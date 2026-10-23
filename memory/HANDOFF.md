@@ -1,4 +1,18 @@
-# HANDOFF — updated 2026-10-20 (body last reconciled 2026-09-01)
+# HANDOFF — updated 2026-10-23 (body last reconciled 2026-09-01; pruned 2026-10-23)
+
+**2026-10-23 pointer.** Persian, all local and NOT yet pushed (origin/main is `8039c6be`):
+half-space key right of the space bar on Persian PC (`9aac669d`, `PersianHalfSpaceKeyTest`);
+`langpack-fa.zip` from a Leipzig + wordfreq blend with a Lilak oracle (`479a7277`; 50,000 words,
+22.4 % with a half-space, `docs/eval/2026-10-23-fa-wordlist.md`); `WordChars` (U+200C is a word
+character only between Arabic-script letters), `ArabicScriptFold` (fa/ckb lookup fold) and
+`HalfSpaceVariants` in `e8f1d3ae` + `c87e2bfb` — `e8f1d3ae` was committed from an index read
+before `479a7277` landed and recorded the pack files as deleted; `4aa4f756` restored them
+byte-identical and history was NOT rewritten (lesson: CLAUDE.md "Shared git INDEX between
+sessions"); docs `ffed91ad`. Suites at `c87e2bfb`: pure 3,215 / mock 1,461. Same day: the
+2026-10-22 doc-freshness audit (scratchpad report, not committed) was acted on for the skills,
+CLAUDE.md, README and this file; two new skills, `theme-system.md` and
+`keyboard-tile-and-minimize.md`. Still waiting on the maintainer: the Persian device half
+(todo 2), the string review (todo 10), and the items below.
 
 **2026-10-22 pointer.** New: settings search lands on the revealing switch for a hidden
 setting (`fb3695b8`, 56 gated controls; device PASS on the Pixel); the tile needs NO overlay
@@ -29,8 +43,8 @@ dispatch only — a push does not re-run it.
 Waiting on the maintainer: Persian half-space plan (todo 2, `docs/research/2026-10-21-persian-zwnj.md`),
 overlay-permission summon (todo 15), the string review (todo 10).
 
-**2026-10-20 pointer.** Local `main` is 79 commits ahead (at `3e863819`) of origin/main (`a40ce7d0`), NOT
-pushed (pushes need the maintainer's word this round). New since 10-18, all on local main:
+**2026-10-20 pointer.** (Local `main` reached `3e863819`, 79 commits past the then
+origin/main `a40ce7d0`; all of it was pushed on 10-21, see above.) New since 10-18:
 - **Autocorrect ranking is now the noisy-channel rule** (default since `353003c6`; weights from
   pre-registered rounds 1–5, `docs/eval/2026-10-18-channel-autocorrect-ranking.md`): shipped
   s₁ 2 · g 1.5 · g₂ 1.0 · τ 1.2 · λ 0.005 · β 0.25 · γ 1 · Hebrew-scoped δ 0.5 · κ 3.0. Every
@@ -219,7 +233,9 @@ the auto-close stale bot REMOVED from community-health.yml; nine bot-closed-but-
 issues reopened for the maintainer's manual close-as-completed (#67 #99 #130 #134 #141
 #146 #148 #149 #154; #158/#89 deliberately closed, #128/#133/#137/#140/#143 are unbuilt
 feature asks and stay closed); FAQ corrected for pack-carried encoders + the re-import
-requirement. The v2.0.0 tag now waits ONLY on the maintainer's word.**
+requirement. The v2.0.0 tag then waited only on the maintainer's word; the October work that
+followed re-opened the gates listed in `memory/todo.md` "Open now" items 8–12 (soak of the
+current build, pre-tag checks, string review, GitHub triage, targetSdk).**
 Final gates 2026-09-10: 2,371 pure / 730 mock / lint 0.
 
 **Round 8 (2026-09-08) — ALL five maintainer forks implemented per decisions** (D-1
@@ -241,10 +257,7 @@ before `optInt` (case-carrying custom words read 1000 on the incremental path). 
 tier pins (GIF scale suite additions, media-path backup test) await the next ew-cli run.
 
 **Still open after round 2 (2026-09-03) — the complete list (ledger "Round 2 closure"
-section is authoritative for what closed):**
-- **ARC-053 minified soak (yours).** Both phones carry the Sep-3 release with ALL round-2
-  code (uk/bg/mk/he CTC, minSdk 24 + ORT 1.21.1, theme fixes, playground, preview-count
-  fix); N-DEV drove the full daily-typing suite green first. ARC-063 keep-narrowing AFTER.
+section is authoritative for what closed; pruned 2026-10-23):**
 - **ARC-060 rider 2 (training box)**: one-shot ru real-probe with the new geometry —
   |result − 85.30| must sit within ±0.207. Everything else about the swap is DONE
   (rider 1: replica agreement now exact 0.0). Until it runs, every published ru accuracy
@@ -254,17 +267,13 @@ section is authoritative for what closed):**
 - `finger_occlusion_offset` A/B: the capture mechanism now EXISTS (Swipe Debug Log
   playground: per-key geometry + ranking + latency traces, export/share) — swipe in the
   playground and export when ready; the A/B analysis follows your traces.
-- ~~Announce uk/bg/mk/he at the next release-notes edit~~ DONE 2026-09-09: the v1.6.0
-  notes announce all four as provisional-via-language-packs; the pin is now emptySet.
 - ARC-114 (LOW): #79 A17 inset-strip observable. Import-preview "Invalid/skipped" label
   wording (the skips are intentional categories, "Invalid" oversells) — cosmetic.
-- ~~Langpack manifest-version normalize on next pack rebuild (byte-identity rule defers it).~~
-  DONE 2026-09-10, on the rebuild that moved the CTC encoders into the packs: uk/bg/mk/he go
-  `version: 1` → `2`, matching ru/el and every other pack. Pinned by
-  `CtcPackModelTest.theSixScriptPacksAgreeOnTheirManifestVersion`. Still open in the same
-  family: the five `langpack-en*.zip` are pre-determinism builds (real mtimes, unsorted
-  entries, no `hasPrefixBoost` key). They cannot ride a bulk rebuild — `build_all_languages.py`
-  refuses to regenerate English — so they normalize only if `en` is rebuilt deliberately.
+- The `langpack-en*.zip` variants are pre-determinism builds (real mtimes, unsorted entries,
+  no `hasPrefixBoost` key); every other pack is `version: 2`
+  (`CtcPackModelTest.theSixScriptPacksAgreeOnTheirManifestVersion`). They cannot ride a bulk
+  rebuild — `build_all_languages.py` refuses to regenerate English — so they normalize only if
+  `en` is rebuilt deliberately.
 - uk apostrophe forms (`м'ясо` — wordfreq uses U+02BC, rejected by the Cyrillic gate) and uk
   ї/ґ serving both need the corner-alias input mode — a different feature, unscheduled. Was
   recorded only in `memory/language-support-todo.md` §C; listed here so it lives in a tracker.
@@ -278,9 +287,13 @@ section is authoritative for what closed):**
   (boundary by design; remedy = max-distance setting). Residuals owed: #167's
   `Keyboard2View._insets_bottom` staleness half (ARC-114-adjacent pass); #151's
   trailing-space-dropped-by-editor half (needs new pending-space state + device confirm);
-  #152 wall-clock feel on a real 130k pack (your soak). Features awaiting your priority:
-  #156 encrypted clipboard, #163 background image, #165 Korean, #168 clear-clipboard key,
-  #175, #177 Pinyin. Closing/commenting on GitHub is YOURS — nothing was posted.
+  #152 wall-clock feel on a real 130k pack (your soak). Features still awaiting your priority
+  (2026-10-23; `docs/audit/gh-issue-resolution.md` has the rows): #163 background image,
+  #165 Korean, #175 part 3 (toolbar, same as #80 part 3), #177 Pinyin (contributor PR #183 to
+  review), #156 at-rest encryption (design only; ask 1, private copy, shipped as schema V5).
+  Shipped since this list was written: #168 `clear_clipboard`, #175 parts 1/2 (minimize +
+  `hide_keyboard`, tile show/minimize, batch selection, swipe-to-delete). Closing/commenting
+  on GitHub is YOURS — nothing was posted.
 - Round-5 residuals (2026-09-06): #167 part-2 (pwd-manager button unresponsive —
   untriaged); #130 visual residue (edit-field white text, search-highlight colors — soak);
   media-delete one-tap soak check (copy image → expand → delete); `ClipboardPinView` is
@@ -467,31 +480,28 @@ retain at the tail.
 - Pack attribution UI (`269d8bb1` — that commit also carries the i18n review doc; `6fed1b12`
   explains the sweep; history NOT rewritten because it is pushed).
 
-**Open (in priority order):**
-1. ~~es/pt/sv LM retry~~ DONE 2026-09-29 (pre-registered `25145b63`, dev choices `7cb2fa36`, one
-   test look): **pt and sv SHIPPED** (`807c56bd`; pt = Portugal web + Brazilian news 0.5/0.5, +5.41;
-   sv = news 2023 + Tatoeba ×2, +5.98 / prefix-2 +2.95); **es FAILED again** (+4.96) — do not
-   retry without a new stated reason (e.g. larger test population). APK/S2 in the eval doc.
-2. ~~Legacy tables hurt `static_only`~~ FIXED 2026-09-29 (`baff9bf1`): only a listed pair of the
-   language's own table moves the multiplier, never below 1; no English fallback (es −22.65 →
-   +0.04 pt). Ratio-shape follow-up MEASURED 2026-09-29 (pre-registered `f596faef`, dev choice
-   `14d403f2`, one test read): production stays `RAW` — `FLOOR_ONE` lost English 0.15 pt on dev
-   (rule: no cell may regress > 0.05). On test `FLOOR_ONE` was ahead everywhere (+0.46 mean
-   prefix-1; es +6.08) — recorded, NOT acted on (would be choosing on test). Confirmed: learned
-   boost ≥ 1 always, so `both` never applies a static penalty, empty store or not; only
-   `static_only` users see `RAW`. Adopting `FLOOR_ONE` needs a new pre-registration + fresh dev
-   evidence (second English dev set, or a per-language rule registered up front).
-3. Device checks — PARTLY DONE on the Seeker test phone (192.168.0.170:5555; recipe in the auto-memory
+**Open (in priority order; completed items removed 2026-10-23, their standing decisions kept):**
+1. Static LM ship state (decided 2026-09-29): **pt and sv SHIPPED** (`807c56bd`, pre-registered
+   `25145b63`; pt = Portugal web + Brazilian news 0.5/0.5, +5.41; sv = news 2023 + Tatoeba ×2,
+   +5.98 / prefix-2 +2.95); **es FAILED twice** (+4.96 vs +5) — do not retry without a new
+   stated reason (e.g. a larger test population; todo "Open now" item 11).
+2. Static-LM ratio shape (decided 2026-09-29, `baff9bf1`, `f596faef`, `14d403f2`): production
+   stays `RAW` — `FLOOR_ONE` lost English 0.15 pt on dev (rule: no cell may regress > 0.05); on
+   TEST it was ahead everywhere (+0.46 mean prefix-1; es +6.08) — recorded, NOT acted on (would
+   be choosing on test). Learned boost ≥ 1 always, so `both` never applies a static penalty;
+   only `static_only` users see `RAW`. Adopting `FLOOR_ONE` needs a new pre-registration + fresh
+   dev evidence (second English dev set, or a per-language rule registered up front).
+3. Device checks — PARTLY DONE on the Seeker test phone (address in `memory/todo.md` "Open now";
+   it was 192.168.0.170 on 2026-09-30; recipe in the auto-memory
    `seeker-test-device`), release builds of `abced4c0` and `59b2da2e`: tap "pka"/"pkay" → play; next-word
    after "I" shows don't; swipes shed → Shed + She'd, ill → I'll, teams → Teams + Team's; fa RTL settings
    + privacy; hu long titles wrap; pack attribution UI + NOTICE dialog; crash buffer empty. Found and
    fixed in `59b2da2e`: hardcoded English, unmirrored arrows, title/chevron collision, hu register mix,
    no delete confirmation, NOTICE wrap. Still owed: native-speaker review; TalkBack; large font;
    en-XA/ar-XB pseudolocales (debug build only); re-check of the 2026-09-30 i18n fixes (§-2).
-4. ~~Apostrophe/hyphen words in the swipe "Prefer" offer~~ DONE 2026-09-29 (`1bb0ddb4`): a joiner
-   user word is a DISPLAY preference honoured by ContractionOverlay (skill §6d); also fixed a user
-   "l'une" hijacking every "lune" swipe. Note: system UserDictionary joiner entries count too.
-5. Two mock tests are load-sensitive (W6 persistence, fuzzy latency) — contention, not bugs.
+4. Two mock tests are load-sensitive (W6 persistence, fuzzy latency) — contention, not bugs.
+   (A joiner user word is a DISPLAY preference honoured by ContractionOverlay — `1bb0ddb4`,
+   contraction skill §6d; system UserDictionary joiner entries count too.)
 **licensing:** repo side DONE 2026-09-26 — see `docs/audit/2026-09-26-data-licensing-audit.md`
 (Norvig pack removed: no redistribution grant; OpenSubtitles packs are FrequencyWords CC BY-SA 4.0
 and stay; every pack now carries `NOTICE.txt` + manifest `license`/`attribution`/`source`).
@@ -509,26 +519,17 @@ ARC-087 complete, with ARC-067 still open. Wave E has ARC-089 and ARC-076 comple
 items remain open. Implementation is committed locally at `5fb58037`; this documentation
 consolidation follows it. Nothing was pushed, tagged, or released.
 
-**Release/maintainer gates:**
-- ARC-053: minified release soak. ARC-062 and ARC-096 are implemented, but the soak remains.
-- ARC-054: decide whether release notes announce ru and newly wired el. Both remain in
-  `SERVED_BUT_NOT_YET_ANNOUNCED`; do not advertise Greek synthesis-holdout evidence as accuracy.
-- ARC-063: narrow blanket R8 keeps only after the first minified soak.
+**Release/maintainer gates (pruned 2026-10-23; ARC-054 announced 2026-09-03/09-09):**
+- ARC-053: the 2026-09-13 soak was signed off, but the October work landed after it — a
+  daily-use soak of the CURRENT minified build is `memory/todo.md` "Open now" item 8.
+- ARC-063: narrow blanket R8 keeps only after that soak.
 - Nonzero `finger_occlusion_offset` default still needs maintainer device-trace A/B evidence.
 
-**Highest-value executable work:**
-- ~~ARC-067~~ **CLOSED 2026-09-01** (ledger §"Wave D"): all 21 locales complete, all 373
-  `MissingTranslation` suppressions removed from the base file, lint green unsuppressed —
-  coverage is now lint-enforced. All new translations are MACHINE translations pending the
-  maintainer's native-review pass. New follow-ons: ARC-103 (`<plurals>` conversion for count
-  strings), ARC-104 (ADB test-script policy decision), ARC-105 (stale IC:539 KDoc line).
-- ~~Wave E remainder~~ — **DONE 2026-09-01**: ARC-073 doc/citation drift + micro-bucket
-  (`d20ed3b5`), ARC-098 phantom-`keyboard2` tooling sweep (`f482faf4`), the four
-  verified-doc-claim audits and the `contraction_pairings_cleaned.json` gate run (see §3).
-  ARC-098's `gesture/` + Bridges/Initializers→`wiring/` half is NOT in that commit — it is
-  source-tree work and stays with ARC-072 slice 3 below.
-- ARC-072 slice 3: Initializers → `wiring/KeyboardComponentGraph`, folded with the gesture/
-  reorg portion of ARC-098. Then continue later Config/SettingsActivity decomposition slices.
+**Highest-value executable work (closed items removed 2026-10-23: ARC-067, Wave E, ARC-072
+slices 1–3 incl. `wiring/KeyboardComponentGraph` and the `gesture/` move — see the ledger):**
+- ARC-067 follow-ons still open: ARC-103 (`<plurals>` conversion for count strings) and the
+  native review of every machine translation (todo "Open now" item 10).
+- Later Config/SettingsActivity decomposition slices (ARC-072 continuation).
 - Evidence-gated geometric OQs ARC-027/028/029: do not change defaults unless local-corpus replay
   shows a non-regressing improvement. ARC-030 floors are already present.
 - Web: ARC-071 Astro 6 migration and ARC-046 regression gate + Tailwind vendoring.
@@ -596,11 +597,6 @@ Everything is in git history and these references — do not re-derive:
 
 ### 3. Smaller, ride-along
 
-- ~~`contraction_pairings_cleaned.json`~~ — **CLOSED 2026-09-01.** The deletion had already
-  landed in `030265ee` (this entry was stale); absence re-confirmed across `src/`, `scripts/`,
-  `tools/`, `build.gradle`. The gate run this entry asked for has now happened:
-  `swipe.BundledContractionDataTest` 18/18 and `swipe.ContractionCollisionDataTest` 6/6 green,
-  plus the full `runPureTests` 2093/2093.
 - **Doc claims found but deliberately not fixed** during the 2026-08-21 deleted-class sweep —
   **all four re-verified against live code 2026-09-01 (ARC-073/§3):**
   - `core-keyboard-system.md` invented API signatures (`CleverKeysService.switchLayout`,
