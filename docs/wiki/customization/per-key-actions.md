@@ -15,7 +15,7 @@ Customize what happens when you swipe in each of the 8 directions from any key. 
 | What | Description |
 |------|-------------|
 | **Purpose** | Customize subkey actions per direction |
-| **Access** | Settings > Activities > Customize Per-Key Actions, or hold a key with the [Subkey Popover](../gestures/subkey-popover.md) on |
+| **Access** | Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions, or hold a key with the [Subkey Popover](../gestures/subkey-popover.md) on |
 | **Directions** | 8 directions (N, NE, E, SE, S, SW, W, NW) |
 
 ## Understanding Subkeys
@@ -179,7 +179,7 @@ Pinned entries are ordered **most-recently-pinned first**. If you request an ind
 
 To set up:
 
-1. Go to **Settings > Activities > Customize Per-Key Actions** and tap a key and direction,
+1. Go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions** and tap a key and direction,
    or let go on an empty slot of the [Subkey Popover](../gestures/subkey-popover.md)
 2. In the command palette, search for "paste_pinned" or browse the **Clipboard** category
 3. Select the desired slot (1-5)
@@ -221,16 +221,16 @@ The text input field includes a **paste button** (icon in the trailing position)
 
 To restore defaults:
 
-1. Go to **Settings > Activities > Backup & Restore**
+1. Expand the **Settings > Backup & Restore** section
 2. Use the restore function to reset to default configuration
 
 ## Settings
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Customize Per-Key Actions** | Activities section | Visual subkey editor |
+| **Customize Per-Key Actions** | Activities > Short Swipe Calibration | Visual subkey editor |
 | **Subkey popover on hold** | Gesture Tuning | Assign and edit slots from the keyboard |
-| **Backup & Restore** | Activities section | Save/restore customizations |
+| **Backup & Restore** | Backup & Restore section | Save/restore customizations |
 
 ## Related Features
 

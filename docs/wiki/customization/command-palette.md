@@ -21,7 +21,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 
 The command palette is **not** a standalone feature. It opens when you:
 
-1. Go to **Settings > Activities > Customize Per-Key Actions**, tap a key, then tap a
+1. Go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**, tap a key, then tap a
    direction; or
 2. Hold a key with the [Subkey Popover](../gestures/subkey-popover.md) on and let go on an
    empty slot (assign), or rest on an assigned slot for 3 seconds and choose **Edit** or

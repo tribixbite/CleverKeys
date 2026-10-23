@@ -33,7 +33,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 
 1. **Reduce beam width**
    - Settings > Swipe Typing > Full CTC Settings > Beam Width
-   - Try 3-4 instead of 6+
+   - The default is 100 (range 10–300); try 50 and check that swipe accuracy is still acceptable
 
 2. **Reduce languages**
    - Keep only languages you actively use
@@ -60,7 +60,7 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
 
 1. **Reduce clipboard history**
    - Settings > Clipboard section > History Limit
-   - Use smaller limit (e.g., 25 instead of 50)
+   - History is unlimited by default (limit 0); set a limit such as 100 entries
 
 2. **Delete old backups**
    - Backups are files you exported from the **Settings > Backup & Restore** section

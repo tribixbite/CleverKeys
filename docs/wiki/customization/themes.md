@@ -175,7 +175,7 @@ A: Yes! Use the DIY Theme Creator in Theme Manager to customize every color.
 
 ### Q: How do I backup my custom theme?
 
-A: Export your settings via **Settings > Activities > Backup & Restore** which includes theme settings.
+A: Export your settings from the **Settings > Backup & Restore** section, which includes theme settings.
 
 ### Q: Why does Monet theme look different than expected?
 

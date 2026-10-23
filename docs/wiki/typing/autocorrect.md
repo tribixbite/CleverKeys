@@ -15,7 +15,7 @@ CleverKeys autocorrect knows that **adjacent keys are more likely typos than dis
 | What | Description |
 |------|-------------|
 | **Purpose** | Fix tap-typing mistakes using keyboard physics + dictionary frequency |
-| **Access** | Automatic while typing; toggle in Settings → Word Prediction |
+| **Access** | Automatic while typing; toggle in Settings → Auto-Correction |
 | **Undo** | Tap the original word in the prediction bar |
 | **Layouts** | Latin letters use a built-in QWERTY map; non-Latin boards (Hebrew, Cyrillic, Greek …) use their own key grid |
 | **Languages** | Latin accents (é, ñ, ü, etc.) covered out of the box; non-Latin letters get adjacency from your layout |
@@ -138,7 +138,7 @@ Open Settings (gear icon on keyboard), then **Activities → Dictionary Manager*
 
 ## Autocorrect Settings
 
-All in Settings → **Word Prediction**. Most users only ever touch the top three.
+All in the Settings → **Auto-Correction** section. Most users only ever touch the top three.
 
 ### Primary Knobs
 
@@ -146,7 +146,7 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 |---------|---------|--------------|
 | **Autocorrect** (`autocorrect_enabled`) | on | Master toggle |
 | **Min word length** (`autocorrect_min_word_length`) | 2 | Skip autocorrect on very short words |
-| **Required prefix length** (`autocorrect_prefix_length`) | 0 | Candidate must share this many starting chars with your typed word. `0` = no prefix required (lets first-character typos like `wuestion → question` correct). `2` is the legacy stricter mode. |
+| **Starting Letter Accuracy** (`autocorrect_prefix_length`) | 0 | Letters at the start of a word that autocorrect keeps (0–4). `0` also fixes a wrong first letter (`wuestion → question`); `1` or more never does. |
 
 ### Advanced Tuning
 
@@ -160,8 +160,41 @@ All in Settings → **Word Prediction**. Most users only ever touch the top thre
 
 | Setting | Default | What it does |
 |---------|---------|--------------|
-| **Beam autocorrect** (`swipe_beam_autocorrect_enabled`) | on | Apply correction during swipe beam search |
-| **Final autocorrect** (`swipe_final_autocorrect_enabled`) | on | Apply correction on swipe completion |
+| **Final Autocorrect** (`swipe_final_autocorrect_enabled`) | on | Apply dictionary-based correction to a swiped word when it is committed. (The older "beam autocorrect" option left with the removed neural engine.) |
+
+### Ranking & Tuning
+
+The **Ranking & Tuning** group at the bottom of the Auto-Correction section exposes every
+weight the corrector uses. The defaults reproduce the shipped behaviour; change them only if
+you can test the result on your own typos.
+
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| **Correction Ranking** | Edit cost plus frequency | How autocorrect picks between several close dictionary words. *Score band, then frequency* is the older method; only the weights of the selected method are shown. |
+| **Score Band Width** | 0.10 | (Band method) words whose scores differ by less than this count as a tie, and the more common word wins |
+| **Swapped Letters Penalty** | 0.15 | (Band method) score lost by a word reached by swapping two neighbouring letters (`teh → the`), divided by word length |
+| **Neighbour-Key Tiebreak** | Off | (Band method) in a tie, prefer the word whose wrong letters sit next to the keys you pressed; off because it fixed fewer real typos than it broke |
+| **Restore Missing Double Letter** | On | (Band method) correct a double letter typed once (`helo → hello`) even when another correction is more common |
+| **Double-Letter Frequency Margin** | 64 | How much rarer the double-letter word may be and still win |
+| **Same-Length Match Minimum** | 0.50 | Share of letters already in place before a same-length word is considered |
+| **Maximum Wrong Letters** | 2 | Most letters a same-length correction may replace |
+| **Length-Change Allowance** | 0.5 | Extra edit distance allowed, beyond the added or missing letters, for a correction of another length |
+| **Remove Extra Repeated Letter** | On | Correct an accidental extra copy of a letter (`gamees → games`) |
+| **Keep Unknown Word Forms** | On | Leave a known word plus `-s`, `-ed`, `-ing` alone (`immunizations`) |
+| **Minimum Known Stem** | 4 | Shortest known word, before the ending, that keeps the typed word |
+| **Distant-Key Cost** | 2.0 | (Edit-cost method) extra cost of a wrong letter far from the key you meant; 0 makes every wrong letter cost the same |
+| **Missing or Extra Letter Cost** | 1.5 | (Edit-cost method) cost of a missing or extra letter; one wrong neighbouring key costs 1 |
+| **Double-Letter Cost** | 1.0 | (Edit-cost method) cost of a missing or extra letter that repeats the letter beside it (`helo → hello`) |
+| **Swapped Letters Cost** | 1.2 | (Edit-cost method) cost of two neighbouring letters typed in the wrong order |
+| **Word Frequency Weight** | 0.005 | (Edit-cost method) how much a word's commonness offsets its edit cost |
+| **Contraction Preference** | 0.25 | (Edit-cost method) bonus for a contraction whose apostrophe-free spelling you typed (`dont → don't`) |
+| **Short-Word Deletion Cost** and its scope | 0.5, Hebrew-script words only | (Edit-cost method) extra cost of deleting onto a word of two letters or fewer |
+| **Maximum Correction Distance** | 3.0 | (Edit-cost method) no correction above this edit cost (10 = off); protects valid words the dictionary lacks |
+| **Word-Form Keep Cost** | 1.0 | (Edit-cost method) cost that keeps a known word plus an ending from being corrected (10 = always keep) |
+
+Defaults are the `AUTOCORRECT_*` values in `Config.kt` at v2.0.0 and reproduce the behaviour
+that shipped before these were settings; the control's own text in Settings is the authority
+if they differ. Engineering detail: `docs/eval/2026-10-18-channel-autocorrect-ranking.md`.
 
 > [!NOTE]
 > Autocorrect's tap-typing path uses the absolute dictionary frequency directly via `autocorrect_confidence_min_frequency`. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.

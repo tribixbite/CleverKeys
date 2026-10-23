@@ -102,7 +102,7 @@ Found under the **Clipboard** section in Settings:
 | Setting | Description |
 |---------|-------------|
 | **Clipboard History** | Enable/disable clipboard history |
-| **Clipboard History Limit** | Maximum items to keep (default: 50) |
+| **Clipboard History Limit** | Maximum entries to keep (default: 0 = unlimited; 1–500) |
 | **Clipboard Size Limit** | Total size limit in MB |
 | **Clipboard Max Item Size** | Maximum size per text item in KB (64-1024) |
 | **Save Media Entries** | Enable/disable media capture (images, videos, PDFs) |
@@ -121,16 +121,20 @@ CleverKeys automatically protects sensitive content:
 | **Sensitive Flag** | Android 13+ password managers mark copies as sensitive; CleverKeys skips them — this is the reliable protection |
 | **Password Managers** | Best-effort extra layer: skips a copy only when Android reveals a known password manager in the foreground (rarely possible without usage access, which CleverKeys never requests) |
 
-## Incognito Mode
+## Private and Incognito Fields
 
-Found in the **Privacy** section:
+There is no Incognito Mode switch in CleverKeys. Instead the keyboard follows what the app
+tells it about the field:
 
-When enabled:
-- Predictions disabled
-- Learning disabled
-- Nothing saved to history
+- **Incognito fields** (a private browser tab, or any field an app flags "no personalized
+  learning"): nothing is learned from what you type there, and your earlier suggestion
+  choices are not used to rank suggestions. The built-in word and phrase models still work.
+- **Password fields**: predictions and clipboard capture are off while you are in the field,
+  and swipe typing too unless you enabled it for password fields (see
+  [Password Fields](password-fields.md)).
 
-Useful for entering sensitive information in any app.
+To stop all learning everywhere, turn off **Learn From My Typing** (Privacy & Data); to keep
+nothing from the clipboard, turn off **Clipboard History** (Clipboard).
 
 ## Data Storage
 
@@ -192,16 +196,15 @@ Use Settings > Backup & Restore to:
 
 | Setting | Section | Default |
 |---------|---------|---------|
-| **Learn From My Typing** | Privacy & Data | On |
+| **Learn From My Typing** | Privacy & Data | Off on a fresh install (an upgrade from before 2.0 keeps learning on, as it was) |
 | **Clipboard History** | Clipboard | On |
-| **History Limit** | Clipboard | 50 items |
+| **History Limit** | Clipboard | 0 (unlimited) |
 | **History Duration** | Clipboard | Never expire |
 | **Save Media Entries** | Clipboard | On |
 | **Text Only** | Clipboard | Off |
 | **Max Media Size** | Clipboard | 10 MB |
 | **Exclude Password Managers** | Clipboard | On |
 | **Respect Sensitive Flag** | Clipboard | On |
-| **Incognito Mode** | Privacy | Off |
 
 ## Network Privacy
 
@@ -232,7 +235,7 @@ A: Go to Android Settings > Apps > CleverKeys > Storage > Clear Data. This remov
 
 ### Q: Can I use CleverKeys without any data storage?
 
-A: Enable Incognito Mode for reduced data retention (predictions will be less personalized).
+A: Yes. Leave **Learn From My Typing** off (it is off by default on a fresh install) and turn off **Clipboard History**; the keyboard then stores nothing beyond your settings and any words you add to your dictionary.
 
 ### Q: How do I stop the keyboard from learning my typing?
 

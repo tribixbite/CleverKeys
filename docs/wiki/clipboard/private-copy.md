@@ -49,7 +49,7 @@ To use it:
 Where you can bind it:
 
 - **Extra keys** — add `copy_private` to your extra-keys row, exactly like the standard `copy` key.
-- **Short swipe / per-key customization** — go to **Settings > Activities > Per-Key Customization**, pick a key and a swipe direction, and assign the **Private Copy** command. A natural home is a short swipe on the existing copy key.
+- **Short swipe / per-key customization** — go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**, pick a key and a swipe direction, and assign the **Private Copy** command. A natural home is a short swipe on the existing copy key.
 - **Command palette** — the **Private Copy** command lives in the Clipboard category.
 
 If nothing is selected (or the field won't share its selection), you'll see a "No text selected" message instead.

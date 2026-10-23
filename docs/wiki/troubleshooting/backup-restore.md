@@ -398,7 +398,7 @@ for i,(ce,hp) in enumerate(chunks):
 
 ### Clipboard History Disappearing
 
-Entries expire based on the **History Duration** setting in Clipboard Settings:
+Entries expire based on the **History Duration** setting in the Clipboard section of Settings:
 - Default: **Never expire** (duration = -1)
 - Can be set to 1 hour, 1 day, 7 days, or custom
 - Pinned items and TODO items never expire regardless of this setting

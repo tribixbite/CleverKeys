@@ -42,7 +42,7 @@ Removes learned words:
 Restore default short swipe actions:
 
 1. Open **Settings**
-2. Tap **Per-Key Customization** in Activities section
+2. Tap **Short Swipe Calibration** in the Activities section, then **Customize Per-Key Actions**
 3. Use **Reset All** option if available
 4. Or manually reset each key
 
@@ -75,7 +75,7 @@ Restores everything to factory state:
 Before any destructive reset, consider backing up:
 
 1. Open CleverKeys **Settings**
-2. Tap **Backup & Restore** in Activities section
+2. Expand the **Backup & Restore** section
 3. Tap **Export Config**
 4. Save the backup file
 
@@ -107,7 +107,7 @@ See [First-Time Setup](../getting-started/first-time-setup.md) for guidance.
 If you exported a backup:
 
 1. Open CleverKeys **Settings**
-2. Tap **Backup & Restore** in Activities section
+2. Expand the **Backup & Restore** section
 3. Tap **Import Config**
 4. Select your backup file
 5. Settings are restored

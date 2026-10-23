@@ -14,26 +14,28 @@ Switch between installed keyboard layouts using key actions or swipe gestures.
 | What | Description |
 |------|-------------|
 | **Purpose** | Change active keyboard layout |
-| **Methods** | Assigned key swipes, Shift key swipe |
+| **Methods** | Spacebar swipes, assigned key swipes, extra keys |
 | **Layouts** | Between all enabled layouts |
 
 ## Switching Methods
 
-### Method 1: Shift Key Swipes (Default)
+### Method 1: Spacebar Swipes (Default)
 
-On the default layout, the Shift key has layout switching:
+The default bottom row puts layout switching on the spacebar:
 
-1. **Swipe right on Shift** → Next layout (`switch_forward`)
-2. **Swipe left on Shift** → Previous layout (`switch_backward`)
+1. **Swipe up on the spacebar** → Next layout (`switch_forward`)
+2. **Swipe down on the spacebar** → Previous layout (`switch_backward`)
 
 > [!NOTE]
-> The exact swipe directions depend on your layout. Check the subkeys on your Shift key.
+> These two spacebar swipes are extra keys that are on by default, and they are hidden
+> automatically while only one layout is enabled. If a custom layout defines its own bottom
+> row, check that layout's subkeys instead.
 
 ### Method 2: Custom Key Assignment
 
 Assign layout switching to any key via Per-Key Customization:
 
-1. Go to **Settings > Per-Key Customization** (in Activities section)
+1. Go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**
 2. Select any key
 3. Assign `switch_forward` or `switch_backward` to a swipe direction
 4. Save your customization
@@ -42,25 +44,9 @@ Assign layout switching to any key via Per-Key Customization:
 
 Add dedicated layout switching keys:
 
-1. Go to **Settings > Extra Keys** (in Activities section)
-2. Add `switch_forward` or `switch_backward` to your extra keys row
-3. Tap the key to switch layouts
-
-## Layout Indicator
-
-When you switch layouts, the current layout name appears briefly on the spacebar.
-
-```
-┌─────────────────────────────────────┐
-│  ┌───┐ ┌───┐ ┌───┐ ┌───┐ ┌───┐     │
-│  │ Q │ │ W │ │ E │ │ R │ │ T │     │
-│  └───┘ └───┘ └───┘ └───┘ └───┘     │
-│           ...                       │
-│  ┌─────────────────────────────────┐│
-│  │         QWERTY EN               ││ ← Layout shown on spacebar
-│  └─────────────────────────────────┘│
-└─────────────────────────────────────┘
-```
+1. Go to **Settings > Activities > Configure Extra Keys**
+2. Enable **Next Layout** (`switch_forward`) or **Previous Layout** (`switch_backward`)
+3. The keys are placed in free subkey slots of the current layout; swipe to them to switch
 
 ## Managing Layouts
 
@@ -72,21 +58,18 @@ Control which layouts appear in rotation:
 2. Configure your enabled languages/layouts
 3. Only enabled layouts are included in switching
 
-### Immediate vs Delayed Switching
+### Switching Keyboards (Input Methods)
 
-| Setting | Behavior |
-|---------|----------|
-| **Immediate** | Layout switches instantly on key action |
-| **Delayed** | Layout changes after releasing the key |
-
-Configure in Settings under the layout/input behavior options.
+Layout switching is instant and has no timing option. The **Immediate Keyboard Switching**
+switch under **Settings > Input Behavior** is about something else: it makes the *Switch
+Keyboard* key (`change_method`) jump straight to the next input method instead of opening
+Android's keyboard picker.
 
 ## Tips and Tricks
 
 - **Two languages**: If you only use 2 layouts, switching always toggles between them
-- **Learn your subkeys**: Check Shift key subkeys for default switch actions
+- **Learn your subkeys**: On the default bottom row, swipe up or down on the spacebar
 - **Custom placement**: Put switch keys where they're most convenient for you
-- **Visual feedback**: Watch the spacebar for current layout confirmation
 
 > [!TIP]
 > For bilingual typing, consider using Multi-Language mode instead of switching layouts. It suggests words from both languages simultaneously.
@@ -129,7 +112,7 @@ Instead of switching layouts, you can type in multiple languages on one layout:
 |---------|----------|-------------|
 | **Primary Language** | Multi-Language section | Main language |
 | **Secondary Language** | Multi-Language section | Additional dictionary |
-| **Switch Input Immediate** | Input settings | Instant vs delayed switch |
+| **Immediate Keyboard Switching** | Input Behavior section | Switch Keyboard key changes input method directly instead of showing the picker |
 
 ## Common Questions
 

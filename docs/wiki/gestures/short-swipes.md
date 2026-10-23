@@ -94,7 +94,7 @@ Adjust sensitivity in Settings:
 - **Practice direction**: North is straight up, not diagonal
 - **Speed matters**: Quick flicks work best
 - **Visual feedback**: The trail shows your swipe direction
-- **Customize**: Change subkey actions in Settings > Activities > Per-Key Customization
+- **Customize**: Change subkey actions in Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions
 
 > [!TIP]
 > If short swipes accidentally trigger, increase the minimum distance setting.

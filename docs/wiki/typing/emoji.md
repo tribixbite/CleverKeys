@@ -30,7 +30,7 @@ CleverKeys includes a full emoji keyboard with categories, search, recent emoji 
 
 You can assign emoji access to any key's short swipe:
 
-1. Go to **Settings > Activities > Per-Key Customization**
+1. Go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**
 2. Select any key
 3. Assign `switch_emoji` to a swipe direction
 

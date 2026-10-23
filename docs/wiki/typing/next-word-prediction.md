@@ -21,7 +21,7 @@ default** (since v2.0); the built-in part works even with learning off.
 | **Purpose** | Suggest the next word before you type a letter |
 | **Access** | Settings > Input Behavior > Word Prediction > Next-Word Prediction |
 | **Default** | On (since v2.0; an install where you had switched it off keeps it off) |
-| **Data source** | Built-in phrase model (English: a model built from public text corpora; French, German, Italian, Portuguese, Spanish: a smaller built-in list of common word pairs). With Learn From My Typing on, your own learned phrases come first. Nothing downloaded, nothing leaves the device, and next-word itself records nothing |
+| **Data source** | Built-in phrase models for English, German, French, Italian, Portuguese and Swedish (each built from public text corpora); Spanish has only a smaller built-in list of common word pairs. With Learn From My Typing on, your own learned phrases come first. Nothing downloaded, nothing leaves the device, and next-word itself records nothing |
 
 ## How It Works
 
@@ -30,8 +30,10 @@ They come in two tiers:
 
 - **Built-in (always available)** — for English, a phrase model that ships inside the app:
   about 75,000 common word pairs over 15,000 words, built from the Leipzig Corpora Collection
-  (English web text, 2018) and Tatoeba example sentences. For French, German, Italian,
-  Portuguese and Spanish a smaller hand-picked list of common word pairs plays the same role.
+  (English web text, 2018) and Tatoeba example sentences. German, French, Italian,
+  Portuguese and Swedish have phrase models of their own built the same way (each shipped
+  only after passing its own accuracy check). Spanish did not pass, so for Spanish a smaller
+  hand-picked list of common word pairs plays the same role.
   This tier contains nothing about you, so it works with on-device learning **off**, with
   Context-Aware Predictions off, and in private/incognito fields.
 - **Learned (optional)** — with **Learn From My Typing** on (Privacy & Data) and
@@ -105,7 +107,7 @@ suggestion is read as the word followed by its origin, e.g. "to, Next-word predi
 | Terminal (Termux) | Terminal input is not prose |
 | An autocorrect-undo, add-to-dictionary or "Prefer … when swiping?" prompt is showing | Prompts take priority |
 | Start of a sentence (after `.` `?` `!`) | There is no previous word to continue |
-| No learned phrase above the confidence floor, and no built-in continuation for the last word | Empty bar by design. The English model covers about 14,500 previous words; the French, German, Italian, Portuguese and Spanish lists only the most common opening words |
+| No learned phrase above the confidence floor, and no built-in continuation for the last word | Empty bar by design. The English model covers about 14,500 previous words and the German, French, Italian, Portuguese and Swedish models 12,000–16,000 each; the Spanish list covers only the most common opening words |
 
 **Only the learned tier** is switched off — the built-in tier keeps working — when:
 

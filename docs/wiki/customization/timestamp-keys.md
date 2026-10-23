@@ -23,11 +23,16 @@ CleverKeys includes 8 ready-to-use timestamp keys:
 | `timestamp_time_12h` | 🕐 | 2:30 PM |
 | `timestamp_iso` | 📋 | 2026-01-15T14:30:45 |
 
-### Adding to Extra Keys
+### Putting a Timestamp Key on the Keyboard
 
-1. Go to **Settings → Activities → Extra Keys**
-2. Add any of the key names above (e.g., `timestamp_date`)
-3. The key will appear in your extra keys row
+Timestamp keys are not in the Extra Keys list. Two ways to use them:
+
+1. **Per-Key Customization** — **Settings → Activities → Short Swipe Calibration →
+   Customize Per-Key Actions**, tap a key and direction, choose **Timestamp** in the
+   command palette and pick one of the preset patterns (the same formats as the table
+   above) or type your own.
+2. **Custom layout XML** — use the key names above in a layout, for example
+   `key2="timestamp_date"` (see [Custom Layouts](../layouts/custom-layouts.md)).
 
 ## Custom Patterns
 

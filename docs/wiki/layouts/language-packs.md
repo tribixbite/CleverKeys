@@ -20,7 +20,7 @@ Add language dictionaries by importing language pack files. Keyboard layouts are
 
 > [!TIP]
 > **Greek, Russian, German, French, Spanish, Italian, Portuguese, Dutch,
-> Swedish, Turkish, Indonesian, Malay, Tagalog, Swahili and more are already
+> Swedish, Turkish, Persian, Indonesian, Malay, Tagalog, Swahili and more are already
 > built** — you don't need to build anything. See [Prebuilt Language Packs](#prebuilt-language-packs)
 > below, then import via Settings > 🌐 Multi-Language > Import Pack.
 
@@ -259,7 +259,7 @@ Once imported, all language features work offline:
 
 A: If it's in the [Prebuilt Language Packs](#prebuilt-language-packs) list
 (Greek, German, French, Spanish, Italian, Portuguese, Dutch, Swedish,
-Turkish, and more), just download the `.zip` and import it via Settings >
+Turkish, Persian, and more), just download the `.zip` and import it via Settings >
 🌐 Multi-Language > Import Pack — no building required. For an unlisted
 language, build a pack with the Python scripts, then import the same way.
 

@@ -15,7 +15,7 @@ CleverKeys maintains a history of everything you've copied — text, images, vid
 |------|-------------|
 | **Purpose** | Access previous clipboard items (text + media) |
 | **Access** | Swipe SW from Ctrl key, or add Clipboard to Extra Keys |
-| **Capacity** | Configurable (default 50 items) |
+| **Capacity** | Unlimited by default (History Limit 0); cap it at 1–500 entries in Settings > Clipboard |
 
 ## Accessing Clipboard History
 
@@ -38,7 +38,7 @@ If you've added a clipboard key to Extra Keys:
 
 You can assign clipboard access to any key's short swipe:
 
-1. Go to **Settings > Activities > Per-Key Customization**
+1. Go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**
 2. Select any key
 3. Assign `switch_clipboard` to a swipe direction
 
@@ -114,7 +114,7 @@ Entries are numbered by position (most-recently-pinned first):
 - `paste_pinned_1` inserts your most recently pinned entry
 - `paste_pinned_2` inserts the second, and so on up to `paste_pinned_5`
 
-To set this up, go to **Settings > Activities > Per-Key Customization**, choose a key and direction, select **Command**, and search for "paste_pinned". See [Per-Key Actions](../customization/per-key-actions.md#pinned-clipboard-actions) for full details.
+To set this up, go to **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**, choose a key and direction, select **Command**, and search for "paste_pinned". See [Per-Key Actions](../customization/per-key-actions.md#pinned-clipboard-actions) for full details.
 
 ## Todo Items
 
@@ -174,7 +174,7 @@ CleverKeys automatically captures images, videos, PDFs, and other files you copy
 | **Text Only** | Hide all media, show only text entries | Off |
 | **Max Media Size** | Skip copied media larger than this size (1-50 MB) | 10 MB |
 
-To access: **Settings > Clipboard section** (expand it) or **Settings > Activities > Clipboard Settings**.
+To access: **Settings > Clipboard section** (expand it). There is no separate clipboard settings screen.
 
 > [!TIP]
 > If you only want text in your clipboard and find media entries distracting, enable **Text Only**. It hides existing media entries from the panel and stops new media from being captured.

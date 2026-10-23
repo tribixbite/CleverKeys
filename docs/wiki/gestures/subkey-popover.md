@@ -61,8 +61,8 @@ edit screen shows what the slot does now and offers:
 | **Restore default** | Removes your custom action so the layout's own subkey shows again. Only shown when your action covers a layout subkey. |
 | **Remove** | Clears the slot. A layout subkey is hidden rather than deleted; letting go on that empty cell later offers **Restore default**. |
 
-Changes made here are the same mappings you see in Settings > Activities > **Customize
-Per-Key Actions**, and the same ones short swipes use.
+Changes made here are the same mappings you see in Settings > Activities > Short Swipe
+Calibration > **Customize Per-Key Actions**, and the same ones short swipes use.
 
 ## Which Keys Open It
 

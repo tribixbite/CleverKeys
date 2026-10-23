@@ -60,7 +60,7 @@ Open CleverKeys settings:
 
 Add a row of function keys above the keyboard:
 
-- **Location**: Tap **Extra Keys** in the Activities section
+- **Location**: Tap **Configure Extra Keys** in the Activities section
 - **Popular additions**: Tab, Ctrl, Arrow keys, Clipboard
 - **Tip**: Drag keys to reorder them
 
@@ -80,7 +80,7 @@ Configure swipe prediction:
 - **Location**: Scroll to the **Swipe Typing** section in Settings
 - **Settings**:
   - Swipe Typing: Enable/disable swipe input
-  - Beam Width: Number of candidates (default: 6, max: 20)
+  - Beam Width (under Full CTC Settings): how wide the swipe decoder searches (default: 100, range 10–300; the default is the measured optimum, lower it only on a slow phone)
 
 ## Quick Test
 

@@ -98,9 +98,11 @@ The **Prediction Engine** dropdown (Settings > Swipe Typing) selects which decod
   those words. The same test rejects Polish `ł`, Vietnamese `đ` and Icelandic `þ`/`ð`
   packs.
 - **Geometric** — a layout-agnostic shape-matching decoder. It is the automatic
-  fallback when CTC prerequisites are unavailable. Both engines require a usable
-  dictionary, supported letter geometry and a valid gesture. Existing Bangla tap
-  layouts do not yet provide Bangla prediction or swipe support.
+  fallback when CTC prerequisites are unavailable, and the engine for Persian: the
+  `langpack-fa.zip` pack (50,000 words, 2026-10-23) carries no swipe encoder, so swipes on
+  the Persian layouts are decoded geometrically against the pack's dictionary. Both
+  engines require a usable dictionary, supported letter geometry and a valid gesture.
+  Existing Bangla tap layouts do not yet provide Bangla prediction or swipe support.
 
 ### How much we actually know per language
 
@@ -130,7 +132,7 @@ for English/French/German/Spanish does *not* apply to them.
   spelling, the more common one is offered.
 
 > [!NOTE]
-> Before v1.6.0 there were two further modes, **Neural** and **Hybrid**, backed by an ONNX
+> Before v2.0.0 there were two further modes, **Neural** and **Hybrid**, backed by an ONNX
 > transformer. That engine was removed: CTC beat it by a wide margin on the same test set
 > (89% vs 75% first-try) while the transformer only worked on QWERTY and cost about 10 MB of
 > app size. If your device still has "Neural" or "Hybrid" stored, it now behaves as CTC.

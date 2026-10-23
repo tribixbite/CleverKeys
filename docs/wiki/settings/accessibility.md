@@ -1,21 +1,22 @@
 ---
 title: Accessibility Settings
-description: Haptic feedback and audio settings
+description: Vibration feedback settings and screen-reader notes
 category: Settings
 difficulty: beginner
 ---
 
 # Accessibility Settings
 
-CleverKeys includes haptic feedback and audio settings in the Accessibility section.
+The Accessibility section of Settings holds the vibration (haptic) settings. CleverKeys has
+no key-press sound option.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Haptic feedback and sound settings |
+| **Purpose** | Vibration feedback |
 | **Access** | Settings > Accessibility |
-| **Features** | Vibration, haptic triggers, keypress sound |
+| **Features** | Master vibration switch, system or custom vibration, five haptic events |
 
 ## Vibration Settings
 
@@ -28,14 +29,19 @@ Enable/disable all haptic feedback:
 | **Enabled** | Vibration feedback active |
 | **Disabled** | No vibration feedback |
 
-### Vibration Duration
+### Use System Vibration
 
-Custom vibration length in milliseconds:
+On by default. Key presses use your phone's built-in haptic pattern, which has the lowest
+latency. Turn it off to set your own vibration length.
+
+### Custom Duration (optional)
+
+Active only while **Use System Vibration** is off:
 
 | Range | Description |
 |-------|-------------|
-| **1-100ms** | Adjust duration of haptic feedback |
-| **Default: 20ms** | Brief, subtle feedback |
+| **5–100 ms** (5 ms steps) | Length of each vibration |
+| **Default: 20 ms** | Brief, subtle feedback |
 
 ## Haptic Feedback Triggers
 
@@ -51,23 +57,12 @@ Configure which actions trigger haptic feedback:
 
 Each trigger can be independently enabled/disabled.
 
-## Sound Settings
-
-### Sound on Keypress
-
-Play audio feedback on key taps:
-
-| Setting | Effect |
-|---------|--------|
-| **Enabled** | Click sound on each key |
-| **Disabled** | Silent typing |
-
 ## Tips
 
 - **Battery conscious**: Disable vibration to save battery
-- **Silent typing**: Disable both vibration and sound
-- **Subtle feedback**: Use short vibration duration (10-15ms)
-- **Strong feedback**: Use longer vibration duration (40-50ms)
+- **Silent typing**: Turn off **Vibration Feedback**
+- **Subtle feedback**: Turn off **Use System Vibration** and set a short duration (5–15 ms)
+- **Strong feedback**: Turn off **Use System Vibration** and set a longer duration (40–50 ms)
 
 ## System Integration
 

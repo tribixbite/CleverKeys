@@ -60,7 +60,7 @@ Solutions for the most frequently encountered problems with CleverKeys.
 | Cause | Solution |
 |-------|----------|
 | Wrong layout | Check active layout in Layout Manager |
-| Autocorrect | Adjust autocorrect in Word Prediction section |
+| Autocorrect | Adjust autocorrect in the Auto-Correction section |
 | Language mismatch | Check language configuration |
 
 ### Issue: Autocorrect making wrong corrections
@@ -68,8 +68,8 @@ Solutions for the most frequently encountered problems with CleverKeys.
 **Solutions:**
 
 1. **Adjust autocorrect settings**
-   - Settings > Word Prediction section (expand it)
-   - Toggle Autocorrect on/off or adjust Min Word Length
+   - Settings > Auto-Correction section (expand it)
+   - Toggle Enable Auto-Correction on/off or adjust Minimum Word Length
 
 2. **Add words to dictionary**
    - When corrected wrongly, tap suggestion bar
@@ -84,7 +84,7 @@ Solutions for the most frequently encountered problems with CleverKeys.
 **Solutions:**
 
 1. Check if predictions enabled:
-   - Settings > Word Prediction section
+   - Settings > Input Behavior section, Word Prediction group
    - Ensure **Word Predictions** is enabled
 
 2. Check language support:
@@ -156,7 +156,7 @@ Some apps override keyboard behavior:
 **Solutions:**
 
 1. **Add extra keys for terminals**
-   - Settings > Activities > Extra Keys
+   - Settings > Activities > Configure Extra Keys
    - Add Ctrl, Tab, Escape
 
 2. **Check app permissions**
@@ -206,7 +206,7 @@ Some apps override keyboard behavior:
 
 1. **Reduce prediction beam width**
    - Settings > Swipe Typing > Full CTC Settings > Beam Width
-   - Try 3-4 instead of 6+
+   - The default is 100 (range 10–300); try 50 and check that swipe accuracy is still acceptable
 
 2. **Disable haptic feedback**
    - Settings > Accessibility section

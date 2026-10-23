@@ -196,7 +196,7 @@ When you swipe a pattern matching a custom word:
 | Setting | Location | Description |
 |---------|----------|-------------|
 | **Dictionary Manager** | Settings > Activities | View and manage custom words, their frequency and swipe priority |
-| **Personalized Learning** | Word Prediction section | Adapt to your typing patterns |
+| **Personalized Learning** | Input Behavior section | Adapt to your typing patterns (needs Learn From My Typing on under Privacy & Data) |
 
 ## How Capitalization Works
 

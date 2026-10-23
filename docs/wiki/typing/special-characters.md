@@ -35,7 +35,10 @@ Example on 'e' key (QWERTY):
 - **Swipe S/SW/SE**: Accented variants (é, è, ê, etc.)
 
 > [!NOTE]
-> CleverKeys does not use long-press popups for special characters. Long-press triggers key repeat instead. All special characters are accessed via short swipes.
+> With **Settings > Gesture Tuning > Hold for Subkeys > Subkey popover on hold** turned on
+> (the default for new installs), holding a character key opens a grid of the same subkeys;
+> slide to one and let go to type it. With it off, a long press starts key repeat and special
+> characters are reached by short swipes only. See [Subkey Popover](../gestures/subkey-popover.md).
 
 ### Method 2: Symbol Keyboard
 
@@ -114,7 +117,7 @@ For languages requiring diacritics:
 - **Customize**: You can change subkey assignments in Settings
 - **Language packs**: Some accents only appear with language pack installed
 - **Dead keys (AZERTY)**: Use j-north for ^, d-north for `, d-south for ´, then type the letter
-- **All layouts supported**: Long-press works on QWERTY, AZERTY, Dvorak, etc.
+- **All layouts supported**: short swipes and the subkey popover work on QWERTY, AZERTY, Dvorak, etc.
 
 > [!TIP]
 > If you frequently use certain special characters, consider customizing subkey positions to place them in easier-to-reach directions.
@@ -123,7 +126,7 @@ For languages requiring diacritics:
 
 | Setting | Location | Description |
 |---------|----------|-------------|
-| **Long-Press Timeout** | Input Behavior | Time before key repeat starts (default: 600ms) |
+| **Long Press Timeout** | Input Behavior | Time before key repeat or the subkey popover starts (default: 600ms) |
 | **Short Swipe Distance** | Gesture Tuning | Sensitivity for flick gestures |
 
 ## Related Features

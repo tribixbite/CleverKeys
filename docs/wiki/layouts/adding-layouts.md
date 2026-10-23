@@ -143,15 +143,15 @@ For specific use cases:
 
 | Feature | Status |
 |---------|--------|
-| **Custom layout creation** | Not currently available |
-| **Layout import** | Via language packs only |
+| **Custom layout creation** | Available: add your own layout XML in Layout Manager, see [Custom Layouts](custom-layouts.md) |
+| **Layout import** | Language packs bring dictionaries, not layouts; a layout is either built in or pasted as custom XML |
 | **Per-app layouts** | Not supported |
 
 ## Common Questions
 
 ### Q: How do I get layouts for my language?
 
-A: Build a language pack using the provided Python scripts, then import via Settings > 🌐 Multi-Language > Import Pack. The pack provides the dictionary; the matching layout must exist in the app's layout list.
+A: Build a language pack using the provided Python scripts, then import via Settings > 🌐 Multi-Language > Import Pack. The pack provides the dictionary; the matching layout must exist in the app's layout list or be added as a [custom layout](custom-layouts.md).
 
 ### Q: Can I create custom layouts?
 
