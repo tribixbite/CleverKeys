@@ -26,7 +26,7 @@ default), second Saga `192.168.0.144` (Termux installed; CleverKeys installed, I
 Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when idle). Never
 `stop`/`start` a Saga; leave no trace; restore any setting you change.
 
-1. [ ] device: Termux drift re-test after `fd3eec40` (the Saga with Termux). Done so far —
+1. [x] device: Termux drift re-test after `fd3eec40` (CLOSED 2026-10-22: D2 PASS below) (the Saga with Termux). Done so far —
    Saga 2026-10-15 (release `7aea1ab8`, Termux 0.118.3, `build/oct15-saga/`): D1
    Backspace-to-empty clears and D3 CleverKeys Enter ends the word PASS; D2/D4 FAILED through
    Termux's OWN toolbar CTRL/⇥, which the IME cannot see → `80207612`: in terminal/remote fields
@@ -100,12 +100,6 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 9. [ ] maintainer: pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
-    (2026-10-22 audit `docs/audit/2026-10-22-translation-audit.md`: 64 mechanical defects fixed
-    in `0a8fc939`, now blocked by `TranslationFormatParityTest`; back-translation found no
-    meaning reversal. Review leads in its "native review" list: `cmd_clear_clipboard_desc`
-    names pins/todos with words that do not match the tabs, es/hu `clipboard_selection_clear`
-    reads as "delete the selection", fa example arrows reversed in RTL (device check), ru
-    plural adjective case, tr/pl Backspace rendered as "undo".)
     locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
     #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 8 swipe
     priority 7 (`b2031f90`), Oct 10 legacy-frequency offer + lift 7 (`051dca51`), Oct 12
@@ -117,6 +111,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     swipe-to-delete 4 (#175; written by an agent in all 21 locales), Oct 21 Starting Letter
     Accuracy description reworded 1 (`63b1731a`, all 21 locales). Counts are the
     `<string` lines added to `res/values/strings.xml` per commit.
+    (2026-10-22 audit `docs/audit/2026-10-22-translation-audit.md`: 64 mechanical defects fixed
+    in `0a8fc939`, now blocked by `TranslationFormatParityTest`; back-translation found no
+    meaning reversal. Review leads in its "native review" list: `cmd_clear_clipboard_desc`
+    names pins/todos with words that do not match the tabs, es/hu `clipboard_selection_clear`
+    reads as "delete the selection", fa example arrows reversed in RTL (device check), ru
+    plural adjective case, tr/pl Backspace rendered as "undo".)
 11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
     needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
     A/B; keep or uninstall CleverKeys on the first Saga (installed, enabled, not default — the
@@ -124,7 +124,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `e940262c` the bar says "Action unavailable" (the old `android.R.id.textAssist` fallback was
     a silent no-op) — decide whether that is final or the command should fall back to the
     editor's Replace popup as Replace text does; not device-checked on a phone without a
-    process-text app.
+    process-text app. (Code reading 2026-10-22: the command always starts the trampoline, so
+    with no process-text app Android shows its own empty chooser; "Action unavailable" comes
+    only from terminal fields, an unreadable selection or a trampoline that cannot start —
+    CHANGELOG corrected in `643cd3bb`.)
 12. [ ] maintainer: targetSdk bump (still compile/target 34; the full instrumented suite is
     green on API 35/36/37, `6bdf282e`). Prerequisites found 2026-10-17: (a) targetSdk 35 forces
     edge-to-edge — only Settings and Launcher handle system-bar insets out of 15 activities;
