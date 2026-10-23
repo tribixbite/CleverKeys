@@ -158,22 +158,14 @@ ASCII_LOWER = 'abcdefghijklmnopqrstuvwxyz'
 
 
 def find_misspellings(candidates: list[str], known_english: set[str], min_gap: float,
-                      *, alphabet: str = ASCII_LOWER, lang: str = 'en',
-                      zipf=None) -> list[tuple]:
+                      *, alphabet: str = ASCII_LOWER, lang: str = 'en') -> list[tuple]:
     """Find words within edit distance 1 of a known-good word with large frequency gap.
 
     `alphabet` is the substitution/insertion charset (per-language: accented
     Latin, Cyrillic, Greek); `lang` selects the wordfreq corpus for the zipf
     gap. Keyword-only with EN defaults so the standalone CLI and the English
     build path are byte-identical to the pre-parametrization behaviour.
-    `zipf` overrides the frequency source (a word -> zipf callable) for
-    languages whose frequencies come from a corpus blend instead of wordfreq
-    (build_wordlist.py `corpus=` configs, e.g. fa); None keeps wordfreq.
     """
-    if zipf is not None:
-        zipf_frequency = lambda w, _lang: zipf(w)  # noqa: E731 -- shadows the wordfreq import
-    else:
-        from wordfreq import zipf_frequency
     results = []
 
     for word in candidates:

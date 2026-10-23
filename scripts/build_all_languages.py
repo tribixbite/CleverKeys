@@ -96,11 +96,6 @@ SUPPORTED_LANGUAGES = {
     'bg': {'name': 'Bulgarian',  'words': 0,     'bundle': False, 'boost': False, 'version': 2, 'model': 'bg_synth_v3_ch80_fp16w.onnx'},  # ~ survivors of 35,791
     'mk': {'name': 'Macedonian', 'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'mk_synth_v3_ch80_fp16w.onnx'},
     'he': {'name': 'Hebrew',     'words': 50000, 'bundle': False, 'boost': False, 'version': 2, 'model': 'he_synth_v3_ch80_fp16w.onnx'},
-    # fa (2026-10-23): corpus blend (Leipzig + wordfreq, build_wordlist.py corpus="fa"), Lilak
-    # oracle; no CTC model (Arabic script swipes on the geometric engine). 'unigrams_from_words'
-    # ranks the built list instead of wordfreq (see generate_unigrams.py --from-words).
-    'fa': {'name': 'Persian',    'words': 50000, 'bundle': False, 'boost': False, 'version': 2,
-           'unigrams_from_words': True},
     # Swahili uses the wiki-corpus word list (wordfreq has no sw data)
     'sw': {'name': 'Swahili',    'words': 20000, 'bundle': False, 'boost': False, 'version': 2,
            'wordlist': 'sw_words.txt'},
@@ -138,12 +133,10 @@ def run(cmd: list, label: str) -> bool:
     return True
 
 
-def build_unigrams(lang: str, output_file: Path, from_words: "Path | None" = None) -> bool:
-    cmd = [str(SCRIPT_DIR / 'generate_unigrams.py'), '--lang', lang,
-           '--output', str(output_file), '--top-n', str(UNIGRAM_COUNT)]
-    if from_words is not None:
-        cmd += ['--from-words', str(from_words)]
-    return run(cmd, f"generate_unigrams({lang})")
+def build_unigrams(lang: str, output_file: Path) -> bool:
+    return run([str(SCRIPT_DIR / 'generate_unigrams.py'), '--lang', lang,
+                '--output', str(output_file), '--top-n', str(UNIGRAM_COUNT)],
+               f"generate_unigrams({lang})")
 
 
 def build_prefix_boosts(lang: str, dict_file: Path, bundled: bool) -> bool:
@@ -234,8 +227,6 @@ def build_language(lang: str, info: dict, models_dir: Path = DEFAULT_MODELS_DIR)
         lines = [ln for ln in (SCRIPT_DIR / legacy_wordlist).read_text(encoding='utf-8')
                  .splitlines() if ln.strip()][:UNIGRAM_COUNT]
         unigrams_file.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    elif info.get('unigrams_from_words'):
-        build_unigrams(lang, unigrams_file, lang_dir / f'{lang}_words.txt')
     else:
         build_unigrams(lang, unigrams_file)
 

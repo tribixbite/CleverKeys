@@ -80,11 +80,6 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from detect_misspellings import BRITISH_RULES, FOREIGN_LANGS, find_misspellings  # noqa: E402
 from generate_binary_dict import _is_latin_word  # noqa: E402
 from build_dictionary import frequency_to_rank, get_word_frequency  # noqa: E402
-# Corpus-blend candidate source (fa, 2026-10-23): Leipzig sentence corpora + wordfreq under one
-# script profile, for languages whose wordfreq list is too small or unclean to classify alone.
-from corpus_blend import (  # noqa: E402
-    BLENDS, PROFILES, ZWNJ, Blend, build_blend, coverage, ensure_hunspell, foreign_spellings,
-)
 
 try:
     from wordfreq import iter_wordlist, zipf_frequency
@@ -107,17 +102,7 @@ WORD_RE_BY_SCRIPT = {
     "greek": re.compile(r"[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿'-]*"),
     "cyrillic": re.compile(r"[Ѐ-ӿ][Ѐ-ӿ'-]*"),
     "hebrew": re.compile(r"[֐-׿][֐-׿'-]*"),
-    # Arabic block letters plus ZWNJ (the half-space is part of a Persian word).
-    "persian": re.compile("[\u0621-\u06cc][\u0621-\u06cc\u200c]*"),
 }
-
-# Scripts without letter case: the lower/Cap/UPPER hunspell probes would be three identical
-# runs, so one probe stands for all three (only fa has a hunspell oracle among them).
-CASELESS_SCRIPTS = frozenset({"hebrew", "persian"})
-
-# `hunspell` values of this form name a dictionary BUILT from a pinned upstream by
-# corpus_blend.ensure_hunspell (fa: Lilak) instead of a system dictionary.
-HUNSPELL_PROVIDER_PREFIX = "provider:"
 WORD_RE = WORD_RE_BY_SCRIPT["latin"]  # back-compat alias (en behaviour)
 
 
@@ -133,8 +118,8 @@ class LangConfig:
     """
     name: str                       # display name (langpack manifest)
     alphabet: str                   # ed1 substitution/insertion charset
-    script: str = "latin"           # latin | greek | cyrillic | hebrew | persian (candidate gate)
-    hunspell: "str | None" = None   # hunspell -d <dict>, or "provider:<name>" (built oracle)
+    script: str = "latin"           # latin | greek | cyrillic (candidate gate)
+    hunspell: "str | None" = None   # hunspell -d <dict>
     aspell: "str | None" = None     # aspell -l <lang>
     pyspell: "str | None" = None    # SpellChecker(language=...)
     aosp: "str | None" = None       # scripts/data/aosp_<lang>_wordlist.txt.gz
@@ -146,8 +131,6 @@ class LangConfig:
     bundle: bool = False            # also write src/main/assets/dictionaries bin
     contractions: "str | None" = None  # assets contraction-map filename
     must_include: tuple = ()        # per-language guard words (hard exit 1)
-    corpus: "str | None" = None     # corpus_blend.BLENDS key: candidates + frequencies from a
-                                    # corpus blend instead of wordfreq alone (fa)
 
 
 # NOTE: the EN entry reproduces build_en_wordlist.py's constants exactly —
@@ -253,22 +236,6 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
         top=65_000, band=40_000, limit=40_000,  # stream is 61,076 deep (full small list)
         must_include=("için", "değil", "büyük"),
     ),
-    "fa": LangConfig(
-        # 2026-10-23 (maintainer: "build the fa pack if you can find a way to filter the word
-        # list well"). Candidates and frequencies: corpus_blend FA_BLEND (Leipzig news 2016-18,
-        # news crawl 2019 and Wikipedia 2014, all ZWNJ-preserving, blended with wordfreq fa;
-        # >= 3 occurrences in >= 2 sources). Positive oracle: Lilak (Apache-2.0) built into a
-        # hunspell dictionary with ZWNJ as a word character, so it validates half-space
-        # compounds as single words. ZWNJ is NOT in the ed1 alphabet: a joined spelling and its
-        # half-space twin (میشود / می‌شود) are both real and must never be read as each other's
-        # typo. Foreign dominance against Arabic (looked up in Arabic spelling, ی→ي/ى, ک→ك).
-        # Method and numbers: docs/eval/2026-10-23-fa-wordlist.md.
-        name="Persian", alphabet="ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیآءأإؤئ", script="persian",
-        hunspell=HUNSPELL_PROVIDER_PREFIX + "lilak",
-        foreign=("ar",),
-        top=120_000, band=60_000, limit=50_000, corpus="fa",
-        must_include=("است", "می‌شود", "میشود", "و", "کتاب‌ها", "نامه‌ای", "نام‌های"),
-    ),
     "he": LangConfig(
         # ARC-056 (2026-09-01). Sole oracle: AOSP LatinIME `iw` snapshot
         # (94,799 headwords, 2014/v44). No hunspell/aspell he dictionary is
@@ -340,10 +307,6 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
 # ContractionManager, not the dictionary.
 FUNC_FORCEKEEP_MAX = 1_000
 
-# Zipf gap below its half-space twin under which a joined ه+suffix spelling is read as a
-# ZWNJ-stripping artefact rather than a real joined spelling (Stage D; fa, 2026-10-23).
-ZWNJ_ARTEFACT_GAP = 1.0
-
 # Valid-seed words (typo-drop-rescue spec, ENGLISH-ONLY): must never be
 # silently lost when present in the candidate stream AND carrying positive
 # evidence. These assert the oracle layering, not raw membership.
@@ -364,21 +327,7 @@ def _is_script_word(word: str, script: str) -> bool:
         # characters are combining marks, so in practice this admits the 22
         # letters + 5 finals.
         return all(0x0590 <= ord(c) <= 0x05FF for c in word)
-    if script in PROFILES:
-        # Profile alphabet plus single word-internal joiners (fa: ZWNJ) — corpus_blend.
-        return PROFILES[script].is_word(word)
     raise ValueError(f"unknown script {script!r}")
-
-
-def _is_wordlike(word: str, script: str) -> bool:
-    """The `isalpha()` gate, joiner-aware: a Persian half-space compound is ONE word.
-
-    ZWNJ is a format character, so `"می‌شود".isalpha()` is False; profile scripts use their
-    own word predicate instead. Every other script keeps `isalpha()` byte-for-byte.
-    """
-    if script in PROFILES:
-        return PROFILES[script].is_word(word)
-    return word.isalpha()
 
 
 def read_list_file(path: Path, script: str = "latin") -> "set[str]":
@@ -651,17 +600,8 @@ def main() -> None:
     # ---------------- Stage B: candidates ----------------
     ranked: "list[str]" = []
     seen: "set[str]" = set()
-    blend: "Blend | None" = None
-    if cfg.corpus:
-        # Corpus blend (fa): candidates in blended-frequency order; zipf from the blend.
-        blend = build_blend(BLENDS[cfg.corpus])
-        stream = blend.ranked()
-        zipf_of = blend.zipf
-    else:
-        stream = iter_wordlist(lang)
-        zipf_of = lambda w: zipf_frequency(w, lang)  # noqa: E731
-    for w in stream:
-        if 2 <= len(w) <= 25 and _is_wordlike(w, script) and _is_script_word(w, script) and w not in seen:
+    for w in iter_wordlist(lang):
+        if 2 <= len(w) <= 25 and w.isalpha() and _is_script_word(w, script) and w not in seen:
             seen.add(w)
             ranked.append(w)
             if len(ranked) >= top:
@@ -670,25 +610,19 @@ def main() -> None:
     func_extras = func if func_forcekeep else set()
     extras = sorted((allow | shipped | func_extras) - seen)   # beyond top-N or non-candidates
     universe = ranked + [w for w in extras if 1 <= len(w) <= 25 and _is_script_word(w, script)]
-    zc = {w: zipf_of(w) for w in universe}
+    zc = {w: zipf_frequency(w, lang) for w in universe}
     print(f"candidates: ranked={len(ranked)} extras={len(extras)} universe={len(universe)}")
 
     # ---------------- Stage C: positive oracles ----------------
-    alpha_tokens = [w for w in universe if _is_wordlike(w, script)]
+    alpha_tokens = [w for w in universe if w.isalpha()]
     universe_set = set(universe)
     lower_ok: "set[str]" = set()
     cap_ok: "set[str]" = set()
     upper_ok: "set[str]" = set()
-    hun_dict = cfg.hunspell
-    if hun_dict and hun_dict.startswith(HUNSPELL_PROVIDER_PREFIX):
-        hun_dict = ensure_hunspell(hun_dict[len(HUNSPELL_PROVIDER_PREFIX):])
-    if hun_dict:
-        lower_ok = hunspell_accepted(alpha_tokens, lambda w: w, hun_dict)
-        if script in CASELESS_SCRIPTS:
-            cap_ok = upper_ok = lower_ok   # no case: one probe answers all three
-        else:
-            cap_ok = hunspell_accepted(alpha_tokens, lambda w: w.capitalize(), hun_dict)
-            upper_ok = hunspell_accepted(alpha_tokens, lambda w: w.upper(), hun_dict)
+    if cfg.hunspell:
+        lower_ok = hunspell_accepted(alpha_tokens, lambda w: w, cfg.hunspell)
+        cap_ok = hunspell_accepted(alpha_tokens, lambda w: w.capitalize(), cfg.hunspell)
+        upper_ok = hunspell_accepted(alpha_tokens, lambda w: w.upper(), cfg.hunspell)
     elif cfg.aspell:  # aspell as the case-probing checker (de/es have no hunspell dict)
         lower_ok = aspell_accepted(alpha_tokens, cfg.aspell, lambda w: w)
         cap_ok = aspell_accepted(alpha_tokens, cfg.aspell, lambda w: w.capitalize())
@@ -737,7 +671,7 @@ def main() -> None:
         return len(collapsed) >= 1 and (collapsed in hf_valid or collapsed in spell)
 
     at_risk = [w for w in universe
-               if len(w) >= 3 and zc[w] < 3.5 and not positive(w) and _is_wordlike(w, script)]
+               if len(w) >= 3 and zc[w] < 3.5 and not positive(w) and w.isalpha()]
     # Known-good set for the ed1 typo detector: spell-valid high-frequency
     # words. Tier C languages substitute the AOSP oracle (their only positive
     # source); Tier D has no oracle at all, so high-zipf (>= 3.5) corpus words
@@ -753,8 +687,7 @@ def main() -> None:
     for lo, hi, gap in ((6, 99, 2.0), (4, 5, 2.5), (3, 3, 3.0)):
         part = [w for w in at_risk if lo <= len(w) <= hi]
         for w, match, rule, g, _ in find_misspellings(part, hf_valid, gap,
-                                                      alphabet=cfg.alphabet, lang=lang,
-                                                      zipf=blend.zipf if blend else None):
+                                                      alphabet=cfg.alphabet, lang=lang):
             typo[w] = (match, rule, g)
     # Foreign-language DOMINANCE (not mere presence): shared tokens (elongations,
     # anime/sports entities) score similarly in several languages — require the
@@ -771,39 +704,12 @@ def main() -> None:
     for w in at_risk:
         best_l, best_z = "", 0.0
         for fl in avail_foreign:
-            # The foreign list may spell the same word differently (fa ی/ک vs ar ي/ك/ى).
-            fz = max(zipf_frequency(f, fl) for f in foreign_spellings(lang, fl, w))
+            fz = zipf_frequency(w, fl)
             if fz > best_z:
                 best_l, best_z = fl, fz
         if best_z > 3.0 and best_z > zc[w] + 1.0:
             foreign[w] = (best_l, best_z)
-    # ZWNJ-stripping artefacts (joiner profiles only): a JOINED spelling whose every attested
-    # half-space twin puts a ZWNJ right after ه (شدهاند ← شده‌اند, پالایشگاههای ← پالایشگاه‌های).
-    # Writers who skip the half-space type a full space there, because ه would join the next
-    # letter; such joined strings come from pipelines that deleted U+200C. A twin with a ZWNJ after
-    # any other letter keeps the joined form (نامهای ← نام‌های; میشود ← می‌شود), and the oracle
-    # rescues lexicalised joined compounds (راهنما).
-    zwnj_artefact: "dict[str, str]" = {}
-    profile = PROFILES.get(script)
-    if profile is not None and profile.joiner:
-        j = profile.joiner
-        twins: "dict[str, list[str]]" = {}
-        for w in universe:
-            if j in w:
-                twins.setdefault(w.replace(j, ""), []).append(w)
-        for w in universe:
-            vs = twins.get(w) if j not in w else None
-            if vs and w not in spell and all(
-                    any(v[i] == j and v[i - 1] == "ه" for i in range(1, len(v))) for v in vs):
-                # An artefact is also RARE next to its twin: measured on fa, artefacts sit about
-                # 2 zipf below the half-space form (شدهاند -2.19, برنامههای -2.14) while real
-                # joined spellings sit near or above it (زهکشی +1.21, بهشان +1.09, نگهداشتن
-                # +0.15), so a joined form is condemned only more than ZWNJ_ARTEFACT_GAP below.
-                twin = min(vs, key=lambda v: (-zc.get(v, 0.0), v))
-                if zc[w] < zc.get(twin, 0.0) - ZWNJ_ARTEFACT_GAP:
-                    zwnj_artefact[w] = twin
-    print(f"negatives: at_risk={len(at_risk)} typo={len(typo)} foreign={len(foreign)} "
-          f"zwnj-artefact={len(zwnj_artefact)} ({time.time()-t0:.0f}s)")
+    print(f"negatives: at_risk={len(at_risk)} typo={len(typo)} foreign={len(foreign)} ({time.time()-t0:.0f}s)")
 
     # ---------------- Stage E: decision ----------------
     keep: "dict[str, str]" = {}     # word -> keep-reason
@@ -840,9 +746,6 @@ def main() -> None:
                           and zc[w] >= 3.0)
             (keep if ok2 else drop)[w] = "2char" if ok2 else "2char-no-evidence"
             continue
-        if w in zwnj_artefact:
-            drop[w] = f"zwnj-stripped→{zwnj_artefact[w]}"
-            continue
         if rank is not None and rank < band:                  # band 1: conservative
             if w in typo and not (pos or w in name):
                 drop[w] = f"typo→{typo[w][0]}"
@@ -871,15 +774,6 @@ def main() -> None:
     # last, best zipf first). Cut words land in the shipped-lost/review files
     # with the explicit `limit-cut` reason — a deliberate size cap, never a
     # silent regression.
-    if blend is not None:
-        # Token coverage of the HELD-OUT corpus sentences (never counted) by the survivors in
-        # blended-frequency order, before the size cap: the curve that justifies --limit.
-        by_freq = sorted(keep, key=lambda w: (-blend.freq.get(w, 0.0), w))
-        pts = tuple(sorted({*blend.config.coverage_points, len(by_freq)}))
-        print(f"coverage of {blend.heldout_total:,} held-out tokens by the {len(by_freq):,} "
-              f"survivors (blended-frequency order, before --limit):")
-        for n, c in coverage(by_freq, blend, pts):
-            print(f"  @ {n:>7,}: {100 * c:.2f}%")
     if limit is not None and len(keep) > limit:
         protected = {w for w, r in keep.items() if r in ("func", "allow")}
         protected |= set(cfg.must_include) & keep.keys()
@@ -916,17 +810,6 @@ def main() -> None:
         print(f"  drop/{r:16s} {n:,}")
     lost = sorted(w for w in shipped if w not in keep)
     print(f"\nregression check — shipped words lost: {len(lost)}")
-    profile = PROFILES.get(script)
-    if blend is not None:
-        final = sorted(keep, key=lambda w: (-blend.freq.get(w, 0.0), w))
-        for n, c in coverage(final, blend, (len(final),)):
-            print(f"final list coverage of held-out tokens: {100 * c:.2f}% ({n:,} words)")
-    if profile is not None and profile.joiner:
-        j = profile.joiner
-        joined = {w for w in keep if j in w}
-        pairs = sum(1 for w in joined if w.replace(j, "") in keep)
-        print(f"joiner (U+{ord(j):04X}): {len(joined):,} of {len(keep):,} kept words "
-              f"({100 * len(joined) / max(1, len(keep)):.1f}%); joined/half-space pairs kept: {pairs:,}")
 
     # ---------------- eval coverage (held-out user-export words) ----------------
     if eval_set:
@@ -994,9 +877,6 @@ def main() -> None:
         f"pyspellchecker {cfg.pyspell}" if cfg.pyspell else None,
         "AOSP LatinIME" if cfg.aosp else None,
     ])) or "none (Tier D: negatives-only)"
-    if cfg.hunspell and cfg.hunspell.startswith(HUNSPELL_PROVIDER_PREFIX):
-        oracle_desc = oracle_desc.replace(f"hunspell {cfg.hunspell}",
-                                          f"hunspell {cfg.hunspell[len(HUNSPELL_PROVIDER_PREFIX):]}")
     with open(src, "w", encoding="utf-8") as fp:
         # No build date in the header: embedding time.strftime() made the
         # artifact byte-differ on every rebuild, defeating reproducibility.
@@ -1006,15 +886,7 @@ def main() -> None:
                  f"# top={top} band={band} limit={limit} keep={len(words_sorted)}\n"
                  f"# Oracles: {oracle_desc},\n"
                  f"# allowlist/blocklist (scripts/dictionaries/{lang}/), contraction keys.\n")
-        if blend is None:
-            fp.write("\n".join(words_sorted) + "\n")
-        else:
-            # Corpus-blend frequencies travel in the list (word<TAB>frequency, the
-            # build_dictionary.py two-column format) on wordfreq's x1e8 scale, so the
-            # CKDT rank uses the blend rather than a wordfreq lookup.
-            fp.write(f"# Frequencies: corpus_blend {cfg.corpus} (relative frequency x 1e8).\n")
-            for w in words_sorted:
-                fp.write(f"{w}\t{max(1.0, blend.freq.get(w, 0.0) * 1e8):.6g}\n")
+        fp.write("\n".join(words_sorted) + "\n")
     print(f"wrote {src} ({len(words_sorted):,} words)")
 
     if is_en:

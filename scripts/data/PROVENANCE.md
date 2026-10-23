@@ -168,19 +168,3 @@ Notes:
 - Artefact filter reference: `wordfreq` (already a NOTICE'd dependency of the dictionary
   pipeline); it only decides which words are dropped, none of its data ships in the model.
 - The UD English-EWT files are evaluation data and never reach the APK.
-
-## Persian word-list corpora (`scripts/corpus_blend.py` → `build_wordlist.py --lang fa`, 2026-10-23)
-
-Downloaded to `~/.cache/cleverkeys-corpora/` (never committed); sha256 pinned in `FA_BLEND`.
-Leipzig `fas` news 2020+ and web-public 2019 were rejected: every U+200C is stripped in them
-(0 of 50,000 sentences carry one), see `docs/eval/2026-10-23-fa-wordlist.md`.
-
-| Asset | Source | License | Fetched | sha256 (first 12) |
-|---|---|---|---|---|
-| `leipzig/fas_news_2016_300K.tar.gz` | downloads.wortschatz-leipzig.de/corpora | CC BY 4.0 | 2026-10-23 | 48fc256187c3 |
-| `leipzig/fas_news_2017_300K.tar.gz` | same | CC BY 4.0 | 2026-10-23 | 9c0b57241c69 |
-| `leipzig/fas_news_2018_300K.tar.gz` | same | CC BY 4.0 | 2026-10-23 | 2ab1164e210f |
-| `leipzig/fas_newscrawl_2019_1M.tar.gz` | same | CC BY 4.0 | 2026-10-23 | 86f200ae416f |
-| `leipzig/fas_wikipedia_2014_1M.tar.gz` | same | CC BY 4.0 | 2026-10-23 | 123da05baca6 |
-| `lilak/` (git checkout, built by its `lilak.py`) | github.com/b00f/lilak @ 4f1f426113e7 | Apache-2.0 | 2026-10-23 | (commit-pinned) |
-| blocklist review input | LDNOOBW `fa` @ 64fc2514 | CC BY 4.0 | 2026-10-23 | (commit-pinned) |
