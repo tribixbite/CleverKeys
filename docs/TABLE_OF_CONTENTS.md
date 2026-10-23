@@ -1,6 +1,6 @@
 # CleverKeys Documentation - Table of Contents
 
-**Last Updated**: 2026-10-06
+**Last Updated**: 2026-10-23
 Current feature guides and paired specs are maintained in `docs/wiki/`. Historical
 review counts are not a current full-tree audit.
 
@@ -15,7 +15,7 @@ review counts are not a current full-tree audit.
 - **Current Tasks**: `memory/todo.md` - Active todo list
 - **Feature Roadmap**: `docs/plans/2026-10-05-recommended-features-and-gaps.md`
 - **Public Guides and Specs**: `docs/wiki/TABLE_OF_CONTENTS.md`
-- **History**: `docs/history/session_log_dec_2025.md` - Recent completed work
+- **History**: `docs/history/session_log_dec_2025.md` - December 2025 work log (later work: `memory/todo.md` dated sections, `CHANGELOG.md`)
 
 ## 🗺️ Documentation Structure
 
@@ -50,8 +50,9 @@ review counts are not a current full-tree audit.
 #### Testing
 | File | Purpose | Status |
 |------|---------|--------|
-| `MANUAL_TESTING_GUIDE.md` | Manual testing procedures | ✅ Active |
-| `test-keyboard-automated.sh` | ADB testing script | ✅ Active |
+| `docs/plans/v2.0.0-manual-test-checklist.md` | v2.0.0 manual test checklist (maintainer-owned; carries uncommitted edits — do not stage) | ✅ Active |
+| `scripts/test-keyboard-automated.sh` | ADB testing script | ✅ Active |
+| `docs/specs/testing-strategy.md` | Suite inventory and executed evidence (pure 3,215 / mock 1,461 / instrumented 1,607 as of 2026-10-23) | ✅ Active |
 
 ### `/docs/specs/` Specifications
 *Spec-driven development - All major systems documented*
@@ -63,14 +64,15 @@ review counts are not a current full-tree audit.
 | `core-keyboard-system.md` | Core keyboard operations | ✅ Implemented |
 | `suggestion-bar-content-pane.md` | Suggestion bar, emoji/clipboard content pane | ✅ Implemented |
 | `gesture-system.md` | Gesture recognition | ✅ Implemented |
-| `layout-system.md` | Layout & extra keys (incl. `numpad_height`, GH #90) | ✅ Implemented |
+| `layout-system.md` | Layout & extra keys (incl. `numpad_height`, GH #90), per-layout language/theme bindings, modified-layout cache | ✅ Implemented |
+| `foldable-keyboard-height.md` | Inner/outer-screen keyboard height on foldables | ✅ Implemented 2026-10-20 |
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `settings-layout-integration.md` | Settings GUI mapping to the layout system | ✅ Implemented |
-| `performance-optimization.md` | Performance & monitoring | ✅ Complete |
+| `performance-optimization.md` | Performance targets and strategies; `CleanupHandler` (no monitoring system exists) | 📖 Reference |
 | `testing-strategy.md` | Measured suites, full cloud evidence, and remaining manual coverage | ✅ Active |
 | `ctc-swipe-engine.md` | CTC trie-beam swipe engine — the default `swipe_engine_mode`; bounded continuous gesture segments | ✅ Implemented |
 | `ctc-architecture-and-multiscript-guide.md` | CTC graph contract, routing rule, multi-script recipe | 📖 Reference |
-| `ctc-context-rescoring-and-tunables.md` | Bigram/trigram rescoring plan and decode-time tunables inventory | 📖 Reference |
+| `ctc-context-rescoring-and-tunables.md` | Bigram/trigram swipe rescoring (built, closed default-OFF 2026-08-26) and the decode-time tunables inventory | 📖 Reference |
 | `geometric-swipe-engine.md` | Layout-agnostic geometric swipe decoder (standalone) | ✅ Implemented |
 | `context-learning-and-next-word.md` | Persistent context LM, master learning privacy gate, next-word prediction (on by default), suggestion provenance, learned-data manager | ✅ Implemented |
 | `cursor-aware-predictions.md` | Cursor sync + cursor-park next-word integration | ✅ Implemented |
@@ -78,10 +80,11 @@ review counts are not a current full-tree audit.
 | `secondary-language-integration.md` | Multi-language typing, language detection | ✅ Implemented |
 | `language-specific-dictionary-manager.md` | Per-language dictionary management | ✅ Implemented |
 | `english-dictionary-pipeline.md` | Dictionary generation and quality pipeline | ✅ Complete |
+| `autocorrect-ranking.md` | Tap autocorrect ranking: noisy-channel rule and weights, gates, κ/δ, prefix length, Persian half-space rule | ✅ Implemented (2026-10-23) |
 | `typo-drop-rescue-pipeline.md` | Typo-drop rescue triage — superseded 2026-07-02 by `scripts/build_wordlist.py` | 🗄️ Superseded |
 | `short-swipe-customization.md` | Short swipes, explicit templates and verified apostrophe suffixes | ✅ Implemented |
 | `subkey-popover.md` | Hold-then-select subkey popover, assign/edit screens | ✅ Implemented |
-| `per-layout-subkey-customization.md` | Layout-specific subkey configuration | ✅ Implemented |
+| `per-layout-subkey-customization.md` | Per-layout subkey mappings — proposal, NOT built (mappings are global) | 📝 Proposal |
 | `subkey-customization-current.md` | Current subkey implementation details | ✅ Implemented |
 | `profile_system_restoration.md` | Profile Import/Export | ✅ Implemented |
 | `keyboard-minimize.md` | Minimize to bar / floating button (GH #175) | ✅ Implemented |
@@ -92,7 +95,7 @@ review counts are not a current full-tree audit.
 | `trackpoint-navigation-mode.md` | Joystick-style cursor control | ✅ Implemented |
 | `selection-delete-mode.md` | Text selection via backspace gesture | ✅ Implemented |
 | `password-field-mode.md` | Password field input handling | ✅ Implemented |
-| `quick-settings-tile.md` | Notification-shade keyboard switch tile | ✅ Implemented |
+| `quick-settings-tile.md` | Shade tile: minimize / restore / show the keyboard, picker fallback (2026-10-20) | ✅ Implemented |
 | `timestamp-keys.md` | Date/time insertion keys | ✅ Implemented |
 | `termux_integration.md` | Terminal keyboard behaviour and custom terminal packages | ✅ Implemented |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
@@ -127,6 +130,9 @@ autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule 
 | `2026-10-11-dropped-double-autocorrect.md` | Dropped-doubled-letter autocorrect, first rule — failed its gate | ⛔ Not shipped |
 | `2026-10-11-dropped-double-margin.md` | DD-M frequency-margin rule (`helo` → `hello`), M=64 tuned and gated on the shipped `.bin` | ✅ Shipped |
 | `2026-10-12-neighbour-substitution-tiebreak.md` | Neighbour-vs-distant substitution tiebreak — fixes תושה, fails DEV | ⛔ Not shipped |
+| `2026-10-18-channel-autocorrect-ranking.md` | Noisy-channel tap autocorrect, rounds 1–5: rule C/C2, maintainer override making `channel` the default, δ (Hebrew-scoped), κ = 3.0 | ✅ Shipped |
+| `2026-10-21-autocorrect-prefix-length.md` | Prefix length 1 vs 0 on the shipped tuning (descriptive; shipped 0 stands) | ✅ Complete |
+| `2026-10-23-fa-wordlist.md` | Persian (`fa`) word list: Leipzig + wordfreq blend, Lilak oracle, half-space handling, coverage | ✅ Complete |
 
 ### `/docs/research/` Research notes
 
@@ -139,7 +145,8 @@ autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule 
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `train-ctc-swipe-model.md` | End-to-end CTC swipe-model training → ONNX export guide (for a GPU box) | ✅ Active |
+| `adding-a-new-language.md` | The complete procedure: langpack pipeline (incl. corpus-blend `fa`), layout, CTC wiring for a new script, gates | ✅ Active |
+| `train-ctc-swipe-model.md` | From-scratch CTC training → ONNX recipe (2026-08-06); historical — the shipped encoders came from the CleverKeys-ML pipeline | 📚 Historical |
 
 ### `/docs/audit/` Live audit ledger
 
@@ -152,7 +159,12 @@ Only in-force audit records live here; everything superseded is under `docs/hist
 | `2026-08-23-v1.5-delta-remediation.md` | Finding-by-finding fixes, validation, and remaining release evidence | 🚧 Release evidence pending |
 | `2026-08-25-remediation-verification.md` | Verification of the remediation wave; residual findings CK-150-019..036 | 🚧 Residuals open |
 | `2026-08-28-archive-verification.md` | Pre-archive verification of the July–August audit corpus; leaked-item ledger ARC-001..050 | 🚧 ARC items open |
+| `2026-09-06-comprehensive-audit.md` | Comprehensive 9-subsystem audit — master todo | ✅ Complete |
 | `2026-09-10-memory-oom-root-cause.md` | App switching, IME recreation, and heap exhaustion OOM root cause audit | ✅ Complete |
+| `2026-09-26-data-licensing-audit.md` | Data licensing audit — word lists and language packs | ✅ Complete |
+| `2026-09-26-learning-system-audit.md` | Learning-system audit | ✅ Complete |
+| `2026-10-22-translation-audit.md` | Translation audit (21 locales, tool survey + findings) | ✅ Complete |
+| `gh-issue-resolution.md` | GitHub issue resolution tracker (per-issue status: DONE / FIXED / …) | ✅ Live |
 
 ### `/docs/history/` History
 | File | Purpose | Status |
@@ -160,14 +172,13 @@ Only in-force audit records live here; everything superseded is under `docs/hist
 | `session_log_dec_2025.md` | December 2025 Work Log | ✅ Archived |
 | `neural-engine/` | The removed ONNX transformer engine: specs, decode pipeline, settings docs (ADR-011) | 📚 Archived |
 | `audits/` | July–August 2026 audit corpus (15 audits + `remediation/` 1–6 + `remediation-plans/`), archived 2026-08-28 after line-by-line verification (`docs/audit/2026-08-28-archive-verification.md`). Notable: `2026-08-06-futo-decoder-integration-study.md` remains the CTC decode-port algorithm ground truth; `2026-08-06-futo-engine-integration-decision.md` §2 is the FUTO licensing analysis | 📚 Archived |
-| `PRODUCTION_READY_NOV_16_2025.md` | Production readiness report | 📚 Reference |
 
 ## 🔄 Consolidation Status
 
 **Verification**:
 - Legacy `migrate/todo` directory has been cleared/consolidated ✅
 - `memory/todo.md` is the single source of truth for active tasks ✅
-- Specs are up-to-date with recent features (Short Swipes, Profiles) ✅
+- Engineering specs re-verified against HEAD on 2026-10-23 (doc-freshness audit; rows for quick-settings tile, settings, content pane, selection-delete, TrackPoint, short swipes, layout, termux, dictionary/multi-language, pipeline, ADRs, rescoring, GIF, performance, profiles, testing counts, guides) ✅
 
 ## 🎯 Spec-Driven Development Workflow
 
