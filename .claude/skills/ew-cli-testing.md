@@ -192,18 +192,23 @@ Activity is auto-launched per test (~1.2-1.8s overhead). Assertion failures surf
 
 | Class | Tests | Purpose |
 |-------|-------|---------|
+`@Test` counts re-read from `src/androidTest` at HEAD 2026-10-23:
+
+| Class | Tests | Purpose |
+|-------|-------|---------|
 | `TypingSimulationTest` | 62 | End-to-end typing, contractions, autocorrect |
-| `GifTest` | 43 | GIF model, search, query matching |
-| `ClipboardDatabaseTest` | 39 | Clipboard CRUD, dedup, pin/todo, export |
-| `SwipeMLDataStoreTest` | 36 | Swipe data SQLite operations |
-| `GifCategoryTest` | 32 | GIF category model and filtering |
-| `LanguageDetectorTest` | 30 | Language detection with confidence |
+| `ClipboardDatabaseTest` | 109 | Clipboard CRUD, dedup, pin/todo, export, private copy |
+| `SwipeMLDataStoreTest` | 38 | Swipe data SQLite operations |
+| `LanguageDetectorTest` | 35 | Language detection with confidence |
 | `SuggestionBarAutofillTest` | 15 | Autofill padding, password mode (#109) |
-| `ContractionFlickerTest` | 20 | Pipeline symmetry, paired contraction prefix guard |
+| `ContractionFlickerTest` | 22 | Pipeline symmetry, paired contraction prefix guard |
 | `ContractionFlickerIntegrationTest` | 7 | Full real component wiring (SuggestionHandler+SuggestionBar+WordPredictor) |
 | `DictionaryDataSourceTest` | 19 | Dictionary cache, toggle coherence |
 | `swipe/ctc` pure suite | See testing strategy | Live contraction ranking/trie checks; transformer VocabularyRankingTest was removed |
-| `SettingsSearchTest` | 5 | Settings search-to-scroll crash regression |
+| `SettingsSearchTest` | 7 | Settings search-to-scroll crash regression |
+
+`GifTest` (49) and `GifCategoryTest` (32) are PURE JVM classes under `src/test/.../gif/`
+(`runPureTests`), not ew-cli classes — do not filter an ew-cli run on them.
 
 ## Infinitely-Animating Compose Screens Never Go Idle (hard-won, 2026-07-15)
 
@@ -417,7 +422,7 @@ Rebuild: `./scripts/gradle-guard.sh assembleDebug assembleDebugAndroidTest`
 | `src/androidTest/kotlin/tribixbite/cleverkeys/` | Test sources |
 | `build.gradle` | Test dependencies |
 | `scripts/run-pure-tests.sh` | Local JVM tests |
-| `.github/workflows/test.yml` | CI test workflow |
+| `.github/workflows/ci.yml`, `ui-testing.yml`, `release.yml` | The workflows that run ew-cli / the emulator steps (there is no `test.yml`; the others are `build-apk.yml`, `nightly.yml`, `community-health.yml`, `deploy-web-demo.yml`). `ui-testing.yml` runs on PRs, a 06:00 schedule and manual dispatch only — a push does not re-run it |
 
 
 ## October 6 complete feature gate

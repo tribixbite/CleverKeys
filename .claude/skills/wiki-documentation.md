@@ -85,14 +85,15 @@ docs/wiki/
     ├── clipboard/
     └── troubleshooting/
 
-docs/specs/                       # Internal engineering notes (with banners
-│                                 # pointing to canonical docs/wiki/specs/ paths)
+docs/specs/                       # Internal engineering notes (39 .md at HEAD 2026-10-23;
+│                                 # banners point to canonical docs/wiki/specs/ paths)
 ├── README.md                     # Index
 ├── SPEC_TEMPLATE.md
 ├── architectural-decisions.md    # Engineering-only, no wiki counterpart
-├── kv-cache-optimization.md      # Engineering-only
-├── memory-pool-optimization.md   # Engineering-only
-└── ...
+├── keyboard-minimize.md          # Engineering-only (minimize + Quick Settings tile)
+├── foldable-keyboard-height.md   # Engineering-only
+└── ...                           # (kv-cache / memory-pool notes moved to
+                                  #  docs/history/neural-engine/ with ADR-011)
 ```
 
 ## Wiki Page Format

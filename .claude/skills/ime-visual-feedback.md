@@ -8,7 +8,7 @@ Use this skill when adding success/error/duplicate feedback to any IME-hosted UI
 
 **Why:** Android assigns toasts a lower window-layer Z-order (`TYPE_TOAST`, base layer ~2000) than the soft-keyboard input window (`TYPE_INPUT_METHOD`, base layer ~2500). The toast renders *beneath* the keyboard panel, inside the small strip of screen still visible above the keyboard — but when the clipboard pane is expanded, that strip is empty or covered by the target app's text field. Either way, the user sees nothing.
 
-**Exception:** Toasts in regular Activities (e.g., `ClipboardSettingsActivity`, `BackupRestoreActivity`) work fine — the Activity runs in its own window, outside the IME.
+**Exception:** Toasts in regular Activities (e.g., `SettingsActivity` — clipboard settings are its Clipboard section; there is no `ClipboardSettingsActivity` — or `BackupRestoreActivity`) work fine — the Activity runs in its own window, outside the IME.
 
 ## When This Matters
 

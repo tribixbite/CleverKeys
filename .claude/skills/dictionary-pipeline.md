@@ -33,7 +33,12 @@ Use this skill when building, modifying, or quality-checking dictionaries and co
 |------|--------|-------|
 | `en_enhanced.txt` | Deleted | V1 word list. DELETED 2026-07-03 (was never loaded at runtime). |
 | ~~`contraction_pairings_cleaned.json`~~ | Deleted | Cleaned subset, never referenced in code. DELETED (`030265ee`); absence re-confirmed 2026-09-01. |
-| `contractions_en.json` | Redundant | Identical to `contractions_non_paired.json` |
+
+`contractions_en.json` IS loaded (`ContractionManager.loadLanguageContractions("en")`, the tap
+path's alias set) and is NOT a mirror of `contractions_non_paired.json`: 119 vs 120 keys at HEAD
+(2026-10-23). `lets` is only in `contractions_en.json` (tap alias `lets` + space → `let's`; PAIRED
+for swipe since 2026-10-07), `etoo` and `high-falutin` only in `non_paired`. See
+`contraction-system.md` §6c.7 before touching either.
 
 ## Build Commands
 
@@ -144,7 +149,8 @@ with open('en_enhanced.bin', 'rb') as f:
 - ~~**`contraction_pairings_cleaned.json`**~~: real contractions only, no possessives. Never loaded; DELETED (`030265ee`).
 
 ### Adding a Contraction
-1. Add to `contractions_non_paired.json` (and `contractions_en.json` — they must stay in sync)
+1. Add to `contractions_non_paired.json` (swipe REPLACE set). Add it to `contractions_en.json`
+   too only when the tap path should alias it; the two files differ by design (Pitfall 3)
 2. Rebuild binary: `python3 generate_binary_contractions.py ...`
 3. Copy `contractions.bin` to assets
 
@@ -232,7 +238,7 @@ add-to-dictionary offers:
 
 1. **`en_enhanced.txt` is NOT the source of truth** — it's vestigial V1. The real source is `scripts/dictionaries/en/en_words.txt` and the `.bin` is what ships.
 2. **`build_langpack.py` requires `--input` or `--dict`** — it cannot generate words from nothing.
-3. **`contractions_en.json` must match `contractions_non_paired.json`** — they're currently identical and both get loaded (harmless duplication but must stay in sync).
+3. **`contractions_en.json` and `contractions_non_paired.json` are NOT mirrors** (119 vs 120 keys, 2026-10-23). `en.json` keeps the tap alias `lets` on purpose (`contraction-system.md` §6c.7); `non_paired` carries `etoo` and `high-falutin`. Both load; "sync them" would re-break `lets`.
 4. **Prefix boosts are DEAD — do not regenerate them.** Their only consumer (the neural beam search) was deleted with the neural engine on 2026-08-18 (ADR-011); `src/main/assets/prefix_boosts/` no longer exists, and every `boost` flag in `build_all_languages.py` is `False` (2026-09-03) so a bulk rebuild cannot resurrect the tree. `LanguagePackManager` still ACCEPTS a pack-side `prefix_boost.bin` and copies it on import (so old packs install cleanly) but nothing reads it back.
 5. **`build_all_languages.py` refuses to regenerate en in bulk runs** — the English dict is frozen at 98,140 words; rebuild it only deliberately via `build_wordlist.py --lang en --write`.
 

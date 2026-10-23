@@ -11,9 +11,9 @@ Use this skill when working on clipboard tabs, entry rendering, inline editing, 
 | `ClipboardManager.kt` | Pane-level state: search, tag mode, edit lock UI, tab switching |
 | `ClipboardHistoryView.kt` | Entry list: adapter, getView(), inline edit, expand states |
 | `ClipboardHistoryService.kt` | Singleton data layer: CRUD, history/pinned/todo operations |
-| `ClipboardDatabase.kt` | SQLite: schema V4, FTS4 search, tag JSON, todo status, media |
+| `ClipboardDatabase.kt` | SQLite: `DATABASE_VERSION = 5` (v5 = GH #156 private copy: `is_private`, `source_package`; v4→v5 like every migration here is CREATE-COPY-DROP-RENAME), FTS4 search, tag JSON, todo status, media |
 | `ClipboardEntry.kt` | Data class: content, timestamp, mimeType, tags, todoStatus |
-| `ClipboardTagPanel.kt` | Inline tag management: chips, suggestions, new tag input |
+| `clipboard/ClipboardTagDialog.kt` | `object ClipboardTagPanel` — inline tag management: chips, suggestions, new tag input (file named Dialog, builds an inline panel) |
 | `KeyEventHandler.kt` | Key routing: tag > edit > search priority chain |
 | `KeyboardReceiver.kt` | Bridge: IReceiver implementation delegating to ClipboardManager |
 

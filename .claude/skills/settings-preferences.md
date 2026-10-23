@@ -57,7 +57,7 @@ preferences at pointer-down so a setting change does not alter an active gesture
 | Component | Use For |
 |-----------|---------|
 | `SettingsSwitch(title, description, checked, onCheckedChange)` | Boolean toggles |
-| `SettingsSlider(title, description, value, valueRange, steps, onValueChange, displayValue)` | Numeric sliders |
+| `SettingsSlider(title, description, value, valueRange, increment, onValueChange, displayValue, enabled = true)` | Numeric sliders. `increment` is the distance between two stops in the value's unit; the Compose step count is derived by `Config.sliderSteps(range, increment)` (Config.kt ~689; `e7c94474` fixed ~40 sliders that passed the interval count). A raw `Slider` must call `sliderSteps` itself |
 | `SettingsDropdown(title, description, options, selectedIndex, onSelectionChange)` | Selection lists |
 | `CollapsibleSettingsSection(title, expanded, onExpandChange) { content }` | Grouped sections |
 | `SettingsSection(title) { content }` | Non-collapsible sections |
@@ -104,11 +104,11 @@ if (featureEnabled) {
 11. [ ] Update ConfigSnapshot and its fixtures when gesture-critical
 12. [ ] Classify backup validation/defaults and add all supported locale resources
 
-## Existing Sections (in order)
+## Existing Sections (in order, `ui/settings/SettingsScreen.kt` ~229–277, re-read 2026-10-23)
 
-Activities, Multi-Language, Privacy, Swipe Typing, Appearance, Swipe Trail,
-Input, Swipe Corrections, Gesture Tuning, Accessibility, **Clipboard**,
-Backup & Restore, Advanced, Info, Help & FAQ
+Test Keyboard, Activities, Swipe Typing, Appearance, Swipe Trail, Input Behavior,
+Auto-Correction, Gesture Tuning, Accessibility, **Clipboard**, GIF Panel, Backup & Restore,
+Multi-Language, Privacy, Advanced, Version actions, Help & FAQ
 
 ## Notable Config Chunks
 
@@ -158,7 +158,7 @@ any control title-word is uncovered — catching generator gaps.
 ## Autocorrect Knobs (v1.4.0 + KeyAdjacency)
 
 Calibrated thresholds — don't change without re-running `AutocorrectTest`
-(36 instrumented + 31 pure-JVM `KeyAdjacencyTest` cases):
+(57 instrumented cases) and `autocorrect/KeyAdjacencyTest` (34 pure-JVM cases; counts re-read 2026-10-23):
 
 | Key | Default | Range | Controls |
 |-----|---------|-------|----------|
@@ -233,6 +233,28 @@ or a `SettingsDefaults` entry for it. Deleting a DIY theme asks the keyboard to 
 theme missing on this device falls back to the global one. Spec: `docs/specs/layout-system.md`
 "Per-layout theme binding". Bar colours under a bound theme come from `SuggestionBarPalette`
 (every text role ≥ 3:1 on the bar, `9e2a9804`).
+
+## October 2026 additions (all verified at HEAD 2026-10-23)
+
+- **`SettingsRanges`** (`Config.kt` ~533): the one definition of every bounded range —
+  `KEYBOARD_HEIGHT` 20..60, `LONGPRESS_INTERVAL` 25..200, `CHARACTER_SIZE` 0.5..2.0,
+  `OPACITY_PERCENT` 0..100, `CLIPBOARD_PANE_HEIGHT_PERCENT` 10..50, the margin percents, …
+  The sliders, `Config.refresh()` and backup validation all read it, so an imported
+  out-of-range value cannot produce a state the UI cannot show (audit M1, 2026-10-20).
+- **Single key definitions**: `LanguagePrefs` (`pref_primary_language` etc.; `userLanguages`
+  delegates the primary+secondary rule to `LayoutLanguageBinding.resolve`) and
+  `MarginPrefKeys` (per side × orientation × screen). Do not restate the literals (audit L2/L6/L13).
+- **Foldables** (`a6f870d6`, spec `docs/specs/foldable-keyboard-height.md`): inner-screen
+  keys carry `KeyboardHeightPrefs.UNFOLDED_SUFFIX` and follow the outer value until set
+  (`KeyboardHeightPrefs.percent(prefs, landscape, unfolded)` is THE reader); two Appearance sliders.
+- **Gated controls and search** (`fb3695b8`): the generated search entries carry `gateIds`
+  (the switches that reveal a hidden control, innermost first); `expandAndScrollTo(settingId,
+  gateIds)` lands on the revealing switch when the target is hidden (56 gated controls).
+- New prefs: `clipboard_swipe_delete_enabled` (GH #175 part 2, default ON, `2787468d`),
+  `enter_always_newline` (GH #139, default OFF) and the Accessibility "Use System Vibration"
+  switch (GH #154; ON = `vibrate_custom` false), both `2a6c43fc`.
+- The settings file is read through `DirectBootAwarePreferences`; the custom-theme store is a
+  DIFFERENT prefs file (`custom_keyboard_themes`), see `theme-system.md`.
 
 ## Internal prefs added October 2026 (classify as INTERNAL, never exported)
 
