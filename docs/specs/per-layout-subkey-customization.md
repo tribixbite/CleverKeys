@@ -1,5 +1,11 @@
 # Per-Layout Subkey Customization
 
+> **Status (2026-10-23): NOT BUILT.** This is a proposal. Short-swipe mappings are still global
+> (`ShortSwipeCustomizationManager` keys `"keyCode:direction"`, one `short_swipe_customizations.json`);
+> none of the `layoutId`-scoped APIs below (`getMapping(layoutId, …)`, `getMappingsForLayout`,
+> `copyMappings`, a `layoutId` field on `ShortSwipeMapping`) exist in `src/main`. Kept as a design
+> note; the as-built system is `short-swipe-customization.md` and `subkey-customization-current.md`.
+
 ## Overview
 
 Proposed extension to store short swipe customizations per-layout instead of globally. Currently all customizations apply to all layouts; this architecture would allow different subkey configurations for different layouts (e.g., programming symbols on QWERTY, math symbols on Greek).

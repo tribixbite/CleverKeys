@@ -1,5 +1,8 @@
 # Short Swipe Customization
 
+> **Status (2026-10-23):** API blocks below re-transcribed from `customization/` at HEAD
+> (6 `ActionType`s, `CustomShortSwipeExecutor(context)`, 240 commands / 21 categories / 12 presets).
+>
 > Canonical public documentation: [per-key actions guide](../wiki/customization/per-key-actions.md)
 > and [paired specification](../wiki/specs/customization/per-key-actions-spec.md).
 > This internal reference retains older implementation examples; current action metadata,
@@ -13,7 +16,7 @@
 
 ## Overview
 
-Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, key events, or Android Intents through a dedicated settings UI.
+Short Swipe Customization allows users to fully customize the 8-direction swipe gestures for every key on the keyboard. Each key has 8 subkey positions (N, NE, E, SE, S, SW, W, NW) that can be customized with text input, commands, key events, Android Intents, timestamps or dynamic templates (`ActionType`, six values) through a dedicated settings UI.
 
 ## Key Files
 
@@ -26,11 +29,13 @@ Short Swipe Customization allows users to fully customize the 8-direction swipe 
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `CustomShortSwipeExecutor` | Executes commands via InputConnection |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt` | `IntentDefinition`, `IntentTargetType` | Intent data model, presets, Gson-safe parsing |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt` | `IntentEditorDialog` | UI for configuring intents (presets, manual fields, extras) |
-| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 200+ searchable commands |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | `ALL_COMMANDS`: 240 commands in 21 `Category` values (2026-10-20) |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRouting.kt` | `CommandRouting.editingValue` | which COMMAND names are editing keys owned by `KeyEventHandler.handleEditingKey` |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | XML round-trip for all action types incl. INTENT |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt` | `parseIntentKeydef()` | Parses `intent:'json'` from layout XML |
-| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleShortGesture()` | Checks custom mappings first |
-| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | Integration | Executes custom commands |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | short-swipe branch of `onTouchUp` (`:534-544`), `resolveShortSwipe` scan (`:920-930`), `executeCustomShortSwipe` (`:948`) | `_customSwipeManager.getMapping(keyCode, dir)` is checked before built-in subkeys |
+| `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `onCustomShortSwipe(mapping)` (`:1088`), `drawCustomSubLabel` (`:2135`) | routes editing commands / templates through `KeyEventHandler`, everything else to the executor; draws the custom sublabel |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `handleEditingKey`, `handlePaste`, `execute_template` (`:1330`) | the one implementation of editing commands and templates |
 
 ## Architecture
 
@@ -51,13 +56,14 @@ Settings UI
        |
        v (on gesture)
 +----------------------------------+
-| Pointers.handleShortGesture()    | -- Check custom mapping first
+| Pointers.onTouchUp short-swipe   | -- _customSwipeManager.getMapping() first
 +----------------------------------+
        |
        v (if custom found)
 +----------------------------------+
-| CustomShortSwipeExecutor         | -- Execute TEXT/COMMAND/KEY_EVENT/INTENT
-| .execute()                       |
+| Keyboard2View.onCustomShortSwipe | -- editing COMMANDs + TEMPLATE -> KeyEventHandler;
+|  -> CustomShortSwipeExecutor     |    TEXT/other COMMAND/KEY_EVENT/INTENT/TIMESTAMP
+| .execute()                       |    -> executor
 +----------------------------------+
        |
        v (if INTENT)
@@ -89,13 +95,19 @@ enum class SwipeDirection {
 ### ActionType
 
 ```kotlin
-enum class ActionType(val displayName: String, val description: String) {
-    TEXT("Text Input", "Insert text directly"),
-    COMMAND("Command", "Execute keyboard command (copy, paste, cursor, etc.)"),
-    KEY_EVENT("Key Event", "Send raw key event (advanced)"),
-    INTENT("Send Intent", "Send Android Intent (advanced)")
+// customization/ActionType.kt — labels are string resources, not literals
+enum class ActionType(@StringRes val displayNameRes: Int, @StringRes val descriptionRes: Int) {
+    TEXT,       // actionValue = literal text to commit
+    COMMAND,    // actionValue = command name (CommandRegistry / legacy AvailableCommand)
+    KEY_EVENT,  // actionValue = key event code
+    INTENT,     // actionValue = JSON-serialized IntentDefinition
+    TIMESTAMP,  // actionValue = SimpleDateFormat pattern, formatted at execution
+    TEMPLATE,   // actionValue = dynamic template; run by KeyEventHandler.execute_template, never by the executor
 }
 ```
+
+(`AvailableCommand`, defined in the same file, is the legacy enum of built-in editing commands —
+`COPY`, `PRIVATE_COPY`, `PASTE`, … — not an action type.)
 
 ### ShortSwipeMapping
 
@@ -139,7 +151,7 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-CommandRegistry contains 200+ commands in 18 categories:
+`CommandRegistry.ALL_COMMANDS` contains 240 commands in 21 `Category` values (counted at HEAD 2026-10-20; the README and wiki palette page carry the same number):
 
 ### Core Categories
 
@@ -157,6 +169,11 @@ CommandRegistry contains 200+ commands in 18 categories:
 | `EVENTS` | config, change_method, action, caps_lock |
 | `MEDIA` | media_play_pause, volume_up, volume_down |
 | `SYSTEM` | search, calculator, calendar, brightness_up |
+| `SPACES` | space, nbsp, nnbsp, zwj |
+| `TEXT` | blt, bgt (literal text keys) |
+| `TEXT_ACTIONS` | textAssist, replaceText, replaceTextMenu, suggestions |
+| `LANGUAGE` | primaryLangToggle, secondaryLangToggle |
+| `TIMESTAMP` | timestamp_date, timestamp_time, timestamp_datetime, timestamp_time_seconds |
 
 ### Diacritics Categories
 
@@ -172,65 +189,59 @@ CommandRegistry contains 200+ commands in 18 categories:
 ### ShortSwipeCustomizationManager
 
 ```kotlin
-class ShortSwipeCustomizationManager(context: Context) {
-    // Get mapping for specific key and direction
-    fun getMapping(keyCode: String, direction: SwipeDirection): ShortSwipeMapping?
+// customization/ShortSwipeCustomizationManager.kt — process singleton
+ShortSwipeCustomizationManager.getInstance(context)
+ShortSwipeCustomizationManager.isMappableKeyCode(code: String): Boolean
 
-    // Save or update a mapping
-    fun saveMapping(mapping: ShortSwipeMapping)
-
-    // Delete a mapping
-    fun deleteMapping(keyCode: String, direction: SwipeDirection)
-
-    // Get all mappings for a key
-    fun getMappingsForKey(keyCode: String): Map<SwipeDirection, ShortSwipeMapping>
-
-    // Reset all customizations
-    fun resetAll()
-
-    // Export for backup
-    fun exportToJson(): String
-
-    // Import from backup
-    fun importFromJson(json: String)
-}
+suspend fun loadMappings()
+fun getMapping(keyCode: String, direction: SwipeDirection): ShortSwipeMapping?
+fun getMappingsForKey(keyCode: String): Map<SwipeDirection, ShortSwipeMapping>
+fun getAllMappings(): List<ShortSwipeMapping>
+suspend fun setMapping(mapping: ShortSwipeMapping)
+suspend fun removeMapping(keyCode: String, direction: SwipeDirection): Boolean
+suspend fun removeMappingsForKey(keyCode: String): Int
+suspend fun resetAll()
+fun exportToJson(): String
+suspend fun importFromJson(json: String, merge: Boolean = false): Int
+suspend fun importFromMappings(mappings: List<ShortSwipeMapping>, merge: Boolean = false): Int
+fun addChangeListener(listener: () -> Unit); fun removeChangeListener(listener: () -> Unit)
 ```
+
+Storage is `filesDir/short_swipe_customizations.json`; writes are suspend functions and the
+in-memory cache is what `Pointers` reads on every short swipe (see `settings-layout-integration.md`
+for the cache + change-listener model).
 
 ### CustomShortSwipeExecutor
 
 ```kotlin
-class CustomShortSwipeExecutor(
-    private val inputConnection: InputConnection,
-    private val keyEventHandler: KeyEventHandler
-) {
-    fun execute(mapping: ShortSwipeMapping, inputConnection: InputConnection?, editorInfo: EditorInfo?): Boolean {
-        return when (mapping.actionType) {
+// customization/CustomShortSwipeExecutor.kt
+class CustomShortSwipeExecutor(private val context: Context) {
+    fun execute(mapping: ShortSwipeMapping, inputConnection: InputConnection?, editorInfo: EditorInfo?): Boolean =
+        when (mapping.actionType) {
             ActionType.TEXT -> executeTextInput(mapping.actionValue, inputConnection)
             ActionType.COMMAND -> executeCommandByName(mapping.actionValue, inputConnection, editorInfo)
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
+            ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
+            ActionType.TEMPLATE -> false   // run by KeyEventHandler.execute_template before this is reached
         }
-    }
 }
 ```
+
+`executeCommandByName` refuses editing commands (`CommandRouting.editingValue(name) != null` →
+`false`): their one implementation is `KeyEventHandler.handleEditingKey`, which
+`Keyboard2View.onCustomShortSwipe` reaches first (todo 12, 2026-10-12). Everything else is
+resolved through the legacy `AvailableCommand` enum, then `CommandRegistry.getByName`.
 
 ### Terminal-Aware Paste
 
-Both the `AvailableCommand.PASTE` and `CommandRegistry` "paste" paths use `handlePaste()` which detects terminal apps and sends Ctrl+V instead of `performContextMenuAction(android.R.id.paste)`:
-
-```kotlin
-// CustomShortSwipeExecutor.kt
-private fun handlePaste(inputConnection: InputConnection, editorInfo: EditorInfo?): Boolean {
-    return if (TerminalUtils.isTerminalApp(editorInfo)) {
-        sendKeyEventWithModifier(inputConnection, KeyEvent.KEYCODE_V,
-            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON)
-    } else {
-        inputConnection.performContextMenuAction(android.R.id.paste)
-    }
-}
-```
-
-This mirrors the same logic in `KeyEventHandler.handlePaste()` for the regular paste key. Without this, paste via custom short swipe does nothing in Termux because terminal apps don't implement the Android context menu protocol.
+`paste` is an editing command, so a custom short swipe reaches `KeyEventHandler.handlePaste`
+(`KeyEventHandler.kt:~757`), the same path as the paste key. There is no Ctrl+V: terminal-style
+editors (Termux, ConnectBot, and BLIND remote fields such as RustDesk — `isTerminalStyleEditor()`,
+backed by `TerminalUtils.editorKind`) get `pasteFromSystemClipboard()`, which reads the OS clip
+and commits its text through the `InputConnection`; every other editor gets
+`sendContextMenuAction(android.R.id.paste)`. A Ctrl+V key event would paste the REMOTE clipboard
+in RustDesk (2026-10-13), which is why committed text is the one route.
 
 ### Pinned Clipboard Commands (paste_pinned_N)
 
@@ -315,23 +326,27 @@ The pasted content is appended to existing text and truncated to `MAX_ACTION_LEN
 
 ```kotlin
 object CommandRegistry {
-    // Get all commands grouped by category
-    fun getAllCommands(): Map<Category, List<Command>>
-
-    // Search commands by keyword
-    fun search(query: String): List<Command>
-
-    // Get display info (icon + useKeyFont flag)
-    fun getDisplayInfo(commandName: String): DisplayInfo?
-
+    enum class Category(@StringRes val labelRes: Int, val sortOrder: Int)   // 21 values
     data class Command(
-        val name: String,
+        val name: String,                 // internal id used by KeyValue.getKeyByName()
+        @StringRes val nameRes: Int,      // `cmd_<id>`, localized
+        @StringRes val descriptionRes: Int, // `cmd_<id>_desc`
         val category: Category,
-        val keywords: List<String>,
-        val description: String
+        val symbol: String? = null,       // keyboard-font glyph
+        val keywords: List<String> = emptyList(),  // English search aids
     )
+    val ALL_COMMANDS: List<Command>
+    fun getByCategory(): Map<Category, List<Command>>
+    fun getByCategory(category: Category): List<Command>
+    fun getByName(name: String): Command?
+    fun getKeyValue(commandName: String): KeyValue?
+    fun getDisplayInfo(commandName: String): CommandDisplayInfo
+    fun upgradeLegacyDefaultLabel(...)
 }
 ```
+
+Search over names, localized descriptions and keywords is done by the palette UI
+(`CommandPaletteDialog`), not by a `CommandRegistry.search` function.
 
 ## Intent Action Type
 
@@ -407,7 +422,7 @@ Dispatch by target type:
 - **SERVICE**: `context.startService(intent)`.
 - **BROADCAST**: `context.sendBroadcast(intent)`.
 
-### Intent Presets (11 built-in)
+### Intent Presets (12 built-in, `IntentDefinition.PRESET_ENTRIES`)
 
 | Preset | Target | Action | Use Case |
 |--------|--------|--------|----------|
@@ -421,7 +436,8 @@ Dispatch by target type:
 | Open Camera | ACTIVITY | `IMAGE_CAPTURE` | Launch camera |
 | Open Maps | ACTIVITY | `VIEW` (geo:) | Open maps with query |
 | Web Search | ACTIVITY | `WEB_SEARCH` | Web search |
-| Termux Command | SERVICE | `RUN_COMMAND` | Execute Termux CLI command |
+| Termux Command (Background) | SERVICE | `RUN_COMMAND` | Execute a Termux CLI command in the background |
+| Termux Tab (Visible) | SERVICE | `RUN_COMMAND` | Run a Termux command in a visible session |
 
 ### XML Round-Trip (Layout Import/Export)
 
@@ -458,59 +474,33 @@ The `actionValue` for INTENT mappings is a JSON string capped at `MAX_ACTION_LEN
 Custom mappings are checked before built-in subkeys:
 
 ```kotlin
-private fun handleShortGesture(ptr: Pointer, direction: SwipeDirection) {
-    // Check custom mapping first
-    val customMapping = customizationManager.getMapping(ptr.key.name, direction)
-    if (customMapping != null) {
-        customExecutor.execute(customMapping)
-        return
-    }
-
-    // Fall back to built-in subkey
-    val subkey = ptr.key.getSubkey(direction)
-    if (subkey != null) {
-        handleKeyPress(subkey)
-    }
+// Pointers.kt:534-544 (onTouchUp, short-swipe branch) — abridged
+val swipeDir = directionToSwipeDirection(direction)          // 16 → 8 directions
+val keyCode = ptr.key.keys[0]?.getString() ?: ""
+val customMapping = _customSwipeManager.getMapping(keyCode, swipeDir)
+if (customMapping != null) {
+    // Custom mappings work even with shift active - this is intentional
+    executeCustomShortSwipe(ptr, customMapping)               // → Keyboard2View.onCustomShortSwipe
+    return
 }
+// otherwise: built-in subkey via getNearestKeyAtDirection (±1 of 16 directions)
 ```
+
+The forgiving ±1 scan that resolves built-in subkeys (`resolveShortSwipe`, `Pointers.kt:920-930`)
+also checks a custom mapping at each scanned direction, in the same 0, −1, +1 order.
 
 ### Modifier Key Support
 
-Custom mappings work even with Shift/Ctrl/Alt active:
-
-```kotlin
-private fun shouldBlockBuiltInGesture(): Boolean {
-    // Built-in gestures blocked when modifiers active
-    return modifierState != 0
-}
-
-// But custom mappings always execute
-if (customMapping != null) {
-    customExecutor.execute(customMapping)  // Executes regardless of modifiers
-    return
-}
-
-// Built-in check happens after
-if (shouldBlockBuiltInGesture()) {
-    return  // Block built-in subkey
-}
-```
+Custom mappings fire regardless of latched modifiers (the check above happens before any
+modifier gating), which is deliberate; built-in subkeys go through `modifyKey(…, ptr.modifiers)`.
 
 ### Icon Font Rendering
 
 Custom mappings can use `special_font.ttf` for icon display:
 
-```kotlin
-// In Keyboard2View
-private fun drawCustomSubLabel(canvas: Canvas, mapping: ShortSwipeMapping, x: Float, y: Float) {
-    val paint = if (mapping.useKeyFont) {
-        sublabelPaint.apply { typeface = specialFont }
-    } else {
-        sublabelPaint.apply { typeface = Typeface.DEFAULT }
-    }
-    canvas.drawText(mapping.displayText, x, y, paint)
-}
-```
+`Keyboard2View.drawCustomSubLabel(…, useKeyFont, …)` (`Keyboard2View.kt:2135`) uses the same base
+size and factors as layout sublabels (`drawSubLabel`); `useKeyFont` only selects the paint
+(`tc_key.sublabel_paint(useKeyFont, color, textSize, alpha)`), i.e. `special_font.ttf` for icons.
 
 ### Direction Zone Colors (UI)
 
@@ -537,7 +527,7 @@ The customization UI uses distinct colors for each direction:
 
 The canonical [per-key guide](../wiki/customization/per-key-actions.md) and
 [paired spec](../wiki/specs/customization/per-key-actions-spec.md) describe the explicit
-TEMPLATE action. TEXT stays literal. Template expansion is bounded/nonrecursive,
+TEMPLATE action (`ActionType.TEMPLATE`; executed by `KeyEventHandler.execute_template`, reached from `Keyboard2View.onCustomShortSwipe` before the executor, whose own branch returns `false`). TEXT stays literal. Template expansion is bounded/nonrecursive,
 uses verified editor readback and UTF-16 caret positions, and is guarded by the shared
 key router against hidden-editor writes. A rejected template never retries via the
 custom-action fallback. Native execution and parser coverage are in DynamicTemplateTest

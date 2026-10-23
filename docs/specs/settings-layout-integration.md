@@ -60,7 +60,7 @@ Integration between GUI customization options, settings storage, and the keyboar
 │                           KEYBOARD RUNTIME                                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ ShortSwipeCustomizationManager  │ Config.extra_keys_param │ LayoutManager  │
-│ (Loaded on each gesture check)  │ (Map<KeyValue, Pos>)    │ (Layout list)  │
+│ (in-memory cache + listeners)   │ (Map<KeyValue, Pos>)    │ (Layout list)  │
 └─────────────────────────────────┴─────────────────────────┴────────────────┘
 ```
 
@@ -68,7 +68,7 @@ Integration between GUI customization options, settings storage, and the keyboar
 
 ### Storage
 - **File**: `short_swipe_customizations.json`
-- **Hot-Reload**: YES - loaded fresh on each gesture check
+- **Hot-reload**: by cache + change listeners, not by re-reading the file. `ShortSwipeCustomizationManager` (process singleton) loads the JSON once (`loadMappings()`) into a `ConcurrentHashMap` (`mappingCache`) plus a `@Volatile` per-key index (`byKeyIndex`, rebuilt under `fileMutex` on every mutation). `Pointers` reads `getMapping()` from that cache on each short swipe; `Keyboard2View` registers `addChangeListener` (`Keyboard2View.kt:266`) and redraws its custom labels when a mapping changes (`9c909048`)
 - **Priority**: Custom mappings override built-in sublabel gestures
 
 ### Integration Flow
@@ -76,12 +76,12 @@ Integration between GUI customization options, settings storage, and the keyboar
 ```
 User edits in ShortSwipeCustomizationActivity
     ↓
-ShortSwipeCustomizationManager.saveMapping()
+ShortSwipeCustomizationManager.setMapping()  (suspend; under fileMutex)
     ↓
-JSON file written to storage
-    ↓
-On next gesture (Pointers.kt):
-    ShortSwipeCustomizationManager.getCustomMapping() loads fresh
+cache + byKeyIndex updated, JSON file written, change listeners notified
+    ↓                                  ↓
+On next gesture (Pointers.kt):       Keyboard2View redraws custom sublabels
+    _customSwipeManager.getMapping() reads the cache
     ↓
 Custom mapping executed BEFORE built-in sublabel check
 ```

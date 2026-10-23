@@ -1,236 +1,103 @@
 # TrackPoint Navigation Mode
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/gestures/trackpoint-mode-spec.md`](../wiki/specs/gestures/trackpoint-mode-spec.md) and renders at <https://cleverkeys.app/specs/gestures/trackpoint-mode-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+> **Status (2026-10-23):** as built; re-transcribed from `Pointers.kt`, `Config.kt` and
+> `VibratorCompat.kt` at HEAD. The wiki copy at `docs/wiki/specs/gestures/trackpoint-mode-spec.md`
+> is maintained separately.
 
 ## Overview
 
-TrackPoint Navigation Mode provides joystick-style cursor control by holding arrow keys (without initial swipe movement). When activated, finger movement in any direction moves the cursor proportionally, with speed scaling based on distance from the activation point. Supports all 8 directions including diagonals for fluid text navigation.
+TrackPoint mode turns any key that carries arrow subkeys (W/E/N/S positions) into a joystick:
+hold the key past the long-press timeout and the finger's offset from where it rested at
+activation drives repeated arrow key events. Each axis is handled independently, so a finger
+in the north-east quadrant sends both Up and Right; the repeat rate on each tick is set by the
+larger offset. The same timer and constants drive Selection-Delete Mode
+(`selection-delete-mode.md`).
 
-## Key Files
+## Key files
 
-| File | Class/Function | Purpose |
-|------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleTrackPointRepeat()` | Main cursor movement logic |
-| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `FLAG_P_TRACKPOINT_MODE` | Mode state flag (value: 64) |
-| `src/main/kotlin/tribixbite/cleverkeys/VibratorCompat.kt` | `CLOCK_TICK` pattern | Distinct haptic on activation |
-| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Haptic toggle | TrackPoint haptic setting |
+| File | Symbol | Purpose |
+|------|--------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `FLAG_P_TRACKPOINT_MODE = 1 shl 10` (`Pointers.kt:2374`) | pointer flag for the mode |
+| same | `handleLongPress` (`:1539-1578`) | activation: `keyrepeat_enabled && hasNavigationSubkeys(ptr)` |
+| same | `startTrackPointRepeat` / `stopTrackPointRepeat` (`:1267-1276`), `handleTrackPointRepeat` (`:1463-1537`) | the joystick timer |
+| same | `hasNavigationSubkeys` (`:1938`), `isNavigationKey` (`:1907`) | nav-subkey detection: `key.keys[5..8]` holding a `Keyevent` with `KEYCODE_DPAD_*` |
+| same | `onTouchMove` branch (`:1005-1010`), `onTouchUp` branch (`:263-270`) | moves only update `lastX/lastY`; release stops the timer |
+| same | `TRACKPOINT_DEAD_ZONE = 15f`, `TRACKPOINT_INITIAL_DELAY = 50L`, `TRACKPOINT_MIN_DELAY = 30L`, `TRACKPOINT_MAX_DELAY = 200L`, `TRACKPOINT_MOVEMENT_THRESHOLD = 15f` (`:2385-2398`) | timing constants |
+| `src/main/kotlin/tribixbite/cleverkeys/VibratorCompat.kt` | `HapticEvent.TRACKPOINT_ACTIVATE` → `HapticFeedbackConstants.CLOCK_TICK` (custom-duration fallback 15 ms) | activation haptic |
+| `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `haptic_trackpoint_activate` (`Defaults.HAPTIC_TRACKPOINT_ACTIVATE = true`, `:825`, read `:1162`) | the haptic toggle |
+| `src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/AccessibilitySection.kt` | "TrackPoint activation" haptic switch (`:145`) | settings UI |
 
-## Architecture
+## Behaviour
 
+### Activation (`handleLongPress`)
+
+Keys with arrow subkeys are deferred on touch-down (`FLAG_P_DEFERRED_DOWN`) so a quick
+swipe-and-release stays a short gesture. When the long-press timer fires for such a pointer:
+
+```kotlin
+// Pointers.kt:1562-1577 (abridged)
+if (snap.keyrepeat_enabled && hasNavSubkeys) {
+    ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
+    ptr.keyCenterX = ptr.lastX          // joystick centre = where the finger IS now,
+    ptr.keyCenterY = ptr.lastY          // not the original touch point
+    _handler.onPointerFlagsChanged(HapticEvent.TRACKPOINT_ACTIVATE)
+    startTrackPointRepeat(ptr)          // first tick after TRACKPOINT_INITIAL_DELAY (50 ms)
+    return
+}
 ```
-User Input (arrow key touch + hold without movement)
-       |
-       v
-+------------------+
-| onTouchDown()    | -- Records initial touch position
-+------------------+
-       |
-       v (no initial movement + hold time exceeded)
-+------------------+
-| TrackPoint Mode  | -- FLAG_P_TRACKPOINT_MODE activated
-| Activation       | -- CLOCK_TICK haptic feedback
-+------------------+
-       |
-       v
-+------------------+
-| handleTrackPoint | -- Repeating handler tracks position
-| Repeat()         | -- Calculates direction and distance
-+------------------+
-       |
-       v
-+------------------+
-| Cursor Movement  | -- Sends DPAD_* key events
-| Handler          | -- Supports all 8 directions
-+------------------+
+
+Movement before the timeout does **not** prevent activation (the user may slide to a
+comfortable spot and then hold); what decides between "short gesture" and "TrackPoint" is
+whether the finger lifts before or after the long-press timeout. Already-swipe-typing pointers
+(`FLAG_P_SWIPE_TYPING`) and pointers already in the mode are skipped. Key repeat must be enabled
+(`keyrepeat_enabled`); with it off the key behaves as a plain subkey key.
+
+### Joystick tick (`handleTrackPointRepeat`)
+
+```kotlin
+val dx = ptr.lastX - ptr.keyCenterX;  val dy = ptr.lastY - ptr.keyCenterY
+val maxDistance = _handler.getKeyHypotenuse(ptr.key) * 0.5f     // half the key diagonal = "edge"
+
+if (abs(dx) > TRACKPOINT_DEAD_ZONE) {
+    val horizKey = _handler.modifyKey(if (dx > 0) key.keys[6] /* E */ else key.keys[5] /* W */, ptr.modifiers)
+    if (isNavigationKey(horizKey)) { onPointerDown(horizKey, false); onPointerUp(horizKey, ptr.modifiers); moved = true }
+}
+if (abs(dy) > TRACKPOINT_DEAD_ZONE) {
+    val vertKey = _handler.modifyKey(if (dy > 0) key.keys[8] /* S */ else key.keys[7] /* N */, ptr.modifiers)
+    if (isNavigationKey(vertKey)) { … same …; moved = true }
+}
+val repeatDelay = if (moved)
+    (TRACKPOINT_MAX_DELAY - maxNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY)).toLong()
+else TRACKPOINT_MAX_DELAY                                           // in the dead zone: re-check in 200 ms
 ```
 
-## Data Flow
+- The events sent are the key's **own** subkeys (after `modifyKey` with the live modifiers), so
+  Shift+arrow selection and Ctrl+arrow word jumps work when those modifiers are latched.
+- `maxNormalizedDist = max over moved axes of min(|d| / maxDistance, 1)`: delay is linear from
+  200 ms just outside the 15 px dead zone to 30 ms at the key's edge (about 5 to 33 events/s).
+- There is no 8-sector angle classification and no `TrackPointDirection` enum; diagonals are
+  simply both axes passing their dead zone in the same tick.
 
-1. **Activation**: Hold arrow key without initial swipe movement
-2. **Detection**: After `LONGPRESS_TIMEOUT` with <30px movement, mode activates
-3. **Tracking**: Repeat handler reads current finger position
-4. **Direction**: Calculate angle from activation point to current position
-5. **Speed**: Distance from center determines repeat rate
-6. **Output**: Appropriate DPAD_* key events sent to input connection
+### Move and release
+
+`onTouchMove` only refreshes `ptr.lastX/lastY` and returns (no swipe path, slider or short
+gesture logic runs). `onTouchUp` calls `stopTrackPointRepeat`, removes the pointer and clears
+the key highlight (`onPointerFlagsChanged(null)`); no key event is sent on release.
 
 ## Configuration
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `trackpoint_haptic_enabled` | Boolean | true | Enable CLOCK_TICK on mode activation |
-| `short_gesture_min_distance` | Int | 15 | Pixels before short swipe detection (30px for nav keys) |
+| `haptic_trackpoint_activate` | Boolean | `true` | CLOCK_TICK on activation (also used by Selection-Delete activation); gated by the master `haptic_enabled` |
+| `keyrepeat_enabled` | Boolean | `true` | prerequisite: TrackPoint uses the key-repeat/long-press machinery |
+| `longpress_timeout` | Int (ms) | 600 | the hold time before activation |
 
-## Public API
+`short_gesture_min_distance` (default **28, % of the key diagonal**, not pixels) governs short
+gestures on the same keys and the Selection-Delete activation gate; it is not a TrackPoint
+threshold. The dead zone and delays above are compile-time constants, not preferences.
 
-### Pointers.kt
+## Tests
 
-```kotlin
-// State flag constant
-private const val FLAG_P_TRACKPOINT_MODE = 64
-
-// Timer identifier for repeat handler
-private val trackpointWhat = Any()
-
-// Main TrackPoint handler - called repeatedly while mode active
-private fun handleTrackPointRepeat(ptr: Pointer) {
-    val dx = ptr.currentX - ptr.activationX
-    val dy = ptr.currentY - ptr.activationY
-
-    // Calculate 8-direction from delta
-    val direction = getTrackPointDirection(dx, dy)
-
-    // Send cursor movement(s)
-    sendCursorMovement(direction)
-}
-
-// Get direction enum from delta coordinates
-private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection
-
-// Send arrow key event(s) for direction
-private fun sendCursorMovement(direction: TrackPointDirection)
-
-// Trigger activation haptic
-private fun triggerTrackPointHaptic()
-```
-
-### Direction Enumeration
-
-```kotlin
-enum class TrackPointDirection {
-    NORTH,      // Up only
-    NORTHEAST,  // Up + Right
-    EAST,       // Right only
-    SOUTHEAST,  // Down + Right
-    SOUTH,      // Down only
-    SOUTHWEST,  // Down + Left
-    WEST,       // Left only
-    NORTHWEST   // Up + Left
-}
-```
-
-## Implementation Details
-
-### Activation vs Short Swipe
-
-TrackPoint mode activates when:
-1. Arrow key touched
-2. Finger moved <30px from initial position (nav keys use 30px, others use 15px)
-3. Hold time exceeds `LONGPRESS_TIMEOUT` (600ms)
-
-If finger moves >30px before timeout, it's a short swipe (single cursor move).
-
-```kotlin
-// Nav keys have increased tolerance to allow hold activation
-val isNavKey = key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)
-val movementThreshold = if (isNavKey) 30 else 15
-
-if (distance < movementThreshold && holdTime > LONGPRESS_TIMEOUT) {
-    activateTrackPointMode(ptr)
-}
-```
-
-### Direction Calculation
-
-Direction determined by angle from activation point:
-
-```kotlin
-private fun getTrackPointDirection(dx: Float, dy: Float): TrackPointDirection {
-    val angle = atan2(dy.toDouble(), dx.toDouble())
-    val degrees = Math.toDegrees(angle)
-
-    // Map angle to 8 sectors (45 degrees each)
-    return when {
-        degrees in -22.5..22.5 -> EAST
-        degrees in 22.5..67.5 -> SOUTHEAST
-        degrees in 67.5..112.5 -> SOUTH
-        degrees in 112.5..157.5 -> SOUTHWEST
-        degrees > 157.5 || degrees < -157.5 -> WEST
-        degrees in -157.5..-112.5 -> NORTHWEST
-        degrees in -112.5..-67.5 -> NORTH
-        degrees in -67.5..-22.5 -> NORTHEAST
-        else -> EAST // fallback
-    }
-}
-```
-
-### Diagonal Movement
-
-Diagonal directions send two key events:
-
-```kotlin
-private fun sendCursorMovement(direction: TrackPointDirection) {
-    when (direction) {
-        NORTH -> sendArrowKey(KEYCODE_DPAD_UP)
-        NORTHEAST -> {
-            sendArrowKey(KEYCODE_DPAD_UP)
-            sendArrowKey(KEYCODE_DPAD_RIGHT)
-        }
-        EAST -> sendArrowKey(KEYCODE_DPAD_RIGHT)
-        SOUTHEAST -> {
-            sendArrowKey(KEYCODE_DPAD_DOWN)
-            sendArrowKey(KEYCODE_DPAD_RIGHT)
-        }
-        SOUTH -> sendArrowKey(KEYCODE_DPAD_DOWN)
-        SOUTHWEST -> {
-            sendArrowKey(KEYCODE_DPAD_DOWN)
-            sendArrowKey(KEYCODE_DPAD_LEFT)
-        }
-        WEST -> sendArrowKey(KEYCODE_DPAD_LEFT)
-        NORTHWEST -> {
-            sendArrowKey(KEYCODE_DPAD_UP)
-            sendArrowKey(KEYCODE_DPAD_LEFT)
-        }
-    }
-}
-```
-
-### Speed Scaling
-
-Cursor movement speed scales with finger distance from activation center:
-
-```kotlin
-val distance = sqrt(dx * dx + dy * dy)
-val repeatDelay = when {
-    distance < 50 -> 200   // Slow (5 moves/sec)
-    distance < 100 -> 100  // Medium (10 moves/sec)
-    distance < 150 -> 50   // Fast (20 moves/sec)
-    else -> 25             // Very fast (40 moves/sec)
-}
-handler.postDelayed(trackpointRunnable, repeatDelay)
-```
-
-### Haptic Feedback
-
-Distinct CLOCK_TICK pattern on activation:
-
-```kotlin
-private fun triggerTrackPointHaptic() {
-    if (config.trackpointHapticEnabled) {
-        VibratorCompat.vibrate(HapticEvent.CLOCK_TICK)
-    }
-}
-```
-
-CLOCK_TICK provides a subtle, distinct feel different from normal key press vibration.
-
-### Nav Key Exclusion from Gesture Collection
-
-Arrow keys are excluded from short gesture path collection to prevent accidental gesture triggering:
-
-```kotlin
-private fun shouldCollectGesturePath(key: KeyValue): Boolean {
-    // Nav keys excluded - they have TrackPoint mode instead
-    if (key.kind in listOf(Kind.Arrow_Up, Kind.Arrow_Down, Kind.Arrow_Left, Kind.Arrow_Right)) {
-        return false
-    }
-    return true
-}
-```
-
-### Error Handling
-
-- No navigation target: Cursor movement commands sent but have no effect
-- Haptic unavailable: Mode still functions, just without feedback
-- Rapid re-activation: Debounced to prevent haptic spam (min 200ms between activations)
+- `PointersFollowFingerSelectionTest` and `PointersSubkeyPopoverTest` (pure JVM) exercise the
+  shared long-press/TrackPoint routing; `VibratorCompatTest` pins the `TRACKPOINT_ACTIVATE` →
+  `CLOCK_TICK` mapping and its pref gate; `ConfigDefaultsTest` pins the default.

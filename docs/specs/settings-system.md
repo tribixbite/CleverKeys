@@ -13,26 +13,27 @@ The settings system manages user preferences through SharedPreferences, provides
 | File | Class/Function | Purpose |
 |------|----------------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `Config`, `Defaults` | Global configuration singleton, centralized defaults |
-| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | `SettingsActivity` | Activity shell: state + SAF launchers + `setContent { SettingsScreen() }` (845 lines as of 2026-09-01 — the old "~3000-line" monolith was decomposed into `ui/settings/`) |
+| `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | `SettingsActivity` | Activity shell: state + SAF launchers + `setContent { SettingsScreen() }` (942 lines as of 2026-10-23 — the old "~3000-line" monolith was decomposed into `ui/settings/`) |
 | `src/main/kotlin/tribixbite/cleverkeys/ui/settings/` | `SettingsScreen` + sections/io | The actual Material 3 Compose settings UI (see Architecture tree below) |
 | `src/main/kotlin/tribixbite/cleverkeys/ConfigurationManager.kt` | `ConfigurationManager` | Runtime configuration application |
 | `src/main/kotlin/tribixbite/cleverkeys/Theme.kt` + `theme/ThemeProvider.kt` | `Theme`, `ThemeProvider` | Keyboard-view theme data and loading (`theme/KeyboardTheme.kt` is only a retained composable alias for `CleverKeysTheme`, the Compose settings-UI wrapper — not a theme store) |
 
 ## Architecture
 
-Real file layout (re-derived 2026-09-01 from `git ls-tree HEAD src/main/kotlin/tribixbite/cleverkeys/ui/settings/`
+Real file layout (re-derived 2026-10-23 from `git ls-tree HEAD src/main/kotlin/tribixbite/cleverkeys/ui/settings/`
 — an earlier revision showed a fictional `PreferenceScreen` tree; counts below are exact, not approximate):
 
 ```
-SettingsActivity.kt (activities/ — 845-line shell: state, SAF launchers, listeners)
+SettingsActivity.kt (activities/ — 942-line shell: state, SAF launchers, listeners)
     └── setContent { SettingsScreen() }
 
-ui/settings/                       # 10 files — screen scaffolding
+ui/settings/                       # 13 files — screen scaffolding
     SettingsScreen.kt              #   top-level composable, section list
     SettingsControls.kt            #   shared switch/slider/dropdown composables
-    SettingsDialogs.kt, SettingsInfoCards.kt, SettingsSearch.kt,
+    SettingsDialogs.kt, SettingsInfoCards.kt, SettingsSearch.kt, SettingsSearchMatch.kt,
     SettingsNavigation.kt, SettingsLifecycle.kt, SettingsPersistence.kt,
-    SettingsResetPresets.kt, SettingsPrefsExt.kt
+    SettingsResetPresets.kt, SettingsResetPolicy.kt, SettingsPrefsExt.kt,
+    AutocorrectTuningSliders.kt    #   autocorrect weight sliders (autocorrect-ranking.md)
 
 ui/settings/sections/              # 20 files — one composable per section
     AppearanceSection, InputBehaviorSection, SwipeTypingSection,
@@ -48,21 +49,19 @@ ui/settings/io/                    # 9 files — import/export handlers
     SettingsSwipeDataHandlers, SettingsCollisionScanHandlers, CreateBackupDocument
 
 Supporting singletons:
-    Config (reads SharedPreferences)
-    ConfigurationManager (applies settings)
+    Config (reads SharedPreferences; `object Defaults` + `object SettingsRanges` live in Config.kt)
+    ConfigurationManager (SharedPreferences listener → Config.refresh → onConfigChanged/onThemeChanged)
 
 Defaults Architecture:
     └── Defaults object (Config.kt)
-        ├── Single source of truth for all ~100 default values
+        ├── Single source of truth for the default values (~200 constants)
         ├── Referenced by Config.kt refresh()
-        ├── Referenced by SettingsActivity.kt loadCurrentSettings()
-        └── Referenced by onSharedPreferenceChanged()
+        ├── Referenced by the settings loader in ui/settings/SettingsPersistence.kt
+        └── Referenced by the typed backup/reset maps
 
 Storage Strategy:
-    ├── SharedPreferences (settings data)
-    ├── DirectBootAwarePreferences (device-protected storage)
-    ├── App-specific storage (getExternalFilesDir)
-    └── Scoped storage (Android 11+)
+    ├── SharedPreferences via DirectBootAwarePreferences (device-protected storage)
+    └── Storage Access Framework for every file import/export (ui/settings/io/; no storage permission)
 ```
 
 ## Configuration
@@ -72,39 +71,54 @@ Storage Strategy:
 The `Defaults` object centralizes all app default values:
 
 ```kotlin
-// Config.kt
+// Config.kt — values copied from HEAD on 2026-10-23; the object is the source of truth
 object Defaults {
     // Appearance
     const val THEME = "cleverkeysdark"
-    const val KEYBOARD_HEIGHT_PORTRAIT = 28
-    const val KEYBOARD_HEIGHT_LANDSCAPE = 50
-    const val KEY_OPACITY = 1.0f
-    const val KEY_BORDER_ENABLED = false
+    const val KEYBOARD_HEIGHT_PORTRAIT = 27      // % of screen height (lowered from 30, 2026-05-15)
+    const val KEYBOARD_HEIGHT_LANDSCAPE = 40
+    const val KEYBOARD_OPACITY = 100             // #51: fully opaque by default
+    const val KEY_OPACITY = 100
+    const val KEY_ACTIVATED_OPACITY = 80
+    const val BORDER_CONFIG = false
 
-    // Input Behavior
+    // Input behavior
     const val LONGPRESS_TIMEOUT = 600
-    const val KEY_REPEAT_DELAY = 50
-    const val VIBRATION_ENABLED = true
-    const val VIBRATION_STRENGTH = 10
+    const val LONGPRESS_INTERVAL = 25
+    const val KEYREPEAT_ENABLED = true
+    const val KEYREPEAT_BACKSPACE_ONLY = true
+    const val HAPTIC_ENABLED = true              // master haptic gate
+    const val VIBRATE_CUSTOM = false
+    const val VIBRATE_DURATION = 20
 
     // Swipe decoding
     const val SWIPE_ENGINE_MODE = "ctc"
     const val CTC_BEAM_WIDTH = 100
     const val ONNX_XNNPACK_THREADS = 2
-    const val SWIPE_ENABLED = true
+    const val SWIPE_TYPING_ENABLED = true
+    const val CONTINUOUS_SWIPE_ENABLED = false
 
     // Gestures
-    const val SHORT_GESTURE_MIN_DISTANCE = 15
-    const val SHORT_GESTURE_MAX_DISTANCE = 50
-    const val SLIDER_SENSITIVITY = 30
-    const val TAP_DURATION_THRESHOLD = 200L
+    const val SHORT_GESTURE_MIN_DISTANCE = 28
+    const val SHORT_GESTURE_MAX_DISTANCE = 141
+    const val SHORT_SWIPES_ONLY = false          // GH #147/#87
+    const val SLIDER_SENSITIVITY = "30"          // stored as a string; SLIDER_SENSITIVITY_FALLBACK = 30f
+    const val TAP_DURATION_THRESHOLD = 150
+
+    // Suggestions
+    const val SUGGESTION_BAR_OPACITY = 80
+    const val WORD_PREDICTION_ENABLED = true
+    const val NEXT_WORD_PREDICTION_ENABLED = true   // default ON since 2026-09-26
 
     // Clipboard
     const val CLIPBOARD_HISTORY_ENABLED = true
-    const val CLIPBOARD_HISTORY_SIZE = 25
+    const val CLIPBOARD_HISTORY_LIMIT = "0"      // 0 = unlimited (SettingsRanges.CLIPBOARD_HISTORY_LIMIT = 0..500)
+    const val CLIPBOARD_MAX_ITEM_SIZE_KB = "512"
+    const val CLIPBOARD_PANE_HEIGHT_PERCENT = 30
     const val CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS = true
 
-    // ... ~100 constants organized by category
+    // ... ~200 constants organized by category; several numeric prefs are stored as
+    // strings and carry a `_FALLBACK` numeric twin for unparseable stored values.
 }
 ```
 
@@ -161,93 +175,73 @@ refreshed from prefs by the loader in the same file, not written back per-key fr
 ### SettingsActivity
 
 ```kotlin
+// activities/SettingsActivity.kt — the shell; state, SAF launchers and listeners live here
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            CleverKeysSettingsTheme {
-                SettingsScreen(
-                    onNavigateBack = { finish() }
-                )
-            }
-        }
+        setContent { KeyboardTheme { SettingsScreen() } }   // KeyboardTheme = alias of theme/CleverKeysTheme.kt
     }
 }
 
+// ui/settings/SettingsScreen.kt — extension composable; the sections are
+// ui/settings/sections/*Section.kt composed inside
+// SettingsActivity.CollapsibleSettingsSection / SettingsSection (SettingsControls.kt)
 @Composable
-fun SettingsScreen(onNavigateBack: () -> Unit) {
-    // Collapsible sections for each category
-    var appearanceExpanded by remember { mutableStateOf(false) }
-    var inputExpanded by remember { mutableStateOf(false) }
-    // ...
-
-    LazyColumn {
-        item { SettingsSection("Appearance", appearanceExpanded, { appearanceExpanded = it }) {
-            ThemePicker()
-            HeightSlider()
-            OpacitySlider()
-        }}
-        item { SettingsSection("Input Behavior", inputExpanded, { inputExpanded = it }) {
-            VibrationToggle()
-            LongpressSlider()
-        }}
-        // ... other sections
-    }
-}
+internal fun SettingsActivity.SettingsScreen()
 ```
+
+(Sketch, not a transcript: the exact `onCreate` body also wires search, deep links and
+lifecycle; see the files named above.)
 
 ## Implementation Details
 
 ### Settings UI Components
 
+Real signatures (`ui/settings/SettingsControls.kt`, 2026-10-23). Both are extension
+composables on `SettingsActivity`; the receiver supplies `highlightedSettingId`,
+`recordSettingPosition` and `contentYOf` for settings search.
+
 ```kotlin
 @Composable
-fun SettingsSwitch(
+internal fun SettingsActivity.SettingsSwitch(
     title: String,
     description: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(description, style = MaterialTheme.typography.bodySmall)
-        }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
+    onCheckedChange: (Boolean) -> Unit,
+    highlightId: String? = null,   // extra search-highlight id for gated entries
+    enabled: Boolean = true,       // false = visible but inert and dimmed (never hidden)
+)
 
 @Composable
-fun SettingsSlider(
+internal fun SettingsActivity.SettingsSlider(
     title: String,
+    description: String,
     value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    onValueChange: (Float) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Slider(value = value, valueRange = range, onValueChange = onValueChange)
-    }
-}
+    valueRange: ClosedFloatingPointRange<Float>,
+    increment: Float,              // distance between two stops, in value's unit
+    onValueChange: (Float) -> Unit,
+    displayValue: String,
+    enabled: Boolean = true,
+)
 ```
 
-### Storage Permissions (Android 11+)
+- A slider takes an **increment**, never a raw Compose step count: the control derives it with
+  `sliderSteps(range, increment)` (`Config.kt`), which returns the number of stops BETWEEN the
+  ends (`(span / increment) - 1`, never negative). Compose's `Slider(steps = n)` convention
+  had put every stop between two values on about 40 sliders (audit 2026-10-20). A raw
+  `Slider` elsewhere must call `sliderSteps` the same way.
+- Every control registers its scroll position under the locale-independent ids returned by
+  `settingIdsFor(title)` (`SettingsSearch.kt`), so a search hit can scroll to and pulse it.
 
-```xml
-<!-- AndroidManifest.xml -->
-<!-- Legacy permissions for Android 10 and below -->
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="29" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-    android:maxSdkVersion="29" />
 
-<!-- For Android 11+, use scoped storage via MediaStore or SAF -->
-```
+### Storage: no storage permission
 
-App-specific storage doesn't require permissions:
-```kotlin
-val appDir = context.getExternalFilesDir(null)  // No permission needed
-```
+`AndroidManifest.xml` declares only `VIBRATE`, `READ_USER_DICTIONARY` and the app's own
+`tribixbite.cleverkeys.permission.SET_DEBUG_MODE` (there is no `INTERNET` permission either).
+No `READ_/WRITE_EXTERNAL_STORAGE` is requested on any API level: every file import/export
+(backups, dictionaries, language packs, GIF packs, swipe data, clipboard) goes through the
+Storage Access Framework from the handlers in `ui/settings/io/` (`CreateBackupDocument` is the
+`ActivityResultContract` for backups).
 
 ### Theme Application
 
@@ -273,31 +267,35 @@ The Compose settings UI is themed separately via `theme/CleverKeysTheme.kt`
 
 ### Settings Change Listener
 
+`Config` is not a `SharedPreferences.OnSharedPreferenceChangeListener` and there is no
+`ConfigurationManager.applyTheme`. The real flow (`ConfigurationManager.kt`, verified 2026-10-23):
+
 ```kotlin
-class Config(context: Context) : SharedPreferences.OnSharedPreferenceChangeListener {
-    init {
-        prefs.registerOnSharedPreferenceChangeListener(this)
+class ConfigurationManager(...) : SharedPreferences.OnSharedPreferenceChangeListener {
+    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
+        refresh(context.resources)          // every key goes through the same path
     }
 
-    override fun onSharedPreferenceChanged(prefs: SharedPreferences, key: String?) {
-        when (key) {
-            "theme" -> {
-                theme = prefs.getString("theme", Defaults.THEME)!!
-                ConfigurationManager.applyTheme(theme)
-            }
-            "keyboard_height_portrait" -> {
-                keyboardHeightPortrait = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
-                CleverKeysService.getInstance()?.requestKeyboardResize()
-            }
-            // ... handle other settings
-        }
+    fun refresh(res: Resources) {
+        // remembers prevTheme / prevThemeName, then:
+        config.refresh(res, foldStateTracker.isUnfolded())
+        for (listener in listeners) listener.onConfigChanged(config)      // each guarded by try/catch(Throwable)
+        val themeChanged = prevTheme != config.theme || prevThemeName != config.themeName
+        if (themeChanged) for (listener in listeners) listener.onThemeChanged(prevTheme, config.theme)
     }
 }
 ```
 
+There is no per-key `when (key)` dispatch: the whole `Config` is re-read from prefs on every
+change, and consumers react in `onConfigChanged` (keyboard height, opacity, …) or
+`onThemeChanged` (view recreation).
+
 ### Collapsible Sections Pattern
 
 Settings UI uses collapsible sections (not hierarchical navigation):
+
+The real composable is `SettingsActivity.CollapsibleSettingsSection` (`SettingsControls.kt:37`);
+the shape below is illustrative:
 
 ```kotlin
 @Composable

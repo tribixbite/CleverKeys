@@ -11,7 +11,8 @@ The layout system manages dynamic key injection through ExtraKeys, position hint
 | `src/main/kotlin/tribixbite/cleverkeys/ExtraKeys.kt` | `ExtraKeys`, `ExtraKey` | Extra key definitions and computation |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyboardData.kt` | `PreferredPos`, `addExtraKeys()` | Layout data, position hints |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `extra_keys_param` | User preferences for extra keys |
-| `res/xml/*.xml` | Layout definitions | Base keyboard layouts |
+| `src/main/layouts/*.xml` | Layout definitions | The 89 built-in layouts (+ `LICENSE`). The build copies them into `build/generated/layouts/res` (`build.gradle:385`), so code loads them as `R.raw.<name>`; `res/xml/` holds only `bottom_row.xml` and the manifest rule files |
+| `src/main/kotlin/tribixbite/cleverkeys/LayoutModifier.kt` | `LayoutModifier`, `LayoutCacheKey` | Applies extra keys / Enter / switch keys to a layout and caches the result |
 
 ## Architecture
 
@@ -33,17 +34,19 @@ Final Layout with injected keys
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `extra_keys_custom` | String | "" | User-defined extra keys (pipe-separated) |
+| `extra_key_<name>` | Boolean each | — | one pref per catalogued extra key (`ExtraKeysPreference`); `Config.extra_keys_param = ExtraKeysPreference.get_extra_keys(prefs) ?: emptyMap()` (`Config.kt:1216`) is the resulting `Map<KeyValue, PreferredPos>` |
+| custom extra keys (`CustomExtraKeysPreference`) | list | empty | user-typed keys; `Config.extra_keys_custom = CustomExtraKeysPreference.get(prefs) ?: emptyMap()` (`Config.kt:1217`), also a `Map<KeyValue, PreferredPos>` — not a pipe-separated string |
 
 ## Implementation Details
 
 ### ExtraKey Data Structure
 
 ```kotlin
-data class ExtraKey(
+// ExtraKeys.kt:15 — nested, internal; constructed by ExtraKey.parse(str, script)
+internal class ExtraKey(
     val kv: KeyValue,              // Key to add
     val script: String?,           // Script constraint (null = any)
-    val alternatives: List<KeyValue>, // Don't add if these present
+    val alts: List<KeyValue>,      // Alternatives: don't add if these are present
     val nextTo: KeyValue?          // Position hint
 )
 ```
@@ -59,26 +62,21 @@ Examples:
   "f1|f2|f3"                 → Multiple keys (pipe-separated)
 ```
 
-### Parsing Algorithm
+### Parsing (as built, `ExtraKeys.kt`)
 
 ```kotlin
-fun parse(script: String?, str: String): ExtraKeys {
-    val keys = str.split('|').mapNotNull { part ->
-        // Split by '@' for position hint
-        val atSplit = part.split('@')
-        val mainPart = atSplit[0]
-        val nextTo = if (atSplit.size > 1) KeyValue.getKeyByName(atSplit[1]) else null
-
-        // Split by ':' for key and alternatives
-        val colonSplit = mainPart.split(':')
-        val kv = KeyValue.getKeyByName(colonSplit[0]) ?: return@mapNotNull null
-        val alternatives = colonSplit.drop(1).mapNotNull { KeyValue.getKeyByName(it) }
-
-        ExtraKey(kv, script, alternatives, nextTo)
-    }
-    return ExtraKeys(keys)
-}
+// ExtraKeys.kt:78 — one entry: "key name" or "key name:alt1:alt2@next_to"
+ExtraKey.parse(str: String, script: String): ExtraKey      // split "@" (limit 2) then ":"; KeyValue.getKeyByName on each part
+// ExtraKeys.kt:105 — a whole preference string
+ExtraKeys.parse(script: String, str: String): ExtraKeys    // splits on "|" and maps ExtraKey.parse
+ExtraKeys.merge(kss: List<ExtraKeys>): ExtraKeys           // ExtraKeys.kt:119; same-key entries combine via ExtraKey.mergeWith
 ```
+
+There is no `getSystemExtraKeys()` and no `prefs.getString("extra_keys_custom")`: the two
+sources are the per-key booleans read by `ExtraKeysPreference.get_extra_keys(prefs)` and the
+custom list read by `CustomExtraKeysPreference.get(prefs)`, both already turned into
+`Map<KeyValue, PreferredPos>` by the time `Config.refresh` stores them (`Config.kt:1216-1217`).
+`LayoutModifier` adds those maps (plus the subtype's extra keys) to the layout.
 
 ### Compute Algorithm
 
@@ -200,7 +198,7 @@ fun loadExtraKeys(prefs: SharedPreferences): ExtraKeys {
 ## Layout XML Format
 
 ```xml
-<!-- res/xml/qwerty.xml -->
+<!-- src/main/layouts/latn_qwerty_us.xml (served as R.raw.latn_qwerty_us) -->
 <keyboard name="qwerty" script="latin">
     <row>
         <key key0="q" key1="1" key2="!" />
@@ -378,3 +376,19 @@ tests must recognize both live XML schemas.
 geometry for a compact bottom-row-free layout versus explicit numeric opt-in, with
 scaling enabled and disabled. This protects GH #90 beyond the mock geometry suite.
 See [testing strategy](testing-strategy.md) for the full cloud verdict.
+
+## Modified-layout cache and recent layout fixes (2026-10)
+
+- **Cache key (`ea88d975`, 2026-10-20).** `LayoutModifier` caches each modified board under
+  `LayoutCacheKey(layoutIdentity, layoutName, configVersion, layoutCount, actionLabel,
+  swapEnterActionKey, offerVoiceTyping, subtypeExtraKeysIdentity)` (`LayoutModifier.kt:30`).
+  `refresh_action_label` sets `Config.actionLabel`/`swapEnterActionKey` at every field start
+  without bumping `Config.version`, so the old identity+name+version+count key served the first
+  field's Enter key to every later field (Saga: "Go" on a Send textarea; the #139 newline
+  switch never took effect). The per-field Enter state is now part of the key.
+- **#187 below-accent dead keys (FIXED, unreleased `d0ab58af`).** Four below-accent combining
+  commands joined the catalogue (240 commands as of 2026-10-20); the dead keys compose on the
+  following letter like the existing accent keys. Status per `docs/audit/gh-issue-resolution.md`.
+- **Per-layout bindings.** The `language` (GH #186/#61) and `theme` (2026-10-15) root attributes
+  above are the two per-layout bindings; both are three-state in the Layout Manager editor and
+  stored with the layout. `LayoutLanguageBindingTest` / `LayoutThemeBindingTest` pin them.

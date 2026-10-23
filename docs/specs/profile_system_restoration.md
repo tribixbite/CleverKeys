@@ -1,5 +1,9 @@
 # Profile System
 
+> **Status (2026-10-23):** as built; direction table, `toXmlValue` and root attributes
+> re-transcribed from `KeyboardData.kt:380-392`, `customization/XmlAttributeMapper.kt:22-52`
+> and `activities/LayoutManagerActivity.kt`.
+
 ## Overview
 
 The Profile System enables importing and exporting keyboard layouts as XML files with embedded short swipe customizations. Layouts are exported with gestures baked into standard Unexpected Keyboard XML attributes for full backward compatibility.
@@ -52,24 +56,30 @@ Gestures are injected as **standard UK XML attributes** (`nw`, `ne`, `sw`, `se`,
 | SwipeDirection | XML Attribute |
 |----------------|---------------|
 | NW | `nw` (key1) |
-| N | `n` (key7) |
 | NE | `ne` (key2) |
-| W | `w` (key6) |
-| E | `e` (key5) |
 | SW | `sw` (key3) |
-| S | `s` (key8) |
 | SE | `se` (key4) |
+| W | `w` (key5) |
+| E | `e` (key6) |
+| N | `n` (key7) |
+| S | `s` (key8) |
+
+(`KeyboardData.Key.parse`, `KeyboardData.kt:382-389`: `get_key_attr(parser, "key5", "w")`, `("key6", "e")`, `("key7", "n")`, `("key8", "s")` — an earlier revision of this table had W/E swapped.)
 
 ### XmlAttributeMapper.toXmlValue()
 
 ```kotlin
-fun toXmlValue(mapping: ShortSwipeMapping): String {
-    return when (mapping.actionType) {
-        ActionType.TEXT -> "'${mapping.actionValue.replace("'", "'\"")}'"
-        ActionType.COMMAND -> mapCommandToKeyword(mapping.getCommand()) ?: mapping.actionValue
-        ActionType.KEY_EVENT -> "keyevent:${mapping.actionValue}"
-    }
+// customization/XmlAttributeMapper.kt:22 — all six ActionTypes
+fun toXmlValue(mapping: ShortSwipeMapping): String = when (mapping.actionType) {
+    ActionType.TEXT      -> "'${mapping.actionValue.replace("'", "\\'")}'"        // ' escaped as \' (QUOTED_PAT)
+    ActionType.COMMAND   -> if (KeyValue.getKeyByName(name) != null) name           // registry names ARE key names
+                            else mapLegacyCommandToKeyword(mapping.getCommand()) ?: name
+    ActionType.KEY_EVENT -> "keyevent:${mapping.actionValue}"
+    ActionType.INTENT    -> "intent:${quotedPayload(mapping.actionValue)}"
+    ActionType.TEMPLATE  -> "template:${quotedPayload(mapping.actionValue)}"
+    ActionType.TIMESTAMP -> "timestamp:${quotedPayload(mapping.actionValue)}"
 }
+// quotedPayload: escape backslashes, then quotes: '…' with \\ and \'
 ```
 
 ### Supported Command Mappings
@@ -101,6 +111,14 @@ fun toXmlValue(mapping: ShortSwipeMapping): String {
 | `width` | Key width (relative units) |
 | `shift` | Left padding (relative units) |
 | `indication` | Display string override |
+
+Root `<keyboard>` attributes carried by a profile (parsed into `KeyboardData.declared_language`
+/ `declared_theme`, `KeyboardData.kt:569-571`): `language` (per-layout language binding, GH
+#186/#61) and `theme` (per-layout theme binding, `e237fa95`, 2026-10-15). `XmlLayoutExporter.
+injectMappings(xmlContent, mappings)` rewrites only key attributes in the XML text, so both
+root attributes round-trip unchanged; the Layout Manager editor exposes them as entry fields
+and refuses to save an invalid value (`LayoutManagerActivity.kt:870-873`). Details:
+`layout-system.md` "Language binding" / "Per-layout theme binding".
 
 ### Compatibility
 

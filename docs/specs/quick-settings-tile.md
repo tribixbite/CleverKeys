@@ -1,149 +1,85 @@
 # Quick Settings Tile
 
-> **Note:** As of v1.4.0, the canonical version of this specification lives at
-> [`docs/wiki/specs/customization/quick-settings-tile-spec.md`](../wiki/specs/customization/quick-settings-tile-spec.md)
-> and renders at <https://cleverkeys.app/specs/customization/quick-settings-tile-spec/>.
-> This file is preserved for cross-references but may not be kept in sync.
+> **Status (2026-10-23):** as built. The tile became a show/minimize/restore toggle on
+> 2026-10-20 (`f47d5f3f`…`be586c84`); the full behaviour, the device evidence and the
+> overlay-permission check live in [`keyboard-minimize.md`](keyboard-minimize.md)
+> "Quick Settings tile (2026-10-20)". This page is the short engineering summary. The wiki copy
+> at `docs/wiki/specs/customization/quick-settings-tile-spec.md` is maintained separately.
 
 ## Overview
 
-CleverKeys provides an Android Quick Settings tile that allows users to quickly access the keyboard switcher from the notification shade. Tapping the tile opens the system input method picker, providing a convenient way to switch between keyboards without navigating to system settings.
+CleverKeys registers an Android Quick Settings tile. A tap acts on the keyboard itself: it
+minimizes a visible keyboard, restores a minimized one, brings back a keyboard the shade (or
+the app) just hid, and only falls back to the system input-method picker when CleverKeys is
+not the selected IME or no editor is focused. The tile's subtitle (Android 10+) names the
+action the next tap will take.
 
-## Key Files
+## Key files
 
-| File | Class/Function | Purpose |
-|------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt` | `KeyboardTileService` | TileService implementation |
-| `AndroidManifest.xml` | Service registration | Declares tile service |
+| File | Symbol | Purpose |
+|------|--------|---------|
+| `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt` | `KeyboardTileService` | `TileService`; reads state, dispatches the tap |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileAction.kt` | `KeyboardTileDecision.actionFor(isCurrentIme, window)` | pure decision table (tap → `KeyboardTileAction`) |
+| same | `KeyboardTileAction` | `PICK_KEYBOARD`, `MINIMIZE`, `RESTORE`, `SHOW_MINIMIZED`, `SHOW_RESTORED`, `SHOW` |
+| same | `TileWindowSnapshot`, `EditorRef`, `VisibleForm` | what the service reports about its window and editor |
+| same | `TileShowSession` | pure state machine for the deferred show (retry every 250 ms for up to 8 s) |
+| `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `tileSnapshot()`, `minimizeFromTile()`, `restoreFromTile()`, `showFromTile(action)`, `logTileDecision(…)` | the service side |
+| `src/main/kotlin/tribixbite/cleverkeys/minimize/KeyboardMinimizer.kt` | `lastStyle` | the style a tile minimize uses (floating button until a minimize command picks another) |
+| `AndroidManifest.xml` | `<service android:name="tribixbite.cleverkeys.KeyboardTileService" … BIND_QUICK_SETTINGS_TILE …>` | tile registration (`tools:targetApi="24"`) |
 
-## Architecture
+## Decision table
 
-```
-Quick Settings Panel
-       |
-       v (user taps tile)
-+------------------+
-| KeyboardTile     | -- Android calls onClick()
-| Service          |
-+------------------+
-       |
-       v
-+------------------+
-| showInputMethod  | -- Opens system IME picker
-| Picker()         |
-+------------------+
-       |
-       v (fallback)
-+------------------+
-| Open Input       | -- If picker fails, opens settings
-| Method Settings  |
-+------------------+
-```
+`KeyboardTileService.onClick` computes `isCleverKeysCurrent()` (package substring of
+`Settings.Secure.DEFAULT_INPUT_METHOD`, via `tileStateFor`), asks the running service for a
+`tileSnapshot()` through `CleverKeysService.getInstance()`, and routes on
+`KeyboardTileDecision.actionFor`:
 
-## Public API
+| CleverKeys selected? | window | tap → action | subtitle |
+|---|---|---|---|
+| no, or service not running | any | `PICK_KEYBOARD`: `InputMethodManager.showInputMethodPicker()`; if no IMM, `startActivityAndCollapse` to `ACTION_INPUT_METHOD_SETTINGS` (PendingIntent overload on API 34+) | Switch keyboard |
+| yes | visible, full | `MINIMIZE` → `minimizeFromTile()` (style `KeyboardMinimizer.lastStyle`) | Minimize |
+| yes | visible, minimized | `RESTORE` → `restoreFromTile()` (`expand()`) | Restore |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not dismissed by the user, input still in that app / unbound / SystemUI; was full | `SHOW_MINIMIZED` → deferred show landing minimized | Minimize |
+| yes | same, was minimized | `SHOW_RESTORED` → deferred show landing full | Restore |
+| yes | otherwise, a real editor is bound (`isRealEditor`) | `SHOW` → deferred show landing full | Show |
+| yes | otherwise (e.g. the launcher's `TYPE_NULL` fallback connection) | `PICK_KEYBOARD` | Switch keyboard |
 
-### KeyboardTileService
+Details that matter when reading the code:
 
-```kotlin
-@RequiresApi(Build.VERSION_CODES.N)
-class KeyboardTileService : TileService() {
+- **Deferred show.** `showFromTile` arms a `TileShowSession` target and calls
+  `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod` below) at once and every
+  `RETRY_INTERVAL_MS` (250 ms) for `RETRY_WINDOW_MS` (8 s), because the system ignores the show
+  while the shade holds focus. `onWindowShown` applies the target once; `onStartInput` for
+  another package, a hardware key, a tap on a visible keyboard, the deadline and `onDestroy`
+  cancel it.
+- **No overlay permission.** `requestShowSelf` needs nothing beyond being the current IME; the
+  2026-10-22 check in `keyboard-minimize.md` "Overlay permission check" documents why
+  `SYSTEM_ALERT_WINDOW` is only relevant to a floating button that outlives the input window
+  (roadmap 4.3, not built).
+- **The shade stays open** after a keyboard action: `startActivityAndCollapse` / `showDialog`
+  would take focus from the app's editor, and `StatusBarManager.collapsePanels` is hidden API.
+  The tile re-reads its state 300 ms and 1 s after a tap (`TILE_REFRESH_DELAYS_MS`) and again
+  after `onStartListening`, since opening the shade can itself hide the keyboard.
+- **Tile state.** `STATE_ACTIVE` when CleverKeys is the selected IME, else `STATE_INACTIVE`;
+  label is the app name; `contentDescription` comes from
+  `KeyboardTileDecision.contentDescriptionFor(isCurrentIme, action)`.
+- **Diagnostics.** Verbose builds (`LOCAL_BUILD=true`) log every decision with its inputs under
+  `CleverKeys/Tile` (`adb logcat -s CleverKeys/Tile`).
 
-    // Called when Quick Settings panel opens
-    override fun onStartListening() {
-        updateTileState()
-    }
+## Requirements
 
-    // Called when user taps the tile
-    override fun onClick() {
-        showInputMethodPicker()
-    }
+- Android 7.0 (API 24) or higher (`TileService`); subtitle on Android 10 (API 29) or higher.
+- The user adds the tile from the shade's edit mode (or, for tests, `cmd statusbar add-tile`).
 
-    // Called when user adds tile to panel
-    override fun onTileAdded() {
-        updateTileState()
-    }
+## Tests
 
-    // Update tile visual state
-    private fun updateTileState() {
-        qsTile?.apply {
-            state = if (isCleverKeysActive()) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-            updateTile()
-        }
-    }
+- `KeyboardTileActionTest` (pure): every `actionFor` branch, the `TileShowSession` state
+  machine, the subtitle/description strings in all locales.
+- `KeyboardTileServiceTest` (mock): source-level `onClick` routing.
+- `KeyboardMinimizerTest`: `lastStyle`.
 
-    // Show system input method picker
-    private fun showInputMethodPicker() {
-        val imm = getSystemService(InputMethodManager::class.java)
-        imm?.showInputMethodPicker()
-    }
-}
-```
+## Known limitation
 
-## Implementation Details
-
-### Tile States
-
-| State | Condition | Visual |
-|-------|-----------|--------|
-| `STATE_ACTIVE` | CleverKeys is current input method | Highlighted/colored |
-| `STATE_INACTIVE` | Another keyboard is active | Dimmed/gray |
-
-### Input Method Detection
-
-```kotlin
-private fun isCleverKeysActive(): Boolean {
-    val currentIme = Settings.Secure.getString(
-        contentResolver,
-        Settings.Secure.DEFAULT_INPUT_METHOD
-    )
-    return currentIme?.contains(packageName) == true
-}
-```
-
-### Fallback Behavior
-
-If `InputMethodManager.showInputMethodPicker()` fails:
-
-```kotlin
-private fun showInputMethodPicker() {
-    try {
-        val imm = getSystemService(InputMethodManager::class.java)
-        imm?.showInputMethodPicker()
-    } catch (e: Exception) {
-        // Fallback: open system input method settings
-        val intent = Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
-    }
-}
-```
-
-### AndroidManifest Registration
-
-```xml
-<service
-    android:name="tribixbite.cleverkeys.KeyboardTileService"
-    android:label="@string/app_name"
-    android:icon="@mipmap/ic_launcher"
-    android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
-    android:exported="true">
-  <intent-filter>
-    <action android:name="android.service.quicksettings.action.QS_TILE"/>
-  </intent-filter>
-</service>
-```
-
-### Requirements
-
-- Android 7.0 (API 24) or higher (TileService introduced in API 24)
-- CleverKeys must be installed and enabled as an input method
-- User must manually add tile to Quick Settings panel
-
-### User Flow
-
-1. Pull down notification shade
-2. Tap "Edit" or pencil icon to customize tiles
-3. Find "CleverKeys" in available tiles
-4. Drag to active tiles area
-5. Tile now appears in Quick Settings
-6. Tap tile → system IME picker appears → select keyboard
+A web page's textarea in Chrome loses editor focus when the shade opens (Chrome hides the IME
+itself); the deferred show lands and the system hides it again ~0.3 s later. Native editors,
+including Chrome's address bar, pass. See `keyboard-minimize.md`.

@@ -40,8 +40,8 @@ inputViewContainer (LinearLayout, VERTICAL)
 │   └── scrollView (HorizontalScrollView) - default, contains SuggestionBar
 │       └── SuggestionBar (LinearLayout)
 │   OR
-│   └── contentPaneContainer (FrameLayout) - when emoji/clipboard shown
-│       └── [emoji_pane OR clipboard_pane] (added dynamically)
+│   └── contentPaneContainer (FrameLayout) - when emoji/clipboard/GIF shown
+│       └── [emoji_pane OR clipboard_pane OR gif_pane] (added dynamically)
 └── keyboardView (Keyboard2View) - wrap_content height
 ```
 
@@ -57,7 +57,7 @@ Uses simple FrameLayout swap instead of ViewFlipper for reliability:
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `SuggestionBarInitializer.kt` | `SuggestionBarInitializer` | Creates view hierarchy, mode switching |
+| `wiring/KeyboardComponentGraph.kt` | `object SuggestionBarPane` (formerly `SuggestionBarInitializer`, renamed v1.32.381) | `initialize(...)` builds the hierarchy; `switchToContentPaneMode` / `switchToSuggestionBarMode` swap; `calculateContentPaneHeight` |
 | `SuggestionBar.kt` | `SuggestionBar` | Displays word suggestions |
 | `SuggestionBarPropagator.kt` | `SuggestionBarPropagator` | Passes view references to managers |
 | `PredictionViewSetup.kt` | `PredictionViewSetup` | Coordinates setup in onStartInputView |
@@ -65,10 +65,11 @@ Uses simple FrameLayout swap instead of ViewFlipper for reliability:
 | `CleverKeysService.kt` | `CleverKeysService` | Tracks view references across app switches |
 | `res/layout/emoji_pane.xml` | - | Emoji picker layout |
 | `res/layout/clipboard_pane.xml` | - | Clipboard manager layout |
+| `res/layout/gif_pane.xml` | - | GIF panel layout (see `gif-panel-spec.md`) |
 
 ### Component Responsibilities
 
-- **SuggestionBarInitializer**: Creates the complete view hierarchy. Provides static methods `switchToContentPaneMode()` and `switchToSuggestionBarMode()` for swapping.
+- **SuggestionBarPane** (`wiring/KeyboardComponentGraph.kt`): Creates the complete view hierarchy (`initialize`). Provides `switchToContentPaneMode()` and `switchToSuggestionBarMode()` for swapping; callers are `PredictionViewSetup` (build + height) and `KeyboardReceiver` (pane/strip switching).
 
 - **SuggestionBar**: Custom LinearLayout that displays word predictions. Supports multiple modes: suggestions, password, emoji search status.
 
@@ -86,7 +87,7 @@ Uses simple FrameLayout swap instead of ViewFlipper for reliability:
 
 When showing content pane:
 ```kotlin
-// SuggestionBarInitializer.switchToContentPaneMode()
+// SuggestionBarPane.switchToContentPaneMode()  (wiring/KeyboardComponentGraph.kt)
 fun switchToContentPaneMode(topPane: FrameLayout, contentPane: FrameLayout,
                             scrollView: HorizontalScrollView, height: Int) {
     // Remove scrollView if present
@@ -111,7 +112,7 @@ fun switchToContentPaneMode(topPane: FrameLayout, contentPane: FrameLayout,
 
 When hiding content pane:
 ```kotlin
-// SuggestionBarInitializer.switchToSuggestionBarMode()
+// SuggestionBarPane.switchToSuggestionBarMode()  (wiring/KeyboardComponentGraph.kt)
 fun switchToSuggestionBarMode(topPane: FrameLayout, contentPane: FrameLayout,
                               scrollView: HorizontalScrollView, height: Int) {
     // Remove contentPane if present
@@ -154,7 +155,7 @@ currentPaneType = PaneType.EMOJI
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `suggestion_bar_opacity` | Int | 90 | Suggestion bar opacity (0-100) |
+| `suggestion_bar_opacity` | Int | 80 (`Defaults.SUGGESTION_BAR_OPACITY`) | Suggestion bar opacity (0-100) |
 | `clipboard_pane_height_percent` | Int | 30 | Content pane height as % of screen |
 | `word_prediction_enabled` | Boolean | true | Enable word predictions |
 | `swipe_typing_enabled` | Boolean | true | Enable swipe typing |
@@ -166,7 +167,7 @@ currentPaneType = PaneType.EMOJI
 private var isContentPaneShowing: Boolean = false
 private var currentPaneType: PaneType = PaneType.NONE
 
-enum class PaneType { NONE, EMOJI, CLIPBOARD }
+private enum class PaneType { NONE, EMOJI, CLIPBOARD, GIF }   // KeyboardReceiver.kt
 ```
 
 ### Critical: State Reset on App Switch
@@ -199,7 +200,7 @@ private fun hideContentPane() {
         return  // Views null, but state already reset
     }
 
-    SuggestionBarInitializer.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
+    SuggestionBarPane.switchToSuggestionBarMode(top, content, scroll, suggestionBarHeight)
 }
 ```
 
@@ -244,7 +245,7 @@ _scrollView = result.scrollView
 ### Internal Dependencies
 - `Theme`: For suggestion bar styling
 - `Config`: For opacity and height settings
-- `EmojiPane`/`ClipboardPane`: Content views
+- `emoji_pane.xml` / `clipboard_pane.xml` / `gif_pane.xml`: content views (inflated by `KeyboardReceiver`)
 
 ### Android Dependencies
 - `LinearLayout`: Root container (vertical orientation)
@@ -328,5 +329,5 @@ Key files: `ClipboardManager.kt`, `ClipboardHistoryView.kt`, `clipboard_pane.xml
 ---
 
 **Created**: 2026-01-20
-**Last Updated**: 2026-01-22
+**Last Updated**: 2026-10-23 (names re-verified against HEAD: `SuggestionBarPane`, `PaneType.GIF`, opacity default 80)
 **Owner**: tribixbite

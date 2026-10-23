@@ -211,7 +211,7 @@ Routing priority matches the IME key-event chain (see `.claude/skills/ime-key-ro
 
 ### Internal
 - `CleverKeysService.kt` — hosts the IME; owns the clipboard pane lifecycle
-- `SuggestionBarInitializer.kt` — swaps the content pane into `topPane`
+- `wiring/KeyboardComponentGraph.kt` (`object SuggestionBarPane`, formerly `SuggestionBarInitializer`) — swaps the content pane into `topPane`
 - `KeyEventHandler.kt` + `KeyEventReceiverBridge.kt` — key routing for tag/edit/search modes
 - `FileProvider` (AndroidManifest) — media paste via `commitContent()`
 

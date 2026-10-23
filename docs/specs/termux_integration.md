@@ -8,31 +8,39 @@ CleverKeys provides gesture typing and cursor control within terminal emulators 
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/InputCoordinator.kt` | `InputCoordinator` | Context detection, text commitment, deletion strategy |
-| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `moveCursorFallback()` | Raw key event simulation for cursor movement |
+| `src/main/kotlin/tribixbite/cleverkeys/TerminalUtils.kt` | `editorKind(editorInfo, customPackages)` → `EditorKind { TEXT, TERMINAL, REMOTE }` (`:73-110`), `isTerminalApp` | THE blind-field detector |
+| `src/main/kotlin/tribixbite/cleverkeys/KeyEventHandler.kt` | `isTerminalStyleEditor()` (`:643`), `handlePaste` / `pasteFromSystemClipboard`, `deleteBeforeCursor`, `moveCursorFallback()` (`:1496`) | deletion, paste, undo and cursor-movement routing for terminal-style editors |
+| `src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt` | `isTerminalEditor`, `TerminalSuggestionPolicy` | no-rewrite suggestion/autocorrect policy |
 | `src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt` | Swipe recognition | ONNX-based recognition (Play Services independent) |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `custom_terminal_packages` | Validated immutable package snapshot |
-| `src/main/kotlin/tribixbite/cleverkeys/TerminalUtils.kt` | `parseCustomPackages`, `isTerminalApp` | Shared package parsing and detection |
+| same | `parseCustomPackages` | Shared custom-package parsing (settings, Config, backup validator) |
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      InputCoordinator                        │
-│  Detects target package, routes to appropriate handler       │
+│ TerminalUtils.editorKind(editorInfo, custom_terminal_packages)│
+│   → TEXT | TERMINAL | REMOTE   (the one detector)           │
 └─────────────────────────────────────────────────────────────┘
                             │
               ┌─────────────┴─────────────┐
               │                           │
               ▼                           ▼
-┌─────────────────────────┐   ┌─────────────────────────┐
-│     Standard Apps       │   │      Termux Mode        │
-│                         │   │                         │
-│ • deleteSurrounding     │   │ • Ctrl+W (delete word)  │
-│ • setSelection()        │   │ • DPAD arrow keys       │
-│ • commitText()          │   │ • commitText()          │
-└─────────────────────────┘   └─────────────────────────┘
+┌─────────────────────────┐   ┌─────────────────────────────────┐
+│ TEXT (ordinary editor)  │   │ TERMINAL / REMOTE (blind field) │
+│ KeyEventHandler:        │   │ KeyEventHandler:                │
+│ • deleteSurroundingText │   │ • KEYCODE_DEL × n               │
+│ • performContextMenu    │   │ • Ctrl+W (TERMINAL) /           │
+│   Action(paste)         │   │   Ctrl+Backspace (REMOTE)       │
+│ • setSelection()        │   │ • paste = commit OS clip text   │
+│ SuggestionHandler:      │   │ • DPAD arrows (moveCursorFallback)│
+│ • full autocorrect      │   │ SuggestionHandler:              │
+│                         │   │ • no rewrite; taps append only  │
+└─────────────────────────┘   └─────────────────────────────────┘
 ```
+
+(`InputCoordinator.kt` still exists but owns swipe-decode requests, trace capture and
+cursor-sync bookkeeping — not terminal detection or commits; see its class KDoc.)
 
 ## The Problem
 
