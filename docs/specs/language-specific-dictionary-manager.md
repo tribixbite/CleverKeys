@@ -35,9 +35,10 @@ disabled_words_es = ["palabra", ...]
 ### Key Generation
 
 ```kotlin
-object LanguagePreferenceKeys {
-    fun customWordsKey(languageCode: String) = "custom_words_$languageCode"
-    fun disabledWordsKey(languageCode: String) = "disabled_words_$languageCode"
+object LanguagePreferenceKeys {   // LanguagePreferenceKeys.kt — codes are lower-cased
+    fun customWordsKey(languageCode: String) = "custom_words_${languageCode.lowercase()}"
+    fun disabledWordsKey(languageCode: String) = "disabled_words_${languageCode.lowercase()}"
+    fun swipePriorityKey(languageCode: String) = "swipe_priority_${languageCode.lowercase()}"   // 2026-10-08
 
     fun migrateToLanguageSpecific(prefs: SharedPreferences, targetLang: String = "en") {
         // Copy global data to language-specific keys
@@ -135,6 +136,24 @@ fun setupViewPager() {
     }
 }
 ```
+
+## Swipe priority and the legacy custom-word frequency (2026-10)
+
+- **`swipe_priority_<lang>`** (JSON, `LanguagePreferenceKeys.swipePriorityKey`): per-word
+  `SwipePriority { NORMAL(0), HIGH(1), HIGHEST(2) }` (`SwipePriority.kt`), read/written through
+  `DictionaryManager.getSwipePriority(word)` / `setSwipePriority(word, priority)`
+  (`DictionaryManager.kt:198-214`). The "Prefer … when swiping?" offer raises a word to HIGH first.
+  Evidence and the bonus/collateral numbers: `docs/eval/2026-10-08-user-swipe-priority.md`.
+- **`swipe/UserLexiconInputs`** (`read(prefs, lang)`) bundles the three per-language inputs the
+  CTC lexicon merge consumes — `customJson` (`custom_words_<lang>`), `disabled`
+  (`disabled_words_<lang>`) and `priorityJson` (`swipe_priority_<lang>`) — and
+  `swipe/LexiconContentVersion` hashes them so raising/lowering a priority rebuilds the trie
+  exactly like adding a word.
+- **Legacy frequency 100**: every pre-2.0 writer stored custom words at frequency 100; the
+  default is 255 since `4525eb9c`. `LegacyCustomWordFrequency` (pure) drives the Custom-tab
+  offer, `CustomDictionarySource.raiseLegacyFrequencies` raises only words still at 100, and the
+  dismissal is the per-language pref `legacy_custom_freq_offer_dismissed`
+  (`.claude/skills/dictionary-pipeline.md` "Legacy frequency 100").
 
 ## Data Sources
 

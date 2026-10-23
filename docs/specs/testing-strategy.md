@@ -4,6 +4,20 @@ Updated: 2026-10-06. Counts below describe executed tests, not source annotation
 estimated coverage percentages. Automated passing results do not certify human swipe
 accuracy, all editor implementations, device fonts, or translated copy fluency.
 
+## Current totals (2026-10-23)
+
+| Suite | Count | Note |
+|-------|-------|------|
+| Pure JVM (`runPureTests`) | 3,215 | source `@Test` count at HEAD, 2026-10-23 |
+| MockK (`runMockTests`) | 1,461 | same |
+| Instrumented (androidTest) | 1,607 `@Test` | API 34, 35, 36 and 37 images green on emulator.wtf, 2026-10-17 / 2026-10-20 (`.claude/skills/ew-cli-testing.md`, `docs/RELEASE_RECORD.md` v2.0.0) |
+
+The run records below are dated evidence of specific builds (2,741 → 2,757 → 2,790 pure; 953 →
+974 → 991 mock; 1,588 instrumented on API 34) and are left as written; they are not the current
+suite size. Later additions include the editor-command / process-text suites
+(`.claude/skills/ime-key-routing.md`), the 2026-10-17 keyboard-tile and 2026-10-20 foldable
+height tests, and `TranslationFormatParityTest` (2026-10-22).
+
 ## Expanded-coverage baseline (`ef36222c`)
 
 | Suite | Result | Evidence |

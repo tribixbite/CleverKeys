@@ -97,8 +97,9 @@ Package names recognized (defined in `Config.kt`):
 | 1Password | `com.onepassword.android`, `com.agilebits.onepassword` |
 | LastPass | `com.lastpass.lpandroid` |
 | Dashlane | `com.dashlane` |
-| KeePass2Android | `keepass2android.keepass2android` |
-| KeePassDX | `com.kunzisoft.keepass.free`, `com.kunzisoft.keepass.pro` |
+| KeePass2Android | `keepass2android.keepass2android`, `keepass2android.keepass2android_nonet` |
+| KeePassDX | `com.kunzisoft.keepass.free`, `com.kunzisoft.keepass.pro`, `com.kunzisoft.keepass.libre` (#86) |
+| OpenKeePass | `de.slackspace.openkeepass` |
 | Enpass | `io.enpass.app` |
 | NordPass | `com.nordpass.android.app.password.manager` |
 | RoboForm | `com.siber.roboform` |
@@ -108,6 +109,9 @@ Package names recognized (defined in `Config.kt`):
 | mSecure | `com.msecure` |
 | Zoho Vault | `com.zoho.vault` |
 | Sticky Password | `com.stickypassword.android` |
+| Browsers (#86, credentials copied from a browser's password manager) | `com.android.chrome`, `com.chrome.beta`, `com.chrome.dev`, `com.chrome.canary`, `com.microsoft.emmx`, … (see `Config.PASSWORD_MANAGER_PACKAGES`) |
+
+(Table re-derived from `Config.PASSWORD_MANAGER_PACKAGES` on 2026-10-23; the set in `Config.kt` is authoritative.)
 
 ### Foreground App Detection
 
@@ -190,7 +194,7 @@ SettingsSwitch(
 > **Canonical spec:** [`docs/wiki/specs/clipboard/private-copy-spec.md`](../wiki/specs/clipboard/private-copy-spec.md)
 > (renders at <https://cleverkeys.app/specs/clipboard/private-copy-spec/>).
 > **User guide:** [`docs/wiki/clipboard/private-copy.md`](../wiki/clipboard/private-copy.md).
-> **Design doc:** [`docs/history/audits/remediation-plans/156-private-copy-paste.md`](../audit/remediation-plans/156-private-copy-paste.md).
+> **Design doc:** [`docs/history/audits/remediation-plans/156-private-copy-paste.md`](../history/audits/remediation-plans/156-private-copy-paste.md).
 > This section is an engineering-notes summary; see the canonical spec for full detail.
 
 Private copy adds a copy path that stores selected text directly into `ClipboardDatabase`

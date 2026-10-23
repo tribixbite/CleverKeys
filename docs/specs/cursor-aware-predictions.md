@@ -1,7 +1,10 @@
 # Cursor-Aware Predictions
 
-Updated: 2026-10-06. This describes the current shared prediction and commit path.
-Continuous swipe and verified suffix transactions remain under development.
+Updated: 2026-10-23. This describes the current shared prediction and commit path.
+Continuous swipe (opt-in, `continuous_swipe_enabled`, default OFF) and the verified suffix
+transactions (`VerifiedSuffixEdit`) have shipped; both are GUARDED rows in
+`docs/RELEASE_RECORD.md` (v2.0.0, unreleased). Cursor sync has been one `SuggestionHandler`
+pipeline since 2026-07-20 (`63ebf231`; ADR-008 superseded).
 
 ## Components
 

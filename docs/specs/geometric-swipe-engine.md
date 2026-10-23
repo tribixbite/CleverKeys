@@ -349,7 +349,7 @@ data class GeometricEngineConfig(
     val startNeighborRadius: Float = 0.9f,    // kw units
     val endNeighborRadius: Float = 1.1f,      // ends looser (ASK precedent)
     val lengthRatioMin: Float = 0.55f, val lengthRatioMax: Float = 1.9f,
-    val maxCandidatesScored: Int = 800,
+    val maxCandidatesScored: Int = 1200,          // was 800; raised with the endpoint-bucket widening (GeometricEngineConfig.kt:220,249)
     val extremityNeighbors: Int = 2,          // per end; widened when dense
     val denseLayoutKwThreshold: Float = 0.075f, // kw below this (≳13 columns) ⇒ 3-nearest buckets
     val dtwBand: Int = 0,                     // 0 = proportional matching (default); >0 experimental

@@ -1,7 +1,14 @@
 # Training a From-Scratch CTC Swipe Model (GPU box → ONNX → Kotlin `swipe/ctc/`)
 
 **Date:** 2026-08-06
-**Status:** Runnable end-to-end recipe (documentation only — no app code changed by this guide).
+**Status (2026-10-23): HISTORICAL recipe.** Written 2026-08-06 as the from-scratch plan; it did not
+produce the shipped encoders. The English encoder in the APK is CleverKeys-ML's
+`phaseM_kd_fresh_w1_s1234_fp16w` (2.91 MB) and the six script encoders are the generation-4
+`<code>_synth_v3_ch80_fp16w.onnx` artifacts carried in their language packs — both from the
+CleverKeys-ML repo's own pipeline, documented in `docs/specs/ctc-swipe-engine.md` and
+`docs/guides/adding-a-new-language.md` §1.3/§3. Version pins below are as of August 2026 (the app
+now runs `onnxruntime-android:1.21.1`, `build.gradle:98`). Licensing rules in §0 still apply.
+Original status: runnable end-to-end recipe (documentation only — no app code changed by this guide).
 **Decision basis:** `docs/history/audits/2026-08-06-futo-engine-integration-decision.md` (option D:
 retrain-to-ONNX; gates G2/G3/G4), architecture ground truth
 `docs/history/audits/2026-08-06-futo-decoder-integration-study.md` ("study"), consuming decoder
@@ -123,7 +130,7 @@ pip install datasets huggingface_hub
 Version pins that matter: `torch>=2.4` (stable ONNX exporter for the ops we use:
 `atan2`, `cumsum`, `where`, `arange`, `log_softmax` — the same op family FUTO's exported
 graph uses, study §1a), `onnx>=1.16`, `onnxruntime>=1.18` (parity checks; the app runs
-`onnxruntime-android:1.20.0`, and opset 17 is comfortably supported there).
+`onnxruntime-android:1.21.1` as of 2026-10 — 1.20.0 when this was written — and opset 17 is comfortably supported there).
 
 ### Directory layout on the training box
 

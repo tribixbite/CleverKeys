@@ -10,8 +10,9 @@ every stratum; UNSEALING_4). Integration per `CleverKeys-ML/ctc/APP_INTEGRATION_
 (commits 3b9dd666..d99dd41f, seam-audit fixes fb77b422): `OnnxCtcEmissionModel` +
 `CtcEngineAdapter` + `SwipeEngineRouter.Mode.CTC` (any layout whose script has a complete
 wiring, and which exposes the active language's alphabet → CTC; everything else → geometric).
-**Languages: en, fr, de, es, it, pt, sv, ru** in the static table — eight, where `it`/`pt`/`sv`
-are `PROVISIONAL` and `ru` is `VAL_ONLY` (see "Per-language enablement") — **plus, since
+**Languages: en, fr, de, es, it, pt, sv, ru, el, uk, bg, mk, he** in the static table — thirteen as of
+2026-09-03 (`CtcLanguageSupport.SUPPORTED`), where `it`/`pt`/`sv`/`el`/`uk`/`bg`/`mk`/`he` are
+`PROVISIONAL` and `ru` is `VAL_ONLY` (see "Per-language enablement") — **plus, since
 2026-08-29, any imported LATIN language pack the device has measured as a–z-typeable**
 (`nl`, `id`, `ms`, … — `PROVISIONAL` by construction; see "Imported language packs"). Russian,
 added the same day, is the first non-Latin script and also reads its lexicon from an IMPORTED
@@ -72,9 +73,10 @@ to geometric:
    wiring (2026-08-29): the alphabet, the lexicon and the ONNX asset all vary by language.
 
 "Served language" = whatever `swipe/ctc/CtcLanguageSupport.sourceFor` resolves — the STATIC table
-`SUPPORTED` = **en, fr, de, es, it, pt, sv, ru** (evidence and tiers in "Per-language enablement"
-below; `ru` is `VAL_ONLY` and its lexicon is the IMPORTED langpack, so it is served only while that
-pack is installed), **plus any imported LATIN language pack this device has measured as
+`SUPPORTED` = **en, fr, de, es, it, pt, sv, ru, el, uk, bg, mk, he** (13 as of 2026-09-03; evidence
+and tiers in "Per-language enablement" below; the six script languages are `CKDT_LANGPACK`, so each
+is served only while its pack is installed, and their encoders travel IN the pack since
+2026-09-10 — the APK's only ONNX is the English `ctc_swipe_encoder.onnx`), **plus any imported LATIN language pack this device has measured as
 a–z-typeable** (2026-08-29, `CtcImportedPackSupport` — see "Imported language packs" below). The
 table is therefore a lower bound on coverage and `SUPPORTED.keys` may not be quoted as the served
 set; ask `isSupported`. Net `ctc` semantics:
@@ -884,7 +886,7 @@ src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/
 ├── CtcCkdtLexicon.kt     # CKDT .bin → (word, 255−rank) frequency pairs
 ├── CtcAzProjection.kt    # accent/joiner projection onto a–z + canonical display map
 ├── CtcContractionKeys.kt # alias-key injection at the MIN_FREQ floor
-├── CtcGreekOrthography.kt# final-sigma repair (Greek prerequisite, not yet routed)
+├── CtcGreekOrthography.kt# final-sigma repair (Greek has been ROUTED since 2026-08-30)
 ├── CtcFeaturizer.kt      # resampler.cpp port: 60Hz→fixed64, layout tensors, 4/3 aspect
 ├── CtcBeamDecoder.kt     # greedy CTC + single-stream Viterbi trie beam  (the core)
 └── CtcSwipeDecoder.kt    # facade: featurizer → CtcEmissionModel → beam

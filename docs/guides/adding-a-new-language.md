@@ -31,9 +31,10 @@ So the decision tree is:
 - **Latin-script language** → build the langpack (§1), done. If ≥98 % of its words project to
   a–z (measured automatically on import by `CtcImportedPackSupport`), CTC serves it; otherwise
   it gets TAP + geometric. No code change, no model, no retraining.
-- **Non-Latin script already trained** (cyrillic, greek, hebrew — models exist for ru, el, uk,
-  bg, mk, he) → langpack (§1) + layout (§2) + wiring row (§3). uk/bg/mk/he need only their
-  model + fixture bytes copied and the table row flipped — everything else already landed.
+- **Non-Latin script already trained** (cyrillic, greek, hebrew — ru, el, uk, bg, mk, he) →
+  these six are DONE: every `CtcScriptSupport` row is `Status.ROUTED` (uk/bg/mk/he since
+  2026-09-03, `CtcLanguageSupport.SUPPORTED` has 13 entries) and their encoders travel in the
+  pack (§1.3). Read their rows as the worked example for a new script.
 - **Non-Latin script with no trained model** (kk, sr, hy, ka, …) → all of the above **plus** an
   ML-side training run (§4). Budget roughly one GPU-day per script; the recipe is proven.
 
@@ -190,6 +191,13 @@ declares exactly that script. Getting this wrong is the "Greek QWERTY trap": `gr
 declared `script="latin"` for months and routed Greek boards to an engine that could not
 represent them.
 
+**Bind the layout to its language (GH #186/#61).** `<keyboard language="xx" …>` declares the
+layout's default language binding (`KeyboardData.declared_language`; validated by
+`LayoutLanguageBinding`, three-state in the Layout Manager editor). A bound layout decides the
+active language and suppresses auto-detection (`Config.layout_bound_language`), so a script
+layout should carry it. `theme="…"` is the parallel per-layout theme binding (2026-10-15).
+See `docs/specs/layout-system.md` "Language binding".
+
 **No geometry work is needed.** The app computes key centers at runtime from the rendered
 layout — user margins, heights, and custom XML included — and normalizes trace and keys in the
 same letter-box frame. `CleverKeys-ML/ctc/app_layout.py` replicates this math to 4.7e-4, which
@@ -214,7 +222,9 @@ All of this is in place for ru and el; read those rows as the worked example.
    licence boundary: if a file is not in `ctc/artifacts/`, it is not wirable). Generation 4 is
    the deployable one: `<code>_synth_v3_ch80_fp16w.onnx` (589,406 B each) + its
    `*_golden.json`. Verify sha256 against `APP_WIRING_CHECKLIST.md` §2.2 before copying. Model
-   → `src/main/assets/models/`; fixture → both `src/test/resources/ctc/` and
+   → the language's pack (`build_langpack.py --model`, §1.3; since 2026-09-10 no script encoder
+   lives in `src/main/assets/models/` — the APK's only ONNX is the English encoder) and its sha256
+   → `ScriptWiring.modelSha256`; fixture → both `src/test/resources/ctc/` and
    `src/androidTest/assets/ctc/` (byte-identical copies).
 4. **Preset** — nothing to add: every script row returns `CtcScoringParams.tunedRuCkdt`
    (γ 1.05 / λ 2.0 / β 0.2 / prunes 0.3734/0.9882), because every langpack is on the same CKDT
