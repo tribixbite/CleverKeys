@@ -146,6 +146,7 @@ class LangConfig:
     bundle: bool = False            # also write src/main/assets/dictionaries bin
     contractions: "str | None" = None  # assets contraction-map filename
     must_include: tuple = ()        # per-language guard words (hard exit 1)
+    glued_suffixes: tuple = ()      # clitics a corpus glues onto the previous word (fa که را و)
     corpus: "str | None" = None     # corpus_blend.BLENDS key: candidates + frequencies from a
                                     # corpus blend instead of wordfreq alone (fa)
 
@@ -267,6 +268,7 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
         hunspell=HUNSPELL_PROVIDER_PREFIX + "lilak",
         foreign=("ar",),
         top=120_000, band=60_000, limit=50_000, corpus="fa",
+        glued_suffixes=("که", "را", "و"),
         must_include=("است", "می‌شود", "میشود", "و", "کتاب‌ها", "نامه‌ای", "نام‌های"),
     ),
     "he": LangConfig(
@@ -343,6 +345,13 @@ FUNC_FORCEKEEP_MAX = 1_000
 # Zipf gap below its half-space twin under which a joined ه+suffix spelling is read as a
 # ZWNJ-stripping artefact rather than a real joined spelling (Stage D; fa, 2026-10-23).
 ZWNJ_ARTEFACT_GAP = 1.0
+
+# Glued-clitic artefacts (Stage D; fa, 2026-10-23 Pixel report: the bar offered می‌شودکه). A
+# candidate W = X + suffix, X among the GLUED_HEAD most frequent candidates, W more than
+# GLUED_RATIO times rarer than X, is a missing space (داردکه, خودرا, نفرو), not a word -- unless
+# the spell oracle accepts W (چونکه, کندو) or the allowlist holds it (وقتیکه).
+GLUED_HEAD = 2_000
+GLUED_RATIO = 200.0
 
 # Valid-seed words (typo-drop-rescue spec, ENGLISH-ONLY): must never be
 # silently lost when present in the candidate stream AND carrying positive
@@ -802,8 +811,20 @@ def main() -> None:
                 twin = min(vs, key=lambda v: (-zc.get(v, 0.0), v))
                 if zc[w] < zc.get(twin, 0.0) - ZWNJ_ARTEFACT_GAP:
                     zwnj_artefact[w] = twin
+    glued: "dict[str, str]" = {}
+    if cfg.glued_suffixes:
+        head = set(ranked[:GLUED_HEAD])
+        gap = __import__("math").log10(GLUED_RATIO)
+        for w in universe:
+            if w in spell or w in allow:
+                continue
+            for sfx in cfg.glued_suffixes:
+                x = w[: -len(sfx)]
+                if w.endswith(sfx) and x in head and zc[w] < zc[x] - gap:
+                    glued[w] = f"{x}+{sfx}"
+                    break
     print(f"negatives: at_risk={len(at_risk)} typo={len(typo)} foreign={len(foreign)} "
-          f"zwnj-artefact={len(zwnj_artefact)} ({time.time()-t0:.0f}s)")
+          f"zwnj-artefact={len(zwnj_artefact)} glued={len(glued)} ({time.time()-t0:.0f}s)")
 
     # ---------------- Stage E: decision ----------------
     keep: "dict[str, str]" = {}     # word -> keep-reason
@@ -842,6 +863,9 @@ def main() -> None:
             continue
         if w in zwnj_artefact:
             drop[w] = f"zwnj-stripped→{zwnj_artefact[w]}"
+            continue
+        if w in glued:
+            drop[w] = f"glued-clitic→{glued[w]}"
             continue
         if rank is not None and rank < band:                  # band 1: conservative
             if w in typo and not (pos or w in name):

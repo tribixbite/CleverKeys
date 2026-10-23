@@ -111,6 +111,19 @@ class PersianLangpackTest {
     }
 
     @Test
+    fun gluedClicticArtefactsAreDroppedAndReviewedJoinedFormsKept() {
+        // Pixel 2026-10-23: the bar completed `می‌شود` to `می‌شودکه` (a missing space). The builder's
+        // glued-clitic filter drops X + که/را/و when X is frequent and the joined string is rare.
+        for (w in listOf("می‌شودکه", "داردکه", "خودرا", "شمارا", "هزارو", "نفرو", "کاررا")) {
+            assertWithMessage("glued artefact '$w' must not be in the pack").that(dict).doesNotContainKey(w)
+        }
+        // Real joined words: kept by the Lilak oracle (چونکه, کندو) or the reviewed allowlist.
+        for (w in listOf("چونکه", "همینکه", "کندو", "وقتیکه", "کسیکه", "زیراکه", "اینو")) {
+            assertWithMessage("joined word '$w' must stay").that(dict).containsKey(w)
+        }
+    }
+
+    @Test
     fun everyWordUsesThePersianAlphabetWithOnlyInternalHalfSpaces() {
         val alphabet = "ابپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیآءأإؤئ".toSet()
         for (w in dict.keys) {

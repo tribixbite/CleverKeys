@@ -3,3 +3,18 @@
 # و ("and") is the one real one-letter Persian word; the classifier keeps one-letter words only
 # from the allowlist or a shipped carryover, and a first build has no carryover.
 و
+
+# Joined forms the glued-clitic filter (X + که/را/و, X frequent, W 200x rarer) would drop but that
+# are real words; Lilak rejects all of them. Reviewed 2026-10-23 (coordinator device follow-up).
+# Lexicalised joined conjunctions:
+وقتیکه
+کسیکه
+زیراکه
+آنانکه
+# Names and loanwords that merely end in را / و:
+سندرا
+سنتو
+تورا
+# Colloquial object marker -و (= را) and colloquial تو "in", frequent in informal typing:
+اینو
+توو

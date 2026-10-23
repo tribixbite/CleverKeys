@@ -5,9 +5,11 @@ well — 1.5M is way too many words." This note records how the list was built a
 count after every step, the size cutoff and why, and what a sample of the result looks like.
 Research input: `docs/research/2026-10-21-persian-zwnj.md` (§3 minimal pairs, §5 sources, §7).
 
-Result: `scripts/dictionaries/langpack-fa.zip` (545,277 bytes, sha256 `68302e60c47b…`),
-**50,000 words**, 11,208 of them (22.4 %) with a half-space, 1,977 joined/half-space pairs, and
-**97.45 % token coverage** of held-out Persian sentences. Commit `479a7277`.
+Result: `scripts/dictionaries/langpack-fa.zip` (545,291 bytes, sha256 `218024dfdabe…`, rebuilt
+2026-10-23 with the glued-clitic filter of §2a),
+**50,000 words**, 11,213 of them (22.4 %) with a half-space, 1,978 joined/half-space pairs, and
+**97.45 % token coverage** of held-out Persian sentences. First build `479a7277`; the glued-clitic
+rebuild is the commit that adds §2a.
 
 Reproduce (downloads go to `~/.cache/cleverkeys-corpora/`, never the repo):
 
@@ -97,6 +99,7 @@ The fold merged 2,097 of wordfreq's 2,100 Arabic-letter tokens into their Persia
 | dropped: ZWNJ-stripping artefact (below) | 81 |
 | dropped: 2-letter without evidence | 70 |
 | dropped: blocklist (profanity/slurs) | 10 |
+| dropped: glued clitic (§2a; rebuild — the rows above are the first build) | 120 |
 | survivors before the size cap | 60,348 |
 | dropped: size cap (`--limit 50000`, blended-frequency order) | 10,348 |
 | **final** | **50,000** |
@@ -122,6 +125,27 @@ different words. Two rules guard the joined side:
 All twelve §3 class-(i) forms survived (`ساله‌ای`/`سال‌های`, `حرفه‌ای`/`حرف‌های`, `نامه‌ای`/`نام‌های`,
 `زمینه‌ای`/`زمین‌های`, `دسته‌ای`/`دست‌های`, `نقشه‌ای`/`نقش‌های`), with their joined strings, as did
 `به‌روز`/`بهروز`, `دست‌کم`/`دستکم`, `گفت‌وگو`/`گفتگو`, `بیشتر`/`بیش‌تر`, `آن‌ها`/`آنها`.
+
+### 2a. Glued-clitic artefacts (added 2026-10-23 after the Pixel device check)
+
+On the Pixel the bar completed `می‌شود` to `می‌شودکه`: a common word with a conjunction or clitic
+glued on where a space is missing. New Stage-D negative in `build_wordlist.py`
+(`LangConfig.glued_suffixes`, fa: `که را و`): a candidate W = X + suffix is dropped when X is
+among the `GLUED_HEAD` = 2,000 most frequent candidates and W is more than `GLUED_RATIO` = 200
+times rarer than X, unless Lilak accepts W or the allowlist holds it.
+
+Lilak accepts `چونکه`, `همینکه`, `آنجاکه`, `اینکه`, `آنکه`, `بلکه`, `چنانکه`, `کندو` (beehive), `اندو`,
+`دومینو`, `شاهو`, so those stay. It rejects `وقتیکه`, `کسیکه`, `زیراکه`, `آنانکه`, `سندرا`, `سنتو`;
+these, plus `تورا` (Torah), the colloquial object form `اینو` (= این را) and colloquial `توو`, are in
+the reviewed allowlist (`fa_allowlist.txt`).
+
+The filter flags 120 candidates. 18 of them were in the first 50,000 and are now dropped:
+`آنهارا استرا اورا باشدکه خودرا داردکه سیاهو شمارا شودکه می‌شودکه نفرو هررا هزارو هستندکه هنریکه
+ویرا پیکه کاررا`. The cap refilled 18 from the next-ranked survivors: `ایفرا تمساح‌های توفان‌ها
+خونابه دهقی رقومی سایبورگ فرضهای فرنگی‌های فسفره قلی‌پور متمرد معاصری مهستان نقش‌آفرینان
+پخش‌کنندگان پروتزهای پونته`. Coverage is unchanged at 97.45 %. Possible over-drops among the 18:
+`اورا` (also "aura"), `پیکه` (piqué), `هنریکه` (Henrique), `سیاهو` (a place/surname) — not
+reviewed by a native speaker. `PersianLangpackTest` pins both sides.
 
 **Space-separated affixes are kept on purpose.** Informal writers type `می شود`, `کتاب ها`, so
 `می`, `نمی`, `ها`, `های` are frequent standalone tokens in every source. Dropping them would make
@@ -230,7 +254,11 @@ no stripped-ZWNJ artefact in the sample.
   pairs, the alphabet, the top ranks, and the geometric/CTC routing above;
   `LanguagePackImportTest.everyShippedPackImportsAndCarriesItsAttribution` imports it through the
   real importer.
-- Not checked on a device; no native-speaker review of the list.
+- Device (Pixel, 2026-10-23, coordinator): the half-space key stays inside the word, and joined
+  `میشود` offers `می‌شود` without autocorrecting it. One synthetic adb swipe of `سلام` on Persian PC
+  produced `سن`; that is not evidence either way, because adb motion events are coarse.
+  **Persian swipe quality on the geometric engine is UNVALIDATED.**
+- No native-speaker review of the list.
 
 ## 6. Open items
 
