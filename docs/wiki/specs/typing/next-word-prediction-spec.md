@@ -17,9 +17,13 @@ be empty, from two tiers:
   corpus-built context model `assets/lm/en.cklm` (`StaticContextLm`, CKLM v1; 15,265 words,
   14,469 previous words, 74,797 pairs; built by `scripts/build_static_lm.py` from the Leipzig
   Corpora Collection `eng-com_web-public_2018_300K` (CC BY 4.0) + Tatoeba English sentences
-  (CC BY 2.0 FR) at weight 0.1; commit 2144770e). de/es/fr/it/pt: the curated
-  `assets/bigrams/<lang>_bigrams.json` seeds (ARC-020, 2026-08-28), which for English only
-  fill slots the LM leaves empty.
+  (CC BY 2.0 FR) at weight 0.1; commit 2144770e). German, French, Italian, Portuguese and
+  Swedish ship their own `assets/lm/<lang>.cklm` from the same builder (each passed its own
+  pre-registered S1 gate; `docs/eval/2026-09-29-static-lm-multilingual.md`, pt/sv added in
+  807c56bd). Spanish failed its gate and has no `.cklm`; it is served by the curated
+  `assets/bigrams/es_bigrams.json` seeds alone. The `<lang>_bigrams.json` seeds (en, de, es,
+  fr, it, pt; ARC-020, 2026-08-28) otherwise only fill slots the LM leaves empty, and a
+  language with neither gets an empty static tier.
 - **Learned tier** — the on-device n-gram store (`BigramStore` + `TrigramStore` via
   `ContextModel`), plus the personalization boost and learned-vocabulary allow-list.
 
@@ -40,7 +44,7 @@ provenance. Internal engineering spec: `docs/specs/context-learning-and-next-wor
 | LearningGate | `src/main/kotlin/tribixbite/cleverkeys/LearningGate.kt` | Master privacy gate; incognito-field flag handling |
 | SuggestionHandler | `src/main/kotlin/tribixbite/cleverkeys/SuggestionHandler.kt` | Impure wiring: the four call-sites, executor, bar posting |
 | SuggestionProvenance | `src/main/kotlin/tribixbite/cleverkeys/SuggestionProvenance.kt` | `SuggestionOrigin.NEXT_WORD` metas + long-press sheet formatting |
-| StaticContextLm | `src/main/kotlin/tribixbite/cleverkeys/StaticContextLm.kt` | CKLM v1 loader for the shipped English context model `assets/lm/en.cklm` |
+| StaticContextLm | `src/main/kotlin/tribixbite/cleverkeys/StaticContextLm.kt` | CKLM v1 loader for the shipped context models `assets/lm/<lang>.cklm` (en, de, fr, it, pt, sv; `assetNameFor`) |
 | StaticBigramSeed | `src/main/kotlin/tribixbite/cleverkeys/StaticBigramSeed.kt` | Pure parse/merge/rank over the shipped `assets/bigrams/<lang>_bigrams.json` cold-start pairs |
 | BigramModel | `src/main/kotlin/tribixbite/cleverkeys/BigramModel.kt` | Loads those assets (async) and serves `getPredictions(prevWord)` — LM continuations first for English, curated pairs filling the rest |
 

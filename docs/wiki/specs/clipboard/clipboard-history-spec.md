@@ -4,7 +4,7 @@ description: Persistent clipboard tabs, size filters, persistent selection with 
 user_guide: /wiki/clipboard/clipboard-history/
 status: implemented
 version: v1.4.0
-schema_version: v4
+schema_version: v5
 ---
 
 # Clipboard History Technical Specification
@@ -115,16 +115,23 @@ Tests: `src/test/kotlin/tribixbite/cleverkeys/clipboard/ClipboardCatchUpTest.kt`
 
 ## Data Models
 
-### ClipboardEntry (v4)
+### ClipboardEntry (v5)
 
 ```kotlin
-// ClipboardEntry.kt
+// ClipboardEntry.kt:17 (abridged)
 class ClipboardEntry(
     @JvmField val content: String,
     @JvmField val timestamp: Long,
     @JvmField val mimeType: String = MIME_TEXT_PLAIN,
     @JvmField val thumbnailBlob: ByteArray? = null,
-    @JvmField val mediaPath: String? = null
+    @JvmField val mediaPath: String? = null,
+    @JvmField val tags: List<String> = emptyList(),
+    @JvmField val todoStatus: String? = null,
+    // #156: private-copy marker (v5). isPrivate → lock badge + confirm before the OS clipboard;
+    // sourcePackage → provenance line ("via <app>" / "direct launch").
+    @JvmField val isPrivate: Boolean = false,
+    @JvmField val sourcePackage: String? = null,
+    @JvmField val rowId: Long = 0,
 ) {
     val isMedia: Boolean get() = mimeType != MIME_TEXT_PLAIN
     val isImage: Boolean get() = mimeType.startsWith("image/")
@@ -186,7 +193,9 @@ CREATE TABLE clipboard_entries (
     content_hash TEXT NOT NULL,
     mime_type TEXT DEFAULT 'text/plain',     -- v4
     thumbnail_blob BLOB,                     -- v4: ≤10KB WebP thumbnail
-    media_path TEXT                           -- v4: internal file path
+    media_path TEXT,                          -- v4: internal file path
+    is_private INTEGER NOT NULL DEFAULT 0,   -- v5: #156 private copy
+    source_package TEXT                       -- v5: #156 provenance
 );
 CREATE INDEX idx_content_hash ON clipboard_entries(content_hash);
 CREATE INDEX idx_timestamp ON clipboard_entries(timestamp DESC);
@@ -206,7 +215,9 @@ CREATE TABLE pinned_entries (
     tags TEXT DEFAULT '[]',                  -- JSON array
     mime_type TEXT DEFAULT 'text/plain',     -- v4
     thumbnail_blob BLOB,                     -- v4
-    media_path TEXT                           -- v4
+    media_path TEXT,                          -- v4
+    is_private INTEGER NOT NULL DEFAULT 0,   -- v5
+    source_package TEXT                       -- v5
 );
 CREATE INDEX idx_pinned_hash ON pinned_entries(content_hash);
 CREATE INDEX idx_pinned_pos ON pinned_entries(position ASC);
@@ -226,7 +237,9 @@ CREATE TABLE todo_entries (
     tags TEXT DEFAULT '[]',
     mime_type TEXT DEFAULT 'text/plain',     -- v4
     thumbnail_blob BLOB,                     -- v4
-    media_path TEXT                           -- v4
+    media_path TEXT,                          -- v4
+    is_private INTEGER NOT NULL DEFAULT 0,   -- v5
+    source_package TEXT                       -- v5
 );
 CREATE INDEX idx_todo_hash ON todo_entries(content_hash);
 CREATE INDEX idx_todo_pos ON todo_entries(position ASC);
@@ -240,6 +253,7 @@ CREATE INDEX idx_todo_status ON todo_entries(status);
 | v1→v2 | Add `is_todo` column | ALTER TABLE ADD COLUMN |
 | v2→v3 | Independent pinned/todo tables | CREATE-COPY-DROP-RENAME (pre-API 34 compat) |
 | v3→v4 | Media columns (mime_type, thumbnail_blob, media_path) | ALTER TABLE ADD COLUMN × 9 |
+| v4→v5 | Private copy (#156): `is_private INTEGER NOT NULL DEFAULT 0`, `source_package TEXT` on all three tables | ALTER TABLE ADD COLUMN × 6 (`migrateV4toV5`, `ClipboardDatabase.kt:250`); `DATABASE_VERSION = 5` (`:1956`) |
 
 All migrations are non-destructive. v2→v3 uses COPY semantics: pinned/todo entries are copied to new tables AND remain in history.
 
@@ -485,9 +499,9 @@ Clipboard data is also included in the new one-click **Full Backup** ZIP (`cleve
 | Setting | Key | Default | Range |
 |---------|-----|---------|-------|
 | Enable History | `clipboard_history_enabled` | true | bool |
-| History Limit | `clipboard_history_limit` | 50 | count or size-based |
+| History Limit | `clipboard_history_limit` | 0 (unlimited) | 0–500 entries (`SettingsRanges.CLIPBOARD_HISTORY_LIMIT`; stored as a string) |
 | History Duration | `clipboard_history_duration` | -1 (never) | minutes, -1=never |
-| Max Item Size (text) | `clipboard_max_item_size_kb` | 256 | 64-1024 KB |
+| Max Item Size (text) | `clipboard_max_item_size_kb` | 512 | 64-1024 KB |
 | Text-Only Mode | `clipboard_text_only` | false | bool — hides all media |
 | Media Clipboard | `clipboard_media_enabled` | true | bool — enables media capture |
 | Max Media Size | `clipboard_max_media_size_mb` | 10 | 1-50 MB |
@@ -496,7 +510,7 @@ Clipboard data is also included in the new one-click **Full Backup** ZIP (`cleve
 | Swipe to Delete | `clipboard_swipe_delete_enabled` | true | bool — swipe a row to delete it (5 s Undo) |
 | Exclude PWMs | `clipboard_exclude_password_managers` | true | bool |
 | Sensitive Flag | `clipboard_respect_sensitive_flag` | true | bool (Android 13+) |
-| Pane Height | `clipboard_pane_height_percent` | 45 | 20-80% |
+| Pane Height | `clipboard_pane_height_percent` | 30 | 10-50% of the keyboard area |
 
 ## Privacy and access control
 

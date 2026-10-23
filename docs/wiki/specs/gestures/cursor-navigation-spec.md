@@ -50,11 +50,14 @@ From `res/xml/bottom_row.xml`:
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `slider_sensitivity` | Int (% string) | 30 | Pixels per cursor movement (lower = more sensitive) |
-| `slider_speed_smoothing` | Float | 0.7 | Exponential smoothing factor (0.0-1.0) |
-| `slider_speed_max` | Float | 4.0 | Maximum speed multiplier |
+| `slider_speed_smoothing` | Float | 0.6 | Exponential smoothing factor (0.0-1.0) |
+| `slider_speed_max` | Float | 6.0 | Maximum speed multiplier |
 | `SLIDING_SPEED_VERTICAL_MULT` | Float (const) | 0.5 | Vertical movement reduction factor |
 
-> Default values reflect the current constants in `Config.kt:542-543` and `Pointers.kt:1747`. The previously-documented defaults (`0.6` / `6.0`) refer to an older configuration.
+> Defaults are `Defaults.SLIDER_SPEED_SMOOTHING = 0.6f` and `Defaults.SLIDER_SPEED_MAX = 6.0f`
+> (`Config.kt:126-127`); the vertical multiplier is `Pointers.kt:2447`. Both slider values
+> travel with the sliding pointer's captured `ConfigSnapshot` (ARC-072), so a settings change
+> cannot alter a slide's acceleration curve halfway through it.
 
 ## Implementation Details
 

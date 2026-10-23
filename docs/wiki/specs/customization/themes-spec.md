@@ -18,7 +18,7 @@ The theme system resolves a theme id (preference key `theme`) into a runtime `Th
 |-----------|------|---------|
 | Theme | `src/main/kotlin/tribixbite/cleverkeys/Theme.kt` | Runtime theme model + precomputed paints (`Theme.Computed`) |
 | ThemeProvider | `src/main/kotlin/tribixbite/cleverkeys/theme/ThemeProvider.kt` | Resolves theme id → `Theme`; fallback on unknown/dangling ids |
-| KeyboardColorScheme | `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardColorScheme.kt` | Immutable semantic color tokens (20 fields) for runtime themes |
+| KeyboardColorScheme | `src/main/kotlin/tribixbite/cleverkeys/theme/KeyboardColorScheme.kt` | Immutable semantic color tokens (17 fields) for runtime themes |
 | PredefinedThemes | `src/main/kotlin/tribixbite/cleverkeys/theme/PredefinedThemes.kt` | Decorative built-in scheme catalog (`ThemeInfo` entries) |
 | CustomThemeManager | `src/main/kotlin/tribixbite/cleverkeys/theme/CustomThemeManager.kt` | Custom-theme CRUD, JSON persistence, reactive `StateFlow` list |
 | CustomThemePrefPolicy | `src/main/kotlin/tribixbite/cleverkeys/theme/CustomThemePrefPolicy.kt` | Pref coherence on save/delete of custom themes (H-2/H-4) |

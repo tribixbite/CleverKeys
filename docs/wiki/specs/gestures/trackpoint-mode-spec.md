@@ -24,7 +24,7 @@ TrackPoint Navigation Mode provides joystick-style cursor control by holding arr
 ## State Flag
 
 ```kotlin
-// Pointers.kt:1713
+// Pointers.kt:2374
 const val FLAG_P_TRACKPOINT_MODE = 1 shl 10  // = 0x400 = 1024
 ```
 
@@ -74,8 +74,9 @@ User Input (arrow key touch + hold without movement)
 Note: unlike a separate "movement threshold" gate, the current implementation **always** enters TrackPoint mode when long-press fires on a key that has navigation subkeys — the user can move the finger to a comfortable position first, then hold.
 
 ```kotlin
-// Pointers.kt:1182 (inside handleLongPress)
-if (_config.keyrepeat_enabled && hasNavSubkeys) {
+// Pointers.kt:1565 (inside handleLongPress; verbose log line omitted). `snap` is the
+// ConfigSnapshot captured when this press began (ARC-072), not the live Config.
+if (snap.keyrepeat_enabled && hasNavSubkeys) {
     ptr.flags = (ptr.flags and FLAG_P_DEFERRED_DOWN.inv()) or FLAG_P_TRACKPOINT_MODE
     // Store CURRENT finger position as joystick center (not initial touch point)
     // This allows user to move finger to comfortable position before TrackPoint activates
@@ -92,7 +93,7 @@ if (_config.keyrepeat_enabled && hasNavSubkeys) {
 ## Joystick Repeat Handler
 
 ```kotlin
-// Pointers.kt:1083 - handleTrackPointRepeat()
+// Pointers.kt:1463 - handleTrackPointRepeat() (verbose log lines omitted)
 private fun handleTrackPointRepeat(ptr: Pointer) {
     if (!ptr.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) {
         return
@@ -182,7 +183,7 @@ Diagonals are produced naturally: if both `absDx > TRACKPOINT_DEAD_ZONE` and `ab
 Repeat delay is linearly interpolated from `TRACKPOINT_MAX_DELAY` at the dead-zone edge to `TRACKPOINT_MIN_DELAY` at the key edge, using the **maximum** normalized displacement across the two axes:
 
 ```kotlin
-// Pointers.kt:1147
+// Pointers.kt:1527
 (TRACKPOINT_MAX_DELAY - (maxNormalizedDist * (TRACKPOINT_MAX_DELAY - TRACKPOINT_MIN_DELAY))).toLong()
 ```
 
@@ -195,7 +196,7 @@ Repeat delay is linearly interpolated from `TRACKPOINT_MAX_DELAY` at the dead-zo
 ## TrackPoint Constants
 
 ```kotlin
-// Pointers.kt:1718-1731
+// Pointers.kt:2386-2398
 const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f  // Min movement (px) to trigger nav event
 const val TRACKPOINT_DEAD_ZONE = 15f           // No movement if finger within this distance
 const val TRACKPOINT_INITIAL_DELAY = 50L       // Initial delay before first repeat
@@ -210,14 +211,14 @@ const val TRACKPOINT_MAX_DELAY = 200L          // Slowest repeat (finger just ou
 | `keyrepeat_enabled` | Boolean | true | Master toggle for TrackPoint / key-repeat / selection-delete |
 | `longpress_timeout` | Int | 600 | Hold duration (ms) before long-press fires and TrackPoint engages |
 | `haptic_trackpoint_activate` | Boolean | true | Trigger haptic when entering TrackPoint or selection-delete mode |
-| `short_gesture_min_distance` | Int | 15 | Pixels of movement that classify a touch as a short swipe (used by selection-delete; TrackPoint itself does not gate on this) |
+| `short_gesture_min_distance` | Int | 28 | Percent of the key diagonal (converted to pixels by `shortGestureMinDistancePx`) that classifies a touch as a short swipe; selection-delete's entry check uses it, TrackPoint itself does not gate on it |
 
 ## Haptic Feedback
 
 Entry into TrackPoint mode triggers `HapticEvent.TRACKPOINT_ACTIVATE`, gated by `config.haptic_trackpoint_activate`:
 
 ```kotlin
-// VibratorCompat.kt:105 + 143 + 176
+// VibratorCompat.kt:99 + 137 + 166
 HapticEvent.TRACKPOINT_ACTIVATE -> config.haptic_trackpoint_activate
 HapticEvent.TRACKPOINT_ACTIVATE -> { /* VibrationEffect.EFFECT_CLOCK_TICK */ }
 HapticEvent.TRACKPOINT_ACTIVATE -> 15L  // legacy fallback amplitude duration (ms)
@@ -227,7 +228,7 @@ HapticEvent.TRACKPOINT_ACTIVATE -> 15L  // legacy fallback amplitude duration (m
 
 ## Nav Key Exclusion from Swipe Typing
 
-Arrow / nav subkeys are excluded from short-gesture path collection so that holding them activates TrackPoint instead of triggering an unintended swipe gesture. The activation gate at `Pointers.kt:1182` checks `hasNavigationSubkeys(ptr)` — keys without nav subkeys never enter this branch.
+Arrow / nav subkeys are excluded from short-gesture path collection so that holding them activates TrackPoint instead of triggering an unintended swipe gesture. The activation gate at `Pointers.kt:1565` checks `hasNavigationSubkeys(ptr)` (`Pointers.kt:1938`) — keys without nav subkeys never enter this branch.
 
 ## Error Handling
 

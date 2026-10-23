@@ -112,7 +112,7 @@ Real preference keys (read in `Config.refresh`, `Config.kt:704-713`):
 | **Custom vibration mode** | `vibrate_custom` | `false` | `Config.kt:704` / `Defaults:72` |
 | **Custom duration (ms)** | `vibrate_duration` | `20` | `Config.kt:705` / `Defaults:73` |
 
-The Settings UI exposes the master toggle, the five per-event switches, and the duration slider in the **Accessibility** section; writing the slider sets `vibrate_custom = true` (`AccessibilitySection.kt`).
+The Settings UI exposes, in the **Accessibility** section: the master toggle (**Vibration Feedback**), a **Use System Vibration** switch (on = `vibrate_custom = false`, the low-latency `performHapticFeedback` path; off = the `Vibrator` one-shot of the duration below), the **Custom Duration (optional)** slider (5–100 ms in 5 ms steps, `SettingsRanges.VIBRATE_DURATION`, enabled only while the switch is off; dragging it re-asserts `vibrate_custom = true`), and the five per-event switches (`AccessibilitySection.kt:60-105`, #154). The master toggle itself never writes `vibrate_custom`.
 
 `android.permission.VIBRATE` is declared in `AndroidManifest.xml`.
 

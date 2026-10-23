@@ -233,51 +233,46 @@ fun SettingsSwitch(
     }
 }
 
+// ui/settings/SettingsControls.kt:225
 @Composable
-fun SettingsSlider(
+internal fun SettingsActivity.SettingsSlider(
     title: String,
+    description: String,
     value: Float,
-    range: ClosedFloatingPointRange<Float>,
-    onValueChange: (Float) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-        Text(title, style = MaterialTheme.typography.bodyLarge)
-        Slider(value = value, valueRange = range, onValueChange = onValueChange)
-    }
-}
+    valueRange: ClosedFloatingPointRange<Float>,
+    /** Distance between two stops, in [value]'s unit; the Compose step count is derived from it. */
+    increment: Float,
+    onValueChange: (Float) -> Unit,
+    displayValue: String,
+    /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
+    enabled: Boolean = true
+)
 ```
 
-### Storage Permissions (Android 11+)
+Callers pass an `increment`, never a raw Compose step count: Compose's `Slider(steps = n)`
+counts the stops *between* the ends, so a 0..100 slider in 1s needs 99. The conversion is
+`sliderSteps(range, increment)` in `Config.kt` (`((end − start) / increment).roundToInt() − 1`,
+floored at 0); raw `Slider`s elsewhere must call it too (audit 2026-10-20: about 40 sliders had
+passed the interval count and every stop fell between two values). Settings search addresses a
+control by a locale-independent `settingId` (`settingIdsFor`, `SettingsSearch.kt`), not by its
+title.
 
-```xml
-<!-- AndroidManifest.xml -->
-<!-- Legacy permissions for Android 10 and below -->
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-    android:maxSdkVersion="29" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
-    android:maxSdkVersion="29" />
+### Storage Permissions
 
-<!-- For Android 11+, use scoped storage via MediaStore or SAF -->
-```
-
-App-specific storage doesn't require permissions:
-
-```kotlin
-val appDir = context.getExternalFilesDir(null)  // No permission needed
-```
+`AndroidManifest.xml` declares **no** storage permission (`READ_/WRITE_EXTERNAL_STORAGE` are
+absent, as is `INTERNET`). Backups, language packs, dictionaries and GIF packs are read and
+written through the Storage Access Framework (document picker) and the app's own
+`filesDir`, neither of which needs a permission on any supported API level.
 
 ### Theme Application
 
-```kotlin
-// ConfigurationManager.kt
-fun applyTheme(themeName: String) {
-    val theme = KeyboardTheme.loadTheme(context, themeName)
-    KeyboardTheme.current = theme
-
-    // Notify keyboard view to redraw
-    CleverKeysService.getInstance()?.requestKeyboardRedraw()
-}
-```
+There is no `applyTheme()`. The `theme` preference is a theme id string; `Config.kt` resolves
+it to an `R.style` (the `when (themeName)` table near `Config.kt:1960`: built-in ids such as
+`light`, `dark`, `jewel`, `cleverkeysdark`; `monet*` ids fall back to `Light`/`Dark` without
+Material You; `decorative_*`/`custom_*` ids render through `ThemeProvider`, see
+[Themes](../customization/themes-spec.md)). A change reaches the keyboard like every other
+preference: `ConfigurationManager` observes `SharedPreferences`, refreshes `Config`, and the
+registered `ConfigChangeListener`s rebuild their views.
 
 ### Settings Change Listener
 

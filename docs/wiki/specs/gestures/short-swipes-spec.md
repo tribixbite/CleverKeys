@@ -15,46 +15,42 @@ Short swipe gesture detection for quick subkey access in 8 directions from any k
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Pointers | `Pointers.kt:200-400` | Swipe detection and direction |
+| Pointers | `Pointers.kt` (`onTouchMove` :1040, `getNearestKeyAtDirection` :852, touch-up short-gesture branch, `DIRECTION_TO_INDEX` :2437) | Swipe detection and direction |
 | KeyboardData | `KeyboardData.kt` | Subkey definitions |
 | Config | `Config.kt` | Distance thresholds |
 | KeyValue | `KeyValue.kt` | Subkey values |
 
 ## Direction Calculation
 
-```kotlin
-// Pointers.kt:~280
-fun getSwipeDirection(dx: Float, dy: Float): Int {
-    val angle = atan2(-dy, dx) * 180 / PI  // 0° = East, 90° = North
-
-    return when {
-        angle >= -22.5 && angle < 22.5 -> DIRECTION_E      // East
-        angle >= 22.5 && angle < 67.5 -> DIRECTION_NE     // North-East
-        angle >= 67.5 && angle < 112.5 -> DIRECTION_N     // North
-        angle >= 112.5 && angle < 157.5 -> DIRECTION_NW   // North-West
-        angle >= 157.5 || angle < -157.5 -> DIRECTION_W   // West
-        angle >= -157.5 && angle < -112.5 -> DIRECTION_SW // South-West
-        angle >= -112.5 && angle < -67.5 -> DIRECTION_S   // South
-        angle >= -67.5 && angle < -22.5 -> DIRECTION_SE   // South-East
-        else -> DIRECTION_NONE
-    }
-}
-```
-
-## Direction Constants
+Direction is a 16-sector index (22.5° slices, 0 = north, clockwise), computed in
+`Pointers.onTouchMove` once the finger has travelled `swipe_dist_px` from the touch-down
+point (`Pointers.kt:1047-1050`). There is no `getSwipeDirection()` and no `DIRECTION_*`
+constant set:
 
 ```kotlin
-// Pointers.kt
-const val DIRECTION_NONE = 0
-const val DIRECTION_N = 1    // key1
-const val DIRECTION_NE = 2   // key2
-const val DIRECTION_E = 3    // key3
-const val DIRECTION_SE = 4   // key4
-const val DIRECTION_S = 5    // key5
-const val DIRECTION_SW = 6   // key6
-const val DIRECTION_W = 7    // key7
-const val DIRECTION_NW = 8   // key8
+if (dist >= snap.swipe_dist_px && ptr.gesture == null) {
+    // Pointer moved significantly - check for special key activation FIRST
+    val a = atan2(dy, dx) + Math.PI
+    val direction = ((a * 8 / Math.PI).toInt() + 12) % 16
 ```
+
+## Direction to Subkey Slot
+
+The sector selects a layout slot through a lookup table; slot numbers are the layout XML's
+`key1`…`key8` (`key1` NW, `key2` NE, `key3` SW, `key4` SE, `key5` W, `key6` E, `key7` N,
+`key8` S):
+
+```kotlin
+// Pointers.kt:2437
+val DIRECTION_TO_INDEX = intArrayOf(
+    7, 2, 2, 6, 6, 4, 4, 8, 8, 3, 3, 5, 5, 1, 1, 7
+//  n ne ne  e  e se se  s  s sw sw  w  w nw nw  n
+//  0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15
+)
+```
+
+`DIRECTION_TO_SWIPE_DIRECTION` (`Pointers.kt:2455`) maps the same 16 sectors onto the
+8-value `SwipeDirection` enum that per-key customization stores.
 
 ## Distance Thresholds
 
@@ -92,22 +88,45 @@ val maxDistance = keyHypotenuse * (config.short_gesture_max_distance / 100f)
 if (distance >= minDistance && distance <= maxDistance) { /* short swipe */ }
 ```
 
+### Short Swipes Only (GH #147, #87)
+
+`short_swipes_only` (default `false`, `Defaults.SHORT_SWIPES_ONLY`, `Config.kt:138`; Settings >
+Gesture Tuning > **Short Swipes Only**; commit 918dc322) removes the upper bound: every swipe of
+at least the minimum distance types the subkey in its direction however long it is, a swipe
+toward a direction with no subkey types nothing, and swipe typing is off while it is on. The
+effective flag is `short_gestures_enabled && short_swipes_only` (`Config.kt:1332-1333`), so it
+needs short gestures enabled; the Swipe Typing toggle and the max-distance slider show
+"Off while Short Swipes Only is on" / "Not used while Short Swipes Only is on" descriptions
+(`strings.xml:699-702`).
+
 ## Subkey Resolution
 
+A sector with no subkey borrows from its two neighbours (±1 sector, about 67° in total), so
+a slightly off-axis flick still finds the intended subkey. `modifyKey` is applied in the same
+step so a key removed by the active modifiers counts as absent:
+
 ```kotlin
-// Pointers.kt:~350
-fun getSubkeyForDirection(key: Key, direction: Int): KeyValue? {
-    return when (direction) {
-        DIRECTION_N -> key.key1
-        DIRECTION_NE -> key.key2
-        DIRECTION_E -> key.key3
-        DIRECTION_SE -> key.key4
-        DIRECTION_S -> key.key5
-        DIRECTION_SW -> key.key6
-        DIRECTION_W -> key.key7
-        DIRECTION_NW -> key.key8
-        else -> null
+// Pointers.kt:841-879 (comments abridged)
+private fun getKeyAtDirection(k: KeyboardData.Key, direction: Int): KeyValue? {
+    return k.keys[DIRECTION_TO_INDEX[direction]]
+}
+
+private fun getNearestKeyAtDirection(ptr: Pointer, direction: Int): KeyValue? {
+    // [i] is [0, -1, +1], scanning ~19% of the circle's area (3 directions = 67.5°)
+    var i = 0
+    while (i > -2) {  // Changed from -3 to -2 (±1 range)
+        val d = (direction + i + 16) % 16
+        val k = _handler.modifyKey(getKeyAtDirection(ptr.key, d), ptr.modifiers)
+        if (k != null) {
+            if (k.getKind() == KeyValue.Kind.Slider && abs(i) >= 2) {
+                i = (i.inv() shr 31) - i
+                continue
+            }
+            return k
+        }
+        i = (i.inv() shr 31) - i
     }
+    return null
 }
 ```
 

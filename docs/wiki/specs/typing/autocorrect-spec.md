@@ -65,7 +65,7 @@ WordPredictor.autoCorrect(typedWord)   (WordPredictor.kt:1855)
 │ Step 1.45: dropped doubled letter (DD-M)     │
 │   double one letter → dictionary word D;     │
 │   D wins over the sweep's word W only if     │
-│   D is <= 32 rank steps rarer (or no W)      │
+│   D is <= 64 rank steps rarer (or no W)      │
 │   "helo" → "hello", "bery" stays → "very"    │
 ├──────────────────────────────────────────────┤
 │ Step 1.5: morphological guard (:1946)        │
@@ -593,28 +593,27 @@ This handles `donr → don't`, `hadnr → hadn't`, `couldnr → couldn't`.
 
 ## Configuration
 
-All `Config` fields below are read in `autoCorrect`. Defaults at v1.5.0 (`Config.kt:179-189` in `object Defaults`):
+All `Config` fields below are read in `autoCorrect`. Defaults from `Config.kt` `object Defaults` at HEAD (2026-10-23); the Settings UI groups them under **Auto-Correction**:
 
 | Setting | Key | Default | Range | Description |
 |---------|-----|---------|-------|-------------|
 | **Enabled** | `autocorrect_enabled` | `true` | bool | Master toggle |
 | **Min word length** | `autocorrect_min_word_length` | `2` | 1–5 | Skip very short words |
-| **Required prefix** | `autocorrect_prefix_length` | `0` | 0–5 | Candidates must share leading N chars (`0` = no prefix; allows first-char typos) |
+| **Starting Letter Accuracy** | `autocorrect_prefix_length` | `0` | 0–4 (`AutoCorrectionSection.kt:173`, step 1) | Letters at the start of the word that a correction must keep (`0` also fixes a wrong first letter; 1 or more never does) |
 | **Score threshold** | `autocorrect_char_match_threshold` | `0.65` | 0.5–0.95 | Min match score |
 | **Max length diff** | `autocorrect_max_length_diff` | `2` | 0–5 | Allow ±N length candidates |
 | **Min freq floor** | `autocorrect_confidence_min_frequency` | `100` | 100–2000 | Slider mapped onto the dictionary's frequency scale via `FrequencyFloor.effective()`; 100 = no floor. Custom/user words exempt |
 | **Diagnostic logging** | `swipe_debug_detailed_logging` | `false` | bool | Gates rejection-reason logs |
 | **Ranking & tuning** | `autocorrect_ranking` + 18 more | `channel` | — | Every ranking weight, gate and step switch: `autocorrect/AutocorrectTuning.kt` `Keys` (single definition of key, default and range, shared by prefs, backup validation and the Settings group) |
 
-## User Freq Control & Beam Search Interaction
+## User Frequency and the Swipe Decoders
 
-The freq-preservation fix at line 1024 is safe for beam search because beam search consumes frequency through `OptimizedVocabulary.WordInfo`, which:
-
-1. Normalizes raw frequency to `[0, 1]`.
-2. Multiplied by a frequency weight (a `neural_frequency_weight` knob, removed with the transformer engine on 2026-08-18).
-3. Combines with NN confidence via `VocabularyUtils.calculateCombinedScore`.
-
-Higher input freq → slightly higher final beam score, no breakage. The CTC engine now applies a per-language λ over `ln(freq)` instead, calibrated offline.
+The user-dictionary frequency that autocorrect preserves is not consumed by swipe decoding
+through a shared score: the CTC engine applies a per-language λ over `ln(freq)` calibrated
+offline, and the geometric engine its own frequency weight (`GEO_FREQUENCY_WEIGHT`). The
+transformer/"neural" beam search and its `neural_frequency_weight` knob were removed with
+that engine on 2026-08-18 (ADR-011); `swipe_beam_autocorrect_enabled` no longer exists, only
+`swipe_final_autocorrect_enabled` (final-output correction for swiped words) remains.
 
 ## Undo Mechanism
 

@@ -1,6 +1,6 @@
 ---
 title: Per-Key Actions — Technical Specification
-description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP/TEMPLATE action types and 200+ command registry
+description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP/TEMPLATE action types and a 240-command registry
 user_guide: /wiki/customization/per-key-actions/
 status: implemented
 version: development
@@ -24,7 +24,7 @@ Short Swipe Customization allows users to fully customize the 8-direction swipe 
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `CustomShortSwipeExecutor` | Executes commands via InputConnection |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt` | `IntentDefinition`, `IntentTargetType` | Intent data model, presets, Gson-safe parsing |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt` | `IntentEditorDialog` | UI for configuring intents (presets, manual fields, extras) |
-| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 200+ searchable commands |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 240 searchable commands in 21 categories (2026-10-20 count) |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | XML round-trip for all action types incl. INTENT |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt` | `parseIntentKeydef()` | Parses `intent:'json'` from layout XML |
 | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleShortGesture()` | Checks custom mappings first |
@@ -134,7 +134,7 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-CommandRegistry contains 200+ commands in 21 categories:
+CommandRegistry contains 240 commands in 21 categories (`Category` enum, `CommandRegistry.kt:56`; count as of 2026-10-20):
 
 ### Core Categories
 
@@ -194,10 +194,8 @@ class ShortSwipeCustomizationManager(context: Context) {
 ### CustomShortSwipeExecutor
 
 ```kotlin
-class CustomShortSwipeExecutor(
-    private val inputConnection: InputConnection,
-    private val keyEventHandler: KeyEventHandler
-) {
+// CustomShortSwipeExecutor.kt:24 (abridged)
+class CustomShortSwipeExecutor(private val context: Context) {
     fun execute(mapping: ShortSwipeMapping, inputConnection: InputConnection?, editorInfo: EditorInfo?): Boolean {
         return when (mapping.actionType) {
             ActionType.TEXT -> executeTextInput(mapping.actionValue, inputConnection)
@@ -205,10 +203,18 @@ class CustomShortSwipeExecutor(
             ActionType.KEY_EVENT -> executeKeyEvent(mapping.getKeyEventCode(), inputConnection)
             ActionType.INTENT -> executeIntent(mapping.actionValue)
             ActionType.TIMESTAMP -> executeTimestamp(mapping.actionValue, inputConnection)
+            // Templates never reach the executor: Keyboard2View routes them through
+            // KeyEventHandler.execute_template (see "Dynamic templates" below).
+            ActionType.TEMPLATE -> false
         }
     }
 }
 ```
+
+`ActionType` has six values (`ActionType.kt`): `TEXT`, `COMMAND`, `KEY_EVENT`, `INTENT`,
+`TIMESTAMP`, `TEMPLATE`. Editing command names (`copy`, `paste`, `selectAll`, …) also return
+`false` from the executor and are routed as the equivalent key would be
+(`CommandRouting.editingValue`).
 
 ### Single-apostrophe text actions
 
@@ -437,7 +443,7 @@ Dispatch by target type:
 - **SERVICE**: `context.startService(intent)`.
 - **BROADCAST**: `context.sendBroadcast(intent)`.
 
-### Intent Presets (11 built-in)
+### Intent Presets (12 built-in)
 
 | Preset | Target | Action | Use Case |
 |--------|--------|--------|----------|
@@ -451,7 +457,8 @@ Dispatch by target type:
 | Open Camera | ACTIVITY | `IMAGE_CAPTURE` | Launch camera |
 | Open Maps | ACTIVITY | `VIEW` (geo:) | Open maps with query |
 | Web Search | ACTIVITY | `WEB_SEARCH` | Web search |
-| Termux Command | SERVICE | `RUN_COMMAND` | Execute Termux CLI command |
+| Termux Command (background) | SERVICE | `com.termux.RUN_COMMAND` → `com.termux.app.RunCommandService` | Run a Termux command without showing a terminal |
+| Termux Command (visible) | SERVICE | `com.termux.RUN_COMMAND` → `com.termux.app.RunCommandService` | Run a Termux command in a visible session |
 
 ### XML Round-Trip (Layout Import/Export)
 

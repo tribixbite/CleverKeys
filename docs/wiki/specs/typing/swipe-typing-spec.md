@@ -77,7 +77,7 @@ Do not label those synthetic results as measured human-language accuracy. Bangla
 not a registered CTC script; existing tap layouts do not establish swipe support.
 
 `Mode.fromPref` maps any unrecognised stored value — including the removed `"neural"` and
-`"hybrid"` — onto `CTC`, so a pre-v1.6.0 backup imports without error.
+`"hybrid"` — onto `CTC`, so a pre-v2.0.0 backup imports without error.
 
 One engine owns each swipe end-to-end; scores are engine-relative and never compared across
 engines. Suggestion provenance tags the engine that actually decoded

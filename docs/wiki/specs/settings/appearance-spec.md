@@ -195,8 +195,10 @@ are shown.
 | Setting | Key | Default | Range |
 |---------|-----|---------|-------|
 | **Theme** | `theme` | `cleverkeysdark` | theme id — see [Themes](../customization/themes-spec.md) |
-| **Portrait Height** | `keyboard_height` | 27 | slider 20-60 (% of screen height); validator 10-100 |
-| **Landscape Height** | `keyboard_height_landscape` | 40 | slider 20-60; validator 20-65 |
+| **Portrait Height** | `keyboard_height` | 27 | 20-60 (% of screen height); `SettingsRanges.KEYBOARD_HEIGHT` is shared by the slider, the reader and the import validator (audit M1, 2026-10-20) |
+| **Landscape Height** | `keyboard_height_landscape` | 40 | 20-60, same shared range |
+| **Keyboard Height (Inner Screen)** | `keyboard_height_unfolded` | follows Portrait Height until set | 20-60; slider enabled only when `FoldStateTracker.isFoldableDevice` (`AppearanceSection.kt:59`) |
+| **Landscape Height (Inner Screen)** | `keyboard_height_landscape_unfolded` | follows Landscape Height until set | 20-60; same foldable gate (`AppearanceSection.kt:73`) |
 | **Scale Numpad Height** | `scale_numpad_height` | true | bool — explicitly opted-in layouts (`numpad_height=true`) stretch rows to the full keyboard height; bottom-row-free compact layouts retain normal row height (consumer `Theme.kt`; #58/#90) |
 | **Bottom Margin (Portrait)** | `margin_bottom_portrait` | 0 | 0-30 (% of screen height) |
 | **Bottom Margin (Landscape)** | `margin_bottom_landscape` | 0 | 0-30 |
@@ -218,7 +220,11 @@ are shown.
 
 On a foldable that reports itself unfolded, `Config` reads `_unfolded` variants of the height
 and margin keys (`keyboard_height_unfolded`, `margin_left_portrait_unfolded`, …) with the same
-defaults and ranges. No Settings control writes them; they arrive through settings import.
+defaults and ranges (`KeyboardHeightPrefs`, `Config.kt:1635-1644`). The two inner-screen height
+sliders above write the height keys (2026-10-20); they are visible but disabled on phones
+without a fold, with the note "No foldable screen detected on this device." The `_unfolded`
+margin keys still have no control and follow the outer-screen value unless a settings import
+sets them.
 
 ### Secondary Label Size (#133, v1.5.0)
 
