@@ -261,6 +261,12 @@ How common, and can autocorrect corrupt meaning?
 | Bijankhan | ~2.6M POS-tagged tokens (news), Univ. of Tehran | — | "not free for commercial use" (en.wikipedia) → not shippable | [V] |
 | Hamshahri v2 | 323,616 news articles 1996–2007, 1.42 GB XML | — | Licence not stated on the pages opened; DBRG site archived → treat as unavailable | [U] |
 
+**Implemented in `479a7277` (2026-10-23):** `langpack-fa.zip`, 50,000 words, from Leipzig `fas`
+news 2016-18, news crawl 2019 and Wikipedia 2014 blended with wordfreq, with Lilak as the
+oracle (`docs/eval/2026-10-23-fa-wordlist.md`). **Correction:** Leipzig does NOT preserve ZWNJ
+throughout — news 2020-2024 and web-public 2019 have every U+200C stripped (0 of 50,000
+sentences), so the row above holds only for the older corpora; HeliBoard's list was not needed.
+
 Practical reading: a `fa` pack can be built the way the other packs are, from **Leipzig `fas`
 (news + web + wikipedia) blended with wordfreq**, which gives correct half-spaces, a clean
 alphabet and a licence chain the project already carries. Lilak is the right cross-check for
@@ -327,6 +333,12 @@ not ت. Cost: `srcs/layouts/arab_pc_ir.xml` (and `arab_pc_ckb_fa.xml`) only; the
 key, glyph 0xE018, a11y label and the command already exist. Risk to other languages: none.
 Open sub-question for the maintainer: whether the key should also appear on `arab_pc.xml`
 (Arabic proper rarely needs it) — recommend no.
+
+**Implemented (a) in `9aac669d` (2026-10-23):** a `halfspace` key right of space with `zwj` on
+swipe-up, in an embedded bottom row on `arab_pc_ir.xml` and `arab_pc_ckb_fa.xml`
+(`bottom_row="false"`; the shared `bottom_row.xml` and `arab_pc.xml` are unchanged); the ت / ج
+corner gestures stay. Pinned by `PersianHalfSpaceKeyTest`. The pack side of (c) — fold and merge
+in the build — is in `479a7277`.
 
 **(b) ZWNJ as a word character — yes, but script-scoped as in §6, never globally.**
 Half-space compounds are 7.5–44% of Persian vocabulary; without (b) the bar can never show

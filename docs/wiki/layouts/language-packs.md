@@ -81,10 +81,13 @@ download the `.zip` and import it (no need to build anything):
 | **Bulgarian (Български)** | `langpack-bg.zip` | 35,027 |
 | **Macedonian (Македонски)** | `langpack-mk.zip` | 50,000 |
 | **Hebrew (עברית)** | `langpack-he.zip` | 50,000 |
+| **Persian (فارسی)** | `langpack-fa.zip` | 50,000 |
 
 > Most packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
 > corpus (real word frequencies), most of them validated against the AOSP
-> LatinIME word list; Swahili comes from the Swwiki Swahili-Wikipedia list.
+> LatinIME word list; Swahili comes from the Swwiki Swahili-Wikipedia list;
+> Persian blends Leipzig Corpora Collection counts with wordfreq and keeps
+> half-space (ZWNJ) compounds such as `می‌شود` as single words.
 > See [Attribution](#attribution).
 > The bundled *English* dictionary is different: it's built by a dedicated
 > evidence-classification pipeline (98,140 words validated against multiple
@@ -293,15 +296,18 @@ third-party data, and each zip carries a `NOTICE.txt` with the full credit:
 
 | Packs | Source | Licence |
 |-------|--------|---------|
-| en, en-wordfreq, de, es, fr, it, nl, pt, sv, ru, el, tr, he, uk, bg, mk, id, ms, tl | [wordfreq](https://github.com/rspeer/wordfreq) (Robyn Speer et al.) — incorporating SUBTLEX (Brysbaert et al.), OpenSubtitles, Wikipedia and [Google Books Ngram](http://books.google.com/ngrams) data | CC BY-SA 4.0 |
+| en, en-wordfreq, de, es, fr, it, nl, pt, sv, ru, el, tr, he, uk, bg, mk, id, ms, tl, fa | [wordfreq](https://github.com/rspeer/wordfreq) (Robyn Speer et al.) — incorporating SUBTLEX (Brysbaert et al.), OpenSubtitles, Wikipedia and [Google Books Ngram](http://books.google.com/ngrams) data | CC BY-SA 4.0 |
 | de, es, fr, it, nl, pt, sv, ru, el, tr, he | [AOSP LatinIME](https://android.googlesource.com/platform/packages/inputmethods/LatinIME/) word lists, used as an inclusion oracle | Apache-2.0 |
 | en-opensubtitles, en-opensubtitles-50k | [FrequencyWords](https://github.com/hermitdave/FrequencyWords) 2018 (Hermit Dave), from [OpenSubtitles.org](http://www.opensubtitles.org/) via the OPUS corpus (Lison & Tiedemann, 2016) | CC BY-SA 4.0 |
+| fa | [Leipzig Corpora Collection](https://wortschatz.uni-leipzig.de/en/download) (Universität Leipzig; Goldhahn, Eckart & Quasthoff, LREC 2012) — Persian news 2016–2018, news crawl 2019 and Wikipedia 2014 counts | CC BY 4.0 |
+| fa | [Lilak](https://github.com/b00f/lilak) (Mostafa Sedaghat Joo) Persian lexicon, used as an inclusion oracle | Apache-2.0 |
 | sw | [Swwiki](https://kevindonnelly.org.uk/swahili/swwiki/) (Kevin Donnelly), from Swahili Wikipedia | CC BY-SA 3.0, adapted under 4.0 |
 
 The packs are distributed under **GPL-3.0-only**. CC BY-SA 4.0 adaptations may be licensed
 under GPLv3 ([CC compatible licenses](https://creativecommons.org/compatible-licenses/));
 Swwiki's CC BY-SA 3.0 reaches 4.0 through its §4(b) later-version clause; Apache-2.0 is
-one-way compatible with GPLv3. The former `en-norvig-50k` pack was withdrawn on 2026-09-26
+one-way compatible with GPLv3, and CC BY 4.0 (attribution only) may be redistributed under it
+with the attribution kept. The former `en-norvig-50k` pack was withdrawn on 2026-09-26
 (Google Web 1T data, no redistribution grant). See the repository `NOTICE` file.
 
 ### Seeing a pack's attribution in the app

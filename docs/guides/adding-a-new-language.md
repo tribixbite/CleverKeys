@@ -152,6 +152,35 @@ get CTC; everything else serves TAP + geometric. Languages with a `CtcScriptSupp
 el, uk, bg, mk, he) are deliberately excluded from this path — they are served (or blocked) by
 the script track instead.
 
+### 1.5 Corpus-blend languages (Persian `fa`, 2026-10-23)
+
+When wordfreq's list is too small or too unclean to be the candidate stream, a `LangConfig` can
+set `corpus="<key>"` (a `BlendConfig` in `scripts/corpus_blend.py`). Persian is the first: its
+wordfreq list has 31k words, 2,024 Arabic-letter duplicates and edge half-spaces. Everything
+after Stage B of the classifier (oracles, typo/foreign negatives, bands, cap, guards, CKDT write)
+stays shared; what changes:
+
+- **Candidates and frequencies** come from pinned Leipzig sentence corpora plus wordfreq, each a
+  source; a word needs ≥ 3 training occurrences in ≥ 2 sources. Frequencies are the mean of the
+  per-source relative frequencies and travel in `<lang>_words.txt` as `word<TAB>freq`, so the
+  CKDT rank uses the blend. 10 % of sentences are held out by hash; the classifier prints the
+  held-out token coverage before and after `--limit`, which is how the size is chosen.
+- **A script profile** (`ScriptProfile`: alphabet, letter fold, word-internal joiner, one-letter
+  words) normalises tokens. Persian: fold ي→ی ك→ک ى→ی ۀ/ة/ە→ه (never آ or hamza), strip marks
+  without decomposing, keep ZWNJ inside a word, strip it at the edges, reject a token with a
+  digit, Latin letter, tatweel, ZWJ or a letter repeated 3+ times as a whole.
+- **A built hunspell oracle**: `hunspell="provider:lilak"` clones and builds Lilak at a pinned
+  commit with ZWNJ as a word character. Keep the joiner out of the ed1 `alphabet`, so a joined
+  spelling and its half-space twin are never each other's typo.
+- **ZWNJ-stripping artefacts** (joiner profiles): a joined ه+suffix spelling that the oracle
+  rejects and that sits more than `ZWNJ_ARTEFACT_GAP` zipf below its half-space twin is dropped.
+- Check a corpus keeps the joiner before using it: Leipzig `fas` news 2020+ and web-public 2019
+  have every U+200C stripped. Unigrams come from the built list
+  (`generate_unigrams.py --from-words`), and `build_langpack.py` credits `leipzig`/`lilak`.
+
+Commands and the full method: `docs/eval/2026-10-23-fa-wordlist.md`. Arabic-script packs carry
+no CTC model; the geometric engine serves them.
+
 ## 2. Layout
 
 Ship a layout XML under `src/main/layouts/` whose `script` attribute declares the real script

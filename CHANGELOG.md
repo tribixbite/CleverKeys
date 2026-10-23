@@ -44,6 +44,13 @@ editor that used to be listed here already ship in 2.0.)
   far-off typo fixes. Every weight and step is a
   setting with a one-tap reset, and the old ranking stays selectable ("Score band, then
   frequency").
+- **Persian (fa) language pack** (`langpack-fa.zip`, 50,000 words) and a **half-space key**
+  right of the space bar on Persian PC and the Kurdish (Persian layout) board, with ZWJ on
+  swipe-up. Half-space compounds such as `می‌شود` are single dictionary words, and both the
+  joined and the half-space spelling are kept where both are written (22 % of the list has a
+  half-space). Built from Leipzig Corpora Collection news and Wikipedia counts blended with
+  wordfreq, filtered with the Lilak Persian lexicon; it covers 97.5 % of the words in held-out
+  Persian text (`docs/eval/2026-10-23-fa-wordlist.md`). Swipe uses the geometric engine.
 - **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
   (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
   row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /

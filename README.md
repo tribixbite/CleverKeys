@@ -301,7 +301,7 @@ oracles with typo/foreign-word negative filters (see the oracle-tier notes).
 | German | de | 40,000 words | A (aspell + pyspell + AOSP) |
 | Swedish | sv | 40,000 words | C (AOSP only) |
 
-### Downloadable Language Packs (22 packs, 18 languages)
+### Downloadable Language Packs (23 packs, 19 languages)
 Import via **Settings → 🌐 Multi-Language → Import Pack**; download prebuilt
 zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)
 (the same files live in [`scripts/dictionaries/`](./scripts/dictionaries/)):
@@ -315,6 +315,7 @@ zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/relea
 | Bulgarian | bg | 35,027 words | D (negatives-only; wordfreq corpus ceiling) |
 | Macedonian | mk | 50,000 words | D (negatives-only) |
 | Hebrew | he | 50,000 words | C (AOSP oracle) |
+| Persian | fa | 50,000 words | Leipzig + wordfreq blend, Lilak oracle (22 % half-space compounds) |
 | Turkish | tr | 40,000 words | C (AOSP only) |
 | Indonesian | id | 28,637 words | D (negatives-only; corpus ceiling ~31k) |
 | Malay | ms | 25,861 words | D (negatives-only; corpus ceiling ~28k) |
@@ -323,7 +324,7 @@ zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/relea
 
 Packs for the bundled languages (es fr de it pt sv) plus English corpus
 variants (opensubtitles-full / opensubtitles-50k / wordfreq) are also
-prebuilt alongside them — 22 zips in total. (The former `en-norvig-50k` variant
+prebuilt alongside them — 23 zips in total. (The former `en-norvig-50k` variant
 was withdrawn on 2026-09-26: its counts derive from Google Web 1T, which carries
 no redistribution grant.)
 
@@ -332,8 +333,8 @@ no redistribution grant.)
 [FrequencyWords](https://github.com/hermitdave/FrequencyWords) / OpenSubtitles
 (CC BY-SA 4.0; the `en-opensubtitles*` variants) and
 [Swwiki](https://kevindonnelly.org.uk/swahili/swwiki/) (CC BY-SA 3.0 → 4.0;
-Swahili), with the AOSP LatinIME word lists (Apache-2.0) as an inclusion
-oracle; the packs are distributed under GPL-3.0-only. Every zip carries a
+Swahili), Leipzig Corpora Collection counts (CC BY 4.0; Persian), with the AOSP
+LatinIME word lists and Lilak (Apache-2.0) as inclusion oracles; the packs are distributed under GPL-3.0-only. Every zip carries a
 `NOTICE.txt` and `license` / `attribution` / `source` manifest keys; full text
 in [`NOTICE`](./NOTICE).
 
