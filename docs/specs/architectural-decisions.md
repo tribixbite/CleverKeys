@@ -137,6 +137,13 @@ When adding new components:
 
 ## ADR-008: Dual Prediction Pipeline Symmetry
 
+> **Status: SUPERSEDED on 2026-07-20 by `63ebf231` (WP9 R-1 step 5, "cursor-sync folded into
+> SuggestionHandler").** There is now ONE pipeline: `SuggestionHandler` owns both the typing
+> path and the cursor-sync prediction+post phase, and `InputCoordinator` only delegates to it
+> (`InputCoordinator.handlePredictionResults` → `SuggestionHandler.handleSwipePredictionResults`;
+> see the `InputCoordinator` class KDoc). The "mirror every feature in both pipelines" rule and
+> the source-scanning symmetry tests below no longer apply. Kept for history.
+
 **Decision**: Both SuggestionHandler (typing path) and InputCoordinator (cursor sync path) maintain independent prediction executors that post to the same SuggestionBar. Both must implement identical contraction/exact_add/capitalization logic.
 
 **Rationale**:
@@ -226,11 +233,18 @@ SHARK2-style decoder (`swipe/geometric/`) everywhere else. `swipe_engine_mode` b
   is the single largest behavioural deletion and is **deferred, not silently dropped**: the
   algorithm is model-independent and can be re-implemented as a post-beam rescue inside
   `CtcEngineAdapter`, which already holds the merged lexicon and the raw beam.
+  **Outcome (2026-08-23, `20d620f4`):** re-implemented as `swipe/ctc/CtcFuzzyRescue.kt`, a
+  bounded dictionary rescue over the unconstrained greedy CTC surface, ranked below every real
+  beam word so it can never displace one.
 - Secondary-language swipe blending is gone (it was already absent in ctc mode). Tap-path
   blending is unaffected.
 - it/pt/sv and the langpack languages move from neural to geometric on QWERTY. The
   per-language delta is unmeasured; the honest statement is "likely a few points down until
   CTC serves them" (English proxy on the same corpus: 74.62 neural vs 67.50 geometric).
+  **Outcome (2026-08-18, `9a6ffdd2`):** it/pt/sv are served by CTC (`CtcLanguageSupport.SUPPORTED`,
+  `LexiconSource.CKDT_BIN`) and listed in `CtcLanguageSupport.PROVISIONAL` with el/uk/bg/mk/he;
+  any a–z-typeable imported pack is CTC-eligible too (`isSupported`). Geometric remains the
+  fallback for non-Latin/incomplete layouts and a user-selectable mode (`ctc-swipe-engine.md`).
 - ~25 `neural_*` preferences are deprecated (still filtered out of backup imports, never
   written). The Neural Settings screen and `SwipeCalibrationActivity` are gone.
 - ADR-003 (external ML training) still holds: CTC is also trained externally and exported to

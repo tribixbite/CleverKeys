@@ -140,100 +140,79 @@ for normalized/accent-map records.
 - Rank 255 = least frequent
 - Log-scaled quantization preserves relative ordering
 
-### Language Detection
+### Language Detection (as built)
 
-Word-based unigram frequency model:
+There is no unigram-profile model and no `LanguageScore`/`shouldSwitch` (the
+`UnigramLanguageDetector` was deleted 2026-08-28, ARC-006). The shipped detector is
+`LanguageDetector` (`LanguageDetector.kt`): per-language **character-frequency tables** plus
+**common-word arrays** for en, es, fr, pt, de and sv (`initialize*Patterns`), scored by
+`detectLanguageFromWordsWithConfidence(words): DetectionResult(language, confidence)`.
 
-```kotlin
-data class LanguageScore(
-    val language: String,
-    var score: Float = 0f,
-    var consecutiveHits: Int = 0
-)
+Trigger (`WordPredictor.tryAutoLanguageDetection`, `WordPredictor.kt:1074`): after each commit,
+once `recentWords.size >= 5` (window capped at `MAX_RECENT_WORDS = 20`), and only when
+`auto_detect_language` is on (default `true`) and the layout has **no** language binding
+(`Config.layout_bound_language == null`, GH #186/#61). It calls
+`MultiLanguageManager.detectAndSwitch(recentWords, language_detection_sensitivity)` (default
+threshold 0.6); on a switch the predictor invalidates its exact-learning commit, moves
+`bigramModel`/`contextModel` to the new language and clears the window so prior-language
+words are not learned under the new one.
 
-// Detection algorithm:
-// 1. Each language pack ships top 1000 unigrams
-// 2. Maintain sliding window of last 5 committed words
-// 3. Score each word against active language unigram lists
-// 4. Track running score per language (exponentially decaying)
+### Dual-Dictionary Mode (as built)
 
-fun shouldSwitch(primary: LanguageScore, candidate: LanguageScore): Boolean {
-    // Conservative threshold to prevent jitter
-    return candidate.score > primary.score * 2.0f &&
-           candidate.consecutiveHits >= 2
-}
-```
-
-### Dual-Dictionary Mode
-
-For bilingual typing (e.g., English + Spanish) without manual switching:
+Bilingual typing merges the secondary `NormalizedPrefixIndex` inline in
+`WordPredictor.predictInternal` (`WordPredictor.kt:~2630-2660`), and again in the typo-tolerant
+pass (`~2990-3010`). There is no neural confidence term:
 
 ```kotlin
-fun calculateUnifiedScore(
-    word: String,
-    nnConfidence: Float,      // From ONNX model
-    dictionaryRank: Int,      // 0-255, lower = more common
-    languageContext: Float,   // 0.0-1.0, from detector
-    isPrimaryLang: Boolean
-): Float {
-    val rankScore = 1.0f - (dictionaryRank / 255f)
-    val langMultiplier = if (isPrimaryLang) 1.0f else languageContext
-    val secondaryPenalty = if (isPrimaryLang) 1.0f else 0.9f
+// WordPredictor.kt — real signatures
+private fun calculateUnifiedScore(word: String, keySequence: String, frequency: Int, context: List<String>): Int =
+    resolveScoreBreakdown(word, keySequence, frequency, context)?.finalScore ?: 0     // :2745
+private fun secondaryRankToFrequency(rank: Int): Int = ((255 - rank) * 4000) + 1000   // :3044
 
-    return nnConfidence * rankScore * langMultiplier * secondaryPenalty
-}
+// per secondary prefix hit (dedup against primary, disabled words skipped):
+val frequency = secondaryRankToFrequency(result.bestFrequencyRank)
+val baseScore = calculateUnifiedScore(result.bestCanonical, lowerSequence, frequency, context)
+val score = (baseScore * (config?.secondary_prediction_weight ?: Defaults.SECONDARY_PREDICTION_WEIGHT)).toInt()
 ```
 
-**Deduplication:** When word exists in both dictionaries, present only entry with higher final score.
+`secondary_prediction_weight` (`pref_secondary_prediction_weight`, default `0.9f`, Config.kt:411)
+is the only secondary-specific factor; it is a fixed multiplier, not a detector-driven
+"language context" term. A word present in both dictionaries is kept once (the primary
+candidate wins; the secondary loop `continue`s on words already present). A contraction alias
+key absent from the secondary dictionary is indexed at rank `CONTRACTION_ALIAS_RANK = 254`
+(score 5,000) so it is reachable by prefix but never outranks a real word.
 
-### Manual Language Switching
+### Manual Language Switching (as built)
 
-```kotlin
-// Triggered by Globe key or long-press Spacebar
-fun switchLanguage(newLang: String) {
-    // 1. Hot-swap MainDictionarySource
-    dictionaryManager.loadMainDictionary(newLang)
+`MultiLanguageManager.switchLanguage(newLanguage): Boolean` (`MultiLanguageManager.kt:66`) only
+validates the code (`isLanguageSupported`) and records `activeLanguage`; it loads **no models**
+(there is no ONNX session per language — the swipe encoders are per-script packs owned by the
+CTC engine, see `ctc-swipe-engine.md`). Dictionary/n-gram state follows through
+`DictionaryManager.setLanguage(code)` (`DictionaryManager.kt:157`), `BigramModel.setLanguage`,
+and the `WordPredictor` reload driven by `PredictionCoordinator`. A layout with a `language`
+binding (GH #186/#61) sets `Config.layout_bound_language` and wins over both the manual
+selection and auto-detection; the Globe/long-press-space keys switch layouts, and the
+primary/secondary toggles are the `primaryLangToggle` / `secondaryLangToggle` commands.
 
-    // 2. Load corresponding ONNX models
-    multiLanguageManager.loadModels(newLang)
+### Data Structures (as built)
 
-    // 3. Update keyboard layout if linked
-    keyboardManager.switchLayout(newLang)
-}
-```
+None of `DictionaryWord`, `WordSource` or `LanguageState` exist. The types in play are:
 
-### Data Structures
-
-```kotlin
-data class DictionaryWord(
-    val canonical: String,      // Display form with accents
-    val normalized: String,     // Lookup key without accents
-    val frequencyRank: Int,     // 0-255, lower = more common
-    val source: WordSource,     // MAIN, USER, CUSTOM, SECONDARY
-    var enabled: Boolean = true
-)
-
-enum class WordSource {
-    MAIN,       // Primary language pack
-    SECONDARY,  // Secondary language pack
-    USER,       // Android UserDictionary
-    CUSTOM      // App SharedPreferences
-}
-
-data class LanguageState(
-    val primary: String,
-    val secondary: String?,
-    val detectedContext: String,
-    val confidence: Float
-)
-```
+- `NormalizedPrefixIndex` (`NormalizedPrefixIndex.kt`): accent-normalized key → `bestCanonical`
+  + `bestFrequencyRank` (0 = most common … 255); `normalizeKey`, `lookup`, `contains`.
+- `WordPredictor.WordCandidate(word, score, fuzzyPrefixScore, fromSecondary)` — the merged
+  candidate; `fromSecondary` is the only provenance bit for the secondary dictionary.
+- `LanguageDetector.DetectionResult(language, confidence)`.
+- `Config.active_secondary_language: String?` (the loaded secondary),
+  `Config.layout_bound_language: String?` (per-layout binding), `Config.auto_detect_language`,
+  `Config.language_detection_sensitivity`, `Config.secondary_prediction_weight`.
 
 ### Key Classes
 
 | Class | Purpose |
 |-------|---------|
 | `DictionaryManager` | Singleton holding active WordPredictor instances, handles language lifecycle |
-| `MultiLanguageManager` | Manages ONNX sessions, handles auto-detection logic |
+| `MultiLanguageManager` | Tracks the active language code, validates switches (`switchLanguage`), runs `detectAndSwitch` over `LanguageDetector`; owns no ONNX sessions |
 | `WordPredictor` (inline) | Merges primary + secondary candidates in `predictInternal` via `calculateUnifiedScore` × `secondary_prediction_weight` (the standalone `SuggestionRanker` had zero production callers post-ADR-011 and was deleted 2026-09-06 — audit C-6) |
 | `LanguageDetector` | Word/character-pattern language detection (the unigram-frequency `UnigramLanguageDetector` was deleted 2026-08-28 — ARC-006, write-only after `OptimizedVocabulary` went) |
 | `AccentNormalizer` | Unicode normalization (NFD) + accent stripping |

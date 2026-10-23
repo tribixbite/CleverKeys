@@ -111,37 +111,33 @@ fun loadSecondaryDictionary(language: String): Boolean {
 }
 ```
 
-### Prediction Flow with Secondary Dictionary
+### Prediction Flow with Secondary Dictionary (as built)
+
+There is no `getSuggestions`/`currentLanguageMultiplier`. `WordPredictor.predictInternal`
+(`WordPredictor.kt:~2630-2660`) appends secondary candidates after the primary ones:
 
 ```kotlin
-fun getSuggestions(prefix: String, limit: Int): List<Candidate> {
-    val candidates = mutableListOf<Candidate>()
-
-    // Primary dictionary (with user words)
-    candidates += primaryIndex.getByNormalizedPrefix(prefix)
-
-    // Secondary dictionary (if loaded)
-    secondaryIndex?.let { secondary ->
-        val langMultiplier = vocabulary.currentLanguageMultiplier
-        secondary.getByNormalizedPrefix(prefix).forEach { entry ->
-            candidates += entry.copy(
-                score = entry.confidence * langMultiplier
-            )
-        }
-    }
-
-    return candidates.sortedByDescending { it.score }.take(limit)
-}
+// per hit of secIndex.getWordsWithPrefix(lowerSequence)   (WordPredictor.kt:2635)
+if (already present from primary || isWordDisabled(canonical)) continue
+val frequency = secondaryRankToFrequency(bestFrequencyRank)          // ((255 - rank) * 4000) + 1000
+val baseScore = calculateUnifiedScore(canonical, lowerSequence, frequency, context)
+val score = (baseScore * secondary_prediction_weight).toInt()         // default 0.9
+if (score > 0) candidates.add(WordCandidate(canonical, score))
 ```
 
-### Language Detection Algorithm
+The typo-tolerant pass (`~2990-3010`) does the same over `FuzzyPrefixMatcher` matches with
+`fromSecondary = true`. Candidates are then ranked by the shared unified score like any other.
 
-- Sliding window of 10 recent committed words
-- 5000 top unigrams per language (EN, ES bundled)
-- Dynamic multiplier adjusts secondary dictionary scoring:
-  - Secondary > threshold: boost (1.1+)
-  - Primary > threshold: penalty (0.85)
-  - Balanced: neutral (1.0)
+### Language Detection Algorithm (as built)
+
+- `LanguageDetector` scores per-language character-frequency tables and common-word arrays
+  (en, es, fr, pt, de, sv); no bundled unigram lists and no 5000-word profiles.
+- `WordPredictor` keeps the last `MAX_RECENT_WORDS = 20` committed words and runs
+  `tryAutoLanguageDetection` once at least 5 are present, when `auto_detect_language` is on and
+  the layout has no language binding; the switch threshold is `language_detection_sensitivity`
+  (default 0.6).
+- Detection never changes the secondary dictionary's weight: `secondary_prediction_weight`
+  is a fixed user preference (default 0.9), not a dynamic 0.85/1.0/1.1 multiplier.
 
 ### Language Pack ZIP Format
 
@@ -177,5 +173,5 @@ langpack-fr.zip
 |--------|----------------|
 | Memory | Secondary dictionary ~2-5MB in NormalizedPrefixIndex |
 | Lookup | O(log n) prefix search per dictionary, merged linearly |
-| Language Detection | O(1) per word (hash lookup in unigram set) |
+| Language Detection | character-frequency + common-word scoring over at most 20 recent words |
 | Pack Import | One-time extraction, ~1-2 seconds for 100k word pack |

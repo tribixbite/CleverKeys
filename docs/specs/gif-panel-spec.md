@@ -4,12 +4,30 @@
 
 Offline GIF panel for CleverKeys keyboard, similar to the emoji panel but displaying animated GIFs from a pre-bundled database. No internet permissions required.
 
-## Status: Pipeline & Pack System Complete — UI Integration Pending
-- Created: 2025-01-27
-- Updated: 2026-02-08
-- Author: Claude Opus 4.5 / Opus 4.6
+## Status (2026-10-23): SHIPPED — panel, packs, search and insertion are in the release build
 
-### Completed
+The pipeline history below (2025-01 → 2026-02) is kept as written. What actually shipped
+differs from the plan in three ways:
+
+- **FTS4, not FTS5.** `gif/GifDatabase.kt` uses FTS4 "for universal Android compatibility —
+  FTS5 is not available in android.database.sqlite on all devices/OEM builds". Every FTS5
+  mention below is the original plan. Schema V5 adds the `gif_pack_membership` table.
+- **Packs are imported, never downloaded.** The app has no `INTERNET` permission. The user picks
+  a pack archive with the Storage Access Framework (`ui/settings/io/SettingsGifHandlers.kt`
+  `performGifPackImport(uri)` → `GifPackManager.importPackFromUri`). There is no pack download
+  manager, no `pack_index.json` discovery and no GitHub-Releases fetch in the app.
+- **Insertion** is `InputConnection.commitContent` of the local animated WebP (API 25+,
+  `InputConnectionCompat`) with a clipboard fallback when there is no connection or URL
+  (`gif/GifInsertPolicy.kt`); thumbnails load through Coil (`gif/GifGridView.kt`).
+
+As built (`src/main/kotlin/tribixbite/cleverkeys/gif/`, 9 files): `Gif`, `GifCategory`,
+`GifDatabase`, `GifAssetManager`, `GifPackManager`, `GifGridView`, `GifGroupButtonsBar`,
+`GifCategoryTapDetector`, `GifInsertPolicy`; layout `res/layout/gif_pane.xml`; the pane is a
+`KeyboardReceiver` `PaneType.GIF` content pane opened by `KeyValue.Event.SWITCH_GIF`
+(`suggestion-bar-content-pane.md`); settings in `ui/settings/sections/GifPanelSection.kt`.
+Original plan status follows.
+
+### Completed (plan, 2026-02-08)
 - [x] Giphy API pipeline (118,944 unique GIFs downloaded)
 - [x] WebP conversion via ffmpeg (balanced profile: 240px, 10fps, Q55)
 - [x] Squoosh optimization (85,954 optimized, avg 46KB, q12 m6 sharp_yuv)
@@ -19,27 +37,27 @@ Offline GIF panel for CleverKeys keyboard, similar to the emoji panel but displa
 - [x] Pipeline improvements: fixed_width WebP download, adaptive quality, small file skip
 - [x] Database builder with slug keyword extraction and pack_id support
 
-### Remaining
-- [ ] GIF panel XML layout (tab in keyboard panel)
-- [ ] Integration with existing keyboard panel system
-- [ ] GIF insertion via commitContent() + clipboard fallback
-- [ ] FileProvider for content URIs
-- [ ] Pack download manager (GifPackManager.kt)
-- [ ] Coil image loading for memory-safe IME rendering
-- [ ] Content moderation pass
+### Formerly "Remaining" — all shipped except as noted
+- [x] GIF panel layout (`res/layout/gif_pane.xml`)
+- [x] Integration with the keyboard content-pane system (`PaneType.GIF`)
+- [x] GIF insertion via `commitContent()` + clipboard fallback (`GifInsertPolicy`)
+- [x] FileProvider for content URIs
+- [~] Pack manager: `GifPackManager` imports packs from a SAF URI; the planned downloader was never built (no INTERNET permission by design)
+- [x] Coil image loading for memory-safe IME rendering
+- Content moderation pass: not tracked here; see `memory/gif-releases-and-legal` notes
 
 ---
 
 ## Requirements
 
 ### Must Have
-- [ ] Offline-only operation (no INTERNET permission)
-- [ ] 50,000+ GIFs with keyword/tag metadata
-- [ ] Full-text search with FTS5
-- [ ] Category/group browsing (17 emotion categories)
-- [ ] Static thumbnails for grid view (memory efficient)
+- [x] Offline-only operation (no INTERNET permission)
+- [x] 50,000+ GIFs with keyword/tag metadata (per imported pack set)
+- [x] Full-text search — shipped as **FTS4** (see Status)
+- [x] Category/group browsing (17 emotion categories)
+- [x] Static thumbnails for grid view (memory efficient)
 - [ ] Animated preview on selection
-- [ ] Insert GIF as image to input field
+- [x] Insert GIF as image to input field (`commitContent`)
 
 ### Nice to Have
 - [ ] Recently used GIFs section
@@ -78,7 +96,7 @@ content quality, richer metadata, and more relevant reaction GIFs.
 src/main/kotlin/tribixbite/cleverkeys/gif/
 ├── Gif.kt                    # Data model (parallel to Emoji.kt)
 ├── GifCategory.kt            # Category enum with emotion types
-├── GifDatabase.kt            # SQLite + FTS5 database handler
+├── GifDatabase.kt            # SQLite + FTS4 database handler (plan said FTS5)
 ├── GifDatabaseHelper.kt      # SQLiteOpenHelper implementation
 ├── GifGridView.kt            # GridView adapter (parallel to EmojiGridView.kt)
 ├── GifGroupButtonsBar.kt     # Category buttons (parallel to EmojiGroupButtonsBar.kt)
@@ -202,11 +220,11 @@ CREATE INDEX idx_gif_usage ON gif_usage(last_used DESC);
 - **Database**: ~7 MB (FTS5)
 - **Total**: ~4.0 GB
 
-### Distribution: Downloadable Packs via GitHub Releases
+### Distribution: packs published on GitHub Releases, IMPORTED by the user (no in-app download)
 1. **Core Pack** (recommended first install): top 2,000 GIFs (~50MB, 1 pack)
 2. **Category Packs**: per-emotion (happy, funny, love, etc.), ~50MB each
 3. **Full Collection**: ~78 packs at 50MB each for all 86K GIFs
-4. No APK bundling — all packs downloaded on demand
+4. No APK bundling — the user downloads a pack in a browser and imports it with the file picker (SAF)
 
 ---
 
@@ -228,19 +246,19 @@ CREATE INDEX idx_gif_usage ON gif_usage(last_used DESC);
 4. [ ] Upload packs to GitHub Releases
 5. [ ] Host pack_index.json for app discovery
 
-### Phase 3: UI Components
-1. [ ] GIF panel XML layout (gif_panel.xml)
-2. [ ] GIF tab in keyboard panel (SWITCH_GIF event)
-3. [ ] Category browsing (GifGroupButtonsBar.kt)
-4. [ ] Grid view with Coil image loading
-5. [ ] Search bar with FTS5
+### Phase 3: UI Components [SHIPPED]
+1. [x] GIF panel XML layout (`gif_pane.xml`)
+2. [x] GIF tab in keyboard panel (SWITCH_GIF event)
+3. [x] Category browsing (GifGroupButtonsBar.kt)
+4. [x] Grid view with Coil image loading
+5. [x] Search bar (FTS4)
 
-### Phase 4: GIF Insertion & Integration
-1. [ ] commitContent() API for GIF insertion
-2. [ ] FileProvider for content URIs
-3. [ ] Clipboard fallback for apps that don't support commitContent
-4. [ ] Recently used tracking (gif_usage table)
-5. [ ] Pack download UI in settings
+### Phase 4: GIF Insertion & Integration [SHIPPED, import instead of download]
+1. [x] commitContent() API for GIF insertion
+2. [x] FileProvider for content URIs
+3. [x] Clipboard fallback for apps that don't support commitContent
+4. [x] Recently used tracking (gif_usage table)
+5. [x] Pack IMPORT UI in settings (SAF); no download UI
 
 ---
 

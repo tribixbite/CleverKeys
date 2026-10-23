@@ -462,7 +462,7 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
 
 | Setting | Key | Default | Range/Values | UI location |
 |---------|-----|---------|--------------|-------------|
-| Learn From My Typing (master gate) | `on_device_learning_enabled` | `true` | bool | 🔒 Privacy & Data → On-Device Learning |
+| Learn From My Typing (master gate) | `on_device_learning_enabled` | `false` (`Defaults.ON_DEVICE_LEARNING_ENABLED`, Config.kt:472; upgrading installs are seeded an explicit `true` by the v4 `LearningMigration`) | bool | 🔒 Privacy & Data → On-Device Learning |
 | Next-Word Prediction | `next_word_prediction_enabled` | `true` (was `false` until 2026-09-26; an explicit stored `false` is kept) | bool — always enabled in Settings (no longer disabled while Context-Aware is off) | ⌨️ Input Behavior → Word Prediction |
 | Context Source | `context_source` | `"both"` | `both` \| `learned_only` \| `static_only` | ⌨️ Input Behavior → Word Prediction |
 | Personalization Strength | `personalization_weight` | `1.0` | 0.0–2.0 (0 = off, 2 = double) | ⌨️ Input Behavior → Word Prediction |

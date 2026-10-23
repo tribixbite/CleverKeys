@@ -1,5 +1,10 @@
 # Performance Optimization
 
+> **Status (2026-10-23):** targets and strategies only. There is no `PerformanceMonitor` class;
+> `PerformanceProfiler` (an `object` over `android.os.Trace`, statistics off by default) has no
+> production call sites at HEAD. Cleanup is `CleanupHandler`, not a hand-written `onDestroy`.
+> Measured evidence lives in `docs/eval/` and `docs/audit/2026-09-10-memory-oom-root-cause.md`.
+
 ## Overview
 
 Performance optimization system covering rendering, prediction latency, memory management, and monitoring. Target metrics: 60fps rendering, <100ms prediction latency, <150MB RAM.
@@ -37,50 +42,34 @@ Enabled in AndroidManifest.xml:
 </manifest>
 ```
 
-### Performance Monitoring System
+### Performance monitoring (as built)
+
+- `PerformanceProfiler` (`PerformanceProfiler.kt`, `object`): wraps `android.os.Trace` sections
+  so Perfetto / Android Studio Profiler can see them; the legacy statistics path is gated by an
+  `ENABLE_STATISTICS` flag that is off by default. **No production code calls it at HEAD**
+  (`rg PerformanceProfiler src/main` finds only the file), so it is a developer utility, not a
+  monitoring system. There is no `PerformanceMonitor`, `TimingToken` or `PerformanceReport`.
+- Swipe decode timing is recorded by `SwipePerformanceStats` (singleton) for the debug
+  activity; heap-pressure work is documented in `docs/audit/2026-09-10-memory-oom-root-cause.md`.
+
+### Resource cleanup (as built: `CleanupHandler`)
+
+`CleverKeysService.onDestroy` unregisters its receivers and then delegates the manager
+teardown (`CleverKeysService.kt:535-544`, extracted in v1.32.404):
 
 ```kotlin
-class PerformanceMonitor {
-    // Frame timing
-    fun startFrameTiming()
-    fun recordFrame(durationMs: Long)
-
-    // Operation timing
-    fun startOperation(name: String): TimingToken
-    fun endOperation(token: TimingToken)
-
-    // Memory tracking
-    fun recordMemorySnapshot()
-
-    // Reporting
-    fun getPerformanceReport(): PerformanceReport
-}
+CleanupHandler.create(
+    this, _configManager, _clipboardManager, _predictionCoordinator, _debugLoggingManager,
+    if (::_inputCoordinator.isInitialized) _inputCoordinator else null,
+    if (::_suggestionHandler.isInitialized) _suggestionHandler else null
+).cleanup()
+DirectBootManager.getInstance(this).cleanup()
 ```
 
-### Resource Cleanup (CleverKeysService.onDestroy)
-
-90+ components cleaned up in proper order:
-
-```kotlin
-override fun onDestroy() {
-    // Cancel all coroutines
-    serviceScope.cancel()
-
-    // Stop performance monitoring
-    performanceProfiler?.cleanup()
-
-    // Unregister listeners
-    prefs.unregisterOnSharedPreferenceChangeListener(this)
-
-    // Clear view references
-    inputView = null
-
-    // Release decoder resources
-    ctcAdapter?.release()
-
-    super.onDestroy()
-}
-```
+`CleanupHandler.kt` owns the order (config listener, clipboard, prediction coordinator and its
+engines, debug logging, coordinator/handler scopes). `performanceProfiler?.cleanup()`,
+`serviceScope.cancel()` and `ctcAdapter?.release()` as written in the old sketch do not exist
+in the service.
 
 ### Memory Optimization Strategies
 

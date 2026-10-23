@@ -58,23 +58,27 @@ Per-language:                         │      1. Try contractions.bin (fastest)
   ...
 ```
 
-### Runtime Application
+### Runtime Application (as built, 2026-10-23)
+
+There is no "+1000 contraction boost" and the path does not run through
+`InputCoordinator.handlePredictionResults`. Replace-mode contractions are resolved in
+`SuggestionHandler`:
 
 ```
-User swipes "cant"
+User types / swipes "cant"
     │
     ▼
-Swipe decoder → ["cant", "can", "cat", ...]
-    │
+SuggestionHandler.replaceModeContractionFor("cant")        // SuggestionHandler.kt:405
+    │  contractionManager.getNonPairedMapping("cant") → "can't"   (ContractionManager.kt:552)
+    │  guard: null if DictionaryManager.isUserWordIgnoringCase("cant")  — a user word is never rewritten
     ▼
-InputCoordinator.handlePredictionResults() (line 255-259)
-    │  contractionManager.getNonPairedMapping("cant") → "can't"
-    ▼
-SuggestionHandler.onSuggestionSelected() (line 1100-1114)
-    │  Contraction key gets +1000 score boost
-    ▼
-Suggestion bar: ["can't", "can", "cat"]
+"can't" is the displayed / committed form; the apostrophe-free key stays the lookup key
 ```
+
+Pairing bases (`contraction_pairings.json`) are never replaced: `isContractionKey` /
+`isKnownContraction` (`SuggestionHandler.kt:1547-1552`) keep `well`, `shell`, … as words and
+offer the paired forms as candidates. The four guards, the display-vs-key model and the
+regeneration commands are in `.claude/skills/contraction-system.md` (authoritative).
 
 ## Key Files
 
@@ -86,7 +90,7 @@ Suggestion bar: ["can't", "can", "cat"]
 | `scripts/build_dictionary.py` | Build V2 binary dict | Word list + `--use-wordfreq` | `{lang}_enhanced.bin` |
 | `scripts/build_langpack.py` | Bundle dict + unigrams + contractions + licence metadata/`NOTICE.txt` (`--repack` for existing packs) | `--input`, `--dict` or `--repack` | `langpack-{lang}.zip` |
 | `scripts/build_all_languages.py` | Batch build all bundled languages | (auto) | Multiple `.bin` files |
-| `scripts/compute_prefix_boosts.py` | Aho-Corasick prefix trie | `--langs en` | `prefix_boosts/{lang}.bin` |
+| `scripts/compute_prefix_boosts.py` | Aho-Corasick prefix trie (**obsolete**: prefix boosts were a neural-engine input; nothing reads `prefix_boosts/*.bin` since ADR-011, and the only surviving mentions are the legacy backup keys `neural_prefix_boost_*` and a pack-manifest flag `hasPrefixBoost`) | `--langs en` | `prefix_boosts/{lang}.bin` |
 
 ### Contraction Build Scripts
 
@@ -122,7 +126,7 @@ them is read by `build_wordlist.py`.
 |------|---------|-------------|
 | `contractions_non_paired.json` | 120 | `dont→don't` style mappings (the English base) |
 | `contractions_en.json` | 119 | A SUBSET of the base, not a duplicate: the base additionally holds `high-falutin`. Loaded AFTER the base, so it only ever adds keys the base lacks — and it must never re-add a pairing base (see below) |
-| `contraction_pairings.json` | 1,744 | Base word → possessive/contraction variants |
+| `contraction_pairings.json` | 1,748 | Base word → possessive/contraction variants (count re-derived 2026-10-23) |
 | `contractions.bin` | ~2,219 | Binary format of non-paired + paired |
 
 > `contraction_pairings_cleaned.json` (32 entries) was listed here until 2026-08-21 and has been
@@ -251,7 +255,7 @@ python3 generate_binary_contractions.py \
 ```bash
 cd scripts/
 
-# Full language pack (dict + unigrams + prefix boosts + contractions)
+# Full language pack (dict + unigrams + contractions; prefix boosts are no longer consumed)
 python3 get_wordlist.py --lang fr --output fr_words.txt --count 50000
 python3 build_langpack.py --lang fr --name "French" --input fr_words.txt --use-wordfreq --output langpack-fr.zip
 ```

@@ -1,6 +1,13 @@
 # CTC context rescoring (bigram/trigram) and the decode-time tunables inventory
 
-**Status**: plan + reference. **Written**: 2026-08-19, against `main` @ `31b289c0`.
+**Status (2026-10-23)**: Part 1 was BUILT and then CLOSED on 2026-08-26 — `SwipeContextRescorer`
+runs only behind `swipe_context_rescoring` (`Defaults.SWIPE_CONTEXT_RESCORING = false`,
+`Config.kt:454`), which has no Settings UI entry and stays default-OFF for good after the replay
+failed its ship bar on both corpora (`docs/eval/2026-08-22-context-rescoring-first-replay.md`;
+no shadow mode). The next-word predictor is the context consumer instead. Part 2 (the tunables
+inventory) remains the reference. The "Step 1/Step 2/§7.1" anchors are cited by
+`SwipeContextRescorerTest`, `ContextEvidenceLookupTest` and `RescoringMetrics`; keep them.
+Originally written as a plan on 2026-08-19 against `main` @ `31b289c0`.
 **Architecture reference**: `docs/specs/ctc-architecture-and-multiscript-guide.md` (graph
 contract), `docs/specs/ctc-swipe-engine.md` (as-built decoder).
 Every claim below is cited against the code at this commit; where an older doc disagrees
@@ -273,8 +280,9 @@ So evidence has to be built:
 
 - `TrigramStore` exists, is populated on every commit alongside bigrams
   (`ContextModel.recordCommit`, `ContextModel.kt:151-158`), capped at 10 continuations
-  per two-word prefix and 10k per language (`TrigramStore.kt:44-45`), deliberately
-  excluded from backup because it relearns quickly (`ContextModel.kt:380-385`).
+  per two-word prefix and 10k per language (`TrigramStore.kt:44-45`). It WAS excluded from
+  backup when this was written; since `d5ef4fad` (2026-08-27, ARC-022) trigrams are exported
+  and imported as `learned_trigrams_by_language` (`BackupRestoreManager.kt:~1218-1223`).
 - The trigram-preferred/bigram-backoff policy is already implemented and floor-guarded
   inside `getContextBoost` (`ContextModel.kt:212-229`) and `getNextWordCandidates`.
 
