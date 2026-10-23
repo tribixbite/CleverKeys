@@ -40,7 +40,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    `foo`, Termux toolbar CTRL + `c`, `bar` → the bar stays empty (no `+foocbar` chip), space gives
    `bar ` with no add prompt, `foo^C` untouched. That Saga now has CleverKeys enabled and as its
    DEFAULT keyboard (maintainer: keep CleverKeys default on test phones). Item can close.
-2. [ ] agent → device: Persian half of #186/#61. No `fa` language pack exists. (Correction
+2. [ ] maintainer: Persian half of #186/#61 — BUILT 2026-10-23 (half-space key `9aac669d`; fa pack
+   `479a7277`, artefact filter `2beac893`; WordChars/ArabicScriptFold `e8f1d3ae`+`4aa4f756`;
+   method `docs/eval/2026-10-23-fa-wordlist.md`). DEVICE PASS on the Pixel (release `c87e2bfb`):
+   pack import and in-place update OK; joined `میشود`+space stays joined, bar offers `می‌شود`
+   unhighlighted; `می`+half-space key+`شو` keeps one word, completions می‌شود/می‌شوند/می‌شویم/
+   می‌شوم/می‌شوید; restored afterwards. OPEN: native-speaker review of the pack and the 4
+   possibly over-dropped words (اورا پیکه هنریکه سیاهو); Persian swipe quality UNVALIDATED (one
+   synthetic adb trace is not evidence); 172 pack words need أ ؤ إ, which Persian PC lacks;
+   half-space completions for a joined prefix not built (# TODO in WordPredictor); publishing
+   the pack as a release asset needs the maintainer. History below:
+   Persian half of #186/#61. No `fa` language pack exists. (Correction
    2026-10-21: a Persian layout DOES exist, `srcs/layouts/arab_pc_ir.xml` "Persian PC", but it
    has no dedicated ZWNJ key; 2026-10-22: a `halfspace` corner gesture on ت exists, as upstream.)
    RESEARCH DONE 2026-10-22 (`docs/research/2026-10-21-persian-zwnj.md` §1–§7): AOSP, HeliBoard,
