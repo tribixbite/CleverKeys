@@ -2489,6 +2489,8 @@ class WordPredictor : Predictor {
      * words already present.
      */
     private fun addHalfSpaceVariants(seq: String, context: List<String>, candidates: MutableList<WordCandidate>) {
+        // TODO: offer half-space completions for a joined PREFIX (`میش` → `می‌شود`) and for the
+        //  secondary dictionary; today only the whole typed word of the primary is matched.
         val dict = dictionary.get()
         val variants = halfSpaceVariantsFor(dict).variantsOf(seq) { dict.containsKey(it) }
         if (variants.isEmpty()) return

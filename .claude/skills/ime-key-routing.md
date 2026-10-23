@@ -411,7 +411,8 @@ From docs/research/2026-10-15-ime-editor-actions.md §4.2, all in `handleEditing
   the result (UTF-16 length may change: ß → SS). Refused with feedback in terminal-style
   editors, without readback, and behind ANY inline field.
 - **word_left/right, select_word_left/right, select_word, select_line**: `EditorTextNavigation`
-  (pure; word = letters/digits/marks + inner apostrophe, by code point) over a readback window
+  (pure; word = letters/digits/marks + inner apostrophe + a Persian half-space between
+  Arabic-script letters, by code point) over a readback window
   (256 chars; 4096 for lines). A word/line touching a cut window edge is refused, never guessed.
   No readback window, `moveCursorForceFallback`, or a refused `setSelection` → Ctrl(+Shift)+DPAD
   key events for moves/extends, and select_word/select_line as the editor's OWN keys
@@ -510,3 +511,16 @@ backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() →
   fields (tag, clipboard/emoji/GIF search) always append at their end, like their tap typing.
   The field is resolved when the decode RESULT arrives: a swipe whose result lands after the
   editor closed goes to the app.
+
+## Word characters: the Persian half-space (2026-10-23)
+
+U+200C is a word character ONLY between two Arabic-script letters (`WordChars`, pure; marks
+skipped), plus the cursor edge (half-space just typed after an Arabic letter, nothing or a
+non-letter/Arabic letter after the cursor). Every word scanner ORs that clause into its own
+base rule — never add a scanner with a private ZWNJ rule; call `WordChars`. Typing U+200C
+after an Arabic letter APPENDS to the composing word (no W7 stem reset); after anything else
+it ends the word as before. The composing-word tracker used to keep U+200C in every script —
+it now matches the other scanners. Call-site list and rationale:
+`docs/specs/dictionary-and-language-system.md` "Persian half-space and Arabic-script lookup
+fold"; tests `WordCharsTest`, `PersianHalfSpaceBoundaryTest` (pure), `PersianHalfSpaceTypingTest`
+(mock).

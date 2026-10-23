@@ -392,3 +392,74 @@ layout order. There is no limit on the number of bound layouts.
 - `LayoutManagerLanguageBindingComposeTest` (androidTest): the Language chip, the
   "not installed" warning on the row and in the picker, and unbinding via "Follow
   Multi-Language settings".
+
+## Persian half-space and Arabic-script lookup fold (2026-10-23)
+
+Maintainer decisions (b), (c), (d) of `docs/research/2026-10-21-persian-zwnj.md` §7.
+
+### Word characters — `WordChars`
+
+U+200C (ZWNJ, the Persian half-space) is a word character **only** when the nearest base
+characters on both sides (combining marks skipped) are Arabic-script letters
+(`Character.isLetter` and `UnicodeScript.ARABIC`). Cursor edge: a half-space as the last
+character before the cursor, after an Arabic-script letter, belongs to the word when the first
+character after the cursor is an Arabic-script letter, a non-letter/digit, or absent (`می‌|`).
+Everything else — Latin/Cyrillic/Greek/Hebrew/Indic/Sinhala ZWNJ, edges, digits, Arabic next
+to Latin — is a boundary. U+200D is not covered. Call sites (each keeps its own base rule and
+ORs the half-space clause in): `TextActionPolicy.wordAtCursor`, `PredictionContextTracker`
+prefix/suffix extraction, `EditorTextNavigation.isWordAt/isWordBefore`,
+`VerifiedSuffixEdit.isWordContinuationAt`, `NextWordPredictor.contextFromEditorText`,
+`SuggestionHandler` (typing branch, `trimJoiners`, whole-token check, #78 editor scan),
+`KeyEventHandler` double-space check, `EmojiSearchManager.extractWordBeforeCursor`,
+`SwipeCorrectionTracker.editorContinuesAnchor`. Reviewed and left alone:
+`InlineSwipeInput.insertion` (visual fusion only) and the owed-space repair in
+`KeyEventHandler` (a half-space never starts a word).
+
+**One deliberate behaviour change outside Persian:** `PredictionContextTracker` used to keep
+U+200C in the composing word in EVERY script (it fell through to "word char"); it now follows
+the shared rule like the other sites, so a Latin or Sinhala ZWNJ ends the cursor-synced word,
+as it already did for typing, selection, navigation and the tokeniser.
+
+Typing: U+200C typed after an Arabic-script letter appends to the composing word (no reset,
+unlike the apostrophe/hyphen W7 path), so the bar completes `می‌ش` → `می‌شود`. A dangling
+half-space is trimmed from the learned token (`می‌` + space learns `می`).
+
+Swipe: `CtcScriptProjection` and `UserJoinerPreference` strip a joining half-space (the trace
+`میشود` reaches `می‌شود`, displayed in its dictionary form); a non-joining U+200C still makes a
+word untypeable / non-joiner. `CtcAzProjection` is a–z only and needs nothing. The geometric
+`LayoutProjection` already ignored U+200C.
+
+### Autocorrect and the offer — `HalfSpaceVariants`
+
+Autocorrect never adds, removes or moves a half-space (`WordChars.crossesHalfSpace`, applied in
+`WordPredictor.gatedCandidates`, so both rankings and the bar highlight share it); a word with
+an edge half-space is never corrected. A correction that keeps the half-space count (a typo fix
+inside a half-space word) still applies. Instead `predictInternal` offers the other spellings as
+whole-word candidates (direct-match prefix score): typed `میشود` → `می‌شود`, typed `می‌شود` →
+`میشود` when it is a dictionary word, `نامهای` → both `نامه‌ای` and `نام‌های`. Space keeps the
+typed word, so the offer is never highlighted. The index is built from the primary dictionary's
+keys and cached per map instance and size. `UserJoinerPreference` was considered for recording
+the user's choice and does not fit the tap path (it is a swipe display rule built from user
+words); a chosen spelling is learned by the ordinary learn funnel. Not offered for the secondary
+dictionary, and not for prefixes (# TODO in `WordPredictor.addHalfSpaceVariants`).
+
+### Lookup fold — `ArabicScriptFold`
+
+Lookup keys only, never the user's text, one code unit for one code unit:
+
+| Language | Fold |
+|---|---|
+| `fa` | ي U+064A → ی U+06CC, ك U+0643 → ک U+06A9, ى U+0649 → ی U+06CC, ۀ U+06C0 → ه U+0647, ة U+0629 → ه U+0647, ە U+06D5 → ه U+0647 |
+| `ckb` | ي → ی, ك → ک only (ە and ه are distinct Sorani letters) |
+| anything else (ar, ur, Latin, …) | none |
+
+Never folded: آ and the hamza carriers ء أ إ ؤ ئ. Scoping follows the language of the dictionary
+being loaded or queried: `WordPredictor.lookupKey` uses `currentLanguage` (the active primary,
+`Config.primary_language`, per-layout bindings included), the load paths re-key the loaded map
+and prefix index with the loading language (`foldDictionaryKeys`, max frequency on a merge),
+and `NormalizedPrefixIndex(language)` folds before accent stripping for the secondary
+dictionary. A typed word whose folded key is a dictionary word is returned AS TYPED by
+autocorrect. `PredictionContextTracker.normalizeForPrediction` no longer runs NFD over
+Arabic-script characters (NFD turned ۀ into Kurdish ە + hamza and stripped hamza/madda from
+أ ؤ ئ آ); it applies the fold and drops harakat. The `fa` pack builder applies the same `fa`
+table (the shipped `langpack-fa.zip` has 0 of the six variant letters).

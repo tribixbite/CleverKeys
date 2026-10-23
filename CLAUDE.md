@@ -68,6 +68,13 @@ doc's "Current execution status" table the roadmap state, and CHANGELOG.md's 2.0
 user-visible summary. `docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted
 maintainer edits — never edit or stage it. Read those before editing or launching Gradle.
 
+## Shared git INDEX between sessions (2026-10-23)
+
+Never `git add` to the shared `.git/index`: another session's `git commit` takes everything
+staged (a Persian pack commit swept in a whole uncommitted feature). Commit from a private index
+(`GIT_INDEX_FILE=<scratch> git read-tree HEAD`, add, commit) and re-read HEAD right before
+committing — an index read before a foreign commit records that commit's files as deleted.
+
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 
 `TerminalUtils.editorKind` treats RustDesk and ANY `inputType == TYPE_NULL` editor as a blind

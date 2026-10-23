@@ -235,3 +235,14 @@ add-to-dictionary offers:
 3. **`contractions_en.json` must match `contractions_non_paired.json`** — they're currently identical and both get loaded (harmless duplication but must stay in sync).
 4. **Prefix boosts are DEAD — do not regenerate them.** Their only consumer (the neural beam search) was deleted with the neural engine on 2026-08-18 (ADR-011); `src/main/assets/prefix_boosts/` no longer exists, and every `boost` flag in `build_all_languages.py` is `False` (2026-09-03) so a bulk rebuild cannot resurrect the tree. `LanguagePackManager` still ACCEPTS a pack-side `prefix_boost.bin` and copies it on import (so old packs install cleanly) but nothing reads it back.
 5. **`build_all_languages.py` refuses to regenerate en in bulk runs** — the English dict is frozen at 98,140 words; rebuild it only deliberately via `build_wordlist.py --lang en --write`.
+
+## Arabic-script lookup fold and the Persian half-space (2026-10-23)
+
+- `ArabicScriptFold` folds LOOKUP KEYS only (dictionary keys at load, the typed word at
+  lookup; the user's text is never rewritten): `fa` ي ك ى → ی ک ی and ۀ ة ە → ه; `ckb` only
+  ي ك → ی ک (ە is a Sorani letter); every other language nothing. Never آ or a hamza carrier.
+  A pack builder for `fa` must apply the same table (`ArabicScriptFold.PERSIAN`).
+- Dictionary words may contain U+200C between Arabic letters (`می‌شود`): they are single words.
+  Autocorrect never adds, removes or moves a half-space; the other spelling is offered in the
+  bar instead (`HalfSpaceVariants`). Details: `docs/specs/dictionary-and-language-system.md`.
+

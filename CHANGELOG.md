@@ -292,6 +292,11 @@ editor that used to be listed here already ship in 2.0.)
 - Custom layout XML accepts `escape` as an alias of the `esc` key name.
 - Web demo (site): the shipped CTC engine is selectable beside the transformer engines, with a
   parity gate against the app's golden fixtures.
+- Persian (2026-10-23): a half-space (ZWNJ) between two Arabic-script letters is part of the
+  word, so `می‌شود` is typed, selected, predicted, learned and swiped as one word; a half-space
+  in any other script still ends the word. Autocorrect never adds, removes or moves a
+  half-space — the other spelling is offered in the suggestion bar instead. Arabic ي/ك (and
+  ى, ۀ, ة, ە) find their Persian dictionary words without changing what was typed.
 
 ### Changed
 

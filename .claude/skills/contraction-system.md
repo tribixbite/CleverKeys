@@ -337,7 +337,10 @@ re-run (`build_contraction_collisions.py`: unchanged, `etoo` is in no other lexi
 
 Everything in §6c decides from SHIPPED data for everyone. A personal-dictionary word spelled
 with an apostrophe or hyphen (`she'd`, `l'une`, `co-op`) is a per-user claim, and it is read as
-a **display preference, not a frequency lift** (`swipe/UserJoinerPreference.kt`):
+a **display preference, not a frequency lift** (`swipe/UserJoinerPreference.kt`). Since
+2026-10-23 the Persian half-space (U+200C) is a joiner too, but only between two Arabic-script
+letters (`WordChars.isJoiningZwnjAt`; `می‌شود` → surface `میشود`); a Latin or Sinhala ZWNJ is
+not. `CtcScriptProjection` strips it under the same rule:
 
 - No engine can spell a joiner, so the entry only ever decodes as its joiner-free SURFACE
   (`shed`, `lune`, `coop`). `ContractionOverlay.apply(userPreferredForm = …)` runs **before

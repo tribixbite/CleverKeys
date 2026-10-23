@@ -275,6 +275,15 @@ and Hazm's list must not be used as-is.
 
 ## 6. CleverKeys word-boundary code (input to decision (b))
 
+**Implemented (2026-10-23) in 479a7277** (the code was swept into that pack commit from the
+shared index; `e8f1d3ae` carries its message and `4aa4f756` registers the tests): one shared
+predicate `WordChars` (the rule below, with the cursor-edge case), switched at every site in
+the table plus `EmojiSearchManager`, `SwipeCorrectionTracker` and the `SuggestionHandler`
+typing branch / #78 scan; `CtcScriptProjection` and `UserJoinerPreference` strip a joining
+half-space (`CtcAzProjection` is a–z only and is unchanged). `PredictionContextTracker` no
+longer keeps U+200C in non-Arabic scripts. Spec: `docs/specs/dictionary-and-language-system.md`
+"Persian half-space and Arabic-script lookup fold". The line numbers below are as of 2026-10-22.
+
 `rg -n isWordChar src/main/kotlin` gives two definitions; the behaviourally equivalent checks
 elsewhere are listed too. "ZWNJ" = how U+200C is classified today [V].
 
@@ -323,6 +332,13 @@ candidate generation (so `میشود` can *offer* `می‌شود`) — and `norm
 U+06C0 → ه and ي/ك → ی/ک before NFD (see §4).
 
 ## 7. Recommendations for (a)–(d), with cost and risk
+
+**Status (2026-10-23):** (b), (c) and (d) approved by the maintainer and implemented in
+479a7277 / `e8f1d3ae` / `4aa4f756` (see §6). (c) scoping: `fa` gets the full table, `ckb` only
+ي/ك → ی/ک (ە stays a Sorani letter), every other language nothing; the table is
+`ArabicScriptFold.PERSIAN`. (d): `WordChars.crossesHalfSpace` blocks every autocorrect that adds,
+removes or moves a half-space; `HalfSpaceVariants` offers the other spelling (whole word only,
+primary dictionary only). The space→half-space rewrite of (d)(3) is NOT built.
 
 **(a) ZWNJ key — yes, a dedicated key beside the space bar, keep the corner gesture.**
 Every open Android keyboard that handles Persian puts it right of (AOSP/HeliBoard/FUTO) or left
