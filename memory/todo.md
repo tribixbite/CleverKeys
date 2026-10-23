@@ -78,7 +78,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    edits made within a few seconds, so one undo can span several edits — Compose behaviour).
    Termux undo PASS 2026-10-21 (second Saga, default `undo` extra key on `z` SE): the bar shows
    "Action unavailable in this editor or panel" and no Ctrl+Z reaches the shell
-   (`build/oct21-saga144/09.png`). STILL OPEN: Ctrl+C on a PRIVATE entry asks before copying.
+   (`build/oct21-saga144/09.png`). Ctrl+C on a PRIVATE entry PASS 2026-10-22 (Pixel, release `643cd3bb`+i18n tree): a
+   private copy (temporary `copy_private` extra key, s SE) made a 🔒 entry; in its inline editor
+   keyboard Ctrl+A, Ctrl+C opened "Copy to system clipboard? … Copy anyway?"; Cancel left the OS
+   clip untouched. Entry removed by swipe (COMMITTED on TIMEOUT), extra key unticked (19 of 121).
+   Item can close.
 6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
