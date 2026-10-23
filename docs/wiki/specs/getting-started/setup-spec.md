@@ -1,97 +1,109 @@
 ---
 title: First Time Setup - Technical Specification
+description: First-run flow (LauncherActivity enable/select), preference storage, verified defaults and language-pack import
 user_guide: /wiki/getting-started/first-time-setup/
 status: implemented
-version: v1.5.0
+version: v2.0.0
 ---
 
 # First Time Setup Technical Specification
 
 ## Overview
 
-Initial keyboard configuration flow including language pack download and preference initialization.
+There is no setup wizard and no first-run flag. On a fresh install the launcher icon opens
+`LauncherActivity`, which offers **Enable Keyboard**, **Select Keyboard** and gesture
+calibration; everything else is configured from `SettingsActivity`. A preference that was
+never written reads its value from `Config.Defaults`, so a new install is fully defined by
+that object.
 
 ## Key Components
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| Settings Activity | `SettingsActivity.kt` | Main configuration UI |
-| Config | `Config.kt` | Default values and preference keys |
-| DirectBootPrefs | `DirectBootAwarePreferences.kt` | Device-encrypted storage |
-| Launcher | `LauncherActivity.kt` | First-run Enable/Select Keyboard flow |
-| Language Manager | `langpack/LanguagePackManager.kt` | Import and install language packs (SAF, no network) |
+| Settings Activity | `src/main/kotlin/tribixbite/cleverkeys/activities/SettingsActivity.kt` | Main configuration UI (collapsible sections and settings search) |
+| Config | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | `object Defaults`, `object SettingsRanges`, preference keys |
+| DirectBootAwarePreferences | `src/main/kotlin/tribixbite/cleverkeys/DirectBootAwarePreferences.kt` | On API 24+ the keyboard settings live in device-protected storage, readable before the first unlock so the storage password can be typed; nothing personal is stored there |
+| Launcher | `src/main/kotlin/tribixbite/cleverkeys/activities/LauncherActivity.kt` | First-run Enable / Select Keyboard / Calibrate Gestures flow |
+| Language Pack Manager | `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Import and install language packs (SAF file picker, no network) |
 
-## Initialization Flow
+## First-Run Flow
 
 ```
-App Install
+App install
     ↓
-First keyboard launch
+Launcher icon → LauncherActivity
     ↓
-Check isFirstRun preference
+Enable Keyboard  → system "On-screen keyboard" settings
     ↓
-Show setup wizard (if first run)
+Select Keyboard  → system input-method picker (see below)
     ↓
-Layout selection → Language pack download → Theme selection
+(optional) Calibrate Gestures → ShortSwipeCalibrationActivity
     ↓
-Mark isFirstRun = false
-    ↓
-Normal keyboard operation
+Keyboard usable; Settings reachable from the keyboard's gear key
 ```
 
-## Configuration Storage
-
-| Storage | File | Contents |
-|---------|------|----------|
-| **Preferences** | `shared_prefs/cleverkeys_prefs.xml` | User settings |
-| **Device Protected** | `shared_prefs/neural_performance_stats.xml` | Swipe selection stats (legacy file name) |
-| **Language Packs** | `files/langpacks/` | Imported dictionaries + unigrams (`LanguagePackManager.kt:29`) |
-
-## Default Values
-
-Key defaults from `Config.kt` `object Defaults` (line 18+):
-
-| Setting | Default | Source (`Config.kt` line) |
-|---------|---------|--------------------------|
-| `THEME` | `"cleverkeysdark"` | 20 |
-| `KEYBOARD_HEIGHT_PORTRAIT` | 27 | 23 |
-| `KEYBOARD_HEIGHT_LANDSCAPE` | 40 | 24 |
-| `SHORT_GESTURE_MIN_DISTANCE` | 28 (% of key diagonal) | 119 |
-| `SHORT_GESTURE_MAX_DISTANCE` | 141 (% of key diagonal; short/long boundary) | 120 |
-| `AUTOCORRECT_ENABLED` | true | 176 |
-| `LONGPRESS_TIMEOUT` | 600 | 85 |
-| `SWIPE_ENGINE_MODE` | "ctc" | 296 |
-| `CTC_BEAM_WIDTH` | 100 | 305 |
-| `ONNX_XNNPACK_THREADS` | 2 | 288 |
-| `ONNX_XNNPACK_THREADS` | 2 | 299 |
-| `HAPTIC_ENABLED` | true | 75 |
-| `HAPTIC_SWIPE_COMPLETE` | true | 84 |
-| `SMART_PUNCTUATION` | true | 95 |
-| `DOUBLE_SPACE_TO_PERIOD` | true | 104 |
-| `DOUBLE_SPACE_THRESHOLD` | 500 | 105 |
-| `LANGUAGE_DETECTION_SENSITIVITY` | 0.6f | 295 |
-| `CLIPBOARD_HISTORY_LIMIT` | "0" (unlimited) | 215 |
+The launcher checks the live enabled/selected state on every launch; nothing is stored to
+mark the first run as done.
 
 ## Enable / Select Keyboard Flow (LauncherActivity)
 
-The in-app launcher offers **Enable Keyboard** and **Select Keyboard** actions (`LauncherActivity.kt:110-111`). `Select Keyboard` never calls `showInputMethodPicker()` in crash-prone states (UT-6, `LauncherActivity.kt:131-164`):
+The launcher wires **Enable Keyboard** to `launchKeyboardSettings()` and **Select Keyboard**
+to `launchInputMethodPicker()` (`LauncherActivity.kt:118-119`). `Select Keyboard` never calls
+`showInputMethodPicker()` in crash-prone states (UT-6, `LauncherActivity.kt:151-162`):
 
-- CleverKeys **not yet enabled** as an input method → opens the system IME settings screen instead of the picker (`isCleverKeysEnabledCompat()` check → `launchKeyboardSettings()`).
+- CleverKeys **not yet enabled** as an input method → opens the system IME settings screen
+  instead of the picker (`isCleverKeysEnabledCompat()` check → `launchKeyboardSettings()`).
 - Enabled **and window focused** → shows the system input-method picker.
 - Enabled but **window unfocused** at picker time → falls back to IME settings.
 
-Rationale: `showInputMethodPicker()` displays a dialog owned by `system_server`; issuing it while the IME isn't enabled or the window is unfocused can crash or no-op silently.
+Rationale: `showInputMethodPicker()` displays a dialog owned by `system_server`; issuing it
+while the IME isn't enabled or the window is unfocused can crash or no-op silently.
+
+## Configuration Storage
+
+| Storage | Where | Contents |
+|---------|-------|----------|
+| **Keyboard settings** | Default `SharedPreferences`; device-protected storage on API 24+ (`DirectBootAwarePreferences`) | Every user setting |
+| **Swipe selection stats** | `neural_performance_stats` `SharedPreferences` (`SwipePerformanceStats.kt`; legacy file name) | Suggestion-selection statistics |
+| **Privacy settings** | `privacy_settings` `SharedPreferences` (`PrivacyManager.kt`) | Local data-collection toggles |
+| **Language packs** | `files/langpacks/<code>/` (`LanguagePackManager.kt`) | Imported dictionaries and unigrams |
+
+## Default Values
+
+Defaults live in `Config.kt` `object Defaults`; the values below were read from HEAD on
+2026-10-23 (line numbers are omitted because they shift with every edit):
+
+| Setting | Default |
+|---------|---------|
+| `THEME` | `"cleverkeysdark"` |
+| `KEYBOARD_HEIGHT_PORTRAIT` / `KEYBOARD_HEIGHT_LANDSCAPE` | 27 / 40 (% of screen height; sliders 20–60) |
+| `SHORT_GESTURE_MIN_DISTANCE` / `SHORT_GESTURE_MAX_DISTANCE` | 28 / 141 (% of key diagonal; max is the short/long boundary) |
+| `AUTOCORRECT_ENABLED` | `true` |
+| `LONGPRESS_TIMEOUT` | 600 ms |
+| `SWIPE_ENGINE_MODE` | `"ctc"` |
+| `CTC_BEAM_WIDTH` | 100 (slider 10–300) |
+| `ONNX_XNNPACK_THREADS` | 2 |
+| `HAPTIC_ENABLED` / `HAPTIC_SWIPE_COMPLETE` | `true` / `true` |
+| `SMART_PUNCTUATION` | `true` |
+| `DOUBLE_SPACE_TO_PERIOD` / `DOUBLE_SPACE_THRESHOLD` | `true` / 500 ms |
+| `LANGUAGE_DETECTION_SENSITIVITY` | 0.6 |
+| `CLIPBOARD_HISTORY_LIMIT` | `"0"` (unlimited) |
+| `NEXT_WORD_PREDICTION_ENABLED` | `true` (since 2026-09-26; an explicit stored `false` is kept) |
+| `ON_DEVICE_LEARNING_ENABLED` | `false` (fresh installs; upgrades from pre-2.0 are seeded `true` by the v4 migration) |
 
 ## Language Pack Import
 
 CleverKeys has **no INTERNET permission** — language packs are never downloaded by the app. Flow:
 
-1. Obtain a prebuilt `langpack-<lang>.zip` (repo `scripts/dictionaries/`) or build one with `scripts/build_langpack.py`
+1. Obtain a prebuilt `langpack-<lang>.zip` (repo `scripts/dictionaries/`, or the
+   [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks)) or
+   build one with `scripts/build_langpack.py`
 2. Settings → 🌐 Multi-Language → **Import Pack** (SAF file picker)
-3. Pack contents (manifest.json + dictionary.bin + unigrams.txt) are installed under `files/langpacks/`
+3. Pack contents (`manifest.json` + `dictionary.bin` + `unigrams.txt`, optional `NOTICE.txt`
+   and swipe model) are installed under `files/langpacks/<code>/`
 4. The language becomes selectable; installed packs are detected alongside bundled dictionaries
 
 ## Related Specifications
 
 - [Installation Specification](installation-spec.md)
-- [Settings System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/settings-system.md)
+- [Settings System Architecture](../settings/settings-system-architecture-spec.md)

@@ -513,4 +513,4 @@ See [Clipboard Privacy](privacy-spec.md) for the full exclusion list, foreground
 ## Related Specifications
 
 - [Clipboard Privacy](privacy-spec.md) — password manager exclusion, IS_SENSITIVE handling, media gating
-- [Text Selection](text-selection-spec.md) - Selection integration
+- [Text Selection](../../clipboard/text-selection.md) - User guide to selecting the text that gets copied

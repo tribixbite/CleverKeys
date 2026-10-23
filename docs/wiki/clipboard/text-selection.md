@@ -1,187 +1,80 @@
 ---
 title: Text Selection
-description: Select text efficiently with gestures
+description: Select text with the Selection-Delete gesture, Shift plus arrow keys, Ctrl+A, or commands assigned to key swipes
 category: Clipboard
 difficulty: intermediate
-related_spec: ../specs/clipboard/text-selection-spec.md
 ---
 
 # Text Selection
 
-Select text efficiently using CleverKeys gestures, including selection-delete mode and trackpoint navigation.
+CleverKeys selects text the way a hardware keyboard would: it sends Shift+arrow and Ctrl
+key combinations, or the editor's own select-all/copy/cut actions. The app you are typing in
+draws the selection and its handles, so what you can select depends on that app.
 
 ## Quick Summary
 
 | What | Description |
 |------|-------------|
-| **Purpose** | Select text for copy/cut/delete |
-| **Methods** | Selection-delete, trackpoint, shortcuts |
-| **Features** | Word/line/all selection |
+| **Purpose** | Select text to copy, cut, delete or replace |
+| **Methods** | Selection-Delete gesture, Shift + arrow keys, Ctrl+A, assigned commands |
+| **Where** | Any text field that reports its cursor to the keyboard (terminals and remote-desktop fields do not) |
 
-## Selection Methods
+## Method 1: Selection-Delete gesture
 
-### Method 1: Selection-Delete Mode
+Short-swipe on backspace and keep your finger down. After a moment the keyboard vibrates
+and selection mode starts: move your finger to extend the selection, lift it to delete what
+is selected. **Settings > Gesture Tuning > Selection Movement** chooses between the
+joystick style (default: further from the start point selects faster) and **Follow finger**
+(one character per step of travel; moving back shrinks the selection, step size adjustable).
 
-Select text while preparing to delete:
+See [Selection Delete](../gestures/selection-delete.md) for the full gesture.
 
-1. **Short swipe** on backspace (any direction)
-2. **Hold** (don't release)
-3. Wait for haptic feedback
-4. **Move finger** like joystick:
-   - Left/Right: Select characters
-   - Up/Down: Select lines
-5. **Release** to delete selected text
+## Method 2: Shift + arrow keys
 
-See [Selection Delete](../gestures/selection-delete.md) for details.
+1. Tap **Shift** once (it stays latched for the next key; tap twice to lock it).
+2. Use an arrow key: the navigation key between the spacebar and Enter has up, down, left
+   and right on its swipe directions, you can add arrow keys through
+   **Settings > Activities > Configure Extra Keys**, or hold the navigation key to enter
+   [TrackPoint Mode](../gestures/trackpoint-mode.md).
+3. With Shift active the arrows extend the selection instead of moving the cursor.
 
-### Method 2: TrackPoint Mode
+The spacebar cursor slider ([Cursor Navigation](../gestures/cursor-navigation.md)) moves the
+cursor only; it does not select.
 
-For precise cursor positioning:
+## Method 3: Select all
 
-1. **Long-press the nav key** (between spacebar and enter)
-2. Wait for haptic activation
-3. **Move finger** to position cursor
-4. Hold **Shift** while moving to select
-5. Release to exit mode
+- Tap **Ctrl**, then **A** (Ctrl is sticky: tap it, then the letter).
+- Or assign the **Select All** command (`selectAll`) to a key swipe in
+  **Settings > Activities > Short Swipe Calibration > Customize Per-Key Actions**.
 
-See [TrackPoint Mode](../gestures/trackpoint-mode.md) for details.
+## Working with the selection
 
-### Method 3: Keyboard Shortcuts
+| Action | Ctrl shortcut | Assignable command |
+|--------|---------------|--------------------|
+| Copy | Ctrl+C | `copy` |
+| Copy to CleverKeys only ([Private Copy](private-copy.md)) | — | `copy_private` |
+| Cut | Ctrl+X | `cut` |
+| Paste | Ctrl+V | `paste`, `pasteAsPlainText` |
+| Share | — | `shareText` |
+| Undo / Redo | Ctrl+Z / Ctrl+Y | `undo`, `redo` |
+| Delete | Backspace | — |
+| Replace | Type anything | — |
 
-Use modifier keys:
+Whether a shortcut works is up to the editor: CleverKeys sends the key combination, and
+most text fields implement these. The **Show Text Menu** command asks the editor to open its
+own cut/copy/paste toolbar on the word at the cursor.
 
-| Shortcut | Action |
-|----------|--------|
-| **Ctrl+A** | Select all |
-| **Shift+Arrow** | Extend selection |
-| **Ctrl+Shift+Arrow** | Select word |
+## Settings
 
-## Quick Selection Actions
-
-### Select All
-
-1. Open command palette (long-press settings)
-2. Select **Select All**
-3. Or use Ctrl+A shortcut
-
-### Select Word
-
-1. **Double-tap** on a word (in the text field)
-2. Word is selected
-3. Or use Selection-Delete with minimal movement
-
-### Select Line
-
-1. In Selection-Delete mode, swipe **up** or **down**
-2. Entire line gets selected
-3. Continue for multiple lines
-
-## Working with Selected Text
-
-Once text is selected:
-
-### Copy Selection
-
-| Method | How |
-|--------|-----|
-| **Ctrl+C** | If Ctrl key enabled |
-| **Command palette** | Long-press settings > Copy |
-| **App menu** | Use app's copy function |
-
-### Cut Selection
-
-| Method | How |
-|--------|-----|
-| **Ctrl+X** | If Ctrl key enabled |
-| **Command palette** | Long-press settings > Cut |
-| **App menu** | Use app's cut function |
-
-### Delete Selection
-
-| Method | How |
-|--------|-----|
-| **Backspace** | Press backspace key |
-| **Selection-Delete** | Release finger |
-| **Type anything** | Replace with new text |
-
-## Selection Visual Feedback
-
-When text is selected:
-
-```
-┌─────────────────────────────────────┐
-│ Text before [selected text] after   │
-│              ↑ Blue highlight       │
-│                                     │
-│ ┌───────────────────────────────┐   │
-│ │    Selection handles (○)      │   │
-│ └───────────────────────────────┘   │
-└─────────────────────────────────────┘
-```
-
-- Selected text is highlighted
-- Selection handles appear at edges
-- Keyboard shows selection-aware actions
-
-## Tips and Tricks
-
-- **Practice Selection-Delete**: Most efficient method once learned
-- **Modifier keys**: Add Ctrl as extra key for shortcuts
-- **Word selection**: Double-tap in text is often faster
-- **Line selection**: Vertical swipe in Selection-Delete mode
-
-> [!TIP]
-> Selection-Delete mode selects AND deletes in one gesture - great for editing.
-
-## Selection Settings
-
-| Setting | Location | Description |
-|---------|----------|-------------|
-| **Selection Haptics** | Haptics | Feedback during selection |
-| **Vertical Threshold** | Gestures | Line selection sensitivity |
-| **Selection Speed** | Gestures | Character selection speed |
-
-## Common Selection Patterns
-
-### Deleting a Word
-
-1. Short swipe backspace, hold
-2. Swipe right to select word
-3. Release to delete
-
-### Copying a Paragraph
-
-1. Enter TrackPoint mode
-2. Position at paragraph start
-3. Hold Shift, move to end
-4. Open command palette, Copy
-
-### Replacing Text
-
-1. Select text to replace
-2. Start typing
-3. Selection is replaced
-
-## Common Questions
-
-### Q: How do I select without deleting?
-
-A: Use TrackPoint mode with Shift, or use the app's native selection.
-
-### Q: Why is selection slow/fast?
-
-A: Adjust selection speed in Settings > Gestures.
-
-### Q: Can I select across multiple lines?
-
-A: Yes, use vertical movement in Selection-Delete or TrackPoint mode.
+| Setting | Section | Default |
+|---------|---------|---------|
+| **Selection Movement** | Gesture Tuning | Joystick (speed by distance) |
+| **Step Size** | Gesture Tuning | 12 dp per character (follow-finger mode only) |
 
 ## Related Features
 
-- [Selection Delete](../gestures/selection-delete.md) - Selection-delete gesture
-- [TrackPoint Mode](../gestures/trackpoint-mode.md) - Cursor navigation
-- [Clipboard History](clipboard-history.md) - Manage copied text
-
-## Technical Details
-
-See [Text Selection Technical Specification](../specs/clipboard/text-selection-spec.md).
+- [Selection Delete](../gestures/selection-delete.md) - The select-and-delete gesture
+- [TrackPoint Mode](../gestures/trackpoint-mode.md) - Joystick cursor on the navigation key
+- [Cursor Navigation](../gestures/cursor-navigation.md) - Spacebar cursor slider
+- [Clipboard Shortcuts](shortcuts.md) - Copy, cut, paste, undo and redo
+- [Clipboard History](clipboard-history.md) - Where copied text goes

@@ -126,5 +126,5 @@ The global `theme` preference is never written. Full rules: `docs/specs/layout-s
 ## Related Specifications
 
 - [Multi-Language Input](./multi-language-spec.md) - Active languages and per-layout binding
-- [Adding Layouts](adding-layouts-spec.md) - Layout management
+- [Adding Layouts](../../layouts/adding-layouts.md) - User guide to enabling layouts in Layout Manager
 - [Layout System](https://github.com/tribixbite/CleverKeys/blob/main/docs/specs/layout-system.md) - Full architecture

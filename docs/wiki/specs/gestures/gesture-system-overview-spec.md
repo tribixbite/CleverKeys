@@ -17,10 +17,10 @@ This spec is the system-level overview. Per-gesture behavior is documented in th
 
 | File | Class/Function | Purpose |
 |------|----------------|---------|
-| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Touch event handling, gesture pipeline routing (~1789 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers` | Touch event handling, gesture pipeline routing (~2480 lines) |
 | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `Pointers.Pointer` (internal class) | Per-pointer state including `hasLeftStartingKey` |
-| `src/main/kotlin/tribixbite/cleverkeys/GestureClassifier.kt` | `GestureClassifier` | TAP vs SWIPE classification (65 lines) |
-| `src/main/kotlin/tribixbite/cleverkeys/Gesture.kt` | `Gesture` | Circle/rotation state machine (141 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/gesture/GestureClassifier.kt` | `GestureClassifier` | TAP vs SWIPE classification (62 lines) |
+| `src/main/kotlin/tribixbite/cleverkeys/gesture/Gesture.kt` | `Gesture` | Rotation state machine inherited from Unexpected Keyboard; only used as a "subkey already taken" marker (151 lines, see below) |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/SwipeDirection.kt` | `SwipeDirection` | 8-direction enum for short swipes |
 | `src/main/kotlin/tribixbite/cleverkeys/Config.kt` | Gesture settings | Configuration thresholds |
 | `src/main/kotlin/tribixbite/cleverkeys/Keyboard2View.kt` | `getKeyHypotenuse()` | Key dimension calculation |
@@ -206,32 +206,17 @@ private fun calculateSwipeDirection(dx: Float, dy: Float): SwipeDirection {
 }
 ```
 
-### Circle Gesture Detection
+### No circle or round-trip gestures
 
-Circle gestures detected via rotation accumulation:
-
-```kotlin
-class Gesture {
-    private var totalRotation: Float = 0f
-    private var lastAngle: Float = 0f
-
-    fun addPoint(x: Float, y: Float, centerX: Float, centerY: Float) {
-        val currentAngle = atan2(y - centerY, x - centerX)
-        val delta = normalizeAngle(currentAngle - lastAngle)
-        totalRotation += delta
-        lastAngle = currentAngle
-    }
-
-    fun isCircleComplete(): Boolean {
-        return abs(totalRotation) >= 2 * PI  // Full circle (360 degrees)
-    }
-
-    fun getDirection(): CircleDirection {
-        return if (totalRotation > 0) CircleDirection.CLOCKWISE
-               else CircleDirection.COUNTER_CLOCKWISE
-    }
-}
-```
+CleverKeys does not implement Unexpected Keyboard's circle, anticircle or round-trip
+gestures. `gesture/Gesture.kt` still contains that rotation state machine
+(`Gesture.Name.{Swipe, Roundtrip, Circle, Anticircle}`), but `Pointers` only constructs it
+as a marker when a slider or event subkey has been taken (`Pointers.kt:1058`, `:1069`); nothing
+calls `changed_direction()`, `moved_to_center()` or `get_gesture()`, and the
+`KeyValue.Modifier.GESTURE` branch of `KeyModifier` is never reached. The removed consumer is
+noted at `Pointers.kt:1974-1977` ("REMOVED: apply_gesture() ... obsolete with the new swipe
+typing system"). The **Circle Gesture Sensitivity** setting (`circle_sensitivity`, Input
+Behavior) is read into `ConfigSnapshot` but has no effect on typing.
 
 ### Swipe Typing Activation — two paths, one boundary
 
@@ -276,7 +261,6 @@ data class Pointer(
 ## Related Specifications
 
 - [Short Swipes](short-swipes-spec.md) - Per-key 8-direction sublabel gestures
-- [Circle Gestures](circle-gestures-spec.md) - Rotation-based double-letter input
 - [Cursor Navigation](cursor-navigation-spec.md) - Spacebar swipe cursor movement
 - [Selection / Delete](selection-delete-spec.md) - Backspace swipe word-delete and selection
 - [Trackpoint Mode](trackpoint-mode-spec.md) - Continuous cursor control

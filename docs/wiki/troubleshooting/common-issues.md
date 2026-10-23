@@ -3,7 +3,6 @@ title: Common Issues
 description: Solutions for frequently encountered problems
 category: Troubleshooting
 difficulty: beginner
-related_spec: ../specs/troubleshooting/common-issues-spec.md
 ---
 
 # Common Issues
@@ -335,7 +334,3 @@ If problems persist:
 - [Reset Defaults](reset-defaults.md) - Start fresh
 - [Backup & Restore](backup-restore.md) - Preserve settings
 - [Performance](performance.md) - Speed issues
-
-## Technical Details
-
-See [Common Issues Technical Specification](../specs/troubleshooting/common-issues-spec.md).

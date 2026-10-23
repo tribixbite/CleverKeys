@@ -242,7 +242,7 @@ validator (`backup/SettingsValidation.kt`) accepts a wider band, both are shown.
 | Setting | Key | Default | Range |
 |---------|-----|---------|-------|
 | **Swipe Distance Threshold** | `swipe_dist` | `"23"` | slider 5-30 (stored as a string; scaled to px at `Config.kt:774`) |
-| **Circle Gesture Sensitivity** | `circle_sensitivity` | `"2"` | 1-5 (string) |
+| **Circle Gesture Sensitivity** | `circle_sensitivity` | `"2"` | 1-5 (string); read into `ConfigSnapshot` but inert — no circle gesture consumer exists (see [Gesture System Overview](../gestures/gesture-system-overview-spec.md#no-circle-or-round-trip-gestures)) |
 | **Space Slider Sensitivity** | `slider_sensitivity` | `"30"` | 1-100% (`SettingsRanges.SLIDER_SENSITIVITY_PERCENT`; string). Floor is 1, not 0 — F-3 |
 | **Long-Press Timeout** | `longpress_timeout` | 600 | slider 200-1000 ms; validator 50-2000 |
 | **Key-Repeat Interval** | `longpress_interval` | 25 | 25-200 ms (`SettingsRanges.LONGPRESS_INTERVAL`) |

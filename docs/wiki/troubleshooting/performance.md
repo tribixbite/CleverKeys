@@ -62,9 +62,9 @@ Optimize CleverKeys for better speed, responsiveness, and battery efficiency.
    - Settings > Clipboard section > History Limit
    - Use smaller limit (e.g., 25 instead of 50)
 
-2. **Clear unused profiles**
-   - Settings > Activities > Backup & Restore
-   - Delete unused exports
+2. **Delete old backups**
+   - Backups are files you exported from the **Settings > Backup & Restore** section
+   - Delete the ones you no longer need with a file manager
 
 3. **Reduce installed layouts**
    - Settings > Activities > Layout Manager
