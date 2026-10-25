@@ -2554,9 +2554,9 @@
     <string name="continuous_swipe_desc">Pomiędzy słowami przytrzymaj krótko środek spacji bez unoszenia palca. Szybkie przesunięcie zachowuje jedno słowo.</string>
     <string name="continuous_swipe_stopped">Ciągłe przeciąganie zatrzymane; sprawdź tekst przed kontynuowaniem.</string>
     <string name="cmd_append_possessive">Dołącz \'s</string>
-    <string name="cmd_append_possessive_desc">Dołącz \'s do ostatniego zweryfikowanego słowa; jedno cofnięcie usuwa tylko sufiks</string>
+    <string name="cmd_append_possessive_desc">Dołącz \'s do ostatniego zweryfikowanego słowa; jedno naciśnięcie Backspace usuwa tylko sufiks</string>
     <string name="cmd_append_apostrophe">Dołącz apostrof</string>
-    <string name="cmd_append_apostrophe_desc">Dołącz apostrof do ostatniego zweryfikowanego słowa (parents\'); jedno cofnięcie usuwa tylko sufiks</string>
+    <string name="cmd_append_apostrophe_desc">Dołącz apostrof do ostatniego zweryfikowanego słowa (parents\'); jedno naciśnięcie Backspace usuwa tylko sufiks</string>
     <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
     <string name="layout_theme_chip">Motyw: %1$s</string>
     <string name="layout_theme_title">Motyw układu</string>

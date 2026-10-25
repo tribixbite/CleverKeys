@@ -546,7 +546,7 @@
     <string name="input_smart_punctuation_title">Akıllı Noktalama</string>
     <string name="input_smart_punctuation_desc">Noktalamayı sözcüklerin sonuna ekle (. , ! ? vb.\'den önceki boşluğu kaldırır)</string>
     <string name="input_swipe_distance_threshold_title">Kaydırma Mesafesi Eşiği</string>
-    <string name="input_swipe_distance_threshold_desc">Kaydırma ortasında kaydırıcı/etkinlik alt tuşlarını etkinleştirmek için mesafe (cihaz ölçekli birimler, örn. boşluk çubuğu imleç kaydırıcısı). Ayrıca geri al gibi geniş tuşlarda kısa kaydırma minimumunu sınırlar.</string>
+    <string name="input_swipe_distance_threshold_desc">Kaydırma ortasında kaydırıcı/etkinlik alt tuşlarını etkinleştirmek için mesafe (cihaz ölçekli birimler, örn. boşluk çubuğu imleç kaydırıcısı). Ayrıca geri silme gibi geniş tuşlarda kısa kaydırma minimumunu sınırlar.</string>
     <string name="input_circle_gesture_title">Daire Hareketi Duyarlılığı</string>
     <string name="input_circle_gesture_desc">Döngü/daire hareketleri için duyarlılık</string>
     <string name="input_space_slider_title">Boşluk Çubuğu Kaydırıcı Duyarlılığı</string>
@@ -2465,9 +2465,9 @@
     <string name="continuous_swipe_desc">Kelimeler arasında parmağınızı kaldırmadan boşluk tuşunun ortasında kısa süre bekletin. Hızlı bir geçiş tek kelime olarak bırakır.</string>
     <string name="continuous_swipe_stopped">Sürekli kaydırma durduruldu; devam etmeden önce metni kontrol edin.</string>
     <string name="cmd_append_possessive">\'s ekle</string>
-    <string name="cmd_append_possessive_desc">Son doğrulanan kelimeye \'s iliştir; bir geri alma yalnızca son eki siler</string>
+    <string name="cmd_append_possessive_desc">Son doğrulanan kelimeye \'s iliştir; geri silme tuşuna bir kez basmak yalnızca son eki siler</string>
     <string name="cmd_append_apostrophe">Kesme işareti ekle</string>
-    <string name="cmd_append_apostrophe_desc">Son doğrulanan kelimeye kesme işareti iliştir (parents\'); bir geri alma yalnızca son eki siler</string>
+    <string name="cmd_append_apostrophe_desc">Son doğrulanan kelimeye kesme işareti iliştir (parents\'); geri silme tuşuna bir kez basmak yalnızca son eki siler</string>
     <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
     <string name="layout_theme_chip">Tema: %1$s</string>
     <string name="layout_theme_title">Düzen teması</string>
