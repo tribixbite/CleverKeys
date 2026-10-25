@@ -300,7 +300,7 @@
     <string name="short_swipe_custom_mappings">Mapări personalizate</string>
     <string name="theme_settings_title">Teme pentru tastatură</string>
     <string name="theme_restart_keyboard">Repornește tastatura</string>
-    <string name="theme_create">Crează temă</string>
+    <string name="theme_create">Creează temă</string>
     <string name="theme_edit">Editează tema</string>
     <string name="theme_section_builtin">Teme integrate</string>
     <string name="theme_builtin_desc">Aceste teme se aplică direct pe tastatură</string>
@@ -479,17 +479,17 @@
     <string name="clipboard_swipe_deleted">Șters</string>
     <string name="clipboard_swipe_undo">Anulează</string>
     <string name="clipboard_private_copy_other_apps_title">Copiere privată în alte aplicații</string>
-    <string name="clipboard_private_copy_other_apps_desc">Adaugă \"Copiere privată\" la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Adaugă „Copiere privată” la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
     <string name="clipboard_sanitize_links_title">Sanitizează parametrii de urmărire</string>
-    <string name="clipboard_sanitize_links_desc">Elimină utm_*, fbclid, etc. din URL-urile copiate. Alimentat de ClearURLs.</string>
+    <string name="clipboard_sanitize_links_desc">Elimină utm_*, fbclid etc. din URL-urile copiate. Alimentat de ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Curăță și clipboard-ul sistemului</string>
     <string name="clipboard_sanitize_system_desc">Când un URL copiat este curățat, suprascrie și clipboard-ul sistemului, astfel încât lipirile în orice aplicație să fie sanitizate — nu doar în panoul CleverKeys.</string>
     <string name="clipboard_embed_enrich_title">Îmbogățește embed-urile pentru partajare</string>
-    <string name="clipboard_embed_enrich_desc">Rescrie x.com → fxtwitter.com, reddit.com → rxddit.com, etc.</string>
+    <string name="clipboard_embed_enrich_desc">Rescrie x.com → fxtwitter.com, reddit.com → rxddit.com etc.</string>
     <string name="clipboard_custom_rules_title">Folosește reguli personalizate</string>
     <string name="clipboard_custom_rules_desc">Aplică propriul JSON în format ClearURLs.</string>
     <string name="gesture_enable_short_title">Activează gesturi scurte</string>
-    <string name="gesture_enable_short_desc">Recunoaște glisări scurte pentru cuvinte rapide (it, is, at, etc.)</string>
+    <string name="gesture_enable_short_desc">Recunoaște glisări scurte pentru cuvinte rapide (it, is, at etc.)</string>
     <string name="gesture_min_distance_title">Distanță minimă</string>
     <string name="gesture_min_distance_desc" formatted="false">Distanța minimă de glisare pentru a se declanșa (% din diagonala tastei)</string>
     <string name="gesture_max_distance_title">Distanță maximă</string>
@@ -557,8 +557,8 @@
     <string name="input_context_boost_desc">Cât de mult influențează contextul predicțiile (0,5–5,0)</string>
     <string name="input_frequency_scale_title">Scală frecvență</string>
     <string name="input_frequency_scale_desc">Echilibrează cuvintele comune față de cele neobișnuite (100–5000)</string>
-    <string name="input_capitalize_i_title">Majusculă pentru \"I\"</string>
-    <string name="input_capitalize_i_desc">Majusculizează automat \"I\" și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Majusculă pentru „I”</string>
+    <string name="input_capitalize_i_desc">Majusculizează automat „I” și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Punctuație inteligentă</string>
     <string name="input_smart_punctuation_desc">Atașează punctuația la sfârșitul cuvintelor (elimină spațiul înainte de . , ! ? etc.)</string>
     <string name="input_swipe_distance_threshold_title">Prag distanță glisare</string>
@@ -640,7 +640,7 @@
     <string name="theme_color_keyboard_surface">Suprafață tastatură</string>
     <plurals name="short_swipe_mappings_summary"><item quantity="one">%1$d mapare personalizată • %2$d comenzi disponibile</item><item quantity="few">%1$d mapări personalizate • %2$d comenzi disponibile</item><item quantity="other">%1$d de mapări personalizate • %2$d comenzi disponibile</item></plurals>
     <string name="short_swipe_last_key">Ultima tastă: %1$s</string>
-    <string name="short_swipe_customize_key">Personalizați tasta \"%1$s\"</string>
+    <string name="short_swipe_customize_key">Personalizați tasta „%1$s”</string>
     <string name="extra_keys_enabled_count">%1$d din %2$d taste extra activate</string>
     <!-- END auto-generated translations (wp8b) -->
     <!-- Context-LM / next-word / swipe-engine settings -->
@@ -908,9 +908,9 @@
     <string name="command_palette_title_custom_text">Introduceți text personalizat</string>
     <string name="command_palette_select_desc">Selectează</string>
     <string name="command_palette_action_command">Comandă: %1$s</string>
-    <string name="command_palette_action_text">Text: \"%1$s\"</string>
+    <string name="command_palette_action_text">Text: „%1$s”</string>
     <string name="command_palette_action_intent">Intent: %1$s</string>
-    <string name="command_palette_action_timestamp">Marcaj temporal: %1$s (acum → \"%2$s\")</string>
+    <string name="command_palette_action_timestamp">Marcaj temporal: %1$s (acum → „%2$s”)</string>
     <string name="command_palette_customize_label">Personalizează eticheta</string>
     <string name="command_palette_display_label">Etichetă afișată</string>
     <string name="command_palette_icon_placeholder">[Pictogramă: %1$s]</string>
@@ -926,7 +926,7 @@
     <string name="command_palette_timestamp_title">Marcaj temporal</string>
     <string name="command_palette_timestamp_desc">Inserează data/ora formatată (ex.: yyyy-MM-dd HH:mm)</string>
     <string name="command_palette_count_available">%1$d comenzi disponibile</string>
-    <plurals name="command_palette_count_results"><item quantity="one">%1$d rezultat pentru \"%2$s\"</item><item quantity="few">%1$d rezultate pentru \"%2$s\"</item><item quantity="other">%1$d de rezultate pentru \"%2$s\"</item></plurals>
+    <plurals name="command_palette_count_results"><item quantity="one">%1$d rezultat pentru „%2$s”</item><item quantity="few">%1$d rezultate pentru „%2$s”</item><item quantity="other">%1$d de rezultate pentru „%2$s”</item></plurals>
     <string name="command_palette_browse_all">Răsfoiește toate cele %1$d comenzi</string>
     <string name="command_palette_quick_commands">Comenzi rapide</string>
     <string name="command_palette_custom_text_intro">Introduceți textul care va fi inserat când glisați în această direcție.</string>
