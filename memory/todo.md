@@ -100,6 +100,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    DELETE (maintainer: acceptable); swipe corrections tapped from the bar also delete instead of
    append AND remove the preceding space (may involve the auto-space-before/after-swipe
    settings) → agent investigate; Ctrl+Backspace PASS; the PASTE SUBKEY NO LONGER WORKS → bug.
+   SWIPE-CORRECTION PART FIXED `691aa8cf` (= GH #192): the REPLACE branch assumed the swipe typed
+   `word + " "`; in terminal/blind fields it added a Backspace when the char before the cursor was a
+   space — the swipe's OWN trailing space — so RustDesk (its hidden field reads back) lost the space
+   before the word; with auto-space-after off every editor lost it. Now the swipe records its exact
+   committed text and the tap deletes exactly that, re-using the swipe's leading space.
+   `BlindFieldPolicyTest` (all after/before combinations, RustDesk + TYPE_NULL + ordinary editor):
+   17 cases red before, green after. Device: Termux on Saga 144 with the OLD build (10-20) does NOT
+   show it with auto-space-after on (`echo ok ` + swipe `hello` + tap `help` → `echo ok help `,
+   `build/oct25-saga144/02–04`) because Termux reads back nothing, unlike RustDesk; the fixed build
+   is not yet device-checked and the after-off case was not tried on a device.
    Original: device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
@@ -118,7 +128,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 8. [ ] maintainer soak: running every release as generated (2026-10-25). Bugs found: (a) `they've`
    hard to swipe; (b) clipboard TO-DO panel entries — text input/editing broken for long
    entries (no text inserts); (c) bépo `é` discarded in swipe: swiping `été` gives `tp`, swiping
-   `ete` gives `été`. No other bugs found yet. The checklist
+   `ete` gives `été`. No other bugs found yet.
+   (c) FIXED `84021ccb`: CTC had slots for the 26 a–z keys only, so bépo's TOP-LEVEL `é` read as
+   b/p/u (`été` → `bcp`/`btp`) and QWERTZ `ü ö ä`, Swedish `å ö ä`, Spanish `ñ`, Swiss-French
+   `è é à ê` were also outside the frame box. Those keys are now alias slots folded into their base
+   letter (`CtcMappedLayoutBuilder`). Real FUTO German traces 81.46 → 83.75 % top-1, umlaut words
+   53.6 → 77.0 % (`docs/eval/2026-10-25-ctc-accent-keys.md`); synthetic pins in
+   `CtcAccentKeyLayoutReplayTest`. Geometric was already right. Left: `ß`/`æ`/`œ` keys still have
+   no slot; `schön`/`schon`-type projection collisions keep only the more frequent form.
+   (a) MEASURED, NOT CHANGED: `theyve` is in `en_enhanced.json` (159) with display `they've`
+   (contractions_en + non_paired), pairing frequency 199. A clean synthetic QWERTY `theyve` trace
+   decodes `they've` rank 1 on CTC (Python mirror of the shipped encoder + beam), 39/40 with
+   per-key offset noise σ 0.025; geometric not measured. So no lexicon or display defect. The
+   pronoun contraction keys sit ~40 below their pairing frequency (theyve 159/199, theyre 175/213,
+   youve 169/206, weve 163/205); `they're` 8/40 and `you're` 5/40 lose to `there`/`your`. Raising
+   them is a ranking change with no human evidence (FUTO corpora: 0 `theyve`, 1 `youve`, 1
+   `weve` traces) → maintainer: a few real traces of the hard word would decide it.
+   The checklist
    `docs/plans/v2.0.0-manual-test-checklist.md` was written and edited by agents only
    (maintainer, 2026-10-25): agents may edit it and should attempt every item.
    Original: ARC-053 daily-use soak of the minified release
