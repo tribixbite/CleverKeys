@@ -1019,8 +1019,12 @@ fun ColorPickerDialog(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp)
         ) {
+            // Scrolls: in landscape the hue/saturation/lightness/opacity sliders alone fill the
+            // screen, and the hex field and the buttons below were unreachable (Saga 2026-10-25).
             Column(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
