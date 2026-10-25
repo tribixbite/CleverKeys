@@ -428,7 +428,7 @@
     <string name="clipboard_limit_type_title">Soort limiet</string>
     <string name="clipboard_limit_type_desc">Hoe de klembordgeschiedenis te beperken</string>
     <string name="clipboard_history_limit_title">Geschiedenislimiet</string>
-    <string name="clipboard_history_limit_desc">Maximum aantal klembordinvoeren (0 = onbeperkt)</string>
+    <string name="clipboard_history_limit_desc">Maximaal aantalklembordinvoeren (0 = onbeperkt)</string>
     <string name="clipboard_entry_duration_title">Duur van invoer</string>
     <string name="clipboard_size_limit_title">Groottelimiet</string>
     <string name="clipboard_size_limit_desc">Maximale totale klembordopslag</string>
@@ -455,7 +455,7 @@
     <string name="clipboard_swipe_deleted">Verwijderd</string>
     <string name="clipboard_swipe_undo">Ongedaan maken</string>
     <string name="clipboard_private_copy_other_apps_title">Privé kopiëren in andere apps</string>
-    <string name="clipboard_private_copy_other_apps_desc">Voeg \"Privé kopie\" toe aan tekstselectiemenu\'s van andere apps. Kopieert geselecteerde tekst alleen naar CleverKeys — nooit naar het systeemklembord. Inschakelen voegt een app-vermelding toe die andere apps kunnen zien.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Voeg \"Privé kopiëren\" toe aan tekstselectiemenu\'s van andere apps. Kopieert geselecteerde tekst alleen naar CleverKeys — nooit naar het systeemklembord. Inschakelen voegt een app-vermelding toe die andere apps kunnen zien.</string>
     <string name="clipboard_sanitize_links_title">Trackingparameters verwijderen</string>
     <string name="clipboard_sanitize_links_desc">utm_*, fbclid enz. verwijderen uit gekopieerde URL\'s. Mogelijk gemaakt door ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Ook systeemklembord opschonen</string>
@@ -507,7 +507,7 @@
     <string name="gesture_max_speed_multiplier_title">Maximale snelheidsvermenigvuldiger</string>
     <string name="gesture_max_speed_multiplier_desc">Maximale schuifversnelling. Hoger maakt sneller schuiven mogelijk.</string>
     <string name="gif_enable_title">GIF-paneel inschakelen</string>
-    <string name="gif_enable_desc">GIF-toets op toetsenbord tonen en reaciekiezer inschakelen</string>
+    <string name="gif_enable_desc">GIF-toets op toetsenbord tonen en reactiekiezer inschakelen</string>
     <string name="gif_grid_columns_title">Rasterkolommen</string>
     <string name="gif_grid_columns_desc">Aantal kolommen in het GIF-selectieraster</string>
     <string name="gif_remove_pack_confirm">%1$s verwijderen?</string>
@@ -550,7 +550,7 @@
     <string name="input_key_repeat_title">Toetsherhaling ingeschakeld</string>
     <string name="input_key_repeat_desc">Toetsen laten herhalen bij lang ingedrukt houden</string>
     <string name="input_backspace_only_repeat_title">Alleen backspace herhalen</string>
-    <string name="input_backspace_only_repeat_desc">Alleen backspace-/navigatietoetsen herhalen, geen tekenttoetsen</string>
+    <string name="input_backspace_only_repeat_desc">Alleen backspace-/navigatietoetsen herhalen, geen tekentoetsen</string>
     <string name="input_double_tap_shift_title">Dubbel tikken op Shift voor Caps Lock</string>
     <string name="input_double_tap_shift_desc">Shift-toets vergrendelen door tweemaal snel te tikken</string>
     <string name="input_immediate_switching_title">Direct wisselen van toetsenbord</string>
@@ -629,7 +629,7 @@
     <string name="input_context_source_desc">Welk uitdrukkingsmodel de voorspellingen versterkt: ingebouwd, de geleerde patronen of beide</string>
     <string name="input_personalization_weight_title">Sterkte van personalisatie</string>
     <string name="input_personalization_weight_desc">Hoe sterk het eigen woordgebruik de voorspellingen versterkt (0 = uit, 2 = dubbel)</string>
-    <string name="input_personalization_max_words_title">Maximum aantal geleerde woorden</string>
+    <string name="input_personalization_max_words_title">Maximaal aantalgeleerde woorden</string>
     <string name="input_personalization_max_words_desc">Limiet voor de geleerde woordenschat; de minst waardevolle woorden worden als eerste verwijderd (standaard 5000)</string>
     <string name="privacy_on_device_learning_title">Leren van mijn typen</string>
     <string name="privacy_on_device_learning_desc">Bouwt op het apparaat privémodellen van uitdrukkingen en woordgebruik op basis van wat er wordt getypt. Uitschakelen stopt elke automatische registratie van typgedrag — zolang het uit staat wordt er niets nieuws opgeslagen. Gegevens die je zelf uitdrukkelijk maakt staan hier los van: statistieken over de voorspellingsprestaties en geleerde gegevens die uit een back-up zijn hersteld.</string>
@@ -654,7 +654,7 @@
     <string name="swipe_engine_layout_script_fallback">CTC kan het schrift van %1$s niet verwerken, dus vegen op die indeling gebruiken de geometrische engine.</string>
     <string name="swipe_engine_layout_corner_fallback">Op %1$s kan CTC %2$s niet lezen omdat het hoektekens zijn in plaats van primaire toetslabels. Vegen op die indeling gebruiken de geometrische engine.</string>
     <string name="swipe_engine_layout_incomplete_fallback">Op %1$s heeft CTC primaire toetsen nodig voor %2$s. Vegen op die indeling gebruiken de geometrische engine.</string>
-    <string name="clipboard_provenance_via">Privé kopie · via %1$s</string>
+    <string name="clipboard_provenance_via">Privékopie · via %1$s</string>
     <string name="clipboard_provenance_direct_launch">directe start (geen selectiemenu)</string>
     <string name="provenance_origin_geometric">Geometrische veegdecoder</string>
     <string name="provenance_origin_ctc">CTC-vegen (trie-beam)</string>
@@ -697,7 +697,7 @@
     <string name="provenance_note_autocorrected_from">Automatisch gecorrigeerd van “%1$s”</string>
     <string name="provenance_note_typo_correction_of">Correctie van het getypte “%1$s”</string>
     <string name="backup_base64_too_large">Import mislukt: de inline back-uppayload is te groot</string>
-    <string name="clipboard_private_copy_toast_title">Privé kopieën bevestigen</string>
+    <string name="clipboard_private_copy_toast_title">Privékopieën bevestigen</string>
     <string name="clipboard_private_copy_toast_desc">Toon een korte melding na privé kopiëren vanuit het selectiemenu van een andere app. Waarschuwingen worden altijd getoond.</string>
     <string name="common_done">Klaar</string>
     <string name="learning_data_title">Leren &amp; gegevens</string>
@@ -925,7 +925,7 @@
     <string name="command_palette_ts_date_time">Datum + tijd</string>
     <string name="command_palette_ts_time">Tijd</string>
     <string name="command_palette_ts_time_sec">Tijd + sec</string>
-    <string name="command_palette_ts_12h">12-uurs tijd</string>
+    <string name="command_palette_ts_12h">12-uurstijd</string>
     <string name="command_palette_ts_day_mon_d">Dag mnd d</string>
     <string name="command_palette_ts_long_date">Lange datum</string>
     <string name="command_palette_ts_iso">ISO 8601</string>
@@ -994,7 +994,7 @@
     <string name="geo_settings_title">Geometrische engine-instellingen</string>
     <string name="geo_settings_intro">Stem de geometrische (vormvergelijkende) veegengine af, gebruikt op niet-QWERTY-indelingen in hybride modus of op alle indelingen in geometrische modus. Andere engineparameters zijn gekalibreerd op gemeten nauwkeurigheid en niet instelbaar.</string>
     <string name="geo_settings_decoding_section">Decoderen</string>
-    <string name="geo_settings_max_suggestions_title">Maximum aantal suggesties</string>
+    <string name="geo_settings_max_suggestions_title">Maximaal aantalsuggesties</string>
     <string name="geo_settings_max_suggestions_desc">Gerangschikte kandidaten per veeg (de suggestiebalk toont de bovenste paar).</string>
     <string name="geo_settings_freq_weight_title">Frequentiegewicht</string>
     <string name="geo_settings_freq_weight_desc">Voorkeur voor veelvoorkomende woorden versus exacte vormgetrouwheid. Hoger = veelvoorkomende woorden winnen vaker; 0 = pure vormvergelijking.</string>
@@ -1600,7 +1600,7 @@
     <string name="theme_builtin_white_name">Wit</string>
     <string name="theme_builtin_white_desc">Puur wit thema</string>
     <string name="theme_builtin_rosepine_name">Rosé Pine</string>
-    <string name="theme_builtin_rosepine_desc">Elegant donker rozethema</string>
+    <string name="theme_builtin_rosepine_desc">Elegant donker roze thema</string>
     <string name="theme_builtin_cobalt_name">Kobalt</string>
     <string name="theme_builtin_cobalt_desc">Diepblauw thema</string>
     <string name="theme_builtin_pine_name">Den</string>
