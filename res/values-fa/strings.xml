@@ -756,7 +756,7 @@
     <plurals name="learning_data_forget_words_body"><item quantity="one">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item><item quantity="other">%1$d واژهٔ آموخته‌شده حذف شود؟ تقویت شخصی‌سازی‌شده از تایپ شما دوباره یاد می‌گیرد.</item></plurals>
     <string name="learning_data_phrases_dialog_title">عبارت‌های آموخته‌شده</string>
     <string name="learning_data_phrases_dialog_empty">عبارت آموخته‌شده‌ای نیست.</string>
-    <string name="learning_data_phrase_row">"⁦%1$s → %2$s⁩  (%3$d×, %4$s)"</string>
+    <string name="learning_data_phrase_row">"⁧⁨%1$s⁩ ← ⁨%2$s⁩⁩  (%3$d×, %4$s)"</string>
     <string name="learning_data_words_dialog_title">واژه‌های آموخته‌شده</string>
     <string name="learning_data_words_dialog_empty">واژهٔ آموخته‌شده‌ای نیست.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
@@ -850,7 +850,7 @@
     <plurals name="multilang_installed_count"><item quantity="one">نصب‌شده: %1$d بستهٔ زبان</item><item quantity="other">نصب‌شده: %1$d بستهٔ زبان</item></plurals>
     <string name="multilang_import_pack">وارد کردن بسته</string>
     <string name="multilang_manage">مدیریت</string>
-    <string name="multilang_collision_example">"  ⁦%1$s → %2$s⁩"</string>
+    <string name="multilang_collision_example">"  ⁧⁨%1$s⁩ ← ⁨%2$s⁩⁩"</string>
     <string name="multilang_packs_dialog_title">بسته‌های زبان نصب‌شده</string>
     <string name="multilang_packs_dialog_empty">هیچ بستهٔ زبانی نصب نشده است.\n\nبا «مرور بسته‌های موجود» یک ZIP دانلود کنید، سپس با «وارد کردن بسته» آن را بیفزایید.</string>
     <plurals name="multilang_pack_stats"><item quantity="one">کد: %1$s • %2$d واژه</item><item quantity="other">کد: %1$s • %2$d واژه</item></plurals>
@@ -1238,14 +1238,14 @@
     <string name="autocorrect_channel_frequency_weight_title">وزن بسامد واژه</string>
     <string name="autocorrect_channel_frequency_weight_desc">هزینهٔ واژهٔ کم‌کاربردتر برای هر پله در رتبه‌بندی بسامد. مقدار بیشتر واژه‌های رایج را بیشتر ترجیح می‌دهد.</string>
     <string name="autocorrect_channel_alias_bonus_title">اولویت شکل‌های کوتاه‌شده</string>
-    <string name="autocorrect_channel_alias_bonus_desc">کاهش هزینه برای شکل کوتاه‌شده‌ای مانند don\'t در برابر واژهٔ عادی‌ای که به همان اندازه نزدیک است (donr ← don\'t به‌جای done). ۰ = بدون اولویت.</string>
+    <string name="autocorrect_channel_alias_bonus_desc">کاهش هزینه برای شکل کوتاه‌شده‌ای مانند don\'t در برابر واژهٔ عادی‌ای که به همان اندازه نزدیک است (donr → don\'t به‌جای done). ۰ = بدون اولویت.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">هزینهٔ حذف تا واژهٔ کوتاه</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">هزینهٔ اضافه وقتی اصلاح با حذف حروف به واژه‌ای یک یا دوحرفی می‌رسد، تا حرف اولِ اشتباه‌تایپ‌شده صرفاً حذف نشود. ۰ = بدون هزینهٔ اضافه.</string>
     <string name="autocorrect_channel_max_correction_cost_title">بیشترین فاصلهٔ اصلاح</string>
     <string name="autocorrect_channel_max_correction_cost_desc">اصلاح‌هایی با هزینهٔ ویرایش بیشتر از این انجام نمی‌شوند، تا واژهٔ درستی که در واژه‌نامه نیست به واژهٔ دیگری بازنویسی نشود. یک کلید همسایهٔ اشتباه حدود ۱٫۳ هزینه دارد.</string>
     <string name="autocorrect_max_correction_cost_off">خاموش</string>
     <string name="autocorrect_short_deletion_scope_title">هزینهٔ حذف برای</string>
-    <string name="autocorrect_short_deletion_scope_desc">پیشوندهای یک‌حرفی عبری این هزینه را آنجا سودمند می‌کنند؛ در انگلیسی یک حرف اضافه کنار واژهٔ دوحرفی (tpo ← to) غلط تایپی واقعی است، پس برای خط‌های دیگر به‌طور پیش‌فرض خاموش است.</string>
+    <string name="autocorrect_short_deletion_scope_desc">پیشوندهای یک‌حرفی عبری این هزینه را آنجا سودمند می‌کنند؛ در انگلیسی یک حرف اضافه کنار واژهٔ دوحرفی (tpo → to) غلط تایپی واقعی است، پس برای خط‌های دیگر به‌طور پیش‌فرض خاموش است.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">فقط خط عبری</string>
     <string name="autocorrect_short_deletion_scope_all">همهٔ زبان‌ها</string>
     <string name="autocorrect_frequency_ignored">بسامد نادیده گرفته می‌شود؛ فقط ویرایش‌ها تعیین‌کننده‌اند.</string>
@@ -1443,7 +1443,7 @@
     <string name="import_preview_source_encrypted">🔒 پشتیبان رمزگذاری‌شده</string>
     <string name="import_preview_source_encrypted_at">🔒 پشتیبان رمزگذاری‌شده — برون‌بری در %1$s</string>
     <string name="import_preview_source_plaintext">پشتیبان رمزگذاری‌نشده — بهتر است آن را دوباره با رمزگذاری برون‌بری کنید.</string>
-    <string name="import_preview_value_change">⁦%1$s → %2$s⁩</string>
+    <string name="import_preview_value_change">⁧⁨%1$s⁩ ← ⁨%2$s⁩⁩</string>
     <string name="import_preview_value_none">(هیچ)</string>
     <string name="import_preview_json_change">(تغییر JSON)</string>
     <string name="import_preview_json_empty">[خالی]</string>
@@ -2387,7 +2387,7 @@
     <string name="cmd_show_text_menu_desc">انتخاب واژهٔ زیر مکان‌نما و نمایش نوار ابزار سامانه</string>
     <!-- 2026-10-17: editor commands (docs/research/2026-10-15-ime-editor-actions.md §4.2) -->
     <string name="cmd_case_cycle">تغییر بزرگی و کوچکی حروف</string>
-    <string name="cmd_case_cycle_desc">تغییر بزرگی و کوچکی حروفِ انتخاب یا واژهٔ زیر مکان‌نما: کوچک → عنوانی → بزرگ</string>
+    <string name="cmd_case_cycle_desc">تغییر بزرگی و کوچکی حروفِ انتخاب یا واژهٔ زیر مکان‌نما: کوچک ← عنوانی ← بزرگ</string>
     <string name="cmd_word_left">واژه به چپ</string>
     <string name="cmd_word_left_desc">بردن مکان‌نما به ابتدای واژهٔ قبلی</string>
     <string name="cmd_word_right">واژه به راست</string>
@@ -2505,5 +2505,5 @@
     <string name="layout_theme_xml_invalid">ویژگی theme باید شناسهٔ یک تم باشد، مانند rosepine یا decorative_neon_cyberpunk</string>
     <string name="layout_theme_search_hint">جستجوی تم‌ها</string>
     <string name="layout_theme_no_results">هیچ تمی مطابقت ندارد</string>
-    <string name="import_preview_layout_theme_change">%1$s: تم %2$s → %3$s</string>
+    <string name="import_preview_layout_theme_change">%1$s: تم ⁧⁨%2$s⁩ ← ⁨%3$s⁩⁩</string>
 </resources>
