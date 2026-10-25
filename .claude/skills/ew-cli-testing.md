@@ -470,3 +470,83 @@ No failure was an app bug on newer Android. Root causes:
 Android 17 all-apps changes checked against the code: implicit URI grants for ACTION_SEND
 (Android 18 enforcement) — both share paths already grant explicitly or send text only;
 "IME visibility not restored after unhandled rotation" concerns host apps, not the IME.
+
+## Real 1.x → 2.0 upgrade install (2026-10-25)
+
+`tools/upgrade-test/` installs a real v1.5.0 build, populates it through v1.5.0's own
+code, installs 2.0 over it with `pm install -r` (no uninstall), checks the data, then
+does backup export → uninstall → fresh install → import → checks again. It is NOT in
+any default suite. One command builds and runs it:
+
+```bash
+tools/upgrade-test/run-upgrade-test.sh            # build + run (API 34 and 36)
+EW_DEVICES="model=Pixel7,version=34 model=Pixel7,version=37" tools/upgrade-test/run-upgrade-test.sh run
+```
+
+**Why an orchestrator APK.** An instrumentation dies when its own target is reinstalled,
+and emulator.wtf keeps nothing between runs. So `orchestrator/` is a standalone Gradle
+project (not in `settings.gradle`) whose self-instrumenting library test APK runs as
+`ew-cli --library-test`, gets the six APKs through `--other-files /sdcard/upgrade/…`, and
+drives everything as the shell uid through `UiAutomation.executeShellCommandRwe("sh")`
+(stdin, so pipes and redirects work): `pm install -r`, `am instrument` of the seeder and
+verifier, `run-as` copies, `ime`, `dumpsys`. The report lands in `/sdcard/upgrade-out`
+(`--directories-to-pull`): one `.txt` per test plus the verifier's `results_*.json`.
+Use `--side-effects --no-test-cache`: the run is stateful, and an identical rerun would
+otherwise come back from the test cache.
+
+**Signing.** The GitHub v1.5.0 release APK and a local release build are signed by the same
+release key (SHA-256 `3c70de88…`), so `releaseSignedOverInstallSmoke` installs the real
+GitHub APK and a 2.0 release APK over it. A release build is minified and not debuggable,
+so nothing can be seeded or read through instrumentation there: that test checks only that
+the update is accepted, keeps the install, the IME binds and the app starts without a
+crash. The data test (`debugBuildUpgradeAndBackupRoundTrip`) uses DEBUG builds of both
+versions: `debug.keystore` has not changed since the first commit (`99bf7cfc…`), and the
+v1.5.0 debug build comes from a `git worktree` of the tag (`../cleverkeys-upg150`), built
+with its own copy of `gradle-guard.sh`. The script refuses to run if either pair's signers
+differ. Main's build config is not touched.
+
+**Seeding (v1.5.0 code paths only).** `seeder-v1.5.0/UpgradeSeedV150Test.kt` is copied into
+the tag worktree's androidTest: history through `ClipboardHistoryService.addClip` (plain,
+duplicate, unicode multi-line, a 524,188-byte entry 100 B under the 512 KB cap, and an
+entry 1 B over it, which 1.x refuses), old-dated history/pinned/to-do rows through the 1.x
+restore path `importFromJSON`, pins and tags (one, several, unicode), to-dos in all three
+statuses, two PNGs through `ClipboardMediaManager.saveMedia` (200×150 with a thumbnail,
+pinned too; 64×48, which v1.5.0 stores WITHOUT a thumbnail because its `generateThumbnail`
+recycled the bitmap it was about to compress, fixed in 2.0 by `c1bf9530`), custom words
+through `CustomDictionarySource`, a custom layout through `LayoutsPreference`, a short-swipe
+mapping through `ShortSwipeCustomizationManager`, and six non-default settings with the
+1.x settings screen's value types. No private entry: v1.5.0 has none (schema v4). It then
+writes a read-only dump (all rows and columns, schema, prefs, files) to
+`files/upgrade-test/seed_dump.json`.
+
+**Checks** (`verifier/UpgradeInstallVerifyTest.kt`, copied into a worktree of the commit under
+test; `shared/` goes into both trees): every 1.x row and column identical by id with
+`is_private=0`/`source_package=NULL`; `user_version` 5; columns and indexes equal to a
+fresh v5 (`onCreate` on an in-memory DB); every item through the 2.0 API; media bytes;
+words, layout, mapping, settings (prefs and `Config`); then `exportFullBackup`. After the
+fresh install: empty DB, schema equal to the upgraded one, `importFullBackup`, rows by
+content (id, expiry and thumbnail excluded) and the item checks again.
+
+**Traps found getting it green:**
+- The release package and the 2.0 debug package cannot be installed together:
+  `INSTALL_FAILED_DUPLICATE_PERMISSION` for `tribixbite.cleverkeys.permission.SET_DEBUG_MODE`
+  (fixed-name signature permission, `9c799506`). Each test starts by uninstalling both.
+- An IME records the CURRENT OS clip when it starts, and a duplicate is re-stamped to now:
+  a clip left by the other test showed up as an extra row and a changed timestamp. Each test
+  clears the OS clipboard first.
+- The release package's IME id is the short form `tribixbite.cleverkeys/.CleverKeysService`
+  (`ime enable` with the full name: "unrecognized IME ID"); `.debug` uses the full class name.
+- The IME is bound only for a focused editor, and a start-input that races `pm install -r`
+  is dropped until the next focus change: the probe re-focuses its own `ImeProbeActivity`
+  on every poll. API 37's `dumpsys input_method` has no `mCurId` line; read
+  `settings get secure default_input_method`.
+- `run-as pkg cat f > /sdcard/x` writes an EMPTY file (the run-as domain may not write the
+  FUSE fd); go through `/data/local/tmp`.
+
+**Results 2026-10-25** (2.0 = `81d65663`, app200 `b4c1f736…`, test200 `9f10579a…`, app150
+`7873c115…`, rel150 `5cfff11d…` = GitHub asset, rel200 `5ba42d42…`): both tests pass on API
+34 (runs `25f6020d`, `bedd6a3c`), 36 (`5aa94405`) and 37 (`bedd6a3c`); verifier 45
+checks after the over-install and 36 after the round trip, 0 failures on each API. Reported,
+not failed: Config's own `version` pref goes 3 → 5 and 2.0 adds `on_device_learning_enabled`
+and `subkey_popover_enabled`; the 64×48 image keeps its missing thumbnail after the update
+(2.0 does not backfill) and gets one after the backup round trip (import regenerates).
