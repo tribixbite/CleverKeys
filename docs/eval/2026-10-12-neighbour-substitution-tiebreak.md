@@ -236,3 +236,84 @@ points at todo item 20.
   unchanged.
 - Harness: `src/test/kotlin/tribixbite/cleverkeys/autocorrect/NeighbourTiebreakEval.kt`.
 - Rows (local, not committed): `build/eval/neighbour-tiebreak/rows-dev.tsv`.
+
+## 3. Re-measured under channel ranking (2026-10-25)
+
+The maintainer asked for this (2026-10-25): re-measure the question under the CURRENT default
+and close todo item 13 if the default already fixes it. The default since 353003c6
+(2026-10-19) is the noisy-channel ranking of `2026-10-18-channel-autocorrect-ranking.md`:
+s₁ 2.0, g 1.5, g₂ 1.0, τ 1.2, λ 0.005, β 0.25, γ 1.0, Hebrew-scoped δ 0.5, κ 3.0. The NB tiebreak
+belongs to the band fold only (`WordPredictor` sweep, `neighbourRuleApplies`). It is inert
+under the channel ranking at any setting, and it stays OFF.
+
+Harness: `ChannelRankingEval`, phase `CK_CH_PHASE=neighbour` (commit 4ffda7e1). It runs full
+production `autoCorrect` over the shipped `en_enhanced.bin` and `langpack-he.zip`, with
+`hebr_1_il` installed for Hebrew. Each input runs twice, once under the band ranking and once
+under `AutocorrectTuning.DEFAULT`. It is descriptive and selects nothing. The fresh sets ran
+from a separate worktree at 4ffda7e1, because an unrelated uncommitted resource edit in the
+shared tree broke `processDebugResources`. Output (local): `build/eval/nb-remeasure/`.
+
+### 3.1 Named cases (production, band → default)
+
+- **`תושה` → `תודה`: fixed.** Band commits `עושה`. The default commits `תודה` at cost 1.60
+  (E 1.26). The next two are `תושב` at 1.79 and `תעשה` at 1.86, and `עושה` is not in the top
+  three, because the distant ת↔ע key now costs about 1 + 2·keyDistance.
+- **`tfe` → `the`: holds** (the 1.44; tfw 2.09). All 16 English T5 cases and the 11 other Hebrew
+  cases hold under both rankings.
+- The §2.1 S-adj neighbour slips that N1 fixed are fixed by the default too: `hac`/`haf`/`har`
+  → had, `tham` → than and `dould` → could (band: has, has, has, that, would).
+- The §2.1 GTC distant misspellings that N1 broke: 6 of 10 hold under the default (`tipically`,
+  `unter`, `startet`, `seprate`, `hava`, `zime`). **4 fail**, and band got all 4 right:
+  `compatability` → comparability, `releated` → repeated, `thet` → they and `choise` → choose.
+  The channel ranking caused these 4 itself, with no neighbour rule involved. They fall in the
+  "1-sub distant" breaks that round-2 TEST counted and accepted (channel doc §5: 78 raw breaks
+  against 340 fixes in that class).
+
+### 3.2 How often the item-13 failure still occurs
+
+**Failure** means the output is a distant one-letter substitution of the typed word, when a
+neighbour one was intended. The eligible inputs are the pairs whose dictionary holds such a
+distant word. Only those can fail, so this pre-filter is exact. Counts are raw pairs, with
+distinct target words in parentheses.
+
+| set | status | eligible pairs | band: right / failure | default: right / failure |
+|---|---|---|---|---|
+| HE-adj (ranks 1–500) | seen | 5,405 (490) | 3,368 (431) / **487 (222)** | 4,865 (484) / **13 (12)** |
+| HE-adj4 (ranks 6,001–8,000), seeded 6,000 of 24,244 | **fresh** | 6,000 | 703 (452) / **633 (462)** | 4,589 (1,680) / **117 (106)** |
+| S-adj2 (EN ranks 10,001–12,000), seeded 6,000 of 11,665 | **fresh** | 6,000 | 1,445 (669) / **567 (368)** | 4,740 (1,338) / **183 (152)** |
+| GTC 1-sub-adjacent, DEV+TEST | seen | 2,222 (1,389) | 1,479 (905) / **79 (71)** | 2,026 (1,260) / **17 (16)** |
+
+Under the default, the failure rate is 0.2 % of eligible HE-adj pairs, 2.0 % on fresh HE-adj4,
+3.1 % on fresh S-adj2 and 0.8 % of GTC neighbour-slip pairs. Scaled to the whole fresh sets,
+which include pairs that cannot fail, that is about 1.1 % of HE-adj4 and 0.6 % of S-adj2. Under
+band the failure count was higher by 3.1× (S-adj2), 4.6× (GTC), 5.4× (HE-adj4) and 37× (HE-adj). The failures that remain are mostly a much more
+frequent distant word against a rare or proper-noun target: `stoce` → store (want stove),
+`kere` → here (kerr), `wio` → who (wii), `mard` → hard (marx), and in Hebrew `סלו` → `שלו`
+(want `סלט`) and `נעד` → `נגד` (`יעד`). On those, frequency is a fair signal.
+
+The opposite direction is the cost any neighbour rule would pay. These are GTC pairs whose
+intended word is a distant 1-sub, of which there are 3,151 (2,067 targets), where the output
+is a wrong neighbour 1-sub. Band does this on 63 (55), and the default on **223 (187)**. The
+default's accuracy on that class still rises, from 1,843 (1,187) to 2,392 (1,567). So the
+channel ranking already leans toward neighbour keys, further than band did. A rule that
+favours neighbours more strongly would add to the 223.
+
+### 3.3 Decision
+
+**Item 13 is closed.** The default ranking fixes the motivating case `תושה`, keeps `tfe` and
+every named case, and cuts the failure class 3–37× (5.4× and 3.1× on the two fresh sets). The 4 GTC distant misspellings it misses are
+a cost of the channel ranking, which round-2 TEST already measured. They are not caused by a
+neighbour rule. No ranking code changed. `HebrewLayoutAutoCorrectTest` now includes
+`תושה` → `תודה` among its passing cases.
+
+**The seam.** `WordPredictor.NeighbourTiebreak` is more than an eval seam now. It is the
+user-facing band-ranking setting `autocorrect_neighbour_tiebreak` (Settings → Auto-Correction →
+Ranking & Tuning, `AutocorrectTuning.Keys.NEIGHBOUR_TIEBREAK`, its backup key and strings).
+Deleting it would mean removing that setting, its UI and the backup key, and keeping the
+backup import tolerant of the old key. Whether to do that is a maintainer UX decision, so it
+is not deleted here. It has no effect under the default ranking.
+
+**No new rule is proposed.** The remaining 0.6–1.1 % is mostly frequency outvoting a rare
+target, and pushing toward neighbour keys has a measured cost (the 223 above). Any future
+rule would need fresh data, because HE-adj4 and S-adj2 have now been seen. Hebrew ranks above
+8,000 and English ranks above 12,000 are still unseen.
