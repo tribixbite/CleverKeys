@@ -449,8 +449,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Upgrade: a throwaway instrumented test drove the PRODUCTION `onUpgrade` on v1.5.0-shaped
     (v4) and v1.3.0-shaped (v2) files: 2/2 on 34–37 (schema and indexes equal a fresh v5, rows
     and media columns read back). The committed `ClipboardDatabaseV5MigrationTest` mirrors the
-    ALTERs instead of calling `migrateV4toV5`. No real 1.x-APK → 2.0 install was done (no safe
-    path). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
+    ALTERs instead of calling `migrateV4toV5`. Real 1.x-APK → 2.0 over-install DONE later that
+    day on emulator.wtf (`tools/upgrade-test/`, `e2007ffb`/`e0c95c87`, recipe in
+    `.claude/skills/ew-cli-testing.md`): v1.5.0 debug seeded by its own code → `pm install -r`
+    2.0 debug (`81d65663`) → 45 checks, then backup → uninstall → fresh → import → 36 checks,
+    0 failures on API 34, 36, 37; GitHub v1.5.0 release → same-key 2.0 release over it: update
+    accepted, IME binds, no crash. Open: the debug and release packages can't coexist
+    (fixed-name `SET_DEBUG_MODE` permission, `9c799506`); 1.x small images keep no thumbnail
+    after the update (round trip regenerates). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
     without restart PASS (`d85be0dd`); bépo `été` synthetic swipe gave `Ecb` (coarse, 2.3 s,
     not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
     i.e. the OS clipboard; the instrumented test covers History/To-dos caret, Pinned spell-check
