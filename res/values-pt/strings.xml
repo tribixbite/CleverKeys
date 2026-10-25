@@ -496,15 +496,15 @@
     <string name="gesture_min_swipe_distance_title">Distância mínima de deslize</string>
     <string name="gesture_min_swipe_distance_desc">Percurso mínimo traçado (px) para que um gesto se qualifique como palavra por deslize. Menor ajuda palavras muito curtas a serem registradas; aumente se toques acidentais disparam palavras. (O limite curto/longo é decidido pela Distância máxima acima.)</string>
     <string name="gesture_min_key_distance_title">Distância mínima entre teclas</string>
-    <string name="gesture_min_key_distance_desc">Distância entre teclas durante o deslize (px). Menor captura mais teclas mas pode adicionar ruído.</string>
+    <string name="gesture_min_key_distance_desc">Distância entre teclas durante o deslize (px). Menor captura mais teclas, mas pode adicionar ruído.</string>
     <string name="gesture_min_key_dwell_title">Tempo mínimo na tecla</string>
     <string name="gesture_min_key_dwell_desc">Tempo para registrar uma tecla durante o deslize (ms). Menor permite deslizes mais rápidos.</string>
     <string name="gesture_noise_filter_title">Filtro de ruído de movimento</string>
-    <string name="gesture_noise_filter_desc">Movimento mínimo para registrar (px). Maior filtra tremor mas pode perder dados.</string>
+    <string name="gesture_noise_filter_desc">Movimento mínimo para registrar (px). Maior filtra tremor, mas pode perder dados.</string>
     <string name="gesture_high_velocity_title">Limiar de alta velocidade</string>
     <string name="gesture_high_velocity_desc">Velocidade para detecção de deslize rápido (px/s). Maior permite deslizes mais rápidos.</string>
     <string name="gesture_speed_smoothing_title">Suavização de velocidade</string>
-    <string name="gesture_speed_smoothing_desc">Fator de suavização para o movimento do controle deslizante. Maior = mais suave mas menos responsivo.</string>
+    <string name="gesture_speed_smoothing_desc">Fator de suavização para o movimento do controle deslizante. Maior = mais suave, mas menos responsivo.</string>
     <string name="gesture_max_speed_multiplier_title">Multiplicador de velocidade máxima</string>
     <string name="gesture_max_speed_multiplier_desc">Aceleração máxima do controle deslizante. Maior permite deslizamento mais rápido.</string>
     <string name="gif_enable_title">Ativar painel GIF</string>
@@ -1236,7 +1236,7 @@
     <string name="swipe_trail_effect_rainbow">Arco-íris</string>
     <string name="swipe_trail_color_jewel_purple">Roxo joia</string>
     <string name="swipe_trail_color_electric_blue">Azul elétrico</string>
-    <string name="swipe_trail_color_emerald_green">Verde esmeralda</string>
+    <string name="swipe_trail_color_emerald_green">Verde-esmeralda</string>
     <string name="swipe_trail_color_sunset_orange">Laranja pôr do sol</string>
     <string name="swipe_trail_color_ruby_red">Vermelho rubi</string>
     <string name="swipe_trail_color_silver">Prata</string>
@@ -1640,7 +1640,7 @@
     <string name="theme_builtin_cobalt_name">Cobalto</string>
     <string name="theme_builtin_cobalt_desc">Tema azul profundo</string>
     <string name="theme_builtin_pine_name">Pinheiro</string>
-    <string name="theme_builtin_pine_desc">Tema verde floresta</string>
+    <string name="theme_builtin_pine_desc">Tema verde-floresta</string>
     <string name="theme_builtin_desert_name">Deserto</string>
     <string name="theme_builtin_desert_desc">Cores quentes de areia</string>
     <string name="theme_builtin_jungle_name">Selva</string>
