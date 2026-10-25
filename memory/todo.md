@@ -93,7 +93,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    keyboard Ctrl+A, Ctrl+C opened "Copy to system clipboard? … Copy anyway?"; Cancel left the OS
    clip untouched. Entry removed by swipe (COMMITTED on TIMEOUT), extra key unticked (19 of 121).
    Item can close.
-6. [ ] device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
+6. [ ] MAINTAINER RESULTS 2026-10-25 (RustDesk): `teh`+space stays `teh` PASS; tapped suggestions
+   DELETE (maintainer: acceptable); swipe corrections tapped from the bar also delete instead of
+   append AND remove the preceding space (may involve the auto-space-before/after-swipe
+   settings) → agent investigate; Ctrl+Backspace PASS; the PASTE SUBKEY NO LONGER WORKS → bug.
+   Original: device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
    the word, clipboard-panel tap and paste key type the phone clip, delete-last-word is
@@ -108,10 +112,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    Compose 1.6.8 does not implement android.R.id.replaceText and the IME cannot detect the
    refusal (the connection returns IPC success; a check added in `68e779ef` never fired and was
    removed in `34dbb8e9`). Found on the way: Reset all left stale labels → fixed `9c909048`.
-8. [ ] maintainer: ARC-053 daily-use soak of the minified release
+8. [ ] maintainer soak: running every release as generated (2026-10-25). Bugs found: (a) `they've`
+   hard to swipe; (b) clipboard TO-DO panel entries — text input/editing broken for long
+   entries (no text inserts); (c) bépo `é` discarded in swipe: swiping `été` gives `tp`, swiping
+   `ete` gives `été`. No other bugs found yet. The checklist
+   `docs/plans/v2.0.0-manual-test-checklist.md` was written and edited by agents only
+   (maintainer, 2026-10-25): agents may edit it and should attempt every item.
+   Original: ARC-053 daily-use soak of the minified release
    (`docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted maintainer edits — never
    edit or stage it) → ARC-063 narrow the blanket R8 keeps → tag decision.
-9. [ ] maintainer: pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
+9. [ ] agent does the objective ones (#90, #168, #145, both minimize styles) on test phones; maintainer only the feel checks (2026-10-25). pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
     locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
@@ -131,7 +141,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     names pins/todos with words that do not match the tabs, es/hu `clipboard_selection_clear`
     reads as "delete the selection", fa example arrows reversed in RTL (device check), ru
     plural adjective case, tr/pl Backspace rendered as "undo".)
-11. [ ] maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
+11. [ ] DECIDED 2026-10-25 (maintainer questionnaire): es LM → agent researches a new method
+    and corpus, tries one or both if promising; FLOOR_ONE → maintainer asked for a fuller
+    explanation (pending); finger_occlusion_offset → stays 0, no test needed (CLOSED); first
+    Saga keeps CleverKeys as DEFAULT (CLOSED; it is default since 10-20); Text Assist with no
+    process-text app → keep Android's own chooser (CLOSED). Original text:
+    maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`
     needs a fresh pre-registration; nonzero `finger_occlusion_offset` only from device-trace
     A/B; keep or uninstall CleverKeys on the first Saga (installed, enabled, not default — the
     second Saga keeps it, 2026-10-11); Text assist when no app can take the text: since
@@ -142,7 +157,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     with no process-text app Android shows its own empty chooser; "Action unavailable" comes
     only from terminal fields, an unreadable selection or a trampoline that cannot start —
     CHANGELOG corrected in `643cd3bb`.)
-12. [ ] maintainer: targetSdk bump (still compile/target 34; the full instrumented suite is
+12. [ ] DECIDED 2026-10-25: stay at targetSdk 34 for 2.0; bump in a later release. targetSdk bump (still compile/target 34; the full instrumented suite is
     green on API 35/36/37, `6bdf282e`). Prerequisites found 2026-10-17: (a) targetSdk 35 forces
     edge-to-edge — only Settings and Launcher handle system-bar insets out of 15 activities;
     (b) targetSdk 35 needs `values-id` beside `values-in` (build.gradle TODO); (c) targetSdk 36
@@ -150,7 +165,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Compose dialog/activity back path needs a device pass; (d) targetSdk 37 can no longer opt
     out of large-screen orientation/resizability; (e) Android 18 drops implicit URI grants —
     both share paths are already explicit.
-13. [ ] maintainer: neighbour-substitution tiebreak — inside the ±0.10 score band a DISTANT
+13. [ ] agent (maintainer 2026-10-25): re-measure under the channel ranking, close if fixed. neighbour-substitution tiebreak — inside the ±0.10 score band a DISTANT
     one-letter substitution can beat a neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4
     keys, over תודה ש↔ד; scores ≈0.89 vs 0.97). MEASURED 2026-10-12, NOT SHIPPED
     (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`): "neighbour sub beats distant
@@ -287,7 +302,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     "jewel" fallback is unreachable while `globalConfig()` throws (TODO; changing it changes
     the preview colours). Dictionary Manager shows no tab for a layout-bound language (TODO).
     Pure 3,178 / mock 1,426 green at `0b3bb5ac`; not run on instrumented or a device.
-14. [ ] maintainer: GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
+14. [ ] agent drafts every close comment / PR review into a file; maintainer approves per item before anything is posted (2026-10-25). GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
 15. [ ] maintainer: deferred review items — summon after a system hide does NOT need the overlay
     permission (checked 2026-10-22, AOSP 9–16 sources + Saga runs; no code changed):
