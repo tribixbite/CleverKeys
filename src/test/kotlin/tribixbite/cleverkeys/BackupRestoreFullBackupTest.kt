@@ -17,6 +17,8 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.backup.CustomThemeBackup
+import tribixbite.cleverkeys.backup.CustomThemeStore
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ShortSwipeImporter
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
@@ -637,7 +639,7 @@ class BackupRestoreFullBackupTest {
         val configJson = """{"preferences":{"clipboard_private_copy_toolbar_enabled":false}}"""
         val mgr = newManager()
         val plan = mgr.buildSettingsImportPlan(fakeReopenableUriForInput(configJson.toByteArray(Charsets.UTF_8)), prefs)
-        mgr.applySettingsImportPlan(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs)
+        mgr.applySettingsImportPlan(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, ShortSwipeImportMode.REPLACE)
 
         // enabled=false → reconciler invoked with false (covers single-file / headless importConfig).
         verify(atLeast = 1) { reconcilePrivateCopyToolbarComponent(context, false) }
@@ -667,5 +669,83 @@ class BackupRestoreFullBackupTest {
         assertEquals("config.json", BackupRestoreManager.ENTRY_CONFIG)
         assertEquals("dictionaries.json", BackupRestoreManager.ENTRY_DICTIONARIES)
         assertEquals("clipboard_history.json", BackupRestoreManager.ENTRY_CLIPBOARD_JSON)
+    }
+
+    // ── Saga 2026-10-25: custom (DIY) themes ride config.json ──────────────────────
+
+    /** In-memory DIY-theme store; [replaceAll] keeps exactly what it is given. */
+    private class InMemoryThemeStore(var stored: String) : CustomThemeStore {
+        override fun exportThemesJson(): String = stored
+        override fun replaceAll(themesArrayJson: String): Int {
+            stored = themesArrayJson
+            return CustomThemeBackup.parseStored(themesArrayJson)!!.size
+        }
+    }
+
+    private fun diyTheme(id: String, name: String): JsonObject = JsonObject().apply {
+        addProperty("id", id)
+        addProperty("name", name)
+        addProperty("createdAt", 1_761_000_000_000L)
+        addProperty("modifiedAt", 1_761_000_000_001L)
+        add("colors", JsonObject().apply {
+            CustomThemeBackup.COLOR_KEYS.forEachIndexed { i, key -> addProperty(key, 0xFF336699.toInt() + i) }
+        })
+    }
+
+    @Test
+    fun fullBackup_roundTripRestoresDeletedCustomThemesAndTheirSelection() {
+        // Export with two DIY themes, one of them selected.
+        val themes = CustomThemeBackup.toArrayJson(listOf(diyTheme("t1", "Ocean"), diyTheme("t2", "Dusk")))
+        val store = InMemoryThemeStore(themes)
+        every { prefs.all } returns mapOf("theme" to "custom_t2")
+        val exportResult = BackupRestoreManager(context, shortSwipeImporter, customThemeStore = store)
+            .exportFullBackup(fakeUriForOutput(), prefs)
+        assertTrue(exportResult.success)
+        val config = JsonParser.parseString(
+            String(zipEntries(capturedOutput.toByteArray())[BackupRestoreManager.ENTRY_CONFIG]!!, Charsets.UTF_8)
+        ).asJsonObject
+        assertTrue("config.json must carry the custom_themes section", config.has(CustomThemeBackup.SECTION_KEY))
+
+        // Reinstall: the themes are gone and the keyboard fell back.
+        store.stored = "[]"
+        every { prefs.all } returns mapOf("theme" to "cleverkeysdark")
+        val editor = mockk<SharedPreferences.Editor>(relaxed = true)
+        every { prefs.edit() } returns editor
+        every { editor.commit() } returns true
+
+        val result = BackupRestoreManager(context, shortSwipeImporter, customThemeStore = store)
+            .importFullBackup(fakeUriForInput(capturedOutput.toByteArray()), prefs)
+
+        assertTrue("import should succeed: err=${result.errorMessage}", result.success)
+        assertEquals(2, result.customThemesImported)
+        assertEquals(themes, store.stored)
+        // The selection comes back with its theme.
+        verify { editor.putString("theme", "custom_t2") }
+    }
+
+    @Test
+    fun fullBackup_failedImportRollsTheCustomThemesBack() {
+        val original = CustomThemeBackup.toArrayJson(listOf(diyTheme("mine", "Mine")))
+        val store = InMemoryThemeStore(original)
+        val configJson = JsonObject().apply {
+            add("preferences", JsonObject())
+            add(CustomThemeBackup.SECTION_KEY, CustomThemeBackup.section(
+                CustomThemeBackup.toArrayJson(listOf(diyTheme("file", "From file")))
+            ))
+        }.toString()
+        // The clipboard section fails after the config (and its themes) applied.
+        every { clipboardDb.importFromJSON(any()) } throws RuntimeException("simulated db failure")
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to
+                """{"format":"cleverkeys_full_backup","format_version":1,"app_version":"2.0.0"}""".toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CONFIG to configJson.toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CLIPBOARD_JSON to """{"version":4,"active":[]}""".toByteArray(Charsets.UTF_8),
+        ))
+
+        val result = BackupRestoreManager(context, shortSwipeImporter, customThemeStore = store)
+            .importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        assertEquals(original, store.stored)
     }
 }

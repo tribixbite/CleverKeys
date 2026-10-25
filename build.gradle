@@ -631,6 +631,8 @@ tasks.register('runPureTests', JavaExec) {
     // Roadmap §4.1 (2026-10-08): theme-editor keyboard preview scene plan (trail effect
     // fallback, sample words, static sample trail through the layout's letter keys).
     'tribixbite.cleverkeys.theme.ThemePreviewSceneTest',
+    // Saga 2026-10-25: the Theme Creator hex field keeps typed text that denotes the colour.
+    'tribixbite.cleverkeys.theme.HexColorTextTest',
     'tribixbite.cleverkeys.GestureTest',
     // Licensing-audit follow-up (2026-09-29): which parts of a pack's manifest attribution the
     // language-pack manager shows, and that only http(s) source tokens become tappable links.
@@ -738,6 +740,9 @@ tasks.register('runPureTests', JavaExec) {
     // caps are ~64 MB — exercising them through the Activity would OOM the test process.
     'tribixbite.cleverkeys.backup.HeadlessPayloadLimitsTest',
     'tribixbite.cleverkeys.backup.ShortSwipeDiffTest',
+    // Saga 2026-10-25: custom (DIY) themes in the backup — section rules and the import preview.
+    'tribixbite.cleverkeys.backup.CustomThemeBackupTest',
+    'tribixbite.cleverkeys.backup.CustomThemeImportPlanTest',
     'tribixbite.cleverkeys.autocorrect.KeyAdjacencyTest',
     // 2026-09-26: keyboard-weighted fuzzy PREFIX matcher behind the typo-tolerant bar.
     'tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcherTest',
@@ -1401,6 +1406,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.TerminalUtilsTest',
     'tribixbite.cleverkeys.KeyRepeatLogicTest',
     'tribixbite.cleverkeys.backup.SettingsImportPlanApplyTest',
+    // Saga 2026-10-25: applying the custom-theme section (order, Merge/Replace, fallback).
+    'tribixbite.cleverkeys.backup.CustomThemeImportApplyTest',
     'tribixbite.cleverkeys.backup.DictImportPlanApplyTest',
     'tribixbite.cleverkeys.backup.BackupRestoreManagerHeadlessTest',
     'tribixbite.cleverkeys.BackupRestoreFullBackupTest',
@@ -1510,6 +1517,8 @@ tasks.register('runMockTests', JavaExec) {
     // custom theme resets the theme pref BEFORE the store delete; saving the ACTIVE theme
     // re-syncs swipe_trail_color (previously synced only at select time).
     'tribixbite.cleverkeys.theme.CustomThemePrefPolicyTest',
+    // Saga 2026-10-25: the real DIY-theme store behind the backup section.
+    'tribixbite.cleverkeys.theme.CustomThemeBackupFormatTest',
     // Audit 2026-09-06 W7 (H-1 + H-7): onCustomShortSwipe dispatch is exclusive —
     // switch_forward/backward execute exactly once (Event branch no longer falls through
     // into the legacy AvailableCommand block) — and the five custom text-action commands

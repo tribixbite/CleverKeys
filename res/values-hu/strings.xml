@@ -970,6 +970,10 @@
     <string name="import_preview_short_swipe_merge">Egyesítés — ütközésnél a fájl nyer, a többi megmarad (ajánlott)</string>
     <string name="import_preview_short_swipe_replace">Csere — meglévők törlése, a fájl készletének telepítése</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item><item quantity="other">Ez LECSERÉLI az összes meglévő rövid csúsztatási testreszabását a fájl %1$d leképezésére.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d egyéni téma ebben a mentésben</item><item quantity="other">%1$d egyéni téma ebben a mentésben</item></plurals>
+    <string name="import_preview_custom_themes_merge">Egyesítés — ütközésnél a fájl nyer, a többi téma megmarad (ajánlott)</string>
+    <string name="import_preview_custom_themes_replace">Csere — egyéni témái törlése, a fájl készletének telepítése</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Ez LECSERÉLI az összes egyéni témáját a fájl %1$d témájára.</item><item quantity="other">Ez LECSERÉLI az összes egyéni témáját a fájl %1$d témájára.</item></plurals>
     <string name="import_preview_selected_count">%1$d/%2$d kiválasztva</string>
     <string name="import_preview_expand">Kibontás</string>
     <string name="import_preview_hide">Elrejtés</string>
@@ -1305,6 +1309,7 @@
     <string name="backup_result_excluded_by_you">• Ön által kizárva: %1$d</string>
     <string name="backup_result_not_importable">• Nem importálható (belső/származtatott): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Alkalmazott rövid csúsztatások: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Visszaállított egyéni témák: %1$d</string>
     <string name="backup_result_source_version">• Forrásverzió: %1$s</string>
     <string name="backup_result_screen_mismatch">Eltérő képernyőméret: forrás %1$dx%2$d, jelenlegi %3$dx%4$d. Egyes megjelenítési beállítások módosításra szorulhatnak.</string>
     <string name="backup_result_restart_keyboard">A módosítások érvénybe lépéséhez indítsa újra a billentyűzetet.</string>

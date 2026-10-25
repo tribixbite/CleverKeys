@@ -994,6 +994,10 @@
     <string name="import_preview_short_swipe_merge">Îmbină — la conflict câștigă fișierul, restul se păstrează (recomandat)</string>
     <string name="import_preview_short_swipe_replace">Înlocuiește — șterge existentul, instalează setul din fișier</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu %1$d mapare din fișier.</item><item quantity="few">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d mapări din fișier.</item><item quantity="other">Aceasta va ÎNLOCUI toate personalizările dvs. de glisare scurtă cu cele %1$d de mapări din fișier.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d temă personalizată în acest backup</item><item quantity="few">%1$d teme personalizate în acest backup</item><item quantity="other">%1$d de teme personalizate în acest backup</item></plurals>
+    <string name="import_preview_custom_themes_merge">Îmbină — la conflict câștigă fișierul, celelalte teme se păstrează (recomandat)</string>
+    <string name="import_preview_custom_themes_replace">Înlocuiește — șterge temele personalizate, instalează setul din fișier</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Aceasta va ÎNLOCUI toate temele dvs. personalizate cu %1$d temă din fișier.</item><item quantity="few">Aceasta va ÎNLOCUI toate temele dvs. personalizate cu cele %1$d teme din fișier.</item><item quantity="other">Aceasta va ÎNLOCUI toate temele dvs. personalizate cu cele %1$d de teme din fișier.</item></plurals>
     <string name="import_preview_selected_count">%1$d din %2$d selectate</string>
     <string name="import_preview_expand">Extinde</string>
     <string name="import_preview_hide">Ascunde</string>
@@ -1339,6 +1343,7 @@
     <string name="backup_result_excluded_by_you">• Excluse de dvs.: %1$d</string>
     <string name="backup_result_not_importable">• Neimportabile (interne/derivate): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Glisări scurte aplicate: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Teme personalizate restaurate: %1$d</string>
     <string name="backup_result_source_version">• Versiunea sursei: %1$s</string>
     <string name="backup_result_screen_mismatch">Nepotrivire de dimensiune a ecranului: sursă %1$dx%2$d, curent %3$dx%4$d. Unele setări vizuale ar putea necesita ajustare.</string>
     <string name="backup_result_restart_keyboard">Reporniți tastatura pentru ca modificările să aibă efect.</string>

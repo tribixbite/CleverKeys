@@ -85,9 +85,22 @@ dialog before applying any changes:
   - **Per-layout themes** — a layout's theme binding is saved inside the
     `layouts` row. When an import changes it, the row lists each layout
     whose theme changes (e.g. `latn_qwerty_us: theme Follow global theme
-    → cobalt`). DIY themes themselves are not in the backup: a restored
-    layout bound to one that is missing on this device uses the global
-    theme until you pick another in Layout Manager.
+    → cobalt`). A layout bound to a DIY theme that is missing on this
+    device uses the global theme until you pick another in Layout Manager.
+  - **DIY themes** (since 2.0.0) — custom themes are in the settings
+    export and the full backup. The preview lists one row per theme
+    (`+ Ocean`, `~ Dusk` for a changed one, `− Old` under Replace) above
+    a Skip / Merge / Replace choice: **Merge** (the default) lets the
+    file win for a theme with the same id and keeps your other themes,
+    **Replace** installs exactly the file's themes. The themes are
+    written before the settings, so a restored selection of a DIY theme
+    comes back with its theme instead of falling back to CleverKeys Dark.
+    If Replace removes the theme you have selected and the backup selects
+    no other, the keyboard switches to CleverKeys Dark. Backups made
+    before 2.0.0 have no themes and leave yours untouched. (Until
+    2026-10-25 DIY themes were in no backup at all — not by design: they
+    live in their own store, outside the settings the export reads, and
+    nothing carried it. A reinstall plus a restore lost them.)
   - **Short-swipe diff** — short-swipe customizations show a per-mapping
     diff above the Skip/Merge/Replace radio so you can see exactly
     which `key+direction` mappings will change. In **Merge** mode the

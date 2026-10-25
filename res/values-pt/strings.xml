@@ -966,6 +966,10 @@
     <string name="import_preview_short_swipe_merge">Mesclar — em conflito o arquivo vence, o resto é mantido (recomendado)</string>
     <string name="import_preview_short_swipe_replace">Substituir — apagar existentes, instalar o conjunto do arquivo</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelo %1$d mapeamento do arquivo.</item><item quantity="many">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelos %1$d mapeamentos do arquivo.</item><item quantity="other">Isso SUBSTITUIRÁ todas as suas personalizações de deslize curto pelos %1$d mapeamentos do arquivo.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d tema personalizado neste backup</item><item quantity="many">%1$d temas personalizados neste backup</item><item quantity="other">%1$d temas personalizados neste backup</item></plurals>
+    <string name="import_preview_custom_themes_merge">Mesclar — em conflito o arquivo vence, os outros temas são mantidos (recomendado)</string>
+    <string name="import_preview_custom_themes_replace">Substituir — apagar seus temas personalizados, instalar o conjunto do arquivo</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Isso SUBSTITUIRÁ todos os seus temas personalizados pelo %1$d tema do arquivo.</item><item quantity="many">Isso SUBSTITUIRÁ todos os seus temas personalizados pelos %1$d temas do arquivo.</item><item quantity="other">Isso SUBSTITUIRÁ todos os seus temas personalizados pelos %1$d temas do arquivo.</item></plurals>
     <string name="import_preview_selected_count">%1$d de %2$d selecionados</string>
     <string name="import_preview_expand">Expandir</string>
     <string name="import_preview_hide">Ocultar</string>
@@ -1312,6 +1316,7 @@
     <string name="backup_result_excluded_by_you">• Desmarcadas por você: %1$d</string>
     <string name="backup_result_not_importable">• Não importáveis (internas/derivadas): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Deslizes curtos aplicados: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Temas personalizados restaurados: %1$d</string>
     <string name="backup_result_source_version">• Versão de origem: %1$s</string>
     <string name="backup_result_screen_mismatch">Tamanho de tela diferente: origem %1$dx%2$d, atual %3$dx%4$d. Algumas configurações visuais podem precisar de ajuste.</string>
     <string name="backup_result_restart_keyboard">Reinicie o teclado para que as alterações tenham efeito.</string>

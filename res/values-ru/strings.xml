@@ -974,6 +974,10 @@
     <string name="import_preview_short_swipe_merge">Объединить — при конфликте побеждает файл, остальное сохраняется (рекомендуется)</string>
     <string name="import_preview_short_swipe_replace">Заменить — стереть существующие, установить набор из файла</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="few">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="many">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item><item quantity="other">Это ЗАМЕНИТ все ваши настройки коротких свайпов назначениями из файла (%1$d шт.).</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">Пользовательских тем в этой резервной копии: %1$d</item><item quantity="few">Пользовательских тем в этой резервной копии: %1$d</item><item quantity="many">Пользовательских тем в этой резервной копии: %1$d</item><item quantity="other">Пользовательских тем в этой резервной копии: %1$d</item></plurals>
+    <string name="import_preview_custom_themes_merge">Объединить — при конфликте побеждает файл, остальные темы сохраняются (рекомендуется)</string>
+    <string name="import_preview_custom_themes_replace">Заменить — стереть ваши пользовательские темы, установить набор из файла</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Это ЗАМЕНИТ все ваши пользовательские темы темами из файла (%1$d шт.).</item><item quantity="few">Это ЗАМЕНИТ все ваши пользовательские темы темами из файла (%1$d шт.).</item><item quantity="many">Это ЗАМЕНИТ все ваши пользовательские темы темами из файла (%1$d шт.).</item><item quantity="other">Это ЗАМЕНИТ все ваши пользовательские темы темами из файла (%1$d шт.).</item></plurals>
     <string name="import_preview_selected_count">Выбрано %1$d из %2$d</string>
     <string name="import_preview_expand">Развернуть</string>
     <string name="import_preview_hide">Скрыть</string>
@@ -1330,6 +1334,7 @@
     <string name="backup_result_excluded_by_you">• Исключено вами: %1$d</string>
     <string name="backup_result_not_importable">• Не импортируется (внутренние/производные): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Применено коротких свайпов: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Восстановлено пользовательских тем: %1$d</string>
     <string name="backup_result_source_version">• Версия источника: %1$s</string>
     <string name="backup_result_screen_mismatch">Размер экрана не совпадает: источник %1$dx%2$d, текущий %3$dx%4$d. Некоторые визуальные настройки могут потребовать корректировки.</string>
     <string name="backup_result_restart_keyboard">Перезапустите клавиатуру, чтобы изменения вступили в силу.</string>

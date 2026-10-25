@@ -50,18 +50,28 @@ internal fun rememberResultText(): ResultText {
 /**
  * Top-level entry point for the settings import preview.
  *
- * onApply receives the user's exclusion set and the chosen short-swipe
- * mode. Empty exclusion + MERGE mode = "approve everything" path.
+ * onApply receives the user's exclusion set and the chosen short-swipe and custom-theme
+ * modes. Empty exclusion + MERGE modes = "approve everything" path.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsImportPreviewDialog(
     plan: SettingsImportPlan,
     onCancel: () -> Unit,
-    onApply: (excludedKeys: Set<String>, shortSwipeMode: ShortSwipeImportMode) -> Unit,
+    onApply: (
+        excludedKeys: Set<String>,
+        shortSwipeMode: ShortSwipeImportMode,
+        customThemeMode: ShortSwipeImportMode,
+    ) -> Unit,
 ) {
     val excluded = remember { mutableStateOf(emptySet<String>()) }
     val shortSwipeMode = remember { mutableStateOf(ShortSwipeImportMode.MERGE) }
+    val customThemeMode = remember { mutableStateOf(ShortSwipeImportMode.MERGE) }
+    // Per-theme diff against the device's themes; null when either side is unknown.
+    val customThemeDiff = remember(plan) {
+        CustomThemeBackup.parseStored(plan.customThemesImportRawJson)
+            ?.let { file -> CustomThemeBackup.diff(plan.currentCustomThemesRawJson, file) }
+    }
 
     Dialog(
         onDismissRequest = onCancel,
@@ -72,7 +82,7 @@ fun SettingsImportPreviewDialog(
                 SettingsPreviewTopBar(
                     appliedCount = plan.changes.size - excluded.value.size,
                     onCancel = onCancel,
-                    onApply = { onApply(excluded.value, shortSwipeMode.value) },
+                    onApply = { onApply(excluded.value, shortSwipeMode.value, customThemeMode.value) },
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     item { SettingsPreviewHeaderCard(plan) }
@@ -124,10 +134,36 @@ fun SettingsImportPreviewDialog(
                             item { ShortSwipeDiffSummary(diff) }
                         }
                         item {
-                            ShortSwipeModeRadio(
-                                size = plan.shortSwipeImportSize,
+                            val size = plan.shortSwipeImportSize
+                            ImportModeRadio(
+                                countText = pluralStringResource(R.plurals.import_preview_short_swipe_count, size, size),
+                                mergeLabel = stringResource(R.string.import_preview_short_swipe_merge),
+                                replaceLabel = stringResource(R.string.import_preview_short_swipe_replace),
+                                replaceWarning = pluralStringResource(R.plurals.import_preview_short_swipe_warning, size, size),
                                 selected = shortSwipeMode.value,
                                 onSelect = { shortSwipeMode.value = it },
+                            )
+                        }
+                    }
+
+                    // Custom (DIY) themes travel in their own section (CustomThemeBackup): one
+                    // row per theme the chosen mode adds, changes or removes, then the same
+                    // Skip / Merge / Replace choice as short swipes.
+                    if (plan.customThemesImportSize > 0) {
+                        item { SectionHeader(stringResource(R.string.theme_section_custom)) }
+                        val diff = customThemeDiff?.forMode(customThemeMode.value)
+                        if (diff != null && !diff.isEmpty) {
+                            item { CustomThemeDiffRows(diff) }
+                        }
+                        item {
+                            val size = plan.customThemesImportSize
+                            ImportModeRadio(
+                                countText = pluralStringResource(R.plurals.import_preview_custom_themes_count, size, size),
+                                mergeLabel = stringResource(R.string.import_preview_custom_themes_merge),
+                                replaceLabel = stringResource(R.string.import_preview_custom_themes_replace),
+                                replaceWarning = pluralStringResource(R.plurals.import_preview_custom_themes_warning, size, size),
+                                selected = customThemeMode.value,
+                                onSelect = { customThemeMode.value = it },
                             )
                         }
                     }
@@ -581,27 +617,7 @@ private fun TypeChip(value: PrefValue) {
 private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
     val text = rememberResultText()
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
-        // Headline counts on one line for at-a-glance reading.
-        val countParts = buildList {
-            if (diff.added.isNotEmpty()) {
-                add(stringResource(R.string.import_preview_diff_new, diff.added.size))
-            }
-            if (diff.removed.isNotEmpty()) {
-                add(stringResource(R.string.import_preview_diff_removed, diff.removed.size))
-            }
-            if (diff.changed.isNotEmpty()) {
-                add(stringResource(R.string.import_preview_diff_changed, diff.changed.size))
-            }
-            if (diff.unchanged > 0) {
-                add(stringResource(R.string.import_preview_diff_unchanged, diff.unchanged))
-            }
-        }
-        Text(
-            countParts.joinToString("  "),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        DiffCountLine(diff.added.size, diff.removed.size, diff.changed.size, diff.unchanged)
         // Detail lines (truncated). Each non-empty bucket gets one line.
         if (diff.added.isNotEmpty()) {
             Text(
@@ -627,17 +643,60 @@ private fun ShortSwipeDiffSummary(diff: ShortSwipeDiff) {
     }
 }
 
+/** Headline counts of a diff on one line ("+2 new  ~1 changed  3 unchanged"), zero buckets left out. */
 @Composable
-private fun ShortSwipeModeRadio(
-    size: Int,
+private fun DiffCountLine(added: Int, removed: Int, changed: Int, unchanged: Int) {
+    val countParts = buildList {
+        if (added > 0) add(stringResource(R.string.import_preview_diff_new, added))
+        if (removed > 0) add(stringResource(R.string.import_preview_diff_removed, removed))
+        if (changed > 0) add(stringResource(R.string.import_preview_diff_changed, changed))
+        if (unchanged > 0) add(stringResource(R.string.import_preview_diff_unchanged, unchanged))
+    }
+    Text(
+        countParts.joinToString("  "),
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * The custom-theme diff for the selected mode: the counts, then one row per theme by name
+ * (`+` added, `~` changed, `−` removed). At most [CustomThemeBackup.MAX_THEMES] themes exist,
+ * so every row is listed rather than truncated.
+ */
+@Composable
+private fun CustomThemeDiffRows(diff: CustomThemeDiff) {
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        DiffCountLine(diff.added.size, diff.removed.size, diff.changed.size, diff.unchanged)
+        val rows = diff.added.map { "+" to it.name } +
+            diff.changed.map { "~" to it.name } +
+            diff.removed.map { "\u2212" to it.name }
+        rows.forEach { (marker, name) ->
+            Text(
+                "  $marker $name",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/**
+ * Skip / Merge / Replace for one restorable collection (short swipes, custom themes). Skip's
+ * label is shared; the red [replaceWarning] shows only while Replace is selected.
+ */
+@Composable
+private fun ImportModeRadio(
+    countText: String,
+    mergeLabel: String,
+    replaceLabel: String,
+    replaceWarning: String,
     selected: ShortSwipeImportMode,
     onSelect: (ShortSwipeImportMode) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(
-            pluralStringResource(R.plurals.import_preview_short_swipe_count, size, size),
-            fontWeight = FontWeight.SemiBold,
-        )
+        Text(countText, fontWeight = FontWeight.SemiBold)
         ShortSwipeImportMode.entries.forEach { mode ->
             Row(
                 modifier = Modifier
@@ -652,18 +711,18 @@ private fun ShortSwipeModeRadio(
             ) {
                 RadioButton(selected = (mode == selected), onClick = null)
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(when (mode) {
-                    ShortSwipeImportMode.SKIP -> R.string.import_preview_short_swipe_skip
-                    ShortSwipeImportMode.MERGE -> R.string.import_preview_short_swipe_merge
-                    ShortSwipeImportMode.REPLACE -> R.string.import_preview_short_swipe_replace
-                }))
+                Text(when (mode) {
+                    ShortSwipeImportMode.SKIP -> stringResource(R.string.import_preview_short_swipe_skip)
+                    ShortSwipeImportMode.MERGE -> mergeLabel
+                    ShortSwipeImportMode.REPLACE -> replaceLabel
+                })
             }
         }
         // Warning only when REPLACE is the active selection — see spec
         // "Red warning text shown only when REPLACE is selected".
         if (selected == ShortSwipeImportMode.REPLACE) {
             Text(
-                text = pluralStringResource(R.plurals.import_preview_short_swipe_warning, size, size),
+                text = replaceWarning,
                 color = MaterialTheme.colorScheme.error,
                 fontSize = 11.sp,
                 modifier = Modifier.padding(start = 48.dp, top = 4.dp),

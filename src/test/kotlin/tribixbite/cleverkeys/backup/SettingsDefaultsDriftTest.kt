@@ -7,7 +7,8 @@ import java.io.File
 /**
  * Drift detection: scans `src/main/kotlin/` for every SharedPreferences
  * read site at test time, then asserts every key found is classified
- * into exactly one of four buckets:
+ * into exactly one of four buckets (and, at the end of the class, that every
+ * config.json SECTION the exporter writes is one the importer reads):
  *
  *   1. `SETTINGS_DEFAULTS` — known compile-time default value
  *   2. `NON_DEFAULTED_KEYS` — literal `null` default (intentional)
@@ -187,5 +188,47 @@ class SettingsDefaultsDriftTest {
 
         check(repaired.isNotEmpty()) { "Extracted zero repair keys — the scan is broken." }
         assertThat(repaired.filter { it in SettingsValidation.DEPRECATED_KEYS }).isEmpty()
+    }
+
+    // -------------------------------------------------------------------------------------
+    // Saga 2026-10-25: custom (DIY) themes were in NO backup. Their store is a separate prefs
+    // file, so the key scan above could never notice: nothing in the settings file was
+    // unclassified, the themes simply had no section. The fourth classification is therefore
+    // the config.json SECTIONS: every top-level key the exporter writes must be one the
+    // importer reads (SettingsImportPlanBuilder.CONFIG_SECTIONS), and the user-created stores
+    // that a restore must bring back each own a section.
+    // -------------------------------------------------------------------------------------
+
+    /** `root.add("<section>", …)` or `root.add(CustomThemeBackup.SECTION_KEY, …)` in buildConfigJson. */
+    private val sectionWritePattern = Regex("""root\.add\(\s*(?:"([a-z_]+)"|(CustomThemeBackup\.SECTION_KEY))""")
+
+    @Test
+    fun everyConfigSectionTheExporterWritesIsClassified() {
+        val manager = File("src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt")
+        check(manager.exists()) { "BackupRestoreManager.kt not found at ${manager.absolutePath}" }
+        val text = manager.readText()
+        val start = text.indexOf("private fun buildConfigJson(")
+        check(start >= 0) {
+            "Anchor 'private fun buildConfigJson(' not found — re-point this test rather than deleting it."
+        }
+        val end = text.indexOf("\n    }\n", start)
+        check(end > start) { "Could not find the end of buildConfigJson." }
+
+        val written = sectionWritePattern.findAll(text.substring(start, end)).map { match ->
+            match.groupValues[1].ifEmpty { CustomThemeBackup.SECTION_KEY }
+        }.toSet()
+
+        check(written.isNotEmpty()) { "Matched zero section writes — the scan is broken, not a pass." }
+        assertThat(written).containsAtLeast("metadata", "preferences", CustomThemeBackup.SECTION_KEY)
+        assertThat(written - SettingsImportPlanBuilder.CONFIG_SECTIONS).isEmpty()
+    }
+
+    @Test
+    fun theCustomThemeStoreHasABackupSection() {
+        // The DIY-theme store (theme/CustomThemeManager, prefs file custom_keyboard_themes) is
+        // user-created data: it must stay covered by a config section that the importer reads.
+        assertThat(SettingsImportPlanBuilder.CONFIG_SECTIONS).contains(CustomThemeBackup.SECTION_KEY)
+        val builder = File("src/main/kotlin/tribixbite/cleverkeys/backup/SettingsImportPlanBuilder.kt").readText()
+        assertThat(builder).contains("root.get(CustomThemeBackup.SECTION_KEY)")
     }
 }

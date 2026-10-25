@@ -64,7 +64,8 @@ class CustomThemeManager(private val context: Context) {
         private const val TAG = "CustomThemeManager"
         private const val PREFS_NAME = "custom_keyboard_themes"
         private const val KEY_THEMES = "themes"
-        private const val MAX_CUSTOM_THEMES = 50
+        /** The most DIY themes the store keeps (also the backup restore's cap). */
+        const val MAX_CUSTOM_THEMES = 50
     }
 
     /**
@@ -213,6 +214,34 @@ class CustomThemeManager(private val context: Context) {
     }
 
     /**
+     * Every stored theme as a JSON array of [CustomTheme.toJson] objects: the themes of the
+     * backup's `custom_themes` section (`backup/CustomThemeBackup`).
+     */
+    fun exportAllThemesJson(): String =
+        JSONArray().apply { _customThemes.value.forEach { put(it.toJson()) } }.toString()
+
+    /**
+     * Backup restore: make the stored set exactly [themesArrayJson] (a JSON array of
+     * [CustomTheme.toJson] objects, ids and timestamps kept) and persist it with `commit()`, so a
+     * restored `theme = custom_<id>` never outlives its theme across a process kill.
+     *
+     * All or nothing: every entry is parsed before anything is written.
+     *
+     * @return the number of stored themes.
+     * @throws org.json.JSONException when an entry does not parse; the store is then unchanged.
+     * @throws IllegalArgumentException when the set exceeds [MAX_CUSTOM_THEMES].
+     * @throws IllegalStateException when the write fails; the store is then unchanged.
+     */
+    fun replaceAllThemes(themesArrayJson: String): Int {
+        val array = JSONArray(themesArrayJson)
+        val themes = (0 until array.length()).map { CustomTheme.fromJson(array.getJSONObject(it)) }
+        require(themes.size <= MAX_CUSTOM_THEMES) { "${themes.size} themes exceed the limit of $MAX_CUSTOM_THEMES" }
+        check(saveCustomThemesToPrefs(themes, synchronous = true)) { "Could not write ${themes.size} custom themes" }
+        _customThemes.value = themes
+        return themes.size
+    }
+
+    /**
      * Get all themes (predefined + custom).
      *
      * @return Map of category to themes
@@ -274,19 +303,23 @@ class CustomThemeManager(private val context: Context) {
     }
 
     /**
-     * Save custom themes to SharedPreferences.
+     * Save custom themes to SharedPreferences. [synchronous] commits (and reports the disk
+     * write's result) instead of the default asynchronous apply.
      */
-    private fun saveCustomThemesToPrefs(themes: List<CustomTheme>): Boolean {
+    private fun saveCustomThemesToPrefs(themes: List<CustomTheme>, synchronous: Boolean = false): Boolean {
         return try {
             val jsonArray = JSONArray()
             themes.forEach { theme ->
                 jsonArray.put(theme.toJson())
             }
 
-            prefs.edit()
-                .putString(KEY_THEMES, jsonArray.toString())
-                .apply()
-            true
+            val editor = prefs.edit().putString(KEY_THEMES, jsonArray.toString())
+            if (synchronous) {
+                editor.commit()
+            } else {
+                editor.apply()
+                true
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to persist ${themes.size} custom themes to preferences", e)
             false

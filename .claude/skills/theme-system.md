@@ -74,7 +74,22 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
    `subLabelColor` (`22b35f71`; hard-coded 80 % white vanished on light themes). Bar text colours
    come from `SuggestionBarPalette` (pure, in `Theme.kt`): every text role ≥ 3:1 against the bar
    background, also under a bound per-layout theme (`SuggestionBarPaletteTest`).
-9. `MaterialThemeManager` is the Settings app's Material 3 (Compose) theming, with Device
+9. **DIY themes are in the backup** (Saga 2026-10-25; before that NO backup carried them).
+   `config.json` section `custom_themes` (`backup/CustomThemeBackup.kt`: validation, per-theme
+   diff, Skip/Merge/Replace merge — the same `ShortSwipeImportMode` and `forMode` rules as short
+   swipes). The applier writes them through `CustomThemeStore` (`RealCustomThemeStore` wraps the
+   PROVIDER's `customThemeManager`, rule 4) BEFORE the settings commit, so a restored
+   `theme = custom_<id>` resolves on the first refresh; a Replace that removes the selected
+   theme selects the fallback. `CustomThemeManager.replaceAllThemes` is all-or-nothing and
+   commits. Full-backup rollback restores the themes too. Tests: `backup/CustomThemeBackupTest`,
+   `CustomThemeImportPlanTest` (pure), `CustomThemeImportApplyTest`,
+   `theme/CustomThemeBackupFormatTest`, `BackupRestoreFullBackupTest` round trip (mock).
+10. **Theme Creator hex field** (`theme/HexColorText`): keep the user's text and caret; apply
+   only a complete `#RRGGBB`/`#AARRGGBB`; replace the text only when the colour changed to one
+   it does not denote. The picker holds the exact typed/preset ARGB (`exactArgb`) because the
+   HSL round trip is lossy (Saga 2026-10-25: a typed `#FF0000` was rewritten to `#FFFF0000`
+   mid-entry).
+11. `MaterialThemeManager` is the Settings app's Material 3 (Compose) theming, with Device
    Encrypted storage; it is not the keyboard `Theme` and does not affect the IME window.
 
 ## Traps

@@ -30,6 +30,15 @@ object SettingsImportPlanBuilder {
     private val JSON_BLOB_KEYS = setOf("layouts", "extra_keys", "custom_extra_keys")
 
     /**
+     * Every top-level `config.json` section this importer reads. `BackupRestoreManager.buildConfigJson`
+     * may write only these (`SettingsDefaultsDriftTest` scans it); a store a restore must bring
+     * back — like the DIY themes, missing from every backup until 2026-10-25 — needs one.
+     */
+    val CONFIG_SECTIONS: Set<String> = setOf(
+        "metadata", "preferences", "short_swipe_customizations", CustomThemeBackup.SECTION_KEY,
+    )
+
+    /**
      * Build an import plan.
      *
      * @param defaultSnapshot maps SharedPreferences key → the value the app
@@ -48,8 +57,15 @@ object SettingsImportPlanBuilder {
         screen: ScreenMetrics,
         defaultSnapshot: Map<String, PrefValue> = emptyMap(),
         currentShortSwipeRawJson: String? = null,
+        currentCustomThemesRawJson: String? = null,
     ): SettingsImportPlan {
         val root = JsonParser.parseString(jsonString).asJsonObject
+
+        // DIY themes travel beside the preferences (their store is a separate prefs file).
+        // Parsed before the preferences so a file carrying only themes still imports them.
+        val customThemes = CustomThemeBackup.parse(root.get(CustomThemeBackup.SECTION_KEY))
+        val customThemesRaw = customThemes?.themes?.takeIf { it.isNotEmpty() }
+            ?.let(CustomThemeBackup::toArrayJson)
 
         val sourceVersion = root.getAsJsonObject("metadata")
             ?.get("app_version")?.asString ?: "unknown"
@@ -63,7 +79,10 @@ object SettingsImportPlanBuilder {
         val rawPreferences: JsonObject = root.getAsJsonObject("preferences")
             ?: return SettingsImportPlan(
                 sourceVersion, sourceScreen, screen,
-                emptyList(), emptyList(), emptyList(), 0, null,
+                emptyList(), customThemes?.skipped.orEmpty(), emptyList(), 0, null,
+                customThemesImportSize = customThemes?.themes?.size ?: 0,
+                customThemesImportRawJson = customThemesRaw,
+                currentCustomThemesRawJson = currentCustomThemesRawJson,
             )
 
         // Legacy-margin migration runs BEFORE the diff so the user sees only
@@ -74,6 +93,7 @@ object SettingsImportPlanBuilder {
         val changes = mutableListOf<SettingsChange>()
         val skipped = mutableListOf<SkippedKey>()
         skipped += migration.skipped
+        skipped += customThemes?.skipped.orEmpty()
 
         for ((key, valueElement) in preferences.entrySet()) {
             if (SettingsValidation.isInternalPreference(key)) {
@@ -175,6 +195,9 @@ object SettingsImportPlanBuilder {
             shortSwipeImportSize = shortSwipeSize,
             shortSwipeImportRawJson = shortSwipeRaw,
             currentShortSwipeRawJson = currentShortSwipeRawJson,
+            customThemesImportSize = customThemes?.themes?.size ?: 0,
+            customThemesImportRawJson = customThemesRaw,
+            currentCustomThemesRawJson = currentCustomThemesRawJson,
         )
     }
 

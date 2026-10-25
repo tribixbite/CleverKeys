@@ -961,6 +961,10 @@
     <string name="import_preview_short_swipe_merge">マージ — 競合時はファイル優先、他は維持(推奨)</string>
     <string name="import_preview_short_swipe_replace">置換 — 既存を消去し、ファイルのセットを導入</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">既存のショートスワイプカスタマイズをすべてファイルの %1$d 件のマッピングで置き換えます。</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="other">このバックアップには %1$d 件のカスタムテーマがあります</item></plurals>
+    <string name="import_preview_custom_themes_merge">マージ — 競合時はファイル優先、他のテーマは維持(推奨)</string>
+    <string name="import_preview_custom_themes_replace">置換 — カスタムテーマを消去し、ファイルのセットを導入</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="other">カスタムテーマをすべてファイルの %1$d 件のテーマで置き換えます。</item></plurals>
     <string name="import_preview_selected_count">%2$d 件中 %1$d 件を選択</string>
     <string name="import_preview_expand">展開</string>
     <string name="import_preview_hide">隠す</string>
@@ -1285,6 +1289,7 @@
     <string name="backup_result_excluded_by_you">• ユーザーが除外: %1$d</string>
     <string name="backup_result_not_importable">• インポート不可(内部/派生): %1$d</string>
     <string name="backup_result_short_swipe_applied">• 適用したショートスワイプ: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• 復元したカスタムテーマ: %1$d</string>
     <string name="backup_result_source_version">• 作成元のバージョン: %1$s</string>
     <string name="backup_result_screen_mismatch">画面サイズが一致しません: 作成元 %1$dx%2$d、現在 %3$dx%4$d。一部の表示設定の調整が必要になる場合があります。</string>
     <string name="backup_result_restart_keyboard">変更を反映するには、キーボードを再起動してください。</string>

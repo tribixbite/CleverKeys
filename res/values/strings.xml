@@ -1341,6 +1341,12 @@
         <item quantity="one">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mapping.</item>
         <item quantity="other">This will REPLACE all your existing short-swipe customizations with the file\'s %1$d mappings.</item>
     </plurals>
+    <!-- %1$d = valid custom (DIY) themes in the backup; the section header is theme_section_custom -->
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d custom theme in this backup</item><item quantity="other">%1$d custom themes in this backup</item></plurals>
+    <string name="import_preview_custom_themes_merge">Merge — file wins on conflicts, other themes kept (recommended)</string>
+    <string name="import_preview_custom_themes_replace">Replace — delete your custom themes, install the file\'s set</string>
+    <!-- %1$d = themes in the file that would replace every custom theme the user has -->
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">This will REPLACE all your custom themes with the file\'s %1$d theme.</item><item quantity="other">This will REPLACE all your custom themes with the file\'s %1$d themes.</item></plurals>
     <!-- %1$d = words kept selected, %2$d = words offered -->
     <string name="import_preview_selected_count">%1$d of %2$d selected</string>
     <string name="import_preview_expand">Expand</string>
@@ -1699,6 +1705,7 @@
     <string name="backup_result_excluded_by_you">• Excluded by you: %1$d</string>
     <string name="backup_result_not_importable">• Not importable (internal/derived): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Short-swipe applied: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Custom themes restored: %1$d</string>
     <string name="backup_result_source_version">• Source version: %1$s</string>
     <string name="backup_result_screen_mismatch">Screen-size mismatch: source %1$dx%2$d, current %3$dx%4$d. Some visual settings may need adjustment.</string>
     <string name="backup_result_restart_keyboard">Restart the keyboard for changes to take effect.</string>

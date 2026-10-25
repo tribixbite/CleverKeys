@@ -984,6 +984,10 @@
     <string name="import_preview_short_swipe_merge">Zusammenführen — bei Konflikt gewinnt die Datei, Übriges bleibt (empfohlen)</string>
     <string name="import_preview_short_swipe_replace">Ersetzen — Vorhandenes löschen, Satz aus der Datei installieren</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnung der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre vorhandenen Kurzwisch-Anpassungen durch die %1$d Zuordnungen der Datei.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d benutzerdefiniertes Theme in dieser Sicherung</item><item quantity="other">%1$d benutzerdefinierte Themes in dieser Sicherung</item></plurals>
+    <string name="import_preview_custom_themes_merge">Zusammenführen — bei Konflikt gewinnt die Datei, andere Themes bleiben (empfohlen)</string>
+    <string name="import_preview_custom_themes_replace">Ersetzen — Ihre benutzerdefinierten Themes löschen, Satz aus der Datei installieren</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch das %1$d Theme der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch die %1$d Themes der Datei.</item></plurals>
     <string name="import_preview_selected_count">%1$d von %2$d ausgewählt</string>
     <string name="import_preview_expand">Ausklappen</string>
     <string name="import_preview_hide">Ausblenden</string>
@@ -1319,6 +1323,7 @@
     <string name="backup_result_excluded_by_you">• Von Ihnen ausgeschlossen: %1$d</string>
     <string name="backup_result_not_importable">• Nicht importierbar (intern/abgeleitet): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Kurze Wischgesten übernommen: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Benutzerdefinierte Themes wiederhergestellt: %1$d</string>
     <string name="backup_result_source_version">• Quellversion: %1$s</string>
     <string name="backup_result_screen_mismatch">Unterschiedliche Bildschirmgröße: Quelle %1$dx%2$d, aktuell %3$dx%4$d. Einige visuelle Einstellungen müssen eventuell angepasst werden.</string>
     <string name="backup_result_restart_keyboard">Starten Sie die Tastatur neu, damit die Änderungen wirksam werden.</string>

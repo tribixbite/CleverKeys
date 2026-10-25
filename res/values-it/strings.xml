@@ -1006,6 +1006,10 @@
     <string name="import_preview_short_swipe_merge">Unisci — in caso di conflitto vince il file, il resto è conservato (consigliato)</string>
     <string name="import_preview_short_swipe_replace">Sostituisci — cancella l\'esistente, installa il set del file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con %1$d mappatura del file.</item><item quantity="many">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con le %1$d mappature del file.</item><item quantity="other">Questo SOSTITUIRÀ tutte le tue personalizzazioni di scorrimento breve esistenti con le %1$d mappature del file.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d tema personalizzato in questo backup</item><item quantity="many">%1$d temi personalizzati in questo backup</item><item quantity="other">%1$d temi personalizzati in questo backup</item></plurals>
+    <string name="import_preview_custom_themes_merge">Unisci — in caso di conflitto vince il file, gli altri temi sono conservati (consigliato)</string>
+    <string name="import_preview_custom_themes_replace">Sostituisci — cancella i tuoi temi personalizzati, installa il set del file</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Questo SOSTITUIRÀ tutti i tuoi temi personalizzati con %1$d tema del file.</item><item quantity="many">Questo SOSTITUIRÀ tutti i tuoi temi personalizzati con i %1$d temi del file.</item><item quantity="other">Questo SOSTITUIRÀ tutti i tuoi temi personalizzati con i %1$d temi del file.</item></plurals>
     <string name="import_preview_selected_count">%1$d di %2$d selezionate</string>
     <string name="import_preview_expand">Espandi</string>
     <string name="import_preview_hide">Nascondi</string>
@@ -1352,6 +1356,7 @@
     <string name="backup_result_excluded_by_you">• Escluse da te: %1$d</string>
     <string name="backup_result_not_importable">• Non importabili (interne/derivate): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Scorrimenti brevi applicati: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Temi personalizzati ripristinati: %1$d</string>
     <string name="backup_result_source_version">• Versione di origine: %1$s</string>
     <string name="backup_result_screen_mismatch">Dimensioni dello schermo diverse: origine %1$dx%2$d, attuale %3$dx%4$d. Alcune impostazioni visive potrebbero richiedere modifiche.</string>
     <string name="backup_result_restart_keyboard">Riavvia la tastiera per applicare le modifiche.</string>

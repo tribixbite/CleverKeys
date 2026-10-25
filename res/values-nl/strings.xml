@@ -964,6 +964,10 @@
     <string name="import_preview_short_swipe_merge">Samenvoegen — bij conflict wint het bestand, de rest blijft (aanbevolen)</string>
     <string name="import_preview_short_swipe_replace">Vervangen — bestaande wissen, set uit het bestand installeren</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzing uit het bestand.</item><item quantity="other">Dit VERVANGT al je bestaande korte-veegaanpassingen door de %1$d toewijzingen uit het bestand.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d aangepast thema in deze back-up</item><item quantity="other">%1$d aangepaste thema\'s in deze back-up</item></plurals>
+    <string name="import_preview_custom_themes_merge">Samenvoegen — bij conflict wint het bestand, andere thema\'s blijven (aanbevolen)</string>
+    <string name="import_preview_custom_themes_replace">Vervangen — je aangepaste thema\'s wissen, set uit het bestand installeren</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dit VERVANGT al je aangepaste thema\'s door het %1$d thema uit het bestand.</item><item quantity="other">Dit VERVANGT al je aangepaste thema\'s door de %1$d thema\'s uit het bestand.</item></plurals>
     <string name="import_preview_selected_count">%1$d van %2$d geselecteerd</string>
     <string name="import_preview_expand">Uitvouwen</string>
     <string name="import_preview_hide">Verbergen</string>
@@ -1299,6 +1303,7 @@
     <string name="backup_result_excluded_by_you">• Door jou uitgesloten: %1$d</string>
     <string name="backup_result_not_importable">• Niet importeerbaar (intern/afgeleid): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Korte vegen toegepast: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Aangepaste thema\'s hersteld: %1$d</string>
     <string name="backup_result_source_version">• Bronversie: %1$s</string>
     <string name="backup_result_screen_mismatch">Schermgrootte komt niet overeen: bron %1$dx%2$d, huidig %3$dx%4$d. Sommige visuele instellingen moeten mogelijk worden aangepast.</string>
     <string name="backup_result_restart_keyboard">Herstart het toetsenbord om de wijzigingen toe te passen.</string>

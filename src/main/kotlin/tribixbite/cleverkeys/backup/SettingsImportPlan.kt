@@ -78,4 +78,16 @@ data class SettingsImportPlan(
      * its tests need no knowledge of the crypto layer; the manager overwrites it after reading.
      */
     val source: BackupSourceInfo = BackupSourceInfo.PLAINTEXT,
+    /** Valid DIY themes in the file's `custom_themes` section ([CustomThemeBackup]). */
+    val customThemesImportSize: Int = 0,
+    /**
+     * Those themes as a stored-shape JSON array, or null when the file has no importable
+     * section. The applier writes them through `CustomThemeStore` with the chosen mode.
+     */
+    val customThemesImportRawJson: String? = null,
+    /**
+     * The device's DIY themes when the plan was built (a JSON array), for the preview's
+     * per-theme diff; null when the runtime could not read them (count and radio only).
+     */
+    val currentCustomThemesRawJson: String? = null,
 )

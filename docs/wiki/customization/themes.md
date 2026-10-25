@@ -175,7 +175,10 @@ A: Yes! Use the DIY Theme Creator in Theme Manager to customize every color.
 
 ### Q: How do I backup my custom theme?
 
-A: Export your settings from the **Settings > Backup & Restore** section, which includes theme settings.
+A: Export your settings, or make a full backup, in **Settings > Backup & Restore**. Since 2.0.0
+both include your DIY themes and which theme is selected; importing shows each theme and lets you
+Skip, Merge (keep your other themes) or Replace. Older backups carry the selection only, so a
+restored DIY theme was missing and the keyboard fell back to CleverKeys Dark.
 
 ### Q: Why does Monet theme look different than expected?
 

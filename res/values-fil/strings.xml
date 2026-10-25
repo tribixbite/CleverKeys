@@ -977,6 +977,10 @@
     <string name="import_preview_short_swipe_merge">I-merge — mananaig ang file sa salungatan, mananatili ang iba (inirerekomenda)</string>
     <string name="import_preview_short_swipe_replace">Palitan — burahin ang umiiral, i-install ang set ng file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item><item quantity="other">PAPALITAN nito ang lahat ng iyong umiiral na short-swipe customization ng %1$d mapping ng file.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d custom na tema sa backup na ito</item><item quantity="other">%1$d custom na tema sa backup na ito</item></plurals>
+    <string name="import_preview_custom_themes_merge">I-merge — mananaig ang file sa salungatan, mananatili ang ibang tema (inirerekomenda)</string>
+    <string name="import_preview_custom_themes_replace">Palitan — burahin ang iyong mga custom na tema, i-install ang set ng file</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">PAPALITAN nito ang lahat ng iyong custom na tema ng %1$d tema ng file.</item><item quantity="other">PAPALITAN nito ang lahat ng iyong custom na tema ng %1$d tema ng file.</item></plurals>
     <string name="import_preview_selected_count">%1$d sa %2$d ang napili</string>
     <string name="import_preview_expand">I-expand</string>
     <string name="import_preview_hide">Itago</string>
@@ -1311,6 +1315,7 @@
     <string name="backup_result_excluded_by_you">• Ibinukod mo: %1$d</string>
     <string name="backup_result_not_importable">• Hindi ma-import (internal/derived): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Nailapat na short-swipe: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Naibalik na custom na tema: %1$d</string>
     <string name="backup_result_source_version">• Bersyon ng pinagmulan: %1$s</string>
     <string name="backup_result_screen_mismatch">Hindi tugma ang laki ng screen: pinagmulan %1$dx%2$d, kasalukuyan %3$dx%4$d. Maaaring kailangang ayusin ang ilang visual na setting.</string>
     <string name="backup_result_restart_keyboard">I-restart ang keyboard para magkabisa ang mga pagbabago.</string>

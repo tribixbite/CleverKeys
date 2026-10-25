@@ -974,6 +974,10 @@
     <string name="import_preview_short_swipe_merge">Gabung — saat konflik file menang, lainnya dipertahankan (disarankan)</string>
     <string name="import_preview_short_swipe_replace">Ganti — hapus yang ada, pasang set dari file</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">Ini akan MENGGANTI semua kustomisasi geser pendek Anda dengan %1$d pemetaan dari file.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="other">%1$d tema kustom dalam cadangan ini</item></plurals>
+    <string name="import_preview_custom_themes_merge">Gabung — saat konflik file menang, tema lain dipertahankan (disarankan)</string>
+    <string name="import_preview_custom_themes_replace">Ganti — hapus tema kustom Anda, pasang set dari file</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="other">Ini akan MENGGANTI semua tema kustom Anda dengan %1$d tema dari file.</item></plurals>
     <string name="import_preview_selected_count">%1$d dari %2$d dipilih</string>
     <string name="import_preview_expand">Bentangkan</string>
     <string name="import_preview_hide">Sembunyikan</string>
@@ -1298,6 +1302,7 @@
     <string name="backup_result_excluded_by_you">• Dikecualikan oleh Anda: %1$d</string>
     <string name="backup_result_not_importable">• Tidak dapat diimpor (internal/turunan): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Geser pendek diterapkan: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Tema kustom dipulihkan: %1$d</string>
     <string name="backup_result_source_version">• Versi sumber: %1$s</string>
     <string name="backup_result_screen_mismatch">Ukuran layar tidak cocok: sumber %1$dx%2$d, saat ini %3$dx%4$d. Beberapa pengaturan visual mungkin perlu disesuaikan.</string>
     <string name="backup_result_restart_keyboard">Mulai ulang keyboard agar perubahan diterapkan.</string>

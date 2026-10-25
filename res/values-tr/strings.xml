@@ -976,6 +976,10 @@
     <string name="import_preview_short_swipe_merge">Birleştir — çakışmada dosya kazanır, diğerleri korunur (önerilen)</string>
     <string name="import_preview_short_swipe_replace">Değiştir — mevcut olanları sil, dosyadaki kümeyi yükle</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item><item quantity="other">Bu, mevcut tüm kısa kaydırma özelleştirmelerinizi dosyadaki %1$d eşlemeyle DEĞİŞTİRİR.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">Bu yedekte %1$d özel tema var</item><item quantity="other">Bu yedekte %1$d özel tema var</item></plurals>
+    <string name="import_preview_custom_themes_merge">Birleştir — çakışmada dosya kazanır, diğer temalar korunur (önerilen)</string>
+    <string name="import_preview_custom_themes_replace">Değiştir — özel temalarınızı sil, dosyadaki kümeyi yükle</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Bu, tüm özel temalarınızı dosyadaki %1$d temayla DEĞİŞTİRİR.</item><item quantity="other">Bu, tüm özel temalarınızı dosyadaki %1$d temayla DEĞİŞTİRİR.</item></plurals>
     <string name="import_preview_selected_count">%2$d öğeden %1$d tanesi seçili</string>
     <string name="import_preview_expand">Genişlet</string>
     <string name="import_preview_hide">Gizle</string>
@@ -1310,6 +1314,7 @@
     <string name="backup_result_excluded_by_you">• Sizin hariç tuttuğunuz: %1$d</string>
     <string name="backup_result_not_importable">• İçe aktarılamayan (dahili/türetilmiş): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Uygulanan kısa kaydırma: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Geri yüklenen özel temalar: %1$d</string>
     <string name="backup_result_source_version">• Kaynak sürüm: %1$s</string>
     <string name="backup_result_screen_mismatch">Ekran boyutu uyuşmazlığı: kaynak %1$dx%2$d, geçerli %3$dx%4$d. Bazı görsel ayarların düzenlenmesi gerekebilir.</string>
     <string name="backup_result_restart_keyboard">Değişikliklerin geçerli olması için klavyeyi yeniden başlatın.</string>

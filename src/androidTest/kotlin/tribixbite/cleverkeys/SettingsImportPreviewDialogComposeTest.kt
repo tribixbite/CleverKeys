@@ -45,7 +45,7 @@ class SettingsImportPreviewDialogComposeTest {
                     SettingsImportPreviewDialog(
                         plan = planWith(SettingsChange("k", PrefValue.Unset, PrefValue.IntV(1), ChangeType.ADDED)),
                         onCancel = { cancelCalled = true },
-                        onApply = { _, _ -> applyCalled = true },
+                        onApply = { _, _, _ -> applyCalled = true },
                     )
                 }
             }
@@ -67,7 +67,7 @@ class SettingsImportPreviewDialogComposeTest {
                             SettingsChange("b", PrefValue.Unset, PrefValue.IntV(2), ChangeType.ADDED),
                         ),
                         onCancel = {},
-                        onApply = { excluded, _ -> captured = excluded },
+                        onApply = { excluded, _, _ -> captured = excluded },
                     )
                 }
             }
@@ -87,7 +87,7 @@ class SettingsImportPreviewDialogComposeTest {
                             SettingsChange("b", PrefValue.Unset, PrefValue.IntV(2), ChangeType.ADDED),
                         ),
                         onCancel = {},
-                        onApply = { _, _ -> },
+                        onApply = { _, _, _ -> },
                     )
                 }
             }
@@ -110,7 +110,7 @@ class SettingsImportPreviewDialogComposeTest {
                     SettingsImportPreviewDialog(
                         plan = planWith(ssSize = 5, ssRaw = """{"q":{"up":"DEL"}}"""),
                         onCancel = {},
-                        onApply = { _, _ -> },
+                        onApply = { _, _, _ -> },
                     )
                 }
             }
@@ -131,7 +131,7 @@ class SettingsImportPreviewDialogComposeTest {
                     SettingsImportPreviewDialog(
                         plan = planWith(ssSize = 5, ssRaw = """{"q":{"up":"DEL"}}"""),
                         onCancel = {},
-                        onApply = { _, _ -> },
+                        onApply = { _, _, _ -> },
                     )
                 }
             }
@@ -166,7 +166,7 @@ class SettingsImportPreviewDialogComposeTest {
                             )
                         ),
                         onCancel = {},
-                        onApply = { _, _ -> },
+                        onApply = { _, _, _ -> },
                     )
                 }
             }
@@ -189,7 +189,7 @@ class SettingsImportPreviewDialogComposeTest {
                     SettingsImportPreviewDialog(
                         plan = planWith(SettingsChange("a", PrefValue.Unset, PrefValue.IntV(1), ChangeType.ADDED)),
                         onCancel = {},
-                        onApply = { _, _ -> },
+                        onApply = { _, _, _ -> },
                     )
                 }
             }

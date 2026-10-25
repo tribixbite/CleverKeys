@@ -27,6 +27,10 @@ import kotlin.math.abs
 import android.provider.UserDictionary
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.backup.BackupSourceInfo
+import tribixbite.cleverkeys.backup.CustomThemeBackup
+import tribixbite.cleverkeys.backup.CustomThemeStore
+import tribixbite.cleverkeys.backup.RealCustomThemeStore
+import tribixbite.cleverkeys.theme.ThemeProvider
 import tribixbite.cleverkeys.backup.DictImportApplier
 import tribixbite.cleverkeys.backup.DictImportPlan
 import tribixbite.cleverkeys.backup.DictImportPlanBuilder
@@ -64,7 +68,25 @@ open class BackupRestoreManager(
     private val passphraseStore: BackupPassphraseStore = BackupPassphraseStore(context),
     /** Injectable only so archive-limit tests can exercise aggregate/container ceilings cheaply. */
     private val importLimits: ImportLimits = ImportLimits(),
+    /**
+     * DIY-theme store for the `custom_themes` section. Null (the default) resolves lazily to the
+     * process-wide `ThemeProvider.customThemeManager`, so tests that never touch themes need no
+     * theme store at all.
+     */
+    customThemeStore: CustomThemeStore? = null,
 ) {
+    private val customThemeStore: CustomThemeStore by lazy {
+        customThemeStore ?: RealCustomThemeStore(ThemeProvider.getInstance(context).customThemeManager)
+    }
+
+    /** The device's DIY themes as a JSON array, or null (logged) when the store cannot be read. */
+    private fun readCurrentCustomThemes(): String? = try {
+        customThemeStore.exportThemesJson()
+    } catch (e: Exception) {
+        Log.w(TAG, "DIY theme snapshot failed; the preview shows no theme diff", e)
+        null
+    }
+
     // Lazy init to avoid circular dependency issues
     private val shortSwipeManager: ShortSwipeCustomizationManager by lazy {
         ShortSwipeCustomizationManager.getInstance(context)
@@ -864,6 +886,18 @@ open class BackupRestoreManager(
             Log.w(TAG, "Failed to export short swipe customizations (non-fatal)", e)
         }
 
+        // DIY themes live in their own store (custom_keyboard_themes), not in prefs. Without
+        // this section a reinstall plus a restore lost every DIY theme (Saga, 2026-10-25).
+        try {
+            val themes = customThemeStore.exportThemesJson()
+            if (CustomThemeBackup.parseStored(themes)?.isNotEmpty() == true) {
+                root.add(CustomThemeBackup.SECTION_KEY, CustomThemeBackup.section(themes))
+                Log.i(TAG, "Exported DIY themes")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to export DIY themes (non-fatal)", e)
+        }
+
         return root to preferences.size()
     }
 
@@ -926,6 +960,7 @@ open class BackupRestoreManager(
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
             currentShortSwipeRawJson = currentShortSwipeJson,
+            currentCustomThemesRawJson = readCurrentCustomThemes(),
         ).copy(source = source)
     }
 
@@ -939,9 +974,10 @@ open class BackupRestoreManager(
         excludedKeys: Set<String>,
         shortSwipeMode: ShortSwipeImportMode,
         prefs: SharedPreferences,
+        customThemeMode: ShortSwipeImportMode,
     ): ImportResult = runBlocking {
         val result = SettingsImportApplier.apply(
-            plan, excludedKeys, shortSwipeMode, prefs, shortSwipeImporter
+            plan, excludedKeys, shortSwipeMode, prefs, shortSwipeImporter, customThemeMode, customThemeStore,
         )
         // #156 F5: an import can write `clipboard_private_copy_toolbar_enabled` (a normal exportable
         // key) WITHOUT flipping the manifest-disabled PrivateCopyProcessTextActivity component. The
@@ -971,14 +1007,17 @@ open class BackupRestoreManager(
      * Legacy headless entry point. Termux automation callers depend on this
      * signature and the destructive `merge=false` short-swipe semantics — both
      * are preserved by routing through `applySettingsImportPlan` with
-     * `ShortSwipeImportMode.REPLACE`. The SAF-flow UI uses MERGE by default
+     * `ShortSwipeImportMode.REPLACE`. DIY themes follow the same REPLACE rule; a file without
+     * a `custom_themes` section (every backup before 2026-10-25) leaves the themes alone. The SAF-flow UI uses MERGE by default
      * (see `BackupRestoreActivity.applyPlannedSettings`); flipping the headless
      * default is intentionally out of scope (tracked in `memory/todo.md`).
      */
     fun importConfig(uri: Uri, prefs: SharedPreferences): ImportResult {
         return try {
             val plan = buildSettingsImportPlan(uri, prefs)
-            applySettingsImportPlan(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs)
+            applySettingsImportPlan(
+                plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, ShortSwipeImportMode.REPLACE,
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Import failed", e)
             throw Exception("Import failed: ${e.message}", e)
@@ -1023,7 +1062,9 @@ open class BackupRestoreManager(
         @JvmField var currentScreenHeight: Int = 0,
         @JvmField val importedKeys: MutableSet<String> = mutableSetOf(),
         @JvmField val skippedKeys: MutableSet<String> = mutableSetOf(),
-        @JvmField var shortSwipeCustomizationsImported: Int = 0
+        @JvmField var shortSwipeCustomizationsImported: Int = 0,
+        /** File DIY themes stored by the import (`custom_themes` section). */
+        @JvmField var customThemesImported: Int = 0,
     ) {
         fun hasScreenSizeMismatch(): Boolean {
             if (sourceScreenWidth == 0 || sourceScreenHeight == 0)
@@ -1791,6 +1832,8 @@ open class BackupRestoreManager(
         @JvmField val errorReason: IoFailureReason? = null,
         /** Some learned data in dictionaries.json could not be restored (audit M2). */
         @JvmField val learnedDataIncomplete: Boolean = false,
+        /** DIY themes restored from config.json's `custom_themes` section. */
+        @JvmField val customThemesImported: Int = 0,
     )
 
     /**
@@ -1980,6 +2023,7 @@ open class BackupRestoreManager(
         var clipboardEntriesSkipped = 0
         var mediaFilesRestored = 0
         var learnedDataIncomplete = false
+        var customThemesImported = 0
         var sourceAppVersion: String? = null
 
         // Transparently decrypt a CKENC1 container to a verified temp file first
@@ -2104,6 +2148,9 @@ open class BackupRestoreManager(
             // dictionary state cannot survive a failed import. Nothing writes prefs between here
             // and the config apply, so this snapshot is also the plan builder's `currentSnapshot`.
             val prefsSnapshot: Map<String, Any?> = prefs.all.toMap()
+            // The DIY themes are a second store the config apply writes; snapshot them too, so a
+            // failed import cannot leave the file's themes behind (null: nothing readable to keep).
+            val customThemesSnapshot: String? = readCurrentCustomThemes()
             try {
                 // Apply config.json — funnel through SettingsImportPlanBuilder + Applier
                 // so screen-mismatch + drift handling stay consistent with single-file import.
@@ -2120,10 +2167,12 @@ open class BackupRestoreManager(
                     )
                     val result = runBlocking {
                         SettingsImportApplier.apply(
-                            plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, shortSwipeImporter
+                            plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, shortSwipeImporter,
+                            ShortSwipeImportMode.REPLACE, customThemeStore,
                         )
                     }
                     configKeysApplied = result.importedCount
+                    customThemesImported = result.customThemesImported
                     configImported = true
                     // #156 F5: full-backup restore also writes clipboard_private_copy_toolbar_enabled;
                     // reconcile the component from the imported value (covers the headless path — the
@@ -2170,6 +2219,11 @@ open class BackupRestoreManager(
                 // A restore failure must never replace the original cause — log it and continue.
                 runCatching { restorePrefsSnapshot(prefs, prefsSnapshot) }
                     .onFailure { Log.e(TAG, "Settings rollback failed after a failed import", it) }
+                if (customThemesImported > 0 && customThemesSnapshot != null) {
+                    runCatching { customThemeStore.replaceAll(customThemesSnapshot) }
+                        .onFailure { Log.e(TAG, "DIY theme rollback failed after a failed import", it) }
+                }
+                customThemesImported = 0
                 configImported = false
                 configKeysApplied = 0
                 customWordsImported = 0
@@ -2227,6 +2281,7 @@ open class BackupRestoreManager(
                 mediaFilesRestored = mediaFilesRestored,
                 sourceAppVersion = sourceAppVersion,
                 learnedDataIncomplete = learnedDataIncomplete,
+                customThemesImported = customThemesImported,
             )
         } catch (e: BackupDecryptException) {
             // Surface decrypt failures distinctly so the UI can prompt for a passphrase

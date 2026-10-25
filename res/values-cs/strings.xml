@@ -968,6 +968,10 @@
     <string name="import_preview_short_swipe_merge">Sloučit — při konfliktu vyhrává soubor, ostatní zůstávají (doporučeno)</string>
     <string name="import_preview_short_swipe_replace">Nahradit — smaže stávající, nainstaluje sadu ze souboru</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováním ze souboru.</item><item quantity="few">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="many">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item><item quantity="other">Tímto NAHRADÍTE všechna svá stávající přizpůsobení krátkých tahů %1$d mapováními ze souboru.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">Vlastní motivy v této záloze: %1$d</item><item quantity="few">Vlastní motivy v této záloze: %1$d</item><item quantity="many">Vlastní motivy v této záloze: %1$d</item><item quantity="other">Vlastní motivy v této záloze: %1$d</item></plurals>
+    <string name="import_preview_custom_themes_merge">Sloučit — při konfliktu vyhrává soubor, ostatní motivy zůstávají (doporučeno)</string>
+    <string name="import_preview_custom_themes_replace">Nahradit — smaže vaše vlastní motivy, nainstaluje sadu ze souboru</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Tímto NAHRADÍTE všechny své vlastní motivy %1$d motivem ze souboru.</item><item quantity="few">Tímto NAHRADÍTE všechny své vlastní motivy %1$d motivy ze souboru.</item><item quantity="many">Tímto NAHRADÍTE všechny své vlastní motivy %1$d motivy ze souboru.</item><item quantity="other">Tímto NAHRADÍTE všechny své vlastní motivy %1$d motivy ze souboru.</item></plurals>
     <string name="import_preview_selected_count">Vybráno %1$d z %2$d</string>
     <string name="import_preview_expand">Rozbalit</string>
     <string name="import_preview_hide">Skrýt</string>
@@ -1325,6 +1329,7 @@
     <string name="backup_result_excluded_by_you">• Vámi vyloučeno: %1$d</string>
     <string name="backup_result_not_importable">• Nelze importovat (interní/odvozené): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Použité krátké tahy: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Obnovené vlastní motivy: %1$d</string>
     <string name="backup_result_source_version">• Zdrojová verze: %1$s</string>
     <string name="backup_result_screen_mismatch">Nesoulad velikosti obrazovky: zdroj %1$dx%2$d, aktuální %3$dx%4$d. Některá vizuální nastavení může být nutné upravit.</string>
     <string name="backup_result_restart_keyboard">Aby se změny projevily, restartujte klávesnici.</string>

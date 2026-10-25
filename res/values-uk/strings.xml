@@ -895,6 +895,10 @@
     <string name="import_preview_short_swipe_replace">Замінити — стерти наявні, встановити набір із файлу</string>
     <string name="import_preview_short_swipe_skip">Пропустити — не імпортувати</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленням з файлу.</item><item quantity="few">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="many">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item><item quantity="other">Це ЗАМІНИТЬ усі ваші наявні налаштування коротких свайпів %1$d зіставленнями з файлу.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">Власних тем у цій копії: %1$d</item><item quantity="few">Власних тем у цій копії: %1$d</item><item quantity="many">Власних тем у цій копії: %1$d</item><item quantity="other">Власних тем у цій копії: %1$d</item></plurals>
+    <string name="import_preview_custom_themes_merge">Злити — у разі конфлікту перемагає файл, решта тем зберігається (рекомендовано)</string>
+    <string name="import_preview_custom_themes_replace">Замінити — стерти ваші власні теми, встановити набір із файлу</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Це ЗАМІНИТЬ усі ваші власні теми %1$d темою з файлу.</item><item quantity="few">Це ЗАМІНИТЬ усі ваші власні теми %1$d темами з файлу.</item><item quantity="many">Це ЗАМІНИТЬ усі ваші власні теми %1$d темами з файлу.</item><item quantity="other">Це ЗАМІНИТЬ усі ваші власні теми %1$d темами з файлу.</item></plurals>
     <string name="import_preview_skipped_collapse">▼ Не імпортуються — внутрішні/похідні (%1$d) — торкніться, щоб згорнути</string>
     <string name="import_preview_skipped_expand">▶ Не імпортуються — внутрішні/похідні (%1$d) — торкніться, щоб розгорнути</string>
     <string name="import_preview_source_screen">Екран джерела: %1$d×%2$d@%3$s</string>
@@ -1336,6 +1340,7 @@
     <string name="backup_result_excluded_by_you">• Виключено вами: %1$d</string>
     <string name="backup_result_not_importable">• Не імпортується (внутрішні/похідні): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Застосовано коротких свайпів: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Відновлено власних тем: %1$d</string>
     <string name="backup_result_source_version">• Версія джерела: %1$s</string>
     <string name="backup_result_screen_mismatch">Розмір екрана не збігається: джерело %1$dx%2$d, поточний %3$dx%4$d. Деякі візуальні налаштування може знадобитися скоригувати.</string>
     <string name="backup_result_restart_keyboard">Перезапустіть клавіатуру, щоб зміни набули чинності.</string>

@@ -269,13 +269,14 @@ internal fun SettingsActivity.applyPlannedSettings(
     plan: SettingsImportPlan,
     excludedKeys: Set<String>,
     shortSwipeMode: ShortSwipeImportMode,
+    customThemeMode: ShortSwipeImportMode,
 ) {
     val _self = this
     lifecycleScope.launch {
         backupRestoreViewModel.isProcessing = true
         try {
             val result = withContext(Dispatchers.IO) {
-                backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs)
+                backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs, customThemeMode)
             }
             DirectBootAwarePreferences.copy_preferences_to_protected_storage(_self, prefs)
             loadCurrentSettings()
@@ -384,6 +385,9 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase:
                     appendLine(getString(R.string.backup_result_full_settings_applied, result.configKeysApplied))
                     appendLine(getString(R.string.backup_result_full_custom_words, result.customWordsImported))
                     appendLine(getString(R.string.backup_result_full_disabled_words, result.disabledWordsImported))
+                    if (result.customThemesImported > 0) {
+                        appendLine(getString(R.string.backup_result_custom_themes_applied, result.customThemesImported))
+                    }
                     if (result.learnedDataIncomplete) {
                         appendLine(getString(R.string.backup_result_learned_data_incomplete))
                     }

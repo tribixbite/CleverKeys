@@ -906,6 +906,10 @@
     <string name="import_preview_short_swipe_replace">Thay thế — xóa cái hiện có, cài bộ trong tệp</string>
     <string name="import_preview_short_swipe_skip">Bỏ qua — không nhập</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">Thao tác này sẽ THAY THẾ toàn bộ tùy chỉnh vuốt ngắn hiện có của bạn bằng %1$d ánh xạ trong tệp.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="other">%1$d chủ đề tùy chỉnh trong bản sao lưu này</item></plurals>
+    <string name="import_preview_custom_themes_merge">Gộp — khi xung đột tệp thắng, các chủ đề khác được giữ (khuyên dùng)</string>
+    <string name="import_preview_custom_themes_replace">Thay thế — xóa các chủ đề tùy chỉnh của bạn, cài bộ trong tệp</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="other">Thao tác này sẽ THAY THẾ toàn bộ chủ đề tùy chỉnh của bạn bằng %1$d chủ đề trong tệp.</item></plurals>
     <string name="import_preview_skipped_collapse">▼ Không thể nhập — nội bộ/phái sinh (%1$d) — chạm để thu gọn</string>
     <string name="import_preview_skipped_expand">▶ Không thể nhập — nội bộ/phái sinh (%1$d) — chạm để mở rộng</string>
     <string name="import_preview_source_screen">Màn hình nguồn: %1$d×%2$d@%3$s</string>
@@ -1314,6 +1318,7 @@
     <string name="backup_result_excluded_by_you">• Bạn đã loại trừ: %1$d</string>
     <string name="backup_result_not_importable">• Không thể nhập (nội bộ/phái sinh): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Vuốt ngắn đã áp dụng: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Chủ đề tùy chỉnh đã khôi phục: %1$d</string>
     <string name="backup_result_source_version">• Phiên bản nguồn: %1$s</string>
     <string name="backup_result_screen_mismatch">Kích thước màn hình không khớp: nguồn %1$dx%2$d, hiện tại %3$dx%4$d. Một số cài đặt hiển thị có thể cần điều chỉnh.</string>
     <string name="backup_result_restart_keyboard">Khởi động lại bàn phím để các thay đổi có hiệu lực.</string>

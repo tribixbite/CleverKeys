@@ -962,6 +962,10 @@
     <string name="import_preview_short_swipe_merge">병합 — 충돌 시 파일 우선, 나머지는 유지(권장)</string>
     <string name="import_preview_short_swipe_replace">교체 — 기존을 지우고 파일의 세트 설치</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">기존의 모든 짧은 스와이프 사용자 지정이 파일의 매핑 %1$d개로 교체됩니다.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="other">이 백업에 사용자 지정 테마 %1$d개가 있습니다</item></plurals>
+    <string name="import_preview_custom_themes_merge">병합 — 충돌 시 파일 우선, 다른 테마는 유지(권장)</string>
+    <string name="import_preview_custom_themes_replace">교체 — 사용자 지정 테마를 지우고 파일의 세트 설치</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="other">모든 사용자 지정 테마가 파일의 테마 %1$d개로 교체됩니다.</item></plurals>
     <string name="import_preview_selected_count">%2$d개 중 %1$d개 선택됨</string>
     <string name="import_preview_expand">펼치기</string>
     <string name="import_preview_hide">숨기기</string>
@@ -1286,6 +1290,7 @@
     <string name="backup_result_excluded_by_you">• 사용자가 제외함: %1$d</string>
     <string name="backup_result_not_importable">• 가져올 수 없음(내부/파생): %1$d</string>
     <string name="backup_result_short_swipe_applied">• 적용된 짧은 스와이프: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• 복원된 사용자 지정 테마: %1$d</string>
     <string name="backup_result_source_version">• 원본 버전: %1$s</string>
     <string name="backup_result_screen_mismatch">화면 크기 불일치: 원본 %1$dx%2$d, 현재 %3$dx%4$d. 일부 화면 설정을 조정해야 할 수 있습니다.</string>
     <string name="backup_result_restart_keyboard">변경 사항을 적용하려면 키보드를 다시 시작하세요.</string>

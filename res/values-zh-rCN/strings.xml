@@ -876,6 +876,10 @@
     <string name="import_preview_short_swipe_replace">替换 — 清除现有，安装文件中的集合</string>
     <string name="import_preview_short_swipe_skip">跳过 — 不导入</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="other">这将用文件中的 %1$d 条映射替换你现有的全部短滑动自定义。</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="other">此备份中有 %1$d 个自定义主题</item></plurals>
+    <string name="import_preview_custom_themes_merge">合并 — 冲突时以文件为准，其他主题保留（推荐）</string>
+    <string name="import_preview_custom_themes_replace">替换 — 清除你的自定义主题，安装文件中的集合</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="other">这将用文件中的 %1$d 个主题替换你现有的全部自定义主题。</item></plurals>
     <string name="import_preview_skipped_collapse">▼ 不可导入 — 内部/派生（%1$d）— 点按收起</string>
     <string name="import_preview_skipped_expand">▶ 不可导入 — 内部/派生（%1$d）— 点按展开</string>
     <string name="import_preview_source_screen">来源屏幕：%1$d×%2$d@%3$s</string>
@@ -1284,6 +1288,7 @@
     <string name="backup_result_excluded_by_you">• 你已排除：%1$d</string>
     <string name="backup_result_not_importable">• 无法导入（内部/派生）：%1$d</string>
     <string name="backup_result_short_swipe_applied">• 已应用短滑动：%1$d</string>
+    <string name="backup_result_custom_themes_applied">• 已恢复自定义主题：%1$d</string>
     <string name="backup_result_source_version">• 来源版本：%1$s</string>
     <string name="backup_result_screen_mismatch">屏幕尺寸不一致：来源 %1$dx%2$d，当前 %3$dx%4$d。部分外观设置可能需要调整。</string>
     <string name="backup_result_restart_keyboard">重启键盘以使更改生效。</string>

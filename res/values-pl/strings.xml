@@ -978,6 +978,10 @@
     <string name="import_preview_short_swipe_merge">Scal — przy konflikcie wygrywa plik, reszta zostaje (zalecane)</string>
     <string name="import_preview_short_swipe_replace">Zastąp — usuń istniejące, zainstaluj zestaw z pliku</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniem z pliku.</item><item quantity="few">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="many">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item><item quantity="other">Spowoduje to ZASTĄPIENIE wszystkich istniejących dostosowań krótkich gestów %1$d mapowaniami z pliku.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d motyw własny w tej kopii zapasowej</item><item quantity="few">%1$d motywy własne w tej kopii zapasowej</item><item quantity="many">%1$d motywów własnych w tej kopii zapasowej</item><item quantity="other">%1$d motywów własnych w tej kopii zapasowej</item></plurals>
+    <string name="import_preview_custom_themes_merge">Scal — przy konflikcie wygrywa plik, pozostałe motywy zostają (zalecane)</string>
+    <string name="import_preview_custom_themes_replace">Zastąp — usuń swoje motywy własne, zainstaluj zestaw z pliku</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Spowoduje to ZASTĄPIENIE wszystkich motywów własnych %1$d motywem z pliku.</item><item quantity="few">Spowoduje to ZASTĄPIENIE wszystkich motywów własnych %1$d motywami z pliku.</item><item quantity="many">Spowoduje to ZASTĄPIENIE wszystkich motywów własnych %1$d motywami z pliku.</item><item quantity="other">Spowoduje to ZASTĄPIENIE wszystkich motywów własnych %1$d motywami z pliku.</item></plurals>
     <string name="import_preview_selected_count">Wybrano %1$d z %2$d</string>
     <string name="import_preview_expand">Rozwiń</string>
     <string name="import_preview_hide">Ukryj</string>
@@ -1335,6 +1339,7 @@
     <string name="backup_result_excluded_by_you">• Wykluczone przez Ciebie: %1$d</string>
     <string name="backup_result_not_importable">• Nie do zaimportowania (wewnętrzne/pochodne): %1$d</string>
     <string name="backup_result_short_swipe_applied">• Zastosowane krótkie gesty: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Przywrócone motywy własne: %1$d</string>
     <string name="backup_result_source_version">• Wersja źródłowa: %1$s</string>
     <string name="backup_result_screen_mismatch">Niezgodny rozmiar ekranu: źródło %1$dx%2$d, obecny %3$dx%4$d. Niektóre ustawienia wyglądu mogą wymagać dostosowania.</string>
     <string name="backup_result_restart_keyboard">Uruchom ponownie klawiaturę, aby zmiany zaczęły działać.</string>

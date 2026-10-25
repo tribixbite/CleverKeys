@@ -977,6 +977,10 @@
     <string name="import_preview_short_swipe_merge">Fusionner — le fichier gagne en cas de conflit, le reste est conservé (recommandé)</string>
     <string name="import_preview_short_swipe_replace">Remplacer — effacer l\'existant, installer le jeu du fichier</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">Cela REMPLACERA toutes vos personnalisations de glissé court existantes par %1$d mappage du fichier.</item><item quantity="many">Cela REMPLACERA toutes vos personnalisations de glissé court existantes par les %1$d mappages du fichier.</item><item quantity="other">Cela REMPLACERA toutes vos personnalisations de glissé court existantes par les %1$d mappages du fichier.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d thème personnalisé dans cette sauvegarde</item><item quantity="many">%1$d thèmes personnalisés dans cette sauvegarde</item><item quantity="other">%1$d thèmes personnalisés dans cette sauvegarde</item></plurals>
+    <string name="import_preview_custom_themes_merge">Fusionner — le fichier gagne en cas de conflit, les autres thèmes sont conservés (recommandé)</string>
+    <string name="import_preview_custom_themes_replace">Remplacer — effacer vos thèmes personnalisés, installer le jeu du fichier</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Cela REMPLACERA tous vos thèmes personnalisés par %1$d thème du fichier.</item><item quantity="many">Cela REMPLACERA tous vos thèmes personnalisés par les %1$d thèmes du fichier.</item><item quantity="other">Cela REMPLACERA tous vos thèmes personnalisés par les %1$d thèmes du fichier.</item></plurals>
     <string name="import_preview_selected_count">%1$d sur %2$d sélectionnés</string>
     <string name="import_preview_expand">Développer</string>
     <string name="import_preview_hide">Masquer</string>
@@ -1322,6 +1326,7 @@
     <string name="backup_result_excluded_by_you">• Exclus par vous : %1$d</string>
     <string name="backup_result_not_importable">• Non importables (internes/dérivés) : %1$d</string>
     <string name="backup_result_short_swipe_applied">• Glissés courts appliqués : %1$d</string>
+    <string name="backup_result_custom_themes_applied">• Thèmes personnalisés restaurés : %1$d</string>
     <string name="backup_result_source_version">• Version source : %1$s</string>
     <string name="backup_result_screen_mismatch">Tailles d\'écran différentes : source %1$dx%2$d, actuel %3$dx%4$d. Certains paramètres visuels devront peut-être être ajustés.</string>
     <string name="backup_result_restart_keyboard">Redémarrez le clavier pour appliquer les modifications.</string>

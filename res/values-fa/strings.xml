@@ -1003,6 +1003,10 @@
     <string name="import_preview_short_swipe_merge">ادغام — در تعارض فایل برنده است، بقیه حفظ می‌شود (توصیه‌شده)</string>
     <string name="import_preview_short_swipe_replace">جایگزینی — پاک کردن موجود، نصب مجموعهٔ فایل</string>
     <plurals name="import_preview_short_swipe_warning"><item quantity="one">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item><item quantity="other">این کار همهٔ سفارشی‌سازی‌های کشیدن کوتاه موجود شما را با %1$d نگاشت فایل جایگزین می‌کند.</item></plurals>
+    <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d تم سفارشی در این پشتیبان</item><item quantity="other">%1$d تم سفارشی در این پشتیبان</item></plurals>
+    <string name="import_preview_custom_themes_merge">ادغام — در تعارض فایل برنده است، بقیهٔ تم‌ها حفظ می‌شوند (توصیه‌شده)</string>
+    <string name="import_preview_custom_themes_replace">جایگزینی — پاک کردن تم‌های سفارشی شما، نصب مجموعهٔ فایل</string>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">این کار همهٔ تم‌های سفارشی شما را با %1$d تم فایل جایگزین می‌کند.</item><item quantity="other">این کار همهٔ تم‌های سفارشی شما را با %1$d تم فایل جایگزین می‌کند.</item></plurals>
     <string name="import_preview_selected_count">%1$d از %2$d انتخاب شده</string>
     <string name="import_preview_expand">گسترش</string>
     <string name="import_preview_hide">پنهان کردن</string>
@@ -1337,6 +1341,7 @@
     <string name="backup_result_excluded_by_you">• کنار گذاشته‌شده توسط شما: %1$d</string>
     <string name="backup_result_not_importable">• غیرقابل وارد کردن (داخلی/مشتق): %1$d</string>
     <string name="backup_result_short_swipe_applied">• کشیدن کوتاهِ اعمال‌شده: %1$d</string>
+    <string name="backup_result_custom_themes_applied">• تم‌های سفارشیِ بازیابی‌شده: %1$d</string>
     <string name="backup_result_source_version">• نسخهٔ مبدأ: %1$s</string>
     <string name="backup_result_screen_mismatch">ناهمخوانی اندازهٔ صفحه: مبدأ %1$dx%2$d، کنونی %3$dx%4$d. ممکن است برخی تنظیمات ظاهری نیاز به تنظیم داشته باشند.</string>
     <string name="backup_result_restart_keyboard">برای اعمال تغییرات، صفحه‌کلید را دوباره راه‌اندازی کنید.</string>

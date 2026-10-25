@@ -54,6 +54,9 @@ internal fun buildSettingsResultMessage(
             text.string(R.string.backup_result_short_swipe_applied, result.shortSwipeCustomizationsImported)
         )
     }
+    if (result.customThemesImported > 0) {
+        appendLine(text.string(R.string.backup_result_custom_themes_applied, result.customThemesImported))
+    }
     if (result.sourceVersion != "unknown") {
         appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
     }
