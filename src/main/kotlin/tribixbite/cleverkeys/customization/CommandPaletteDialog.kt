@@ -26,6 +26,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
+import android.view.ViewGroup
+import android.view.WindowManager
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -156,66 +165,97 @@ fun CommandPaletteDialog(
             dismissOnClickOutside = true
         )
     ) {
-        Surface(
-            // Nearly full height: the command list is what the user is here for.
+        FitDialogWindowAboveKeyboard()
+        // The window covers the screen (FitDialogWindowAboveKeyboard), so the platform's own
+        // tap-outside dismissal never fires: a tap on the scrim around the palette dismisses
+        // here, and the palette itself swallows taps so they do not reach the scrim.
+        Box(
             modifier = Modifier
-                .fillMaxWidth(PALETTE_WIDTH_FRACTION)
-                .fillMaxHeight(PALETTE_HEIGHT_FRACTION),
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+                .fillMaxSize()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                ),
+            contentAlignment = Alignment.Center,
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
-                PaletteHeader(
-                    title = stringResource(
-                        if (showTextInput) R.string.command_palette_title_custom_text
-                        else R.string.command_palette_title_select
-                    ),
-                    subtitle = subtitle,
-                    showBack = showTextInput,
-                    onNavigate = {
-                        if (showTextInput) showTextInput = false else onDismiss()
-                    }
-                )
-
-                if (showTextInput) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = templateMode, onCheckedChange = { templateMode = it })
-                        Text(stringResource(R.string.command_palette_template_title))
-                    }
-                    if (templateMode) Text(stringResource(R.string.command_palette_template_help), modifier = Modifier.padding(horizontal = 16.dp))
-                    if (templateMode && !DynamicTemplate.isValid(customText)) Text(stringResource(R.string.dynamic_template_invalid), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 16.dp))
-                    CustomTextInputSection(
-                        text = customText,
-                        valid = !templateMode || DynamicTemplate.isValid(customText),
-                        onTextChange = { customText = it },
-                        onConfirm = {
-                            if (customText.isNotBlank() && (!templateMode || DynamicTemplate.isValid(customText))) {
-                                // Show label confirmation instead of directly calling callback
-                                pendingText = customText
-                                customLabel = proposedLabel(if (templateMode) ActionType.TEMPLATE else ActionType.TEXT, customText.take(4))
-                            }
-                        }
-                    )
-                } else {
-                    // Command search and list mode
-                    CommandSearchSection(
-                        searchQuery = searchQuery,
-                        onSearchChange = { searchQuery = it },
-                        filteredCommands = filteredCommands,
-                        onCommandSelected = { command ->
+            Surface(
+                // Nearly full height: the command list is what the user is here for.
+                modifier = Modifier
+                    .fillMaxWidth(PALETTE_WIDTH_FRACTION)
+                    .fillMaxHeight(PALETTE_HEIGHT_FRACTION)
+                    .pointerInput(Unit) { detectTapGestures() },
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 6.dp
+            ) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Custom text is confirmed from the header, where the keyboard cannot cover it.
+                    val customTextValid = !templateMode || DynamicTemplate.isValid(customText)
+                    fun confirmCustomText() {
+                        if (customText.isNotBlank() && customTextValid) {
                             // Show label confirmation instead of directly calling callback
-                            pendingCommandName = command.name
-                            customLabel = commandText.string(command.nameRes).take(4)
+                            pendingText = customText
+                            customLabel = proposedLabel(if (templateMode) ActionType.TEMPLATE else ActionType.TEXT, customText.take(4))
+                        }
+                    }
+                    PaletteHeader(
+                        title = stringResource(
+                            if (showTextInput) R.string.command_palette_title_custom_text
+                            else R.string.command_palette_title_select
+                        ),
+                        subtitle = subtitle,
+                        showBack = showTextInput,
+                        onNavigate = {
+                            if (showTextInput) showTextInput = false else onDismiss()
                         },
-                        onShowTextInput = { templateMode = false; showTextInput = true },
-                        onShowTemplateInput = { templateMode = true; showTextInput = true },
-                        onShowIntentEditor = {
-                            intentToEditJson = null
-                            showIntentEditor = true
+                        action = {
+                            if (showTextInput) {
+                                Button(
+                                    onClick = ::confirmCustomText,
+                                    enabled = customText.isNotBlank() && customTextValid,
+                                ) {
+                                    Icon(Icons.Filled.Check, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.command_palette_use_text))
+                                }
+                            }
                         },
-                        onShowTimestampEditor = { showTimestampEditor = true }
                     )
+
+                    if (showTextInput) {
+                        CustomTextInputSection(
+                            options = {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(checked = templateMode, onCheckedChange = { templateMode = it })
+                                    Text(stringResource(R.string.command_palette_template_title))
+                                }
+                                if (templateMode) Text(stringResource(R.string.command_palette_template_help))
+                                if (templateMode && !DynamicTemplate.isValid(customText)) Text(stringResource(R.string.dynamic_template_invalid), color = MaterialTheme.colorScheme.error)
+                            },
+                            text = customText,
+                            onTextChange = { customText = it },
+                        )
+                    } else {
+                        // Command search and list mode
+                        CommandSearchSection(
+                            searchQuery = searchQuery,
+                            onSearchChange = { searchQuery = it },
+                            filteredCommands = filteredCommands,
+                            onCommandSelected = { command ->
+                                // Show label confirmation instead of directly calling callback
+                                pendingCommandName = command.name
+                                customLabel = commandText.string(command.nameRes).take(4)
+                            },
+                            onShowTextInput = { templateMode = false; showTextInput = true },
+                            onShowTemplateInput = { templateMode = true; showTextInput = true },
+                            onShowIntentEditor = {
+                                intentToEditJson = null
+                                showIntentEditor = true
+                            },
+                            onShowTimestampEditor = { showTimestampEditor = true }
+                        )
+                    }
                 }
             }
         }
@@ -377,11 +417,34 @@ private const val PALETTE_WIDTH_FRACTION = 0.96f
 private const val PALETTE_HEIGHT_FRACTION = 0.94f
 
 /**
+ * Give the palette's dialog window the whole screen and let the platform RESIZE it above the
+ * keyboard. A wrap-content dialog window is only panned: the platform shifted the palette up until
+ * the focused text field cleared the keyboard, pushing the header (and its "Use This Text" button)
+ * off the top of the screen (Saga, 2026-10-25). A full-screen window is resized instead, so the
+ * palette's fractional height is taken of the space above the keyboard and nothing is hidden.
+ */
+@Composable
+private fun FitDialogWindowAboveKeyboard() {
+    val window = (LocalView.current.parent as? DialogWindowProvider)?.window
+    SideEffect {
+        window?.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        @Suppress("DEPRECATION") // ADJUST_RESIZE is still how a window asks to be resized for the IME.
+        window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+    }
+}
+
+/**
  * Compact title row: a close (or back) button, the title and an optional subtitle. Replaces a
  * full TopAppBar, whose 64 dp plus large-font wrapping left room for one command on screen.
  */
 @Composable
-private fun PaletteHeader(title: String, subtitle: String?, showBack: Boolean, onNavigate: () -> Unit) {
+private fun PaletteHeader(
+    title: String,
+    subtitle: String?,
+    showBack: Boolean,
+    onNavigate: () -> Unit,
+    action: @Composable RowScope.() -> Unit = {},
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -412,6 +475,7 @@ private fun PaletteHeader(title: String, subtitle: String?, showBack: Boolean, o
                 )
             }
         }
+        action()
     }
 }
 
@@ -862,12 +926,22 @@ private fun CommandItem(
     }
 }
 
+/**
+ * Custom text editor body; it scrolls, so in landscape the field stays reachable above the
+ * keyboard.
+ *
+ * Its "Use This Text" button is in the palette header, not here. At the bottom of this body it
+ * sat under the keyboard (Saga, 2026-10-25): the keyboard stays attached to the activity behind
+ * the palette (Short Swipe Customization shows it there), and the wrap-content dialog window was
+ * neither resized nor given IME insets. See also [FitDialogWindowAboveKeyboard].
+ *
+ * @param options the template toggle and its help, shown above the intro.
+ */
 @Composable
 private fun CustomTextInputSection(
     text: String,
-    valid: Boolean = true,
+    options: @Composable ColumnScope.() -> Unit = {},
     onTextChange: (String) -> Unit,
-    onConfirm: () -> Unit
 ) {
     val context = LocalContext.current
     val focusRequester = remember { FocusRequester() }
@@ -883,91 +957,89 @@ private fun CustomTextInputSection(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            stringResource(R.string.command_palette_custom_text_intro),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = text,
-            onValueChange = { if (it.length <= ShortSwipeMapping.MAX_ACTION_LENGTH) onTextChange(it) },
+        Column(
             modifier = Modifier
+                .weight(1f)
                 .fillMaxWidth()
-                .focusRequester(focusRequester),
-            label = { Text(stringResource(R.string.command_palette_text_to_insert)) },
-            placeholder = { Text(stringResource(R.string.command_palette_text_placeholder)) },
-            supportingText = {
-                Text(
-                    pluralStringResource(
-                        R.plurals.command_palette_char_count, text.length, text.length
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) { options() }
+
+            Text(
+                stringResource(R.string.command_palette_custom_text_intro),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = text,
+                onValueChange = { if (it.length <= ShortSwipeMapping.MAX_ACTION_LENGTH) onTextChange(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                label = { Text(stringResource(R.string.command_palette_text_to_insert)) },
+                placeholder = { Text(stringResource(R.string.command_palette_text_placeholder)) },
+                supportingText = {
+                    Text(
+                        pluralStringResource(
+                            R.plurals.command_palette_char_count, text.length, text.length
+                        )
                     )
-                )
-            },
-            trailingIcon = {
-                // Paste button — Compose text fields don't reliably receive
-                // performContextMenuAction(paste) from the IME, so provide
-                // a direct paste mechanism via ClipboardManager.
-                IconButton(onClick = {
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    val clip = clipboard?.primaryClip
-                    if (clip != null && clip.itemCount > 0) {
-                        val pasteText = clip.getItemAt(0).coerceToText(context).toString()
-                        if (pasteText.isNotEmpty()) {
-                            val combined = text + pasteText
-                            onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
+                },
+                trailingIcon = {
+                    // Paste button — Compose text fields don't reliably receive
+                    // performContextMenuAction(paste) from the IME, so provide
+                    // a direct paste mechanism via ClipboardManager.
+                    IconButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        val clip = clipboard?.primaryClip
+                        if (clip != null && clip.itemCount > 0) {
+                            val pasteText = clip.getItemAt(0).coerceToText(context).toString()
+                            if (pasteText.isNotEmpty()) {
+                                val combined = text + pasteText
+                                onTextChange(combined.take(ShortSwipeMapping.MAX_ACTION_LENGTH))
+                            }
                         }
+                    }) {
+                        // Create icon (page+pencil) — ContentPaste requires extended icons lib
+                        Icon(
+                            imageVector = Icons.Filled.Create,
+                            contentDescription = stringResource(R.string.command_palette_paste_desc),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
-                }) {
-                    // Create icon (page+pencil) — ContentPaste requires extended icons lib
-                    Icon(
-                        imageVector = Icons.Filled.Create,
-                        contentDescription = stringResource(R.string.command_palette_paste_desc),
-                        tint = MaterialTheme.colorScheme.primary
+                },
+                maxLines = 5,
+                minLines = 3
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quick insert suggestions
+            Text(
+                stringResource(R.string.command_palette_quick_suggestions),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf(".", ",", "!", "?", "...", ":-)", "<3").forEach { suggestion ->
+                    SuggestionChip(
+                        onClick = { onTextChange(suggestion) },
+                        label = { Text(suggestion) },
+                        modifier = Modifier.weight(1f, fill = false)
                     )
                 }
-            },
-            maxLines = 5,
-            minLines = 3
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Quick insert suggestions
-        Text(
-            stringResource(R.string.command_palette_quick_suggestions),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 4.dp)
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            listOf(".", ",", "!", "?", "...", ":-)", "<3").forEach { suggestion ->
-                SuggestionChip(
-                    onClick = { onTextChange(suggestion) },
-                    label = { Text(suggestion) },
-                    modifier = Modifier.weight(1f, fill = false)
-                )
             }
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Button(
-            onClick = onConfirm,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = text.isNotBlank() && valid
-        ) {
-            Icon(Icons.Filled.Check, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.command_palette_use_text))
         }
     }
 }
