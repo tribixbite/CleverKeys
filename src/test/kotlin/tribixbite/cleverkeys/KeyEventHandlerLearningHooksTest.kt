@@ -103,6 +103,9 @@ class KeyEventHandlerLearningHooksTest {
         every { Config.globalConfig() } returns config
 
         conn = mockk(relaxed = true)
+        // A relaxed mock answers false, which on a real IME-side connection means the IPC was
+        // refused; clipboard pastes then retry and report an incomplete paste (2026-10-25).
+        every { conn.commitText(any(), any()) } returns true
         recv = mockk(relaxed = true)
         every { recv.getHandler() } returns mockk<Handler>(relaxed = true)
         every { recv.isClipboardTagMode() } returns false
