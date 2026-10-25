@@ -106,10 +106,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    before the word; with auto-space-after off every editor lost it. Now the swipe records its exact
    committed text and the tap deletes exactly that, re-using the swipe's leading space.
    `BlindFieldPolicyTest` (all after/before combinations, RustDesk + TYPE_NULL + ordinary editor):
-   17 cases red before, green after. Device: Termux on Saga 144 with the OLD build (10-20) does NOT
-   show it with auto-space-after on (`echo ok ` + swipe `hello` + tap `help` → `echo ok help `,
-   `build/oct25-saga144/02–04`) because Termux reads back nothing, unlike RustDesk; the fixed build
-   is not yet device-checked and the after-off case was not tried on a device.
+   17 cases red before, green after. Device (Saga 144, Termux = terminal kind, the same key-event
+   REPLACE branch as RustDesk): OLD build 10-20 with auto-space-after OFF: `echo ok ` + swipe
+   `hello` + tap `help` → `echo okhelp` (bug); FIXED release `84021ccb` (sha256 b2c916f0…) →
+   `echo ok help`; after ON → `echo ok help ` on both builds (Termux reads back nothing, so the
+   extra-Backspace half needs RustDesk's readback). `build/oct25-saga144/02–17`; setting restored
+   ON, lines cleared. RustDesk itself not re-tested (no host here).
    Original: device + maintainer: blind-field checks with RustDesk installed on a Saga (F-Droid/GitHub
    APK `com.carriez.flutter_hbb`) controlling any reachable desktop — typed text, `teh`+space
    stays `teh`, a tapped suggestion appends (never deletes), Backspace after a swipe removes
