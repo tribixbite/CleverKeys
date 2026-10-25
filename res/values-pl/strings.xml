@@ -451,7 +451,7 @@
     <string name="clipboard_max_item_size_title">Maksymalny rozmiar wpisu</string>
     <string name="clipboard_max_item_size_desc">Maksymalny rozmiar wpisu w schowku (limit Android Binder: ~1 MB)</string>
     <string name="clipboard_exclude_password_managers_title">Wyklucz menedżery haseł</string>
-    <string name="clipboard_exclude_password_managers_desc">Najlepsze starania: kopia jest pomijana tylko wtedy, gdy Android ujawni, że na pierwszym planie jest znany menedżer haseł — rzadko możliwe bez dostępu do danych użycia (nigdy nie żądanego). Niezawodną ochronę zapewnia poniższe ustawienie treści wrażliwych.</string>
+    <string name="clipboard_exclude_password_managers_desc">Najlepsze starania: kopia jest pomijana tylko wtedy, gdy Android ujawni, że na pierwszym planie jest znany menedżer haseł — rzadko możliwe bez dostępu do danych użycia (nigdy nieżądanego). Niezawodną ochronę zapewnia poniższe ustawienie treści wrażliwych.</string>
     <string name="clipboard_respect_sensitive_title">Uwzględniaj flagę wrażliwości</string>
     <string name="clipboard_respect_sensitive_desc">Pomijaj schowek oznaczony jako wrażliwy przez menedżery haseł (Android 13+)</string>
     <string name="clipboard_text_only_title">Tylko tekst</string>
@@ -483,7 +483,7 @@
     <string name="gesture_min_distance_title">Minimalna odległość</string>
     <string name="gesture_min_distance_desc" formatted="false">Minimalna odległość gestu do aktywacji (% przekątnej klawisza)</string>
     <string name="gesture_max_distance_title">Maksymalna odległość</string>
-    <string name="gesture_max_distance_desc" formatted="false">Granica krótki/długi (% przekątnej klawisza): poniżej lub równo = krótki gest, powyżej = słowo wpisane gestem. Niskie wartości zamieniają lekkie przesuniecia w słowa; wysokie wymagają dłuższych gestów przed rozpoczęciem pisania słów.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Granica krótki/długi (% przekątnej klawisza): poniżej lub równo = krótki gest, powyżej = słowo wpisane gestem. Niskie wartości zamieniają lekkie przesunięcia w słowa; wysokie wymagają dłuższych gestów przed rozpoczęciem pisania słów.</string>
     <string name="gesture_short_swipes_only_title">Tylko krótkie gesty</string>
     <string name="gesture_short_swipes_only_desc">Każdy gest o długości co najmniej minimalnej odległości wpisuje podklawisz w swoim kierunku, niezależnie od długości; gest w kierunku bez podklawisza nic nie wpisuje. Pisanie gestem jest wyłączone, dopóki ta opcja jest włączona. Wymaga krótkich gestów.</string>
     <string name="swipe_enable_desc_short_swipes_only">Wyłączone, dopóki włączona jest opcja Tylko krótkie gesty (Dostrajanie gestów).</string>
@@ -507,7 +507,7 @@
     <string name="gesture_sensitivity_preset_title">Preset czułości</string>
     <string name="gesture_sensitivity_preset_desc">Szybkie presety rozpoznawania gestów. Własny wyświetla się, gdy wartości różnią się od presetów.</string>
     <string name="gesture_min_swipe_distance_title">Minimalna odległość gestu</string>
-    <string name="gesture_min_swipe_distance_desc">Minimalna długość śladu (px) zanim gest może być zakwalifikowany jako słowo wpisane gestem. Niższy pomaga rejestrować bardzo krótkie słowa; zwiększ, jeśli przypadkowe dotknięcia fałszywie aktywują słowa.</string>
+    <string name="gesture_min_swipe_distance_desc">Minimalna długość śladu (px), zanim gest może być zakwalifikowany jako słowo wpisane gestem. Niższy pomaga rejestrować bardzo krótkie słowa; zwiększ, jeśli przypadkowe dotknięcia fałszywie aktywują słowa.</string>
     <string name="gesture_min_key_distance_title">Minimalna odległość klawiszy</string>
     <string name="gesture_min_key_distance_desc">Odległość między klawiszami podczas gestu (px). Niższy rejestruje więcej klawiszy, ale może dodawać szum.</string>
     <string name="gesture_min_key_dwell_title">Minimalny czas przebywania na klawiszu</string>
@@ -547,8 +547,8 @@
     <string name="input_context_boost_desc">Jak silnie kontekst wpływa na podpowiedzi (0,5–5,0)</string>
     <string name="input_frequency_scale_title">Skala częstotliwości</string>
     <string name="input_frequency_scale_desc">Balans między popularnymi a rzadkimi słowami (100–5000)</string>
-    <string name="input_capitalize_i_title">Wielka litera w słowach z „I“</string>
-    <string name="input_capitalize_i_desc">Automatycznie używaj wielkich liter dla „I“ i skrótów (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_title">Wielka litera w słowach z „I”</string>
+    <string name="input_capitalize_i_desc">Automatycznie używaj wielkich liter dla „I” i skrótów (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Inteligentna interpunkcja</string>
     <string name="input_smart_punctuation_desc">Dołącz interpunkcję na końcu słów (usuwa spację przed . , ! ? itp.)</string>
     <string name="input_swipe_distance_threshold_title">Próg odległości gestu</string>
@@ -562,7 +562,7 @@
     <string name="input_long_press_interval_title">Interwał długiego naciśnięcia</string>
     <string name="input_long_press_interval_desc">Interwał powtarzania przy długim naciśnięciu (milisekundy)</string>
     <string name="input_key_repeat_title">Włączone powtarzanie klawiszy</string>
-    <string name="input_key_repeat_desc">Pozwól klawisom powtarzać się przy długim naciśnięciu</string>
+    <string name="input_key_repeat_desc">Pozwól klawiszom powtarzać się przy długim naciśnięciu</string>
     <string name="input_backspace_only_repeat_title">Powtarzaj tylko Backspace</string>
     <string name="input_backspace_only_repeat_desc">Powtarzaj tylko Backspace/klawisze nawigacyjne, nie klawisze znaków</string>
     <string name="input_double_tap_shift_title">Podwójne naciśnięcie Shift dla Caps Lock</string>
@@ -1239,10 +1239,10 @@
         <item quantity="other">%1$d miejsca</item>
     </plurals>
     <plurals name="autocorrect_frequency_equivalence">
-        <item quantity="one">Jeden błędny klawisz kosztuje tyle co %1$d miejsce w rankingu.</item>
-        <item quantity="few">Jeden błędny klawisz kosztuje tyle co %1$d miejsca w rankingu.</item>
-        <item quantity="many">Jeden błędny klawisz kosztuje tyle co %1$d miejsc w rankingu.</item>
-        <item quantity="other">Jeden błędny klawisz kosztuje tyle co %1$d miejsca w rankingu.</item>
+        <item quantity="one">Jeden błędny klawisz kosztuje tyle, co %1$d miejsce w rankingu.</item>
+        <item quantity="few">Jeden błędny klawisz kosztuje tyle, co %1$d miejsca w rankingu.</item>
+        <item quantity="many">Jeden błędny klawisz kosztuje tyle, co %1$d miejsc w rankingu.</item>
+        <item quantity="other">Jeden błędny klawisz kosztuje tyle, co %1$d miejsca w rankingu.</item>
     </plurals>
     <string name="swipe_trail_effect_sparkle">Iskry</string>
     <string name="swipe_trail_effect_glow">Poświata</string>
