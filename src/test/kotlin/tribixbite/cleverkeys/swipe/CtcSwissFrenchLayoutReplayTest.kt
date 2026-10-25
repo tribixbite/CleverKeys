@@ -3,13 +3,11 @@ package tribixbite.cleverkeys.swipe
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
-import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.Assume
 import org.junit.Test
-import org.w3c.dom.Element
-import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
+import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcLayout
 
 /**
@@ -58,47 +56,15 @@ class CtcSwissFrenchLayoutReplayTest {
 
     // ── the shipped file, parsed with a plain JDK DOM (NumpadKeySizeTest idiom) ──────────
 
-    /** `<row>` elements → hand-built [KeyboardData.Row]s mirroring `KeyboardData.parse`'s
-     *  width/shift defaults. Single-char centres become real char keys (including è/é/à —
-     *  the gate skips non-alphabet letters WITHOUT admitting their rects to the letter box,
-     *  same as production); multi-char centres (shift, backspace) become placeholder cells
-     *  that advance the x cursor but produce no rect — their WIDTH still displaces the
-     *  letters after them, which is exactly why they cannot just be dropped. */
-    private fun parseLetterRows(file: File): List<KeyboardData.Row> {
-        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
-        val rows = ArrayList<KeyboardData.Row>()
-        val rowNodes = doc.documentElement.getElementsByTagName("row")
-        for (r in 0 until rowNodes.length) {
-            val rowEl = rowNodes.item(r) as Element
-            val keys = ArrayList<KeyboardData.Key>()
-            val keyNodes = rowEl.getElementsByTagName("key")
-            for (k in 0 until keyNodes.length) {
-                val keyEl = keyNodes.item(k) as Element
-                val width = keyEl.getAttribute("width").ifEmpty { "1" }.toFloat()
-                val shift = keyEl.getAttribute("shift").ifEmpty { "0" }.toFloat()
-                val centre = keyEl.getAttribute("key0").ifEmpty { keyEl.getAttribute("c") }
-                val key =
-                    if (centre.length == 1) {
-                        KeyboardData.Key.EMPTY
-                            .withKeyValue(0, KeyValue.makeCharKey(centre[0]))
-                            .let { KeyboardData.Key(it.keys, it.anticircle, 0, width, shift, null) }
-                    } else {
-                        KeyboardData.Key(List(9) { null }, null, 0, width, shift, null)
-                    }
-                keys.add(key)
-            }
-            val height = rowEl.getAttribute("height").ifEmpty { "1" }.toFloat()
-            val rshift = rowEl.getAttribute("shift").ifEmpty { "0" }.toFloat()
-            rows.add(KeyboardData.Row(keys, height, rshift))
-        }
-        return rows
-    }
+    /** The shipped file's rows ([LayoutXmlRows]: single-char centres become char keys, è/é/à
+     *  included; placeholder cells keep their width). */
+    private fun parseLetterRows(file: File): List<KeyboardData.Row> = LayoutXmlRows.parse(file)
 
     /**
-     * Mirror of `CtcEngineAdapter.buildMappedLayout` over the parsed rows: per-letter key
-     * centers normalized into the a–z letter-box (the box is built from the ALPHABET keys'
-     * rect edges only — accented/utility keys stay outside it, matching production).
-     * Returns null when any a–z letter is missing — the same answer `supportsLayout` gives.
+     * The production mapping (`CtcMappedLayoutBuilder`, what `CtcEngineAdapter.buildMappedLayout`
+     * calls) over the parsed rows, Latin alias projection included: since 2026-10-25 the board's
+     * è/é/à/ê centre keys are alias slots and join the model frame. Returns null when any a–z
+     * letter is missing — the same answer `supportsLayout` gives.
      */
     private fun buildSwissCtcLayout(rows: List<KeyboardData.Row>): CtcLayout? {
         // Absolute px scale cancels in the per-axis normalization; any positive params work.
@@ -106,33 +72,7 @@ class CtcSwissFrenchLayoutReplayTest {
             keyWidth = 100f, rowHeight = 160f, marginTop = 0f, marginLeft = 0f,
         )
         val rects = KeyboardGeometry.computeKeyRects(rows, params)
-        val alphabet = CharArray(26) { ('a' + it) }
-        val slotOf = alphabet.withIndex().associate { (i, c) -> c to i }
-        val k = alphabet.size
-        val cx = FloatArray(k); val cy = FloatArray(k); val seen = BooleanArray(k)
-        var left = Float.MAX_VALUE; var top = Float.MAX_VALUE
-        var right = -Float.MAX_VALUE; var bottom = -Float.MAX_VALUE
-        for (rect in rects) {
-            val letter = KeyLetter.centreLetterOf(rect.kv) ?: continue
-            val i = slotOf[letter] ?: continue
-            if (seen[i]) continue
-            seen[i] = true
-            cx[i] = (rect.bounds.left + rect.bounds.right) / 2f
-            cy[i] = (rect.bounds.top + rect.bounds.bottom) / 2f
-            if (rect.bounds.left < left) left = rect.bounds.left
-            if (rect.bounds.top < top) top = rect.bounds.top
-            if (rect.bounds.right > right) right = rect.bounds.right
-            if (rect.bounds.bottom > bottom) bottom = rect.bounds.bottom
-        }
-        if (seen.any { !it }) return null
-        val w = right - left
-        val h = bottom - top
-        if (w <= 0f || h <= 0f) return null
-        return CtcLayout(
-            alphabet.copyOf(),
-            FloatArray(k) { (cx[it] - left) / w },
-            FloatArray(k) { (cy[it] - top) / h },
-        )
+        return CtcMappedLayoutBuilder.build(rects, CharArray(26) { 'a' + it }, CtcAzProjection::project)?.layout
     }
 
     private fun swissLayout(): CtcLayout {

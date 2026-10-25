@@ -456,7 +456,7 @@ class CtcEngineAdapter(
             }
         }
         val built = try {
-            buildMappedLayout(keyboard, params, alphabet)
+            buildMappedLayout(keyboard, params, alphabet, aliasProjectionFor(language))
         } catch (e: Exception) {
             Log.e(TAG, "CtcLayout build failed", e)
             null
@@ -504,58 +504,35 @@ class CtcEngineAdapter(
     // SwipeEngineFallbackTest's one-implementation scan.
 
     /**
+     * The projection that turns an accented centre key into an alias of its base letter
+     * ([CtcMappedLayoutBuilder]): the Latin family's a–z projection. Script languages build no
+     * aliases — their alphabets were drawn from their own boards, and no script board has been
+     * measured with alias slots.
+     */
+    private fun aliasProjectionFor(language: String?): ((String) -> String?)? =
+        if (CtcScriptSupport.wiringFor(language) == null) CtcAzProjection::project else null
+
+    /**
      * Builds the [CtcLayout] over [alphabet] from the final modified layout, or null when any
-     * of its letters is missing from the board. First occurrence of a letter wins (deterministic
-     * row-major order).
-     *
-     * Generalized from a hard-coded a–z in the multi-script wiring; the Latin path is the same
-     * computation with `alphabet = a–z` and is byte-identical to what it was (the featurizer
-     * cases in `CtcParityTest` pin it). Keys OUTSIDE the alphabet are skipped and — importantly
-     * — do not enter the normalization box: the box is built from the alphabet's own key rects,
-     * which is the frame the models were trained on (`app_layout.py` reproduces
-     * `computeKeyRects` + this function from the app's own XML to 4.7e-4).
+     * of its letters is missing from the board ([CtcMappedLayoutBuilder]). First occurrence of
+     * a letter wins (deterministic row-major order). With [aliasProjection], accented centre
+     * keys (bépo `é`, QWERTZ `ü`) become alias slots folded into their base letter, and their
+     * rects join the normalization box; a board without such keys builds exactly the a–z
+     * layout and frame it did before (`CtcParityTest`'s featurizer cases pin that frame;
+     * `app_layout.py` reproduces `computeKeyRects` + this mapping from the app's own XML).
      */
     private fun buildMappedLayout(
         keyboard: KeyboardData,
         params: KeyboardGeometry.Params,
         alphabet: CharArray,
+        aliasProjection: ((String) -> String?)?,
     ): MappedLayout? {
-        val rects = KeyboardGeometry.computeKeyRects(keyboard, params)
-        if (rects.isEmpty()) return null
-
-        val k = alphabet.size
-        val slotOf = HashMap<Char, Int>(k * 2)
-        for (i in 0 until k) slotOf[alphabet[i]] = i
-        val cx = FloatArray(k); val cy = FloatArray(k); val seen = BooleanArray(k)
-        var left = Float.MAX_VALUE; var top = Float.MAX_VALUE
-        var right = -Float.MAX_VALUE; var bottom = -Float.MAX_VALUE
-        for (rect in rects) {
-            val letter = KeyLetter.centreLetterOf(rect.kv) ?: continue
-            val i = slotOf[letter] ?: continue
-            if (seen[i]) continue
-            seen[i] = true
-            cx[i] = (rect.bounds.left + rect.bounds.right) / 2f
-            cy[i] = (rect.bounds.top + rect.bounds.bottom) / 2f
-            if (rect.bounds.left < left) left = rect.bounds.left
-            if (rect.bounds.top < top) top = rect.bounds.top
-            if (rect.bounds.right > right) right = rect.bounds.right
-            if (rect.bounds.bottom > bottom) bottom = rect.bounds.bottom
-        }
-        if (seen.any { !it }) return null // the board does not expose this alphabet
-        val w = right - left
-        val h = bottom - top
-        if (w <= 0f || h <= 0f) return null
-
-        val invW = 1f / w
-        val invH = 1f / h
-        val normX = FloatArray(k) { (cx[it] - left) * invW }
-        val normY = FloatArray(k) { (cy[it] - top) * invH }
-        val layout = CtcLayout(alphabet.copyOf(), normX, normY)
-        // Row count from the geometry: every letter key in one row shares a row rect, so the
-        // distinct centre-y values ARE the rows. Three on every board the adapter serves today.
-        val letterRowCount = cy.toSortedSet().size.coerceAtLeast(1)
+        val built = CtcMappedLayoutBuilder.build(
+            KeyboardGeometry.computeKeyRects(keyboard, params), alphabet, aliasProjection
+        ) ?: return null
         return MappedLayout(
-            layout, CtcFeaturizer.buildPaddedLayout(layout), left, top, invW, invH, letterRowCount
+            built.layout, CtcFeaturizer.buildPaddedLayout(built.layout),
+            built.originX, built.originY, built.invW, built.invH, built.letterRowCount,
         )
     }
 

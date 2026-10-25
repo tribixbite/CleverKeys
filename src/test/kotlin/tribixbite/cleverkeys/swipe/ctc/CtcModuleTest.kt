@@ -64,6 +64,43 @@ class CtcModuleTest {
         }
     }
 
+    /**
+     * Alias key slots (bépo `é`, QWERTZ `ü`, 2026-10-25): slot `numLetters + j` is folded into
+     * column `aliasTargets[j]` by log-sum-exp, the other columns and the blank are untouched,
+     * and the folded columns still form one normalized distribution.
+     */
+    @Test
+    fun emissions_sliceFromHead_foldsAliasSlotsIntoTheirBaseLetter() {
+        val maxKeys = 6
+        val numLetters = 3
+        // One frame, probabilities a=0.1 b=0.2 c=0.1 alias(→a)=0.3 alias(→c)=0.1 pad=0 blank=0.2.
+        val p = floatArrayOf(0.1f, 0.2f, 0.1f, 0.3f, 0.1f, 0f, 0.2f)
+        val head = FloatArray(p.size) { if (p[it] == 0f) Float.NEGATIVE_INFINITY else Math.log(p[it].toDouble()).toFloat() }
+        val sliced = CtcEmissions.sliceFromHead(head, 1, maxKeys, numLetters, intArrayOf(0, 2))
+        assertThat(sliced.numClasses).isEqualTo(numLetters + 1)
+        assertThat(Math.exp(sliced.at(0, 0).toDouble())).isWithin(1e-6).of(0.4)
+        assertThat(Math.exp(sliced.at(0, 1).toDouble())).isWithin(1e-6).of(0.2)
+        assertThat(Math.exp(sliced.at(0, 2).toDouble())).isWithin(1e-6).of(0.2)
+        assertThat(Math.exp(sliced.at(0, 3).toDouble())).isWithin(1e-6).of(0.2)
+        val total = (0 until sliced.numClasses).sumOf { Math.exp(sliced.at(0, it).toDouble()) }
+        assertThat(total).isWithin(1e-6).of(1.0)
+    }
+
+    /** The padded layout carries alias slots after the alphabet, masked, with their targets. */
+    @Test
+    fun featurizer_buildPaddedLayout_appendsAliasSlots() {
+        val layout = CtcLayout(
+            charArrayOf('a', 'e'), floatArrayOf(0.1f, 0.5f), floatArrayOf(0.2f, 0.2f),
+            aliasTargets = intArrayOf(1), aliasCentersX = floatArrayOf(0.3f), aliasCentersY = floatArrayOf(0.1f),
+        )
+        val padded = CtcFeaturizer.buildPaddedLayout(layout)
+        assertThat(padded.numLetters).isEqualTo(2)
+        assertThat(padded.aliasTargets.toList()).containsExactly(1)
+        assertThat(padded.mask.count { it }).isEqualTo(3)
+        assertThat(padded.keys[4]).isEqualTo(0.3f)
+        assertThat(padded.keys[5]).isEqualTo(0.1f)
+    }
+
     @Test
     fun emissions_constructionValidation() {
         // values length must equal frames*numClasses.

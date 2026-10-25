@@ -254,6 +254,15 @@ path, geometric always gets the smoothed path, the ML capture records both).
    here). The raw `PointF` trace is normalized under the SAME letter-box affine. Layouts
    missing any a–z letter build no `CtcLayout` → `supportsLayout` is false → the dispatcher
    hands the swipe to geometric before any CTC work starts.
+   **Accented centre keys (2026-10-25, `swipe/CtcMappedLayoutBuilder.kt`).** A single-letter
+   centre key outside the alphabet whose a–z projection is ONE letter (bépo `é`, QWERTZ
+   `ü ö ä`, Swedish `å`, Spanish `ñ`, Swiss-French `è é à ê`) is an ALIAS slot after the 26:
+   at its own centre, its emission column log-sum-exp-folded into the base letter
+   (`CtcEmissions.sliceFromHead`), its rect part of the frame box. Before this a path over
+   bépo's `é` read as `b`/`p`/`u` (`été` → `tp`) and a path over QWERTZ `ü` was clipped to the
+   a–z box edge. Real FUTO German traces: top-1 81.46 → 83.75 %, umlaut words 53.6 → 77.0 %
+   (`docs/eval/2026-10-25-ctc-accent-keys.md`). Latin family only; a board without such keys
+   builds the identical a–z layout and frame. `ß`/`æ`/`œ` keys (several letters) stay slotless.
 2. **Lexicon, per language** (`CtcLanguageSupport` is the table; see "Per-language
    enablement" for the λ/source matrix). **en** reads the bundled
    `dictionaries/en_enhanced.json` ({word: freq}, frequencies already on the AOSP-like
@@ -424,10 +433,12 @@ that matters when a NEW language is added.
 > still correct: selection is made on the **tune** half (the ✔ marks) and confirm is reported,
 > never selected on.
 >
-> All alt-layout numbers are the **`az26`** arm — 26 slots, exactly what
-> `CtcEngineAdapter.buildMappedLayout` builds. The `full` arm (27 slots for dvorak/azerty/
+> All alt-layout numbers are the **`az26`** arm — 26 slots, what
+> `CtcEngineAdapter.buildMappedLayout` built until 2026-10-25. The `full` arm (27 slots for dvorak/azerty/
 > spanish, 29 for german) was measured and buys nothing: +0.05 / +0.10 / 0.00 / −0.23
-> (`ctc/ALT_LAYOUT_EVAL.md:303-311`). The suspected app-vs-campaign slot mismatch does not exist.
+> (`ctc/ALT_LAYOUT_EVAL.md:303-311`) — but that arm DISCARDED the extra columns. Since
+> 2026-10-25 the app adds accented letter keys as alias slots and FOLDS their columns into the
+> base letter, which does help on the german corpus (`docs/eval/2026-10-25-ctc-accent-keys.md`).
 
 **Honest tier note on layouts, not languages.** Colemak specifically, and arbitrary user
 XML generally, were **never benchmarked**. They are covered *by design* (key geometry is a

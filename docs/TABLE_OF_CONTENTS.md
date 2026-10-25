@@ -133,6 +133,7 @@ autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule 
 | `2026-10-18-channel-autocorrect-ranking.md` | Noisy-channel tap autocorrect, rounds 1–5: rule C/C2, maintainer override making `channel` the default, δ (Hebrew-scoped), κ = 3.0 | ✅ Shipped |
 | `2026-10-21-autocorrect-prefix-length.md` | Prefix length 1 vs 0 on the shipped tuning (descriptive; shipped 0 stands) | ✅ Complete |
 | `2026-10-23-fa-wordlist.md` | Persian (`fa`) word list: Leipzig + wordfreq blend, Lilak oracle, half-space handling, coverage | ✅ Complete |
+| `2026-10-25-ctc-accent-keys.md` | CTC alias slots for accented top-level keys (bépo `é`, QWERTZ `ü ö ä`, `å`, `ñ`): real German traces 81.46 → 83.75 % | ✅ Shipped |
 
 ### `/docs/research/` Research notes
 

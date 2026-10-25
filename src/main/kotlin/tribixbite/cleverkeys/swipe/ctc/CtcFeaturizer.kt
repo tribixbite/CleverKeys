@@ -192,12 +192,15 @@ object CtcFeaturizer {
      * slots `[0..K)` as `(cx, cy)` (rest `(0,0)`), and a boolean mask true for the K real
      * keys (`engine.cpp::build_padded_layout_inputs`). Both are padded to [MAX_KEYS].
      *
+     * Alias keys ([CtcLayout.aliasTargets]) follow in slots `[K..K+A)`, also masked true.
+     *
      * @return [PaddedLayout] with `keys` (length `MAX_KEYS*2`, interleaved cx,cy) and
      *   `mask` (length `MAX_KEYS`).
      */
     fun buildPaddedLayout(layout: CtcLayout): PaddedLayout {
         val k = layout.alphabet.size
-        require(k <= MAX_KEYS) { "layout has $k keys, exceeds MAX_KEYS=$MAX_KEYS" }
+        val a = layout.aliasTargets.size
+        require(k + a <= MAX_KEYS) { "layout has $k keys + $a aliases, exceeds MAX_KEYS=$MAX_KEYS" }
         val keys = FloatArray(MAX_KEYS * 2)
         val mask = BooleanArray(MAX_KEYS)
         for (i in 0 until k) {
@@ -205,9 +208,24 @@ object CtcFeaturizer {
             keys[i * 2 + 1] = layout.keyCentersY[i]
             mask[i] = true
         }
-        return PaddedLayout(keys, mask)
+        for (j in 0 until a) {
+            keys[(k + j) * 2] = layout.aliasCentersX[j]
+            keys[(k + j) * 2 + 1] = layout.aliasCentersY[j]
+            mask[k + j] = true
+        }
+        return PaddedLayout(keys, mask, k, layout.aliasTargets.copyOf())
     }
 
-    /** Padded encoder layout tensors: interleaved key centers + real-key mask. */
-    class PaddedLayout(val keys: FloatArray, val mask: BooleanArray)
+    /**
+     * Padded encoder layout tensors: interleaved key centers + real-key mask.
+     *
+     * @property numLetters the alphabet's K slots; the emission slice keeps these columns.
+     * @property aliasTargets for alias slot `K + j`, the column its emission folds into.
+     */
+    class PaddedLayout(
+        val keys: FloatArray,
+        val mask: BooleanArray,
+        val numLetters: Int = mask.count { it },
+        val aliasTargets: IntArray = IntArray(0),
+    )
 }

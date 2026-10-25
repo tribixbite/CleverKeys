@@ -52,6 +52,14 @@ class CtcEmissions(
     fun row(t: Int): FloatArray = values.copyOfRange(t * numClasses, t * numClasses + numClasses)
 
     companion object {
+        /** `ln(e^a + e^b)` without overflow; `-inf` operands are exact. */
+        private fun logAddExp(a: Float, b: Float): Float {
+            if (a == Float.NEGATIVE_INFINITY) return b
+            if (b == Float.NEGATIVE_INFINITY) return a
+            val hi = maxOf(a, b)
+            return (hi + Math.log1p(Math.exp((minOf(a, b) - hi).toDouble()))).toFloat()
+        }
+
         /**
          * Slice a raw encoder head `[frames][maxKeys + 1]` down to the active-alphabet
          * view `[frames][numLetters + 1]`, moving blank from the full head's last column
@@ -66,14 +74,22 @@ class CtcEmissions(
          * @param frames number of time frames.
          * @param maxKeys export-time key capacity (blank lives at column `maxKeys`).
          * @param numLetters count of active alphabet columns to keep (`[0..numLetters)`).
+         * @param aliasTargets alias key slots `numLetters + j` (see `CtcLayout.aliasTargets`):
+         *   each is folded into column `aliasTargets[j]` by log-sum-exp, so the kept columns
+         *   stay one normalized distribution over the alphabet + blank.
          */
         fun sliceFromHead(
             fullHead: FloatArray,
             frames: Int,
             maxKeys: Int,
             numLetters: Int,
+            aliasTargets: IntArray = IntArray(0),
         ): CtcEmissions {
             require(numLetters in 1..maxKeys) { "numLetters $numLetters out of range 1..$maxKeys" }
+            require(numLetters + aliasTargets.size <= maxKeys) {
+                "numLetters $numLetters + ${aliasTargets.size} aliases exceed $maxKeys"
+            }
+            require(aliasTargets.all { it in 0 until numLetters }) { "alias target outside the alphabet" }
             val headWidth = maxKeys + 1
             require(fullHead.size == frames * headWidth) {
                 "fullHead length ${fullHead.size} != frames*(maxKeys+1) (${frames * headWidth})"
@@ -85,6 +101,10 @@ class CtcEmissions(
                 val dstBase = t * outWidth
                 System.arraycopy(fullHead, srcBase, out, dstBase, numLetters)
                 out[dstBase + numLetters] = fullHead[srcBase + maxKeys] // blank column
+                for (j in aliasTargets.indices) {
+                    val c = dstBase + aliasTargets[j]
+                    out[c] = logAddExp(out[c], fullHead[srcBase + numLetters + j])
+                }
             }
             return CtcEmissions(out, frames, outWidth)
         }

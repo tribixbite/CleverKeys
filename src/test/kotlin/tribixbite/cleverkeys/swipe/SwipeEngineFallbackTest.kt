@@ -266,13 +266,14 @@ class SwipeEngineFallbackTest {
      */
     @Test
     fun theCentreLetterDefinitionHasExactlyOneImplementation() {
-        val adapter = File("src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt").readText()
+        // The gate's mapping lives in CtcMappedLayoutBuilder since 2026-10-25 (the adapter calls it).
+        val adapter = File("src/main/kotlin/tribixbite/cleverkeys/swipe/CtcMappedLayoutBuilder.kt").readText()
         val card = File("src/main/kotlin/tribixbite/cleverkeys/swipe/SwipeEngineFallback.kt").readText()
         val helper = File("src/main/kotlin/tribixbite/cleverkeys/swipe/KeyLetter.kt").readText()
 
         assertWithMessage("the shared helper must exist and own the definition")
             .that(helper).contains("fun centreLetterOf(")
-        for ((name, src) in mapOf("CtcEngineAdapter" to adapter, "SwipeEngineFallback" to card)) {
+        for ((name, src) in mapOf("CtcMappedLayoutBuilder" to adapter, "SwipeEngineFallback" to card)) {
             assertWithMessage("$name must consume the shared KeyLetter.centreLetterOf")
                 .that(src).contains("KeyLetter.centreLetterOf(")
             assertWithMessage("$name must not re-declare a private centre-letter extractor")

@@ -51,8 +51,12 @@ class OnnxCtcEmissionModel(
         require(layout.keys.size == CtcFeaturizer.MAX_KEYS * 2) {
             "layout keys length ${layout.keys.size} != ${CtcFeaturizer.MAX_KEYS * 2}"
         }
-        val numLetters = layout.mask.count { it }
+        // The alphabet's K columns; alias key slots follow them and are folded in by the slice.
+        val numLetters = layout.numLetters
         require(numLetters in 1..CtcFeaturizer.MAX_KEYS) { "empty layout mask" }
+        require(numLetters + layout.aliasTargets.size == layout.mask.count { it }) {
+            "layout mask does not match ${numLetters} letters + ${layout.aliasTargets.size} aliases"
+        }
 
         // ORT bool tensors are 1 byte/element via ByteBuffer + OnnxJavaType.BOOL.
         val maskBytes = ByteArray(CtcFeaturizer.MAX_KEYS)
@@ -88,7 +92,7 @@ class OnnxCtcEmissionModel(
                         val full = FloatArray(frames * headWidth)
                         out.floatBuffer.get(full)
                         return CtcEmissions.sliceFromHead(
-                            full, frames, CtcFeaturizer.MAX_KEYS, numLetters
+                            full, frames, CtcFeaturizer.MAX_KEYS, numLetters, layout.aliasTargets
                         )
                     }
                 }

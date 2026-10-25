@@ -1161,6 +1161,9 @@ tasks.register('runPureTests', JavaExec) {
     // the engine follows the DISPLAYED geometry (y-e-s → "yes", not a z- word), plus the
     // catalogue/gate pins that keep the board served and CTC-eligible.
     'tribixbite.cleverkeys.swipe.CtcSwissFrenchLayoutReplayTest',
+    // 2026-10-25 maintainer report: bépo `été` over the é key decoded `tp` — accented TOP-LEVEL
+    // keys get CTC alias slots folded into their base letter (bépo, QWERTZ de, se, es, fr_ch).
+    'tribixbite.cleverkeys.swipe.CtcAccentKeyLayoutReplayTest',
     'tribixbite.cleverkeys.swipe.ContractionCollisionDataTest',
     // ARC-010 (2026-08-28): the six shipped assets/bigrams/*.json tables were read by
     // NOTHING for nine months — the only loader referencing them had zero callers AND
