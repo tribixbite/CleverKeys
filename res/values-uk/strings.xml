@@ -650,7 +650,7 @@
     <string name="privacy_on_device_learning_desc">Будувати безпосередньо на пристрої приватні моделі сполучень і слововживання на основі набраного тексту. Вимкнення зупиняє весь автоматичний запис поведінки під час набору — доки опція вимкнена, нічого нового не зберігається. Дані, які ви створюєте явно, зберігаються окремо: статистика якості передбачень і вивчені дані, відновлені з резервної копії.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Додано, але слово задовге для свайпу</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d крок.</item><item quantity="few">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроки.</item><item quantity="many">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроків.</item><item quantity="other">«%1$s» додано для звичайного введення, але CTC потребує %2$d кроків і може декодувати лише %3$d кроків.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» додано для звичайного введення, але потрібна кількість кроків CTC — %2$d, а декодувати можна лише %3$d крок.</item><item quantity="few">«%1$s» додано для звичайного введення, але потрібна кількість кроків CTC — %2$d, а декодувати можна лише %3$d кроки.</item><item quantity="many">«%1$s» додано для звичайного введення, але потрібна кількість кроків CTC — %2$d, а декодувати можна лише %3$d кроків.</item><item quantity="other">«%1$s» додано для звичайного введення, але потрібна кількість кроків CTC — %2$d, а декодувати можна лише %3$d кроків.</item></plurals>
     <string name="gesture_finger_occlusion_title">Корекція зміщення дотику</string>
     <string name="gesture_finger_occlusion_desc">Зміщує зчитування свайпу відносно кінчика пальця. Додатне значення для слідів над клавішами, від’ємне — для слідів під ними. Типово вимкнено.</string>
     <string name="gesture_touch_smoothing_title">Згладжування дотику</string>
@@ -1531,10 +1531,10 @@
         <item quantity="other">Імпортовано %1$d налаштування</item>
     </plurals>
     <plurals name="backup_headless_dict_imported">
-        <item quantity="one">Імпортовано слів: %1$d власних + %2$d вимкнене</item>
-        <item quantity="few">Імпортовано слів: %1$d власних + %2$d вимкнені</item>
-        <item quantity="many">Імпортовано слів: %1$d власних + %2$d вимкнених</item>
-        <item quantity="other">Імпортовано слів: %1$d власних + %2$d вимкненого</item>
+        <item quantity="one">Імпортовано слів: власних — %1$d, вимкнених — %2$d</item>
+        <item quantity="few">Імпортовано слів: власних — %1$d, вимкнених — %2$d</item>
+        <item quantity="many">Імпортовано слів: власних — %1$d, вимкнених — %2$d</item>
+        <item quantity="other">Імпортовано слів: власних — %1$d, вимкнених — %2$d</item>
     </plurals>
     <plurals name="backup_headless_clipboard_imported">
         <item quantity="one">Імпортовано %1$d запис буфера обміну</item>

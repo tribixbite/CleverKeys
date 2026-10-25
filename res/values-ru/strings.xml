@@ -639,7 +639,7 @@
     <string name="privacy_on_device_learning_desc">Строить прямо на устройстве частные модели сочетаний и словоупотребления на основе набранного текста. Выключение останавливает всю автоматическую запись поведения при наборе — пока опция выключена, ничего нового не сохраняется. Данные, создаваемые вами явно, хранятся отдельно: статистика качества предсказаний и выученные данные, восстановленные из резервной копии.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Добавлено, но слово слишком длинное для свайпа</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» добавлено для обычного ввода, но CTC требуется %2$d шага, а доступен только %3$d шаг.</item><item quantity="few">«%1$s» добавлено для обычного ввода, но CTC требуется %2$d шага, а доступно только %3$d шага.</item><item quantity="many">«%1$s» добавлено для обычного ввода, но CTC требуется %2$d шагов, а доступно только %3$d шагов.</item><item quantity="other">«%1$s» добавлено для обычного ввода, но CTC требуется %2$d шагов, а доступно только %3$d шагов.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступен только %3$d шаг.</item><item quantity="few">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шага.</item><item quantity="many">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шагов.</item><item quantity="other">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шагов.</item></plurals>
     <string name="gesture_finger_occlusion_title">Коррекция смещения касания</string>
     <string name="gesture_finger_occlusion_desc">Смещает распознавание свайпа относительно кончика пальца. Положительное значение — если след выше клавиш, отрицательное — если ниже. По умолчанию выключено.</string>
     <string name="gesture_touch_smoothing_title">Сглаживание касаний</string>
@@ -1525,10 +1525,10 @@
         <item quantity="other">Импортировано %1$d настройки</item>
     </plurals>
     <plurals name="backup_headless_dict_imported">
-        <item quantity="one">Импортировано слов: %1$d пользовательских + %2$d отключённое</item>
-        <item quantity="few">Импортировано слов: %1$d пользовательских + %2$d отключённых</item>
-        <item quantity="many">Импортировано слов: %1$d пользовательских + %2$d отключённых</item>
-        <item quantity="other">Импортировано слов: %1$d пользовательских + %2$d отключённых</item>
+        <item quantity="one">Импортировано слов: пользовательских — %1$d, отключённых — %2$d</item>
+        <item quantity="few">Импортировано слов: пользовательских — %1$d, отключённых — %2$d</item>
+        <item quantity="many">Импортировано слов: пользовательских — %1$d, отключённых — %2$d</item>
+        <item quantity="other">Импортировано слов: пользовательских — %1$d, отключённых — %2$d</item>
     </plurals>
     <plurals name="backup_headless_clipboard_imported">
         <item quantity="one">Импортирована %1$d запись буфера обмена</item>
