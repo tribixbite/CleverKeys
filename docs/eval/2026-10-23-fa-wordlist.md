@@ -246,8 +246,11 @@ no stripped-ZWNJ artefact in the sample.
 
 - Swipe: no CTC. `fa` has no `CtcLanguageSupport` row and `CtcImportedPackSupport.evaluate`
   refuses the pack (not a–z projectable), so the geometric engine serves it. On Persian PC
-  (`arab_pc_ir.xml`) the geometric projection templates 49,828 of 50,000 words; the 172 that
-  fail all contain أ, ؤ or إ, which the layout has no key or corner for. The half-space is a
+  (`arab_pc_ir.xml`) the geometric projection templated 49,828 of 50,000 words on 2026-10-23;
+  the 172 that failed all contain أ, ؤ or إ, which the layout had no key or corner for. Since
+  2026-10-25 they are gestures (Persian PC: أ swipe-up and إ swipe-down on ا, ؤ top-right of و;
+  Kurdish (Persian layout): أ top-left and إ bottom-left of ا, ؤ top-left of و), the projection
+  maps each to its host key, and all 50,000 words template. The half-space is a
   default-ignorable control in `LayoutProjection`, so `می‌شود` and `میشود` swipe the same path.
 - Tests: `langpack.PersianLangpackTest` (mock tier) loads the pack through
   `BinaryDictionaryLoader`, checks the CKDT caps via `CkdtDictionaryReader`, the ZWNJ forms and
@@ -259,11 +262,15 @@ no stripped-ZWNJ artefact in the sample.
   produced `سن`; that is not evidence either way, because adb motion events are coarse.
   **Persian swipe quality on the geometric engine is UNVALIDATED.**
 - No native-speaker review of the list.
+- Published 2026-10-25 (maintainer approval) to the `langpacks` GitHub pre-release as an
+  **experimental** pack: listed there and in the docs as experimental until a native speaker
+  reviews the list.
 
 ## 6. Open items
 
 - A native-speaker pass over `fa_words.txt` and the drops review
   (`build_wordlist.py --review-dir`), especially the 2,141 typo drops, which include colloquial
   forms Lilak lacks (`پیشش`, `کشه`, `شمام`).
-- Persian PC has no key for أ ؤ إ; 172 pack words cannot be typed or swiped on it.
+- ~~Persian PC has no key for أ ؤ إ~~ — done 2026-10-25 (gestures on ا and و, see §5;
+  `PersianLayoutHamzaAndLanguageTest`). Persian PC also declares `language="fa"` now.
 - `اب` (a misspelling of آب, also an Arabic word) is in the list through the 2-letter rule.

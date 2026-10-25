@@ -105,7 +105,7 @@ A: Yes, with the appropriate dictionary and letter layout. The CTC engine serves
 
 Six non-Latin languages — Russian, Ukrainian, Bulgarian, Macedonian (Cyrillic), Greek, and Hebrew — are served **via their language packs**: one import brings both the dictionary and that script's swipe encoder (the encoder is verified against a hash pinned in the app, so only the exact published model loads). Until the pack is imported, these languages tap-type normally and swipe falls back to the geometric engine. **If you imported one of these packs before September 2026, re-import the updated zip** — older packs predate the bundled encoder and won't swipe-decode on current versions.
 
-Persian (`langpack-fa.zip`, 50,000 words, added 2026-10-23) is also pack-based, but its pack carries no swipe encoder: tap typing gets the Persian dictionary and autocorrect, swipes on the Persian layouts use the geometric engine, and a half-space (ZWNJ) key sits right of the space bar on the Persian PC and Kurdish (Persian layout) boards.
+Persian (`langpack-fa.zip`, 50,000 words, added 2026-10-23, **experimental**: no native-speaker review yet) is also pack-based, but its pack carries no swipe encoder: tap typing gets the Persian dictionary and autocorrect, swipes on the Persian layouts use the geometric engine, and a half-space (ZWNJ) key sits right of the space bar on the Persian PC and Kurdish (Persian layout) boards.
 
 To add a language beyond the bundled seven, go to **Settings > 🌐 Multi-Language > Import Pack** and import that language's pack; prebuilt zips are on the [langpacks release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks). Set it as your primary (or secondary) language and swipe normally.
 

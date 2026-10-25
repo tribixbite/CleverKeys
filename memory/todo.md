@@ -47,9 +47,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    unhighlighted; `می`+half-space key+`شو` keeps one word, completions می‌شود/می‌شوند/می‌شویم/
    می‌شوم/می‌شوید; restored afterwards. OPEN: native-speaker review of the pack and the 4
    possibly over-dropped words (اورا پیکه هنریکه سیاهو); Persian swipe quality UNVALIDATED (one
-   synthetic adb trace is not evidence); 172 pack words need أ ؤ إ, which Persian PC lacks;
-   half-space completions for a joined prefix not built (# TODO in WordPredictor); publishing
-   the pack as a release asset needs the maintainer. History below:
+   synthetic adb trace is not evidence); half-space completions for a joined prefix not built
+   (# TODO in WordPredictor). DONE 2026-10-25 (`1d3bc1d0`): أ ؤ إ as gestures on ا/و on both
+   Persian layouts (all 50,000 pack words template), Persian PC declares `language="fa"`, Layout
+   Manager reads built-in declarations; langpack-fa.zip PUBLISHED to the `langpacks` release as
+   experimental (sha256 218024df… verified by download). Not device-checked. Open decision: the
+   two Central Kurdish boards declare no language (no ckb pack exists). History below:
    Persian half of #186/#61. No `fa` language pack exists. (Correction
    2026-10-21: a Persian layout DOES exist, `srcs/layouts/arab_pc_ir.xml` "Persian PC", but it
    has no dedicated ZWNJ key; 2026-10-22: a `halfspace` corner gesture on ت exists, as upstream.)

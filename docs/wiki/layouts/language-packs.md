@@ -81,7 +81,10 @@ download the `.zip` and import it (no need to build anything):
 | **Bulgarian (Български)** | `langpack-bg.zip` | 35,027 |
 | **Macedonian (Македонски)** | `langpack-mk.zip` | 50,000 |
 | **Hebrew (עברית)** | `langpack-he.zip` | 50,000 |
-| **Persian (فارسی)** | `langpack-fa.zip` | 50,000 |
+| **Persian (فارسی)** — *experimental* | `langpack-fa.zip` | 50,000 |
+
+> **Persian is experimental**: its word list has had no native-speaker review yet, and swipe
+> quality on the geometric engine is unmeasured. Reports of wrong or missing words are welcome.
 
 > Most packs are generated from the [`wordfreq`](https://github.com/rspeer/wordfreq)
 > corpus (real word frequencies), most of them validated against the AOSP

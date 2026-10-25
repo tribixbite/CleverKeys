@@ -319,7 +319,7 @@ zips from the [langpacks release](https://github.com/tribixbite/CleverKeys/relea
 | Bulgarian | bg | 35,027 words | D (negatives-only; wordfreq corpus ceiling) |
 | Macedonian | mk | 50,000 words | D (negatives-only) |
 | Hebrew | he | 50,000 words | C (AOSP oracle) |
-| Persian | fa | 50,000 words | Leipzig + wordfreq blend, Lilak oracle (22 % half-space compounds) |
+| Persian (experimental) | fa | 50,000 words | Leipzig + wordfreq blend, Lilak oracle (22 % half-space compounds); no native-speaker review yet |
 | Turkish | tr | 40,000 words | C (AOSP only) |
 | Indonesian | id | 28,637 words | D (negatives-only; corpus ceiling ~31k) |
 | Malay | ms | 25,861 words | D (negatives-only; corpus ceiling ~28k) |
