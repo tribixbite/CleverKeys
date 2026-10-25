@@ -97,13 +97,13 @@ class BucketBSourceContractTest {
 
     @Test
     fun `issue 93 — hex parse logic exists for color input`() {
+        // The parsing moved to the pure theme/HexColorText (Saga 2026-10-25; its rules are pinned
+        // by theme/HexColorTextTest): the activity must route the field through it.
         val source = readSource("activities/ThemeSettingsActivity.kt")
-        // Expected: a regex/match that accepts "#RRGGBB" or similar
-        val hasHexParse = source.contains("Regex(\"#") ||
-            source.contains("\"\"\"#") ||
-            source.contains("toLong(16)") ||
-            source.contains("Color(\"#")
-        assertThat(hasHexParse).isTrue()  // RED until #93 fix lands
+        assertThat(source).contains("HexColorText.parse(")
+        val parser = readSource("theme/HexColorText.kt")
+        val hasHexParse = parser.contains("Regex(\"#") || parser.contains("toLong(16)")
+        assertThat(hasHexParse).isTrue()
     }
 
     // =========================================================================
