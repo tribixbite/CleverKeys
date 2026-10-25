@@ -1,0 +1,21 @@
+// Standalone build for the upgrade-install orchestrator APK (tools/upgrade-test/).
+// Deliberately NOT included in the root settings.gradle: it is a self-instrumenting
+// library test APK run only by tools/upgrade-test/run-upgrade-test.sh, never by the
+// default unit or instrumented suites.
+pluginManagement {
+  repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+  }
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositories {
+    google()
+    mavenCentral()
+  }
+}
+
+rootProject.name = "CleverKeysUpgradeOrchestrator"

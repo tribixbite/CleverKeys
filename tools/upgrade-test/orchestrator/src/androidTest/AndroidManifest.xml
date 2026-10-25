@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <queries>
+    <package android:name="tribixbite.cleverkeys" />
+    <package android:name="tribixbite.cleverkeys.debug" />
+  </queries>
+  <application>
+    <!-- Exported so the shell (am start) can open it; it holds no data. -->
+    <activity
+        android:name="tribixbite.cleverkeys.upgradetest.ImeProbeActivity"
+        android:exported="true"
+        android:windowSoftInputMode="stateAlwaysVisible" />
+  </application>
+</manifest>

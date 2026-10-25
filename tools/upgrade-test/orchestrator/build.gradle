@@ -1,0 +1,32 @@
+// Same AGP/Kotlin versions as the root build, so no new plugin artifacts are fetched.
+plugins {
+  id 'com.android.library' version '8.8.2'
+  id 'org.jetbrains.kotlin.android' version '2.0.0'
+}
+
+android {
+  namespace 'tribixbite.cleverkeys.upgradetest'
+  compileSdk 34
+
+  defaultConfig {
+    // executeShellCommandRwe (stdin for multi-line shell scripts) needs API 31;
+    // the emulator.wtf runs are API 34+ anyway.
+    minSdk 31
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_11
+    targetCompatibility JavaVersion.VERSION_11
+  }
+  kotlinOptions {
+    jvmTarget = "11"
+  }
+}
+
+dependencies {
+  androidTestImplementation "androidx.test:core:1.7.0"
+  androidTestImplementation "androidx.test.ext:junit:1.3.0"
+  androidTestImplementation "androidx.test:runner:1.7.0"
+  androidTestImplementation "junit:junit:4.13.2"
+}
