@@ -2506,7 +2506,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Golește clipboardul de sistem</string>
-    <string name="cmd_clear_clipboard_desc">Golește clipboardul curent din Android; istoricul salvat, elementele fixate și activitățile rămân.</string>
+    <string name="cmd_clear_clipboard_desc">Golește clipboardul curent din Android; istoricul salvat, elementele fixate și elementele de făcut rămân.</string>
     <string name="system_clipboard_cleared">Clipboard de sistem golit</string>
     <string name="system_clipboard_clear_failed">Nu s-a putut goli clipboardul de sistem</string>
 

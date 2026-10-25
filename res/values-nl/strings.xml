@@ -2434,7 +2434,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Systeemklembord wissen</string>
-    <string name="cmd_clear_clipboard_desc">Huidig Android-klembord wissen; opgeslagen geschiedenis, pins en to-do\'s blijven behouden.</string>
+    <string name="cmd_clear_clipboard_desc">Huidig Android-klembord wissen; opgeslagen geschiedenis, vastgezette items en to-do-items blijven behouden.</string>
     <string name="system_clipboard_cleared">Systeemklembord gewist</string>
     <string name="system_clipboard_clear_failed">Kan systeemklembord niet wissen</string>
 

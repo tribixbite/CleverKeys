@@ -2489,7 +2489,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Effacer le presse-papiers système</string>
-    <string name="cmd_clear_clipboard_desc">Effacer le presse-papiers Android actuel ; l’historique enregistré, les éléments épinglés et les tâches sont conservés.</string>
+    <string name="cmd_clear_clipboard_desc">Effacer le presse-papiers Android actuel ; l’historique enregistré, les éléments épinglés et les tâches à faire sont conservés.</string>
     <string name="system_clipboard_cleared">Presse-papiers système effacé</string>
     <string name="system_clipboard_clear_failed">Impossible d’effacer le presse-papiers système</string>
 

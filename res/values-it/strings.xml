@@ -2519,7 +2519,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Cancella appunti di sistema</string>
-    <string name="cmd_clear_clipboard_desc">Cancella gli appunti correnti di Android; la cronologia salvata, gli elementi bloccati e le attività restano.</string>
+    <string name="cmd_clear_clipboard_desc">Cancella gli appunti correnti di Android; la cronologia salvata, gli elementi fissati e gli elementi To-do restano.</string>
     <string name="system_clipboard_cleared">Appunti di sistema cancellati</string>
     <string name="system_clipboard_clear_failed">Impossibile cancellare gli appunti di sistema</string>
 
