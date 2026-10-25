@@ -156,7 +156,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    `textMultiLine|textNoSuggestions`, live-row check. Device PASS after: History and To-dos
    long entry, typing scrolls to the caret, tap-to-place-caret keeps the keyboard. Pinned not
    device-checked (same code). Mock `ClipboardHistoryViewStateGuardsTest` fail-first → 28/28;
-   instrumented `ClipboardLongEntryEditTest` written, emulator.wtf run pending.
+   instrumented `ClipboardLongEntryEditTest` 3/3 on emulator.wtf API 34 (`1812cdce`; post-fix only).
+   Also fixed `c1bf9530`: images ≤ 80 px got no thumbnail ("Can't compress a recycled bitmap").
    (c) FIXED `84021ccb`: CTC had slots for the 26 a–z keys only, so bépo's TOP-LEVEL `é` read as
    b/p/u (`été` → `bcp`/`btp`) and QWERTZ `ü ö ä`, Swedish `å ö ä`, Spanish `ñ`, Swiss-French
    `è é à ê` were also outside the frame box. Those keys are now alias slots folded into their base
