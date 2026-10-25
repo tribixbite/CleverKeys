@@ -1352,6 +1352,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardBulkPlansTest',
     'tribixbite.cleverkeys.clipboard.ClipboardBulkServiceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
+    // Saga 2026-10-25: a media capture on IO notified the pane off the main thread (stuck
+    // "Loading results…"); listener calls are delivered on main and failures are logged.
+    'tribixbite.cleverkeys.clipboard.ClipboardHistoryListenerThreadTest',
     // #130 residual (2026-09-05): setConfig drops the cached pane when the theme
     // signature changes (switch OR color edit), preserving close callback + tab choice.
     'tribixbite.cleverkeys.clipboard.ClipboardPaneThemeInvalidationTest',

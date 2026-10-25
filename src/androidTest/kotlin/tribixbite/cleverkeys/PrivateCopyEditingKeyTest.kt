@@ -99,6 +99,8 @@ class PrivateCopyEditingKeyTest {
             val entry = db.getActiveClipboardEntries().firstOrNull { it.content == "private-only note" }
             assertNotNull("private copy must bypass the OS-monitoring gate", entry)
             assertTrue(entry!!.isPrivate)
+            // Listener calls are delivered on the main thread (2026-10-25); this test runs off it.
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync()
             assertEquals("successful private insert must refresh clipboard UI", 1, callbacks)
         } finally {
             service.setOnClipboardHistoryChange(null)

@@ -255,6 +255,8 @@ class ClipboardHistoryTest {
         // Unique content, so the consecutive-duplicate filter cannot apply —
         // a successful insert MUST notify the registered listener.
         clipboardService?.addClip("Trigger listener ${System.currentTimeMillis()}")
+        // Listener calls are delivered on the main thread (2026-10-25); this test runs off it.
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync()
 
         assertTrue("Change listener must fire when a unique clip is added", listenerCalled)
 
@@ -374,6 +376,7 @@ class ClipboardHistoryTest {
         clipboardService?.editEntryContent(
             "Listener test", "Listener edited", ClipboardTab.HISTORY
         )
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync() // main-thread delivery
 
         assertTrue("Change listener should fire on successful edit", listenerFired)
 
@@ -394,6 +397,7 @@ class ClipboardHistoryTest {
         clipboardService?.editEntryContent(
             "No-op listener", "No-op listener", ClipboardTab.HISTORY
         )
+        InstrumentationRegistry.getInstrumentation().waitForIdleSync() // main-thread delivery
 
         assertFalse("Listener should NOT fire on no-op", listenerFired)
 

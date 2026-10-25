@@ -19,6 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.coroutines.EmptyCoroutineContext
 import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCatchUp
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
@@ -354,7 +355,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
             _mediaManager.deleteMedia(mediaPath)
         }
-        _listener?.on_clipboard_history_change()
+        notifyHistoryChanged()
     }
 
     /**
@@ -481,7 +482,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         if (added) {
             applyHistoryLimits(config)
-            _listener?.on_clipboard_history_change()
+            notifyHistoryChanged()
         }
     }
 
@@ -626,11 +627,39 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 _mediaManager.deleteMedia(mediaPath)
             }
         }
-        _listener?.on_clipboard_history_change()
+        notifyHistoryChanged()
     }
 
     fun setOnClipboardHistoryChange(l: OnClipboardHistoryChange?) {
         _listener = l
+    }
+
+    /**
+     * Tell the history-change listener (the clipboard pane) on the MAIN thread. History changes
+     * also happen on `Dispatchers.IO` — a copied image or text URI is captured there
+     * ([processClipUri] → [addMediaClip] / [addClip]) — and the pane's reload touches views.
+     * Called from IO it threw "Animators may only be run on Looper threads" after marking the
+     * pane not ready, so the pane stayed on "Loading results…" (Saga 2026-10-25). Off the main
+     * thread the call is posted; on it, it runs at once as before. The listener is read when the
+     * call runs, so a pane detached meanwhile is not called. A listener failure is logged with
+     * its stack trace and never aborts the history change that triggered it.
+     */
+    private fun notifyHistoryChanged() {
+        if (_listener == null) return // No pane attached: nothing to tell.
+        val main = Dispatchers.Main.immediate
+        if (main.isDispatchNeeded(EmptyCoroutineContext)) {
+            main.dispatch(EmptyCoroutineContext, Runnable { deliverHistoryChanged() })
+        } else {
+            deliverHistoryChanged()
+        }
+    }
+
+    private fun deliverHistoryChanged() {
+        try {
+            _listener?.on_clipboard_history_change()
+        } catch (e: Exception) {
+            android.util.Log.e("ClipboardHistory", "Clipboard history listener failed", e)
+        }
     }
 
     /** Pin a clipboard entry (copies to independent pinned_entries table). Returns true if new, false if duplicate. */
@@ -640,7 +669,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // #156 COPY semantics: preserve the private marker + provenance on the pinned copy.
         val (isPrivate, sourcePackage) = _database.getPrivateMarker(clip)
         val added = _database.pinEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath, isPrivate, sourcePackage)
-        if (added) _listener?.on_clipboard_history_change()
+        if (added) notifyHistoryChanged()
         return added
     }
 
@@ -650,7 +679,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
             _mediaManager.deleteMedia(mediaPath)
         }
-        _listener?.on_clipboard_history_change()
+        notifyHistoryChanged()
     }
 
     /** Check if content is pinned */
@@ -664,7 +693,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // #156 COPY semantics: preserve the private marker + provenance on the todo copy.
         val (isPrivate, sourcePackage) = _database.getPrivateMarker(clip)
         val added = _database.addTodoEntry(clip, createdTimestamp, mimeType, thumbnailBlob, mediaPath, isPrivate, sourcePackage)
-        if (added) _listener?.on_clipboard_history_change()
+        if (added) notifyHistoryChanged()
         return added
     }
 
@@ -674,13 +703,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (mediaPath != null && !_database.isMediaPathReferenced(mediaPath)) {
             _mediaManager.deleteMedia(mediaPath)
         }
-        _listener?.on_clipboard_history_change()
+        notifyHistoryChanged()
     }
 
     /** Update todo entry status (active/planned/completed) */
     fun setTodoStatus(clip: String, status: String) {
         val updated = _database.setTodoEntryStatus(clip, status)
-        if (updated) _listener?.on_clipboard_history_change()
+        if (updated) notifyHistoryChanged()
     }
 
     /**
@@ -718,7 +747,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         if (result is EditEntryResult.Success) {
-            _listener?.on_clipboard_history_change()
+            notifyHistoryChanged()
         }
         return result
     }
@@ -733,14 +762,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /** Set tags for a pinned entry. Returns true if updated. */
     fun setPinnedTags(clip: String, tags: List<String>): Boolean {
         val updated = _database.setPinnedEntryTags(clip, tags)
-        if (updated) _listener?.on_clipboard_history_change()
+        if (updated) notifyHistoryChanged()
         return updated
     }
 
     /** Set tags for a todo entry. Returns true if updated. */
     fun setTodoTags(clip: String, tags: List<String>): Boolean {
         val updated = _database.setTodoEntryTags(clip, tags)
-        if (updated) _listener?.on_clipboard_history_change()
+        if (updated) notifyHistoryChanged()
         return updated
     }
 
@@ -989,7 +1018,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 android.util.Log.d("ClipboardHistory", "URI permission expired: ${e.message}")
             }
         } catch (e: Exception) {
-            android.util.Log.w("ClipboardHistory", "Failed to process clip URI: ${e.message}")
+            // With the stack trace: a bare message hid where the failure came from (2026-10-25).
+            android.util.Log.w("ClipboardHistory", "Failed to process clip URI", e)
         }
     }
 
@@ -1067,7 +1097,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 pruneByCountAndCleanMedia(Config.globalConfig().clipboard_history_limit)
             }
 
-            _listener?.on_clipboard_history_change()
+            notifyHistoryChanged()
         }
     }
 
