@@ -38,7 +38,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -1001,10 +1003,14 @@ fun ColorPickerDialog(
     var saturation by remember { mutableFloatStateOf(initialColor.toHsl()[1]) }
     var lightness by remember { mutableFloatStateOf(initialColor.toHsl()[2]) }
     var alpha by remember { mutableFloatStateOf(initialColor.alpha) }
+    // The exact ARGB set by the hex field or a preset (and the initial colour); null once a
+    // slider moves. The 8-bit → HSL → 8-bit round trip is lossy, so without it a typed value
+    // came back one step off, re-formatted the field mid-entry, and Apply saved a different colour.
+    var exactArgb by remember { mutableStateOf<Int?>(initialColor.toArgb()) }
 
-    val currentColor by remember(hue, saturation, lightness, alpha) {
+    val currentColor by remember(hue, saturation, lightness, alpha, exactArgb) {
         derivedStateOf {
-            Color.hsl(hue, saturation, lightness, alpha)
+            exactArgb?.let { Color(it) } ?: Color.hsl(hue, saturation, lightness, alpha)
         }
     }
 
@@ -1049,7 +1055,7 @@ fun ColorPickerDialog(
                 )
                 Slider(
                     value = hue,
-                    onValueChange = { hue = it },
+                    onValueChange = { hue = it; exactArgb = null },
                     valueRange = 0f..360f,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1072,7 +1078,7 @@ fun ColorPickerDialog(
                 )
                 Slider(
                     value = saturation,
-                    onValueChange = { saturation = it },
+                    onValueChange = { saturation = it; exactArgb = null },
                     valueRange = 0f..1f,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1096,7 +1102,7 @@ fun ColorPickerDialog(
                 )
                 Slider(
                     value = lightness,
-                    onValueChange = { lightness = it },
+                    onValueChange = { lightness = it; exactArgb = null },
                     valueRange = 0f..1f,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -1105,33 +1111,34 @@ fun ColorPickerDialog(
                 Text(stringResource(R.string.theme_color_opacity), style = MaterialTheme.typography.labelSmall)
                 Slider(
                     value = alpha,
-                    onValueChange = { alpha = it },
+                    onValueChange = { alpha = it; exactArgb = null },
                     valueRange = 0f..1f,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // #93: Editable hex input — accepts #RRGGBB or #AARRGGBB and updates HSL sliders
-                var hexText by remember { mutableStateOf(String.format("#%08X", currentColor.toArgb())) }
-                val expectedHex = String.format("#%08X", currentColor.toArgb())
-                LaunchedEffect(expectedHex) {
-                    if (hexText.uppercase() != expectedHex.uppercase()) {
-                        hexText = expectedHex
+                // #93: Editable hex input — accepts #RRGGBB or #AARRGGBB and updates HSL sliders.
+                // The field keeps the user's own text and cursor (HexColorText): a colour applies
+                // only once the text is a complete valid value, and the text is replaced only when
+                // a slider or preset moved the colour to one the text does not denote.
+                val currentArgb = currentColor.toArgb()
+                var hexField by remember {
+                    val initial = HexColorText.format(currentArgb)
+                    mutableStateOf(TextFieldValue(initial, TextRange(initial.length)))
+                }
+                LaunchedEffect(currentArgb) {
+                    HexColorText.resyncedText(hexField.text, currentArgb)?.let { text ->
+                        hexField = TextFieldValue(text, TextRange(text.length))
                     }
                 }
                 // Hoisted out of the semantics {} lambda (not a composable scope).
                 val hexInputDesc = stringResource(R.string.theme_color_hex_desc)
                 OutlinedTextField(
-                    value = hexText,
-                    onValueChange = { newText ->
-                        hexText = newText
-                        val match = Regex("#?([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})").matchEntire(newText.trim())
-                        if (match != null) {
-                            val hex = match.groupValues[1]
-                            val argb = if (hex.length == 6) {
-                                (0xFF000000.toInt()) or hex.toLong(16).toInt()
-                            } else {
-                                hex.toLong(16).toInt()
-                            }
+                    value = hexField,
+                    onValueChange = { newValue ->
+                        hexField = newValue
+                        val argb = HexColorText.parse(newValue.text)
+                        if (argb != null) {
+                            exactArgb = argb
                             val parsed = Color(argb)
                             val hsl = parsed.toHsl()
                             hue = hsl[0]
@@ -1167,6 +1174,7 @@ fun ColorPickerDialog(
                                 .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
                                 .clickable {
                                     val hsl = preset.toHsl()
+                                    exactArgb = preset.toArgb()
                                     hue = hsl[0]
                                     saturation = hsl[1]
                                     lightness = hsl[2]
