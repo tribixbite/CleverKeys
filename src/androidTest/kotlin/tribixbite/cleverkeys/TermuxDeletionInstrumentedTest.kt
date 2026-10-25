@@ -163,17 +163,15 @@ class TermuxDeletionInstrumentedTest {
 
     /**
      * `note hello ` was auto-inserted by a swipe; tapping a different suggestion must remove
-     * `hello` plus the spaces around it.
+     * `hello` and its trailing space with DEL key events.
      *
-     * Count: `"hello".length + 1` for word+trailing space, then `+1` because the Termux branch
-     * finds a space immediately before the cursor and counts the leading space too — 7 presses,
-     * exactly the length of `" hello "`.
-     *
-     * TODO(ARC-007 follow-up): the Termux branch inspects `getTextBeforeCursor(1)` BEFORE deleting
-     * while the InputConnection branch inspects it AFTER, so the two disagree when the committed
-     * word has no leading space (Termux would then send one DEL too many). Not changed here: a
-     * swipe commit always inserts the leading space, so the divergence is unreachable on the path
-     * that actually runs, and altering the count needs a real-terminal verification run.
+     * Count: this fixture uses legacy tracking (no recorded commit text), so
+     * [SmartAutoSpace.swipeReplacement] plans `"hello".length + 1` = 6 presses (word + trailing
+     * space). Until 691aa8cf the Termux branch read the character before the cursor BEFORE
+     * deleting and added a 7th press for it, but that character is the swipe's own trailing
+     * space, so the extra press erased the space before the word (the divergence this test's old
+     * TODO described; fixed for RustDesk, 2026-10-25). The space before `hello` now stays, and the
+     * tap's leading-space rule sees it and adds none.
      */
     @Test
     fun termux_replaceDeletion_usesKeyEventsOnly() {
@@ -187,7 +185,7 @@ class TermuxDeletionInstrumentedTest {
 
             assertEquals(
                 "Termux REPLACE must delete with DEL key events. Presses: ${ic.keyPresses}",
-                7, ic.pressesOf(KeyEvent.KEYCODE_DEL)
+                6, ic.pressesOf(KeyEvent.KEYCODE_DEL)
             )
             assertEquals(
                 "Termux REPLACE must NOT use deleteSurroundingText. Calls: ${ic.deleteSurroundingCalls}",
