@@ -476,7 +476,7 @@
     <string name="gesture_min_distance_title">Distance minimale</string>
     <string name="gesture_min_distance_desc" formatted="false">Distance minimale de glissé pour déclencher (% de la diagonale de touche)</string>
     <string name="gesture_max_distance_title">Distance maximale</string>
-    <string name="gesture_max_distance_desc" formatted="false">La limite court/long (% de la diagonale de touche) : en dessous = glissé court, au-delà = mot par glissé. Les valeurs basses transforment les légères dépassements en mots ; les valeurs élevées exigent des glissés plus longs avant que la saisie de mots commence.</string>
+    <string name="gesture_max_distance_desc" formatted="false">La limite court/long (% de la diagonale de touche) : en dessous = glissé court, au-delà = mot par glissé. Les valeurs basses transforment les légers dépassements en mots ; les valeurs élevées exigent des glissés plus longs avant que la saisie de mots commence.</string>
     <string name="gesture_short_swipes_only_title">Glissés courts uniquement</string>
     <string name="gesture_short_swipes_only_desc">Chaque glissé d\'au moins la distance minimale saisit la sous-touche de sa direction, quelle que soit sa longueur ; un glissé vers une direction sans sous-touche ne saisit rien. La saisie par glissé est désactivée tant que cette option est active. Nécessite les gestes courts.</string>
     <string name="swipe_enable_desc_short_swipes_only">Désactivé tant que « Glissés courts uniquement » est actif (Réglage des gestes).</string>
@@ -492,7 +492,7 @@
     <string name="gesture_selection_delete_step_title">Taille du pas</string>
     <string name="gesture_selection_delete_step_desc">Déplacement du doigt nécessaire pour sélectionner un caractère de plus en mode « Suivre le doigt ». Plus petit = plus rapide, plus grand = plus précis.</string>
     <string name="gesture_tap_duration_title">Seuil de durée d\'appui</string>
-    <string name="gesture_tap_duration_desc">Durée maximale d\'un geste d\'appui (ms). Plus élevé = appuis plus faciles mais peut interférer avec les glissés.</string>
+    <string name="gesture_tap_duration_desc">Durée maximale d\'un geste d\'appui (ms). Plus élevé = appuis plus faciles, mais peut interférer avec les glissés.</string>
     <string name="gesture_double_space_period_title">Double espace pour point</string>
     <string name="gesture_double_space_period_desc">Appuyer deux fois rapidement sur espace pour insérer un point. Ne se déclenche qu\'après des lettres/chiffres.</string>
     <string name="gesture_double_space_timing_title">Timing double espace</string>
@@ -502,15 +502,15 @@
     <string name="gesture_min_swipe_distance_title">Distance minimale de glissé</string>
     <string name="gesture_min_swipe_distance_desc">Chemin tracé minimal (px) avant qu\'un geste puisse être qualifié de mot par glissé. Une valeur plus basse aide les mots très courts à être reconnus ; augmentez si des touches accidentelles se transforment en mots. (La distinction court/long est déterminée par la distance maximale ci-dessus.)</string>
     <string name="gesture_min_key_distance_title">Distance minimale entre touches</string>
-    <string name="gesture_min_key_distance_desc">Distance entre les touches lors du glissé (px). Valeur plus basse capture plus de touches mais peut ajouter du bruit.</string>
+    <string name="gesture_min_key_distance_desc">Distance entre les touches lors du glissé (px). Valeur plus basse capture plus de touches, mais peut ajouter du bruit.</string>
     <string name="gesture_min_key_dwell_title">Temps de maintien minimal sur touche</string>
     <string name="gesture_min_key_dwell_desc">Temps pour enregistrer une touche lors du glissé (ms). Valeur plus basse permet un glissé plus rapide.</string>
     <string name="gesture_noise_filter_title">Filtre de bruit de mouvement</string>
-    <string name="gesture_noise_filter_desc">Mouvement minimal pour enregistrer (px). Plus élevé filtre les tremblements mais peut perdre des données.</string>
+    <string name="gesture_noise_filter_desc">Mouvement minimal pour enregistrer (px). Plus élevé filtre les tremblements, mais peut perdre des données.</string>
     <string name="gesture_high_velocity_title">Seuil de haute vitesse</string>
     <string name="gesture_high_velocity_desc">Vitesse pour la détection de glissé rapide (px/s). Plus élevé permet des glissés plus rapides.</string>
     <string name="gesture_speed_smoothing_title">Lissage de vitesse</string>
-    <string name="gesture_speed_smoothing_desc">Facteur de lissage pour le mouvement du curseur. Plus élevé est plus fluide mais moins réactif.</string>
+    <string name="gesture_speed_smoothing_desc">Facteur de lissage pour le mouvement du curseur. Plus élevé est plus fluide, mais moins réactif.</string>
     <string name="gesture_max_speed_multiplier_title">Multiplicateur de vitesse maximale</string>
     <string name="gesture_max_speed_multiplier_desc">Accélération maximale du curseur. Plus élevé permet un glissement plus rapide.</string>
     <string name="gif_enable_title">Activer le panneau GIF</string>
@@ -589,7 +589,7 @@
     <string name="swipe_enable_title">Activer la saisie par glissé</string>
     <string name="swipe_enable_desc">Glissez sur les touches pour saisir des mots entiers.</string>
     <string name="swipe_password_title">Glissé dans les champs de mot de passe</string>
-    <string name="swipe_password_desc">Activer la saisie par glissé même dans les champs de mot de passe. Les suggestions seront affichées mais les caractères individuels saisis resteront masqués.</string>
+    <string name="swipe_password_desc">Activer la saisie par glissé même dans les champs de mot de passe. Les suggestions seront affichées, mais les caractères individuels saisis resteront masqués.</string>
     <string name="privacy_swipe_pattern_title">Données de schéma de glissé</string>
     <string name="privacy_swipe_pattern_desc">Stocker les trajectoires de glissé localement pour l\'apprentissage sur l\'appareil</string>
     <string name="privacy_performance_metrics_title">Métriques de performance</string>
@@ -607,7 +607,7 @@
     <string name="theme_color_key_default">Touche par défaut</string>
     <string name="theme_color_key_activated">Touche activée</string>
     <string name="theme_color_key_locked">Touche verrouillée</string>
-    <string name="theme_color_key_modifier">Touche modificateur</string>
+    <string name="theme_color_key_modifier">Touche de modification</string>
     <string name="theme_color_key_special">Touche spéciale</string>
     <string name="theme_color_key_label">Étiquette de touche</string>
     <string name="theme_color_sub_label">Sous-étiquette</string>
@@ -654,13 +654,13 @@
     <plurals name="collision_warning_body"><item quantity="one">%1$d raccourci d\'un paquet importé aurait remplacé un mot réel de l\'autre langue active (%2$s). Il devient une suggestion facultative.</item><item quantity="many">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item><item quantity="other">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item></plurals>
     <string name="collision_warning_examples">Raccourcis concernés :</string>
     <string name="swipe_context_rescoring_title">Utiliser le contexte pour classer</string>
-    <string name="swipe_context_rescoring_desc">Réordonne les suggestions avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent; un glissé clair reste prioritaire. Nécessite l\'apprentissage local.</string>
+    <string name="swipe_context_rescoring_desc">Réordonne les suggestions avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent ; un glissé clair reste prioritaire. Nécessite l\'apprentissage local.</string>
     <!-- ARC-067 batch (2026-09-01): machine translations pending native review -->
     <string name="swipe_engine_pack_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : seuls %2$d %% de ses mots peuvent s\'épeler avec les touches a–z. Des lettres comme ı, ł et đ n\'ont pas de forme a–z, ces mots ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
     <string name="swipe_engine_pack_head_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : trop de ses mots les plus courants utilisent des lettres sans forme a–z, ils ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
     <string name="swipe_engine_pack_unusable">Le paquet de langue %1$s que vous avez importé ne contient pas de liste de mots lisible, CTC ne peut donc pas l\'utiliser. Essayez de réimporter le paquet.</string>
     <string name="swipe_engine_layout_script_fallback">CTC ne peut pas traiter l\'écriture utilisée par %1$s ; les glissés sur cette disposition utilisent donc le moteur géométrique.</string>
-    <string name="swipe_engine_layout_corner_fallback">Sur %1$s, CTC ne peut pas lire %2$s car ce sont des caractères de coin et non des étiquettes principales de touche. Les glissés sur cette disposition utilisent le moteur géométrique.</string>
+    <string name="swipe_engine_layout_corner_fallback">Sur %1$s, CTC ne peut pas lire %2$s, car ce sont des caractères de coin et non des étiquettes principales de touche. Les glissés sur cette disposition utilisent le moteur géométrique.</string>
     <string name="swipe_engine_layout_incomplete_fallback">Sur %1$s, CTC a besoin de touches principales pour %2$s. Les glissés sur cette disposition utilisent le moteur géométrique.</string>
     <string name="clipboard_provenance_via">Copie privée · via %1$s</string>
     <string name="clipboard_provenance_direct_launch">lancement direct (pas un menu de sélection)</string>
@@ -1254,7 +1254,7 @@
     <string name="clipboard_limit_type_by_count">Par nombre</string>
     <string name="clipboard_limit_type_by_size">Par taille</string>
     <string name="clipboard_history_limit_unlimited">Illimité</string>
-    <string name="clipboard_entry_duration_desc_unlimited_count">Attention : le nombre est illimité mais les entrées expirent après cette durée</string>
+    <string name="clipboard_entry_duration_desc_unlimited_count">Attention : le nombre est illimité, mais les entrées expirent après cette durée</string>
     <string name="clipboard_entry_duration_desc_default">Durée de conservation des entrées avant suppression automatique (-1 = jamais)</string>
     <string name="clipboard_entry_duration_never">N\'expire jamais</string>
     <string name="clipboard_private_copy_header">🔒 Copie privée</string>
@@ -1301,9 +1301,9 @@
         <item quantity="other">%1$d éléments</item>
     </plurals>
     <plurals name="clipboard_entry_duration_desc_never_capped">
-        <item quantity="one">Les entrées n\'expirent jamais mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
-        <item quantity="many">Les entrées n\'expirent jamais mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
-        <item quantity="other">Les entrées n\'expirent jamais mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
+        <item quantity="one">Les entrées n\'expirent jamais, mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
+        <item quantity="many">Les entrées n\'expirent jamais, mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
+        <item quantity="other">Les entrées n\'expirent jamais, mais sont limitées à %1$d (la limite de nombre s\'applique toujours)</item>
     </plurals>
     <plurals name="settings_value_hours">
         <item quantity="one">%1$d heure</item>
