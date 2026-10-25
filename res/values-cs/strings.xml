@@ -1912,6 +1912,7 @@
     <string name="clipboard_filter_match_all">Shoda: vše</string>
     <string name="clipboard_filter_match_any">Shoda: kterýkoli</string>
     <string name="clipboard_paste_media_unsupported">Sem nelze vložit média</string>
+    <string name="clipboard_paste_incomplete">Vložení je neúplné: aplikace nepřijala celý výstřižek.</string>
     <string name="clipboard_paste_media_private_refused">Tato aplikace nepřijímá přímé vložení médií — soukromé položky se nikdy neukládají do systémové schránky</string>
     <string name="clipboard_time_just_now">Právě teď</string>
     <string name="clipboard_time_yesterday">Včera</string>

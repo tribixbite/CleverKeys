@@ -1923,6 +1923,7 @@
     <string name="clipboard_filter_match_all">Збіг: усі</string>
     <string name="clipboard_filter_match_any">Збіг: будь-який</string>
     <string name="clipboard_paste_media_unsupported">Тут не можна вставити медіафайл</string>
+    <string name="clipboard_paste_incomplete">Вставлення не завершено: застосунок прийняв не весь фрагмент.</string>
     <string name="clipboard_paste_media_private_refused">Цей застосунок не приймає медіафайли напряму — приватні записи ніколи не потрапляють до системного буфера обміну</string>
     <string name="clipboard_time_just_now">Щойно</string>
     <string name="clipboard_time_yesterday">Учора</string>

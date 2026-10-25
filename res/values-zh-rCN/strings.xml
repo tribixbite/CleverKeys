@@ -1784,6 +1784,7 @@
     <string name="clipboard_filter_match_all">匹配：全部</string>
     <string name="clipboard_filter_match_any">匹配：任一</string>
     <string name="clipboard_paste_media_unsupported">无法在此处粘贴媒体</string>
+    <string name="clipboard_paste_incomplete">粘贴不完整：应用未接受整个剪贴项。</string>
     <string name="clipboard_paste_media_private_refused">此应用不接受直接粘贴媒体——私密条目绝不会被放到系统剪贴板</string>
     <string name="clipboard_time_just_now">刚刚</string>
     <string name="clipboard_time_yesterday">昨天</string>

@@ -1848,6 +1848,7 @@
     <string name="clipboard_filter_match_all">Treffer: Alle</string>
     <string name="clipboard_filter_match_any">Treffer: Beliebig</string>
     <string name="clipboard_paste_media_unsupported">Medien können hier nicht eingefügt werden</string>
+    <string name="clipboard_paste_incomplete">Einfügen unvollständig: Die App hat nicht den ganzen Clip angenommen.</string>
     <string name="clipboard_paste_media_private_refused">Diese App nimmt keine Medien direkt an – private Einträge werden nie in die Systemzwischenablage gelegt</string>
     <string name="clipboard_time_just_now">Gerade eben</string>
     <string name="clipboard_time_yesterday">Gestern</string>

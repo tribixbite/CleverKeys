@@ -1786,6 +1786,7 @@
     <string name="clipboard_filter_match_all">일치: 모두</string>
     <string name="clipboard_filter_match_any">일치: 하나 이상</string>
     <string name="clipboard_paste_media_unsupported">여기에는 미디어를 붙여넣을 수 없습니다</string>
+    <string name="clipboard_paste_incomplete">붙여넣기가 완료되지 않았습니다. 앱이 클립 전체를 받지 않았습니다.</string>
     <string name="clipboard_paste_media_private_refused">이 앱은 미디어 직접 삽입을 지원하지 않습니다 — 비공개 항목은 절대 시스템 클립보드에 저장되지 않습니다</string>
     <string name="clipboard_time_just_now">방금</string>
     <string name="clipboard_time_yesterday">어제</string>

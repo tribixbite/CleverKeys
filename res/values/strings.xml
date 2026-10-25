@@ -2228,6 +2228,7 @@
     <string name="clipboard_filter_match_all">Match: All</string>
     <string name="clipboard_filter_match_any">Match: Any</string>
     <string name="clipboard_paste_media_unsupported">Cannot paste media here</string>
+    <string name="clipboard_paste_incomplete">Paste incomplete: the app did not accept all of this clipping.</string>
     <string name="clipboard_paste_media_private_refused">This app doesn\'t accept direct media — private entries are never placed on the system clipboard</string>
     <string name="clipboard_time_just_now">Just now</string>
     <string name="clipboard_time_yesterday">Yesterday</string>

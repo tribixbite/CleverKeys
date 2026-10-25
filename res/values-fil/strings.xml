@@ -1840,6 +1840,7 @@
     <string name="clipboard_filter_match_all">Tugma: Lahat</string>
     <string name="clipboard_filter_match_any">Tugma: Alinman</string>
     <string name="clipboard_paste_media_unsupported">Hindi ma-paste ang media rito</string>
+    <string name="clipboard_paste_incomplete">Hindi kumpleto ang pag-paste: hindi tinanggap ng app ang buong clipping.</string>
     <string name="clipboard_paste_media_private_refused">Hindi tumatanggap ang app na ito ng direktang media — hindi kailanman inilalagay ang mga private na entry sa system clipboard</string>
     <string name="clipboard_time_just_now">Ngayon lang</string>
     <string name="clipboard_time_yesterday">Kahapon</string>

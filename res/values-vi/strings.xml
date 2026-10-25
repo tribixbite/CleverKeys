@@ -1814,6 +1814,7 @@
     <string name="clipboard_filter_match_all">Khớp: Tất cả</string>
     <string name="clipboard_filter_match_any">Khớp: Bất kỳ</string>
     <string name="clipboard_paste_media_unsupported">Không thể dán tệp phương tiện ở đây</string>
+    <string name="clipboard_paste_incomplete">Dán chưa hoàn tất: ứng dụng không nhận toàn bộ đoạn cắt.</string>
     <string name="clipboard_paste_media_private_refused">Ứng dụng này không nhận tệp phương tiện trực tiếp — các mục riêng tư không bao giờ được đưa vào bảng tạm hệ thống</string>
     <string name="clipboard_time_just_now">Vừa xong</string>
     <string name="clipboard_time_yesterday">Hôm qua</string>

@@ -1785,6 +1785,7 @@
     <string name="clipboard_filter_match_all">一致: すべて</string>
     <string name="clipboard_filter_match_any">一致: いずれか</string>
     <string name="clipboard_paste_media_unsupported">ここにはメディアを貼り付けられません</string>
+    <string name="clipboard_paste_incomplete">貼り付けが不完全です。アプリがクリップの一部を受け付けませんでした。</string>
     <string name="clipboard_paste_media_private_refused">このアプリはメディアの直接挿入に対応していません — プライベート項目がシステムのクリップボードに置かれることはありません</string>
     <string name="clipboard_time_just_now">たった今</string>
     <string name="clipboard_time_yesterday">昨日</string>

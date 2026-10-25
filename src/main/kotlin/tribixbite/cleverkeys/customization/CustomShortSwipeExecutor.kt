@@ -15,6 +15,7 @@ import java.util.Locale
 import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.ClipboardDatabase
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.LargeTextCommit
 import tribixbite.cleverkeys.R
 
 /**
@@ -625,7 +626,13 @@ class CustomShortSwipeExecutor(private val context: Context) {
             }
 
             val entry = pinnedEntries[index - 1] // Convert to 0-based
-            inputConnection.commitText(entry.content, 1)
+            // Chunked like every clipboard-entry commit: one commitText of a large entry
+            // exceeds the binder limit and is dropped (Saga 2026-10-25).
+            if (!LargeTextCommit.commit(inputConnection, entry.content)) {
+                Log.w(TAG, "paste_pinned_$index: the editor connection refused part of the entry")
+                showToast(context.getString(R.string.clipboard_paste_incomplete))
+                return false
+            }
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Pasted pinned entry #$index: ${entry.content.take(30)}...")
             true
         } catch (e: Exception) {

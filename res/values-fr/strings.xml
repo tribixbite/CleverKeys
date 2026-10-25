@@ -1880,6 +1880,7 @@
     <string name="clipboard_filter_match_all">Correspondance : toutes</string>
     <string name="clipboard_filter_match_any">Correspondance : au moins une</string>
     <string name="clipboard_paste_media_unsupported">Impossible de coller un média ici</string>
+    <string name="clipboard_paste_incomplete">Collage incomplet : l\'application n\'a pas accepté tout l\'élément.</string>
     <string name="clipboard_paste_media_private_refused">Cette appli n\'accepte pas directement les médias — les entrées privées ne sont jamais placées dans le presse-papiers système</string>
     <string name="clipboard_time_just_now">À l\'instant</string>
     <string name="clipboard_time_yesterday">Hier</string>

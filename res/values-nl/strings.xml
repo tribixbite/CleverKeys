@@ -1828,6 +1828,7 @@
     <string name="clipboard_filter_match_all">Match: alle</string>
     <string name="clipboard_filter_match_any">Match: één</string>
     <string name="clipboard_paste_media_unsupported">Kan hier geen media plakken</string>
+    <string name="clipboard_paste_incomplete">Plakken onvolledig: de app heeft niet het hele fragment geaccepteerd.</string>
     <string name="clipboard_paste_media_private_refused">Deze app accepteert geen media direct – privé-items worden nooit op het systeemklembord gezet</string>
     <string name="clipboard_time_just_now">Zojuist</string>
     <string name="clipboard_time_yesterday">Gisteren</string>

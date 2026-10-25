@@ -1910,6 +1910,7 @@
     <string name="clipboard_filter_match_all">Corrispondenza: tutti</string>
     <string name="clipboard_filter_match_any">Corrispondenza: almeno uno</string>
     <string name="clipboard_paste_media_unsupported">Impossibile incollare contenuti multimediali qui</string>
+    <string name="clipboard_paste_incomplete">Incolla incompleto: l\'app non ha accettato l\'intero ritaglio.</string>
     <string name="clipboard_paste_media_private_refused">Questa app non accetta direttamente contenuti multimediali — le voci private non vengono mai inserite negli appunti di sistema</string>
     <string name="clipboard_time_just_now">Adesso</string>
     <string name="clipboard_time_yesterday">Ieri</string>

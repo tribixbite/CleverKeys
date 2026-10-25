@@ -1870,6 +1870,7 @@
     <string name="clipboard_filter_match_all">Corresponder: todas</string>
     <string name="clipboard_filter_match_any">Corresponder: qualquer</string>
     <string name="clipboard_paste_media_unsupported">Não é possível colar mídia aqui</string>
+    <string name="clipboard_paste_incomplete">Colagem incompleta: o aplicativo não aceitou o recorte inteiro.</string>
     <string name="clipboard_paste_media_private_refused">Este aplicativo não aceita mídia direta — itens privados nunca são colocados na área de transferência do sistema</string>
     <string name="clipboard_time_just_now">Agora mesmo</string>
     <string name="clipboard_time_yesterday">Ontem</string>

@@ -1897,6 +1897,7 @@
     <string name="clipboard_filter_match_all">Potrivire: toate</string>
     <string name="clipboard_filter_match_any">Potrivire: oricare</string>
     <string name="clipboard_paste_media_unsupported">Nu se poate lipi conținut media aici</string>
+    <string name="clipboard_paste_incomplete">Lipire incompletă: aplicația nu a acceptat tot decupajul.</string>
     <string name="clipboard_paste_media_private_refused">Această aplicație nu acceptă media direct – intrările private nu sunt plasate niciodată în clipboardul sistemului</string>
     <string name="clipboard_time_just_now">Chiar acum</string>
     <string name="clipboard_time_yesterday">Ieri</string>

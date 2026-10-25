@@ -1839,6 +1839,7 @@
     <string name="clipboard_filter_match_all">Eşleşme: Tümü</string>
     <string name="clipboard_filter_match_any">Eşleşme: Herhangi</string>
     <string name="clipboard_paste_media_unsupported">Medya buraya yapıştırılamaz</string>
+    <string name="clipboard_paste_incomplete">Yapıştırma tamamlanmadı: uygulama kırpmanın tamamını kabul etmedi.</string>
     <string name="clipboard_paste_media_private_refused">Bu uygulama doğrudan medya kabul etmiyor — özel kayıtlar asla sistem panosuna konmaz</string>
     <string name="clipboard_time_just_now">Az önce</string>
     <string name="clipboard_time_yesterday">Dün</string>

@@ -1881,6 +1881,7 @@
     <string name="clipboard_filter_match_all">Atbilst: visām</string>
     <string name="clipboard_filter_match_any">Atbilst: jebkurai</string>
     <string name="clipboard_paste_media_unsupported">Šeit nevar ielīmēt multividi</string>
+    <string name="clipboard_paste_incomplete">Ielīmēšana nav pabeigta: lietotne nepieņēma visu klipu.</string>
     <string name="clipboard_paste_media_private_refused">Šī lietotne nepieņem multividi tieši — privātie ieraksti nekad netiek ievietoti sistēmas starpliktuvē</string>
     <string name="clipboard_time_just_now">Tikko</string>
     <string name="clipboard_time_yesterday">Vakar</string>

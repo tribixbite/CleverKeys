@@ -1517,6 +1517,12 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.EditingCommandParityTest',
     // 2026-10-13 Saga: Ctrl+V with the clipboard editor open pasted into the app behind it.
     'tribixbite.cleverkeys.InlineFieldShortcutTest',
+    // Saga 2026-10-25: a 524,000-char clipboard entry exceeded one binder transaction; every
+    // clipboard-entry commit is chunked inside one batch edit and a refused chunk is reported.
+    'tribixbite.cleverkeys.ClipboardLargePasteTest',
+    // The chunked commit itself: order, one batch edit, surrogate-safe boundaries, a round
+    // trip between chunks, stop on a refused chunk (needs android.jar's InputConnection).
+    'tribixbite.cleverkeys.LargeTextCommitTest',
     // 2026-10-20: swipes with the clipboard editor open landed in the app behind the panel.
     'tribixbite.cleverkeys.InlineSwipeRoutingTest',
     // 2026-10-17: new editor commands against a fake editor (readback, refusals, inline routing).

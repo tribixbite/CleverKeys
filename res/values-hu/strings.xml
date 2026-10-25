@@ -1834,6 +1834,7 @@
     <string name="clipboard_filter_match_all">Egyezés: mind</string>
     <string name="clipboard_filter_match_any">Egyezés: bármelyik</string>
     <string name="clipboard_paste_media_unsupported">Ide nem illeszthető be média</string>
+    <string name="clipboard_paste_incomplete">A beillesztés hiányos: az alkalmazás nem fogadta el a teljes kivágást.</string>
     <string name="clipboard_paste_media_private_refused">Ez az alkalmazás nem fogad közvetlenül médiát — a privát bejegyzések soha nem kerülnek a rendszer vágólapjára</string>
     <string name="clipboard_time_just_now">Épp most</string>
     <string name="clipboard_time_yesterday">Tegnap</string>

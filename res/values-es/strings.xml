@@ -1888,6 +1888,7 @@
     <string name="clipboard_filter_match_all">Coincidir: todas</string>
     <string name="clipboard_filter_match_any">Coincidir: cualquiera</string>
     <string name="clipboard_paste_media_unsupported">No se pueden pegar medios aquí</string>
+    <string name="clipboard_paste_incomplete">Pegado incompleto: la aplicación no aceptó todo el recorte.</string>
     <string name="clipboard_paste_media_private_refused">Esta app no acepta medios directamente: las entradas privadas nunca se colocan en el portapapeles del sistema</string>
     <string name="clipboard_time_just_now">Ahora mismo</string>
     <string name="clipboard_time_yesterday">Ayer</string>

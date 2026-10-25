@@ -596,9 +596,20 @@ class KeyEventHandler(
      */
     private fun sendTextDirect(text: CharSequence) {
         val conn = recv.getCurrentInputConnection() ?: return
-        conn.beginBatchEdit()
-        conn.commitText(text, 1)
-        conn.endBatchEdit()
+        commitClipboardText(conn, text)
+    }
+
+    /**
+     * Commit clipboard text (a pane entry or the system clip) into the app: chunked inside one
+     * batch edit so an entry of any stored size fits the binder limit ([LargeTextCommit]; a
+     * 524,000-char entry used to fail as ONE transaction, Saga 2026-10-25). When the app's
+     * connection refuses a chunk the paste is incomplete, and the user is told in the bar.
+     */
+    private fun commitClipboardText(conn: InputConnection, text: CharSequence) {
+        if (!LargeTextCommit.commit(conn, text)) {
+            Log.w(TAG, "Clipboard paste refused by the editor connection after part of ${text.length} chars")
+            showFeedback(R.string.clipboard_paste_incomplete)
+        }
     }
 
     /**
@@ -777,7 +788,7 @@ class KeyEventHandler(
      */
     private fun pasteFromSystemClipboard() {
         val conn = recv.getCurrentInputConnection() ?: return
-        readSystemClipText()?.let { conn.commitText(it, 1) }
+        readSystemClipText()?.let { commitClipboardText(conn, it) }
     }
 
     /** The system clip as plain text, or null when there is none (or it cannot be read). */

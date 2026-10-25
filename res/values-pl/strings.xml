@@ -1922,6 +1922,7 @@
     <string name="clipboard_filter_match_all">Dopasuj: wszystkie</string>
     <string name="clipboard_filter_match_any">Dopasuj: dowolny</string>
     <string name="clipboard_paste_media_unsupported">Nie można tu wkleić multimediów</string>
+    <string name="clipboard_paste_incomplete">Wklejanie niepełne: aplikacja nie przyjęła całego wycinka.</string>
     <string name="clipboard_paste_media_private_refused">Ta aplikacja nie przyjmuje multimediów bezpośrednio — prywatne wpisy nigdy nie trafiają do schowka systemowego</string>
     <string name="clipboard_time_just_now">Przed chwilą</string>
     <string name="clipboard_time_yesterday">Wczoraj</string>

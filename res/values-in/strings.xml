@@ -1798,6 +1798,7 @@
     <string name="clipboard_filter_match_all">Cocok: Semua</string>
     <string name="clipboard_filter_match_any">Cocok: Salah satu</string>
     <string name="clipboard_paste_media_unsupported">Tidak dapat menempel media di sini</string>
+    <string name="clipboard_paste_incomplete">Penempelan tidak lengkap: aplikasi tidak menerima seluruh klip.</string>
     <string name="clipboard_paste_media_private_refused">Aplikasi ini tidak menerima media langsung — entri pribadi tidak pernah ditaruh di clipboard sistem</string>
     <string name="clipboard_time_just_now">Baru saja</string>
     <string name="clipboard_time_yesterday">Kemarin</string>

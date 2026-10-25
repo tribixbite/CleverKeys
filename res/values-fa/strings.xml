@@ -1866,6 +1866,7 @@
     <string name="clipboard_filter_match_all">تطابق: همه</string>
     <string name="clipboard_filter_match_any">تطابق: هر کدام</string>
     <string name="clipboard_paste_media_unsupported">چسباندن رسانه در اینجا ممکن نیست</string>
+    <string name="clipboard_paste_incomplete">چسباندن ناقص ماند: برنامه همهٔ این بریده را نپذیرفت.</string>
     <string name="clipboard_paste_media_private_refused">این برنامه رسانه را مستقیم نمی‌پذیرد — موارد خصوصی هرگز در بریده‌دان سامانه قرار نمی‌گیرند</string>
     <string name="clipboard_time_just_now">همین حالا</string>
     <string name="clipboard_time_yesterday">دیروز</string>

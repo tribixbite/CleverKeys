@@ -1917,6 +1917,7 @@
     <string name="clipboard_filter_match_all">Совпадение: все</string>
     <string name="clipboard_filter_match_any">Совпадение: любой</string>
     <string name="clipboard_paste_media_unsupported">Здесь нельзя вставить медиафайл</string>
+    <string name="clipboard_paste_incomplete">Вставка не завершена: приложение приняло не весь фрагмент.</string>
     <string name="clipboard_paste_media_private_refused">Это приложение не принимает медиафайлы напрямую — приватные записи никогда не помещаются в системный буфер обмена</string>
     <string name="clipboard_time_just_now">Только что</string>
     <string name="clipboard_time_yesterday">Вчера</string>
