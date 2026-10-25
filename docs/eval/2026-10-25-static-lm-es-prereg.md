@@ -137,3 +137,44 @@ read.
   on two independent dev populations, not one.
 - **The 30-token cap drops long sentences.** AnCora has 1,880 segments and 1,213 are kept; the cap
   applies to every population alike.
+
+## Dev results and choice (2026-10-25, committed before the test split is read)
+
+**Builds.** Builder at `a4b92efd`, built `--offline` into the session scratchpad (never under
+`src/main/assets`).
+
+- en rebuilds byte-identically: `en.cklm` sha256 `8efe036a…125a4`, the sidecar, the contributor
+  list and all three eval files. The builder change is inert for en.
+- **C1:** 405,743 B, vocab 15,572 / prevs 14,817 / pairs 57,762, sha256
+  `0ad97cd5426d3f655db4494f83ec50543ed8a73f6cdbfd6b1a7ea028c47d5ee2`.
+- **C2:** 406,041 B (+298 B), prevs 14,822 / pairs 57,850 (the 5 new rows, +88 pairs), sha256
+  `5dcf812c197b25ce633344a0592fd5bf52ec1aa8e025394c4b27b411a88c4aea`.
+- The AnCora exclusion dropped 5 / 29 / 17 training sentences (spa_web / Tatoeba / spa_wikipedia).
+- The builder's own log also prints a Python next-word number on GSD test, as it did for the
+  retry. That number was used for nothing.
+
+**Runs.** Two guarded `StaticLmTapEvalTest` grid runs (`STATIC_LM_EVAL_SPLIT=dev`). They ran
+from a clean `git worktree` at HEAD, because an uncommitted layout edit by another session in the
+shared tree failed `processDebugResources`. The box's load average was about 12–15; the counts are
+deterministic.
+
+`lm_static` − `none`, top-3, shipped `RAW` shape:
+
+| Dev population | n (prefix-1) | C1 p1 / p2 / p3 | C2 p1 / p2 / p3 | empty dev. |
+|---|---|---|---|---|
+| AnCora dev: 1,179 sent. (1,161 distinct), 18,142 pos / 5,136 prev / 13,937 pairs | 16,474 | **+3.78** / +4.58 / +2.90 | +3.57 / +4.55 / +2.96 | 0 / 0 |
+| GSD dev: 1,215 sent., 18,399 pos / 5,653 prev / 13,921 pairs | 16,211 | **+5.37** / +6.39 / +4.63 | +5.22 / +6.38 / +4.73 | 0 / 0 |
+
+**Choice: C1.** C2 loses at prefix-1 on both dev populations (−0.21, −0.15), so it misses the
++0.10 requirement. C1 on GSD dev reproduces the retry's +5.37 exactly, so the extra exclusion did
+not move it.
+
+C2 raised the share of positions whose previous word the LM knows from 83.8 % to 88.5 % (AnCora
+dev) and from 82.6 % to 87.9 % (GSD). It still lost, because under `RAW` a known previous word
+also brings the backoff PENALTY (< 1) for every unlisted candidate. Under the `FLOOR_ONE` arm,
+which is reported and not selected on, C2 beats C1 (AnCora +4.85 vs +4.83, GSD +6.80 vs +6.61).
+That is the same penalty effect the ratio-shape follow-up studies. It is recorded here, and it is
+not used.
+
+**Expectation, stated before the test read.** C1 is at +3.78 on AnCora dev, 1.2 pt below the line.
+A pass on AnCora test is unlikely. The test is still read once, as registered.
