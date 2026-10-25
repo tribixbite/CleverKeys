@@ -245,7 +245,7 @@ retain their release-anchored names.
 the raw value in `KeyboardData.declared_language` and never fails on it (a stored layout must
 not disappear over its attribute); `LayoutLanguageBinding.effective` validates it with the
 language-pack code shape (`^[a-z]{2,3}(?:[_-][a-z0-9]{1,16}){0,4}$`, case-insensitive) and the
-Layout Manager editor refuses to save an invalid value. Built-in layouts declare no language.
+Layout Manager editor refuses to save an invalid value. One built-in layout declares a language: Persian PC (`arab_pc_ir.xml`, `language="fa"`, 2026-10-25), so it binds to Persian unless the user picks "Follow Multi-Language settings" (stored as `"none"`); without `langpack-fa.zip` it still types, with the "no dictionary installed" warning and no predictions. Layout Manager reads built-in declarations too (`DeclaredLayoutLanguages`). The Kurdish (Persian layout) board declares none.
 
 The user's choice is stored per entry of the `layouts` preference (`language` field: absent =
 use the XML default, `"none"` = explicitly unbound, a code = bound) and overrides the XML

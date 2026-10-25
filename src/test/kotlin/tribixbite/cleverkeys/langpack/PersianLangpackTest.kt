@@ -157,14 +157,13 @@ class PersianLangpackTest {
             File("src/main/layouts/arab_pc_ir.xml"),
             includeLocCorners = true, appendBottomRow = false, aspect = GeoLayoutFixtures.DEFAULT_ASPECT,
         )
-        val untypeable = ranked.filter { LayoutProjection.project(it, layout) == null }
-        // Persian PC has no key or corner for أ ؤ إ (the pack keeps them: hamza is never folded),
-        // so exactly the words spelled with one of them cannot be templated — 172 of 50,000 on
-        // the 2026-10-23 build. Nothing else may fail.
-        assertWithMessage("untypeable fa words on Persian PC that do not use أ ؤ إ")
-            .that(untypeable.filterNot { w -> w.any { it in "أؤإ" } }).isEmpty()
-        assertWithMessage("share of fa words the geometric engine can template on Persian PC")
-            .that(1.0 - untypeable.size.toDouble() / ranked.size).isAtLeast(0.995)
+        // Until 2026-10-25 Persian PC had no key or corner for أ ؤ إ (the pack keeps them: hamza
+        // is never folded), so the 172 words spelled with one of them could not be templated.
+        // They are now edge/corner gestures on ا and و (PersianLayoutHamzaAndLanguageTest), and
+        // every word of the pack projects.
+        assertWithMessage("hamza words in the pack").that(ranked.count { w -> w.any { it in "أؤإ" } }).isEqualTo(172)
+        assertWithMessage("fa words the geometric engine cannot template on Persian PC")
+            .that(ranked.filter { LayoutProjection.project(it, layout) == null }).isEmpty()
         // The half-space is not a key: both spellings swipe the same letter path.
         assertThat(LayoutProjection.project("می‌شود", layout)!!.toList())
             .isEqualTo(LayoutProjection.project("میشود", layout)!!.toList())

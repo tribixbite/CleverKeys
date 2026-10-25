@@ -116,6 +116,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     val availableLanguages = remember { LanguageAvailability.availableLanguages(context) }
     val uiLocale = context.resources.configuration.locales[0]
     fun languageName(code: String): String = LanguageDisplayNames.displayName(code, uiLocale)
+    // XML `language` defaults, built-in layouts included (arab_pc_ir declares fa), parsed once each.
+    val declaredLanguages = remember {
+        DeclaredLayoutLanguages { name -> LayoutsPreference.layoutOfString(context.resources, name) }
+    }
 
     // Per-layout theme binding: the themes Theme Manager offers (custom themes live-updated from
     // the same store ThemeProvider renders from), and which ids exist on this device.
@@ -224,8 +228,8 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                             layoutDisplayNames = layoutDisplayNames,
                             context = context,
                             elevation = elevation,
-                            languageLabel = layoutLanguageLabel(layoutWithId.layout, ::languageName),
-                            missingLanguage = layoutBindingOf(layoutWithId.layout)
+                            languageLabel = layoutLanguageLabel(layoutWithId.layout, declaredLanguages, ::languageName),
+                            missingLanguage = declaredLanguages.bindingOf(layoutWithId.layout)
                                 ?.takeIf { it !in availableLanguages }
                                 ?.let(::languageName),
                             onLanguage = { showLanguagePickerFor = index },
@@ -325,11 +329,12 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         } else {
             LayoutLanguageDialog(
                 layout = entry.layout,
+                declaredLanguages = declaredLanguages,
                 availableLanguages = availableLanguages,
                 languageName = ::languageName,
                 onDismiss = { showLanguagePickerFor = null },
                 onSelect = { choice ->
-                    val declared = declaredLanguageOf(entry.layout)
+                    val declared = declaredLanguages.of(entry.layout)
                     val updated = entry.layout.withLanguage(LayoutLanguageBinding.entryValueFor(choice, declared))
                     layoutsWithIds = layoutsWithIds.toMutableList().apply {
                         this[index] = LayoutWithId(id = entry.id, layout = updated)
@@ -557,24 +562,45 @@ fun LayoutItem(
 }
 
 /**
- * The XML `language` default of a layout entry. Only custom layouts are inspected: no built-in
- * layout declares `language`, and Config (which does read built-ins) would still honour one.
- * TODO: read the built-in XML here too if a built-in layout ever declares `language`.
+ * The XML `language` default of each layout entry, for Layout Manager's chip, warning and picker.
+ *
+ * Built-in (named) layouts are read too: `arab_pc_ir.xml` declares `language="fa"` (2026-10-25),
+ * and Config resolves a built-in's declaration through [LayoutsPreference.loadLayoutsWithBindings].
+ * Reading only custom layouts here made the chip say "Follow Multi-Language settings" while the
+ * keyboard was bound to Persian, and choosing "Follow" then stored `null` (= keep the XML default)
+ * instead of [LayoutLanguageBinding.UNBOUND], so the binding could not be turned off.
+ *
+ * @param loadBuiltIn parses a built-in layout by name (production: [LayoutsPreference.layoutOfString]);
+ *   each name is parsed once per instance, and a failed or missing layout declares nothing.
  */
-private fun declaredLanguageOf(layout: LayoutsPreference.Layout): String? =
-    (layout as? LayoutsPreference.CustomLayout)?.parsed?.declared_language
+internal class DeclaredLayoutLanguages(private val loadBuiltIn: (String) -> KeyboardData?) {
+    private val builtIn = HashMap<String, String?>()
 
-/** The effective language binding of a layout entry, or null when it follows Multi-Language. */
-private fun layoutBindingOf(layout: LayoutsPreference.Layout): String? =
-    LayoutLanguageBinding.effective(layout.language, declaredLanguageOf(layout))
+    /** The raw XML `language` attribute of [layout], or null (System layout, or none declared). */
+    fun of(layout: LayoutsPreference.Layout): String? = when (layout) {
+        is LayoutsPreference.CustomLayout -> layout.parsed?.declared_language
+        is LayoutsPreference.NamedLayout -> {
+            if (!builtIn.containsKey(layout.name)) {
+                builtIn[layout.name] = runCatching { loadBuiltIn(layout.name) }.getOrNull()?.declared_language
+            }
+            builtIn[layout.name]
+        }
+        else -> null
+    }
+
+    /** The effective language binding of [layout], or null when it follows Multi-Language. */
+    fun bindingOf(layout: LayoutsPreference.Layout): String? =
+        LayoutLanguageBinding.effective(layout.language, of(layout))
+}
 
 /** Chip text for a layout's binding: the language, marked when it comes from the XML. */
 @Composable
 private fun layoutLanguageLabel(
     layout: LayoutsPreference.Layout,
+    declaredLanguages: DeclaredLayoutLanguages,
     languageName: (String) -> String
 ): String {
-    val bound = layoutBindingOf(layout)
+    val bound = declaredLanguages.bindingOf(layout)
         ?: return stringResource(R.string.layout_language_follow_multilang)
     return if (layout.language == null) {
         stringResource(R.string.layout_language_from_xml, languageName(bound))
@@ -606,13 +632,14 @@ private fun layoutThemeLabel(
 @Composable
 private fun LayoutLanguageDialog(
     layout: LayoutsPreference.Layout,
+    declaredLanguages: DeclaredLayoutLanguages,
     availableLanguages: List<String>,
     languageName: (String) -> String,
     onDismiss: () -> Unit,
     onSelect: (String?) -> Unit
 ) {
-    val declared = LayoutLanguageBinding.normalizeCode(declaredLanguageOf(layout))
-    val current = layoutBindingOf(layout)
+    val declared = LayoutLanguageBinding.normalizeCode(declaredLanguages.of(layout))
+    val current = declaredLanguages.bindingOf(layout)
     val options: List<String?> = listOf<String?>(null) +
         (availableLanguages + listOfNotNull(current, declared)).distinct().sortedBy { languageName(it) }
 

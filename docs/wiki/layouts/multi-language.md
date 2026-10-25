@@ -79,7 +79,9 @@ on **Follow Multi-Language settings** use the Primary and Secondary languages ab
 as before. This also works for three or more languages: bind one layout per language.
 
 - A custom layout can declare a default with `language="fa"` on its `<keyboard>` element;
-  the choice in Layout Manager overrides it.
+  the choice in Layout Manager overrides it. The built-in **Persian PC** layout declares
+  `language="fa"`, so its chip reads "Persian (layout default)"; pick **Follow Multi-Language
+  settings** there to unbind it.
 - If the chosen language has no dictionary installed, Layout Manager shows a warning and
   the keyboard says "no dictionary installed" when you switch to it. The layout still works
   for typing; import the language pack to get predictions and autocorrect.

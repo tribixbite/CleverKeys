@@ -83,7 +83,7 @@ as `null`).
 (`KeyboardData.declared_language`). Loading is lenient: an invalid value never hides a
 stored layout, but the layout editor refuses to save one ("The language attribute must be a
 language code such as fa or pt_br"). The user's per-entry choice overrides the XML.
-Built-in layouts declare no language.
+One built-in layout declares a language: Persian PC (`arab_pc_ir.xml`, `language="fa"`, 2026-10-25), so it binds to Persian unless the user picks "Follow Multi-Language settings" (stored as `"none"`); without `langpack-fa.zip` it still types, with the "no dictionary installed" warning and no predictions. Layout Manager reads built-in declarations too (`DeclaredLayoutLanguages`). The Kurdish (Persian layout) board declares none.
 
 **UI.** Each Layout Manager row shows a "Language: X" chip; tapping it opens **Layout
 language** with **Follow Multi-Language settings**, the installed languages, and the XML

@@ -1548,6 +1548,8 @@ tasks.register('runMockTests', JavaExec) {
     // 2026-10-23: dedicated half-space key right of the space bar on the Persian layouts, through
     // the real layout parser; the embedded bottom row must track res/xml/bottom_row.xml.
     'tribixbite.cleverkeys.PersianHalfSpaceKeyTest',
+    // 2026-10-25: hamza letters on the Persian layouts and Persian PC's language="fa".
+    'tribixbite.cleverkeys.PersianLayoutHamzaAndLanguageTest',
     // 2026-10-23: langpack-fa.zip through BinaryDictionaryLoader / CkdtDictionaryReader caps,
     // half-space compounds as single words, and geometric (not CTC) swipe coverage.
     'tribixbite.cleverkeys.langpack.PersianLangpackTest',

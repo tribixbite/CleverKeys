@@ -13,13 +13,15 @@
     <key key0="ح" key3="{" key2="}" />
     <key key0="ج" key3="backspace" key7="halfspace" />
   </row>
+  <!-- Hamza letters (maintainer decision 2026-10-25): أ and إ on the free top-left / bottom-left
+       corners of ا (as arab_pc.xml and arab_hamvaj_tly.xml place them), ؤ on the top-left of و. -->
   <row>
     <key key0="ش" key7="١" key8="ض" />
     <key key0="س" key7="٢" key8="ص" />
     <key key0="ی" key7="٣" key8="ؽ" />
     <key key0="ب" key7="٤" key8="ٮ" />
     <key key0="ل" key7="٥" key8="ڵ" />
-    <key key0="ا" key7="٦" key8="آ" />
+    <key key0="ا" key7="٦" key8="آ" key1="أ" key3="إ" />
     <key key0="ت" key7="٧" key8="ط" />
     <key key0="ن" key7="٨" key8="-" />
     <key key0="م" key7="٩" key8="=" />
@@ -34,7 +36,7 @@
     <key key0="ڤ" key7="ڡ" />
     <key key0="د" key7="ذ" />
     <key key0="پ" key7="ث" />
-    <key key0="و" key7="ۉ" />
+    <key key0="و" key7="ۉ" key1="ؤ" />
     <key key0="ێ" key7="ٕ" />
     <key key0="ئ" key7="ء" />
     <key key0="چ" />

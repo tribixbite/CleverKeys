@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<keyboard name="Persian PC" script="persian">
+<keyboard name="Persian PC" script="persian" language="fa">
   <row>
     <key key0="ض" key2="۱" key4="loc esc"/>
     <key key0="ص" key2="۲" key1="~" key3="\@"/>
@@ -13,13 +13,16 @@
     <key key0="ح" key2="۰"/>
     <key key0="ج"/>
   </row>
+  <!-- Hamza letters (maintainer decision 2026-10-25; 172 words of langpack-fa need them): all four
+       corners of ا are taken (آ - _ ء), so أ sits on swipe-up and إ on swipe-down (hamza above /
+       below); ؤ is on the top-right corner of و, where ی carries ئ. -->
   <row>
     <key key0="ش" key2="loc tab"/>
     <key key0="س"/>
     <key key0="ی" key2="ئ"/>
     <key key0="ب"/>
     <key key0="ل"/>
-    <key key0="ا" key1="آ" key4="ء" key2="-" key3="_"/>
+    <key key0="ا" key1="آ" key4="ء" key2="-" key3="_" key7="أ" key8="إ"/>
     <key key0="ت" key1="halfspace" key2="+"/>
     <key key0="ن"/>
     <key key0="م"/>
@@ -34,7 +37,7 @@
     <key key0="ذ" key2=":"/>
     <key key0="د" key2="؛"/>
     <key key0="پ" key2="&#1567;"/>
-    <key key0="و"/>
+    <key key0="و" key2="ؤ"/>
     <key key0="چ"/>
     <key width="1.5" key0="backspace" key2="delete"/>
   </row>

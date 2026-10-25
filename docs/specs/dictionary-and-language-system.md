@@ -284,7 +284,7 @@ invalid value read from a backup or older build is dropped (treated as `null`).
 the raw value (`KeyboardData.declared_language`); loading stays lenient so an invalid
 value never makes a stored layout disappear, while the layout editor refuses to save an
 invalid value with a localized message. The user's per-entry choice overrides it.
-Built-in layouts declare no language, so the default for everyone is "no binding".
+One built-in layout declares a language: Persian PC (`arab_pc_ir.xml`, `language="fa"`, 2026-10-25), so it binds to Persian unless the user picks "Follow Multi-Language settings" (stored as `"none"`); without `langpack-fa.zip` it still types, with the "no dictionary installed" warning and no predictions. Layout Manager reads built-in declarations too (`DeclaredLayoutLanguages`). The Kurdish (Persian layout) board declares none.
 
 **Resolution — `LayoutLanguageBinding.resolve`.** Config computes, on every refresh and on
 every `set_current_layout`, the ACTIVE languages from the current layout index (same
