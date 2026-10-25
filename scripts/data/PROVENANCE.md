@@ -169,6 +169,15 @@ Notes:
   pipeline); it only decides which words are dropped, none of its data ships in the model.
 - The UD English-EWT files are evaluation data and never reach the APK.
 
+#### Fresh ratio-shape eval populations (2026-10-25, `scripts/build_static_lm_fresh_eval.py`)
+
+Eval-only, never shipped, never a build input; pinned by sha256 in the script, fetched
+2026-10-25. Pre-registered in `docs/eval/2026-10-25-static-lm-floor-one-prereg.md`. UD PUD
+treebanks (en/de/fr/pt CC BY-SA 3.0, sv CC BY-SA 4.0); Italian UD ParlaMint + Valico (CC BY-SA
+4.0); Leipzig 10K web corpora `eng-uk_web-public_2018`, `deu-at_web_2019`, `fra-be_web_2013`,
+`ita-ch_web_2016`, `por-mz_web_2016`, `swe-se_web_2020` (CC BY 4.0). Any sentence also present in
+a language's build inputs or earlier eval files is dropped from the eval side.
+
 ## Persian word-list corpora (`scripts/corpus_blend.py` → `build_wordlist.py --lang fa`, 2026-10-23)
 
 Downloaded to `~/.cache/cleverkeys-corpora/` (never committed); sha256 pinned in `FA_BLEND`.
