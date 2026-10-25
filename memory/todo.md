@@ -433,6 +433,24 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     4.3 opt-in floating quick-action button (future release; overlay permission requested only
     on opt-in; maintainer 2026-10-22).
     (4.1 live theme preview shipped 2026-10-08, `70b94c11`.)
+21. [ ] Final QA pass 2026-10-25 (agent, HEAD `2cf8338d`; evidence `build/oct25-pixel/`, not in git).
+    Pure 3,225 OK, mock 1,488 OK. lintDebug: main-source analysis 0 errors / 228 warnings;
+    `lintAnalyzeDebugAndroidTest` and `…UnitTest` OOM on Termux at 1.5, 2.5 and 3.5 GB heap
+    (open: let CI's lintDebug cover test sources after the next push). Release arm64
+    25,294,803 B, sha256 `f16a01b6…cf81a2`. ew-cli unfiltered, 3 shards (app `40003054…`,
+    test `c70f2937…`): 1,609/1,610 on API 34, 36, 37; 1,606/1,610 on 35. The 1 shared failure
+    was the stale `TermuxDeletionInstrumentedTest` count after `691aa8cf` (harness, fixed in
+    `edd96cd9`, 7/7 on 34–37). The 3 extra API 35 failures (2 SettingsSearchTest process kills,
+    1 ProcessTextResult connect timeout) passed on rerun (SettingsSearch 7/7, ProcessText 3/3).
+    Upgrade: a throwaway instrumented test drove the PRODUCTION `onUpgrade` on v1.5.0-shaped
+    (v4) and v1.3.0-shaped (v2) files: 2/2 on 34–37 (schema and indexes equal a fresh v5, rows
+    and media columns read back). The committed `ClipboardDatabaseV5MigrationTest` mirrors the
+    ALTERs instead of calling `migrateV4toV5`. No real 1.x-APK → 2.0 install was done (no safe
+    path). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
+    without restart PASS (`d85be0dd`); bépo `été` synthetic swipe gave `Ecb` (coarse, 2.3 s,
+    not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
+    i.e. the OS clipboard; the instrumented test covers History/To-dos caret, Pinned spell-check
+    only). Left: CleverKeys default, Cyberpunk, layouts and themes restored.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
