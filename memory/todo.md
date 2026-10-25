@@ -152,6 +152,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    edit or stage it) → ARC-063 narrow the blanket R8 keeps → tag decision.
 9. [ ] agent does the objective ones (#90, #168, #145, both minimize styles) on test phones; maintainer only the feel checks (2026-10-25). pre-tag checks — #90 numpad-height cases, #168 `clear_clipboard` on a
    disposable clip, #145 cold start, both minimize styles, suffix/template/continuous feel.
+   OBJECTIVE ONES DONE 2026-10-25 on the Pixel (release `ac86bda5`, APK sha256 `f78f048c…`,
+   `build/oct25-pixel/`), all PASS, everything restored: **#90** Scale Numpad Height on → PIN
+   and numeric pads exactly as tall as the text keyboard (key top y 1534 = 1534; off: 1526), a
+   custom one-row `bottom_row="false"` layout stays one compact row, the same row with
+   `numpad_height="true"` fills the full height (`49-`, `51-`, `54-`, `56-`). **#168**
+   `clear_clipboard` (temporary g↗ mapping) after copying `throwaway168`: bar "System clipboard
+   cleared", Ctrl+V pastes nothing, history keeps the entry (`82-`–`85-`). **#145** swipe typing +
+   word predictions off, Restart Keyboard (pid 7504 → 22413), a custom short swipe (g↗ text) worked
+   on the first try (`94-`). **Minimize**: `minimize_bar` → 30 dp strip, app resized, tap restores
+   (`100-`, `101-`); `minimize_fab` → round button, app full screen, a tap elsewhere reaches the
+   app, tap on the button restores (`102-`–`105-`). Left: the maintainer's feel checks only.
+   Checklist pass (29 pass / 1 fail / 8 maintainer): `docs/plans/v2.0.0-manual-test-checklist.md`.
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
     locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
     #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 8 swipe
