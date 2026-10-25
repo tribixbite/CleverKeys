@@ -104,7 +104,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 6. [ ] MAINTAINER RESULTS 2026-10-25 (RustDesk): `teh`+space stays `teh` PASS; tapped suggestions
    DELETE (maintainer: acceptable); swipe corrections tapped from the bar also delete instead of
    append AND remove the preceding space (may involve the auto-space-before/after-swipe
-   settings) → agent investigate; Ctrl+Backspace PASS; the PASTE SUBKEY NO LONGER WORKS → bug.
+   settings) → agent investigate; Ctrl+Backspace PASS; the PASTE SUBKEY NO LONGER WORKS → cause found by code history 2026-10-25: `68d91874`
+   (10-12) switched blind-field paste from the field's own context-menu paste to an IME
+   commit of the clip; RustDesk (Flutter fields, which perform the paste in the adaptor) now
+   gets its own paste back (`TerminalUtils.handlesOwnPaste`); TYPE_NULL/VNC and terminals keep
+   the committed clip. NOT device-verified in a RustDesk session.
    PASTE SUBKEY (agent, Saga 202, 10-25): NOT REPRODUCED. The subkey is the default-on
    `extra_key_paste` on `v` (se corner; sw on bépo). It pasted in Chrome, in Chrome made a custom
    terminal (TERMINAL path: IME reads the clip, commitText) and in RustDesk's own Remote ID field

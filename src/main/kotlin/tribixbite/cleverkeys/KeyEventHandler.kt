@@ -758,11 +758,12 @@ class KeyEventHandler(
      * clipboard popup uses (paste_from_clipboard_pane → sendText → commitText).
      */
     private fun handlePaste(menuId: Int = android.R.id.paste) {
-        // Terminal-style editors include BLIND remote fields (2026-10-13): RustDesk's terminal
-        // view has no clipboard path, and a Ctrl+V key event would paste the REMOTE clipboard
-        // (RustDesk syncs the phone's clip only when its app resumes). Committed text is the one
-        // route that reaches every such field; a clip is plain text there anyway.
-        if (isTerminalStyleEditor()) {
+        // Terminal-style editors include BLIND remote fields (2026-10-13). A Ctrl+V key event
+        // would paste the REMOTE clipboard, and a TYPE_NULL field's dummy connection ignores the
+        // paste id, so those get the clip text committed. RustDesk is the exception: its Flutter
+        // fields perform the context-menu paste themselves, which is what worked there before
+        // 2026-10-13 ([TerminalUtils.handlesOwnPaste], maintainer report 2026-10-25).
+        if (isTerminalStyleEditor() && !TerminalUtils.handlesOwnPaste(recv.getCurrentEditorInfo())) {
             pasteFromSystemClipboard()
         } else {
             sendContextMenuAction(menuId)

@@ -360,14 +360,37 @@ class BlindFieldPolicyTest {
     private fun press(keys: KeyEventHandler, name: String) =
         keys.key_up(KeyValue.getKeyByName(name), Pointers.Modifiers.EMPTY, false)
 
+    /**
+     * A TYPE_NULL field (VNC clients) has no paste of its own: the platform's dummy connection
+     * ignores a context-menu paste, so the IME commits the clip text itself (2026-10-13).
+     */
     @Test
     fun pasteKeysCommitTheClipTextToABlindField() {
         for (name in listOf("paste", "pasteAsPlainText")) {
             field = RustDeskField(); ic = field.connection()
-            val (keys, _) = keyHandler(rustDesk())
+            val (keys, _) = keyHandler(blindEditor())
             press(keys, name)
             assertWithMessage("remote after '$name'").that(field.remote()).isEqualTo("clip text")
             verify(exactly = 0) { ic.performContextMenuAction(any()) }
+        }
+    }
+
+    /**
+     * RustDesk's fields are Flutter text inputs, and Flutter's InputConnectionAdaptor performs a
+     * context-menu paste itself (reads the clip, edits the field, reports the change). Before
+     * 2026-10-13 the paste key sent exactly that and worked in RustDesk; the blind-field change
+     * replaced it with a committed clip, and the paste subkey stopped working in RustDesk remote
+     * sessions (maintainer, 2026-10-25). RustDesk gets its field's own paste again.
+     */
+    @Test
+    fun pasteKeysInRustDeskUseTheFieldsOwnPaste() {
+        for ((name, id) in listOf("paste" to android.R.id.paste, "pasteAsPlainText" to android.R.id.pasteAsPlainText)) {
+            field = RustDeskField(); ic = field.connection()
+            val (keys, _) = keyHandler(rustDesk())
+            press(keys, name)
+            verify(exactly = 1) { ic.performContextMenuAction(id) }
+            verify(exactly = 0) { ic.commitText(any(), any()) }
+            assertWithMessage("remote after '$name'").that(field.remote()).isEqualTo("clip text")
         }
     }
 
@@ -457,7 +480,17 @@ class BlindFieldPolicyTest {
                 changed(old)
                 true
             }
-            every { conn.performContextMenuAction(any()) } returns true
+            // Flutter's InputConnectionAdaptor handles paste / paste-as-plain-text in the adaptor:
+            // the clip goes into the field and the change reaches handleSoftKeyboardInput.
+            every { conn.performContextMenuAction(any()) } answers {
+                val id = firstArg<Int>()
+                if (id == android.R.id.paste || id == android.R.id.pasteAsPlainText) {
+                    val old = text.length
+                    text.append("clip text")
+                    changed(old)
+                }
+                true
+            }
             return conn
         }
     }

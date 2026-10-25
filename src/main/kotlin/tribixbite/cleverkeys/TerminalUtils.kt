@@ -69,6 +69,18 @@ object TerminalUtils {
         "com.carriez.flutter_hbb", // RustDesk
     )
 
+    /**
+     * True when the editor implements a context-menu paste itself even though it is a blind
+     * field. RustDesk's fields are Flutter text inputs: Flutter's InputConnectionAdaptor handles
+     * android.R.id.paste / pasteAsPlainText by reading the clip into the field, and the change
+     * reaches RustDesk's input handler like typing. Pasting there through the field (as before
+     * 2026-10-13) is what worked in RustDesk remote sessions; the IME-committed clip did not
+     * (maintainer report 2026-10-25). A TYPE_NULL field's dummy connection ignores the paste id,
+     * so every other blind field and every terminal still gets the clip text committed.
+     */
+    fun handlesOwnPaste(editorInfo: EditorInfo?): Boolean =
+        editorInfo?.packageName in KNOWN_REMOTE_INPUT_PACKAGES
+
     /** How the IME may treat an editor's text (see [editorKind]). */
     enum class EditorKind {
         /** An ordinary editor: readable, editable in place with InputConnection calls. */
