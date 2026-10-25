@@ -189,7 +189,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     gate population UD AnCora test + R2 = es context-only `y a o e u` rows; R2 lost on both dev
     splits, C1 (retry model) FAILED AnCora test prefix-1 +3.64 < +5 → es stays unshipped;
     `docs/eval/2026-10-25-static-lm-es-prereg.md`; only UD Spanish-PUD remains unused]; FLOOR_ONE → maintainer asked for a fuller
-    explanation (pending); finger_occlusion_offset → stays 0, no test needed (CLOSED); first
+    explanation (pending) [DONE 2026-10-25: maintainer-approved re-run pre-registered in
+    `b85b8136` with a per-language rule on fresh UD PUD (it ParlaMint+Valico) + Leipzig 10K web
+    populations, 118–150K positions each; pooled prefix-1 FLOOR_ONE−RAW en −0.09, de +0.36,
+    fr +0.52, it +0.41, pt +0.46, sv +0.71 → de/fr/it/pt/sv use FLOOR_ONE in `static_only`, en
+    keeps RAW (`StaticContextLm.shippedRatioShape`); `docs/eval/2026-10-25-static-lm-floor-one-prereg.md`;
+    final, no second read]; finger_occlusion_offset → stays 0, no test needed (CLOSED); first
     Saga keeps CleverKeys as DEFAULT (CLOSED; it is default since 10-20); Text Assist with no
     process-text app → keep Android's own chooser (CLOSED). Original text:
     maintainer decisions: es LM needs a NEW stated reason; `FLOOR_ONE` for `static_only`

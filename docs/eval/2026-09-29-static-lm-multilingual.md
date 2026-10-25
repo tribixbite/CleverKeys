@@ -653,3 +653,15 @@ evidence for, and replaces (does not stack on) a static boost smaller than its o
 and for en (642 learned pairs) `lm_both` sits +0.11 pt (dev) above it at prefix-1 — the learned
 boosts, never a static penalty. Consequence: the static LM's backoff penalty exists only in
 `static_only`. Documented in `UnifiedScore.combine` and the context spec.
+
+## Follow-up: FLOOR_ONE decided per language on fresh populations (2026-10-25)
+
+The re-run this section asked for was pre-registered in
+[2026-10-25-static-lm-floor-one-prereg.md](2026-10-25-static-lm-floor-one-prereg.md) (committed
+`b85b8136` before any measurement) with a per-language rule on fresh populations (UD PUD, Italian
+ParlaMint + Valico, and Leipzig 10K web corpora of other national domains; build-input overlap
+removed; 118–150K prefix-1 positions per language). None of the splits above was used. Pooled
+prefix-1 top-3 gain of `FLOOR_ONE` over `RAW`: en −0.09, de +0.36, fr +0.52, it +0.41, pt +0.46,
+sv +0.71 pt. Under the rule (gain ≥ +0.10, no prefix-2/3 loss beyond 0.05, no register-specific
+loss) de/fr/it/pt/sv now use `FLOOR_ONE` in `static_only` and English keeps `RAW`
+(`StaticContextLm.shippedRatioShape`). Final; no further read.

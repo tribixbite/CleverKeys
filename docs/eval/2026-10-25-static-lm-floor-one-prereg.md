@@ -143,6 +143,65 @@ first and only run on these populations, and there is no second read, no re-run 
 populations or thresholds, and no reuse of the 09-29 splits. A later attempt would need new
 populations and its own pre-registration.
 
-## Results
+## Results (2026-10-25, the one and only run; appended after `b85b8136`)
 
-(appended after the run)
+Runs: `StaticLmTapEvalTest -PgeoFull=true`, `STATIC_LM_EVAL_SPLIT=dev`, one guarded invocation
+per population set (pooled en/de/fr 5 min 31 s; pooled it/pt/sv, `ud`, `web` about 1 min each),
+from a clean worktree at `4ffda7e1` (the shared tree had another agent's half-edited resource that
+failed `processDebugResources`); scoring code and `lm/*.cklm` identical to `b85b8136`. Shipped
+assets, `RAW` = the shipped arm at the time. Empty-context deviation was 0 for every arm of every
+run. Top-3 Δ vs `none`, points, prefix 1 / 2 / 3:
+
+| Lang | pop | n (p1) | `RAW` | `FLOOR_ONE` | d_1 / d_2 / d_3 |
+|---|---|---|---|---|---|
+| en | **pooled** | 149,665 | +7.75 / +2.71 / +1.80 | +7.66 / +3.00 / +1.84 | **−0.09** / +0.29 / +0.04 |
+| en | ud | 14,650 | +6.92 / +1.97 / +1.79 | +6.93 / +2.28 / +1.77 | +0.01 / +0.31 / −0.02 |
+| en | web | 135,015 | +7.84 / +2.79 / +1.81 | +7.74 / +3.08 / +1.85 | −0.10 / +0.29 / +0.04 |
+| de | **pooled** | 131,763 | +6.02 / +4.80 / +4.07 | +6.38 / +5.35 / +4.07 | **+0.36** / +0.55 / 0.00 |
+| de | ud | 13,629 | +5.08 / +4.15 / +3.28 | +5.56 / +4.88 / +3.36 | +0.48 / +0.73 / +0.08 |
+| de | web | 118,134 | +6.13 / +4.87 / +4.16 | +6.47 / +5.41 / +4.15 | +0.34 / +0.54 / −0.01 |
+| fr | **pooled** | 131,595 | +7.00 / +6.83 / +4.23 | +7.52 / +7.04 / +4.28 | **+0.52** / +0.21 / +0.05 |
+| fr | ud | 12,991 | +6.44 / +5.88 / +3.92 | +6.98 / +6.09 / +3.96 | +0.54 / +0.21 / +0.04 |
+| fr | web | 118,604 | +7.06 / +6.94 / +4.26 | +7.58 / +7.14 / +4.32 | +0.52 / +0.20 / +0.06 |
+| it | **pooled** | 133,562 | +6.84 / +7.35 / +4.44 | +7.25 / +7.46 / +4.43 | **+0.41** / +0.11 / −0.01 |
+| it | ud | 10,225 | +7.59 / +7.59 / +4.37 | +7.99 / +7.70 / +4.37 | +0.40 / +0.11 / 0.00 |
+| it | web | 123,337 | +6.78 / +7.33 / +4.45 | +7.19 / +7.44 / +4.43 | +0.41 / +0.11 / −0.02 |
+| pt | **pooled** | 130,517 | +6.40 / +6.65 / +4.18 | +6.86 / +6.92 / +4.21 | **+0.46** / +0.27 / +0.03 |
+| pt | ud | 13,010 | +5.57 / +5.35 / +2.80 | +6.01 / +5.54 / +2.84 | +0.44 / +0.19 / +0.04 |
+| pt | web | 117,507 | +6.49 / +6.79 / +4.33 | +6.96 / +7.07 / +4.36 | +0.47 / +0.28 / +0.03 |
+| sv | **pooled** | 118,192 | +5.39 / +2.62 / +1.51 | +6.10 / +3.31 / +1.56 | **+0.71** / +0.69 / +0.05 |
+| sv | ud | 12,787 | +6.01 / +2.75 / +1.70 | +6.59 / +3.39 / +1.74 | +0.58 / +0.64 / +0.04 |
+| sv | web | 105,405 | +5.32 / +2.60 / +1.48 | +6.04 / +3.30 / +1.53 | +0.72 / +0.70 / +0.05 |
+
+Reported only, pooled prefix-1: `FLOOR_HALF` en +7.74, de +6.05, fr +7.06, it +6.86, pt +6.41,
+sv +5.41; `SQRT_BELOW_ONE` en +7.66, de +6.04, fr +7.05, it +6.87, pt +6.43, sv +5.47 — neither
+beats `RAW` by more than 0.08 anywhere.
+
+### Rule applied
+
+| Lang | 1. d_1 ≥ +0.10 | 2. d_2, d_3 ≥ −0.05 | 3. ud/web d_1 ≥ −0.30 | 4. empty ctx | 5. S1 (09-29 test) | **Shape** |
+|---|---|---|---|---|---|---|
+| en | **no** (−0.09) | yes | yes | yes | yes | **`RAW`** |
+| de | yes (+0.36) | yes (0.00) | yes | yes | yes | **`FLOOR_ONE`** |
+| fr | yes (+0.52) | yes | yes | yes | yes | **`FLOOR_ONE`** |
+| it | yes (+0.41) | yes (−0.01) | yes | yes | yes | **`FLOOR_ONE`** |
+| pt | yes (+0.46) | yes | yes | yes | yes | **`FLOOR_ONE`** |
+| sv | yes (+0.71) | yes | yes | yes | yes | **`FLOOR_ONE`** |
+
+S1 on `pooled` under the decided shapes (reported): en `RAW` +7.75 / +2.71 / +1.80, de +6.38 /
++5.35 / +4.07, fr +7.52 / +7.04 / +4.28, it +7.25 / +7.46 / +4.43, pt +6.86 / +6.92 / +4.21, sv
++6.10 / +3.31 / +1.56 — all pass. (English `ud` alone has prefix-2 +1.97 under `RAW`, just under
+the +2 S1 line; it is ~14.6K positions and not a gate population.)
+
+The 09-29 global rule, reported: `FLOOR_ONE` ineligible (en pooled d_1 −0.09 < −0.05) — the
+same outcome as 09-29, now on ~10× the English data.
+
+### Decision (final)
+
+**Per-language shape:** `StaticContextLm.shippedRatioShape(language)` returns `FLOOR_ONE` for
+de, fr, it, pt, sv and `RAW` for en and every other language; `BigramModel.getContextMultiplier`
+applies it for the requested language; the eval harness's shipped arms follow it (smoke-checked:
+`lm_static` = `FLOOR_ONE` row for sv, = `RAW` row for en). Only `context_source = static_only`
+changes; `both` (the default) already behaved as `FLOOR_ONE` or better. The reading of the 09-29
+data holds on fresh data: English's backoff penalty is worth ~0.1 pt at prefix-1 (and costs
+0.3 pt at prefix-2), the other five models lose 0.36–0.71 pt to it. No further read.

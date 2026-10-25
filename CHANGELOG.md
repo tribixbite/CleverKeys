@@ -139,7 +139,9 @@ editor that used to be listed here already ship in 2.0.)
   fields. Your own learned phrases are added only when on-device learning and Context-Aware
   Predictions are on and the field allows learning; with learning off they are neither read
   nor updated, and accepting a next-word suggestion records nothing. If you had turned
-  next-word off, it stays off.
+  next-word off, it stays off. With Context Source set to "Built-in Only", the German,
+  French, Italian, Portuguese and Swedish models only raise likely words and no longer push
+  others down (English keeps both); measured on fresh text, pre-registered (2026-10-25).
 - **Suggestion transparency**: long-press a suggestion to see why it was offered
   (dictionary frequency, learned context, personalization, engine); optional origin
   markers on the bar.

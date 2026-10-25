@@ -305,21 +305,25 @@ apostrophe form (`don't`, `c'est`, straight or typographic apostrophe) by its ap
 dictionary key, because every bundled dictionary stores contractions that way; a Dictionary
 Manager disable of the key blocks the display form too (`NextWordContractionAllowTest`).
 
-**Ratio shape (measured 2026-09-29, unchanged).** `BigramModel` applies
-`StaticContextLm.SHIPPED_RATIO_SHAPE` (`RAW`) to `contextRatio` before the clamp. A pre-registered
-comparison of `RAW`, `FLOOR_ONE` (max(r, 1)), `FLOOR_HALF` (max(r, 0.5)) and `SQRT_BELOW_ONE`
-on the OOD dev splits kept `RAW`: `FLOOR_ONE` gained +0.48 pt mean prefix-1 top-3 but cost
-English 0.15 pt (the rule allowed no regression beyond 0.05). The single test read later showed
-`FLOOR_ONE` ahead everywhere (+0.46 mean, en +0.03, es +1.12); that is recorded, not acted on.
+**Ratio shape (per language since 2026-10-25).** `BigramModel` applies
+`StaticContextLm.shippedRatioShape(language)` to `contextRatio` before the clamp: `FLOOR_ONE`
+(max(r, 1), no penalty) for de, fr, it, pt, sv and `RAW` for en and any other language. History: a
+pre-registered 2026-09-29 comparison of `RAW`, `FLOOR_ONE`, `FLOOR_HALF` (max(r, 0.5)) and
+`SQRT_BELOW_ONE` on the OOD dev splits kept `RAW` globally (`FLOOR_ONE` +0.48 pt mean prefix-1
+top-3 but English −0.15); the 2026-10-25 re-run, pre-registered with a per-language rule on fresh
+populations (UD PUD / ParlaMint + Valico and Leipzig 10K web, 118–150K positions per language),
+gave de +0.36, fr +0.52, it +0.41, pt +0.46, sv +0.71 and en −0.09 pt prefix-1 (rule: ≥ +0.10 with
+no prefix-2/3 loss beyond 0.05), so the five switched and English stayed `RAW`
+(`docs/eval/2026-10-25-static-lm-floor-one-prereg.md`). The decision is final for that evidence.
 **`context_source` semantics, confirmed:** the learned boost is always ≥ 1 (1.0 without evidence,
 else [1, 5]), so `both` = `max(static, learned)` never applies a static value below 1 — empty
-store or not. The backoff penalty exists only in `static_only`; `both` with nothing learned
+store or not. The backoff penalty exists only in `static_only` (and, since 2026-10-25, only for
+English there); `both` with nothing learned
 behaves exactly like `FLOOR_ONE`.
 
 # TODO: es needs a new stated reason before any further attempt (e.g. a larger Spanish test
-# population; GSD test is 339 sentences, ±0.7 pt); FLOOR_ONE for static_only needs a fresh
-# pre-registration (second English dev population or a per-language rule registered up front —
-# its test read already happened); imported-pack LM support would need a separate importer contract.
+# population; GSD test is 339 sentences, ±0.7 pt); imported-pack LM support would need a
+# separate importer contract. (FLOOR_ONE: decided per language 2026-10-25, see above.)
 Evaluation:
 `docs/eval/2026-09-26-static-lm-replay.md` (tap S1 and swipe S3); provenance:
 `scripts/data/PROVENANCE.md`; attribution: `NOTICE`, Settings → Help & FAQ.
