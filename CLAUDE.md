@@ -194,6 +194,14 @@ Mutating calls (`performContextMenuAction`, `performEditorAction`, `commitText`,
 connection return the IPC's success (AOSP `IRemoteInputConnectionInvoker`), never the editor's
 answer. A mock IC that returns false models nothing real; feedback built on it never fired.
 
+## Large commits and batch edits (2026-10-25)
+
+One `commitText` crosses binder as UTF-8 in a ONE-WAY transaction limited to half of the ~1 MB
+buffer, so a 524,000-char paste failed with FAILED BINDER TRANSACTION and returned false,
+silently. `LargeTextCommit` sends 32K-char chunks in one batch edit. Chrome never answers
+`getTextBeforeCursor` inside a batch edit (each call hit the 2 s timeout): never read back
+between chunks; retry a refused chunk in place and report an incomplete paste instead.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.
