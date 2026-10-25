@@ -1333,6 +1333,9 @@ tasks.register('runMockTests', JavaExec) {
     // other tab's COPY still references it.
     'tribixbite.cleverkeys.clipboard.ClipboardMediaDeleteAffordanceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardMediaDeletionCleanupTest',
+    // 2026-10-25: thumbnails of images that already fit 80×80 (the source is not recycled
+    // before the same bitmap is compressed).
+    'tribixbite.cleverkeys.clipboard.ClipboardMediaThumbnailTest',
     // Audit W4 (2026-09-07): D-3/D-7/D-10 — ClipboardHistoryView state guards (status-filter
     // tint truth, failed save keeps the edit session, bounds-guarded row handlers); D-4/D-5 —
     // service hygiene (primary-clip-keyed OS-clipboard clearing, count-prune media cleanup).

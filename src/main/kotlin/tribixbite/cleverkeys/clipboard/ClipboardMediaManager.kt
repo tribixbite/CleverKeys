@@ -161,20 +161,30 @@ class ClipboardMediaManager(private val context: Context) {
                 mimeType == "application/pdf" -> decodePdfThumbnail(path, maxDim)
                 else -> null
             } ?: return null
-
-            // Scale to maxDim × maxDim preserving aspect ratio
-            val scaled = scaleBitmap(bitmap, maxDim)
-            bitmap.recycle()
-
-            // Compress to WebP, targeting ≤10KB
-            val blob = compressToWebP(scaled, MAX_THUMBNAIL_BYTES)
-            scaled.recycle()
-
-            blob
+            thumbnailFromBitmap(bitmap, maxDim)
         } catch (e: Exception) {
             Log.w(TAG, "Thumbnail generation failed for $mimeType: ${e.message}")
             null
         }
+    }
+
+    /**
+     * Scale a decoded [bitmap] into the maxDim × maxDim box and compress it to WebP (≤10KB).
+     * Recycles every bitmap it is given or creates. Internal for ClipboardMediaThumbnailTest.
+     */
+    internal fun thumbnailFromBitmap(bitmap: Bitmap, maxDim: Int): ByteArray? {
+        // Scale to maxDim × maxDim preserving aspect ratio. scaleBitmap returns its input when
+        // the image already fits (and createScaledBitmap may too, at the same size): recycling
+        // the source then recycled the bitmap about to be compressed, and every image of 80 px
+        // or less lost its thumbnail ("Can't compress a recycled bitmap", Pixel 2026-10-25).
+        val scaled = scaleBitmap(bitmap, maxDim)
+        if (scaled !== bitmap) bitmap.recycle()
+
+        // Compress to WebP, targeting ≤10KB
+        val blob = compressToWebP(scaled, MAX_THUMBNAIL_BYTES)
+        scaled.recycle()
+
+        return blob
     }
 
     /**
