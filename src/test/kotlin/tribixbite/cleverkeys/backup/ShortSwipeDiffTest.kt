@@ -107,4 +107,50 @@ class ShortSwipeDiffTest {
         assertThat(d.changed).hasSize(5)       // b:* all changed values
         assertThat(d.unchanged).isEqualTo(5)   // a:*
     }
+
+    // ── Mode-aware preview (Saga backup round trip, 2026-10-25) ──────────────────────────
+    // The import preview showed "−1 removed  h:SE" under the default MERGE mode, where an
+    // existing mapping missing from the file is KEPT. Only REPLACE removes it; SKIP changes
+    // nothing. The diff the dialog renders must describe the selected mode's outcome.
+
+    @Test
+    fun `merge keeps mappings missing from the file, so nothing is reported removed`() {
+        val cur = blob("g:SE" to "macro", "h:SE" to "mine")
+        val prop = blob("g:SE" to "macro")
+        val d = computeShortSwipeDiff(cur, prop)!!.forMode(ShortSwipeImportMode.MERGE)
+        assertThat(d.removed).isEmpty()
+        assertThat(d.added).isEmpty()
+        assertThat(d.changed).isEmpty()
+        assertThat(d.unchanged).isEqualTo(2) // g:SE identical + h:SE kept as is
+        assertThat(d.isEmpty).isTrue()
+    }
+
+    @Test
+    fun `merge still reports additions and collisions`() {
+        val cur = blob("g:SE" to "old", "h:SE" to "mine")
+        val prop = blob("g:SE" to "new", "k:N" to "added")
+        val d = computeShortSwipeDiff(cur, prop)!!.forMode(ShortSwipeImportMode.MERGE)
+        assertThat(d.added).containsExactly("k:N")
+        assertThat(d.changed).containsExactly("g:SE") // file wins on a collision
+        assertThat(d.removed).isEmpty()
+        assertThat(d.unchanged).isEqualTo(1) // h:SE kept
+    }
+
+    @Test
+    fun `replace reports the full diff including removals`() {
+        val cur = blob("g:SE" to "macro", "h:SE" to "mine")
+        val prop = blob("g:SE" to "macro")
+        val raw = computeShortSwipeDiff(cur, prop)!!
+        assertThat(raw.forMode(ShortSwipeImportMode.REPLACE)).isEqualTo(raw)
+        assertThat(raw.forMode(ShortSwipeImportMode.REPLACE).removed).containsExactly("h:SE")
+    }
+
+    @Test
+    fun `skip changes nothing, so the diff is empty`() {
+        val cur = blob("g:SE" to "macro", "h:SE" to "mine")
+        val prop = blob("g:SE" to "other", "k:N" to "added")
+        val d = computeShortSwipeDiff(cur, prop)!!.forMode(ShortSwipeImportMode.SKIP)
+        assertThat(d.isEmpty).isTrue()
+        assertThat(d.unchanged).isEqualTo(2) // the current set survives untouched
+    }
 }

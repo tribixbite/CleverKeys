@@ -114,10 +114,12 @@ fun SettingsImportPreviewDialog(
                         // Diff section (above the radio) shows exactly which
                         // key+direction mappings change. Null when current
                         // state couldn't be captured — radio still works.
+                        // Mode-aware: MERGE keeps mappings the file lacks and SKIP changes
+                        // nothing, so only REPLACE may show "removed" rows.
                         val diff = computeShortSwipeDiff(
                             currentJson = plan.currentShortSwipeRawJson,
                             proposedJson = plan.shortSwipeImportRawJson,
-                        )
+                        )?.forMode(shortSwipeMode.value)
                         if (diff != null && !diff.isEmpty) {
                             item { ShortSwipeDiffSummary(diff) }
                         }

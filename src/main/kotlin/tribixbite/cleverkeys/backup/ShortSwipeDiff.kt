@@ -30,6 +30,28 @@ data class ShortSwipeDiff(
 }
 
 /**
+ * The part of this diff that the chosen import [mode] actually applies, so the preview
+ * never describes a change the selected radio will not make:
+ *   - [ShortSwipeImportMode.REPLACE]: the full diff — mappings missing from the file are removed.
+ *   - [ShortSwipeImportMode.MERGE]: additions and collisions (file wins) only; mappings missing
+ *     from the file are KEPT, so they count as unchanged instead of removed.
+ *   - [ShortSwipeImportMode.SKIP]: nothing changes; every current mapping is unchanged.
+ *
+ * Found on the Saga backup round trip (2026-10-25): the default MERGE showed "−1 removed".
+ */
+fun ShortSwipeDiff.forMode(mode: ShortSwipeImportMode): ShortSwipeDiff = when (mode) {
+    ShortSwipeImportMode.REPLACE -> this
+    ShortSwipeImportMode.MERGE -> copy(removed = emptyList(), unchanged = unchanged + removed.size)
+    ShortSwipeImportMode.SKIP -> ShortSwipeDiff(
+        added = emptyList(),
+        removed = emptyList(),
+        changed = emptyList(),
+        // Current mappings = those also in the file (unchanged + changed) + those only current.
+        unchanged = unchanged + changed.size + removed.size,
+    )
+}
+
+/**
  * Compute a [ShortSwipeDiff] between a current and a proposed
  * short-swipe customization JSON blob. The JSON shape is
  * `{ "version": N, "mappings": { "<keyCode>": { "<direction>": { ... } } } }`.
