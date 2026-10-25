@@ -78,6 +78,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    uninstalled-language warning. Saga Latin→German PASS 2026-10-07.
 3. [ ] device: clipboard Select/⋮ with TalkBack; #181 glyph filter on a device WITHOUT a font
    provider; #184 oversized UPDATE of an already-installed pack.
+   TalkBack (agent, Saga 202, 10-25): NOT VERIFIED — could not be driven over adb. TalkBack's
+   IME window is lift-to-type, so a tap on a pane row activates it (it expanded); injected
+   swipes and angle gestures (input swipe / motionevent) did nothing, so the Actions menu
+   ("Delete") and the Select/⋮ menus were not reached. Needs a person. Settings restored
+   (`enabled_accessibility_services` deleted = null, `accessibility_enabled` 0).
 4. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
@@ -100,6 +105,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    DELETE (maintainer: acceptable); swipe corrections tapped from the bar also delete instead of
    append AND remove the preceding space (may involve the auto-space-before/after-swipe
    settings) → agent investigate; Ctrl+Backspace PASS; the PASTE SUBKEY NO LONGER WORKS → bug.
+   PASTE SUBKEY (agent, Saga 202, 10-25): NOT REPRODUCED. The subkey is the default-on
+   `extra_key_paste` on `v` (se corner; sw on bépo). It pasted in Chrome, in Chrome made a custom
+   terminal (TERMINAL path: IME reads the clip, commitText) and in RustDesk's own Remote ID field
+   (REMOTE path). No paste-routing change since 10-13 (`git log -S`). A remote SESSION was not
+   opened (it would type into the maintainer's PC). Candidate cause, unproven: Android 14 clears
+   the OS clip after 1 h (`device_config clipboard auto_clear_enabled=true`, 3600000 ms) and the
+   blind-field paste is then a SILENT no-op while the pane still lists the clip; RustDesk also
+   overwrites the phone clip with the remote clipboard during a session. Next: maintainer retry
+   right after a fresh copy; if wanted, a "clipboard is empty" message (new string ×21).
    SWIPE-CORRECTION PART FIXED `691aa8cf` (= GH #192): the REPLACE branch assumed the swipe typed
    `word + " "`; in terminal/blind fields it added a Backspace when the char before the cursor was a
    space — the swipe's OWN trailing space — so RustDesk (its hidden field reads back) lost the space
@@ -131,6 +145,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    hard to swipe; (b) clipboard TO-DO panel entries — text input/editing broken for long
    entries (no text inserts); (c) bépo `é` discarded in swipe: swiping `été` gives `tp`, swiping
    `ete` gives `été`. No other bugs found yet.
+   (b) FIXED `623070d2` + `63e27c70` (Saga 202, release built 10-25 01:40): three faults in the
+   one inline editor (History/Pinned/To-dos). No length cap — the threshold is the pane: once
+   the entry is taller than the visible list (~7 lines portrait, 2–3 landscape) the unfocused
+   field's caret sat below it and typed text landed out of sight; tapping a spell-underlined
+   word opened the focusable SuggestionsPopupWindow, Chrome hid the keyboard and the edit was
+   lost (`inputType="none"` is the unset value → TYPE_CLASS_TEXT with suggestions); and on
+   To-dos keystrokes went into a DETACHED recycled copy of the editor (ListView's
+   detachViewFromParent keeps the window token) — saved, never shown. Now: field focused,
+   `textMultiLine|textNoSuggestions`, live-row check. Device PASS after: History and To-dos
+   long entry, typing scrolls to the caret, tap-to-place-caret keeps the keyboard. Pinned not
+   device-checked (same code). Mock `ClipboardHistoryViewStateGuardsTest` fail-first → 28/28;
+   instrumented `ClipboardLongEntryEditTest` written, emulator.wtf run pending.
    (c) FIXED `84021ccb`: CTC had slots for the 26 a–z keys only, so bépo's TOP-LEVEL `é` read as
    b/p/u (`été` → `bcp`/`btp`) and QWERTZ `ü ö ä`, Swedish `å ö ä`, Spanish `ñ`, Swiss-French
    `è é à ê` were also outside the frame box. Those keys are now alias slots folded into their base
@@ -375,7 +401,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `fe91c783…` PASS: left swipe hides the row with "Deleted" + Undo, Undo at 1.2 s restores it,
     a slow 20 % swipe springs back, swipe then keyboard hide commits at once (log PANE_HIDDEN;
     reopened pane empty), an unattended row commits on TIMEOUT; NOT yet checked on device:
-    TalkBack and the Todos tab only. Later the same day PASS too: a mostly vertical drag scrolls
+    TalkBack and the Todos tab only. TODOS tab PASS 2026-10-25 (Saga 202): left swipe → "Deleted"
+    + Undo, Undo restores; right swipe + Undo restores; unattended row commits on TIMEOUT at 5 s.
+    TalkBack: not drivable over adb (item 3). Later the same day PASS too: a mostly vertical drag scrolls
     with no swipe; right swipe + Undo; tap still expands; long-press still copies; a Pinned-tab
     swipe removes only the pinned copy (History keeps it, commit on tab switch); with the setting
     OFF a swipe is ignored; test clips removed, setting back ON): horizontal swipe on a normal-mode row of any tab → row hidden, "Deleted" +
