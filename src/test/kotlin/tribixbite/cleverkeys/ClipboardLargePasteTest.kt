@@ -27,7 +27,7 @@ import java.lang.reflect.Proxy
  *
  * Every path that commits a clipboard entry into the app must split large text into ordered
  * chunks well below that limit, inside one batch edit, and tell the user when the app's
- * connection refuses a chunk. Harness: a real [KeyEventHandler] (Objenesis) with a recording
+ * connection keeps refusing a chunk. Harness: a real [KeyEventHandler] (Objenesis) with a recording
  * receiver and a recording InputConnection (the [InlineFieldShortcutTest] idiom).
  */
 class ClipboardLargePasteTest {
@@ -37,11 +37,12 @@ class ClipboardLargePasteTest {
     /** Every receiver / connection call, in order. */
     private val log = mutableListOf<String>()
 
-    /** The text of every `commitText` call, in order. */
+    /** The text of every ACCEPTED `commitText` call, in order. */
     private val commits = mutableListOf<String>()
 
-    /** 1-based index of the `commitText` call that fails (the IPC refused it); 0 = none. */
-    private var failCommitNumber = 0
+    /** From this 1-based `commitText` attempt on, the IPC refuses every call; 0 = never. */
+    private var refuseFromAttempt = 0
+    private var attempts = 0
 
     /** Current batch-edit nesting and the deepest nesting any commit was made at. */
     private var batchDepth = 0
@@ -82,9 +83,10 @@ class ClipboardLargePasteTest {
                 "beginBatchEdit" -> { batchDepth++; true }
                 "endBatchEdit" -> { batchDepth--; batchDepth > 0 }
                 "commitText" -> {
-                    commits += (args!![0] as CharSequence).toString()
                     commitDepths += batchDepth
-                    commits.size != failCommitNumber
+                    val accepted = refuseFromAttempt == 0 || ++attempts < refuseFromAttempt
+                    if (accepted) commits += (args!![0] as CharSequence).toString()
+                    accepted
                 }
                 "getTextBeforeCursor", "getTextAfterCursor" -> ""
                 else -> if (method.returnType == Boolean::class.javaPrimitiveType) true else null
@@ -170,10 +172,10 @@ class ClipboardLargePasteTest {
     }
 
     @Test
-    fun aRefusedChunkStopsThePasteAndTellsTheUser() {
-        failCommitNumber = 3
+    fun aChunkThatStaysRefusedStopsThePasteAndTellsTheUser() {
+        refuseFromAttempt = 3
         handler.paste_from_clipboard_pane(hugeEntry())
-        assertEquals("nothing is sent after the refused chunk", 3, commits.size)
+        assertEquals("nothing is delivered after the refused chunk", 2, commits.size)
         assertEquals("the batch edit is still closed", 0, batchDepth)
         assertTrue("the user is told the paste is incomplete: $log",
             log.contains("feedback(res#${R.string.clipboard_paste_incomplete})"))
@@ -181,7 +183,7 @@ class ClipboardLargePasteTest {
 
     @Test
     fun aRefusedSmallPasteAlsoTellsTheUser() {
-        failCommitNumber = 1
+        refuseFromAttempt = 1
         handler.paste_from_clipboard_pane("short entry")
         assertTrue(log.contains("feedback(res#${R.string.clipboard_paste_incomplete})"))
     }

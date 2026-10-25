@@ -9,15 +9,19 @@ import java.lang.reflect.Proxy
 
 /**
  * [LargeTextCommit]: clipboard text of any stored size reaches the editor as ordered chunks
- * below the binder limit, inside one batch edit, never splitting a surrogate pair, with a
- * synchronous round trip between chunks (Saga 2026-10-25, a 524,000-char entry failed as one
- * transaction). Pure JVM: the connection is a recording [Proxy].
+ * below the binder limit, inside one batch edit, never splitting a surrogate pair; a refused
+ * chunk is retried in place (Saga 2026-10-25, a 524,000-char entry failed as one transaction).
+ * Pure JVM apart from android.jar's interface: the connection is a recording [Proxy].
  */
 class LargeTextCommitTest {
 
     private val calls = mutableListOf<String>()
     private val commits = mutableListOf<String>()
-    private var failAt = 0
+    /** `commitText` call numbers (1-based) the connection refuses. */
+    private var refused: (Int) -> Boolean = { false }
+    private var attempts = 0
+    private val pauses = mutableListOf<Long>()
+    private val recordPause: (Long) -> Unit = { pauses += it }
 
     private val conn = Proxy.newProxyInstance(
         InputConnection::class.java.classLoader, arrayOf(InputConnection::class.java)
@@ -25,11 +29,11 @@ class LargeTextCommitTest {
         calls += method.name
         when (method.name) {
             "commitText" -> {
-                commits += (args!![0] as CharSequence).toString()
-                assertEquals("cursor after the text", 1, args[1])
-                commits.size != failAt
+                assertEquals("cursor after the text", 1, args!![1])
+                val accepted = !refused(++attempts)
+                if (accepted) commits += (args[0] as CharSequence).toString()
+                accepted
             }
-            "getTextBeforeCursor" -> ""
             else -> if (method.returnType == Boolean::class.javaPrimitiveType) true else null
         }
     } as InputConnection
@@ -49,17 +53,15 @@ class LargeTextCommitTest {
     }
 
     @Test
-    fun longTextIsSplitInOrderWithABarrierBetweenChunks() {
+    fun longTextIsSplitInOrderInsideOneBatchEditWithNoReads() {
         val text = (0 until 30_000).joinToString("") { "%06d\n".format(it) } // 210,000 chars
-        assertTrue(LargeTextCommit.commit(conn, text))
+        assertTrue(LargeTextCommit.commit(conn, text, pause = recordPause))
         assertEquals(text, commits.joinToString(""))
         assertTrue(commits.all { it.length <= LargeTextCommit.CHUNK_CHARS })
         assertEquals((text.length + LargeTextCommit.CHUNK_CHARS - 1) / LargeTextCommit.CHUNK_CHARS, commits.size)
-        // begin, then commit / read pairs, the last commit without a read, then end.
-        val expected = listOf("beginBatchEdit") +
-            List(commits.size - 1) { listOf("commitText", "getTextBeforeCursor") }.flatten() +
-            listOf("commitText", "endBatchEdit")
-        assertEquals(expected, calls)
+        // No synchronous read between chunks: Chrome leaves it unanswered inside a batch edit.
+        assertEquals(listOf("beginBatchEdit") + List(commits.size) { "commitText" } + "endBatchEdit", calls)
+        assertTrue("nothing was refused, so nothing waited", pauses.isEmpty())
     }
 
     @Test
@@ -86,11 +88,23 @@ class LargeTextCommitTest {
     }
 
     @Test
-    fun aRefusedChunkStopsAndStillClosesTheBatchEdit() {
-        failAt = 2
+    fun aTransientlyRefusedChunkIsRetriedInPlaceAndOrderIsKept() {
+        // The binder had no async space for the 2nd chunk twice; the 3rd attempt fits.
+        refused = { it == 2 || it == 3 }
+        val text = (0 until 20_000).joinToString("") { "%06d\n".format(it) }
+        assertTrue(LargeTextCommit.commit(conn, text, pause = recordPause))
+        assertEquals(text, commits.joinToString(""))
+        assertEquals(listOf(5L, 10L), pauses)
+    }
+
+    @Test
+    fun aChunkRefusedOnEveryRetryStopsAndStillClosesTheBatchEdit() {
+        refused = { it >= 2 }
         val text = "y".repeat(LargeTextCommit.CHUNK_CHARS * 4)
-        assertFalse(LargeTextCommit.commit(conn, text))
-        assertEquals(2, commits.size)
+        assertFalse(LargeTextCommit.commit(conn, text, pause = recordPause))
+        assertEquals("only the first chunk was delivered", 1, commits.size)
+        assertEquals(LargeTextCommit.RETRY_PAUSES_MS, pauses)
+        assertEquals(1 + 1 + LargeTextCommit.RETRY_PAUSES_MS.size, calls.count { it == "commitText" })
         assertEquals("endBatchEdit", calls.last())
     }
 }
