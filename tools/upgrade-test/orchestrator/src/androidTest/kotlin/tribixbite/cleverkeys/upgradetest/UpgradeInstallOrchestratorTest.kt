@@ -159,7 +159,9 @@ class UpgradeInstallOrchestratorTest {
                     "dumpsys activity services $pkg | grep -E 'ServiceRecord|app=ProcessRecord' | head -6"
             )
         }) {
-            it.contains("mCurId=${imeId(pkg)}") && it.contains("mBoundToMethod=true") &&
+            // Selection is read from secure settings: API 37's dumpsys input_method no
+            // longer prints mCurId/mCurMethodId lines (run 5, 2026-10-25).
+            isImeSelected(it.lineSequence().first(), pkg) && it.contains("mBoundToMethod=true") &&
                 it.contains("app=ProcessRecord") && it.contains("CleverKeysService")
         }
         r.step(name, ok, "focus attempts=$attempts\n$out")
