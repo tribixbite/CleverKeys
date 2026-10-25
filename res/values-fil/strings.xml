@@ -2446,7 +2446,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">I-clear ang clipboard ng system</string>
-    <string name="cmd_clear_clipboard_desc">I-clear ang kasalukuyang clipboard ng Android; mananatili ang naka-save na history, mga pin, at todo.</string>
+    <string name="cmd_clear_clipboard_desc">I-clear ang kasalukuyang clipboard ng Android; mananatili ang naka-save na history, mga naka-pin na item, at mga To-do na item.</string>
     <string name="system_clipboard_cleared">Na-clear ang clipboard ng system</string>
     <string name="system_clipboard_clear_failed">Hindi ma-clear ang clipboard ng system</string>
 

@@ -2472,7 +2472,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">پاک کردن کلیپ‌بورد سیستم</string>
-    <string name="cmd_clear_clipboard_desc">پاک کردن کلیپ‌بورد فعلی اندروید؛ تاریخچه ذخیره‌شده، سنجاق‌ها و کارها باقی می‌مانند.</string>
+    <string name="cmd_clear_clipboard_desc">پاک کردن کلیپ‌بورد فعلی اندروید؛ تاریخچه ذخیره‌شده، موارد سنجاق‌شده و موارد کارها باقی می‌مانند.</string>
     <string name="system_clipboard_cleared">کلیپ‌بورد سیستم پاک شد</string>
     <string name="system_clipboard_clear_failed">پاک کردن کلیپ‌بورد سیستم انجام نشد</string>
 

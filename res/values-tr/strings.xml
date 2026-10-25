@@ -2445,7 +2445,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Sistem panosunu temizle</string>
-    <string name="cmd_clear_clipboard_desc">Android\'in mevcut panosunu temizle; kaydedilen geçmiş, sabitlenenler ve yapılacaklar korunur.</string>
+    <string name="cmd_clear_clipboard_desc">Android\'in mevcut panosunu temizle; kaydedilen geçmiş, sabitlenmiş öğeler ve yapılacak öğeler korunur.</string>
     <string name="system_clipboard_cleared">Sistem panosu temizlendi</string>
     <string name="system_clipboard_clear_failed">Sistem panosu temizlenemedi</string>
 
