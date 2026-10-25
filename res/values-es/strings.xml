@@ -476,7 +476,7 @@
     <string name="clipboard_private_copy_other_apps_title">Copia privada en otras apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Añade \"Copia privada\" a los menús de selección de texto de otras apps. Copia el texto seleccionado solo en CleverKeys, nunca en el portapapeles del sistema. Al activarlo se añade una entrada de app que otras apps pueden ver.</string>
     <string name="clipboard_sanitize_links_title">Limpiar parámetros de seguimiento</string>
-    <string name="clipboard_sanitize_links_desc">Elimina utm_*, fbclid, etc. de las URLs que copias. Desarrollado por ClearURLs.</string>
+    <string name="clipboard_sanitize_links_desc">Elimina utm_*, fbclid, etc. de las URL que copias. Desarrollado por ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Limpiar también el portapapeles del sistema</string>
     <string name="clipboard_sanitize_system_desc">Cuando se limpia una URL copiada, también se sobrescribe el portapapeles del sistema, de modo que los pegados en cualquier app queden limpios, no solo en el panel de CleverKeys.</string>
     <string name="clipboard_embed_enrich_title">Enriquecer incrustaciones para compartir</string>
@@ -504,7 +504,7 @@
     <string name="gesture_selection_delete_step_title">Tamaño del paso</string>
     <string name="gesture_selection_delete_step_desc">Recorrido del dedo necesario para seleccionar un carácter más en el modo «Seguir el dedo». Menor = más rápido, mayor = más preciso.</string>
     <string name="gesture_tap_duration_title">Umbral de duración de toque</string>
-    <string name="gesture_tap_duration_desc">Duración máxima de un gesto de toque (ms). Mayor = toques más fáciles pero puede interferir con deslizamientos.</string>
+    <string name="gesture_tap_duration_desc">Duración máxima de un gesto de toque (ms). Mayor = toques más fáciles, pero puede interferir con deslizamientos.</string>
     <string name="gesture_double_space_period_title">Doble espacio para punto</string>
     <string name="gesture_double_space_period_desc">Toca el espacio dos veces rápidamente para insertar un punto. Solo se activa después de letras/números.</string>
     <string name="gesture_double_space_timing_title">Tiempo de doble espacio</string>
@@ -514,11 +514,11 @@
     <string name="gesture_min_swipe_distance_title">Distancia mínima de deslizamiento</string>
     <string name="gesture_min_swipe_distance_desc">Trayectoria mínima trazada (px) antes de que un gesto pueda calificarse como palabra por deslizamiento. Un valor menor ayuda a registrar palabras muy cortas; auméntalo si toques accidentales se detectan erróneamente como palabras. (La distinción corto/largo la decide la Distancia máxima anterior.)</string>
     <string name="gesture_min_key_distance_title">Distancia mínima entre teclas</string>
-    <string name="gesture_min_key_distance_desc">Distancia entre teclas durante el deslizamiento (px). Menor captura más teclas pero puede añadir ruido.</string>
+    <string name="gesture_min_key_distance_desc">Distancia entre teclas durante el deslizamiento (px). Menor captura más teclas, pero puede añadir ruido.</string>
     <string name="gesture_min_key_dwell_title">Tiempo mínimo de permanencia en tecla</string>
     <string name="gesture_min_key_dwell_desc">Tiempo para registrar una tecla durante el deslizamiento (ms). Menor permite deslizamientos más rápidos.</string>
     <string name="gesture_noise_filter_title">Filtro de ruido de movimiento</string>
-    <string name="gesture_noise_filter_desc">Movimiento mínimo para registrar (px). Mayor filtra el temblor pero puede perder datos.</string>
+    <string name="gesture_noise_filter_desc">Movimiento mínimo para registrar (px). Mayor filtra el temblor, pero puede perder datos.</string>
     <string name="gesture_high_velocity_title">Umbral de alta velocidad</string>
     <string name="gesture_high_velocity_desc">Velocidad para la detección de deslizamiento rápido (px/s). Mayor permite deslizamientos más rápidos.</string>
     <string name="gesture_speed_smoothing_title">Suavizado de velocidad</string>
@@ -601,7 +601,7 @@
     <string name="swipe_enable_title">Activar escritura por deslizamiento</string>
     <string name="swipe_enable_desc">Desliza por las teclas para escribir palabras completas.</string>
     <string name="swipe_password_title">Deslizamiento en campos de contraseña</string>
-    <string name="swipe_password_desc">Activa la escritura por deslizamiento incluso en campos de contraseña. Se mostrarán sugerencias pero los caracteres individuales escritos permanecerán ocultos.</string>
+    <string name="swipe_password_desc">Activa la escritura por deslizamiento incluso en campos de contraseña. Se mostrarán sugerencias, pero los caracteres individuales escritos permanecerán ocultos.</string>
     <string name="privacy_swipe_pattern_title">Datos de patrón de deslizamiento</string>
     <string name="privacy_swipe_pattern_desc">Almacena trayectorias de deslizamiento localmente para el aprendizaje en el dispositivo</string>
     <string name="privacy_performance_metrics_title">Métricas de rendimiento</string>

@@ -1366,7 +1366,7 @@
     <string name="backup_result_full_backup_failed_title">پشتیبان کامل ناموفق بود</string>
     <string name="backup_result_full_backup_write_failed">نوشتن پشتیبان کامل ناموفق بود:\n\n%1$s</string>
     <string name="backup_result_full_restored_title">پشتیبان کامل بازیابی شد</string>
-    <string name="backup_result_full_import_completed">وارد کردن پشتیبان کامل کامل شد.</string>
+    <string name="backup_result_full_import_completed">وارد کردن پشتیبان کامل انجام شد.</string>
     <string name="backup_result_full_settings_applied">• تنظیمات اعمال‌شده: %1$d</string>
     <string name="backup_result_full_custom_words">• واژه‌های سفارشی: %1$d</string>
     <string name="backup_result_full_disabled_words">• واژه‌های غیرفعال: %1$d</string>

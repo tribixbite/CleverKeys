@@ -539,7 +539,7 @@
     <string name="input_auto_space_before_title">Automatisches Leerzeichen vor Vorschlag</string>
     <string name="input_auto_space_before_desc">Führendes Leerzeichen vor einem getippten Vorschlag einfügen (Wischeingabe fügt immer Leerzeichen hinzu)</string>
     <string name="input_backspace_undo_swipe_title">Rücktaste macht Wischgeste rückgängig</string>
-    <string name="input_backspace_undo_swipe_desc">Durch Tippen auf Rücktaste unmittelbar nach einem Wischtatwort wird das gesamte Wort gelöscht</string>
+    <string name="input_backspace_undo_swipe_desc">Durch Tippen auf Rücktaste unmittelbar nach einem gewischten Wort wird das gesamte Wort gelöscht</string>
     <string name="input_show_exact_typed_title">Exakt getipptes Wort anzeigen</string>
     <string name="input_show_exact_typed_desc">Die tatsächlich getippten Buchstaben als Vorschlag anbieten — Antippen fügt sie dem Wörterbuch hinzu</string>
     <string name="input_context_aware_title">Kontextbewusste Vorhersagen</string>
@@ -716,7 +716,7 @@
     <string name="provenance_note_typed_undo">Ihr getipptes Wort (zum Rückgängigmachen tippen)</string>
     <string name="provenance_note_autocorrected_from">Autokorrigiert von „%1$s“</string>
     <string name="provenance_note_typo_correction_of">Korrektur der Eingabe „%1$s“</string>
-    <string name="backup_base64_too_large">Import fehlgeschlagen: die eingebettete Sicherungsnutzlast ist zu groß</string>
+    <string name="backup_base64_too_large">Import fehlgeschlagen: Die eingebettete Sicherungsnutzlast ist zu groß</string>
     <string name="clipboard_private_copy_toast_title">Private Kopien bestätigen</string>
     <string name="clipboard_private_copy_toast_desc">Nach dem privaten Kopieren aus dem Auswahlmenü einer anderen App kurz eine Meldung anzeigen. Warnungen werden immer angezeigt.</string>
     <string name="common_done">Fertig</string>
