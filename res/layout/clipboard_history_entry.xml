@@ -95,11 +95,18 @@
       android:ellipsize="end"
       android:visibility="gone"/>
 
-  <!-- Inline edit field: overlays TextView when editing. Uses inputType="none"
-       (TYPE_NULL) per IME best practice — prevents framework from calling restartInput()
-       on setText(), which breaks key routing after newline insertion.
-       Cursor tracking is handled by editingCursorPosition in ClipboardHistoryView.
-       Multiline display is controlled by minLines/maxLines, not inputType. -->
+  <!-- Inline edit field: overlays TextView when editing. The IME owns this field and writes
+       it with setText()/setSelection() (ClipboardHistoryView); the platform never serves it as
+       an input target, so setText() never triggers restartInput().
+       inputType: "none" is the attribute's UNSET value — an EditText then stays
+       TYPE_CLASS_TEXT with suggestions, which ran the spell checker, and tapping an underlined
+       word opened its SuggestionsPopupWindow. That popup is focusable: it took window focus
+       from the app, the app hid the keyboard and the edit was lost (Saga 2026-10-25, long
+       to-do entries). textNoSuggestions turns the spell checker off; textMultiLine keeps the
+       field multi-line (minLines/maxLines size it). ClipboardHistoryView focuses the field and
+       turns showSoftInputOnFocus off (no public XML attribute): the keyboard is the input
+       method, so focusing the field must not ask the platform to show one.
+       Cursor tracking is handled by editingCursorPosition in ClipboardHistoryView. -->
   <!-- Inline overlay editor for the clipboard entry's own text. Not autofillable
        (edits arbitrary clipboard content) → importantForAutofill="no". LabelFor is
        suppressed: this field overlays the visible clipboard_entry_text above it, which
@@ -110,7 +117,7 @@
       style="@style/clipboardEntry"
       android:layout_weight="0"
       android:visibility="gone"
-      android:inputType="none"
+      android:inputType="textMultiLine|textNoSuggestions"
       android:importantForAutofill="no"
       android:minLines="2"
       android:maxLines="50"

@@ -21,6 +21,7 @@ import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.ClipboardHistoryView
 import tribixbite.cleverkeys.ClipboardTab
 import tribixbite.cleverkeys.EditEntryResult
+import tribixbite.cleverkeys.R
 
 /**
  * 2026-09-06 comprehensive-audit fixes D-10, D-3 and D-7 — state-level guards on
@@ -506,6 +507,79 @@ class ClipboardHistoryViewStateGuardsTest {
         assertThat(view.getField("dataReady")).isEqualTo(false)
         assertThat(view.getField("loadJob")).isNotNull()
     }
+
+    // ─────────────────────────────────────────────── long-entry editor (soak 2026-10-25)
+    //
+    // memory/todo.md item 8 (b): editing a long to-do entry "inserts no text". Saga 202: the
+    // editor row grows past the pane, the field was never focused, and TextView scrolls its
+    // caret into view (and draws it) only while focused — typed text landed below the pane.
+    // Tapping an underlined word hid the keyboard: inputType="none" is the attribute's unset
+    // value, the field stayed TYPE_CLASS_TEXT with suggestions, and the spell checker's
+    // focusable SuggestionsPopupWindow took window focus from the app. The view-level behaviour
+    // (caret scrolled into a short pane) is ClipboardLongEntryEditTest (instrumented).
+
+    @Test
+    fun theVisibleEditorTakesFocusSoItsCaretIsDrawnAndScrolledIntoView() {
+        val long = (1..40).joinToString("\n") { "line $it of a long to-do entry" }
+        buildView(entries = listOf(ClipboardEntry(content = long, timestamp = 1L, todoStatus = "active")),
+            tab = ClipboardTab.TODOS)
+        view.setField("editingOriginalContent", long)
+        view.setField("editingInProgressText", long)
+        view.setField("editingCursorPosition", long.length)
+        val (row, editField) = editRow()
+        val posted = mutableListOf<Runnable>()
+        every { editField.post(any()) } answers { posted += firstArg<Runnable>(); true }
+        every { editField.isFocused } returns false
+
+        rowAdapter().getView(0, row, mockk(relaxed = true))
+        posted.forEach { it.run() }
+
+        verify(exactly = 1) { editField.requestFocus() }
+        verify { editField.showSoftInputOnFocus = false }
+    }
+
+    @Test
+    fun theEditorLayoutRunsNoSpellCheck() {
+        val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+        val doc = factory.newDocumentBuilder().parse(java.io.File("res/layout/clipboard_history_entry.xml"))
+        val ns = "http://schemas.android.com/apk/res/android"
+        val fields = doc.getElementsByTagName("EditText")
+        val editor = (0 until fields.length).map { fields.item(it) as org.w3c.dom.Element }
+            .single { it.getAttributeNS(ns, "id") == "@+id/clipboard_entry_edit_field" }
+        val inputType = editor.getAttributeNS(ns, "inputType").split("|").toSet()
+        assertWithMessage("textNoSuggestions turns the spell checker (and its focusable popup) off")
+            .that(inputType).contains("textNoSuggestions")
+        assertWithMessage("an explicit text class keeps the field multi-line")
+            .that(inputType).contains("textMultiLine")
+    }
+
+    /** A row whose findViewById returns typed relaxed mocks; the second value is its edit field. */
+    private fun editRow(): Pair<android.view.View, android.widget.EditText> {
+        val editField = mockk<android.widget.EditText>(relaxed = true)
+        val typed = mapOf<Int, android.view.View>(
+            R.id.clipboard_entry_edit_field to editField,
+            R.id.clipboard_entry_text to mockk<android.widget.TextView>(relaxed = true),
+            R.id.clipboard_entry_edit_error to mockk<android.widget.TextView>(relaxed = true),
+            R.id.clipboard_entry_private_badge to mockk<android.widget.TextView>(relaxed = true),
+            R.id.clipboard_entry_provenance to mockk<android.widget.TextView>(relaxed = true),
+            R.id.clipboard_entry_primary_buttons to mockk<android.widget.LinearLayout>(relaxed = true),
+            R.id.clipboard_entry_edit_buttons to mockk<android.widget.LinearLayout>(relaxed = true),
+            R.id.clipboard_entry_delete_row to mockk<android.widget.LinearLayout>(relaxed = true),
+            R.id.clipboard_entry_secondary_buttons to mockk<android.widget.LinearLayout>(relaxed = true),
+            R.id.clipboard_entry_thumbnail_container to mockk<android.widget.FrameLayout>(relaxed = true),
+            R.id.clipboard_entry_thumbnail to mockk<android.widget.ImageView>(relaxed = true),
+            R.id.clipboard_entry_play_badge to mockk<android.widget.ImageView>(relaxed = true),
+            R.id.clipboard_entry_select to mockk<android.widget.CheckBox>(relaxed = true),
+        )
+        val row = mockk<android.view.View>(relaxed = true)
+        every { row.findViewById<android.view.View>(any()) } answers {
+            typed[firstArg<Int>()] ?: mockk<android.view.View>(relaxed = true)
+        }
+        return row to editField
+    }
+
+    private fun rowAdapter(): android.widget.BaseAdapter =
+        view.getField("clipboardAdapter") as android.widget.BaseAdapter
 
     private fun buildReadyView(entries: List<ClipboardEntry>) {
         buildView()

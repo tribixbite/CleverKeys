@@ -1897,6 +1897,20 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     editingEditText = editField
                 }
 
+                // Long entries (soak bug 2026-10-25): the row grows with its text inside the
+                // pane's ScrollView, and TextView only scrolls its caret into view
+                // (bringPointIntoView → requestRectangleOnScreen → the ScrollView) and draws it
+                // while it has focus. Unfocused, a caret past the pane's bottom took every typed
+                // character out of sight. View focus inside the IME window does not take window
+                // focus from the app, so the keyboard stays up (tapping the field already focused
+                // it on device). Posted, so a scrap measurement view (never attached) is skipped.
+                // The keyboard is the input method: focusing must not ask the platform for one
+                // (showSoftInputOnFocus has no public XML attribute).
+                editField.showSoftInputOnFocus = false
+                editField.post {
+                    if (editField === activeEditingEditText && !editField.isFocused) editField.requestFocus()
+                }
+
                 return view
             }
 

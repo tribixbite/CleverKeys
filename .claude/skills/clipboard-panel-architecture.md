@@ -64,7 +64,7 @@ clipboard_history_entry.xml (LinearLayout, HORIZONTAL)
 |   +-- play_badge (ImageView, GONE)
 |
 +-- Text content (TextView, style=clipboardEntry, weight=1)
-+-- Edit field (EditText, GONE, inputType=none)
++-- Edit field (EditText, GONE, inputType=textMultiLine|textNoSuggestions; showSoftInputOnFocus=false is set in getView — no public XML attribute)
 |
 +-- Button column (LinearLayout, VERTICAL, right-aligned)
     +-- Row 1: Primary (expand, edit, paste) — always visible in normal mode
@@ -119,6 +119,7 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 - **Text manipulation**: All methods use `activeEditingEditText` (dynamic property with visibility + windowToken validation + child view fallback) — see `ime-key-routing.md` "ListView Scrap View Architecture"
 - **View recycling**: getView() sets up cursor, click listeners, TextWatcher on EVERY call (not just first render). Only the `editingEditText` reference cache is guarded.
 - **State tracking**: `editingInProgressText` is synced directly in text manipulation methods AND via TextWatcher (belt-and-suspenders). `save_edit()` reads from `editingInProgressText` (not EditText widget).
+- **Focus and long entries (2026-10-25)**: getView posts `requestFocus()` on the visible edit field. TextView draws its caret and scrolls it into view (bringPointIntoView → requestRectangleOnScreen → the pane's ScrollView) only while focused; unfocused, an entry taller than the pane put the caret, and every typed character, out of sight. View focus inside the IME window never takes window focus from the app. Never let a FOCUSABLE popup open from the field: `inputType="none"` is the attribute's unset value (EditText stays TYPE_CLASS_TEXT with suggestions), and tapping a spell-checker-underlined word opened the focusable SuggestionsPopupWindow, the app lost window focus and hid the keyboard (same mechanism as `ImeDialogWindowPolicy`). Tests: `ClipboardHistoryViewStateGuardsTest` (mock), `ClipboardLongEntryEditTest` (instrumented).
 
 ### 3. Tag Mode (pane-level, in ClipboardManager)
 - **State**: `tagMode: Boolean` + `tagEditText: EditText?`
