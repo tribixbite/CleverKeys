@@ -333,8 +333,10 @@ class StaticContextLm private constructor(
      * Why this exists: in the default `context_source = both`, `UnifiedScore.combine` takes
      * `max(static, learned)` and the learned boost is always ≥ 1, so a static ratio below 1 is
      * never applied there; only `static_only` applies it. The closed candidate set was measured
-     * on the OOD dev splits (docs/eval/2026-09-29-static-lm-multilingual.md, "LM ratio shape");
-     * [SHIPPED_RATIO_SHAPE] names the one the tap multiplier uses.
+     * on the OOD dev splits (docs/eval/2026-09-29-static-lm-multilingual.md, "LM ratio shape")
+     * and decided per language on fresh populations
+     * (docs/eval/2026-10-25-static-lm-floor-one-prereg.md); [shippedRatioShape] names the one the
+     * tap multiplier uses for a language.
      */
     enum class RatioShape {
         /** r — the backoff alpha(prev) and sub-1 listed ratios demote as computed. */
@@ -357,8 +359,25 @@ class StaticContextLm private constructor(
     }
 
     companion object {
-        /** The shape `BigramModel.getContextMultiplier` applies to [contextRatio]. */
-        val SHIPPED_RATIO_SHAPE = RatioShape.RAW
+        /**
+         * Languages whose model drops the backoff penalty ([RatioShape.FLOOR_ONE]) in
+         * `static_only`. Decided ONCE by the pre-registered per-language rule of 2026-10-25 on
+         * fresh populations (UD PUD/ParlaMint+Valico + Leipzig 10K web, 118–150K positions per
+         * language): each gained +0.36 … +0.71 pt prefix-1 top-3 with no prefix-2/3 regression.
+         * English failed the +0.10 pt gain condition (−0.09) and keeps [RatioShape.RAW].
+         * docs/eval/2026-10-25-static-lm-floor-one-prereg.md. Not re-tunable without a new
+         * pre-registration on new populations.
+         */
+        private val FLOOR_ONE_LANGUAGES = setOf("de", "fr", "it", "pt", "sv")
+
+        /**
+         * The shape `BigramModel.getContextMultiplier` applies to [contextRatio] for [language]:
+         * [RatioShape.FLOOR_ONE] for [FLOOR_ONE_LANGUAGES], [RatioShape.RAW] for every other
+         * language (English, and any language that run did not decide).
+         */
+        @JvmStatic
+        fun shippedRatioShape(language: String): RatioShape =
+            if (language in FLOOR_ONE_LANGUAGES) RatioShape.FLOOR_ONE else RatioShape.RAW
 
         const val MAGIC = "CKLM"
         const val FORMAT_VERSION = 1

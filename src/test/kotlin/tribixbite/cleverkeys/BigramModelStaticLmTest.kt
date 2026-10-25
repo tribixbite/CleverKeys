@@ -40,6 +40,23 @@ class BigramModelStaticLmTest {
     }
 
     @Test
+    fun `static_only penalty is per language - English keeps it, the FLOOR_ONE languages drop it`() {
+        // 2026-10-25 pre-registered per-language rule (docs/eval/2026-10-25-static-lm-floor-one-prereg.md).
+        val m = model()
+        for (lang in listOf("en", "de", "fr", "it", "pt", "sv")) m.installStaticLm(lang, lm)
+        // go|want is an UNLISTED pair: backoff ratio < 1.
+        m.applyLanguage("en")
+        assertThat(m.getContextMultiplier("go", listOf("want"))).isLessThan(1f)
+        for (lang in listOf("de", "fr", "it", "pt", "sv")) {
+            m.applyLanguage(lang)
+            assertWithMessage(lang).that(m.getContextMultiplier("go", listOf("want"))).isEqualTo(1f)
+            // Boosts are untouched by the floor.
+            assertWithMessage(lang).that(m.getContextMultiplier("a", listOf("want")))
+                .isWithin(1e-2f).of(dequantised(0.05) / dequantised(0.025))
+        }
+    }
+
+    @Test
     fun `huge ratios are clamped to the historic 10x ceiling`() {
         val m = model()
         m.installStaticLm("en", lm)

@@ -81,7 +81,8 @@ import java.io.File
  * | lm_both | this LM | device export | both (the new default) |
  * | lm_static_<shape> | this LM, `contextRatio` through [StaticContextLm.RatioShape] `<shape>` | 1 | static_only |
  *
- * `lm_static`/`lm_both` apply [StaticContextLm.SHIPPED_RATIO_SHAPE], as `BigramModel` does. The
+ * `lm_static`/`lm_both` apply [StaticContextLm.shippedRatioShape] for the model's language, as
+ * `BigramModel` does (en RAW, de/fr/it/pt/sv FLOOR_ONE since 2026-10-25). The
  * four `lm_static_<shape>` arms are the 2026-09-29 ratio-shape comparison; each population also
  * prints one machine-readable `SHAPE` line per shape (top-3 Δ vs none at prefix 1/2/3).
  *
@@ -124,14 +125,15 @@ class StaticLmTapEvalTest {
     /** One arm's static/learned sources. */
     /**
      * One arm's static/learned sources. LM arms apply [shape] to `contextRatio` before the clamp;
-     * `lm_static`/`lm_both` use the SHIPPED shape (what `BigramModel` does), and the
+     * `lm_static`/`lm_both` use the SHIPPED shape of the model's language (`shape = null` →
+     * [StaticContextLm.shippedRatioShape], what `BigramModel` does), and the
      * `lm_static_<shape>` arms are the ratio-shape comparison (static_only, one per candidate).
      */
     private enum class Arm(
         val static: StaticSource,
         val learned: Boolean,
         val source: String,
-        val shape: StaticContextLm.RatioShape = StaticContextLm.SHIPPED_RATIO_SHAPE,
+        val shape: StaticContextLm.RatioShape? = null,
     ) {
         NONE(StaticSource.NONE, false, UnifiedScore.SOURCE_BOTH),
         LEGACY_STATIC(StaticSource.LEGACY, false, UnifiedScore.SOURCE_STATIC_ONLY),
@@ -484,7 +486,7 @@ class StaticLmTapEvalTest {
         for (arm in Arm.entries) {
             val staticOf: (String) -> Float = when (arm.static) {
                 StaticSource.NONE -> { _ -> 1f }
-                StaticSource.LM -> { w -> if (prev == null) 1f else clampMult(arm.shape.apply(lm.contextRatio(prev, w))) }
+                StaticSource.LM -> { w -> if (prev == null) 1f else clampMult((arm.shape ?: StaticContextLm.shippedRatioShape(lm.language)).apply(lm.contextRatio(prev, w))) }
                 StaticSource.LEGACY -> { w -> legacy.multiplier(w, prev) }
             }
             val learnedOf: (String) -> Float = if (arm.learned) { w -> learnedFor[w] ?: 1f } else { _ -> 1f }

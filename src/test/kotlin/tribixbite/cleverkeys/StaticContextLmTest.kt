@@ -254,6 +254,20 @@ class StaticContextLmTest {
     }
 
     @Test
+    fun `shipped ratio shape is the 2026-10-25 per-language rule`() {
+        // Pre-registered, decided once on fresh populations (docs/eval/2026-10-25-static-lm-floor-one-prereg.md):
+        // English kept RAW (prefix-1 -0.09 pt), the other five shipped languages passed for FLOOR_ONE.
+        assertThat(StaticContextLm.shippedRatioShape("en")).isEqualTo(StaticContextLm.RatioShape.RAW)
+        for (lang in listOf("de", "fr", "it", "pt", "sv")) {
+            assertThat(StaticContextLm.shippedRatioShape(lang)).isEqualTo(StaticContextLm.RatioShape.FLOOR_ONE)
+        }
+        // Any language not decided by that run (es ships no LM; imported packs) stays RAW.
+        for (lang in listOf("es", "nl", "pl", "")) {
+            assertThat(StaticContextLm.shippedRatioShape(lang)).isEqualTo(StaticContextLm.RatioShape.RAW)
+        }
+    }
+
+    @Test
     fun `RAW is the identity`() {
         for (r in floatArrayOf(0.05f, 0.5f, 0.99f, 1f, 3f)) {
             assertThat(StaticContextLm.RatioShape.RAW.apply(r)).isEqualTo(r)
