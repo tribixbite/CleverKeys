@@ -53,6 +53,16 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
    components; `PredictionViewSetup` rebuilds the whole container when it does not hold the new
    view (Saga 2026-10-07: a theme switch, and Monet Auto following dark mode, were invisible until
    the process restarted). A minimized keyboard survives this through `KeyboardMinimizer.resolve`.
+   **Stale-view detection is `theme/KeyboardViewThemeTracker`** (Pixel 2026-10-25): every
+   keyboard view is stamped in `inflate_view` with style id + effective theme name + (runtime
+   themes only) the `KeyboardColorScheme` ThemeProvider holds. An edit of the displayed custom
+   theme changes ONLY the colours — the old id/name check missed it, and the
+   `ACTION_THEME_CHANGED` receiver rebuilt only `if (isInputViewShown)`, so a save made while
+   the keyboard was hidden never reached it until a restart. Now the receiver rebuilds when
+   shown AND stale, and `onStartInputView` rebuilds whatever is stale; nothing is remembered
+   between them and nothing rebuilds when the colours did not change. The editor notifies on
+   EVERY edit save (the theme may be bound to the current layout). Never compare id/name alone
+   again; pinned by `theme/KeyboardViewThemeTrackerTest` (mock).
 7. **Every colour field must reach a renderer.** `KeyboardColorScheme` has 17 colour fields;
    nine Theme-Creator fields were persisted but consumed by nothing until H-4
    (`ThemeCreatorFieldWiringTest` pins each: keyLocked, keyModifier, keySpecial,
@@ -88,6 +98,7 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
 | `theme/ThemeProvider.kt` | id → `Theme`; `BUILT_IN_THEME_IDS`, `FALLBACK_THEME_ID`, `isAvailable`, `getAllThemeIds` |
 | `theme/PredefinedThemes.kt`, `theme/KeyboardColorScheme.kt` | decorative palettes, the 17-field scheme |
 | `theme/CustomThemeManager.kt`, `theme/CustomThemePrefPolicy.kt` | DIY store, pref coherence |
+| `theme/KeyboardViewThemeTracker.kt` | keyboard-view stale detection (id + name + runtime colours) |
 | `theme/ThemeEditorPreview.kt`, `theme/ThemePreviewScene.kt` | Theme Creator preview |
 | `theme/MaterialThemeManager.kt`, `theme/CleverKeysTheme.kt`, `KeyboardShapes.kt`, `KeyboardTypography.kt` | Settings-app Compose theme |
 | `activities/ThemeSettingsActivity.kt` | Theme Manager + Theme Creator UI, `BUILTIN_THEMES` |
@@ -101,7 +112,8 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
   unknown names follow the system, runtime themes take the base style),
   `LayoutThemeBindingConfigTest`, `theme/ThemeProviderFallbackTest`,
   `theme/CustomThemePrefPolicyTest`, `theme/ThemeCreatorFieldWiringTest`,
-  `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`.
+  `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
+  `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip).
 - Instrumented: `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.
 - Device: a custom-theme visual pass is pure-tier only so far (HANDOFF round 8); Monet (Auto)

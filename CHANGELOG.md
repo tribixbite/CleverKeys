@@ -538,6 +538,9 @@ editor that used to be listed here already ship in 2.0.)
 - The clipboard pane repaints when the theme changes or the active custom theme's colours are
   edited, and its entry rows take the runtime colours (#130); the keyboard view is swapped after
   a theme change, so Monet (Auto) follows system dark mode without a restart.
+- Editing the colours of the theme in use while the keyboard is hidden now shows on the next
+  keyboard appearance; before, the old colours stayed until "Restart Keyboard". Edits of a theme
+  tied to the current layout apply too.
 - With no theme chosen, the keyboard and the launcher follow the system light/dark mode instead
   of always rendering dark.
 - The numeric pane's Greek/Math key honours its Extra Keys checkbox (#77), so a custom layout

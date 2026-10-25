@@ -26,6 +26,9 @@ import tribixbite.cleverkeys.minimize.KeyboardMinimizer
 import tribixbite.cleverkeys.minimize.MinimizedKeyboardView
 import tribixbite.cleverkeys.minimize.MinimizedStyle
 import tribixbite.cleverkeys.ml.SwipeMLData
+import tribixbite.cleverkeys.theme.KeyboardViewThemeStamp
+import tribixbite.cleverkeys.theme.KeyboardViewThemeTracker
+import tribixbite.cleverkeys.theme.ThemeProvider
 
 /**
  * Main InputMethodService implementation for Unexpected Keyboard.
@@ -96,13 +99,12 @@ class CleverKeysService : InputMethodService(),
     private lateinit var _configManager: ConfigurationManager
     private var _config: Config? = null // Cached reference from _configManager, updated by ConfigChangeListener
 
-    // Track the theme ID used to create the current keyboard view (for stale view detection)
-    private var _currentViewThemeId: Int = 0
     /**
-     * Theme NAME the current keyboard view was inflated with. Runtime themes (decorative/custom)
-     * all share one style id, so [_currentViewThemeId] alone cannot tell two of them apart.
+     * Stale-view detection for the keyboard view: what it was inflated with (style id, effective
+     * theme name and, for runtime themes, the colours). An edit of the displayed custom theme
+     * changes only the colours, so a name/id comparison missed it (Pixel 2026-10-25).
      */
-    private var _currentViewThemeName: String = ""
+    private val _viewTheme = KeyboardViewThemeTracker { currentKeyboardThemeStamp() }
 
     // Prediction coordination (v1.32.346: extracted to PredictionCoordinator)
     private var _predictionCoordinator: PredictionCoordinator? = null
@@ -423,11 +425,13 @@ class CleverKeysService : InputMethodService(),
                     // 1. Refresh config to pick up new values (colors, etc.)
                     _configManager.refresh(resources)
                     
-                    // 2. FORCE view recreation.
-                    // Even if the theme ID hasn't changed (e.g. editing custom theme colors),
-                    // we need to recreate the view to pick up the new colors.
-                    // Passing 0, 0 forces the logic in onThemeChanged to run.
-                    if (isInputViewShown) {
+                    // 2. Rebuild the view when its colours are stale. The style id and the theme
+                    // name may be unchanged (an edited custom theme): the tracker compares the
+                    // colours too. A theme switch was already re-inflated by the refresh above
+                    // (onThemeChanged), so it is not stale here. A HIDDEN keyboard is left
+                    // alone: onStartInputView rebuilds it before it is shown (Pixel 2026-10-25:
+                    // the old `if (isInputViewShown)` alone dropped hidden edits for good).
+                    if (_viewTheme.shouldRebuildOnThemeBroadcast(isInputViewShown)) {
                         onThemeChanged(0, 0)
                     }
                 }
@@ -678,7 +682,29 @@ class CleverKeysService : InputMethodService(),
      * Re-creates keyboard views with new theme.
      */
     override fun onThemeChanged(oldTheme: Int, newTheme: Int) {
-        // Recreate views with new theme
+        recreateThemedViews()
+
+        // Per-layout theme binding: a theme change can arrive MID-TYPING (switching onto a layout
+        // bound to another theme). Handing the bare view to setInputView would drop the
+        // suggestion strip until the next field focus, so while the keyboard is shown rebuild
+        // the whole input hierarchy now through the same setup onStartInputView uses (it sees
+        // the container no longer holds this view and rebuilds it, suggestion bar included).
+        // Hidden: the next onStartInputView does that rebuild.
+        val info = currentInputEditorInfo
+        if (isInputViewShown && info != null && _config != null) {
+            installPredictionViews(info)
+        } else {
+            setInputView(_keyboardView)
+        }
+    }
+
+    /**
+     * Re-inflate the keyboard view with the current theme and drop every view built with the
+     * old one (emoji pane, clipboard pane views). Shared by [onThemeChanged] and the stale-view
+     * branch of [onStartInputView], so a theme edited while the keyboard was hidden restyles
+     * the clipboard pane as well (Pixel 2026-10-25). The caller installs the new view.
+     */
+    private fun recreateThemedViews() {
         _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
         _emojiPane = null
 
@@ -693,19 +719,6 @@ class CleverKeysService : InputMethodService(),
         // Pass null for word predictor (re-wired by PredictionViewSetup on next input)
         // The service reference enables swipe handling callbacks
         _keyboardView.setSwipeTypingComponents(null, this)
-
-        // Per-layout theme binding: a theme change can arrive MID-TYPING (switching onto a layout
-        // bound to another theme). Handing the bare view to setInputView would drop the
-        // suggestion strip until the next field focus, so while the keyboard is shown rebuild
-        // the whole input hierarchy now through the same setup onStartInputView uses (it sees
-        // the container no longer holds this view and rebuilds it, suggestion bar included).
-        // Hidden: the next onStartInputView does that rebuild.
-        val info = currentInputEditorInfo
-        if (isInputViewShown && info != null && _config != null) {
-            installPredictionViews(info)
-        } else {
-            setInputView(_keyboardView)
-        }
     }
 
     /**
@@ -749,17 +762,11 @@ class CleverKeysService : InputMethodService(),
         // 2026-08-28 along with UnigramLanguageDetector — it cleared a word window nothing
         // read. The remaining per-field resets live in KeyEventHandler.started(info) below.
 
-        // Check if the current view was created with a stale theme (style id OR theme name:
-        // runtime themes, and layouts bound to them, share one style id)
-        val latestThemeId = _config?.theme ?: 0
-        val latestThemeName = _config?.themeName ?: ""
-        if (latestThemeId != 0 &&
-            (_currentViewThemeId != latestThemeId || _currentViewThemeName != latestThemeName)
-        ) {
-            _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
-            _emojiPane = null
-            _keyboardView.setKeyboard(current_layout())
-            _keyboardView.setSwipeTypingComponents(null, this)
+        // Rebuild a view inflated with a stale theme: another style id, another theme name
+        // (runtime themes, and layouts bound to them, share one style id) or other colours of
+        // the same runtime theme (edited while the keyboard was hidden).
+        if (_viewTheme.shouldRebuildOnShow()) {
+            recreateThemedViews()
             setInputView(_keyboardView)
         } else if (_keyboardView.parent == null) {
             // Ensure view is attached if it was detached
@@ -1390,12 +1397,20 @@ class CleverKeysService : InputMethodService(),
      */
     fun inflate_view(layout: Int): View {
         val themeId = _config?.theme ?: 0
-        // Stamp the theme ID when inflating keyboard layout (for stale view detection in onStartInputView)
+        // Stamp the keyboard view's theme (for stale view detection in onStartInputView and
+        // the theme-changed receiver)
         if (layout == R.layout.keyboard) {
-            _currentViewThemeId = themeId
-            _currentViewThemeName = _config?.themeName ?: ""
+            _viewTheme.onKeyboardViewInflated()
         }
         return View.inflate(ContextThemeWrapper(this, themeId), layout, null)
+    }
+
+    /** The theme a keyboard view inflated now would be drawn with. */
+    private fun currentKeyboardThemeStamp(): KeyboardViewThemeStamp {
+        val cfg = _config
+        return KeyboardViewThemeStamp.of(cfg?.theme ?: 0, cfg?.themeName ?: "") { name ->
+            ThemeProvider.getInstance(this).getColorScheme(name)
+        }
     }
 
     // ARC-084 (2026-08-29): updateCGRPredictions/checkCGRPredictions were re-exported here

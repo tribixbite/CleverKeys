@@ -464,14 +464,17 @@ fun ThemeSettingsScreen(
                 // until re-selection (the pref sync ran only in onThemeSelected). The
                 // policy reports an active-theme save; the broadcast then makes the live
                 // keyboard rebuild its view so ALL edited colours apply immediately —
-                // no process restart needed.
-                val savedActive = CustomThemePrefPolicy.saveCustomTheme(
+                // no process restart needed. Notify on EVERY save, not only an active one:
+                // the theme may be bound to the current layout (e237fa95), which the policy's
+                // global-pref check cannot see. The keyboard compares the displayed colours
+                // and rebuilds only when they changed (KeyboardViewThemeTracker).
+                CustomThemePrefPolicy.saveCustomTheme(
                     prefs,
                     PreferenceManager.getDefaultSharedPreferences(context),
                     themeManager,
                     updatedTheme
                 )
-                if (savedActive) notifyKeyboardThemeChanged(context)
+                notifyKeyboardThemeChanged(context)
                 editingTheme = null
             }
         )

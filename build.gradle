@@ -1571,6 +1571,9 @@ tasks.register('runMockTests', JavaExec) {
     // Roadmap §4.1 (2026-10-08): every one of the 17 editable theme-creator colours reaches
     // exactly its renderer field (or the trail colour) in the theme-editor preview.
     'tribixbite.cleverkeys.theme.ThemeEditorPreviewMappingTest',
+    // Pixel 2026-10-25: an edit of the displayed custom theme while the keyboard is hidden
+    // re-inflates the view on the next onStartInputView (stamp carries the runtime colours).
+    'tribixbite.cleverkeys.theme.KeyboardViewThemeTrackerTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

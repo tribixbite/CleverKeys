@@ -184,8 +184,10 @@ class CoreImeHygieneDriftTest {
         val onStart = service.substringAfter("override fun onStartInputView(").substringBefore("\n    override fun ")
         assertWithMessage("onStartInputView and onThemeChanged must share ONE prediction-view setup path")
             .that(onStart).contains("installPredictionViews(info)")
-        assertWithMessage("the stale-view check must compare the theme NAME too: runtime themes share a style id")
-            .that(onStart).contains("_currentViewThemeName")
+        // The stale-view check (theme NAME too, since runtime themes share a style id, and the
+        // runtime colours) is KeyboardViewThemeTracker's; KeyboardViewThemeTrackerTest pins it.
+        assertWithMessage("the stale-view check must go through KeyboardViewThemeTracker")
+            .that(onStart).contains("_viewTheme.shouldRebuildOnShow()")
     }
 
     /**
