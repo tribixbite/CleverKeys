@@ -38,8 +38,8 @@ import java.util.zip.ZipFile
  * XML parser are android.jar stubs).
  *
  * Every case below is a one-key neighbour typo on `hebr_1_il`
- * ([typosAreRealNeighbourTypos] proves it from the layout) of a top-100 Hebrew word, and none
- * of the typos is itself a dictionary word.
+ * ([typosAreRealNeighbourTypos] proves it from the layout) of a common Hebrew word (the
+ * first ten are top-100 words, the last two the Pixel device-pass typos), and none of the typos is itself a dictionary word.
  */
 class HebrewLayoutAutoCorrectTest {
 
@@ -60,9 +60,13 @@ class HebrewLayoutAutoCorrectTest {
             "שםך" to "שלך",   // ם↔ל; was the deletion שם
             "זנ" to "זה",     // ה↔נ; two letters: was the anagram נז
             "טש" to "יש",     // ט↔י; two letters: was the anagram שט
-            // Pixel 2026-10-12 device pass (release 7eef0b7c) → אתמול. Its other typo, תושה, commits
-            // עושה (a distant 1-substitution inside the tie band, frequency wins): todo item 20.
+            // Pixel 2026-10-12 device pass (release 7eef0b7c) → אתמול.
             "אתנול" to "אתמול", // נ↔מ
+            // The same device pass: under the old band ranking this committed עושה (ת↔ע, a
+            // distant 1-substitution inside the tie band, frequency won). The channel ranking,
+            // the default since 2026-10-19, prices the distant key: תודה 1.60 vs עושה not in
+            // its top 3 (docs/eval/2026-10-12-neighbour-substitution-tiebreak.md, 2026-10-25).
+            "תושה" to "תודה",   // ש↔ד
         )
 
         @JvmStatic
