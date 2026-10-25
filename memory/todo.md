@@ -461,6 +461,29 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
     i.e. the OS clipboard; the instrumented test covers History/To-dos caret, Pinned spell-check
     only). Left: CleverKeys default, Cyberpunk, layouts and themes restored.
+22. [ ] Saga 202 backup round trip + real 1.x upgrade, 2026-10-25 (agent; evidence
+    `build/oct25-saga/`, original backup in `backup-original/`, not in git). Plaintext full ZIP,
+    the same ZIP twice, encrypted `.ckenc`, clipboard JSON and ZIP, config Merge/Replace: every
+    seeded row identical after uninstall → reinstall → import (diff of re-exports incl.
+    timestamps), no duplicates; the private entry survives only the encrypted backup. v1.5.0
+    GitHub APK → local 2.0 release `adb install -r` works (one signer `3c70de88…` for GitHub,
+    F-Droid `AllowedAPKSigningKeys`, `release.yml` and local builds); 1.x data identical after.
+    Fixed `bf20161d` (short-swipe preview showed Replace's removals under Merge/Skip). Open, not
+    fixed (other owners active): (a) pasting a 524,000-char entry fails silently — one
+    `commitText` (`KeyEventHandler.kt:597-602`) hits FAILED BINDER TRANSACTION (parcel 524,156)
+    while the store accepts up to 512 KiB (`ClipboardHistoryService.kt:434-438`); 200,000 chars
+    paste fine; (b) copying an image while the clipboard pane is open leaves it on "Loading
+    results…": `addMediaClip` runs on IO (`ClipboardHistoryService.kt:930`) and calls the
+    listener (`:1070`), `loadDataAsync` touches UI off the main thread
+    (`ClipboardHistoryView.kt:1366-1367`), "Animators may only be run on Looper threads" caught at
+    `ClipboardHistoryService.kt:992`; (c) theme hex field: typing a value char by char is
+    rewritten mid-entry and the caret stays mid-text (`ThemeSettingsActivity.kt:1114-1120`);
+    (d) Command palette Custom Text: "Use This Text" sits under the keyboard
+    (`CommandPaletteDialog.kt:~970`); (e) DIY themes are in no backup and have no UI export
+    (`CustomThemeManager.exportTheme` has no caller), the restored theme id falls back to
+    CleverKeys Dark. Restored: release `f34a977c…` (HEAD `bf20161d`) default IME, original
+    backup imported, 174 prefs equal (only `clipboard_history_limit` int 0 → String "0"), 0
+    words, 0 clips, 19/121 extra keys, CleverKeys Dark; test files deleted from Download.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
