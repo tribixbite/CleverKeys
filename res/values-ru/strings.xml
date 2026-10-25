@@ -519,9 +519,9 @@
     <string name="input_enable_predictions_desc">Показывать подсказки слов при наборе</string>
     <string name="input_suggestion_bar_opacity_title">Прозрачность панели подсказок</string>
     <string name="input_suggestion_bar_opacity_desc">Прозрачность панели подсказок</string>
-    <string name="input_auto_space_after_title">Авто-пробел после подсказки</string>
+    <string name="input_auto_space_after_title">Автопробел после подсказки</string>
     <string name="input_auto_space_after_desc">Добавлять пробел после выбора подсказки</string>
-    <string name="input_auto_space_before_title">Авто-пробел перед подсказкой</string>
+    <string name="input_auto_space_before_title">Автопробел перед подсказкой</string>
     <string name="input_auto_space_before_desc">Вставлять пробел перед нажатой подсказкой (свайп всегда добавляет пробел)</string>
     <string name="input_backspace_undo_swipe_title">Backspace отменяет свайп</string>
     <string name="input_backspace_undo_swipe_desc">Нажатие Backspace сразу после свайп-слова удаляет всё слово</string>
@@ -542,7 +542,7 @@
     <string name="input_smart_punctuation_title">Умная пунктуация</string>
     <string name="input_smart_punctuation_desc">Присоединять знаки препинания к словам (убирать пробел перед . , ! ? и т.д.)</string>
     <string name="input_swipe_distance_threshold_title">Порог расстояния свайпа</string>
-    <string name="input_swipe_distance_threshold_desc">Расстояние (в единицах устройства) для активации слайдера/суб-клавиш в середине свайпа. Также ограничивает минимум коротких свайпов на широких клавишах.</string>
+    <string name="input_swipe_distance_threshold_desc">Расстояние (в единицах устройства) для активации слайдера/подклавиш в середине свайпа. Также ограничивает минимум коротких свайпов на широких клавишах.</string>
     <string name="input_circle_gesture_title">Чувствительность кругового жеста</string>
     <string name="input_circle_gesture_desc">Чувствительность жестов петли/круга</string>
     <string name="input_space_slider_title">Чувствительность слайдера пробела</string>
