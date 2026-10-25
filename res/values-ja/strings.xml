@@ -2388,7 +2388,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">システムのクリップボードを消去</string>
-    <string name="cmd_clear_clipboard_desc">Androidの現在のクリップボードを消去します。保存した履歴、ピン留め、ToDoは保持されます。</string>
+    <string name="cmd_clear_clipboard_desc">Androidの現在のクリップボードを消去します。保存した履歴、ピン留めした項目、To-Do 項目は保持されます。</string>
     <string name="system_clipboard_cleared">システムのクリップボードを消去しました</string>
     <string name="system_clipboard_clear_failed">システムのクリップボードを消去できませんでした</string>
 

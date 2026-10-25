@@ -2387,7 +2387,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">清除系统剪贴板</string>
-    <string name="cmd_clear_clipboard_desc">清除 Android 当前剪贴板；已保存的历史记录、置顶和待办事项将保留。</string>
+    <string name="cmd_clear_clipboard_desc">清除 Android 当前剪贴板；已保存的历史记录、已固定的项目和待办事项将保留。</string>
     <string name="system_clipboard_cleared">系统剪贴板已清除</string>
     <string name="system_clipboard_clear_failed">无法清除系统剪贴板</string>
 

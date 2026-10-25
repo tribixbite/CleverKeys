@@ -2389,7 +2389,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">시스템 클립보드 지우기</string>
-    <string name="cmd_clear_clipboard_desc">Android의 현재 클립보드를 지웁니다. 저장된 기록, 고정 항목 및 할 일은 유지됩니다.</string>
+    <string name="cmd_clear_clipboard_desc">Android의 현재 클립보드를 지웁니다. 저장된 기록, 고정된 항목 및 할 일 항목은 유지됩니다.</string>
     <string name="system_clipboard_cleared">시스템 클립보드를 지웠습니다</string>
     <string name="system_clipboard_clear_failed">시스템 클립보드를 지울 수 없습니다</string>
 
