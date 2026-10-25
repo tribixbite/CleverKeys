@@ -89,8 +89,13 @@ class ClipboardLongEntryEditTest {
                 FrameLayout.LayoutParams.MATCH_PARENT, PANE_HEIGHT_PX
             ))
         }
-        instr.waitForIdleSync()
-        instr.runOnMainSync { getField<BaseAdapter>(chv, "clipboardAdapter")!!.notifyDataSetChanged() }
+        // Attaching starts the view's own async load (empty here: no service, no DB rows),
+        // which replaces the rows; let it finish, then show the test rows.
+        settle()
+        instr.runOnMainSync {
+            setField(chv, "paginatedHistory", entries)
+            getField<BaseAdapter>(chv, "clipboardAdapter")!!.notifyDataSetChanged()
+        }
         instr.waitForIdleSync()
         return Hosted(scenario, chv, pane)
     }
