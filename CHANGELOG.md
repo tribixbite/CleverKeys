@@ -400,6 +400,13 @@ editor that used to be listed here already ship in 2.0.)
   editor; Copy and Cut ran without a selection.
 - Ctrl+V in the clipboard entry editor pasted into the app behind the panel. Ctrl shortcuts and
   the paste key now stay inside the inline editor, search and tag fields.
+- Very large clipboard entries paste. A 524,000-character entry (the store keeps up to 512 KB)
+  pasted nothing and showed no message: it was sent to the app in one piece, which is more
+  than Android passes in one transfer. Clipboard text is now sent in ordered pieces within one
+  edit — from the clipboard pane, the paste key in terminals and remote-desktop fields, and
+  paste-pinned commands — and the bar says so if the app accepts only part of it.
+- Copying an image while the clipboard pane was open left the pane on "Loading results…" until
+  it was reopened. The pane now updates and lists the new image.
 - A language-pack update that is interrupted or refused halfway no longer loses the installed
   pack: the old pack is kept as a backup until the new one is in place, and leftovers are
   repaired at the next start.

@@ -469,14 +469,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     GitHub APK → local 2.0 release `adb install -r` works (one signer `3c70de88…` for GitHub,
     F-Droid `AllowedAPKSigningKeys`, `release.yml` and local builds); 1.x data identical after.
     Fixed `bf20161d` (short-swipe preview showed Replace's removals under Merge/Skip). Open, not
-    fixed (other owners active): (a) pasting a 524,000-char entry fails silently — one
-    `commitText` (`KeyEventHandler.kt:597-602`) hits FAILED BINDER TRANSACTION (parcel 524,156)
-    while the store accepts up to 512 KiB (`ClipboardHistoryService.kt:434-438`); 200,000 chars
-    paste fine; (b) copying an image while the clipboard pane is open leaves it on "Loading
-    results…": `addMediaClip` runs on IO (`ClipboardHistoryService.kt:930`) and calls the
-    listener (`:1070`), `loadDataAsync` touches UI off the main thread
-    (`ClipboardHistoryView.kt:1366-1367`), "Animators may only be run on Looper threads" caught at
-    `ClipboardHistoryService.kt:992`; (c) theme hex field: typing a value char by char is
+    fixed (other owners active): (a) FIXED `30c6cc6f` + `d5b825d3`: a 524,000-char entry hit
+    FAILED BINDER TRANSACTION (parcel 524,156) as one `commitText`; `LargeTextCommit` now sends
+    32 Ki-char chunks in one batch edit (surrogate-safe, a refused chunk retried in place, then a
+    bar message) from the pane, the terminal/blind-field paste key and paste_pinned_N. Saga, release
+    `73fb0d8b…`: Chrome textarea got len 524,000 and the expected checksum, no binder failure; Chrome's
+    renderer then took ~6.5 min of CPU to lay out the text (keyboard not blocked). A first
+    version's `getTextBeforeCursor` barrier is never answered by Chrome inside a batch edit (15×2 s
+    main-thread stalls) and was removed. (b) FIXED `cf74c393`: history-change callbacks from IO
+    are posted to the main thread, a listener failure is logged with its stack; Saga: image
+    copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
+    on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted
+    for main-thread delivery, not run. (c) theme hex field: typing a value char by char is
     rewritten mid-entry and the caret stays mid-text (`ThemeSettingsActivity.kt:1114-1120`);
     (d) Command palette Custom Text: "Use This Text" sits under the keyboard
     (`CommandPaletteDialog.kt:~970`); (e) DIY themes are in no backup and have no UI export
