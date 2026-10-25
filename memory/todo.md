@@ -480,12 +480,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted
-    for main-thread delivery, not run. (c) theme hex field: typing a value char by char is
-    rewritten mid-entry and the caret stays mid-text (`ThemeSettingsActivity.kt:1114-1120`);
-    (d) Command palette Custom Text: "Use This Text" sits under the keyboard
-    (`CommandPaletteDialog.kt:~970`); (e) DIY themes are in no backup and have no UI export
-    (`CustomThemeManager.exportTheme` has no caller), the restored theme id falls back to
-    CleverKeys Dark. Restored: release `f34a977c…` (HEAD `bf20161d`) default IME, original
+    for main-thread delivery, not run. (c) FIXED `61c5f273` + `4b93c3c2` (Saga 144,
+    2026-10-25): the hex field rewrote `#FF0000` to `#FFFF0000` mid-entry (resync compared
+    against the 8-digit spelling; now `theme/HexColorText`, and the picker keeps the exact typed
+    ARGB and scrolls in landscape). Device: `#FF0000` and `#80FF0000` typed char by char, middle
+    edit `#80FF0000`→`#80FA0000`, text and caret kept; (d) FIXED `4d69ee7e`: "Use This Text" is in
+    the palette header (the IME stays attached to the activity behind it, so the dialog got no
+    resize or IME insets, and panning hid the header); landscape + portrait checked, a scrim tap
+    still dismisses; (e) FIXED `e9c0802e`: `custom_themes` section in the settings export and
+    full backup, per-theme preview rows + Skip/Merge/Replace, themes written before the settings
+    commit. Device: DIY theme selected → full backup → theme deleted → import → "Custom themes
+    restored: 1", theme back and selected; then CleverKeys Dark restored, test theme and ZIP
+    deleted. Restored: release `f34a977c…` (HEAD `bf20161d`) default IME, original
     backup imported, 174 prefs equal (only `clipboard_history_limit` int 0 → String "0"), 0
     words, 0 clips, 19/121 extra keys, CleverKeys Dark; test files deleted from Download.
 

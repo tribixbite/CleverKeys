@@ -29,6 +29,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Custom themes are in the backup.** The settings export and the full backup now carry your
+  DIY themes, so a reinstall plus a restore brings them back, and a restored selection of a DIY
+  theme comes back with it instead of falling back to CleverKeys Dark. The import preview lists
+  each theme with Skip / Merge (the default: the file wins for the same theme, your others are
+  kept) / Replace. Backups made before 2.0.0 contain no themes and leave yours untouched.
 - **Autocorrect Ranking & Tuning** (Settings → Auto-Correction): autocorrect now ranks
   candidates by **edit cost plus a frequency term** instead of "most frequent word within a
   score band". One wrong key is never outweighed by a tiny frequency difference (`devixe` →
@@ -374,6 +379,13 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The theme editor's hex colour field no longer rewrites what you type. A complete six-digit
+  value was re-formatted as eight digits while you typed and the caret was left in the middle;
+  the field now keeps your text, applies a colour once the value is complete, and keeps the exact
+  colour you typed. In landscape the colour picker scrolls, so the hex field and its buttons are
+  reachable.
+- Short-swipe customization: the Custom Text "Use This Text" button no longer sits under the
+  keyboard. It is now in the editor's header, and the text area scrolls.
 - The Enter key shows the current field's action. It kept the first field's label and Enter/action swap until a setting or orientation changed, so a Send field could show "Go" and "Enter Always Inserts a New Line" (#139) had no effect.
 - With Monet (Auto) in light mode, the per-key customization magnifier drew a dark key under a
   light keyboard: two theme lookups disagreed. There is now one, and the direction names over
