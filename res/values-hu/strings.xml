@@ -2405,7 +2405,7 @@
     <plurals name="clipboard_selection_count"><item quantity="one">%1$d kijelölve</item><item quantity="other">%1$d kijelölve</item></plurals>
     <string name="clipboard_select_all_matching">Az összes találat kijelölése</string>
     <string name="clipboard_deselect_all_matching">Az összes találat kijelölésének megszüntetése</string>
-    <string name="clipboard_selection_clear">Kijelölés törlése</string>
+    <string name="clipboard_selection_clear">Kijelölés megszüntetése</string>
     <string name="clipboard_delete_selected">Kijelöltek törlése</string>
     <string name="clipboard_selection_exit">Kilépés a kijelölésből</string>
     <string name="clipboard_select_entry_descr">Kivágás kijelölése: %1$s</string>

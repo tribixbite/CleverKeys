@@ -2462,7 +2462,7 @@
     <plurals name="clipboard_selection_count"><item quantity="one">%1$d seleccionado</item><item quantity="many">%1$d seleccionados</item><item quantity="other">%1$d seleccionados</item></plurals>
     <string name="clipboard_select_all_matching">Seleccionar todos los resultados coincidentes</string>
     <string name="clipboard_deselect_all_matching">Deseleccionar todos los resultados coincidentes</string>
-    <string name="clipboard_selection_clear">Borrar selección</string>
+    <string name="clipboard_selection_clear">Quitar selección</string>
     <string name="clipboard_delete_selected">Eliminar seleccionados</string>
     <string name="clipboard_selection_exit">Salir de la selección</string>
     <string name="clipboard_select_entry_descr">Seleccionar recorte: %1$s</string>
