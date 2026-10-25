@@ -13,7 +13,7 @@ review in `memory/todo.md` "Open now" item 10.
 | Android Lint translation checks | MissingTranslation, ExtraTranslation (error/fatal), StringFormatInvalid, StringFormatMatches (error), StringFormatCount (warning), Typos (warning, about 10 languages incl. de es fr it nl pt ru hu), PluralsCandidate / UnusedQuantity (warning), MissingQuantity / ImpliedQuantity (error), Untranslatable | Yes, but about 45 min on Termux. CI runs it on every PR (`ci.yml` lint, `release.yml` lintDebug). | `scripts/gradle-guard.sh lintDebug`; report in `build/reports/lint-results-debug.xml` | Read the last local report (2026-10-07) |
 | translate-toolkit 3.x (`android2po` + `pofilter`) | 47 filters: printf, variables, xmltags, accelerators, doublespacing, endpunc, startpunc, untranslated, unchanged, long/short, brackets, quoting, numbers, nplurals, spellcheck (enchant) | Yes, with one workaround. The `unicode_segmentation_rs` wheel misses `PyModule_Type` on bionic, so preload libpython. | `python3.12 -m venv --system-site-packages v && v/bin/pip install translate-toolkit`; then `LD_PRELOAD=$PREFIX/lib/libpython3.12.so v/bin/android2po -t res/values/strings.xml res/values-de/strings.xml de.po` and `v/bin/pofilter --language=de de.po out.po` | Yes, all 21 locales |
 | Weblate quality checks | Same family as pofilter, plus same-plurals, ICU MessageFormat, max-length, glossary-consistency, inconsistent-across-units | Not practical: a Django server (PostgreSQL, Redis). Most of its checks are pofilter's. | Hosted Weblate (third party: maintainer decision), or a self-hosted container elsewhere | No |
-| LanguageTool | Grammar, agreement and punctuation rules for about 30 languages (ru uk pl de fr es pt nl it fa ja zh ro…) | Yes in principle: Java 21 is installed. Needs a separate download (about 250 MB) and about 1.5 GB of RAM for the local server. | `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081`, then POST each string to `localhost:8081/v2/check` | No. Sending strings to the public api.languagetool.org would be a third-party upload: **maintainer decision** |
+| LanguageTool | Grammar, agreement and punctuation rules for about 30 languages (ru uk pl de fr es pt nl it fa ja zh ro…) | Yes in principle: Java 21 is installed. Needs a separate download (about 250 MB) and about 1.5 GB of RAM for the local server. | `java -cp languagetool-server.jar org.languagetool.server.HTTPServer --port 8081`, then POST each string to `localhost:8081/v2/check` | Yes, 2026-10-25: the public API, approved by the maintainer; 14 locales, see §7 |
 | Hunspell | Spelling of unknown words | Yes. Installed dictionaries: en_US, fr_FR, nl_NL, ru_RU. pacman also has hunspell-hu. No package for most other locales; LibreOffice dictionaries can be dropped into `$PREFIX/share/hunspell`. | `hunspell -d fr_FR -l strings.txt` | Yes (fr, nl, ru) |
 | ICU / CLDR plural rules | Plural categories each locale needs (one/few/many/zero) | Yes, via `babel` (CLDR data, pure Python) | `v/bin/pip install babel`; `Locale.parse('ru').plural_form` | Yes. The checker's rule table matched babel for every integer 0–1000 and 10⁶ in all 21 locales. |
 | Glossary / terminology | Same concept translated two ways | Yes: `TranslationGlossaryTest` with `docs/i18n/glossary.json` (key-scoped), plus a corpus-wide lift probe written for this audit | Throwaway `terms.py` (stems frequent in strings whose English contains the term) | Yes |
@@ -142,7 +142,8 @@ What these heuristics showed:
 Back-translation of the strings added since 2026-10-01 found **no HIGH (meaning-reversing)
 drift in any locale**. `autocorrect_starting_letter_desc`, `appearance_border_radius_desc` and
 the `clipboard_swipe_*` strings are correct in all 21. The concerns below are ordered by user
-impact:
+impact. **Items 1–5 were fixed by agents on 2026-10-25 (maintainer decision: 2.0 ships with
+machine review; see §6). Items 6–11 still need the native speaker.**
 
 1. **`cmd_clear_clipboard_desc`, many locales.** The words for "pins" and "todos" differ from
    the clipboard tab names (it *bloccati*, hu, ro, ru *задачи*, lv, pl, vi *nhật ký* for
@@ -219,7 +220,195 @@ impact:
      `docs/i18n/2026-09-29-back-translation-review.md`), give the reviewer every quantity
      item, and record the results in item 10.
    - Then do the native-speaker pass.
-6. **Optional: LanguageTool.**
-   - A local server (about 250 MB download) adds grammar checks for ru/uk/pl plural
-     agreement, which the model review only partly caught.
-   - The public API is a third-party upload of every string, so it is a maintainer decision.
+6. **LanguageTool** (done once on 2026-10-25 through the public API; §7 has the recipe and
+   the triage categories).
+   - Rerun it for each batch of new strings. The public API's limits (20 requests and 75 KB
+     per minute, 20 KB per request, 20 s of processing per check) make a full run take about
+     40 minutes; its terms also say "do not send automated requests", so a local server
+     (about 250 MB download, 1.5 GB RAM) is the right tool for anything more frequent.
+   - Read only the non-speller rules in full; for the speller rules, read the distinct-token
+     list (§7). Most of the signal is in agreement, punctuation and doubled-word rules.
+
+## 6. Native-review leads fixed (2026-10-25)
+
+The maintainer decided on 2026-10-25 that agents fix leads 1–5 of §4 and that 2.0 ships with
+machine review. Every fix keeps the placeholders and `formatted="false"` attributes;
+`TranslationFormatParityTest`, `TranslationGlossaryTest`, `TranslationCoverageDriftTest` and
+`TranslationLengthTest` are the gate (run after the fixes, see §7).
+
+| # | Lead (§4) | Fix | Commits |
+|---|---|---|---|
+| 1 | `cmd_clear_clipboard_desc` named pins and todos differently from the clipboard tabs | Each locale reuses its own `clipboard_tab_pinned` / `clipboard_tab_todos` wording (18 locales changed; cs and uk already matched; vi additionally *nhật ký* → *lịch sử* for history, as its tab says). The clipboard term itself (fa کلیپ‌بورد vs بریده‌دان, vi *khay nhớ tạm* vs *bộ nhớ tạm*) is the glossary split of §3.4 and was left alone. | `1ac944a9` `2e49403d` `367a748a` `80a3ddcd` |
+| 2 | es/hu `clipboard_selection_clear` read as *delete the selection* | *Quitar selección* / *Kijelölés megszüntetése* (hu reuses the verb of its own `clipboard_deselect_all_matching`). | `d11baf11` |
+| 3 | fa arrows reversed or misleading in RTL | See the rules below; 7 strings changed, 1 reviewed and kept. | `12a425b2` |
+| 4 | ru plural grammar after a count | The flagged `#other` items are correct: in ru/pl/uk `other` is the fractional category, CLDR's own sample is the genitive singular (*1,5 дня*), and an integer `%d` never selects it. The real defects were counts that are not the selecting argument: `dict_word_too_long_for_swipe_msg` chooses its form from the constant `%3$d` (`EMISSION_FRAMES = 32`, always `few`), so `%2$d шага/kroków/кроків` disagreed for most values in ru/pl/uk; `backup_headless_dict_imported` chooses on `%2$d`, so ru/uk `%1$d пользовательских/власних` was wrong for 1. Both counts are now in case-neutral constructions (*требуется шагов: %2$d*; *пользовательских — %1$d, отключённых — %2$d*). cs is unaffected (one form for every integer above 4). pl `#other` items checked the same way: all genitive singular, correct. | `e16549d2` |
+| 5 | tr/pl rendered Backspace as *undo* | *geri silme tuşuna bir kez basmak* / *jedno naciśnięcie Backspace*, the locales' own Backspace key names; tr `input_swipe_distance_threshold_desc` had the same slip (*geri al gibi geniş tuşlarda*). | `4c1207ff` |
+
+**fa arrow rules.** Arrows are not `Bidi_Mirrored`, so what a reader sees depends on the
+resolved direction of the run the arrow lands in, not on which arrow was typed. The test is
+"the tail sits at the source": that reading is the same for an LTR and an RTL reader.
+
+- Latin→Latin examples (`teh → the`) form one LTR run (UBA rule N1: a neutral between two
+  L characters is L), so the arrow keeps its English direction. `donr ← don't` and `tpo ← to`
+  had been flipped and rendered target-to-source; both are `→` again.
+- Persian→Persian sequences form one RTL run, so the arrow must point in the reading
+  direction: `←`, as the Settings paths (`تنظیمات ← چندزبانه`) already did.
+  `cmd_case_cycle_desc` had `→` and rendered UPPER→Title→lower; now `کوچک ← عنوانی ← بزرگ`.
+- String placeholders of unknown script (learned phrase pairs, collision examples, backup
+  value and theme diffs) used an LRI island with `→`: right for Latin values, reversed for
+  Persian ones, because both operands and the arrow collapse into one RTL run inside the
+  island. They now use an RLI island with each operand in its own FSI isolate,
+  `⁧⁨%1$s⁩ ← ⁨%2$s⁩⁩`: isolates count as neutrals for the arrow, so it follows the
+  island's direction whatever the operands or the surrounding paragraph are.
+  `short_swipe_toast_mapped` keeps `%1$s ← «%2$s»`: its `%1$s` is always a Persian direction
+  name, which pins both the paragraph and the arrow's run RTL.
+- Numeric placeholders (`⁦%1$d → %2$d⁩`) and `↔` are unchanged: digits are LTR inside their
+  island, and `↔` is symmetric.
+
+Verified with `java.text.Bidi` (the JDK's UBA implementation, isolates included) for Latin and
+Persian operands in LTR and RTL paragraphs; **not verified on a device** (this agent had no
+phone). A device check of the Learning Data phrase list and the Backup preview in fa is the
+remaining step.
+
+## 7. LanguageTool pass (2026-10-25)
+
+The maintainer approved the public API (`https://api.languagetool.org/v2/check`; the strings
+are public in the repository anyway). One full pass was run on 2026-10-25 by an agent.
+
+**Method.** A throwaway script in the session scratchpad (`lt_check.py`, not committed) parses
+each `res/values-<locale>/strings.xml`, takes every translatable `<string>` and every
+`<plurals>` item, resolves the Android escapes (`\'`, `\"`, `\n`, the whole-value `"…"`
+wrapper), joins the texts with a blank line into batches of at most 12 KB, POSTs each batch
+with `language=<code>` and `enabledOnly=false`, maps every match back to its key and quantity
+by UTF-16 offset (LanguageTool is Java), and drops matches that touch a format placeholder.
+Responses are cached by content hash, so a rerun re-sends only changed text. Rate limit:
+one request every 17 s and at most 12 KB per request, against the published limits of 20
+requests, 75 KB per minute and 20 KB per request. The server also stops a check after 20 s of
+processing (HTTP 500 "took longer than 20.0 seconds"): French needed 12 KB batches and Dutch
+had to be bisected down to 3 KB. The terms also say "do not send automated requests"; a one-off
+cached pass at a third of the limits is the most conservative reading of the approval, and
+anything recurring should use the local server (§1).
+
+**Locales.** LanguageTool supports 14 of the 21: de (de-DE), es, fa, fil (tl-PH), fr, it,
+ja (ja-JP), nl, pl (pl-PL), pt (pt-BR), ro (ro-RO), ru (ru-RU), uk (uk-UA), zh-rCN (zh-CN).
+Not supported and therefore not covered: **cs, hu, in, ko, lv, tr, vi.**
+
+**Triage rule.** Fixed only clear errors: real typos, agreement errors, doubled words and
+punctuation spacing that the locale's own strings already follow. Ignored: style and
+register suggestions, brand and product names, diacritic and vowel-point names (Macron,
+Ogonek, Qamats…), format patterns (`yyyy-MM-dd HH:mm`), English typo examples (`teh → the`),
+project terms (sottotasto, subtecla, saisie par glissé), UI fragments that are not sentences
+(`vor %1$d Min.`, `Re Pág`, `Diz. utente`), the deliberate double spaces in
+`learning_data_phrase_row` and `extra_key_description_with_shortcut`, punctuation-character
+lists in `input_smart_punctuation_desc`, the comma-separated sample-word lists in
+`theme_preview_sample_words`, and false positives. Nothing was reworded.
+
+**Matches per locale** (after placeholder filtering; "speller" is the locale's
+`MORFOLOGIK_RULE_*` / `*_SPELLER_RULE`, read as a distinct-token list; "other rules" were read
+match by match):
+
+| locale | LT code | entries | matches | speller | other rules | fixed (corrections) | commit |
+|---|---|---|---|---|---|---|---|
+| de | de-DE | 2323 | 400 | 338 | 62 | 2 | `bd00844a` |
+| es | es | 2400 | 424 | 384 | 40 | 5 | `bd00844a` |
+| fa | fa | 2323 | 13 | 0 | 13 | 1 | `bd00844a` |
+| fil | tl-PH | 2323 | 4970 | 4912 | 58 | 0 | – |
+| fr | fr | 2400 | 446 | 301 | 145 | 13 | `f03cee30` |
+| it | it | 2400 | 540 | 516 | 24 | 0 | – |
+| ja | ja-JP | 2246 | 1 | 0 | 1 | 0 | – |
+| nl | nl | 2323 | 682 | 640 | 42 | 10 | `dfc27734` |
+| pl | pl-PL | 2477 | 410 | 316 | 94 | 10 | `c3a21249` |
+| pt | pt-BR | 2400 | 460 | 378 | 82 | 5 | `48a49119` |
+| ro | ro-RO | 2400 | 488 | 455 | 33 | 13 | `349e2b23` |
+| ru | ru-RU | 2477 | 341 | 300 | 41 | 3 | `ada395c7` |
+| uk | uk-UA | 2477 | 369 | 317 | 52 | 12 | `4c0a812f` |
+| zh-rCN | zh-CN | 2246 | 19 | 0 | 19 | 0 | – |
+| **total** | 14 | 33 215 | **9 563** | **8 857** | **706** | **74** | |
+
+The 8 857 speller hits are, with 15 exceptions, brand and product names (CleverKeys, ClearURLs,
+TalkBack, Material You), diacritic and vowel-point names (Makron, Ogonek, Qamats, Hataf…),
+format patterns and Java identifiers, English typo examples, key abbreviations, project terms
+(subtecla, podklawisz, свайп) and, in fil, English words in the Taglish copy. The 706 other-rule
+hits split into about 60 % false positives on UI fragments and lists, 25 % style and register
+suggestions, and the 15 % that were fixed or recorded below.
+
+**Fixed (74 corrections in 72 string/plural items, 65 resources).**
+
+- *Typos (7)*: de `Wischtatwort` → gewischten Wort; nl `reaciekiezer` → reactiekiezer,
+  `tekenttoetsen` → tekentoetsen; pl `przesuniecia` → przesunięcia, `klawisom` → klawiszom;
+  ro `Crează` → Creează; uk `паттерн` → патерн (3 strings, 2019 orthography).
+- *Agreement and grammar (8)*: fr `légères dépassements` → légers; uk `плаваючу кнопку` →
+  плавучу (2), `зменшіть/збільшіть` → зменште/збільште, `неточних початку/кінця` →
+  неточного, `неправильні першу/останню літери` → неправильну … літеру; fa doubled word
+  `کامل کامل شد` → `کامل انجام شد`.
+- *Punctuation the locale's own norm requires (31)*: comma before *pero* (es 4), *mais/car*
+  (fr 10 items), *mas* (pt 3), *zanim* and *tyle, co* (pl 5); no comma before *etc.* (ro 3);
+  the one fr semicolon without the space the file's other 47 carry; de sentence after a colon
+  capitalised; ro's nine straight `\"…\"` pairs → „…” like the file's other 35; pl „I“ → „I”.
+- *Compound spelling (12)*: nl `Maximum aantal` → Maximaal aantal (3), `Privé kopie(ën)` →
+  Privékopie(ën) (2), `12-uurs tijd` → 12-uurstijd, `rozethema` → roze thema; pl `nie żądanego`
+  → nieżądanego; pt `Verde esmeralda` → Verde-esmeralda, `verde floresta` → verde-floresta;
+  ru/uk `Авто-пробел/Авто-пробіл` → Автопробел/Автопробіл (4).
+- *Terminology inside one file (5)*: es `las URLs` → las URL (acronym plurals, RAE); fr
+  `Touche modificateur` → Touche de modification; nl quoted menu label → `Privé kopiëren` (the
+  real `private_copy_toolbar_label`); ru/uk `суб-клавиш/суб-клавіш` → подклавиш/підклавіш;
+  uk `(у одиницях` → `(в одиницях`.
+
+Every edited key was re-sent to LanguageTool afterwards (the script's `--recheck` mode): no new
+non-speller match beyond the pre-existing false positives. `TranslationFormatParityTest`,
+`TranslationGlossaryTest`, `TranslationCoverageDriftTest` and `TranslationLengthTest` were run
+after the last edit (`4c0a812f`) through `scripts/gradle-guard.sh runPureTests`: OK (6), OK (5),
+OK (6), OK (2), 2026-10-26 00:19–00:20. A Python mirror of the parity rules also reports 0
+findings on the final tree.
+
+**Ignored, by category** (counts are approximate, from the rule ids):
+
+- Speller hits on names, format patterns and project terms: 8 842 (fil alone 4 912).
+- Style, register and readability rules: de Auslassungspunkte/Mathe/Compound-Coherency, fr
+  PLACE_ADJ (16) and repetition rules, it anglicism rule (input/output), pt barbarism rules
+  (app, status, versus), uk recommended-synonym rules (Переключити, Двонапрямлена, Заготовки),
+  ro cacophony, ja 「ことができる」, nl ERG_LANG_WOORD: about 180.
+- UI fragments and lists read as sentences: lowercase after an abbreviation (`Max. mediagrootte`,
+  `Dicc. usuario`), relative-time labels, the `. , ! ?` list in `input_smart_punctuation_desc`,
+  the sample-word lists, separators (`, `), `H h` format letters, `{{ and }}`: about 150.
+- Deliberate double spaces in `learning_data_phrase_row`, `learning_data_word_row`,
+  `multilang_collision_example`, `extra_key_description_with_shortcut`: 5 per locale.
+- False positives on correct text: de *Kombinierender Hatschek* (masculine), *Professionelles
+  Anthrazit* (neuter colour noun); es *Activa predicciones* (verb), *Copia … guardada*; it *dello
+  ZIP*, *ai fissati*; nl *accent grave*; pl brand casing (37), *we/wy*; ru/uk indeclinable Hebrew
+  and Arabic names (патах, шин, седили), the `Экспортовано настроек: N` colon counts; fil
+  ligature rules on *sa*-phrases and *bawat/buong*, English *raw*, Material *You*; zh 的 in
+  attributive position, 补回, 移到: about 200.
+- Optional punctuation: nl commas before *maar/omdat*; pt *etc.* without a comma, *nº*; uk
+  euphonic й/та and в/у alternation (one fixed where the string was already open).
+
+**Uncertain, left for a native speaker** (new leads beyond §4):
+
+- de: hyphenation is inconsistent within concepts (*Zwischenablageeinträgen* vs
+  *Zwischenablage-Eintrag*, *Wort-Tripel* vs *Worttripel*, *System-Zwischenablage* vs
+  *Systemzwischenablage*).
+- es: `calibration_tap_swipe_title` *Umbral toque / deslizamiento* reads as a missing *de*;
+  *recencia*; key labels without abbreviation points (*Mín*, *Re Pág*).
+- fr: *saisie par glissé* (the glossary noun; a grammar checker reads it as a participle);
+  cardinal directions in capitals mirror the English emphasis; *1re/2e* vs superscript ordinals.
+- it: *recentezza* (recency) is a coinage.
+- nl: `theme_color_key_modifier` *Modifier-toets* beside *modificatietoets* elsewhere; *een even
+  dichtbij gewoon woord*.
+- pl: *zanim gest może być zakwalifikowany* (imperfective after *zanim*); the comma in
+  `dict_legacy_freq_dialog_message` *zmienia tylko poniższe słowa, na %2$d* copied from English.
+- pt: *da pipeline* (gender varies in usage); *Roxo joia*, *Vermelho rubi*, *Azul elétrico*
+  unhyphenated while the file hyphenates its other compound colours.
+- ro: *Majusculizează* (a coinage for *capitalize*); *Sesiune de test al glisării pornită*.
+- ru: *Оценка недавности* (recency); Latin *a* naming the fatha vowel in two strings.
+- uk: *Виключити менеджери паролів* (accusative of an inanimate; acceptable); *Заготовки* for
+  presets.
+- fa: *بلادرنگ* vs *بی‌درنگ* (both current; the checker prefers the Persian form).
+- fil: the Tagalog ligature (*-ng/na*) and *d/r* alternation rules fire throughout the Taglish
+  copy; a Filipino reader should decide whether the Taglish policy wants them.
+
+**Repeat recipe.** `lt_check.py` (session scratchpad; about 250 lines of typed Python, no
+dependencies beyond the standard library): `python3 lt_check.py [locale…]` for a full pass,
+`python3 lt_check.py --recheck <locale> key1,key2` after edits; `triage.py <locale>` writes a
+digest, `--words RULE` lists a speller rule's distinct tokens, `--skip RULE,…` prints everything
+else with context; `report.py` prints the table above from `summary.json`. Keep MAX_BYTES at
+12 KB and MIN_INTERVAL at 17 s, or point LT_URL at a local server and drop both.
