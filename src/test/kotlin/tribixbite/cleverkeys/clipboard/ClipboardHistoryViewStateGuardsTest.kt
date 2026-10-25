@@ -527,6 +527,7 @@ class ClipboardHistoryViewStateGuardsTest {
         view.setField("editingInProgressText", long)
         view.setField("editingCursorPosition", long.length)
         val (row, editField) = editRow()
+        every { row.parent } returns view  // the row is in the list
         val posted = mutableListOf<Runnable>()
         every { editField.post(any()) } answers { posted += firstArg<Runnable>(); true }
         every { editField.isFocused } returns false
@@ -553,8 +554,46 @@ class ClipboardHistoryViewStateGuardsTest {
             .that(inputType).contains("textMultiLine")
     }
 
+    @Test
+    fun typingGoesToTheEditorOnScreenNotADetachedRecycledCopy() {
+        // Saga 202, 2026-10-25 (release with the focus fix): on the To-dos tab the typed text
+        // went into editingInProgressText and was saved, while the editor on screen (focused,
+        // per uiautomator) never changed. ListView detaches recycled rows with
+        // detachViewFromParent, which keeps their window token, so the cached editingEditText —
+        // VISIBLE, token non-null, but no longer in the list — passed the fast path.
+        val text = "line one\nline two"
+        buildView(entries = listOf(ClipboardEntry(content = text, timestamp = 1L, todoStatus = "active")),
+            tab = ClipboardTab.TODOS)
+        view.setField("editingOriginalContent", text)
+        view.setField("editingInProgressText", text)
+        view.setField("editingCursorPosition", text.length)
+        val detached = editorMock(parent = null)
+        val (row, onScreen) = editRow()
+        every { row.parent } returns view
+        every { onScreen.windowToken } returns mockk()
+        every { onScreen.visibility } returns android.view.View.VISIBLE
+        every { view.childCount } returns 1
+        every { view.getChildAt(0) } returns row
+        view.setField("editingEditText", detached)
+
+        val getter = ClipboardHistoryView::class.java.getDeclaredMethod("getActiveEditingEditText")
+        getter.isAccessible = true
+
+        assertWithMessage("the editor that is a row of the list right now")
+            .that(getter.invoke(view)).isSameInstanceAs(onScreen)
+    }
+
+    /** An EditText mock that looks attached and visible, under [parent]. */
+    private fun editorMock(parent: android.view.ViewParent?): android.widget.EditText {
+        val et = mockk<android.widget.EditText>(relaxed = true)
+        every { et.visibility } returns android.view.View.VISIBLE
+        every { et.windowToken } returns mockk()
+        every { et.parent } returns parent
+        return et
+    }
+
     /** A row whose findViewById returns typed relaxed mocks; the second value is its edit field. */
-    private fun editRow(): Pair<android.view.View, android.widget.EditText> {
+    private fun editRow(): Pair<android.widget.LinearLayout, android.widget.EditText> {
         val editField = mockk<android.widget.EditText>(relaxed = true)
         val typed = mapOf<Int, android.view.View>(
             R.id.clipboard_entry_edit_field to editField,
@@ -571,10 +610,13 @@ class ClipboardHistoryViewStateGuardsTest {
             R.id.clipboard_entry_play_badge to mockk<android.widget.ImageView>(relaxed = true),
             R.id.clipboard_entry_select to mockk<android.widget.CheckBox>(relaxed = true),
         )
-        val row = mockk<android.view.View>(relaxed = true)
+        val row = mockk<android.widget.LinearLayout>(relaxed = true)
         every { row.findViewById<android.view.View>(any()) } answers {
             typed[firstArg<Int>()] ?: mockk<android.view.View>(relaxed = true)
         }
+        // A finite parent chain (relaxed mocks would return parents forever): field → row → none.
+        every { editField.parent } returns row
+        every { row.parent } returns null
         return row to editField
     }
 

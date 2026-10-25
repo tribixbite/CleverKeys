@@ -453,8 +453,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // different list position (visibility=GONE) while a NEW editField becomes
             // the visible edit widget. Without the visibility check, setText() goes to
             // the invisible recycled view — user sees nothing.
+            // The window token alone cannot tell: ListView takes recycled rows out with
+            // detachViewFromParent, which keeps it, so a detached copy of the editor still
+            // looked live. Typed text then went into that copy (and was saved) while the editor
+            // on screen never changed (To-dos tab, Saga 2026-10-25). Require the row to be in
+            // this list now.
             editingEditText?.let { et ->
-                if (et.visibility == VISIBLE && et.windowToken != null) return et
+                if (et.visibility == VISIBLE && et.windowToken != null && isInThisList(et)) return et
             }
             // Slow path: reference is stale, recycled, or detached. Search live children.
             for (i in 0 until childCount) {
@@ -468,6 +473,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // No attached editing view found — return cached reference (callers null-check)
             return editingEditText
         }
+
+    /** True while [view] sits in a row that is a child of this list (not a detached recycled row). */
+    private fun isInThisList(view: View): Boolean {
+        var parent = view.parent
+        while (parent != null) {
+            if (parent === this) return true
+            parent = parent.parent
+        }
+        return false
+    }
 
     // Callbacks for edit mode transitions — used by ClipboardManager to lock/unlock UI controls
     var onEditModeEntered: (() -> Unit)? = null
