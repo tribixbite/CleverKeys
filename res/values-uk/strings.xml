@@ -352,7 +352,7 @@
     <string name="settings_section_privacy">🔒 Конфіденційність і дані</string>
     <string name="settings_section_swipe_trail">✨ Слід свайпу</string>
     <string name="accessibility_system_vibration_title">Системна вібрація</string>
-    <string name="accessibility_system_vibration_desc">Використовується вбудований тактильний паттерн телефону (мінімальна затримка). Вимкніть, щоб задати власну тривалість.</string>
+    <string name="accessibility_system_vibration_desc">Використовується вбудований тактильний патерн телефону (мінімальна затримка). Вимкніть, щоб задати власну тривалість.</string>
     <string name="accessibility_custom_duration_title">Тривалість (додатково)</string>
     <string name="accessibility_custom_duration_desc">Тривалість вібрації, коли системну вібрацію вимкнено.</string>
     <string name="accessibility_key_press_title">Натискання клавіші</string>
@@ -530,16 +530,16 @@
     <string name="input_enable_predictions_desc">Показувати підказки слів під час набору</string>
     <string name="input_suggestion_bar_opacity_title">Прозорість панелі підказок</string>
     <string name="input_suggestion_bar_opacity_desc">Прозорість панелі підказок</string>
-    <string name="input_auto_space_after_title">Авто-пробіл після підказки</string>
+    <string name="input_auto_space_after_title">Автопробіл після підказки</string>
     <string name="input_auto_space_after_desc">Додавати пробіл після вибору підказки</string>
-    <string name="input_auto_space_before_title">Авто-пробіл перед підказкою</string>
+    <string name="input_auto_space_before_title">Автопробіл перед підказкою</string>
     <string name="input_auto_space_before_desc">Вставляти пробіл перед натиснутою підказкою (свайп завжди додає пробіл)</string>
     <string name="input_backspace_undo_swipe_title">Backspace скасовує свайп</string>
     <string name="input_backspace_undo_swipe_desc">Натискання Backspace одразу після свайп-слова видаляє все слово</string>
     <string name="input_show_exact_typed_title">Показувати точно введене слово</string>
     <string name="input_show_exact_typed_desc">Пропонувати фактично введені літери як підказку; торкніться, щоб додати до словника</string>
     <string name="input_context_aware_title">Контекстні передбачення</string>
-    <string name="input_context_aware_desc">Навчатися на основі паттернів набору (N-грам модель)</string>
+    <string name="input_context_aware_desc">Навчатися на основі патернів набору (N-грам модель)</string>
     <string name="input_personalized_learning_title">Персоналізоване навчання</string>
     <string name="input_personalized_learning_desc">Підсилювати передбачення для часто набираних слів</string>
     <string name="input_learning_aggression_title">Агресивність навчання</string>
@@ -553,7 +553,7 @@
     <string name="input_smart_punctuation_title">Розумна пунктуація</string>
     <string name="input_smart_punctuation_desc">Приєднувати знаки пунктуації до слів (видаляти пробіл перед . , ! ? тощо)</string>
     <string name="input_swipe_distance_threshold_title">Поріг відстані свайпу</string>
-    <string name="input_swipe_distance_threshold_desc">Відстань (у одиницях пристрою) для активації слайдера/суб-клавіш посередині свайпу. Також обмежує мінімум коротких свайпів на широких клавішах.</string>
+    <string name="input_swipe_distance_threshold_desc">Відстань (в одиницях пристрою) для активації слайдера/підклавіш посередині свайпу. Також обмежує мінімум коротких свайпів на широких клавішах.</string>
     <string name="input_circle_gesture_title">Чутливість кругового жесту</string>
     <string name="input_circle_gesture_desc">Чутливість жестів петлі/кола</string>
     <string name="input_space_slider_title">Чутливість слайдера пробілу</string>
@@ -598,7 +598,7 @@
     <string name="swipe_enable_desc">Проводьте по клавішах для набору слів цілком.</string>
     <string name="swipe_password_title">Свайп у полях пароля</string>
     <string name="swipe_password_desc">Увімкнути свайп-введення навіть у полях пароля. Підказки показуватимуться, але введені символи залишаться прихованими.</string>
-    <string name="privacy_swipe_pattern_title">Дані паттернів свайпів</string>
+    <string name="privacy_swipe_pattern_title">Дані патернів свайпів</string>
     <string name="privacy_swipe_pattern_desc">Зберігати траєкторії свайпів локально для навчання на пристрої</string>
     <string name="privacy_performance_metrics_title">Метрики продуктивності</string>
     <string name="privacy_performance_metrics_desc">Зберігати часові дані локально для оптимізації</string>
@@ -813,7 +813,7 @@
     <string name="custom_theme_preview">Попередній перегляд</string>
     <string name="custom_theme_title">Створити власну тему</string>
     <string name="geo_settings_decoding_section">Декодування</string>
-    <string name="geo_settings_endpoint_desc">Допуск до неточних початку/кінця свайпу, у ширинах клавіш. Більше = поблажливіше; занадто велике може давати неправильні першу/останню літери.</string>
+    <string name="geo_settings_endpoint_desc">Допуск до неточного початку/кінця свайпу, у ширинах клавіш. Більше = поблажливіше; занадто велике може давати неправильну першу/останню літеру.</string>
     <string name="geo_settings_endpoint_title">Допуск кінцевих точок</string>
     <string name="geo_settings_freq_weight_desc">Зсув до поширених слів проти точної відповідності формі. Більше = поширені слова перемагають частіше; 0 = лише збіг форми.</string>
     <string name="geo_settings_freq_weight_title">Вага частоти</string>
@@ -849,7 +849,7 @@
     <string name="gesture_slider_key_header">Поведінка клавіші-повзунка</string>
     <string name="gesture_swipe_recognition_header">Розпізнавання свайпів</string>
     <string name="gesture_tap_typing_header">Дотики та набір</string>
-    <string name="gesture_tuning_tip">Якщо жести здаються повільними, зменшіть час утримання й поріг шуму. Якщо дотики розпізнаються як свайпи, збільшіть тривалість дотику.</string>
+    <string name="gesture_tuning_tip">Якщо жести здаються повільними, зменште час утримання й поріг шуму. Якщо дотики розпізнаються як свайпи, збільште тривалість дотику.</string>
     <string name="gif_get_packs">Отримати GIF-пакети (відкриє браузер)</string>
     <plurals name="gif_grid_columns_display"><item quantity="one">%1$d стовпець</item><item quantity="few">%1$d стовпці</item><item quantity="many">%1$d стовпців</item><item quantity="other">%1$d стовпців</item></plurals>
     <string name="gif_import_pack">Імпортувати пакет із ZIP</string>
@@ -2111,8 +2111,8 @@
     <string name="cmd_voice_typing_chooser_desc">Вибрати спосіб голосового введення</string>
     <string name="cmd_minimize_bar">Згорнути в смугу</string>
     <string name="cmd_minimize_bar_desc">Згортає клавіатуру в тонку смугу; торкніться її, щоб повернути клавіатуру</string>
-    <string name="cmd_minimize_fab">Згорнути в плаваючу кнопку</string>
-    <string name="cmd_minimize_fab_desc">Згортає клавіатуру в плаваючу кнопку, щоб застосунок мав увесь екран; торкніться її, щоб повернути клавіатуру</string>
+    <string name="cmd_minimize_fab">Згорнути в плавучу кнопку</string>
+    <string name="cmd_minimize_fab_desc">Згортає клавіатуру в плавучу кнопку, щоб застосунок мав увесь екран; торкніться її, щоб повернути клавіатуру</string>
     <string name="cmd_hide_keyboard">Сховати клавіатуру</string>
     <string name="cmd_hide_keyboard_desc">Закриває клавіатуру; торкніться текстового поля, щоб повернути її</string>
     <string name="cmd_shift">Shift</string>
