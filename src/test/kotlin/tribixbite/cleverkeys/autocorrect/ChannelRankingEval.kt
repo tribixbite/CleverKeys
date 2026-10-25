@@ -597,7 +597,8 @@ class ChannelRankingEval {
             "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
             "prefix" -> prefixPhase(::say)
-            else -> error("CK_CH_PHASE must be dev, test or inspect")
+            "neighbour" -> neighbourPhase(::say)
+            else -> error("CK_CH_PHASE must be dev, test, inspect, prefix or neighbour")
         }
     }
 
@@ -1251,6 +1252,194 @@ class ChannelRankingEval {
                     "${it.typed}→${base.getValue(it.typed)}|${cand.getValue(it.typed)}" })
             }
         }
+    }
+
+    // ── Neighbour-substitution re-measure (todo 13, 2026-10-25; descriptive, selects nothing) ──
+
+    /**
+     * English words the 2026-10-12 neighbour-tiebreak doc names (§1.5 T5 and §2.1): typo → the
+     * intended word. The §2.1 GTC examples are DISTANT one-letter misspellings that a
+     * "neighbour beats distant" rule broke; the S-adj examples are neighbour slips it fixed.
+     */
+    private val NB_NAMED_EN = linkedMapOf(
+        "compatability" to "compatibility", "releated" to "related", "tipically" to "typically",
+        "unter" to "under", "startet" to "started", "seprate" to "separate", "thet" to "that",
+        "hava" to "have", "choise" to "choice", "zime" to "time",
+        "hac" to "had", "haf" to "had", "har" to "had", "tham" to "than", "dould" to "could",
+    )
+
+    /** English neighbour slips of words ranked (from, to] (same construction as [sAdj], no split). */
+    private fun sAdjRanks(from: Int, to: Int): List<P> {
+        val ranked = en.dict.entries.filter { it.key.length >= 3 && letters.matches(it.key) && it.key !in en.aliases }
+            .sortedByDescending { it.value }.map { it.key }
+        val out = LinkedHashSet<P>()
+        for (w in ranked.subList(from, minOf(to, ranked.size))) for (i in w.indices) for (c in 'a'..'z') {
+            if (c == w[i] || !KeyAdjacency.areNeighbors(c, w[i])) continue
+            val typo = w.substring(0, i) + c + w.substring(i + 1)
+            if (!en.dict.containsKey(typo) && typo !in en.aliases) out += P(typo, w)
+        }
+        return out.toList()
+    }
+
+    /** Positions where [a] and [b] (same length) differ; null when the lengths differ. */
+    private fun diffs(a: String, b: String): List<Int>? =
+        if (a.length != b.length) null else a.indices.filter { a[it] != b[it] }
+
+    /** [o] is a one-letter substitution of [t] on a non-neighbour key (the item-13 failure). */
+    private fun isDistantOneSub(t: String, o: String): Boolean =
+        diffs(t, o)?.let { it.size == 1 && !KeyAdjacency.areNeighbors(t[it[0]], o[it[0]]) } == true
+
+    /** [o] is a one-letter substitution of [t] on a neighbour key. */
+    private fun isNeighbourOneSub(t: String, o: String): Boolean =
+        diffs(t, o)?.let { it.size == 1 && KeyAdjacency.areNeighbors(t[it[0]], o[it[0]]) } == true
+
+    /**
+     * Whether [lang]'s dictionary holds a distant one-letter substitution of [t] other than
+     * [target]. Without one, no ranking can commit the item-13 failure on [t] (harness
+     * pre-filter, exact by construction: the output must be a dictionary word to be one).
+     */
+    private fun hasDistantOneSub(lang: Lang, t: String, target: String, alphabet: Collection<Char>): Boolean {
+        for (i in t.indices) for (c in alphabet) {
+            if (c == t[i] || KeyAdjacency.areNeighbors(c, t[i])) continue
+            val w = t.substring(0, i) + c + t.substring(i + 1)
+            if (w != target && lang.dict.containsKey(w)) return true
+        }
+        return false
+    }
+
+    /** Production outputs (band, shipped default) for [inputs], checkpointed to [name]. */
+    private fun bandAndDefault(lang: Lang, inputs: List<String>, name: String, say: (String) -> Unit): Pair<Map<String, String>, Map<String, String>> {
+        val band = ConcurrentHashMap<String, String>()
+        val dflt = ConcurrentHashMap<String, String>()
+        val checkpoint = File(outDir, "nb-$name.tsv")
+        val header = "# band|default ${inputs.size}"
+        if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+            checkpoint.useLines { l -> l.drop(1).forEach { x -> val c = x.split('\t'); band[c[0]] = c[1]; dflt[c[0]] = c[2] } }
+            check(band.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+            say("  $name: ${inputs.size} inputs from checkpoint")
+        } else {
+            val start = System.nanoTime()
+            inputs.parallelStream().forEach { t ->
+                band[t] = lang.base(t)
+                dflt[t] = lang.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+            }
+            checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${band[it]}\t${dflt[it]}" } + "\n")
+            say("  $name: ${inputs.size} inputs in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        }
+        return band to dflt
+    }
+
+    /**
+     * Outcome counts of [pairs] (raw pairs / distinct targets): right, the item-13 failure
+     * (a distant one-letter substitution committed), a neighbour one-letter substitution
+     * committed (wrong), kept as typed, other wrong.
+     */
+    private fun nbOutcomes(lang: Lang, pairs: List<P>, out: Map<String, String>): String {
+        val buckets = linkedMapOf<String, MutableList<P>>("right" to mutableListOf(), "distant-1sub" to mutableListOf(),
+            "neighbour-1sub" to mutableListOf(), "kept" to mutableListOf(), "other" to mutableListOf())
+        for (p in pairs) {
+            val o = out.getValue(p.typed)
+            val k = when {
+                lang.ok(o, p.target) -> "right"
+                isDistantOneSub(p.typed, o) -> "distant-1sub"
+                isNeighbourOneSub(p.typed, o) -> "neighbour-1sub"
+                o == p.typed -> "kept"
+                else -> "other"
+            }
+            buckets.getValue(k) += p
+        }
+        return buckets.entries.joinToString(" ") { (k, l) -> "$k=${l.size} (${l.mapTo(HashSet()) { it.target }.size})" }
+    }
+
+    /** Pairs of [pairs] where the output is a distant one-letter substitution, as `typo→out (want)`. */
+    private fun nbFailures(lang: Lang, pairs: List<P>, out: Map<String, String>): List<String> =
+        pairs.filter { val o = out.getValue(it.typed); !lang.ok(o, it.target) && isDistantOneSub(it.typed, o) }
+            .map { "${it.typed}→${out.getValue(it.typed)} (want ${it.target})" }
+
+    /** One named case through production: band output, default output, and the default's top-3 by E + λ·rank. */
+    private fun nbNamed(lang: Lang, typo: String, want: String): String {
+        val band = lang.base(typo)
+        var seen: WordPredictor.ChannelProbe? = null
+        val dflt = lang.predictor.autoCorrect(typo, AutocorrectTuning.DEFAULT) { seen = it }
+        val w = AutocorrectTuning.DEFAULT.channel
+        val top = seen?.let { p ->
+            p.candidates.map { c ->
+                val e = ChannelEditCost.cost(p.lowerTypedWord, c.word, w)
+                Triple(c.word, e, e + w.frequencyWeight * ChannelRanker.rankSteps(c.frequency, p.maxFrequency))
+            }.sortedBy { it.third }.take(3).joinToString(", ") { "%s E=%.2f total=%.2f".format(it.first, it.second, it.third) }
+        } ?: "(decided before the sweep)"
+        val mark = if (lang.ok(dflt, want)) "OK" else "FAIL"
+        return "$typo (want $want): band→$band  default→$dflt [$mark]  top: $top"
+    }
+
+    /**
+     * Todo item 13 re-measure (2026-10-25): does the shipped default ranking (channel) still
+     * commit a distant one-letter substitution where a neighbour one was meant? Descriptive
+     * only. Sets with a cap are a seeded sample (seed 20261025) of their eligible pairs, to keep
+     * one run under ~25 minutes. `CK_NB2_SETS` (comma list, default all): `named`, `gtc`, `he`, `hefresh`, `sadj`,
+     * `sadjfresh`. Outputs are checkpointed per set (`nb-<set>.tsv` in `$CK_EVAL_OUT`).
+     */
+    private fun neighbourPhase(say: (String) -> Unit) {
+        val sets = (System.getenv("CK_NB2_SETS") ?: "named,gtc,he,hefresh,sadj,sadjfresh").split(',').map { it.trim() }.toSet()
+        val rows = mutableListOf("set\ttyped\ttarget\tocc\tband\tdefault\tclass")
+        fun rowsOf(set: String, pairs: List<P>, band: Map<String, String>, dflt: Map<String, String>) {
+            for (p in pairs) rows += "$set\t${p.typed}\t${p.target}\t${p.occ}\t${band[p.typed]}\t${dflt[p.typed]}\t${typoClass(p)}"
+        }
+        fun report(lang: Lang, name: String, pairs: List<P>, band: Map<String, String>, dflt: Map<String, String>) {
+            say("  $name band:    ${nbOutcomes(lang, pairs, band)}")
+            say("  $name default: ${nbOutcomes(lang, pairs, dflt)}")
+            say("  $name default distant-1sub failures (first 40): ${nbFailures(lang, pairs, dflt).take(40)}")
+            rowsOf(name, pairs, band, dflt)
+        }
+        say("NEIGHBOUR-SUBSTITUTION RE-MEASURE (todo 13), default ranking=${AutocorrectTuning.DEFAULT.ranking} " +
+            "channel=${AutocorrectTuning.DEFAULT.channel} neighbourTiebreak=${AutocorrectTuning.DEFAULT.neighbourTiebreak}")
+
+        if ("named" in sets) {
+            KeyAdjacency.setLayoutLetters(emptyMap())
+            say("named, English (10-12 §1.5 T5 and §2.1):")
+            for ((t, w) in NAMED_EN + NB_NAMED_EN) say("  " + nbNamed(en, t, w))
+            KeyAdjacency.setLayoutLetters(heGrid)
+            say("named, Hebrew (hebr_1_il installed):")
+            for ((t, w) in NAMED_HE) say("  " + nbNamed(he, t, w))
+            KeyAdjacency.setLayoutLetters(emptyMap())
+        }
+        if ("gtc" in sets) {
+            // Seen (DEV and TEST both used by the channel rounds): descriptive only.
+            KeyAdjacency.setLayoutLetters(emptyMap())
+            val gtc = (readGtc("DEV") + readGtc("TEST")).filter { typoClass(it).startsWith("1-sub-") }
+            val (band, dflt) = bandAndDefault(en, gtc.map { it.typed }.distinct(), "gtc-1sub", say)
+            for (cls in listOf("1-sub-adjacent", "1-sub-distant")) {
+                val ps = gtc.filter { typoClass(it) == cls }
+                report(en, "GTC $cls (seen; ${ps.size} pairs, ${ps.map { it.target }.toSet().size} targets)", ps, band, dflt)
+            }
+        }
+        fun neighbourSet(lang: Lang, name: String, pairs: List<P>, alphabet: Collection<Char>, cap: Int?) {
+            val elig = pairs.filter { hasDistantOneSub(lang, it.typed, it.target, alphabet) }
+            val use = if (cap != null && elig.size > cap) elig.shuffled(java.util.Random(20261025)).take(cap) else elig
+            say("$name: ${pairs.size} pairs (${pairs.map { it.target }.toSet().size} words); with a distant 1-sub competitor " +
+                "${elig.size} (${elig.map { it.target }.toSet().size})" + if (use !== elig) "; seeded sample ${use.size}" else "")
+            val (band, dflt) = bandAndDefault(lang, use.map { it.typed }.distinct(), name.substringBefore(' '), say)
+            report(lang, name.substringBefore(' '), use, band, dflt)
+        }
+        if ("he" in sets) {
+            KeyAdjacency.setLayoutLetters(heGrid)
+            neighbourSet(he, "HE-adj (seen, ranks 1-500)", heAdj(), heGrid.keys, null)
+            KeyAdjacency.setLayoutLetters(emptyMap())
+        }
+        if ("hefresh" in sets) {
+            KeyAdjacency.setLayoutLetters(heGrid)
+            neighbourSet(he, "HE-adj4 (fresh, ranks 6,001-8,000)", heAdjRanks(6_000, 8_000) { true }, heGrid.keys, 6_000)
+            KeyAdjacency.setLayoutLetters(emptyMap())
+        }
+        if ("sadj" in sets) {
+            KeyAdjacency.setLayoutLetters(emptyMap())
+            neighbourSet(en, "S-adj (seen, DEV+TEST)", sAdj(dev = true) + sAdj(dev = false), ('a'..'z').toList(), 4_000)
+        }
+        if ("sadjfresh" in sets) {
+            KeyAdjacency.setLayoutLetters(emptyMap())
+            neighbourSet(en, "S-adj2 (fresh, ranks 10,001-12,000)", sAdjRanks(10_000, 12_000), ('a'..'z').toList(), 6_000)
+        }
+        File(outDir, "rows-neighbour-${sets.sorted().joinToString("+")}.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     private fun testPhase(say: (String) -> Unit) {
