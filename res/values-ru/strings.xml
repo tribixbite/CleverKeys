@@ -2529,7 +2529,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Очистить системный буфер обмена</string>
-    <string name="cmd_clear_clipboard_desc">Очистить текущий буфер обмена Android; сохраненная история, закрепленные элементы и задачи останутся.</string>
+    <string name="cmd_clear_clipboard_desc">Очистить текущий буфер обмена Android; сохранённая история, закреплённые элементы и элементы списка дел останутся.</string>
     <string name="system_clipboard_cleared">Системный буфер обмена очищен</string>
     <string name="system_clipboard_clear_failed">Не удалось очистить системный буфер обмена</string>
 

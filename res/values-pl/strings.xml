@@ -2534,7 +2534,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Wyczyść schowek systemowy</string>
-    <string name="cmd_clear_clipboard_desc">Wyczyść bieżący schowek Androida; zapisana historia, przypięte elementy i zadania zostaną zachowane.</string>
+    <string name="cmd_clear_clipboard_desc">Wyczyść bieżący schowek Androida; zapisana historia, przypięte elementy i elementy To-do zostaną zachowane.</string>
     <string name="system_clipboard_cleared">Schowek systemowy wyczyszczony</string>
     <string name="system_clipboard_clear_failed">Nie udało się wyczyścić schowka systemowego</string>
 
