@@ -176,11 +176,22 @@ class LangConfig:
     # Second-corpus CANDIDATES for `--emit-grid` (pinned; evaluation-stage only — a candidate
     # that is not chosen never reaches a shipped model).
     candidates: tuple[Source, ...] = ()
+    # Further OOD populations as (tag, dev, test): written to `<eval-dir>/<tag>/ood_{dev,test}_<code>.txt`
+    # (+ a copy of the held-out file) for `STATIC_LM_EVAL_DIR`, and excluded from training like
+    # `ood_dev`/`ood_test`. es: UD Spanish-AnCora, the gate of the third attempt
+    # (docs/eval/2026-10-25-static-lm-es-prereg.md).
+    extra_eval: tuple[tuple[str, Source, Source], ...] = ()
+    # CONTEXT-ONLY words: counted as PREVIOUS words (their rows list lexicon continuations) but
+    # never stored as a continuation, so the model still names only words the app can show. For
+    # function words the typing lexicon omits (es has no single-letter entry, so `y`/`a`/`o` could
+    # never condition anything). Recorded in the sidecar as `model.contextOnlyWords`.
+    context_only: tuple[str, ...] = ()
 
     @property
     def sources(self) -> tuple[Source, ...]:
         extra = (self.leipzig2,) if self.leipzig2 is not None else ()
-        return (self.leipzig, self.tatoeba, *extra, self.ood_dev, self.ood_test)
+        evals = tuple(s for _tag, dev, test in self.extra_eval for s in (dev, test))
+        return (self.leipzig, self.tatoeba, *extra, self.ood_dev, self.ood_test, *evals)
 
     @property
     def vocabulary_note(self) -> str:
@@ -211,10 +222,11 @@ def _tatoeba(iso3: str, sha256: str, fetched: str) -> Source:
     )
 
 
-def _ud(repo: str, commit: str, stem: str, split: str, sha256: str, license: str = "CC BY-SA 4.0") -> Source:
+def _ud(repo: str, commit: str, stem: str, split: str, sha256: str, license: str = "CC BY-SA 4.0",
+        key: str | None = None) -> Source:
     dev = split == "dev"
     return Source(
-        key="ood_dev" if dev else "ood_test",
+        key=key or ("ood_dev" if dev else "ood_test"),
         filename=f"ud/{stem}-ud-{split}.conllu",
         url=f"https://raw.githubusercontent.com/UniversalDependencies/{repo}/{commit}/{stem}-ud-{split}.conllu",
         sha256=sha256,
@@ -228,6 +240,7 @@ def _ud(repo: str, commit: str, stem: str, split: str, sha256: str, license: str
 # one per language is also that config's `leipzig2`.
 _ES_NEWS = _leipzig("spa_news_2023_300K", "668ee9fbb6ee70aaff0164b2fa2f6acff54950cf7b444f8f2021997684b06d6f", "Spanish news 2023, 300K sentences", key="leipzig2")
 _ES_WIKI = _leipzig("spa_wikipedia_2021_300K", "8f6d62de098a7615c5b8d40d4e449e883888252fa599102747c5eec91b10fa46", "Spanish Wikipedia 2021, 300K sentences", key="leipzig2")
+_ANCORA_COMMIT = "20adddbfcdd773c6dc97ba48ea11ca9364e74185"
 _PT_BR_NEWS = _leipzig("por-br_newscrawl_2011_300K", "20b8dad08d98ef1d9a4aa17b959532ba0c7b0e6f8fee7da6324cfd1e818452ce", "Brazilian Portuguese news crawl 2011, 300K sentences", key="leipzig2")
 _PT_NEWS = _leipzig("por_news_2023_300K", "ffd654ebb29e8afdd802fbd6a1cdc3258f927f15339f368e55529ed058bb5a70", "Portuguese news 2023, 300K sentences", key="leipzig2")
 _SV_NEWS = _leipzig("swe_news_2023_300K", "e7c777651a432df0e9f108c9b7f452e22c6cfe9d6572ba00d1891a9baa69db85", "Swedish news 2023, 300K sentences", key="leipzig2")
@@ -283,6 +296,16 @@ CONFIGS: dict[str, LangConfig] = {
             candidates=(
                 _ES_NEWS,
                 _ES_WIKI,
+            ),
+            # Third attempt (pre-registered 2026-10-25): UD Spanish-AnCora (CC BY 4.0, newswire),
+            # never read by an es model before, 3.6x GSD test — the new gate population; its dev
+            # split chooses between the registered candidates.
+            extra_eval=(
+                ("ancora",
+                 _ud("UD_Spanish-AnCora", _ANCORA_COMMIT, "es_ancora", "dev",
+                     "1a132068062edf2654fb45b41cd4c59ba7e5c18e7c5f642ed5a9cc351fd9f0fe", "CC BY 4.0", key="ancora_dev"),
+                 _ud("UD_Spanish-AnCora", _ANCORA_COMMIT, "es_ancora", "test",
+                     "679f1c05ca654aa26801c80319df45f8f97606718fb534b91755b48f3e67fa6f", "CC BY 4.0", key="ancora_test")),
             ),
         ),
         LangConfig(
@@ -572,6 +595,7 @@ def count_corpus(
     heldout_sink: Callable[[str], None],
     nfc: bool = False,
     eval_keys: frozenset[str] = frozenset(),
+    context_only: frozenset[str] = frozenset(),
 ) -> tuple[CorpusCounts, list[list[str | None]]]:
     """Count one corpus; return counts plus its train sentences (kept for the artefact re-count).
 
@@ -594,12 +618,16 @@ def count_corpus(
         if who:
             c.contributors.add(who)
         train.append(tuple(toks))  # type: ignore[arg-type]
-    recount(c, train, vocab, frozenset())
+    recount(c, train, vocab, frozenset(), context_only)
     return c, train
 
 
-def recount(c: CorpusCounts, train: list[list[str | None]], vocab: set[str], artefacts: frozenset[str]) -> None:
-    """(Re)build [c]'s counters from its train sentences, treating [artefacts] as chain breaks."""
+def recount(c: CorpusCounts, train: list[list[str | None]], vocab: set[str], artefacts: frozenset[str],
+            context_only: frozenset[str] = frozenset()) -> None:
+    """(Re)build [c]'s counters from its train sentences, treating [artefacts] as chain breaks.
+
+    A pair is counted when the next word is in [vocab] and the previous word is in [vocab] or
+    [context_only] (a context-only word gets a row but is never a continuation)."""
     c.unigrams.clear()
     c.successors.clear()
     c.bigrams.clear()
@@ -615,7 +643,7 @@ def recount(c: CorpusCounts, train: list[list[str | None]], vocab: set[str], art
             c.tokens += 1
             if prev is not None:
                 succ[prev] += 1
-                if prev in vocab and t in vocab:
+                if t in vocab and (prev in vocab or prev in context_only):
                     bi[(prev, t)] += 1
             prev = t
 
@@ -856,6 +884,7 @@ def filter_artefacts(
     ref: Callable[[str], float] | None,
     ref_name: str,
     vocab: set[str],
+    context_only: frozenset[str] = frozenset(),
 ) -> dict[str, dict[str, float]]:
     """Per corpus (counts, train sentences, fallback reference corpus): find its artefacts
     against wordfreq (or the fallback corpus when wordfreq is absent), print them and recount
@@ -869,7 +898,7 @@ def filter_artefacts(
         print(f"[artefacts:{c.name}] {len(found)} words dropped (reference: "
               f"{ref_name if ref else 'other corpus'}); most frequent: "
               + ", ".join(f"{w} {r:.0f}x" for w, r in top))
-        recount(c, train, vocab, frozenset(found))
+        recount(c, train, vocab, frozenset(found), context_only)
     return artefacts
 
 
@@ -895,6 +924,7 @@ def emit_grid(
     excluded: frozenset[str],
     ref: Callable[[str], float] | None,
     ref_name: str,
+    context_only: frozenset[str] = frozenset(),
 ) -> int:
     """Write every (second corpus, mix, Tatoeba weight) grid point within the size cap to
     `<emit_grid>/<tag>/<lang>.cklm` + a sidecar, for the Kotlin dev-split selection
@@ -919,7 +949,8 @@ def emit_grid(
         side = {
             "format": "CKLM", "version": FORMAT_VERSION, "language": cfg.code,
             **stats, "bytes": len(blob), "sha256": hashlib.sha256(blob).hexdigest(),
-            "model": {"lexicon": cfg.lexicon, "contractionFiles": list(cfg.contraction_files)},
+            "model": {"lexicon": cfg.lexicon, "contractionFiles": list(cfg.contraction_files),
+                      **({"contextOnlyWords": sorted(context_only)} if context_only else {})},
             "grid": meta,
         }
         (out / f"{cfg.code}.json").write_text(json.dumps(side, indent=2, ensure_ascii=False) + "\n", "utf-8")
@@ -932,10 +963,11 @@ def emit_grid(
         name = cand.filename.split("/")[-1].removesuffix(".tar.gz")
         # The second corpus is counted after Leipzig + Tatoeba, exactly as the final build does.
         second, second_train = count_corpus(
-            "leipzig2", leipzig_lines(path), vocab, set(seen_after_tatoeba), lambda _s: None, cfg.nfc, excluded)
+            "leipzig2", leipzig_lines(path), vocab, set(seen_after_tatoeba), lambda _s: None, cfg.nfc, excluded,
+            context_only)
         print(f"[{name}] train sentences {second.sentences}, held-out {second.heldout}, "
               f"duplicates {second.duplicates}, eval-overlap dropped {second.eval_overlap}, tokens {second.tokens}")
-        filter_artefacts([(second, second_train, leipzig)], ref, ref_name, vocab)
+        filter_artefacts([(second, second_train, leipzig)], ref, ref_name, vocab, context_only)
         del second_train
         for mix in MIX_GRID[1:]:
             for w in GRID_WEIGHTS:
@@ -964,10 +996,18 @@ def main() -> int:
     ap.add_argument("--emit-grid", type=Path, default=None,
                     help="write every (second corpus, mix, Tatoeba weight) grid point under this directory "
                          "for the Kotlin dev-split selection, and nothing else")
+    ap.add_argument("--context-only", default=None, metavar="WORDS",
+                    help="override the config's context-only words: a comma list, or 'none' "
+                         "(evaluation-stage candidates; a shipped model is built from the config)")
     ap.add_argument("--allow-unpinned", action="store_true")
     ap.add_argument("--offline", action="store_true")
     args = ap.parse_args()
     cfg = CONFIGS[args.lang]
+    if args.context_only is None:
+        context_only = frozenset(cfg.context_only)
+    else:
+        context_only = frozenset() if args.context_only == "none" else frozenset(
+            w.strip().lower() for w in args.context_only.split(",") if w.strip())
     if args.emit_grid is not None and cfg.leipzig2 is not None:
         raise SystemExit("--emit-grid starts from the single-corpus configuration; this one already mixes")
     contributors_path: Path = args.contributors or REPO / f"scripts/data/tatoeba-contributors-{cfg.code}.txt"
@@ -980,17 +1020,25 @@ def main() -> int:
     lexicon, forms = load_vocab(REPO / "src/main/assets/dictionaries", cfg)
     vocab = lexicon | forms
     print(f"[vocab] {cfg.lexicon}: lexicon {len(lexicon)} + contraction forms {len(forms)} -> {len(vocab)}")
+    if context_only & vocab:
+        raise SystemExit(f"context-only words already in the vocabulary: {sorted(context_only & vocab)}")
+    if context_only:
+        print(f"[vocab] context-only previous words: {' '.join(sorted(context_only))}")
 
     # OOD files — surface text, same sentence splitting, never counted. Read first so their keys
     # can be excluded from training (cfg.exclude_eval_overlap).
     args.eval_dir.mkdir(parents=True, exist_ok=True)
     ood: dict[str, list[list[str | None]]] = {}
     eval_keys: set[str] = set()
-    for key in ("ood_dev", "ood_test"):
-        out = args.eval_dir / f"{key}_{cfg.code}.txt"
+    eval_files = [(key, key, args.eval_dir / f"{key}_{cfg.code}.txt") for key in ("ood_dev", "ood_test")]
+    for tag, dev, test in cfg.extra_eval:
+        eval_files += [(dev.key, f"{tag}:ood_dev", args.eval_dir / tag / f"ood_dev_{cfg.code}.txt"),
+                       (test.key, f"{tag}:ood_test", args.eval_dir / tag / f"ood_test_{cfg.code}.txt")]
+    for src_key, key, out in eval_files:
+        out.parent.mkdir(parents=True, exist_ok=True)
         sents: list[list[str | None]] = []
         with open(out, "w", encoding="utf-8") as fh:
-            for text in conllu_texts(paths[key]):
+            for text in conllu_texts(paths[src_key]):
                 for seg in split_sentences(text, cfg.nfc):
                     toks = tokenize(seg)
                     if MIN_TOKENS <= word_count(toks) <= MAX_TOKENS:
@@ -1009,14 +1057,18 @@ def main() -> int:
         def sink(sentence: str) -> None:
             held.write(sentence + "\n")
         leipzig, leipzig_train = count_corpus(
-            "leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink, cfg.nfc, excluded)
+            "leipzig", leipzig_lines(paths["leipzig"]), vocab, seen, sink, cfg.nfc, excluded, context_only)
         tatoeba, tatoeba_train = count_corpus(
-            "tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink, cfg.nfc, excluded)
+            "tatoeba", tatoeba_lines(paths["tatoeba"]), vocab, seen, sink, cfg.nfc, excluded, context_only)
         seen_after_tatoeba = set(seen) if args.emit_grid is not None else set()
         if cfg.leipzig2 is not None:
             second, second_train = count_corpus(
-                "leipzig2", leipzig_lines(paths["leipzig2"]), vocab, seen, sink, cfg.nfc, excluded)
+                "leipzig2", leipzig_lines(paths["leipzig2"]), vocab, seen, sink, cfg.nfc, excluded, context_only)
     del seen
+    # Each extra population's directory gets the same held-out file, so STATIC_LM_EVAL_DIR=<tag dir>
+    # is a complete eval directory.
+    for tag, _dev, _test in cfg.extra_eval:
+        (args.eval_dir / tag / heldout_path.name).write_bytes(heldout_path.read_bytes())
     counted = [c for c in (leipzig, tatoeba, second) if c is not None]
     for c in counted:
         print(f"[{c.name}] train sentences {c.sentences}, held-out {c.heldout}, "
@@ -1027,11 +1079,12 @@ def main() -> int:
     jobs = [(leipzig, leipzig_train, tatoeba), (tatoeba, tatoeba_train, leipzig)]
     if second is not None:
         jobs.append((second, second_train, leipzig))
-    artefacts = filter_artefacts(jobs, ref, ref_name, vocab)
+    artefacts = filter_artefacts(jobs, ref, ref_name, vocab, context_only)
     del leipzig_train, tatoeba_train, second_train, jobs
 
     if args.emit_grid is not None:
-        return emit_grid(args, cfg, leipzig, tatoeba, seen_after_tatoeba, paths, vocab, excluded, ref, ref_name)
+        return emit_grid(args, cfg, leipzig, tatoeba, seen_after_tatoeba, paths, vocab, excluded, ref, ref_name,
+                         context_only)
 
     # Tatoeba weight: fixed by the dev-split gate-metric selection (cfg.tatoeba_weight), given on
     # the command line, or selected here on OOD dev by the next-word proxy (ties -> lower weight).
@@ -1129,6 +1182,8 @@ def main() -> int:
             # from these files, so the pin cannot drift from the builder's configuration.
             "lexicon": cfg.lexicon,
             "contractionFiles": list(cfg.contraction_files),
+            # Only when set, so every sidecar without context-only words stays byte-identical.
+            **({"contextOnlyWords": sorted(context_only)} if context_only else {}),
         },
         "corpus": corpus,
         "artefactFilter": {
