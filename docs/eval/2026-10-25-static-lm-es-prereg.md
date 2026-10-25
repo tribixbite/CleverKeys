@@ -1,5 +1,11 @@
 # Spanish static next-word LM — third attempt: PRE-REGISTRATION (2026-10-25)
 
+> **Outcome: FAIL, es stays unshipped.** On UD Spanish-AnCora test, the chosen model (C1) scored
+> prefix-1 **+3.64** pt (the gate is +5), prefix-2 +4.59 and prefix-3 +2.75. See
+> [Test result](#test-result--read-once-2026-10-25). Neither new reason held up: the larger
+> population put es further below the line, and the context-only words lost on both dev
+> populations.
+
 Written and committed **before** any model in this document is built or scored. Maintainer
 decision 2026-10-25 (`memory/todo.md` Open now 11): "research new method and corpus, try one or
 both if promising". Project rule: a new attempt needs a NEW stated reason, not another try.
@@ -178,3 +184,65 @@ not used.
 
 **Expectation, stated before the test read.** C1 is at +3.78 on AnCora dev, 1.2 pt below the line.
 A pass on AnCora test is unlikely. The test is still read once, as registered.
+
+## Test result — read once (2026-10-25)
+
+**Run.** One guarded run of `StaticLmTapEvalTest -PgeoFull=true` with
+`STATIC_LM_MODEL_DIR=<C1>` and `STATIC_LM_EVAL_DIR=<eval>/ancora`, from the same clean worktree at
+`4db68a17`. The choice was already committed. A second run read GSD test for the report.
+
+`lm_static` − `none`, top-3, `RAW`:
+
+| Population | Size | prefix-1 (≥ +5) | prefix-2 (≥ +2) | prefix-3 (≥ 0) | empty dev. | S1 |
+|---|---|---|---|---|---|---|
+| **AnCora test (gate)** | 1,213 sent. (1,206 distinct); 18,389 pos / 5,264 prev / 14,214 pairs; n1 16,620 | **+3.64** | +4.59 | +2.75 | 0 | **FAIL** |
+| GSD test (report only, 3rd read) | 339 sent.; n1 4,539 | +4.96 | +5.13 | +3.66 | 0 | fail (as in the retry) |
+| In-domain held-out (1/20, report only) | 4,998 sent.; n1 47,391 | +6.32 | +6.50 | +3.94 | — | — |
+
+**Levels on AnCora test** (`none` → `lm_static`/`lm_both`): prefix-1 41.20 % → 44.84 % / 46.04 %;
+next-word top-3 14.95 % → 20.08 % (`lm_both`). Only these arms are reported; none is gated:
+
+- `lm_both`, the shipped default with no learned es rows: +4.84;
+- `FLOOR_ONE`: +4.84;
+- `FLOOR_HALF`: +3.75;
+- `SQRT_BELOW_ONE`: +3.67.
+
+Even with the backoff penalty removed, es stays under +5 on AnCora.
+
+## What this shows
+
+1. **R1 was wrong: es did not fail GSD through bad luck.** On a population 3.7× the size
+   (±≈0.37 pt), the same model is 1.4 pt below the line. That is further from it than on GSD
+   (+4.96). The dev split agreed (+3.78), so this is not a test-split accident either. GSD's
+   encyclopedic register, the one the retry's Wikipedia mix was chosen for, was the FAVOURABLE
+   case. On newswire, es gains less.
+2. **R2 did not help under the shipped shape.** Giving `y`/`a`/`o`/`e`/`u` rows lifted
+   previous-word coverage by about 5 pt but cost 0.15–0.21 pt at prefix-1 on both dev splits.
+   Under `RAW`, a newly known previous word also turns on the backoff penalty for every unlisted
+   candidate. After `y` (coordination), the 20 listed continuations cover little of what follows,
+   so the penalty demotes the right word more often than the boosts promote it. Under
+   `FLOOR_ONE`, which is reported only, C2 would beat C1. This is a datum for the ratio-shape
+   follow-up, not grounds for an es change.
+3. **Remaining es-specific headroom is small and register-bound.** On every es population, the
+   gain is 3.6–5.4 pt against a 41–42 % baseline. The shipped de/pt pass by under 0.5 pt from a
+   34/33 % baseline. Moving es over an absolute +5 on news would need a model that knows news
+   continuations much better, inside a 512 KiB cap that already binds at Tatoeba × 1.0.
+
+## Disposition
+
+- es stays unshipped. No `src/main/assets/lm/es.cklm`, NOTICE line, contributor file or drift-test
+  change is made. Neither candidate was copied anywhere near the assets.
+- **Spent for es:** GSD test (3 reads) and AnCora dev+test. The only unused UD es population left
+  is **UD Spanish-PUD** (1,000 sentences, CC BY-SA 3.0, wiki/news).
+- **What stays in the builder** (`a4b92efd`):
+  - `LangConfig.extra_eval`, which gives es's AnCora pins and the training exclusion;
+  - `LangConfig.context_only` / `--context-only`, unused by every config (default empty).
+  
+  The en model rebuilds byte-identically, and no shipped model changes.
+- **A fourth attempt would need a new reason beyond these two.** Plausible ones:
+  - a model change chosen on AnCora dev, e.g. a news-register second corpus such as
+    `spa_news_2023` at a higher λ, gated on PUD;
+  - a decision to adopt `FLOOR_ONE` through the ratio-shape pre-registration, which would also
+    have to clear S1 on a fresh population.
+
+  Neither is attempted here.
