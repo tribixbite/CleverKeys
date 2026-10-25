@@ -156,6 +156,31 @@ object SmartAutoSpace {
      * complement of the two NO_SPACE modes — kept as a derived helper so the
      * `addedTrailingSpace` flag can never drift from [decideTrailingSpace].
      */
+    /**
+     * What a bar tap over a swipe auto-insert removes (maintainer report 2026-10-25, RustDesk:
+     * the tap removed the swiped word AND the space before it).
+     *
+     * @property deleteCount characters to delete before the cursor.
+     * @property leadingSpace whether the auto-insert began with a space it typed itself — the
+     *   replacement takes the same place, so it gets the same leading space. Null when the
+     *   committed text is unknown (legacy tracking): callers fall back to reading the editor.
+     */
+    data class SwipeReplacement(val deleteCount: Int, val leadingSpace: Boolean?)
+
+    /**
+     * The replacement plan for [word], auto-inserted as exactly [committedText] (the text the
+     * commit wrote, e.g. `" hello "`, `"hello "`, `"hello"`). Deleting exactly that never reaches
+     * the space or word the user had typed before the swipe, whatever the auto-space settings
+     * were. Unknown text (null, or text that does not hold [word]) keeps the old assumption of
+     * the word plus one trailing space.
+     */
+    fun swipeReplacement(word: String, committedText: String?): SwipeReplacement =
+        if (committedText != null && committedText.trim(' ') == word) {
+            SwipeReplacement(committedText.length, committedText.startsWith(' '))
+        } else {
+            SwipeReplacement(word.length + 1, null)
+        }
+
     fun addsTrailingSpace(
         autoSpaceAfterEnabled: Boolean,
         isSwipeAutoInsert: Boolean,

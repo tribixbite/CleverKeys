@@ -273,11 +273,12 @@ class LearningWiringDriftTest {
         // Replacement tracking uses onSuggestionSelected's RETURN (post final
         // autocorrect + I-word handling) so REPLACE deletion counts match the
         // editor even when the correction changed the word's length.
-        assertThat(handler).containsMatch("""setLastAutoInsertedWord\(\s*committedWord\s*\)""")
+        // Since 2026-10-25 the exact committed text rides along (a replacing tap deletes exactly it).
+        assertThat(handler).containsMatch("""setLastAutoInsertedWord\(\s*committedWord\s*,\s*lastSelectionCommitText\s*\)""")
         assertThat(handler).doesNotContain("committedWord ?:")
         val rejectionIdx = handler.indexOf("if (committedWord == null)")
         assertThat(rejectionIdx).isGreaterThan(-1)
-        assertThat(handler.indexOf("setLastAutoInsertedWord(committedWord)"))
+        assertThat(handler.indexOf("setLastAutoInsertedWord(committedWord, lastSelectionCommitText)"))
             .isGreaterThan(rejectionIdx)
         assertThat(handler.indexOf("mlDataCollector.collectAndStoreSwipeData("))
             .isGreaterThan(rejectionIdx)

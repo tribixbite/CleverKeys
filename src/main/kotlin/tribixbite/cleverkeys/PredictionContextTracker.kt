@@ -134,6 +134,10 @@ class PredictionContextTracker {
     // Used for smart deletion: if user taps suggestion, we can delete it cleanly
     private var lastAutoInsertedWord: String? = null
 
+    // The exact text that auto-insert committed (" hello ", "hello ", "hello"…), when known:
+    // a bar tap that replaces the auto-insert deletes exactly this and nothing before it.
+    private var lastAutoInsertedText: String? = null
+
     // Source of last committed text (swipe, typing, candidate selection, etc.)
     // Used for context-aware deletion behavior
     private var lastCommitSource = PredictionSource.UNKNOWN
@@ -399,6 +403,7 @@ class PredictionContextTracker {
         // Track for smart deletion
         lastCommitSource = source
         lastAutoInsertedWord = if (autoInserted) word else null
+        lastAutoInsertedText = null
     }
 
     /**
@@ -461,6 +466,7 @@ class PredictionContextTracker {
      */
     fun clearLastAutoInsertedWord() {
         lastAutoInsertedWord = null
+        lastAutoInsertedText = null
     }
 
     /**
@@ -468,10 +474,15 @@ class PredictionContextTracker {
      * Used in special cases where auto-insertion happens outside commitWord().
      *
      * @param word The word that was auto-inserted
+     * @param insertedText the exact text that commit wrote, spaces included (null = unknown)
      */
-    fun setLastAutoInsertedWord(word: String) {
+    fun setLastAutoInsertedWord(word: String, insertedText: String? = null) {
         lastAutoInsertedWord = word
+        lastAutoInsertedText = insertedText
     }
+
+    /** The exact text of the last auto-insert ([setLastAutoInsertedWord]), or null if unknown. */
+    fun getLastAutoInsertedText(): String? = lastAutoInsertedText
 
     /**
      * Gets the source of the last committed text.
@@ -530,6 +541,7 @@ class PredictionContextTracker {
         contextWords.clear()
         wasLastInputSwipeFlag = false
         lastAutoInsertedWord = null
+        lastAutoInsertedText = null
         lastCommitSource = PredictionSource.UNKNOWN
         lastAutocorrectOriginalWord = null
         rawPrefixForDeletion = ""

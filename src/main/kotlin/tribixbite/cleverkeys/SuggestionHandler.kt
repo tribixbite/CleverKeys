@@ -543,6 +543,13 @@ class SuggestionHandler(
     @Volatile
     private var nextWordSuggestionsActive = false
 
+    /**
+     * The exact text the latest [onSuggestionSelected] commit wrote (`" hello "`, `"hello"`…),
+     * null until a commit is acknowledged. The swipe auto-insert hands it to the context tracker
+     * so a replacing tap deletes exactly that much ([SmartAutoSpace.swipeReplacement]).
+     */
+    private var lastSelectionCommitText: String? = null
+
     // M5 (review 2026-08-06): incognito-field contract. False while the active
     // editor sets IME_FLAG_NO_PERSONALIZED_LEARNING — suppresses the learn
     // funnel, selection-adaptation recording, and next-word surfacing for that
@@ -1228,7 +1235,9 @@ class SuggestionHandler(
                 // (The learn funnel was already correct either way: updateContext() inside
                 // onSuggestionSelected records the post-autocorrect word.) A null return means
                 // no acknowledged commit; it must never create replacement ownership.
-                contextTracker.setLastAutoInsertedWord(committedWord)
+                // The exact committed text rides along, so a replacing tap deletes exactly what
+                // this swipe typed — never the space the user had typed before it (2026-10-25).
+                contextTracker.setLastAutoInsertedWord(committedWord, lastSelectionCommitText)
                 contextTracker.setLastCommitSource(PredictionSource.SWIPE)
 
                 // Swipe-correction tracking: remember this auto-insert (the word in the editor,
@@ -1610,6 +1619,9 @@ class SuggestionHandler(
 
         // Swipe-correction tracking: the auto-inserted swipe word this tap REPLACED, if any.
         var replacedSwipeWord: String? = null
+        // The leading space of the swipe this tap replaces (null: no replacement, or unknown).
+        var replacedLeadingSpace: Boolean? = null
+        lastSelectionCommitText = null
 
         // Terminal-style editors: what a typed-word tap appends (it never deletes there —
         // [TerminalSuggestionPolicy]); null everywhere else and for swipe commits.
@@ -1667,22 +1679,24 @@ class SuggestionHandler(
                     vlog { "REPLACE: Deleting auto-inserted word: '${contextTracker.getLastAutoInsertedWord()}'" }
                     val rejectedWord = contextTracker.getLastAutoInsertedWord().orEmpty()
 
-                    var deleteCount = (contextTracker.getLastAutoInsertedWord()?.length ?: 0) + 1 // Word + trailing space
-                    var deletedLeadingSpace = false
+                    // Exactly what the swipe committed, spaces included ([SmartAutoSpace.swipeReplacement]).
+                    // The old count assumed `word + " "` and, in a terminal-style editor, added a
+                    // Backspace whenever the character before the cursor was a space — but that is
+                    // the swipe's own TRAILING space, so the extra key event erased the space before
+                    // the word (RustDesk, 2026-10-25), and with auto-space-after off the plain count
+                    // already reached one character past the word.
+                    val replacement = SmartAutoSpace.swipeReplacement(
+                        rejectedWord, contextTracker.getLastAutoInsertedText()
+                    )
+                    val deleteCount = replacement.deleteCount
+                    replacedLeadingSpace = replacement.leadingSpace
 
                     if (inTermuxApp) {
-                        // TERMUX: Use backspace key events instead of InputConnection methods
-                        // Termux doesn't support deleteSurroundingText properly
+                        // TERMUX / blind field: Backspace key events instead of InputConnection
+                        // methods (no editable buffer). Readback cannot tell how much the swipe typed:
+                        // RustDesk's hidden field is unchanged by a key-event Backspace, so only the
+                        // recorded commit text can.
                         vlog { "TERMUX: Using backspace key events to delete $deleteCount chars" }
-
-                        // Check if there's a leading space to delete
-                        val textBefore = inputConnection.getTextBeforeCursor(1, 0)
-                        if (textBefore != null && textBefore.isNotEmpty() && textBefore[0] == ' ') {
-                            deleteCount++ // Include leading space
-                            deletedLeadingSpace = true
-                        }
-
-                        // Send backspace key events
                         repeat(deleteCount) {
                             keyeventhandler.send_key_down_up(KeyEvent.KEYCODE_DEL, 0)
                         }
@@ -1702,8 +1716,14 @@ class SuggestionHandler(
                             Log.d(TAG, "REPLACE: After deleting word, text before cursor: '$debugAfter'")
                         }
 
-                        // Also need to check if there was a space added before it
-                        val textBefore = inputConnection.getTextBeforeCursor(1, 0)
+                        // Legacy tracking only (commit text unknown): a space before the word may
+                        // have been the swipe's own, so delete it and let the leading-space rule
+                        // below decide again. With the text known the deletion above was exact.
+                        val textBefore = if (replacement.leadingSpace == null) {
+                            inputConnection.getTextBeforeCursor(1, 0)
+                        } else {
+                            null
+                        }
                         vlog { "REPLACE: Checking for leading space, got: '$textBefore'" }
                         if (textBefore != null && textBefore.isNotEmpty() && textBefore[0] == ' ') {
                             vlog { "REPLACE: Deleting leading space" }
@@ -1833,7 +1853,12 @@ class SuggestionHandler(
                 // Add space before word if previous character isn't whitespace.
                 // For tapped suggestions (not swipe), respect auto_space_before_suggestion setting.
                 // Swipe auto-inserts always get the leading space since the swipe replaces no typed text.
-                val needsSpaceBefore = if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
+                val needsSpaceBefore = if (replacedLeadingSpace != null) {
+                    // A tap replacing a swipe takes exactly the swipe's place, leading space
+                    // included — independent of the tapped-suggestion setting and of readback
+                    // (a blind field's readback still shows the swiped word).
+                    replacedLeadingSpace == true
+                } else if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
                     false  // User disabled leading space before tapped suggestions
                 } else if (terminalAppendsToTypedWord) {
                     // The remainder continues the typed letters on the line (a blind field's
@@ -1956,6 +1981,7 @@ class SuggestionHandler(
                 // Track the exact spelling acknowledged by the editor, including a
                 // typed partial's capitalization, rather than the offered candidate.
                 processedWord = capitalizedWord
+                lastSelectionCommitText = textToInsert
 
                 if (addedTrailingSpace) {
                     contextTracker.markAutoSpacePending(

@@ -244,6 +244,87 @@ class BlindFieldPolicyTest {
         assertWithMessage("keys sent").that(keysSent).containsExactly("${KeyEvent.KEYCODE_W}/$ctrl")
     }
 
+    // ------------------------------------------------------------------ swipe corrections
+
+    /**
+     * A swipe auto-insert through the SHIPPED entry point ([SuggestionHandler.handleSwipePredictionResults]),
+     * so the tracking it leaves for a later bar tap is the production one, not a test's guess.
+     */
+    private fun swipe(slate: List<String>, editor: EditorInfo) {
+        val bar = handler.getField("suggestionBar") as SuggestionBar
+        every { bar.getTopSuggestion() } returns slate.first()
+        val coordinator = mockk<InputCoordinator>(relaxed = true)
+        every { coordinator.getCurrentSwipeData() } returns null
+        tracker.setWasLastInputSwipe(true)
+        handler.handleSwipePredictionResults(
+            slate, slate.map { 100 }, ic, editor, mockk(relaxed = true),
+            shiftActive = false, shiftLocked = false, inputCoordinator = coordinator,
+        )
+    }
+
+    /**
+     * Maintainer report 2026-10-25 (RustDesk): tapping a swipe correction from the bar removed
+     * the swiped word AND the space before it. Root cause: the REPLACE branch assumed the swipe
+     * typed `word + " "` and, in a terminal-style editor, added one more Backspace whenever the
+     * character before the cursor was a space — which is the swipe's own TRAILING space, so the
+     * extra key event ate the space before the word. RustDesk's hidden field does not change on
+     * a key-event Backspace, so the leading-space readback afterwards saw that stale space and
+     * the replacement went in without one: `ok hello ` → tap `help` → `okhelp `.
+     *
+     * Every auto-space combination, three contexts, both blind field kinds: the replacement must
+     * take exactly the swipe's place — the same leading space the swipe had, the trailing space
+     * the after-setting asks for — and nothing before the swiped word may go.
+     */
+    @Test
+    fun aSwipeCorrectionTapReplacesExactlyWhatTheSwipeTypedOnTheRemote() {
+        val failures = ArrayList<String>()
+        for (blind in listOf(false, true)) for (after in listOf(true, false)) for (before in listOf(true, false)) {
+            for (context in listOf("ok ", "ok", "")) {
+                field = RustDeskField(); ic = field.connection(); field.blind = blind
+                tracker.clearAll()
+                keysSent.clear()
+                config.auto_space_after_suggestion = after
+                config.auto_space_before_suggestion = before
+                val rd = if (blind) blindEditor() else rustDesk()
+                type(context, rd)
+                swipe(listOf("hello", "help"), rd)
+                val swiped = field.remote()
+                tap("help", rd)
+                val got = field.remote()
+                val expected = swiped.removeSuffix(if (after) "hello " else "hello") + if (after) "help " else "help"
+                if (got != expected) {
+                    failures += "blind=$blind after=$after before=$before context='$context': " +
+                        "swipe gave '$swiped', tap gave '$got', expected '$expected'"
+                }
+            }
+        }
+        assertWithMessage(failures.joinToString("\n")).that(failures).isEmpty()
+    }
+
+    /** The same rule in an ordinary editor, whose text reads back and deletes in place. */
+    @Test
+    fun aSwipeCorrectionTapInAnOrdinaryEditorKeepsThePrecedingSpace() {
+        val failures = ArrayList<String>()
+        for (after in listOf(true, false)) for (before in listOf(true, false)) for (context in listOf("ok ", "ok")) {
+            field = RustDeskField(); ic = field.connection()
+            tracker.clearAll()
+            config.auto_space_after_suggestion = after
+            config.auto_space_before_suggestion = before
+            val notes = editor("com.example.notes", InputType.TYPE_CLASS_TEXT)
+            type(context, notes)
+            swipe(listOf("hello", "help"), notes)
+            val swiped = field.typed()
+            tap("help", notes)
+            val got = field.typed()
+            val expected = swiped.removeSuffix(if (after) "hello " else "hello") + if (after) "help " else "help"
+            if (got != expected) {
+                failures += "after=$after before=$before context='$context': swipe gave '$swiped', " +
+                    "tap gave '$got', expected '$expected'"
+            }
+        }
+        assertWithMessage(failures.joinToString("\n")).that(failures).isEmpty()
+    }
+
     // ------------------------------------------------------------------ KeyEventHandler
 
     private fun keyHandler(editor: EditorInfo): Pair<KeyEventHandler, KeyEventHandler.IReceiver> {
@@ -341,6 +422,9 @@ class BlindFieldPolicyTest {
 
         fun remote(): String = remote.toString()
 
+        /** The field's own text after the placeholder run (an ordinary editor's content). */
+        fun typed(): String = text.toString().removePrefix("1".repeat(1024))
+
         fun remoteBackspace() {
             if (remote.isNotEmpty()) remote.setLength(remote.length - 1)
         }
@@ -376,6 +460,15 @@ class BlindFieldPolicyTest {
             every { conn.performContextMenuAction(any()) } returns true
             return conn
         }
+    }
+
+    private fun Any.getField(name: String): Any? {
+        var cls: Class<*>? = javaClass
+        while (cls != null) {
+            cls.declaredFields.firstOrNull { it.name == name }?.let { it.isAccessible = true; return it.get(this) }
+            cls = cls.superclass
+        }
+        throw AssertionError("field '$name' not found on ${javaClass.simpleName}")
     }
 
     private fun Any.setField(name: String, value: Any?) {
