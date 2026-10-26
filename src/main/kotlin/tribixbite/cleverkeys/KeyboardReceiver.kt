@@ -327,6 +327,8 @@ class KeyboardReceiver(
                 // Set pane with explicit height
                 pane?.layoutParams = paneLayoutParams(contentPaneHeight)
                 container.addView(pane)
+                // Keep the pane's controls out of the display cutout / side bars, like the keys.
+                pane?.let { WindowLayoutUtils.keepPaneClearOfSideInsets(it) }
                 showContentPane()
 
                 // H-3: runtime (custom/decorative) themes need a programmatic repaint
@@ -405,6 +407,9 @@ class KeyboardReceiver(
                 // Set pane with explicit height
                 clipboardPane.layoutParams = paneLayoutParams(contentPaneHeight)
                 container.addView(clipboardPane)
+                // Saga landscape 2026-10-26: the editor's cancel/delete sat under the camera
+                // cutout, where a systemui overlay owns the touches. Pad like the keys.
+                WindowLayoutUtils.keepPaneClearOfSideInsets(clipboardPane)
                 showContentPane()
 
                 currentPaneType = PaneType.CLIPBOARD
@@ -437,6 +442,7 @@ class KeyboardReceiver(
                 (gifPaneView.parent as? ViewGroup)?.removeView(gifPaneView)
                 gifPaneView.layoutParams = paneLayoutParams(contentPaneHeight)
                 container.addView(gifPaneView)
+                WindowLayoutUtils.keepPaneClearOfSideInsets(gifPaneView)
                 showContentPane()
 
                 // H-3: runtime (custom/decorative) themes need a programmatic repaint

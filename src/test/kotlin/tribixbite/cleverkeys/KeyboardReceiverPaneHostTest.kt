@@ -184,6 +184,31 @@ class KeyboardReceiverPaneHostTest {
         verify(exactly = 0) { keyboard2.setInputView(any()) }
     }
 
+    // ── 1b. Side insets (display cutout): pane controls must stay touchable ───────
+    //
+    // Saga 2026-10-26, landscape: the clipboard editor's cancel and delete buttons sat under
+    // the camera cutout at the right edge, where a systemui ScreenDecorOverlay window owns a
+    // 118 px touchable square, so taps there never reached the keyboard. The keyboard keys
+    // already keep out of systemBars|displayCutout (Keyboard2View margins); the content panes
+    // did not. Each opener must hand its pane to WindowLayoutUtils.keepPaneClearOfSideInsets.
+
+    @Test
+    fun everyContentPaneIsKeptClearOfTheSideInsets() {
+        // @JvmStatic object function: Kotlin call sites go through the static bridge, so
+        // mockkStatic (as for SuggestionBarPane above) is what intercepts it.
+        mockkStatic(WindowLayoutUtils::class)
+        every { WindowLayoutUtils.keepPaneClearOfSideInsets(any()) } just Runs
+        wireContainer()
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
+        verify(exactly = 1) { WindowLayoutUtils.keepPaneClearOfSideInsets(clipboardPane) }
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_EMOJI)
+        receiver.handle_event_key(KeyValue.Event.SWITCH_GIF)
+        // Emoji and GIF are inflated fresh (both the inflatedPane double here).
+        verify(atLeast = 1) { WindowLayoutUtils.keepPaneClearOfSideInsets(inflatedPane) }
+    }
+
     // ── 2. Missing container: refuse, never replace the keyboard ────────────────
 
     @Test

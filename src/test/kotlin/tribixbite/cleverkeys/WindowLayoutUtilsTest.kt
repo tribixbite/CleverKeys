@@ -448,6 +448,79 @@ class WindowLayoutUtilsTest {
     }
 
     // =========================================================================
+    // keepPaneClearOfSideInsets — content panes stay out of the cutout (Saga 2026-10-26)
+    // =========================================================================
+    //
+    // In landscape the clipboard editor's cancel/delete buttons sat under the Saga's camera
+    // cutout, where a systemui overlay owns the touches. The pane keeps its background edge
+    // to edge and pads its content by the same left/right insets the keys honour.
+
+    /** A pane double with real padding state and a real tag slot. */
+    private class PaneDouble(val view: View, val listener: io.mockk.CapturingSlot<View.OnApplyWindowInsetsListener>) {
+        var padding = intArrayOf(0, 0, 0, 0)
+    }
+
+    private fun paneDouble(left: Int, top: Int, right: Int, bottom: Int): PaneDouble {
+        val view = mockk<View>(relaxed = true)
+        val slot = io.mockk.slot<View.OnApplyWindowInsetsListener>()
+        val d = PaneDouble(view, slot)
+        d.padding = intArrayOf(left, top, right, bottom)
+        var tag: Any? = null
+        every { view.paddingLeft } answers { d.padding[0] }
+        every { view.paddingTop } answers { d.padding[1] }
+        every { view.paddingRight } answers { d.padding[2] }
+        every { view.paddingBottom } answers { d.padding[3] }
+        every { view.setPadding(any(), any(), any(), any()) } answers {
+            d.padding = intArrayOf(firstArg(), secondArg(), thirdArg(), arg(3))
+        }
+        every { view.getTag(R.id.pane_base_padding) } answers { tag }
+        every { view.setTag(R.id.pane_base_padding, any()) } answers { tag = secondArg() }
+        every { view.setOnApplyWindowInsetsListener(capture(slot)) } just Runs
+        return d
+    }
+
+    private fun sideInsets(left: Int, right: Int, bottom: Int = 0): WindowInsets {
+        val wi = mockk<WindowInsets>(relaxed = true)
+        every { wi.systemWindowInsetLeft } returns left
+        every { wi.systemWindowInsetRight } returns right
+        every { wi.systemWindowInsetBottom } returns bottom
+        return wi
+    }
+
+    @Test
+    fun paneIsPaddedByTheSideInsetsOnTopOfItsOwnPadding() {
+        setSdkInt(Build.VERSION_CODES.P)
+        val pane = paneDouble(left = 4, top = 6, right = 8, bottom = 10)
+
+        WindowLayoutUtils.keepPaneClearOfSideInsets(pane.view)
+        verify(exactly = 1) { pane.view.requestApplyInsets() }
+
+        val wi = sideInsets(left = 0, right = 118, bottom = 50)
+        val returned = pane.listener.captured.onApplyWindowInsets(pane.view, wi)
+
+        // Left/right grow by the insets; top/bottom keep the pane's own padding (the keyboard
+        // below already owns the bottom inset). Insets pass on unconsumed to the keyboard.
+        assertThat(pane.padding.toList()).containsExactly(4, 6, 126, 10).inOrder()
+        assertThat(returned).isSameInstanceAs(wi)
+    }
+
+    @Test
+    fun repeatedInsetsAndReinstallsNeverAccumulatePadding() {
+        setSdkInt(Build.VERSION_CODES.P)
+        val pane = paneDouble(left = 0, top = 0, right = 0, bottom = 0)
+
+        WindowLayoutUtils.keepPaneClearOfSideInsets(pane.view)
+        pane.listener.captured.onApplyWindowInsets(pane.view, sideInsets(left = 0, right = 118))
+        pane.listener.captured.onApplyWindowInsets(pane.view, sideInsets(left = 0, right = 118))
+        // The clipboard pane is cached and re-added on every open: reinstalling must start from
+        // the pane's own padding, not from the already-padded value.
+        WindowLayoutUtils.keepPaneClearOfSideInsets(pane.view)
+        pane.listener.captured.onApplyWindowInsets(pane.view, sideInsets(left = 118, right = 0))
+
+        assertThat(pane.padding.toList()).containsExactly(118, 0, 0, 0).inOrder()
+    }
+
+    // =========================================================================
     // refreshSystemBarInsets — configuration/nav-mode change re-derivation (#167 residual)
     // =========================================================================
     //

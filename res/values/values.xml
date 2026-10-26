@@ -6,4 +6,7 @@
   <dimen name="pref_button_size">28dp</dimen>
   <!-- Will be overwritten automatically by Gradle for the debug build variant -->
   <bool name="debug_logs">false</bool>
+  <!-- View tag: a content pane's own padding before WindowLayoutUtils.keepPaneClearOfSideInsets
+       added the side insets, so reinstalling on the cached clipboard pane never accumulates. -->
+  <item type="id" name="pane_base_padding"/>
 </resources>

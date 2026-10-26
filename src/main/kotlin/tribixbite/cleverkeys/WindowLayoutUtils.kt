@@ -190,6 +190,36 @@ object WindowLayoutUtils {
     }
 
     /**
+     * Keep a content pane's controls (clipboard, emoji, GIF) out of the side system bars and
+     * the display cutout, the same left/right insets [readSystemBarInsets] gives the keys.
+     *
+     * The IME window lays out under the cutout (`LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS` on 35+,
+     * SHORT_EDGES below), and Keyboard2View turns those insets into key margins, but the panes
+     * filled the full width. On the Saga in landscape the clipboard editor's cancel and delete
+     * buttons then sat under the camera cutout at the right edge, where a systemui
+     * ScreenDecorOverlay window owns a touchable square: taps there never reached the keyboard
+     * (2026-10-26). The pane keeps its background edge to edge and pads its content instead.
+     *
+     * Top and bottom keep the pane's own padding (the keyboard below owns the bottom inset),
+     * and the insets pass on unconsumed. The pane's own padding is stored under
+     * `R.id.pane_base_padding` on first install, so the cached clipboard pane, re-added on
+     * every open, never accumulates padding.
+     */
+    @JvmStatic
+    fun keepPaneClearOfSideInsets(pane: View) {
+        val base = pane.getTag(R.id.pane_base_padding) as? IntArray
+            ?: intArrayOf(pane.paddingLeft, pane.paddingTop, pane.paddingRight, pane.paddingBottom)
+                .also { pane.setTag(R.id.pane_base_padding, it) }
+        pane.setOnApplyWindowInsetsListener { v, insets ->
+            val side = readSystemBarInsets(insets)
+            v.setPadding(base[0] + side.left, base[1], base[2] + side.right, base[3])
+            insets
+        }
+        // A pane added after the window's last inset dispatch would otherwise wait for the next one.
+        pane.requestApplyInsets()
+    }
+
+    /**
      * Configuration/navigation-mode change re-derivation (#167 residual — the staleness
      * half). A nav-mode switch (3-button bar → gesture pill) or rotation can change the
      * system-bar insets while the IME window survives; a cached inset with only
