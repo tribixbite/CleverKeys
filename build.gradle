@@ -676,6 +676,9 @@ tasks.register('runPureTests', JavaExec) {
     // ARC-075 (2026-08-30): the GIF import status is a typed value, so the settings section
     // never classifies a failure by matching English message text.
     'tribixbite.cleverkeys.ui.settings.io.GifImportStatusTest',
+    // 2026-10-26: import/export result dialogs name the file by OpenableColumns.DISPLAY_NAME
+    // ("File: 932" was a Downloads document id); fallback policy + dialog wiring.
+    'tribixbite.cleverkeys.ui.settings.io.DocumentNamePolicyTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',
@@ -1247,6 +1250,8 @@ tasks.register('runMockTests', JavaExec) {
   jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
+    // 2026-10-26: the DISPLAY_NAME query behind the import/export result dialogs' file name.
+    'tribixbite.cleverkeys.ui.settings.io.DocumentDisplayNameResolveTest',
     // B-1 (2026-09-06 audit, P1): the recognizer/detector letter gate was hard-coded a-z,
     // so swipe typing could never trigger on any non-Latin board. Drives the REAL
     // ImprovedSwipeGestureRecognizer touch-stream path (startSwipe/addPoint/endSwipe) with

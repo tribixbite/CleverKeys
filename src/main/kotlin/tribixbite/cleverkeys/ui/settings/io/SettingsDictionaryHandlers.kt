@@ -47,7 +47,7 @@ internal fun SettingsActivity.performDictionaryExport(uri: Uri, plaintextOptOut:
             ) + "\n" + getString(R.string.dictionary_backup_export_disabled_words, summary.disabledWordsCount)
             showIoResult(
                 getString(R.string.dictionary_backup_export_success_title),
-                paragraphs(counts, getString(R.string.common_file_name, uri.lastPathSegment.orEmpty())),
+                paragraphs(counts, getString(R.string.common_file_name, documentDisplayName(uri))),
             )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Dictionary export failed", e)

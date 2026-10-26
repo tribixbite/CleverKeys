@@ -165,7 +165,7 @@ internal fun SettingsActivity.performClipboardExport(uri: Uri, plaintextOptOut: 
                         R.plurals.clipboard_backup_exported_entries, result.exportedCount, result.exportedCount
                     )
                 )
-                add(getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()))
+                add(getString(R.string.common_file_name, documentDisplayName(uri)))
                 add(getString(R.string.clipboard_backup_json_scope))
                 // #156: a plaintext export omits private entries; tell the user how to include them.
                 if (result.privateSkipped > 0) {
@@ -241,7 +241,7 @@ internal fun SettingsActivity.performClipboardZipExport(uri: Uri, plaintextOptOu
             val message = buildString {
                 appendLine(getString(R.string.clipboard_backup_zip_saved))
                 appendLine()
-                appendLine(getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()))
+                appendLine(getString(R.string.common_file_name, documentDisplayName(uri)))
                 appendLine()
                 appendLine(
                     resources.getQuantityString(

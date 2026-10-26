@@ -170,7 +170,7 @@ internal fun SettingsActivity.performConfigExport(uri: Uri, plaintextOptOut: Boo
                 getString(R.string.backup_result_export_success_title),
                 paragraphs(
                     getString(R.string.backup_result_settings_exported, count),
-                    getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()),
+                    getString(R.string.common_file_name, documentDisplayName(uri)),
                     getString(R.string.backup_result_config_export_hint),
                 ),
             )
@@ -312,7 +312,7 @@ internal fun SettingsActivity.performFullBackupExport(uri: Uri, plaintextOptOut:
                 val message = buildString {
                     appendLine(getString(R.string.backup_result_full_backup_saved))
                     appendLine()
-                    appendLine(getString(R.string.common_file_name, uri.lastPathSegment.orEmpty()))
+                    appendLine(getString(R.string.common_file_name, documentDisplayName(uri)))
                     appendLine()
                     appendLine(
                         getString(
