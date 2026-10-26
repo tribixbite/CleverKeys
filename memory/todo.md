@@ -83,6 +83,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    swipes and angle gestures (input swipe / motionevent) did nothing, so the Actions menu
    ("Delete") and the Select/⋮ menus were not reached. Needs a person. Settings restored
    (`enabled_accessibility_services` deleted = null, `accessibility_enabled` 0).
+   MAINTAINER 2026-10-26: TalkBack in the clipboard pane works, BUT the pane cannot be OPENED with
+   TalkBack on: short swipes (Ctrl down-left) do not reach the keyboard under explore-by-touch, and
+   `KeyboardAccessibilityHelper` exposes only ACTION_CLICK per key → agent: expose each key's
+   short-swipe outputs as custom accessibility actions (TalkBack Actions menu).
 4. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
@@ -109,6 +113,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    commit of the clip; RustDesk (Flutter fields, which perform the paste in the adaptor) now
    gets its own paste back (`TerminalUtils.handlesOwnPaste`); TYPE_NULL/VNC and terminals keep
    the committed clip. NOT device-verified in a RustDesk session.
+   MAINTAINER PASS 2026-10-26: RustDesk paste and suggestion taps work properly now.
    PASTE SUBKEY (agent, Saga 202, 10-25): NOT REPRODUCED. The subkey is the default-on
    `extra_key_paste` on `v` (se corner; sw on bépo). It pasted in Chrome, in Chrome made a custom
    terminal (TERMINAL path: IME reads the clip, commitText) and in RustDesk's own Remote ID field
@@ -149,6 +154,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    hard to swipe; (b) clipboard TO-DO panel entries — text input/editing broken for long
    entries (no text inserts); (c) bépo `é` discarded in swipe: swiping `été` gives `tp`, swiping
    `ete` gives `été`. No other bugs found yet.
+   MAINTAINER PASS 2026-10-26: swiping `été` (bépo) and `they've` both work.
    (b) FIXED `623070d2` + `63e27c70` (Saga 202, release built 10-25 01:40): three faults in the
    one inline editor (History/Pinned/To-dos). No length cap — the threshold is the pane: once
    the entry is taller than the visible list (~7 lines portrait, 2–3 landscape) the unfocused
