@@ -6,11 +6,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.annotation.PluralsRes
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -19,9 +27,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
@@ -53,7 +66,7 @@ private const val DELETE_ROW_GLYPH = "✕"
  * Learning & Data manager (audit 2026-08-06 §3.3): shows what the keyboard has
  * learned on-device (context-LM bigram/trigram counts per language,
  * personalization vocabulary stats), lets the user BROWSE and DELETE individual
- * learned phrases/words (per-word delete via the tested
+ * learned phrases/words — searchable and paged, see [LearnedBrowsePolicy] — (per-word delete via the tested
  * [BigramStore.removeBigram] / `UserVocabulary.removeWord` APIs), and gives
  * bulk delete controls with count-bearing confirmations. Export/import rides
  * the standard Backup & Restore dictionary payload
@@ -74,8 +87,9 @@ internal fun SettingsActivity.LearningDataManagerBlock() {
     var refreshKey by remember { mutableIntStateOf(0) }
     var showClearBigrams by remember { mutableStateOf(false) }
     var showClearVocab by remember { mutableStateOf(false) }
-    var showBrowsePhrases by remember { mutableStateOf(false) }
-    var showBrowseWords by remember { mutableStateOf(false) }
+    // Saveable: the browsers (and their search text) stay open across rotation.
+    var showBrowsePhrases by rememberSaveable { mutableStateOf(false) }
+    var showBrowseWords by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(refreshKey) {
         val stats = withContext(Dispatchers.IO) {
@@ -306,13 +320,21 @@ private data class PhraseRow(
     val frequency: Int
 )
 
-/** Cap on rows shown in a browser dialog (frequency-ranked, so the head matters). */
-private const val BROWSE_LIMIT = 200
+/** One learned word row in the browser. */
+private data class WordRow(val word: String, val usageCount: Int)
+
+/** Lazy-list keys of the browser's header items; row keys carry a different prefix. */
+private const val KEY_SEARCH = "header:search"
+private const val KEY_COUNT = "header:count"
+private const val KEY_NO_MATCHES = "header:none"
+
+/** Header items before the first row (search field + count line), for the paging index. */
+private const val HEADER_ITEMS = 2
 
 /**
  * Per-phrase browse/delete dialog (audit §3.3): every learned bigram across all
- * languages, most frequent first, with per-entry delete via
- * [BigramStore.removeBigram] + the trigram cascade
+ * languages, most frequent first, searchable and paged ([LearnedBrowsePolicy]), with
+ * per-entry delete via [BigramStore.removeBigram] + the trigram cascade
  * [TrigramStore.removeContinuationsOf] (ARC-004: without the cascade, a stored
  * `(·, w1) → w2` trigram keeps suggesting the deleted continuation, because
  * ContextModel prefers trigram evidence). NOTE: trigrams are not individually
@@ -321,105 +343,177 @@ private const val BROWSE_LIMIT = 200
  */
 @Composable
 private fun LearnedPhraseBrowserDialog(onDismiss: () -> Unit) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var rows by remember { mutableStateOf<List<PhraseRow>>(emptyList()) }
-    var loadKey by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(loadKey) {
-        rows = withContext(Dispatchers.IO) {
+    val context = LocalContext.current
+    LearnedBrowserDialog(
+        title = stringResource(R.string.learning_data_phrases_dialog_title),
+        searchHint = stringResource(R.string.learning_data_search_phrases_hint),
+        emptyText = stringResource(R.string.learning_data_phrases_dialog_empty),
+        totalPlural = R.plurals.learning_data_phrase_count,
+        load = {
             val store = BigramStore.getInstance(context)
-            store.getKnownLanguages().sorted().flatMap { lang ->
+            val rows = store.getKnownLanguages().sorted().flatMap { lang ->
                 store.getAllEntries(lang).map { PhraseRow(lang, it.word1, it.word2, it.frequency) }
-            }.sortedByDescending { it.frequency }.take(BROWSE_LIMIT)
-        }
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.learning_data_phrases_dialog_title)) },
-        text = {
-            if (rows.isEmpty()) {
-                Text(stringResource(R.string.learning_data_phrases_dialog_empty))
-            } else {
-                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
-                    items(rows, key = { "${it.language}|${it.word1}|${it.word2}" }) { row ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                stringResource(
-                                    R.string.learning_data_phrase_row,
-                                    row.word1, row.word2, row.frequency, row.language
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            TextButton(onClick = {
-                                Thread {
-                                    BigramStore.getInstance(context)
-                                        .removeBigram(row.language, row.word1, row.word2)
-                                    // ARC-004 cascade: also remove every (·, w1) → w2 trigram,
-                                    // or the deleted continuation keeps surfacing via the
-                                    // trigram-first next-word/boost path.
-                                    TrigramStore.getInstance(context)
-                                        .removeContinuationsOf(row.language, row.word1, row.word2)
-                                    loadKey++
-                                }.start()
-                            }) { Text(DELETE_ROW_GLYPH) }
-                        }
-                    }
-                }
-            }
+            }.sortedByDescending { it.frequency }
+            LearnedBrowsePolicy.index(rows) { listOf(it.word1, it.word2) }
         },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.common_done)) }
-        }
+        rowKey = { "p:${it.language}|${it.word1}|${it.word2}" },
+        rowText = { row ->
+            stringResource(
+                R.string.learning_data_phrase_row, row.word1, row.word2, row.frequency, row.language
+            )
+        },
+        delete = { row ->
+            BigramStore.getInstance(context).removeBigram(row.language, row.word1, row.word2)
+            // ARC-004 cascade: also remove every (·, w1) → w2 trigram, or the deleted
+            // continuation keeps surfacing via the trigram-first next-word/boost path.
+            TrigramStore.getInstance(context).removeContinuationsOf(row.language, row.word1, row.word2)
+        },
+        onDismiss = onDismiss
     )
 }
 
 /**
- * Per-word browse/delete dialog (audit §3.3): the personalization vocabulary's
- * top words with usage counts, per-entry delete via `UserVocabulary.removeWord`.
+ * Per-word browse/delete dialog (audit §3.3): the whole personalization vocabulary,
+ * highest personalization boost first, searchable and paged ([LearnedBrowsePolicy]),
+ * with per-entry delete via `UserVocabulary.removeWord`.
  */
 @Composable
 private fun LearnedWordBrowserDialog(onDismiss: () -> Unit) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-    var rows by remember { mutableStateOf<List<Pair<String, Int>>>(emptyList()) }
-    var loadKey by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+    LearnedBrowserDialog(
+        title = stringResource(R.string.learning_data_words_dialog_title),
+        searchHint = stringResource(R.string.learning_data_search_words_hint),
+        emptyText = stringResource(R.string.learning_data_words_dialog_empty),
+        totalPlural = R.plurals.learning_data_word_count,
+        load = {
+            val rows = UserVocabulary.getInstance(context).getAllWords().map { WordRow(it.word, it.usageCount) }
+            LearnedBrowsePolicy.index(rows) { listOf(it.word) }
+        },
+        rowKey = { "w:${it.word}" },
+        rowText = { row -> stringResource(R.string.learning_data_word_row, row.word, row.usageCount) },
+        delete = { row -> UserVocabulary.getInstance(context).removeWord(row.word) },
+        onDismiss = onDismiss
+    )
+}
 
-    LaunchedEffect(loadKey) {
-        rows = withContext(Dispatchers.IO) {
-            UserVocabulary.getInstance(context)
-                .getTopWords(BROWSE_LIMIT)
-                .map { it.word to it.usageCount }
-        }
+/**
+ * The shared learned-data browser: a search field and a count line ("1,234 words", or
+ * "12 of 1,234" while searching) above the rows, all in ONE keyed lazy list so the header
+ * scrolls with the rows and cannot starve a short landscape viewport of entries.
+ *
+ * [load] snapshots and folds the store once on [Dispatchers.IO]; filtering runs on
+ * [Dispatchers.Default] per query (a substring scan of pre-folded text — the stores are
+ * in-memory and capped at tens of thousands of rows, so this is milliseconds), and the list
+ * grows [LearnedBrowsePolicy.PAGE_SIZE] rows at a time as it is scrolled. A delete drops the
+ * row from the snapshot at once (the list keeps its scroll position) and calls [delete] on IO.
+ * The query survives rotation (rememberSaveable); the page count restarts with each query.
+ */
+@Composable
+private fun <T> LearnedBrowserDialog(
+    title: String,
+    searchHint: String,
+    emptyText: String,
+    @PluralsRes totalPlural: Int,
+    load: suspend () -> List<LearnedBrowsePolicy.Indexed<T>>,
+    rowKey: (T) -> String,
+    rowText: @Composable (T) -> String,
+    delete: (T) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    // null while the first snapshot loads.
+    var snapshot by remember { mutableStateOf<List<LearnedBrowsePolicy.Indexed<T>>?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    var matches by remember { mutableStateOf<List<T>>(emptyList()) }
+    var pages by rememberSaveable(query) { mutableIntStateOf(1) }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(Unit) {
+        snapshot = withContext(Dispatchers.IO) { load() }
+    }
+    LaunchedEffect(snapshot, query) {
+        val rows = snapshot ?: return@LaunchedEffect
+        matches = withContext(Dispatchers.Default) { LearnedBrowsePolicy.filter(rows, query) }
+    }
+    // Lazy paging: add a page when the last laid-out row nears the end of the shown rows.
+    LaunchedEffect(listState, matches) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
+            .collect { lastItem ->
+                pages = LearnedBrowsePolicy.pagesAfterScroll(lastItem - HEADER_ITEMS, matches.size, pages)
+            }
     }
 
+    val rows = snapshot
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.learning_data_words_dialog_title)) },
+        title = { Text(title) },
         text = {
-            if (rows.isEmpty()) {
-                Text(stringResource(R.string.learning_data_words_dialog_empty))
-            } else {
-                LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
-                    items(rows, key = { it.first }) { (word, count) ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                stringResource(R.string.learning_data_word_row, word, count),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+            when {
+                rows == null -> Text(stringResource(R.string.learning_data_loading))
+                rows.isEmpty() -> Text(emptyText)
+                else -> {
+                    val shown = LearnedBrowsePolicy.visibleCount(matches.size, pages)
+                    LazyColumn(state = listState, modifier = Modifier.heightIn(max = 400.dp)) {
+                        item(key = KEY_SEARCH) {
+                            OutlinedTextField(
+                                value = query,
+                                onValueChange = { query = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                placeholder = { Text(searchHint) },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.common_search))
+                                },
+                                trailingIcon = {
+                                    if (query.isNotEmpty()) {
+                                        IconButton(onClick = { query = "" }) {
+                                            Icon(
+                                                Icons.Filled.Close,
+                                                contentDescription = stringResource(R.string.clipboard_clear_search)
+                                            )
+                                        }
+                                    }
+                                },
+                                singleLine = true
                             )
-                            TextButton(onClick = {
-                                Thread {
-                                    UserVocabulary.getInstance(context).removeWord(word)
-                                    loadKey++
-                                }.start()
-                            }) { Text(DELETE_ROW_GLYPH) }
+                        }
+                        item(key = KEY_COUNT) {
+                            val countText = when (val line = LearnedBrowsePolicy.countLine(query, matches.size, rows.size)) {
+                                is LearnedBrowsePolicy.CountLine.Total ->
+                                    pluralStringResource(totalPlural, line.total, line.total)
+                                is LearnedBrowsePolicy.CountLine.Filtered ->
+                                    stringResource(R.string.learning_data_filtered_count, line.matches, line.total)
+                            }
+                            Text(
+                                countText,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 6.dp)
+                            )
+                        }
+                        if (matches.isEmpty() && query.isNotBlank()) {
+                            item(key = KEY_NO_MATCHES) {
+                                Text(
+                                    stringResource(R.string.learning_data_no_matches),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                        items(matches.subList(0, shown), key = rowKey) { row ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    rowText(row),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(onClick = {
+                                    val key = rowKey(row)
+                                    snapshot = snapshot?.filterNot { rowKey(it.item) == key }
+                                    scope.launch(Dispatchers.IO) { delete(row) }
+                                }) { Text(DELETE_ROW_GLYPH) }
+                            }
                         }
                     }
                 }

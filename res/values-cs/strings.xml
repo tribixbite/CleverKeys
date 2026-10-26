@@ -729,6 +729,11 @@
     <string name="learning_data_words_dialog_title">Naučená slova</string>
     <string name="learning_data_words_dialog_empty">Žádná naučená slova.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Hledat naučená slova…</string>
+    <string name="learning_data_search_phrases_hint">Hledat naučené fráze…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d fráze</item><item quantity="few">%1$d fráze</item><item quantity="many">%1$d frází</item><item quantity="other">%1$d frází</item></plurals>
+    <string name="learning_data_filtered_count">%1$d z %2$d</string>
+    <string name="learning_data_no_matches">Žádné shody.</string>
     <string name="backup_password_title">Heslo zálohy</string>
     <string name="backup_password_not_set_desc">Nenastaveno. Vyžadováno pro export/import přes automatizaci (am start); šifruje všechny zálohy.</string>
     <string name="backup_password_set">Nastavit heslo</string>

@@ -739,6 +739,11 @@
     <string name="learning_data_words_dialog_title">Wyuczone słowa</string>
     <string name="learning_data_words_dialog_empty">Brak wyuczonych słów.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Szukaj wyuczonych słów…</string>
+    <string name="learning_data_search_phrases_hint">Szukaj wyuczonych zwrotów…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d zwrot</item><item quantity="few">%1$d zwroty</item><item quantity="many">%1$d zwrotów</item><item quantity="other">%1$d zwrotu</item></plurals>
+    <string name="learning_data_filtered_count">%1$d z %2$d</string>
+    <string name="learning_data_no_matches">Brak wyników.</string>
     <string name="backup_password_title">Hasło kopii zapasowej</string>
     <string name="backup_password_not_set_desc">Nieustawione. Wymagane do eksportu/importu przez automatyzację (am start); szyfruje wszystkie kopie zapasowe.</string>
     <string name="backup_password_set">Ustaw hasło</string>

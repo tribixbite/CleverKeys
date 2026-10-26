@@ -767,6 +767,11 @@
     <string name="learning_data_words_dialog_title">Parole apprese</string>
     <string name="learning_data_words_dialog_empty">Nessuna parola appresa.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Cerca parole apprese…</string>
+    <string name="learning_data_search_phrases_hint">Cerca frasi apprese…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d frase</item><item quantity="many">%1$d frasi</item><item quantity="other">%1$d frasi</item></plurals>
+    <string name="learning_data_filtered_count">%1$d di %2$d</string>
+    <string name="learning_data_no_matches">Nessun risultato.</string>
     <string name="backup_password_title">Password di backup</string>
     <string name="backup_password_not_set_desc">Non impostata. Necessaria per esportazione/importazione tramite automazione (am start); cifra tutti i backup.</string>
     <string name="backup_password_set">Imposta password</string>

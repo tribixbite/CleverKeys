@@ -984,6 +984,11 @@
     <plurals name="learning_data_triples_suffix"><item quantity="other">, %1$d bộ ba</item></plurals>
     <plurals name="learning_data_word_count"><item quantity="other">%1$d từ</item></plurals>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Tìm từ đã học…</string>
+    <string name="learning_data_search_phrases_hint">Tìm cụm từ đã học…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="other">%1$d cụm từ</item></plurals>
+    <string name="learning_data_filtered_count">%1$d trong số %2$d</string>
+    <string name="learning_data_no_matches">Không có kết quả phù hợp.</string>
     <string name="learning_data_word_usage">Mức dùng từ — %1$s</string>
     <string name="learning_data_words_dialog_empty">Không có từ đã học.</string>
     <string name="learning_data_words_dialog_title">Từ đã học</string>

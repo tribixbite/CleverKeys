@@ -750,6 +750,11 @@
     <string name="learning_data_words_dialog_title">Cuvinte învățate</string>
     <string name="learning_data_words_dialog_empty">Niciun cuvânt învățat.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Caută cuvinte învățate…</string>
+    <string name="learning_data_search_phrases_hint">Caută expresii învățate…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d expresie</item><item quantity="few">%1$d expresii</item><item quantity="other">%1$d de expresii</item></plurals>
+    <string name="learning_data_filtered_count">%1$d din %2$d</string>
+    <string name="learning_data_no_matches">Niciun rezultat.</string>
     <string name="backup_password_title">Parolă pentru backup</string>
     <string name="backup_password_not_set_desc">Nesetată. Necesară pentru exportul/importul prin automatizare (am start); criptează toate backupurile.</string>
     <string name="backup_password_set">Setează parola</string>

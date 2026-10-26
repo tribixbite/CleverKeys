@@ -733,6 +733,11 @@
     <string name="learning_data_words_dialog_title">Öğrenilen kelimeler</string>
     <string name="learning_data_words_dialog_empty">Öğrenilmiş kelime yok.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Öğrenilen kelimelerde ara…</string>
+    <string name="learning_data_search_phrases_hint">Öğrenilen ifadelerde ara…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d ifade</item><item quantity="other">%1$d ifade</item></plurals>
+    <string name="learning_data_filtered_count">%2$d içinden %1$d</string>
+    <string name="learning_data_no_matches">Eşleşme yok.</string>
     <string name="backup_password_title">Yedek Parolası</string>
     <string name="backup_password_not_set_desc">Ayarlanmadı. Otomasyonla (am start) dışa/içe aktarma için gereklidir; tüm yedekleri şifreler.</string>
     <string name="backup_password_set">Parola Belirle</string>

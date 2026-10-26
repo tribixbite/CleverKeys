@@ -725,6 +725,11 @@
     <string name="learning_data_words_dialog_title">Geleerde woorden</string>
     <string name="learning_data_words_dialog_empty">Geen geleerde woorden.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Geleerde woorden zoeken…</string>
+    <string name="learning_data_search_phrases_hint">Geleerde uitdrukkingen zoeken…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d uitdrukking</item><item quantity="other">%1$d uitdrukkingen</item></plurals>
+    <string name="learning_data_filtered_count">%1$d van %2$d</string>
+    <string name="learning_data_no_matches">Geen resultaten.</string>
     <string name="backup_password_title">Back-upwachtwoord</string>
     <string name="backup_password_not_set_desc">Niet ingesteld. Vereist voor export/import via automatisering (am start); versleutelt alle back-ups.</string>
     <string name="backup_password_set">Wachtwoord instellen</string>

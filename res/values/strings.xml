@@ -992,6 +992,18 @@
     <string name="learning_data_words_dialog_empty">No learned words.</string>
     <!-- %1$s = learned word, %2$d = usage count -->
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <!-- Learned-word / learned-phrase browser search and paging (2026-10-26). -->
+    <string name="learning_data_search_words_hint">Search learned words…</string>
+    <string name="learning_data_search_phrases_hint">Search learned phrases…</string>
+    <!-- %1$d = number of learned phrases (word pairs) -->
+    <plurals name="learning_data_phrase_count">
+        <item quantity="one">%1$d phrase</item>
+        <item quantity="other">%1$d phrases</item>
+    </plurals>
+    <!-- %1$d = rows matching the search, %2$d = all rows. A bare "X of Y": the noun is in the
+         browser title, so every locale can phrase it numeral-neutrally. -->
+    <string name="learning_data_filtered_count" tools:ignore="PluralsCandidate">%1$d of %2$d</string>
+    <string name="learning_data_no_matches">No matches.</string>
 
     <!-- BackupPasswordBlock.kt — backup-encryption passphrase block and its dialogs -->
     <string name="backup_password_title">Backup Password</string>

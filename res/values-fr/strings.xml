@@ -733,6 +733,11 @@
     <string name="learning_data_words_dialog_title">Mots appris</string>
     <string name="learning_data_words_dialog_empty">Aucun mot appris.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Rechercher des mots appris…</string>
+    <string name="learning_data_search_phrases_hint">Rechercher des expressions apprises…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d expression</item><item quantity="many">%1$d expressions</item><item quantity="other">%1$d expressions</item></plurals>
+    <string name="learning_data_filtered_count">%1$d sur %2$d</string>
+    <string name="learning_data_no_matches">Aucun résultat.</string>
     <string name="backup_password_title">Mot de passe de sauvegarde</string>
     <string name="backup_password_not_set_desc">Non défini. Requis pour l\'export/import par automatisation (am start) ; chiffre toutes les sauvegardes.</string>
     <string name="backup_password_set">Définir le mot de passe</string>

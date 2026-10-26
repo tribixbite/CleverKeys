@@ -745,6 +745,11 @@
     <string name="learning_data_words_dialog_title">Gelernte Wörter</string>
     <string name="learning_data_words_dialog_empty">Keine gelernten Wörter.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Gelernte Wörter suchen…</string>
+    <string name="learning_data_search_phrases_hint">Gelernte Wendungen suchen…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d Wendung</item><item quantity="other">%1$d Wendungen</item></plurals>
+    <string name="learning_data_filtered_count">%1$d von %2$d</string>
+    <string name="learning_data_no_matches">Keine Treffer.</string>
     <string name="backup_password_title">Sicherungspasswort</string>
     <string name="backup_password_not_set_desc">Nicht gesetzt. Erforderlich für automatisierten Export/Import (am start); verschlüsselt alle Sicherungen.</string>
     <string name="backup_password_set">Passwort festlegen</string>

@@ -954,6 +954,11 @@
     <plurals name="learning_data_triples_suffix"><item quantity="other">，%1$d 个三词组</item></plurals>
     <plurals name="learning_data_word_count"><item quantity="other">%1$d 个单词</item></plurals>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">搜索已学单词…</string>
+    <string name="learning_data_search_phrases_hint">搜索已学短语…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="other">%1$d 个短语</item></plurals>
+    <string name="learning_data_filtered_count">%1$d / %2$d</string>
+    <string name="learning_data_no_matches">没有匹配项。</string>
     <string name="learning_data_word_usage">用词情况 — %1$s</string>
     <string name="learning_data_words_dialog_empty">没有已学单词。</string>
     <string name="learning_data_words_dialog_title">已学单词</string>

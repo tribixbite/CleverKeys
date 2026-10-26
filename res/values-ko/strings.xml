@@ -723,6 +723,11 @@
     <string name="learning_data_words_dialog_title">학습된 단어</string>
     <string name="learning_data_words_dialog_empty">학습된 단어가 없습니다.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d회)"</string>
+    <string name="learning_data_search_words_hint">학습된 단어 검색…</string>
+    <string name="learning_data_search_phrases_hint">학습된 표현 검색…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="other">표현 %1$d개</item></plurals>
+    <string name="learning_data_filtered_count">%1$d / %2$d</string>
+    <string name="learning_data_no_matches">일치하는 항목이 없습니다.</string>
     <string name="backup_password_title">백업 비밀번호</string>
     <string name="backup_password_not_set_desc">설정되지 않음. 자동화(am start) 내보내기/가져오기에 필요하며 모든 백업을 암호화합니다.</string>
     <string name="backup_password_set">비밀번호 설정</string>

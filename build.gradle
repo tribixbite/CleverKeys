@@ -679,6 +679,8 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-10-26: import/export result dialogs name the file by OpenableColumns.DISPLAY_NAME
     // ("File: 932" was a Downloads document id); fallback policy + dialog wiring.
     'tribixbite.cleverkeys.ui.settings.io.DocumentNamePolicyTest',
+    // 2026-10-26 maintainer request: learned words/phrases browsers get search + paging.
+    'tribixbite.cleverkeys.ui.settings.sections.LearnedBrowsePolicyTest',
     'tribixbite.cleverkeys.BackspaceUndoTest',
     'tribixbite.cleverkeys.ClipboardPaginationTest',
     'tribixbite.cleverkeys.ClipboardFixesJvmTest',

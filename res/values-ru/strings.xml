@@ -729,6 +729,11 @@
     <string name="learning_data_words_dialog_title">Выученные слова</string>
     <string name="learning_data_words_dialog_empty">Выученных слов нет.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Поиск выученных слов…</string>
+    <string name="learning_data_search_phrases_hint">Поиск выученных сочетаний…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="one">сочетаний: %1$d</item><item quantity="few">сочетаний: %1$d</item><item quantity="many">сочетаний: %1$d</item><item quantity="other">сочетаний: %1$d</item></plurals>
+    <string name="learning_data_filtered_count">%1$d из %2$d</string>
+    <string name="learning_data_no_matches">Совпадений нет.</string>
     <string name="backup_password_title">Пароль резервной копии</string>
     <string name="backup_password_not_set_desc">Не задан. Требуется для экспорта/импорта через автоматизацию (am start); шифрует все резервные копии.</string>
     <string name="backup_password_set">Задать пароль</string>

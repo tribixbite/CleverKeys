@@ -735,6 +735,11 @@
     <string name="learning_data_words_dialog_title">Kata yang dipelajari</string>
     <string name="learning_data_words_dialog_empty">Tidak ada kata yang dipelajari.</string>
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
+    <string name="learning_data_search_words_hint">Cari kata yang dipelajari…</string>
+    <string name="learning_data_search_phrases_hint">Cari frasa yang dipelajari…</string>
+    <plurals name="learning_data_phrase_count"><item quantity="other">%1$d frasa</item></plurals>
+    <string name="learning_data_filtered_count">%1$d dari %2$d</string>
+    <string name="learning_data_no_matches">Tidak ada yang cocok.</string>
     <string name="backup_password_title">Kata Sandi Cadangan</string>
     <string name="backup_password_not_set_desc">Belum disetel. Diperlukan untuk ekspor/impor otomatis (am start); mengenkripsi semua cadangan.</string>
     <string name="backup_password_set">Setel Kata Sandi</string>
