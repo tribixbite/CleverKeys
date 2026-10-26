@@ -87,6 +87,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    TalkBack on: short swipes (Ctrl down-left) do not reach the keyboard under explore-by-touch, and
    `KeyboardAccessibilityHelper` exposes only ACTION_CLICK per key → agent: expose each key's
    short-swipe outputs as custom accessibility actions (TalkBack Actions menu).
+   AGENT 2026-10-26: DONE in code — each key's short swipes (layout subkeys + custom mappings,
+   `removed` left out, none while Short gestures is off) are TalkBack custom actions labelled
+   "<action> (<direction>)", e.g. Ctrl "Clipboard manager (Southwest)", dispatched through the
+   real short-swipe path (`Pointers.performAccessibilityShortSwipe`). Pure + mock + instrumented
+   tests; not tried with TalkBack on a phone → maintainer: Ctrl → TalkBack Actions menu → that entry.
 4. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
@@ -471,7 +476,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     accepted, IME binds, no crash. FIXED 2026-10-26: debug and release could not coexist
     (fixed-name `SET_DEBUG_MODE` permission from `9c799506` defined by both differently signed
     packages); the name is now `${applicationId}.permission.SET_DEBUG_MODE` (release name
-    unchanged, aapt2 dumps share no permission/authority; phone install check still open). 1.x small images keep no thumbnail
+    unchanged, aapt2 dumps share no permission/authority). PHONE CHECK PASS 2026-10-26 on Saga 144: the `bd4ec789` debug APK
+    installed beside release 2.0, each defining its own SET_DEBUG_MODE; debug then uninstalled, release stays the
+    default IME. Pixel: Play Protect blocks any debug build ("Harmful app blocked", dialog dismissed, nothing installed). 1.x small images keep no thumbnail
     after the update — FIXED `ce96d38f` (startup repair; upgrade rerun 2026-10-26 on API 34/36:
     47 + 37 checks, 0 failures, small-image thumbnail PASS, `0a923417` verifier). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
     without restart PASS (`d85be0dd`); bépo `été` synthetic swipe gave `Ecb` (coarse, 2.3 s,
