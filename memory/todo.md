@@ -509,7 +509,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     expanded 20,000 + "Showing the first N of M characters…", no inline edit past that).
     Main-thread CPU, release: pane open 41.7 → 0.1 s, enter Select 51.4 → 0.05 s, leave Select
     52.1 → 0.05 s, expand ≤ 0.5 s, search keystroke ≤ 0.06 s; a query for text past 520,000
-    chars still matches; emoji entry pasted with exact length + checksum; no ANR. (b) FIXED `cf74c393`: history-change callbacks from IO
+    chars still matches; emoji entry pasted with exact length + checksum; no ANR. Maintainer request
+    "facilitate editing of 20k+ char entries" DONE `14277584` 2026-10-26 (Saga 202, release `36970673…`, evidence
+    `build/oct26-saga202-paged/`): such entries are edited a page at a time (`ClipboardEditPages`,
+    "Page N of M" + prev/next, long-press first/last; unsaved edits kept across pages; Save = one
+    update of the spliced text; a row changed meanwhile → `EntryChanged`, nothing written). Per key
+    tap 20–70 ms main-thread CPU on the 520K entry; History (pages 1, 14, last), Pinned and To-do
+    edits pasted into Chrome with exact length + checksum. Not device-checked: the conflict message,
+    TalkBack labels, landscape. (b) FIXED `cf74c393`: history-change callbacks from IO
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted

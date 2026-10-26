@@ -29,6 +29,14 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Edit very long clipboard entries page by page.** An entry longer than 20,000 characters or
+  1,000 lines opens in the pane's editor one page at a time, with "Page N of M" and previous /
+  next buttons above it (hold a button to jump to the first or last page). Edits are kept when
+  you move between pages; Save writes the whole entry once, and Cancel drops every page's
+  edits. Works in History, Pinned and To-dos. Paste, copy and search still use the whole entry.
+  If the entry was changed or removed after you started editing, Save says so and writes
+  nothing. On a Saga, typing in a 520,000-character entry costs about as much as typing in a
+  short one (20–70 ms of keyboard CPU per key).
 - **Search in the learned words and phrases browsers** (Settings → Input Behavior → Learning &
   Data). Browse words and Browse phrases used to show only the top 200 entries; they now list
   everything learned, load more rows as you scroll, and filter as you type (capitals, accents
@@ -432,8 +440,8 @@ editor that used to be listed here already ship in 2.0.)
   of an entry: a collapsed row its first 300 characters, an expanded row its first 20,000 with a
   line saying how many characters are shown. Opening the pane, Select mode, search and expanding
   a row now take well under a second. Search still finds text anywhere in an entry, and paste and
-  copy still use the whole entry. Entries longer than an expanded row shows cannot be edited in
-  the pane.
+  copy still use the whole entry. Entries longer than an expanded row shows are edited a page at
+  a time (see Added).
 - Copying an image while the clipboard pane was open left the pane on "Loading results…" until
   it was reopened. The pane now updates and lists the new image.
 - Clipboard images of 80 px or less get a thumbnail again instead of a file icon, and images

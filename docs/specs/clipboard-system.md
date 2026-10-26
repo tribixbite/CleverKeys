@@ -678,15 +678,69 @@ kills on 2026-10-26; trace in `build/oct26-saga202-chunk/anr-dropbox.txt`).
 - Paste, copy, long-press copy, search (plain and regex, over `entry.content`) and every bulk
   action use the full text. The database still loads full rows on IO: reading three 0.5 MB
   rows took no measurable main-thread time, so no `substr()` column or schema change.
-- The inline editor is offered only for entries an expanded row shows whole
-  (`isEditableInline`): it re-sets its whole text on every keystroke. The edit button is hidden
-  and `edit_entry` refuses longer entries; the note says they cannot be edited in the pane.
+- The inline editor edits an entry an expanded row shows whole (`isEditableInline`) in one
+  piece, as before; longer entries are edited a page at a time (next section). The note says
+  so. (Between `5c97417e` and the paged editor such entries had no edit button.)
 - Measured on Saga 202 (release, main-thread CPU s, the three entries of the chunk-size eval):
   pane open 41.7 → 0.10–0.13; enter Select 51.4 → 0.05; leave Select 52.1 → 0.04–0.08; expand the
   524K ASCII row 0.06, the emoji row 0.48, the Hebrew row 0.08; each search keystroke ≤ 0.06; the
   query `l0130` (text only past 520,000 chars) found the ASCII entry; the emoji entry pasted into
   Chrome with the full length and checksum (256,000 units). Tests: `ClipboardPreviewPolicyTest`
   (pure), `ClipboardLongEntryPreviewViewTest` (mock, the real `getView`).
+
+## Paged editing of long entries (2026-10-26)
+
+Maintainer request: "find a way to facilitate editing of 20k+ char entries". The inline editor
+re-sets its whole text on every keystroke (IME-owned EditText, `setText` + `setSelection`), so a
+0.5 MB entry cannot sit in the field. An entry is paged exactly when `isEditableInline` is false
+(more than 20,000 UTF-16 units or 1,000 lines); shorter entries keep the single-page editor with
+no pager.
+
+- `clipboard/ClipboardEditPages` (pure). A page is at most 20,000 units / 1,000 lines. A page
+  that hits the line limit ends after its last allowed line; one that hits the char limit ends
+  after the last line break in the final quarter of its window, else after the last whitespace
+  there, else at the limit. A cut never splits a surrogate pair or a CRLF. One page end reads at
+  most one window. `Session` holds the entry as opened (`original`), a working copy with the
+  other pages' edits, the page starts and the current index.
+- Moving to another page first splices the field's text into the working copy (no prompt).
+  Only that page is re-split: earlier pages are untouched, later pages keep their boundaries
+  (shifted), an emptied page disappears. Next / previous are ±1 in the working copy, so after an
+  edit that overflowed a page "next" shows the overflow. Each move costs O(entry) once (splice +
+  the blank check below); typing costs one page.
+- The view (`ClipboardHistoryView`): `editingPages` is non-null only for a paged edit; the field
+  and `editingInProgressText` hold the current page. `edit_entry` opens page 1 with the caret at
+  0; next / first / last put it at 0, previous at the page end. A move restarts the page's undo
+  history (`InlineEditHistory`) and the swipe session. Select all, cut, copy and the editor
+  commands act on the current page.
+- Pager row above the field (`clipboard_entry_edit_pager`): "Page N of M"
+  (`clipboard_edit_page`, a polite live region) between previous / next buttons (content
+  descriptions `clipboard_edit_page_previous` / `_next`; long-press = first / last page, labelled
+  for TalkBack by `clipboard_edit_page_first` / `_last`). Disabled buttons are dimmed. A paged
+  field is capped to the pane's visible height minus the pager row and scrolls its own text:
+  otherwise the pane's ScrollView, on focusing a field taller than itself, aligned the field's top
+  with its own and scrolled the pager (and Save/Cancel) out of sight (seen on the Saga).
+- Save splices the current page in and calls `editEntryContent(original, fullText, tab)` ONCE.
+  It is enabled when the page or any other page has non-whitespace text (`othersBlank` is
+  computed per move, not per keystroke). The service's size limit (`clipboard_max_item_size_kb`)
+  and the existing errors apply. Cancel drops every page's edits.
+- Optimistic concurrency: the UPDATE is keyed on the content the editor opened with, so a row
+  that changed or was removed meanwhile matches nothing. `ClipboardEditPolicy.updateOutcome(0)`
+  is the new `EditEntryResult.EntryChanged` (it was a generic `Error`); the editor stays open and
+  shows `clipboard_edit_changed`. This applies to single-page edits too.
+- Device (Saga 202, release `36970673…`, 2026-10-26, evidence `build/oct26-saga202-paged/`, not
+  in git): 520,000-char History entry, 100,000-char Pinned and To-do entries imported through
+  Backup & Restore → Import Clip. Main-thread CPU in a 1.5 s window after each key tap 20–70 ms
+  (idle caret blink ≈ 10 ms in the same window), next / previous 30–80 ms, long-press to the last
+  or first page ≈ 220 ms, open ≈ 90 ms, Save ≈ 80–100 ms. Edits on page 1, page 14 of 27 and the
+  last page, navigation back with unsaved edits (page 1 kept them), Save; pasted into a Chrome
+  textarea: length 520,011 and the expected UTF-16 checksum. Pinned (edit on page 3) and To-do
+  (first and last page) likewise exact. No ANR or crash.
+- Code `14277584`. Tests: `ClipboardEditPagesTest` (pure: boundaries, surrogates, CRLF, no-newline text, exact
+  limits, agreement with `isEditableInline`, 520K round trip, splice / grow / shrink / empty /
+  navigation), `ClipboardEditJvmTest` (`updateOutcome`), `ClipboardPagedEditViewTest` (mock, the
+  real `getView`: one page bound, pager, unsaved edits across pages, one spliced save per tab,
+  conflict, short entry unchanged), `ClipboardDatabaseTest` (instrumented, `EntryChanged`; not
+  run in this change).
 
 ## Capture limits and the keyboard-shown catch-up (2026-10-08)
 

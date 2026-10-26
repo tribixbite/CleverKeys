@@ -121,6 +121,21 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 - **State tracking**: `editingInProgressText` is synced directly in text manipulation methods AND via TextWatcher (belt-and-suspenders). `save_edit()` reads from `editingInProgressText` (not EditText widget).
 - **Focus and long entries (2026-10-25)**: getView posts `requestFocus()` on the visible edit field. TextView draws its caret and scrolls it into view (bringPointIntoView → requestRectangleOnScreen → the pane's ScrollView) only while focused; unfocused, an entry taller than the pane put the caret, and every typed character, out of sight. View focus inside the IME window never takes window focus from the app. Never let a FOCUSABLE popup open from the field: `inputType="none"` is the attribute's unset value (EditText stays TYPE_CLASS_TEXT with suggestions), and tapping a spell-checker-underlined word opened the focusable SuggestionsPopupWindow, the app lost window focus and hid the keyboard (same mechanism as `ImeDialogWindowPolicy`). Tests: `ClipboardHistoryViewStateGuardsTest` (mock), `ClipboardLongEntryEditTest` (instrumented).
 
+- **Paged editing (2026-10-26, todo 22)**: an entry over 20,000 units / 1,000 lines (not
+  `isEditableInline`) is edited one page at a time. `clipboard/ClipboardEditPages` (pure) splits
+  pages (line break in the window's last quarter, else whitespace, else the limit; never inside
+  a surrogate pair or CRLF) and its `Session` keeps the working copy. `editingPages` non-null =
+  paged; then the field and `editingInProgressText` hold ONLY the current page — never put the
+  full text in the field (every keystroke re-sets it). Moves (`editPageNext/Previous/First/
+  Last`, pager row `clipboard_entry_edit_pager`, long-press = first/last) splice the field's text
+  in first, re-split only that page, restart the page's undo history and swipe session. Save =
+  `session.fullText(page)` → ONE `editEntryContent(original, full, tab)`. The paged field is
+  capped to the pane height minus the pager (`fitEditFieldHeight`), else the ScrollView's focus
+  scroll hides the pager. A row changed meanwhile → `EditEntryResult.EntryChanged` (UPDATE keyed
+  on the opened content) → `clipboard_edit_changed`, session kept. Tests:
+  `ClipboardEditPagesTest` (pure), `ClipboardPagedEditViewTest` (mock). Spec:
+  `docs/specs/clipboard-system.md` "Paged editing of long entries".
+
 ### 3. Tag Mode (pane-level, in ClipboardManager)
 - **State**: `tagMode: Boolean` + `tagEditText: EditText?`
 - **Enter**: Tap tags button → `showTagPanel(entry, tab)`
@@ -182,9 +197,9 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 - **Rows never bind the full text** (2026-10-26): every binding goes through
   `ClipboardPreviewPolicy.forRow` (collapsed / Select mode 300 chars, expanded 20,000). A TextView
   line-breaks ALL its text even with maxLines=1, so 0.5 MB entries froze the main thread ~50 s
-  per bind and a tap was an ANR. Paste/copy/search use `entry.content`; the inline editor (edit
-  button + `edit_entry`) is only for entries `isEditableInline`. Any new row text path must use
-  the preview too. Tests: `ClipboardPreviewPolicyTest`, `ClipboardLongEntryPreviewViewTest`.
+  per bind and a tap was an ANR. Paste/copy/search use `entry.content`; entries that are not
+  `isEditableInline` are edited a page at a time (below). Any new row text path must use the
+  preview too. Tests: `ClipboardPreviewPolicyTest`, `ClipboardLongEntryPreviewViewTest`.
 - States cleared on tab switch, page change, or filter change (`applyFilter(resetView=true)`)
 - States preserved on data reloads after pin/todo/delete actions (`applyFilter(resetView=false)`)
 
