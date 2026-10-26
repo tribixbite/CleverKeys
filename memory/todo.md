@@ -251,7 +251,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     and every named case, and cuts the failure class 3–37× (fresh HE-adj4 633→117 pairs, fresh S-adj2 567→183
     of 6,000 eligible each); 4 GTC distant misspellings (compatability, releated, thet, choise) are a
     channel cost already counted in round-2 TEST. No ranking change; seam stays OFF (it is a band-only
-    user setting now — deleting it is a maintainer UX call). Was: neighbour-substitution tiebreak — inside the ±0.10 score band a DISTANT
+    user setting now — deleting it is a maintainer UX call). 2026-10-26: setting, seam and eval DELETED (`2984b7da`; key in DEPRECATED_KEYS). Was: neighbour-substitution tiebreak — inside the ±0.10 score band a DISTANT
     one-letter substitution can beat a neighbour-key one on frequency (he תושה→עושה ת↔ע ≈4
     keys, over תודה ש↔ד; scores ≈0.89 vs 0.97). MEASURED 2026-10-12, NOT SHIPPED
     (`docs/eval/2026-10-12-neighbour-substitution-tiebreak.md`): "neighbour sub beats distant
