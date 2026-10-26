@@ -855,6 +855,9 @@ tasks.register('runPureTests', JavaExec) {
     // (slop, 2:1 ratio, 35 % / fling commit) and the deferred-delete state machine.
     'tribixbite.cleverkeys.clipboard.ClipboardSwipePolicyTest',
     'tribixbite.cleverkeys.clipboard.ClipboardPendingDeletionTest',
+    // Upgrade test 2026-10-25: v1.5.0 stored small images without a thumbnail; the startup
+    // repair pass regenerates missing thumbnails from the saved media file.
+    'tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepairTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',

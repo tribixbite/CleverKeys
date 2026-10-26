@@ -162,13 +162,24 @@ class UpgradeInstallVerifyTest {
         }
         c.check("history_media_small_image") {
             val e = historyOf(small.getString("name")).singleOrNull() ?: return@check "count=${historyOf(small.getString("name")).size}"
-            c.info(
-                "history_media_small_thumbnail",
-                "1.x stored thumbnail=${small.getBoolean("thumbnail")} (v1.5.0 bug, fixed in 2.0 by c1bf9530); " +
-                    "2.0 now has thumbnail=${e.thumbnailBlob != null}"
-            )
             if (e.mimeType == UpgradeFixture.MEDIA_MIME && e.mediaPath == small.getString("path")) null
             else "mime=${e.mimeType} path=${e.mediaPath}"
+        }
+        c.check("history_media_small_thumbnail") {
+            // v1.5.0 stored this ≤80 px image with thumbnail_blob NULL (its recycle bug, fixed for
+            // new copies by c1bf9530). 2.0's clipboard service regenerates missing thumbnails on
+            // IO at construction (ClipboardThumbnailRepair): start it the way the IME does and
+            // wait for the row. Before that pass existed the row stayed NULL for good.
+            ClipboardHistoryService.get_service(context)
+            val name = small.getString("name")
+            var e = historyOf(name).singleOrNull()
+            val deadline = System.currentTimeMillis() + 15_000
+            while (e?.thumbnailBlob == null && System.currentTimeMillis() < deadline) {
+                Thread.sleep(250)
+                e = db.getActiveClipboardEntries().singleOrNull { it.content == name }
+            }
+            c.info("history_media_small_thumbnail_1x", "1.x stored thumbnail=${small.getBoolean("thumbnail")}")
+            if (e?.thumbnailBlob != null) null else "no thumbnail 15 s after the clipboard service started"
         }
         c.check("media_files_bytes_intact") {
             val want = seed.getJSONObject("media_files")

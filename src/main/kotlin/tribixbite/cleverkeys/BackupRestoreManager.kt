@@ -1684,17 +1684,8 @@ open class BackupRestoreManager(
 
     /** Update thumbnail_blob for all rows referencing a given media_path across all tables */
     private fun updateThumbnailForMediaPath(db: ClipboardDatabase, mediaPath: String, thumbnail: ByteArray) {
-        try {
-            val sqliteDb = db.writableDatabase
-            val values = android.content.ContentValues().apply {
-                put("thumbnail_blob", thumbnail)
-            }
-            for (table in listOf("clipboard_entries", "pinned_entries", "todo_entries")) {
-                sqliteDb.update(table, values, "media_path = ?", arrayOf(mediaPath))
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to update thumbnail for $mediaPath: ${e.message}")
-        }
+        // Shared with the startup thumbnail repair; logs and swallows its own failures.
+        db.setThumbnailForMediaPath(mediaPath, thumbnail)
     }
 
     /**

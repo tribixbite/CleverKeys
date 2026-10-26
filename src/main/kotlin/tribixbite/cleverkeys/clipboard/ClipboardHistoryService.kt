@@ -24,6 +24,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCatchUp
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
+import tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepair
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import tribixbite.cleverkeys.clipboard.sanitize.systemClipboardRewrite
 import java.io.InputStreamReader
@@ -158,6 +159,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         serviceScope.launch(Dispatchers.IO) {
             val referencedPaths = _database.getAllReferencedMediaPaths()
             _mediaManager.cleanupOrphans(referencedPaths)
+            repairMissingThumbnails()
         }
 
         // Note: Listener registration is deferred to attemptToRegisterListener()
@@ -628,6 +630,34 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         }
         notifyHistoryChanged()
+    }
+
+    /**
+     * Regenerate thumbnails that media rows lack — every image of 80 px or less copied under
+     * v1.5.0 (see [ClipboardThumbnailRepair]). Runs on IO from the constructor; an open pane is
+     * told to reload when anything was stored, so the fallback icon is replaced in place.
+     */
+    private fun repairMissingThumbnails() {
+        try {
+            val missing = _database.getMediaPathsMissingThumbnail()
+            if (missing.isEmpty()) return
+            val outcome = ClipboardThumbnailRepair.repair(
+                missing = missing,
+                fileExists = { path ->
+                    try {
+                        _mediaManager.getMediaFile(path).isFile
+                    } catch (e: Exception) {
+                        false // a path outside the media dir (SecurityException) is never decoded
+                    }
+                },
+                generate = { path, mime -> _mediaManager.generateThumbnail(_mediaManager.getMediaFile(path).absolutePath, mime) },
+                store = { path, blob -> _database.setThumbnailForMediaPath(path, blob) },
+            )
+            android.util.Log.i("ClipboardHistory", "Thumbnail repair: $outcome of ${missing.size} media paths")
+            if (outcome.repaired > 0) notifyHistoryChanged()
+        } catch (e: Exception) {
+            android.util.Log.w("ClipboardHistory", "Thumbnail repair failed: ${e.message}")
+        }
     }
 
     fun setOnClipboardHistoryChange(l: OnClipboardHistoryChange?) {

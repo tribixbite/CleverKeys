@@ -1428,6 +1428,54 @@ class ClipboardDatabase private constructor(context: Context) :
         return paths
     }
 
+    /**
+     * Media rows that have a file but no thumbnail, as media_path → MIME type, across all three
+     * tables (a pinned or to-do COPY of a 1.x row carries the same NULL blob). Feeds the startup
+     * [tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepair] pass: v1.5.0 stored every image
+     * of 80 px or less without a thumbnail. Private rows are included — the thumbnail never
+     * leaves the database.
+     */
+    fun getMediaPathsMissingThumbnail(): Map<String, String> {
+        val missing = linkedMapOf<String, String>()
+        try {
+            val db = readableDatabase
+            for (table in listOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO)) {
+                db.rawQuery(
+                    "SELECT DISTINCT $COLUMN_MEDIA_PATH, $COLUMN_MIME_TYPE FROM $table " +
+                        "WHERE $COLUMN_MEDIA_PATH IS NOT NULL AND $COLUMN_THUMBNAIL_BLOB IS NULL",
+                    null
+                ).use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val path = cursor.getString(0) ?: continue
+                        val mime = cursor.getString(1) ?: continue
+                        missing.putIfAbsent(path, mime)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error collecting media rows without a thumbnail: ${e.message}")
+        }
+        return missing
+    }
+
+    /**
+     * Store [thumbnail] on every row (history, pinned, to-do) that references [mediaPath].
+     * Used by the startup thumbnail repair and by backup import's thumbnail regeneration.
+     * @return the number of rows updated (0 on failure).
+     */
+    fun setThumbnailForMediaPath(mediaPath: String, thumbnail: ByteArray): Int {
+        return try {
+            val db = writableDatabase
+            val values = ContentValues().apply { put(COLUMN_THUMBNAIL_BLOB, thumbnail) }
+            listOf(TABLE_CLIPBOARD, TABLE_PINNED, TABLE_TODO).sumOf { table ->
+                db.update(table, values, "$COLUMN_MEDIA_PATH = ?", arrayOf(mediaPath))
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to store thumbnail for $mediaPath: ${e.message}")
+            0
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // Tags CRUD (foundation — UI deferred to separate PR)
     // ═══════════════════════════════════════════════════════════════════
