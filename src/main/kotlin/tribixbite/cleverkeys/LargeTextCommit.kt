@@ -14,7 +14,8 @@ import android.view.inputmethod.InputConnection
  * IME-side `commitText` then returns false and nothing reaches the editor (Saga 2026-10-25;
  * 200,000 chars still fit).
  *
- * Text longer than [CHUNK_CHARS] is therefore sent as ordered chunks inside ONE batch edit:
+ * Text larger than [CHUNK_BUDGET_BYTES] on the wire is therefore sent as ordered chunks inside
+ * ONE batch edit:
  * - oneway calls from one thread to one binder node are delivered in order, so the chunks
  *   reassemble exactly;
  * - chunks end on code-point boundaries, never between the two halves of a surrogate pair
@@ -23,6 +24,14 @@ import android.view.inputmethod.InputConnection
  *   gone) was NOT delivered, so it is retried after a short pause ([RETRY_PAUSES_MS]) without
  *   breaking the order: the receiver frees its async space as soon as its binder thread has
  *   taken the earlier chunks. Only after the last retry is the paste reported incomplete.
+ *
+ * Chunks are bounded by their size on the wire, never by their char count, and fill that budget:
+ * a char count is up to 3 bytes per char in UTF-8, so it either wastes most of the budget on
+ * ASCII or risks the limit on 3-byte scripts. Fewer chunks also paste faster: Chrome re-lays out
+ * the whole textarea after each commit, so 260,000 chars of Hebrew took 54 s in 8 chunks of 32 Ki
+ * chars (Saga 2026-10-26). Chrome's own per-line handling of newlines dominates line-broken text
+ * (524,000 chars in 13,100 lines: ~350 s at any chunk size); no chunk size changes that.
+ * docs/eval/2026-10-26-large-paste-chunk-size.md has the measurements.
  *
  * No synchronous read is used as back-pressure between chunks: Chrome does not answer
  * `getTextBeforeCursor` inside a batch edit, so each such read blocked the keyboard's main
@@ -39,36 +48,60 @@ import android.view.inputmethod.InputConnection
 internal object LargeTextCommit {
 
     /**
-     * Chars per `commitText`: at most 96 KiB as UTF-8 (3 bytes per UTF-16 unit) or 64 KiB as
-     * UTF-16, well under the ~508 KiB async binder space even with other calls queued.
+     * Wire bytes per `commitText`, counted by [codePointWireBytes] on the larger of UTF-8
+     * (API 34+) and UTF-16 (older releases). Two chunks fit at once in the ~508 KiB async binder space, so the
+     * next chunk can be queued while the receiver still holds the previous one, with room left
+     * for the other oneway calls that share that space.
      */
-    const val CHUNK_CHARS: Int = 32 * 1024
+    const val CHUNK_BUDGET_BYTES: Int = 192 * 1024
 
     /** Pauses before each retry of a refused chunk: about 0.3 s in all, then give up. */
     val RETRY_PAUSES_MS: List<Long> = listOf(5L, 10L, 20L, 40L, 80L, 160L)
 
     /**
-     * End (exclusive) of the chunk that starts at [start]: at most [maxChars] chars, moved back
-     * by one when it would split a surrogate pair. Always > [start] while [start] < length.
+     * Wire size of the code point starting at [i] in [text] (2 UTF-16 units for a surrogate
+     * pair, else 1): a pair is 4 bytes in both encodings; any other unit is 2 bytes as UTF-16 and
+     * 1–3 as UTF-8 (a lone surrogate is replaced by a 3-byte character), so the larger is taken.
      */
-    fun chunkEnd(text: CharSequence, start: Int, maxChars: Int = CHUNK_CHARS): Int {
-        require(maxChars >= 2) { "a chunk must hold a surrogate pair" }
-        val end = minOf(text.length, start + maxChars)
-        return if (end < text.length && Character.isHighSurrogate(text[end - 1]) &&
-            Character.isLowSurrogate(text[end])
-        ) end - 1 else end
+    private fun codePointWireBytes(text: CharSequence, i: Int): Int {
+        val c = text[i]
+        if (Character.isHighSurrogate(c) && i + 1 < text.length && Character.isLowSurrogate(text[i + 1])) {
+            return PAIR_BYTES
+        }
+        return if (c.code < 0x800) UTF16_UNIT_BYTES else 3
     }
 
     /**
+     * End (exclusive) of the chunk that starts at [start]: as many whole code points as fit in
+     * [budgetBytes], never ending between the halves of a surrogate pair. Always > [start] while
+     * [start] < length.
+     */
+    fun chunkEnd(text: CharSequence, start: Int, budgetBytes: Int = CHUNK_BUDGET_BYTES): Int {
+        require(budgetBytes >= PAIR_BYTES) { "a chunk must hold a surrogate pair" }
+        var end = start
+        var bytes = 0
+        while (end < text.length) {
+            val size = codePointWireBytes(text, end)
+            if (bytes + size > budgetBytes) break
+            bytes += size
+            end += if (size == PAIR_BYTES) 2 else 1
+        }
+        return end
+    }
+
+    private const val PAIR_BYTES = 4
+    private const val UTF16_UNIT_BYTES = 2
+
+    /**
      * Commit [text] at the cursor of [conn] (cursor placed after it, like `commitText(text, 1)`),
-     * in one batch edit and in chunks of at most [maxChars] chars. A refused chunk is retried
+     * in one batch edit and in chunks of at most [budgetBytes] wire bytes. A refused chunk is retried
      * after each of [retryPausesMs] (spent by [pause]); returns false when it stays refused, and
      * nothing after it is sent.
      */
     fun commit(
         conn: InputConnection,
         text: CharSequence,
-        maxChars: Int = CHUNK_CHARS,
+        budgetBytes: Int = CHUNK_BUDGET_BYTES,
         retryPausesMs: List<Long> = RETRY_PAUSES_MS,
         pause: (Long) -> Unit = Thread::sleep,
     ): Boolean {
@@ -76,7 +109,7 @@ internal object LargeTextCommit {
         try {
             var start = 0
             do {
-                val end = chunkEnd(text, start, maxChars)
+                val end = chunkEnd(text, start, budgetBytes)
                 val chunk = text.subSequence(start, end)
                 if (!commitWithRetries(conn, chunk, retryPausesMs, pause)) return false
                 start = end

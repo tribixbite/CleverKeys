@@ -136,8 +136,9 @@ class ClipboardLargePasteTest {
         assertTrue("a large entry must be split, got ${commits.size} commit(s)", commits.size > 1)
         assertEquals("chunks must reassemble the entry exactly, in order", expected, commits.joinToString(""))
         for ((i, chunk) in commits.withIndex()) {
-            assertTrue("commit $i has ${chunk.length} chars; must stay well below the binder limit",
-                chunk.length <= MAX_SAFE_CHARS)
+            val wire = maxOf(chunk.toByteArray(Charsets.UTF_8).size, 2 * chunk.length)
+            assertTrue("commit $i is $wire bytes on the wire; must stay well below the binder limit",
+                wire <= MAX_SAFE_WIRE_BYTES)
             assertFalse("commit $i ends inside a surrogate pair", Character.isHighSurrogate(chunk.last()))
             assertFalse("commit $i starts inside a surrogate pair", Character.isLowSurrogate(chunk.first()))
         }
@@ -213,9 +214,9 @@ class ClipboardLargePasteTest {
 
     private companion object {
         /**
-         * Generous upper bound for one commit: 64 Ki chars is at most 192 KiB as UTF-8 (3 bytes
-         * per UTF-16 unit) or 128 KiB as UTF-16, well under half of a 1 MiB binder buffer.
+         * Upper bound for one commit on the wire (the larger of UTF-8 and UTF-16): two such
+         * commits fit at once in the ~508 KiB async binder space (half of a 1 MiB buffer).
          */
-        const val MAX_SAFE_CHARS = 64 * 1024
+        const val MAX_SAFE_WIRE_BYTES = 192 * 1024
     }
 }
