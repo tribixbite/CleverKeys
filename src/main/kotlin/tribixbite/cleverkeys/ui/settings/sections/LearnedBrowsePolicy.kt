@@ -51,6 +51,13 @@ internal object LearnedBrowsePolicy {
     }
 
     /**
+     * The rows to show: the first [visibleCount] of [matches]. Always computed from the same
+     * [matches] instance it slices, so it cannot index past the end of a list that shrank.
+     */
+    fun <T> page(matches: List<T>, pagesLoaded: Int): List<T> =
+        matches.subList(0, visibleCount(matches.size, pagesLoaded))
+
+    /**
      * The page count after the list reports [lastVisibleIndex] (-1 when nothing is laid out):
      * one more page when that row is within [PREFETCH_DISTANCE] of the end of the shown rows
      * and more matches remain; otherwise [pagesLoaded] unchanged.

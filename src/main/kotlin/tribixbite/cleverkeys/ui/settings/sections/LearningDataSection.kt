@@ -452,7 +452,6 @@ private fun <T> LearnedBrowserDialog(
                 rows == null -> Text(stringResource(R.string.learning_data_loading))
                 rows.isEmpty() -> Text(emptyText)
                 else -> {
-                    val shown = LearnedBrowsePolicy.visibleCount(matches.size, pages)
                     LazyColumn(state = listState, modifier = Modifier.heightIn(max = 400.dp)) {
                         item(key = KEY_SEARCH) {
                             OutlinedTextField(
@@ -498,7 +497,11 @@ private fun <T> LearnedBrowserDialog(
                                 )
                             }
                         }
-                        items(matches.subList(0, shown), key = rowKey) { row ->
+                        // Read matches and pages HERE, not in the enclosing lambda: the lazy
+                        // list re-runs this block on its own when either changes, and a page
+                        // size computed outside went stale (subList past a shrunken match list
+                        // crashed the process on the first keystroke, Pixel 2026-10-26).
+                        items(LearnedBrowsePolicy.page(matches, pages), key = rowKey) { row ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically

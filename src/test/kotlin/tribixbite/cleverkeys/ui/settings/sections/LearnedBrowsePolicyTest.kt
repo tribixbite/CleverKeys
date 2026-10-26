@@ -73,6 +73,17 @@ class LearnedBrowsePolicyTest {
     }
 
     @Test
+    fun `a page slices the list it is given, even after the matches shrank`() {
+        val many = (1..1_000).map { "w$it" }
+        assertThat(LearnedBrowsePolicy.page(many, 1)).isEqualTo(many.subList(0, PAGE_SIZE))
+        assertThat(LearnedBrowsePolicy.page(many, 2)).hasSize(2 * PAGE_SIZE)
+        // Pixel 2026-10-26: typing a query shrank 102 matches to 2 while two pages were loaded;
+        // a page size computed for the old list crashed with toIndex = 100.
+        assertThat(LearnedBrowsePolicy.page(listOf("hello", "help"), 2)).containsExactly("hello", "help").inOrder()
+        assertThat(LearnedBrowsePolicy.page(emptyList<String>(), 3)).isEmpty()
+    }
+
+    @Test
     fun `scrolling near the end of the shown rows loads the next page`() {
         val nearEnd = PAGE_SIZE - PREFETCH_DISTANCE
         assertThat(LearnedBrowsePolicy.pagesAfterScroll(nearEnd, matchCount = 1_000, pagesLoaded = 1)).isEqualTo(2)
