@@ -10,6 +10,7 @@ import android.widget.ScrollView
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.UiDevice
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -176,6 +177,57 @@ class ClipboardLongEntryEditTest {
             hosted.scenario.close()
         }
     }
+
+    /**
+     * Saga 2026-10-26 (release 5eefd162): in edit mode the trash button did nothing — five taps,
+     * the row stayed in edit mode — while save and cancel in the row above responded. Taps here
+     * are REAL touches at the button's screen centre (UiDevice), not performClick, so the whole
+     * dispatch path (pane ScrollView → list → row → button column) is exercised.
+     */
+    private fun tapCentreOf(id: Int, hosted: Hosted) {
+        val instr = InstrumentationRegistry.getInstrumentation()
+        var x = 0
+        var y = 0
+        instr.runOnMainSync {
+            val row = hosted.chv.getChildAt(0)
+            val button = row.findViewById<android.view.View>(id)
+            assertTrue("precondition: button ${context.resources.getResourceEntryName(id)} is shown", button.isShown)
+            val loc = IntArray(2).also { button.getLocationOnScreen(it) }
+            x = loc[0] + button.width / 2
+            y = loc[1] + button.height / 2
+        }
+        assertTrue(UiDevice.getInstance(instr).click(x, y))
+        settle()
+    }
+
+    private fun assertEditButtonEndsEditMode(id: Int, content: String) {
+        val entry = ClipboardEntry(content = content, timestamp = 1_700_000_000_000L)
+        val hosted = host(listOf(entry), ClipboardTab.HISTORY)
+        val instr = InstrumentationRegistry.getInstrumentation()
+        try {
+            instr.runOnMainSync { hosted.chv.edit_entry(0) }
+            settle()
+            var editing = false
+            instr.runOnMainSync { editing = hosted.chv.isEditing() }
+            assertTrue("precondition: edit mode", editing)
+            tapCentreOf(id, hosted)
+            instr.runOnMainSync { editing = hosted.chv.isEditing() }
+            assertFalse("a tap on ${context.resources.getResourceEntryName(id)} must leave edit mode", editing)
+        } finally {
+            hosted.scenario.close()
+        }
+    }
+
+    @Test
+    fun aTapOnCancelLeavesEditMode() = assertEditButtonEndsEditMode(R.id.clipboard_entry_cancel, "short entry")
+
+    @Test
+    fun aTapOnDeleteInTheEditorReachesTheButtonForAShortEntry() =
+        assertEditButtonEndsEditMode(R.id.clipboard_entry_delete, "short entry")
+
+    @Test
+    fun aTapOnDeleteInTheEditorReachesTheButtonForALongEntry() =
+        assertEditButtonEndsEditMode(R.id.clipboard_entry_delete, longEntry)
 
     private companion object {
         /** A short pane, as on a phone with the keyboard below it (~7 editor lines). */
