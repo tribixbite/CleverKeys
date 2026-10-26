@@ -2364,6 +2364,7 @@
     <string name="clipboard_delete_selected">選択項目を削除</string>
     <string name="clipboard_selection_exit">選択を終了</string>
     <string name="clipboard_select_entry_descr">クリップを選択: %1$s</string>
+    <string name="clipboard_entry_preview_truncated">%2$s 文字のうち最初の %1$s 文字を表示しています。貼り付けとコピーではクリップ全体が使われます。長すぎるため、ここでは編集できません。</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="other">選択した%1$d件のクリップを削除しますか？</item></plurals>
     <string name="clipboard_delete_selected_message">%1$sのコピーのみが削除され、他のタブのコピーは保持されます。合計クリップサイズ: %2$s。選択後に変更または削除されたクリップはスキップされます。この操作は取り消せません。</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">選択したクリップ%2$d件中%1$d件を削除しました。</item></plurals>

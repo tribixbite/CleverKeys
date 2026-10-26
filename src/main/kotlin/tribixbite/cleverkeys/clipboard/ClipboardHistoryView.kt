@@ -35,6 +35,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
+import tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipePolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipeTracker
 import tribixbite.cleverkeys.clipboard.ClipboardProvenance
@@ -877,8 +878,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun edit_entry(pos: Int) {
         if (pos < 0 || pos >= paginatedHistory.size) return
         val entry = paginatedHistory[pos]
-        // Media entries cannot be edited inline
-        if (entry.isMedia) return
+        // Media entries cannot be edited inline, nor entries too long to show whole (todo 22 a)
+        if (entry.isMedia || !ClipboardPreviewPolicy.isEditableInline(entry.content)) return
         // Edit mode locks the pane; a swiped row is deleted before it starts.
         commitPendingDeletion(ClipboardPendingDeletion.CommitReason.EDIT)
 
@@ -1728,7 +1729,10 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         selectBox.visibility = VISIBLE
         selectBox.isChecked = checked
         selectBox.contentDescription =
-            context.getString(R.string.clipboard_select_entry_descr, entry.content.take(SELECTION_LABEL_CHARS))
+            context.getString(
+                R.string.clipboard_select_entry_descr,
+                ClipboardPreviewPolicy.cut(entry.content, SELECTION_LABEL_CHARS, maxLines = 1).text
+            )
         runtimeColors?.label?.takeIf { it != 0 }?.let {
             selectBox.buttonTintList = android.content.res.ColorStateList.valueOf(it)
         }
@@ -1753,6 +1757,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         selectBox.setOnClickListener(null)
         textView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
         row.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+    }
+
+    /** "Showing the first N of M characters…" for an expanded row whose preview was cut. */
+    private fun truncationNote(content: String, preview: ClipboardPreviewPolicy.Preview): String {
+        val (shown, total) = ClipboardPreviewPolicy.codePointCounts(content, preview)
+        val numbers = java.text.NumberFormat.getIntegerInstance()
+        return context.getString(
+            R.string.clipboard_entry_preview_truncated, numbers.format(shown), numbers.format(total)
+        )
     }
 
     /** Translucent label colour (runtime theme aware) behind selected rows. */
@@ -1825,6 +1838,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // Bug #2 fix: match by content identity, not list position — survives list shifts
             val isEditingThis = editingOriginalContent != null && entry.content == editingOriginalContent
+
+            // Rows bind a bounded preview, never the full text (Saga 2026-10-26, todo 22 a):
+            // a TextView line-breaks ALL of its text even when it shows one ellipsized line, so
+            // ~0.5 MB entries blocked the main thread ~50 s per bind (pane open, Select mode)
+            // and a tap meanwhile was an ANR. Select mode always shows rows collapsed. Paste,
+            // copy and the editor still use entry.content.
+            val isExpanded = selection == null && expandedStates[entry.timestamp] == true
+            val preview = ClipboardPreviewPolicy.forRow(text, isExpanded)
+            val previewNote = if (isExpanded && preview.truncated) truncationNote(text, preview) else null
 
             // ── Edit mode: show EditText + save/cancel, hide normal UI ──
             if (isEditingThis) {
@@ -1980,7 +2002,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 playBadge.visibility = if (isAnimated) VISIBLE else GONE
 
                 // For media entries, show MIME label + filename instead of content body
-                textView.text = entry.getFormattedText(context)
+                textView.text = entry.getFormattedText(context, preview.text, previewNote)
             } else {
                 thumbnailContainer.visibility = GONE
                 playBadge.visibility = GONE
@@ -1988,42 +2010,24 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // ── Todo status visual indicator (prefix + strikethrough) ──
                 if (currentTab == ClipboardTab.TODOS && entry.todoStatus != null) {
                     val prefix = TodoEntry.statusPrefix(entry.todoStatus, context.resources)
-                    // Non-breaking spaces so time suffix never wraps mid-unit
-                    val timeStr = entry.metadataText(context)
-                    val spannable = android.text.SpannableStringBuilder(prefix + entry.content).append(timeStr)
-
-                    // Strikethrough the content portion (not prefix or timestamp) for completed
-                    if (entry.todoStatus == TodoEntry.STATUS_COMPLETED) {
-                        spannable.setSpan(
-                            android.text.style.StrikethroughSpan(),
-                            prefix.length,
-                            prefix.length + entry.content.length,
-                            android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    // Strikethrough on the shown text when completed; the metadata suffix and
+                    // any truncation note dimmed. #130: the effective sub-label color is the
+                    // runtime theme's value when one is active (the ?attr below resolves to the
+                    // base style for runtime themes), else the theme attr, else a system fallback.
+                    textView.text = entry.getFormattedTodoText(context, prefix, preview.text, previewNote) {
+                        val typed = android.util.TypedValue()
+                        context.theme.resolveAttribute(R.attr.colorSubLabel, typed, true)
+                        ClipboardPaneThemePolicy.effectiveColor(
+                            isRuntimeTheme = runtimeColors != null,
+                            runtimeColor = runtimeColors?.subLabel ?: 0,
+                            xmlResolved = typed.data.takeIf { it != 0 },
+                            fallback = androidx.core.content.ContextCompat.getColor(
+                                context, android.R.color.secondary_text_dark
+                            )
                         )
                     }
-                    // #130: Dim timestamp suffix using the effective sub-label color: the
-                    // runtime theme's value when one is active (the ?attr below resolves
-                    // to the base style for runtime themes), else the theme attr, else a
-                    // system fallback.
-                    val typed = android.util.TypedValue()
-                    context.theme.resolveAttribute(R.attr.colorSubLabel, typed, true)
-                    val subLabelColor = ClipboardPaneThemePolicy.effectiveColor(
-                        isRuntimeTheme = runtimeColors != null,
-                        runtimeColor = runtimeColors?.subLabel ?: 0,
-                        xmlResolved = typed.data.takeIf { it != 0 },
-                        fallback = androidx.core.content.ContextCompat.getColor(
-                            context, android.R.color.secondary_text_dark
-                        )
-                    )
-                    spannable.setSpan(
-                        android.text.style.ForegroundColorSpan(subLabelColor),
-                        prefix.length + entry.content.length,
-                        spannable.length,
-                        android.text.Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                    textView.text = spannable
                 } else {
-                    textView.text = entry.getFormattedText(context)
+                    textView.text = entry.getFormattedText(context, preview.text, previewNote)
                 }
             }
 
@@ -2043,7 +2047,6 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")
-            val isExpanded = expandedStates[entry.timestamp] == true
 
             // Set maxLines based on expanded state (applies to all entries)
             if (isExpanded) {
@@ -2064,8 +2067,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 expandButton.visibility = GONE
             }
 
-            // Show edit button for text entries only (media entries cannot be edited inline)
-            editButton.visibility = if (!entry.isMedia) VISIBLE else GONE
+            // Show edit button for text entries only (media entries cannot be edited inline),
+            // and only for entries the expanded row shows whole: the editor re-sets its whole
+            // text on every keystroke, so a huge entry is pasted or copied, not edited here.
+            editButton.visibility =
+                if (!entry.isMedia && ClipboardPreviewPolicy.isEditableInline(text)) VISIBLE else GONE
             editButton.setOnClickListener {
                 if (!isEditing()) edit_entry(pos)
             }

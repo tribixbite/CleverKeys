@@ -68,31 +68,70 @@ class ClipboardEntry(
         android.text.format.Formatter.formatShortFileSize(context, sizeBytes).replace(' ', '\u00A0')
 
     /**
-     * Get formatted text with timestamp appended.
-     * Uses SpannableStringBuilder to avoid intermediate String allocation —
-     * content is appended directly without concatenation copy.
+     * Row text: [shown] (the bounded preview of [content] a row binds, see
+     * `ClipboardPreviewPolicy`; never the full text of a huge entry) followed by the dimmed
+     * metadata suffix, and, when given, a dimmed [note] on its own line.
+     * Uses SpannableStringBuilder to avoid intermediate String allocation.
      * Color is cached to avoid repeated resource lookups.
      */
-    fun getFormattedText(context: Context): Spannable {
+    fun getFormattedText(context: Context, shown: String = content, note: String? = null): Spannable {
         // Use non-breaking spaces (\u00A0) so the time suffix never wraps mid-unit
         val timeStr = metadataText(context)
-        val contentLen = content.length
-
-        // Append directly to builder — avoids content + timeStr intermediate String
-        val spannable = SpannableStringBuilder(content).append(timeStr)
-
+        val spannable = SpannableStringBuilder(shown).append(timeStr)
         spannable.setSpan(
             ForegroundColorSpan(getSecondaryColor(context)),
-            contentLen,
-            contentLen + timeStr.length,
+            shown.length,
+            shown.length + timeStr.length,
             Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
         )
+        appendNote(spannable, note, getSecondaryColor(context))
+        return spannable
+    }
 
+    /**
+     * To-do row text: status [prefix], [shown] (struck through when completed), the metadata
+     * suffix and an optional [note], the suffix and note in [metaColor] (resolved by the caller
+     * from the active theme, only when this is built).
+     */
+    fun getFormattedTodoText(
+        context: Context,
+        prefix: String,
+        shown: String,
+        note: String?,
+        metaColor: () -> Int,
+    ): Spannable {
+        val timeStr = metadataText(context)
+        val spannable = SpannableStringBuilder(prefix).append(shown).append(timeStr)
+        val contentEnd = prefix.length + shown.length
+        if (todoStatus == TodoEntry.STATUS_COMPLETED) {
+            spannable.setSpan(
+                android.text.style.StrikethroughSpan(),
+                prefix.length,
+                contentEnd,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
+        val color = metaColor()
+        spannable.setSpan(
+            ForegroundColorSpan(color),
+            contentEnd,
+            spannable.length,
+            Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        appendNote(spannable, note, color)
         return spannable
     }
 
     companion object {
         const val MIME_TEXT_PLAIN = "text/plain"
+
+        /** Appends [note] on a new line in [color]; no-op for null. */
+        private fun appendNote(spannable: SpannableStringBuilder, note: String?, color: Int) {
+            if (note == null) return
+            val start = spannable.length
+            spannable.append('\n').append(note)
+            spannable.setSpan(ForegroundColorSpan(color), start, spannable.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
 
         // Built per call so the user's current default locale is honored even
         // after a runtime locale change (SimpleDateFormat is not thread-safe, so

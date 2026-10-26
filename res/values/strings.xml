@@ -2824,6 +2824,8 @@
     <string name="clipboard_selection_exit">Exit selection</string>
     <!-- TalkBack label of a row checkbox; %1$s = the start of the clipping text -->
     <string name="clipboard_select_entry_descr">Select clipping: %1$s</string>
+    <!-- Expanded clipboard row of a very long entry (todo 22 a, 2026-10-26): %1$s shown, %2$s total characters, both pre-formatted numbers. -->
+    <string name="clipboard_entry_preview_truncated">Showing the first %1$s of %2$s characters. Paste and copy use the whole clipping; it is too long to edit here.</string>
     <!-- %1$d = clippings that will be deleted -->
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Delete %1$d selected clipping?</item><item quantity="other">Delete %1$d selected clippings?</item></plurals>
     <!-- %1$s = tab name, %2$s = combined clipping size -->

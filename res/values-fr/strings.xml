@@ -2465,6 +2465,7 @@
     <string name="clipboard_delete_selected">Supprimer la sélection</string>
     <string name="clipboard_selection_exit">Quitter la sélection</string>
     <string name="clipboard_select_entry_descr">Sélectionner l\'élément : %1$s</string>
+    <string name="clipboard_entry_preview_truncated">Affichage des %1$s premiers caractères sur %2$s. Coller et copier utilisent l\'élément entier ; il est trop long pour être modifié ici.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Supprimer %1$d élément sélectionné ?</item><item quantity="many">Supprimer %1$d éléments sélectionnés ?</item><item quantity="other">Supprimer %1$d éléments sélectionnés ?</item></plurals>
     <string name="clipboard_delete_selected_message">Seules les copies dans %1$s sont supprimées ; les copies dans les autres onglets sont conservées. Taille cumulée : %2$s. Les éléments modifiés ou retirés depuis leur sélection sont ignorés. Action irréversible.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d sur %2$d élément sélectionné supprimé.</item><item quantity="many">%1$d sur %2$d éléments sélectionnés supprimés.</item><item quantity="other">%1$d sur %2$d éléments sélectionnés supprimés.</item></plurals>

@@ -2448,6 +2448,7 @@
     <string name="clipboard_delete_selected">حذف موارد انتخاب‌شده</string>
     <string name="clipboard_selection_exit">خروج از انتخاب</string>
     <string name="clipboard_select_entry_descr">انتخاب بریده: %1$s</string>
+    <string name="clipboard_entry_preview_truncated">نمایش %1$s نویسهٔ نخست از %2$s نویسه. چسباندن و کپی از کل بریده استفاده می‌کنند؛ این بریده برای ویرایش در اینجا بیش از حد طولانی است.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d بریده انتخاب‌شده حذف شود؟</item><item quantity="other">%1$d بریده انتخاب‌شده حذف شود؟</item></plurals>
     <string name="clipboard_delete_selected_message">فقط نسخه‌های موجود در %1$s حذف می‌شوند؛ نسخه‌های سایر تب‌ها باقی می‌مانند. مجموع حجم بریده‌ها: %2$s. بریده‌هایی که پس از انتخاب تغییر کرده یا حذف شده‌اند نادیده گرفته می‌شوند. این عمل غیرقابل‌بازگشت است.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item><item quantity="other">%1$d از %2$d بریده انتخاب‌شده حذف شد.</item></plurals>

@@ -2466,6 +2466,7 @@
     <string name="clipboard_delete_selected">Dzēst atlasītos</string>
     <string name="clipboard_selection_exit">Iziet no atlases</string>
     <string name="clipboard_select_entry_descr">Atlasīt klipu: %1$s</string>
+    <string name="clipboard_entry_preview_truncated">Rādītas pirmās %1$s no %2$s rakstzīmēm. Ielīmēšana un kopēšana izmanto visu klipu; tas ir pārāk garš, lai to rediģētu šeit.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="zero">Vai dzēst %1$d atlasīto klipu?</item><item quantity="one">Vai dzēst %1$d atlasīto klipu?</item><item quantity="other">Vai dzēst %1$d atlasītos klipus?</item></plurals>
     <string name="clipboard_delete_selected_message">Tiek dzēstas tikai kopijas no %1$s; kopijas citās cilnēs paliek. Kopējais klipu lielums: %2$s. Klipi, kas mainīti vai noņemti pēc to atlasīšanas, tiek izlaisti. Šo darbību nevar atsaukt.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="zero">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item><item quantity="one">Izdzēsti: %1$d no %2$d atlasītā klipa.</item><item quantity="other">Izdzēsti: %1$d no %2$d atlasītajiem klipiem.</item></plurals>

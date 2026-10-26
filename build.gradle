@@ -855,6 +855,8 @@ tasks.register('runPureTests', JavaExec) {
     // (slop, 2:1 ratio, 35 % / fling commit) and the deferred-delete state machine.
     'tribixbite.cleverkeys.clipboard.ClipboardSwipePolicyTest',
     'tribixbite.cleverkeys.clipboard.ClipboardPendingDeletionTest',
+    // Saga 2026-10-26 (todo 22 a): rows bind a bounded, code-point-safe preview of huge entries.
+    'tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicyTest',
     // Upgrade test 2026-10-25: v1.5.0 stored small images without a thumbnail; the startup
     // repair pass regenerates missing thumbnails from the saved media file.
     'tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepairTest',
@@ -1381,6 +1383,9 @@ tasks.register('runMockTests', JavaExec) {
     // service delete and every view/manager commit trigger.
     'tribixbite.cleverkeys.clipboard.ClipboardSwipeDeleteViewTest',
     'tribixbite.cleverkeys.clipboard.ClipboardSwipeDeleteManagerTest',
+    // Saga 2026-10-26 (todo 22 a): every row binding (collapsed, expanded, Select, To-dos) binds
+    // a bounded preview, and the inline editor is not offered for entries too long to show.
+    'tribixbite.cleverkeys.clipboard.ClipboardLongEntryPreviewViewTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
     // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads

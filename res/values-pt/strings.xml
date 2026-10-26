@@ -2455,6 +2455,7 @@
     <string name="clipboard_delete_selected">Excluir selecionados</string>
     <string name="clipboard_selection_exit">Sair da seleção</string>
     <string name="clipboard_select_entry_descr">Selecionar recorte: %1$s</string>
+    <string name="clipboard_entry_preview_truncated">Mostrando os primeiros %1$s de %2$s caracteres. Colar e copiar usam o recorte inteiro; ele é longo demais para editar aqui.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Excluir %1$d recorte selecionado?</item><item quantity="many">Excluir %1$d recortes selecionados?</item><item quantity="other">Excluir %1$d recortes selecionados?</item></plurals>
     <string name="clipboard_delete_selected_message">Somente as cópias em %1$s são excluídas; cópias em outras abas permanecem. Tamanho combinado dos recortes: %2$s. Recortes alterados ou removidos depois de selecionados são ignorados. Esta ação não pode ser desfeita.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Excluídos: %1$d de %2$d recorte selecionado.</item><item quantity="many">Excluídos: %1$d de %2$d recortes selecionados.</item><item quantity="other">Excluídos: %1$d de %2$d recortes selecionados.</item></plurals>

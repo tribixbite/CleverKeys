@@ -2377,6 +2377,7 @@
     <string name="clipboard_delete_selected">Hapus yang dipilih</string>
     <string name="clipboard_selection_exit">Keluar dari pemilihan</string>
     <string name="clipboard_select_entry_descr">Pilih klip: %1$s</string>
+    <string name="clipboard_entry_preview_truncated">Menampilkan %1$s karakter pertama dari %2$s. Tempel dan salin memakai seluruh klip; klip ini terlalu panjang untuk diedit di sini.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="other">Hapus %1$d klip yang dipilih?</item></plurals>
     <string name="clipboard_delete_selected_message">Hanya salinan di %1$s yang dihapus; salinan di tab lain tetap tersimpan. Total ukuran klip: %2$s. Klip yang diubah atau dihapus sejak Anda memilihnya akan dilewati. Tindakan ini tidak dapat diurungkan.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">Berhasil menghapus %1$d dari %2$d klip yang dipilih.</item></plurals>
