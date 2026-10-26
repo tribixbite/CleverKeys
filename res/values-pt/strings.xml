@@ -1180,11 +1180,6 @@
     <string name="autocorrect_band_gap_desc">Palavras cujas pontuações diferem menos que este valor contam como empate, e a mais comum vence. Um valor maior deixa a frequência prevalecer sobre mais erros.</string>
     <string name="autocorrect_transposition_penalty_title">Penalidade por letras trocadas</string>
     <string name="autocorrect_transposition_penalty_desc">Pontuação perdida por uma palavra obtida trocando duas letras vizinhas (teh → the), dividida pelo comprimento da palavra</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Desempate por tecla vizinha</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Num empate, preferir a palavra cujas letras erradas ficam ao lado das teclas pressionadas. Desativado por padrão: nos testes, corrigiu menos erros reais do que estragou.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Desativado</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Só com uma letra errada</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Com qualquer número de letras erradas</string>
     <string name="autocorrect_dropped_double_title">Restaurar letra dupla omitida</string>
     <string name="autocorrect_dropped_double_desc">Corrigir uma letra dupla digitada uma só vez (helo → hello), mesmo quando outra correção é uma palavra mais comum</string>
     <string name="autocorrect_dropped_double_margin_title">Margem de frequência para letras duplas</string>

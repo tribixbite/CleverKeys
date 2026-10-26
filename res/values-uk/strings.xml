@@ -1194,11 +1194,6 @@
     <string name="autocorrect_band_gap_desc">Слова, оцінки яких різняться менше ніж на це значення, вважаються рівними, і перемагає частіше. Більше значення дає частоті переважити більше помилок.</string>
     <string name="autocorrect_transposition_penalty_title">Штраф за переставлені літери</string>
     <string name="autocorrect_transposition_penalty_desc">Скільки оцінки втрачає слово, отримане перестановкою двох сусідніх літер (teh → the), поділене на довжину слова</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Вибір за сусідньою клавішею</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">За рівності віддавати перевагу слову, хибні літери якого розташовані поруч із натиснутими клавішами. Типово вимкнено: у тестах воно виправляло менше справжніх помилок, ніж псувало.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Вимк.</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Лише за однієї хибної літери</string>
-    <string name="autocorrect_neighbour_tiebreak_na">За будь-якої кількості хибних літер</string>
     <string name="autocorrect_dropped_double_title">Відновлювати подвоєну літеру</string>
     <string name="autocorrect_dropped_double_desc">Виправляти подвоєну літеру, набрану один раз (helo → hello), навіть якщо інше виправлення — частіше слово</string>
     <string name="autocorrect_dropped_double_margin_title">Запас частоти для подвоєних літер</string>

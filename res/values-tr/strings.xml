@@ -1188,11 +1188,6 @@
     <string name="autocorrect_band_gap_desc">Puanları bu değerden daha az farklı olan kelimeler berabere sayılır ve daha yaygın olan kazanır. Daha büyük değer, sıklığın daha fazla hatayı geçersiz kılmasına izin verir.</string>
     <string name="autocorrect_transposition_penalty_title">Yer değiştiren harf cezası</string>
     <string name="autocorrect_transposition_penalty_desc">İki komşu harfin yer değiştirmesiyle elde edilen kelimenin kaybettiği puan (teh → the), kelime uzunluğuna bölünür</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Komşu tuşla eşitlik bozma</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Beraberlikte, yanlış harfleri basılan tuşların yanında olan kelimeyi tercih et. Varsayılan olarak kapalı: testlerde bozduğundan daha az gerçek yazım hatası düzeltti.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Kapalı</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Yalnızca tek yanlış harfte</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Herhangi sayıda yanlış harfte</string>
     <string name="autocorrect_dropped_double_title">Eksik çift harfi geri getir</string>
     <string name="autocorrect_dropped_double_desc">Bir kez yazılmış çift harfi düzelt (helo → hello); başka bir düzeltme daha yaygın bir kelime olsa bile</string>
     <string name="autocorrect_dropped_double_margin_title">Çift harf sıklık payı</string>

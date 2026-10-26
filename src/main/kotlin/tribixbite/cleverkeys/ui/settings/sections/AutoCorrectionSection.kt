@@ -16,12 +16,10 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import java.util.Locale
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
-import tribixbite.cleverkeys.WordPredictor.NeighbourTiebreak
 import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
 import tribixbite.cleverkeys.autocorrect.ShortDeletionScope
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
@@ -418,26 +416,6 @@ private fun SettingsActivity.BandRankingControls(tuning: AutocorrectTuning) {
             saveSetting(Keys.TRANSPOSITION_PENALTY.key, v)
         },
         displayValue = sliders.TRANSPOSITION_PENALTY.format(tuning.transpositionPenalty)
-    )
-
-    // Option order = NeighbourTiebreak.entries order (OFF, N1, NA); stored as the lowercase name.
-    val tiebreakLabels = NeighbourTiebreak.entries.map { variant ->
-        when (variant) {
-            NeighbourTiebreak.OFF -> stringResource(R.string.autocorrect_neighbour_tiebreak_off)
-            NeighbourTiebreak.N1 -> stringResource(R.string.autocorrect_neighbour_tiebreak_n1)
-            NeighbourTiebreak.NA -> stringResource(R.string.autocorrect_neighbour_tiebreak_na)
-        }
-    }
-    SettingsDropdown(
-        title = stringResource(R.string.autocorrect_neighbour_tiebreak_title),
-        description = stringResource(R.string.autocorrect_neighbour_tiebreak_desc),
-        options = tiebreakLabels,
-        selectedIndex = NeighbourTiebreak.entries.indexOf(tuning.neighbourTiebreak),
-        onSelectionChange = { index ->
-            val variant = NeighbourTiebreak.entries[index]
-            autocorrectTuning = tuning.copy(neighbourTiebreak = variant)
-            saveSetting(Keys.NEIGHBOUR_TIEBREAK.key, variant.name.lowercase(Locale.ROOT))
-        }
     )
 
     SettingsSwitch(

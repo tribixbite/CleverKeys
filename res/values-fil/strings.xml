@@ -1189,11 +1189,6 @@
     <string name="autocorrect_band_gap_desc">Ang mga salitang may iskor na nagkakaiba nang mas mababa rito ay itinuturing na tabla, at nananalo ang mas karaniwan. Kapag mas malaki, mas maraming mali ang matatalo ng dalas.</string>
     <string name="autocorrect_transposition_penalty_title">Bawas sa nagpalit na titik</string>
     <string name="autocorrect_transposition_penalty_desc">Iskor na nawawala sa salitang nakukuha sa pagpapalit ng dalawang magkatabing titik (teh → the), hinati sa haba ng salita</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Pagpapasya sa katabing key</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Kapag tabla, piliin ang salitang ang maling titik ay katabi ng mga key na pinindot. Naka-off bilang default: sa mga pagsubok, mas kaunti ang naayos nitong totoong typo kaysa sa nasira.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Naka-off</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Sa isang maling titik lang</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Sa anumang bilang ng maling titik</string>
     <string name="autocorrect_dropped_double_title">Ibalik ang nawawalang dobleng titik</string>
     <string name="autocorrect_dropped_double_desc">Itama ang dobleng titik na isang beses lang na-type (helo → hello), kahit mas karaniwang salita ang ibang pagwawasto</string>
     <string name="autocorrect_dropped_double_margin_title">Palugit sa dalas ng dobleng titik</string>

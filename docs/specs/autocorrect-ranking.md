@@ -124,16 +124,16 @@ Then, in `WordPredictor`'s channel decision:
 
 Candidates are kept pairwise on raw score. One more than `bandGap` better wins outright;
 inside the band: alias-vs-alias by raw score; alias privilege at equal-or-better score; one
-Damerau swap beats two independent substitutions; the optional neighbour-key tiebreak
-(`autocorrect_neighbour_tiebreak` `off` / `n1` / `na`, default `off`, evaluated and kept off on
-2026-10-12); then **frequency**; then score as the deterministic tiebreak.
+Damerau swap beats two independent substitutions; then **frequency**; then score as the
+deterministic tiebreak. (A neighbour-key rule, `autocorrect_neighbour_tiebreak`, was evaluated
+and kept off on 2026-10-12; the setting and the rule were deleted on 2026-10-26, and old
+backups carrying the key hit `SettingsValidation.DEPRECATED_KEYS`.)
 
 | Setting | Pref key | Default | Range |
 |---------|----------|---------|-------|
 | band gap | `autocorrect_band_gap` | 0.10 (`SCORE_TIEBREAK_GAP`) | 0..0.3 |
 | transposition penalty | `autocorrect_transposition_penalty` | 0.15 | 0..0.5 |
 | DD-M enabled / margin | `autocorrect_dropped_double_enabled` / `autocorrect_dropped_double_margin` | true / 64 steps | — / 0..128 |
-| neighbour tiebreak | `autocorrect_neighbour_tiebreak` | `off` | `off`, `n1`, `na` |
 
 Why it lost (eval §0): one neighbour slip costs ≈0.02 of raw score on a six-letter word, so
 0, 1 or 2 nearby errors are a tie inside the 0.10 band and a 4-rank frequency difference beat
@@ -206,7 +206,8 @@ the Persian word list in `docs/eval/2026-10-23-fa-wordlist.md`.
   `AutocorrectContextGuardTest`, `SpaceCommitPreviewTest`, `FuzzyPrefixMatcherTest`,
   `HebrewLayoutAutoCorrectTest`, `AutoCorrectEndToEndTest`; `AutocorrectTuningSlidersTest`
   pins that every default and every grid value is an exact slider position. The evals
-  (`ChannelRankingEval`, `DroppedDoubleMarginEval`, `NeighbourTiebreakEval`) run under
+  (`ChannelRankingEval`, `DroppedDoubleMarginEval`; `NeighbourTiebreakEval` was deleted with the
+  neighbour rule on 2026-10-26) run under
   `runMockTests` with `CK_CH_PHASE`, from a separate worktree — they hold the device-wide
   Gradle lock for hours.
 

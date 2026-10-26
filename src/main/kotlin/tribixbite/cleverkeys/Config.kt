@@ -245,8 +245,6 @@ object Defaults {
     const val AUTOCORRECT_MIN_EXACT_RATIO = WordPredictor.MIN_SAME_LENGTH_EXACT_RATIO
     const val AUTOCORRECT_MAX_SUBSTITUTIONS = WordPredictor.MAX_SAME_LENGTH_SUBSTITUTIONS
     const val AUTOCORRECT_LENGTH_EDIT_BUDGET = WordPredictor.LENGTH_DIFF_ED_BUDGET
-    /** `off`, `n1` or `na` — see `WordPredictor.NeighbourTiebreak`. */
-    const val AUTOCORRECT_NEIGHBOUR_TIEBREAK = "off"
     const val AUTOCORRECT_DROPPED_DOUBLE_ENABLED = true
     const val AUTOCORRECT_DROPPED_DOUBLE_MARGIN = WordPredictor.DROPPED_DOUBLE_MARGIN_STEPS
     const val AUTOCORRECT_ELONGATION_COLLAPSE_ENABLED = true

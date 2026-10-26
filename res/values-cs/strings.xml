@@ -1183,11 +1183,6 @@
     <string name="autocorrect_band_gap_desc">Slova, jejichž skóre se liší méně než o tuto hodnotu, se berou jako shoda a vyhrává častější slovo. Vyšší hodnota nechá četnost přebít více chyb.</string>
     <string name="autocorrect_transposition_penalty_title">Penalizace za prohozená písmena</string>
     <string name="autocorrect_transposition_penalty_desc">Skóre, které ztratí slovo vzniklé prohozením dvou sousedních písmen (teh → the), vydělené délkou slova</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Rozhodnutí podle sousední klávesy</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Při shodě upřednostnit slovo, jehož chybná písmena leží vedle stisknutých kláves. Ve výchozím stavu vypnuto: v testech opravilo méně skutečných překlepů, než kolik jich pokazilo.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Vypnuto</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Jen při jednom chybném písmenu</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Při libovolném počtu chybných písmen</string>
     <string name="autocorrect_dropped_double_title">Doplnit chybějící zdvojené písmeno</string>
     <string name="autocorrect_dropped_double_desc">Opravit zdvojené písmeno napsané jen jednou (helo → hello), i když jiná oprava je častější slovo</string>
     <string name="autocorrect_dropped_double_margin_title">Rezerva četnosti pro zdvojená písmena</string>

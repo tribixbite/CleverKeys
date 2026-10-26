@@ -1177,11 +1177,6 @@
     <string name="autocorrect_band_gap_desc">Woorden waarvan de scores minder dan deze waarde verschillen, gelden als gelijk en het vaakst gebruikte woord wint. Groter laat frequentie meer fouten overstemmen.</string>
     <string name="autocorrect_transposition_penalty_title">Straf voor verwisselde letters</string>
     <string name="autocorrect_transposition_penalty_desc">Score die een woord verliest als twee naast elkaar liggende letters zijn verwisseld (teh → the), gedeeld door de woordlengte</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Beslissing via buurtoets</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Bij gelijkspel het woord kiezen waarvan de foute letters naast de ingedrukte toetsen liggen. Standaard uit: in tests verhielp het minder echte typefouten dan het veroorzaakte.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Uit</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Alleen bij één foute letter</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Bij elk aantal foute letters</string>
     <string name="autocorrect_dropped_double_title">Ontbrekende dubbele letter herstellen</string>
     <string name="autocorrect_dropped_double_desc">Een dubbele letter die maar één keer is getypt corrigeren (helo → hello), ook als een andere correctie een vaker gebruikt woord is</string>
     <string name="autocorrect_dropped_double_margin_title">Frequentiemarge voor dubbele letters</string>

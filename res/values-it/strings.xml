@@ -1220,11 +1220,6 @@
     <string name="autocorrect_band_gap_desc">Le parole i cui punteggi differiscono meno di questo valore sono a pari merito e vince la più comune. Un valore più alto lascia prevalere la frequenza su più errori.</string>
     <string name="autocorrect_transposition_penalty_title">Penalità per lettere scambiate</string>
     <string name="autocorrect_transposition_penalty_desc">Punteggio perso da una parola ottenuta scambiando due lettere vicine (teh → the), diviso per la lunghezza della parola</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Spareggio per tasto vicino</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">A parità, preferisci la parola le cui lettere sbagliate sono accanto ai tasti premuti. Disattivato per impostazione predefinita: nei test ha corretto meno errori reali di quanti ne abbia introdotti.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Disattivato</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Solo con una lettera sbagliata</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Con qualsiasi numero di lettere sbagliate</string>
     <string name="autocorrect_dropped_double_title">Ripristina doppia mancante</string>
     <string name="autocorrect_dropped_double_desc">Correggi una lettera doppia digitata una sola volta (helo → hello) anche quando un\'altra correzione è una parola più comune</string>
     <string name="autocorrect_dropped_double_margin_title">Margine di frequenza per le doppie</string>

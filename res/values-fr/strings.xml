@@ -1190,11 +1190,6 @@
     <string name="autocorrect_band_gap_desc">Les mots dont les scores diffèrent de moins que cette valeur sont à égalité, et le mot le plus courant l\'emporte. Plus grand laisse la fréquence l\'emporter sur davantage d\'erreurs.</string>
     <string name="autocorrect_transposition_penalty_title">Pénalité pour lettres inversées</string>
     <string name="autocorrect_transposition_penalty_desc">Score perdu par un mot obtenu en inversant deux lettres voisines (teh → the), divisé par la longueur du mot</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Départage par touche voisine</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">En cas d\'égalité, préférer le mot dont les lettres fausses sont voisines des touches pressées. Désactivé par défaut : lors des tests, il a corrigé moins de vraies fautes qu\'il n\'en a introduit.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Désactivé</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Pour une seule lettre fausse</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Pour n\'importe quel nombre de lettres fausses</string>
     <string name="autocorrect_dropped_double_title">Rétablir la lettre double manquante</string>
     <string name="autocorrect_dropped_double_desc">Corriger une lettre double tapée une seule fois (helo → hello), même si une autre correction est un mot plus courant</string>
     <string name="autocorrect_dropped_double_margin_title">Marge de fréquence des lettres doubles</string>

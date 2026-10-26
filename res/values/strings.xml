@@ -1586,11 +1586,6 @@
     <string name="autocorrect_band_gap_desc">Words whose match scores differ by less than this count as a tie, and the more common word wins. Larger lets frequency override more errors.</string>
     <string name="autocorrect_transposition_penalty_title">Swapped Letters Penalty</string>
     <string name="autocorrect_transposition_penalty_desc">Score lost by a word reached by swapping two neighbouring letters (teh → the), divided by the word length</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Neighbour-Key Tiebreak</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">In a tie, prefer the word whose wrong letters are next to the keys you pressed. Off by default: in testing it fixed fewer real typos than it broke.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Off</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Only for one wrong letter</string>
-    <string name="autocorrect_neighbour_tiebreak_na">For any number of wrong letters</string>
     <string name="autocorrect_dropped_double_title">Restore Missing Double Letter</string>
     <string name="autocorrect_dropped_double_desc">Correct a double letter typed once (helo → hello) even when another correction is a more common word</string>
     <string name="autocorrect_dropped_double_margin_title">Double-Letter Frequency Margin</string>

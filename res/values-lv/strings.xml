@@ -1191,11 +1191,6 @@
     <string name="autocorrect_band_gap_desc">Vārdi, kuru rezultāti atšķiras mazāk par šo vērtību, tiek uzskatīti par līdzvērtīgiem, un uzvar biežākais. Lielāka vērtība ļauj biežumam pārspēt vairāk kļūdu.</string>
     <string name="autocorrect_transposition_penalty_title">Sods par samainītiem burtiem</string>
     <string name="autocorrect_transposition_penalty_desc">Rezultāts, ko zaudē vārds, kas iegūts, samainot divus blakus burtus (teh → the), dalīts ar vārda garumu</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Izšķiršana pēc blakus taustiņa</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Līdzvērtības gadījumā dot priekšroku vārdam, kura kļūdainie burti ir blakus nospiestajiem taustiņiem. Pēc noklusējuma izslēgts: testos tas izlaboja mazāk īstu kļūdu, nekā sabojāja.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Izslēgts</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Tikai ar vienu kļūdainu burtu</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Ar jebkuru kļūdainu burtu skaitu</string>
     <string name="autocorrect_dropped_double_title">Atjaunot trūkstošu dubulto burtu</string>
     <string name="autocorrect_dropped_double_desc">Labot dubulto burtu, kas uzrakstīts tikai vienreiz (helo → hello), pat ja cits labojums ir biežāks vārds</string>
     <string name="autocorrect_dropped_double_margin_title">Dubulto burtu biežuma rezerve</string>

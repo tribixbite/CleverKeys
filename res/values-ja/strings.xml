@@ -1173,11 +1173,6 @@
     <string name="autocorrect_band_gap_desc">スコアの差がこの値未満の単語は同点とみなし、より一般的な単語を選びます。大きくすると、頻度がより多くの誤りを上回ります。</string>
     <string name="autocorrect_transposition_penalty_title">入れ替わり文字のペナルティ</string>
     <string name="autocorrect_transposition_penalty_desc">隣り合う2文字を入れ替えて得られる単語が失うスコア（teh → the）を単語の長さで割った値</string>
-    <string name="autocorrect_neighbour_tiebreak_title">隣接キーによる同点判定</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">同点のとき、誤った文字が押したキーの隣にある単語を優先します。既定ではオフ：テストでは、直した実際の入力ミスより悪化させたものの方が多かったためです。</string>
-    <string name="autocorrect_neighbour_tiebreak_off">オフ</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">誤りが1文字のときのみ</string>
-    <string name="autocorrect_neighbour_tiebreak_na">誤りが何文字でも</string>
     <string name="autocorrect_dropped_double_title">抜けた重ね文字を補う</string>
     <string name="autocorrect_dropped_double_desc">1回しか入力されなかった重ね文字を修正します（helo → hello）。別の候補の方が一般的な単語でも適用します</string>
     <string name="autocorrect_dropped_double_margin_title">重ね文字の頻度の余裕</string>

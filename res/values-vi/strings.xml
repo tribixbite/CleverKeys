@@ -1202,11 +1202,6 @@
     <string name="autocorrect_band_gap_desc">Các từ có điểm chênh nhau ít hơn giá trị này được xem là ngang nhau, và từ phổ biến hơn sẽ thắng. Giá trị lớn hơn cho phép tần suất lấn át nhiều lỗi hơn.</string>
     <string name="autocorrect_transposition_penalty_title">Điểm trừ khi đảo chữ</string>
     <string name="autocorrect_transposition_penalty_desc">Số điểm mà từ có được bằng cách đảo hai chữ cạnh nhau bị mất (teh → the), chia cho độ dài từ</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Phân định bằng phím kề</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Khi ngang nhau, ưu tiên từ có chữ sai nằm cạnh các phím đã nhấn. Mặc định tắt: trong thử nghiệm, nó sửa được ít lỗi gõ thật hơn số lỗi nó gây ra.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Tắt</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Chỉ khi sai một chữ</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Khi sai bao nhiêu chữ cũng được</string>
     <string name="autocorrect_dropped_double_title">Khôi phục chữ đôi bị thiếu</string>
     <string name="autocorrect_dropped_double_desc">Sửa chữ đôi chỉ gõ một lần (helo → hello), kể cả khi một cách sửa khác là từ phổ biến hơn</string>
     <string name="autocorrect_dropped_double_margin_title">Biên tần suất cho chữ đôi</string>

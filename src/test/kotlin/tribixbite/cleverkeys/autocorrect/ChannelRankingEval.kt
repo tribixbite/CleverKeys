@@ -1392,7 +1392,7 @@ class ChannelRankingEval {
             rowsOf(name, pairs, band, dflt)
         }
         say("NEIGHBOUR-SUBSTITUTION RE-MEASURE (todo 13), default ranking=${AutocorrectTuning.DEFAULT.ranking} " +
-            "channel=${AutocorrectTuning.DEFAULT.channel} neighbourTiebreak=${AutocorrectTuning.DEFAULT.neighbourTiebreak}")
+            "channel=${AutocorrectTuning.DEFAULT.channel}")
 
         if ("named" in sets) {
             KeyAdjacency.setLayoutLetters(emptyMap())

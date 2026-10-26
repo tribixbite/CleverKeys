@@ -190,6 +190,11 @@ object SettingsValidation {
         // now reads/writes number_entry_layout directly; migrate still consults this key
         // for legacy first-launch seeding, but it must not round-trip through backups.
         "pin_entry_enabled",
+        // 2026-10-26: the band ranking's "Neighbour-Key Tiebreak" dropdown (off / n1 / na,
+        // default off, failed its DEV gate — docs/eval/2026-10-12-neighbour-substitution-
+        // tiebreak.md). Deleted with its rule; the default channel ranking makes it unnecessary.
+        // 2.0-dev backups (settings since 2026-10-18) may carry it.
+        "autocorrect_neighbour_tiebreak",
     )
 
     /**
@@ -477,7 +482,7 @@ object SettingsValidation {
         }
 
         val ok = when (key) {
-            // Autocorrect ranking / neighbour tiebreak: one of the key's stored values exactly.
+            // Autocorrect ranking / short-deletion scope: one of the key's stored values exactly.
             in TUNING_STRINGS -> value in TUNING_STRINGS.getValue(key).values
 
             // Theme values - relaxed validation for forward compatibility

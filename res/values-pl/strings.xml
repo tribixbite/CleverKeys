@@ -1193,11 +1193,6 @@
     <string name="autocorrect_band_gap_desc">Słowa, których wyniki różnią się o mniej niż ta wartość, traktowane są jako remis i wygrywa częstsze. Większa wartość pozwala częstości przeważyć więcej błędów.</string>
     <string name="autocorrect_transposition_penalty_title">Kara za zamienione litery</string>
     <string name="autocorrect_transposition_penalty_desc">Wynik tracony przez słowo powstałe z zamiany dwóch sąsiednich liter (teh → the), podzielony przez długość słowa</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Rozstrzyganie sąsiednim klawiszem</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Przy remisie preferuj słowo, którego błędne litery leżą obok naciśniętych klawiszy. Domyślnie wyłączone: w testach naprawiało mniej prawdziwych literówek, niż psuło.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Wyłączone</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Tylko przy jednej błędnej literze</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Przy dowolnej liczbie błędnych liter</string>
     <string name="autocorrect_dropped_double_title">Przywracaj brakującą podwójną literę</string>
     <string name="autocorrect_dropped_double_desc">Poprawiaj podwójną literę wpisaną raz (helo → hello), nawet gdy inna poprawka jest częstszym słowem</string>
     <string name="autocorrect_dropped_double_margin_title">Margines częstości dla podwójnych liter</string>

@@ -1174,11 +1174,6 @@
     <string name="autocorrect_band_gap_desc">점수 차이가 이 값보다 작은 단어는 동점으로 보고 더 흔한 단어를 고릅니다. 값이 클수록 빈도가 더 많은 오류를 이깁니다.</string>
     <string name="autocorrect_transposition_penalty_title">자리 바뀐 글자 감점</string>
     <string name="autocorrect_transposition_penalty_desc">이웃한 두 글자를 바꿔서 얻은 단어가 잃는 점수(teh → the)를 단어 길이로 나눈 값</string>
-    <string name="autocorrect_neighbour_tiebreak_title">이웃 키 동점 처리</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">동점일 때 틀린 글자가 누른 키 옆에 있는 단어를 우선합니다. 기본값은 꺼짐: 테스트에서 고친 실제 오타보다 망친 경우가 더 많았습니다.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">끄기</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">틀린 글자가 하나일 때만</string>
-    <string name="autocorrect_neighbour_tiebreak_na">틀린 글자 수와 관계없이</string>
     <string name="autocorrect_dropped_double_title">빠진 겹글자 복원</string>
     <string name="autocorrect_dropped_double_desc">한 번만 입력된 겹글자를 수정합니다(helo → hello). 다른 수정 후보가 더 흔한 단어여도 적용합니다</string>
     <string name="autocorrect_dropped_double_margin_title">겹글자 빈도 여유</string>

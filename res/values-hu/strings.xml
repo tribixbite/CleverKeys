@@ -1183,11 +1183,6 @@
     <string name="autocorrect_band_gap_desc">Azok a szavak, amelyek pontszáma ennél kevesebbel tér el, döntetlennek számítanak, és a gyakoribb nyer. Nagyobb érték mellett a gyakoriság több hibát írhat felül.</string>
     <string name="autocorrect_transposition_penalty_title">Levonás felcserélt betűkért</string>
     <string name="autocorrect_transposition_penalty_desc">Az a pontszám, amelyet egy két szomszédos betű felcserélésével kapott szó veszít (teh → the), a szó hosszával osztva</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Döntés szomszédos billentyű alapján</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Döntetlennél azt a szót részesíti előnyben, amelynek hibás betűi a lenyomott billentyűk mellett vannak. Alapból ki van kapcsolva: a tesztekben kevesebb valódi elírást javított, mint amennyit elrontott.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Ki</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Csak egy hibás betűnél</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Bármennyi hibás betűnél</string>
     <string name="autocorrect_dropped_double_title">Hiányzó dupla betű pótlása</string>
     <string name="autocorrect_dropped_double_desc">Kijavítja az egyszer leütött dupla betűt (helo → hello), akkor is, ha egy másik javítás gyakoribb szó</string>
     <string name="autocorrect_dropped_double_margin_title">Gyakorisági tartalék dupla betűhöz</string>

@@ -604,7 +604,7 @@ All `Config` fields below are read in `autoCorrect`. Defaults from `Config.kt` `
 | **Max length diff** | `autocorrect_max_length_diff` | `2` | 0–5 | Allow ±N length candidates |
 | **Min freq floor** | `autocorrect_confidence_min_frequency` | `100` | 100–2000 | Slider mapped onto the dictionary's frequency scale via `FrequencyFloor.effective()`; 100 = no floor. Custom/user words exempt |
 | **Diagnostic logging** | `swipe_debug_detailed_logging` | `false` | bool | Gates rejection-reason logs |
-| **Ranking & tuning** | `autocorrect_ranking` + 18 more | `channel` | — | Every ranking weight, gate and step switch: `autocorrect/AutocorrectTuning.kt` `Keys` (single definition of key, default and range, shared by prefs, backup validation and the Settings group) |
+| **Ranking & tuning** | `autocorrect_ranking` + 20 more | `channel` | — | Every ranking weight, gate and step switch: `autocorrect/AutocorrectTuning.kt` `Keys` (single definition of key, default and range, shared by prefs, backup validation and the Settings group) |
 
 ## User Frequency and the Swipe Decoders
 

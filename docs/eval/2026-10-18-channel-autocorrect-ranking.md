@@ -4,6 +4,10 @@ Date: 2026-10-18. Scope: tap-typing space-bar autocorrect (`WordPredictor.autoCo
 on the shipped `en_enhanced.bin` (QWERTY) and Hebrew on the shipped `langpack-he.zip` with the
 `hebr_1_il` letter grid. Base: origin/main a40ce7d0.
 
+> 2026-10-26: the band ranking's neighbour-key tiebreak (`NeighbourTiebreak`, the
+> `autocorrect_neighbour_tiebreak` setting and `NeighbourTiebreakEval`) was deleted; references to it
+> below are historical.
+
 ## 0. The problem
 
 Maintainer report, 2026-10-18: `devixe` commits `decide` instead of `device`, and `shated` is

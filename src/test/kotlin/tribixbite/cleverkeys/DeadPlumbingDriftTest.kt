@@ -208,6 +208,42 @@ class DeadPlumbingDriftTest {
             .that(stringHits).isEmpty()
     }
 
+    // ------------------------------------------ Neighbour-Key Tiebreak (2026-10-26)
+
+    @Test
+    fun `the Neighbour-Key Tiebreak setting and its band rule are gone`() {
+        // Maintainer decision 2026-10-26 (memory/todo.md item 13): the band-only setting was
+        // OFF by default, failed its DEV gate (docs/eval/2026-10-12-neighbour-substitution-
+        // tiebreak.md) and is unnecessary under the default channel ranking. The setting, the
+        // `NeighbourTiebreak` seam and its band rule were deleted together. Only the
+        // DEPRECATED_KEYS tombstone, which keeps 2.0-dev backups from re-importing the key,
+        // may name it.
+        val tombstone = "tribixbite/cleverkeys/backup/SettingsValidation.kt"
+        val hits = occurrences(
+            Regex("autocorrect_neighbour_tiebreak|NEIGHBOUR_TIEBREAK|\\bNeighbourTiebreak\\b|\\bneighbourTiebreak\\b"),
+            allowedFiles = setOf(tombstone),
+        )
+        assertWithMessage(
+            "The neighbour-key tiebreak was removed; do not restore it without a new " +
+                "pre-registered evaluation.\nFound:\n" + hits.joinToString("\n")
+        ).that(hits).isEmpty()
+
+        val strings = Regex("""<string name="autocorrect_neighbour_tiebreak_""")
+        val stringHits = File("res").walkTopDown()
+            .filter { it.isFile && it.name == "strings.xml" }
+            .flatMap { file ->
+                file.readLines().mapIndexedNotNull { index, line ->
+                    if (strings.containsMatchIn(line)) "${file.path}:${index + 1}" else null
+                }
+            }
+            .toList()
+        assertWithMessage("Neighbour-Key Tiebreak strings must go from every locale.\nFound:\n" + stringHits.joinToString("\n"))
+            .that(stringHits).isEmpty()
+        assertWithMessage("old backups carrying the key must hit the deprecated-key filter")
+            .that(tribixbite.cleverkeys.backup.SettingsValidation.DEPRECATED_KEYS)
+            .contains("autocorrect_neighbour_tiebreak")
+    }
+
     // ------------------------------------------------------------------- B-2
 
     @Test

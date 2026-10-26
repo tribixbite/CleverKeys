@@ -173,7 +173,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "autocorrect_prefix_length" to PrefValue.IntV(Defaults.AUTOCORRECT_PREFIX_LENGTH),
     "swipe_final_autocorrect_enabled" to PrefValue.Bool(Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED),
     "autocapitalize_i_words" to PrefValue.Bool(Defaults.AUTOCAPITALIZE_I_WORDS),
-    // Ranking & Tuning (2026-10-18): the 22 AutocorrectTuning.Keys, typed from their single
+    // Ranking & Tuning (2026-10-18): the 21 AutocorrectTuning.Keys, typed from their single
     // definition (floats/ints/bools/strings), so a new tuning key is classified by adding it there.
     *autocorrectTuningDefaults(),
 

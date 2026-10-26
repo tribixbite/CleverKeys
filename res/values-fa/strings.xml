@@ -1215,11 +1215,6 @@
     <string name="autocorrect_band_gap_desc">واژه‌هایی که اختلاف امتیازشان کمتر از این مقدار است برابر شمرده می‌شوند و واژهٔ رایج‌تر برنده است. مقدار بیشتر اجازه می‌دهد بسامد بر خطاهای بیشتری غلبه کند.</string>
     <string name="autocorrect_transposition_penalty_title">جریمهٔ جابه‌جایی حروف</string>
     <string name="autocorrect_transposition_penalty_desc">امتیازی که واژهٔ حاصل از جابه‌جایی دو حرف کنار هم از دست می‌دهد (teh → the)، تقسیم بر طول واژه</string>
-    <string name="autocorrect_neighbour_tiebreak_title">تصمیم با کلید همسایه</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">در حالت برابری، واژه‌ای ترجیح داده می‌شود که حروف نادرستش کنار کلیدهای فشرده‌شده است. به‌طور پیش‌فرض خاموش است: در آزمون‌ها غلط‌های واقعی کمتری را درست کرد تا آنچه خراب کرد.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">خاموش</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">فقط با یک حرف نادرست</string>
-    <string name="autocorrect_neighbour_tiebreak_na">با هر تعداد حرف نادرست</string>
     <string name="autocorrect_dropped_double_title">بازگرداندن حرف دوتایی جاافتاده</string>
     <string name="autocorrect_dropped_double_desc">اصلاح حرف دوتایی که فقط یک بار تایپ شده (helo → hello)، حتی اگر اصلاح دیگری واژهٔ رایج‌تری باشد</string>
     <string name="autocorrect_dropped_double_margin_title">حاشیهٔ بسامد حرف دوتایی</string>

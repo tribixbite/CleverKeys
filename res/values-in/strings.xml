@@ -1186,11 +1186,6 @@
     <string name="autocorrect_band_gap_desc">Kata dengan selisih skor kurang dari nilai ini dianggap seri, dan kata yang lebih umum menang. Nilai lebih besar membuat frekuensi mengalahkan lebih banyak kesalahan.</string>
     <string name="autocorrect_transposition_penalty_title">Penalti huruf tertukar</string>
     <string name="autocorrect_transposition_penalty_desc">Skor yang hilang dari kata yang didapat dengan menukar dua huruf bersebelahan (teh → the), dibagi panjang kata</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Penentu tombol tetangga</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Saat seri, utamakan kata yang huruf salahnya berada di samping tombol yang ditekan. Nonaktif secara default: dalam pengujian, ini memperbaiki lebih sedikit salah ketik nyata daripada yang dirusaknya.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Nonaktif</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Hanya untuk satu huruf salah</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Untuk berapa pun huruf salah</string>
     <string name="autocorrect_dropped_double_title">Pulihkan huruf ganda yang hilang</string>
     <string name="autocorrect_dropped_double_desc">Koreksi huruf ganda yang hanya diketik sekali (helo → hello), meski koreksi lain adalah kata yang lebih umum</string>
     <string name="autocorrect_dropped_double_margin_title">Margin frekuensi huruf ganda</string>

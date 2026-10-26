@@ -1197,11 +1197,6 @@
     <string name="autocorrect_band_gap_desc">Wörter, deren Trefferwerte sich um weniger als diesen Wert unterscheiden, gelten als gleichauf, und das häufigere Wort gewinnt. Größer lässt die Häufigkeit mehr Fehler überstimmen.</string>
     <string name="autocorrect_transposition_penalty_title">Abzug für vertauschte Buchstaben</string>
     <string name="autocorrect_transposition_penalty_desc">Punkte, die ein Wort verliert, wenn zwei benachbarte Buchstaben vertauscht sind (teh → the), geteilt durch die Wortlänge</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Nachbartasten-Entscheid</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">Bei Gleichstand das Wort bevorzugen, dessen falsche Buchstaben neben den gedrückten Tasten liegen. Standardmäßig aus: In Tests behob es weniger echte Tippfehler, als es verschlechterte.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Aus</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Nur bei einem falschen Buchstaben</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Bei beliebig vielen falschen Buchstaben</string>
     <string name="autocorrect_dropped_double_title">Fehlenden Doppelbuchstaben ergänzen</string>
     <string name="autocorrect_dropped_double_desc">Einen nur einmal getippten Doppelbuchstaben korrigieren (helo → hello), auch wenn eine andere Korrektur ein häufigeres Wort wäre</string>
     <string name="autocorrect_dropped_double_margin_title">Häufigkeitsspielraum für Doppelbuchstaben</string>

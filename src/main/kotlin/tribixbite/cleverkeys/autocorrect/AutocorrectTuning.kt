@@ -3,7 +3,6 @@ package tribixbite.cleverkeys.autocorrect
 import android.content.SharedPreferences
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
-import tribixbite.cleverkeys.WordPredictor.NeighbourTiebreak
 
 /**
  * How `WordPredictor.autoCorrect` chooses between the dictionary words that pass its candidate
@@ -43,11 +42,6 @@ enum class ShortDeletionScope(val prefValue: String) {
                 ?: entries.first { it.prefValue == Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE }
     }
 }
-
-/** Pref string ↔ [NeighbourTiebreak] (`off` / `n1` / `na`); unknown values mean the default. */
-fun neighbourTiebreakFromPref(value: String?): NeighbourTiebreak =
-    NeighbourTiebreak.entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
-        ?: NeighbourTiebreak.valueOf(Defaults.AUTOCORRECT_NEIGHBOUR_TIEBREAK.uppercase())
 
 /**
  * Rule C's edit weights (eval doc §1.1). A substitution `a → b` costs
@@ -126,7 +120,6 @@ data class ChannelWeights(
  * @property maxSubstitutions candidate gate: most substituted positions a same-length word may have.
  * @property lengthEditBudget candidate gate: a different-length word may have weighted edit
  *   distance up to `length difference + budget`.
- * @property neighbourTiebreak band ranking's neighbour-key rule (evaluated, kept OFF, 2026-10-12).
  * @property droppedDoubleEnabled band ranking's step 1.45 (`helo` → `hello`). The channel
  *   ranking models this typo with [ChannelWeights.doubleCost] instead.
  * @property droppedDoubleMarginSteps how many rank steps rarer the re-doubled word may be.
@@ -141,7 +134,6 @@ data class AutocorrectTuning(
     val minExactRatio: Float = Defaults.AUTOCORRECT_MIN_EXACT_RATIO,
     val maxSubstitutions: Int = Defaults.AUTOCORRECT_MAX_SUBSTITUTIONS,
     val lengthEditBudget: Float = Defaults.AUTOCORRECT_LENGTH_EDIT_BUDGET,
-    val neighbourTiebreak: NeighbourTiebreak = neighbourTiebreakFromPref(Defaults.AUTOCORRECT_NEIGHBOUR_TIEBREAK),
     val droppedDoubleEnabled: Boolean = Defaults.AUTOCORRECT_DROPPED_DOUBLE_ENABLED,
     val droppedDoubleMarginSteps: Int = Defaults.AUTOCORRECT_DROPPED_DOUBLE_MARGIN,
     val elongationCollapseEnabled: Boolean = Defaults.AUTOCORRECT_ELONGATION_COLLAPSE_ENABLED,
@@ -177,8 +169,6 @@ data class AutocorrectTuning(
             Defaults.AUTOCORRECT_LENGTH_EDIT_BUDGET, 0f..1.5f)
         val CHANNEL_SHORT_DELETION_SCOPE = StringKey("autocorrect_channel_short_deletion_scope",
             Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE, ShortDeletionScope.entries.map { it.prefValue })
-        val NEIGHBOUR_TIEBREAK = StringKey("autocorrect_neighbour_tiebreak",
-            Defaults.AUTOCORRECT_NEIGHBOUR_TIEBREAK, NeighbourTiebreak.entries.map { it.name.lowercase() })
         val DROPPED_DOUBLE_ENABLED = BoolKey("autocorrect_dropped_double_enabled",
             Defaults.AUTOCORRECT_DROPPED_DOUBLE_ENABLED)
         val DROPPED_DOUBLE_MARGIN = IntKey("autocorrect_dropped_double_margin",
@@ -214,7 +204,7 @@ data class AutocorrectTuning(
             CHANNEL_INFLECTION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
-        val STRINGS = listOf(RANKING, NEIGHBOUR_TIEBREAK, CHANNEL_SHORT_DELETION_SCOPE)
+        val STRINGS = listOf(RANKING, CHANNEL_SHORT_DELETION_SCOPE)
 
         /** Every key above, for "reset to defaults" and backup classification. */
         val ALL_KEYS: List<String> =
@@ -247,7 +237,6 @@ data class AutocorrectTuning(
                 minExactRatio = f(Keys.MIN_EXACT_RATIO),
                 maxSubstitutions = i(Keys.MAX_SUBSTITUTIONS),
                 lengthEditBudget = f(Keys.LENGTH_EDIT_BUDGET),
-                neighbourTiebreak = neighbourTiebreakFromPref(s(Keys.NEIGHBOUR_TIEBREAK)),
                 droppedDoubleEnabled = b(Keys.DROPPED_DOUBLE_ENABLED),
                 droppedDoubleMarginSteps = i(Keys.DROPPED_DOUBLE_MARGIN),
                 elongationCollapseEnabled = b(Keys.ELONGATION_COLLAPSE_ENABLED),

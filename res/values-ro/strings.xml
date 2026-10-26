@@ -1207,11 +1207,6 @@
     <string name="autocorrect_band_gap_desc">Cuvintele ale căror scoruri diferă cu mai puțin decât această valoare sunt la egalitate și câștigă cel mai frecvent. O valoare mai mare lasă frecvența să depășească mai multe greșeli.</string>
     <string name="autocorrect_transposition_penalty_title">Penalizare pentru litere inversate</string>
     <string name="autocorrect_transposition_penalty_desc">Scorul pierdut de un cuvânt obținut prin inversarea a două litere vecine (teh → the), împărțit la lungimea cuvântului</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Departajare după tasta vecină</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">La egalitate, preferă cuvântul ale cărui litere greșite sunt lângă tastele apăsate. Dezactivat implicit: în teste a corectat mai puține greșeli reale decât a stricat.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Dezactivat</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Doar pentru o literă greșită</string>
-    <string name="autocorrect_neighbour_tiebreak_na">Pentru orice număr de litere greșite</string>
     <string name="autocorrect_dropped_double_title">Refă litera dublă lipsă</string>
     <string name="autocorrect_dropped_double_desc">Corectează o literă dublă tastată o singură dată (helo → hello), chiar dacă altă corectură este un cuvânt mai frecvent</string>
     <string name="autocorrect_dropped_double_margin_title">Marjă de frecvență pentru litere duble</string>

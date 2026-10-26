@@ -1188,11 +1188,6 @@
     <string name="autocorrect_band_gap_desc">Слова, оценки которых различаются меньше чем на это значение, считаются равными, и побеждает более частое. Большее значение позволяет частоте перевешивать больше ошибок.</string>
     <string name="autocorrect_transposition_penalty_title">Штраф за переставленные буквы</string>
     <string name="autocorrect_transposition_penalty_desc">Сколько оценки теряет слово, получаемое перестановкой двух соседних букв (teh → the), делённое на длину слова</string>
-    <string name="autocorrect_neighbour_tiebreak_title">Выбор по соседней клавише</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">При равенстве предпочитать слово, ошибочные буквы которого находятся рядом с нажатыми клавишами. По умолчанию выключено: в тестах исправляло меньше реальных опечаток, чем портило.</string>
-    <string name="autocorrect_neighbour_tiebreak_off">Выкл.</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">Только при одной ошибочной букве</string>
-    <string name="autocorrect_neighbour_tiebreak_na">При любом числе ошибочных букв</string>
     <string name="autocorrect_dropped_double_title">Восстанавливать удвоенную букву</string>
     <string name="autocorrect_dropped_double_desc">Исправлять удвоенную букву, набранную один раз (helo → hello), даже если другое исправление — более частое слово</string>
     <string name="autocorrect_dropped_double_margin_title">Запас частоты для удвоенных букв</string>

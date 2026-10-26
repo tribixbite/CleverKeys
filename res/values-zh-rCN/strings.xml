@@ -1172,11 +1172,6 @@
     <string name="autocorrect_band_gap_desc">分数相差小于此值的词视为并列，较常用的词胜出。值越大，词频可以压过的错误越多。</string>
     <string name="autocorrect_transposition_penalty_title">字母互换扣分</string>
     <string name="autocorrect_transposition_penalty_desc">通过交换两个相邻字母得到的词所扣的分数（teh → the），再除以词长</string>
-    <string name="autocorrect_neighbour_tiebreak_title">相邻键决胜</string>
-    <string name="autocorrect_neighbour_tiebreak_desc">并列时，优先选择错误字母位于所按键旁边的词。默认关闭：测试中它修正的真实错字少于它弄错的。</string>
-    <string name="autocorrect_neighbour_tiebreak_off">关闭</string>
-    <string name="autocorrect_neighbour_tiebreak_n1">仅限一个错误字母</string>
-    <string name="autocorrect_neighbour_tiebreak_na">任意数量的错误字母</string>
     <string name="autocorrect_dropped_double_title">补回漏掉的双写字母</string>
     <string name="autocorrect_dropped_double_desc">纠正只输入了一次的双写字母（helo → hello），即使另一个纠正结果是更常用的词</string>
     <string name="autocorrect_dropped_double_margin_title">双写字母词频余量</string>

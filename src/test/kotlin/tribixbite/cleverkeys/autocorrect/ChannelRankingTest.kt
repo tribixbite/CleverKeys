@@ -192,8 +192,5 @@ class ChannelRankingTest {
     fun prefStringsRoundTrip() {
         for (r in AutocorrectRanking.entries) assertEquals(r, AutocorrectRanking.fromPref(r.prefValue))
         assertEquals(AutocorrectRanking.fromPref(Defaults.AUTOCORRECT_RANKING), AutocorrectRanking.fromPref("bogus"))
-        for (v in tribixbite.cleverkeys.WordPredictor.NeighbourTiebreak.entries) {
-            assertEquals(v, neighbourTiebreakFromPref(v.name.lowercase()))
-        }
     }
 }

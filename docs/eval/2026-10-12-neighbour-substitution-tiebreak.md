@@ -1,5 +1,9 @@
 # Neighbour-key substitution in the autocorrect tie band (`תושה`, todo item 20)
 
+> 2026-10-26: the `autocorrect_neighbour_tiebreak` setting, the `NeighbourTiebreak` seam and
+> `NeighbourTiebreakEval` were deleted (maintainer decision; unnecessary under the default channel
+> ranking, todo item 13). This document is kept as history; its commands no longer run on main.
+
 Date: 2026-10-12. Scope: tap-typing space-bar autocorrect (`WordPredictor.autoCorrect`), shipped
 defaults, English on the shipped `en_enhanced.bin` (QWERTY) and Hebrew on the shipped
 `langpack-he.zip` with the `hebr_1_il` letter grid. Base: origin/main 000502a1.

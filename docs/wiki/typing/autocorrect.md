@@ -173,7 +173,6 @@ you can test the result on your own typos.
 | **Correction Ranking** | Edit cost plus frequency | How autocorrect picks between several close dictionary words. *Score band, then frequency* is the older method; only the weights of the selected method are shown. |
 | **Score Band Width** | 0.10 | (Band method) words whose scores differ by less than this count as a tie, and the more common word wins |
 | **Swapped Letters Penalty** | 0.15 | (Band method) score lost by a word reached by swapping two neighbouring letters (`teh → the`), divided by word length |
-| **Neighbour-Key Tiebreak** | Off | (Band method) in a tie, prefer the word whose wrong letters sit next to the keys you pressed; off because it fixed fewer real typos than it broke |
 | **Restore Missing Double Letter** | On | (Band method) correct a double letter typed once (`helo → hello`) even when another correction is more common |
 | **Double-Letter Frequency Margin** | 64 | How much rarer the double-letter word may be and still win |
 | **Same-Length Match Minimum** | 0.50 | Share of letters already in place before a same-length word is considered |
