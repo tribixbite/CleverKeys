@@ -375,7 +375,13 @@ class UpgradeInstallVerifyTest {
                 if (seedRows.keys != liveRows.keys) problems += "ids 1.x=${seedRows.keys} 2.0=${liveRows.keys}"
                 for ((id, s) in seedRows) {
                     val l = liveRows[id] ?: continue
-                    val d = diffRow(s, l, s.keys().asSequence().toList())
+                    // A thumbnail 1.x never stored (its ≤80 px recycle bug) is rebuilt by 2.0's
+                    // ClipboardThumbnailRepair; NULL → blob is that repair, not a changed row. Any
+                    // thumbnail 1.x DID store must survive byte-identical.
+                    val repaired = valueString(s, "thumbnail_blob") == "null" && valueString(l, "thumbnail_blob") != "null"
+                    if (repaired) c.info("thumbnail_rebuilt_${t}_$id", "1.x NULL -> 2.0 blob")
+                    val cols = s.keys().asSequence().filter { !(repaired && it == "thumbnail_blob") }.toList()
+                    val d = diffRow(s, l, cols)
                     if (d.isNotEmpty()) problems += "id=$id ${d.joinToString()}"
                     if (valueString(l, "is_private") != "0") problems += "id=$id is_private=${valueString(l, "is_private")}"
                     if (valueString(l, "source_package") != "null") problems += "id=$id source_package=${valueString(l, "source_package")}"
