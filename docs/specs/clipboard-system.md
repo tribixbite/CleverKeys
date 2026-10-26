@@ -656,8 +656,37 @@ chunk retried in place and then reported in the bar. Chrome's own work dominates
 line-broken text costs one edit per newline (524,000 chars in 13,100 lines ≈ 340 s on the Saga at
 any chunk size); without newlines each commit re-lays out the field, so fewer chunks are faster
 (260,000 Hebrew chars 54 → 29 s). Measurements: `docs/eval/2026-10-26-large-paste-chunk-size.md`.
-Known gap: the pane binds each row's full text, so entries of this size block the keyboard for
-~50 s when the pane opens or enters Select mode, and a tap meanwhile is an ANR.
+The pane itself shows such entries through bounded previews (next section).
+
+## Bounded row previews (2026-10-26)
+
+A row never binds an entry's full text. A TextView line-breaks all of its text even when it
+shows one ellipsized line (`StaticLayout` → `LineBreaker.computeLineBreaks`), so three ~0.5 MB
+entries kept the keyboard's main thread busy ~43 s on pane open and ~52 s on entering or leaving
+Select mode (Saga 202, main-thread CPU), and a tap in that window was an input-dispatch ANR (5
+kills on 2026-10-26; trace in `build/oct26-saga202-chunk/anr-dropbox.txt`).
+
+- `clipboard/ClipboardPreviewPolicy` (pure) cuts the text every row binds: collapsed rows (and
+  every Select-mode row) at 300 UTF-16 units / 2 lines, expanded rows at 20,000 units / 1,000
+  lines. Cuts fall on a code-point boundary (a surrogate pair is never split; grapheme clusters
+  may be), a cut text never ends in a line break, and `…` marks the cut. The cost is bounded by
+  the limit: only the first `limit + 1` chars are read.
+- It applies to History, Pinned, To-dos (status prefix and strikethrough on the shown text),
+  search results, media labels and the Select-mode checkbox label (80 units, one line).
+- An expanded row that was cut ends with "Showing the first N of M characters…" (code points,
+  `clipboard_entry_preview_truncated`, 22 locales).
+- Paste, copy, long-press copy, search (plain and regex, over `entry.content`) and every bulk
+  action use the full text. The database still loads full rows on IO: reading three 0.5 MB
+  rows took no measurable main-thread time, so no `substr()` column or schema change.
+- The inline editor is offered only for entries an expanded row shows whole
+  (`isEditableInline`): it re-sets its whole text on every keystroke. The edit button is hidden
+  and `edit_entry` refuses longer entries; the note says they cannot be edited in the pane.
+- Measured on Saga 202 (release, main-thread CPU s, the three entries of the chunk-size eval):
+  pane open 41.7 → 0.10–0.13; enter Select 51.4 → 0.05; leave Select 52.1 → 0.04–0.08; expand the
+  524K ASCII row 0.06, the emoji row 0.48, the Hebrew row 0.08; each search keystroke ≤ 0.06; the
+  query `l0130` (text only past 520,000 chars) found the ASCII entry; the emoji entry pasted into
+  Chrome with the full length and checksum (256,000 units). Tests: `ClipboardPreviewPolicyTest`
+  (pure), `ClipboardLongEntryPreviewViewTest` (mock, the real `getView`).
 
 ## Capture limits and the keyboard-shown catch-up (2026-10-08)
 

@@ -504,8 +504,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `docs/eval/2026-10-26-large-paste-chunk-size.md`): chunks are now 192 KiB of wire bytes, not
     32 Ki chars; Hebrew 260K 54 → 29 s, emoji 0.7 → 0.3 s, the 13,100-line 524K entry 352 → 338 s
     (Chrome handles each newline as its own edit; no chunk size fixes that), no binder failure.
-    Open: the pane lays out every row's full text, so ~0.5 MB entries block the keyboard ~50 s
-    on pane open / Select and a tap meanwhile is an ANR (owner: agent). (b) FIXED `cf74c393`: history-change callbacks from IO
+    Pane freeze FIXED `5c97417e` (2026-10-26, Saga 202, evidence `build/oct26-saga202-preview/`):
+    rows bound the full text; now `ClipboardPreviewPolicy` previews (collapsed/Select 300 chars,
+    expanded 20,000 + "Showing the first N of M characters…", no inline edit past that).
+    Main-thread CPU, release: pane open 41.7 → 0.1 s, enter Select 51.4 → 0.05 s, leave Select
+    52.1 → 0.05 s, expand ≤ 0.5 s, search keystroke ≤ 0.06 s; a query for text past 520,000
+    chars still matches; emoji entry pasted with exact length + checksum; no ANR. (b) FIXED `cf74c393`: history-change callbacks from IO
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted

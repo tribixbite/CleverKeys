@@ -176,8 +176,15 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
 
 - Tracked by **timestamp** (Long key, not position or content): `expandedStates: MutableMap<Long, Boolean>`
 - Single tap on text/chevron toggles expansion
-- Expanded state shows: full text (maxLines=MAX_VALUE) + secondary buttons
+- Expanded state shows: up to 20,000 chars / 1,000 lines (maxLines=MAX_VALUE) + secondary buttons,
+  and "Showing the first N of M characters…" when that cut the entry
 - Collapsed state: single line (maxLines=1) + no secondary buttons
+- **Rows never bind the full text** (2026-10-26): every binding goes through
+  `ClipboardPreviewPolicy.forRow` (collapsed / Select mode 300 chars, expanded 20,000). A TextView
+  line-breaks ALL its text even with maxLines=1, so 0.5 MB entries froze the main thread ~50 s
+  per bind and a tap was an ANR. Paste/copy/search use `entry.content`; the inline editor (edit
+  button + `edit_entry`) is only for entries `isEditableInline`. Any new row text path must use
+  the preview too. Tests: `ClipboardPreviewPolicyTest`, `ClipboardLongEntryPreviewViewTest`.
 - States cleared on tab switch, page change, or filter change (`applyFilter(resetView=true)`)
 - States preserved on data reloads after pin/todo/delete actions (`applyFilter(resetView=false)`)
 

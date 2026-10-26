@@ -426,6 +426,14 @@ editor that used to be listed here already ship in 2.0.)
   than Android passes in one transfer. Clipboard text is now sent in ordered pieces within one
   edit — from the clipboard pane, the paste key in terminals and remote-desktop fields, and
   paste-pinned commands — and the bar says so if the app accepts only part of it.
+- The clipboard pane no longer freezes the keyboard on very large entries. With three entries of
+  about 0.5 MB, opening the pane took ~43 s and entering Select mode ~52 s on a Saga, and a tap
+  in that time made Android close the keyboard as not responding. Rows now show only the start
+  of an entry: a collapsed row its first 300 characters, an expanded row its first 20,000 with a
+  line saying how many characters are shown. Opening the pane, Select mode, search and expanding
+  a row now take well under a second. Search still finds text anywhere in an entry, and paste and
+  copy still use the whole entry. Entries longer than an expanded row shows cannot be edited in
+  the pane.
 - Copying an image while the clipboard pane was open left the pane on "Loading results…" until
   it was reopened. The pane now updates and lists the new image.
 - Clipboard images of 80 px or less get a thumbnail again instead of a file icon, and images
