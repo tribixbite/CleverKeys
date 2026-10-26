@@ -390,6 +390,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Pure 3,178 / mock 1,426 green at `0b3bb5ac`; not run on instrumented or a device.
 14. [ ] agent drafts every close comment / PR review into a file; maintainer approves per item before anything is posted (2026-10-25). GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
+    Drafts done (`docs/audit/2026-10-25-github-drafts.md`, 48 items). DECIDED 2026-10-26: hold every
+    draft until v2.0.0 is tagged, then the maintainer reviews them (re-check each against the tag first).
 15. [ ] maintainer: deferred review items — summon after a system hide does NOT need the overlay
     permission (checked 2026-10-22, AOSP 9–16 sources + Saga runs; no code changed):
     `requestShowSelf` → IMMS `showMySoftInput` checks only the IME token and WM shows the IME for
