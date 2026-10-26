@@ -198,9 +198,12 @@ answer. A mock IC that returns false models nothing real; feedback built on it n
 
 One `commitText` crosses binder as UTF-8 in a ONE-WAY transaction limited to half of the ~1 MB
 buffer, so a 524,000-char paste failed with FAILED BINDER TRANSACTION and returned false,
-silently. `LargeTextCommit` sends 32K-char chunks in one batch edit. Chrome never answers
-`getTextBeforeCursor` inside a batch edit (each call hit the 2 s timeout): never read back
-between chunks; retry a refused chunk in place and report an incomplete paste instead.
+silently. `LargeTextCommit` sends chunks of 192 KiB WIRE BYTES (not chars) in one batch edit.
+Chrome never answers `getTextBeforeCursor` inside a batch edit (each call hit the 2 s timeout):
+never read back between chunks; retry a refused chunk in place and report an incomplete paste.
+Paste time is Chrome's, not IPC (2026-10-26): every `\n` becomes its own edit (13,100 lines ≈
+340 s at any chunk size) and each commit re-lays out the field, so fewer chunks help only
+newline-free text. Time pastes by `input` events over CDP, never by eye.
 
 ## Self-defined permissions and authorities (2026-10-26)
 
