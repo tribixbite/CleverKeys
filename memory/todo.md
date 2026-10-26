@@ -502,6 +502,21 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     deleted. Restored: release `f34a977c…` (HEAD `bf20161d`) default IME, original
     backup imported, 174 prefs equal (only `clipboard_history_limit` int 0 → String "0"), 0
     words, 0 clips, 19/121 extra keys, CleverKeys Dark; test files deleted from Download.
+23. [x] agent, 2026-10-26 (Pixel 8 Pro, release `dd304fb1…`; evidence `build/oct26-pixel/`, not
+    in git). (b) Export result dialogs said "File: 932" (`uri.lastPathSegment` = the Downloads
+    provider's document id): `02729472` resolves `OpenableColumns.DISPLAY_NAME` through one helper
+    (`ui/settings/io/DocumentDisplayName.kt`) for the settings, full backup, dictionary and
+    clipboard JSON/ZIP dialogs; device: Export Config → "File: cleverkeys-config (4).json" (the
+    provider's rename shown), test file deleted. Not changed: `BackupRestoreManager`'s
+    "Cannot read file: …" exception text still uses the segment (file had another session's
+    uncommitted edits). (e) Maintainer request "Browsing learned words and phrases needs
+    pagination and search": `4fe24f12` + follow-up fix — search field (settings-search fold:
+    case, accents, ZWNJ, Arabic yeh/kaf), 100-row pages loaded on scroll, "N words/phrases" or
+    "N of M", query and dialog survive rotation, 200-row cap gone. Device: "hel" → 4 of 102,
+    landscape keeps the query, all 102 words reachable by scrolling, phrases show 235 (was capped
+    at 200). The first build crashed the process on the first keystroke (stale page size vs a
+    shrunken match list, `IndexOutOfBoundsException: toIndex = 100`); fixed by
+    `LearnedBrowsePolicy.page`, pinned in `LearnedBrowsePolicyTest`. No learned entry was deleted.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

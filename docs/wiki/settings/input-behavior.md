@@ -74,7 +74,10 @@ How strongly your personal word usage boosts predictions, from 0.0 (off) to 2.0
 Shows what the keyboard has learned on this device — per-language phrase-pattern counts
 and word-usage stats — with **Browse phrases**, **Browse words**, **Forget phrases**, and
 **Forget words** controls. Individual learned entries can be deleted from the browse
-dialogs. Learned data is included in dictionary exports (Backup & Restore).
+dialogs. Each browse dialog lists everything learned, not just the top entries: type in its
+search field to filter (capitals and accents are ignored, so `cafe` finds `café`); the count
+above the list shows the total, or "12 of 1,234" while searching, and more rows load as you
+scroll. Learned data is included in dictionary exports (Backup & Restore).
 
 #### Max Learned Words
 

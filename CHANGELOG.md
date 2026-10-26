@@ -29,6 +29,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Search in the learned words and phrases browsers** (Settings → Input Behavior → Learning &
+  Data). Browse words and Browse phrases used to show only the top 200 entries; they now list
+  everything learned, load more rows as you scroll, and filter as you type (capitals, accents
+  and the Persian half-space are ignored). The count above the list shows the total, or
+  "N of M" while searching. Deleting an entry keeps your place in the list.
 - **Custom themes are in the backup.** The settings export and the full backup now carry your
   DIY themes, so a reinstall plus a restore brings them back, and a restored selection of a DIY
   theme comes back with it instead of falling back to CleverKeys Dark. The import preview lists
@@ -379,6 +384,8 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Backup, settings, dictionary and clipboard export results name the file you chose
+  (`File: cleverkeys-dictionary.json`) instead of a storage number such as `File: 932`.
 - The theme editor's hex colour field no longer rewrites what you type. A complete six-digit
   value was re-formatted as eight digits while you typed and the caret was left in the middle;
   the field now keeps your text, applies a colour once the value is complete, and keeps the exact

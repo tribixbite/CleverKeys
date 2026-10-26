@@ -433,11 +433,22 @@ Prediction block of `InputBehaviorSection` ("Learning & Data").
 
 - **Counts**: per-language bigram pairs + trigram triples ("en: 412 pairs, 96 triples"),
   vocabulary word count + most-used word.
-- **Browse phrases**: all learned bigrams across languages, most frequent first (cap 200),
-  per-entry delete via `BigramStore.removeBigram`. Trigrams are NOT individually browsable
-  — bulk-cleared by "Forget phrases" (documented scope).
-- **Browse words**: top personalization-vocabulary words with usage counts, per-entry
-  delete via `UserVocabulary.removeWord`.
+- **Browse phrases**: all learned bigrams across languages, most frequent first,
+  per-entry delete via `BigramStore.removeBigram` (+ the ARC-004 trigram cascade). Trigrams
+  are NOT individually browsable — bulk-cleared by "Forget phrases" (documented scope).
+- **Browse words**: the whole personalization vocabulary, highest boost first, with usage
+  counts, per-entry delete via `UserVocabulary.removeWord`.
+- **Search and paging (2026-10-26)**: both browsers had a hard cap of 200 rows and no search.
+  Now (`LearnedBrowsePolicy`, pure-tested) the store is snapshotted once on IO with each row's
+  text folded by `SettingsSearchMatch.fold` (case, diacritics, ZWNJ, Arabic yeh/kaf); the
+  search filters by substring as you type (a phrase query spans both words: "of the"); the
+  list shows 100 rows and adds a page when the last visible row is within 20 of the end. A
+  count line reads "N words/phrases", or "N of M" while a query is active. Search field, count
+  and rows are one keyed lazy list (keys `w:`/`p:` + the row), so the header scrolls away in a
+  short landscape dialog instead of starving the rows. The query and the open dialog are
+  `rememberSaveable` (survive rotation). A delete removes the row from the snapshot at once
+  (scroll position kept) and calls the store on IO. The stores are in-memory maps (vocabulary
+  ≤ 20,000 words, ≤ 10,000 bigrams per language), so the paging bounds composition, not I/O.
 - **Max Learned Words slider**: sets `personalization_max_words` (default 5000,
   1000–20000 in 500-word steps) — the cap on the personalization vocabulary. Lowering
   it below the current word count evicts least-valuable words down to the new cap
