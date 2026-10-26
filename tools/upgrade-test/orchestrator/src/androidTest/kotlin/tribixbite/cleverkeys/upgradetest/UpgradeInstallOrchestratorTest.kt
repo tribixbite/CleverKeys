@@ -187,10 +187,12 @@ class UpgradeInstallOrchestratorTest {
 
     /**
      * Both tests share one emulator, so each starts from no CleverKeys at all. Required,
-     * not tidy-up: since 9c799506 (2026-09-07) the manifest declares the fixed-name
-     * signature permission `tribixbite.cleverkeys.permission.SET_DEBUG_MODE`, so the
-     * debug-key `.debug` 2.0 build is refused (INSTALL_FAILED_DUPLICATE_PERMISSION)
-     * while the release-key package is installed, and vice versa.
+     * not tidy-up: from 9c799506 (2026-09-07, shipped in v1.5.0) until 2026-10-26 the
+     * manifest declared the fixed-name signature permission
+     * `tribixbite.cleverkeys.permission.SET_DEBUG_MODE` in BOTH variants, so a debug-key
+     * `.debug` build was refused (INSTALL_FAILED_DUPLICATE_PERMISSION) while the
+     * release-key package was installed, and vice versa. Current builds scope the name to
+     * `${applicationId}`, but the v1.5.0 APKs this test installs still carry the old one.
      */
     private fun cleanSlate() {
         sh("pm uninstall $DEBUG_PKG.test; pm uninstall $DEBUG_PKG; pm uninstall $RELEASE_PKG")

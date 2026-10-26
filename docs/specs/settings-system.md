@@ -237,7 +237,9 @@ internal fun SettingsActivity.SettingsSlider(
 ### Storage: no storage permission
 
 `AndroidManifest.xml` declares only `VIBRATE`, `READ_USER_DICTIONARY` and the app's own
-`tribixbite.cleverkeys.permission.SET_DEBUG_MODE` (there is no `INTERNET` permission either).
+`${applicationId}.permission.SET_DEBUG_MODE` — `tribixbite.cleverkeys.permission.SET_DEBUG_MODE`
+in release, `tribixbite.cleverkeys.debug.…` in debug, so the two differently signed packages can
+be installed side by side (there is no `INTERNET` permission either).
 No `READ_/WRITE_EXTERNAL_STORAGE` is requested on any API level: every file import/export
 (backups, dictionaries, language packs, GIF packs, swipe data, clipboard) goes through the
 Storage Access Framework from the handlers in `ui/settings/io/` (`CreateBackupDocument` is the

@@ -202,6 +202,12 @@ silently. `LargeTextCommit` sends 32K-char chunks in one batch edit. Chrome neve
 `getTextBeforeCursor` inside a batch edit (each call hit the 2 s timeout): never read back
 between chunks; retry a refused chunk in place and report an incomplete paste instead.
 
+## Self-defined permissions and authorities (2026-10-26)
+
+Write every `<permission>` and provider authority as `${applicationId}.…` (Kotlin:
+`BuildConfig.APPLICATION_ID`). A fixed name blocks a differently signed package from installing
+(INSTALL_FAILED_DUPLICATE_PERMISSION): the debug and release builds could not coexist.
+
 ## PAL model preference
 
 Use Gemini 3.8 (`gemini-3.8-flash`) for PAL consultation; never use Gemini 3.1.

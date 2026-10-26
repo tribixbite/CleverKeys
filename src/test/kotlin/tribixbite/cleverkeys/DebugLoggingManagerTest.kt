@@ -196,10 +196,16 @@ class DebugLoggingManagerTest {
     @Test
     fun `the debug mode permission is declared signature-level and requested in the manifest`() {
         val manifest = java.io.File("AndroidManifest.xml").readText()
-        // Literal (not the constant) so this test compiles — and stays red — before the fix
-        // lands; the source pin above ties the constant name to the registration call.
-        val permission = "tribixbite.cleverkeys.permission.SET_DEBUG_MODE"
-        assertThat(managerSource).contains("\"$permission\"")
+        // The name is variant-scoped (2026-10-26) so the debug and release packages, signed
+        // with different keys, do not both define it: `${applicationId}` in the manifest,
+        // BuildConfig.APPLICATION_ID in Kotlin. ReleasePackagingDriftTest pins that the
+        // release build still resolves to the v1.5.0 name.
+        val permission = "\${applicationId}.permission.SET_DEBUG_MODE"
+        assertThat(managerSource).contains(
+            "PERMISSION_SET_DEBUG_MODE = BuildConfig.APPLICATION_ID + \".permission.SET_DEBUG_MODE\""
+        )
+        assertThat(DebugLoggingManager.PERMISSION_SET_DEBUG_MODE)
+            .isEqualTo(BuildConfig.APPLICATION_ID + ".permission.SET_DEBUG_MODE")
         assertThat(manifest).contains("<permission android:name=\"$permission\" android:protectionLevel=\"signature\"/>")
         assertThat(manifest).contains("<uses-permission android:name=\"$permission\"/>")
     }

@@ -220,7 +220,9 @@ class ReleasePackagingDriftTest {
                 // Self-defined signature permission (I-8): gates the pre-26 debug
                 // receivers against third-party broadcast injection. Grantable only
                 // to same-signature apps; grants no capability to this app itself.
-                "tribixbite.cleverkeys.permission.SET_DEBUG_MODE",
+                // Scoped to the variant's applicationId so debug and release coexist
+                // ([selfDefinedNamesAreScopedToTheApplicationId]).
+                "\${applicationId}.permission.SET_DEBUG_MODE",
             )
         // The debug overlay merges into the debug APK; assert it adds none either, so an
         // instrumented-test convenience cannot become a shipped permission.
@@ -233,6 +235,74 @@ class ReleasePackagingDriftTest {
             assertWithMessage("'no network access' forbids $forbidden in any manifest")
                 .that(main).doesNotContain(forbidden)
         }
+    }
+
+    /**
+     * The debug (`tribixbite.cleverkeys.debug`, debug key) and release
+     * (`tribixbite.cleverkeys`, release key) packages must install side by side. Android
+     * refuses an install whose manifest defines a `<permission>` (or a provider authority)
+     * that another, differently signed package already owns
+     * (INSTALL_FAILED_DUPLICATE_PERMISSION / _CONFLICTING_PROVIDER). Until 2026-10-26 the
+     * I-8 permission was the fixed literal `tribixbite.cleverkeys.permission.SET_DEBUG_MODE`
+     * in both variants, so one blocked the other.
+     *
+     * Every self-defined permission and every authority is therefore written with the
+     * `${applicationId}` placeholder, the Kotlin side derives the name from
+     * `BuildConfig.APPLICATION_ID`, and the RELEASE name still resolves to the v1.5.0
+     * literal so upgrades over 1.5.0 and the F-Droid build see no change.
+     */
+    @Test
+    fun selfDefinedNamesAreScopedToTheApplicationId() {
+        val xml = manifest.replace(Regex("""<!--[\s\S]*?-->"""), "")
+        val placeholder = "\${applicationId}."
+
+        val defined = Regex("""<permission\b[^>]*android:name="([^"]+)"""")
+            .findAll(xml).map { it.groupValues[1] }.toList()
+        assertWithMessage("self-defined permissions").that(defined).isNotEmpty()
+        for (name in defined) {
+            assertWithMessage("<permission> $name must be variant-scoped")
+                .that(name).startsWith(placeholder)
+        }
+        // A self-defined permission the app requests or enforces must be the scoped one.
+        val selfReferenced = Regex("""android:(?:name|permission)="(tribixbite\.[^"]+)"""")
+            .findAll(xml).map { it.groupValues[1] }
+            .filter { it.contains(".permission.") }.toList()
+        assertWithMessage("hard-coded self permission names in the manifest")
+            .that(selfReferenced).isEmpty()
+
+        val authorities = Regex("""android:authorities="([^"]+)"""")
+            .findAll(xml).flatMap { it.groupValues[1].split(';') }.toList()
+        for (authority in authorities) {
+            assertWithMessage("provider authority $authority must be variant-scoped")
+                .that(authority).startsWith(placeholder)
+        }
+        assertWithMessage("sharedUserId would tie both variants to one signer")
+            .that(xml).doesNotContain("sharedUserId")
+
+        // Release resolution: defaultConfig applicationId with no release suffix.
+        val appId = Regex("""applicationId\s+"([^"]+)"""").find(buildGradle)?.groupValues?.get(1)
+        assertThat(appId).isEqualTo("tribixbite.cleverkeys")
+        // Inside buildTypes: signingConfigs has release/debug blocks of its own.
+        val buildTypes = buildGradle.substringAfter("  buildTypes {")
+        assertThat(buildTypes).isNotEqualTo(buildGradle)
+        val releaseBlock = buildTypes.substringAfter("    release {").substringBefore("    debug {")
+        assertWithMessage("release must keep the bare applicationId (v1.5.0 permission name)")
+            .that(releaseBlock).doesNotContain("applicationIdSuffix")
+        assertThat("$appId.permission.SET_DEBUG_MODE")
+            .isEqualTo("tribixbite.cleverkeys.permission.SET_DEBUG_MODE")
+        val debugBlock = buildTypes.substringAfter("    debug {").substringBefore("\n    }")
+        assertWithMessage("debug needs its own applicationId to coexist")
+            .that(debugBlock).contains("applicationIdSuffix '.debug'")
+
+        // Kotlin: the constant follows the variant, and no source hard-codes the literal.
+        assertThat(DebugLoggingManager.PERMISSION_SET_DEBUG_MODE)
+            .isEqualTo(BuildConfig.APPLICATION_ID + ".permission.SET_DEBUG_MODE")
+        val literal = Regex(""""tribixbite\.cleverkeys(\.debug)?\.permission\.""")
+        val offenders = File("src/main/kotlin").walkTopDown()
+            .filter { it.isFile && it.extension == "kt" && literal.containsMatchIn(it.readText()) }
+            .map { it.path }.toList()
+        assertWithMessage("hard-coded self permission names in src/main/kotlin")
+            .that(offenders).isEmpty()
     }
 
     @Test

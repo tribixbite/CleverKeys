@@ -60,8 +60,14 @@ class DebugLoggingManager(
          * this app itself) can deliver the broadcast. Without it, ANY installed app could
          * flip debug mode on those API levels — silently enabling the playground
          * recording path (I-1) with every consent toggle off.
+         *
+         * The name is `<applicationId>.permission.SET_DEBUG_MODE`, matching the manifest's
+         * `${applicationId}` placeholder: `tribixbite.cleverkeys.permission.SET_DEBUG_MODE`
+         * in release (unchanged since v1.5.0) and `tribixbite.cleverkeys.debug.…` in debug,
+         * so the two differently signed packages never define the same permission and can
+         * be installed side by side.
          */
-        const val PERMISSION_SET_DEBUG_MODE = "tribixbite.cleverkeys.permission.SET_DEBUG_MODE"
+        const val PERMISSION_SET_DEBUG_MODE = BuildConfig.APPLICATION_ID + ".permission.SET_DEBUG_MODE"
     }
 
     /**

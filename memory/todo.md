@@ -462,8 +462,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `.claude/skills/ew-cli-testing.md`): v1.5.0 debug seeded by its own code → `pm install -r`
     2.0 debug (`81d65663`) → 45 checks, then backup → uninstall → fresh → import → 36 checks,
     0 failures on API 34, 36, 37; GitHub v1.5.0 release → same-key 2.0 release over it: update
-    accepted, IME binds, no crash. Open: the debug and release packages can't coexist
-    (fixed-name `SET_DEBUG_MODE` permission, `9c799506`); 1.x small images keep no thumbnail
+    accepted, IME binds, no crash. FIXED 2026-10-26: debug and release could not coexist
+    (fixed-name `SET_DEBUG_MODE` permission from `9c799506` defined by both differently signed
+    packages); the name is now `${applicationId}.permission.SET_DEBUG_MODE` (release name
+    unchanged, aapt2 dumps share no permission/authority; phone install check still open). 1.x small images keep no thumbnail
     after the update (round trip regenerates). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
     without restart PASS (`d85be0dd`); bépo `été` synthetic swipe gave `Ecb` (coarse, 2.3 s,
     not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
