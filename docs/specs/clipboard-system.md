@@ -647,6 +647,18 @@ cancels once, then verifies immutable confirmation against a new row and an edit
 row while preserving independent pinned/todo copies. Fixtures use unique prefixes
 and remove only their own data. Full cloud evidence: [testing strategy](testing-strategy.md).
 
+## Pasting large entries (2026-10-25, sized 2026-10-26)
+
+Every clipboard text commit into the app (pane tap, the paste key in terminals and blind remote
+fields, `paste_pinned_N`) goes through `LargeTextCommit`: ordered chunks inside one batch edit,
+each at most 192 KiB on the wire (the larger of UTF-8 and UTF-16, whole code points), a refused
+chunk retried in place and then reported in the bar. Chrome's own work dominates the paste time:
+line-broken text costs one edit per newline (524,000 chars in 13,100 lines ≈ 340 s on the Saga at
+any chunk size); without newlines each commit re-lays out the field, so fewer chunks are faster
+(260,000 Hebrew chars 54 → 29 s). Measurements: `docs/eval/2026-10-26-large-paste-chunk-size.md`.
+Known gap: the pane binds each row's full text, so entries of this size block the keyboard for
+~50 s when the pane opens or enters Select mode, and a tap meanwhile is an ANR.
+
 ## Capture limits and the keyboard-shown catch-up (2026-10-08)
 
 Saga report (2026-10-07): one of four clippings copied with Chrome's selection-toolbar

@@ -500,7 +500,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `73fb0d8b…`: Chrome textarea got len 524,000 and the expected checksum, no binder failure; Chrome's
     renderer then took ~6.5 min of CPU to lay out the text (keyboard not blocked). A first
     version's `getTextBeforeCursor` barrier is never answered by Chrome inside a batch edit (15×2 s
-    main-thread stalls) and was removed. (b) FIXED `cf74c393`: history-change callbacks from IO
+    main-thread stalls) and was removed. Chunk size measured 2026-10-26 (Saga 202, `cb6c111e`,
+    `docs/eval/2026-10-26-large-paste-chunk-size.md`): chunks are now 192 KiB of wire bytes, not
+    32 Ki chars; Hebrew 260K 54 → 29 s, emoji 0.7 → 0.3 s, the 13,100-line 524K entry 352 → 338 s
+    (Chrome handles each newline as its own edit; no chunk size fixes that), no binder failure.
+    Open: the pane lays out every row's full text, so ~0.5 MB entries block the keyboard ~50 s
+    on pane open / Select and a tap meanwhile is an ANR (owner: agent). (b) FIXED `cf74c393`: history-change callbacks from IO
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted
