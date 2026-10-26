@@ -426,6 +426,13 @@ editor that used to be listed here already ship in 2.0.)
   paste-pinned commands — and the bar says so if the app accepts only part of it.
 - Copying an image while the clipboard pane was open left the pane on "Loading results…" until
   it was reopened. The pane now updates and lists the new image.
+- Clipboard images of 80 px or less get a thumbnail again instead of a file icon, and images
+  that small copied under 1.x get theirs after the update: 1.x never stored one for them, and
+  missing thumbnails are now rebuilt from the saved image when the keyboard starts.
+- In landscape on phones with a camera cutout at the side (seen on a Saga test phone), the
+  clipboard editor's cancel and delete buttons sat under the cutout, where the system takes the
+  touches, and did nothing. The clipboard, emoji and GIF panes now keep their controls clear of
+  the cutout and side bars, the same way the keys already did.
 - A language-pack update that is interrupted or refused halfway no longer loses the installed
   pack: the old pack is kept as a backup until the new one is in place, and leftovers are
   repaired at the next start.

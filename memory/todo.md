@@ -164,10 +164,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    To-dos keystrokes went into a DETACHED recycled copy of the editor (ListView's
    detachViewFromParent keeps the window token) — saved, never shown. Now: field focused,
    `textMultiLine|textNoSuggestions`, live-row check. Device PASS after: History and To-dos
-   long entry, typing scrolls to the caret, tap-to-place-caret keeps the keyboard. Pinned not
-   device-checked (same code). Mock `ClipboardHistoryViewStateGuardsTest` fail-first → 28/28;
+   long entry, typing scrolls to the caret, tap-to-place-caret keeps the keyboard. Pinned device
+   PASS 2026-10-26 (Saga 144, release 5eefd162, landscape; throwaway 1.5 kB private entry via the
+   private-copy activity, toggle restored off): insert/delete/caret moves at start, middle, end
+   all land on screen and save. Found there: the editor's cancel/delete were dead in landscape —
+   under the camera cutout a systemui ScreenDecorOverlay owns touches (x 2282–2400, y 492–610);
+   panes ignored the side insets the keys honour. FIXED `8adc1a98` (mock fail-first → 14/14;
+   device PASS on release e866a580: cancel and delete respond). Mock `ClipboardHistoryViewStateGuardsTest` fail-first → 28/28;
    instrumented `ClipboardLongEntryEditTest` 3/3 on emulator.wtf API 34 (`1812cdce`; post-fix only).
    Also fixed `c1bf9530`: images ≤ 80 px got no thumbnail ("Can't compress a recycled bitmap").
+   1.x rows stored that way are repaired at service start (`ce96d38f`, ClipboardThumbnailRepair).
    (c) FIXED `84021ccb`: CTC had slots for the 26 a–z keys only, so bépo's TOP-LEVEL `é` read as
    b/p/u (`été` → `bcp`/`btp`) and QWERTZ `ü ö ä`, Swedish `å ö ä`, Spanish `ñ`, Swiss-French
    `è é à ê` were also outside the frame box. Those keys are now alias slots folded into their base
@@ -466,7 +472,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (fixed-name `SET_DEBUG_MODE` permission from `9c799506` defined by both differently signed
     packages); the name is now `${applicationId}.permission.SET_DEBUG_MODE` (release name
     unchanged, aapt2 dumps share no permission/authority; phone install check still open). 1.x small images keep no thumbnail
-    after the update (round trip regenerates). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
+    after the update — FIXED `ce96d38f` (startup repair; upgrade rerun 2026-10-26 on API 34/36:
+    47 + 37 checks, 0 failures, small-image thumbnail PASS, `0a923417` verifier). Pixel (release installed, sha matched): theme edit with keyboard hidden applies
     without restart PASS (`d85be0dd`); bépo `été` synthetic swipe gave `Ecb` (coarse, 2.3 s,
     not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
     i.e. the OS clipboard; the instrumented test covers History/To-dos caret, Pinned spell-check
