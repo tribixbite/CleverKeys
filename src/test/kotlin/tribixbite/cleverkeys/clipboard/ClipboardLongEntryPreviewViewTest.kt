@@ -42,7 +42,7 @@ import tribixbite.cleverkeys.TodoEntry
  * Drives the REAL `ClipboardEntriesAdapter.getView` (the ClipboardMediaDeleteAffordanceTest
  * idiom) and captures the text each row binds: collapsed, expanded, Select-mode and To-do rows
  * of a 524,000-char entry must bind a bounded preview, an expanded cut row says so, paste still
- * sends the full text, and the inline editor is not offered for an entry it cannot show whole.
+ * sends the full text, and an entry it cannot show whole is edited a page at a time.
  */
 class ClipboardLongEntryPreviewViewTest {
 
@@ -245,16 +245,19 @@ class ClipboardLongEntryPreviewViewTest {
     }
 
     @Test
-    fun theInlineEditorIsNotOfferedForAnEntryTooLongToShowWhole() {
+    fun theInlineEditorIsOfferedForAnEntryTooLongToShowWholeAndEditsItInPages() {
+        // 2026-10-26: such entries are edited a page at a time (ClipboardEditPages,
+        // ClipboardPagedEditViewTest); the row itself still binds only the bounded preview.
         buildView(listOf(entry(huge)))
 
         render()
         view.edit_entry(0)
 
-        verify { widgets.getValue(R.id.clipboard_entry_edit).visibility = View.GONE }
-        verify(exactly = 0) { widgets.getValue(R.id.clipboard_entry_edit).visibility = View.VISIBLE }
-        assertWithMessage("edit_entry must refuse an entry the editor cannot show whole")
-            .that(view.getField("editingOriginalContent")).isNull()
+        verify { widgets.getValue(R.id.clipboard_entry_edit).visibility = View.VISIBLE }
+        assertThat(view.getField("editingOriginalContent")).isEqualTo(huge)
+        assertWithMessage("the editor holds one page, not the whole entry")
+            .that((view.getField("editingInProgressText") as String).length)
+            .isAtMost(ClipboardEditPages.PAGE_MAX_CHARS)
     }
 
     @Test

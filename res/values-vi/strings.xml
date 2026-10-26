@@ -2393,7 +2393,13 @@
     <string name="clipboard_delete_selected">Xóa mục đã chọn</string>
     <string name="clipboard_selection_exit">Thoát chế độ chọn</string>
     <string name="clipboard_select_entry_descr">Chọn đoạn cắt: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Đang hiển thị %1$s ký tự đầu tiên trong số %2$s. Dán và sao chép dùng toàn bộ đoạn cắt; đoạn này quá dài để chỉnh sửa tại đây.</string>
+    <string name="clipboard_entry_preview_truncated">Đang hiển thị %1$s ký tự đầu tiên trong số %2$s. Dán và sao chép dùng toàn bộ đoạn cắt; trình chỉnh sửa mở đoạn này theo từng trang.</string>
+    <string name="clipboard_edit_page">Trang %1$d/%2$d</string>
+    <string name="clipboard_edit_page_previous">Trang trước</string>
+    <string name="clipboard_edit_page_next">Trang sau</string>
+    <string name="clipboard_edit_page_first">Trang đầu</string>
+    <string name="clipboard_edit_page_last">Trang cuối</string>
+    <string name="clipboard_edit_changed">Đoạn cắt này đã bị thay đổi hoặc xóa sau khi bắt đầu chỉnh sửa, nên nội dung chỉnh sửa chưa được lưu.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="other">Xóa %1$d đoạn cắt đã chọn?</item></plurals>
     <string name="clipboard_delete_selected_message">Chỉ các bản sao trong %1$s bị xóa; bản sao ở các thẻ khác vẫn được giữ lại. Tổng kích thước đoạn cắt: %2$s. Các đoạn cắt đã thay đổi hoặc bị gỡ sau khi bạn chọn sẽ bị bỏ qua. Thao tác này không thể hoàn tác.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">Đã xóa %1$d trên %2$d đoạn cắt đã chọn.</item></plurals>

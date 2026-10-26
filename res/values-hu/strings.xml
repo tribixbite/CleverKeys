@@ -2416,7 +2416,13 @@
     <string name="clipboard_delete_selected">Kijelöltek törlése</string>
     <string name="clipboard_selection_exit">Kilépés a kijelölésből</string>
     <string name="clipboard_select_entry_descr">Kivágás kijelölése: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Az első %1$s karakter látható ennyiből: %2$s. A beillesztés és a másolás a teljes kivágást használja; túl hosszú az itteni szerkesztéshez.</string>
+    <string name="clipboard_entry_preview_truncated">Az első %1$s karakter látható ennyiből: %2$s. A beillesztés és a másolás a teljes kivágást használja; a szerkesztő oldalanként nyitja meg.</string>
+    <string name="clipboard_edit_page">%1$d. oldal (összesen %2$d)</string>
+    <string name="clipboard_edit_page_previous">Előző oldal</string>
+    <string name="clipboard_edit_page_next">Következő oldal</string>
+    <string name="clipboard_edit_page_first">Első oldal</string>
+    <string name="clipboard_edit_page_last">Utolsó oldal</string>
+    <string name="clipboard_edit_changed">A kivágás a szerkesztés megkezdése után megváltozott vagy törlődött, ezért a módosítás nem lett mentve.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Törli a(z) %1$d kijelölt kivágást?</item><item quantity="other">Törli a(z) %1$d kijelölt kivágást?</item></plurals>
     <string name="clipboard_delete_selected_message">Csak a(z) %1$s másolatai törlődnek; a más lapokon lévő másolatok megmaradnak. Összesített méret: %2$s. A kijelölés óta módosított vagy eltávolított kivágások kimaradnak. Ez a művelet nem vonható vissza.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d / %2$d kijelölt kivágás törölve.</item><item quantity="other">%1$d / %2$d kijelölt kivágás törölve.</item></plurals>

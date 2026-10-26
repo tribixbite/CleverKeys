@@ -2430,7 +2430,13 @@
     <string name="clipboard_delete_selected">Ausgewählte löschen</string>
     <string name="clipboard_selection_exit">Auswahl beenden</string>
     <string name="clipboard_select_entry_descr">Clip auswählen: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Die ersten %1$s von %2$s Zeichen werden angezeigt. Einfügen und Kopieren verwenden den ganzen Clip; er ist zu lang, um ihn hier zu bearbeiten.</string>
+    <string name="clipboard_entry_preview_truncated">Die ersten %1$s von %2$s Zeichen werden angezeigt. Einfügen und Kopieren verwenden den ganzen Clip; der Editor öffnet ihn seitenweise.</string>
+    <string name="clipboard_edit_page">Seite %1$d von %2$d</string>
+    <string name="clipboard_edit_page_previous">Vorherige Seite</string>
+    <string name="clipboard_edit_page_next">Nächste Seite</string>
+    <string name="clipboard_edit_page_first">Erste Seite</string>
+    <string name="clipboard_edit_page_last">Letzte Seite</string>
+    <string name="clipboard_edit_changed">Der Clip wurde nach Beginn der Bearbeitung geändert oder entfernt, daher wurde die Änderung nicht gespeichert.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d ausgewählten Clip löschen?</item><item quantity="other">%1$d ausgewählte Clips löschen?</item></plurals>
     <string name="clipboard_delete_selected_message">Nur die Kopien in %1$s werden gelöscht; Kopien in anderen Tabs bleiben erhalten. Gesamte Clipgröße: %2$s. Clips, die seit der Auswahl geändert oder entfernt wurden, werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d von %2$d ausgewählten Clip gelöscht.</item><item quantity="other">%1$d von %2$d ausgewählten Clips gelöscht.</item></plurals>

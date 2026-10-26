@@ -2482,7 +2482,13 @@
     <string name="clipboard_delete_selected">Șterge elementele selectate</string>
     <string name="clipboard_selection_exit">Ieși din selecție</string>
     <string name="clipboard_select_entry_descr">Selectează decupajul: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Se afișează primele %1$s din %2$s caractere. Lipirea și copierea folosesc tot decupajul; este prea lung pentru a fi editat aici.</string>
+    <string name="clipboard_entry_preview_truncated">Se afișează primele %1$s din %2$s caractere. Lipirea și copierea folosesc tot decupajul; editorul îl deschide pagină cu pagină.</string>
+    <string name="clipboard_edit_page">Pagina %1$d din %2$d</string>
+    <string name="clipboard_edit_page_previous">Pagina anterioară</string>
+    <string name="clipboard_edit_page_next">Pagina următoare</string>
+    <string name="clipboard_edit_page_first">Prima pagină</string>
+    <string name="clipboard_edit_page_last">Ultima pagină</string>
+    <string name="clipboard_edit_changed">Decupajul a fost modificat sau eliminat după începerea editării, așa că modificarea nu a fost salvată.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Ștergeți %1$d decupaj selectat?</item><item quantity="few">Ștergeți %1$d decupaje selectate?</item><item quantity="other">Ștergeți %1$d de decupaje selectate?</item></plurals>
     <string name="clipboard_delete_selected_message">Se șterg doar copiile din %1$s; copiile din alte file rămân. Dimensiune combinată a decupajelor: %2$s. Decupajele modificate sau eliminate după selectare sunt ignorate. Această acțiune nu poate fi anulată.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">S-au șters %1$d din %2$d decupaj selectat.</item><item quantity="few">S-au șters %1$d din %2$d decupaje selectate.</item><item quantity="other">S-au șters %1$d din %2$d de decupaje selectate.</item></plurals>

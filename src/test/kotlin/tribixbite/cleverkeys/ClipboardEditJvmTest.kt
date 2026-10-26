@@ -54,6 +54,7 @@ class ClipboardEditJvmTest {
             EditEntryResult.Success,
             EditEntryResult.DuplicateConflict,
             EditEntryResult.InvalidContent,
+            EditEntryResult.EntryChanged,
             EditEntryResult.Error("test")
         )
         val labels = results.map { result ->
@@ -61,10 +62,27 @@ class ClipboardEditJvmTest {
                 is EditEntryResult.Success -> "success"
                 is EditEntryResult.DuplicateConflict -> "duplicate"
                 is EditEntryResult.InvalidContent -> "invalid"
+                is EditEntryResult.EntryChanged -> "changed"
                 is EditEntryResult.Error -> "error:${result.message}"
             }
         }
-        assertThat(labels).containsExactly("success", "duplicate", "invalid", "error:test")
+        assertThat(labels).containsExactly("success", "duplicate", "invalid", "changed", "error:test")
+    }
+
+    // =========================================================================
+    // Optimistic concurrency (todo 22, 2026-10-26): the update is keyed on the content the
+    // editor opened with, so a row that changed (or was removed) meanwhile matches nothing.
+    // That is a conflict to report, never a silent overwrite or a generic error.
+    // =========================================================================
+
+    @Test
+    fun `an update that matched no row is a conflict`() {
+        assertThat(ClipboardEditPolicy.updateOutcome(0)).isSameInstanceAs(EditEntryResult.EntryChanged)
+    }
+
+    @Test
+    fun `an update that matched the opened row succeeds`() {
+        assertThat(ClipboardEditPolicy.updateOutcome(1)).isSameInstanceAs(EditEntryResult.Success)
     }
 
     // =========================================================================

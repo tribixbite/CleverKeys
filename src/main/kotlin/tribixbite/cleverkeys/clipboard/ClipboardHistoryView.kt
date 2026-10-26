@@ -35,6 +35,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
+import tribixbite.cleverkeys.clipboard.ClipboardEditPages
 import tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipePolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipeTracker
@@ -434,7 +435,17 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var editingHistory: InlineEditHistory? = null
     // Identifies the edit session for swipe ownership (InlineSwipeSession): a word swiped in
     // one session is never rewritten in a later one that happens to hold the same text.
+    // A page change starts a new one too (the field then holds other text).
     private var editingSession = 0L
+    // Paged editing (todo 22, 2026-10-26): non-null while editing an entry too long to edit
+    // whole. The field (and editingInProgressText) then hold only the current page; the
+    // session keeps the working copy with the other pages' edits. Save splices the page in
+    // and writes the full text once. Null for entries that fit one page (unchanged editor).
+    private var editingPages: ClipboardEditPages.Session? = null
+    // TalkBack labels for the pager buttons' long-press (first / last page). Created on first
+    // paged bind; Objenesis-built test views inject their own (the stub constructor throws).
+    private var pageFirstDelegate: View.AccessibilityDelegate? = null
+    private var pageLastDelegate: View.AccessibilityDelegate? = null
 
     // Dynamic lookup for the editing EditText — resilient to stale references from
     // ListView scrap view measurement passes. When Enter inserts a newline, the EditText
@@ -519,7 +530,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             R.id.clipboard_entry_addpin, R.id.clipboard_entry_unpin, R.id.clipboard_entry_addtodo,
             R.id.clipboard_entry_done, R.id.clipboard_entry_status, R.id.clipboard_entry_tags,
             R.id.clipboard_entry_save, R.id.clipboard_entry_cancel, R.id.clipboard_entry_delete,
+            R.id.clipboard_entry_edit_page_prev, R.id.clipboard_entry_edit_page_next,
         )
+
+        /** clipboard_history_entry.xml's android:maxLines for the edit field (single-page edits). */
+        private const val EDIT_FIELD_MAX_LINES = 50
+
+        /** Pager row: 32dp buttons + 4dp top margin (clipboard_history_entry.xml). */
+        private const val PAGER_ROW_DP = 36
 
         /** Map MIME type to a fallback drawable icon when no thumbnail BLOB is available */
         fun getMimeTypeIcon(mimeType: String): Int = when {
@@ -878,8 +896,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     fun edit_entry(pos: Int) {
         if (pos < 0 || pos >= paginatedHistory.size) return
         val entry = paginatedHistory[pos]
-        // Media entries cannot be edited inline, nor entries too long to show whole (todo 22 a)
-        if (entry.isMedia || !ClipboardPreviewPolicy.isEditableInline(entry.content)) return
+        // Media entries cannot be edited inline. Entries too long to edit whole are edited a
+        // page at a time (ClipboardEditPages, todo 22): the field never holds the whole text.
+        if (entry.isMedia) return
         // Edit mode locks the pane; a swiped row is deleted before it starts.
         commitPendingDeletion(ClipboardPendingDeletion.CommitReason.EDIT)
 
@@ -887,8 +906,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         onEditModeEntered?.invoke()
 
         editingOriginalContent = entry.content
-        editingInProgressText = entry.content
-        editingCursorPosition = entry.content.length
+        val pages = if (ClipboardEditPages.needsPaging(entry.content)) ClipboardEditPages.Session(entry.content) else null
+        editingPages = pages
+        if (pages != null) {
+            editingInProgressText = pages.pageText()
+            editingCursorPosition = 0  // a paged entry opens at the top of page 1
+        } else {
+            editingInProgressText = entry.content
+            editingCursorPosition = entry.content.length
+        }
         editingHistory = InlineEditHistory()
         editingSession++
         // #156: remember the entry's privacy so cutFromEditText() can gate the OS-clipboard write.
@@ -902,7 +928,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         val oldContent = editingOriginalContent ?: return
         // editingInProgressText is guaranteed non-null during active edit (set in edit_entry,
         // updated by TextWatcher + direct sync in text manipulation methods).
-        val newContent = editingInProgressText ?: return
+        val fieldText = editingInProgressText ?: return
+        // Paged: splice the current page into the working copy; ONE update of the full text.
+        // The update is keyed on oldContent (the entry as opened), so a row changed meanwhile
+        // is refused (EntryChanged) instead of overwritten.
+        val newContent = editingPages?.fullText(fieldText) ?: fieldText
 
         when (service?.editEntryContent(oldContent, newContent, currentTab)) {
             is EditEntryResult.Success -> {
@@ -915,6 +945,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // error renders inline in the edit row and the user can fix or deliberately cancel.
             is EditEntryResult.DuplicateConflict -> showEditError(R.string.clipboard_edit_duplicate)
             is EditEntryResult.InvalidContent -> showEditError(R.string.clipboard_edit_invalid)
+            is EditEntryResult.EntryChanged -> showEditError(R.string.clipboard_edit_changed)
             is EditEntryResult.Error, null -> showEditError(R.string.clipboard_edit_error)
         }
     }
@@ -930,6 +961,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (editingOriginalContent == null) return
         editingOriginalContent = null
         editingInProgressText = null
+        editingPages = null
         editingHistory = null
         editingCursorPosition = null
         editingIsPrivate = false
@@ -950,6 +982,107 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         onEditModeExited?.invoke()
         // Reload data to pick up any changes that were suppressed during edit
         loadDataAsync()
+    }
+
+    // ── Paged editing (todo 22, 2026-10-26) ──────────────────────────────
+    // Every move first splices the field's text into the session's working copy, so unsaved
+    // edits are kept across pages (no prompt); Save writes them all, Cancel drops them all.
+
+    /** Show the next page of a paged edit (no-op on the last page or when not paged). */
+    fun editPageNext() = moveEditPage(caretAtEnd = false) { s, t -> s.next(t) }
+
+    /** Show the previous page; its caret goes to the end, next to where the user came from. */
+    fun editPagePrevious() = moveEditPage(caretAtEnd = true) { s, t -> s.previous(t) }
+
+    fun editPageFirst() = moveEditPage(caretAtEnd = false) { s, t -> s.first(t) }
+
+    fun editPageLast() = moveEditPage(caretAtEnd = false) { s, t -> s.last(t) }
+
+    /**
+     * Apply [move] to the paged session with the field's current text, then bind the new
+     * page. The undo history and swipe ownership belong to one page's text, so both restart.
+     */
+    private inline fun moveEditPage(caretAtEnd: Boolean, move: (ClipboardEditPages.Session, String) -> Boolean) {
+        val pages = editingPages ?: return
+        val fieldText = editingInProgressText ?: return
+        if (!move(pages, fieldText)) return
+        val page = pages.pageText()
+        editingInProgressText = page
+        editingCursorPosition = if (caretAtEnd) page.length else 0
+        editingHistory = InlineEditHistory()
+        editingSession++
+        editingErrorRes = null
+        clipboardAdapter.notifyDataSetChanged()
+    }
+
+    /** "Page N of M" and prev/next state for the row being edited; GONE unless paged. */
+    private fun bindEditPager(row: View) {
+        val pager = row.findViewById<View?>(R.id.clipboard_entry_edit_pager) ?: return
+        val pages = editingPages
+        if (pages == null) {
+            pager.visibility = GONE
+            return
+        }
+        pager.visibility = VISIBLE
+        (row.findViewById<View?>(R.id.clipboard_entry_edit_page_label) as? TextView)?.text =
+            context.getString(R.string.clipboard_edit_page, pages.pageIndex + 1, pages.pageCount)
+        val prev = row.findViewById<View?>(R.id.clipboard_entry_edit_page_prev)
+        val next = row.findViewById<View?>(R.id.clipboard_entry_edit_page_next)
+        val hasPrev = pages.pageIndex > 0
+        val hasNext = pages.pageIndex < pages.pageCount - 1
+        prev?.apply {
+            isEnabled = hasPrev
+            alpha = if (hasPrev) 1.0f else 0.3f
+            setOnClickListener { editPagePrevious() }
+            setOnLongClickListener { editPageFirst(); true }
+            accessibilityDelegate = pageFirstDelegate
+                ?: PageJumpDelegate(R.string.clipboard_edit_page_first).also { pageFirstDelegate = it }
+        }
+        next?.apply {
+            isEnabled = hasNext
+            alpha = if (hasNext) 1.0f else 0.3f
+            setOnClickListener { editPageNext() }
+            setOnLongClickListener { editPageLast(); true }
+            accessibilityDelegate = pageLastDelegate
+                ?: PageJumpDelegate(R.string.clipboard_edit_page_last).also { pageLastDelegate = it }
+        }
+    }
+
+    /**
+     * A paged field is capped to the pane's visible height minus the pager row, so the pager
+     * and Save/Cancel stay on screen and the field scrolls its own text. Otherwise the pane's
+     * ScrollView, on focusing a field taller than itself, aligns the field's top with its own
+     * and scrolls the pager out of sight (Saga 2026-10-26). Single-page edits keep the XML
+     * line cap ([EDIT_FIELD_MAX_LINES]); recycled rows are reset to it.
+     */
+    private fun fitEditFieldHeight(editField: EditText) {
+        if (editingPages == null) {
+            editField.maxLines = EDIT_FIELD_MAX_LINES
+            return
+        }
+        val viewport = contentViewportHeight()
+        if (viewport <= 0) return  // not laid out yet; the next bind fits it
+        val pagerRow = (PAGER_ROW_DP * resources.displayMetrics.density).toInt()
+        editField.maxHeight = (viewport - pagerRow).coerceAtLeast(editField.lineHeight * 2)
+    }
+
+    /** Inner height of the pane's ScrollView holding this list, or 0 when there is none. */
+    private fun contentViewportHeight(): Int {
+        var p = parent
+        while (p != null) {
+            if (p is android.widget.ScrollView) return p.height - p.paddingTop - p.paddingBottom
+            p = p.parent
+        }
+        return 0
+    }
+
+    /** Names a pager button's long-press for TalkBack ("First page" / "Last page"). */
+    private inner class PageJumpDelegate(private val labelRes: Int) : View.AccessibilityDelegate() {
+        override fun onInitializeAccessibilityNodeInfo(host: View, info: android.view.accessibility.AccessibilityNodeInfo) {
+            super.onInitializeAccessibilityNodeInfo(host, info)
+            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_LONG_CLICK, context.getString(labelRes)))
+        }
     }
 
     // ── IME-owned EditText manipulation ──────────────────────────────────
@@ -1709,6 +1842,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
         if (rc.subLabel != 0) {
             provenanceView.setTextColor(rc.subLabel)
+            (row.findViewById<View?>(R.id.clipboard_entry_edit_page_label) as? TextView)?.setTextColor(rc.subLabel)
         }
     }
 
@@ -1873,8 +2007,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                     editErrorView.visibility = GONE
                 }
 
+                // Paged edit: "Page N of M" + prev/next above the field (GONE otherwise).
+                bindEditPager(view)
+                fitEditFieldHeight(editField)
+
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
+                // Never the full text of a paged entry: only its current page (todo 22).
                 val displayText = editingInProgressText ?: text
                 editField.setText(displayText)
 
@@ -1886,8 +2025,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
                 // Save button state — reflects current content on every render
                 val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
-                saveButton.isEnabled = displayText.isNotBlank()
-                saveButton.alpha = if (displayText.isNotBlank()) 1.0f else 0.3f
+                // A paged entry may be saved with a blank page when other pages hold text
+                // (othersBlank is computed per page move, not per keystroke).
+                val othersHaveText = editingPages?.othersBlank == false
+                val canSaveNow = othersHaveText || displayText.isNotBlank()
+                saveButton.isEnabled = canSaveNow
+                saveButton.alpha = if (canSaveNow) 1.0f else 0.3f
 
                 // Click listeners: setOnClickListener replaces previous, no accumulation.
                 // Must be set on every getView because ListView may provide a recycled view
@@ -1916,7 +2059,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                         // setText() resets cursor to 0 before our setSelection() corrects it.
                         // The TextWatcher fires between those two calls, capturing the wrong
                         // position (0). Cursor is tracked explicitly in insertEditText/backspace/etc.
-                        val canSave = !s.isNullOrBlank()
+                        val canSave = othersHaveText || !s.isNullOrBlank()
                         saveButton.isEnabled = canSave
                         saveButton.alpha = if (canSave) 1.0f else 0.3f
                     }
@@ -1954,6 +2097,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // ── Normal mode: standard rendering ──
             textView.visibility = VISIBLE
             editField.visibility = GONE
+            view.findViewById<View?>(R.id.clipboard_entry_edit_pager)?.visibility = GONE  // recycled edit rows
             editErrorView.visibility = GONE  // D-7: recycled edit rows must not leak the error line
             primaryButtons.visibility = VISIBLE
             editButtons.visibility = GONE
@@ -2067,11 +2211,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 expandButton.visibility = GONE
             }
 
-            // Show edit button for text entries only (media entries cannot be edited inline),
-            // and only for entries the expanded row shows whole: the editor re-sets its whole
-            // text on every keystroke, so a huge entry is pasted or copied, not edited here.
-            editButton.visibility =
-                if (!entry.isMedia && ClipboardPreviewPolicy.isEditableInline(text)) VISIBLE else GONE
+            // Show edit button for text entries only (media entries cannot be edited inline).
+            // Entries too long to edit whole open a page at a time (ClipboardEditPages).
+            editButton.visibility = if (!entry.isMedia) VISIBLE else GONE
             editButton.setOnClickListener {
                 if (!isEditing()) edit_entry(pos)
             }

@@ -2495,7 +2495,13 @@
     <string name="clipboard_delete_selected">Elimina selezionati</string>
     <string name="clipboard_selection_exit">Esci dalla selezione</string>
     <string name="clipboard_select_entry_descr">Seleziona ritaglio: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Sono mostrati i primi %1$s di %2$s caratteri. Incolla e copia usano l\'intero ritaglio; è troppo lungo per modificarlo qui.</string>
+    <string name="clipboard_entry_preview_truncated">Sono mostrati i primi %1$s di %2$s caratteri. Incolla e copia usano l\'intero ritaglio; l\'editor lo apre pagina per pagina.</string>
+    <string name="clipboard_edit_page">Pagina %1$d di %2$d</string>
+    <string name="clipboard_edit_page_previous">Pagina precedente</string>
+    <string name="clipboard_edit_page_next">Pagina successiva</string>
+    <string name="clipboard_edit_page_first">Prima pagina</string>
+    <string name="clipboard_edit_page_last">Ultima pagina</string>
+    <string name="clipboard_edit_changed">Il ritaglio è stato modificato o rimosso dopo l\'inizio della modifica, quindi la modifica non è stata salvata.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Eliminare %1$d ritaglio selezionato?</item><item quantity="many">Eliminare %1$d ritagli selezionati?</item><item quantity="other">Eliminare %1$d ritagli selezionati?</item></plurals>
     <string name="clipboard_delete_selected_message">Vengono eliminate solo le copie in %1$s; le copie in altre schede rimarranno. Dimensione totale dei ritagli: %2$s. I ritagli modificati o rimossi dopo la selezione verranno ignorati. L\'azione non può essere annullata.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Eliminati %1$d di %2$d ritaglio selezionato.</item><item quantity="many">Eliminati %1$d di %2$d ritagli selezionati.</item><item quantity="other">Eliminati %1$d di %2$d ritagli selezionati.</item></plurals>

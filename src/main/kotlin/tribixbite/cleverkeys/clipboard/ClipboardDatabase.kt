@@ -18,6 +18,11 @@ sealed class EditEntryResult {
     object DuplicateConflict : EditEntryResult()
     /** Content is blank or otherwise invalid */
     object InvalidContent : EditEntryResult()
+    /**
+     * No row holds the content the editor opened with: the entry was changed or removed after
+     * the edit began (optimistic concurrency, todo 22). Nothing was written.
+     */
+    object EntryChanged : EditEntryResult()
     /** Unexpected database error */
     data class Error(val message: String) : EditEntryResult()
 }
@@ -56,6 +61,14 @@ object ClipboardEditPolicy {
         newContent == oldContent -> Decision.NoOp
         else -> Decision.Apply(newContent)
     }
+
+    /**
+     * Result of the content-keyed UPDATE. The row is matched on the exact content the editor
+     * opened with — a compare-and-set on the entry itself — so 0 rows means it changed or was
+     * removed meanwhile: a conflict to report, never a silent overwrite (todo 22, 2026-10-26).
+     */
+    fun updateOutcome(updatedRows: Int): EditEntryResult =
+        if (updatedRows > 0) EditEntryResult.Success else EditEntryResult.EntryChanged
 }
 
 /**
@@ -1042,8 +1055,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
 
                 db.setTransactionSuccessful()
-                if (updatedRows > 0) EditEntryResult.Success
-                else EditEntryResult.Error("Entry not found in $table")
+                ClipboardEditPolicy.updateOutcome(updatedRows)
             } finally {
                 if (db.inTransaction()) db.endTransaction()
             }

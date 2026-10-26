@@ -2410,7 +2410,13 @@
     <string name="clipboard_delete_selected">Geselecteerde verwijderen</string>
     <string name="clipboard_selection_exit">Selectie beëindigen</string>
     <string name="clipboard_select_entry_descr">Fragment selecteren: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">De eerste %1$s van %2$s tekens worden getoond. Plakken en kopiëren gebruiken het hele fragment; het is te lang om hier te bewerken.</string>
+    <string name="clipboard_entry_preview_truncated">De eerste %1$s van %2$s tekens worden getoond. Plakken en kopiëren gebruiken het hele fragment; de editor opent het per pagina.</string>
+    <string name="clipboard_edit_page">Pagina %1$d van %2$d</string>
+    <string name="clipboard_edit_page_previous">Vorige pagina</string>
+    <string name="clipboard_edit_page_next">Volgende pagina</string>
+    <string name="clipboard_edit_page_first">Eerste pagina</string>
+    <string name="clipboard_edit_page_last">Laatste pagina</string>
+    <string name="clipboard_edit_changed">Het fragment is gewijzigd of verwijderd nadat het bewerken begon, dus de bewerking is niet opgeslagen.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d geselecteerd fragment verwijderen?</item><item quantity="other">%1$d geselecteerde fragmenten verwijderen?</item></plurals>
     <string name="clipboard_delete_selected_message">Alleen de kopieën in %1$s worden verwijderd; kopieën op andere tabbladen blijven behouden. Gecombineerde fragmentgrootte: %2$s. Fragmenten die sinds je selectie zijn gewijzigd of verwijderd, worden overgeslagen. Dit kan niet ongedaan worden gemaakt.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d van %2$d geselecteerd fragment verwijderd.</item><item quantity="other">%1$d van %2$d geselecteerde fragmenten verwijderd.</item></plurals>

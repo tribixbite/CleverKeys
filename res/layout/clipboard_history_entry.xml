@@ -107,6 +107,50 @@
        turns showSoftInputOnFocus off (no public XML attribute): the keyboard is the input
        method, so focusing the field must not ask the platform to show one.
        Cursor tracking is handled by editingCursorPosition in ClipboardHistoryView. -->
+  <!-- Paged editing (todo 22, 2026-10-26): VISIBLE only while editing an entry too long to edit
+       whole (ClipboardEditPages). The field below then holds one page; prev / next move
+       between pages (long-press: first / last page) and keep unsaved edits. The label is a
+       polite live region, so TalkBack reads the new page number after a move. -->
+  <LinearLayout
+      android:id="@+id/clipboard_entry_edit_pager"
+      android:orientation="horizontal"
+      android:layout_width="fill_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="8dp"
+      android:layout_marginTop="4dp"
+      android:gravity="center_vertical"
+      android:visibility="gone">
+
+    <View
+        android:id="@+id/clipboard_entry_edit_page_prev"
+        android:contentDescription="@string/clipboard_edit_page_previous"
+        style="@style/clipboardEntryButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:rotation="90"
+        android:background="@drawable/ic_expand_more"/>
+
+    <TextView
+        android:id="@+id/clipboard_entry_edit_page_label"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:textSize="13sp"
+        android:textColor="?attr/colorSubLabel"
+        android:accessibilityLiveRegion="polite"/>
+
+    <View
+        android:id="@+id/clipboard_entry_edit_page_next"
+        android:contentDescription="@string/clipboard_edit_page_next"
+        style="@style/clipboardEntryButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:rotation="-90"
+        android:background="@drawable/ic_expand_more"/>
+
+  </LinearLayout>
+
   <!-- Inline overlay editor for the clipboard entry's own text. Not autofillable
        (edits arbitrary clipboard content) → importantForAutofill="no". LabelFor is
        suppressed: this field overlays the visible clipboard_entry_text above it, which

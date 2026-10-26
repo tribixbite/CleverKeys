@@ -2505,7 +2505,13 @@
     <string name="clipboard_delete_selected">Удалить выбранное</string>
     <string name="clipboard_selection_exit">Выйти из режима выбора</string>
     <string name="clipboard_select_entry_descr">Выбрать фрагмент: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Показаны первые %1$s из %2$s символов. Вставка и копирование используют весь фрагмент; он слишком длинный для редактирования здесь.</string>
+    <string name="clipboard_entry_preview_truncated">Показаны первые %1$s из %2$s символов. Вставка и копирование используют весь фрагмент; редактор открывает его по страницам.</string>
+    <string name="clipboard_edit_page">Страница %1$d из %2$d</string>
+    <string name="clipboard_edit_page_previous">Предыдущая страница</string>
+    <string name="clipboard_edit_page_next">Следующая страница</string>
+    <string name="clipboard_edit_page_first">Первая страница</string>
+    <string name="clipboard_edit_page_last">Последняя страница</string>
+    <string name="clipboard_edit_changed">Фрагмент был изменён или удалён после начала редактирования, поэтому изменения не сохранены.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Удалить %1$d выбранный фрагмент?</item><item quantity="few">Удалить %1$d выбранных фрагмента?</item><item quantity="many">Удалить %1$d выбранных фрагментов?</item><item quantity="other">Удалить %1$d выбранного фрагмента?</item></plurals>
     <string name="clipboard_delete_selected_message">Удаляются только копии в %1$s; копии на других вкладках останутся. Общий размер фрагментов: %2$s. Фрагменты, изменённые или удалённые после выбора, пропускаются. Это действие нельзя отменить.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Удалено %1$d из %2$d выбранного фрагмента.</item><item quantity="few">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="many">Удалено %1$d из %2$d выбранных фрагментов.</item><item quantity="other">Удалено %1$d из %2$d выбранного фрагмента.</item></plurals>

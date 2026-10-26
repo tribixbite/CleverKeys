@@ -2422,7 +2422,13 @@
     <string name="clipboard_delete_selected">I-delete ang napili</string>
     <string name="clipboard_selection_exit">Lumabas sa pagpili</string>
     <string name="clipboard_select_entry_descr">Piliin ang clipping: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Ipinapakita ang unang %1$s sa %2$s na character. Ginagamit ng pag-paste at pagkopya ang buong clipping; masyado itong mahaba para i-edit dito.</string>
+    <string name="clipboard_entry_preview_truncated">Ipinapakita ang unang %1$s sa %2$s na character. Ginagamit ng pag-paste at pagkopya ang buong clipping; binubuksan ito ng editor nang pahina-pahina.</string>
+    <string name="clipboard_edit_page">Pahina %1$d ng %2$d</string>
+    <string name="clipboard_edit_page_previous">Nakaraang pahina</string>
+    <string name="clipboard_edit_page_next">Susunod na pahina</string>
+    <string name="clipboard_edit_page_first">Unang pahina</string>
+    <string name="clipboard_edit_page_last">Huling pahina</string>
+    <string name="clipboard_edit_changed">Binago o inalis ang clipping na ito pagkatapos simulan ang pag-edit, kaya hindi na-save ang pag-edit.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">I-delete ang %1$d napiling clipping?</item><item quantity="other">I-delete ang %1$d napiling clipping?</item></plurals>
     <string name="clipboard_delete_selected_message">Ang mga kopya lang sa %1$s ang ide-delete; mananatili ang mga kopya sa ibang tab. Pinagsamang laki ng clipping: %2$s. Lalampasan ang mga clipping na binago o inalis mula nang piliin mo ang mga ito. Hindi na ito mababawi.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Na-delete ang %1$d sa %2$d napiling clipping.</item><item quantity="other">Na-delete ang %1$d sa %2$d napiling clipping.</item></plurals>

@@ -857,6 +857,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardPendingDeletionTest',
     // Saga 2026-10-26 (todo 22 a): rows bind a bounded, code-point-safe preview of huge entries.
     'tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicyTest',
+    // 2026-10-26 (todo 22): entries too long to edit whole are edited in pages — page
+    // splitting (CRLF/surrogate-safe, round trip) and the session's splice math.
+    'tribixbite.cleverkeys.clipboard.ClipboardEditPagesTest',
     // Upgrade test 2026-10-25: v1.5.0 stored small images without a thumbnail; the startup
     // repair pass regenerates missing thumbnails from the saved media file.
     'tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepairTest',
@@ -1386,6 +1389,9 @@ tasks.register('runMockTests', JavaExec) {
     // Saga 2026-10-26 (todo 22 a): every row binding (collapsed, expanded, Select, To-dos) binds
     // a bounded preview, and the inline editor is not offered for entries too long to show.
     'tribixbite.cleverkeys.clipboard.ClipboardLongEntryPreviewViewTest',
+    // 2026-10-26 (todo 22): paged editing on the real getView — one page in the field, the
+    // pager, navigation with unsaved edits, one spliced save per tab, the conflict refusal.
+    'tribixbite.cleverkeys.clipboard.ClipboardPagedEditViewTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
     // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads

@@ -1546,7 +1546,21 @@ class ClipboardDatabaseTest {
         clearAllTables()
 
         val result = db.updateHistoryEntryContent("Does not exist", "New content")
-        assertTrue("Should return Error for missing entry", result is EditEntryResult.Error)
+        // 2026-10-26 (todo 22): a missing row is the optimistic-concurrency conflict.
+        assertTrue("Should return EntryChanged for missing entry", result is EditEntryResult.EntryChanged)
+    }
+
+    @Test
+    fun anEditOfAnEntryThatChangedSinceItWasOpenedIsRefused() {
+        clearAllTables()
+        assertTrue(db.addClipboardEntry("opened text", futureExpiry))
+        // another writer changes the row after the editor opened "opened text"
+        assertEquals(EditEntryResult.Success, db.updateHistoryEntryContent("opened text", "changed elsewhere"))
+
+        val result = db.updateHistoryEntryContent("opened text", "the editor's version")
+
+        assertEquals(EditEntryResult.EntryChanged, result)
+        assertEquals(listOf("changed elsewhere"), db.getActiveClipboardEntries().map { it.content })
     }
     @Test
     fun bulkSnapshotAcrossPagesSkipsNewAndEditedEntries() {

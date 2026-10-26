@@ -2510,7 +2510,13 @@
     <string name="clipboard_delete_selected">Usuń zaznaczone</string>
     <string name="clipboard_selection_exit">Zakończ zaznaczanie</string>
     <string name="clipboard_select_entry_descr">Zaznacz wycinek: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Wyświetlono pierwsze %1$s z %2$s znaków. Wklejanie i kopiowanie używa całego wycinka; jest za długi, by edytować go tutaj.</string>
+    <string name="clipboard_entry_preview_truncated">Wyświetlono pierwsze %1$s z %2$s znaków. Wklejanie i kopiowanie używa całego wycinka; edytor otwiera go strona po stronie.</string>
+    <string name="clipboard_edit_page">Strona %1$d z %2$d</string>
+    <string name="clipboard_edit_page_previous">Poprzednia strona</string>
+    <string name="clipboard_edit_page_next">Następna strona</string>
+    <string name="clipboard_edit_page_first">Pierwsza strona</string>
+    <string name="clipboard_edit_page_last">Ostatnia strona</string>
+    <string name="clipboard_edit_changed">Wycinek został zmieniony lub usunięty po rozpoczęciu edycji, więc zmiany nie zostały zapisane.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Usunąć %1$d zaznaczony wycinek?</item><item quantity="few">Usunąć %1$d zaznaczone wycinki?</item><item quantity="many">Usunąć %1$d zaznaczonych wycinków?</item><item quantity="other">Usunąć %1$d zaznaczonego wycinka?</item></plurals>
     <string name="clipboard_delete_selected_message">Usuwane są tylko kopie w %1$s; kopie na innych kartach pozostaną. Łączny rozmiar wycinków: %2$s. Wycinki zmienione lub usunięte od chwili zaznaczenia zostaną pominięte. Tej operacji nie można cofnąć.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Usunięto %1$d z %2$d zaznaczonego wycinka.</item><item quantity="few">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="many">Usunięto %1$d z %2$d zaznaczonych wycinków.</item><item quantity="other">Usunięto %1$d z %2$d zaznaczonego wycinka.</item></plurals>

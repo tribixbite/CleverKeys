@@ -2825,7 +2825,15 @@
     <!-- TalkBack label of a row checkbox; %1$s = the start of the clipping text -->
     <string name="clipboard_select_entry_descr">Select clipping: %1$s</string>
     <!-- Expanded clipboard row of a very long entry (todo 22 a, 2026-10-26): %1$s shown, %2$s total characters, both pre-formatted numbers. -->
-    <string name="clipboard_entry_preview_truncated">Showing the first %1$s of %2$s characters. Paste and copy use the whole clipping; it is too long to edit here.</string>
+    <string name="clipboard_entry_preview_truncated">Showing the first %1$s of %2$s characters. Paste and copy use the whole clipping; the editor opens it page by page.</string>
+    <!-- Paged editing of clippings too long to edit whole (todo 22, 2026-10-26): the editor
+         header and its buttons' TalkBack labels (long-press jumps to the first / last page). -->
+    <string name="clipboard_edit_page">Page %1$d of %2$d</string>
+    <string name="clipboard_edit_page_previous">Previous page</string>
+    <string name="clipboard_edit_page_next">Next page</string>
+    <string name="clipboard_edit_page_first">First page</string>
+    <string name="clipboard_edit_page_last">Last page</string>
+    <string name="clipboard_edit_changed">This clipping was changed or removed after editing began, so the edit was not saved.</string>
     <!-- %1$d = clippings that will be deleted -->
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Delete %1$d selected clipping?</item><item quantity="other">Delete %1$d selected clippings?</item></plurals>
     <!-- %1$s = tab name, %2$s = combined clipping size -->

@@ -2500,7 +2500,13 @@
     <string name="clipboard_delete_selected">Smazat vybrané</string>
     <string name="clipboard_selection_exit">Ukončit výběr</string>
     <string name="clipboard_select_entry_descr">Vybrat výstřižek: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Zobrazeno prvních %1$s z %2$s znaků. Vložení a kopírování použije celý výstřižek; je příliš dlouhý na úpravy zde.</string>
+    <string name="clipboard_entry_preview_truncated">Zobrazeno prvních %1$s z %2$s znaků. Vložení a kopírování použije celý výstřižek; editor jej otevře po stranách.</string>
+    <string name="clipboard_edit_page">Strana %1$d z %2$d</string>
+    <string name="clipboard_edit_page_previous">Předchozí strana</string>
+    <string name="clipboard_edit_page_next">Další strana</string>
+    <string name="clipboard_edit_page_first">První strana</string>
+    <string name="clipboard_edit_page_last">Poslední strana</string>
+    <string name="clipboard_edit_changed">Výstřižek byl po zahájení úprav změněn nebo odstraněn, úprava proto nebyla uložena.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Smazat %1$d vybraný výstřižek?</item><item quantity="few">Smazat %1$d vybrané výstřižky?</item><item quantity="many">Smazat %1$d vybraného výstřižku?</item><item quantity="other">Smazat %1$d vybraných výstřižků?</item></plurals>
     <string name="clipboard_delete_selected_message">Smažou se pouze kopie v %1$s; kopie na ostatních kartách zůstanou. Celková velikost výstřižků: %2$s. Výstřižky změněné nebo odstraněné od jejich výběru budou přeskočeny. Tuto akci nelze vrátit zpět.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="few">Smazáno %1$d z %2$d vybraných výstřižků.</item><item quantity="many">Smazáno %1$d z %2$d vybraného výstřižku.</item><item quantity="other">Smazáno %1$d z %2$d vybraných výstřižků.</item></plurals>

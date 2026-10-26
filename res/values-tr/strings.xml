@@ -2421,7 +2421,13 @@
     <string name="clipboard_delete_selected">Seçilenleri sil</string>
     <string name="clipboard_selection_exit">Seçimden çık</string>
     <string name="clipboard_select_entry_descr">Kırpmayı seç: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">%2$s karakterin ilk %1$s karakteri gösteriliyor. Yapıştırma ve kopyalama kırpmanın tamamını kullanır; burada düzenlemek için çok uzun.</string>
+    <string name="clipboard_entry_preview_truncated">%2$s karakterin ilk %1$s karakteri gösteriliyor. Yapıştırma ve kopyalama kırpmanın tamamını kullanır; düzenleyici onu sayfa sayfa açar.</string>
+    <string name="clipboard_edit_page">Sayfa %1$d / %2$d</string>
+    <string name="clipboard_edit_page_previous">Önceki sayfa</string>
+    <string name="clipboard_edit_page_next">Sonraki sayfa</string>
+    <string name="clipboard_edit_page_first">İlk sayfa</string>
+    <string name="clipboard_edit_page_last">Son sayfa</string>
+    <string name="clipboard_edit_changed">Bu kırpma düzenleme başladıktan sonra değiştirildi veya kaldırıldı, bu nedenle düzenleme kaydedilmedi.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Seçilen %1$d kırpma silinsin mi?</item><item quantity="other">Seçilen %1$d kırpma silinsin mi?</item></plurals>
     <string name="clipboard_delete_selected_message">Yalnızca %1$s içindeki kopyalar silinir; diğer sekmelerdeki kopyalar kalır. Toplam kırpma boyutu: %2$s. Seçtikten sonra değiştirilen veya kaldırılan kırpmalar atlanır. Bu işlem geri alınamaz.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item><item quantity="other">Seçilen %2$d kırpmadan %1$d tanesi silindi.</item></plurals>

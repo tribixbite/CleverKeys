@@ -2473,7 +2473,13 @@
     <string name="clipboard_delete_selected">Eliminar seleccionados</string>
     <string name="clipboard_selection_exit">Salir de la selección</string>
     <string name="clipboard_select_entry_descr">Seleccionar recorte: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Se muestran los primeros %1$s de %2$s caracteres. Pegar y copiar usan el recorte completo; es demasiado largo para editarlo aquí.</string>
+    <string name="clipboard_entry_preview_truncated">Se muestran los primeros %1$s de %2$s caracteres. Pegar y copiar usan el recorte completo; el editor lo abre página a página.</string>
+    <string name="clipboard_edit_page">Página %1$d de %2$d</string>
+    <string name="clipboard_edit_page_previous">Página anterior</string>
+    <string name="clipboard_edit_page_next">Página siguiente</string>
+    <string name="clipboard_edit_page_first">Primera página</string>
+    <string name="clipboard_edit_page_last">Última página</string>
+    <string name="clipboard_edit_changed">El recorte se cambió o se eliminó después de empezar a editarlo, así que la edición no se guardó.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">¿Eliminar %1$d recorte seleccionado?</item><item quantity="many">¿Eliminar %1$d recortes seleccionados?</item><item quantity="other">¿Eliminar %1$d recortes seleccionados?</item></plurals>
     <string name="clipboard_delete_selected_message">Solo se eliminan las copias de %1$s; las copias en otras pestañas se conservan. Tamaño total de los recortes: %2$s. Se omiten los recortes que cambiaron o se eliminaron después de seleccionarlos. Esta acción no se puede deshacer.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="one">Eliminados: %1$d de %2$d recorte seleccionado.</item><item quantity="many">Eliminados: %1$d de %2$d recortes seleccionados.</item><item quantity="other">Eliminados: %1$d de %2$d recortes seleccionados.</item></plurals>

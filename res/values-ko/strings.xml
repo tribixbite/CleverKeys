@@ -2365,7 +2365,13 @@
     <string name="clipboard_delete_selected">선택 항목 삭제</string>
     <string name="clipboard_selection_exit">선택 종료</string>
     <string name="clipboard_select_entry_descr">클립 선택: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">%2$s자 중 처음 %1$s자를 표시합니다. 붙여넣기와 복사에는 클립 전체가 사용됩니다. 너무 길어 여기서 편집할 수 없습니다.</string>
+    <string name="clipboard_entry_preview_truncated">%2$s자 중 처음 %1$s자를 표시합니다. 붙여넣기와 복사에는 클립 전체가 사용됩니다. 편집기에서는 페이지 단위로 엽니다.</string>
+    <string name="clipboard_edit_page">%2$d페이지 중 %1$d페이지</string>
+    <string name="clipboard_edit_page_previous">이전 페이지</string>
+    <string name="clipboard_edit_page_next">다음 페이지</string>
+    <string name="clipboard_edit_page_first">첫 페이지</string>
+    <string name="clipboard_edit_page_last">마지막 페이지</string>
+    <string name="clipboard_edit_changed">편집을 시작한 뒤 이 클립이 변경되거나 삭제되어 편집 내용이 저장되지 않았습니다.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="other">선택한 클립 %1$d개를 삭제하시겠습니까?</item></plurals>
     <string name="clipboard_delete_selected_message">%1$s의 사본만 삭제되며 다른 탭의 사본은 유지됩니다. 총 클립 크기: %2$s. 선택한 후 변경되거나 제거된 클립은 건너뜁니다. 이 작업은 취소할 수 없습니다.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">선택한 클립 %2$d개 중 %1$d개를 삭제했습니다.</item></plurals>
