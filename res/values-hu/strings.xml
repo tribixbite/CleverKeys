@@ -1676,6 +1676,7 @@
     <string name="swipe_direction_southwest">Délnyugat</string>
     <string name="swipe_direction_west">Nyugat</string>
     <string name="swipe_direction_northwest">Északnyugat</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Az intent sikertelen: %1$s</string>
     <string name="short_swipe_intent_no_app">Nem található alkalmazás ehhez: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Nem található alkalmazás az intenthez</string>

@@ -1632,6 +1632,7 @@
     <string name="swipe_direction_southwest">남서쪽</string>
     <string name="swipe_direction_west">서쪽</string>
     <string name="swipe_direction_northwest">북서쪽</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">인텐트 실패: %1$s</string>
     <string name="short_swipe_intent_no_app">처리할 앱을 찾을 수 없습니다: %1$s</string>
     <string name="short_swipe_intent_app_not_found">인텐트 대상 앱을 찾을 수 없습니다</string>

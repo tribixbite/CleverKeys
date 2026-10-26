@@ -1682,6 +1682,7 @@
     <string name="swipe_direction_southwest">Timog-kanluran</string>
     <string name="swipe_direction_west">Kanluran</string>
     <string name="swipe_direction_northwest">Hilagang-kanluran</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Nabigo ang intent: %1$s</string>
     <string name="short_swipe_intent_no_app">Walang nahanap na app para sa: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Hindi nahanap ang app para sa intent</string>

@@ -1708,6 +1708,7 @@
     <string name="swipe_direction_southwest">جنوب‌غرب</string>
     <string name="swipe_direction_west">غرب</string>
     <string name="swipe_direction_northwest">شمال‌غرب</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">اینتنت ناموفق بود: %1$s</string>
     <string name="short_swipe_intent_no_app">برنامه‌ای برای این مورد یافت نشد: %1$s</string>
     <string name="short_swipe_intent_app_not_found">برنامهٔ مقصد اینتنت یافت نشد</string>

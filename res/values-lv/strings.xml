@@ -1719,6 +1719,7 @@
     <string name="swipe_direction_southwest">Dienvidrietumi</string>
     <string name="swipe_direction_west">Rietumi</string>
     <string name="swipe_direction_northwest">Ziemeļrietumi</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Nolūks (intent) neizdevās: %1$s</string>
     <string name="short_swipe_intent_no_app">Nav atrasta lietotne darbībai: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Nolūkam (intent) nav atrasta lietotne</string>

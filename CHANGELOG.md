@@ -164,8 +164,10 @@ editor that used to be listed here already ship in 2.0.)
   exports (with the excluded count shown) and included in encrypted ones.
 - **TalkBack support for the keyboard itself**: the custom-drawn keyboard now exposes a
   virtual view tree, so keys can be explored by touch and activated by double-tap, with
-  spoken labels for every key kind and working modifier latching. The settings UI also
-  mirrors correctly on right-to-left locales.
+  spoken labels for every key kind and working modifier latching. TalkBack takes swipes for
+  itself, so each key's short swipes are in TalkBack's Actions menu for that key (for example
+  "Clipboard manager (Southwest)" on Ctrl opens the clipboard pane), including your custom
+  short-swipe mappings. The settings UI also mirrors correctly on right-to-left locales.
 
 - **Subkey popover**: hold a text key past the long-press timeout to open a 3×3 grid of
   its subkeys around your finger; slide to a slot and let go to type or run it. Letting go

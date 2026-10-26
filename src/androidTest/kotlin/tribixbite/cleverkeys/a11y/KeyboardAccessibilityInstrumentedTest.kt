@@ -18,12 +18,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
+import kotlinx.coroutines.runBlocking
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.ComposeKeyData
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Keyboard2View
 import tribixbite.cleverkeys.KeyValue
+import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.Pointers
+import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 
 /**
@@ -331,5 +337,93 @@ class KeyboardAccessibilityInstrumentedTest {
             "every key event from a stationary tap on 'a' must BE 'a'. Got: $emitted",
             List(emitted.size) { expected }, emitted
         )
+    }
+
+    // ── short swipes as TalkBack custom actions (maintainer report 2026-10-26) ──
+    // Explore-by-touch consumes swipes, so the clipboard pane (Ctrl south-west) was unreachable.
+
+    /** Re-lay the view out with the bottom row (Ctrl, Fn, Space …) the IME's LayoutModifier adds. */
+    private fun useLayoutWithBottomRow() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val base = LayoutsPreference.layoutOfString(context.resources, "latn_qwerty_us")!!
+            val bottom = KeyboardData.load_row(context.resources, R.xml.bottom_row)
+            view.setKeyboard(base.insert_row(bottom, base.rows.size))
+            measureAndLayout(view, 1080, 800)
+        }
+    }
+
+    private fun idByDescription(description: String): Int =
+        virtualIds().firstOrNull { nodeDescription(it) == description } ?: -1
+
+    private fun customAction(id: Int, label: String): AccessibilityNodeInfo.AccessibilityAction? =
+        provider().createAccessibilityNodeInfo(id)!!.actionList.firstOrNull { it.label?.toString() == label }
+
+    private fun actionLabel(what: String, direction: SwipeDirection): String =
+        context.getString(R.string.a11y_short_swipe_action, what, context.getString(direction.displayNameRes))
+
+    @Test
+    fun ctrlKeyOffersTheClipboardPaneAsACustomActionAndRunsIt() {
+        useLayoutWithBottomRow()
+        val ctrlId = idByDescription(context.getString(R.string.key_descr_ctrl))
+        assertTrue("the bottom row's Ctrl key must be in the virtual tree", ctrlId >= 0)
+
+        val label = actionLabel(context.getString(R.string.key_descr_clipboard), SwipeDirection.SW)
+        val action = customAction(ctrlId, label)
+        assertNotNull(
+            "Ctrl must list \"$label\"; got ${provider().createAccessibilityNodeInfo(ctrlId)!!.actionList.map { it.label }}",
+            action
+        )
+
+        recorder.downs.clear(); recorder.ups.clear()
+        var handled = false
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            handled = provider().performAction(ctrlId, action!!.id, null)
+        }
+        assertTrue("the clipboard action must be handled", handled)
+        // The same key events a real Ctrl south-west swipe sends; KeyEventHandler's key_up on
+        // SWITCH_CLIPBOARD is what opens the pane in the IME.
+        val clip = KeyValue.getKeyByName("switch_clipboard")
+        assertEquals(listOf<KeyValue?>(clip), recorder.downs)
+        assertEquals(listOf<KeyValue?>(clip), recorder.ups)
+    }
+
+    @Test
+    fun customShortSwipeMappingReplacesTheDefaultAction() {
+        val manager = ShortSwipeCustomizationManager.getInstance(context)
+        val previous = manager.getMapping("q", SwipeDirection.SE)
+        runBlocking { manager.setMapping(ShortSwipeMapping.textInput("q", SwipeDirection.SE, "€", "€")) }
+        try {
+            val qId = findKeyId('q')
+            val action = customAction(qId, actionLabel("€", SwipeDirection.SE))
+            assertNotNull("q must list the custom € action", action)
+
+            recorder.downs.clear(); recorder.ups.clear()
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                assertTrue(provider().performAction(qId, action!!.id, null))
+            }
+            // A single-character TEXT mapping is typed through the key pipeline, as a swipe does.
+            assertEquals(listOf<KeyValue?>(KeyValue.makeCharKey('€')), recorder.ups)
+        } finally {
+            runBlocking {
+                if (previous != null) manager.setMapping(previous) else manager.removeMapping("q", SwipeDirection.SE)
+            }
+        }
+    }
+
+    @Test
+    fun shortGesturesOffOffersNoSwipeActions() {
+        useLayoutWithBottomRow()
+        val prefs = context.getSharedPreferences("cleverkeys_a11y_test_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean("short_gestures_enabled", false).commit()
+        try {
+            Config.globalConfig().refresh(context.resources, null)
+            val ctrlId = idByDescription(context.getString(R.string.key_descr_ctrl))
+            val custom = provider().createAccessibilityNodeInfo(ctrlId)!!.actionList
+                .filter { ShortSwipeAccessibilityActions.directionOf(it.id) != null }
+            assertTrue("short gestures off: no swipe actions, got ${custom.map { it.label }}", custom.isEmpty())
+        } finally {
+            prefs.edit().putBoolean("short_gestures_enabled", true).commit()
+            Config.globalConfig().refresh(context.resources, null)
+        }
     }
 }

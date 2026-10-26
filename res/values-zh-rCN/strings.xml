@@ -1630,6 +1630,7 @@
     <string name="swipe_direction_southwest">西南</string>
     <string name="swipe_direction_west">西</string>
     <string name="swipe_direction_northwest">西北</string>
+    <string name="a11y_short_swipe_action">%1$s（%2$s）</string>
     <string name="short_swipe_intent_failed">Intent 执行失败：%1$s</string>
     <string name="short_swipe_intent_no_app">找不到可处理的应用：%1$s</string>
     <string name="short_swipe_intent_app_not_found">找不到 Intent 对应的应用</string>

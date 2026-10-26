@@ -1751,6 +1751,7 @@
     <string name="swipe_direction_southwest">Юго-запад</string>
     <string name="swipe_direction_west">Запад</string>
     <string name="swipe_direction_northwest">Северо-запад</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Ошибка Intent: %1$s</string>
     <string name="short_swipe_intent_no_app">Не найдено приложение для: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Приложение для Intent не найдено</string>

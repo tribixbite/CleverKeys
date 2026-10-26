@@ -1,6 +1,6 @@
 ---
 title: Accessibility Settings
-description: Vibration feedback settings and screen-reader notes
+description: Vibration feedback settings and TalkBack use
 category: Settings
 difficulty: beginner
 ---
@@ -64,9 +64,28 @@ Each trigger can be independently enabled/disabled.
 - **Subtle feedback**: Turn off **Use System Vibration** and set a short duration (5–15 ms)
 - **Strong feedback**: Turn off **Use System Vibration** and set a longer duration (40–50 ms)
 
+## TalkBack
+
+With TalkBack on, explore the keyboard by touch: each key announces its name (letters, Shift,
+Backspace, Ctrl, Space …) and a double-tap presses it. Shift and Caps Lock announce whether they
+are on.
+
+TalkBack uses swipes for its own navigation, so the keyboard never sees a short swipe while it is
+on. Every short swipe of a key is offered instead in TalkBack's **Actions** menu for that key:
+put focus on the key, open the menu (swipe up then right, or a three-finger tap, depending on
+your TalkBack gesture settings) and choose the action. Each entry names what the swipe does and
+its direction, for example "Clipboard manager (Southwest)" on Ctrl, which opens the clipboard
+pane. The menu lists exactly what a swipe would do at that moment: your custom short-swipe
+mappings replace the layout's subkeys, a direction set to "removed" is left out, a latched Shift
+applies, and nothing is listed while **Short gestures** is turned off.
+
+The subkey popover (hold a key) does not open under TalkBack; its slots are the same short
+swipes, so the Actions menu covers them.
+
 ## System Integration
 
-CleverKeys respects Android's system-wide accessibility settings where applicable. For additional accessibility features like TalkBack screen reader support, configure them in Android's system accessibility settings.
+CleverKeys respects Android's system-wide accessibility settings where applicable. TalkBack
+itself is turned on in Android's accessibility settings.
 
 ## Related Features
 

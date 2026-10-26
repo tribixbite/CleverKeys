@@ -6,6 +6,7 @@ import android.view.View
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
+import tribixbite.cleverkeys.customization.SwipeDirection
 
 /**
  * TalkBack virtual-view tree for the custom-drawn [tribixbite.cleverkeys.Keyboard2View].
@@ -40,6 +41,12 @@ import androidx.customview.widget.ExploreByTouchHelper
  *   latching works — see Keyboard2View.activateKeyForAccessibility.
  * @param checkedState for Shift/CapsLock: `(isCheckable, isChecked)`; null for
  *   every other key (not checkable).
+ * @param shortSwipeActions the key's short swipes as TalkBack custom actions
+ *   ([ShortSwipeAccessibilityActions]); explore-by-touch consumes swipes, so the
+ *   Actions menu is the only way to reach them under TalkBack.
+ * @param onShortSwipe performs one of those actions. MUST route through
+ *   `Pointers.performAccessibilityShortSwipe` (the real short-swipe dispatch);
+ *   returns false when nothing was done.
  */
 class KeyboardAccessibilityHelper(
     host: View,
@@ -47,6 +54,8 @@ class KeyboardAccessibilityHelper(
     private val describe: (KeyboardGeometry.KeyRect) -> CharSequence,
     private val onActivate: (KeyboardGeometry.KeyRect) -> Unit,
     private val checkedState: (KeyboardGeometry.KeyRect) -> Pair<Boolean, Boolean>?,
+    private val shortSwipeActions: (KeyboardGeometry.KeyRect) -> List<ShortSwipeAccessibilityActions.Action>,
+    private val onShortSwipe: (KeyboardGeometry.KeyRect, SwipeDirection) -> Boolean,
 ) : ExploreByTouchHelper(host) {
 
     // Scratch Rect reused across onPopulateNodeForVirtualView calls (a11y events
@@ -93,6 +102,14 @@ class KeyboardAccessibilityHelper(
         node.className = "android.inputmethodservice.Keyboard\$Key"
         node.isClickable = true
         node.addAction(AccessibilityNodeInfoCompat.ACTION_CLICK)
+        // One custom action per non-empty short-swipe slot (TalkBack's Actions menu).
+        for (action in shortSwipeActions(kr)) {
+            node.addAction(
+                AccessibilityNodeInfoCompat.AccessibilityActionCompat(
+                    ShortSwipeAccessibilityActions.actionId(action.direction), action.label
+                )
+            )
+        }
 
         checkedState(kr)?.let { (checkable, checked) ->
             node.isCheckable = checkable
@@ -116,9 +133,13 @@ class KeyboardAccessibilityHelper(
         action: Int,
         arguments: Bundle?,
     ): Boolean {
-        if (action != AccessibilityNodeInfoCompat.ACTION_CLICK) return false
         val kr = rectById(virtualViewId) ?: return false
-        onActivate(kr)
+        if (action == AccessibilityNodeInfoCompat.ACTION_CLICK) {
+            onActivate(kr)
+        } else {
+            val direction = ShortSwipeAccessibilityActions.directionOf(action) ?: return false
+            if (!onShortSwipe(kr, direction)) return false
+        }
         sendEventForVirtualView(virtualViewId, AccessibilityEvent.TYPE_VIEW_CLICKED)
         return true
     }

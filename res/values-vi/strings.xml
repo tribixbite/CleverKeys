@@ -1660,6 +1660,7 @@
     <string name="swipe_direction_southwest">Tây Nam</string>
     <string name="swipe_direction_west">Tây</string>
     <string name="swipe_direction_northwest">Tây Bắc</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent thất bại: %1$s</string>
     <string name="short_swipe_intent_no_app">Không tìm thấy ứng dụng cho: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Không tìm thấy ứng dụng cho intent</string>

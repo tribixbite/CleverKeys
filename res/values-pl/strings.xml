@@ -1756,6 +1756,7 @@
     <string name="swipe_direction_southwest">Południowy zachód</string>
     <string name="swipe_direction_west">Zachód</string>
     <string name="swipe_direction_northwest">Północny zachód</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intencja nie powiodła się: %1$s</string>
     <string name="short_swipe_intent_no_app">Nie znaleziono aplikacji dla: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Nie znaleziono aplikacji dla intencji</string>

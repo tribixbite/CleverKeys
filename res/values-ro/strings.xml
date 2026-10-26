@@ -1735,6 +1735,7 @@
     <string name="swipe_direction_southwest">Sud-vest</string>
     <string name="swipe_direction_west">Vest</string>
     <string name="swipe_direction_northwest">Nord-vest</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent eșuat: %1$s</string>
     <string name="short_swipe_intent_no_app">Nicio aplicație găsită pentru: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Aplicația pentru intent nu a fost găsită</string>

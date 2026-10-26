@@ -1681,6 +1681,7 @@
     <string name="swipe_direction_southwest">Güneybatı</string>
     <string name="swipe_direction_west">Batı</string>
     <string name="swipe_direction_northwest">Kuzeybatı</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent başarısız: %1$s</string>
     <string name="short_swipe_intent_no_app">Şunun için uygulama bulunamadı: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Intent için uygulama bulunamadı</string>

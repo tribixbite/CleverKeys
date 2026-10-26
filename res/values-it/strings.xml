@@ -1748,6 +1748,7 @@
     <string name="swipe_direction_southwest">Sud-ovest</string>
     <string name="swipe_direction_west">Ovest</string>
     <string name="swipe_direction_northwest">Nord-ovest</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent non riuscito: %1$s</string>
     <string name="short_swipe_intent_no_app">Nessuna app trovata per: %1$s</string>
     <string name="short_swipe_intent_app_not_found">App non trovata per l\'Intent</string>

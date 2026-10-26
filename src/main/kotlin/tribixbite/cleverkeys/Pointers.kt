@@ -967,6 +967,71 @@ class Pointers(
         removePtr(ptr)
     }
 
+    // ── Accessibility (TalkBack) short swipes ─────────────────────────────────
+
+    /**
+     * The eight short-swipe slots of [key] as a release on it would resolve them right now:
+     * at each direction the user's custom mapping first (a `removed` mapping blanks the slot),
+     * else the layout subkey with the current modifiers applied. This is the exact-bin rule of
+     * [onTouchUp] for a single-key flick and the same [SubkeyPopoverSlots.resolve] the subkey
+     * popover uses, so TalkBack's Actions menu, a real swipe and the popover always agree.
+     *
+     * Empty when short gestures are disabled — the actions honour that setting like swipes do.
+     * Explore-by-touch consumes swipes, so these actions are a TalkBack user's only way to
+     * reach them (maintainer report 2026-10-26: the clipboard pane, Ctrl south-west).
+     */
+    fun accessibilityShortSwipeSlots(key: KeyboardData.Key): List<PopoverSlot> {
+        if (!_config.snapshot.short_gestures_enabled) return emptyList()
+        return resolveShortSwipeSlots(key, getModifiers(isOtherPointerDown()))
+    }
+
+    /**
+     * Run the short swipe of [key] toward [direction] for an accessibility action, as if a
+     * finger had flicked that way: the slot is resolved by [accessibilityShortSwipeSlots]'s rule
+     * and dispatched through the SAME [emitSubkeyValue] / [executeCustomShortSwipe] a released
+     * flick uses — Shift capitalises word sublabels, latchable values latch, latched modifiers
+     * are cleared afterwards, custom commands reach the executor. Only the touch tracking that
+     * turns a finger path into a direction is skipped, because the direction is given.
+     *
+     * The synthetic pointer ([pointerId], at [x],[y]) is never added to the pointer list, so the
+     * key itself is not pressed and nothing is left behind.
+     *
+     * @return false (nothing done) when short gestures are off, a slide is in progress, or the
+     *   slot is empty.
+     */
+    fun performAccessibilityShortSwipe(
+        key: KeyboardData.Key,
+        direction: SwipeDirection,
+        pointerId: Int,
+        x: Float,
+        y: Float,
+    ): Boolean {
+        if (isSliding()) return false
+        val snap = _config.snapshot
+        if (!snap.short_gestures_enabled) return false
+        val mods = getModifiers(isOtherPointerDown())
+        val slot = resolveShortSwipeSlots(key, mods).firstOrNull { it.direction == direction }
+        vlog { "A11Y_SHORT_SWIPE: key=${key.keys[0]} dir=$direction slot=${slot?.let { it::class.simpleName }}" }
+        val ptr = make_pointer(pointerId, key, _handler.modifyKey(key.keys[0], mods), x, y, mods, snap)
+        when (slot) {
+            is PopoverSlot.Default -> emitSubkeyValue(ptr, slot.value, snap)
+            is PopoverSlot.Custom -> executeCustomShortSwipe(ptr, slot.mapping)
+            is PopoverSlot.Empty, null -> return false
+        }
+        _handler.onPointerFlagsChanged(null)
+        return true
+    }
+
+    /** Shared slot resolution for the accessibility listing and action (see [accessibilityShortSwipeSlots]). */
+    private fun resolveShortSwipeSlots(key: KeyboardData.Key, mods: Modifiers): List<PopoverSlot> {
+        // Same key code as onTouchUp's custom lookup (getMapping lowercases it).
+        val keyCode = key.keys[0]?.getString() ?: ""
+        return SubkeyPopoverSlots.resolve(
+            defaultAt = { dir -> _handler.modifyKey(key.keys[dir.subLabelIndex], mods) },
+            customAt = { dir -> if (keyCode.isEmpty()) null else _customSwipeManager.getMapping(keyCode, dir) },
+        )
+    }
+
     fun onTouchMove(x: Float, y: Float, pointerId: Int) {
         val ptr = getPtr(pointerId) ?: return
 

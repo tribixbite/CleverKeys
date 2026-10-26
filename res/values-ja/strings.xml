@@ -1631,6 +1631,7 @@
     <string name="swipe_direction_southwest">南西</string>
     <string name="swipe_direction_west">西</string>
     <string name="swipe_direction_northwest">北西</string>
+    <string name="a11y_short_swipe_action">%1$s（%2$s）</string>
     <string name="short_swipe_intent_failed">インテントの実行に失敗しました: %1$s</string>
     <string name="short_swipe_intent_no_app">対応するアプリが見つかりません: %1$s</string>
     <string name="short_swipe_intent_app_not_found">インテントの対象アプリが見つかりません</string>

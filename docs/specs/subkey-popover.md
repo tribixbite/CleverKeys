@@ -48,6 +48,14 @@ subkey popover found in mainstream keyboards".
    - **TalkBack.** While touch exploration is on (`AccessibilityManager.isTouchExplorationEnabled`)
      the popover never opens: it is drawn only and exposes no accessibility nodes, so a blind
      user would get a silent hold. Those keys keep their previous hold (key repeat).
+     The same eight slots reach TalkBack users as custom accessibility actions on each key
+     (2026-10-26): `Pointers.accessibilityShortSwipeSlots` resolves them with
+     `SubkeyPopoverSlots.resolve` (custom before default, `removed` = empty, short gestures
+     off = none), `a11y/ShortSwipeAccessibilityActions` names them ("Clipboard manager
+     (Southwest)"), and `Pointers.performAccessibilityShortSwipe` dispatches the chosen one
+     through the real `emitSubkeyValue` / `executeCustomShortSwipe`. Pinned by
+     `ShortSwipeAccessibilityActionsTest` (pure), `PointersAccessibilityShortSwipeTest` (mock,
+     event-for-event parity with a real flick) and `KeyboardAccessibilityInstrumentedTest`.
 7. **Second finger.** A new finger landing while the popover is open dismisses it, as mainstream
    keyboards do. The first finger's release is then inert (nothing typed, no latch cleared); the
    new finger behaves as any second pointer, so a shift it latches survives.

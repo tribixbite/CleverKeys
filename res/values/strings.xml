@@ -2079,6 +2079,9 @@
     <string name="swipe_direction_southwest">Southwest</string>
     <string name="swipe_direction_west">West</string>
     <string name="swipe_direction_northwest">Northwest</string>
+    <!-- TalkBack Actions menu entry for one short swipe of a key: %1$s = what the swipe does
+         (e.g. "Clipboard manager"), %2$s = its direction (swipe_direction_*). -->
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent failed: %1$s</string>
     <string name="short_swipe_intent_no_app">No app found for: %1$s</string>
     <string name="short_swipe_intent_app_not_found">App not found for intent</string>

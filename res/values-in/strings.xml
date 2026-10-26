@@ -1644,6 +1644,7 @@
     <string name="swipe_direction_southwest">Barat Daya</string>
     <string name="swipe_direction_west">Barat</string>
     <string name="swipe_direction_northwest">Barat Laut</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Intent gagal: %1$s</string>
     <string name="short_swipe_intent_no_app">Tidak ada aplikasi untuk: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Aplikasi untuk intent tidak ditemukan</string>

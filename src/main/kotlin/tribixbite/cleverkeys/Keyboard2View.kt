@@ -27,6 +27,7 @@ import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
+import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
 import tribixbite.cleverkeys.customization.CommandRouting
 import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.AvailableCommand
@@ -245,6 +246,9 @@ class Keyboard2View @JvmOverloads constructor(
             // Route through Pointers (NOT the handler) so modifier latching works.
             onActivate = ::activateKeyForAccessibility,
             checkedState = ::accessibilityCheckedState,
+            // Short swipes as TalkBack Actions (explore-by-touch consumes swipes).
+            shortSwipeActions = ::accessibilityShortSwipeActions,
+            onShortSwipe = ::performAccessibilityShortSwipe,
         )
         ViewCompat.setAccessibilityDelegate(this, _a11yHelper)
 
@@ -1576,6 +1580,32 @@ class Keyboard2View @JvmOverloads constructor(
         val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
         _pointers.onTouchDown(cx, cy, a11yPointerId, kr.key)
         _pointers.onTouchUp(a11yPointerId)
+    }
+
+    /**
+     * The key's short swipes as TalkBack custom actions — what each direction does right now
+     * (custom mappings, layout subkeys, live modifiers), resolved by [Pointers]. None in the
+     * read-only preview, which never types.
+     */
+    private fun accessibilityShortSwipeActions(
+        kr: KeyboardGeometry.KeyRect,
+    ): List<ShortSwipeAccessibilityActions.Action> {
+        if (_previewMode) return emptyList()
+        return ShortSwipeAccessibilityActions.actionsFor(_pointers.accessibilityShortSwipeSlots(kr.key)) { id ->
+            context.getString(id)
+        }
+    }
+
+    /**
+     * Perform one short-swipe action. Routes through [Pointers.performAccessibilityShortSwipe]
+     * (the real short-swipe dispatch), so the action does exactly what the swipe would — e.g.
+     * Ctrl south-west opens the clipboard pane.
+     */
+    private fun performAccessibilityShortSwipe(kr: KeyboardGeometry.KeyRect, direction: SwipeDirection): Boolean {
+        if (_previewMode) return false // read-only preview: never type
+        val cx = (kr.bounds.left + kr.bounds.right) / 2f
+        val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
+        return _pointers.performAccessibilityShortSwipe(kr.key, direction, a11yPointerId, cx, cy)
     }
 
     /**

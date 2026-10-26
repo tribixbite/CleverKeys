@@ -862,6 +862,8 @@ tasks.register('runPureTests', JavaExec) {
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
     'tribixbite.cleverkeys.a11y.KeyLabelsTest',
+    // TalkBack custom actions for short swipes (2026-10-26 maintainer report)
+    'tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActionsTest',
     // SuggestionBar rework (WP6-R3) — de-stringified suggestion protocol
     'tribixbite.cleverkeys.SuggestionModelTest',
     // WP9 pipeline-unification characterization oracle (R-1 step 2) — pure JVM twin
@@ -1278,6 +1280,8 @@ tasks.register('runMockTests', JavaExec) {
     // the default at every fuzzed direction bin; cold-load independence from swipe typing;
     // the short/long boundary is authoritative (BY-DESIGN pin for #83).
     'tribixbite.cleverkeys.PointersShortSwipeCustomOverrideTest',
+    // TalkBack short-swipe actions run the real short-swipe resolution + dispatch
+    'tribixbite.cleverkeys.PointersAccessibilityShortSwipeTest',
     // #147/#87 (2026-10-20): "short swipes only" — past the minimum distance every gesture is
     // its direction's subkey, never a word swipe or a tap of the start key; OFF unchanged.
     'tribixbite.cleverkeys.PointersShortSwipesOnlyTest',

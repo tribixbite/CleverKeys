@@ -9,4 +9,15 @@
   <!-- View tag: a content pane's own padding before WindowLayoutUtils.keepPaneClearOfSideInsets
        added the side insets, so reinstalling on the cached clipboard pane never accumulates. -->
   <item type="id" name="pane_base_padding"/>
+  <!-- TalkBack custom-action ids, one per short-swipe direction (a11y/ShortSwipeAccessibilityActions).
+       App-defined accessibility actions must use resource ids so they never collide with the
+       framework's standard action ids. -->
+  <item type="id" name="a11y_short_swipe_n"/>
+  <item type="id" name="a11y_short_swipe_ne"/>
+  <item type="id" name="a11y_short_swipe_e"/>
+  <item type="id" name="a11y_short_swipe_se"/>
+  <item type="id" name="a11y_short_swipe_s"/>
+  <item type="id" name="a11y_short_swipe_sw"/>
+  <item type="id" name="a11y_short_swipe_w"/>
+  <item type="id" name="a11y_short_swipe_nw"/>
 </resources>

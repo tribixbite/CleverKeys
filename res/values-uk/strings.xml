@@ -1757,6 +1757,7 @@
     <string name="swipe_direction_southwest">Південний захід</string>
     <string name="swipe_direction_west">Захід</string>
     <string name="swipe_direction_northwest">Північний захід</string>
+    <string name="a11y_short_swipe_action">%1$s (%2$s)</string>
     <string name="short_swipe_intent_failed">Помилка intent: %1$s</string>
     <string name="short_swipe_intent_no_app">Не знайдено застосунок для: %1$s</string>
     <string name="short_swipe_intent_app_not_found">Застосунок для intent не знайдено</string>
