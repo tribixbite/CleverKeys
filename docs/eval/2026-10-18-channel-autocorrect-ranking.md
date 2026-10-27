@@ -702,3 +702,87 @@ Named cases hold (L4 ✓). **PASS. Shipped: κ = 3.0** (`Defaults.AUTOCORRECT_CH
 Across the shipped stack the space bar now leaves 58 % of valid unlisted words alone (21,238 /
 36,491), against 26 % before. It gives up 48 of 5,845 distinct GitHub-typo targets, the
 corrections that needed an edit cost above 3, and loses nothing on one-key slips.
+
+## 16. Round 6 pre-registration: the unfinished-word cost ρ (written before any round-6 outcome)
+
+**Report (2026-10-27, Pixel 8 Pro, todo item 25).** Space after `tomorr` committed `timor`, after
+`caf` `car`, after `resta` `rest`. Each is the start of a common word the user had not finished.
+On the shipped `.bin` with shipped weights (a diagnostic run of production, 2026-10-27; these
+numbers chose the rule's form and nothing else):
+
+| typed | shipped winner (edit, total) | best completion (rank steps, λ·r) |
+|---|---|---|
+| tomorr | timor (2.22, 3.06); `tomorrow` itself 3.00 / 3.51 | tomorrow (101, 0.51) |
+| caf | car (1.25, 1.68) | cafe (136, 0.68) |
+| resta | rest (1.50, 1.97) | restaurant (114, 0.57) — 5 letters short, outside the length gate |
+| kne (named → one) | one (1.25, 1.48) | knew (94, 0.47) |
+
+Two insertions cost 2 × g = 3.0 while a neighbour slip plus a dropped double costs 2.22, so the
+channel prefers rewriting the stem to finishing it, and a completion more than
+`autocorrect_max_length_diff` letters away is never a candidate at all.
+
+### 16.1 Rule C6
+
+Shipped rule (C2 + Hebrew δ + κ = 3.0) plus one step, priced like guard G (§3.1): after the
+winner W is picked and guard G has run, let C be the most frequent enabled dictionary word that
+strictly extends the typed word t (any length). If `|t| ≥ L`, W does not itself extend t, and
+`ρ + λ · rankSteps(C) ≤ totalCost(W)`, the typed word is kept. ρ = ∞ is the shipped behaviour.
+The rule commits nothing new: it only withholds a correction, so the user still sees C on the bar.
+(Committing C instead was rejected before measurement: a completion is a guess about letters the
+user never typed, and the eval sets cannot say whether the user wanted `cafe`, `caffeine` or
+`café`.) Production: `ChannelWeights.completionCost` / `completionMinLength`,
+`WordPredictor.bestCompletionFrequency`; until this round decides, ρ is off and has no setting.
+
+Grid: `ρ ∈ {1.0, 1.25, 1.5, 1.75, 2.0, 2.5}` × `L ∈ {3, 4, 5}` (18 configurations).
+
+The diagnostic table already shows that `kne` → one needs ρ > 1.01 at L = 3, so `caf` → car
+(which needs ρ ≤ 1.0) can only be withheld by breaking a named case; at L ≥ 4 `caf` is out of
+scope. This is stated now so that a `caf` outcome is not read as a result.
+
+### 16.2 Data and baseline
+
+GTC, S-adj and C-oov with the §1.2 splits, plus a new set:
+
+- **T-trunc** (unfinished words): every prefix of 3 or more letters, at least one letter short,
+  of each top-10,000 dictionary word of 4+ letters (letters only, not an alias key) that is
+  itself neither a dictionary word nor an alias key; its target is the most frequent such word it
+  starts. DEV when the FNV-1a hash of the TARGET is even (a target's prefixes stay in one split).
+  On T-trunc the shipped default **hijacks** a prefix when it rewrites it into a word that does
+  not extend it (`timor`); ρ **protects** a hijacked prefix when it keeps it. Distinct unit =
+  target word.
+
+Baseline = the shipped default. ρ can only withhold corrections, so on GTC, S-adj and Birkbeck it
+can only break (a right correction no longer made) and on C-oov and T-trunc only protect. Counts
+are raw pairs and distinct target words.
+
+Harness: `ChannelRankingEval` with `CK_CH_ROUND=6`. Each input runs once through production
+`autoCorrect` (shipped tuning) with the probe attached; the winner's total cost is recomputed with
+the production `ChannelEditCost.cost` / `ChannelRanker`, and `bestCompletionFrequency` gives C. An
+input without a completion is skipped on S-adj, C-oov and T-trunc (ρ cannot change it); GTC runs
+in full for the denominator. **Soundness:** at the chosen configuration, 2,000 seeded inputs must
+give exactly production's output (0 mismatches, or the run is void).
+
+### 16.3 Choice on DEV
+
+(ρ, L) is admissible when:
+
+1. **Q1.** GTC-DEV distinct breaks ≤ **0.5 %** of the distinct GTC-DEV targets the baseline gets right.
+2. **Q2.** S-adj-DEV distinct breaks ≤ **0.5 %** of S-adj-DEV base words.
+3. **Q3.** Every named case of §1.5 T5 (English, `shated` → shared, Hebrew) holds, through production.
+
+Choice: the admissible configuration that protects the most T-trunc-DEV distinct targets; ties go
+to the larger ρ, then the larger L (more conservative). If none is admissible, ρ stays off and
+TEST is not run. The report cases (`tomorr`, `caf`, `resta`, `becau`, `restau`, `tomo`,
+`beautif`) and C-oov-DEV protection are reported, not gated. The bar is stricter than κ's 1.5 %
+(§13.3) because the benefit is narrower: unfinished words, not every valid unlisted word.
+
+### 16.4 Ship gate on TEST (one evaluation)
+
+- **R1.** GTC-TEST distinct breaks ≤ 0.5 % of the distinct targets the baseline gets right.
+- **R2.** S-adj-TEST distinct breaks ≤ 0.5 % of base words.
+- **R3.** T-trunc-TEST protected ≥ 25 % of the distinct targets the baseline hijacks.
+- **R4.** Named cases hold.
+
+Reported, not gated: Birkbeck R-union breaks, C-oov-TEST protected, the report cases. All four
+must hold to ship ρ as the default (with its setting); otherwise ρ stays off and the finding is
+recorded here. These thresholds are fixed now.
