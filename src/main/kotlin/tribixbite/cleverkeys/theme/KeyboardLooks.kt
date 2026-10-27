@@ -125,7 +125,7 @@ object KeyboardLooks {
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.13f, keyGapVertical = 0.17f, cornerRadiusDp = 8f,
-            borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
+            borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.2f, labelWeight = 400,
         ),
         functionChars = ",.",
     )
@@ -160,7 +160,7 @@ object KeyboardLooks {
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.12f, keyGapVertical = 0.10f, cornerRadiusDp = 8f,
-            borderWidthDp = 0f, shadowDyDp = 0.7f, labelScale = 1.05f, labelWeight = 400,
+            borderWidthDp = 0f, shadowDyDp = 0.7f, labelScale = 1.2f, labelWeight = 400,
         ),
     )
 

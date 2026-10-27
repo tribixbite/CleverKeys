@@ -177,6 +177,24 @@ class KeyboardLookRenderTest {
         assertThat(Theme.Computed(lookTheme(), config, 100f, layout()).key.border_width).isEqualTo(0f)
     }
 
+    /**
+     * Samsung light on the Pixel, 2026-10-27: the "!#1" and shift glyphs drew in the hint grey.
+     * Function keys carry FLAG_SECONDARY, so their label colour is the theme's SECONDARY colour,
+     * which the first version of the override (plain label colour only) never replaced.
+     */
+    @Test
+    fun aFramesLookLabelColourReplacesThePlainAndTheSecondaryColour() {
+        val theme = lookTheme()
+        val override = 0xFF111111.toInt()
+        assertThat(Theme.Computed.frameLabelColor(theme.labelColor, override, theme)).isEqualTo(override)
+        assertWithMessage("function keys (FLAG_SECONDARY) take the look's modifier label colour")
+            .that(Theme.Computed.frameLabelColor(theme.secondaryLabelColor, override, theme)).isEqualTo(override)
+        assertWithMessage("pressed / locked / greyed colours are kept")
+            .that(Theme.Computed.frameLabelColor(theme.lockedColor, override, theme)).isEqualTo(theme.lockedColor)
+        assertWithMessage("no override (letter frames, non-look themes): unchanged")
+            .that(Theme.Computed.frameLabelColor(theme.secondaryLabelColor, 0, theme)).isEqualTo(theme.secondaryLabelColor)
+    }
+
     @Test
     fun enterTheEditorActionKeyAndALooksFunctionCharactersGetTheirRolesAtRest() {
         val roleOf = { kv: KeyValue, down: Boolean -> Theme.Computed.roleOf(kv, down, false) }

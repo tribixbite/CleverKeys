@@ -2043,10 +2043,9 @@ class Keyboard2View @JvmOverloads constructor(
         val textSize = scaleTextSize(modifiedKv, true)
         // A look's modifier / action label colour applies to the frame's plain label at rest;
         // pressed, locked, secondary and greyed labels keep their usual colours.
-        val color = labelColor(modifiedKv, isKeyDown, false)
         val p = tc.label_paint(
             modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
-            if (tc.labelColorOverride != 0 && color == _theme.labelColor) tc.labelColorOverride else color,
+            Theme.Computed.frameLabelColor(labelColor(modifiedKv, isKeyDown, false), tc.labelColorOverride, _theme),
             textSize,
         )
         val label = modifiedKv.getString()

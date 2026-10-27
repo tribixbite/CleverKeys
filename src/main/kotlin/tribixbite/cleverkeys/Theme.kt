@@ -620,6 +620,18 @@ class Theme {
                 }
             }
 
+            /**
+             * The main-label colour of a key drawn with a frame whose look label colour is
+             * [override] (0 = none): the override replaces the plain label colour AND the
+             * secondary colour — function keys such as shift, backspace and 123 carry
+             * FLAG_SECONDARY, so their labels are normally drawn in the dimmed secondary colour
+             * (Samsung light, 2026-10-27: "!#1" and the shift arrow came out hint-grey). Pressed,
+             * locked and greyed labels (space) keep their colours.
+             */
+            @JvmStatic
+            fun frameLabelColor(base: Int, override: Int, theme: Theme): Int =
+                if (override != 0 && (base == theme.labelColor || base == theme.secondaryLabelColor)) override else base
+
             private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {
                 return Paint().apply {
                     style = Paint.Style.STROKE
