@@ -128,7 +128,7 @@ object KeyboardLooks {
             barBackground = argb(0xEEEDF4), barText = argb(0x1A1B20), barHighlight = argb(0x1A1B20),
             barSeparator = argb(0xC5C6D0), swipeTrail = argb(0x475D92),
             // Auto-cap / one-shot Shift keeps the function-key fill (Pixel 2026-10-27).
-            latchKeepsFill = true,
+            latchedKey = argb(0xDCE2F9), latchedLabel = argb(0x404659),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x1E1F25), key = argb(0x38393F), keyPressed = argb(0x4B4C52),
@@ -139,7 +139,7 @@ object KeyboardLooks {
             keyShadow = 0, keyBorder = argb(0x38393F),
             barBackground = argb(0x1E1F25), barText = argb(0xE2E2E9), barHighlight = argb(0xE2E2E9),
             barSeparator = argb(0x44464F), swipeTrail = argb(0xB0C6FF),
-            latchKeepsFill = true,
+            latchedKey = argb(0x404659), latchedLabel = argb(0xDCE2F9),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.13f, keyGapVertical = 0.17f, cornerRadiusDp = 8f,
@@ -218,7 +218,8 @@ object KeyboardLooks {
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x2793FC),
             popup = argb(0xFCFCFF), popupLabel = argb(0x252528),
             popupSelected = argb(0x376FDE), popupSelectedLabel = argb(0xFFFFFF),
-            latchKeepsFill = true,
+            // Shift engaged: the icon turns blue on the unchanged function-key fill.
+            latchedKey = argb(0xC9C9CC), latchedLabel = argb(0x2E65D4),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x010102), key = argb(0x3A3A3D), keyPressed = argb(0x47474A),
@@ -231,7 +232,7 @@ object KeyboardLooks {
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x2793FC),
             popup = argb(0x2D2D30), popupLabel = argb(0xFAFAFF),
             popupSelected = argb(0x376FDE), popupSelectedLabel = argb(0xFFFFFF),
-            latchKeepsFill = true,
+            latchedKey = argb(0x17171A), latchedLabel = argb(0x578FFF),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.16f, keyGapVertical = 0.14f, cornerRadiusDp = 6f,

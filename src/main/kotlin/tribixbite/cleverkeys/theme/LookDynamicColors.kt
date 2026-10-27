@@ -74,7 +74,9 @@ object LookDynamicColors {
             popupLabel = r.onSurface,
             popupSelected = r.primary,
             popupSelectedLabel = r.onPrimary,
-            latchKeepsFill = fixed.latchKeepsFill,
+            // Shift engaged keeps the function-key fill and glyph colour (Pixel 2026-10-27).
+            latchedKey = r.secondaryContainer,
+            latchedLabel = r.onSecondaryContainer,
         )
         return if (LookContrast.meetsFloors(mapped)) mapped else fixed
     }

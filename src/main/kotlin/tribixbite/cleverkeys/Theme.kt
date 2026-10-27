@@ -185,11 +185,15 @@ class Theme {
     val lookPopupColors: LookPopupColors?
 
     /**
-     * A latched modifier at rest keeps its resting fill (LookPalette.latchKeepsFill: Gboard,
-     * Samsung); false for every non-look theme, which draws it with the activated frame.
+     * Fill of a latched modifier at rest (LookPalette.latchedKey: Gboard, Samsung); 0 for every
+     * other theme, which draws it with the activated frame.
      */
     @JvmField
-    val lookLatchKeepsFill: Boolean
+    val colorKeyLatched: Int
+
+    /** Label colour on [colorKeyLatched] (LookPalette.latchedLabel); 0 = the ordinary label. */
+    @JvmField
+    val latchedLabelColor: Int
 
     /** How a look draws corner labels (size, weight); null for every non-look theme. */
     @JvmField
@@ -276,7 +280,8 @@ class Theme {
         lookPreview = null
         lookPopupColors = null
         lookHintStyle = null
-        lookLatchKeepsFill = false
+        colorKeyLatched = 0
+        latchedLabelColor = 0
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
@@ -395,7 +400,8 @@ class Theme {
         this.lookPreview = lookPreview?.takeIf { lookPalette != null }
         this.lookPopupColors = lookPopupColors?.takeIf { lookPalette != null }
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
-        lookLatchKeepsFill = lookPalette?.latchKeepsFill ?: false
+        colorKeyLatched = lookPalette?.latchedKey ?: 0
+        latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
         swipeTrailColor = lookPalette?.swipeTrail ?: 0
@@ -481,6 +487,9 @@ class Theme {
         /** A function key a look draws as a letter key (Gboard's emoji key): letter fill and label. */
         @JvmField
         val key_letter: Key
+        /** A latched modifier at rest on a look that defines its fill ([Theme.colorKeyLatched]). */
+        @JvmField
+        val key_latched: Key
         /** Multiplier on the main label size (a look's `labelScale`; 1 otherwise). */
         @JvmField
         val label_scale: Float
@@ -532,6 +541,11 @@ class Theme {
             key_enter = Key(theme, config, keyWidth, false, theme.colorKeyEnter, geometry, theme.enterLabelColor)
             key_action = Key(theme, config, keyWidth, false, theme.colorKeyAction, geometry, theme.actionLabelColor)
             key_letter = Key(theme, config, keyWidth, false, theme.colorKey, geometry, theme.letterKeyLabelColor)
+            // 0 = undefined: the activated frame's fill (roleOf never picks LATCHED then).
+            key_latched = Key(
+                theme, config, keyWidth, false,
+                theme.colorKeyLatched.takeIf { it != 0 } ?: theme.colorKeyActivated, geometry, theme.latchedLabelColor,
+            )
             indication_paint = init_label_paint(config, null).apply {
                 color = theme.subLabelColor
             }
@@ -610,6 +624,7 @@ class Theme {
             KeyRole.SPECIAL -> theme.colorKeySpecial
             KeyRole.ENTER -> theme.colorKeyEnter
             KeyRole.ACTION -> theme.colorKeyAction
+            KeyRole.LATCHED -> theme.colorKeyLatched.takeIf { it != 0 } ?: theme.colorKeyActivated
         }
 
         /** The look label colour of [role]'s frame (0 = none), as [keyForRole]'s frames carry it. */
@@ -618,6 +633,7 @@ class Theme {
             KeyRole.ENTER -> theme.enterLabelColor
             KeyRole.ACTION -> theme.actionLabelColor
             KeyRole.LETTER -> theme.letterKeyLabelColor
+            KeyRole.LATCHED -> theme.latchedLabelColor
             else -> 0
         }
 
@@ -625,7 +641,7 @@ class Theme {
          * H-4: which computed key frame a key renders with — pure so the mapping is
          * pinnable off-device (the draw loop feeds it kind + pointer state).
          */
-        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER }
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER, LATCHED }
 
         /** The computed frame for [role] (see [roleOf]). */
         fun keyForRole(role: KeyRole): Key = when (role) {
@@ -637,6 +653,7 @@ class Theme {
             KeyRole.ENTER -> key_enter
             KeyRole.ACTION -> key_action
             KeyRole.LETTER -> key_letter
+            KeyRole.LATCHED -> key_latched
         }
 
         class Key(
@@ -781,10 +798,11 @@ class Theme {
             fun roleOf(
                 kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = "",
                 letterKeys: Set<LookLetterKey> = emptySet(),
-                /** [isRestingLatch]: draw a latched key with its resting frame (locked still wins). */
+                /** [isRestingLatch]: draw a latched key with the [KeyRole.LATCHED] frame (locked still wins). */
                 restingLatch: Boolean = false,
             ): KeyRole {
-                val role = roleOf(kv?.getKind(), isKeyDown && (isLocked || !restingLatch), isLocked)
+                if (restingLatch && isKeyDown && !isLocked) return KeyRole.LATCHED
+                val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
                 if (kv == null) return role
                 return when {
                     role == KeyRole.SPECIAL && kv.getKind() == KeyValue.Kind.Keyevent &&
@@ -802,12 +820,12 @@ class Theme {
             /**
              * True when a key's pointer [flags] (`Pointers.getKeyFlags`, -1 = none) say it is
              * latched but neither held nor locked — a one-shot or auto-capitalised Shift — and
-             * the look keeps the resting fill for that ([keepsFill], `Theme.lookLatchKeepsFill`).
+             * the theme defines a fill for that ([hasLatchedFill]: `Theme.colorKeyLatched` != 0).
              * The real Gboard keeps Shift's function-key fill then (Pixel 2026-10-27).
              */
             @JvmStatic
-            fun isRestingLatch(flags: Int, keepsFill: Boolean): Boolean =
-                keepsFill && flags != -1 &&
+            fun isRestingLatch(flags: Int, hasLatchedFill: Boolean): Boolean =
+                hasLatchedFill && flags != -1 &&
                     (flags and Pointers.FLAG_P_LATCHED) != 0 && (flags and Pointers.FLAG_P_LOCKED) == 0
 
             /**

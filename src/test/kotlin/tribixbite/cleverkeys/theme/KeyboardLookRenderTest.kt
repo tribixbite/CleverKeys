@@ -258,29 +258,30 @@ class KeyboardLookRenderTest {
     /**
      * Pixel 2026-10-27: an auto-capitalised (latched) Shift drew in the pressed grey on
      * Gboard-style, while the real Gboard keeps the function-key fill (both #2D3D4A dark, sampled
-     * from `build/oct28-looks2/gboard-dark.png`) and only changes the glyph. On a look a latched
-     * modifier at rest keeps its resting frame; a held key and Caps Lock keep theirs, and every
-     * non-look theme still draws a latched key with the activated frame.
+     * from `build/oct28-looks2/gboard-dark.png`) and only changes the glyph; Samsung keeps the
+     * fill and turns the icon blue (research §4). A look that defines a latched fill draws a
+     * latched-at-rest key with the LATCHED frame; a held key and Caps Lock keep theirs, and every
+     * other theme still draws a latched key with the activated frame.
      */
     @Test
     fun aLooksLatchedShiftAtRestKeepsItsFunctionKeyFill() {
         val shift = KeyValue.getKeyByName("shift")
         val latched = Pointers.FLAG_P_LATCHABLE or Pointers.FLAG_P_LATCHED
-        assertWithMessage("look + latched at rest")
-            .that(Theme.Computed.isRestingLatch(latched, keepsFill = true)).isTrue()
+        assertWithMessage("latched fill defined + latched at rest")
+            .that(Theme.Computed.isRestingLatch(latched, hasLatchedFill = true)).isTrue()
         assertWithMessage("auto-capitalisation's fake pointer is latched too")
-            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_FAKE, keepsFill = true)).isTrue()
-        assertWithMessage("non-look themes keep the activated frame")
-            .that(Theme.Computed.isRestingLatch(latched, keepsFill = false)).isFalse()
+            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_FAKE, hasLatchedFill = true)).isTrue()
+        assertWithMessage("no latched fill: the activated frame")
+            .that(Theme.Computed.isRestingLatch(latched, hasLatchedFill = false)).isFalse()
         assertWithMessage("held (latchable, not yet latched)")
-            .that(Theme.Computed.isRestingLatch(Pointers.FLAG_P_LATCHABLE, keepsFill = true)).isFalse()
+            .that(Theme.Computed.isRestingLatch(Pointers.FLAG_P_LATCHABLE, hasLatchedFill = true)).isFalse()
         assertWithMessage("Caps Lock keeps the locked frame")
-            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_LOCKED, keepsFill = true)).isFalse()
-        assertThat(Theme.Computed.isRestingLatch(-1, keepsFill = true)).isFalse()
+            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_LOCKED, hasLatchedFill = true)).isFalse()
+        assertThat(Theme.Computed.isRestingLatch(-1, hasLatchedFill = true)).isFalse()
 
-        assertWithMessage("a resting latch draws the modifier frame")
+        assertWithMessage("a resting latch draws the latched frame")
             .that(Theme.Computed.roleOf(shift, true, false, ",.", emptySet(), restingLatch = true))
-            .isEqualTo(Theme.Computed.KeyRole.MODIFIER)
+            .isEqualTo(Theme.Computed.KeyRole.LATCHED)
         assertWithMessage("without it: the activated frame, as before")
             .that(Theme.Computed.roleOf(shift, true, false, ",.", emptySet()))
             .isEqualTo(Theme.Computed.KeyRole.ACTIVATED)
@@ -288,20 +289,33 @@ class KeyboardLookRenderTest {
             .that(Theme.Computed.roleOf(shift, true, true, ",.", emptySet(), restingLatch = true))
             .isEqualTo(Theme.Computed.KeyRole.LOCKED)
 
-        // Which looks keep the fill: Gboard (sampled) and Samsung (research §4: only the shift
-        // icon turns blue). iOS lights the key up, which the pressed fill stands in for.
+        // Gboard: the function-key fill and glyph colour; Samsung: the fill with the blue icon.
         for (p in listOf(KeyboardLooks.gboardLook.light, KeyboardLooks.gboardLook.dark,
                 KeyboardLooks.samsungLook.light, KeyboardLooks.samsungLook.dark)) {
-            assertThat(p.latchKeepsFill).isTrue()
+            assertThat(p.latchedKey).isEqualTo(p.modifierKey)
         }
-        assertThat(KeyboardLooks.iosLook.dark.latchKeepsFill).isFalse()
-        val gboard = Theme(
-            context, KeyboardLookSchemes.colorScheme(KeyboardLooks.gboardLook.dark), density = 2f,
-            lookPalette = KeyboardLooks.gboardLook.dark, lookGeometry = look,
+        assertThat(KeyboardLooks.gboardLook.dark.latchedLabel).isEqualTo(KeyboardLooks.gboardLook.dark.modifierLabel)
+        assertThat(KeyboardLooks.samsungLook.light.latchedLabel).isEqualTo(0xFF2E65D4.toInt())
+        assertThat(KeyboardLooks.samsungLook.dark.latchedLabel).isEqualTo(0xFF578FFF.toInt())
+        assertWithMessage("iOS lights the key up; the pressed fill stands in for it")
+            .that(KeyboardLooks.iosLook.dark.latchedKey).isEqualTo(0)
+
+        val samsung = KeyboardLooks.samsungLook.dark
+        val theme = Theme(
+            context, KeyboardLookSchemes.colorScheme(samsung), density = 2f,
+            lookPalette = samsung, lookGeometry = look,
         )
-        assertThat(gboard.lookLatchKeepsFill).isTrue()
-        assertWithMessage("non-look themes never keep the fill")
-            .that(Theme(context, darkKeyboardColorScheme(), density = 2f).lookLatchKeepsFill).isFalse()
+        val tc = Theme.Computed(theme, config(), 100f, layout())
+        val frame = tc.keyForRole(Theme.Computed.KeyRole.LATCHED)
+        assertThat(frame).isSameInstanceAs(tc.key_latched)
+        assertThat(frame.bg_paint.color).isEqualTo(tc.key_modifier.bg_paint.color)
+        assertWithMessage("the blue icon replaces the ordinary (activated) label")
+            .that(Theme.Computed.frameLabelColor(theme.activatedColor, frame.labelColorOverride, theme))
+            .isEqualTo(samsung.latchedLabel)
+
+        val plain = Theme(context, darkKeyboardColorScheme(), density = 2f)
+        assertWithMessage("non-look themes define no latched fill").that(plain.colorKeyLatched).isEqualTo(0)
+        assertThat(plain.latchedLabelColor).isEqualTo(0)
     }
 
     /** A look's preview, popup colours and hint style reach the Theme from ThemeProvider. */

@@ -202,8 +202,9 @@ object ThemeSpecs {
         )
         val key = diy(ThemeColorRole.KEY)
         val subLabel = diy(ThemeColorRole.SUB_LABEL)
-        // TODO: a spec carries colours only, so a theme saved from Gboard-/Samsung-style draws a
-        // latched Shift with the pressed fill (LookPalette.latchKeepsFill stays false).
+        // TODO: no colour role carries LookPalette.latchedKey / latchedLabel yet (a new role needs
+        // a Theme Look editor label in 21 locales), so a theme saved from Gboard-/Samsung-style
+        // draws a latched Shift with the pressed fill.
         val palette = LookPalette(
             keyboardBackground = diy(ThemeColorRole.KEYBOARD_BACKGROUND),
             key = key,
