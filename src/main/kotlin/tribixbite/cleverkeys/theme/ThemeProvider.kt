@@ -58,8 +58,10 @@ class ThemeProvider(
             themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.colors
             themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId)
             // A look's scheme for the CURRENT system mode (it follows light/dark like Monet Auto).
+            // Wallpaper colours included (Gboard-style), so KeyboardViewThemeTracker sees a
+            // wallpaper/palette change as a colour change and the next keyboard show re-inflates.
             themeId.startsWith(KeyboardLooks.ID_PREFIX) -> KeyboardLooks.byId(themeId)
-                ?.let { KeyboardLookSchemes.colorScheme(it, Config.isSystemLight(context.resources)) }
+                ?.let { KeyboardLookSchemes.colorScheme(lookPalette(it)) }
             else -> getBuiltInColorScheme(themeId)
         }
     }
@@ -289,7 +291,7 @@ class ThemeProvider(
             android.util.Log.w(TAG, "Unknown keyboard look '$themeId' — falling back to $FALLBACK_THEME_ID")
             return fallbackTheme()
         }
-        val palette = look.palette(Config.isSystemLight(context.resources))
+        val palette = lookPalette(look)
         return Theme(
             context,
             KeyboardLookSchemes.colorScheme(palette),
@@ -298,6 +300,95 @@ class ThemeProvider(
             lookFunctionChars = look.functionChars,
             lookLegends = look.legends,
             lookPillKeys = look.pillKeys,
+            lookLetterKeys = look.letterKeys,
+            lookPreview = look.preview,
+            lookHintStyle = look.hintStyle,
+        )
+    }
+
+    /**
+     * The palette [look] draws with now: its fixed light/dark palette by `Config.isSystemLight`,
+     * or — for a [KeyboardLook.dynamicColor] look on API 31+ — the system's wallpaper colours
+     * mapped by [LookDynamicColors] (which falls back to the fixed palette if a contrast floor
+     * would be missed). Read fresh every time: the system updates these resources when the
+     * wallpaper or palette changes, so the stale-view stamp picks the change up.
+     */
+    private fun lookPalette(look: KeyboardLook): LookPalette {
+        val light = Config.isSystemLight(context.resources)
+        val fixed = look.palette(light)
+        if (!look.dynamicColor || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return fixed
+        val roles = try {
+            systemMaterialRoles(light)
+        } catch (e: Exception) {
+            // Resources.NotFoundException on a ROM without the system palette: keep the fixed one.
+            android.util.Log.w(TAG, "System dynamic colours unavailable — using ${look.id}'s fixed palette", e)
+            return fixed
+        }
+        return LookDynamicColors.gboardPalette(roles, light, fixed)
+    }
+
+    /**
+     * The Material 3 roles of the system's dynamic palette. API 34+ exposes the roles themselves
+     * (`system_surface_container_light`, …), computed by the system with its own scheme spec —
+     * the values Gboard draws with. API 31–33 expose only the tonal palettes; the roles are
+     * their standard tones (Material 3 tonal-spot mapping, tones 100/99/95/90/80/…/10/0 =
+     * shades 0/10/50/100/200/…/900/1000; tones without a shade take the nearest one).
+     */
+    @android.annotation.TargetApi(android.os.Build.VERSION_CODES.S)
+    private fun systemMaterialRoles(light: Boolean): LookDynamicColors.MaterialRoles {
+        val res = context.resources
+        fun c(id: Int): Int = res.getColor(id, null)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            return if (light) LookDynamicColors.MaterialRoles(
+                surfaceContainer = c(android.R.color.system_surface_container_light),
+                surfaceContainerLowest = c(android.R.color.system_surface_container_lowest_light),
+                surfaceContainerHighest = c(android.R.color.system_surface_container_highest_light),
+                surfaceBright = c(android.R.color.system_surface_bright_light),
+                secondaryContainer = c(android.R.color.system_secondary_container_light),
+                onSecondaryContainer = c(android.R.color.system_on_secondary_container_light),
+                primary = c(android.R.color.system_primary_light),
+                onPrimary = c(android.R.color.system_on_primary_light),
+                onSurface = c(android.R.color.system_on_surface_light),
+                onSurfaceVariant = c(android.R.color.system_on_surface_variant_light),
+                outlineVariant = c(android.R.color.system_outline_variant_light),
+            ) else LookDynamicColors.MaterialRoles(
+                surfaceContainer = c(android.R.color.system_surface_container_dark),
+                surfaceContainerLowest = c(android.R.color.system_surface_container_lowest_dark),
+                surfaceContainerHighest = c(android.R.color.system_surface_container_highest_dark),
+                surfaceBright = c(android.R.color.system_surface_bright_dark),
+                secondaryContainer = c(android.R.color.system_secondary_container_dark),
+                onSecondaryContainer = c(android.R.color.system_on_secondary_container_dark),
+                primary = c(android.R.color.system_primary_dark),
+                onPrimary = c(android.R.color.system_on_primary_dark),
+                onSurface = c(android.R.color.system_on_surface_dark),
+                onSurfaceVariant = c(android.R.color.system_on_surface_variant_dark),
+                outlineVariant = c(android.R.color.system_outline_variant_dark),
+            )
+        }
+        return if (light) LookDynamicColors.MaterialRoles(
+            surfaceContainer = c(android.R.color.system_neutral1_50),        // tone 94 ≈ 95
+            surfaceContainerLowest = c(android.R.color.system_neutral1_0),   // tone 100
+            surfaceContainerHighest = c(android.R.color.system_neutral1_100), // tone 90
+            surfaceBright = c(android.R.color.system_neutral1_10),           // tone 98 ≈ 99
+            secondaryContainer = c(android.R.color.system_accent2_100),      // tone 90
+            onSecondaryContainer = c(android.R.color.system_accent2_900),    // tone 10
+            primary = c(android.R.color.system_accent1_600),                 // tone 40
+            onPrimary = c(android.R.color.system_accent1_0),                 // tone 100
+            onSurface = c(android.R.color.system_neutral1_900),              // tone 10
+            onSurfaceVariant = c(android.R.color.system_neutral2_700),       // tone 30
+            outlineVariant = c(android.R.color.system_neutral2_200),         // tone 80
+        ) else LookDynamicColors.MaterialRoles(
+            surfaceContainer = c(android.R.color.system_neutral1_900),       // tone 12 ≈ 10
+            surfaceContainerLowest = c(android.R.color.system_neutral1_1000), // tone 4 ≈ 0
+            surfaceContainerHighest = c(android.R.color.system_neutral1_800), // tone 22 ≈ 20
+            surfaceBright = c(android.R.color.system_neutral1_700),          // tone 24 ≈ 30
+            secondaryContainer = c(android.R.color.system_accent2_700),      // tone 30
+            onSecondaryContainer = c(android.R.color.system_accent2_100),    // tone 90
+            primary = c(android.R.color.system_accent1_200),                 // tone 80
+            onPrimary = c(android.R.color.system_accent1_800),               // tone 20
+            onSurface = c(android.R.color.system_neutral1_100),              // tone 90
+            onSurfaceVariant = c(android.R.color.system_neutral2_200),       // tone 80
+            outlineVariant = c(android.R.color.system_neutral2_700),         // tone 30
         )
     }
 

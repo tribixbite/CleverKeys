@@ -838,6 +838,8 @@ tasks.register('runPureTests', JavaExec) {
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
     'tribixbite.cleverkeys.theme.KeyboardLooksTest',
+    'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
+    'tribixbite.cleverkeys.theme.LookPopupsTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',

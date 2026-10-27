@@ -413,6 +413,8 @@
     <string name="appearance_key_horizontal_margin_desc">Горизонтальний проміжок між клавішами</string>
     <string name="appearance_look_show_hints_title">Показувати підказки жестів у знайомих стилях</string>
     <string name="appearance_look_show_hints_desc">Стилі iOS, Gboard, SwiftKey і Samsung приховують підказки в кутах клавіш, як ці клавіатури; увімкніть, щоб показати всі. Жести працюють у будь-якому разі.</string>
+    <string name="appearance_look_key_preview_title">Перегляд натиснутої клавіші у знайомих стилях</string>
+    <string name="appearance_look_key_preview_desc">Стилі iOS, Gboard, SwiftKey і Samsung показують натиснутий символ у спливному вікні у формі, як у цих клавіатур.</string>
     <string name="appearance_custom_border_title">Власна рамка</string>
     <string name="appearance_custom_border_desc">Увімкнути власний стиль рамки клавіш</string>
     <string name="appearance_border_radius_title">Радіус скруглення рамки</string>

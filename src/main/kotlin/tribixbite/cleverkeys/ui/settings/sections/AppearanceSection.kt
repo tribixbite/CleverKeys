@@ -301,6 +301,18 @@ internal fun SettingsActivity.AppearanceSection() {
                     }
                 )
 
+                // Looks show their product's key-press preview (LookPreviewPolicy); this turns
+                // it off. Non-look themes never draw one.
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_look_key_preview_title),
+                    description = stringResource(R.string.appearance_look_key_preview_desc),
+                    checked = lookKeyPreview,
+                    onCheckedChange = {
+                        lookKeyPreview = it
+                        saveSetting("look_key_preview", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_custom_border_title),
                     description = stringResource(R.string.appearance_custom_border_desc),

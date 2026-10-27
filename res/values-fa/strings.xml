@@ -433,6 +433,8 @@
     <string name="appearance_key_horizontal_margin_desc">فاصله افقی بین کلیدها</string>
     <string name="appearance_look_show_hints_title">نمایش راهنمای حرکات در ظاهرهای آشنا</string>
     <string name="appearance_look_show_hints_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung مانند همان صفحه‌کلیدها راهنماهای گوشه را پنهان می‌کنند؛ برای نمایش همه روشن کنید. حرکات در هر حالت کار می‌کنند.</string>
+    <string name="appearance_look_key_preview_title">پیش‌نمایش کلید فشرده در ظاهرهای آشنا</string>
+    <string name="appearance_look_key_preview_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung نویسهٔ فشرده‌شده را در پنجره‌ای به شکل همان صفحه‌کلیدها نشان می‌دهند.</string>
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
     <string name="appearance_custom_border_desc">استایل‌دهی سفارشی حاشیه کلید را فعال کنید</string>
     <string name="appearance_border_radius_title">شعاع گوشه</string>

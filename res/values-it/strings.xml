@@ -438,6 +438,8 @@
     <string name="appearance_key_horizontal_margin_desc">Spaziatura orizzontale tra i tasti</string>
     <string name="appearance_look_show_hints_title">Mostra i suggerimenti dei gesti negli aspetti familiari</string>
     <string name="appearance_look_show_hints_desc">Gli aspetti stile iOS, Gboard, SwiftKey e Samsung nascondono i suggerimenti agli angoli come quelle tastiere; attiva per mostrarli tutti. I gesti funzionano comunque.</string>
+    <string name="appearance_look_key_preview_title">Anteprima del tasto negli aspetti familiari</string>
+    <string name="appearance_look_key_preview_desc">Gli aspetti stile iOS, Gboard, SwiftKey e Samsung mostrano il carattere premuto in un popup con la forma di quelle tastiere.</string>
     <string name="appearance_custom_border_title">Bordo personalizzato</string>
     <string name="appearance_custom_border_desc">Abilita lo stile bordo personalizzato per i tasti</string>
     <string name="appearance_border_radius_title">Raggio bordo</string>

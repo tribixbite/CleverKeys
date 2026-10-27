@@ -412,6 +412,8 @@
     <string name="appearance_key_horizontal_margin_desc">Poziome odstępy między klawiszami</string>
     <string name="appearance_look_show_hints_title">Pokaż podpowiedzi gestów w znajomych wyglądach</string>
     <string name="appearance_look_show_hints_desc">Wyglądy w stylu iOS, Gboard, SwiftKey i Samsung ukrywają podpowiedzi w rogach jak te klawiatury; włącz, aby pokazać wszystkie. Gesty działają w obu przypadkach.</string>
+    <string name="appearance_look_key_preview_title">Podgląd naciśniętego klawisza w znajomych wyglądach</string>
+    <string name="appearance_look_key_preview_desc">Wyglądy w stylu iOS, Gboard, SwiftKey i Samsung pokazują naciśnięty znak w dymku o kształcie jak w tych klawiaturach.</string>
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
     <string name="appearance_custom_border_desc">Włącz własny styl obramowania klawiszy</string>
     <string name="appearance_border_radius_title">Promień narożników</string>

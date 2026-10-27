@@ -10,9 +10,13 @@ import androidx.compose.ui.graphics.compositeOver
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import tribixbite.cleverkeys.theme.KeyboardLookGeometry
 import tribixbite.cleverkeys.theme.LookGeometry
+import tribixbite.cleverkeys.theme.LookHintStyle
+import tribixbite.cleverkeys.theme.LookLetterKey
 import tribixbite.cleverkeys.theme.LookLegends
 import tribixbite.cleverkeys.theme.LookPillKey
 import tribixbite.cleverkeys.theme.LookPalette
+import tribixbite.cleverkeys.theme.LookPopupColors
+import tribixbite.cleverkeys.theme.LookPreview
 import tribixbite.cleverkeys.theme.LookTypeface
 import kotlin.math.min
 
@@ -164,6 +168,26 @@ class Theme {
     @JvmField
     val modifierLabelColor: Int
 
+    /** Function keys a look draws as letter keys (Gboard's emoji key); empty otherwise. */
+    @JvmField
+    val lookLetterKeys: Set<LookLetterKey>
+
+    /** Label colour of a function key drawn as a letter key ([lookLetterKeys]); 0 = none. */
+    @JvmField
+    val letterKeyLabelColor: Int
+
+    /** A look's key-press preview; null for every non-look theme (none drawn). */
+    @JvmField
+    val lookPreview: LookPreview?
+
+    /** Colours of a look's key-press preview and long-press popover; null for other themes. */
+    @JvmField
+    val lookPopupColors: LookPopupColors?
+
+    /** How a look draws corner labels (size, weight); null for every non-look theme. */
+    @JvmField
+    val lookHintStyle: LookHintStyle?
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -240,6 +264,11 @@ class Theme {
         lookLegends = null
         lookPillKeys = emptySet()
         modifierLabelColor = 0
+        lookLetterKeys = emptySet()
+        letterKeyLabelColor = 0
+        lookPreview = null
+        lookPopupColors = null
+        lookHintStyle = null
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
@@ -268,6 +297,9 @@ class Theme {
         lookFunctionChars: String = "",
         lookLegends: LookLegends? = null,
         lookPillKeys: Set<LookPillKey> = emptySet(),
+        lookLetterKeys: Set<LookLetterKey> = emptySet(),
+        lookPreview: LookPreview? = null,
+        lookHintStyle: LookHintStyle? = null,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -335,6 +367,11 @@ class Theme {
         this.lookLegends = lookLegends
         this.lookPillKeys = lookPillKeys
         modifierLabelColor = lookPalette?.modifierLabel ?: 0
+        this.lookLetterKeys = lookLetterKeys
+        letterKeyLabelColor = if (lookLetterKeys.isNotEmpty()) lookPalette?.label ?: 0 else 0
+        this.lookPreview = lookPreview?.takeIf { lookPalette != null }
+        lookPopupColors = lookPalette?.let { LookPopupColors.of(it) }
+        this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
         swipeTrailColor = lookPalette?.swipeTrail ?: 0
@@ -417,6 +454,9 @@ class Theme {
         /** The editor-action key at rest (other themes: same fill as [key_special]). */
         @JvmField
         val key_action: Key
+        /** A function key a look draws as a letter key (Gboard's emoji key): letter fill and label. */
+        @JvmField
+        val key_letter: Key
         /** Multiplier on the main label size (a look's `labelScale`; 1 otherwise). */
         @JvmField
         val label_scale: Float
@@ -488,6 +528,7 @@ class Theme {
             key_special = Key(theme, config, keyWidth, false, theme.colorKeySpecial, geometry, theme.modifierLabelColor)
             key_enter = Key(theme, config, keyWidth, false, theme.colorKeyEnter, geometry, theme.enterLabelColor)
             key_action = Key(theme, config, keyWidth, false, theme.colorKeyAction, geometry, theme.actionLabelColor)
+            key_letter = Key(theme, config, keyWidth, false, theme.colorKey, geometry, theme.letterKeyLabelColor)
             indication_paint = init_label_paint(config, null).apply {
                 color = theme.subLabelColor
             }
@@ -497,7 +538,7 @@ class Theme {
          * H-4: which computed key frame a key renders with — pure so the mapping is
          * pinnable off-device (the draw loop feeds it kind + pointer state).
          */
-        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION }
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER }
 
         /** The computed frame for [role] (see [roleOf]). */
         fun keyForRole(role: KeyRole): Key = when (role) {
@@ -508,6 +549,7 @@ class Theme {
             KeyRole.SPECIAL -> key_special
             KeyRole.ENTER -> key_enter
             KeyRole.ACTION -> key_action
+            KeyRole.LETTER -> key_letter
         }
 
         class Key(
@@ -584,7 +626,8 @@ class Theme {
                 )
                 _label_paint = init_label_paint(config, LookTypeface.forWeight(geometry?.labelWeight))
                 _special_label_paint = init_label_paint(config, _key_font)
-                _sublabel_paint = init_label_paint(config, null)
+                // A look's hint weight (Fluent's light hints); null = the default face.
+                _sublabel_paint = init_label_paint(config, LookTypeface.forWeight(theme.lookHintStyle?.weight))
                 _special_sublabel_paint = init_label_paint(config, _key_font)
                 _label_alpha_bits = (config.labelBrightness and 0xFF) shl 24
             }
@@ -633,13 +676,17 @@ class Theme {
              *  - plain Enter (`KEYCODE_ENTER`) → [KeyRole.ENTER];
              *  - the editor-action key (`Event.ACTION`: the Enter replacement in Go / Search /
              *    Send / Done fields, LayoutModifier) → [KeyRole.ACTION];
-             *  - a character in [functionChars] (a look's, e.g. Gboard's `,.`) → [KeyRole.MODIFIER].
+             *  - a character in [functionChars] (a look's, e.g. Gboard's `,.`) → [KeyRole.MODIFIER];
+             *  - a function key in [letterKeys] (a look's, e.g. Gboard's emoji key) → [KeyRole.LETTER].
              * Every non-look theme gives the ENTER and ACTION frames the special fill and has no
              * function characters, so it draws exactly as before.
              */
             @JvmStatic
             @JvmOverloads
-            fun roleOf(kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = ""): KeyRole {
+            fun roleOf(
+                kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = "",
+                letterKeys: Set<LookLetterKey> = emptySet(),
+            ): KeyRole {
                 val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
                 if (kv == null) return role
                 return when {
@@ -649,6 +696,8 @@ class Theme {
                         kv.getEvent() == KeyValue.Event.ACTION -> KeyRole.ACTION
                     role == KeyRole.NORMAL && functionChars.isNotEmpty() &&
                         kv.getKind() == KeyValue.Kind.Char && functionChars.indexOf(kv.getChar()) >= 0 -> KeyRole.MODIFIER
+                    role == KeyRole.SPECIAL && LookLetterKey.EMOJI in letterKeys &&
+                        kv.getKind() == KeyValue.Kind.Event && kv.getEvent() == KeyValue.Event.SWITCH_EMOJI -> KeyRole.LETTER
                     else -> role
                 }
             }
