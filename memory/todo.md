@@ -702,14 +702,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     preview renders the first non-System layout, so a styled layout's row colours appear in a
     theme's preview; after a night-mode switch the IME window once came up 126 px short
     (frame [0,1706], keys under the nav bar) and was right on the next show; hint/preview chip
-    rows overflow and scroll in fa. Not done: Add Layout in landscape (Saga left in portrait);
-    the `ed022c9c` APK (sha256 b3667ea5…, `build/oct27pm-saga202/ck-hexfix.apk`) is NOT on the
-    Saga — at 16:42 the LAN dropped (host could not reach .202/.144/.81) and stayed down past
-    17:05. OPEN on the Saga, left mid-test: per-app locale fa (restore: `cmd locale
-    set-app-locales tribixbite.cleverkeys --locales ""`, was []), layouts Harbour + GboardTest
-    (delete; was [System] only), custom theme "Harbour" (delete), Theme Creator open unsaved,
-    1–2 Chrome `data:` textarea tabs. Already restored: global theme CleverKeys Dark, night
-    mode yes, default IME CleverKeys.
+    rows overflow and scroll in fa. Not done: Add Layout in landscape (Saga left in portrait).
+    17:58 (LAN back): the `ed022c9c` APK (sha256 b3667ea5…) installed on the Saga; in fa every
+    Theme Creator hex reads `#…` first (17 colour rows and Keyboard Look rows) and the switch
+    reads "(Android / 12 و بالاتر)": PASS (`build/oct27pm-saga202/73-fa-fixed-strip.png`). Saga
+    restored and verified: app locale [], layouts System only, custom theme "Harbour" deleted
+    (Creator closed unsaved), my Chrome `data:` tab closed (3 pre-existing tabs kept),
+    CleverKeys Dark selected, night mode yes, default IME CleverKeys, launcher in front, no
+    files left in Download. Scratch worktrees ck-wt-saga202/202c removed (content = HEAD).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
