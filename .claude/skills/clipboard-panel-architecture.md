@@ -435,3 +435,34 @@ on another tab stays. Private entries included. Setting `clipboard_swipe_delete_
 - Tests: `ClipboardSwipePolicyTest`, `ClipboardPendingDeletionTest` (pure),
   `ClipboardSwipeDeleteViewTest`, `ClipboardSwipeDeleteManagerTest` (mock). The touch path
   itself (MotionEvent dispatch, VelocityTracker) has no host test; it needs a device check.
+
+## Reorder Pinned / To-dos rows (2026-10-27)
+
+Drag handle `clipboard_entry_drag_handle` (first child of the entry row, `clipboardEntryButton`
+style, `ic_drag_handle`) on PINNED/TODOS rows. Full design: `docs/specs/clipboard-system.md`
+"Reordering Pinned and To-dos rows".
+
+- **Write path**: `moveEntryTo(entry, targetIndex)` (index in `filteredHistory`) →
+  `ClipboardReorderPolicy.neighbours` (the VISIBLE rows around the slot, by `rowId`) →
+  `ClipboardHistoryService.moveInTab` → `ClipboardDatabase.moveEntry`, which re-reads the table in
+  its transaction and applies `ClipboardReorderPolicy.plan`: one midpoint UPDATE, open ends past
+  the table's min/max, renumber 1.0… when the gap ≤ `MIN_GAP` (1e-6), on duplicates or non-finite
+  positions; stale requests refused. Then the view reorders `history` locally (no flash) and the
+  change notification reloads. Only `position` is written — status/tags untouched.
+- **Availability** (`reorderAvailability()`): HIDDEN on History, in Select mode, while editing,
+  during a bulk action; FILTERED (handle alpha 0.3, touch → `onReorderUnavailable` → manager's
+  `showReorderUnavailableHint`, cleared by `updateResultSummary` once no longer FILTERED) with a search or date/size/private/tag
+  filter. The To-dos STATUS filter does not count. Any new filter must be added to
+  `hasNonStatusFilter()`.
+- **Gesture**: `handleReorderTouch` runs FIRST in `dispatchTouchEvent`; a DOWN on the handle
+  (±10dp, full row height) owns the whole gesture, so the swipe tracker, clicks and long-press
+  never see it. Row offset `dragOffset` (half a row past either list end, else the end slots are
+  unreachable), drop slot `dropIndex`, line drawn in `dispatchDraw`, edge auto-scroll of the
+  parent ScrollView via `postOnAnimation` (bands shrink to a third of a viewport shorter than two
+  bands — the landscape pane). `applyPagination` and detach cancel a drag (rows are
+  rebound); `getView` resets `translationY/Z` on every row but the dragged one.
+- **TalkBack**: one shared `RowActionDelegate` reads two tags — `R.id.clipboard_entry_delete`
+  (Delete) and `R.id.clipboard_entry_drag_handle` (moves, also on the handle). Actions come from
+  `rowAccessibilityActions(host)`, testable without the stub `AccessibilityNodeInfo`.
+- Tests: `ClipboardReorderPolicyTest` (pure), `ClipboardReorderViewTest` (mock),
+  `ClipboardReorderDatabaseTest` (instrumented).

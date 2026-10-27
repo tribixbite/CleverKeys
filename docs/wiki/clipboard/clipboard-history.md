@@ -137,6 +137,29 @@ Todo items:
 - Can also be pinned (both flags independent)
 - Useful for quick reference or follow-up
 
+## Reorder Pinned Items and To-dos
+
+Pinned items and to-dos stay in the order you give them. Each row on the **Pinned** and **Todos**
+tabs has a handle (two short bars) at its start:
+
+1. Touch the handle and, without lifting, drag the row up or down. The row lifts and a line shows
+   where it will land.
+2. Hold it near the top or bottom of the panel to scroll the list while dragging.
+3. Lift your finger to drop it. The new order is saved straight away: it is kept when the panel
+   closes or the keyboard restarts, and backups carry it.
+
+- **To-do status is not changed by moving.** Active, planned and completed to-dos share one order.
+  With the default filter (active only) you are ordering the active to-dos; hidden planned and
+  completed ones keep their places.
+- **While you search or use a tag, date, size or private-only filter**, the handle is dimmed and
+  reordering waits: touching it says *Clear the search and filters to reorder*. The status filter
+  does not pause it.
+- No handle on the History tab (it is ordered by time), in selection mode or while editing an item.
+- Long-press still copies and a sideways swipe still deletes; only a drag that starts on the handle
+  reorders.
+- TalkBack: each item's actions menu offers **Move up**, **Move down** and **Move to top**, and
+  announces the new position.
+
 ## Media Clipboard
 
 CleverKeys automatically captures images, videos, PDFs, and other files you copy to the clipboard.

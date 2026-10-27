@@ -29,6 +29,15 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Reorder pinned clipboard items and to-dos.** Rows on the Pinned and To-dos tabs have a drag
+  handle at their start: touch it and drag the row to a new place (a line shows where it lands;
+  holding it near the top or bottom of the panel scrolls the list). The order is saved at once,
+  survives closing the panel and restarting the keyboard, and is carried by backups. Moving a
+  to-do never changes its status; with the default active-only view you order the active to-dos
+  and hidden planned / completed ones keep their places. While a search or a tag, date, size or
+  private-only filter is active the handle is dimmed and says to clear them first. No handle on
+  History, in selection mode or while editing; long-press copy and swipe to delete are
+  unchanged. TalkBack: **Move up**, **Move down** and **Move to top** in each item's actions.
 - **Edit very long clipboard entries page by page.** An entry longer than 20,000 characters or
   1,000 lines opens in the pane's editor one page at a time, with "Page N of M" and previous /
   next buttons above it (hold a button to jump to the first or last page). Edits are kept when

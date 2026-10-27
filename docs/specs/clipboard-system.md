@@ -864,3 +864,74 @@ per-tab commit without a flash-back, view triggers, refusals, edit-mode delete s
 path) and `ClipboardSwipeDeleteManagerTest` (feedback/Undo button, pane-level triggers,
 per-tab service routing, ownership) — mock. The MotionEvent path itself is device-checked
 only (`memory/todo.md`).
+
+## Reordering Pinned and To-dos rows (2026-10-27)
+
+**Request.** Maintainer: "todo items in clipboard should be rearrange-able". Both
+`pinned_entries` and `todo_entries` already stored a REAL `position` (shown ascending) for
+midpoint insertion, but nothing wrote it except appends (`max + 1`). Same code path for both
+tabs, so Pinned gets it too.
+
+**Order.** `ORDER BY position ASC, id ASC` everywhere (list, full list, export); the id tie-break
+makes equal positions (possible after a merged import) display deterministically.
+
+**Write** (`ClipboardReorderPolicy`, pure; `ClipboardDatabase.moveEntry`, one transaction). A move
+names the moved row and the two VISIBLE rows it lands between (null = open end) by row id. The
+database re-reads the table inside the transaction and plans against it, so a stale view is
+refused (`Plan.Refused`: a row gone, neighbours out of order). Normally one UPDATE: the
+neighbours' midpoint. An open end goes `END_STEP` (1.0) past the table's min / max — "top" means
+above every row, including hidden ones. **Renumbering threshold:** when the neighbour gap is
+`≤ MIN_GAP` (1e-6), a position is not finite, or two rows share a position, the whole table is
+rewritten 1.0, 2.0, … in its new order (only changed rows written). From gaps of 1.0 that is after
+about 20 consecutive drops into the same gap (2^-20 < 1e-6); a double near the positions in use
+resolves far below the threshold, so a midpoint above it is always strictly between its
+neighbours. Only `position` is written.
+
+**Status groups.** The To-dos list is ONE order in which active, planned and completed rows
+interleave; the status filter only hides rows. A move never changes status (only the Done and
+Status buttons do). Rows hidden between the two neighbours keep their relative order, so ordering
+the active rows (the default active-only view) never reshuffles planned or completed ones. We
+chose this over "dragging across a group changes status" because there are no group sections on
+screen to drag across, and a reorder silently changing status would surprise.
+
+**Availability** (`ClipboardReorderPolicy.availability`). HIDDEN (no handle): History tab
+(ordered by time), selection mode, any row in edit mode, a bulk action running. FILTERED (handle
+dimmed to 0.3, touching it shows "Clear the search and filters to reorder" in the result row's
+feedback line until the next results update where reordering is no longer paused; gesture
+swallowed): a search or a date / size / private-only / tag filter — the
+visible rows are then a scattered subset and a drop between two of them would land among unseen
+rows. The status filter does NOT pause reordering (it is the default). AVAILABLE otherwise. A
+pending swipe deletion does not block it (the hidden row is not a neighbour).
+
+**Gesture** (`ClipboardHistoryView.handleReorderTouch`, ahead of the swipe tracker in
+`dispatchTouchEvent`). A DOWN on a visible handle (24dp icon at the row's start, ±10dp, full row
+height) starts the drag at once — no long press, so it never competes with long-press copy, and
+the swipe-to-delete tracker never sees the gesture. The parent ScrollView is told not to
+intercept. The row follows the finger (`translationY`, `translationZ` 8dp, keyboard background
+forced opaque; `dragOffset` lets it go half a row past either end of the list so the first and
+last slots are reachable), a 3dp label-coloured line marks the drop slot (`dropIndex`: other rows whose middle
+is above the dragged row's centre), and holding within 40dp of the pane's top or bottom scrolls
+it (`autoScrollStep`, up to 12dp per frame, deeper = faster; a viewport shorter than two bands —
+the landscape pane, ~195 px on a Saga — uses bands of a third of its height). UP moves the entry to the slot
+(page offset + slot in the current results); CANCEL, a data reload mid-drag or detaching puts the
+row back unchanged. A second finger is ignored. Pages: a drag moves within the page; the
+TalkBack moves cross page boundaries.
+
+**Accessibility.** The row text (which already carries Delete) and the handle carry custom
+actions **Move up**, **Move down** (not on the last row) and **Move to top** (from the third row,
+where it differs from Move up), ids `clipboard_entry_move_up/down/top`; after a move the view
+announces "Moved to position N of M". Offered only when AVAILABLE. The handle's content
+description is "Drag to reorder".
+
+**Persistence.** The database is the only store: pane close/reopen and keyboard restart reload
+it. Backups already exported `position` for both tables and imports (export version ≥ 3) keep it,
+so the order round-trips; a merged import may duplicate positions, which the next move renumbers.
+
+**Tests.** `ClipboardReorderPolicyTest` (pure: midpoint, ends past the table, hidden rows keep
+order, threshold and duplicate renumbering, 58 repeated halvings, refusals, neighbours, drop slot,
+auto-scroll bands, availability, offered moves). `ClipboardReorderViewTest` (mock: neighbours sent
+to the service, instant new order, Pinned path, active-only filter keeps statuses, refused and
+no-op moves, filters pause it, History / Select / edit hide it, TalkBack moves and ids, handle
+visibility/dimming in `getView`). `ClipboardReorderDatabaseTest` (instrumented: real SQL, reload
+order, status/tags kept, renumbering, stale refusals, backup round trip). The MotionEvent path is
+device-checked (`memory/todo.md`).

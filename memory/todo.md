@@ -549,6 +549,20 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     at 200). The first build crashed the process on the first keystroke (stale page size vs a
     shrunken match list, `IndexOutOfBoundsException: toIndex = 100`); fixed by
     `LearnedBrowsePolicy.page`, pinned in `LearnedBrowsePolicyTest`. No learned entry was deleted.
+24. [ ] agent, 2026-10-27 (maintainer request "todo items in clipboard should be rearrange-able";
+    second Saga 192.168.0.144, release `efe7723d…`, evidence `build/oct27-saga144-reorder/`, not in
+    git). Pinned and To-dos rows reorder by a drag handle or TalkBack Move up / Move down / Move to
+    top: `32f3c2c1` (feature), `00f36502` (short landscape pane auto-scroll; stale filter hint),
+    `5176889e` (end slots reachable; opaque lifted row), `14ad281c` (build.gradle cleanup). Design
+    and thresholds: `docs/specs/clipboard-system.md` "Reordering Pinned and To-dos rows". Device
+    PASS: handle on To-dos, drag drops and persists across pane close/reopen and APK reinstall,
+    auto-scroll in the ~195 px landscape pane both ways (first and last slot), dimmed handle +
+    hint while searching (hint clears with the search), no handle in Select mode, vertical
+    scrolling and swipe-to-delete unchanged (the five throwaway to-dos were swiped away; History,
+    Pinned and To-dos back to 0 / 0 / 0 as recorded before). Open: (a) TalkBack moves not
+    driven on a device (adb cannot run custom actions) — pinned by `ClipboardReorderViewTest`;
+    (b) `ClipboardReorderDatabaseTest` (instrumented: SQL, renumbering, backup round trip) not
+    yet run on emulator.wtf; (c) Pinned tab not dragged on a device (same code path).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

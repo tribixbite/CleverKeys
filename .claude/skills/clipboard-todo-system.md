@@ -135,6 +135,16 @@ if (statusFilterActive || statusFilterPlanned || statusFilterCompleted) {
 
 **Default filter state:** on first open only **Active** is checked — planned and completed todos are hidden until the user widens the filter in the dialog (active-first UX; the state also resets to active-only on every tab switch via `setTab`). Because that default HIDES data, `hasActiveFilters()` reports the status filter as active whenever any of the three statuses is unchecked — including the default — so the filter icon in the search bar is tinted on the TODOS tab by default (audit D-3: the icon must never claim "no filters" while rows are being hidden).
 
+## Order (reorderable, 2026-10-27)
+
+Todos display by `position ASC, id ASC`; new todos append at `max + 1`. Users reorder by dragging
+the row's handle or with TalkBack Move up / Move down / Move to top — see
+`clipboard-panel-architecture.md` "Reorder Pinned / To-dos rows". Status is NOT a grouping: the
+list is one order where statuses interleave, a move never changes status, and with the default
+active-only filter only active rows are reordered (hidden planned/completed rows keep their
+relative order because the write is the midpoint between the two VISIBLE neighbours). Reordering
+pauses while a search or a non-status filter is active.
+
 ## Common Operations
 
 ### Add a fourth status (e.g., `blocked`)
