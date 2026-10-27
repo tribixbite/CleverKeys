@@ -85,7 +85,8 @@
     <key c="l"/>
   </row>
   <row key_background="#3E6A93" key_border_color="#9FB3C8" key_label_color="#FFFFFF">
-    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"/>
+    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"
+         key_background_pressed="#174F80" key_label_color_pressed="#FFFFFF"/>
     <key c="z"/>
     <key c="x"/>
     <key c="c"/>

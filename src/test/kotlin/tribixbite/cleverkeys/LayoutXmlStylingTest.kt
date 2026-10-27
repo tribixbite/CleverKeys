@@ -98,7 +98,8 @@ class LayoutXmlStylingTest {
             .that(keyOf(layout, "z").style).isEqualTo(KeyStyle(background = 0xFF3E6A93.toInt(), borderColor = 0xFF9FB3C8.toInt(), labelColor = 0xFFFFFFFF.toInt()))
         assertWithMessage("a key's own attribute beats its row's, the rest is inherited")
             .that(layout.rows[2].keys.first().style)
-            .isEqualTo(KeyStyle(background = 0xFF1F6FB2.toInt(), borderColor = 0xFF9FB3C8.toInt(), labelColor = 0xFFFFFFFF.toInt()))
+            .isEqualTo(KeyStyle(background = 0xFF1F6FB2.toInt(), backgroundPressed = 0xFF174F80.toInt(), borderColor = 0xFF9FB3C8.toInt(), labelColor = 0xFFFFFFFF.toInt(),
+                labelColorPressed = 0xFFFFFFFF.toInt()))
         val bottom = layout.rows[3].keys
         assertThat(bottom[3].style!!.geometry).containsExactly(
             KeyGeometryField.VERTICAL_GAP, 2f, KeyGeometryField.HORIZONTAL_GAP, 0.6f,
@@ -158,6 +159,15 @@ class LayoutXmlStylingTest {
                     val label = style.labelColor ?: c.getValue(if (isChar) ThemeColorRole.LABEL else ThemeColorRole.MODIFIER_LABEL)
                     val ratio = contrast(fill, label)
                     if (ratio < 3.0) problems += "$mode ${kv.getString()} at rest: ${hex(label)} on ${hex(fill)} = %.2f".format(ratio)
+                }
+                // A latched modifier (Shift after a sentence end) draws its ACTIVATED frame: the
+                // pressed fill, but — not being held down — its rest label colour, so a key
+                // label colour also has to read on the theme's mode-dependent pressed fill
+                // (Saga 2026-10-27, light mode: white Shift arrow on #C9D6E3, 1.48).
+                if (kv.getKind() == KeyValue.Kind.Modifier && style.labelColor != null) {
+                    val fill = style.backgroundPressed ?: c.getValue(ThemeColorRole.KEY_PRESSED)
+                    val ratio = contrast(fill, style.labelColor!!)
+                    if (ratio < 3.0) problems += "$mode ${kv.getString()} latched: ${hex(style.labelColor!!)} on ${hex(fill)} = %.2f".format(ratio)
                 }
                 if (style.backgroundPressed != null) {
                     val label = style.labelColorPressed ?: c.getValue(ThemeColorRole.LABEL_PRESSED)

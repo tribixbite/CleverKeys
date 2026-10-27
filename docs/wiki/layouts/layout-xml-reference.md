@@ -193,7 +193,9 @@ Key and row colours are the **same in light and dark mode**; only the `<theme>` 
 `<light>`/`<dark>` children) changes with the mode. A key that sets `key_background` but no
 `key_label_color` keeps the theme's label colour for the current mode, which can vanish on a
 fixed background (a light fill under dark mode's light labels). Set `key_label_color` together
-with `key_background`, and pick colours that read in both modes.
+with `key_background`, and pick colours that read in both modes. A latched Shift or other
+modifier keeps its `key_label_color` on the pressed fill, so give such a key a
+`key_background_pressed` (and `key_label_color_pressed`) too.
 
 ## `<modmap>`
 
@@ -307,7 +309,8 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
     <key c="l"/>
   </row>
   <row key_background="#3E6A93" key_border_color="#9FB3C8" key_label_color="#FFFFFF">
-    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"/>
+    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"
+         key_background_pressed="#174F80" key_label_color_pressed="#FFFFFF"/>
     <key c="z"/>
     <key c="x"/>
     <key c="c"/>
@@ -332,8 +335,8 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
 What it does: white letter keys on a light blue-grey background (dark navy in dark mode),
 a blue Enter (and orange in Go / Search / Send fields), Gboard-like digit hints on the top row,
 a bubble preview, `f` and `j` with blue labels, the third row in steel blue with white labels
-and a blue-grey outline (Shift and Backspace in the Enter key's blue; these colours read in both
-modes), a taller gap above the bottom row, a slightly wider space bar frame and an Enter key
+and a blue-grey outline (Shift and Backspace in the Enter key's blue, a latched Shift dark blue;
+these colours read in both modes), a taller gap above the bottom row, a slightly wider space bar frame and an Enter key
 without the custom border that turns dark blue while pressed.
 
 ## Related Features
