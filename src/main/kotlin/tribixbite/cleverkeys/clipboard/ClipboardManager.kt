@@ -30,6 +30,7 @@ import android.widget.Switch
 import android.widget.TextView
 import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
+import tribixbite.cleverkeys.clipboard.ClipboardReorderPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSelection
 import tribixbite.cleverkeys.clipboard.ClipboardSelectionAction
 import tribixbite.cleverkeys.clipboard.ClipboardSelectionHolder
@@ -400,9 +401,7 @@ class ClipboardManager(
             }
 
             // Reordering (2026-10-27): a touch on the dimmed handle says why it does not move.
-            clipboardHistoryView?.onReorderUnavailable = {
-                showBulkFeedback(context.getString(R.string.clipboard_reorder_unavailable))
-            }
+            clipboardHistoryView?.onReorderUnavailable = { showReorderUnavailableHint() }
 
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
@@ -1006,6 +1005,20 @@ class ClipboardManager(
         bulkFeedback?.visibility = View.GONE
     }
 
+    /** The reorder hint currently in the feedback line, or null (it is cleared once moot). */
+    private var reorderHint: CharSequence? = null
+
+    /**
+     * Reordering (2026-10-27): the dimmed handle was touched while a search or filter pauses
+     * reordering. The line goes again at the first results update where reordering is no
+     * longer paused ([updateResultSummary]), so it never outlives the cause it names.
+     */
+    internal fun showReorderUnavailableHint() {
+        val hint = context.getString(R.string.clipboard_reorder_unavailable)
+        reorderHint = hint
+        showBulkFeedback(hint)
+    }
+
     /** The result line currently kept for re-rendering (tests). */
     internal fun bulkFeedbackText(): CharSequence? = lastBulkFeedback
 
@@ -1210,6 +1223,14 @@ class ClipboardManager(
 
     private fun updateResultSummary() {
         val view = clipboardHistoryView ?: return
+        // The reorder hint names a search or filter; drop it once that no longer applies
+        // (unless a newer message has replaced it).
+        reorderHint?.let { hint ->
+            if (view.reorderAvailability() != ClipboardReorderPolicy.Availability.FILTERED) {
+                reorderHint = null
+                if (lastBulkFeedback === hint) clearBulkFeedback()
+            }
+        }
         val (count, bytes) = view.resultSummary()
         val ready = view.isResultsReady()
         resultSummary?.text = if (ready)

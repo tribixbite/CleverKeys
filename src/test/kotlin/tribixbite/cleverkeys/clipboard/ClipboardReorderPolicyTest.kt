@@ -211,8 +211,13 @@ class ClipboardReorderPolicyTest {
         assertThat(step(475f)).isGreaterThan(0)
         assertThat(step(500f)).isEqualTo(20)
         assertThat(step(10f)).isLessThan(step(40f))
-        assertWithMessage("a viewport too short for two bands never scrolls")
-            .that(ClipboardReorderPolicy.autoScrollStep(10f, viewportHeight = 60f, edge = 50f, maxStep = 20f)).isEqualTo(0)
+        // Saga landscape (2026-10-27): the pane's list viewport was ~195 px against 105 px bands.
+        // A viewport shorter than two bands uses bands of a third of its height instead.
+        val short = { y: Float -> ClipboardReorderPolicy.autoScrollStep(y, viewportHeight = 60f, edge = 50f, maxStep = 20f) }
+        assertWithMessage("short viewport: top third scrolls up").that(short(10f)).isLessThan(0)
+        assertWithMessage("short viewport: middle third is still").that(short(30f)).isEqualTo(0)
+        assertWithMessage("short viewport: bottom third scrolls down").that(short(55f)).isGreaterThan(0)
+        assertThat(short(60f)).isEqualTo(20)
     }
 
     // ─────────────────────────────────────────────── availability and accessible moves

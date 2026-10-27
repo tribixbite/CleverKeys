@@ -140,11 +140,17 @@ object ClipboardReorderPolicy {
     /**
      * Pixels to scroll this frame while dragging with the finger at [fingerY] inside a
      * viewport of [viewportHeight]: negative (up) inside the top [edge] band, positive inside
-     * the bottom one, growing to [maxStep] at the edge and beyond. Zero elsewhere, and always
-     * zero in a viewport too short for two bands.
+     * the bottom one, growing to [maxStep] at the edge and beyond. Zero elsewhere. A viewport
+     * shorter than two bands (the landscape pane: ~195 px against 105 px bands on a Saga) uses
+     * bands of a third of its height, so the middle third still holds the list still.
      */
     fun autoScrollStep(fingerY: Float, viewportHeight: Float, edge: Float, maxStep: Float): Int {
-        if (edge <= 0f || viewportHeight < 2 * edge) return 0
+        if (edge <= 0f || viewportHeight <= 0f) return 0
+        val band = if (viewportHeight < 2 * edge) viewportHeight / 3 else edge
+        return bandStep(fingerY, viewportHeight, band, maxStep)
+    }
+
+    private fun bandStep(fingerY: Float, viewportHeight: Float, edge: Float, maxStep: Float): Int {
         val depth = when {
             fingerY < edge -> -(edge - fingerY) / edge
             fingerY > viewportHeight - edge -> (fingerY - (viewportHeight - edge)) / edge

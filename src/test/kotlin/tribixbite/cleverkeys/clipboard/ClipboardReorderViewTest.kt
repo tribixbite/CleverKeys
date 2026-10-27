@@ -281,6 +281,38 @@ class ClipboardReorderViewTest {
         assertThat(ClipboardHistoryView.moveActionForId(R.id.clipboard_entry_delete)).isNull()
     }
 
+    // ─────────────────────────────────────────────── the manager's hint line
+
+    @Test
+    fun theFilterHintLeavesTheResultRowOnceReorderingIsAvailableAgain() {
+        // Saga 2026-10-27: after clearing the search, "Clear the search and filters to reorder"
+        // stayed in the result row although the handle worked again.
+        val list = mockk<ClipboardHistoryView>(relaxed = true)
+        every { list.isSelecting() } returns false
+        every { list.resultSummary() } returns (0 to 0L)
+        every { list.reorderAvailability() } returns Availability.FILTERED
+        every { context.getString(R.string.clipboard_reorder_unavailable) } returns "hint"
+        val mgr = objenesis.newInstance(tribixbite.cleverkeys.ClipboardManager::class.java)
+        mgr.setField("context", context)
+        mgr.setField("clipboardHistoryView", list)
+        mgr.setField("bulkFeedback", mockk<TextView>(relaxed = true))
+        mgr.setField("tabHistory", mockk<ImageView>(relaxed = true))
+        mgr.setField("tabPinned", mockk<ImageView>(relaxed = true))
+        mgr.setField("tabTodos", mockk<ImageView>(relaxed = true))
+        mgr.setField("currentTab", ClipboardTab.TODOS)
+        mgr.setField("tagMode", false)
+        mgr.setField("config", objenesis.newInstance(Config::class.java))
+        val update = mgr.javaClass.getDeclaredMethod("updateResultSummary").apply { isAccessible = true }
+
+        mgr.showReorderUnavailableHint()
+        update.invoke(mgr)
+        assertWithMessage("still filtered: the hint stays").that(mgr.bulkFeedbackText()?.toString()).isEqualTo("hint")
+
+        every { list.reorderAvailability() } returns Availability.AVAILABLE
+        update.invoke(mgr)
+        assertThat(mgr.bulkFeedbackText()).isNull()
+    }
+
     // ─────────────────────────────────────────────── the drag handle in getView
 
     @Test
