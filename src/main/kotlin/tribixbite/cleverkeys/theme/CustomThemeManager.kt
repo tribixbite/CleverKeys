@@ -329,14 +329,35 @@ class CustomThemeManager(private val context: Context) {
 
 /**
  * Custom theme data class with JSON serialization.
+ *
+ * Format versions (backward compatible both ways, docs/specs/layout-system.md "Layout themes"):
+ *  - 1 (every theme before 2026-10-28): `id`, `name`, `createdAt`, `modifiedAt` and the 17
+ *    [KeyboardColorScheme] colours in `colors`. Rendered exactly as before.
+ *  - 2: the same fields plus `formatVersion: 2` and `look`, a [ThemeSpec] ([ThemeSpecJson]) with
+ *    everything a layout `<theme>` can carry beyond the 17 colours — look-only colours, light /
+ *    dark variants, key geometry, hints, pills, preview. An older build reads `colors` and
+ *    ignores the rest, so the theme still loads there (without its geometry).
+ *
+ * @property extension the version-2 `look` part, or null (version 1). Its common `colors` never
+ *   repeat the 17 DIY roles: those live in [colors] alone ([fullSpec] joins the two).
  */
 data class CustomTheme(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
     val colors: KeyboardColorScheme,
     val createdAt: Long = System.currentTimeMillis(),
-    val modifiedAt: Long = System.currentTimeMillis()
+    val modifiedAt: Long = System.currentTimeMillis(),
+    val extension: ThemeSpec? = null,
 ) {
+    /**
+     * The whole appearance as one spec: [colors] as the common DIY colours, the [extension]'s
+     * look-only colours, variants, geometry and policies. The theme name is the spec's name.
+     */
+    fun fullSpec(): ThemeSpec {
+        val ext = extension ?: ThemeSpec()
+        return ext.copy(name = name, colors = ThemeSpecs.schemeColors(colors) + ext.colors)
+    }
+
     /**
      * Convert to ThemeInfo for use in theme selector.
      */
@@ -360,6 +381,12 @@ data class CustomTheme(
             put("createdAt", createdAt)
             put("modifiedAt", modifiedAt)
             put("colors", colors.toJson())
+            // Version 2 only when there is something beyond the 17 colours: a version-1 theme
+            // keeps its exact stored JSON (and its backups) byte for byte.
+            extension?.let {
+                put("formatVersion", FORMAT_VERSION_LOOK)
+                put("look", ThemeSpecJson.toJson(it))
+            }
         }
     }
 
@@ -373,9 +400,32 @@ data class CustomTheme(
                 name = json.getString("name"),
                 createdAt = json.getLong("createdAt"),
                 modifiedAt = json.getLong("modifiedAt"),
-                colors = KeyboardColorSchemeHelper.fromJson(json.getJSONObject("colors"))
+                colors = KeyboardColorSchemeHelper.fromJson(json.getJSONObject("colors")),
+                extension = json.optJSONObject("look")?.let { split(ThemeSpecJson.fromJson(it)) },
             )
         }
+
+        /** `formatVersion` of a theme with a [CustomTheme.extension]. */
+        const val FORMAT_VERSION_LOOK = 2
+
+        /**
+         * A custom theme holding everything of [spec] (an embedded layout `<theme>`, or a look):
+         * the 17 DIY colours come from [spec]'s common colours where it defines them and from
+         * [base] (the theme it inherits from — the user's global theme in the current mode)
+         * otherwise; the rest is kept as the [CustomTheme.extension], variants and geometry
+         * included. [CustomTheme.fullSpec] of the result defines every field [spec] defines with
+         * the same value (`CustomThemeSpecTest`: XML → custom theme → XML loses nothing).
+         */
+        fun fromSpec(spec: ThemeSpec, name: String, base: KeyboardColorScheme, id: String = UUID.randomUUID().toString()): CustomTheme {
+            val baseColors = ThemeSpecs.schemeColors(base)
+            val diy = baseColors + spec.colors.filterKeys { it.diy }
+            val colors = ThemeSpecs.render(ThemeSpec(colors = diy), base).scheme
+            return CustomTheme(id = id, name = name, colors = colors, extension = split(spec.copy(name = null)))
+        }
+
+        /** [spec] without its common DIY colours (they belong in `colors`); null when nothing is left. */
+        private fun split(spec: ThemeSpec): ThemeSpec? =
+            spec.copy(name = null, colors = spec.colors.filterKeys { !it.diy }).takeIf { !it.isEmpty }
 
         private const val DAY_MS = 24L * 60 * 60 * 1000
 

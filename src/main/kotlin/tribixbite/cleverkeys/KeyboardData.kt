@@ -4,6 +4,8 @@ import android.content.res.Resources
 import android.content.res.XmlResourceParser
 import android.util.Xml
 import org.xmlpull.v1.XmlPullParser
+import tribixbite.cleverkeys.theme.ThemeSpec
+import tribixbite.cleverkeys.theme.ThemeSpecXml
 import java.io.StringReader
 
 /**
@@ -54,7 +56,19 @@ class KeyboardData private constructor(
      * layout's DEFAULT per-layout geometry overrides. Unvalidated, like [declared_theme]; always
      * read through `LayoutKeyGeometry` (`declaredValues` / `xmlProblems`).
      */
-    val declared_key_geometry: Map<String, String> = emptyMap()
+    val declared_key_geometry: Map<String, String> = emptyMap(),
+    /**
+     * The layout's EMBEDDED theme (`<theme>` child of `<keyboard>`, [ThemeSpecXml]), or null.
+     * Partial: unset fields inherit from the user's global theme. Rendered when the layout has
+     * no theme binding of its own (user choice or XML `theme=` id): `LayoutThemeBinding.resolve`.
+     */
+    val embedded_theme: ThemeSpec? = null,
+    /**
+     * Invalid `<theme>`, `<row>` and `<key>` styling values that loading dropped (each as
+     * "`<element> name="value"`"). Loading stays lenient; the layout editor refuses to save
+     * while this is not empty.
+     */
+    val style_problems: List<String> = emptyList()
 ) {
     /** Position of every keys on the layout, see [getKeys()]. */
     private var _key_pos: Map<KeyValue, KeyPos>? = null
@@ -206,7 +220,9 @@ class KeyboardData private constructor(
         src.numpad_height,
         src.declared_language,
         src.declared_theme,
-        src.declared_key_geometry
+        src.declared_key_geometry,
+        src.embedded_theme,
+        src.style_problems
     )
 
     data class Row(
@@ -255,13 +271,16 @@ class KeyboardData private constructor(
         companion object {
             @JvmStatic
             @Throws(Exception::class)
-            fun parse(parser: XmlPullParser): Row {
+            @JvmOverloads
+            fun parse(parser: XmlPullParser, problems: MutableList<String> = ArrayList()): Row {
                 val keys = ArrayList<Key>()
                 val h = attribute_float(parser, "height", 1f)
                 val shift = attribute_float(parser, "shift", 0f)
                 val scale = attribute_float(parser, "scale", 0f)
+                // Row-level key styling: the default of every key in the row (KeyStyle).
+                val rowStyle = KeyStyles.parse("row", { parser.getAttributeValue(null, it) }, problems)
                 while (expect_tag(parser, "key"))
-                    keys.add(Key.parse(parser))
+                    keys.add(Key.parse(parser, rowStyle, problems))
                 var row = Row(keys, maxOf(h, 0.5f), maxOf(shift, 0f))
                 if (scale > 0f)
                     row = row.updateWidth(scale)
@@ -286,7 +305,12 @@ class KeyboardData private constructor(
         /** Extra empty space on the left of the key. */
         val shift: Float,
         /** String printed on the keys. It has no other effect. */
-        val indication: String?
+        val indication: String?,
+        /**
+         * Per-key styling from the XML (`<key>` attributes over its `<row>`'s), or null. Drawing
+         * only: the key's cell, hit-testing and swipe key centres ignore it ([KeyStyles.frame]).
+         */
+        val style: KeyStyle? = null
     ) {
         /** Whether key at [index] as [flag]. */
         fun keyHasFlag(index: Int, flag: Int): Boolean =
@@ -294,7 +318,7 @@ class KeyboardData private constructor(
 
         /** New key with the width multiplied by 's'. */
         fun scaleWidth(s: Float): Key =
-            Key(keys, anticircle, keysflags, width * s, shift, indication)
+            Key(keys, anticircle, keysflags, width * s, shift, indication, style)
 
         fun getKeys(dst: MutableMap<KeyValue, KeyPos>, row: Int, col: Int) {
             for (i in keys.indices) {
@@ -310,11 +334,11 @@ class KeyboardData private constructor(
             val ks = keys.toMutableList()
             ks[i] = kv
             val flags = keysflags and (ALL_FLAGS shl i).inv()
-            return Key(ks, anticircle, flags, width, shift, indication)
+            return Key(ks, anticircle, flags, width, shift, indication, style)
         }
 
         fun withShift(s: Float): Key =
-            Key(keys, anticircle, keysflags, width, s, indication)
+            Key(keys, anticircle, keysflags, width, s, indication, style)
 
         fun hasValue(kv: KeyValue): Boolean {
             for (i in keys.indices) {
@@ -383,7 +407,8 @@ class KeyboardData private constructor(
 
             @JvmStatic
             @Throws(Exception::class)
-            fun parse(parser: XmlPullParser): Key {
+            @JvmOverloads
+            fun parse(parser: XmlPullParser, rowStyle: KeyStyle? = null, problems: MutableList<String> = ArrayList()): Key {
                 val ks = arrayOfNulls<KeyValue>(9)
                 var keysflags = 0
                 keysflags = keysflags or parse_key_attr(parser, get_key_attr(parser, "key0", "c"), ks, 0)
@@ -401,9 +426,12 @@ class KeyboardData private constructor(
                 val width = attribute_float(parser, "width", 1f)
                 val shift = attribute_float(parser, "shift", 0f)
                 val indication = parser.getAttributeValue(null, "indication")
+                // Per-key styling over the row's (KeyStyle precedence: key > row).
+                val own = KeyStyles.parse("key", { parser.getAttributeValue(null, it) }, problems)
+                val style = own?.over(rowStyle) ?: rowStyle
                 while (parser.next() != XmlPullParser.END_TAG)
                     continue
-                return Key(ks.toList(), anticircle, keysflags, maxOf(width, 0f), maxOf(shift, 0f), indication)
+                return Key(ks.toList(), anticircle, keysflags, maxOf(width, 0f), maxOf(shift, 0f), indication, style)
             }
         }
     }
@@ -423,7 +451,7 @@ class KeyboardData private constructor(
                 else
                     null
             }
-            return Key(ks, k.anticircle, k.keysflags, k.width, k.shift, k.indication)
+            return Key(ks, k.anticircle, k.keysflags, k.width, k.shift, k.indication, k.style)
         }
     }
 
@@ -583,9 +611,16 @@ class KeyboardData private constructor(
             }.toMap()
             val rows = ArrayList<Row>()
             var modmap: Modmap? = null
+            val problems = ArrayList<String>()
+            var embeddedTheme: ThemeSpec? = null
             while (next_tag(parser)) {
                 when (parser.name) {
-                    "row" -> rows.add(Row.parse(parser))
+                    "row" -> rows.add(Row.parse(parser, problems))
+                    ThemeSpecXml.TAG -> {
+                        val spec = parse_theme(parser, problems)
+                        if (embeddedTheme == null) embeddedTheme = spec
+                        else problems.add("<${ThemeSpecXml.TAG}> (only the first <theme> is used)")
+                    }
                     "modmap" -> {
                         if (modmap != null)
                             throw error(parser, "Multiple '<modmap>' are not allowed")
@@ -598,9 +633,55 @@ class KeyboardData private constructor(
             var kh = 0f
             for (r in rows)
                 kh += r.height + r.shift
+            if (problems.isNotEmpty()) {
+                // Lenient: the layout loads without the dropped values (KeyStyles / ThemeSpecXml).
+                try {
+                    android.util.Log.w("KeyboardData", "Layout '${name ?: "?"}': ignored invalid styling ${problems.joinToString()}")
+                } catch (e: RuntimeException) {
+                    // android.util.Log is a stub off-device; the problems stay on the layout.
+                }
+            }
             return KeyboardData(rows, maxOf(kw, 1f), kh, modmap, script, numpad_script, name,
                 bottom_row, embedded_number_row, locale_extra_keys, numpad_height, declared_language,
-                declared_theme, declared_key_geometry)
+                declared_theme, declared_key_geometry, embeddedTheme, problems)
+        }
+
+        /** Attribute name → value of the current start tag. */
+        private fun attributes(parser: XmlPullParser): Map<String, String> {
+            val out = LinkedHashMap<String, String>()
+            for (i in 0 until parser.attributeCount)
+                out[parser.getAttributeName(i)] = parser.getAttributeValue(i)
+            return out
+        }
+
+        /** Skip the rest of the current element (its children included). */
+        private fun skip_element(parser: XmlPullParser) {
+            var depth = 1
+            while (depth > 0) {
+                when (parser.next()) {
+                    XmlPullParser.START_TAG -> depth++
+                    XmlPullParser.END_TAG -> depth--
+                    XmlPullParser.END_DOCUMENT -> return
+                }
+            }
+        }
+
+        /**
+         * Parse a `<theme>` element (parser on its start tag) and its `<light>` / `<dark>`
+         * children into a [ThemeSpec]; unknown children and bad values go to [problems].
+         */
+        private fun parse_theme(parser: XmlPullParser, problems: MutableList<String>): ThemeSpec {
+            val themeAttrs = attributes(parser)
+            var light: Map<String, String>? = null
+            var dark: Map<String, String>? = null
+            while (next_tag(parser)) {
+                when (parser.name) {
+                    ThemeSpecXml.LIGHT_TAG -> { light = attributes(parser); skip_element(parser) }
+                    ThemeSpecXml.DARK_TAG -> { dark = attributes(parser); skip_element(parser) }
+                    else -> { problems.add("<${parser.name}> (not allowed in <theme>)"); skip_element(parser) }
+                }
+            }
+            return ThemeSpecXml.parse(themeAttrs, light, dark, problems)
         }
 
         private fun compute_max_width(rows: List<Row>): Float {

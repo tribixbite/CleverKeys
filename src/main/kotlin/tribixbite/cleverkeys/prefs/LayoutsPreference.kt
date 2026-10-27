@@ -366,6 +366,11 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         val themes: List<String?>,
         /** Each layout's effective key-geometry overrides ([LayoutKeyGeometry.effective]). */
         val keyGeometry: List<Map<KeyGeometryField, Float>> = emptyList(),
+        /**
+         * Each layout's EMBEDDED theme (its XML `<theme>`), or null where it has none or its
+         * entry explicitly follows the global theme ([LayoutThemeBinding.UNBOUND]).
+         */
+        val embeddedThemes: List<tribixbite.cleverkeys.theme.ThemeSpec?> = emptyList(),
     )
 
     companion object {
@@ -427,6 +432,7 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
             val languages = mutableListOf<String?>()
             val themes = mutableListOf<String?>()
             val geometry = mutableListOf<Map<KeyGeometryField, Float>>()
+            val embedded = mutableListOf<tribixbite.cleverkeys.theme.ThemeSpec?>()
             for (l in loadFromPreferences(KEY, prefs, DEFAULT, SERIALIZER) ?: DEFAULT) {
                 val data = when (l) {
                     is NamedLayout -> layoutOfString(res, l.name)
@@ -436,13 +442,17 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 layouts.add(data)
                 languages.add(LayoutLanguageBinding.effective(l.language, data?.declared_language))
                 themes.add(LayoutThemeBinding.effective(l.theme, data?.declared_theme))
+                // "Follow global theme" over the layout's own <theme> as well (UNBOUND).
+                embedded.add(
+                    data?.embedded_theme?.takeIf { LayoutThemeBinding.normalizeEntry(l.theme) != LayoutThemeBinding.UNBOUND }
+                )
                 geometry.add(
                     LayoutKeyGeometry.effective(
                         l.keyGeometry, LayoutKeyGeometry.declaredValues(data?.declared_key_geometry),
                     ),
                 )
             }
-            return LoadedLayouts(layouts, languages, themes, geometry)
+            return LoadedLayouts(layouts, languages, themes, geometry, embedded)
         }
 
         /** Does not call [prefs.commit]. */

@@ -45,6 +45,7 @@ class ThemeProvider(
             themeId.startsWith("custom_") -> loadCustomTheme(themeId)
             themeId.startsWith("decorative_") -> loadDecorativeTheme(themeId)
             themeId.startsWith(KeyboardLooks.ID_PREFIX) -> loadLook(themeId)
+            themeId.startsWith(EmbeddedThemes.ID_PREFIX) -> loadEmbedded(themeId)
             else -> loadBuiltInTheme(themeId)
         }
     }
@@ -55,7 +56,12 @@ class ThemeProvider(
      */
     fun getColorScheme(themeId: String): KeyboardColorScheme? {
         return when {
-            themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.colors
+            // A version-2 custom theme: its colours for the current mode (light/dark variants).
+            themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.let { custom ->
+                if (custom.extension == null) custom.colors
+                else renderedFor(ThemeSpecs.flatten(custom.fullSpec(), systemLight())).scheme
+            }
+            themeId.startsWith(EmbeddedThemes.ID_PREFIX) -> embeddedFlat(themeId)?.let { renderedFor(it.first).scheme }
             themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId)
             // A look's scheme for the CURRENT system mode (it follows light/dark like Monet Auto).
             // Wallpaper colours included (Gboard-style), so KeyboardViewThemeTracker sees a
@@ -226,7 +232,117 @@ class ThemeProvider(
         themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId) != null
         themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId) != null
         themeId.startsWith(KeyboardLooks.ID_PREFIX) -> KeyboardLooks.byId(themeId) != null
+        themeId.startsWith(EmbeddedThemes.ID_PREFIX) -> EmbeddedThemes.parse(themeId) != null
         else -> themeId in BUILT_IN_THEME_IDS
+    }
+
+    /**
+     * What a keyboard view of [themeId] is built from beyond its colours — the resolved spec of
+     * a version-2 custom theme or of an embedded layout theme — for `KeyboardViewThemeStamp`, so
+     * an edit of geometry or hints alone re-inflates the view. Null for every other theme.
+     */
+    fun appearanceOf(themeId: String): Any? = when {
+        themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)
+            ?.takeIf { it.extension != null }?.let { ThemeSpecs.flatten(it.fullSpec(), systemLight()) }
+        themeId.startsWith(EmbeddedThemes.ID_PREFIX) -> embeddedFlat(themeId)?.first
+        else -> null
+    }
+
+    /**
+     * The appearance [themeId] draws with in the current system mode, as a flat (one-mode)
+     * spec, plus the theme's own key frame in px for built-in XML themes (radius, width,
+     * pressed width; null otherwise). What a layout's embedded `<theme>` inherits from: its
+     * unset fields take these values. Total, like [getTheme]: an unknown id gives the fallback.
+     */
+    fun baseAppearance(themeId: String): Pair<ThemeSpec, FloatArray?> {
+        val light = systemLight()
+        return when {
+            themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.let {
+                ThemeSpecs.flatten(it.fullSpec(), light) to null
+            }
+            themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId)?.let { ThemeSpecs.fromScheme(it) to null }
+            themeId.startsWith(KeyboardLooks.ID_PREFIX) -> KeyboardLooks.byId(themeId)?.let {
+                ThemeSpecs.fromLook(it, lookPalette(it)) to null
+            }
+            // The global theme is never an embedded one; guard against a loop anyway.
+            themeId.startsWith(EmbeddedThemes.ID_PREFIX) -> null
+            else -> {
+                val xml = loadBuiltInTheme(themeId)
+                xmlThemeSpec(xml) to floatArrayOf(xml.keyBorderRadius, xml.keyBorderWidth, xml.keyBorderWidthActivated)
+            }
+        } ?: (ThemeSpecs.fromScheme(getBuiltInColorScheme(FALLBACK_THEME_ID)) to null)
+    }
+
+    /** An XML theme's rendered colours as role colours (its trail follows the user: not set). */
+    private fun xmlThemeSpec(t: Theme): ThemeSpec = ThemeSpec(
+        colors = linkedMapOf(
+            ThemeColorRole.KEY to t.colorKey,
+            ThemeColorRole.KEY_PRESSED to t.colorKeyActivated,
+            ThemeColorRole.KEY_LOCKED to t.colorKeyLocked,
+            ThemeColorRole.KEY_MODIFIER to t.colorKeyModifier,
+            ThemeColorRole.KEY_SPECIAL to t.colorKeySpecial,
+            ThemeColorRole.LABEL to t.labelColor,
+            ThemeColorRole.SUB_LABEL to t.subLabelColor,
+            ThemeColorRole.SECONDARY_LABEL to t.secondaryLabelColor,
+            ThemeColorRole.KEY_BORDER to t.keyBorderColorTop,
+            ThemeColorRole.KEY_BORDER_PRESSED to t.keyBorderColorActivated,
+            ThemeColorRole.RIPPLE to t.rippleColor,
+            ThemeColorRole.BAR_TEXT to t.suggestionTextColor,
+            ThemeColorRole.BAR_BACKGROUND to t.suggestionBackgroundColor,
+            ThemeColorRole.BAR_HIGHLIGHT to t.suggestionHighConfidenceColor,
+            ThemeColorRole.KEYBOARD_BACKGROUND to t.colorKeyboardBackground,
+            ThemeColorRole.SURFACE to t.colorKeyboardSurface,
+            ThemeColorRole.LABEL_PRESSED to t.activatedColor,
+            ThemeColorRole.LOCKED_LABEL to t.lockedColor,
+            ThemeColorRole.BAR_SEPARATOR to t.suggestionSeparatorColor,
+        ),
+    )
+
+    /** An embedded id's spec over its base, flattened for the current mode, and the base's frame. */
+    private fun embeddedFlat(themeId: String): Pair<ThemeSpec, FloatArray?>? {
+        val parsed = EmbeddedThemes.parse(themeId) ?: return null
+        val (base, frame) = baseAppearance(parsed.baseThemeId)
+        return ThemeSpecs.resolve(parsed.spec, base, systemLight()) to frame
+    }
+
+    private fun systemLight(): Boolean = Config.isSystemLight(context.resources)
+
+    /** [flat] rendered, with wallpaper colours applied when it asks for them ([dynamicPalette]). */
+    private fun renderedFor(flat: ThemeSpec): RenderedThemeSpec {
+        val r = ThemeSpecs.render(flat)
+        if (!r.dynamicColor) return r
+        val palette = dynamicPalette(r.palette)
+        return if (palette === r.palette) r else r.copy(palette = palette, scheme = KeyboardLookSchemes.colorScheme(palette))
+    }
+
+    /** A Theme from a flat spec ([ThemeSpecs.render]); [frame] = an inherited XML key frame. */
+    private fun specTheme(flat: ThemeSpec, frame: FloatArray?): Theme {
+        val r = renderedFor(flat)
+        return Theme(
+            context,
+            r.scheme,
+            lookPalette = r.palette,
+            lookGeometry = r.geometry,
+            lookFunctionChars = r.functionChars,
+            lookLegends = r.legends,
+            lookPillKeys = r.pillKeys,
+            lookLetterKeys = r.letterKeys,
+            lookPreview = r.preview,
+            lookHintStyle = r.hintStyle,
+            lookPopupColors = if (r.popups) LookPopupColors.of(r.palette) else null,
+            baseFrame = frame,
+            pressedLabelColor = r.labelPressed,
+        )
+    }
+
+    /** A layout's embedded `<theme>` over the global theme it names (EmbeddedThemes). */
+    private fun loadEmbedded(themeId: String): Theme {
+        val flat = embeddedFlat(themeId)
+        if (flat == null) {
+            android.util.Log.w(TAG, "Unknown embedded layout theme '$themeId' — falling back to $FALLBACK_THEME_ID")
+            return fallbackTheme()
+        }
+        return specTheme(flat.first, flat.second)
     }
 
     /**
@@ -314,14 +430,24 @@ class ThemeProvider(
      * wallpaper or palette changes, so the stale-view stamp picks the change up.
      */
     private fun lookPalette(look: KeyboardLook): LookPalette {
-        val light = Config.isSystemLight(context.resources)
-        val fixed = look.palette(light)
-        if (!look.dynamicColor || android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return fixed
+        val fixed = look.palette(systemLight())
+        if (!look.dynamicColor) return fixed
+        return dynamicPalette(fixed)
+    }
+
+    /**
+     * The system's wallpaper colours mapped onto a palette ([LookDynamicColors]) with [fixed] as
+     * the fallback: below API 31, on a ROM without the system palette, or when a contrast floor
+     * would be missed, [fixed] itself is returned.
+     */
+    private fun dynamicPalette(fixed: LookPalette): LookPalette {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return fixed
+        val light = systemLight()
         val roles = try {
             systemMaterialRoles(light)
         } catch (e: Exception) {
             // Resources.NotFoundException on a ROM without the system palette: keep the fixed one.
-            android.util.Log.w(TAG, "System dynamic colours unavailable — using ${look.id}'s fixed palette", e)
+            android.util.Log.w(TAG, "System dynamic colours unavailable — using the fixed palette", e)
             return fixed
         }
         return LookDynamicColors.gboardPalette(roles, light, fixed)
@@ -402,6 +528,9 @@ class ThemeProvider(
             android.util.Log.w(TAG, "Custom theme not found '$themeId' — falling back to $FALLBACK_THEME_ID")
             return fallbackTheme()
         }
+        // Version 2 (a saved layout <theme> or an edited extension): the full spec; version 1
+        // renders exactly as it always did.
+        if (customTheme.extension != null) return specTheme(ThemeSpecs.flatten(customTheme.fullSpec(), systemLight()), null)
         return Theme(context, customTheme.colors)
     }
 

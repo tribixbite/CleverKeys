@@ -872,6 +872,14 @@ class Config private constructor(
      */
     @JvmField var layout_missing_theme: String? = null
     /**
+     * Each layout's EMBEDDED theme (its XML `<theme>`, partial over the global theme), index-
+     * aligned with [layouts]; null where none applies. Rendered when the layout has no theme
+     * binding of its own ([LayoutThemeBinding.resolve]).
+     */
+    @JvmField var layout_embedded_themes: List<tribixbite.cleverkeys.theme.ThemeSpec?> = emptyList()
+    /** Non-null while the current layout's embedded theme is rendered (then == [themeName]). */
+    @JvmField var layout_embedded_theme: String? = null
+    /**
      * Each layout's EFFECTIVE key-geometry overrides (gaps, border), index-aligned with
      * [layouts]: the entry's choices over its XML defaults ([LayoutKeyGeometry.effective]).
      * Empty map = the layout follows the look / global settings. The global preferences are
@@ -1158,6 +1166,7 @@ class Config private constructor(
         layout_languages = loaded.languages
         layout_themes = loaded.themes
         layout_key_geometry = loaded.keyGeometry
+        layout_embedded_themes = loaded.embeddedThemes
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
         scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
@@ -1576,18 +1585,27 @@ class Config private constructor(
      * @return true when the effective theme or its binding state changed.
      */
     internal fun recomputeActiveTheme(styleIdOf: (String) -> Int): Boolean {
-        val before = Triple(themeName, layout_bound_theme, layout_missing_theme)
+        val before = listOf(themeName, layout_bound_theme, layout_missing_theme, layout_embedded_theme)
+        // An Objenesis-built test Config never ran the initialiser: treat its null as "none".
+        @Suppress("USELESS_CAST")
+        val embeddedSpecs = (layout_embedded_themes as List<tribixbite.cleverkeys.theme.ThemeSpec?>?) ?: emptyList()
         val active = LayoutThemeBinding.resolve(
             bindings = layout_themes,
             currentIndex = get_current_layout(),
             globalTheme = user_theme_name,
             isAvailable = themeAvailability ?: { true },
+            // The embedded id names its base (the global theme), so a global-theme change under
+            // a layout with its own <theme> also changes themeName and re-inflates the view.
+            embedded = embeddedSpecs.map { spec ->
+                spec?.let { tribixbite.cleverkeys.theme.EmbeddedThemes.idFor(it, user_theme_name) }
+            },
         )
         themeName = active.themeName
         layout_bound_theme = active.boundTheme
         layout_missing_theme = active.missingTheme
+        layout_embedded_theme = active.embeddedTheme
         theme = styleIdOf(active.themeName)
-        return Triple(themeName, layout_bound_theme, layout_missing_theme) != before
+        return listOf(themeName, layout_bound_theme, layout_missing_theme, layout_embedded_theme) != before
     }
 
     fun set_current_layout(l: Int) {
@@ -1998,6 +2016,10 @@ class Config private constructor(
                 // Keyboard looks follow the system: the base style flips with it, so a light/dark
                 // switch changes the style id and re-inflates the view with the other palette.
                 themeName.startsWith(tribixbite.cleverkeys.theme.KeyboardLooks.ID_PREFIX) ->
+                    if (systemLight) R.style.CleverKeysLight else R.style.CleverKeysDark
+                // A layout's embedded theme may carry light/dark variants and inherits from the
+                // global theme in the current mode: it follows the system the same way.
+                themeName.startsWith(tribixbite.cleverkeys.theme.EmbeddedThemes.ID_PREFIX) ->
                     if (systemLight) R.style.CleverKeysLight else R.style.CleverKeysDark
                 else -> when (themeName) {
                     "light" -> R.style.Light

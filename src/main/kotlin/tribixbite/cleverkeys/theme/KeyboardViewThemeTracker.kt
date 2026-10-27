@@ -17,6 +17,12 @@ data class KeyboardViewThemeStamp(
      * for XML themes, whose colours come from the style [styleId] names.
      */
     val runtimeColors: KeyboardColorScheme?,
+    /**
+     * Runtime themes only: what besides the colours the view is built from — the resolved
+     * [ThemeSpec] of a version-2 custom theme or an embedded layout theme (geometry, hints,
+     * preview), so an edit that changes only those still re-inflates. Null otherwise.
+     */
+    val runtimeAppearance: Any? = null,
 ) {
     companion object {
         /**
@@ -26,12 +32,17 @@ data class KeyboardViewThemeStamp(
         fun of(
             styleId: Int,
             themeName: String,
+            runtimeAppearance: (String) -> Any? = { null },
             runtimeColors: (String) -> KeyboardColorScheme?,
-        ): KeyboardViewThemeStamp = KeyboardViewThemeStamp(
-            styleId = styleId,
-            themeName = themeName,
-            runtimeColors = if (ConfigSnapshot.isRuntimeThemeName(themeName)) runtimeColors(themeName) else null,
-        )
+        ): KeyboardViewThemeStamp {
+            val runtime = ConfigSnapshot.isRuntimeThemeName(themeName)
+            return KeyboardViewThemeStamp(
+                styleId = styleId,
+                themeName = themeName,
+                runtimeColors = if (runtime) runtimeColors(themeName) else null,
+                runtimeAppearance = if (runtime) runtimeAppearance(themeName) else null,
+            )
+        }
     }
 }
 

@@ -4,7 +4,9 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import tribixbite.cleverkeys.theme.CustomTheme
 import tribixbite.cleverkeys.theme.CustomThemeManager
+import tribixbite.cleverkeys.theme.ThemeSpecJson
 
 /**
  * DIY (custom) keyboard themes in a settings backup.
@@ -129,8 +131,10 @@ object CustomThemeBackup {
 
     /**
      * The theme in the exact stored shape (`id`, `name`, `createdAt`, `modifiedAt`, `colors`
-     * with every [COLOR_KEYS] entry as an ARGB int), or null when any part is missing or
-     * malformed. Unknown fields are dropped, so a later format's extras never reach the store.
+     * with every [COLOR_KEYS] entry as an ARGB int, and — format version 2 — `formatVersion` and
+     * the `look` extension, re-serialized by [ThemeSpecJson] so only known, in-range fields
+     * survive), or null when any part is missing or malformed. Unknown fields are dropped, so a
+     * later format's extras never reach the store.
      */
     private fun normalize(entry: JsonElement): JsonObject? {
         val obj = entry.takeIf { it.isJsonObject }?.asJsonObject ?: return null
@@ -152,12 +156,26 @@ object CustomThemeBackup {
             }
             normalizedColors.addProperty(key, argb)
         }
+        val look = obj.get("look")?.let { raw ->
+            if (!raw.isJsonObject) return null
+            try {
+                val spec = ThemeSpecJson.fromJson(org.json.JSONObject(raw.toString()))
+                JsonParser.parseString(ThemeSpecJson.toJson(spec).toString()).asJsonObject.takeIf { !spec.isEmpty }
+            } catch (_: Exception) {
+                // A wrong-typed extension: refuse the theme rather than half-import it.
+                return null
+            }
+        }
         return JsonObject().apply {
             addProperty("id", id)
             addProperty("name", name)
             addProperty("createdAt", createdAt)
             addProperty("modifiedAt", modifiedAt)
             add("colors", normalizedColors)
+            if (look != null) {
+                addProperty("formatVersion", CustomTheme.FORMAT_VERSION_LOOK)
+                add("look", look)
+            }
         }
     }
 
@@ -182,7 +200,7 @@ object CustomThemeBackup {
     fun nameOf(theme: JsonObject): String = stringField(theme, "name") ?: idOf(theme)
 
     /** What the user sees of a theme: its name and colours (timestamps are bookkeeping). */
-    private fun visibleBody(theme: JsonObject): Pair<String, JsonElement?> = nameOf(theme) to theme.get("colors")
+    private fun visibleBody(theme: JsonObject): List<Any?> = listOf(nameOf(theme), theme.get("colors"), theme.get("look"))
 
     /**
      * The per-theme diff between the device's stored themes and the file's, matched by id.

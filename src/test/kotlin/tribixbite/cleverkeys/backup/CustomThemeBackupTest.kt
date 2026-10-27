@@ -52,6 +52,41 @@ class CustomThemeBackupTest {
             .containsExactlyElementsIn(CustomThemeBackup.COLOR_KEYS)
     }
 
+    /**
+     * Version-2 themes (2026-10-28: a layout `<theme>` saved as a custom theme) carry a `look`
+     * extension; the backup keeps it — normalized, so unknown and out-of-range fields never reach
+     * the store — and refuses a theme whose extension has the wrong shape. A version-1 theme
+     * keeps its exact stored shape.
+     */
+    @Test
+    fun aVersionTwoThemesLookExtensionSurvivesNormalizedAndAMalformedOneIsRefused() {
+        val look = JsonParser.parseString(
+            """{"colors":{"enterKey":-16776961},"geometry":{"cornerRadiusDp":10,"gapHorizontal":9},""" +
+                """"hints":"DIGITS","futureKey":true}"""
+        ).asJsonObject
+        val v2 = theme("v2").apply { addProperty("formatVersion", 2); add("look", look) }
+        val wrongType = theme("bad").apply { addProperty("formatVersion", 2); addProperty("look", "not an object") }
+        val wrongField = theme("bad2").apply {
+            add("look", JsonParser.parseString("""{"geometry":{"cornerRadiusDp":"ten"}}"""))
+        }
+        val parsed = CustomThemeBackup.parse(section(v2, wrongType, wrongField))!!
+        assertThat(ids(parsed.themes)).containsExactly("v2")
+        assertThat(parsed.skipped.map { it.key }).containsExactly("custom_themes[1]", "custom_themes[2]").inOrder()
+        val kept = parsed.themes.single()
+        assertThat(kept.get("formatVersion").asInt).isEqualTo(2)
+        assertThat(kept.getAsJsonObject("look")).isEqualTo(JsonParser.parseString(
+            """{"colors":{"enterKey":-16776961},"geometry":{"cornerRadiusDp":10},"hints":"DIGITS"}"""
+        ))
+        assertThat(CustomThemeBackup.parse(section(theme("v1")))!!.themes.single().has("look")).isFalse()
+        // An edit of only the extension is a change in the import preview.
+        val edited = theme("v2").apply {
+            addProperty("formatVersion", 2)
+            add("look", JsonParser.parseString("""{"hints":"NONE"}"""))
+        }
+        val diff = CustomThemeBackup.diff("[$kept]", listOf(CustomThemeBackup.parse(section(edited))!!.themes.single()))!!
+        assertThat(diff.changed.map { it.id }).containsExactly("v2")
+    }
+
     @Test
     fun unsignedColourSpellingIsTheSameArgb() {
         val t = theme("a").apply { getAsJsonObject("colors").addProperty("keyDefault", 0xFF000000L) }

@@ -1834,15 +1834,15 @@ class Keyboard2View @JvmOverloads constructor(
         val lookPreview = _theme.lookPreview
         var previewKv: KeyValue? = null
         var previewX = 0f; var previewY = 0f; var previewW = 0f; var previewH = 0f; var previewR = 0f
-        var y = tc.margin_top
+        var rowY = tc.margin_top
 
         for (row in keyboard.rows) {
-            y += row.shift * tc.row_height
-            var x = _marginLeft + tc.margin_left
-            val keyH = row.height * tc.row_height - tc.vertical_margin
+            rowY += row.shift * tc.row_height
+            var cursorX = _marginLeft + tc.margin_left
+            val rowKeyH = row.height * tc.row_height - tc.vertical_margin
 
             for (k in row.keys) {
-                x += k.shift * _keyWidth
+                cursorX += k.shift * _keyWidth
                 // Audit H-8 (#77 residual): the pane loc-strip can null EVERY slot of a
                 // key (numeric's `loc switch_greekmath` cell with the checkbox off).
                 // Such a cell must render as empty space, not a blank dead key frame —
@@ -1850,10 +1850,10 @@ class Keyboard2View @JvmOverloads constructor(
                 // exactly the strip artefact. Geometry is preserved (x advances by the
                 // cell's width), keeping every other key in place.
                 if (keyCellIsEmpty(k)) {
-                    x += _keyWidth * k.width
+                    cursorX += _keyWidth * k.width
                     continue
                 }
-                val keyW = _keyWidth * k.width - tc.horizontal_margin
+                val cellX = cursorX
                 val isKeyDown = _pointers.isKeyDown(k)
                 // Audit H-4: role-aware frame selection so the Theme-Creator's
                 // Key Locked / Key Modifier / Key Special colours render. For XML
@@ -1866,9 +1866,28 @@ class Keyboard2View @JvmOverloads constructor(
                     }
                 // Keyboard looks: Enter, the editor-action key and a look's function characters
                 // (Gboard's comma/period) get their own frames.
-                val tc_key = tc.keyForRole(
-                    Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys)
-                )
+                val role = Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys)
+                // Per-key XML styling (KeyStyle): its own fill/border/label colours and gaps. The
+                // frame stays centred on the key's cell (KeyStyles.frame), so hit-testing and the
+                // swipe engines' key centres are unaffected.
+                val style = k.style
+                val styled = if (style != null) tc.styledFrame(role, style) else null
+                val tc_key = styled?.key ?: tc.keyForRole(role)
+                val x: Float
+                val y: Float
+                val keyW: Float
+                val keyH: Float
+                if (styled == null) {
+                    x = cellX; y = rowY
+                    keyW = _keyWidth * k.width - tc.horizontal_margin
+                    keyH = rowKeyH
+                } else {
+                    val f = KeyStyles.frame(
+                        cellX, rowY, _keyWidth * k.width, row.height * tc.row_height,
+                        tc.horizontal_margin, tc.vertical_margin, styled.horizontalMargin, styled.verticalMargin,
+                    )
+                    x = f.left; y = f.top; keyW = f.width; keyH = f.height
+                }
 
                 // A look's pill keys (Gboard's ?123 and Enter): identity, so pressed stays a pill.
                 val radius = if (pills.isEmpty() || kv0 == null) tc_key.border_radius else
@@ -1919,9 +1938,9 @@ class Keyboard2View @JvmOverloads constructor(
                 if (hasCustomMappings && allLegends)
                     drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap, mainLabelW)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
-                x += _keyWidth * k.width
+                cursorX = cellX + _keyWidth * k.width
             }
-            y += row.height * tc.row_height
+            rowY += row.height * tc.row_height
         }
 
         // A look's key-press preview, above the keys; not while swipe typing or in the popover.
@@ -2101,7 +2120,9 @@ class Keyboard2View @JvmOverloads constructor(
         // pressed, locked, secondary and greyed labels keep their usual colours.
         val p = tc.label_paint(
             modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
-            Theme.Computed.frameLabelColor(labelColor(modifiedKv, isKeyDown, false), tc.labelColorOverride, _theme),
+            // A per-key style's pressed label colour (KeyStyle) wins while the key is down.
+            if (isKeyDown && tc.pressedLabelColorOverride != 0) tc.pressedLabelColorOverride
+            else Theme.Computed.frameLabelColor(labelColor(modifiedKv, isKeyDown, false), tc.labelColorOverride, _theme),
             textSize,
         )
         val label = modifiedKv.getString()

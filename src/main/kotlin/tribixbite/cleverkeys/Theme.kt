@@ -300,6 +300,20 @@ class Theme {
         lookLetterKeys: Set<LookLetterKey> = emptySet(),
         lookPreview: LookPreview? = null,
         lookHintStyle: LookHintStyle? = null,
+        /**
+         * Pop-up colours of the preview and popover; by default a look's (from [lookPalette]).
+         * A theme spec (`ThemeSpecs.render`) passes null unless it defines pop-ups, so the
+         * popover keeps its non-look colours.
+         */
+        lookPopupColors: LookPopupColors? = lookPalette?.let { LookPopupColors.of(it) },
+        /**
+         * The theme's own key frame (radius, width, pressed width in px) for the case where the
+         * user's custom border is off; null = the runtime default (8 dp, 1 dp, 2 dp). An embedded
+         * layout theme over an XML theme passes the XML theme's frame so it is inherited.
+         */
+        baseFrame: FloatArray? = null,
+        /** Label colour of a pressed key; 0 = the label colour (the runtime default). */
+        pressedLabelColor: Int = 0,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -307,7 +321,7 @@ class Theme {
         colorKey = colorScheme.keyDefault.toArgb()
         colorKeyActivated = colorScheme.keyActivated.toArgb()
         labelColor = colorScheme.keyLabel.toArgb()
-        activatedColor = colorScheme.keyLabel.toArgb() // Use same for activated
+        activatedColor = pressedLabelColor.takeIf { it != 0 } ?: colorScheme.keyLabel.toArgb() // Use same for activated
         // A look sets its own Caps Lock label (Gboard: onPrimary on primary; Samsung: blue icon).
         lockedColor = lookPalette?.lockedLabel ?: colorScheme.keyLabel.toArgb()
         subLabelColor = colorScheme.keySubLabel.toArgb()
@@ -321,10 +335,10 @@ class Theme {
         keyBorderColorRight = borderColor
         keyBorderColorBottom = borderColor
 
-        // Default border dimensions (can be customized later)
-        keyBorderRadius = 8f * density  // 8dp default
-        keyBorderWidth = 1f * density   // 1dp default
-        keyBorderWidthActivated = 2f * density  // 2dp when activated
+        // Default border dimensions (can be customized later); an inherited XML frame wins.
+        keyBorderRadius = baseFrame?.getOrNull(0) ?: (8f * density)  // 8dp default
+        keyBorderWidth = baseFrame?.getOrNull(1) ?: (1f * density)   // 1dp default
+        keyBorderWidthActivated = baseFrame?.getOrNull(2) ?: (2f * density)  // 2dp when activated
 
         // Nav bar - derive from keyboard background
         colorNavBar = colorScheme.keyboardBackground.toArgb()
@@ -359,9 +373,10 @@ class Theme {
         suggestionSecondaryTextColor = bar.secondary
         colorKeyboardSurface = colorScheme.keyboardSurface.toArgb()
 
-        colorKeyEnter = lookPalette?.enterKey ?: colorKeySpecial
+        // 0 = not defined (a theme spec without Enter / action colours): the special fill.
+        colorKeyEnter = lookPalette?.enterKey?.takeIf { it != 0 } ?: colorKeySpecial
         enterLabelColor = lookPalette?.enterLabel ?: 0
-        colorKeyAction = lookPalette?.actionKey ?: colorKeySpecial
+        colorKeyAction = lookPalette?.actionKey?.takeIf { it != 0 } ?: colorKeySpecial
         actionLabelColor = lookPalette?.actionLabel ?: 0
         functionChars = lookFunctionChars
         this.lookLegends = lookLegends
@@ -370,7 +385,7 @@ class Theme {
         this.lookLetterKeys = lookLetterKeys
         letterKeyLabelColor = if (lookLetterKeys.isNotEmpty()) lookPalette?.label ?: 0 else 0
         this.lookPreview = lookPreview?.takeIf { lookPalette != null }
-        lookPopupColors = lookPalette?.let { LookPopupColors.of(it) }
+        this.lookPopupColors = lookPopupColors?.takeIf { lookPalette != null }
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
@@ -417,9 +432,9 @@ class Theme {
     }
 
     class Computed(
-        theme: Theme,
-        config: Config,
-        keyWidth: Float,
+        private val theme: Theme,
+        private val config: Config,
+        private val keyWidth: Float,
         layout: KeyboardData
     ) {
         @JvmField
@@ -463,6 +478,8 @@ class Theme {
         /** Key geometry after the effective look's precedence ([KeyboardLookGeometry.resolve]). */
         @JvmField
         val geometry: KeyboardLookGeometry.Effective
+        /** The current layout's key-geometry overrides (user choice over XML `key_*` defaults). */
+        private val layoutOverrides: Map<KeyGeometryField, Float>
 
         init {
             // Rows height is proportional to the keyboard height, meaning it doesn't
@@ -485,33 +502,10 @@ class Theme {
                 config.screenHeightPixels * config.keyboardHeightPercent / 100 / heightDivisor,
                 config.screenHeightPixels / layout.keysHeight
             )
-            // The user's geometry exactly as it was always derived; a look then overrides the
-            // attributes it defines (theme/KeyboardLook.kt, KeyboardLookGeometry.resolve).
-            // The current layout's overrides (LayoutKeyGeometry); a layout may switch the custom
-            // border off (theme/look frame) or on independently of the global switch.
-            val layoutOverrides = config.currentKeyGeometry()
-            val borderOn = LayoutKeyGeometry.effectiveBorderOn(layoutOverrides, config.borderConfig)
-            val user = KeyboardLookGeometry.UserGeometry(
-                verticalMargin = config.key_vertical_margin * row_height,
-                horizontalMargin = config.key_horizontal_margin * keyWidth,
-                borderRadius = if (borderOn) config.customBorderRadius * keyWidth else theme.keyBorderRadius,
-                borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
-                borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
-            )
-            // Most specific wins: the current layout's overrides (user per-layout choice, else its
-            // XML defaults) beat the look, which beats the global setting (LayoutKeyGeometry).
-            geometry = LayoutKeyGeometry.applyTo(
-                KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density),
-                overrides = layoutOverrides,
-                globals = LayoutKeyGeometry.Globals(
-                    borderOn = config.borderConfig,
-                    borderRadiusFraction = config.customBorderRadius,
-                    borderWidthPx = config.customBorderLineWidth,
-                ),
-                keyWidth = keyWidth,
-                rowHeight = row_height,
-                density = theme.density,
-            )
+            // The current layout's overrides (LayoutKeyGeometry: user per-layout choice, else its
+            // XML defaults); per-key styling adds its own on top (styledFrame).
+            layoutOverrides = config.currentKeyGeometry()
+            geometry = geometryFor(layoutOverrides)
             vertical_margin = geometry.verticalMargin
             horizontal_margin = geometry.horizontalMargin
             label_scale = geometry.labelScale
@@ -532,6 +526,90 @@ class Theme {
             indication_paint = init_label_paint(config, null).apply {
                 color = theme.subLabelColor
             }
+        }
+
+        /**
+         * The geometry for [overrides]: the user's geometry exactly as it was always derived, the
+         * effective look's attributes over it (KeyboardLookGeometry.resolve), then [overrides] —
+         * most specific wins (LayoutKeyGeometry). The user layer's border switch follows the
+         * overrides, so a layout (or key) may switch the custom border off (theme/look frame) or
+         * on independently of the global switch.
+         */
+        private fun geometryFor(overrides: Map<KeyGeometryField, Float>): KeyboardLookGeometry.Effective {
+            val borderOn = LayoutKeyGeometry.effectiveBorderOn(overrides, config.borderConfig)
+            val user = KeyboardLookGeometry.UserGeometry(
+                verticalMargin = config.key_vertical_margin * row_height,
+                horizontalMargin = config.key_horizontal_margin * keyWidth,
+                borderRadius = if (borderOn) config.customBorderRadius * keyWidth else theme.keyBorderRadius,
+                borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
+                borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
+            )
+            return LayoutKeyGeometry.applyTo(
+                KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density),
+                overrides = overrides,
+                globals = LayoutKeyGeometry.Globals(
+                    borderOn = config.borderConfig,
+                    borderRadiusFraction = config.customBorderRadius,
+                    borderWidthPx = config.customBorderLineWidth,
+                ),
+                keyWidth = keyWidth,
+                rowHeight = row_height,
+                density = theme.density,
+            )
+        }
+
+        /**
+         * The frame a key with per-key styling ([KeyboardData.Key.style]) draws in [role], and its
+         * own gaps. Precedence: the key's (row-merged) attributes > the layout overrides > the
+         * look > the global settings; colours: the key's > the role's. Built once per
+         * (style, role) and cached for this Computed's lifetime (one keyboard size and config).
+         */
+        class StyledFrame(
+            @JvmField val key: Key,
+            @JvmField val horizontalMargin: Float,
+            @JvmField val verticalMargin: Float,
+        )
+
+        private val styledFrames = HashMap<KeyStyle, Array<StyledFrame?>>()
+
+        fun styledFrame(role: KeyRole, style: KeyStyle): StyledFrame {
+            val byRole = styledFrames.getOrPut(style) { arrayOfNulls(KeyRole.entries.size) }
+            byRole[role.ordinal]?.let { return it }
+            val g = if (style.geometry.isEmpty()) geometry else geometryFor(layoutOverrides + style.geometry)
+            val activated = role == KeyRole.ACTIVATED || role == KeyRole.LOCKED
+            val fill = (if (activated) style.backgroundPressed else style.background) ?: roleFill(role)
+            val frame = StyledFrame(
+                key = Key(
+                    theme, config, keyWidth, activated, fill, g,
+                    labelColorOverride = style.labelColor ?: roleLabelColor(role),
+                    borderColorOverride = style.borderColor ?: 0,
+                    pressedLabelColorOverride = style.labelColorPressed ?: 0,
+                ),
+                horizontalMargin = g.horizontalMargin,
+                verticalMargin = g.verticalMargin,
+            )
+            byRole[role.ordinal] = frame
+            return frame
+        }
+
+        /** The fill of [role]'s frame (what [keyForRole] draws), before key opacity. */
+        private fun roleFill(role: KeyRole): Int = when (role) {
+            KeyRole.NORMAL, KeyRole.LETTER -> theme.colorKey
+            KeyRole.ACTIVATED -> theme.colorKeyActivated
+            KeyRole.LOCKED -> theme.colorKeyLocked
+            KeyRole.MODIFIER -> theme.colorKeyModifier
+            KeyRole.SPECIAL -> theme.colorKeySpecial
+            KeyRole.ENTER -> theme.colorKeyEnter
+            KeyRole.ACTION -> theme.colorKeyAction
+        }
+
+        /** The look label colour of [role]'s frame (0 = none), as [keyForRole]'s frames carry it. */
+        private fun roleLabelColor(role: KeyRole): Int = when (role) {
+            KeyRole.MODIFIER, KeyRole.SPECIAL -> theme.modifierLabelColor
+            KeyRole.ENTER -> theme.enterLabelColor
+            KeyRole.ACTION -> theme.actionLabelColor
+            KeyRole.LETTER -> theme.letterKeyLabelColor
+            else -> 0
         }
 
         /**
@@ -570,6 +648,10 @@ class Theme {
             geometry: KeyboardLookGeometry.Effective? = null,
             /** Main label colour of this frame at rest; 0 = the theme's label colour. */
             @JvmField val labelColorOverride: Int = 0,
+            /** Border colour of this frame (per-key `key_border_color`); 0 = the theme's. */
+            borderColorOverride: Int = 0,
+            /** Main label colour while the key is pressed (per-key style); 0 = the theme's. */
+            @JvmField val pressedLabelColorOverride: Int = 0,
         ) {
             @JvmField
             val bg_paint = Paint()
@@ -622,7 +704,11 @@ class Theme {
                 border_paint = init_border_paint(
                     config,
                     border_width,
-                    if (activated) theme.keyBorderColorActivated else theme.keyBorderColorTop
+                    when {
+                        borderColorOverride != 0 -> borderColorOverride
+                        activated -> theme.keyBorderColorActivated
+                        else -> theme.keyBorderColorTop
+                    }
                 )
                 _label_paint = init_label_paint(config, LookTypeface.forWeight(geometry?.labelWeight))
                 _special_label_paint = init_label_paint(config, _key_font)

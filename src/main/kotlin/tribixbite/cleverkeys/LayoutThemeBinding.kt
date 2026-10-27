@@ -15,6 +15,8 @@ data class ActiveTheme(
     val themeName: String,
     val boundTheme: String?,
     val missingTheme: String?,
+    /** Non-null while the current layout's EMBEDDED `<theme>` is rendered (then == [themeName]). */
+    val embeddedTheme: String? = null,
 )
 
 /**
@@ -115,18 +117,30 @@ object LayoutThemeBinding {
      *   `LayoutManager.current_layout_unmodified` does, so the theme follows the layout shown.
      * @param globalTheme the user's `theme` preference (never modified here).
      * @param isAvailable whether a theme id exists on this device (ThemeProvider.isAvailable).
+     * @param embedded each layout's EMBEDDED theme id (`EmbeddedThemes.idFor`, its `<theme>` over
+     *   the global theme), index-aligned with [bindings]; null where the layout has none or its
+     *   entry explicitly follows the global theme ([UNBOUND]).
+     *
+     * Precedence (docs/specs/layout-system.md "Layout themes"): the user's binding > the XML
+     * `theme=` id (both in [bindings]) > the layout's embedded `<theme>` > the global theme. A
+     * binding to a theme that is not on this device falls through to the embedded theme, else
+     * to the global one, and is reported as [ActiveTheme.missingTheme].
      */
     fun resolve(
         bindings: List<String?>,
         currentIndex: Int,
         globalTheme: String,
         isAvailable: (String) -> Boolean,
+        embedded: List<String?> = emptyList(),
     ): ActiveTheme {
         val index = if (currentIndex >= bindings.size) 0 else currentIndex
         val bound = bindings.getOrNull(index)
-            ?: return ActiveTheme(themeName = globalTheme, boundTheme = null, missingTheme = null)
-        return if (isAvailable(bound)) {
-            ActiveTheme(themeName = bound, boundTheme = bound, missingTheme = null)
+        if (bound != null && isAvailable(bound)) {
+            return ActiveTheme(themeName = bound, boundTheme = bound, missingTheme = null)
+        }
+        val own = embedded.getOrNull(index)
+        return if (own != null) {
+            ActiveTheme(themeName = own, boundTheme = null, missingTheme = bound, embeddedTheme = own)
         } else {
             ActiveTheme(themeName = globalTheme, boundTheme = null, missingTheme = bound)
         }

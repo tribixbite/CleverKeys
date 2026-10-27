@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Harbour: a complete example of a self-styled CleverKeys layout.
+     Reference: docs/wiki/layouts/layout-xml-reference.md. Paste it into
+     Settings > Layout Manager > Add Layout > Custom, or import the file there.
+     Every attribute of <theme>, <row> and <key> styling is used at least once. -->
+<keyboard name="Harbour" script="latin" bottom_row="false"
+          key_horizontal_gap="1.2" key_vertical_gap="1.5"
+          key_border="true" key_border_radius="18" key_border_width="1">
+  <theme
+      name="Harbour"
+      key="#FFFFFF"
+      key_pressed="#C9D6E3"
+      key_locked="#1F6FB2"
+      key_modifier="#D7E2EC"
+      key_special="#D7E2EC"
+      label="#102A43"
+      sub_label="#52667A"
+      secondary_label="#52667A"
+      border_color="#B8C7D6"
+      border_color_pressed="#1F6FB2"
+      swipe_trail="#1F6FB2"
+      ripple="#C9D6E3"
+      bar_text="#102A43"
+      bar_background="#E8EEF4"
+      bar_highlight="#1F6FB2"
+      keyboard_background="#E8EEF4"
+      surface="#FFFFFF"
+      label_pressed="#102A43"
+      locked_label="#FFFFFF"
+      enter_key="#1F6FB2"
+      enter_label="#FFFFFF"
+      action_key="#E07A1F"
+      action_label="#FFFFFF"
+      modifier_label="#243B53"
+      key_shadow="#33102A43"
+      bar_separator="#00FFFFFF"
+      popup="#FFFFFF"
+      popup_label="#102A43"
+      popup_selected="#1F6FB2"
+      popup_selected_label="#FFFFFF"
+      gap_horizontal="0.12"
+      gap_vertical="0.16"
+      corner_radius="10"
+      border_width="0"
+      shadow_dy="1"
+      label_scale="1.15"
+      label_weight="500"
+      function_chars=",."
+      hints="digits"
+      pill_keys="enter action"
+      letter_keys="emoji"
+      preview="bubble"
+      preview_width="1.3"
+      preview_height="1.25"
+      preview_label_scale="1.2"
+      preview_corner="0.2"
+      preview_shadow="true"
+      hint_size="0.4"
+      hint_weight="400"
+      dynamic_color="false">
+    <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
+    <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
+  </theme>
+  <row>
+    <key c="q" ne="1"/>
+    <key c="w" ne="2"/>
+    <key c="e" ne="3" se="loc €"/>
+    <key c="r" ne="4"/>
+    <key c="t" ne="5"/>
+    <key c="y" ne="6"/>
+    <key c="u" ne="7"/>
+    <key c="i" ne="8"/>
+    <key c="o" ne="9"/>
+    <key c="p" ne="0"/>
+  </row>
+  <row>
+    <key shift="0.5" c="a"/>
+    <key c="s"/>
+    <key c="d"/>
+    <key c="f" key_label_color="#1F6FB2"/>
+    <key c="g"/>
+    <key c="h"/>
+    <key c="j" key_label_color="#1F6FB2"/>
+    <key c="k"/>
+    <key c="l"/>
+  </row>
+  <row key_background="#F4F7FA" key_border_color="#9FB3C8">
+    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#D7E2EC"/>
+    <key c="z"/>
+    <key c="x"/>
+    <key c="c"/>
+    <key c="v"/>
+    <key c="b"/>
+    <key c="n"/>
+    <key c="m"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" key_background="#D7E2EC"/>
+  </row>
+  <row height="0.95" key_vertical_gap="2">
+    <key width="1.5" c="?123:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath"/>
+    <key c=","/>
+    <key c="switch_emoji" nw="loc change_method" ne="config" sw="loc switch_clipboard" se="switch_gif"/>
+    <key width="4" c="space" w="cursor_left" e="cursor_right" key_horizontal_gap="0.6"/>
+    <key c="." nw="'" n="\?" ne="!" sw="-" se=":"/>
+    <key width="1.5" c="enter" ne="action" n="up" s="down" w="left" e="right"
+         key_border="false" key_background_pressed="#174F80" key_label_color_pressed="#FFFFFF"/>
+  </row>
+</keyboard>

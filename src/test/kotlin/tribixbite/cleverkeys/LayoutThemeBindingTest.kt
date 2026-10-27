@@ -198,4 +198,33 @@ class LayoutThemeBindingTest {
             )
         ).isEmpty()
     }
+
+    // ── a layout's EMBEDDED <theme> (2026-10-28) ──────────────────────────────────
+
+    @Test
+    fun anEmbeddedThemeRendersWhenTheLayoutHasNoBindingOfItsOwn() {
+        val active = LayoutThemeBinding.resolve(
+            bindings = listOf(null, null), currentIndex = 1, globalTheme = "dark",
+            isAvailable = everyThemeExists, embedded = listOf(null, "embedded_0.dark"),
+        )
+        assertThat(active).isEqualTo(ActiveTheme("embedded_0.dark", null, null, embeddedTheme = "embedded_0.dark"))
+        assertWithMessage("a layout without one follows the global theme as before")
+            .that(LayoutThemeBinding.resolve(listOf(null, null), 0, "dark", everyThemeExists, listOf(null, "embedded_0.dark")))
+            .isEqualTo(ActiveTheme("dark", null, null))
+    }
+
+    @Test
+    fun aUserOrXmlBindingBeatsTheEmbeddedThemeAndAMissingOneFallsThroughToIt() {
+        assertWithMessage("user choice / XML theme= id (both arrive as the binding) win")
+            .that(LayoutThemeBinding.resolve(listOf("cobalt"), 0, "dark", everyThemeExists, listOf("embedded_0.dark")))
+            .isEqualTo(ActiveTheme("cobalt", "cobalt", null))
+        val missing = LayoutThemeBinding.resolve(
+            listOf("custom_gone"), 0, "dark", { it != "custom_gone" }, listOf("embedded_0.dark"),
+        )
+        assertWithMessage("a binding to a deleted theme renders the layout's own theme, not the global one")
+            .that(missing).isEqualTo(ActiveTheme("embedded_0.dark", null, "custom_gone", embeddedTheme = "embedded_0.dark"))
+        assertWithMessage("past the end resolves to layout 0, embedded theme included")
+            .that(LayoutThemeBinding.resolve(listOf(null), 5, "dark", everyThemeExists, listOf("embedded_0.dark")).themeName)
+            .isEqualTo("embedded_0.dark")
+    }
 }

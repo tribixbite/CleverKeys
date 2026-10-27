@@ -1413,9 +1413,11 @@ class CleverKeysService : InputMethodService(),
     /** The theme a keyboard view inflated now would be drawn with. */
     private fun currentKeyboardThemeStamp(): KeyboardViewThemeStamp {
         val cfg = _config
-        return KeyboardViewThemeStamp.of(cfg?.theme ?: 0, cfg?.themeName ?: "") { name ->
-            ThemeProvider.getInstance(this).getColorScheme(name)
-        }
+        val provider = ThemeProvider.getInstance(this)
+        return KeyboardViewThemeStamp.of(
+            cfg?.theme ?: 0, cfg?.themeName ?: "",
+            runtimeAppearance = { name -> provider.appearanceOf(name) },
+        ) { name -> provider.getColorScheme(name) }
     }
 
     // ARC-084 (2026-08-29): updateCGRPredictions/checkCGRPredictions were re-exported here

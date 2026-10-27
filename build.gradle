@@ -834,6 +834,12 @@ tasks.register('runPureTests', JavaExec) {
     // Per-layout key gaps / border (LayoutKeyGeometry): stored three-state entries, XML defaults
     // and export, editor state, backup diff and the layout > XML > look > global precedence.
     'tribixbite.cleverkeys.LayoutKeyGeometryTest',
+    // 2026-10-28 layouts that style themselves: the <theme> schema, parser, writer, JSON extension
+    // and inherit-from-global resolution; per-key/row styling and centre-preserving frames;
+    // embedded-theme ids.
+    'tribixbite.cleverkeys.theme.ThemeSpecTest',
+    'tribixbite.cleverkeys.KeyStyleTest',
+    'tribixbite.cleverkeys.theme.EmbeddedThemesTest',
     // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
@@ -1608,6 +1614,11 @@ tasks.register('runMockTests', JavaExec) {
     // Per-layout key gaps / border through the layouts serializer (backup blob, hostile values),
     // the XML key_* attributes, Config's current layout and Theme.Computed (beats a look).
     'tribixbite.cleverkeys.LayoutKeyGeometryConfigTest',
+    // 2026-10-28: the worked example through the real parser, swipe-centre invariance, per-key
+    // frames; embedded <theme> through prefs, Config, ThemeProvider, save-as-custom and export.
+    'tribixbite.cleverkeys.LayoutXmlStylingTest',
+    'tribixbite.cleverkeys.LayoutEmbeddedThemeTest',
+    'tribixbite.cleverkeys.theme.ThemeSpecRenderTest',
     // 2026-10-27 keyboard looks reach Theme.Computed (gaps, radius, shadow, action/modifier
     // frames), non-look themes compute as before, looks follow the system light/dark mode.
     'tribixbite.cleverkeys.theme.KeyboardLookRenderTest',

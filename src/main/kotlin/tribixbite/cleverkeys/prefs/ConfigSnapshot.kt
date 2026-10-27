@@ -177,6 +177,7 @@ data class ConfigSnapshot(
         @JvmStatic
         fun isRuntimeThemeName(name: String): Boolean =
             name.startsWith("decorative_") || name.startsWith("custom_") ||
-                name.startsWith(tribixbite.cleverkeys.theme.KeyboardLooks.ID_PREFIX)
+                name.startsWith(tribixbite.cleverkeys.theme.KeyboardLooks.ID_PREFIX) ||
+                name.startsWith(tribixbite.cleverkeys.theme.EmbeddedThemes.ID_PREFIX)
     }
 }
