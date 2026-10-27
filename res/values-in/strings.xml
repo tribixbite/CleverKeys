@@ -407,8 +407,6 @@
     <string name="appearance_key_horizontal_margin_desc">Jarak horizontal antar tombol</string>
     <string name="appearance_look_show_hints_title">Tampilkan petunjuk gestur pada tampilan familier</string>
     <string name="appearance_look_show_hints_desc">Tampilan gaya iOS, Gboard, SwiftKey, dan Samsung menyembunyikan petunjuk sudut seperti keyboard tersebut; aktifkan untuk menampilkan semuanya. Gestur tetap berfungsi.</string>
-    <string name="appearance_look_key_preview_title">Pratinjau tombol pada tampilan familier</string>
-    <string name="appearance_look_key_preview_desc">Tampilan gaya iOS, Gboard, SwiftKey, dan Samsung menampilkan karakter yang ditekan dalam pop-up berbentuk seperti keyboard tersebut.</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
     <string name="appearance_custom_border_desc">Aktifkan gaya batas tombol kustom</string>
     <string name="appearance_border_radius_title">Radius Batas</string>
@@ -2466,4 +2464,12 @@
     <string name="layout_theme_search_hint">Cari tema</string>
     <string name="layout_theme_no_results">Tidak ada tema yang cocok</string>
     <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Jarak dan bingkai tombol: %1$s</string>
+    <string name="layout_key_geometry_title">Jarak dan bingkai tombol</string>
+    <string name="layout_key_geometry_global">Setelan global</string>
+    <string name="layout_key_geometry_custom">Tata letak ini</string>
+    <string name="layout_key_geometry_desc">Selama tata letak ini aktif, nilai yang ditetapkan di sini menggantikan setelan Tampilan dan jarak tampilan yang familier. Setelan Tampilan itu sendiri tidak berubah.</string>
+    <string name="layout_key_geometry_use_global">Gunakan setelan global</string>
+    <string name="layout_key_geometry_xml_invalid">Atribut jarak atau bingkai tombol tidak valid: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: jarak dan bingkai tombol %2$s → %3$s</string>
 </resources>

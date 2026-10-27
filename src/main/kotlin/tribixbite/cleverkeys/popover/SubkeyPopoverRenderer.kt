@@ -75,13 +75,9 @@ class SubkeyPopoverRenderer {
         val pad = min(cw, ch) * PANEL_PAD
         rect.set(state.centreX - 1.5f * cw - pad, state.centreY - 1.5f * ch - pad,
             state.centreX + 1.5f * cw + pad, state.centreY + 1.5f * ch + pad)
-        // A keyboard look draws its product's popover: an opaque panel in the look's popup
-        // colour with larger corners (LookPopupColors); other themes keep the dark panel.
-        val look = theme.lookPopupColors
-        panelPaint.color = withAlpha(look?.fill ?: panelColor(theme), if (look != null) (255 * open).toInt() else (PANEL_ALPHA * open).toInt())
+        panelPaint.color = withAlpha(panelColor(theme), (PANEL_ALPHA * open).toInt())
         val radius = min(cw, ch) * CORNER
-        val panelRadius = if (look != null) min(cw, ch) * LOOK_PANEL_CORNER else radius * 1.4f
-        canvas.drawRoundRect(rect, panelRadius, panelRadius, panelPaint)
+        canvas.drawRoundRect(rect, radius * 1.4f, radius * 1.4f, panelPaint)
 
         // Centre cell: the held key, dimmed, with the neutral zone outlined so the user learns
         // (and after tuning, sees) where letting go cancels.
@@ -92,7 +88,7 @@ class SubkeyPopoverRenderer {
         strokePaint.color = withAlpha(theme.subLabelColor, (NEUTRAL_OUTLINE_ALPHA * open).toInt())
         canvas.drawRoundRect(rect, radius, radius, strokePaint)
         drawText(canvas, keyPaints, state.keyLabel, state.keyLabelUsesKeyFont, state.centreX, state.centreY,
-            cw, ch * 0.34f, withAlpha(look?.label ?: theme.labelColor, (CENTRE_LABEL_ALPHA * open).toInt()))
+            cw, ch * 0.34f, withAlpha(theme.labelColor, (CENTRE_LABEL_ALPHA * open).toInt()))
 
         // Slots, the selected one last so it draws above its neighbours when enlarged.
         var animating = openT < 1f || selectT < 1f
@@ -143,19 +139,6 @@ class SubkeyPopoverRenderer {
             drawText(canvas, keyPaints, "+", false, cx, cy, w, h * 0.42f,
                 withAlpha(if (selected) theme.activatedColor else theme.subLabelColor,
                     if (selected) alpha else (alpha * 0.6f).toInt()))
-            return
-        }
-        val look = theme.lookPopupColors
-        if (look != null) {
-            // Look (Gboard/iOS/Samsung/SwiftKey): alternatives sit directly on the panel; the
-            // selected one gets the look's accent fill as a circle (Gboard) / rounded cell.
-            if (selected) {
-                cellPaint.color = withAlpha(look.selected, alpha)
-                val r = min(w, h) / 2f
-                canvas.drawRoundRect(rect, r, r, cellPaint)
-            }
-            drawText(canvas, keyPaints, label.text, label.useKeyFont, cx, cy, w, h * 0.46f * label.sizeScale,
-                withAlpha(if (selected) look.selectedLabel else look.label, alpha))
             return
         }
         cellPaint.color = withAlpha(if (selected) theme.colorKeyActivated else theme.colorKey, alpha)
@@ -276,8 +259,6 @@ class SubkeyPopoverRenderer {
         const val ACTIVE_SCALE = 1.3f
         const val CELL_FILL = 0.9f
         const val CORNER = 0.18f
-        /** A look's popover panel corner, as a fraction of the cell (Gboard's rounded panel). */
-        const val LOOK_PANEL_CORNER = 0.4f
         const val PANEL_PAD = 0.08f
         const val PANEL_ALPHA = 245
         const val PANEL_DARKEN = 0.65f

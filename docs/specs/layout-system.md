@@ -385,45 +385,6 @@ only: the gestures, `KeyboardAccessibilityHelper` labels and the a11y short-swip
 the layout, not the renderer, so they are unchanged; the existing hint settings (secondary
 label size, dimming) still apply to what is drawn.
 
-**Hint style** (`LookHintStyle`, `LookHintLayout`, 2026-10-28). Whatever corner labels a look
-draws (Gboard's digits, or every label with the switch above on) take the look's hint style:
-size = the look's main label × `sizeFraction` (Gboard 0.40, iOS 0.38, SwiftKey 0.45 at weight
-300, Samsung 0.42) × the user's secondary-label size, capped at 30 % of the key height, in the
-look's hint colour; corner slots are inset by at least radius × (1 − 1/√2), so labels stay on
-the key on pills and large radii. Non-look themes keep CleverKeys' own sizes and padding.
-
-**Key-press preview precedence** (`LookPreviewPolicy`, 2026-10-28). CleverKeys never had a
-key-press preview and has no preference for one on other themes; nothing changes for them. A
-look draws its product's default preview — iOS's key-pop balloon (`BALLOON`), Gboard's stadium
-bubble (`BUBBLE`; Gboard's own "Pop-up on keypress", on as shipped on the reference Pixel),
-SwiftKey's key-wide column (`COLUMN`) and Samsung's plate (`PLATE`) — for character keys
-(not space or function keys), unless Appearance → "Key-press preview on familiar looks"
-(`look_key_preview`, boolean, default ON, `SettingsDefaults`) is off. Because the preference
-is new, there is no earlier user choice to respect; turning it off is the user's choice and the
-look never overrides it. The preview is drawn inside the keyboard view (an IME window cannot
-draw above itself): a top-row preview moves down until it fits and an edge-key preview moves
-sideways. Colours: `LookPalette.popup` / `popupLabel` (default the letter key and label) and,
-for the long-press popover, `popupSelected` / `popupSelectedLabel` (default the Caps Lock
-fill and label); `SubkeyPopoverRenderer` then draws an opaque panel in the popup colour with
-the selected alternative on the selected colour (Gboard: a primary circle).
-
-**Letter-coloured function keys** (`KeyboardLook.letterKeys`, `KeyRole.LETTER`). Gboard draws
-its emoji key like a letter key (Pixel 2026-10-28); `LookLetterKey.EMOJI` gives `switch_emoji`
-the letter fill and label colour at rest.
-
-**Wallpaper colours** (`KeyboardLook.dynamicColor`, `LookDynamicColors`, 2026-10-28). On API
-31+ Gboard-style maps the system's dynamic palette the way Gboard's dynamic theme does (research
-§2a): background and bar `surfaceContainer`; letter keys `surfaceContainerLowest` (light) /
-`surfaceBright` (dark); shift, delete, ?123, comma, period and Enter `secondaryContainer` with
-`onSecondaryContainer`; Caps Lock, editor action, swipe trail and popover selection `primary` /
-`onPrimary`; labels and bar text `onSurface`; hints `onSurfaceVariant`; separators
-`outlineVariant`; pressed `surfaceContainerHighest` (light) / the label at 10 % over the key
-(dark). `ThemeProvider` reads the role colours (`system_surface_container_light`, … on API 34+;
-the accent/neutral tonal shades on 31–33). Below API 31, or when the mapped palette misses any
-`LookContrast` floor, the fixed palette is used. `getColorScheme` returns the same dynamic
-colours, so `KeyboardViewThemeTracker` sees a wallpaper change as a colour change and the next
-keyboard show re-inflates (rule 6 of the theme skill).
-
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,
 8 dp corners, no shadow, blue editor-action key), `look_gboard` (Material You on the default
@@ -454,7 +415,8 @@ attribute it defines wins over the user's global appearance setting, including a
 (`border_config` radius / line width) and the key margins: selecting or binding a look is an
 explicit choice of that appearance. Attributes it leaves null keep the user's values; the label
 size stays relative to the user's label-size setting (accessibility sizes keep counting); key
-opacity, keyboard height, label brightness and every non-geometry preference are untouched. No
+opacity, keyboard height, label brightness and every non-geometry preference are untouched. A
+layout's own key gaps / border ("Per-layout key geometry" below) beat the look. No
 preference is written: switching to a non-look theme or layout restores the user's geometry
 exactly. The trail colour of a look applies while it is effective (the user's
 `swipe_trail_color` otherwise); this lifts the per-layout limitation above for looks only.
@@ -474,6 +436,99 @@ unchanged), `theme/KeyboardLookRenderTest` (mock: computed frames, non-look pari
 provider light/dark and fallback), `StyleLayoutsTest` (each style layout's look,
 `PredefinedLayoutThemes` vs every layout file), `LayoutThemeBindingConfigTest` (Theme Manager
 list vs registry), `LayoutThemeBindingTest` (backup preview of a style layout's look).
+
+### Per-layout key geometry (`key_*`, 2026-10-27)
+
+Maintainer request (2026-10-27): "make it so layouts can override/set layout-specific key gap
+and border, so user setting acts as global default". The third per-layout binding, after
+`language` and `theme`, with the same three-state storage — per FIELD. No parallel system: it
+rides in the same `layouts` entry, the same Layout Manager row, the same export and the same
+backup blob.
+
+**Fields** (`KeyGeometryField`, `LayoutKeyGeometry.kt`, pure). Each overrides one global
+Appearance preference and uses that preference's own unit, range and slider step:
+
+| Field | Global pref | XML attribute | JSON key | Unit / accepted range (slider) |
+|---|---|---|---|---|
+| horizontal gap | `key_horizontal_margin` | `key_horizontal_gap` | `horizontal_gap` | percent 0–5, step 0.05 |
+| vertical gap | `key_vertical_margin` | `key_vertical_gap` | `vertical_gap` | percent 0–5, step 0.05 |
+| border on/off | `border_config` | `key_border` | `border` | `true`/`false` |
+| corner radius | `custom_border_radius` | `key_border_radius` | `border_radius` | % of key width, 0–100 accepted (`ImportEnvelope`), slider 0–20 step 1 |
+| line width | `custom_border_line_width` | `key_border_width` | `border_width` | dp 0–10, step 1 |
+
+A gap percentage converts exactly as Config converts the global one (`v × density / 100` of the
+key width / row height), so the same number means the same gap.
+
+**XML.** `<keyboard key_horizontal_gap="3" key_border="true" key_border_radius="12" …>` declares
+the layout's DEFAULTS. The parser keeps the raw values in `KeyboardData.declared_key_geometry`
+(carried through every layout transformation) and never fails on them;
+`LayoutKeyGeometry.declaredValues` ignores an invalid one and `xmlProblems` lets the Layout
+Manager XML editor refuse to save it ("Invalid key spacing or border attribute: …"). No
+built-in layout declares any. **Export XML** writes the entry's choices onto the root
+(`LayoutKeyGeometry.applyToXml`): a value sets the attribute, "Use global setting" over an XML
+default removes it, an untouched field leaves the XML as written.
+
+**Storage.** The `key_geometry` object of a `layouts` entry, per field: absent = use the XML
+default, `"inherit"` = explicitly follow the global setting (the counterpart of the theme
+binding's `"none"`), a number / boolean = this layout's value. An entry with no field stores no
+object, so an untouched preference is byte-identical to earlier builds (a named layout stays a
+plain string). Loading sanitises through `LayoutKeyGeometry.normalizeEntry`: unknown fields,
+out-of-range or malformed values (including from a backup) are dropped, the layout survives.
+Editing the XML, reordering and the legacy preference dialog carry the entry's choices.
+
+**Precedence** (per field, most specific first; `LayoutKeyGeometry.applyTo`, pinned by
+`LayoutKeyGeometryTest` and `LayoutKeyGeometryConfigTest`):
+
+1. the user's per-layout choice (Layout Manager);
+2. the layout XML's `key_*` default;
+3. the EFFECTIVE keyboard look's geometry, if a look is active ("Keyboard looks" above);
+4. the global Appearance setting.
+
+The most specific explicit choice wins: a layout the user (or its author) gave its own spacing
+keeps it under any look. Border fields: when none is overridden the look/global result stands.
+Otherwise the layout's border is ON when its `border` says so (if not overridden, when the
+global switch is on); radius and width are the layout's where set, else the global custom
+border's, and both beat a look. A layout that turns the border OFF draws the theme's (or look's)
+own frame even while the global custom border is on (`LayoutKeyGeometry.effectiveBorderOn`
+feeds the user layer). Shadow, label scale and weight stay the look's. **Global preferences are
+never written by a binding.**
+
+**Resolution and switching.** `Config.refresh` loads each entry's effective overrides into
+`Config.layout_key_geometry` (index-aligned with `layouts`); `Config.currentKeyGeometry()` picks
+the current layout's (past the end → layout 0) at the moment `Theme.Computed` is built, so it
+needs no refresh-time resolution and is already correct when `set_current_layout` changes the
+index. `set_current_layout` publishes a new snapshot version (`edit { }`) when the current
+layout's effective overrides change, because `Keyboard2View` keys its computed-frame cache on
+`snap.version` (a live Config read there is forbidden by `ConfigSnapshotRatchetTest`); so a
+space-bar switch to a layout with other gaps lays out with them on the same `setKeyboard`, also
+between two entries of the same layout; a switch that also
+changes the effective theme re-inflates as before. Overlay boards (emoji, numeric pane) follow
+the current text layout's overrides, as the theme binding does. Saga 144 (release, 2026-10-27,
+`build/oct28-saga144-geometry/`): System ↔ Colemak bound to iOS-style with horizontal gap 5 %,
+border on, radius 20 %, width 3 dp — the Colemak board drew the wide gaps and the rounder corners
+over the look's 8 dp (the 3 dp outline is not visible in the capture: it is drawn in the look's
+dark outline colour `#3D3D3D`, identical to its dark key fill; the width is pinned by the mock
+test), System drew the global 2.0 % / 1.5 % / no custom border again; the
+theme rebuild took 3 ms per switch; the global preferences were unchanged afterwards.
+
+**Layout Manager.** Each row has a "Key spacing & borders: Global settings / This layout" chip
+(`LayoutKeyGeometryEditor.hasOverrides`). Its editor (`LayoutKeyGeometryDialog`) lists the five
+fields, each with "Use global setting" (ticked = inherit; the slider shows the inherited global
+value, dimmed) and a slider/switch with the global control's range and step
+(`sliderSteps(range, increment)`). Saving stores `LayoutKeyGeometry.entryFor(choices, xml)`:
+picking the XML value stores nothing, inheriting over an XML default stores `"inherit"`.
+
+**Backup & Restore.** No preference key is added: the overrides travel inside the classified
+`layouts` blob. The import preview lists each matched entry whose effective overrides change
+(`LayoutThemeBindingDiff.geometryChanges`, "<layout>: key spacing & borders A → B", each side as
+`key_horizontal_gap=3, …` or "Global settings"), computed from the same sanitised values loading
+uses, so an out-of-range value from a file is never previewed as a change.
+
+Tests: `LayoutKeyGeometryTest` (pure: entries, XML defaults/problems, export round trip, editor
+state and snapping, backup diff, precedence incl. border on/off under a look),
+`LayoutKeyGeometryConfigTest` (mock: serializer round trip and hostile backup values, XML
+attributes through `KeyboardData` and `loadLayoutsWithBindings`, `Theme.Computed` per current
+layout, over a look, border off under a global custom border, globals never written).
 
 ### CTC swipe eligibility
 
@@ -514,5 +569,6 @@ See [testing strategy](testing-strategy.md) for the full cloud verdict.
   commands joined the catalogue (240 commands as of 2026-10-20); the dead keys compose on the
   following letter like the existing accent keys. Status per `docs/audit/gh-issue-resolution.md`.
 - **Per-layout bindings.** The `language` (GH #186/#61) and `theme` (2026-10-15) root attributes
-  above are the two per-layout bindings; both are three-state in the Layout Manager editor and
-  stored with the layout. `LayoutLanguageBindingTest` / `LayoutThemeBindingTest` pin them.
+  above, and the `key_*` geometry attributes (2026-10-27, per field), are the per-layout
+  bindings; all are three-state in Layout Manager and stored with the layout.
+  `LayoutLanguageBindingTest` / `LayoutThemeBindingTest` / `LayoutKeyGeometryTest` pin them.

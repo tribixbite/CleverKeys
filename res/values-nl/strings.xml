@@ -398,8 +398,6 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontale ruimte tussen toetsen</string>
     <string name="appearance_look_show_hints_title">Gebarenhints tonen bij bekende looks</string>
     <string name="appearance_look_show_hints_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl verbergen hoekhints zoals die toetsenborden; zet aan om alle hints te tonen. Gebaren werken hoe dan ook.</string>
-    <string name="appearance_look_key_preview_title">Toetsvoorbeeld bij bekende looks</string>
-    <string name="appearance_look_key_preview_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl tonen het ingedrukte teken in een pop-up met de vorm van die toetsenborden.</string>
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
     <string name="appearance_custom_border_desc">Aangepaste toetsrandstijl inschakelen</string>
     <string name="appearance_border_radius_title">Randradius</string>
@@ -2499,4 +2497,12 @@
     <string name="layout_theme_search_hint">Thema\'s zoeken</string>
     <string name="layout_theme_no_results">Geen overeenkomende thema\'s</string>
     <string name="import_preview_layout_theme_change">%1$s: thema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Toetsafstand en randen: %1$s</string>
+    <string name="layout_key_geometry_title">Toetsafstand en randen</string>
+    <string name="layout_key_geometry_global">Algemene instellingen</string>
+    <string name="layout_key_geometry_custom">Deze indeling</string>
+    <string name="layout_key_geometry_desc">Zolang deze indeling actief is, vervangen de hier ingestelde waarden de Weergave-instellingen en de afstanden van een bekende stijl. De Weergave-instellingen zelf veranderen niet.</string>
+    <string name="layout_key_geometry_use_global">Algemene instelling gebruiken</string>
+    <string name="layout_key_geometry_xml_invalid">Ongeldig attribuut voor toetsafstand of rand: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: toetsafstand en randen %2$s → %3$s</string>
 </resources>

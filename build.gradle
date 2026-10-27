@@ -831,6 +831,9 @@ tasks.register('runPureTests', JavaExec) {
     // Per-layout theme binding: id validation, entry precedence, effective-theme resolution
     // (bound / unbound / missing theme) and the layout-XML `theme` attribute read/write.
     'tribixbite.cleverkeys.LayoutThemeBindingTest',
+    // Per-layout key gaps / border (LayoutKeyGeometry): stored three-state entries, XML defaults
+    // and export, editor state, backup diff and the layout > XML > look > global precedence.
+    'tribixbite.cleverkeys.LayoutKeyGeometryTest',
     // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
@@ -838,8 +841,6 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
-    'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
-    'tribixbite.cleverkeys.theme.LookPopupsTest',
     // Backup encryption (2026-07-17) — pure crypto substrate
     'tribixbite.cleverkeys.backup.crypto.Pbkdf2Sha256VectorTest',
     'tribixbite.cleverkeys.backup.crypto.BackupCryptoRoundTripTest',
@@ -1602,6 +1603,9 @@ tasks.register('runMockTests', JavaExec) {
     // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an
     // effective-theme change), the layouts serializer (backup blob) and the XML `theme` attribute.
     'tribixbite.cleverkeys.LayoutThemeBindingConfigTest',
+    // Per-layout key gaps / border through the layouts serializer (backup blob, hostile values),
+    // the XML key_* attributes, Config's current layout and Theme.Computed (beats a look).
+    'tribixbite.cleverkeys.LayoutKeyGeometryConfigTest',
     // 2026-10-27 keyboard looks reach Theme.Computed (gaps, radius, shadow, action/modifier
     // frames), non-look themes compute as before, looks follow the system light/dark mode.
     'tribixbite.cleverkeys.theme.KeyboardLookRenderTest',

@@ -1479,13 +1479,8 @@ class Keyboard2View @JvmOverloads constructor(
                 val tx = event.getX(p)
                 val ty = event.getY(p)
                 val key = getKeyAtPosition(tx, ty)
-                if (key != null) {
+                if (key != null)
                     _pointers.onTouchDown(tx, ty, event.getPointerId(p), key)
-                    // A look's key-press preview must appear at touch-down. With swipe typing on,
-                    // a character key's down is DEFERRED (Pointers: no onPointerDown, so no
-                    // redraw) until release; redraw here so the pressed key and its preview show.
-                    if (_theme.lookPreview != null) invalidate()
-                }
             }
             MotionEvent.ACTION_MOVE -> {
                 for (p in 0 until event.pointerCount)
@@ -1741,13 +1736,6 @@ class Keyboard2View @JvmOverloads constructor(
         // #133: secondary (flick) labels scale independently of the primary
         // label via secondary_label_size_scale (default 1.0 = unchanged).
         _subLabelSize = labelBaseSize * snap.sublabelTextSize * snap.secondary_label_size_scale
-        // A keyboard look draws its hints in its own proportion to its label (LookHintLayout:
-        // the look's fraction × the user's secondary scale, capped by the key height); every
-        // corner-label path (drawSubLabel, drawCustomSubLabel) reads this one base size.
-        _theme.lookHintStyle?.let { style ->
-            _subLabelSize = tribixbite.cleverkeys.theme.LookHintLayout.size(
-                style, _mainLabelSize, snap.secondary_label_size_scale, tc.row_height - tc.vertical_margin)
-        }
 
         val height = (tc.row_height * keyboard.keysHeight + snap.marginTop + _marginBottom).toInt()
         setMeasuredDimension(width, height)
@@ -1829,11 +1817,6 @@ class Keyboard2View @JvmOverloads constructor(
         val legends = tribixbite.cleverkeys.theme.LookLegendPolicy.effective(_theme.lookLegends, snap.look_show_hints)
         val allLegends = legends == tribixbite.cleverkeys.theme.LookLegends.ALL
         val pills = _theme.lookPillKeys
-        // A look's key-press preview (LookPreviewPolicy): the first pressed character key is
-        // remembered here and its preview drawn above every key after the loop.
-        val lookPreview = _theme.lookPreview
-        var previewKv: KeyValue? = null
-        var previewX = 0f; var previewY = 0f; var previewW = 0f; var previewH = 0f; var previewR = 0f
         var y = tc.margin_top
 
         for (row in keyboard.rows) {
@@ -1867,7 +1850,7 @@ class Keyboard2View @JvmOverloads constructor(
                 // Keyboard looks: Enter, the editor-action key and a look's function characters
                 // (Gboard's comma/period) get their own frames.
                 val tc_key = tc.keyForRole(
-                    Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys)
+                    Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars)
                 )
 
                 // A look's pill keys (Gboard's ?123 and Enter): identity, so pressed stays a pill.
@@ -1882,15 +1865,6 @@ class Keyboard2View @JvmOverloads constructor(
                         tc_key.border_radius, keyW, keyH,
                     )
                 drawKeyFrame(canvas, x, y, keyW, keyH, tc_key, radius)
-                if (lookPreview != null && isKeyDown && previewKv == null && kv0 != null &&
-                    tribixbite.cleverkeys.theme.LookPreviewPolicy.shows(
-                        lookPreview, snap.look_key_preview,
-                        isCharacter = kv0.getKind() == KeyValue.Kind.Char || kv0.getKind() == KeyValue.Kind.String,
-                        isSpace = kv0.getKind() == KeyValue.Kind.Char && kv0.getChar() == ' ',
-                    )
-                ) {
-                    previewKv = kv0; previewX = x; previewY = y; previewW = keyW; previewH = keyH; previewR = radius
-                }
                 // The main label's drawn width bounds the W/E sublabel slots (SubLabelSizing).
                 // A look hides CleverKeys' space-bar glyph with the other hints (LookLegendPolicy).
                 val mainLabelW = if (k.keys[0] != null && (tribixbite.cleverkeys.theme.LookLegendPolicy.drawsSpaceBarGlyph(legends) ||
@@ -1911,7 +1885,7 @@ class Keyboard2View @JvmOverloads constructor(
                     val sub = k.keys[i] ?: continue
                     if ((coveredSubLabels and (1 shl i)) == 0 &&
                         (allLegends || tribixbite.cleverkeys.theme.LookLegendPolicy.drawsCornerLabel(legends, sub.getString())))
-                        drawSubLabel(canvas, sub, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW, radius)
+                        drawSubLabel(canvas, sub, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW)
                 }
                 // Draw custom short swipe mappings (they own their slots — see above).
                 // Skip the whole overlay when no custom mappings are configured (R2 early-out),
@@ -1922,12 +1896,6 @@ class Keyboard2View @JvmOverloads constructor(
                 x += _keyWidth * k.width
             }
             y += row.height * tc.row_height
-        }
-
-        // A look's key-press preview, above the keys; not while swipe typing or in the popover.
-        if (previewKv != null && lookPreview != null && _subkeyPopover == null &&
-            _swipeRecognizer?.isSwipeTyping() != true) {
-            drawKeyPreview(canvas, lookPreview, previewKv, previewX, previewY, previewW, previewH, previewR, tc)
         }
 
         // Draw swipe trail if swipe typing is enabled and active
@@ -2110,58 +2078,18 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * Draw a look's key-press preview for [kv] pressed at ([keyX], [keyY]) size [keyW] × [keyH]
-     * with corner radius [keyR] ([tribixbite.cleverkeys.theme.LookPreviewPolicy.frame]: shape,
-     * size and clamping inside the view; colours from [Theme.lookPopupColors]).
-     */
-    private fun drawKeyPreview(
-        canvas: Canvas, preview: tribixbite.cleverkeys.theme.LookPreview, kv: KeyValue,
-        keyX: Float, keyY: Float, keyW: Float, keyH: Float, keyR: Float, tc: Theme.Computed,
-    ) {
-        val colors = _theme.lookPopupColors ?: return
-        val modifiedKv = modifyKey(kv, _mods) ?: return
-        val f = tribixbite.cleverkeys.theme.LookPreviewPolicy.frame(
-            preview, keyX, keyY, keyW, keyH, keyR, width.toFloat(), scaleTextSize(modifiedKv, true),
-        )
-        val fill = _previewFillPaint
-        fill.color = colors.fill
-        if (preview.shadow) {
-            val dy = PREVIEW_SHADOW_DY_DP * _theme.density
-            _previewShadowPaint.color = PREVIEW_SHADOW_COLOR
-            _tmpRect.set(f.headLeft, f.headTop + dy, f.headRight, f.headBottom + dy)
-            canvas.drawRoundRect(_tmpRect, f.headRadius, f.headRadius, _previewShadowPaint)
-        }
-        if (f.hasNeck) {
-            _tmpRect.set(f.neckLeft, f.neckTop, f.neckRight, f.neckBottom)
-            canvas.drawRoundRect(_tmpRect, f.neckRadius, f.neckRadius, fill)
-        }
-        _tmpRect.set(f.headLeft, f.headTop, f.headRight, f.headBottom)
-        canvas.drawRoundRect(_tmpRect, f.headRadius, f.headRadius, fill)
-        val p = tc.key.label_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), colors.label, f.labelSize)
-        val label = modifiedKv.getString()
-        canvas.drawText(label, f.labelCenterX, f.labelCenterY - (p.ascent() + p.descent()) / 2f, p)
-    }
-
-    /**
      * [snap] is the frame's captured configuration — see [onDraw]. [mainLabelW] is the key's
-     * drawn main-label width, which bounds the W/E slots ([SubLabelSizing.maxWidth]); [radius]
-     * the key's drawn corner radius (a look's corner hints keep clear of it).
+     * drawn main-label width, which bounds the W/E slots ([SubLabelSizing.maxWidth]).
      */
-    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float, radius: Float = tc.border_radius) {
+    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
         val modifiedKv = modifyKey(kv, _mods) ?: return
-        // A look's hints: the base size comes from LookHintLayout (onMeasure), and corner slots
-        // are inset clear of the rounded corner so they never clip on pills or large radii.
-        val hintStyle = _theme.lookHintStyle
         // SubLabelSizing is shared with drawCustomSubLabel, KeyMagnifierView and the popover:
         // FLAG_SMALLER_FONT / colour-emoji scale, then shrink-to-fit the slot's width.
         val textSize = _subLabelSize * SubLabelSizing.scaleFor(modifiedKv)
         val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, true), textSize, a)
-        val isCorner = v != Vertical.CENTER && a != Paint.Align.CENTER
-        val subPadding = if (hintStyle != null && isCorner)
-            tribixbite.cleverkeys.theme.LookHintLayout.cornerInset(snap.keyPadding, radius)
-        else snap.keyPadding
+        val subPadding = snap.keyPadding
         val label = modifiedKv.getString()
         var label_len = label.length
         // Limit the label of string keys to 3 characters
@@ -2355,12 +2283,6 @@ class Keyboard2View @JvmOverloads constructor(
     companion object {
         private var _currentWhat = 0
         private val _tmpRect = RectF()
-        /** Key-press preview paints (a look's), allocated once. */
-        private val _previewFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        private val _previewShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        /** Gboard-style preview elevation: a soft offset shadow. */
-        private const val PREVIEW_SHADOW_DY_DP = 1.5f
-        private const val PREVIEW_SHADOW_COLOR = 0x33000000
 
         /**
          * Audit H-8: whether a key cell has nothing to render — all nine slots null and

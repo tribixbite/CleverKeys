@@ -28,11 +28,6 @@ object KeyboardLooks {
 
     private fun argb(rgb: Long): Int = (0xFF000000L or rgb).toInt()
 
-    /** iOS key-pop: head 12 pt wider than the key on each side, ~50 pt over a 43 pt key, 12 pt corners. */
-    private val IOS_BALLOON = LookPreview(
-        LookPreviewShape.BALLOON, widthScale = 1.75f, heightScale = 1.16f, labelScale = 1.6f, cornerScale = 0.28f,
-    )
-
     /** A separator colour with alpha 0: no separators are drawn. */
     private const val NO_SEPARATOR = 0x00FFFFFF
 
@@ -52,7 +47,6 @@ object KeyboardLooks {
             keyShadow = 0, keyBorder = argb(0xFFFFFF),
             barBackground = argb(0xE2E4E8), barText = argb(0x000000), barHighlight = argb(0x000000),
             barSeparator = 0x4D3C3C43, swipeTrail = argb(0x007AFF),
-            popupSelected = argb(0x007AFF), popupSelectedLabel = argb(0xFFFFFF),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x171717), key = argb(0x3D3D3D), keyPressed = argb(0x7D7D7D),
@@ -63,15 +57,12 @@ object KeyboardLooks {
             keyShadow = 0, keyBorder = argb(0x3D3D3D),
             barBackground = argb(0x171717), barText = argb(0xFFFFFF), barHighlight = argb(0xFFFFFF),
             barSeparator = 0x4DEBEBF5, swipeTrail = argb(0x0A84FF),
-            popup = argb(0x505050), popupSelected = argb(0x007AFF), popupSelectedLabel = argb(0xFFFFFF),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.15f, keyGapVertical = 0.20f, cornerRadiusDp = 8f,
             borderWidthDp = 0f, shadowDyDp = 0f, labelScale = 1.25f, labelWeight = 400,
         ),
         legends = LookLegends.NONE,
-        preview = IOS_BALLOON,
-        hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 400),
     )
 
     /**
@@ -89,7 +80,6 @@ object KeyboardLooks {
             keyShadow = 0x4D000000, keyBorder = argb(0xFFFFFF),
             barBackground = argb(0xD5D6DD), barText = argb(0x000000), barHighlight = argb(0x000000),
             barSeparator = 0x4D3C3C43, swipeTrail = argb(0x007AFF),
-            popupSelected = argb(0x007AFF), popupSelectedLabel = argb(0xFFFFFF),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x2C2C2C), key = argb(0x6B6B6B), keyPressed = argb(0x555555),
@@ -100,15 +90,12 @@ object KeyboardLooks {
             keyShadow = 0xB3000000.toInt(), keyBorder = argb(0x6B6B6B),
             barBackground = argb(0x2C2C2C), barText = argb(0xFFFFFF), barHighlight = argb(0xFFFFFF),
             barSeparator = 0x4DEBEBF5, swipeTrail = argb(0x0A84FF),
-            popupSelected = argb(0x007AFF), popupSelectedLabel = argb(0xFFFFFF),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.15f, keyGapVertical = 0.22f, cornerRadiusDp = 5f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.25f, labelWeight = 300,
         ),
         legends = LookLegends.NONE,
-        preview = IOS_BALLOON,
-        hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 300),
     )
 
     /**
@@ -145,14 +132,6 @@ object KeyboardLooks {
         functionChars = ",.",
         legends = LookLegends.DIGITS,
         pillKeys = setOf(LookPillKey.ENTER, LookPillKey.ACTION, LookPillKey.NUMBERS),
-        // The real Gboard draws its emoji key like a letter key (Pixel 2026-10-28).
-        letterKeys = setOf(LookLetterKey.EMOJI),
-        preview = LookPreview(
-            LookPreviewShape.BUBBLE, widthScale = 1.3f, heightScale = 1.25f, labelScale = 1.2f, shadow = true,
-        ),
-        // Gboard's top-right digits: small, regular weight.
-        hintStyle = LookHintStyle(sizeFraction = 0.40f, weight = 400),
-        dynamicColor = true,
     )
 
     /**
@@ -172,7 +151,6 @@ object KeyboardLooks {
             keyShadow = 0x29000000, keyBorder = argb(0xFFFFFF),
             barBackground = argb(0xF1F1F1), barText = argb(0x292929), barHighlight = argb(0x292929),
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x3961ED),
-            popup = argb(0xE3E3E3), popupSelected = argb(0x3961ED), popupSelectedLabel = argb(0xFFFFFF),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x141414), key = argb(0x232323), keyPressed = argb(0x404040),
@@ -183,17 +161,12 @@ object KeyboardLooks {
             keyShadow = 0x29000000, keyBorder = argb(0x232323),
             barBackground = argb(0x141414), barText = argb(0xFFFFFF), barHighlight = argb(0xFFFFFF),
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x9DC3FF),
-            popup = argb(0x404040), popupSelected = argb(0x9DC3FF), popupSelectedLabel = argb(0x141414),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.12f, keyGapVertical = 0.10f, cornerRadiusDp = 8f,
             borderWidthDp = 0f, shadowDyDp = 0.7f, labelScale = 1.2f, labelWeight = 400,
         ),
         legends = LookLegends.NONE,
-        // A key-wide column rising about one row (Pixel 2026-10-28).
-        preview = LookPreview(LookPreviewShape.COLUMN, widthScale = 1f, heightScale = 2.1f, labelScale = 1.15f),
-        // Fluent draws its symbol hints small and light.
-        hintStyle = LookHintStyle(sizeFraction = 0.45f, weight = 300),
     )
 
     /**
@@ -213,8 +186,6 @@ object KeyboardLooks {
             keyShadow = 0x24000000, keyBorder = argb(0xFCFCFF),
             barBackground = argb(0xE4E4E7), barText = argb(0x252528), barHighlight = argb(0x387AFF),
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x2793FC),
-            popup = argb(0xFCFCFF), popupLabel = argb(0x252528),
-            popupSelected = argb(0x376FDE), popupSelectedLabel = argb(0xFFFFFF),
         ),
         dark = LookPalette(
             keyboardBackground = argb(0x010102), key = argb(0x3A3A3D), keyPressed = argb(0x47474A),
@@ -225,18 +196,12 @@ object KeyboardLooks {
             keyShadow = 0, keyBorder = argb(0x3A3A3D),
             barBackground = argb(0x010102), barText = argb(0xFAFAFF), barHighlight = argb(0x387AFF),
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x2793FC),
-            popup = argb(0x2D2D30), popupLabel = argb(0xFAFAFF),
-            popupSelected = argb(0x376FDE), popupSelectedLabel = argb(0xFFFFFF),
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.16f, keyGapVertical = 0.14f, cornerRadiusDp = 6f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.1f, labelWeight = 400,
         ),
         legends = LookLegends.NONE,
-        // One UI's preview plate (`preview_*` colours, research §4).
-        preview = LookPreview(LookPreviewShape.PLATE, widthScale = 1.15f, heightScale = 1.2f, labelScale = 1.3f, cornerScale = 0.18f),
-        // "Alternative characters": top-right, the label at 50 %.
-        hintStyle = LookHintStyle(sizeFraction = 0.42f, weight = 400),
     )
 
     /** Every look, in Theme Manager order. */

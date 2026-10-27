@@ -411,8 +411,6 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontālais atstatums starp taustiņiem</string>
     <string name="appearance_look_show_hints_title">Rādīt žestu norādes pazīstamiem izskatiem</string>
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey un Samsung stila izskati slēpj stūru norādes tāpat kā šīs tastatūras; ieslēdziet, lai rādītu visas. Žesti darbojas jebkurā gadījumā.</string>
-    <string name="appearance_look_key_preview_title">Taustiņa priekšskatījums pazīstamiem izskatiem</string>
-    <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey un Samsung stila izskati rāda nospiesto rakstzīmi uznirstošā logā, kas veidots kā šīm tastatūrām.</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>
@@ -2555,4 +2553,12 @@
     <string name="layout_theme_search_hint">Meklēt tēmas</string>
     <string name="layout_theme_no_results">Nav atbilstošu tēmu</string>
     <string name="import_preview_layout_theme_change">%1$s: tēma %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Taustiņu atstarpes un apmales: %1$s</string>
+    <string name="layout_key_geometry_title">Taustiņu atstarpes un apmales</string>
+    <string name="layout_key_geometry_global">Globālie iestatījumi</string>
+    <string name="layout_key_geometry_custom">Šis izkārtojums</string>
+    <string name="layout_key_geometry_desc">Kamēr šis izkārtojums ir aktīvs, šeit iestatītās vērtības aizstāj Izskata iestatījumus un pazīstama izskata atstarpes. Paši Izskata iestatījumi nemainās.</string>
+    <string name="layout_key_geometry_use_global">Izmantot globālo iestatījumu</string>
+    <string name="layout_key_geometry_xml_invalid">Nederīgs taustiņu atstarpes vai apmales atribūts: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: taustiņu atstarpes un apmales %2$s → %3$s</string>
 </resources>

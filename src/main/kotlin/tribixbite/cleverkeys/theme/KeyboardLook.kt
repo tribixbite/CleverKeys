@@ -37,20 +37,6 @@ data class KeyboardLook(
     val legends: LookLegends = LookLegends.ALL,
     /** Keys drawn as full pills (radius = half the shorter side), e.g. Gboard's ?123 and Enter. */
     val pillKeys: Set<LookPillKey> = emptySet(),
-    /**
-     * Function keys this look draws as LETTER keys ([LookPalette.key] fill, [LookPalette.label]
-     * glyph), e.g. Gboard's emoji key (Pixel 2026-10-28: the real Gboard draws it like a letter).
-     */
-    val letterKeys: Set<LookLetterKey> = emptySet(),
-    /** The key-press preview this look's product shows ([LookPreviewShape.NONE] = none). */
-    val preview: LookPreview = LookPreview.NONE,
-    /** How corner labels look when the user shows them on this look ([LookHintStyle]). */
-    val hintStyle: LookHintStyle = LookHintStyle.DEFAULT,
-    /**
-     * Whether the look's palette follows the system's dynamic (wallpaper) colours on API 31+
-     * ([LookDynamicColors]); the fixed [light] / [dark] palettes are the fallback.
-     */
-    val dynamicColor: Boolean = false,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark
@@ -102,17 +88,6 @@ data class LookPalette(
     val barSeparator: Int,
     /** Swipe trail colour while this look is the effective theme. */
     val swipeTrail: Int,
-    /**
-     * Fill of the key-press preview and of the long-press popover panel; 0 = [key]
-     * ([LookPopupColors] resolves the defaults).
-     */
-    val popup: Int = 0,
-    /** Label colour on [popup]; 0 = [label]. */
-    val popupLabel: Int = 0,
-    /** Fill of the selected popover alternative; 0 = [keyLocked]. */
-    val popupSelected: Int = 0,
-    /** Label colour on [popupSelected]; 0 = [lockedLabel]. */
-    val popupSelectedLabel: Int = 0,
 )
 
 /**
@@ -180,12 +155,6 @@ object LookLegendPolicy {
 
     /** CleverKeys' space-bar glyph is a hint too: none of the copied keyboards draws one. */
     fun drawsSpaceBarGlyph(effective: LookLegends): Boolean = effective == LookLegends.ALL
-}
-
-/** Function keys a look can draw as letter keys. */
-enum class LookLetterKey {
-    /** The emoji-pane switch (`switch_emoji`). */
-    EMOJI,
 }
 
 /** Per-key shapes of a look. */

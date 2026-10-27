@@ -413,8 +413,6 @@
     <string name="appearance_key_horizontal_margin_desc">Горизонтальний проміжок між клавішами</string>
     <string name="appearance_look_show_hints_title">Показувати підказки жестів у знайомих стилях</string>
     <string name="appearance_look_show_hints_desc">Стилі iOS, Gboard, SwiftKey і Samsung приховують підказки в кутах клавіш, як ці клавіатури; увімкніть, щоб показати всі. Жести працюють у будь-якому разі.</string>
-    <string name="appearance_look_key_preview_title">Перегляд натиснутої клавіші у знайомих стилях</string>
-    <string name="appearance_look_key_preview_desc">Стилі iOS, Gboard, SwiftKey і Samsung показують натиснутий символ у спливному вікні у формі, як у цих клавіатур.</string>
     <string name="appearance_custom_border_title">Власна рамка</string>
     <string name="appearance_custom_border_desc">Увімкнути власний стиль рамки клавіш</string>
     <string name="appearance_border_radius_title">Радіус скруглення рамки</string>
@@ -2600,4 +2598,12 @@
     <string name="layout_theme_search_hint">Пошук тем</string>
     <string name="layout_theme_no_results">Немає відповідних тем</string>
     <string name="import_preview_layout_theme_change">%1$s: тема %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Відступи й рамки клавіш: %1$s</string>
+    <string name="layout_key_geometry_title">Відступи й рамки клавіш</string>
+    <string name="layout_key_geometry_global">Загальні налаштування</string>
+    <string name="layout_key_geometry_custom">Ця розкладка</string>
+    <string name="layout_key_geometry_desc">Поки ця розкладка активна, задані тут значення замінюють налаштування вигляду та відступи знайомого стилю. Самі налаштування вигляду не змінюються.</string>
+    <string name="layout_key_geometry_use_global">Використовувати загальне налаштування</string>
+    <string name="layout_key_geometry_xml_invalid">Недійсний атрибут відступу або рамки клавіш: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: відступи й рамки клавіш %2$s → %3$s</string>
 </resources>

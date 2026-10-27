@@ -599,8 +599,6 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontal spacing between keys</string>
     <string name="appearance_look_show_hints_title">Show gesture hints on familiar looks</string>
     <string name="appearance_look_show_hints_desc">iOS-, Gboard-, SwiftKey- and Samsung-style looks hide corner hints as those keyboards do; turn on to show every hint. Gestures work either way.</string>
-    <string name="appearance_look_key_preview_title">Key-press preview on familiar looks</string>
-    <string name="appearance_look_key_preview_desc">iOS-, Gboard-, SwiftKey- and Samsung-style looks show the pressed character in a pop-up shaped like those keyboards\' own.</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>
@@ -2926,4 +2924,13 @@
     <string name="layout_theme_search_hint">Search themes</string>
     <string name="layout_theme_no_results">No matching themes</string>
     <string name="import_preview_layout_theme_change">%1$s: theme %2$s → %3$s</string>
+    <!-- Per-layout key spacing & borders (Layout Manager chip/editor, backup preview) -->
+    <string name="layout_key_geometry_chip">Key spacing &amp; borders: %1$s</string>
+    <string name="layout_key_geometry_title">Key spacing &amp; borders</string>
+    <string name="layout_key_geometry_global">Global settings</string>
+    <string name="layout_key_geometry_custom">This layout</string>
+    <string name="layout_key_geometry_desc">While this layout is active, values set here replace your Appearance settings and a familiar look\'s spacing. Your Appearance settings do not change.</string>
+    <string name="layout_key_geometry_use_global">Use global setting</string>
+    <string name="layout_key_geometry_xml_invalid">Invalid key spacing or border attribute: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: key spacing &amp; borders %2$s → %3$s</string>
 </resources>

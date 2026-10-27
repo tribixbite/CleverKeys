@@ -438,8 +438,6 @@
     <string name="appearance_key_horizontal_margin_desc">Spaziatura orizzontale tra i tasti</string>
     <string name="appearance_look_show_hints_title">Mostra i suggerimenti dei gesti negli aspetti familiari</string>
     <string name="appearance_look_show_hints_desc">Gli aspetti stile iOS, Gboard, SwiftKey e Samsung nascondono i suggerimenti agli angoli come quelle tastiere; attiva per mostrarli tutti. I gesti funzionano comunque.</string>
-    <string name="appearance_look_key_preview_title">Anteprima del tasto negli aspetti familiari</string>
-    <string name="appearance_look_key_preview_desc">Gli aspetti stile iOS, Gboard, SwiftKey e Samsung mostrano il carattere premuto in un popup con la forma di quelle tastiere.</string>
     <string name="appearance_custom_border_title">Bordo personalizzato</string>
     <string name="appearance_custom_border_desc">Abilita lo stile bordo personalizzato per i tasti</string>
     <string name="appearance_border_radius_title">Raggio bordo</string>
@@ -2584,4 +2582,12 @@
     <string name="layout_theme_search_hint">Cerca temi</string>
     <string name="layout_theme_no_results">Nessun tema corrispondente</string>
     <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Spaziatura e bordi dei tasti: %1$s</string>
+    <string name="layout_key_geometry_title">Spaziatura e bordi dei tasti</string>
+    <string name="layout_key_geometry_global">Impostazioni globali</string>
+    <string name="layout_key_geometry_custom">Questo layout</string>
+    <string name="layout_key_geometry_desc">Mentre questo layout è attivo, i valori impostati qui sostituiscono le impostazioni di Aspetto e la spaziatura di uno stile familiare. Le impostazioni di Aspetto non cambiano.</string>
+    <string name="layout_key_geometry_use_global">Usa l’impostazione globale</string>
+    <string name="layout_key_geometry_xml_invalid">Attributo di spaziatura o bordo dei tasti non valido: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: spaziatura e bordi dei tasti %2$s → %3$s</string>
 </resources>

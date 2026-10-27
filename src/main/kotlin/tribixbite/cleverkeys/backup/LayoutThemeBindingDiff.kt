@@ -2,6 +2,8 @@ package tribixbite.cleverkeys.backup
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
+import tribixbite.cleverkeys.KeyGeometryField
+import tribixbite.cleverkeys.LayoutKeyGeometry
 import tribixbite.cleverkeys.LayoutThemeBinding
 import tribixbite.cleverkeys.PredefinedLayoutThemes
 
@@ -30,7 +32,24 @@ object LayoutThemeBindingDiff {
      */
     data class Change(val kind: Kind, val name: String?, val from: String?, val to: String?)
 
-    private data class Entry(val kind: Kind, val name: String?, val identity: String, val theme: String?)
+    /**
+     * One entry whose EFFECTIVE key-geometry overrides ([LayoutKeyGeometry.effective]: the entry's
+     * choices over its XML defaults) differ; an empty map = follows the look / global settings.
+     */
+    data class GeometryChange(
+        val kind: Kind,
+        val name: String?,
+        val from: Map<KeyGeometryField, Float>,
+        val to: Map<KeyGeometryField, Float>,
+    )
+
+    private data class Entry(
+        val kind: Kind,
+        val name: String?,
+        val identity: String,
+        val theme: String?,
+        val geometry: Map<KeyGeometryField, Float> = emptyMap(),
+    )
 
     private val ROOT_TAG = Regex("<keyboard(\\s[^>]*)?>")
     private val NAME_ATTRIBUTE = Regex("\\sname\\s*=\\s*(\"([^\"]*)\"|'([^']*)')")
@@ -46,16 +65,39 @@ object LayoutThemeBindingDiff {
      * effective theme binding changes. Added/removed layouts are not theme changes and are left
      * to the generic count. An unparseable entry is skipped, never thrown.
      */
-    fun themeChanges(current: JsonArray, proposed: JsonArray): List<Change> {
-        val cur = entriesOf(current)
-        val prop = entriesOf(proposed)
-        val unmatched = cur.groupBy { it.identity }.mapValues { it.value.toMutableList() }
-        val changes = mutableListOf<Change>()
-        for (p in prop) {
-            val c = unmatched[p.identity]?.removeFirstOrNull() ?: continue
-            if (c.theme != p.theme) changes += Change(p.kind, p.name, c.theme, p.theme)
+    fun themeChanges(current: JsonArray, proposed: JsonArray): List<Change> =
+        matched(current, proposed).mapNotNull { (c, p) ->
+            if (c.theme != p.theme) Change(p.kind, p.name, c.theme, p.theme) else null
         }
-        return changes
+
+    /**
+     * Entries present in both blobs whose effective key-geometry overrides change (the same
+     * matching as [themeChanges]). Values in the stored blob are sanitised exactly as loading
+     * sanitises them ([LayoutKeyGeometry.normalizeEntry]): an out-of-range value from a file
+     * is dropped there and therefore never previewed as a change.
+     */
+    fun geometryChanges(current: JsonArray, proposed: JsonArray): List<GeometryChange> =
+        matched(current, proposed).mapNotNull { (c, p) ->
+            if (c.geometry != p.geometry) GeometryChange(p.kind, p.name, c.geometry, p.geometry) else null
+        }
+
+    /** Pairs (current, proposed) of entries matched by identity, in order of occurrence. */
+    private fun matched(current: JsonArray, proposed: JsonArray): List<Pair<Entry, Entry>> {
+        val unmatched = entriesOf(current).groupBy { it.identity }.mapValues { it.value.toMutableList() }
+        return entriesOf(proposed).mapNotNull { p -> unmatched[p.identity]?.removeFirstOrNull()?.let { it to p } }
+    }
+
+    /** The entry's stored `key_geometry` object as JSON-like values, or null. */
+    private fun geometryEntryOf(obj: com.google.gson.JsonObject): Map<String, Any?>? {
+        val g = obj.get(LayoutKeyGeometry.JSON_FIELD)?.takeIf { it.isJsonObject }?.asJsonObject ?: return null
+        return g.entrySet().associate { (k, v) ->
+            k to when {
+                v.isJsonNull || !v.isJsonPrimitive -> null
+                v.asJsonPrimitive.isBoolean -> v.asBoolean
+                v.asJsonPrimitive.isNumber -> v.asDouble
+                else -> v.asString
+            }
+        }
     }
 
     private fun entriesOf(array: JsonArray): List<Entry> = array.mapNotNull(::entryOf)
@@ -69,12 +111,15 @@ object LayoutThemeBindingDiff {
         } else {
             val obj = element.asJsonObject
             val entryTheme = obj.get("theme")?.takeIf { !it.isJsonNull }?.asString
+            val entryGeometry = LayoutKeyGeometry.normalizeEntry(geometryEntryOf(obj))
             when (obj.get("kind")?.asString) {
                 "named" -> {
                     val name = obj.get("name").asString
                     Entry(
                         Kind.NAMED, name, "named:$name",
                         LayoutThemeBinding.effective(entryTheme, PredefinedLayoutThemes.declaredThemeOf(name)),
+                        // Predefined layouts declare no key geometry.
+                        LayoutKeyGeometry.effective(entryGeometry, emptyMap()),
                     )
                 }
                 "custom" -> {
@@ -86,9 +131,15 @@ object LayoutThemeBindingDiff {
                     Entry(
                         Kind.CUSTOM, name, identity,
                         LayoutThemeBinding.effective(entryTheme, LayoutThemeBinding.declaredThemeOfXml(xml)),
+                        LayoutKeyGeometry.effective(
+                            entryGeometry, LayoutKeyGeometry.declaredValues(LayoutKeyGeometry.declaredOfXml(xml)),
+                        ),
                     )
                 }
-                else -> Entry(Kind.SYSTEM, null, "system", LayoutThemeBinding.effective(entryTheme, null))
+                else -> Entry(
+                    Kind.SYSTEM, null, "system", LayoutThemeBinding.effective(entryTheme, null),
+                    LayoutKeyGeometry.effective(entryGeometry, emptyMap()),
+                )
             }
         }
     } catch (_: Exception) {

@@ -446,8 +446,11 @@ private fun renderArrayDelta(
     ) {
         val countDelta = text.plural(R.plurals.import_preview_json_items_delta, prop.size(), cur.size(), prop.size())
         val themeChanges = tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.themeChanges(cur, prop)
-        if (themeChanges.isEmpty()) return countDelta
-        val lines = themeChanges.map { renderLayoutThemeChange(it, text) }
+        // Per-layout key gaps / border overrides ride in the same entries.
+        val geometryChanges = tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.geometryChanges(cur, prop)
+        if (themeChanges.isEmpty() && geometryChanges.isEmpty()) return countDelta
+        val lines = themeChanges.map { renderLayoutThemeChange(it, text) } +
+            geometryChanges.map { renderLayoutGeometryChange(it, text) }
         return (if (cur.size() != prop.size()) listOf(countDelta) + lines else lines).joinToString("  ")
     }
     // Layouts: array of objects with `name` field — diff by name + per-layout
@@ -473,6 +476,25 @@ internal fun renderLayoutThemeChange(
     }
     val follow = text.string(R.string.layout_theme_follow_global)
     return text.string(R.string.import_preview_layout_theme_change, label, change.from ?: follow, change.to ?: follow)
+}
+
+/**
+ * `<layout>: key spacing & borders <from> → <to>`; each side lists the overridden XML attribute
+ * names with their values (`key_horizontal_gap=3`), or "Global settings" when there are none.
+ */
+internal fun renderLayoutGeometryChange(
+    change: tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.GeometryChange,
+    text: ResultText,
+): String {
+    val label = change.name ?: when (change.kind) {
+        tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.Kind.SYSTEM ->
+            text.string(R.string.layout_manager_system_layout_name)
+        else -> text.string(R.string.layout_manager_custom_layout_name)
+    }
+    fun side(values: Map<KeyGeometryField, Float>): String =
+        if (values.isEmpty()) text.string(R.string.layout_key_geometry_global)
+        else values.entries.joinToString(", ") { (f, v) -> "${f.xmlAttribute}=${LayoutKeyGeometry.formatValue(f, v)}" }
+    return text.string(R.string.import_preview_layout_geometry_change, label, side(change.from), side(change.to))
 }
 
 /**

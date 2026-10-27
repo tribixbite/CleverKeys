@@ -417,8 +417,6 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontaler Abstand zwischen den Tasten</string>
     <string name="appearance_look_show_hints_title">Gesten-Hinweise bei bekannten Looks anzeigen</string>
     <string name="appearance_look_show_hints_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung blenden Eckhinweise wie diese Tastaturen aus; einschalten, um alle Hinweise anzuzeigen. Gesten funktionieren in beiden Fällen.</string>
-    <string name="appearance_look_key_preview_title">Tastenvorschau bei bekannten Looks</string>
-    <string name="appearance_look_key_preview_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung zeigen das gedrückte Zeichen in einem Pop-up wie bei diesen Tastaturen.</string>
     <string name="appearance_custom_border_title">Benutzerdefinierte Rahmenkonfiguration</string>
     <string name="appearance_custom_border_desc">Benutzerdefiniertes Tastenkanten-Styling aktivieren</string>
     <string name="appearance_border_radius_title">Eckenradius</string>
@@ -2519,4 +2517,12 @@
     <string name="layout_theme_search_hint">Themes suchen</string>
     <string name="layout_theme_no_results">Keine passenden Themes</string>
     <string name="import_preview_layout_theme_change">%1$s: Theme %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Tastenabstand und Rahmen: %1$s</string>
+    <string name="layout_key_geometry_title">Tastenabstand und Rahmen</string>
+    <string name="layout_key_geometry_global">Globale Einstellungen</string>
+    <string name="layout_key_geometry_custom">Dieses Layout</string>
+    <string name="layout_key_geometry_desc">Solange dieses Layout aktiv ist, ersetzen die hier gesetzten Werte die Darstellungseinstellungen und die Abstände eines bekannten Looks. Die Darstellungseinstellungen selbst ändern sich nicht.</string>
+    <string name="layout_key_geometry_use_global">Globale Einstellung verwenden</string>
+    <string name="layout_key_geometry_xml_invalid">Ungültiges Attribut für Tastenabstand oder Rahmen: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: Tastenabstand und Rahmen %2$s → %3$s</string>
 </resources>

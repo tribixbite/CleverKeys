@@ -406,8 +406,6 @@
     <string name="appearance_key_horizontal_margin_desc">Tuşlar arasındaki yatay boşluk</string>
     <string name="appearance_look_show_hints_title">Tanıdık görünümlerde hareket ipuçlarını göster</string>
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler köşe ipuçlarını bu klavyeler gibi gizler; tümünü göstermek için açın. Hareketler her iki durumda da çalışır.</string>
-    <string name="appearance_look_key_preview_title">Tanıdık görünümlerde tuş önizlemesi</string>
-    <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler basılan karakteri bu klavyelerinkine benzeyen bir açılır pencerede gösterir.</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>
@@ -2510,4 +2508,12 @@
     <string name="layout_theme_search_hint">Tema ara</string>
     <string name="layout_theme_no_results">Eşleşen tema yok</string>
     <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Tuş aralığı ve kenarlıklar: %1$s</string>
+    <string name="layout_key_geometry_title">Tuş aralığı ve kenarlıklar</string>
+    <string name="layout_key_geometry_global">Genel ayarlar</string>
+    <string name="layout_key_geometry_custom">Bu düzen</string>
+    <string name="layout_key_geometry_desc">Bu düzen etkinken burada belirlenen değerler Görünüm ayarlarının ve tanıdık bir görünümün aralıklarının yerine geçer. Görünüm ayarlarının kendisi değişmez.</string>
+    <string name="layout_key_geometry_use_global">Genel ayarı kullan</string>
+    <string name="layout_key_geometry_xml_invalid">Geçersiz tuş aralığı veya kenarlık özniteliği: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: tuş aralığı ve kenarlıklar %2$s → %3$s</string>
 </resources>

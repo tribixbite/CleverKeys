@@ -394,8 +394,6 @@
     <string name="appearance_key_horizontal_margin_desc">按键之间的横向间隔。</string>
     <string name="appearance_look_show_hints_title">在熟悉的外观中显示手势提示</string>
     <string name="appearance_look_show_hints_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会像原键盘一样隐藏角落提示；开启后显示全部提示。手势在两种情况下都可用。</string>
-    <string name="appearance_look_key_preview_title">在熟悉的外观中显示按键预览</string>
-    <string name="appearance_look_key_preview_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会以与原键盘相同形状的弹出框显示按下的字符。</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
     <string name="appearance_custom_border_desc">启用自定义按键边框样式。</string>
     <string name="appearance_border_radius_title">边框圆角</string>
@@ -2452,4 +2450,12 @@
     <string name="layout_theme_search_hint">搜索主题</string>
     <string name="layout_theme_no_results">没有匹配的主题</string>
     <string name="import_preview_layout_theme_change">%1$s：主题 %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">按键间距与边框：%1$s</string>
+    <string name="layout_key_geometry_title">按键间距与边框</string>
+    <string name="layout_key_geometry_global">全局设置</string>
+    <string name="layout_key_geometry_custom">此布局</string>
+    <string name="layout_key_geometry_desc">此布局处于活动状态时，此处设置的值会取代外观设置和熟悉样式的间距。外观设置本身不会改变。</string>
+    <string name="layout_key_geometry_use_global">使用全局设置</string>
+    <string name="layout_key_geometry_xml_invalid">无效的按键间距或边框属性：%1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s：按键间距与边框 %2$s → %3$s</string>
 </resources>

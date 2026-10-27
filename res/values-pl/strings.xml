@@ -412,8 +412,6 @@
     <string name="appearance_key_horizontal_margin_desc">Poziome odstępy między klawiszami</string>
     <string name="appearance_look_show_hints_title">Pokaż podpowiedzi gestów w znajomych wyglądach</string>
     <string name="appearance_look_show_hints_desc">Wyglądy w stylu iOS, Gboard, SwiftKey i Samsung ukrywają podpowiedzi w rogach jak te klawiatury; włącz, aby pokazać wszystkie. Gesty działają w obu przypadkach.</string>
-    <string name="appearance_look_key_preview_title">Podgląd naciśniętego klawisza w znajomych wyglądach</string>
-    <string name="appearance_look_key_preview_desc">Wyglądy w stylu iOS, Gboard, SwiftKey i Samsung pokazują naciśnięty znak w dymku o kształcie jak w tych klawiaturach.</string>
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
     <string name="appearance_custom_border_desc">Włącz własny styl obramowania klawiszy</string>
     <string name="appearance_border_radius_title">Promień narożników</string>
@@ -2599,4 +2597,12 @@
     <string name="layout_theme_search_hint">Szukaj motywów</string>
     <string name="layout_theme_no_results">Brak pasujących motywów</string>
     <string name="import_preview_layout_theme_change">%1$s: motyw %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Odstępy i obramowanie klawiszy: %1$s</string>
+    <string name="layout_key_geometry_title">Odstępy i obramowanie klawiszy</string>
+    <string name="layout_key_geometry_global">Ustawienia globalne</string>
+    <string name="layout_key_geometry_custom">Ten układ</string>
+    <string name="layout_key_geometry_desc">Gdy ten układ jest aktywny, ustawione tu wartości zastępują ustawienia Wyglądu i odstępy znanego stylu. Same ustawienia Wyglądu się nie zmieniają.</string>
+    <string name="layout_key_geometry_use_global">Użyj ustawienia globalnego</string>
+    <string name="layout_key_geometry_xml_invalid">Nieprawidłowy atrybut odstępu lub obramowania klawiszy: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: odstępy i obramowanie klawiszy %2$s → %3$s</string>
 </resources>

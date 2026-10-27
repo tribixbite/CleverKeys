@@ -50,8 +50,6 @@ object Defaults {
     const val BORDER_CONFIG = false
     /** Appearance → "Show gesture hints on familiar looks": off = a look decides its legends. */
     const val LOOK_SHOW_HINTS = false
-    /** Looks draw their product's key-press preview (LookPreviewPolicy); on by default. */
-    const val LOOK_KEY_PREVIEW = true
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -871,6 +869,26 @@ class Config private constructor(
      * theme is rendered instead. Shown by Layout Manager; never written back to the binding.
      */
     @JvmField var layout_missing_theme: String? = null
+    /**
+     * Each layout's EFFECTIVE key-geometry overrides (gaps, border), index-aligned with
+     * [layouts]: the entry's choices over its XML defaults ([LayoutKeyGeometry.effective]).
+     * Empty map = the layout follows the look / global settings. The global preferences are
+     * never written by an override.
+     */
+    @JvmField var layout_key_geometry: List<Map<KeyGeometryField, Float>> = emptyList()
+
+    /**
+     * The current layout's key-geometry overrides (index past the end resolves to layout 0, as
+     * [LayoutThemeBinding.resolve] does). Read by `Theme.Computed` each time a keyboard is laid
+     * out, so a space-bar layout switch applies them on the next `setKeyboard` with no restart.
+     */
+    fun currentKeyGeometry(): Map<KeyGeometryField, Float> {
+        // An Objenesis-built test Config never ran the initialiser: treat its null as "none".
+        @Suppress("USELESS_CAST")
+        val all = (layout_key_geometry as List<Map<KeyGeometryField, Float>>?) ?: return emptyMap()
+        val index = get_current_layout().let { if (it >= all.size) 0 else it }
+        return all.getOrNull(index) ?: emptyMap()
+    }
     @JvmField var autocapitalisation = Defaults.AUTOCAPITALISATION
     @JvmField var switch_input_immediate = Defaults.SWITCH_INPUT_IMMEDIATE
     /** #139: Enter inserts a newline in multi-line fields even when the app asks for an action. */
@@ -899,7 +917,6 @@ class Config private constructor(
     // URL sanitization toggles (Chunk 3 — applies to clipboard text inserts only)
     @JvmField var clipboard_sanitize_links_enabled = Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED
     @JvmField var clipboard_embed_enrich_enabled = Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED
-    @JvmField var look_key_preview = Defaults.LOOK_KEY_PREVIEW
     @JvmField var clipboard_custom_rules_enabled = Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED
     @JvmField var clipboard_custom_rules_uri: String? = null   // SAF persisted URI as String, null = no file picked
     // When sanitization actually cleans a copied URL, also overwrite the Android system
@@ -1132,10 +1149,12 @@ class Config private constructor(
         // Keep nulls - they represent SystemLayout entries (resolved to localeTextLayout at runtime).
         // GH #186/#61: each entry's effective language binding is loaded in the same pass.
         // Per-layout theme bindings are loaded in the same pass.
-        val (loadedLayouts, loadedLanguages, loadedThemes) = LayoutsPreference.loadLayoutsWithBindings(res, _prefs)
-        layouts = loadedLayouts
-        layout_languages = loadedLanguages
-        layout_themes = loadedThemes
+        // Per-layout key-geometry overrides (gaps, border) too.
+        val loaded = LayoutsPreference.loadLayoutsWithBindings(res, _prefs)
+        layouts = loaded.layouts
+        layout_languages = loaded.languages
+        layout_themes = loaded.themes
+        layout_key_geometry = loaded.keyGeometry
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
         scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
@@ -1229,7 +1248,6 @@ class Config private constructor(
 
         // G-5: read-site clamp — pre-fix imports could have written out-of-range
         // (or negative) values that the string-form validator used to accept.
-        look_key_preview = _prefs.getBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         clipboard_history_limit = (safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
             .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last)
 
@@ -1527,7 +1545,6 @@ class Config private constructor(
     /**
      * Re-resolve the active languages from the current layout's binding and the user's
      * language preferences. @return true when any of them changed.
-        look_key_preview = look_key_preview,
      */
     private fun recomputeActiveLanguages(): Boolean {
         val before = activeLanguages()
@@ -1569,16 +1586,22 @@ class Config private constructor(
     }
 
     fun set_current_layout(l: Int) {
+        val keyGeometryBefore = currentKeyGeometry()
         if (wide_screen) {
             current_layout_wide = l
         } else {
             current_layout_narrow = l
         }
+        // Per-layout key geometry (LayoutKeyGeometry): Theme.Computed reads the current layout's
+        // overrides, and Keyboard2View keys its computed-frame cache on the snapshot version, so
+        // a switch between layouts with different gaps/borders must publish a new version (the
+        // edit below) or a cached frame of the same layout name would be served.
+        val keyGeometryChanged = currentKeyGeometry() != keyGeometryBefore
         // GH #186/#61: a layout switch is a language switch when either layout is bound. Resolve
         // now and re-publish the snapshot (gesture hot paths read primary_language from it), so
         // nothing reads the old language between this call and the preference-listener refresh
         // that follows the write below and drives ActiveLanguageSync.
-        if (recomputeActiveLanguages()) edit { }
+        if (recomputeActiveLanguages() || keyGeometryChanged) edit { }
         _prefs.edit().apply {
             putInt("current_layout_portrait", current_layout_narrow)
             putInt("current_layout_landscape", current_layout_wide)

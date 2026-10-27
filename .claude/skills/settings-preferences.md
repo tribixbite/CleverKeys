@@ -234,6 +234,18 @@ theme missing on this device falls back to the global one. Spec: `docs/specs/lay
 "Per-layout theme binding". Bar colours under a bound theme come from `SuggestionBarPalette`
 (every text role ≥ 3:1 on the bar, `9e2a9804`).
 
+## Per-layout key gaps / border are NOT preferences (2026-10-27)
+
+`key_horizontal_margin`, `key_vertical_margin`, `border_config`, `custom_border_radius` and
+`custom_border_line_width` stay the GLOBAL defaults. A layout overrides any of them through the
+`key_geometry` object of its `layouts` entry (per field: absent = XML `key_*` default,
+`"inherit"` = global, a value in the pref's own unit) — never by writing the prefs. Precedence:
+per-layout choice > layout XML > effective look > global. Backup carries it inside the
+classified `layouts` blob (import preview: `LayoutThemeBindingDiff.geometryChanges`); loading
+drops out-of-range values (`LayoutKeyGeometry.normalizeEntry`, ranges from `SettingsRanges`).
+Do not add prefs or `SettingsDefaults` entries for it. Spec: `docs/specs/layout-system.md`
+"Per-layout key geometry".
+
 ## October 2026 additions (all verified at HEAD 2026-10-23)
 
 - **`SettingsRanges`** (`Config.kt` ~533): the one definition of every bounded range —

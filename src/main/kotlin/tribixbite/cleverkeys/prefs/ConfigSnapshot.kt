@@ -107,8 +107,6 @@ data class ConfigSnapshot(
     val secondary_label_size_scale: Float,
     /** Appearance → "Show gesture hints on familiar looks" (keyboard looks hide corner labels). */
     val look_show_hints: Boolean = false,
-    /** Looks draw their product's key-press preview (`look_key_preview`). */
-    val look_key_preview: Boolean = true,
     val characterSize: Float,
     val keyboardOpacity: Int,
     val themeName: String,

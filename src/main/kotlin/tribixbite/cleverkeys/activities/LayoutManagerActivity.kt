@@ -133,6 +133,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     var showAddDialog by remember { mutableStateOf(false) }
     var showLanguagePickerFor by remember { mutableStateOf<Int?>(null) }
     var showThemePickerFor by remember { mutableStateOf<Int?>(null) }
+    var showKeyGeometryFor by remember { mutableStateOf<Int?>(null) }
     var showCustomLayoutDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Int?>(null) }
 
@@ -237,6 +238,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                             missingTheme = layoutThemeBindingOf(layoutWithId.layout)
                                 ?.takeIf { !themeProvider.isAvailable(it) },
                             onTheme = { showThemePickerFor = index },
+                            keyGeometryCustom = LayoutKeyGeometryEditor.hasOverrides(
+                                layoutWithId.layout.keyGeometry, declaredKeyGeometryOf(layoutWithId.layout),
+                            ),
+                            onKeyGeometry = { showKeyGeometryFor = index },
                             onEdit = {
                                 val initialXml = when (val layout = layoutWithId.layout) {
                                     is LayoutsPreference.CustomLayout -> layout.xml
@@ -287,6 +292,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         CustomLayoutEditorDialog(
             initialXml = initialXml,
             exportThemeEntry = layoutsWithIds.getOrNull(index)?.layout?.theme,
+            exportKeyGeometryEntry = layoutsWithIds.getOrNull(index)?.layout?.keyGeometry,
             allowRemove = index >= 0,
             onDismiss = { showCustomLayoutDialog = null },
             onSave = { xml ->
@@ -297,7 +303,8 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                 val customLayout = LayoutsPreference.CustomLayout.parse(
                     xml,
                     language = existing?.language,
-                    theme = existing?.theme
+                    theme = existing?.theme,
+                    keyGeometry = existing?.keyGeometry
                 )
                 if (index >= 0) {
                     // Edit existing - create new list with updated item
@@ -374,6 +381,31 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         }
     }
 
+    // Per-layout key spacing & borders
+    showKeyGeometryFor?.let { index ->
+        val entry = layoutsWithIds.getOrNull(index)
+        if (entry == null) {
+            showKeyGeometryFor = null
+        } else {
+            LayoutKeyGeometryDialog(
+                layout = entry.layout,
+                globals = remember(index) { globalKeyGeometryValues(prefs) },
+                onDismiss = { showKeyGeometryFor = null },
+                onSave = { choices ->
+                    val updated = entry.layout.withKeyGeometry(
+                        LayoutKeyGeometry.entryFor(choices, declaredKeyGeometryOf(entry.layout))
+                    )
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                        this[index] = LayoutWithId(id = entry.id, layout = updated)
+                    }
+                    // Saving refreshes Config; the current layout re-lays out with the new geometry.
+                    saveLayouts(prefs, getLayoutsForSaving())
+                    showKeyGeometryFor = null
+                }
+            )
+        }
+    }
+
     // Delete Confirmation Dialog
     showDeleteConfirmDialog?.let { index ->
         AlertDialog(
@@ -418,6 +450,8 @@ fun LayoutItem(
     themeLabel: String,
     missingTheme: String?,
     onTheme: () -> Unit,
+    keyGeometryCustom: Boolean,
+    onKeyGeometry: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     reorderState: ReorderableLazyListState
@@ -535,6 +569,24 @@ fun LayoutItem(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
+                // Per-layout key gaps and border (LayoutKeyGeometry); tap to change them.
+                AssistChip(
+                    onClick = onKeyGeometry,
+                    label = {
+                        Text(
+                            text = stringResource(
+                                R.string.layout_key_geometry_chip,
+                                stringResource(
+                                    if (keyGeometryCustom) R.string.layout_key_geometry_custom
+                                    else R.string.layout_key_geometry_global
+                                ),
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                )
             }
 
             // Action buttons
@@ -829,6 +881,7 @@ fun CustomLayoutEditorDialog(
     initialXml: String,
     /** The entry's stored theme binding choice, written onto the root of an exported XML. */
     exportThemeEntry: String?,
+    exportKeyGeometryEntry: Map<KeyGeometryField, LayoutKeyGeometry.Choice>? = null,
     allowRemove: Boolean,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
@@ -887,6 +940,7 @@ fun CustomLayoutEditorDialog(
     val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)
     val invalidLanguageError = stringResource(R.string.layout_language_xml_invalid)
     val invalidThemeError = stringResource(R.string.layout_theme_xml_invalid)
+    val invalidKeyGeometryError = stringResource(R.string.layout_key_geometry_xml_invalid)
     LaunchedEffect(xmlText) {
         validationError = try {
             if (xmlText.isNotBlank()) {
@@ -898,6 +952,11 @@ fun CustomLayoutEditorDialog(
                     // Same rule for the optional `theme` attribute (a well-formed id of a theme
                     // not on this device is accepted: it falls back to the global theme).
                     LayoutThemeBinding.xmlThemeProblem(parsed.declared_theme) -> invalidThemeError
+                    // Out-of-range or malformed key_* geometry attributes.
+                    LayoutKeyGeometry.xmlProblems(parsed.declared_key_geometry).isNotEmpty() ->
+                        invalidKeyGeometryError.format(
+                            LayoutKeyGeometry.xmlProblems(parsed.declared_key_geometry).joinToString()
+                        )
                     else -> null
                 }
             } else {
@@ -958,7 +1017,10 @@ fun CustomLayoutEditorDialog(
                             val mappings = manager.getAllMappings()
                             // The exported file carries the entry's theme binding as the root
                             // `theme` attribute, so re-importing it restores the binding.
-                            val themed = LayoutThemeBinding.applyToXml(xmlText, exportThemeEntry)
+                            // …and its key-geometry choices as the key_* root attributes.
+                            val themed = LayoutKeyGeometry.applyToXml(
+                                LayoutThemeBinding.applyToXml(xmlText, exportThemeEntry), exportKeyGeometryEntry,
+                            )
                             pendingExportContent = XmlLayoutExporter.injectMappings(themed, mappings)
                             exportLauncher.launch("custom_layout.xml")
                         },

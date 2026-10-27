@@ -396,8 +396,6 @@
     <string name="appearance_key_horizontal_margin_desc">키 사이의 가로 간격</string>
     <string name="appearance_look_show_hints_title">익숙한 모양에서 제스처 힌트 표시</string>
     <string name="appearance_look_show_hints_desc">iOS·Gboard·SwiftKey·Samsung 스타일 모양은 해당 키보드처럼 모서리 힌트를 숨깁니다. 켜면 모든 힌트를 표시합니다. 제스처는 어느 쪽이든 작동합니다.</string>
-    <string name="appearance_look_key_preview_title">익숙한 모양에서 키 누름 미리보기</string>
-    <string name="appearance_look_key_preview_desc">iOS·Gboard·SwiftKey·Samsung 스타일 모양에서 누른 문자를 해당 키보드와 같은 모양의 팝업으로 표시합니다.</string>
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
     <string name="appearance_custom_border_desc">키의 사용자 정의 테두리 스타일을 활성화합니다</string>
     <string name="appearance_border_radius_title">테두리 둥글기</string>
@@ -2454,4 +2452,12 @@
     <string name="layout_theme_search_hint">테마 검색</string>
     <string name="layout_theme_no_results">일치하는 테마가 없습니다</string>
     <string name="import_preview_layout_theme_change">%1$s: 테마 %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">키 간격 및 테두리: %1$s</string>
+    <string name="layout_key_geometry_title">키 간격 및 테두리</string>
+    <string name="layout_key_geometry_global">전역 설정</string>
+    <string name="layout_key_geometry_custom">이 레이아웃</string>
+    <string name="layout_key_geometry_desc">이 레이아웃이 활성화된 동안에는 여기서 설정한 값이 모양 설정과 익숙한 스타일의 간격을 대신합니다. 모양 설정 자체는 바뀌지 않습니다.</string>
+    <string name="layout_key_geometry_use_global">전역 설정 사용</string>
+    <string name="layout_key_geometry_xml_invalid">잘못된 키 간격 또는 테두리 속성: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: 키 간격 및 테두리 %2$s → %3$s</string>
 </resources>

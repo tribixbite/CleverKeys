@@ -405,8 +405,6 @@
     <string name="appearance_key_horizontal_margin_desc">Espacement horizontal entre les touches</string>
     <string name="appearance_look_show_hints_title">Afficher les indices de gestes sur les apparences familières</string>
     <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indices d’angle comme ces claviers ; activer pour tous les afficher. Les gestes fonctionnent dans les deux cas.</string>
-    <string name="appearance_look_key_preview_title">Aperçu de la touche sur les apparences familières</string>
-    <string name="appearance_look_key_preview_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung affichent le caractère appuyé dans une bulle à la forme de ces claviers.</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
     <string name="appearance_custom_border_desc">Activer le style de bordure de touche personnalisé</string>
     <string name="appearance_border_radius_title">Rayon de bordure</string>
@@ -2554,4 +2552,12 @@
     <string name="layout_theme_search_hint">Rechercher des thèmes</string>
     <string name="layout_theme_no_results">Aucun thème ne correspond</string>
     <string name="import_preview_layout_theme_change">%1$s : thème %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Espacement et bordures des touches : %1$s</string>
+    <string name="layout_key_geometry_title">Espacement et bordures des touches</string>
+    <string name="layout_key_geometry_global">Réglages globaux</string>
+    <string name="layout_key_geometry_custom">Cette disposition</string>
+    <string name="layout_key_geometry_desc">Tant que cette disposition est active, les valeurs définies ici remplacent les réglages d’Apparence et l’espacement d’un style familier. Les réglages d’Apparence eux-mêmes ne changent pas.</string>
+    <string name="layout_key_geometry_use_global">Utiliser le réglage global</string>
+    <string name="layout_key_geometry_xml_invalid">Attribut d’espacement ou de bordure des touches non valide : %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s : espacement et bordures des touches %2$s → %3$s</string>
 </resources>

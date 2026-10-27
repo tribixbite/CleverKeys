@@ -10,13 +10,9 @@ import androidx.compose.ui.graphics.compositeOver
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import tribixbite.cleverkeys.theme.KeyboardLookGeometry
 import tribixbite.cleverkeys.theme.LookGeometry
-import tribixbite.cleverkeys.theme.LookHintStyle
-import tribixbite.cleverkeys.theme.LookLetterKey
 import tribixbite.cleverkeys.theme.LookLegends
 import tribixbite.cleverkeys.theme.LookPillKey
 import tribixbite.cleverkeys.theme.LookPalette
-import tribixbite.cleverkeys.theme.LookPopupColors
-import tribixbite.cleverkeys.theme.LookPreview
 import tribixbite.cleverkeys.theme.LookTypeface
 import kotlin.math.min
 
@@ -168,26 +164,6 @@ class Theme {
     @JvmField
     val modifierLabelColor: Int
 
-    /** Function keys a look draws as letter keys (Gboard's emoji key); empty otherwise. */
-    @JvmField
-    val lookLetterKeys: Set<LookLetterKey>
-
-    /** Label colour of a function key drawn as a letter key ([lookLetterKeys]); 0 = none. */
-    @JvmField
-    val letterKeyLabelColor: Int
-
-    /** A look's key-press preview; null for every non-look theme (none drawn). */
-    @JvmField
-    val lookPreview: LookPreview?
-
-    /** Colours of a look's key-press preview and long-press popover; null for other themes. */
-    @JvmField
-    val lookPopupColors: LookPopupColors?
-
-    /** How a look draws corner labels (size, weight); null for every non-look theme. */
-    @JvmField
-    val lookHintStyle: LookHintStyle?
-
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -264,11 +240,6 @@ class Theme {
         lookLegends = null
         lookPillKeys = emptySet()
         modifierLabelColor = 0
-        lookLetterKeys = emptySet()
-        letterKeyLabelColor = 0
-        lookPreview = null
-        lookPopupColors = null
-        lookHintStyle = null
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
@@ -297,9 +268,6 @@ class Theme {
         lookFunctionChars: String = "",
         lookLegends: LookLegends? = null,
         lookPillKeys: Set<LookPillKey> = emptySet(),
-        lookLetterKeys: Set<LookLetterKey> = emptySet(),
-        lookPreview: LookPreview? = null,
-        lookHintStyle: LookHintStyle? = null,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -367,11 +335,6 @@ class Theme {
         this.lookLegends = lookLegends
         this.lookPillKeys = lookPillKeys
         modifierLabelColor = lookPalette?.modifierLabel ?: 0
-        this.lookLetterKeys = lookLetterKeys
-        letterKeyLabelColor = if (lookLetterKeys.isNotEmpty()) lookPalette?.label ?: 0 else 0
-        this.lookPreview = lookPreview?.takeIf { lookPalette != null }
-        lookPopupColors = lookPalette?.let { LookPopupColors.of(it) }
-        this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
         swipeTrailColor = lookPalette?.swipeTrail ?: 0
@@ -454,9 +417,6 @@ class Theme {
         /** The editor-action key at rest (other themes: same fill as [key_special]). */
         @JvmField
         val key_action: Key
-        /** A function key a look draws as a letter key (Gboard's emoji key): letter fill and label. */
-        @JvmField
-        val key_letter: Key
         /** Multiplier on the main label size (a look's `labelScale`; 1 otherwise). */
         @JvmField
         val label_scale: Float
@@ -487,14 +447,31 @@ class Theme {
             )
             // The user's geometry exactly as it was always derived; a look then overrides the
             // attributes it defines (theme/KeyboardLook.kt, KeyboardLookGeometry.resolve).
+            // The current layout's overrides (LayoutKeyGeometry); a layout may switch the custom
+            // border off (theme/look frame) or on independently of the global switch.
+            val layoutOverrides = config.currentKeyGeometry()
+            val borderOn = LayoutKeyGeometry.effectiveBorderOn(layoutOverrides, config.borderConfig)
             val user = KeyboardLookGeometry.UserGeometry(
                 verticalMargin = config.key_vertical_margin * row_height,
                 horizontalMargin = config.key_horizontal_margin * keyWidth,
-                borderRadius = if (config.borderConfig) config.customBorderRadius * keyWidth else theme.keyBorderRadius,
-                borderWidth = if (config.borderConfig) config.customBorderLineWidth else theme.keyBorderWidth,
-                borderWidthActivated = if (config.borderConfig) config.customBorderLineWidth else theme.keyBorderWidthActivated,
+                borderRadius = if (borderOn) config.customBorderRadius * keyWidth else theme.keyBorderRadius,
+                borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
+                borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
             )
-            geometry = KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density)
+            // Most specific wins: the current layout's overrides (user per-layout choice, else its
+            // XML defaults) beat the look, which beats the global setting (LayoutKeyGeometry).
+            geometry = LayoutKeyGeometry.applyTo(
+                KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density),
+                overrides = layoutOverrides,
+                globals = LayoutKeyGeometry.Globals(
+                    borderOn = config.borderConfig,
+                    borderRadiusFraction = config.customBorderRadius,
+                    borderWidthPx = config.customBorderLineWidth,
+                ),
+                keyWidth = keyWidth,
+                rowHeight = row_height,
+                density = theme.density,
+            )
             vertical_margin = geometry.verticalMargin
             horizontal_margin = geometry.horizontalMargin
             label_scale = geometry.labelScale
@@ -520,7 +497,7 @@ class Theme {
          * H-4: which computed key frame a key renders with — pure so the mapping is
          * pinnable off-device (the draw loop feeds it kind + pointer state).
          */
-        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER }
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION }
 
         /** The computed frame for [role] (see [roleOf]). */
         fun keyForRole(role: KeyRole): Key = when (role) {
@@ -528,7 +505,6 @@ class Theme {
             KeyRole.ACTIVATED -> key_activated
             KeyRole.LOCKED -> key_locked
             KeyRole.MODIFIER -> key_modifier
-            key_letter = Key(theme, config, keyWidth, false, theme.colorKey, geometry, theme.letterKeyLabelColor)
             KeyRole.SPECIAL -> key_special
             KeyRole.ENTER -> key_enter
             KeyRole.ACTION -> key_action
@@ -549,7 +525,6 @@ class Theme {
              * Border radius/width and shadow to draw with. Null (direct construction, e.g. the
              * subkey popover tests) derives them from the user's settings as before.
              */
-            KeyRole.LETTER -> key_letter
             geometry: KeyboardLookGeometry.Effective? = null,
             /** Main label colour of this frame at rest; 0 = the theme's label colour. */
             @JvmField val labelColorOverride: Int = 0,
@@ -609,8 +584,7 @@ class Theme {
                 )
                 _label_paint = init_label_paint(config, LookTypeface.forWeight(geometry?.labelWeight))
                 _special_label_paint = init_label_paint(config, _key_font)
-                // A look's hint weight (Fluent's light hints); null = the default face.
-                _sublabel_paint = init_label_paint(config, LookTypeface.forWeight(theme.lookHintStyle?.weight))
+                _sublabel_paint = init_label_paint(config, null)
                 _special_sublabel_paint = init_label_paint(config, _key_font)
                 _label_alpha_bits = (config.labelBrightness and 0xFF) shl 24
             }
@@ -659,17 +633,13 @@ class Theme {
              *  - plain Enter (`KEYCODE_ENTER`) → [KeyRole.ENTER];
              *  - the editor-action key (`Event.ACTION`: the Enter replacement in Go / Search /
              *    Send / Done fields, LayoutModifier) → [KeyRole.ACTION];
-             *  - a character in [functionChars] (a look's, e.g. Gboard's `,.`) → [KeyRole.MODIFIER];
-             *  - a function key in [letterKeys] (a look's, e.g. Gboard's emoji key) → [KeyRole.LETTER].
+             *  - a character in [functionChars] (a look's, e.g. Gboard's `,.`) → [KeyRole.MODIFIER].
              * Every non-look theme gives the ENTER and ACTION frames the special fill and has no
              * function characters, so it draws exactly as before.
              */
             @JvmStatic
             @JvmOverloads
-            fun roleOf(
-                kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = "",
-                letterKeys: Set<LookLetterKey> = emptySet(),
-            ): KeyRole {
+            fun roleOf(kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = ""): KeyRole {
                 val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
                 if (kv == null) return role
                 return when {
@@ -696,8 +666,6 @@ class Theme {
                 if (override != 0 && (base == theme.labelColor || base == theme.secondaryLabelColor)) override else base
 
             private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {
-                    role == KeyRole.SPECIAL && LookLetterKey.EMOJI in letterKeys &&
-                        kv.getKind() == KeyValue.Kind.Event && kv.getEvent() == KeyValue.Event.SWITCH_EMOJI -> KeyRole.LETTER
                 return Paint().apply {
                     style = Paint.Style.STROKE
                     strokeWidth = border_width

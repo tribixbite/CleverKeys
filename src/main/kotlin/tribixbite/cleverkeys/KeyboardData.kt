@@ -47,7 +47,14 @@ class KeyboardData private constructor(
      * that is not on this device; always read it through `LayoutThemeBinding` (`effective` /
      * `xmlThemeProblem`). Predefined layouts never declare it, so their theme follows the user.
      */
-    val declared_theme: String?
+    val declared_theme: String?,
+    /**
+     * The raw key-geometry root attributes (`key_horizontal_gap`, `key_vertical_gap`,
+     * `key_border`, `key_border_radius`, `key_border_width`; attribute name → value): the
+     * layout's DEFAULT per-layout geometry overrides. Unvalidated, like [declared_theme]; always
+     * read through `LayoutKeyGeometry` (`declaredValues` / `xmlProblems`).
+     */
+    val declared_key_geometry: Map<String, String> = emptyMap()
 ) {
     /** Position of every keys on the layout, see [getKeys()]. */
     private var _key_pos: Map<KeyValue, KeyPos>? = null
@@ -198,7 +205,8 @@ class KeyboardData private constructor(
         src.locale_extra_keys,
         src.numpad_height,
         src.declared_language,
-        src.declared_theme
+        src.declared_theme,
+        src.declared_key_geometry
     )
 
     data class Row(
@@ -569,6 +577,10 @@ class KeyboardData private constructor(
             val declared_language = parser.getAttributeValue(null, "language")?.trim()
             // Optional default theme binding, e.g. theme="rosepine" (see LayoutThemeBinding).
             val declared_theme = parser.getAttributeValue(null, LayoutThemeBinding.XML_ATTRIBUTE)?.trim()
+            // Optional per-layout key-geometry defaults (see LayoutKeyGeometry); kept raw.
+            val declared_key_geometry = KeyGeometryField.entries.mapNotNull { f ->
+                parser.getAttributeValue(null, f.xmlAttribute)?.let { f.xmlAttribute to it.trim() }
+            }.toMap()
             val rows = ArrayList<Row>()
             var modmap: Modmap? = null
             while (next_tag(parser)) {
@@ -588,7 +600,7 @@ class KeyboardData private constructor(
                 kh += r.height + r.shift
             return KeyboardData(rows, maxOf(kw, 1f), kh, modmap, script, numpad_script, name,
                 bottom_row, embedded_number_row, locale_extra_keys, numpad_height, declared_language,
-                declared_theme)
+                declared_theme, declared_key_geometry)
         }
 
         private fun compute_max_width(rows: List<Row>): Float {

@@ -402,8 +402,6 @@
     <string name="appearance_key_horizontal_margin_desc">Vodorovné mezery mezi klávesami</string>
     <string name="appearance_look_show_hints_title">Zobrazit nápovědy gest u známých vzhledů</string>
     <string name="appearance_look_show_hints_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung skrývají rohové nápovědy jako tyto klávesnice; zapnutím se zobrazí všechny. Gesta fungují v obou případech.</string>
-    <string name="appearance_look_key_preview_title">Náhled stisknuté klávesy u známých vzhledů</string>
-    <string name="appearance_look_key_preview_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung zobrazí stisknutý znak v bublině tvarované jako u těchto klávesnic.</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
     <string name="appearance_custom_border_desc">Povolit vlastní styl ohraničení kláves</string>
     <string name="appearance_border_radius_title">Poloměr rohů</string>
@@ -2589,4 +2587,12 @@
     <string name="layout_theme_search_hint">Hledat motivy</string>
     <string name="layout_theme_no_results">Žádné odpovídající motivy</string>
     <string name="import_preview_layout_theme_change">%1$s: motiv %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Rozestupy a ohraničení kláves: %1$s</string>
+    <string name="layout_key_geometry_title">Rozestupy a ohraničení kláves</string>
+    <string name="layout_key_geometry_global">Globální nastavení</string>
+    <string name="layout_key_geometry_custom">Toto rozložení</string>
+    <string name="layout_key_geometry_desc">Když je toto rozložení aktivní, hodnoty nastavené zde nahradí nastavení Vzhledu i rozestupy známého vzhledu. Samotné nastavení Vzhledu se nemění.</string>
+    <string name="layout_key_geometry_use_global">Použít globální nastavení</string>
+    <string name="layout_key_geometry_xml_invalid">Neplatný atribut rozestupů nebo ohraničení kláves: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: rozestupy a ohraničení kláves %2$s → %3$s</string>
 </resources>

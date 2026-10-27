@@ -92,6 +92,30 @@ a theme ID as Theme Manager stores it: a built-in name such as `rosepine` or `co
 this device falls back to your global theme. **Export XML** writes the layout's current theme
 choice into the file, so importing it elsewhere keeps the theme.
 
+### Key spacing and borders per layout
+
+Each layout can have its own key gaps and border while **Settings > Appearance** stays the
+default for every other layout. In **Layout Manager**, tap a layout's **Key spacing & borders**
+chip: for each of Key Horizontal Margin, Key Vertical Margin, Custom Border Config, Border
+Radius and Border Line Width, untick **Use global setting** and pick a value (same ranges and
+steps as in Appearance). While ticked, the row shows the global value it follows. The chip reads
+**This layout** when anything is set. The values apply as soon as you switch to the layout with
+the space bar, and they win over a familiar look's spacing (for example an iOS-style layout with
+your own wider gaps). Your Appearance settings never change.
+
+A layout XML can carry the same values as defaults on its root element:
+
+```xml
+<keyboard name="Roomy" script="latin" key_horizontal_gap="3" key_vertical_gap="2"
+          key_border="true" key_border_radius="12" key_border_width="1">
+```
+
+Gaps are percentages like the Appearance sliders (0–5), `key_border` is `true` or `false`, the
+radius is a percentage of the key width (0–100) and the width is in dp (0–10). The editor
+refuses an invalid value. **Use global setting** in Layout Manager overrides an XML value, and
+**Export XML** writes the layout's current choices into the file. Backups carry the values; the
+restore preview lists each layout whose spacing or border would change.
+
 ### Keeping CTC swipe available
 
 If a custom layout should use the CTC engine, declare the correct `script` on its

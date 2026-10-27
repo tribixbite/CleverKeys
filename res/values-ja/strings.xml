@@ -395,8 +395,6 @@
     <string name="appearance_key_horizontal_margin_desc">キー間の横方向のスペース</string>
     <string name="appearance_look_show_hints_title">おなじみの外観でジェスチャーのヒントを表示</string>
     <string name="appearance_look_show_hints_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観は、元のキーボードと同じく角のヒントを表示しません。オンにするとすべて表示します。ジェスチャーはどちらでも使えます。</string>
-    <string name="appearance_look_key_preview_title">おなじみの外観でキーのプレビューを表示</string>
-    <string name="appearance_look_key_preview_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観で、押した文字を元のキーボードと同じ形のポップアップで表示します。</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
     <string name="appearance_custom_border_desc">キーのカスタム枠線スタイルを有効にします</string>
     <string name="appearance_border_radius_title">枠線の角丸</string>
@@ -2453,4 +2451,12 @@
     <string name="layout_theme_search_hint">テーマを検索</string>
     <string name="layout_theme_no_results">一致するテーマはありません</string>
     <string name="import_preview_layout_theme_change">%1$s: テーマ %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">キーの間隔と枠線: %1$s</string>
+    <string name="layout_key_geometry_title">キーの間隔と枠線</string>
+    <string name="layout_key_geometry_global">全体の設定</string>
+    <string name="layout_key_geometry_custom">このレイアウト</string>
+    <string name="layout_key_geometry_desc">このレイアウトが有効な間は、ここで設定した値が外観の設定と見慣れたスタイルの間隔に代わって使われます。外観の設定自体は変わりません。</string>
+    <string name="layout_key_geometry_use_global">全体の設定を使用</string>
+    <string name="layout_key_geometry_xml_invalid">キーの間隔または枠線の属性が無効です: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: キーの間隔と枠線 %2$s → %3$s</string>
 </resources>

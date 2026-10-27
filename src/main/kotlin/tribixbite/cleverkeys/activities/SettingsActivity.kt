@@ -388,7 +388,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     // Border customization settings
     internal var borderConfigEnabled by mutableStateOf(Defaults.BORDER_CONFIG)
     internal var lookShowHints by mutableStateOf(Defaults.LOOK_SHOW_HINTS)
-    internal var lookKeyPreview by mutableStateOf(Defaults.LOOK_KEY_PREVIEW)
     internal var customBorderRadius by mutableIntStateOf(Defaults.CUSTOM_BORDER_RADIUS)
     internal var customBorderLineWidth by mutableIntStateOf(Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

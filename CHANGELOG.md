@@ -29,6 +29,14 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Key spacing and borders per layout.** Layout Manager has a **Key spacing & borders** chip on
+  every layout: set its own horizontal and vertical key gap, border on/off, corner radius and
+  line width, or keep **Use global setting** for any of them — Settings → Appearance stays the
+  default for everything you do not set. A layout's values also beat a familiar look's spacing,
+  apply immediately on a space-bar switch, can be declared in a layout's XML
+  (`key_horizontal_gap`, `key_vertical_gap`, `key_border`, `key_border_radius`,
+  `key_border_width`), are written by Export XML and travel in backups (the restore preview
+  lists the changes). Your Appearance settings are never changed by it.
 - **Reorder pinned clipboard items and to-dos.** Rows on the Pinned and To-dos tabs have a drag
   handle at their start: touch it and drag the row to a new place (a line shows where it lands;
   holding it near the top or bottom of the panel scrolls the list). The order is saved at once,
@@ -94,12 +102,8 @@ editor that used to be listed here already ship in 2.0.)
   looks** and can be bound to any layout. While a look is in use, the gaps, corner radius and
   borders it defines replace your Appearance settings for those items; your settings are never
   changed. Gestures still work where no hint is drawn; Appearance → **Show gesture hints on
-  familiar looks** draws them all, in the look's own hint style. Each look shows its keyboard's
-  key-press preview (iOS balloon, Gboard bubble, SwiftKey column, Samsung plate; Appearance →
-  **Key-press preview on familiar looks** turns it off) and styles the long-press popup to
-  match. Gboard-style follows your wallpaper colours on Android 12 and later, as Gboard does,
-  and draws its emoji key like a letter key. Drawn with CleverKeys' own keys and the system
-  font; not affiliated with Apple, Google, Microsoft or Samsung.
+  familiar looks** draws them all. Drawn with CleverKeys' own keys and the system font; not affiliated with Apple,
+  Google, Microsoft or Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard
   entry editor (and tag, clipboard-search, emoji-search and GIF-search fields) instead of the
   app behind the panel. Bar alternatives replace the swiped word in the field, backspace right

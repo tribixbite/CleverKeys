@@ -422,8 +422,6 @@
     <string name="appearance_key_horizontal_margin_desc">Spațiere orizontală între taste</string>
     <string name="appearance_look_show_hints_title">Afișează indiciile gesturilor la aspectele cunoscute</string>
     <string name="appearance_look_show_hints_desc">Aspectele în stil iOS, Gboard, SwiftKey și Samsung ascund indiciile din colțuri ca acele tastaturi; activarea opțiunii le afișează pe toate. Gesturile funcționează oricum.</string>
-    <string name="appearance_look_key_preview_title">Previzualizarea tastei la aspectele cunoscute</string>
-    <string name="appearance_look_key_preview_desc">Aspectele în stil iOS, Gboard, SwiftKey și Samsung arată caracterul apăsat într-o fereastră cu forma acelor tastaturi.</string>
     <string name="appearance_custom_border_title">Chenar personalizat</string>
     <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>
@@ -2571,4 +2569,12 @@
     <string name="layout_theme_search_hint">Caută teme</string>
     <string name="layout_theme_no_results">Nicio temă potrivită</string>
     <string name="import_preview_layout_theme_change">%1$s: temă %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Spațiere și chenare taste: %1$s</string>
+    <string name="layout_key_geometry_title">Spațiere și chenare taste</string>
+    <string name="layout_key_geometry_global">Setări globale</string>
+    <string name="layout_key_geometry_custom">Acest aspect</string>
+    <string name="layout_key_geometry_desc">Cât timp acest aspect este activ, valorile setate aici înlocuiesc setările de Aspect vizual și spațierea unui stil familiar. Setările de Aspect vizual nu se schimbă.</string>
+    <string name="layout_key_geometry_use_global">Folosește setarea globală</string>
+    <string name="layout_key_geometry_xml_invalid">Atribut de spațiere sau chenar al tastelor nevalid: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: spațiere și chenare taste %2$s → %3$s</string>
 </resources>

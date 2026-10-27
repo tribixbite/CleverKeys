@@ -9,13 +9,18 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ArrayAdapter
 import tribixbite.cleverkeys.CustomLayoutEditDialog
+import tribixbite.cleverkeys.KeyGeometryField
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.LayoutKeyGeometry
 import tribixbite.cleverkeys.LayoutLanguageBinding
 import tribixbite.cleverkeys.LayoutThemeBinding
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Utils
 import org.json.JSONException
 import org.json.JSONObject
+
+/** One entry's stored per-field key-geometry choices (see [LayoutKeyGeometry]); null = none. */
+typealias KeyGeometryEntry = Map<KeyGeometryField, LayoutKeyGeometry.Choice>
 
 @Suppress("DEPRECATION")
 class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreference<LayoutsPreference.Layout>(ctx, attrs) {
@@ -132,7 +137,10 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
             // Editing the XML keeps the entry's language (GH #186/#61) and theme bindings.
             selectCustom(object : SelectionCallback<Layout> {
                 override fun select(value: Layout?) =
-                    callback.select(value?.withLanguage(oldValue.language)?.withTheme(oldValue.theme))
+                    callback.select(
+                        value?.withLanguage(oldValue.language)?.withTheme(oldValue.theme)
+                            ?.withKeyGeometry(oldValue.keyGeometry)
+                    )
                 override fun allowRemove(): Boolean = callback.allowRemove()
             }, oldValue.xml)
         } else {
@@ -184,30 +192,49 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
 
         /** This entry with its theme binding choice replaced by [theme] (normalised). */
         fun withTheme(theme: String?): Layout
+
+        /**
+         * The entry's per-layout KEY GEOMETRY choices (gaps, border), normalised by
+         * [LayoutKeyGeometry.normalized]: null = no choice (the XML attributes apply), else per
+         * field [LayoutKeyGeometry.Choice.Inherit] (follow the global setting) or a value.
+         * Stored inside the entry like [theme].
+         */
+        val keyGeometry: KeyGeometryEntry?
+
+        /** This entry with its key-geometry choices replaced by [keyGeometry] (normalised). */
+        fun withKeyGeometry(keyGeometry: KeyGeometryEntry?): Layout
     }
 
     data class SystemLayout(
         override val language: String? = null,
-        override val theme: String? = null
+        override val theme: String? = null,
+        override val keyGeometry: KeyGeometryEntry? = null
     ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
 
         override fun withTheme(theme: String?): Layout =
             copy(theme = LayoutThemeBinding.normalizeEntry(theme))
+
+        override fun withKeyGeometry(keyGeometry: KeyGeometryEntry?): Layout =
+            copy(keyGeometry = LayoutKeyGeometry.normalized(keyGeometry))
     }
 
     /** The name of a layout defined in [srcs/layouts]. */
     data class NamedLayout(
         val name: String,
         override val language: String? = null,
-        override val theme: String? = null
+        override val theme: String? = null,
+        override val keyGeometry: KeyGeometryEntry? = null
     ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
 
         override fun withTheme(theme: String?): Layout =
             copy(theme = LayoutThemeBinding.normalizeEntry(theme))
+
+        override fun withKeyGeometry(keyGeometry: KeyGeometryEntry?): Layout =
+            copy(keyGeometry = LayoutKeyGeometry.normalized(keyGeometry))
     }
 
     /** The XML description of a custom layout. */
@@ -215,7 +242,8 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         val xml: String,
         val parsed: KeyboardData?,
         override val language: String? = null,
-        override val theme: String? = null
+        override val theme: String? = null,
+        override val keyGeometry: KeyGeometryEntry? = null
     ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
@@ -223,10 +251,18 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         override fun withTheme(theme: String?): Layout =
             copy(theme = LayoutThemeBinding.normalizeEntry(theme))
 
+        override fun withKeyGeometry(keyGeometry: KeyGeometryEntry?): Layout =
+            copy(keyGeometry = LayoutKeyGeometry.normalized(keyGeometry))
+
         companion object {
             @JvmStatic
             @JvmOverloads
-            fun parse(xml: String, language: String? = null, theme: String? = null): CustomLayout {
+            fun parse(
+                xml: String,
+                language: String? = null,
+                theme: String? = null,
+                keyGeometry: KeyGeometryEntry? = null,
+            ): CustomLayout {
                 val parsed = try {
                     KeyboardData.load_string_exn(xml)
                 } catch (e: Exception) {
@@ -236,7 +272,8 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                     xml,
                     parsed,
                     LayoutLanguageBinding.normalizeEntry(language),
-                    LayoutThemeBinding.normalizeEntry(theme)
+                    LayoutThemeBinding.normalizeEntry(theme),
+                    LayoutKeyGeometry.normalized(keyGeometry)
                 )
             }
         }
@@ -269,10 +306,11 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 val jsonObj = obj as JSONObject
                 val language = LayoutLanguageBinding.normalizeEntry(optionalString(jsonObj, LANGUAGE_FIELD))
                 val theme = LayoutThemeBinding.normalizeEntry(optionalString(jsonObj, THEME_FIELD))
+                val geometry = LayoutKeyGeometry.normalizeEntry(optionalObject(jsonObj, LayoutKeyGeometry.JSON_FIELD))
                 when (jsonObj.getString("kind")) {
-                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language, theme)
-                    "named" -> NamedLayout(jsonObj.getString("name"), language, theme)
-                    "system" -> SystemLayout(language, theme)
+                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language, theme, geometry)
+                    "named" -> NamedLayout(jsonObj.getString("name"), language, theme, geometry)
+                    "system" -> SystemLayout(language, theme, geometry)
                     else -> SystemLayout()
                 }
             }
@@ -282,19 +320,30 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         private fun optionalString(obj: JSONObject, field: String): String? =
             if (obj.isNull(field)) null else obj.optString(field)
 
+        /**
+         * [field] of [obj] as a key → value map when it is a JSON object, else null — a hostile
+         * non-object value from a backup is dropped (the layout survives).
+         */
+        private fun optionalObject(obj: JSONObject, field: String): Map<String, Any?>? {
+            val o = obj.optJSONObject(field) ?: return null
+            return o.keys().asSequence().associateWith { k -> if (o.isNull(k)) null else o.get(k) }
+        }
+
         @Throws(JSONException::class)
         override fun saveItem(v: Layout): Any {
             val language = LayoutLanguageBinding.normalizeEntry(v.language)
             val theme = LayoutThemeBinding.normalizeEntry(v.theme)
+            val geometry = LayoutKeyGeometry.toRaw(v.keyGeometry)
             // Unbound entries keep their exact pre-binding encoding (a named layout stays a
             // plain string), so an untouched preference is byte-identical across versions.
             val bindings: JSONObject.() -> JSONObject = {
                 if (language != null) put(LANGUAGE_FIELD, language)
                 if (theme != null) put(THEME_FIELD, theme)
+                if (geometry != null) put(LayoutKeyGeometry.JSON_FIELD, JSONObject(geometry))
                 this
             }
             return when (v) {
-                is NamedLayout -> if (language == null && theme == null) v.name else JSONObject()
+                is NamedLayout -> if (language == null && theme == null && geometry == null) v.name else JSONObject()
                     .put("kind", "named")
                     .put("name", v.name)
                     .bindings()
@@ -315,6 +364,8 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         val layouts: List<KeyboardData?>,
         val languages: List<String?>,
         val themes: List<String?>,
+        /** Each layout's effective key-geometry overrides ([LayoutKeyGeometry.effective]). */
+        val keyGeometry: List<Map<KeyGeometryField, Float>> = emptyList(),
     )
 
     companion object {
@@ -375,6 +426,7 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
             val layouts = mutableListOf<KeyboardData?>()
             val languages = mutableListOf<String?>()
             val themes = mutableListOf<String?>()
+            val geometry = mutableListOf<Map<KeyGeometryField, Float>>()
             for (l in loadFromPreferences(KEY, prefs, DEFAULT, SERIALIZER) ?: DEFAULT) {
                 val data = when (l) {
                     is NamedLayout -> layoutOfString(res, l.name)
@@ -384,8 +436,13 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 layouts.add(data)
                 languages.add(LayoutLanguageBinding.effective(l.language, data?.declared_language))
                 themes.add(LayoutThemeBinding.effective(l.theme, data?.declared_theme))
+                geometry.add(
+                    LayoutKeyGeometry.effective(
+                        l.keyGeometry, LayoutKeyGeometry.declaredValues(data?.declared_key_geometry),
+                    ),
+                )
             }
-            return LoadedLayouts(layouts, languages, themes)
+            return LoadedLayouts(layouts, languages, themes, geometry)
         }
 
         /** Does not call [prefs.commit]. */

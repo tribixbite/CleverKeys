@@ -216,58 +216,6 @@ class KeyboardLookRenderTest {
         assertThat(roleOf(KeyValue.getKeyByName("a"), false)).isEqualTo(Theme.Computed.KeyRole.NORMAL)
     }
 
-    /**
-     * Pixel 2026-10-28: the real Gboard draws its emoji key like a letter key (white light,
-     * surfaceBright dark), but Gboard-style drew it in the function-key colour with the hint-grey
-     * glyph (switch_emoji is a FLAG_SECONDARY event key).
-     */
-    @Test
-    fun aLooksLetterKeysDrawWithTheLetterFillAndLabel() {
-        val emoji = KeyValue.getKeyByName("switch_emoji")
-        assertWithMessage("non-look themes: the emoji key stays a special key")
-            .that(Theme.Computed.roleOf(emoji, false, false)).isEqualTo(Theme.Computed.KeyRole.SPECIAL)
-        assertWithMessage("Gboard-style: the emoji key is drawn as a letter key")
-            .that(Theme.Computed.roleOf(emoji, false, false, ",.", setOf(LookLetterKey.EMOJI)))
-            .isEqualTo(Theme.Computed.KeyRole.LETTER)
-        assertWithMessage("pressed: the pressed frame as every key")
-            .that(Theme.Computed.roleOf(emoji, true, false, ",.", setOf(LookLetterKey.EMOJI)))
-            .isEqualTo(Theme.Computed.KeyRole.ACTIVATED)
-        assertThat(Theme.Computed.roleOf(KeyValue.getKeyByName("backspace"), false, false, ",.", setOf(LookLetterKey.EMOJI)))
-            .isEqualTo(Theme.Computed.KeyRole.SPECIAL)
-
-        val theme = Theme(
-            context, KeyboardLookSchemes.colorScheme(palette), density = 2f,
-            lookPalette = palette, lookGeometry = look, lookLetterKeys = setOf(LookLetterKey.EMOJI),
-        )
-        val tc = Theme.Computed(theme, config(), 100f, layout())
-        val frame = tc.keyForRole(Theme.Computed.KeyRole.LETTER)
-        assertThat(frame).isSameInstanceAs(tc.key_letter)
-        assertThat(frame.bg_paint.color).isEqualTo(tc.key.bg_paint.color)
-        assertWithMessage("the glyph takes the letter label colour, not the secondary (hint) colour")
-            .that(Theme.Computed.frameLabelColor(theme.secondaryLabelColor, frame.labelColorOverride, theme))
-            .isEqualTo(palette.label)
-
-        val plain = Theme(context, darkKeyboardColorScheme(), density = 2f)
-        assertThat(plain.letterKeyLabelColor).isEqualTo(0)
-        assertWithMessage("non-look themes draw no key-press preview").that(plain.lookPreview).isNull()
-        assertThat(plain.lookPopupColors).isNull()
-        assertThat(plain.lookHintStyle).isNull()
-    }
-
-    /** A look's preview, popup colours and hint style reach the Theme from ThemeProvider. */
-    @Test
-    fun aLooksPreviewPopupColoursAndHintStyleReachTheTheme() {
-        val provider = ThemeProvider(context, mockk(relaxed = true))
-        nightMode = Configuration.UI_MODE_NIGHT_YES
-        for (look in KeyboardLooks.ALL) {
-            val theme = provider.getTheme(look.id)
-            assertThat(theme.lookPreview).isEqualTo(look.preview)
-            assertThat(theme.lookHintStyle).isEqualTo(look.hintStyle)
-            assertThat(theme.lookPopupColors).isEqualTo(LookPopupColors.of(look.dark))
-            assertThat(theme.lookLetterKeys).isEqualTo(look.letterKeys)
-        }
-    }
-
     @Test
     fun looksFollowTheSystemModeInThemeProviderAndTheBaseStyleMap() {
         val provider = ThemeProvider(context, mockk(relaxed = true))

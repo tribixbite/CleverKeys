@@ -89,6 +89,13 @@ Switching to that layout redraws the keyboard in its theme; switching to a layou
 **Follow global theme** returns to the theme chosen in Theme Manager. The keyboard is only
 redrawn when the theme actually changes. See [Themes: A Theme per Layout](../customization/themes.md#a-theme-per-layout).
 
+## Switching Key Spacing and Borders with the Layout
+
+A layout can also have its own key gaps and border (**Settings > Layout Manager**, the **Key
+spacing & borders** chip). Switching to it draws its spacing at once; layouts left on **Use
+global setting** follow **Settings > Appearance**. See
+[Custom Layouts: Key spacing and borders per layout](custom-layouts.md#key-spacing-and-borders-per-layout).
+
 ## Multi-Language Alternative
 
 Instead of switching layouts, you can type in multiple languages on one layout:

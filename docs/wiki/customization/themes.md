@@ -70,7 +70,7 @@ system's dark-mode setting.
 | Look | What it copies |
 |------|----------------|
 | **iOS-style** | iPhone (iOS 26): one key colour for every key, rounded keys with wide gaps, a blue Enter in Go / Search / Send fields |
-| **Gboard-style** | Gboard with Material You: white letter keys, tinted shift, delete, ?123, comma, period and Enter; on Android 12 and later its colours follow your wallpaper like Gboard's |
+| **Gboard-style** | Gboard with Material You: white letter keys, tinted shift, delete, ?123, comma, period and Enter |
 | **SwiftKey-style** | SwiftKey's Fluent look: almost identical letter and function keys with a soft shadow |
 | **Samsung-style** | Samsung Keyboard (One UI 8): darker function keys, a blue shift glyph when locked, blue auto-replace suggestion |
 | **iOS 18-style** | the previous iPhone keyboard: grey function keys and a thin shadow under every key |
@@ -80,16 +80,8 @@ While a look is in use, the key gaps, corner radius and borders it defines repla
 yours, and the label size stays relative to your label-size setting. A look also draws only
 the corner hints the real keyboard shows (Gboard-style: the top-row digits; the others: none)
 and Gboard-style draws ?123 and Enter as pills; the swipe gestures behind hidden hints still
-work. Turn on **Appearance > Show gesture hints on familiar looks** to draw every hint; they are
-drawn in the look's own hint style (smaller, in its hint colour, clear of rounded corners). Your settings are not
-changed: pick another theme and they apply again.
-
-When you press a letter, a look shows the pressed character the way its keyboard does: a tall
-balloon above the key on iOS-style, a rounded bubble on Gboard-style, a key-wide column on
-SwiftKey-style and a plate on Samsung-style. Turn it off with **Appearance > Key-press preview
-on familiar looks**. The long-press popup of alternative characters also takes the look's
-colours. On the top row the preview is drawn lower, because a keyboard cannot draw above its
-own window. The four familiar-style layouts (see
+work. Turn on **Appearance > Show gesture hints on familiar looks** to draw every hint. Your settings are not
+changed: pick another theme and they apply again. The four familiar-style layouts (see
 [Adding Layouts](../layouts/adding-layouts.md#familiar-style-layouts)) use their look
 automatically.
 

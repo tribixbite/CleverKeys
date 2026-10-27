@@ -417,8 +417,6 @@
     <string name="appearance_key_horizontal_margin_desc">Espaciado horizontal entre teclas</string>
     <string name="appearance_look_show_hints_title">Mostrar pistas de gestos en aspectos conocidos</string>
     <string name="appearance_look_show_hints_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung ocultan las pistas de las esquinas como esos teclados; actívalo para mostrarlas todas. Los gestos funcionan igual.</string>
-    <string name="appearance_look_key_preview_title">Vista previa de tecla en aspectos conocidos</string>
-    <string name="appearance_look_key_preview_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung muestran el carácter pulsado en una ventana emergente con la forma de esos teclados.</string>
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
     <string name="appearance_custom_border_desc">Activar estilo de borde de tecla personalizado</string>
     <string name="appearance_border_radius_title">Radio de borde</string>
@@ -2562,4 +2560,12 @@
     <string name="layout_theme_search_hint">Buscar temas</string>
     <string name="layout_theme_no_results">Ningún tema coincide</string>
     <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Espaciado y bordes de teclas: %1$s</string>
+    <string name="layout_key_geometry_title">Espaciado y bordes de teclas</string>
+    <string name="layout_key_geometry_global">Ajustes globales</string>
+    <string name="layout_key_geometry_custom">Esta distribución</string>
+    <string name="layout_key_geometry_desc">Mientras esta distribución está activa, los valores definidos aquí sustituyen a los ajustes de Apariencia y al espaciado de un aspecto conocido. Los ajustes de Apariencia no cambian.</string>
+    <string name="layout_key_geometry_use_global">Usar el ajuste global</string>
+    <string name="layout_key_geometry_xml_invalid">Atributo de espaciado o borde de teclas no válido: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: espaciado y bordes de teclas %2$s → %3$s</string>
 </resources>

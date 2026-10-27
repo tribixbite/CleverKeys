@@ -596,14 +596,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     SwiftKey's mic/!? hints on comma/period are not drawn; (d) Samsung and iOS
     looks have no on-device reference capture (no Samsung Keyboard on the test phones, no
     iPhone) — values come from the shipping app's own resources and from measured recreations.
-    ROUND 2 (2026-10-28, maintainer): (b) and (c) addressed — Gboard-style follows the system
-    wallpaper palette on API 31+ (`LookDynamicColors`, Gboard's role mapping, verified against
-    the real Gboard on the Pixel, seed #5D646B; fixed palette below 31 or on a contrast miss),
-    its emoji key is letter-coloured (`KeyRole.LETTER`); every look draws its product's
-    key-press preview (iOS balloon, Gboard bubble, SwiftKey column, Samsung plate;
-    `LookPreviewPolicy`, new pref `look_key_preview` default on) and styles the long-press
-    popover; look hints use `LookHintStyle` (size, weight, corner inset clear of pills). Research
-    §9, spec "Keyboard looks", theme skill rule 13. Evidence `build/oct28-looks2/` (not in git).
+26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
+    gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
+    (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
+    geometry", theme skill rule 14, settings skill): horizontal/vertical gap, border on/off,
+    radius, line width per layout, each absent = XML `key_*` default, `"inherit"` = global, or a
+    value; precedence per-layout > XML > look > global; Layout Manager "Key spacing & borders"
+    chip + editor; Export XML; backup preview lists changes; strings in 22 locale files.
+    Device: Saga 144, release `592b5b3f…` — built before two later changes that only tests cover:
+    a layout's border OFF under a global custom border, and the frame-cache invalidation moved
+    from a live Config read in `Keyboard2View` (forbidden by `ConfigSnapshotRatchetTest`) to a
+    snapshot-version bump in `set_current_layout`; `build/oct28-saga144-geometry/` (not in git): System ↔ Colemak bound to
+    iOS-style with gap 5 %, border on, radius 20 %, width 3 dp — overrides drawn over the look,
+    System back to global, `Theme rebuild` 3 ms per switch, Appearance prefs unchanged (1.5 % /
+    2.0 % / custom border off); Colemak removed, layouts back to [System], CleverKeys default.
+    Open: the Saga now runs this build; a light-mode / border-OFF device pass; the Add Layout
+    dialog's Predefined list does not scroll in landscape on the Saga (pre-existing, only Colemak
+    and QWERTY US reachable).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

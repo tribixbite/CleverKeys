@@ -403,8 +403,6 @@
     <string name="appearance_key_horizontal_margin_desc">Vízszintes távolság a billentyűk között</string>
     <string name="appearance_look_show_hints_title">Mozdulattippek megjelenítése ismerős megjelenéseknél</string>
     <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A mozdulatok mindkét esetben működnek.</string>
-    <string name="appearance_look_key_preview_title">Billentyű-előnézet ismerős megjelenéseknél</string>
-    <string name="appearance_look_key_preview_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések a lenyomott karaktert az adott billentyűzetéhez hasonló felugró ablakban mutatják.</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
     <string name="appearance_custom_border_desc">Egyéni billentyűszegély stílus engedélyezése</string>
     <string name="appearance_border_radius_title">Szegély sugara</string>
@@ -2505,4 +2503,12 @@
     <string name="layout_theme_search_hint">Témák keresése</string>
     <string name="layout_theme_no_results">Nincs egyező téma</string>
     <string name="import_preview_layout_theme_change">%1$s: téma %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Billentyűtávolság és keret: %1$s</string>
+    <string name="layout_key_geometry_title">Billentyűtávolság és keret</string>
+    <string name="layout_key_geometry_global">Globális beállítások</string>
+    <string name="layout_key_geometry_custom">Ez a kiosztás</string>
+    <string name="layout_key_geometry_desc">Amíg ez a kiosztás aktív, az itt megadott értékek felülírják a Megjelenés beállításait és egy ismert megjelenés térközeit. Maguk a Megjelenés beállítások nem változnak.</string>
+    <string name="layout_key_geometry_use_global">Globális beállítás használata</string>
+    <string name="layout_key_geometry_xml_invalid">Érvénytelen billentyűtávolság- vagy keretattribútum: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: billentyűtávolság és keret %2$s → %3$s</string>
 </resources>

@@ -407,8 +407,6 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontal na espasyo sa pagitan ng mga key</string>
     <string name="appearance_look_show_hints_title">Ipakita ang mga hint ng gesture sa mga pamilyar na hitsura</string>
     <string name="appearance_look_show_hints_desc">Itinatago ng mga hitsurang istilong iOS, Gboard, SwiftKey at Samsung ang mga hint sa sulok gaya ng mga keyboard na iyon; i-on para ipakita ang lahat. Gumagana ang mga gesture alinman dito.</string>
-    <string name="appearance_look_key_preview_title">Preview ng pinindot na key sa mga pamilyar na hitsura</string>
-    <string name="appearance_look_key_preview_desc">Ipinapakita ng mga hitsurang istilong iOS, Gboard, SwiftKey at Samsung ang pinindot na character sa pop-up na hugis gaya ng sa mga keyboard na iyon.</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
     <string name="appearance_custom_border_desc">I-enable ang custom na styling ng border ng key</string>
     <string name="appearance_border_radius_title">Radius ng Border</string>
@@ -2511,4 +2509,12 @@
     <string name="layout_theme_search_hint">Maghanap ng tema</string>
     <string name="layout_theme_no_results">Walang tumutugmang tema</string>
     <string name="import_preview_layout_theme_change">%1$s: tema %2$s → %3$s</string>
+    <string name="layout_key_geometry_chip">Pagitan at border ng key: %1$s</string>
+    <string name="layout_key_geometry_title">Pagitan at border ng key</string>
+    <string name="layout_key_geometry_global">Pangkalahatang setting</string>
+    <string name="layout_key_geometry_custom">Layout na ito</string>
+    <string name="layout_key_geometry_desc">Habang aktibo ang layout na ito, papalitan ng mga value na itinakda rito ang mga setting ng Hitsura at ang pagitan ng isang pamilyar na hitsura. Hindi nagbabago ang mismong mga setting ng Hitsura.</string>
+    <string name="layout_key_geometry_use_global">Gamitin ang pangkalahatang setting</string>
+    <string name="layout_key_geometry_xml_invalid">Hindi wastong attribute ng pagitan o border ng key: %1$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: pagitan at border ng key %2$s → %3$s</string>
 </resources>
