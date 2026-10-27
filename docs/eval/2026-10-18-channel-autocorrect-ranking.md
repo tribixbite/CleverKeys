@@ -786,3 +786,36 @@ TEST is not run. The report cases (`tomorr`, `caf`, `resta`, `becau`, `restau`, 
 Reported, not gated: Birkbeck R-union breaks, C-oov-TEST protected, the report cases. All four
 must hold to ship ρ as the default (with its setting); otherwise ρ stays off and the finding is
 recorded here. These thresholds are fixed now.
+
+## 17. Round 6 DEV (run 2026-10-27, harness in the round-6 commit, separate worktree)
+
+GTC-DEV 16,358 pairs (16,095 inputs, 520 eligible: the shipped default corrects them into a word
+that does not extend them, and they have a completion); S-adj-DEV 137,871 pairs (4,925 base
+words, 2,448 eligible); C-oov-DEV 36,241 (454 eligible); T-trunc-DEV 6,278 prefixes of 2,908
+targets. Baseline: GTC-DEV distinct targets right 4,963; the shipped default **hijacks** 3,521
+T-trunc-DEV prefixes of 2,387 targets (82 % of targets: it rewrites an unfinished word into a
+different word). Limits: Q1 24.8, Q2 24.6.
+
+| ρ | L | GTC-DEV breaks (pairs) | S-adj-DEV breaks (pairs) | T-trunc-DEV protected (prefixes) | C-oov-DEV protected | named | admissible |
+|---|---|---|---|---|---|---|---|
+| 1.0 | 3 | 109 (118) | 582 (697) | 2,343 (3,443) | 377 | kne, אתכ fail | no |
+| 1.0 | 4 | 103 (112) | 507 (609) | 2,245 (3,260) | 360 | ok | no |
+| 1.0 | 5 | 86 (89) | 352 (408) | 1,866 (2,606) | 308 | ok | no |
+| 1.25 | 3 | 56 (59) | 130 (141) | 2,059 (2,957) | 248 | ok | no |
+| 1.25 | 4 | 55 (58) | 115 (125) | 1,998 (2,864) | 241 | ok | no |
+| 1.25 | 5 | 48 (49) | 82 (88) | 1,714 (2,371) | 217 | ok | no |
+| **1.5** | **3** | **9 (10)** | **1 (1)** | **1,110 (1,601)** | **136** | ok | **yes (chosen)** |
+| 1.5 | 4 | 9 (10) | 1 (1) | 1,102 (1,591) | 135 | ok | yes |
+| 1.5 | 5 | 9 (10) | 0 | 1,005 (1,409) | 129 | ok | yes |
+| 1.75 | 3–4 | 4 (4) | 0 | 759 (971) | 98 | ok | yes |
+| 1.75 | 5 | 4 (4) | 0 | 743 (942) | 98 | ok | yes |
+| 2.0 | 3–4 | 1 (1) | 0 | 566 (702) | 89 | ok | yes |
+| 2.0 | 5 | 1 (1) | 0 | 563 (694) | 89 | ok | yes |
+| 2.5 | 3–5 | 0 | 0 | 405 / 405 / 404 | 58 | ok | yes |
+
+**Chosen: ρ = 1.5, L = 3** (most T-trunc-DEV protection among admissible configurations).
+Soundness: 2,000 seeded inputs, 0 mismatches between the replica and production. Report cases at
+the choice: `tomorr` → tomorr (kept), `becau` → becau, `restau` → restau; `caf` → car and `resta`
+→ rest unchanged (as §16.1 predicted for `caf`; `resta` needs ρ ≤ 1.4, which breaks 48+ GTC-DEV
+targets); `tomo` → too and `beautif` → beautify (a completion, never withheld). TEST runs once at
+ρ = 1.5, L = 3.
