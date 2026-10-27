@@ -831,6 +831,10 @@ tasks.register('runPureTests', JavaExec) {
     // Per-layout theme binding: id validation, entry precedence, effective-theme resolution
     // (bound / unbound / missing theme) and the layout-XML `theme` attribute read/write.
     'tribixbite.cleverkeys.LayoutThemeBindingTest',
+    // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
+    // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
+    'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
+    'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -1596,6 +1600,9 @@ tasks.register('runMockTests', JavaExec) {
     // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an
     // effective-theme change), the layouts serializer (backup blob) and the XML `theme` attribute.
     'tribixbite.cleverkeys.LayoutThemeBindingConfigTest',
+    // 2026-10-27 keyboard looks reach Theme.Computed (gaps, radius, shadow, action/modifier
+    // frames), non-look themes compute as before, looks follow the system light/dark mode.
+    'tribixbite.cleverkeys.theme.KeyboardLookRenderTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // 2026-10-17 Pixel: suggestion-bar text colour vs the bar, every role, every built-in theme
     // (mock tier: the decorative schemes need Compose's Color on the classpath).
