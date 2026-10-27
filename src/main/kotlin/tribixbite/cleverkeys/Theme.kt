@@ -184,6 +184,13 @@ class Theme {
     @JvmField
     val lookPopupColors: LookPopupColors?
 
+    /**
+     * A latched modifier at rest keeps its resting fill (LookPalette.latchKeepsFill: Gboard,
+     * Samsung); false for every non-look theme, which draws it with the activated frame.
+     */
+    @JvmField
+    val lookLatchKeepsFill: Boolean
+
     /** How a look draws corner labels (size, weight); null for every non-look theme. */
     @JvmField
     val lookHintStyle: LookHintStyle?
@@ -269,6 +276,7 @@ class Theme {
         lookPreview = null
         lookPopupColors = null
         lookHintStyle = null
+        lookLatchKeepsFill = false
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
@@ -387,6 +395,7 @@ class Theme {
         this.lookPreview = lookPreview?.takeIf { lookPalette != null }
         this.lookPopupColors = lookPopupColors?.takeIf { lookPalette != null }
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
+        lookLatchKeepsFill = lookPalette?.latchKeepsFill ?: false
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
         swipeTrailColor = lookPalette?.swipeTrail ?: 0
@@ -772,8 +781,10 @@ class Theme {
             fun roleOf(
                 kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = "",
                 letterKeys: Set<LookLetterKey> = emptySet(),
+                /** [isRestingLatch]: draw a latched key with its resting frame (locked still wins). */
+                restingLatch: Boolean = false,
             ): KeyRole {
-                val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
+                val role = roleOf(kv?.getKind(), isKeyDown && (isLocked || !restingLatch), isLocked)
                 if (kv == null) return role
                 return when {
                     role == KeyRole.SPECIAL && kv.getKind() == KeyValue.Kind.Keyevent &&
@@ -787,6 +798,17 @@ class Theme {
                     else -> role
                 }
             }
+
+            /**
+             * True when a key's pointer [flags] (`Pointers.getKeyFlags`, -1 = none) say it is
+             * latched but neither held nor locked — a one-shot or auto-capitalised Shift — and
+             * the look keeps the resting fill for that ([keepsFill], `Theme.lookLatchKeepsFill`).
+             * The real Gboard keeps Shift's function-key fill then (Pixel 2026-10-27).
+             */
+            @JvmStatic
+            fun isRestingLatch(flags: Int, keepsFill: Boolean): Boolean =
+                keepsFill && flags != -1 &&
+                    (flags and Pointers.FLAG_P_LATCHED) != 0 && (flags and Pointers.FLAG_P_LOCKED) == 0
 
             /**
              * The main-label colour of a key drawn with a frame whose look label colour is

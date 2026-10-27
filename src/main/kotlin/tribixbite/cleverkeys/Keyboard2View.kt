@@ -1860,13 +1860,15 @@ class Keyboard2View @JvmOverloads constructor(
                 // themes every role colour equals the old default, so this draws
                 // pixel-identically to the previous activated/normal split.
                 val kv0 = k.keys[0]
-                val isLocked = isKeyDown && kv0 != null &&
-                    _pointers.getKeyFlags(kv0).let {
-                        it != -1 && (it and Pointers.FLAG_P_LOCKED) != 0
-                    }
+                val kv0Flags = if (isKeyDown && kv0 != null) _pointers.getKeyFlags(kv0) else -1
+                val isLocked = kv0Flags != -1 && (kv0Flags and Pointers.FLAG_P_LOCKED) != 0
                 // Keyboard looks: Enter, the editor-action key and a look's function characters
-                // (Gboard's comma/period) get their own frames.
-                val role = Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys)
+                // (Gboard's comma/period) get their own frames; a latched Shift at rest keeps its
+                // function-key fill on looks that do so (Gboard, Samsung).
+                val role = Theme.Computed.roleOf(
+                    kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys,
+                    Theme.Computed.isRestingLatch(kv0Flags, _theme.lookLatchKeepsFill),
+                )
                 // Per-key XML styling (KeyStyle): its own fill/border/label colours and gaps. The
                 // frame stays centred on the key's cell (KeyStyles.frame), so hit-testing and the
                 // swipe engines' key centres are unaffected.

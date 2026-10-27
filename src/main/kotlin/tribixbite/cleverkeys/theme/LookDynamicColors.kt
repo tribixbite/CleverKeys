@@ -74,6 +74,7 @@ object LookDynamicColors {
             popupLabel = r.onSurface,
             popupSelected = r.primary,
             popupSelectedLabel = r.onPrimary,
+            latchKeepsFill = fixed.latchKeepsFill,
         )
         return if (LookContrast.meetsFloors(mapped)) mapped else fixed
     }

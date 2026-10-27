@@ -113,6 +113,12 @@ data class LookPalette(
     val popupSelected: Int = 0,
     /** Label colour on [popupSelected]; 0 = [lockedLabel]. */
     val popupSelectedLabel: Int = 0,
+    /**
+     * A latched modifier at rest (one-shot or auto-capitalised Shift) keeps its own resting fill
+     * instead of [keyPressed]: Gboard and Samsung change only the glyph. False = the pressed
+     * fill, as every non-look theme (`Theme.Computed.isRestingLatch`).
+     */
+    val latchKeepsFill: Boolean = false,
 )
 
 /**

@@ -21,6 +21,7 @@ import org.objenesis.ObjenesisStd
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
+import tribixbite.cleverkeys.Pointers
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.Theme
 
@@ -252,6 +253,55 @@ class KeyboardLookRenderTest {
         assertWithMessage("non-look themes draw no key-press preview").that(plain.lookPreview).isNull()
         assertThat(plain.lookPopupColors).isNull()
         assertThat(plain.lookHintStyle).isNull()
+    }
+
+    /**
+     * Pixel 2026-10-27: an auto-capitalised (latched) Shift drew in the pressed grey on
+     * Gboard-style, while the real Gboard keeps the function-key fill (both #2D3D4A dark, sampled
+     * from `build/oct28-looks2/gboard-dark.png`) and only changes the glyph. On a look a latched
+     * modifier at rest keeps its resting frame; a held key and Caps Lock keep theirs, and every
+     * non-look theme still draws a latched key with the activated frame.
+     */
+    @Test
+    fun aLooksLatchedShiftAtRestKeepsItsFunctionKeyFill() {
+        val shift = KeyValue.getKeyByName("shift")
+        val latched = Pointers.FLAG_P_LATCHABLE or Pointers.FLAG_P_LATCHED
+        assertWithMessage("look + latched at rest")
+            .that(Theme.Computed.isRestingLatch(latched, keepsFill = true)).isTrue()
+        assertWithMessage("auto-capitalisation's fake pointer is latched too")
+            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_FAKE, keepsFill = true)).isTrue()
+        assertWithMessage("non-look themes keep the activated frame")
+            .that(Theme.Computed.isRestingLatch(latched, keepsFill = false)).isFalse()
+        assertWithMessage("held (latchable, not yet latched)")
+            .that(Theme.Computed.isRestingLatch(Pointers.FLAG_P_LATCHABLE, keepsFill = true)).isFalse()
+        assertWithMessage("Caps Lock keeps the locked frame")
+            .that(Theme.Computed.isRestingLatch(latched or Pointers.FLAG_P_LOCKED, keepsFill = true)).isFalse()
+        assertThat(Theme.Computed.isRestingLatch(-1, keepsFill = true)).isFalse()
+
+        assertWithMessage("a resting latch draws the modifier frame")
+            .that(Theme.Computed.roleOf(shift, true, false, ",.", emptySet(), restingLatch = true))
+            .isEqualTo(Theme.Computed.KeyRole.MODIFIER)
+        assertWithMessage("without it: the activated frame, as before")
+            .that(Theme.Computed.roleOf(shift, true, false, ",.", emptySet()))
+            .isEqualTo(Theme.Computed.KeyRole.ACTIVATED)
+        assertWithMessage("locked wins over a resting latch")
+            .that(Theme.Computed.roleOf(shift, true, true, ",.", emptySet(), restingLatch = true))
+            .isEqualTo(Theme.Computed.KeyRole.LOCKED)
+
+        // Which looks keep the fill: Gboard (sampled) and Samsung (research §4: only the shift
+        // icon turns blue). iOS lights the key up, which the pressed fill stands in for.
+        for (p in listOf(KeyboardLooks.gboardLook.light, KeyboardLooks.gboardLook.dark,
+                KeyboardLooks.samsungLook.light, KeyboardLooks.samsungLook.dark)) {
+            assertThat(p.latchKeepsFill).isTrue()
+        }
+        assertThat(KeyboardLooks.iosLook.dark.latchKeepsFill).isFalse()
+        val gboard = Theme(
+            context, KeyboardLookSchemes.colorScheme(KeyboardLooks.gboardLook.dark), density = 2f,
+            lookPalette = KeyboardLooks.gboardLook.dark, lookGeometry = look,
+        )
+        assertThat(gboard.lookLatchKeepsFill).isTrue()
+        assertWithMessage("non-look themes never keep the fill")
+            .that(Theme(context, darkKeyboardColorScheme(), density = 2f).lookLatchKeepsFill).isFalse()
     }
 
     /** A look's preview, popup colours and hint style reach the Theme from ThemeProvider. */
