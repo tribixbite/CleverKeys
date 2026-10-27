@@ -215,7 +215,12 @@ class Theme {
     @JvmField
     val lookGeometry: LookGeometry?
 
-    /** Pixels per dp used to convert [lookGeometry] (1 for XML themes, which have none). */
+    /**
+     * Pixels per dp: converts [lookGeometry] and a layout's key-gap percentages and border width
+     * (LayoutKeyGeometry.applyTo, `percent × density / 100` exactly as Config converts the global
+     * gap). The display density for every theme, XML ones included — a fixed 1 made a layout's
+     * 5 % gap draw like a global 2 % on the 420 dpi Saga (2026-10-27).
+     */
     @JvmField
     val density: Float
 
@@ -286,7 +291,7 @@ class Theme {
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
         lookGeometry = null
-        density = 1f
+        density = context.resources.displayMetrics.density
     }
 
     /**

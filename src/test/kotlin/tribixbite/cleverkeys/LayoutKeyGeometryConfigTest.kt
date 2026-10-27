@@ -305,6 +305,44 @@ class LayoutKeyGeometryConfigTest {
         assertThat(config.version).isGreaterThan(v1)
     }
 
+    /**
+     * Saga 144, 2026-10-27 (release acd3b79e, CleverKeys Dark = an XML theme): a layout's 5 %
+     * horizontal / 4.25 % vertical gap drew the same ~10 px / ~5 px as the global 2 % / 1.5 %.
+     * The XML constructor set [Theme.density] to 1, so an override's percent was scaled by 1
+     * where Config scales the global one by the display density (2.625 there). The same number
+     * must give the same gap on every theme, as the spec promises.
+     */
+    @Test
+    fun anXmlThemeScalesALayoutsGapsAndWidthByTheDisplayDensityLikeTheGlobalSetting() {
+        val metrics = objenesis.newInstance(android.util.DisplayMetrics::class.java).apply { density = 2.625f }
+        every { context.resources.displayMetrics } returns metrics
+        val theme = Theme(context, null)
+        val config = config(
+            listOf(
+                emptyMap(),
+                mapOf(
+                    KeyGeometryField.HORIZONTAL_GAP to 2f, KeyGeometryField.VERTICAL_GAP to 1.5f,
+                    KeyGeometryField.BORDER to 1f, KeyGeometryField.BORDER_WIDTH to 3f,
+                ),
+            ),
+        ).apply {
+            // What Config.refresh stores for the global 2 % / 1.5 % at density 2.625 (get_dip_pref / 100).
+            key_horizontal_margin = 2f * 2.625f / 100f
+            key_vertical_margin = 1.5f * 2.625f / 100f
+        }
+        select(config, 0)
+        val global = Theme.Computed(theme, config, 100f, layout())
+        select(config, 1)
+        val bound = Theme.Computed(theme, config, 100f, layout())
+        assertWithMessage("a layout's 2 % is the global 2 %")
+            .that(bound.horizontal_margin).isWithin(1e-3f).of(global.horizontal_margin)
+        assertThat(bound.horizontal_margin).isWithin(1e-3f).of(5.25f)
+        assertWithMessage("a layout's 1.5 % is the global 1.5 %")
+            .that(bound.vertical_margin).isWithin(1e-3f).of(global.vertical_margin)
+        assertWithMessage("a layout's 3 dp line is 3 × density px")
+            .that(bound.key.border_width).isWithin(1e-3f).of(3f * 2.625f)
+    }
+
     @Test
     fun anObjenesisConfigHasNoOverrides() {
         val config = objenesis.newInstance(Config::class.java)
