@@ -199,6 +199,26 @@ class ClipboardReorderPolicyTest {
     }
 
     @Test
+    fun aRowHeldPastEitherEndOfTheListReachesTheFirstAndLastSlot() {
+        // Saga 2026-10-27: the dragged row was clamped inside the list, so its centre could only
+        // reach the last row's middle and a drag to the bottom landed one above the end.
+        val tops = listOf(0, 100, 200, 300)
+        val bottoms = listOf(100, 200, 300, 400)
+        fun slot(dragged: Int, fingerDy: Float): Int {
+            val dy = ClipboardReorderPolicy.dragOffset(fingerDy, tops[dragged], bottoms[dragged], listHeight = 400)
+            return ClipboardReorderPolicy.dropIndex(tops, bottoms, dragged, tops[dragged] + dy + 50f)
+        }
+
+        assertThat(slot(dragged = 0, fingerDy = 10_000f)).isEqualTo(3)
+        assertThat(slot(dragged = 3, fingerDy = -10_000f)).isEqualTo(0)
+        assertThat(slot(dragged = 1, fingerDy = 10_000f)).isEqualTo(3)
+        assertWithMessage("never more than half a row past the list")
+            .that(ClipboardReorderPolicy.dragOffset(10_000f, 0, 100, listHeight = 400)).isEqualTo(350f)
+        assertThat(ClipboardReorderPolicy.dragOffset(-10_000f, 300, 400, listHeight = 400)).isEqualTo(-350f)
+        assertThat(ClipboardReorderPolicy.dragOffset(42f, 100, 200, listHeight = 400)).isEqualTo(42f)
+    }
+
+    @Test
     fun autoScrollStartsInsideTheEdgeBandAndGrowsTowardTheEdge() {
         val step = { y: Float -> ClipboardReorderPolicy.autoScrollStep(y, viewportHeight = 500f, edge = 50f, maxStep = 20f) }
 

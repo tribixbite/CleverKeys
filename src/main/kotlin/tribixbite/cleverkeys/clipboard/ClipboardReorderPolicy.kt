@@ -138,6 +138,19 @@ object ClipboardReorderPolicy {
     }
 
     /**
+     * The dragged row's vertical offset for a finger travel of [fingerDy], for a row laid out at
+     * [rowTop]..[rowBottom] in a list [listHeight] tall. The row may go half its height past
+     * either end of the list, so its centre can pass the first or last row's middle and the
+     * first and last slots are reachable (a row clamped inside the list could not reach them).
+     */
+    fun dragOffset(fingerDy: Float, rowTop: Int, rowBottom: Int, listHeight: Int): Float {
+        val half = (rowBottom - rowTop) / 2f
+        val min = -rowTop - half
+        val max = (listHeight - rowBottom) + half
+        return fingerDy.coerceIn(min, max(min, max))
+    }
+
+    /**
      * Pixels to scroll this frame while dragging with the finger at [fingerY] inside a
      * viewport of [viewportHeight]: negative (up) inside the top [edge] band, positive inside
      * the bottom one, growing to [maxStep] at the edge and beyond. Zero elsewhere. A viewport

@@ -2046,8 +2046,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private fun updateReorderDrag(drag: ReorderDrag) {
         val scrollDelta = (reorderScrollParent()?.scrollY ?: 0) - drag.startScrollY
         val row = drag.row
-        val dy = (drag.lastRawY - drag.startRawY + scrollDelta)
-            .coerceIn(-row.top.toFloat(), (height - row.bottom).toFloat().coerceAtLeast(0f))
+        val dy = ClipboardReorderPolicy.dragOffset(drag.lastRawY - drag.startRawY + scrollDelta, row.top, row.bottom, height)
         row.translationY = dy
         val count = childCount
         val tops = List(count) { getChildAt(it).top }
@@ -2273,9 +2272,14 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     /** The effective label colour (runtime theme aware); also the reorder drop line. */
     private fun labelColor(): Int = themeColor(R.attr.colorLabel, runtimeColors?.label ?: 0, android.graphics.Color.WHITE)
 
-    /** Opaque keyboard background behind a dragged row, so the rows it passes do not show through. */
-    private fun dragRowColor(): Int =
-        themeColor(R.attr.colorKeyboard, runtimeColors?.keyboardBackground ?: 0, android.graphics.Color.DKGRAY)
+    /**
+     * Opaque keyboard background behind a dragged row, so the rows it passes do not show through.
+     * Forced opaque: theme keyboard colours may be translucent (Saga 2026-10-27, the lifted row
+     * showed the text of the row under it).
+     */
+    private fun dragRowColor(): Int = androidx.core.graphics.ColorUtils.setAlphaComponent(
+        themeColor(R.attr.colorKeyboard, runtimeColors?.keyboardBackground ?: 0, android.graphics.Color.DKGRAY), 0xFF
+    )
 
     private fun themeColor(attr: Int, runtimeColor: Int, fallback: Int): Int {
         val typed = android.util.TypedValue()
