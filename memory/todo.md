@@ -669,6 +669,31 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Save → Theme Manager → Creator edit → keyboard, Theme Manager export on a look and paste
     into a new layout, Add Layout in landscape on the Saga, a Theme Creator pass of every new
     control (sliders, chips, variant rows), Persian/RTL rendering of the new strings.
+    DEVICE 2026-10-27 (Saga 192.168.0.202, APK acd3b79e sha256 6bc336b2…, portrait; evidence
+    `build/oct27pm-saga202/`): (1) harbour.xml light PASS (variants, pill Enter, bubble preview,
+    pressed Enter #174F80, f/j, row styling, digit hints); dark FAIL → fixed: the third row
+    #F4F7FA took dark-mode label #E6EEF5 (1.09:1) and Shift/Backspace drew blank — key/row colours
+    do not follow light/dark. Example recoloured + wiki rule + legibility test (`eba7dba2`); its
+    latched Shift then read white on #C9D6E3 (1.48) → `4449359a` (pressed colours on Shift).
+    Re-imported on the Saga: both modes legible. (2) Save as custom theme → Theme Manager →
+    Creator (Enter pill off) → selected globally → keyboard shows a rounded-rect Enter: PASS.
+    (3) Gboard-style "Export as layout XML" → wrapped in QWERTY rows → imported: colours/pills
+    match the look selected globally (key #3B383E, bg #1E1D21, Enter #4B4358): PASS. (4) fa:
+    Layout Manager chips, Key spacing & borders dialog, layout theme picker, save toast PASS;
+    Theme Creator hex rows drew `FFFFFFFF#` and the dynamic-colour switch "(+12" → `ed022c9c`
+    (LRM-led `HexColorText.display`, fa string). Seen, not fixed: the Theme Manager card of a
+    custom theme with `<dark>` colours shows its light colours in dark mode; the Theme Creator
+    preview renders the first non-System layout, so a styled layout's row colours appear in a
+    theme's preview; after a night-mode switch the IME window once came up 126 px short
+    (frame [0,1706], keys under the nav bar) and was right on the next show; hint/preview chip
+    rows overflow and scroll in fa. Not done: Add Layout in landscape (Saga left in portrait);
+    the `ed022c9c` APK (sha256 b3667ea5…, `build/oct27pm-saga202/ck-hexfix.apk`) is NOT on the
+    Saga — at 16:42 the LAN dropped (host could not reach .202/.144/.81) and stayed down past
+    17:05. OPEN on the Saga, left mid-test: per-app locale fa (restore: `cmd locale
+    set-app-locales tribixbite.cleverkeys --locales ""`, was []), layouts Harbour + GboardTest
+    (delete; was [System] only), custom theme "Harbour" (delete), Theme Creator open unsaved,
+    1–2 Chrome `data:` textarea tabs. Already restored: global theme CleverKeys Dark, night
+    mode yes, default IME CleverKeys.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
