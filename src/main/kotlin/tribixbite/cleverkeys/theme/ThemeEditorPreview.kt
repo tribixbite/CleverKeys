@@ -55,6 +55,20 @@ object ThemeEditorPreview {
 
     /** The trail colour the keyboard uses for [scheme] once applied (pref-sync format). */
     fun trailColorFor(scheme: KeyboardColorScheme): Int = scheme.swipeTrail.toArgb()
+
+    /**
+     * The layout the preview draws, from the user's enabled layouts ([Config.layouts], null =
+     * the System layout) and [neutral] (the built-in QWERTY): the user's FIRST layout when it is a
+     * plain one, so the preview keeps their script and arrangement; the neutral layout when that
+     * first entry is the System layout (the IME subtype that resolves it does not exist in the
+     * settings process) or a layout that styles itself ([KeyboardData.carriesStyling]) — its
+     * `<theme>`, row / key colours and key gaps would otherwise be drawn as if they belonged to the
+     * theme being previewed (Saga 2026-10-27: Harbour's row colours in every theme's preview).
+     */
+    fun previewLayout(userLayouts: List<KeyboardData?>, neutral: () -> KeyboardData?): KeyboardData? {
+        val first = userLayouts.firstOrNull()
+        return if (first != null && !first.carriesStyling()) first else neutral()
+    }
 }
 
 /**
@@ -241,13 +255,14 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
         }
 
         /**
-         * The user's first enabled layout, modified exactly as the keyboard shows it
-         * (bottom row, extra keys, number row); QWERTY when none resolves.
+         * The layout [ThemeEditorPreview.previewLayout] picks (the user's first layout when it is
+         * plain, else the built-in QWERTY), modified exactly as the keyboard shows it (bottom row,
+         * extra keys, number row).
          */
         private fun resolveLayout(context: Context): KeyboardData? {
-            val base = Config.globalConfig().layouts.firstOrNull { it != null }
-                ?: KeyboardData.load(context.resources, R.raw.latn_qwerty_us)
-                ?: return null
+            val base = ThemeEditorPreview.previewLayout(Config.globalConfig().layouts) {
+                KeyboardData.load(context.resources, R.raw.latn_qwerty_us)
+            } ?: return null
             return try {
                 LayoutModifier.modify_layout(base)
             } catch (e: RuntimeException) {

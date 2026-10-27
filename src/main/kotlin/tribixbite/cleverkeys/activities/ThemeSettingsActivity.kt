@@ -281,6 +281,9 @@ fun ThemeSettingsScreen(
     onThemeSelected: (themeId: String, displayName: String) -> Unit
 ) {
     val context = LocalContext.current
+    // Light/dark cue for the cards' colours (custom themes with variants, looks): a mode switch
+    // re-reads them.
+    val systemDark = isSystemInDarkTheme()
     // Use DirectBootAwarePreferences to ensure we read the same prefs as the service
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
     // Use mutableStringStateOf instead of mutableStateOf to avoid type inference issues
@@ -413,7 +416,7 @@ fun ThemeSettingsScreen(
             }
             items(ThemeSettingsActivity.LOOK_THEMES) { lookTheme ->
                 val lookName = stringResource(lookTheme.nameRes)
-                val lookScheme = remember(lookTheme.id) {
+                val lookScheme = remember(lookTheme.id, systemDark) {
                     ThemeProvider.getInstance(context).getColorScheme(lookTheme.id)
                 }
                 if (lookScheme != null) {
@@ -444,9 +447,14 @@ fun ThemeSettingsScreen(
                 }
                 items(customThemes) { theme ->
                     val customId = "custom_${theme.id}"
+                    // The current system mode's colours: a version-2 theme's light/dark variants
+                    // flattened exactly as the keyboard draws them (theme.colors is only its base).
+                    val cardScheme = remember(theme, systemDark) {
+                        ThemeProvider.getInstance(context).getColorScheme(customId) ?: theme.colors
+                    }
                     ThemeCard(
                         name = theme.name,
-                        colorScheme = theme.colors,
+                        colorScheme = cardScheme,
                         isCustom = true,
                         isSelected = currentThemeId == customId,
                         onSelect = {

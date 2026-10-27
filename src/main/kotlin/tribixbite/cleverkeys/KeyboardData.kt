@@ -78,6 +78,16 @@ class KeyboardData private constructor(
         return KeyboardData(this, rows_)
     }
 
+    /**
+     * Whether the layout styles its own appearance: an embedded `<theme>`, per-layout key-gap /
+     * border defaults (`key_*` root attributes) or any row / key styling ([KeyStyle]). A `theme=`
+     * binding is not styling — it only names which theme to use. Theme previews avoid styled
+     * layouts, whose colours would be mistaken for the theme's (`ThemeEditorPreview.previewLayout`).
+     */
+    fun carriesStyling(): Boolean =
+        embedded_theme != null || declared_key_geometry.isNotEmpty() ||
+            rows.any { row -> row.keys.any { it.style != null } }
+
     /** Add keys from the given iterator into the keyboard. Preferred position is
         specified via [PreferredPos]. */
     fun addExtraKeys(extra_keys: Iterator<Map.Entry<KeyValue, PreferredPos>>): KeyboardData {
