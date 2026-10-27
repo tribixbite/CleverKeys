@@ -402,6 +402,8 @@
     <string name="appearance_key_horizontal_margin_desc">Vodorovné mezery mezi klávesami</string>
     <string name="appearance_look_show_hints_title">Zobrazit nápovědy gest u známých vzhledů</string>
     <string name="appearance_look_show_hints_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung skrývají rohové nápovědy jako tyto klávesnice; zapnutím se zobrazí všechny. Gesta fungují v obou případech.</string>
+    <string name="appearance_look_key_preview_title">Náhled stisknuté klávesy u známých vzhledů</string>
+    <string name="appearance_look_key_preview_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung zobrazí stisknutý znak v bublině tvarované jako u těchto klávesnic.</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
     <string name="appearance_custom_border_desc">Povolit vlastní styl ohraničení kláves</string>
     <string name="appearance_border_radius_title">Poloměr rohů</string>

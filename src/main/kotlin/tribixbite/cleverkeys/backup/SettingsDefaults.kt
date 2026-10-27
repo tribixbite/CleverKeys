@@ -63,6 +63,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "key_horizontal_margin" to PrefValue.FloatV(Defaults.KEY_HORIZONTAL_MARGIN),
     "border_config" to PrefValue.Bool(Defaults.BORDER_CONFIG),
     "look_show_hints" to PrefValue.Bool(Defaults.LOOK_SHOW_HINTS),
+    "look_key_preview" to PrefValue.Bool(Defaults.LOOK_KEY_PREVIEW),
     "custom_border_radius" to PrefValue.IntV(Defaults.CUSTOM_BORDER_RADIUS),
     "custom_border_line_width" to PrefValue.FloatV(Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat()),
 

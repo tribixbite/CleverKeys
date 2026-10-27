@@ -838,6 +838,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
+    'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
+    'tribixbite.cleverkeys.theme.LookPopupsTest',
     // Backup encryption (2026-07-17) — pure crypto substrate
     'tribixbite.cleverkeys.backup.crypto.Pbkdf2Sha256VectorTest',
     'tribixbite.cleverkeys.backup.crypto.BackupCryptoRoundTripTest',

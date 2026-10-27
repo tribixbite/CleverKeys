@@ -119,6 +119,23 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    side, decided by key identity in `Keyboard2View.onDraw`). New look = a `KeyboardLooks` entry + a `ThemeSettingsActivity.LOOK_THEMES`
    row (drift: `LayoutThemeBindingConfigTest`) + 6 strings × 22 locales; render pinned by
    `theme/KeyboardLookRenderTest` (mock).
+13. **Look pop-ups, hint style, letter keys, wallpaper colours** (2026-10-28,
+   `theme/LookPopups.kt`, `theme/LookDynamicColors.kt`; spec `layout-system.md`). A look's
+   `preview` (`LookPreviewShape` BUBBLE Gboard / BALLOON iOS / COLUMN SwiftKey / PLATE Samsung)
+   is drawn by `Keyboard2View.drawKeyPreview` for the pressed CHARACTER key, inside the view
+   (`LookPreviewPolicy.frame` moves a top-row preview down and edge previews inward), unless
+   `look_key_preview` (default ON) is off; non-look themes draw none. Preview and popover
+   colours are `LookPopupColors.of(palette)` (`popup*` fields, 0 = letter key / Caps Lock
+   roles); `SubkeyPopoverRenderer` uses them when `Theme.lookPopupColors` is set. Corner labels
+   on a look use `LookHintStyle` via `LookHintLayout` (fraction of the look's label × the user's
+   secondary scale, ≤ 30 % of the key; corner inset ≥ radius × (1 − 1/√2) so pills never clip).
+   `letterKeys` (`LookLetterKey.EMOJI`) maps `switch_emoji` to `KeyRole.LETTER` = letter fill
+   + letter label (`key_letter`). `dynamicColor` (Gboard only): `ThemeProvider.lookPalette`
+   reads the system Material roles (API 34+ `system_*_light/dark` role colours, 31–33 tonal
+   shades) → `LookDynamicColors.gboardPalette`; falls back to the fixed palette below API 31 or
+   when `LookContrast` fails. `getColorScheme` uses the same palette, so the stale-view stamp
+   (rule 6) catches wallpaper changes. Tests: `theme/LookDynamicColorsTest`,
+   `theme/LookPopupsTest` (pure, MCU fixtures for nine seeds), `KeyboardLookRenderTest` (mock).
 
 ## Traps
 
@@ -149,6 +166,7 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 | `theme/CustomThemeManager.kt`, `theme/CustomThemePrefPolicy.kt` | DIY store, pref coherence |
 | `theme/KeyboardViewThemeTracker.kt` | keyboard-view stale detection (id + name + runtime colours) |
 | `theme/KeyboardLook.kt`, `theme/KeyboardLooks.kt`, `theme/KeyboardLookSchemes.kt`, `theme/LookTypeface.kt`, `PredefinedLayoutThemes.kt` | looks: data + geometry precedence, the four built-ins, palette → scheme, label weight, predefined layouts' XML looks |
+| `theme/LookPopups.kt`, `theme/LookDynamicColors.kt` | looks: key-press preview, popup colours, hint style; wallpaper (Material You) mapping + contrast floors |
 | `theme/ThemeEditorPreview.kt`, `theme/ThemePreviewScene.kt` | Theme Creator preview |
 | `theme/MaterialThemeManager.kt`, `theme/CleverKeysTheme.kt`, `KeyboardShapes.kt`, `KeyboardTypography.kt` | Settings-app Compose theme |
 | `activities/ThemeSettingsActivity.kt` | Theme Manager + Theme Creator UI, `BUILTIN_THEMES` |
@@ -164,7 +182,8 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
   `theme/CustomThemePrefPolicyTest`, `theme/ThemeCreatorFieldWiringTest`,
   `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
   `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip),
-  `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest` (pure), `theme/KeyboardLookRenderTest` (mock).
+  `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest`, `theme/LookDynamicColorsTest`,
+  `theme/LookPopupsTest` (pure), `theme/KeyboardLookRenderTest` (mock).
 - Instrumented: `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.
 - Device: a custom-theme visual pass is pure-tier only so far (HANDOFF round 8); Monet (Auto)

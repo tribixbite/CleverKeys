@@ -50,6 +50,8 @@ object Defaults {
     const val BORDER_CONFIG = false
     /** Appearance → "Show gesture hints on familiar looks": off = a look decides its legends. */
     const val LOOK_SHOW_HINTS = false
+    /** Looks draw their product's key-press preview (LookPreviewPolicy); on by default. */
+    const val LOOK_KEY_PREVIEW = true
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -897,6 +899,7 @@ class Config private constructor(
     // URL sanitization toggles (Chunk 3 — applies to clipboard text inserts only)
     @JvmField var clipboard_sanitize_links_enabled = Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED
     @JvmField var clipboard_embed_enrich_enabled = Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED
+    @JvmField var look_key_preview = Defaults.LOOK_KEY_PREVIEW
     @JvmField var clipboard_custom_rules_enabled = Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED
     @JvmField var clipboard_custom_rules_uri: String? = null   // SAF persisted URI as String, null = no file picked
     // When sanitization actually cleans a copied URL, also overwrite the Android system
@@ -1226,6 +1229,7 @@ class Config private constructor(
 
         // G-5: read-site clamp — pre-fix imports could have written out-of-range
         // (or negative) values that the string-form validator used to accept.
+        look_key_preview = _prefs.getBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         clipboard_history_limit = (safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
             .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last)
 
@@ -1523,6 +1527,7 @@ class Config private constructor(
     /**
      * Re-resolve the active languages from the current layout's binding and the user's
      * language preferences. @return true when any of them changed.
+        look_key_preview = look_key_preview,
      */
     private fun recomputeActiveLanguages(): Boolean {
         val before = activeLanguages()

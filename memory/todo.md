@@ -596,6 +596,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     SwiftKey's mic/!? hints on comma/period are not drawn; (d) Samsung and iOS
     looks have no on-device reference capture (no Samsung Keyboard on the test phones, no
     iPhone) — values come from the shipping app's own resources and from measured recreations.
+    ROUND 2 (2026-10-28, maintainer): (b) and (c) addressed — Gboard-style follows the system
+    wallpaper palette on API 31+ (`LookDynamicColors`, Gboard's role mapping, verified against
+    the real Gboard on the Pixel, seed #5D646B; fixed palette below 31 or on a contrast miss),
+    its emoji key is letter-coloured (`KeyRole.LETTER`); every look draws its product's
+    key-press preview (iOS balloon, Gboard bubble, SwiftKey column, Samsung plate;
+    `LookPreviewPolicy`, new pref `look_key_preview` default on) and styles the long-press
+    popover; look hints use `LookHintStyle` (size, weight, corner inset clear of pills). Research
+    §9, spec "Keyboard looks", theme skill rule 13. Evidence `build/oct28-looks2/` (not in git).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

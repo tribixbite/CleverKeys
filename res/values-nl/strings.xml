@@ -398,6 +398,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontale ruimte tussen toetsen</string>
     <string name="appearance_look_show_hints_title">Gebarenhints tonen bij bekende looks</string>
     <string name="appearance_look_show_hints_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl verbergen hoekhints zoals die toetsenborden; zet aan om alle hints te tonen. Gebaren werken hoe dan ook.</string>
+    <string name="appearance_look_key_preview_title">Toetsvoorbeeld bij bekende looks</string>
+    <string name="appearance_look_key_preview_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl tonen het ingedrukte teken in een pop-up met de vorm van die toetsenborden.</string>
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
     <string name="appearance_custom_border_desc">Aangepaste toetsrandstijl inschakelen</string>
     <string name="appearance_border_radius_title">Randradius</string>

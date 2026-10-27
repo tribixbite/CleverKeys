@@ -94,8 +94,12 @@ editor that used to be listed here already ship in 2.0.)
   looks** and can be bound to any layout. While a look is in use, the gaps, corner radius and
   borders it defines replace your Appearance settings for those items; your settings are never
   changed. Gestures still work where no hint is drawn; Appearance → **Show gesture hints on
-  familiar looks** draws them all. Drawn with CleverKeys' own keys and the system font; not affiliated with Apple,
-  Google, Microsoft or Samsung.
+  familiar looks** draws them all, in the look's own hint style. Each look shows its keyboard's
+  key-press preview (iOS balloon, Gboard bubble, SwiftKey column, Samsung plate; Appearance →
+  **Key-press preview on familiar looks** turns it off) and styles the long-press popup to
+  match. Gboard-style follows your wallpaper colours on Android 12 and later, as Gboard does,
+  and draws its emoji key like a letter key. Drawn with CleverKeys' own keys and the system
+  font; not affiliated with Apple, Google, Microsoft or Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard
   entry editor (and tag, clipboard-search, emoji-search and GIF-search fields) instead of the
   app behind the panel. Bar alternatives replace the swiped word in the field, backspace right

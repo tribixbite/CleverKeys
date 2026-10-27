@@ -385,6 +385,45 @@ only: the gestures, `KeyboardAccessibilityHelper` labels and the a11y short-swip
 the layout, not the renderer, so they are unchanged; the existing hint settings (secondary
 label size, dimming) still apply to what is drawn.
 
+**Hint style** (`LookHintStyle`, `LookHintLayout`, 2026-10-28). Whatever corner labels a look
+draws (Gboard's digits, or every label with the switch above on) take the look's hint style:
+size = the look's main label × `sizeFraction` (Gboard 0.40, iOS 0.38, SwiftKey 0.45 at weight
+300, Samsung 0.42) × the user's secondary-label size, capped at 30 % of the key height, in the
+look's hint colour; corner slots are inset by at least radius × (1 − 1/√2), so labels stay on
+the key on pills and large radii. Non-look themes keep CleverKeys' own sizes and padding.
+
+**Key-press preview precedence** (`LookPreviewPolicy`, 2026-10-28). CleverKeys never had a
+key-press preview and has no preference for one on other themes; nothing changes for them. A
+look draws its product's default preview — iOS's key-pop balloon (`BALLOON`), Gboard's stadium
+bubble (`BUBBLE`; Gboard's own "Pop-up on keypress", on as shipped on the reference Pixel),
+SwiftKey's key-wide column (`COLUMN`) and Samsung's plate (`PLATE`) — for character keys
+(not space or function keys), unless Appearance → "Key-press preview on familiar looks"
+(`look_key_preview`, boolean, default ON, `SettingsDefaults`) is off. Because the preference
+is new, there is no earlier user choice to respect; turning it off is the user's choice and the
+look never overrides it. The preview is drawn inside the keyboard view (an IME window cannot
+draw above itself): a top-row preview moves down until it fits and an edge-key preview moves
+sideways. Colours: `LookPalette.popup` / `popupLabel` (default the letter key and label) and,
+for the long-press popover, `popupSelected` / `popupSelectedLabel` (default the Caps Lock
+fill and label); `SubkeyPopoverRenderer` then draws an opaque panel in the popup colour with
+the selected alternative on the selected colour (Gboard: a primary circle).
+
+**Letter-coloured function keys** (`KeyboardLook.letterKeys`, `KeyRole.LETTER`). Gboard draws
+its emoji key like a letter key (Pixel 2026-10-28); `LookLetterKey.EMOJI` gives `switch_emoji`
+the letter fill and label colour at rest.
+
+**Wallpaper colours** (`KeyboardLook.dynamicColor`, `LookDynamicColors`, 2026-10-28). On API
+31+ Gboard-style maps the system's dynamic palette the way Gboard's dynamic theme does (research
+§2a): background and bar `surfaceContainer`; letter keys `surfaceContainerLowest` (light) /
+`surfaceBright` (dark); shift, delete, ?123, comma, period and Enter `secondaryContainer` with
+`onSecondaryContainer`; Caps Lock, editor action, swipe trail and popover selection `primary` /
+`onPrimary`; labels and bar text `onSurface`; hints `onSurfaceVariant`; separators
+`outlineVariant`; pressed `surfaceContainerHighest` (light) / the label at 10 % over the key
+(dark). `ThemeProvider` reads the role colours (`system_surface_container_light`, … on API 34+;
+the accent/neutral tonal shades on 31–33). Below API 31, or when the mapped palette misses any
+`LookContrast` floor, the fixed palette is used. `getColorScheme` returns the same dynamic
+colours, so `KeyboardViewThemeTracker` sees a wallpaper change as a colour change and the next
+keyboard show re-inflates (rule 6 of the theme skill).
+
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,
 8 dp corners, no shadow, blue editor-action key), `look_gboard` (Material You on the default

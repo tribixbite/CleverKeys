@@ -417,6 +417,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontaler Abstand zwischen den Tasten</string>
     <string name="appearance_look_show_hints_title">Gesten-Hinweise bei bekannten Looks anzeigen</string>
     <string name="appearance_look_show_hints_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung blenden Eckhinweise wie diese Tastaturen aus; einschalten, um alle Hinweise anzuzeigen. Gesten funktionieren in beiden Fällen.</string>
+    <string name="appearance_look_key_preview_title">Tastenvorschau bei bekannten Looks</string>
+    <string name="appearance_look_key_preview_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung zeigen das gedrückte Zeichen in einem Pop-up wie bei diesen Tastaturen.</string>
     <string name="appearance_custom_border_title">Benutzerdefinierte Rahmenkonfiguration</string>
     <string name="appearance_custom_border_desc">Benutzerdefiniertes Tastenkanten-Styling aktivieren</string>
     <string name="appearance_border_radius_title">Eckenradius</string>

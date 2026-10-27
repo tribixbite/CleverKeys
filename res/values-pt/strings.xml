@@ -399,6 +399,8 @@
     <string name="appearance_key_horizontal_margin_desc">Espaçamento horizontal entre teclas</string>
     <string name="appearance_look_show_hints_title">Mostrar dicas de gestos nos visuais conhecidos</string>
     <string name="appearance_look_show_hints_desc">Os visuais estilo iOS, Gboard, SwiftKey e Samsung ocultam as dicas dos cantos como esses teclados; ative para mostrar todas. Os gestos funcionam de qualquer forma.</string>
+    <string name="appearance_look_key_preview_title">Prévia da tecla nos visuais conhecidos</string>
+    <string name="appearance_look_key_preview_desc">Os visuais estilo iOS, Gboard, SwiftKey e Samsung mostram o caractere pressionado num pop-up com o formato desses teclados.</string>
     <string name="appearance_custom_border_title">Borda personalizada</string>
     <string name="appearance_custom_border_desc">Ativar estilo de borda personalizada para teclas</string>
     <string name="appearance_border_radius_title">Raio de borda</string>
