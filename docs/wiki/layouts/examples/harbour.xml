@@ -99,7 +99,7 @@
     <key width="1.5" c="?123:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath"/>
     <key c=","/>
     <key c="switch_emoji" nw="loc change_method" ne="config" sw="loc switch_clipboard" se="switch_gif"/>
-    <key width="4" c="space" w="cursor_left" e="cursor_right" key_horizontal_gap="0.6"/>
+    <key width="4" c="space" n="loc switch_forward" s="loc switch_backward" w="cursor_left" e="cursor_right" key_horizontal_gap="0.6"/>
     <key c="." nw="'" n="\?" ne="!" sw="-" se=":"/>
     <key width="1.5" c="enter" ne="action" n="up" s="down" w="left" e="right"
          key_border="false" key_background_pressed="#174F80" key_label_color_pressed="#FFFFFF"/>

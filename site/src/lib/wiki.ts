@@ -49,7 +49,7 @@ export const PRIORITY: Record<string, string[]> = {
   typing:            ['swipe-typing', 'autocorrect', 'emoji', 'smart-punctuation', 'special-characters', 'user-dictionary'],
   gestures:          ['short-swipes', 'subkey-popover', 'cursor-navigation', 'selection-delete', 'trackpoint-mode'],
   customization:     ['per-key-actions', 'extra-keys', 'themes', 'timestamp-keys', 'command-palette'],
-  layouts:           ['adding-layouts', 'switching-layouts', 'multi-language', 'language-packs', 'custom-layouts'],
+  layouts:           ['adding-layouts', 'switching-layouts', 'multi-language', 'language-packs', 'custom-layouts', 'layout-xml-reference'],
   settings:          ['appearance', 'input-behavior', 'haptics', 'accessibility', 'password-fields', 'privacy', 'advanced'],
   clipboard:         ['clipboard-history', 'private-copy', 'url-sanitization', 'text-selection', 'shortcuts'],
   troubleshooting:   ['common-issues', 'performance', 'reset-defaults'],

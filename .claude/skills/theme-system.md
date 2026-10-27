@@ -150,6 +150,21 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    Prefs are never written.
    Tests: `LayoutKeyGeometryTest` (pure), `LayoutKeyGeometryConfigTest` (mock).
 
+15. **Layouts style themselves** (2026-10-28, spec `docs/specs/layout-system.md` "Layout themes
+   and per-key styling", user reference `docs/wiki/layouts/layout-xml-reference.md`). A layout
+   XML's `<theme>` is a partial `ThemeSpec` (`theme/ThemeSpec.kt`, codec `ThemeSpecCodec.kt`)
+   over the global theme: the FIFTH theme kind, id `embedded_<n>.<globalTheme>`
+   (`EmbeddedThemes`, in-process, never persisted; runtime theme, light/dark base style).
+   Precedence user binding > XML `theme=` > embedded > global (`LayoutThemeBinding.resolve`).
+   Per-key/row styling (`KeyStyle`) is drawing only — `KeyStyles.frame` keeps every frame centred
+   on its cell (swipe/hit-test unchanged). Custom themes gained format version 2
+   (`CustomTheme.extension`, JSON `look`): v1 JSON and rendering byte-identical; the Theme
+   Creator's "Keyboard Look" section edits it; never construct `CustomTheme(id, name, colors)`
+   from an edited theme without carrying `extension` (the creator used to). Layout → custom
+   theme and theme → `<theme>` XML go through `LayoutThemeTransfer` with THE provider (rule 4).
+   Pure model tests can not touch `KeyboardColorScheme` (Compose colours are not on the pure
+   classpath): rendering tests are mock tier (`ThemeSpecRenderTest`).
+
 ## Traps
 
 - Theme's runtime constructor converts colours through Compose float channels and TRUNCATES
@@ -185,6 +200,7 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 | `activities/ThemeSettingsActivity.kt` | Theme Manager + Theme Creator UI, `BUILTIN_THEMES` |
 | `activities/LayoutThemePicker.kt`, `LayoutThemeBinding.kt`, `backup/LayoutThemeBindingDiff.kt`, `prefs/LayoutsPreference.kt` | per-layout binding UI, rules, backup preview, storage |
 | `LayoutKeyGeometry.kt`, `activities/LayoutKeyGeometryDialog.kt` | per-layout key gaps / border: rules + precedence, Layout Manager editor |
+| `theme/ThemeSpec.kt`, `theme/ThemeSpecCodec.kt`, `theme/EmbeddedThemes.kt`, `theme/LayoutThemeTransfer.kt`, `theme/ThemeSpecEdits.kt`, `KeyStyle.kt`, `activities/ThemeLookEditor.kt` | layout `<theme>` model/XML/JSON, embedded ids, save/export, Theme Creator "Keyboard Look", per-key styling |
 | `customization/KeyMagnifierView.kt` | magnifier colours (`activeTheme`, `overlayLabelColor`) |
 | `res/values/themes.xml` | the XML styles (`BaseTheme`, `CleverKeysDark/Light`, `Monet*`, `Jewel`, …) |
 
@@ -197,8 +213,11 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
   `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
   `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip),
   `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest`, `theme/LookDynamicColorsTest`,
-  `theme/LookPopupsTest` (pure), `theme/KeyboardLookRenderTest` (mock).
-- Instrumented: `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
+  `theme/LookPopupsTest` (pure), `theme/KeyboardLookRenderTest` (mock), `theme/ThemeSpecTest`,
+  `theme/ThemeSpecEditsTest`, `theme/EmbeddedThemesTest`, `KeyStyleTest` (pure),
+  `theme/ThemeSpecRenderTest`, `LayoutXmlStylingTest`, `LayoutEmbeddedThemeTest` (mock).
+- Instrumented: `LayoutXmlThemeKeyboardInstrumentedTest`, `LayoutThemeSaveAsCustomComposeTest`,
+  `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.
 - Device: a custom-theme visual pass is pure-tier only so far (HANDOFF round 8); Monet (Auto)
   magnifier/keyboard agreement was checked on the Saga in light mode (`ddac0605`, `22b35f71`).

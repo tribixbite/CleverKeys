@@ -116,6 +116,14 @@ refuses an invalid value. **Use global setting** in Layout Manager overrides an 
 **Export XML** writes the layout's current choices into the file. Backups carry the values; the
 restore preview lists each layout whose spacing or border would change.
 
+### A layout's own theme and per-key styling
+
+A layout can also carry its whole look — a `<theme>` element (colours for light and dark mode,
+key gaps, corners, hints, a key-press preview) — and colours, borders and gaps for single keys or
+rows. Every element and attribute, the order in which settings win, and a complete example are in
+the [Layout XML Reference](layout-xml-reference.md). **Save theme as custom theme** in Layout
+Manager keeps a layout's theme in Theme Manager.
+
 ### Keeping CTC swipe available
 
 If a custom layout should use the CTC engine, declare the correct `script` on its
@@ -155,6 +163,7 @@ A: Copy the XML text and share it. Recipients paste it into their custom layout 
 
 ## Related Features
 
+- [Layout XML Reference](layout-xml-reference.md) - Every attribute, own theme, per-key styling
 - [Adding Layouts](adding-layouts.md) - Built-in layout options
 - [Per-Key Actions](../customization/per-key-actions.md) - Customize subkeys
 - [Language Packs](language-packs.md) - Download language support

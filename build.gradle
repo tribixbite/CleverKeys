@@ -840,6 +840,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.ThemeSpecTest',
     'tribixbite.cleverkeys.KeyStyleTest',
     'tribixbite.cleverkeys.theme.EmbeddedThemesTest',
+    'tribixbite.cleverkeys.theme.ThemeSpecEditsTest',
     // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',

@@ -140,6 +140,20 @@ internal fun declaredThemeOf(layout: LayoutsPreference.Layout): String? = when (
     else -> null
 }
 
+/**
+ * The layout's own `<theme>` (custom layouts' XML; built-in layouts carry none), or null.
+ */
+internal fun embeddedThemeOf(layout: LayoutsPreference.Layout): tribixbite.cleverkeys.theme.ThemeSpec? =
+    (layout as? LayoutsPreference.CustomLayout)?.parsed?.embedded_theme
+
+/**
+ * Whether the keyboard draws the layout's own `<theme>` for this entry: it has one, nothing binds
+ * the layout (user choice or XML `theme=` id), and the entry does not follow the global theme.
+ */
+internal fun usesEmbeddedTheme(layout: LayoutsPreference.Layout): Boolean =
+    embeddedThemeOf(layout) != null && layoutThemeBindingOf(layout) == null &&
+        LayoutThemeBinding.normalizeEntry(layout.theme) != LayoutThemeBinding.UNBOUND
+
 /** The effective theme binding of a layout entry, or null when it follows the global theme. */
 internal fun layoutThemeBindingOf(layout: LayoutsPreference.Layout): String? =
     LayoutThemeBinding.effective(layout.theme, declaredThemeOf(layout))
@@ -160,9 +174,13 @@ internal fun LayoutThemeDialog(
     isAvailable: (String) -> Boolean,
     onDismiss: () -> Unit,
     onSelect: (String?) -> Unit,
+    /** "Layout's own theme" (its XML `<theme>`); offered only when the layout has one and no XML id. */
+    onSelectOwn: () -> Unit = {},
 ) {
     val declared = LayoutThemeBinding.normalizeId(declaredThemeOf(layout))
     val current = layoutThemeBindingOf(layout)
+    val offersOwn = embeddedThemeOf(layout) != null && declared == null
+    val ownSelected = usesEmbeddedTheme(layout)
     var query by rememberSaveable { mutableStateOf("") }
     // A bound or declared theme missing from this device is still offered (it is the state the
     // user needs to see and leave), labelled by its raw id.
@@ -194,9 +212,18 @@ internal fun LayoutThemeDialog(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                 )
                 LazyColumn(modifier = Modifier.heightIn(max = 380.dp)) {
+                    if (offersOwn) item(key = "own") {
+                        ThemeOptionRow(
+                            selected = ownSelected,
+                            title = stringResource(R.string.layout_theme_own),
+                            subtitle = stringResource(R.string.layout_theme_own_desc, globalThemeName),
+                            swatch = null,
+                            onClick = onSelectOwn
+                        )
+                    }
                     item(key = "follow") {
                         ThemeOptionRow(
-                            selected = current == null,
+                            selected = current == null && !ownSelected,
                             title = stringResource(R.string.layout_theme_follow_global),
                             subtitle = stringResource(R.string.layout_theme_follow_global_desc, globalThemeName),
                             swatch = null,

@@ -530,6 +530,15 @@ class ThemeProvider(
         }
         // Version 2 (a saved layout <theme> or an edited extension): the full spec; version 1
         // renders exactly as it always did.
+        return themeForCustom(customTheme)
+    }
+
+    /**
+     * The renderer theme of [customTheme]: version 2 (a saved layout `<theme>` or an edited
+     * extension) through its full spec in the current mode; version 1 exactly as it always
+     * rendered. Also the Theme Creator preview's path, so preview and keyboard cannot differ.
+     */
+    fun themeForCustom(customTheme: CustomTheme): Theme {
         if (customTheme.extension != null) return specTheme(ThemeSpecs.flatten(customTheme.fullSpec(), systemLight()), null)
         return Theme(context, customTheme.colors)
     }

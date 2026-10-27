@@ -569,6 +569,86 @@ state and snapping, backup diff, precedence incl. border on/off under a look),
 attributes through `KeyboardData` and `loadLayoutsWithBindings`, `Theme.Computed` per current
 layout, over a look, border off under a global custom border, globals never written).
 
+### Layout themes and per-key styling (`<theme>`, `<row>`/`<key>` styling, 2026-10-28)
+
+Maintainer request (2026-10-27): "you should be able to fully define a custom layout incl. custom
+theme with per-key gap and background/border from an XML config file — and save/export theme from
+one"; clarified "export theme meaning it will show up in theme editor as a custom theme". User
+reference with every attribute and range: `docs/wiki/layouts/layout-xml-reference.md`; worked
+example `docs/wiki/layouts/examples/harbour.xml` (copied to `src/androidTest/assets/layouts/`,
+identity pinned by `ThemeSpecEditsTest`).
+
+**Model** (`theme/ThemeSpec.kt`, pure). `ThemeSpec` = optional name; colour maps (common,
+`light`, `dark`) over `ThemeColorRole` — the 17 DIY roles plus the look-only ones (pressed and
+locked labels, Enter/action fills and labels, modifier label, key shadow, bar separator, four
+pop-up roles); `LookGeometry`; function chars, legends, pills, letter keys, preview, hint style,
+dynamic colour. Every field nullable = not defined. `ThemeSpecs.resolve(top, base, light)`
+flattens both to the current mode first (a base's variant never beats the top's common value) and
+fills each unset field from the base; `ThemeSpecs.render` gives the 17-field scheme, a
+`LookPalette` (0 = the runtime default for each look-only role, so a colour-only spec draws like a
+plain runtime theme — `ThemeSpecRenderTest`) and the look extras; `ThemeProvider.specTheme` builds
+the `Theme` (pop-up colours only when a preview or pop-up colour is defined, the base XML theme's
+key frame passed through `baseFrame`).
+
+**XML** (`theme/ThemeSpecCodec.kt`). `ThemeSpecXml.parse` takes attribute maps (KeyboardData
+hands them over; `ThemeSpecTest` uses DOM), tolerant: unknown attributes, malformed colours
+(`#RRGGBB` / `#AARRGGBB`) and out-of-range values are dropped into `KeyboardData.style_problems`;
+the layout loads, the Layout Manager editor refuses to save while problems remain
+(`layout_style_xml_invalid`). `ThemeSpecXml.write` is the inverse (`parse(write(s)) == s` for the
+example and every look); `replaceInLayout` inserts/replaces/removes the element, ignoring
+mentions inside comments.
+
+**Precedence of the theme** (`LayoutThemeBinding.resolve(…, embedded)`): user binding > XML
+`theme=` id > embedded `<theme>` > global. `LayoutsPreference.loadLayoutsWithBindings` reports
+each layout's spec (`LoadedLayouts.embeddedThemes`), null when its entry is `UNBOUND`; a missing
+bound theme falls through to the embedded one (`ActiveTheme.missingTheme` still reports it).
+`Config.recomputeActiveTheme` turns the current layout's spec into `embedded_<n>.<globalTheme>`
+(`theme/EmbeddedThemes.kt`, an in-process intern table, never persisted), so a space-bar switch or
+a global-theme change under the layout changes `themeName` and re-inflates (rule 6 of the theme
+skill); `builtInThemeStyleId` gives `embedded_` ids the light/dark base style by the system cue.
+`ThemeProvider.baseAppearance(globalId)` is what unset fields inherit: a look's palette (wallpaper
+colours applied), a custom theme's full spec, a decorative scheme, or an XML theme's rendered
+colours and key frame. Layout Manager: the Theme chip reads "Layout's own theme", the picker
+offers it (only without an XML id, which would win) and stores "Follow global theme" over it as
+`UNBOUND` (`entryValueFor(…, hasEmbedded = true)`).
+
+**Per-key styling** (`KeyStyle.kt`). `<key>` and `<row>` accept the five `key_*` geometry
+attributes of `<keyboard>` (same units) plus `key_background`, `key_background_pressed`,
+`key_border_color`, `key_label_color`, `key_label_color_pressed`; a key's own over its row's,
+merged at parse time into `KeyboardData.Key.style` (all copies carry it). Precedence for each
+geometry field: key > row > user per-layout choice > XML `key_*` > look/theme > global
+(`Theme.Computed.styledFrame(role, style)`, cached per style and role: geometry recomputed with
+`layoutOverrides + style.geometry`, fill/border/label colours over the role's). `Keyboard2View`
+places a styled frame with `KeyStyles.frame`: centred on the key's CELL, so hit-testing, TalkBack
+bounds and both swipe engines' key centres are unchanged — `LayoutXmlStylingTest` compares
+`computeKeyRects`, `keyAt` and the CTC mapped layout of the example with and without styling.
+
+**Custom themes, format version 2** (`CustomTheme.extension`, JSON `formatVersion: 2` + `look`).
+`colors` stays the 17 colours (older builds read only them); the extension holds everything else
+of a spec (its common map never repeats a DIY role; `fullSpec()` joins them). A version-1 theme's
+JSON and rendering are unchanged (`LayoutEmbeddedThemeTest`). The backup normalizer keeps the
+extension re-serialized by `ThemeSpecJson` (unknown keys dropped, out-of-range values sanitized,
+a wrong-typed extension refuses the theme) and the import diff compares it.
+`KeyboardViewThemeStamp.runtimeAppearance` carries the resolved spec so a geometry-only edit
+re-inflates.
+
+**Transfer** (`theme/LayoutThemeTransfer.kt`): Layout Manager "Save theme as custom theme" →
+`CustomTheme.fromSpec` (unset DIY colours from the global theme in the current mode) through THE
+provider's store; Theme Manager share button "Export as layout XML" (custom themes and looks; a
+look exports both palettes as common + `<light>`/`<dark>`); Layout Manager Export XML can embed the
+layout's bound custom theme ("Include the layout's custom theme in the file"), keeping the
+`theme=` binding so another device falls back to the embedded copy. Round trip XML → custom
+theme → XML returns the same spec (`LayoutEmbeddedThemeTest`, instrumented
+`LayoutThemeSaveAsCustomComposeTest`). The Theme Creator's "Keyboard Look" section
+(`activities/ThemeLookEditor.kt`, rules `theme/ThemeSpecEdits.kt`) edits every extension field;
+the preview renders through `ThemeProvider.themeForCustom`.
+
+Tests: pure `ThemeSpecTest`, `KeyStyleTest`, `EmbeddedThemesTest`, `ThemeSpecEditsTest`,
+`LayoutThemeBindingTest`, `CustomThemeBackupTest`; mock `ThemeSpecRenderTest`,
+`LayoutXmlStylingTest`, `LayoutEmbeddedThemeTest`; instrumented
+`LayoutXmlThemeKeyboardInstrumentedTest` (the example in the real IME, rendered pixels),
+`LayoutThemeSaveAsCustomComposeTest`, `LayoutManagerLandscapeAddLayoutTest`.
+
 ### CTC swipe eligibility
 
 A layout can reach the CTC engine only when all of these checks pass:

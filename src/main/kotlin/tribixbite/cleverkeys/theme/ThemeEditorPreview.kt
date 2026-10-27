@@ -45,6 +45,14 @@ object ThemeEditorPreview {
     /** The renderer theme for [scheme] — identical to an applied custom theme's. */
     fun themeFor(context: Context, scheme: KeyboardColorScheme): Theme = Theme(context, scheme)
 
+    /**
+     * The renderer theme for [scheme] with a version-2 [extension] (geometry, hints, preview…):
+     * built by ThemeProvider exactly as it renders the saved custom theme. Null extension = [themeFor].
+     */
+    fun themeFor(context: Context, scheme: KeyboardColorScheme, extension: ThemeSpec?): Theme =
+        if (extension == null) themeFor(context, scheme)
+        else ThemeProvider.getInstance(context).themeForCustom(CustomTheme(id = "preview", name = "", colors = scheme, extension = extension))
+
     /** The trail colour the keyboard uses for [scheme] once applied (pref-sync format). */
     fun trailColorFor(scheme: KeyboardColorScheme): Int = scheme.swipeTrail.toArgb()
 }
@@ -74,6 +82,7 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
     private val keyboardView: Keyboard2View
     private var suggestionBar: SuggestionBar? = null
     private var scheme: KeyboardColorScheme? = null
+    private var extension: ThemeSpec? = null
     private var sampleWords: List<String> = emptyList()
     private var trailWord: String = ""
     private var scale = 1f
@@ -106,14 +115,15 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
      * [rawSampleWords] is the localized comma-separated sample list
      * ([ThemePreviewScene.sampleWords]); the first word also shapes the sample trail.
      */
-    fun bind(colors: KeyboardColorScheme, rawSampleWords: String) {
+    fun bind(colors: KeyboardColorScheme, rawSampleWords: String, extension: ThemeSpec? = null) {
         val words = ThemePreviewScene.sampleWords(rawSampleWords)
-        if (colors == scheme && words == sampleWords) return
+        if (colors == scheme && words == sampleWords && extension == this.extension) return
         scheme = colors
+        this.extension = extension
         sampleWords = words
         trailWord = words.firstOrNull().orEmpty()
 
-        val theme = ThemeEditorPreview.themeFor(context, colors)
+        val theme = ThemeEditorPreview.themeFor(context, colors, extension)
         currentTheme = theme
         keyboardView.applyPreviewTheme(theme, ThemeEditorPreview.trailColorFor(colors))
 
@@ -253,7 +263,7 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
  * The height cap keeps the scaled keyboard compact in landscape and on short screens.
  */
 @Composable
-fun ThemeKeyboardPreview(colors: KeyboardColorScheme, modifier: Modifier = Modifier) {
+fun ThemeKeyboardPreview(colors: KeyboardColorScheme, modifier: Modifier = Modifier, extension: ThemeSpec? = null) {
     val description = stringResource(R.string.theme_keyboard_preview_desc)
     val sampleWords = stringResource(R.string.theme_preview_sample_words)
     val screenHeightDp = LocalConfiguration.current.screenHeightDp
@@ -262,7 +272,7 @@ fun ThemeKeyboardPreview(colors: KeyboardColorScheme, modifier: Modifier = Modif
         factory = { ctx -> ThemeKeyboardPreviewView(ctx) },
         update = { view ->
             view.contentDescription = description
-            view.bind(colors, sampleWords)
+            view.bind(colors, sampleWords, extension)
         },
         modifier = modifier
             .fillMaxWidth()

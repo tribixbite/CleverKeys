@@ -64,6 +64,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Multi-Language Typing](./layouts/multi-language.md) | Bilingual swipe typing |
 | [Language Packs](./layouts/language-packs.md) | Import additional dictionaries |
 | [Custom Layouts](./layouts/custom-layouts.md) | Create your own layout XML |
+| [Layout XML Reference](./layouts/layout-xml-reference.md) | Every element and attribute, the layout's own theme, per-key styling |
 
 ### 6. Settings Reference (P1)
 | Page | Description |

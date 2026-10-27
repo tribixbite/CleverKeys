@@ -29,6 +29,19 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Layouts can bring their own look.** A layout file can now define its whole appearance: a
+  `<theme>` with every colour of the Theme Creator plus Enter/action/modifier colours, key gaps,
+  corners, shadows, hints, a key-press preview, and separate light- and dark-mode colours — anything
+  left out comes from your theme — and per-row or per-key colours, borders and gaps
+  (`key_background`, `key_border_color`, `key_label_color`, …). The keyboard switches to it with
+  the layout on a space-bar swipe; the layout's **Theme** chip can still pick another theme or
+  **Follow global theme**. Where you touch and how swipe typing reads the keys never change.
+  **Save theme as custom theme** in Layout Manager puts a layout's theme into Theme Manager, where
+  the Theme Creator's new **Keyboard Look** section edits all of it; **Export as layout XML** in
+  Theme Manager turns a custom theme or familiar look back into a `<theme>`, and Export XML can
+  include a layout's custom theme in the file. New wiki page: Layout XML Reference, with a complete
+  example. Custom themes saved this way load in older versions with their colours only.
+- **Add Layout in landscape**: the Predefined list now fills the dialog (it showed two entries).
 - **Key spacing and borders per layout.** Layout Manager has a **Key spacing & borders** chip on
   every layout: set its own horizontal and vertical key gap, border on/off, corner radius and
   line width, or keep **Use global setting** for any of them — Settings → Appearance stays the

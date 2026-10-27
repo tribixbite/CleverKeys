@@ -149,6 +149,7 @@ CleverKeys includes a powerful theme creator for custom colors. Every field in t
 | **Ripple Effect** | Press feedback color on suggestion-bar chips and buttons |
 | **Suggestion Bar** | Suggestion Text, Suggestion Background, High Confidence accent |
 | **Background** | Keyboard Background, Keyboard Surface (elevated panels) |
+| **Keyboard Look** (optional) | Look colors (Enter and action keys, function-key labels, Caps Lock label, key shadow, suggestion separator, pop-ups), separate Light Mode and Dark Mode colors, key shape (gaps, corner radius, outline, shadow, label size and weight), gesture hints, key-press preview and key roles (pill-shaped keys, emoji key like a letter, function characters, wallpaper colors). Anything left on **Use keyboard setting** / **Not set** follows your settings. |
 
 ### Creating Custom Theme
 
@@ -157,6 +158,14 @@ CleverKeys includes a powerful theme creator for custom colors. Every field in t
 3. Tap each color element to customize
 4. Use the color picker or enter hex codes
 5. The preview at the top of the editor is the real keyboard, scaled down and read-only: every color change re-renders it immediately. It shows Shift active, a locked modifier (Ctrl on the default layout), modifier and action keys at rest, sub-labels, the suggestion bar and a sample swipe trail, using your own opacity, border and swipe-trail settings
+
+### From a layout, and back
+
+A layout file can carry its own theme (see the [Layout XML Reference](../layouts/layout-xml-reference.md)).
+In **Layout Manager**, **Save theme as custom theme** on such a layout adds it here under Custom,
+named after the layout, with everything it defined; open it in the creator to change it. The
+share button on a custom theme or a familiar look, **Export as layout XML**, saves it as a
+`<theme>` element you can paste into any layout.
 
 > [!NOTE]
 > Editing the theme you're currently using updates the live keyboard immediately — no restart needed. Saved edits to a non-active custom theme take effect when you select it.

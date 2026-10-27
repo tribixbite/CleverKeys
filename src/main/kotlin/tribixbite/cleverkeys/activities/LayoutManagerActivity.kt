@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -256,7 +258,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                                     showDeleteConfirmDialog = index
                                 }
                             },
-                            reorderState = reorderState
+                            reorderState = reorderState,
+                            onSaveTheme = embeddedThemeOf(layoutWithId.layout)?.let { spec ->
+                                { saveLayoutThemeAsCustom(context, themeProvider, prefs, layoutWithId.layout, spec) }
+                            }
                         )
                     }
                 }
@@ -365,9 +370,19 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                 globalThemeName = globalThemeName,
                 isAvailable = themeProvider::isAvailable,
                 onDismiss = { showThemePickerFor = null },
+                onSelectOwn = {
+                    // No user choice: the layout's own <theme> renders (no XML id beats it here).
+                    layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                        this[index] = LayoutWithId(id = entry.id, layout = entry.layout.withTheme(null))
+                    }
+                    saveLayouts(prefs, getLayoutsForSaving())
+                    showThemePickerFor = null
+                },
                 onSelect = { choice ->
                     val updated = entry.layout.withTheme(
-                        LayoutThemeBinding.entryValueFor(choice, declaredThemeOf(entry.layout))
+                        LayoutThemeBinding.entryValueFor(
+                            choice, declaredThemeOf(entry.layout), hasEmbedded = embeddedThemeOf(entry.layout) != null,
+                        )
                     )
                     layoutsWithIds = layoutsWithIds.toMutableList().apply {
                         this[index] = LayoutWithId(id = entry.id, layout = updated)
@@ -454,7 +469,9 @@ fun LayoutItem(
     onKeyGeometry: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    reorderState: ReorderableLazyListState
+    reorderState: ReorderableLazyListState,
+    /** The layout XML carries its own `<theme>`: offer "Save theme as custom theme". */
+    onSaveTheme: (() -> Unit)? = null,
 ) {
     val layoutLabel = when (layout) {
         is LayoutsPreference.NamedLayout -> {
@@ -587,6 +604,20 @@ fun LayoutItem(
                         )
                     }
                 )
+
+                // A layout with its own <theme>: store it as a custom theme (Theme Manager / Creator).
+                if (onSaveTheme != null) {
+                    AssistChip(
+                        onClick = onSaveTheme,
+                        label = {
+                            Text(
+                                text = stringResource(R.string.layout_theme_save_custom),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    )
+                }
             }
 
             // Action buttons
@@ -667,6 +698,7 @@ private fun layoutThemeLabel(
     layout: LayoutsPreference.Layout,
     themeName: (String) -> String
 ): String {
+    if (usesEmbeddedTheme(layout)) return stringResource(R.string.layout_theme_own)
     val bound = layoutThemeBindingOf(layout)
         ?: return stringResource(R.string.layout_theme_follow_global)
     return if (layout.theme == null) {
@@ -755,23 +787,43 @@ fun AddLayoutDialog(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    // Saga 2026-10-27: in landscape the dialog was 80 % of a short screen and a title, the tabs
+    // and a separate Cancel row left the Predefined list two entries high. Now the dialog takes
+    // the screen's own size (not the platform dialog's), Cancel shares the title row, and the
+    // list gets every remaining pixel (LayoutManagerLandscapeAddLayoutTest).
+    val screen = androidx.compose.ui.platform.LocalConfiguration.current
+    val landscape = screen.screenWidthDp > screen.screenHeightDp
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.8f),
+                .fillMaxWidth(if (landscape) 0.75f else 0.92f)
+                .widthIn(max = 640.dp)
+                .height((screen.screenHeightDp * if (landscape) 0.92f else 0.8f).dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             )
         ) {
             Column {
-                // Title
-                Text(
-                    text = stringResource(R.string.layout_manager_add),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
-                )
+                // Title, with Cancel beside it (no footer row taking list height)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.layout_manager_add),
+                        style = if (landscape) MaterialTheme.typography.titleLarge else MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                }
 
                 // Tabs
                 TabRow(selectedTabIndex = selectedTab) {
@@ -795,8 +847,8 @@ fun AddLayoutDialog(
                 // Content
                 when (selectedTab) {
                     0 -> {
-                        // System layout option
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        // System layout option (scrolls on a short landscape screen)
+                        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                             Text(
                                 text = stringResource(R.string.layout_manager_system_desc),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -826,7 +878,7 @@ fun AddLayoutDialog(
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                                            .padding(horizontal = 16.dp, vertical = 3.dp)
                                             .clickable { onSelectNamed(name) },
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -835,7 +887,7 @@ fun AddLayoutDialog(
                                         Text(
                                             text = displayName,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            modifier = Modifier.padding(16.dp)
+                                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
                                         )
                                     }
                                 }
@@ -844,7 +896,7 @@ fun AddLayoutDialog(
                     }
                     2 -> {
                         // Custom layout option
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Column(modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)) {
                             Text(
                                 text = stringResource(R.string.layout_manager_custom_desc),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -860,17 +912,7 @@ fun AddLayoutDialog(
                     }
                 }
 
-                // Cancel button
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.common_cancel))
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -936,11 +978,19 @@ fun CustomLayoutEditorDialog(
         }
     }
 
+    // Export can embed the layout's effective CUSTOM theme as its <theme> element, so the file
+    // carries the appearance to a device that does not have that theme (LayoutThemeTransfer).
+    val themeProvider = remember { ThemeProvider.getInstance(context) }
+    val boundCustomTheme = LayoutThemeBinding.effective(exportThemeEntry, LayoutThemeBinding.declaredThemeOfXml(xmlText))
+        ?.takeIf { it.startsWith("custom_") && themeProvider.isAvailable(it) }
+    var includeTheme by remember { mutableStateOf(true) }
+
     // Validate XML (the empty-input message is resolved here: LaunchedEffect is not composable)
     val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)
     val invalidLanguageError = stringResource(R.string.layout_language_xml_invalid)
     val invalidThemeError = stringResource(R.string.layout_theme_xml_invalid)
     val invalidKeyGeometryError = stringResource(R.string.layout_key_geometry_xml_invalid)
+    val invalidStyleError = stringResource(R.string.layout_style_xml_invalid)
     LaunchedEffect(xmlText) {
         validationError = try {
             if (xmlText.isNotBlank()) {
@@ -957,6 +1007,8 @@ fun CustomLayoutEditorDialog(
                         invalidKeyGeometryError.format(
                             LayoutKeyGeometry.xmlProblems(parsed.declared_key_geometry).joinToString()
                         )
+                    // <theme>, <row> and <key> styling values loading would silently drop.
+                    parsed.style_problems.isNotEmpty() -> invalidStyleError.format(parsed.style_problems.joinToString())
                     else -> null
                 }
             } else {
@@ -1021,12 +1073,28 @@ fun CustomLayoutEditorDialog(
                             val themed = LayoutKeyGeometry.applyToXml(
                                 LayoutThemeBinding.applyToXml(xmlText, exportThemeEntry), exportKeyGeometryEntry,
                             )
-                            pendingExportContent = XmlLayoutExporter.injectMappings(themed, mappings)
+                            val withTheme = if (includeTheme && boundCustomTheme != null) {
+                                tribixbite.cleverkeys.theme.LayoutThemeTransfer.layoutXmlWithCustomTheme(themeProvider, themed, boundCustomTheme)
+                            } else themed
+                            pendingExportContent = XmlLayoutExporter.injectMappings(withTheme, mappings)
                             exportLauncher.launch("custom_layout.xml")
                         },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text(stringResource(R.string.layout_manager_export_xml))
+                    }
+                }
+
+                if (boundCustomTheme != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(checked = includeTheme, onCheckedChange = { includeTheme = it })
+                        Text(
+                            text = stringResource(R.string.layout_manager_export_include_theme),
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
                 }
 
@@ -1070,6 +1138,29 @@ fun CustomLayoutEditorDialog(
 }
 
 // Helper functions
+
+/**
+ * Layout Manager → "Save theme as custom theme": [spec] (the layout's `<theme>`) becomes a custom
+ * theme named after the layout in THE provider's store (theme-system skill rule 4), so it is
+ * listed in Theme Manager and opens in the Theme Creator. Unset colours are filled from the global
+ * theme the layout inherited them from.
+ */
+private fun saveLayoutThemeAsCustom(
+    context: android.content.Context,
+    provider: ThemeProvider,
+    prefs: android.content.SharedPreferences,
+    layout: LayoutsPreference.Layout,
+    spec: tribixbite.cleverkeys.theme.ThemeSpec,
+) {
+    val name = (layout as? LayoutsPreference.CustomLayout)?.parsed?.name?.takeIf { it.isNotBlank() }
+        ?: spec.name
+        ?: context.getString(R.string.layout_manager_custom_layout_name)
+    val global = prefs.getString("theme", null) ?: ThemeProvider.FALLBACK_THEME_ID
+    val saved = tribixbite.cleverkeys.theme.LayoutThemeTransfer.saveAsCustomTheme(provider, spec, name, global)
+    val message = if (saved != null) context.getString(R.string.layout_theme_saved_custom, saved.name)
+    else context.getString(R.string.layout_theme_save_full, tribixbite.cleverkeys.theme.CustomThemeManager.MAX_CUSTOM_THEMES)
+    android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
+}
 
 private fun saveLayouts(
     prefs: android.content.SharedPreferences,

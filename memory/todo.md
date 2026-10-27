@@ -620,7 +620,24 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     2.0 % / custom border off); Colemak removed, layouts back to [System], CleverKeys default.
     Open: the Saga now runs this build; a light-mode / border-OFF device pass; the Add Layout
     dialog's Predefined list does not scroll in landscape on the Saga (pre-existing, only Colemak
-    and QWERTY US reachable).
+    and QWERTY US reachable) — FIXED 2026-10-28, item 27.
+27. [ ] agent, 2026-10-28 (maintainer: "fully define a custom layout incl. custom theme with
+    per-key gap and background/border from an XML config file — and save/export theme from one";
+    "export theme meaning it will show up in theme editor as a custom theme"). BUILT: layout
+    `<theme>` (every DIY + look colour, `<light>`/`<dark>`, geometry, hints, pills, preview,
+    dynamic colour; partial over the global theme; precedence user > XML `theme=` > `<theme>` >
+    global), per-key/row styling (`KeyStyle`; key > row > per-layout > XML `key_*` > look >
+    global; frames centred on cells, swipe/hit-test unchanged), custom themes format version 2
+    (`extension`, backups keep it), Layout Manager "Save theme as custom theme", Theme Manager
+    "Export as layout XML", Export XML can embed the bound custom theme, Theme Creator "Keyboard
+    look" section, Add Layout landscape fix; strings in 22 locale files; wiki
+    `layouts/layout-xml-reference.md` + example `layouts/examples/harbour.xml`; spec "Layout
+    themes and per-key styling", theme skill rule 15. Instrumented on emulator.wtf API 34 (red
+    run before the UI: landscape "saw 2", save button absent). Open (device): the example on a
+    phone in light AND dark mode (variants, pill Enter, bubble preview, pressed Enter colours),
+    Save → Theme Manager → Creator edit → keyboard, Theme Manager export on a look and paste
+    into a new layout, Add Layout in landscape on the Saga, a Theme Creator pass of every new
+    control (sliders, chips, variant rows), Persian/RTL rendering of the new strings.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

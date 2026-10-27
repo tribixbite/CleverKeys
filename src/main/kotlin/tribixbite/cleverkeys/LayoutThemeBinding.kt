@@ -89,12 +89,17 @@ object LayoutThemeBinding {
      * XML; following the global theme over an XML default is stored explicitly as [UNBOUND].
      * With no binding at all the entry stays null, keeping the stored preference byte-identical
      * to a build without this feature.
+     *
+     * [hasEmbedded]: the layout XML carries its own `<theme>`; following the global theme must
+     * then be stored as [UNBOUND] too (a null entry would render the embedded theme). Choosing
+     * the embedded theme itself ("Layout's own theme", offered only when no `theme=` id is
+     * declared, which would win over it) is the null entry: no user choice.
      */
-    fun entryValueFor(choice: String?, declared: String?): String? {
+    fun entryValueFor(choice: String?, declared: String?, hasEmbedded: Boolean = false): String? {
         val xmlDefault = normalizeId(declared)
         val picked = normalizeId(choice)
         return when {
-            picked == null -> if (xmlDefault != null) UNBOUND else null
+            picked == null -> if (xmlDefault != null || hasEmbedded) UNBOUND else null
             picked == xmlDefault -> null
             else -> picked
         }

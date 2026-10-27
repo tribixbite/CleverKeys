@@ -294,6 +294,35 @@ fun ThemeSettingsScreen(
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var editingTheme by remember { mutableStateOf<CustomTheme?>(null) }
+
+    // "Export as layout XML": a custom theme or look as a <theme> element (LayoutThemeTransfer),
+    // ready to paste into a layout, written through the Storage Access Framework.
+    var pendingThemeXml by remember { mutableStateOf<String?>(null) }
+    val exportThemeLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/xml")
+    ) { uri ->
+        val content = pendingThemeXml
+        pendingThemeXml = null
+        if (uri != null && content != null) {
+            try {
+                LayoutXmlTransfer.write({ context.contentResolver.openOutputStream(uri) }, content)
+            } catch (e: Exception) {
+                android.util.Log.w(LayoutXmlTransfer.TAG, "Theme XML export failed", e)
+                android.widget.Toast.makeText(
+                    context,
+                    LayoutXmlTransfer.failureMessage(R.string.theme_export_xml_failed, e, ResourcesResultText(context.resources)),
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            }
+        }
+    }
+    fun exportThemeXml(themeId: String, name: String) {
+        val xml = tribixbite.cleverkeys.theme.LayoutThemeTransfer.themeXml(ThemeProvider.getInstance(context), themeId, name)
+            ?: return
+        pendingThemeXml = xml + "\n"
+        val fileName = name.replace(Regex("[^A-Za-z0-9._-]+"), "_").trim('_').ifEmpty { "theme" }
+        exportThemeLauncher.launch("$fileName-theme.xml")
+    }
     var showDeleteConfirm by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -396,7 +425,8 @@ fun ThemeSettingsScreen(
                         onSelect = {
                             currentThemeId = lookTheme.id
                             onThemeSelected(lookTheme.id, lookName)
-                        }
+                        },
+                        onExport = { exportThemeXml(lookTheme.id, lookName) }
                     )
                 }
             }
@@ -424,7 +454,8 @@ fun ThemeSettingsScreen(
                             onThemeSelected(customId, theme.name)
                         },
                         onEdit = { editingTheme = theme },
-                        onDelete = { showDeleteConfirm = theme.id }
+                        onDelete = { showDeleteConfirm = theme.id },
+                        onExport = { exportThemeXml(customId, theme.name) }
                     )
                 }
             }
@@ -585,7 +616,9 @@ fun ThemeCard(
     isSelected: Boolean = false,
     onSelect: () -> Unit,
     onEdit: (() -> Unit)? = null,
-    onDelete: (() -> Unit)? = null
+    onDelete: (() -> Unit)? = null,
+    /** "Export as layout XML" (custom themes and looks); null hides the button. */
+    onExport: (() -> Unit)? = null
 ) {
     val borderColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
@@ -629,8 +662,18 @@ fun ThemeCard(
                     }
                 }
 
-                if (isCustom) {
+                if (isCustom || onExport != null) {
                     Row {
+                        onExport?.let {
+                            IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
+                                Icon(
+                                    Icons.Default.Share,
+                                    contentDescription = stringResource(R.string.theme_export_xml),
+                                    tint = Color(colorScheme.keyLabel.toArgb()),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                         onEdit?.let {
                             IconButton(onClick = it, modifier = Modifier.size(32.dp)) {
                                 Icon(
@@ -838,6 +881,8 @@ fun ThemeCreatorDialog(
     var themeName by remember { mutableStateOf(initialTheme?.name ?: defaultThemeName) }
     // Use priority: initialTheme colors > defaultColors > darkKeyboardColorScheme
     var colors by remember { mutableStateOf(initialTheme?.colors ?: defaultColors ?: darkKeyboardColorScheme()) }
+    // The version-2 "Keyboard look" part (geometry, hints, variants…); empty = a version-1 theme.
+    var extension by remember { mutableStateOf(initialTheme?.extension ?: tribixbite.cleverkeys.theme.ThemeSpec()) }
     var selectedColorAttribute by remember { mutableStateOf<ColorAttribute?>(null) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -862,7 +907,11 @@ fun ThemeCreatorDialog(
                                 val theme = CustomTheme(
                                     id = initialTheme?.id ?: java.util.UUID.randomUUID().toString(),
                                     name = themeName,
-                                    colors = colors
+                                    colors = colors,
+                                    createdAt = initialTheme?.createdAt ?: System.currentTimeMillis(),
+                                    // Saving keeps the look part (a theme saved from a layout keeps
+                                    // its geometry when only a colour is edited).
+                                    extension = tribixbite.cleverkeys.theme.ThemeSpecEdits.stored(extension),
                                 )
                                 onSave(theme)
                             }
@@ -900,6 +949,7 @@ fun ThemeCreatorDialog(
                     // compact ThemePreview stays on the theme-list cards only.
                     ThemeKeyboardPreview(
                         colors = colors,
+                        extension = tribixbite.cleverkeys.theme.ThemeSpecEdits.stored(extension),
                         modifier = Modifier.clip(RoundedCornerShape(8.dp))
                     )
 
@@ -984,6 +1034,14 @@ fun ThemeCreatorDialog(
                     )
                     ColorAttributeRow(stringResource(R.string.theme_color_keyboard_background), colors.keyboardBackground, ColorAttribute.KEYBOARD_BACKGROUND) { selectedColorAttribute = it }
                     ColorAttributeRow(stringResource(R.string.theme_color_keyboard_surface), colors.keyboardSurface, ColorAttribute.KEYBOARD_SURFACE) { selectedColorAttribute = it }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    // Everything a layout <theme> can carry beyond the 17 colours (version 2).
+                    ThemeLookEditor(
+                        extension = extension,
+                        baseColors = tribixbite.cleverkeys.theme.ThemeSpecs.schemeColors(colors),
+                        onChange = { extension = it },
+                    )
                 }
             }
         }
