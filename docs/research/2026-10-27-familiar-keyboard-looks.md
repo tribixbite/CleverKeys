@@ -396,7 +396,7 @@ The looks take the values above with these deliberate choices and deviations:
   auto-replace blue `#387AFF`; light hint darkened from `#908F92` to `#7E7E82` for 3:1 on the
   bar; no separators (low-confidence data).
 - Suggestion-bar text uses the label colour for every chip (SwiftKey's grey side candidates
-  are below 4.5:1 on its background and CleverKeys' bar has no centre slot).
+  are below 4.5:1 on its background). Since §10 the looks' bar has the products' centre slot.
 - **Legends and shapes (after the lead review, 2026-10-27).** The products' defaults on the
   Pixel reference screenshots: Gboard draws only 1–0 over the top row and pill-shaped ?123 and
   Enter; SwiftKey 9.13 draws no hints and has no number row; Samsung's "Alternative
@@ -445,3 +445,35 @@ colour, with corner hints kept clear of rounded and pill corners.
 **What CleverKeys cannot reproduce.** A preview cannot rise above the keyboard window, so a
 top-row preview is drawn lower than Gboard's or iOS's; the iOS balloon's S-curve neck is
 approximated by a rounded neck rectangle; Gboard's "…" marker is not drawn.
+
+---
+
+## 10. Follow-up 2026-10-27 (evening): the suggestion bar's arrangement
+
+All four products show a fixed row of **three equal slots** above the keys, not a scrolling list.
+
+| Product | Slots | Best candidate | Typed word | Separators | Confidence |
+|---|---|---|---|---|---|
+| Gboard | 3 | centre | left slot while a correction is pending (verbatim, no quotes) | thin vertical lines (`outlineVariant`, §2a) | medium (Pixel references, §9) |
+| SwiftKey | 3 | centre, bold; "press the spacebar to insert the middle prediction" | "the left hand or middle prediction … will contain your verbatim text" | none (§3a) | high [7] |
+| Samsung Keyboard | 3 | centre (auto-replace candidate in blue, §4) | left | none in the theme (§4) | low (no device capture) |
+| iOS (QuickType) | 3 | centre (the autocorrection, on a white bubble in iOS 18) | the leading (left) suggestion, **in the locale's quotation marks** ("“teh”"), so the user can keep it | thin lines (§1) | medium [8] |
+
+[7] Microsoft Support, "How does the Microsoft SwiftKey Prediction Bar work?" (updated
+2026-09-14). [8] KeyboardKit, "Improved autocomplete" (2023-03-11): "add the currently typed
+word as a leading suggestion, wrapped in locale-specific quotation marks like in the native iOS
+keyboards".
+
+**What CleverKeys ships** (`theme/LookBar.kt`, `KeyboardLook.bar`): every look has a
+`LookBar(slots = 3)` — the best candidate in the centre, the typed word (or the "+word" tap-to-add
+chip of an unknown word) left of it, then the rest right / left outwards; iOS- and iOS 18-style
+quote the typed word (`quoteTyped`) with the locale's quotation marks. Separators keep following
+the look's bar-separator colour (Gboard and iOS draw them, SwiftKey and Samsung none) and are drawn
+only between two filled slots. "Best" is the entry the bar highlights — the word space commits
+(`BarHighlightPlanner`) — or the top prediction when space would keep a typed word the bar does not
+list; the highlight colour still marks only what space commits. It is drawing only: the bar's list,
+its ranking order, the highlight index, what a slot's tap commits, swipe alternatives and the
+"Prefer … when swiping?" / "Add to dictionary?" prompts (shown as before, not arranged) are
+unchanged, and TalkBack reads the slots left to right as drawn. Entries past the third are not shown
+on a look (the products show three). Every non-look theme keeps CleverKeys' scrolling chips. Layout
+`<theme>` and custom themes carry it as `bar_slots` / `bar_centre` / `bar_quote_typed` (JSON `bar`).

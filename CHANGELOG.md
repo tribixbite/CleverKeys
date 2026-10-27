@@ -119,8 +119,12 @@ editor that used to be listed here already ship in 2.0.)
   key-press preview (iOS balloon, Gboard bubble, SwiftKey column, Samsung plate; Appearance →
   **Key-press preview on familiar looks** turns it off) and styles the long-press popup to
   match. Gboard-style follows your wallpaper colours on Android 12 and later, as Gboard does,
-  and draws its emoji key like a letter key. Drawn with CleverKeys' own keys and the system
-  font; not affiliated with Apple, Google, Microsoft or Samsung.
+  and draws its emoji key like a letter key. The suggestion bar also follows the keyboard: three
+  equal slots with the best suggestion — the one space types — in the centre and the word you
+  typed on the left (in quotation marks on iOS-style), instead of CleverKeys' scrolling list;
+  tapping a slot types that slot's word, and other themes keep the scrolling list. Drawn with
+  CleverKeys' own keys and the system font; not affiliated with Apple, Google, Microsoft or
+  Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard
   entry editor (and tag, clipboard-search, emoji-search and GIF-search fields) instead of the
   app behind the panel. Bar alternatives replace the swiped word in the field, backspace right
@@ -440,6 +444,22 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- With **Show gesture hints on familiar looks** on, the small labels along the bottom of the
+  narrow emoji / comma key ("ABC" and "GIF") no longer run into each other: labels sharing a
+  key's top or bottom edge shrink together until they fit.
+- Theme Manager shows a custom theme with separate light and dark colours in the colours of the
+  current mode (it always showed the light ones). The Theme Creator preview no longer borrows the
+  colours of a layout that styles itself; it uses your first layout only when it is a plain one,
+  otherwise QWERTY.
+- A custom theme saved from Gboard-style or Samsung-style keeps how a one-shot Shift looks (the
+  function-key colour, Samsung's blue arrow); the Theme Creator's Keyboard Look section shows
+  them as "Latched Shift Key" and "Latched Shift Label".
+- Space no longer turns an unfinished word into a different one: typing `tomorr` and pressing
+  space used to commit `timor`, `becau` became `beau`. A typed word that a common word starts
+  with is now left as typed when that is about as likely as the correction (Settings →
+  Auto-Correction → Ranking & Tuning → "Unfinished Word Cost"; Off restores the old behaviour).
+  Close corrections still happen (`caf` → car, `resta` → rest). Measured on held-out data: 43 %
+  of such rewrites avoided, 7 of 4,883 real-typo corrections lost.
 - The keyboard keeps its height after a light/dark (night-mode) switch or a rotation. On
   Android 15 and newer it came back about a tenth shorter until the keyboard restarted, because
   its size followed a screen height that Android reports differently after the first change. It

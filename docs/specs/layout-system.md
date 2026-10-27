@@ -424,6 +424,23 @@ the accent/neutral tonal shades on 31–33). Below API 31, or when the mapped pa
 colours, so `KeyboardViewThemeTracker` sees a wallpaper change as a colour change and the next
 keyboard show re-inflates (rule 6 of the theme skill).
 
+**Suggestion-bar arrangement** (`KeyboardLook.bar`, `theme/LookBar.kt`, 2026-10-27; research
+§10). The four products show three equal slots with the best candidate in the centre. While a
+look is effective, `SuggestionBar` arranges its entries with `LookBarArrangement.arrange`:
+the BEST entry — the highlighted one, i.e. what space commits (`BarHighlightPlanner`), else the
+first word — takes the centre slot; the TYPED entry (the word equal to the typed word the
+typing path passes, or the "+word" tap-to-add chip) takes the slot left of it when it is not the
+best, quoted with the locale's quotation marks on iOS-style and iOS 18-style (`quoteTyped`); the
+rest follow in ranking order right / left outwards; entries past the slot count are not shown.
+Separators keep following `barSeparator` and are drawn only between two filled slots. The
+arrangement is DRAWING ONLY: pool view *i* still renders and commits entry *i*, the list,
+scores, metas, highlight index and every accessor keep ranking order, and children are added in
+visual order (TalkBack reads left to right). Prompts ("Add to dictionary?", "Prefer … when
+swiping?" with "Don't ask") are not arranged. Every non-look theme (no `lookBar`) keeps the
+scrolling chips, best first. A layout `<theme>` / custom theme carries it as `bar_slots` (1–5),
+`bar_centre`, `bar_quote_typed` (JSON `bar`). Tests: `theme/LookBarArrangementTest` (pure),
+`LookSuggestionBarInstrumentedTest`.
+
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,
 8 dp corners, no shadow, blue editor-action key), `look_gboard` (Material You on the default

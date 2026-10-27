@@ -649,6 +649,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     phone: night mode NO (was yes); the four style layouts still added (was System / Dvorak /
     QWERTY US, current QWERTY US); the Chrome test tab open (7 tabs before); release `4fdd840a`
     installed. Already restored: subkey popover OFF, look hints OFF; font_scale untouched (1.15).
+    ROUND 4 (2026-10-27 evening, agent; NO PHONES — LAN down; emulator.wtf + JVM only):
+    SUGGESTION BAR per look `9828a99d`: `LookBar` (3 slots; best = highlighted = what space commits,
+    centred; typed word or "+word" chip left of it, quoted on iOS-/iOS 18-style; separators by
+    the look's colour between filled slots; prompts unarranged; non-look themes unchanged).
+    Drawing only — ranking order, highlight index, space commit and the commit path untouched;
+    each slot taps its own entry (instrumented). Research §10, spec "Keyboard looks", theme skill
+    rule 16. "ABC" × "GIF" hint overlap FIXED `35fe062a` (`SubLabelSizing.bandScale`; red then green
+    on emulator.wtf). Theme Manager custom-card light colours in dark mode and the Theme Creator
+    preview drawing a styled layout FIXED `58e86ea0` (item 27 findings). Latched Shift colours now
+    spec roles `latched_key` / `latched_label` `9828a99d` (the 4fdd840a TODO; editor labels in 22
+    locale files, machine-drafted, native review owed). Showcase `build/oct27-bar/`
+    (`{gboard,swiftkey,ios,samsung}-{light,dark}.png`, `grid-{light,dark}.png`; not in git).
+    Full suites: pure 3444 (1 failure fixed: androidTest harbour copy) and mock 1611 (15 bar-stub
+    failures fixed: 5-argument call), reruns green. Open: device pass of the bar (taps, TalkBack
+    order, landscape width, long words ellipsize); entries past the third are not shown on a
+    look; the Theme Creator does not edit the bar arrangement (XML / JSON only).
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key

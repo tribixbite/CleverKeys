@@ -150,6 +150,22 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    Prefs are never written.
    Tests: `LayoutKeyGeometryTest` (pure), `LayoutKeyGeometryConfigTest` (mock).
 
+16. **A look arranges the suggestion bar** (2026-10-27, `theme/LookBar.kt`, research §10, spec
+   "Keyboard looks"). `KeyboardLook.bar` / `ThemeSpec.bar` → `Theme.lookBar` (null on every
+   non-look theme = scrolling chips). `LookBarArrangement.arrange` (pure) maps the bar's entries
+   (RANKING order) to visual slots: best (= highlighted = what space commits, else the first
+   word) in the centre, the typed word or "+word" chip left of it (quoted on iOS), the rest
+   outwards; prompts are never arranged. DRAWING ONLY — never reorder `currentSuggestions`,
+   scores, metas or the highlight index: pool view *i* taps entry *i* and children are added in
+   visual order. The typing path passes the typed word (`setSuggestionsWithScores(…, typedWord)`).
+   `SuggestionBar.onMeasure` gives the slots the scroll view's width. Separators stay a colour
+   (`barSeparator`), drawn only between filled slots.
+17. **Sublabel bands never overlap** (Pixel 2026-10-27, "ABC" over "GIF"). A key's top (NW, N,
+   NE) and bottom (SW, S, SE) labels share one shrink factor, `SubLabelSizing.bandScale`, measured
+   at their individually fitted sizes (`Keyboard2View.bandScale` / `subLabelPaint`); bands with
+   one label draw exactly as before. Pinned by `SubLabelSizingTest` (pure) and
+   `LookHintOverlapRenderTest` (instrumented, measured ink bounds).
+
 15. **Layouts style themselves** (2026-10-28, spec `docs/specs/layout-system.md` "Layout themes
    and per-key styling", user reference `docs/wiki/layouts/layout-xml-reference.md`). A layout
    XML's `<theme>` is a partial `ThemeSpec` (`theme/ThemeSpec.kt`, codec `ThemeSpecCodec.kt`)
@@ -162,6 +178,10 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    Creator's "Keyboard Look" section edits it; never construct `CustomTheme(id, name, colors)`
    from an edited theme without carrying `extension` (the creator used to). Layout → custom
    theme and theme → `<theme>` XML go through `LayoutThemeTransfer` with THE provider (rule 4).
+   The latched Shift colours are spec roles `LATCHED_KEY` / `LATCHED_LABEL` (`latched_key`,
+   `latched_label`; JSON `latchedKey` / `latchedLabel` in the `look` extension; absent = 0 = the
+   pressed fill, so older custom themes render unchanged): a theme saved from Gboard-/Samsung-
+   style keeps them (2026-10-27, `ThemeSpecRenderTest`).
    Pure model tests can not touch `KeyboardColorScheme` (Compose colours are not on the pure
    classpath): rendering tests are mock tier (`ThemeSpecRenderTest`).
 
@@ -182,6 +202,12 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 - Preview surfaces (`Keyboard2View.applyPreviewTheme(theme, trailColor)`,
   `theme/ThemeEditorPreview.kt`, `ThemePreviewScene.kt`): obtain the `Theme` from
   `ThemeProvider`, so a preview and the keyboard cannot disagree on the light/dark cue again.
+  The preview's LAYOUT is `ThemeEditorPreview.previewLayout`: the user's first layout only when it
+  is plain (`KeyboardData.carriesStyling` false), else built-in QWERTY — a styled layout's row
+  colours were drawn into every theme's preview (Saga 2026-10-27, `ThemePreviewLayoutTest`).
+- Theme Manager cards take `ThemeProvider.getColorScheme(id)` (current mode, variants
+  flattened), never `CustomTheme.colors` — that is only a v2 theme's base (light) scheme
+  (`ThemeManagerCustomCardColoursTest`).
 
 ## File map
 
@@ -213,10 +239,12 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
   `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
   `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip),
   `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest`, `theme/LookDynamicColorsTest`,
-  `theme/LookPopupsTest` (pure), `theme/KeyboardLookRenderTest` (mock), `theme/ThemeSpecTest`,
+  `theme/LookPopupsTest`, `theme/LookBarArrangementTest`, `theme/ThemeManagerCustomCardColoursTest`
+  (pure), `theme/KeyboardLookRenderTest`, `theme/ThemePreviewLayoutTest` (mock), `theme/ThemeSpecTest`,
   `theme/ThemeSpecEditsTest`, `theme/EmbeddedThemesTest`, `KeyStyleTest` (pure),
   `theme/ThemeSpecRenderTest`, `LayoutXmlStylingTest`, `LayoutEmbeddedThemeTest` (mock).
-- Instrumented: `LayoutXmlThemeKeyboardInstrumentedTest`, `LayoutThemeSaveAsCustomComposeTest`,
+- Instrumented: `LookSuggestionBarInstrumentedTest` (also writes the looks showcase PNGs),
+  `LookHintOverlapRenderTest`, `LayoutXmlThemeKeyboardInstrumentedTest`, `LayoutThemeSaveAsCustomComposeTest`,
   `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.
 - Device: a custom-theme visual pass is pure-tier only so far (HANDOFF round 8); Monet (Auto)
