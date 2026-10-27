@@ -395,6 +395,12 @@ class CleverKeysService : InputMethodService(),
         val themeProvider = tribixbite.cleverkeys.theme.ThemeProvider.getInstance(this)
         Config.themeAvailability = themeProvider::isAvailable
 
+        // Keyboard sizing reads the display's full bounds, never this service's displayMetrics
+        // (their height changes after the first configuration change on Android 15+).
+        // Weakly held: the hook is static and must not keep a destroyed service alive.
+        val sizingContext = java.lang.ref.WeakReference(this)
+        Config.screenSize = { sizingContext.get()?.let { ScreenSize.of(it) } }
+
         // Initialize global config for KeyEventHandler
         Config.initGlobalConfig(prefs, resources, _keyeventhandler, foldStateTracker.isUnfolded())
 

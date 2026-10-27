@@ -1615,6 +1615,8 @@ tasks.register('runMockTests', JavaExec) {
     // Per-layout key gaps / border through the layouts serializer (backup blob, hostile values),
     // the XML key_* attributes, Config's current layout and Theme.Computed (beats a look).
     'tribixbite.cleverkeys.LayoutKeyGeometryConfigTest',
+    // 2026-10-27: keyboard sizing reads the stable display size, not displayMetrics (night switch).
+    'tribixbite.cleverkeys.KeyboardSizingScreenTest',
     // 2026-10-28: the worked example through the real parser, swipe-centre invariance, per-key
     // frames; embedded <theme> through prefs, Config, ThemeProvider, save-as-custom and export.
     'tribixbite.cleverkeys.LayoutXmlStylingTest',

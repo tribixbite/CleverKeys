@@ -45,6 +45,42 @@ import android.graphics.Color
  */
 data class SystemBarInsets(val left: Int, val right: Int, val bottom: Int)
 
+/**
+ * The display size the keyboard's percentage settings (height, margins) are measured against.
+ *
+ * Not `Resources.displayMetrics`: on Android 15+ an IME service targeting SDK 34 reads the FULL
+ * display height there when it is created and the height WITHOUT the navigation bar (and on some
+ * devices the status bar) after its first configuration change, so a night-mode switch or a
+ * rotation and back left every row shorter (emulator.wtf API 36: 2400 → 2337 px; Pixel 8 Pro
+ * row pitch 151 → 137 px, 2026-10-27). The maximum window bounds do not depend on that
+ * compatibility path, follow the rotation and the fold state, and are the same at every refresh.
+ */
+data class ScreenSize(val width: Int, val height: Int) {
+    companion object {
+        /**
+         * The current display's full bounds through [context]'s WindowManager (a UI context: the
+         * IME service, an activity), or null when unavailable; callers then fall back to
+         * `Resources.displayMetrics`.
+         */
+        @JvmStatic
+        fun of(context: android.content.Context): ScreenSize? = try {
+            val wm = context.getSystemService(WindowManager::class.java)
+            if (wm == null) {
+                null
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                wm.maximumWindowMetrics.bounds.let { ScreenSize(it.width(), it.height()) }
+            } else {
+                val dm = android.util.DisplayMetrics()
+                @Suppress("DEPRECATION")
+                wm.defaultDisplay.getRealMetrics(dm)
+                ScreenSize(dm.widthPixels, dm.heightPixels)
+            }
+        } catch (e: RuntimeException) {
+            null
+        }?.takeIf { it.width > 0 && it.height > 0 }
+    }
+}
+
 object WindowLayoutUtils {
 
     /**

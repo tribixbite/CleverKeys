@@ -1204,9 +1204,10 @@ class Config private constructor(
         keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
         keyrepeat_backspace_only = _prefs.getBoolean("keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
 
-        // Screen dimensions for percentage calculations
-        screenHeightPixels = dm.heightPixels
-        screenWidthPixels = dm.widthPixels
+        // Screen dimensions for percentage calculations: the stable display size (ScreenSize),
+        // not dm, whose height changes meaning after the IME's first configuration change on
+        // Android 15+ (night-mode switch → shorter keyboard, 2026-10-27).
+        applyScreenSize(dm.widthPixels, dm.heightPixels)
 
         // Margin settings (percentage of screen dimensions)
         margin_bottom = get_percent_pref_oriented_height(
@@ -1702,6 +1703,16 @@ class Config private constructor(
         ) { key, def -> safeGetInt(_prefs, key, def) }
 
     /**
+     * Stores the display size keyboard sizing uses: [screenSize]'s answer, else the given
+     * `Resources.displayMetrics` size (no hook installed, or no WindowManager answer).
+     */
+    internal fun applyScreenSize(displayMetricsWidth: Int, displayMetricsHeight: Int) {
+        val screen = screenSize?.invoke()
+        screenHeightPixels = screen?.height ?: displayMetricsHeight
+        screenWidthPixels = screen?.width ?: displayMetricsWidth
+    }
+
+    /**
      * Get a percentage preference and convert to pixels based on screen height.
      * Used for vertical margins (bottom).
      */
@@ -1757,6 +1768,14 @@ class Config private constructor(
          */
         @Volatile
         var themeAvailability: ((String) -> Boolean)? = null
+
+        /**
+         * The display size keyboard sizing is measured against ([ScreenSize.of] over the IME
+         * service), installed by the service before [initGlobalConfig]. Null (a Settings-only
+         * process, tests) or a null answer falls back to `Resources.displayMetrics`.
+         */
+        @Volatile
+        var screenSize: (() -> ScreenSize?)? = null
 
         @JvmStatic
         fun initGlobalConfig(
