@@ -310,6 +310,39 @@ class ClipboardPagedEditViewTest {
         verify { (widgets.getValue(R.id.clipboard_entry_edit_field) as EditText).maxHeight = 908 }
     }
 
+    /**
+     * Saga 144 landscape, 2026-10-27 (release acd3b79e): the capped field showed two lines and
+     * a vertical drag inside it scrolled the pane's ScrollView instead — the pager and Save /
+     * Cancel went out of sight and the field's own text never moved. A field that can scroll
+     * keeps its drag: it asks its ancestors not to intercept.
+     */
+    @Test
+    fun aDragInsideAScrollableEditFieldIsNotTakenByThePane() {
+        val field = widgets.getValue(R.id.clipboard_entry_edit_field) as EditText
+        val touch = slot<View.OnTouchListener>()
+        every { field.setOnTouchListener(capture(touch)) } just runs
+        val ancestor = mockk<android.view.ViewParent>(relaxed = true)
+        every { field.parent } returns ancestor
+        buildView(listOf(entry(huge)))
+
+        view.edit_entry(0)
+        render()
+
+        assertWithMessage("the edit field must own its touch scrolling").that(touch.isCaptured).isTrue()
+        val down = mockk<android.view.MotionEvent>(relaxed = true)
+        every { down.actionMasked } returns android.view.MotionEvent.ACTION_DOWN
+        every { field.canScrollVertically(1) } returns true
+        every { field.canScrollVertically(-1) } returns false
+        assertWithMessage("the field still handles the event itself").that(touch.captured.onTouch(field, down)).isFalse()
+        verify { ancestor.requestDisallowInterceptTouchEvent(true) }
+
+        val still = mockk<android.view.ViewParent>(relaxed = true)
+        every { field.parent } returns still
+        every { field.canScrollVertically(any()) } returns false
+        touch.captured.onTouch(field, down)
+        verify(exactly = 0) { still.requestDisallowInterceptTouchEvent(true) }
+    }
+
     @Test
     fun aSinglePageFieldKeepsItsLineCap() {
         buildView(listOf(entry("short clip")))

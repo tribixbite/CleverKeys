@@ -609,6 +609,26 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     companion object {
         const val ITEMS_PER_PAGE = 100
 
+        /**
+         * Keeps a vertical drag inside a scrollable edit field away from the pane's ScrollView.
+         * The paged field is capped to the pane ([fitEditFieldHeight]); without this the pane
+         * intercepted the drag, scrolled the pager and Save / Cancel out of sight and the field's
+         * text never moved (Saga landscape, 2026-10-27). Returns false: the field still handles
+         * the event (caret, selection, its own scrolling). A companion object, so Objenesis-built
+         * test views share it and recycled rows allocate nothing.
+         */
+        private object EditFieldScrollTouch : View.OnTouchListener {
+            override fun onTouch(v: View, event: MotionEvent): Boolean {
+                val action = event.actionMasked
+                if ((action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE) &&
+                    (v.canScrollVertically(1) || v.canScrollVertically(-1))
+                ) {
+                    v.parent?.requestDisallowInterceptTouchEvent(true)
+                }
+                return false
+            }
+        }
+
         /** Characters of a clipping named in its selection checkbox's accessible label. */
         private const val SELECTION_LABEL_CHARS = 80
 
@@ -2405,6 +2425,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // Paged edit: "Page N of M" + prev/next above the field (GONE otherwise).
                 bindEditPager(view)
                 fitEditFieldHeight(editField)
+                // The capped field scrolls its own text: a drag inside it must not scroll the pane.
+                editField.setOnTouchListener(EditFieldScrollTouch)
 
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
