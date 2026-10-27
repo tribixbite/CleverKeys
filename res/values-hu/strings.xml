@@ -2546,6 +2546,8 @@
     <string name="theme_color_popup_label">Felugró ablak felirata</string>
     <string name="theme_color_popup_selected">Kijelölt felugró elem</string>
     <string name="theme_color_popup_selected_label">Kijelölt felugró elem felirata</string>
+    <string name="theme_color_latched_key">Rögzített Shift billentyű</string>
+    <string name="theme_color_latched_label">Rögzített Shift felirata</string>
     <string name="theme_section_shape">Billentyűforma</string>
     <string name="theme_use_keyboard_setting">Billentyűzet-beállítás használata</string>
     <string name="theme_shape_shadow">Billentyűárnyék eltolása</string>

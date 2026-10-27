@@ -199,6 +199,13 @@ class Theme {
     @JvmField
     val lookHintStyle: LookHintStyle?
 
+    /**
+     * A look's suggestion-bar arrangement (three slots, best centred — `theme/LookBar.kt`); null
+     * for every non-look theme, whose bar keeps its scrolling chips.
+     */
+    @JvmField
+    val lookBar: tribixbite.cleverkeys.theme.LookBar?
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -285,6 +292,7 @@ class Theme {
         lookPreview = null
         lookPopupColors = null
         lookHintStyle = null
+        lookBar = null
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -332,6 +340,8 @@ class Theme {
         baseFrame: FloatArray? = null,
         /** Label colour of a pressed key; 0 = the label colour (the runtime default). */
         pressedLabelColor: Int = 0,
+        /** A look's suggestion-bar arrangement; null = scrolling chips. */
+        lookBar: tribixbite.cleverkeys.theme.LookBar? = null,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -405,6 +415,7 @@ class Theme {
         this.lookPreview = lookPreview?.takeIf { lookPalette != null }
         this.lookPopupColors = lookPopupColors?.takeIf { lookPalette != null }
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
+        this.lookBar = lookBar?.takeIf { lookPalette != null }
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0

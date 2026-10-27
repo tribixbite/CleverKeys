@@ -48,6 +48,9 @@ object ThemeSpecXml {
     const val HINT_SIZE = "hint_size"
     const val HINT_WEIGHT = "hint_weight"
     const val DYNAMIC_COLOR = "dynamic_color"
+    const val BAR_SLOTS = "bar_slots"
+    const val BAR_CENTRE = "bar_centre"
+    const val BAR_QUOTE_TYPED = "bar_quote_typed"
 
     val GAP_RANGE = 0f..KeyboardLookGeometry.MAX_GAP
     val CORNER_RADIUS_RANGE = 0f..64f
@@ -65,7 +68,7 @@ object ThemeSpecXml {
         NAME, GAP_HORIZONTAL, GAP_VERTICAL, CORNER_RADIUS, BORDER_WIDTH, SHADOW_DY, LABEL_SCALE,
         LABEL_WEIGHT, FUNCTION_CHARS, HINTS, PILL_KEYS, LETTER_KEYS, PREVIEW, PREVIEW_WIDTH,
         PREVIEW_HEIGHT, PREVIEW_LABEL_SCALE, PREVIEW_CORNER, PREVIEW_SHADOW, HINT_SIZE, HINT_WEIGHT,
-        DYNAMIC_COLOR,
+        DYNAMIC_COLOR, BAR_SLOTS, BAR_CENTRE, BAR_QUOTE_TYPED,
     )
 
     private val PILL_NAMES = mapOf("enter" to LookPillKey.ENTER, "action" to LookPillKey.ACTION, "numbers" to LookPillKey.NUMBERS)
@@ -159,6 +162,16 @@ object ThemeSpecXml {
             sizeFraction = hintSize ?: LookHintStyle.DEFAULT.sizeFraction,
             weight = hintWeight ?: LookHintStyle.DEFAULT.weight,
         )
+        // The suggestion-bar arrangement (LookBar): any of its three attributes defines it, the
+        // others take their defaults (3 slots, best in the centre, typed word unquoted).
+        val barSlots = intAttr(BAR_SLOTS, LookBar.MIN_SLOTS..LookBar.MAX_SLOTS)
+        val barCentre = boolAttr(BAR_CENTRE)
+        val barQuote = boolAttr(BAR_QUOTE_TYPED)
+        val bar = if (barSlots == null && barCentre == null && barQuote == null) null else LookBar(
+            slots = barSlots ?: LookBar.DEFAULT_SLOTS,
+            centreBest = barCentre ?: true,
+            quoteTyped = barQuote ?: false,
+        )
         return ThemeSpec(
             name = theme[NAME]?.trim()?.takeIf { it.isNotEmpty() },
             colors = common,
@@ -172,6 +185,7 @@ object ThemeSpecXml {
             preview = preview,
             hintStyle = hintStyle,
             dynamicColor = boolAttr(DYNAMIC_COLOR),
+            bar = bar,
         )
     }
 
@@ -209,6 +223,11 @@ object ThemeSpecXml {
             attrs.add(HINT_WEIGHT to it.weight.toString())
         }
         spec.dynamicColor?.let { attrs.add(DYNAMIC_COLOR to it.toString()) }
+        spec.bar?.let {
+            attrs.add(BAR_SLOTS to it.slots.toString())
+            attrs.add(BAR_CENTRE to it.centreBest.toString())
+            attrs.add(BAR_QUOTE_TYPED to it.quoteTyped.toString())
+        }
 
         val inner = "$indent  "
         val sb = StringBuilder()
@@ -319,6 +338,13 @@ object ThemeSpecJson {
             })
         }
         spec.dynamicColor?.let { put("dynamicColor", it) }
+        spec.bar?.let { b ->
+            put("bar", JSONObject().apply {
+                put("slots", b.slots)
+                put("centre", b.centreBest)
+                put("quoteTyped", b.quoteTyped)
+            })
+        }
     }
 
     /**
@@ -349,6 +375,13 @@ object ThemeSpecJson {
             }
         }
         val hint = json.optJSONObject("hintStyle")
+        val barJson = json.optJSONObject("bar")
+        // An out-of-range slot count (hand-edited or from a newer build) drops the arrangement.
+        val bar = barJson?.let { b ->
+            val slots = i(b, "slots") ?: LookBar.DEFAULT_SLOTS
+            if (slots !in LookBar.MIN_SLOTS..LookBar.MAX_SLOTS) null
+            else LookBar(slots, b.optBoolean("centre", true), b.optBoolean("quoteTyped", false))
+        }
         return sanitize(ThemeSpec(
             name = if (json.has("name")) json.getString("name") else null,
             colors = colors(json.optJSONObject("colors")),
@@ -375,6 +408,7 @@ object ThemeSpecJson {
                 )
             },
             dynamicColor = if (json.has("dynamicColor")) json.getBoolean("dynamicColor") else null,
+            bar = bar,
         ))
     }
 

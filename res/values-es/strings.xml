@@ -2603,6 +2603,8 @@
     <string name="theme_color_popup_label">Etiqueta de la ventana emergente</string>
     <string name="theme_color_popup_selected">Elemento emergente seleccionado</string>
     <string name="theme_color_popup_selected_label">Etiqueta del elemento emergente seleccionado</string>
+    <string name="theme_color_latched_key">Tecla Mayús enclavada</string>
+    <string name="theme_color_latched_label">Etiqueta de Mayús enclavada</string>
     <string name="theme_section_shape">Forma de las teclas</string>
     <string name="theme_use_keyboard_setting">Usar ajuste del teclado</string>
     <string name="theme_shape_shadow">Desplazamiento de la sombra</string>

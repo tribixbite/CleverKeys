@@ -2523,6 +2523,8 @@
     <string name="theme_color_popup_label">Nhãn cửa sổ bật lên</string>
     <string name="theme_color_popup_selected">Mục bật lên đã chọn</string>
     <string name="theme_color_popup_selected_label">Nhãn mục bật lên đã chọn</string>
+    <string name="theme_color_latched_key">Phím Shift đang chốt</string>
+    <string name="theme_color_latched_label">Nhãn phím Shift đang chốt</string>
     <string name="theme_section_shape">Hình dạng phím</string>
     <string name="theme_use_keyboard_setting">Dùng cài đặt bàn phím</string>
     <string name="theme_shape_shadow">Độ lệch bóng phím</string>

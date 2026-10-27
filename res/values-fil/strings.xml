@@ -2552,6 +2552,8 @@
     <string name="theme_color_popup_label">Label ng Pop-up</string>
     <string name="theme_color_popup_selected">Napiling Item ng Pop-up</string>
     <string name="theme_color_popup_selected_label">Label ng Napiling Item ng Pop-up</string>
+    <string name="theme_color_latched_key">Naka-latch na Shift Key</string>
+    <string name="theme_color_latched_label">Label ng Naka-latch na Shift</string>
     <string name="theme_section_shape">Hugis ng Key</string>
     <string name="theme_use_keyboard_setting">Gamitin ang setting ng keyboard</string>
     <string name="theme_shape_shadow">Offset ng Anino ng Key</string>

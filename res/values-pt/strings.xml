@@ -2585,6 +2585,8 @@
     <string name="theme_color_popup_label">Etiqueta do pop-up</string>
     <string name="theme_color_popup_selected">Item do pop-up selecionado</string>
     <string name="theme_color_popup_selected_label">Etiqueta do item do pop-up selecionado</string>
+    <string name="theme_color_latched_key">Tecla Shift ativa</string>
+    <string name="theme_color_latched_label">Etiqueta da tecla Shift ativa</string>
     <string name="theme_section_shape">Forma das teclas</string>
     <string name="theme_use_keyboard_setting">Usar a definição do teclado</string>
     <string name="theme_shape_shadow">Deslocamento da sombra</string>

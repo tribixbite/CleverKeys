@@ -2551,6 +2551,8 @@
     <string name="theme_color_popup_label">Açılır Pencere Etiketi</string>
     <string name="theme_color_popup_selected">Seçili Açılır Öğe</string>
     <string name="theme_color_popup_selected_label">Seçili Açılır Öğe Etiketi</string>
+    <string name="theme_color_latched_key">Kilitli Shift Tuşu</string>
+    <string name="theme_color_latched_label">Kilitli Shift Tuşu Etiketi</string>
     <string name="theme_section_shape">Tuş Şekli</string>
     <string name="theme_use_keyboard_setting">Klavye ayarını kullan</string>
     <string name="theme_shape_shadow">Tuş Gölgesi Kayması</string>

@@ -2595,6 +2595,8 @@
     <string name="theme_color_popup_label">Libellé de la fenêtre contextuelle</string>
     <string name="theme_color_popup_selected">Élément contextuel sélectionné</string>
     <string name="theme_color_popup_selected_label">Libellé de l\'élément contextuel sélectionné</string>
+    <string name="theme_color_latched_key">Touche Maj verrouillée</string>
+    <string name="theme_color_latched_label">Libellé de la touche Maj verrouillée</string>
     <string name="theme_section_shape">Forme des touches</string>
     <string name="theme_use_keyboard_setting">Utiliser le réglage du clavier</string>
     <string name="theme_shape_shadow">Décalage de l\'ombre</string>

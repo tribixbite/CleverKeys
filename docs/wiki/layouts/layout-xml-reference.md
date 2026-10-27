@@ -115,6 +115,8 @@ The same colour attributes are allowed on `<theme>` (both modes), `<light>` and 
 | `popup_label` | label in the preview and panel | `label` |
 | `popup_selected` | selected long-press alternative | `key_locked` |
 | `popup_selected_label` | its label | `locked_label` |
+| `latched_key` | Shift latched for one letter (tapped once, or capitalising a sentence start) | `key_pressed` |
+| `latched_label` | its label / icon (drawn only with `latched_key`) | normal labels |
 
 ### Shape and size
 
@@ -148,6 +150,9 @@ Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<ke
 | `preview_corner` | 0–1 | Preview corner radius as a fraction of the key height. |
 | `preview_shadow` | `true` / `false` | Soft shadow under the preview. |
 | `dynamic_color` | `true` / `false` | Follow the wallpaper colours on Android 12+ (Material You); the colours above are the fallback. |
+| `bar_slots` | 1–5 | Show the suggestion bar as this many equal slots instead of scrolling suggestions, like the familiar keyboards (they use 3). Suggestions that do not fit are not shown. |
+| `bar_centre` | `true` / `false` | With `bar_slots`: put the best suggestion — the one space types — in the centre slot and the word you typed left of it (default `true`); `false` fills the slots left to right. |
+| `bar_quote_typed` | `true` / `false` | With `bar_slots`: show the word you typed in quotation marks when it is not the best suggestion, as iOS does (default `false`). |
 | `name` | text | Name for the theme when it is saved or exported. |
 
 ## `<row>`
@@ -262,6 +267,8 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       popup_label="#102A43"
       popup_selected="#1F6FB2"
       popup_selected_label="#FFFFFF"
+      latched_key="#174F80"
+      latched_label="#FFFFFF"
       gap_horizontal="0.12"
       gap_vertical="0.16"
       corner_radius="10"
@@ -281,7 +288,10 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       preview_shadow="true"
       hint_size="0.4"
       hint_weight="400"
-      dynamic_color="false">
+      dynamic_color="false"
+      bar_slots="3"
+      bar_centre="true"
+      bar_quote_typed="false">
     <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
     <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
   </theme>

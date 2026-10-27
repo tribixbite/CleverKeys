@@ -2578,6 +2578,8 @@
     <string name="theme_color_popup_label">برچسب پنجره بازشو</string>
     <string name="theme_color_popup_selected">مورد انتخاب‌شده پنجره بازشو</string>
     <string name="theme_color_popup_selected_label">برچسب مورد انتخاب‌شده پنجره بازشو</string>
+    <string name="theme_color_latched_key">کلید Shift فعال</string>
+    <string name="theme_color_latched_label">برچسب کلید Shift فعال</string>
     <string name="theme_section_shape">شکل کلید</string>
     <string name="theme_use_keyboard_setting">استفاده از تنظیم صفحه‌کلید</string>
     <string name="theme_shape_shadow">جابه‌جایی سایه کلید</string>

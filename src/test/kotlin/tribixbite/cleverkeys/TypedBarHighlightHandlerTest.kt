@@ -93,7 +93,7 @@ class TypedBarHighlightHandlerTest {
 
         bar = mockk(relaxed = true)
         every { bar.getMetaForSuggestion(any()) } returns null
-        every { bar.setSuggestionsWithScores(any(), any(), any(), any()) } answers {
+        every { bar.setSuggestionsWithScores(any(), any(), any(), any(), any()) } answers {
             posts.add(firstArg<List<String>>().toList() to arg<Int?>(3))
         }
 

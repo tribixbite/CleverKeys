@@ -393,6 +393,8 @@ internal fun roleLabel(role: ThemeColorRole): Int = when (role) {
     ThemeColorRole.POPUP_LABEL -> R.string.theme_color_popup_label
     ThemeColorRole.POPUP_SELECTED -> R.string.theme_color_popup_selected
     ThemeColorRole.POPUP_SELECTED_LABEL -> R.string.theme_color_popup_selected_label
+    ThemeColorRole.LATCHED_KEY -> R.string.theme_color_latched_key
+    ThemeColorRole.LATCHED_LABEL -> R.string.theme_color_latched_label
 }
 
 private fun geometryLabel(field: GeometryField): Int = when (field) {

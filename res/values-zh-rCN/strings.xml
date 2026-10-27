@@ -2493,6 +2493,8 @@
     <string name="theme_color_popup_label">弹出窗口标签</string>
     <string name="theme_color_popup_selected">弹出窗口中选中的项</string>
     <string name="theme_color_popup_selected_label">弹出窗口中选中项的标签</string>
+    <string name="theme_color_latched_key">锁定的 Shift 键</string>
+    <string name="theme_color_latched_label">锁定的 Shift 键标签</string>
     <string name="theme_section_shape">按键形状</string>
     <string name="theme_use_keyboard_setting">使用键盘设置</string>
     <string name="theme_shape_shadow">按键阴影偏移</string>

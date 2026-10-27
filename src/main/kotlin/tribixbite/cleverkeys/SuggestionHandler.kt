@@ -3919,7 +3919,9 @@ class SuggestionHandler(
                             bar.setShowDebugScores(config.swipe_show_debug_scores)
                             bar.setShowOriginMarkers(config.suggestion_provenance_markers)
                             // v1.2.0: Use merged scores that include contraction scores
-                            bar.setSuggestionsWithScores(plan.words, plan.scores, plan.metas, plan.highlightIndex)
+                            // The typed word only places the entries on a keyboard look's bar
+                            // (centre = what space commits, typed word left of it).
+                            bar.setSuggestionsWithScores(plan.words, plan.scores, plan.metas, plan.highlightIndex, partial)
                         }
                     }
                 }

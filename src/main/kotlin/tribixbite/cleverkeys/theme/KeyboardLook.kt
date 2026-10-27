@@ -51,6 +51,11 @@ data class KeyboardLook(
      * ([LookDynamicColors]); the fixed [light] / [dark] palettes are the fallback.
      */
     val dynamicColor: Boolean = false,
+    /**
+     * How the suggestion bar is arranged while the look is effective ([LookBar]: three slots,
+     * best candidate centred); null = CleverKeys' scrolling chips.
+     */
+    val bar: LookBar? = null,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark

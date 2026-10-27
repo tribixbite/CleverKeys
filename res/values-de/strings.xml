@@ -2560,6 +2560,8 @@
     <string name="theme_color_popup_label">Popup-Beschriftung</string>
     <string name="theme_color_popup_selected">Ausgewähltes Popup-Element</string>
     <string name="theme_color_popup_selected_label">Beschriftung ausgewähltes Popup-Element</string>
+    <string name="theme_color_latched_key">Umschalttaste eingerastet</string>
+    <string name="theme_color_latched_label">Beschriftung Umschalttaste eingerastet</string>
     <string name="theme_section_shape">Tastenform</string>
     <string name="theme_use_keyboard_setting">Tastatureinstellung verwenden</string>
     <string name="theme_shape_shadow">Versatz des Tastenschattens</string>

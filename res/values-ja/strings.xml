@@ -2494,6 +2494,8 @@
     <string name="theme_color_popup_label">ポップアップのラベル</string>
     <string name="theme_color_popup_selected">選択中のポップアップ項目</string>
     <string name="theme_color_popup_selected_label">選択中のポップアップ項目のラベル</string>
+    <string name="theme_color_latched_key">一時固定中のShiftキー</string>
+    <string name="theme_color_latched_label">一時固定中のShiftキーのラベル</string>
     <string name="theme_section_shape">キーの形</string>
     <string name="theme_use_keyboard_setting">キーボードの設定を使用</string>
     <string name="theme_shape_shadow">キーの影のずれ</string>

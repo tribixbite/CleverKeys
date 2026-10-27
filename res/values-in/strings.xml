@@ -2507,6 +2507,8 @@
     <string name="theme_color_popup_label">Label Pop-up</string>
     <string name="theme_color_popup_selected">Item Pop-up Terpilih</string>
     <string name="theme_color_popup_selected_label">Label Item Pop-up Terpilih</string>
+    <string name="theme_color_latched_key">Tombol Shift Terkunci Sekali</string>
+    <string name="theme_color_latched_label">Label Shift Terkunci Sekali</string>
     <string name="theme_section_shape">Bentuk Tombol</string>
     <string name="theme_use_keyboard_setting">Gunakan setelan keyboard</string>
     <string name="theme_shape_shadow">Geser Bayangan Tombol</string>

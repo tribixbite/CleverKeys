@@ -847,6 +847,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
     'tribixbite.cleverkeys.theme.LookPopupsTest',
+    // 2026-10-27 Saga: Theme Manager's custom-theme cards show the current mode's colours.
+    'tribixbite.cleverkeys.theme.ThemeManagerCustomCardColoursTest',
+    // 2026-10-27: a look's suggestion bar — 3 slots, best (= space commit) centred, typed word left.
+    'tribixbite.cleverkeys.theme.LookBarArrangementTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -1622,6 +1626,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.LayoutXmlStylingTest',
     'tribixbite.cleverkeys.LayoutEmbeddedThemeTest',
     'tribixbite.cleverkeys.theme.ThemeSpecRenderTest',
+    // 2026-10-27 Saga: theme previews never draw a styled layout (its colours bled into themes).
+    'tribixbite.cleverkeys.theme.ThemePreviewLayoutTest',
     // 2026-10-27 keyboard looks reach Theme.Computed (gaps, radius, shadow, action/modifier
     // frames), non-look themes compute as before, looks follow the system light/dark mode.
     'tribixbite.cleverkeys.theme.KeyboardLookRenderTest',

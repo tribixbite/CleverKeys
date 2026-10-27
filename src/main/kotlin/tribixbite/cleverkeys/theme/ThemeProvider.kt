@@ -332,6 +332,7 @@ class ThemeProvider(
             lookPopupColors = if (r.popups) LookPopupColors.of(r.palette) else null,
             baseFrame = frame,
             pressedLabelColor = r.labelPressed,
+            lookBar = r.bar,
         )
     }
 
@@ -407,7 +408,15 @@ class ThemeProvider(
             android.util.Log.w(TAG, "Unknown keyboard look '$themeId' — falling back to $FALLBACK_THEME_ID")
             return fallbackTheme()
         }
-        val palette = lookPalette(look)
+        return lookTheme(look, systemLight())
+    }
+
+    /**
+     * [look]'s renderer theme for one system mode ([systemLight]); the keyboard passes the current
+     * mode ([loadLook]), the instrumented showcase both modes.
+     */
+    fun lookTheme(look: KeyboardLook, systemLight: Boolean): Theme {
+        val palette = lookPalette(look, systemLight)
         return Theme(
             context,
             KeyboardLookSchemes.colorScheme(palette),
@@ -419,6 +428,7 @@ class ThemeProvider(
             lookLetterKeys = look.letterKeys,
             lookPreview = look.preview,
             lookHintStyle = look.hintStyle,
+            lookBar = look.bar,
         )
     }
 
@@ -429,10 +439,10 @@ class ThemeProvider(
      * would be missed). Read fresh every time: the system updates these resources when the
      * wallpaper or palette changes, so the stale-view stamp picks the change up.
      */
-    private fun lookPalette(look: KeyboardLook): LookPalette {
-        val fixed = look.palette(systemLight())
+    private fun lookPalette(look: KeyboardLook, light: Boolean = systemLight()): LookPalette {
+        val fixed = look.palette(light)
         if (!look.dynamicColor) return fixed
-        return dynamicPalette(fixed)
+        return dynamicPalette(fixed, light)
     }
 
     /**
@@ -440,9 +450,8 @@ class ThemeProvider(
      * the fallback: below API 31, on a ROM without the system palette, or when a contrast floor
      * would be missed, [fixed] itself is returned.
      */
-    private fun dynamicPalette(fixed: LookPalette): LookPalette {
+    private fun dynamicPalette(fixed: LookPalette, light: Boolean = systemLight()): LookPalette {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return fixed
-        val light = systemLight()
         val roles = try {
             systemMaterialRoles(light)
         } catch (e: Exception) {

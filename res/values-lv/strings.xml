@@ -2596,6 +2596,8 @@
     <string name="theme_color_popup_label">Uznirstošā loga uzraksts</string>
     <string name="theme_color_popup_selected">Atlasītais uznirstošā loga vienums</string>
     <string name="theme_color_popup_selected_label">Atlasītā uznirstošā loga vienuma uzraksts</string>
+    <string name="theme_color_latched_key">Fiksēts Shift taustiņš</string>
+    <string name="theme_color_latched_label">Fiksēta Shift taustiņa uzraksts</string>
     <string name="theme_section_shape">Taustiņu forma</string>
     <string name="theme_use_keyboard_setting">Izmantot tastatūras iestatījumu</string>
     <string name="theme_shape_shadow">Taustiņu ēnas nobīde</string>

@@ -2540,6 +2540,8 @@
     <string name="theme_color_popup_label">Label pop-up</string>
     <string name="theme_color_popup_selected">Geselecteerd pop-upitem</string>
     <string name="theme_color_popup_selected_label">Label geselecteerd pop-upitem</string>
+    <string name="theme_color_latched_key">Vergrendelde Shift-toets</string>
+    <string name="theme_color_latched_label">Label vergrendelde Shift-toets</string>
     <string name="theme_section_shape">Toetsvorm</string>
     <string name="theme_use_keyboard_setting">Toetsenbordinstelling gebruiken</string>
     <string name="theme_shape_shadow">Verschuiving toetsschaduw</string>

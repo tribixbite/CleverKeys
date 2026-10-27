@@ -23,6 +23,9 @@ import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import tribixbite.cleverkeys.theme.BarSlot
+import tribixbite.cleverkeys.theme.LookBar
+import tribixbite.cleverkeys.theme.LookBarArrangement
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
@@ -39,6 +42,18 @@ class SuggestionBar : LinearLayout {
     // slots (N-1 of them for N suggestions).
     private val suggestionViews: MutableList<TextView> = mutableListOf()
     private val dividerViews: MutableList<View> = mutableListOf()
+
+    /** Empty slots of a look's arranged bar ([LookBarArrangement]); pooled like the dividers. */
+    private val spacerViews: MutableList<View> = mutableListOf()
+
+    /**
+     * The typed word the current entries were computed for (tap typing), or null. Only a keyboard
+     * look's arranged bar reads it — to place (and on iOS quote) the typed word left of the centre.
+     */
+    private var currentTypedWord: String? = null
+
+    /** Whether the children are a look's equal slots ([rebindSuggestionViews]); see [onMeasure]. */
+    private var slotMode = false
     private var listener: OnSuggestionSelectedListener? = null
     private var inspectListener: OnSuggestionInspectedListener? = null
     private val currentSuggestions: MutableList<String> = mutableListOf()
@@ -69,6 +84,13 @@ class SuggestionBar : LinearLayout {
     private var contentGeneration = 0
     private var selectedIndex = -1
     private val theme: Theme?
+
+    /**
+     * The effective keyboard look's bar arrangement (three slots, best centred), or null for every
+     * non-look theme. Fixed for the bar's life: a theme change inflates a new bar.
+     */
+    private val lookBar: LookBar?
+        get() = theme?.lookBar
     private var showDebugScores = false
     private var opacity = 90 // default opacity
     private var alwaysVisible = true // Keep bar visible even when empty (default enabled)
@@ -89,6 +111,7 @@ class SuggestionBar : LinearLayout {
     private var savedScores: List<Int> = emptyList()
     private var savedMetas: List<SuggestionMeta> = emptyList()
     private var savedHighlightIndex: Int? = 0
+    private var savedTypedWord: String? = null
     private var isShowingTemporaryMessage = false
 
     /**
@@ -102,7 +125,7 @@ class SuggestionBar : LinearLayout {
         activeUndoable?.finish()
         activeUndoable = null
         isShowingTemporaryMessage = false
-        setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas, savedHighlightIndex)
+        setSuggestionsWithScores(savedSuggestions, savedScores, savedMetas, savedHighlightIndex, savedTypedWord)
     }
 
     // #41: Emoji search mode properties
@@ -263,6 +286,18 @@ class SuggestionBar : LinearLayout {
      */
     private fun rebindSuggestionViews() {
         val count = currentSuggestions.size
+        val parsed = currentSuggestions.map { Suggestion.parse(it) }
+
+        // A keyboard look shows a fixed row of equal slots, best candidate in the centre
+        // (LookBarArrangement). Drawing only: pool view i still renders and taps entry i, so the
+        // commit path, the highlight (= space commit) and every accessor keep ranking order;
+        // children are added in VISUAL order, which is also TalkBack's reading order.
+        val slots = LookBarArrangement.arrange(parsed, currentHighlightIndex, currentTypedWord, lookBar)
+        if (slots != null) {
+            rebindSlots(parsed, slots)
+            return
+        }
+        slotMode = false
 
         // Grow pools on demand (index-stable click closure captured at creation).
         while (suggestionViews.size < count) {
@@ -276,7 +311,7 @@ class SuggestionBar : LinearLayout {
         // Build the desired ordered child sequence from the pools.
         val desired = ArrayList<View>(count + dividerCount)
         for (i in 0 until count) {
-            val suggestion = Suggestion.parse(currentSuggestions[i])
+            val suggestion = parsed[i]
             val isCenteredPrompt = suggestion is Suggestion.AddToDictionary && count == 1
             bindSuggestionView(suggestionViews[i], i, suggestion, isCenteredPrompt)
             if (i > 0) desired.add(dividerViews[i - 1])
@@ -284,6 +319,76 @@ class SuggestionBar : LinearLayout {
         }
 
         reconcileChildren(desired)
+    }
+
+    /**
+     * A keyboard look's bar: [slots] left to right, each an entry's pooled view (tap = that entry)
+     * or an empty spacer, separators only between two filled slots.
+     */
+    private fun rebindSlots(parsed: List<Suggestion>, slots: List<BarSlot>) {
+        slotMode = true
+        while (suggestionViews.size < parsed.size) {
+            suggestionViews.add(createSuggestionView(context, suggestionViews.size))
+        }
+        val desired = ArrayList<View>(slots.size * 2)
+        var dividers = 0
+        var spacers = 0
+        for ((pos, slot) in slots.withIndex()) {
+            if (pos > 0 && LookBarArrangement.separatorBetween(slots[pos - 1], slot)) {
+                while (dividerViews.size <= dividers) dividerViews.add(createDivider(context))
+                desired.add(dividerViews[dividers++])
+            }
+            val entry = slot.entry
+            if (entry == null) {
+                while (spacerViews.size <= spacers) spacerViews.add(createSpacer(context))
+                desired.add(spacerViews[spacers++])
+            } else {
+                bindSuggestionView(suggestionViews[entry], entry, parsed[entry], isCenteredPrompt = false, slot = slot)
+                desired.add(suggestionViews[entry])
+            }
+        }
+        reconcileChildren(desired)
+    }
+
+    /** An empty slot of a look's bar: takes its share of the width, not focusable or announced. */
+    private fun createSpacer(context: Context): View = View(context).apply {
+        layoutParams = slotLayoutParams()
+        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+    }
+
+    /** Equal-width slot of a look's bar (the bar is stretched to the viewport, see [onMeasure]). */
+    private fun slotLayoutParams(): LayoutParams =
+        LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+
+    /**
+     * A look's slots share the bar's width. The parent HorizontalScrollView measures its child
+     * with an UNSPECIFIED width, where weights have nothing to share; measure at the viewport's
+     * width instead (fillViewport then keeps it). Non-look bars are measured exactly as before.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (slotMode && MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+            val parentView = parent as? View
+            val viewport = parentView?.let { it.width - it.paddingLeft - it.paddingRight } ?: 0
+            val spec = if (viewport > 0) MeasureSpec.makeMeasureSpec(viewport, MeasureSpec.EXACTLY)
+            else MeasureSpec.makeMeasureSpec(resources.displayMetrics.widthPixels, MeasureSpec.AT_MOST)
+            super.onMeasure(spec, heightMeasureSpec)
+            return
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /** The locale's quotation marks for [LookBar.quoteTyped] (“ ” in English, « » in French…). */
+    private fun quoted(word: String): String {
+        val (open, close) = try {
+            val data = android.icu.util.LocaleData.getInstance(
+                android.icu.util.ULocale.forLocale(resources.configuration.locales[0])
+            )
+            data.getDelimiter(android.icu.util.LocaleData.QUOTATION_START) to
+                data.getDelimiter(android.icu.util.LocaleData.QUOTATION_END)
+        } catch (e: RuntimeException) {
+            "\u201C" to "\u201D"
+        }
+        return LookBarArrangement.quote(word, open, close)
     }
 
     /**
@@ -295,10 +400,19 @@ class SuggestionBar : LinearLayout {
         view: TextView,
         index: Int,
         suggestion: Suggestion,
-        isCenteredPrompt: Boolean
+        isCenteredPrompt: Boolean,
+        /** The look-bar slot showing this entry, or null on the plain scrolling bar. */
+        slot: BarSlot? = null,
     ) {
-        // Display text derived from the typed suggestion.
-        val baseText: CharSequence = when (suggestion) {
+        // Display text derived from the typed suggestion. A look that quotes the typed word
+        // (iOS) shows it — or the "+word" tap-to-add chip of an unknown word — as “word”.
+        val quotedWord = when {
+            slot?.quoted != true -> null
+            suggestion is Suggestion.ExactAdd -> suggestion.word
+            suggestion is Suggestion.Word -> suggestion.text
+            else -> null
+        }
+        val baseText: CharSequence = if (quotedWord != null) quoted(quotedWord) else when (suggestion) {
             is Suggestion.AddToDictionary ->
                 context.getString(R.string.suggestion_add_to_dictionary, suggestion.word)
             is Suggestion.ExactAdd -> suggestion.label
@@ -345,6 +459,17 @@ class SuggestionBar : LinearLayout {
             baseText
         }
 
+        // A look's slot: one line, ellipsized, any width; the scrolling chip: up to two lines
+        // (debug scores) with a minimum touch width. Pooled views move between the two.
+        if (slot != null) {
+            view.maxLines = 1
+            view.ellipsize = android.text.TextUtils.TruncateAt.END
+            view.minWidth = 0
+        } else {
+            view.maxLines = 2
+            view.ellipsize = null
+            view.minWidth = dpToPx(context, 80)
+        }
         when {
             // Centered "Add to dictionary?" prompt when it is the only suggestion.
             isCenteredPrompt -> {
@@ -360,20 +485,21 @@ class SuggestionBar : LinearLayout {
             // Swipe-correction offer (audit 2026-09-26): styled like the add-to-dictionary prompt,
             // the accept chip highlighted and its "Don't ask" partner in the sublabel colour.
             suggestion is Suggestion.PreferSwipeWord -> {
-                view.layoutParams = defaultSuggestionLayoutParams()
+                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
                 view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             }
             suggestion is Suggestion.DeclineSwipePreference -> {
-                view.layoutParams = defaultSuggestionLayoutParams()
+                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
-            // #42: Exact typed word (italic, sublabel color for "tap to add").
-            suggestion is Suggestion.ExactAdd -> {
-                view.layoutParams = defaultSuggestionLayoutParams()
+            // #42: Exact typed word (italic, sublabel color for "tap to add"). Quoted on a look
+            // that quotes the typed word (iOS), it reads as an ordinary candidate instead.
+            suggestion is Suggestion.ExactAdd && quotedWord == null -> {
+                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
                 view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
@@ -383,13 +509,13 @@ class SuggestionBar : LinearLayout {
             // activated colour). The first entry unless the caller chose another or none
             // (tap typing: the word space commits — 2026-10-11).
             index == currentHighlightIndex -> {
-                view.layoutParams = defaultSuggestionLayoutParams()
+                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)
                 view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             }
             else -> {
-                view.layoutParams = defaultSuggestionLayoutParams()
+                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 // Audit H-4: the Theme-Creator's "Suggestion Text" colour.
@@ -591,13 +717,16 @@ class SuggestionBar : LinearLayout {
      *
      * @param highlightIndex the entry drawn as the highlighted "commit" item, or null for none.
      *   Defaults to 0 (first entry). An index outside the list highlights nothing.
+     * @param typedWord the typed word these entries were computed for (tap typing), or null.
+     *   Drawing only: a keyboard look's bar puts it left of the centre ([LookBarArrangement]).
      */
     @JvmOverloads
     fun setSuggestionsWithScores(
         suggestions: List<String>?,
         scores: List<Int>?,
         metas: List<SuggestionMeta>? = null,
-        highlightIndex: Int? = 0
+        highlightIndex: Int? = 0,
+        typedWord: String? = null,
     ) {
         // Skip suggestion updates in password mode, unless swipe on password is enabled (#39)
         if (isPasswordMode && !allowSwipeInPasswordMode) {
@@ -616,7 +745,8 @@ class SuggestionBar : LinearLayout {
         // appended next-word candidates) still re-renders.
         if (suggestions != null && suggestions == currentSuggestions.toList() &&
             (metas ?: emptyList()) == currentMetas.toList() &&
-            highlightIndex == currentHighlightIndex
+            highlightIndex == currentHighlightIndex &&
+            typedWord == currentTypedWord
         ) {
             return
         }
@@ -633,6 +763,7 @@ class SuggestionBar : LinearLayout {
         currentScores.clear()
         currentMetas.clear()
         currentHighlightIndex = highlightIndex
+        currentTypedWord = typedWord
 
         if (suggestions != null) {
             currentSuggestions.addAll(suggestions)
@@ -786,6 +917,7 @@ class SuggestionBar : LinearLayout {
             savedScores = currentScores.toList()
             savedMetas = currentMetas.toList()
             savedHighlightIndex = currentHighlightIndex
+            savedTypedWord = currentTypedWord
         } else if (clearAfter) {
             // Clear saved suggestions so nothing gets restored
             savedSuggestions = emptyList()
@@ -798,6 +930,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
@@ -862,6 +996,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
@@ -895,6 +1031,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
@@ -937,6 +1075,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
         currentSuggestions.clear()
         currentScores.clear()
         currentMetas.clear()
@@ -1163,6 +1303,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
 
         // #109: Remove padding so password eye icon (36dp) and autofill chips
         // get the full 40dp bar height. Password views manage their own spacing.
@@ -1398,6 +1540,8 @@ class SuggestionBar : LinearLayout {
         removeAllViews()
         suggestionViews.clear()
         dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
 
         // #109: Restore normal padding after leaving password/autofill mode
         val padding = dpToPx(context, 8)

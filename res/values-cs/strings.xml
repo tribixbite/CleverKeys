@@ -2630,6 +2630,8 @@
     <string name="theme_color_popup_label">Popisek vyskakovacího okna</string>
     <string name="theme_color_popup_selected">Vybraná položka vyskakovacího okna</string>
     <string name="theme_color_popup_selected_label">Popisek vybrané položky vyskakovacího okna</string>
+    <string name="theme_color_latched_key">Klávesa Shift (zapnutá)</string>
+    <string name="theme_color_latched_label">Popisek klávesy Shift (zapnutá)</string>
     <string name="theme_section_shape">Tvar kláves</string>
     <string name="theme_use_keyboard_setting">Použít nastavení klávesnice</string>
     <string name="theme_shape_shadow">Posun stínu kláves</string>

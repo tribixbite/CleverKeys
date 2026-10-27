@@ -2625,6 +2625,8 @@
     <string name="theme_color_popup_label">Etichetta popup</string>
     <string name="theme_color_popup_selected">Elemento popup selezionato</string>
     <string name="theme_color_popup_selected_label">Etichetta elemento popup selezionato</string>
+    <string name="theme_color_latched_key">Tasto Maiusc agganciato</string>
+    <string name="theme_color_latched_label">Etichetta Maiusc agganciato</string>
     <string name="theme_section_shape">Forma dei tasti</string>
     <string name="theme_use_keyboard_setting">Usa impostazione della tastiera</string>
     <string name="theme_shape_shadow">Scostamento ombra dei tasti</string>

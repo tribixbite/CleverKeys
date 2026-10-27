@@ -68,6 +68,8 @@ class ThemeSpecTest {
         assertThat(spec.preview).isEqualTo(LookPreview(LookPreviewShape.BUBBLE, 1.3f, 1.25f, 1.2f, 0.2f, true))
         assertThat(spec.hintStyle).isEqualTo(LookHintStyle(0.4f, 400))
         assertThat(spec.dynamicColor).isFalse()
+        assertThat(spec.bar).isEqualTo(LookBar(slots = 3, centreBest = true, quoteTyped = false))
+        assertThat(spec.colors[ThemeColorRole.LATCHED_KEY]).isEqualTo(argb(0x174F80))
         assertThat(spec.light.keys).containsExactly(ThemeColorRole.KEYBOARD_BACKGROUND, ThemeColorRole.BAR_BACKGROUND)
         assertThat(spec.dark[ThemeColorRole.KEY]).isEqualTo(argb(0x1C2B3A))
         assertWithMessage("every <theme> attribute name is used by the example")

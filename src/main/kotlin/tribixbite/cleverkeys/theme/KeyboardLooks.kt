@@ -72,6 +72,8 @@ object KeyboardLooks {
         legends = LookLegends.NONE,
         preview = IOS_BALLOON,
         hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 400),
+        // QuickType: three slots, autocorrection centred, the typed word quoted on the left (§10).
+        bar = LookBar(slots = 3, quoteTyped = true),
     )
 
     /**
@@ -109,6 +111,7 @@ object KeyboardLooks {
         legends = LookLegends.NONE,
         preview = IOS_BALLOON,
         hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 300),
+        bar = LookBar(slots = 3, quoteTyped = true),
     )
 
     /**
@@ -156,6 +159,8 @@ object KeyboardLooks {
         // Gboard's top-right digits: small, regular weight.
         hintStyle = LookHintStyle(sizeFraction = 0.40f, weight = 400),
         dynamicColor = true,
+        // Three slots, best centred, separators between them (research §10).
+        bar = LookBar(slots = 3),
     )
 
     /**
@@ -197,6 +202,8 @@ object KeyboardLooks {
         preview = LookPreview(LookPreviewShape.COLUMN, widthScale = 1f, heightScale = 2.1f, labelScale = 1.15f),
         // Fluent draws its symbol hints small and light.
         hintStyle = LookHintStyle(sizeFraction = 0.45f, weight = 300),
+        // "Press the spacebar to insert the middle prediction"; verbatim text on the left (§10).
+        bar = LookBar(slots = 3),
     )
 
     /**
@@ -243,6 +250,7 @@ object KeyboardLooks {
         preview = LookPreview(LookPreviewShape.PLATE, widthScale = 1.15f, heightScale = 1.2f, labelScale = 1.3f, cornerScale = 0.18f),
         // "Alternative characters": top-right, the label at 50 %.
         hintStyle = LookHintStyle(sizeFraction = 0.42f, weight = 400),
+        bar = LookBar(slots = 3),
     )
 
     /** Every look, in Theme Manager order. */

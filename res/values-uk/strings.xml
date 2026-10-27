@@ -2641,6 +2641,8 @@
     <string name="theme_color_popup_label">Підпис спливного вікна</string>
     <string name="theme_color_popup_selected">Вибраний пункт спливного вікна</string>
     <string name="theme_color_popup_selected_label">Підпис вибраного пункту спливного вікна</string>
+    <string name="theme_color_latched_key">Клавіша Shift (зафіксована)</string>
+    <string name="theme_color_latched_label">Підпис клавіші Shift (зафіксована)</string>
     <string name="theme_section_shape">Форма клавіш</string>
     <string name="theme_use_keyboard_setting">Використовувати налаштування клавіатури</string>
     <string name="theme_shape_shadow">Зсув тіні клавіш</string>

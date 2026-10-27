@@ -54,7 +54,15 @@ enum class ThemeColorRole(val xmlName: String, val jsonKey: String, val diy: Boo
     POPUP_LABEL("popup_label", "popupLabel", false),
     /** The selected popover alternative (default: [KEY_LOCKED]). */
     POPUP_SELECTED("popup_selected", "popupSelected", false),
-    POPUP_SELECTED_LABEL("popup_selected_label", "popupSelectedLabel", false);
+    POPUP_SELECTED_LABEL("popup_selected_label", "popupSelectedLabel", false),
+    /**
+     * Fill of a latched modifier at rest — one-shot or auto-capitalised Shift (default: the
+     * pressed fill [KEY_PRESSED], as every non-look theme). Gboard and Samsung keep the
+     * function-key fill (LookPalette.latchedKey).
+     */
+    LATCHED_KEY("latched_key", "latchedKey", false),
+    /** Label / icon colour on [LATCHED_KEY] (Samsung's blue Shift); only drawn with it. */
+    LATCHED_LABEL("latched_label", "latchedLabel", false);
 
     companion object {
         private val BY_XML = entries.associateBy { it.xmlName }
@@ -84,6 +92,7 @@ enum class ThemeColorRole(val xmlName: String, val jsonKey: String, val diy: Boo
  * @property light colours that replace [colors] while the system is in light mode.
  * @property dark colours that replace [colors] while the system is in dark mode.
  * @property pillKeys null = not defined; empty = defined as "no pills".
+ * @property bar the suggestion-bar arrangement ([LookBar]); null = not defined (scrolling chips).
  */
 data class ThemeSpec(
     val name: String? = null,
@@ -98,12 +107,13 @@ data class ThemeSpec(
     val preview: LookPreview? = null,
     val hintStyle: LookHintStyle? = null,
     val dynamicColor: Boolean? = null,
+    val bar: LookBar? = null,
 ) {
     /** True when the spec defines nothing at all (a `<theme/>` with no attributes). */
     val isEmpty: Boolean
         get() = colors.isEmpty() && light.isEmpty() && dark.isEmpty() && geometry == LookGeometry() &&
             functionChars == null && legends == null && pillKeys == null && letterKeys == null &&
-            preview == null && hintStyle == null && dynamicColor == null
+            preview == null && hintStyle == null && dynamicColor == null && bar == null
 
     /** The colours for one system mode: [colors] with that mode's variant on top. */
     fun colorsFor(systemLight: Boolean): Map<ThemeColorRole, Int> = colors + (if (systemLight) light else dark)
@@ -131,6 +141,8 @@ data class RenderedThemeSpec(
     val popups: Boolean,
     val dynamicColor: Boolean,
     val labelPressed: Int,
+    /** The suggestion-bar arrangement; null = CleverKeys' scrolling chips. */
+    val bar: LookBar? = null,
 )
 
 /** Resolution of specs: flatten a mode, layer a spec over its base, render, convert. Pure. */
@@ -166,6 +178,7 @@ object ThemeSpecs {
             preview = t.preview ?: b.preview,
             hintStyle = t.hintStyle ?: b.hintStyle,
             dynamicColor = t.dynamicColor ?: b.dynamicColor,
+            bar = t.bar ?: b.bar,
         )
     }
 
@@ -202,9 +215,6 @@ object ThemeSpecs {
         )
         val key = diy(ThemeColorRole.KEY)
         val subLabel = diy(ThemeColorRole.SUB_LABEL)
-        // TODO: no colour role carries LookPalette.latchedKey / latchedLabel yet (a new role needs
-        // a Theme Look editor label in 21 locales), so a theme saved from Gboard-/Samsung-style
-        // draws a latched Shift with the pressed fill.
         val palette = LookPalette(
             keyboardBackground = diy(ThemeColorRole.KEYBOARD_BACKGROUND),
             key = key,
@@ -231,6 +241,8 @@ object ThemeSpecs {
             popupLabel = c[ThemeColorRole.POPUP_LABEL] ?: 0,
             popupSelected = c[ThemeColorRole.POPUP_SELECTED] ?: 0,
             popupSelectedLabel = c[ThemeColorRole.POPUP_SELECTED_LABEL] ?: 0,
+            latchedKey = c[ThemeColorRole.LATCHED_KEY] ?: 0,
+            latchedLabel = c[ThemeColorRole.LATCHED_LABEL] ?: 0,
         )
         val preview = flat.preview?.takeIf { it.shape != LookPreviewShape.NONE }
         val popupRoles = listOf(
@@ -250,6 +262,7 @@ object ThemeSpecs {
             popups = preview != null || popupRoles.any { it in c },
             dynamicColor = flat.dynamicColor == true,
             labelPressed = c[ThemeColorRole.LABEL_PRESSED] ?: 0,
+            bar = flat.bar,
         )
     }
 
@@ -292,6 +305,7 @@ object ThemeSpecs {
         letterKeys = look.letterKeys,
         preview = look.preview,
         hintStyle = look.hintStyle,
+        bar = look.bar,
     )
 
     /**
@@ -321,7 +335,7 @@ object ThemeSpecs {
         )
     }
 
-    /** [palette] as role colours; pop-up roles only where the look defines them (non-zero). */
+    /** [palette] as role colours; pop-up and latched roles only where the look defines them (non-zero). */
     fun paletteColors(palette: LookPalette): Map<ThemeColorRole, Int> {
         val out = linkedMapOf(
             ThemeColorRole.KEY to palette.key,
@@ -354,6 +368,8 @@ object ThemeSpecs {
         if (palette.popupLabel != 0) out[ThemeColorRole.POPUP_LABEL] = palette.popupLabel
         if (palette.popupSelected != 0) out[ThemeColorRole.POPUP_SELECTED] = palette.popupSelected
         if (palette.popupSelectedLabel != 0) out[ThemeColorRole.POPUP_SELECTED_LABEL] = palette.popupSelectedLabel
+        if (palette.latchedKey != 0) out[ThemeColorRole.LATCHED_KEY] = palette.latchedKey
+        if (palette.latchedLabel != 0) out[ThemeColorRole.LATCHED_LABEL] = palette.latchedLabel
         return out
     }
 

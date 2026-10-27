@@ -2968,6 +2968,8 @@
     <string name="theme_color_popup_label">Pop-up Label</string>
     <string name="theme_color_popup_selected">Selected Pop-up Item</string>
     <string name="theme_color_popup_selected_label">Selected Pop-up Item Label</string>
+    <string name="theme_color_latched_key">Latched Shift Key</string>
+    <string name="theme_color_latched_label">Latched Shift Label</string>
     <string name="theme_section_shape">Key Shape</string>
     <string name="theme_use_keyboard_setting">Use keyboard setting</string>
     <string name="theme_shape_shadow">Key Shadow Offset</string>

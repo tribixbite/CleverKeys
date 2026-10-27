@@ -2635,6 +2635,8 @@
     <string name="theme_color_popup_label">Подпись всплывающего окна</string>
     <string name="theme_color_popup_selected">Выбранный пункт всплывающего окна</string>
     <string name="theme_color_popup_selected_label">Подпись выбранного пункта всплывающего окна</string>
+    <string name="theme_color_latched_key">Клавиша Shift (зафиксирована)</string>
+    <string name="theme_color_latched_label">Подпись клавиши Shift (зафиксирована)</string>
     <string name="theme_section_shape">Форма клавиш</string>
     <string name="theme_use_keyboard_setting">Использовать настройку клавиатуры</string>
     <string name="theme_shape_shadow">Смещение тени клавиш</string>

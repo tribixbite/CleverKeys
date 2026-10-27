@@ -2495,6 +2495,8 @@
     <string name="theme_color_popup_label">팝업 라벨</string>
     <string name="theme_color_popup_selected">선택한 팝업 항목</string>
     <string name="theme_color_popup_selected_label">선택한 팝업 항목 라벨</string>
+    <string name="theme_color_latched_key">고정된 Shift 키</string>
+    <string name="theme_color_latched_label">고정된 Shift 키 라벨</string>
     <string name="theme_section_shape">키 모양</string>
     <string name="theme_use_keyboard_setting">키보드 설정 사용</string>
     <string name="theme_shape_shadow">키 그림자 오프셋</string>

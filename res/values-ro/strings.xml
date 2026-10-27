@@ -2612,6 +2612,8 @@
     <string name="theme_color_popup_label">Etichetă fereastră pop-up</string>
     <string name="theme_color_popup_selected">Element pop-up selectat</string>
     <string name="theme_color_popup_selected_label">Eticheta elementului pop-up selectat</string>
+    <string name="theme_color_latched_key">Tasta Shift fixată</string>
+    <string name="theme_color_latched_label">Eticheta tastei Shift fixate</string>
     <string name="theme_section_shape">Forma tastelor</string>
     <string name="theme_use_keyboard_setting">Folosește setarea tastaturii</string>
     <string name="theme_shape_shadow">Decalajul umbrei</string>
