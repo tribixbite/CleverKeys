@@ -420,6 +420,8 @@
     <string name="appearance_key_vertical_margin_desc">Spațiere verticală între taste</string>
     <string name="appearance_key_horizontal_margin_title">Margine orizontală taste</string>
     <string name="appearance_key_horizontal_margin_desc">Spațiere orizontală între taste</string>
+    <string name="appearance_look_show_hints_title">Afișează indiciile gesturilor la aspectele cunoscute</string>
+    <string name="appearance_look_show_hints_desc">Aspectele în stil iOS, Gboard, SwiftKey și Samsung ascund indiciile din colțuri ca acele tastaturi; activarea opțiunii le afișează pe toate. Gesturile funcționează oricum.</string>
     <string name="appearance_custom_border_title">Chenar personalizat</string>
     <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>

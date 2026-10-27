@@ -29,6 +29,14 @@ data class KeyboardLook(
      * e.g. Gboard's comma and period. Empty for most looks.
      */
     val functionChars: String = "",
+    /**
+     * Which corner labels (gesture hints) the look draws ([LookLegendPolicy]): the products show
+     * none (iOS, SwiftKey, Samsung) or only the top-row digits (Gboard). Drawing only — every
+     * gesture, TalkBack label and accessibility short-swipe action is unchanged.
+     */
+    val legends: LookLegends = LookLegends.ALL,
+    /** Keys drawn as full pills (radius = half the shorter side), e.g. Gboard's ?123 and Enter. */
+    val pillKeys: Set<LookPillKey> = emptySet(),
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark
@@ -103,6 +111,66 @@ data class LookGeometry(
     /** Main label font weight, 100..900 (400 = regular); applied on Android 9+. */
     val labelWeight: Int? = null,
 )
+
+/** Which corner labels a look draws. */
+enum class LookLegends {
+    /** No corner labels at all. */
+    NONE,
+    /** Only single-digit corner labels (Gboard's 1–0 over the top row). */
+    DIGITS,
+    /** Every corner label, as every non-look theme draws. */
+    ALL,
+}
+
+/** Keys a look can draw as pills. */
+enum class LookPillKey {
+    /** Plain Enter (`KEYCODE_ENTER`). */
+    ENTER,
+    /** The editor-action key of Go / Search / Send / Done fields (`Event.ACTION`). */
+    ACTION,
+    /** The numbers-pane switch (`switch_numeric`: 123 / ?123 / !#1). */
+    NUMBERS,
+}
+
+/**
+ * Corner-label (gesture hint) drawing while a look is effective.
+ *
+ * Precedence (docs/specs/layout-system.md "Keyboard looks"): no look → every label (as always);
+ * a look → its [KeyboardLook.legends], unless the user turned on Appearance → "Show gesture
+ * hints on familiar looks" (`look_show_hints`, default off), which restores every label. Only
+ * drawing changes: gestures, TalkBack labels and accessibility short-swipe actions are not
+ * affected, and the existing hint preferences (secondary-label size, dimming) still apply to
+ * whatever is drawn.
+ */
+object LookLegendPolicy {
+    fun effective(legends: LookLegends?, showHints: Boolean): LookLegends =
+        if (legends == null || showHints) LookLegends.ALL else legends
+
+    /** Whether a corner label with text [label] is drawn under [effective]. */
+    fun drawsCornerLabel(effective: LookLegends, label: String): Boolean = when (effective) {
+        LookLegends.ALL -> true
+        LookLegends.NONE -> false
+        LookLegends.DIGITS -> label.length == 1 && label[0] in '0'..'9'
+    }
+
+    /** CleverKeys' space-bar glyph is a hint too: none of the copied keyboards draws one. */
+    fun drawsSpaceBarGlyph(effective: LookLegends): Boolean = effective == LookLegends.ALL
+}
+
+/** Per-key shapes of a look. */
+object LookShapes {
+    /** Whether a key is one of the look's [pills] (the key's identity, pressed or not). */
+    fun isPill(pills: Set<LookPillKey>, isEnter: Boolean, isAction: Boolean, isNumbers: Boolean): Boolean =
+        pills.isNotEmpty() && (
+            (isEnter && LookPillKey.ENTER in pills) ||
+                (isAction && LookPillKey.ACTION in pills) ||
+                (isNumbers && LookPillKey.NUMBERS in pills)
+            )
+
+    /** A pill's radius is half its shorter side; any other key keeps [base]. */
+    fun cornerRadius(pill: Boolean, base: Float, keyW: Float, keyH: Float): Float =
+        if (pill) minOf(keyW, keyH) / 2f else base
+}
 
 /**
  * Which appearance values a keyboard view uses for key geometry: the effective look's where it

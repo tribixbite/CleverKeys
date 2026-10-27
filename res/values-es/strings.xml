@@ -415,6 +415,8 @@
     <string name="appearance_key_vertical_margin_desc">Espaciado vertical entre teclas</string>
     <string name="appearance_key_horizontal_margin_title">Margen horizontal de teclas</string>
     <string name="appearance_key_horizontal_margin_desc">Espaciado horizontal entre teclas</string>
+    <string name="appearance_look_show_hints_title">Mostrar pistas de gestos en aspectos conocidos</string>
+    <string name="appearance_look_show_hints_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung ocultan las pistas de las esquinas como esos teclados; actívalo para mostrarlas todas. Los gestos funcionan igual.</string>
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
     <string name="appearance_custom_border_desc">Activar estilo de borde de tecla personalizado</string>
     <string name="appearance_border_radius_title">Radio de borde</string>

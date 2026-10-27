@@ -82,6 +82,20 @@ class KeyboardLooksTest {
     }
 
     @Test
+    fun legendsAndPillsFollowTheProductsDefaults() {
+        // Gboard shows the top-row digit hints; SwiftKey (Pixel reference), iOS and Samsung
+        // ("Alternative characters" off) show none. Gboard's ?123 and Enter are pills.
+        val gboard = KeyboardLooks.byId(KeyboardLooks.GBOARD)!!
+        assertThat(gboard.legends).isEqualTo(LookLegends.DIGITS)
+        assertThat(gboard.pillKeys).containsExactly(LookPillKey.ENTER, LookPillKey.ACTION, LookPillKey.NUMBERS)
+        for (id in listOf(KeyboardLooks.IOS, KeyboardLooks.SWIFTKEY, KeyboardLooks.SAMSUNG, KeyboardLooks.IOS18)) {
+            val look = KeyboardLooks.byId(id)!!
+            assertWithMessage("$id legends").that(look.legends).isEqualTo(LookLegends.NONE)
+            assertWithMessage("$id pills").that(look.pillKeys).isEmpty()
+        }
+    }
+
+    @Test
     fun everyPaletteColourIsOpaqueExceptAnInvisibleSeparator() {
         for (look in KeyboardLooks.ALL) for ((mode, p) in listOf("light" to look.light, "dark" to look.dark)) {
             val colours = mapOf(

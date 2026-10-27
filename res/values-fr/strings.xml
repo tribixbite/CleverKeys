@@ -403,6 +403,8 @@
     <string name="appearance_key_vertical_margin_desc">Espacement vertical entre les touches</string>
     <string name="appearance_key_horizontal_margin_title">Marge horizontale des touches</string>
     <string name="appearance_key_horizontal_margin_desc">Espacement horizontal entre les touches</string>
+    <string name="appearance_look_show_hints_title">Afficher les indices de gestes sur les apparences familières</string>
+    <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indices d’angle comme ces claviers ; activer pour tous les afficher. Les gestes fonctionnent dans les deux cas.</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
     <string name="appearance_custom_border_desc">Activer le style de bordure de touche personnalisé</string>
     <string name="appearance_border_radius_title">Rayon de bordure</string>

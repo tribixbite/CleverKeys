@@ -404,6 +404,8 @@
     <string name="appearance_key_vertical_margin_desc">Tuşlar arasındaki dikey boşluk</string>
     <string name="appearance_key_horizontal_margin_title">Tuş Yatay Kenar Boşluğu</string>
     <string name="appearance_key_horizontal_margin_desc">Tuşlar arasındaki yatay boşluk</string>
+    <string name="appearance_look_show_hints_title">Tanıdık görünümlerde hareket ipuçlarını göster</string>
+    <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler köşe ipuçlarını bu klavyeler gibi gizler; tümünü göstermek için açın. Hareketler her iki durumda da çalışır.</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>

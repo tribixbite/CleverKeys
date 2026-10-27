@@ -405,6 +405,8 @@
     <string name="appearance_key_vertical_margin_desc">Vertical na espasyo sa pagitan ng mga key</string>
     <string name="appearance_key_horizontal_margin_title">Horizontal na Margin ng Key</string>
     <string name="appearance_key_horizontal_margin_desc">Horizontal na espasyo sa pagitan ng mga key</string>
+    <string name="appearance_look_show_hints_title">Ipakita ang mga hint ng gesture sa mga pamilyar na hitsura</string>
+    <string name="appearance_look_show_hints_desc">Itinatago ng mga hitsurang istilong iOS, Gboard, SwiftKey at Samsung ang mga hint sa sulok gaya ng mga keyboard na iyon; i-on para ipakita ang lahat. Gumagana ang mga gesture alinman dito.</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
     <string name="appearance_custom_border_desc">I-enable ang custom na styling ng border ng key</string>
     <string name="appearance_border_radius_title">Radius ng Border</string>

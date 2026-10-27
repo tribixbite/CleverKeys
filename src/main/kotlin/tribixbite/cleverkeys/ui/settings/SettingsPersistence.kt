@@ -146,6 +146,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "border_config" -> {
                 borderConfigEnabled = prefs.getBoolean(key, Defaults.BORDER_CONFIG)
             }
+            "look_show_hints" -> {
+                lookShowHints = prefs.getBoolean(key, Defaults.LOOK_SHOW_HINTS)
+            }
             "custom_border_radius" -> {
                 customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
@@ -275,6 +278,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
 
         // Border customization settings
         borderConfigEnabled = prefs.getSafeBoolean("border_config", Defaults.BORDER_CONFIG)
+        lookShowHints = prefs.getSafeBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

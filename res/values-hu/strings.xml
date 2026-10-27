@@ -401,6 +401,8 @@
     <string name="appearance_key_vertical_margin_desc">Függőleges távolság a billentyűk között</string>
     <string name="appearance_key_horizontal_margin_title">Billentyű vízszintes margója</string>
     <string name="appearance_key_horizontal_margin_desc">Vízszintes távolság a billentyűk között</string>
+    <string name="appearance_look_show_hints_title">Mozdulattippek megjelenítése ismerős megjelenéseknél</string>
+    <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A mozdulatok mindkét esetben működnek.</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
     <string name="appearance_custom_border_desc">Egyéni billentyűszegély stílus engedélyezése</string>
     <string name="appearance_border_radius_title">Szegély sugara</string>

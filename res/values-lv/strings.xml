@@ -409,6 +409,8 @@
     <string name="appearance_key_vertical_margin_desc">Vertikālais atstatums starp taustiņiem</string>
     <string name="appearance_key_horizontal_margin_title">Taustiņu horizontālā mala</string>
     <string name="appearance_key_horizontal_margin_desc">Horizontālais atstatums starp taustiņiem</string>
+    <string name="appearance_look_show_hints_title">Rādīt žestu norādes pazīstamiem izskatiem</string>
+    <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey un Samsung stila izskati slēpj stūru norādes tāpat kā šīs tastatūras; ieslēdziet, lai rādītu visas. Žesti darbojas jebkurā gadījumā.</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>

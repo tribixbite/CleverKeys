@@ -113,7 +113,10 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    colour — function keys carry FLAG_SECONDARY, Pixel 2026-10-27), `functionChars` (Gboard's `,.`
    → MODIFIER), `lockedColor` from the look's Caps Lock label, `keyShadowColor`,
    `suggestionSeparatorColor` (others: sub-label at alpha 100, as always), `swipeTrailColor`
-   (0 = the user's trail). New look = a `KeyboardLooks` entry + a `ThemeSettingsActivity.LOOK_THEMES`
+(0 = the user's trail), `lookLegends` (corner labels: `LookLegendPolicy` — NONE / DIGITS /
+   ALL; the `look_show_hints` pref, default off, restores ALL; drawing only, a11y untouched) and
+   `lookPillKeys` (`LookShapes`: ENTER / ACTION / NUMBERS drawn with radius = half the shorter
+   side, decided by key identity in `Keyboard2View.onDraw`). New look = a `KeyboardLooks` entry + a `ThemeSettingsActivity.LOOK_THEMES`
    row (drift: `LayoutThemeBindingConfigTest`) + 6 strings × 22 locales; render pinned by
    `theme/KeyboardLookRenderTest` (mock).
 

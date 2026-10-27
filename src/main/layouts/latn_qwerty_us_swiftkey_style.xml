@@ -10,10 +10,13 @@ References: Microsoft SwiftKey support articles "How do I turn the number row on
 and "How to use Emoji" (https://support.microsoft.com/en-us/swiftkey-keyboard/how-to-use-emoji-with-microsoft-swiftkey-keyboard).
 
 What is mimicked:
-- a number row 1-0 above three letter rows (embedded, so CleverKeys' optional number row
-  is not added a second time);
-- SwiftKey's long-press symbol for every letter, shown as the top hint (swipe up):
-  % ^ ~ | [ ] < > { } on the top row, @ # & * - + = ( ) and _ $ " ' : ; / below;
+- three letter rows with no number row: the default of the current SwiftKey (Microsoft
+  SwiftKey 9.13 on a Pixel 8 Pro, reference screenshot 2026-10-27, build/oct27-looks/);
+  CleverKeys' own number row (Settings) adds one, as SwiftKey's number-row setting does;
+- SwiftKey's long-press characters as swipe corners: digits 1-0 up (n) on the top row with
+  % ^ ~ | [ ] < > { } up-right (ne), and @ # & * - + = ( ) and _ $ " ' : ; / up on the
+  rows below. The SwiftKey-style look draws none of these hints, as SwiftKey's default
+  (Appearance -> "Show gesture hints on familiar looks" shows them);
 - the second row indented by half a key; Shift and Delete 1.5 keys wide;
 - bottom row "123 | emoji | , | space | . | enter" at 1 / 1 / 1 / 4.5 / 1 / 1.5 key widths,
   with dictation as the comma's top hint and ? ! on the period, where SwiftKey draws them.
@@ -32,30 +35,18 @@ Look: theme="look_swiftkey" binds the matching keyboard look (colours, key shape
 and dark follow the system; theme/KeyboardLooks.kt), so switching to this layout switches
 the whole appearance. Layout Manager's Theme chip can override it ("Follow global theme").
 -->
-<keyboard name="QWERTY (SwiftKey-style)" theme="look_swiftkey" script="latin" bottom_row="false" embedded_number_row="true">
-  <row height="0.75">
-    <key c="1"/>
-    <key c="2"/>
-    <key c="3"/>
-    <key c="4"/>
-    <key c="5"/>
-    <key c="6"/>
-    <key c="7"/>
-    <key c="8"/>
-    <key c="9"/>
-    <key c="0"/>
-  </row>
+<keyboard name="QWERTY (SwiftKey-style)" theme="look_swiftkey" script="latin" bottom_row="false">
   <row>
-    <key c="q" n="%"/>
-    <key c="w" n="^"/>
-    <key c="e" n="~" se="loc €"/>
-    <key c="r" n="|"/>
-    <key c="t" n="["/>
-    <key c="y" n="]"/>
-    <key c="u" n="&lt;"/>
-    <key c="i" n="&gt;"/>
-    <key c="o" n="{"/>
-    <key c="p" n="}"/>
+    <key c="q" n="1" ne="%"/>
+    <key c="w" n="2" ne="^"/>
+    <key c="e" n="3" ne="~" se="loc €"/>
+    <key c="r" n="4" ne="|"/>
+    <key c="t" n="5" ne="["/>
+    <key c="y" n="6" ne="]"/>
+    <key c="u" n="7" ne="&lt;"/>
+    <key c="i" n="8" ne="&gt;"/>
+    <key c="o" n="9" ne="{"/>
+    <key c="p" n="0" ne="}"/>
   </row>
   <row>
     <key shift="0.5" c="a" n="\@"/>

@@ -1811,6 +1811,12 @@ class Keyboard2View @JvmOverloads constructor(
         // has none). Hoisted out of the per-key loop so the whole drawCustomMappings pass — call +
         // index lookup per key — is skipped entirely when the feature is unused.
         val hasCustomMappings = _shortSwipeManager.hasCustomMappings
+        // Keyboard looks: which corner labels are drawn (LookLegendPolicy). Every non-look theme,
+        // and any look with "Show gesture hints on familiar looks" on, draws all of them. Drawing
+        // only — gestures, TalkBack labels and a11y short-swipe actions are untouched.
+        val legends = tribixbite.cleverkeys.theme.LookLegendPolicy.effective(_theme.lookLegends, snap.look_show_hints)
+        val allLegends = legends == tribixbite.cleverkeys.theme.LookLegends.ALL
+        val pills = _theme.lookPillKeys
         var y = tc.margin_top
 
         for (row in keyboard.rows) {
@@ -1847,9 +1853,22 @@ class Keyboard2View @JvmOverloads constructor(
                     Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars)
                 )
 
-                drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
+                // A look's pill keys (Gboard's ?123 and Enter): identity, so pressed stays a pill.
+                val radius = if (pills.isEmpty() || kv0 == null) tc_key.border_radius else
+                    tribixbite.cleverkeys.theme.LookShapes.cornerRadius(
+                        tribixbite.cleverkeys.theme.LookShapes.isPill(
+                            pills,
+                            isEnter = kv0.getKind() == KeyValue.Kind.Keyevent && kv0.getKeyevent() == android.view.KeyEvent.KEYCODE_ENTER,
+                            isAction = kv0.getKind() == KeyValue.Kind.Event && kv0.getEvent() == KeyValue.Event.ACTION,
+                            isNumbers = kv0.getKind() == KeyValue.Kind.Event && kv0.getEvent() == KeyValue.Event.SWITCH_NUMERIC,
+                        ),
+                        tc_key.border_radius, keyW, keyH,
+                    )
+                drawKeyFrame(canvas, x, y, keyW, keyH, tc_key, radius)
                 // The main label's drawn width bounds the W/E sublabel slots (SubLabelSizing).
-                val mainLabelW = if (k.keys[0] != null)
+                // A look hides CleverKeys' space-bar glyph with the other hints (LookLegendPolicy).
+                val mainLabelW = if (k.keys[0] != null && (tribixbite.cleverkeys.theme.LookLegendPolicy.drawsSpaceBarGlyph(legends) ||
+                        !(kv0!!.getKind() == KeyValue.Kind.Char && kv0.getChar() == ' ')))
                     drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
                 else 0f
                 // #171: a custom short-swipe mapping REPLACES the default sublabel in its
@@ -1863,12 +1882,15 @@ class Keyboard2View @JvmOverloads constructor(
                     )
                 else 0
                 for (i in 1..8) {
-                    if (k.keys[i] != null && (coveredSubLabels and (1 shl i)) == 0)
-                        drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW)
+                    val sub = k.keys[i] ?: continue
+                    if ((coveredSubLabels and (1 shl i)) == 0 &&
+                        (allLegends || tribixbite.cleverkeys.theme.LookLegendPolicy.drawsCornerLabel(legends, sub.getString())))
+                        drawSubLabel(canvas, sub, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW)
                 }
                 // Draw custom short swipe mappings (they own their slots — see above).
-                // Skip the whole overlay when no custom mappings are configured (R2 early-out).
-                if (hasCustomMappings)
+                // Skip the whole overlay when no custom mappings are configured (R2 early-out),
+                // and while a look hides corner labels (they are gesture hints too).
+                if (hasCustomMappings && allLegends)
                     drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap, mainLabelW)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 x += _keyWidth * k.width
@@ -2002,8 +2024,10 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /** Draw borders and background of the key. */
-    private fun drawKeyFrame(canvas: Canvas, x: Float, y: Float, keyW: Float, keyH: Float, tc: Theme.Computed.Key) {
-        val r = tc.border_radius
+    private fun drawKeyFrame(
+        canvas: Canvas, x: Float, y: Float, keyW: Float, keyH: Float, tc: Theme.Computed.Key,
+        r: Float = tc.border_radius,
+    ) {
         val w = tc.border_width
         val padding = w / 2f
         _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding)

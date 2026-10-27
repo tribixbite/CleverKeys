@@ -62,6 +62,7 @@ object KeyboardLooks {
             keyGapHorizontal = 0.15f, keyGapVertical = 0.20f, cornerRadiusDp = 8f,
             borderWidthDp = 0f, shadowDyDp = 0f, labelScale = 1.25f, labelWeight = 400,
         ),
+        legends = LookLegends.NONE,
     )
 
     /**
@@ -94,6 +95,7 @@ object KeyboardLooks {
             keyGapHorizontal = 0.15f, keyGapVertical = 0.22f, cornerRadiusDp = 5f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.25f, labelWeight = 300,
         ),
+        legends = LookLegends.NONE,
     )
 
     /**
@@ -128,6 +130,8 @@ object KeyboardLooks {
             borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.2f, labelWeight = 400,
         ),
         functionChars = ",.",
+        legends = LookLegends.DIGITS,
+        pillKeys = setOf(LookPillKey.ENTER, LookPillKey.ACTION, LookPillKey.NUMBERS),
     )
 
     /**
@@ -162,6 +166,7 @@ object KeyboardLooks {
             keyGapHorizontal = 0.12f, keyGapVertical = 0.10f, cornerRadiusDp = 8f,
             borderWidthDp = 0f, shadowDyDp = 0.7f, labelScale = 1.2f, labelWeight = 400,
         ),
+        legends = LookLegends.NONE,
     )
 
     /**
@@ -196,6 +201,7 @@ object KeyboardLooks {
             keyGapHorizontal = 0.16f, keyGapVertical = 0.14f, cornerRadiusDp = 6f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.1f, labelWeight = 400,
         ),
+        legends = LookLegends.NONE,
     )
 
     /** Every look, in Theme Manager order. */

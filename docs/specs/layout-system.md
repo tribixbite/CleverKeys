@@ -371,7 +371,19 @@ shadow and outline; bar background, text, highlight and separator (alpha 0 = non
 `LookGeometry` holds what the look DEFINES, each nullable: horizontal gap (fraction of one key
 unit's width), vertical gap (fraction of the row height), corner radius, outline width and
 shadow offset (dp), label scale (relative to the user's size) and label weight.
-`functionChars` lists character keys drawn as function keys (Gboard's `,.`).
+`functionChars` lists character keys drawn as function keys (Gboard's `,.`). `legends`
+(`LookLegends`: NONE / DIGITS / ALL) says which corner labels are drawn and `pillKeys`
+(`LookPillKey`: ENTER / ACTION / NUMBERS) which keys are pills (radius = half the shorter side,
+`LookShapes`; by key identity, so a pressed pill stays a pill).
+
+**Legends precedence** (`LookLegendPolicy`, lead review 2026-10-27). No look → every corner
+label, as always. A look → its `legends` (Gboard-style DIGITS: only single digits, its 1–0;
+iOS-, SwiftKey-, Samsung-, iOS 18-style NONE), unless Appearance → "Show gesture hints on
+familiar looks" (`look_show_hints`, boolean, default off, `SettingsDefaults`) is on, which
+restores ALL. Custom short-swipe glyphs follow the same rule (drawn only under ALL). Drawing
+only: the gestures, `KeyboardAccessibilityHelper` labels and the a11y short-swipe actions read
+the layout, not the renderer, so they are unchanged; the existing hint settings (secondary
+label size, dimming) still apply to what is drawn.
 
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,

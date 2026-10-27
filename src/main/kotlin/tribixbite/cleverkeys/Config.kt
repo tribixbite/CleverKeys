@@ -48,6 +48,8 @@ object Defaults {
     const val KEY_VERTICAL_MARGIN = 1.5f
     const val KEY_HORIZONTAL_MARGIN = 2.0f
     const val BORDER_CONFIG = false
+    /** Appearance → "Show gesture hints on familiar looks": off = a look decides its legends. */
+    const val LOOK_SHOW_HINTS = false
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -873,6 +875,8 @@ class Config private constructor(
     @JvmField var enter_always_newline = Defaults.ENTER_ALWAYS_NEWLINE
     @JvmField var selected_number_layout: NumberLayout? = null
     @JvmField var borderConfig = Defaults.BORDER_CONFIG
+    /** Draw every corner label even while a keyboard look hides them (LookLegendPolicy). */
+    @JvmField var look_show_hints = Defaults.LOOK_SHOW_HINTS
     @JvmField var circle_sensitivity = Defaults.CIRCLE_SENSITIVITY_FALLBACK
     @JvmField var clipboard_history_enabled = Defaults.CLIPBOARD_HISTORY_ENABLED
     @JvmField var clipboard_history_limit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
@@ -1199,6 +1203,7 @@ class Config private constructor(
         keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY) * 255 / 100
 
         borderConfig = _prefs.getBoolean("border_config", Defaults.BORDER_CONFIG)
+        look_show_hints = _prefs.getBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
@@ -1495,6 +1500,7 @@ class Config private constructor(
         labelTextSize = labelTextSize,
         sublabelTextSize = sublabelTextSize,
         secondary_label_size_scale = secondary_label_size_scale,
+        look_show_hints = look_show_hints,
         characterSize = characterSize,
         keyboardOpacity = keyboardOpacity,
         themeName = themeName,

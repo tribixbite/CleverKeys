@@ -94,4 +94,53 @@ class KeyboardLookGeometryTest {
         assertThat(e.labelScale).isEqualTo(KeyboardLookGeometry.MAX_LABEL_SCALE)
         assertThat(e.labelWeight).isEqualTo(900)
     }
+    // ── legends (corner labels) and per-key shapes (lead review 2026-10-27) ──────────
+
+    @Test
+    fun withoutALookEveryCornerLabelIsDrawnWhateverTheSwitch() {
+        for (showHints in listOf(false, true)) {
+            assertThat(LookLegendPolicy.effective(null, showHints)).isEqualTo(LookLegends.ALL)
+        }
+        assertThat(LookLegendPolicy.drawsCornerLabel(LookLegends.ALL, "€")).isTrue()
+    }
+
+    @Test
+    fun aLookDecidesItsLegendsUnlessTheUserAsksForGestureHints() {
+        assertThat(LookLegendPolicy.effective(LookLegends.NONE, showHints = false)).isEqualTo(LookLegends.NONE)
+        assertThat(LookLegendPolicy.effective(LookLegends.DIGITS, showHints = false)).isEqualTo(LookLegends.DIGITS)
+        assertWithMessage("\"Show gesture hints on familiar looks\" restores every legend")
+            .that(LookLegendPolicy.effective(LookLegends.NONE, showHints = true)).isEqualTo(LookLegends.ALL)
+        assertThat(LookLegendPolicy.effective(LookLegends.DIGITS, showHints = true)).isEqualTo(LookLegends.ALL)
+    }
+
+    @Test
+    fun noneDrawsNothingAndDigitsDrawsOnlySingleDigits() {
+        for (label in listOf("1", "€", "ç", "Esc", "\uE00D")) {
+            assertThat(LookLegendPolicy.drawsCornerLabel(LookLegends.NONE, label)).isFalse()
+        }
+        for (d in '0'..'9') assertThat(LookLegendPolicy.drawsCornerLabel(LookLegends.DIGITS, d.toString())).isTrue()
+        for (label in listOf("€", "ç", "Esc", "10", "", "%")) {
+            assertWithMessage(label).that(LookLegendPolicy.drawsCornerLabel(LookLegends.DIGITS, label)).isFalse()
+        }
+    }
+
+    @Test
+    fun theSpaceBarGlyphIsDrawnOnlyWhenEveryLegendIs() {
+        // Pixel 2026-10-27: no product draws a space glyph; CleverKeys' ⎵ gave the looks away.
+        assertThat(LookLegendPolicy.drawsSpaceBarGlyph(LookLegends.ALL)).isTrue()
+        assertThat(LookLegendPolicy.drawsSpaceBarGlyph(LookLegends.DIGITS)).isFalse()
+        assertThat(LookLegendPolicy.drawsSpaceBarGlyph(LookLegends.NONE)).isFalse()
+    }
+
+    @Test
+    fun pillKeysAreRoundedToHalfTheirShorterSideOthersKeepTheRadius() {
+        val pills = setOf(LookPillKey.ENTER, LookPillKey.NUMBERS)
+        assertThat(LookShapes.isPill(pills, isEnter = true, isAction = false, isNumbers = false)).isTrue()
+        assertThat(LookShapes.isPill(pills, isEnter = false, isAction = false, isNumbers = true)).isTrue()
+        assertThat(LookShapes.isPill(pills, isEnter = false, isAction = true, isNumbers = false)).isFalse()
+        assertThat(LookShapes.isPill(emptySet(), isEnter = true, isAction = true, isNumbers = true)).isFalse()
+        assertThat(LookShapes.cornerRadius(pill = true, base = 8f, keyW = 150f, keyH = 100f)).isEqualTo(50f)
+        assertThat(LookShapes.cornerRadius(pill = true, base = 8f, keyW = 60f, keyH = 100f)).isEqualTo(30f)
+        assertThat(LookShapes.cornerRadius(pill = false, base = 8f, keyW = 150f, keyH = 100f)).isEqualTo(8f)
+    }
 }

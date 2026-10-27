@@ -576,12 +576,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     — every switch re-themes the keyboard; `Theme rebuild` 2–6 ms per switch (logcat); side by
     side with the real Gboard and SwiftKey on the Pixel (`compare-*-{light,dark}.png`). Restored:
     layouts (Pixel System/Dvorak/QWERTY US, current QWERTY US; Saga System), night mode yes,
-    CleverKeys default IME, test tabs closed. Open: (a) the Gboard-style LAYOUT has emoji as the
-    comma's hint, the real Gboard (Pixel, 2026-10-27) has a dedicated emoji key between comma and
-    space; the SwiftKey-style layout has a number row, the Pixel's real SwiftKey has none by
-    default — layout research from 2026-10-15, not changed here; (b) Gboard-style uses one fixed
+    CleverKeys default IME, test tabs closed. LEAD REVIEW round (same day): looks now decide
+    which corner labels are drawn (`LookLegendPolicy`: Gboard top-row digits only, the others
+    none; space glyph hidden), Appearance "Show gesture hints on familiar looks"
+    (`look_show_hints`, default off) restores all; Gboard ?123/Enter are pills (`LookShapes`);
+    Gboard-style layout gained its own emoji key, SwiftKey-style lost its number row (Pixel
+    references). Re-captured `build/oct27-looks/v2-*.png` (Pixel + Saga, light/dark, Gboard and
+    SwiftKey comparisons); both phones restored again. Open: (b) Gboard-style uses one fixed
     Material You palette, not the wallpaper's (could read the system dynamic colours on API 31+);
-    (c) no per-key shapes (Gboard's pill ?123/Enter) and no key-pop balloon; (d) Samsung and iOS
+    (c) no key-pop balloon; Gboard's emoji key draws function-coloured (real: letter-coloured);
+    SwiftKey's mic/!? hints on comma/period are not drawn; (d) Samsung and iOS
     looks have no on-device reference capture (no Samsung Keyboard on the test phones, no
     iPhone) — values come from the shipping app's own resources and from measured recreations.
 

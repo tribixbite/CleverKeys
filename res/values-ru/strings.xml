@@ -400,6 +400,8 @@
     <string name="appearance_key_vertical_margin_desc">Вертикальный интервал между клавишами</string>
     <string name="appearance_key_horizontal_margin_title">Горизонтальный отступ клавиш</string>
     <string name="appearance_key_horizontal_margin_desc">Горизонтальный интервал между клавишами</string>
+    <string name="appearance_look_show_hints_title">Показывать подсказки жестов в знакомых стилях</string>
+    <string name="appearance_look_show_hints_desc">Стили iOS, Gboard, SwiftKey и Samsung скрывают подсказки в углах клавиш, как эти клавиатуры; включите, чтобы показать все. Жесты работают в любом случае.</string>
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
     <string name="appearance_custom_border_desc">Включить пользовательский стиль рамки клавиш</string>
     <string name="appearance_border_radius_title">Радиус скругления рамки</string>

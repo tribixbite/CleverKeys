@@ -41,15 +41,15 @@ Add one from **Settings > Layout Manager > Add Layout**.
 | Layout | Number row | Letter hints | Bottom row (key widths) |
 |--------|------------|--------------|-------------------------|
 | **QWERTY (iOS-style)** | none | none | 123 (1.25) · emoji (1.25) · space (5) · return (2.5) |
-| **QWERTY (Gboard-style)** | none | digits 1–0 on the top row | ?123 (1.5) · comma, emoji above (1) · space (5) · period (1) · enter (1.5) |
-| **QWERTY (SwiftKey-style)** | 1–0 | one symbol per letter (`% ^ ~ \| [ ] < > { }`, `@ # & * - + = ( )`, `_ $ " ' : ; /`) | 123 (1) · emoji (1) · comma, mic above (1) · space (4.5) · period, `? !` (1) · enter (1.5) |
+| **QWERTY (Gboard-style)** | none | digits 1–0 on the top row | ?123 (1.5) · comma (1) · emoji (1) · space (4) · period (1) · enter (1.5) |
+| **QWERTY (SwiftKey-style)** | none | digits 1–0 up on the top row (symbols `% ^ ~ \| [ ] < > { }` up-right), `@ # & * - + = ( )` and `_ $ " ' : ; /` up below — not drawn | 123 (1) · emoji (1) · comma, mic above (1) · space (4.5) · period, `? !` (1) · enter (1.5) |
 | **QWERTY (Samsung-style)** | none | none | !#1 (1.5) · comma, emoji above (1) · space (5) · period (1) · enter (1.5) |
 
 All four keep the half-key indent of the second row and have all 26 letters as keys, so
 both swipe engines serve them as they serve standard QWERTY. Their own bottom row replaces
 CleverKeys' standard one, so the standard row's keys moved to corners: Ctrl and Fn on the
-123 key; settings, clipboard, GIF and the keyboard picker on the emoji key (Gboard- and
-Samsung-style: on the comma); arrows, Home/End of document and dictation on enter (SwiftKey-style: dictation
+123 key; settings, clipboard, GIF and the keyboard picker on the emoji key (Samsung-style: on
+the comma); arrows, Home/End of document and dictation on enter (SwiftKey-style: dictation
 on the comma); and the space bar still moves the cursor when you slide along it.
 
 What they cannot copy:
@@ -68,7 +68,9 @@ What they cannot copy:
   and Gboard's Material You colours use one fixed palette rather than your wallpaper's.
 
 To keep your own theme on one of these layouts, set its **Theme** chip in Layout Manager to
-**Follow global theme**.
+**Follow global theme**. Their looks draw only the hints the real keyboards show (Gboard's
+top-row digits; none on the others), but every corner still works when you swipe toward it;
+**Settings > Appearance > Show gesture hints on familiar looks** draws them all.
 
 These layouts and looks copy a key arrangement and a visual style only; they use no artwork,
 icons or fonts from those keyboards. CleverKeys is not affiliated with or endorsed by Apple,

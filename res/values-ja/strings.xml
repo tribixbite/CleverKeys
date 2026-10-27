@@ -393,6 +393,8 @@
     <string name="appearance_key_vertical_margin_desc">キー間の縦方向のスペース</string>
     <string name="appearance_key_horizontal_margin_title">キーの横間隔</string>
     <string name="appearance_key_horizontal_margin_desc">キー間の横方向のスペース</string>
+    <string name="appearance_look_show_hints_title">おなじみの外観でジェスチャーのヒントを表示</string>
+    <string name="appearance_look_show_hints_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観は、元のキーボードと同じく角のヒントを表示しません。オンにするとすべて表示します。ジェスチャーはどちらでも使えます。</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
     <string name="appearance_custom_border_desc">キーのカスタム枠線スタイルを有効にします</string>
     <string name="appearance_border_radius_title">枠線の角丸</string>

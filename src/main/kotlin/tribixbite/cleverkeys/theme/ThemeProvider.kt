@@ -296,6 +296,8 @@ class ThemeProvider(
             lookPalette = palette,
             lookGeometry = look.geometry,
             lookFunctionChars = look.functionChars,
+            lookLegends = look.legends,
+            lookPillKeys = look.pillKeys,
         )
     }
 

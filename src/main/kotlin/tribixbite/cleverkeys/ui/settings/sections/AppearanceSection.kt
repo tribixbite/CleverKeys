@@ -289,6 +289,18 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "${keyHorizontalMargin / 100f}%"
                 )
 
+                // Keyboard looks hide corner labels like the keyboards they copy; this restores
+                // them (LookLegendPolicy). Drawing only: gestures are unchanged.
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_look_show_hints_title),
+                    description = stringResource(R.string.appearance_look_show_hints_desc),
+                    checked = lookShowHints,
+                    onCheckedChange = {
+                        lookShowHints = it
+                        saveSetting("look_show_hints", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_custom_border_title),
                     description = stringResource(R.string.appearance_custom_border_desc),

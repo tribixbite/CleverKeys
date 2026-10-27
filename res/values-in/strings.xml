@@ -405,6 +405,8 @@
     <string name="appearance_key_vertical_margin_desc">Jarak vertikal antar tombol</string>
     <string name="appearance_key_horizontal_margin_title">Margin Horizontal Tombol</string>
     <string name="appearance_key_horizontal_margin_desc">Jarak horizontal antar tombol</string>
+    <string name="appearance_look_show_hints_title">Tampilkan petunjuk gestur pada tampilan familier</string>
+    <string name="appearance_look_show_hints_desc">Tampilan gaya iOS, Gboard, SwiftKey, dan Samsung menyembunyikan petunjuk sudut seperti keyboard tersebut; aktifkan untuk menampilkan semuanya. Gestur tetap berfungsi.</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
     <string name="appearance_custom_border_desc">Aktifkan gaya batas tombol kustom</string>
     <string name="appearance_border_radius_title">Radius Batas</string>

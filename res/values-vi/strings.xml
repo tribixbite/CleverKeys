@@ -422,6 +422,8 @@
     <string name="appearance_key_vertical_margin_desc">Khoảng cách dọc giữa các phím</string>
     <string name="appearance_key_horizontal_margin_title">Lề ngang phím</string>
     <string name="appearance_key_horizontal_margin_desc">Khoảng cách ngang giữa các phím</string>
+    <string name="appearance_look_show_hints_title">Hiện gợi ý cử chỉ trên giao diện quen thuộc</string>
+    <string name="appearance_look_show_hints_desc">Các giao diện kiểu iOS, Gboard, SwiftKey và Samsung ẩn gợi ý ở góc giống các bàn phím đó; bật để hiện tất cả. Cử chỉ vẫn hoạt động.</string>
     <string name="appearance_custom_border_title">Cấu hình viền tùy chỉnh</string>
     <string name="appearance_custom_border_desc">Bật kiểu viền phím tùy chỉnh</string>
     <string name="appearance_border_radius_title">Bán kính viền</string>

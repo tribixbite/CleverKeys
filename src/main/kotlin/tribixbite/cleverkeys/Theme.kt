@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.compositeOver
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import tribixbite.cleverkeys.theme.KeyboardLookGeometry
 import tribixbite.cleverkeys.theme.LookGeometry
+import tribixbite.cleverkeys.theme.LookLegends
+import tribixbite.cleverkeys.theme.LookPillKey
 import tribixbite.cleverkeys.theme.LookPalette
 import tribixbite.cleverkeys.theme.LookTypeface
 import kotlin.math.min
@@ -150,6 +152,14 @@ class Theme {
     @JvmField
     val functionChars: String
 
+    /** A look's corner-label policy; null for every non-look theme (all labels drawn). */
+    @JvmField
+    val lookLegends: LookLegends?
+
+    /** Keys a look draws as pills; empty for every non-look theme. */
+    @JvmField
+    val lookPillKeys: Set<LookPillKey>
+
     /** Main label colour on modifier and function keys; 0 = the ordinary label colour. */
     @JvmField
     val modifierLabelColor: Int
@@ -227,6 +237,8 @@ class Theme {
         colorKeyAction = colorKeySpecial
         actionLabelColor = 0
         functionChars = ""
+        lookLegends = null
+        lookPillKeys = emptySet()
         modifierLabelColor = 0
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
@@ -254,6 +266,8 @@ class Theme {
         lookPalette: LookPalette? = null,
         lookGeometry: LookGeometry? = null,
         lookFunctionChars: String = "",
+        lookLegends: LookLegends? = null,
+        lookPillKeys: Set<LookPillKey> = emptySet(),
     ) {
         getKeyFont(context) // Initialize font
 
@@ -318,6 +332,8 @@ class Theme {
         colorKeyAction = lookPalette?.actionKey ?: colorKeySpecial
         actionLabelColor = lookPalette?.actionLabel ?: 0
         functionChars = lookFunctionChars
+        this.lookLegends = lookLegends
+        this.lookPillKeys = lookPillKeys
         modifierLabelColor = lookPalette?.modifierLabel ?: 0
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)

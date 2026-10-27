@@ -597,6 +597,8 @@
     <string name="appearance_key_vertical_margin_desc">Vertical spacing between keys</string>
     <string name="appearance_key_horizontal_margin_title">Key Horizontal Margin</string>
     <string name="appearance_key_horizontal_margin_desc">Horizontal spacing between keys</string>
+    <string name="appearance_look_show_hints_title">Show gesture hints on familiar looks</string>
+    <string name="appearance_look_show_hints_desc">iOS-, Gboard-, SwiftKey- and Samsung-style looks hide corner hints as those keyboards do; turn on to show every hint. Gestures work either way.</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>

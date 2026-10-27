@@ -217,10 +217,11 @@ class StyleLayoutsTest {
                 numeric("123", 1.25f), Slot(key("switch_emoji"), 1.25f),
                 Slot(key("space"), 5f), Slot(key("enter"), 2.5f),
             ),
-            // Gboard: ?123 | , | space | . | enter (emoji is the comma's hint)
+            // Gboard: ?123 | , | emoji | space | . | enter (the real Gboard on the Pixel,
+            // 2026-10-27: a dedicated emoji key between comma and space)
             GBOARD to listOf(
-                numeric("?123", 1.5f), Slot(key(","), 1f), Slot(key("space"), 5f),
-                Slot(key("."), 1f), Slot(key("enter"), 1.5f),
+                numeric("?123", 1.5f), Slot(key(","), 1f), Slot(key("switch_emoji"), 1f),
+                Slot(key("space"), 4f), Slot(key("."), 1f), Slot(key("enter"), 1.5f),
             ),
             // SwiftKey: 123 | emoji | , | space | . | enter
             SWIFTKEY to listOf(
@@ -385,30 +386,33 @@ class StyleLayoutsTest {
             .filter { it.getKeyValue(0)?.getKind() == KeyValue.Kind.Char }
             .filter { visibleCorners(it).isNotEmpty() }
         assertThat(hinted).isEmpty()
-        // Gboard draws the emoji key as the comma's top hint.
-        val comma = kw.rows.last().keys.first { it.getKeyValue(0) == key(",") }
-        assertThat(comma.getKeyValue(7)).isEqualTo(key("switch_emoji"))
+        // Gboard draws a dedicated emoji key between comma and space; the comma is bare.
+        val bottom = kw.rows.last().keys
+        val comma = bottom.indexOfFirst { it.getKeyValue(0) == key(",") }
+        assertThat(bottom[comma + 1].getKeyValue(0)).isEqualTo(key("switch_emoji"))
+        assertThat(visibleCorners(bottom[comma])).isEmpty()
         assertWithMessage("Gboard's default has no number row").that(kw.embedded_number_row).isFalse()
     }
 
     @Test
-    fun swiftkeyStyleHasANumberRowAndTheResearchedLongPressSymbols() {
+    fun swiftkeyStyleHasNoNumberRowAndTheResearchedLongPressCharacters() {
         val kw = parse(SWIFTKEY)
-        // Embedded so LayoutModifier does not add CleverKeys' optional number row a second time.
-        assertThat(kw.embedded_number_row).isTrue()
-        assertThat(kw.rows[0].keys.map { it.getKeyValue(0)!!.getString() })
-            .containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "0").inOrder()
-        assertThat(kw.rows[0].height).isEqualTo(0.75f)
+        // The current SwiftKey default (Pixel reference 2026-10-27) has no number row; the
+        // user's own CleverKeys number row can still be added (not embedded).
+        assertThat(kw.embedded_number_row).isFalse()
+        assertThat(topLetterRow(kw)).isEqualTo(0)
 
-        // SwiftKey's long-press symbol per letter with the number row on, drawn top-centre
-        // (CleverKeys direction n = index 7).
+        // Up (n = index 7): digits on the top row, SwiftKey's symbols below; the top row keeps
+        // its symbols up-right (ne = index 2).
         val expected = mapOf(
-            'q' to "%", 'w' to "^", 'e' to "~", 'r' to "|", 't' to "[", 'y' to "]", 'u' to "<",
-            'i' to ">", 'o' to "{", 'p' to "}",
+            'q' to "1", 'w' to "2", 'e' to "3", 'r' to "4", 't' to "5", 'y' to "6", 'u' to "7",
+            'i' to "8", 'o' to "9", 'p' to "0",
             'a' to "@", 's' to "#", 'd' to "&", 'f' to "*", 'g' to "-", 'h' to "+", 'j' to "=",
             'k' to "(", 'l' to ")",
             'z' to "_", 'x' to "$", 'c' to "\"", 'v' to "'", 'b' to ":", 'n' to ";", 'm' to "/",
         )
+        assertThat(kw.rows[0].keys.map { it.getKeyValue(2)?.getString() })
+            .containsExactly("%", "^", "~", "|", "[", "]", "<", ">", "{", "}").inOrder()
         val letters = kw.rows.flatMap { it.keys }.filter {
             val c = it.getKeyValue(0)
             c != null && c.getKind() == KeyValue.Kind.Char && c.getChar() in 'a'..'z'

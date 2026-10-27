@@ -77,7 +77,10 @@ system's dark-mode setting.
 
 While a look is in use, the key gaps, corner radius and borders it defines replace your
 **Appearance** settings for those items (including a custom border); everything else stays
-yours, and the label size stays relative to your label-size setting. Your settings are not
+yours, and the label size stays relative to your label-size setting. A look also draws only
+the corner hints the real keyboard shows (Gboard-style: the top-row digits; the others: none)
+and Gboard-style draws ?123 and Enter as pills; the swipe gestures behind hidden hints still
+work. Turn on **Appearance > Show gesture hints on familiar looks** to draw every hint. Your settings are not
 changed: pick another theme and they apply again. The four familiar-style layouts (see
 [Adding Layouts](../layouts/adding-layouts.md#familiar-style-layouts)) use their look
 automatically.

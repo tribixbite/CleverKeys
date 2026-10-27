@@ -397,6 +397,11 @@ The looks take the values above with these deliberate choices and deviations:
   bar; no separators (low-confidence data).
 - Suggestion-bar text uses the label colour for every chip (SwiftKey's grey side candidates
   are below 4.5:1 on its background and CleverKeys' bar has no centre slot).
+- **Legends and shapes (after the lead review, 2026-10-27).** The products' defaults on the
+  Pixel reference screenshots: Gboard draws only 1–0 over the top row and pill-shaped ?123 and
+  Enter; SwiftKey 9.13 draws no hints and has no number row; Samsung's "Alternative
+  characters" are off (§5); iOS draws none. The looks follow that (`legends`, `pillKeys`), and
+  the Gboard-style layout gained Gboard's dedicated emoji key between comma and space.
 - Contrast floors enforced by `KeyboardLooksTest`: letter and modifier labels 4.5:1, Enter /
   action glyphs, pressed and Caps Lock states 3:1 (iOS's white-on-`#007AFF` return is 4.0:1),
   hints 3:1 on keys and bar, bar text 4.5:1 and highlight 3:1.
