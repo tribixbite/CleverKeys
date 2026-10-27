@@ -189,6 +189,12 @@ Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<ke
 A key's own gap changes only how large its key is **drawn** inside its place on the
 keyboard: where you touch, and the key positions swipe typing uses, stay exactly the same.
 
+Key and row colours are the **same in light and dark mode**; only the `<theme>` (with its
+`<light>`/`<dark>` children) changes with the mode. A key that sets `key_background` but no
+`key_label_color` keeps the theme's label colour for the current mode, which can vanish on a
+fixed background (a light fill under dark mode's light labels). Set `key_label_color` together
+with `key_background`, and pick colours that read in both modes.
+
 ## `<modmap>`
 
 Optional remapping of keys under a modifier: `<modmap><shift a="a" b="A"/></modmap>`; children
@@ -293,15 +299,15 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
     <key shift="0.5" c="a"/>
     <key c="s"/>
     <key c="d"/>
-    <key c="f" key_label_color="#1F6FB2"/>
+    <key c="f" key_label_color="#3A86C8"/>
     <key c="g"/>
     <key c="h"/>
-    <key c="j" key_label_color="#1F6FB2"/>
+    <key c="j" key_label_color="#3A86C8"/>
     <key c="k"/>
     <key c="l"/>
   </row>
-  <row key_background="#F4F7FA" key_border_color="#9FB3C8">
-    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#D7E2EC"/>
+  <row key_background="#3E6A93" key_border_color="#9FB3C8" key_label_color="#FFFFFF">
+    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"/>
     <key c="z"/>
     <key c="x"/>
     <key c="c"/>
@@ -309,7 +315,7 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
     <key c="b"/>
     <key c="n"/>
     <key c="m"/>
-    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" key_background="#D7E2EC"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" key_background="#1F6FB2"/>
   </row>
   <row height="0.95" key_vertical_gap="2">
     <key width="1.5" c="?123:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath"/>
@@ -325,9 +331,10 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
 
 What it does: white letter keys on a light blue-grey background (dark navy in dark mode),
 a blue Enter (and orange in Go / Search / Send fields), Gboard-like digit hints on the top row,
-a bubble preview, `f` and `j` with blue labels, the third row with lighter keys and a blue-grey
-outline (Shift and Backspace darker), a taller gap above the bottom row, a slightly wider space
-bar frame and an Enter key without the custom border that turns dark blue while pressed.
+a bubble preview, `f` and `j` with blue labels, the third row in steel blue with white labels
+and a blue-grey outline (Shift and Backspace in the Enter key's blue; these colours read in both
+modes), a taller gap above the bottom row, a slightly wider space bar frame and an Enter key
+without the custom border that turns dark blue while pressed.
 
 ## Related Features
 

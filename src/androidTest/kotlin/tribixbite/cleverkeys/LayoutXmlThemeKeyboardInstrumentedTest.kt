@@ -170,8 +170,8 @@ class LayoutXmlThemeKeyboardInstrumentedTest {
                 val shift = fillOf(bmp, rects) { it.getKind() == KeyValue.Kind.Modifier }
                 Log.i(TAG, "g=${hex(g)} z=${hex(z)} shift=${hex(shift)}")
                 assertTrue("an unstyled key draws the theme's key colour: ${hex(g)}", near(g, expectedKey))
-                assertTrue("<row key_background> reaches its keys: ${hex(z)}", near(z, 0xFFF4F7FA.toInt()))
-                assertTrue("<key key_background> beats its row's: ${hex(shift)}", near(shift, 0xFFD7E2EC.toInt()))
+                assertTrue("<row key_background> reaches its keys: ${hex(z)}", near(z, 0xFF3E6A93.toInt()))
+                assertTrue("<key key_background> beats its row's: ${hex(shift)}", near(shift, 0xFF1F6FB2.toInt()))
 
                 swipeUpOnSpace()
                 waitFor("back to the global theme") { Config.globalConfig().themeName == "decorative_neon_cyberpunk" }

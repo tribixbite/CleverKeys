@@ -92,13 +92,13 @@ class LayoutXmlStylingTest {
         )
 
         val f = keyOf(layout, "f")
-        assertThat(f.style).isEqualTo(KeyStyle(labelColor = 0xFF1F6FB2.toInt()))
+        assertThat(f.style).isEqualTo(KeyStyle(labelColor = 0xFF3A86C8.toInt()))
         assertWithMessage("an unstyled key in an unstyled row has no style").that(keyOf(layout, "g").style).isNull()
         assertWithMessage("row defaults reach every key of the row")
-            .that(keyOf(layout, "z").style).isEqualTo(KeyStyle(background = 0xFFF4F7FA.toInt(), borderColor = 0xFF9FB3C8.toInt()))
+            .that(keyOf(layout, "z").style).isEqualTo(KeyStyle(background = 0xFF3E6A93.toInt(), borderColor = 0xFF9FB3C8.toInt(), labelColor = 0xFFFFFFFF.toInt()))
         assertWithMessage("a key's own attribute beats its row's, the rest is inherited")
             .that(layout.rows[2].keys.first().style)
-            .isEqualTo(KeyStyle(background = 0xFFD7E2EC.toInt(), borderColor = 0xFF9FB3C8.toInt()))
+            .isEqualTo(KeyStyle(background = 0xFF1F6FB2.toInt(), borderColor = 0xFF9FB3C8.toInt(), labelColor = 0xFFFFFFFF.toInt()))
         val bottom = layout.rows[3].keys
         assertThat(bottom[3].style!!.geometry).containsExactly(
             KeyGeometryField.VERTICAL_GAP, 2f, KeyGeometryField.HORIZONTAL_GAP, 0.6f,
@@ -130,6 +130,55 @@ class LayoutXmlStylingTest {
         assertThat(layout.embedded_theme!!.geometry.cornerRadiusDp).isEqualTo(6f)
         assertThat(layout.embedded_theme!!.colors).isEmpty()
         assertThat(layout.rows.single().keys[0].style).isEqualTo(KeyStyle(labelColor = 0xFF00FF00.toInt()))
+    }
+
+    /**
+     * Per-key and per-row colours are the SAME in light and dark mode, while the `<theme>`'s
+     * label colours follow the mode. A styled key whose label falls back to the theme's can
+     * therefore vanish in one mode: Saga 2026-10-27, dark mode, the example's third row
+     * (`key_background="#F4F7FA"`, theme dark label `#E6EEF5`, contrast 1.09) and its Shift and
+     * Backspace icons were invisible. Every styled key of the shipped example must keep a
+     * readable label (contrast ≥ 3:1, WCAG for large text / UI) at rest and, where the file sets
+     * a pressed fill, while pressed — in BOTH modes.
+     */
+    @Test
+    fun theWorkedExampleKeepsEveryStyledKeyLegibleInLightAndDarkMode() {
+        val layout = KeyboardData.load_string_exn(exampleXml)
+        val spec = layout.embedded_theme!!
+        val problems = mutableListOf<String>()
+        for (light in listOf(true, false)) {
+            val c = spec.colorsFor(light)
+            for (key in layout.rows.flatMap { it.keys }) {
+                val style = key.style ?: continue
+                val kv = key.keys[0] ?: continue
+                val isChar = kv.getKind() == KeyValue.Kind.Char
+                val mode = if (light) "light" else "dark"
+                if (style.background != null || style.labelColor != null) {
+                    val fill = style.background ?: c.getValue(if (isChar) ThemeColorRole.KEY else ThemeColorRole.KEY_MODIFIER)
+                    val label = style.labelColor ?: c.getValue(if (isChar) ThemeColorRole.LABEL else ThemeColorRole.MODIFIER_LABEL)
+                    val ratio = contrast(fill, label)
+                    if (ratio < 3.0) problems += "$mode ${kv.getString()} at rest: ${hex(label)} on ${hex(fill)} = %.2f".format(ratio)
+                }
+                if (style.backgroundPressed != null) {
+                    val label = style.labelColorPressed ?: c.getValue(ThemeColorRole.LABEL_PRESSED)
+                    val ratio = contrast(style.backgroundPressed!!, label)
+                    if (ratio < 3.0) problems += "$mode ${kv.getString()} pressed: ${hex(label)} on ${hex(style.backgroundPressed!!)} = %.2f".format(ratio)
+                }
+            }
+        }
+        assertWithMessage("styled keys whose label is unreadable in one system mode").that(problems).isEmpty()
+    }
+
+    private fun hex(c: Int) = String.format(java.util.Locale.ROOT, "#%06X", c and 0xFFFFFF)
+
+    /** WCAG 2 contrast ratio of two opaque sRGB colours. */
+    private fun contrast(a: Int, b: Int): Double {
+        fun lum(c: Int): Double {
+            fun ch(v: Int): Double = (v / 255.0).let { if (it <= 0.03928) it / 12.92 else Math.pow((it + 0.055) / 1.055, 2.4) }
+            return 0.2126 * ch((c shr 16) and 0xFF) + 0.7152 * ch((c shr 8) and 0xFF) + 0.0722 * ch(c and 0xFF)
+        }
+        val (hi, lo) = lum(a).let { la -> lum(b).let { lb -> if (la > lb) la to lb else lb to la } }
+        return (hi + 0.05) / (lo + 0.05)
     }
 
     /** The example with every styling attribute and the <theme> element removed. */

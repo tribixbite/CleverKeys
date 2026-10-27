@@ -77,15 +77,15 @@
     <key shift="0.5" c="a"/>
     <key c="s"/>
     <key c="d"/>
-    <key c="f" key_label_color="#1F6FB2"/>
+    <key c="f" key_label_color="#3A86C8"/>
     <key c="g"/>
     <key c="h"/>
-    <key c="j" key_label_color="#1F6FB2"/>
+    <key c="j" key_label_color="#3A86C8"/>
     <key c="k"/>
     <key c="l"/>
   </row>
-  <row key_background="#F4F7FA" key_border_color="#9FB3C8">
-    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#D7E2EC"/>
+  <row key_background="#3E6A93" key_border_color="#9FB3C8" key_label_color="#FFFFFF">
+    <key width="1.5" c="shift" nw="home" ne="end" sw="loc capslock" key_background="#1F6FB2"/>
     <key c="z"/>
     <key c="x"/>
     <key c="c"/>
@@ -93,7 +93,7 @@
     <key c="b"/>
     <key c="n"/>
     <key c="m"/>
-    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" key_background="#D7E2EC"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" key_background="#1F6FB2"/>
   </row>
   <row height="0.95" key_vertical_gap="2">
     <key width="1.5" c="?123:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath"/>
