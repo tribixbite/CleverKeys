@@ -1928,11 +1928,22 @@ class Keyboard2View @JvmOverloads constructor(
                         _shortSwipeManager.getMappingsForKey(_keyCodeLowerCache[k] ?: "").keys
                     )
                 else 0
+                // Which slots draw a label, and — where a band (top: NW N NE, bottom: SW S SE) holds
+                // a centre label beside a corner — the band's shared shrink so they never overlap
+                // (SubLabelSizing.bandScale; Pixel 2026-10-27 "ABC" over "GIF").
+                var drawnMask = 0
                 for (i in 1..8) {
                     val sub = k.keys[i] ?: continue
                     if ((coveredSubLabels and (1 shl i)) == 0 &&
                         (allLegends || tribixbite.cleverkeys.theme.LookLegendPolicy.drawsCornerLabel(legends, sub.getString())))
-                        drawSubLabel(canvas, sub, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW, radius)
+                        drawnMask = drawnMask or (1 shl i)
+                }
+                val topScale = bandScale(k, drawnMask, 1, 7, 2, keyW, isKeyDown, tc_key, snap, mainLabelW, radius)
+                val bottomScale = bandScale(k, drawnMask, 3, 8, 4, keyW, isKeyDown, tc_key, snap, mainLabelW, radius)
+                for (i in 1..8) {
+                    if ((drawnMask and (1 shl i)) == 0) continue
+                    val scale = when (i) { 1, 2, 7 -> topScale; 3, 4, 8 -> bottomScale; else -> 1f }
+                    drawSubLabel(canvas, k.keys[i]!!, x, y, keyW, keyH, i, isKeyDown, tc_key, snap, mainLabelW, radius, scale)
                 }
                 // Draw custom short swipe mappings (they own their slots — see above).
                 // Skip the whole overlay when no custom mappings are configured (R2 early-out),
@@ -2170,10 +2181,46 @@ class Keyboard2View @JvmOverloads constructor(
      * drawn main-label width, which bounds the W/E slots ([SubLabelSizing.maxWidth]); [radius]
      * the key's drawn corner radius (a look's corner hints keep clear of it).
      */
-    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float, radius: Float = tc.border_radius) {
+    private fun drawSubLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyW: Float, keyH: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float, radius: Float = tc.border_radius, bandScale: Float = 1f) {
         val a = LABEL_POSITION_H[sub_index]
         val v = LABEL_POSITION_V[sub_index]
-        val modifiedKv = modifyKey(kv, _mods) ?: return
+        val p = subLabelPaint(kv, keyW, sub_index, isKeyDown, tc, snap, mainLabelW, radius) ?: return
+        if (bandScale < 1f) p.textSize *= bandScale
+        val label = _subLabelText
+        val label_len = _subLabelLen
+        val subPadding = _subLabelPadding
+        var yPos = y
+        var xPos = x
+
+        yPos += when (v) {
+            Vertical.CENTER -> (keyH - p.ascent() - p.descent()) / 2f
+            Vertical.TOP -> subPadding - p.ascent()
+            Vertical.BOTTOM -> keyH - subPadding - p.descent()
+        }
+
+        xPos += when (a) {
+            Paint.Align.CENTER -> keyW / 2f
+            Paint.Align.LEFT -> subPadding
+            Paint.Align.RIGHT -> keyW - subPadding
+        }
+
+        canvas.drawText(label, 0, label_len, xPos, yPos, p)
+    }
+
+    /** Outputs of [subLabelPaint] (main-thread draw path; fields avoid a per-label allocation). */
+    private var _subLabelText: String = ""
+    private var _subLabelLen = 0
+    private var _subLabelPadding = 0f
+
+    /**
+     * The paint for sublabel slot [sub_index] at its individually fitted size, or null when the
+     * modifiers hide the key. Also sets [_subLabelText], [_subLabelLen] and [_subLabelPadding].
+     * Shared by [drawSubLabel] and the band measurement ([bandScale]) so both see the same size.
+     */
+    private fun subLabelPaint(kv: KeyValue, keyW: Float, sub_index: Int, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float, radius: Float): Paint? {
+        val a = LABEL_POSITION_H[sub_index]
+        val v = LABEL_POSITION_V[sub_index]
+        val modifiedKv = modifyKey(kv, _mods) ?: return null
         // A look's hints: the base size comes from LookHintLayout (onMeasure), and corner slots
         // are inset clear of the rounded corner so they never clip on pills or large radii.
         val hintStyle = _theme.lookHintStyle
@@ -2192,22 +2239,35 @@ class Keyboard2View @JvmOverloads constructor(
             label_len = 3
         p.textSize = SubLabelSizing.fitToWidth(
             textSize, p.measureText(label, 0, label_len), SubLabelSizing.maxWidth(keyW, subPadding, sub_index, mainLabelW))
-        var yPos = y
-        var xPos = x
+        _subLabelText = label
+        _subLabelLen = label_len
+        _subLabelPadding = subPadding
+        return p
+    }
 
-        yPos += when (v) {
-            Vertical.CENTER -> (keyH - p.ascent() - p.descent()) / 2f
-            Vertical.TOP -> subPadding - p.ascent()
-            Vertical.BOTTOM -> keyH - subPadding - p.descent()
+    /**
+     * Shared shrink of one band of a key's sublabels ([SubLabelSizing.bandScale]): slots [left],
+     * [centre], [right] (Keyboard2View numbering) as far as [drawnMask] draws them. 1 unless the
+     * band has a centre label beside a corner (or two corners), so most keys measure nothing.
+     */
+    private fun bandScale(
+        k: KeyboardData.Key, drawnMask: Int, left: Int, centre: Int, right: Int,
+        keyW: Float, isKeyDown: Boolean, tc: Theme.Computed.Key, snap: ConfigSnapshot, mainLabelW: Float, radius: Float,
+    ): Float {
+        fun has(i: Int) = (drawnMask and (1 shl i)) != 0
+        val count = (if (has(left)) 1 else 0) + (if (has(centre)) 1 else 0) + (if (has(right)) 1 else 0)
+        if (count < 2) return 1f
+        var cornerInset = snap.keyPadding
+        fun width(i: Int): Float {
+            if (!has(i)) return 0f
+            val p = subLabelPaint(k.keys[i]!!, keyW, i, isKeyDown, tc, snap, mainLabelW, radius) ?: return 0f
+            if (i != centre) cornerInset = _subLabelPadding
+            return p.measureText(_subLabelText, 0, _subLabelLen)
         }
-
-        xPos += when (a) {
-            Paint.Align.CENTER -> keyW / 2f
-            Paint.Align.LEFT -> subPadding
-            Paint.Align.RIGHT -> keyW - subPadding
-        }
-
-        canvas.drawText(label, 0, label_len, xPos, yPos, p)
+        val l = width(left)
+        val c = width(centre)
+        val r = width(right)
+        return SubLabelSizing.bandScale(keyW, cornerInset, keyW * SubLabelSizing.SIDE_GAP_FRACTION, l, c, r)
     }
 
     /**

@@ -117,6 +117,34 @@ object SubLabelSizing {
         return budget.coerceAtLeast(0f)
     }
 
+    /**
+     * Shared shrink factor (≤ 1) for the labels of ONE horizontal band of a key — top (NW, N, NE)
+     * or bottom (SW, S, SE) — so they never overlap (Pixel 2026-10-27: the bottom-centre "ABC"
+     * ran into the bottom-right "GIF" on 1-wide emoji / comma keys; each slot's own budget
+     * allows a centre label 0.6 of the key and each corner half of it, which intersect).
+     *
+     * [left], [centre], [right] are the labels' drawn widths at their individually fitted sizes
+     * (0 = slot empty); corners sit [inset] from the key edges, the centre label is centred, and
+     * neighbours keep [gap] between them. A band with at most one label, or whose labels already
+     * fit, keeps factor 1. Applied to the whole band, so its labels stay the same relative size.
+     */
+    fun bandScale(keyWidth: Float, inset: Float, gap: Float, left: Float, centre: Float, right: Float): Float {
+        var scale = 1f
+        fun limit(width: Float, available: Float) {
+            if (width <= 0f) return
+            scale = minOf(scale, (available / width).coerceAtLeast(0f))
+        }
+        if (centre > 0f) {
+            // left: inset + s·left + gap ≤ keyWidth/2 − s·centre/2 (right mirrors it)
+            val half = keyWidth / 2f - inset - gap
+            if (left > 0f) limit(left + centre / 2f, half)
+            if (right > 0f) limit(right + centre / 2f, half)
+        } else if (left > 0f && right > 0f) {
+            limit(left + right, keyWidth - 2f * inset - gap)
+        }
+        return scale
+    }
+
     /** [size], shrunk proportionally when text measuring [measuredWidth] at it exceeds [maxWidth]. */
     fun fitToWidth(size: Float, measuredWidth: Float, maxWidth: Float): Float =
         if (measuredWidth <= maxWidth || measuredWidth <= 0f || maxWidth <= 0f) size

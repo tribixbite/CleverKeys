@@ -217,4 +217,36 @@ class SubLabelSizingTest {
         val renderer = File("src/main/kotlin/tribixbite/cleverkeys/popover/SubkeyPopoverRenderer.kt").readText()
         assertThat(renderer).contains("h * 0.46f * label.sizeScale")
     }
+
+    /**
+     * Pixel 2026-10-27: on a 1-wide emoji key (108 px, Gboard-style, hints on) the bottom-centre
+     * "ABC" and the bottom-right "GIF" overlapped. Widths are the emulator's measured advances
+     * of LookHintOverlapRenderTest's red run (ABC 47 px, GIF 27 px, the clipboard icon 18 px).
+     */
+    @Test
+    fun aBandsLabelsShrinkTogetherUntilTheyNoLongerOverlap() {
+        val key = 108f
+        val inset = 6f
+        val gap = key * SubLabelSizing.SIDE_GAP_FRACTION
+        val s = SubLabelSizing.bandScale(key, inset, gap, left = 18f, centre = 47f, right = 27f)
+        assertThat(s).isLessThan(1f)
+        // Boxes after scaling: left [inset, inset+sL], centre centred, right [key-inset-sR, key-inset].
+        val centreL = key / 2 - s * 47f / 2
+        val centreR = key / 2 + s * 47f / 2
+        assertWithMessage("left corner clear of the centre").that(inset + s * 18f + gap).isAtMost(centreL + 1e-3f)
+        assertWithMessage("right corner clear of the centre").that(key - inset - s * 27f - gap).isAtLeast(centreR - 1e-3f)
+        assertWithMessage("the tightest side touches the gap exactly: no needless shrinking")
+            .that(key - inset - s * 27f - gap).isWithin(1e-3f).of(centreR)
+    }
+
+    @Test
+    fun aBandThatFitsOrHoldsOneLabelIsLeftAlone() {
+        assertThat(SubLabelSizing.bandScale(200f, 6f, 8f, left = 20f, centre = 30f, right = 20f)).isEqualTo(1f)
+        assertThat(SubLabelSizing.bandScale(60f, 6f, 2f, left = 0f, centre = 90f, right = 0f)).isEqualTo(1f)
+        assertThat(SubLabelSizing.bandScale(60f, 6f, 2f, left = 40f, centre = 0f, right = 0f)).isEqualTo(1f)
+        assertWithMessage("two corners alone only shrink when they would meet")
+            .that(SubLabelSizing.bandScale(60f, 6f, 2f, left = 30f, centre = 0f, right = 30f)).isWithin(1e-4f).of(46f / 60f)
+        assertWithMessage("no room at all never goes negative")
+            .that(SubLabelSizing.bandScale(10f, 6f, 2f, left = 5f, centre = 5f, right = 5f)).isEqualTo(0f)
+    }
 }
