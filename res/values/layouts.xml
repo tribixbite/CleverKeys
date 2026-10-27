@@ -73,6 +73,7 @@
     <item>latn_qwerty_us_gboard_style</item>
     <item>latn_qwerty_us_ios_style</item>
     <item>latn_qwerty_us_julow</item>
+    <item>latn_qwerty_us_samsung_style</item>
     <item>latn_qwerty_us_swiftkey_style</item>
     <item>latn_qwerty_uz</item>
     <item>latn_qwerty_vi</item>
@@ -164,6 +165,7 @@
     <item>QWERTY (Gboard-style)</item>
     <item>QWERTY (iOS-style)</item>
     <item>Julow QWERTY (US)</item>
+    <item>QWERTY (Samsung-style)</item>
     <item>QWERTY (SwiftKey-style)</item>
     <item>QWERTY (Oʻzbekcha)</item>
     <item>QWERTY (Vietnamese)</item>
@@ -255,6 +257,7 @@
     <item>@raw/latn_qwerty_us_gboard_style</item>
     <item>@raw/latn_qwerty_us_ios_style</item>
     <item>@raw/latn_qwerty_us_julow</item>
+    <item>@raw/latn_qwerty_us_samsung_style</item>
     <item>@raw/latn_qwerty_us_swiftkey_style</item>
     <item>@raw/latn_qwerty_uz</item>
     <item>@raw/latn_qwerty_vi</item>

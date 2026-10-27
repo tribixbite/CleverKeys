@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.backup
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import tribixbite.cleverkeys.LayoutThemeBinding
+import tribixbite.cleverkeys.PredefinedLayoutThemes
 
 /**
  * Per-layout theme binding changes between two `layouts` preference blobs, for the Backup &
@@ -63,14 +64,18 @@ object LayoutThemeBindingDiff {
         if (element.isJsonPrimitive) {
             val name = element.asString
             if (name == "system") Entry(Kind.SYSTEM, null, "system", null)
-            else Entry(Kind.NAMED, name, "named:$name", null)
+            // A predefined layout's XML default (a familiar-style layout's look) is its binding.
+            else Entry(Kind.NAMED, name, "named:$name", PredefinedLayoutThemes.declaredThemeOf(name))
         } else {
             val obj = element.asJsonObject
             val entryTheme = obj.get("theme")?.takeIf { !it.isJsonNull }?.asString
             when (obj.get("kind")?.asString) {
                 "named" -> {
                     val name = obj.get("name").asString
-                    Entry(Kind.NAMED, name, "named:$name", LayoutThemeBinding.effective(entryTheme, null))
+                    Entry(
+                        Kind.NAMED, name, "named:$name",
+                        LayoutThemeBinding.effective(entryTheme, PredefinedLayoutThemes.declaredThemeOf(name)),
+                    )
                 }
                 "custom" -> {
                     val xml = obj.get("xml").asString

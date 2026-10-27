@@ -1678,6 +1678,13 @@
     <string name="theme_builtin_monetlight_desc">Variante claire Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Sombre</string>
     <string name="theme_builtin_monetdark_desc">Variante sombre Material You</string>
+    <string name="theme_section_looks">Apparences familières</string>
+    <string name="theme_looks_desc">Couleurs et formes de touches de claviers de téléphone connus ; clair ou sombre selon le système. Sans lien avec Apple, Google, Microsoft ou Samsung.</string>
+    <string name="theme_look_ios_name">Style iOS</string>
+    <string name="theme_look_gboard_name">Style Gboard</string>
+    <string name="theme_look_swiftkey_name">Style SwiftKey</string>
+    <string name="theme_look_samsung_name">Style Samsung</string>
+    <string name="theme_look_ios18_name">Style iOS 18</string>
     <string name="theme_toast_applying">Application du thème : %1$s</string>
     <string name="theme_default_custom_name">Mon thème</string>
     <string name="swipe_debug_session_intro">=== Session du bac à sable de glissé démarrée ===\nFaites un glissé dans le champ de texte ci-dessus. Chaque glissé affiche son classement de candidats\net est enregistré (points + géométrie des touches + classement + mot validé).</string>

@@ -1670,6 +1670,13 @@
     <string name="theme_builtin_monetlight_desc">گونهٔ روشن Material You</string>
     <string name="theme_builtin_monetdark_name">Monet تیره</string>
     <string name="theme_builtin_monetdark_desc">گونهٔ تیرهٔ Material You</string>
+    <string name="theme_section_looks">ظاهرهای آشنا</string>
+    <string name="theme_looks_desc">رنگ‌ها و شکل کلیدهای صفحه‌کلیدهای آشنای تلفن؛ روشن یا تیره مطابق سیستم. وابسته به Apple، Google، Microsoft یا Samsung نیست.</string>
+    <string name="theme_look_ios_name">سبک iOS</string>
+    <string name="theme_look_gboard_name">سبک Gboard</string>
+    <string name="theme_look_swiftkey_name">سبک SwiftKey</string>
+    <string name="theme_look_samsung_name">سبک Samsung</string>
+    <string name="theme_look_ios18_name">سبک iOS 18</string>
     <string name="theme_toast_applying">در حال اعمال تم: %1$s</string>
     <string name="theme_default_custom_name">تم من</string>
     <string name="swipe_debug_session_intro">=== جلسهٔ زمین بازی کشیدن آغاز شد ===\nدر کادر متن بالا بکشید. هر کشیدن رتبه‌بندی نامزدهای خود را نشان می‌دهد\nو ضبط می‌شود (نقاط + هندسهٔ کلیدها + رتبه‌بندی + واژهٔ ثبت‌شده).</string>

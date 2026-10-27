@@ -172,6 +172,7 @@ data class ConfigSnapshot(
         /** The single definition of "this theme is resolved at runtime". */
         @JvmStatic
         fun isRuntimeThemeName(name: String): Boolean =
-            name.startsWith("decorative_") || name.startsWith("custom_")
+            name.startsWith("decorative_") || name.startsWith("custom_") ||
+                name.startsWith(tribixbite.cleverkeys.theme.KeyboardLooks.ID_PREFIX)
     }
 }

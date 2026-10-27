@@ -1595,6 +1595,13 @@
     <string name="theme_builtin_monetlight_desc">Material You のライト版</string>
     <string name="theme_builtin_monetdark_name">Monet ダーク</string>
     <string name="theme_builtin_monetdark_desc">Material You のダーク版</string>
+    <string name="theme_section_looks">おなじみの外観</string>
+    <string name="theme_looks_desc">よく知られたスマートフォンキーボードの色とキーの形。ライト／ダークはシステムに従います。Apple、Google、Microsoft、Samsung とは提携していません。</string>
+    <string name="theme_look_ios_name">iOS風</string>
+    <string name="theme_look_gboard_name">Gboard風</string>
+    <string name="theme_look_swiftkey_name">SwiftKey風</string>
+    <string name="theme_look_samsung_name">Samsung風</string>
+    <string name="theme_look_ios18_name">iOS 18風</string>
     <string name="theme_toast_applying">テーマを適用中: %1$s</string>
     <string name="theme_default_custom_name">マイテーマ</string>
     <string name="swipe_debug_session_intro">=== スワイププレイグラウンドのセッション開始 ===\n上のテキスト欄でスワイプしてください。各スワイプの候補ランキングが表示され、\n記録されます(座標点 + キー配置 + ランキング + 確定した単語)。</string>

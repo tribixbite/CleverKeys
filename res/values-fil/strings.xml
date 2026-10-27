@@ -1644,6 +1644,13 @@
     <string name="theme_builtin_monetlight_desc">Maliwanag na variant ng Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Madilim</string>
     <string name="theme_builtin_monetdark_desc">Madilim na variant ng Material You</string>
+    <string name="theme_section_looks">Mga pamilyar na hitsura</string>
+    <string name="theme_looks_desc">Mga kulay at hugis ng key ng mga kilalang keyboard ng telepono; sinusunod ng light o dark ang system. Hindi kaugnay ng Apple, Google, Microsoft o Samsung.</string>
+    <string name="theme_look_ios_name">Istilong iOS</string>
+    <string name="theme_look_gboard_name">Istilong Gboard</string>
+    <string name="theme_look_swiftkey_name">Istilong SwiftKey</string>
+    <string name="theme_look_samsung_name">Istilong Samsung</string>
+    <string name="theme_look_ios18_name">Istilong iOS 18</string>
     <string name="theme_toast_applying">Inilalapat ang tema: %1$s</string>
     <string name="theme_default_custom_name">Aking Tema</string>
     <string name="swipe_debug_session_intro">=== Nagsimula ang Swipe Playground Session ===\nMag-swipe sa text field sa itaas. Bawat swipe ay nagpapakita ng ranking ng mga kandidato nito\nat nire-record (mga point + geometry ng key + ranking + na-commit na salita).</string>

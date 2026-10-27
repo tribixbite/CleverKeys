@@ -682,6 +682,9 @@ class CleverKeysService : InputMethodService(),
      * Re-creates keyboard views with new theme.
      */
     override fun onThemeChanged(oldTheme: Int, newTheme: Int) {
+        // Timed for the keyboard-look switch budget (space-bar swipe between familiar-style
+        // layouts re-inflates the view; docs/specs/layout-system.md "Keyboard looks").
+        val rebuildStartNs = System.nanoTime()
         recreateThemedViews()
 
         // Per-layout theme binding: a theme change can arrive MID-TYPING (switching onto a layout
@@ -696,6 +699,8 @@ class CleverKeysService : InputMethodService(),
         } else {
             setInputView(_keyboardView)
         }
+        android.util.Log.i("CleverKeysService", "Theme rebuild: theme=${_config?.themeName} shown=$isInputViewShown " +
+            "took ${(System.nanoTime() - rebuildStartNs) / 1_000_000} ms")
     }
 
     /**

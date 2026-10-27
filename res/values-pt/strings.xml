@@ -1668,6 +1668,13 @@
     <string name="theme_builtin_monetlight_desc">Variante clara do Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Escuro</string>
     <string name="theme_builtin_monetdark_desc">Variante escura do Material You</string>
+    <string name="theme_section_looks">Visuais conhecidos</string>
+    <string name="theme_looks_desc">Cores e formatos de teclas de teclados de telefone conhecidos; claro ou escuro segue o sistema. Sem afiliação com Apple, Google, Microsoft ou Samsung.</string>
+    <string name="theme_look_ios_name">Estilo iOS</string>
+    <string name="theme_look_gboard_name">Estilo Gboard</string>
+    <string name="theme_look_swiftkey_name">Estilo SwiftKey</string>
+    <string name="theme_look_samsung_name">Estilo Samsung</string>
+    <string name="theme_look_ios18_name">Estilo iOS 18</string>
     <string name="theme_toast_applying">Aplicando tema: %1$s</string>
     <string name="theme_default_custom_name">Meu tema</string>
     <string name="swipe_debug_session_intro">=== Sessão da área de testes de deslize iniciada ===\nDeslize no campo de texto acima. Cada deslize mostra sua classificação de candidatas\ne é registrado (pontos + geometria das teclas + classificação + palavra confirmada).</string>

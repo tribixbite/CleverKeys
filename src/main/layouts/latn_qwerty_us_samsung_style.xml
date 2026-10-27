@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- QWERTY (Samsung-style): a US-English letter pane laid out like Samsung Keyboard's default
+(One UI 7 / One UI 8, portrait). Layout only: "Samsung-style" describes the arrangement; this
+layout is not affiliated with or endorsed by Samsung, and copies no artwork or fonts.
+
+Reference: Samsung Keyboard (HoneyBoard) 5.9.40.75's own defaults and its Settings "Custom
+symbols" preview, which draws the default bottom row at 360 dp width; details and sources in
+docs/research/2026-10-27-familiar-keyboard-looks.md section 5.
+
+What is mimicked:
+- three letter rows with no number row and no symbol hints on the letters ("Number keys" and
+  "Alternative characters" are off by default);
+- the second row indented by half a key;
+- Shift and Delete 1.5 keys wide (47 dp beside 29.5 dp letters with 5.5 dp gaps);
+- bottom row "!#1 | , | space | . | enter" at 1.5 / 1 / 5 / 1 / 1.5 key widths.
+
+How the Samsung features map onto CleverKeys keys:
+- !#1 is `switch_numeric` with a "!#1" label. It opens CleverKeys' own number pane; Samsung's
+  symbol pages cannot be expressed by a layout file.
+- The emoji, clipboard and settings buttons Samsung draws in the toolbar ABOVE the keys become
+  corners of the comma (emoji on top, as Gboard-style); the period's long-press panel becomes
+  `' ? ! - :` corners.
+- The space bar keeps CleverKeys' cursor slide and layout-switch swipes; the language name
+  Samsung prints on it is not drawn.
+- Ctrl, Fn, the arrow keys and the remaining CleverKeys bottom-row keys stay reachable as corner
+  swipes on !#1, enter, Shift and Delete, so no letter key carries a visible corner symbol by
+  default.
+
+Look: theme="look_samsung" binds the matching keyboard look (colours, key shapes, gaps; light
+and dark follow the system; theme/KeyboardLooks.kt), so switching to this layout switches
+the whole appearance. Layout Manager's Theme chip can override it ("Follow global theme").
+-->
+<keyboard name="QWERTY (Samsung-style)" theme="look_samsung" script="latin" bottom_row="false">
+  <row>
+    <key c="q"/>
+    <key c="w"/>
+    <key c="e" se="loc €"/>
+    <key c="r"/>
+    <key c="t"/>
+    <key c="y"/>
+    <key c="u"/>
+    <key c="i"/>
+    <key c="o"/>
+    <key c="p"/>
+  </row>
+  <row>
+    <key shift="0.5" c="a"/>
+    <key c="s" sw="loc ß"/>
+    <key c="d"/>
+    <key c="f"/>
+    <key c="g"/>
+    <key c="h"/>
+    <key c="j"/>
+    <key c="k"/>
+    <key c="l"/>
+  </row>
+  <row>
+    <key width="1.5" c="shift" nw="home" ne="end" se="loc tab" sw="loc capslock"/>
+    <key c="z"/>
+    <key c="x" ne="loc †"/>
+    <key c="c"/>
+    <key c="v"/>
+    <key c="b"/>
+    <key c="n"/>
+    <key c="m"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" sw="loc esc" se="loc menu" n="loc page_up" s="loc page_down"/>
+  </row>
+  <row height="0.95">
+    <key width="1.5" c="!#1:switch_numeric" nw="ctrl" ne="fn" sw="loc switch_greekmath" se="loc meta" n="loc alt" s="loc compose"/>
+    <key c="," n="switch_emoji" nw="loc change_method" ne="config" sw="loc switch_clipboard" se="switch_gif" s="switch_back_clipboard"/>
+    <key width="5" c="space" n="loc switch_forward" s="loc switch_backward" w="cursor_left" e="cursor_right"/>
+    <key c="." nw="'" n="\?" ne="!" sw="-" se=":"/>
+    <key width="1.5" c="enter" nw="loc voice_typing" ne="action" n="up" s="down" w="left" e="right" sw="doc_home" se="doc_end"/>
+  </row>
+</keyboard>

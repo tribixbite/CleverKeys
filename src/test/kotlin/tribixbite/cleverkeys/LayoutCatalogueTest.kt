@@ -30,8 +30,9 @@ import org.w3c.dom.Element
  * ## Finding recorded by this test (v1.0.0 "100+ keyboard layouts")
  *
  * The catalogue has never contained 100 layouts. It shipped **83** selectable layouts at
- * v1.0.0 (85 array entries minus the `system` and `custom` sentinels) and holds **87**
- * today (84 before the three "-style" layouts of 2026-10-15).
+ * v1.0.0 (85 array entries minus the `system` and `custom` sentinels) and holds **88**
+ * today (84 before the three "-style" layouts of 2026-10-15, 87 before Samsung-style on
+ * 2026-10-27).
  * [catalogue_selectableLayoutCount_neverRegressesBelowTheV100Baseline] therefore pins the
  * real floor (83) rather than the published figure, which no build has ever met.
  */
@@ -157,7 +158,7 @@ class LayoutCatalogueTest {
         val selectable = values.filterNot { it in SENTINELS }
 
         // v1.0.0 published "100+ keyboard layouts". It shipped 83 and the catalogue has grown
-        // to 87 since; the published figure has never been met. This pins the real floor.
+        // to 88 since; the published figure has never been met. This pins the real floor.
         assertThat(selectable.size).isAtLeast(V1_0_0_SELECTABLE_LAYOUTS)
         assertThat(selectable).contains("latn_qwerty_us")
         assertThat(selectable).contains("latn_qwerty_us_julow")

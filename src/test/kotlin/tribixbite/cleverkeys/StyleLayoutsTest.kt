@@ -16,9 +16,10 @@ import org.kxml2.io.KXmlParser
 import org.w3c.dom.Element
 
 /**
- * Pins the three "-style" predefined layouts — `QWERTY (iOS-style)`, `QWERTY (Gboard-style)`
- * and `QWERTY (SwiftKey-style)` — that mimic the default US-English phone keyboards of those
- * products (`docs/wiki/layouts/adding-layouts.md`, "Familiar-style layouts").
+ * Pins the four "-style" predefined layouts — `QWERTY (iOS-style)`, `QWERTY (Gboard-style)`,
+ * `QWERTY (SwiftKey-style)` and `QWERTY (Samsung-style)` (2026-10-27) — that mimic the default
+ * US-English phone keyboards of those products (`docs/wiki/layouts/adding-layouts.md`,
+ * "Familiar-style layouts"), and the keyboard LOOK each binds through its XML `theme`.
  *
  * Mock tier: `android.util.Xml` is a stub off-device, so the functional kxml2 parser is
  * substituted and every file is run through the REAL production parser
@@ -33,7 +34,10 @@ import org.w3c.dom.Element
  *   order and key-width proportions;
  * - every named key value resolves to a real key, so a typo cannot silently become a key that
  *   types its own name;
- * - the per-product letter hints are exactly the researched ones.
+ * - the per-product letter hints are exactly the researched ones;
+ * - each declares its product's keyboard look (`theme="look_…"`), so switching to it switches
+ *   the whole appearance, and [PredefinedLayoutThemes] (read by the pure backup preview and the
+ *   Layout Manager chip) says exactly what the XML says, for every predefined layout.
  */
 class StyleLayoutsTest {
 
@@ -44,12 +48,22 @@ class StyleLayoutsTest {
         const val IOS = "latn_qwerty_us_ios_style"
         const val GBOARD = "latn_qwerty_us_gboard_style"
         const val SWIFTKEY = "latn_qwerty_us_swiftkey_style"
+        const val SAMSUNG = "latn_qwerty_us_samsung_style"
 
         /** Layout id -> the display name shown in the layout picker. */
         val NAMES = mapOf(
             IOS to "QWERTY (iOS-style)",
             GBOARD to "QWERTY (Gboard-style)",
             SWIFTKEY to "QWERTY (SwiftKey-style)",
+            SAMSUNG to "QWERTY (Samsung-style)",
+        )
+
+        /** Layout id -> the keyboard look its XML binds (`theme` attribute). */
+        val LOOKS = mapOf(
+            IOS to tribixbite.cleverkeys.theme.KeyboardLooks.IOS,
+            GBOARD to tribixbite.cleverkeys.theme.KeyboardLooks.GBOARD,
+            SWIFTKEY to tribixbite.cleverkeys.theme.KeyboardLooks.SWIFTKEY,
+            SAMSUNG to tribixbite.cleverkeys.theme.KeyboardLooks.SAMSUNG,
         )
 
         /** Compass attributes a `<key>` may carry, in the cardinal notation these files use. */
@@ -141,6 +155,8 @@ class StyleLayoutsTest {
             // Nominative, descriptive naming: "<Product>-style", never the bare product or
             // vendor name, and the file says in words that it is not affiliated.
             assertThat(name).endsWith("-style)")
+            // "Samsung Keyboard" is named after its vendor, so "Samsung-style" is the product
+            // name; the other three never name the vendor.
             for (vendor in listOf("Apple", "Google", "Microsoft")) {
                 assertThat(name).doesNotContain(vendor)
             }
@@ -211,6 +227,12 @@ class StyleLayoutsTest {
                 numeric("123", 1f), Slot(key("switch_emoji"), 1f), Slot(key(","), 1f),
                 Slot(key("space"), 4.5f), Slot(key("."), 1f), Slot(key("enter"), 1.5f),
             ),
+            // Samsung (One UI 8 settings preview at 360 dp: 47 / 29.5 / 169.5 / 29.5 / 47 dp keys
+            // with 5.5 dp gaps = 1.5 / 1 / 5 / 1 / 1.5 key slots): !#1 | , | space | . | enter
+            SAMSUNG to listOf(
+                numeric("!#1", 1.5f), Slot(key(","), 1f), Slot(key("space"), 5f),
+                Slot(key("."), 1f), Slot(key("enter"), 1.5f),
+            ),
         )
         for ((id, slots) in expected) {
             val kw = parse(id)
@@ -226,7 +248,7 @@ class StyleLayoutsTest {
 
     @Test
     fun theRelabelledNumbersKeyStillSwitchesToTheNumberPane() {
-        for ((id, label) in mapOf(IOS to "123", GBOARD to "?123", SWIFTKEY to "123")) {
+        for ((id, label) in mapOf(IOS to "123", GBOARD to "?123", SWIFTKEY to "123", SAMSUNG to "!#1")) {
             val kv = parse(id).rows.last().keys.first().getKeyValue(0)!!
             assertThat(kv.getKind()).isEqualTo(KeyValue.Kind.Event)
             assertThat(kv.getEvent()).isEqualTo(KeyValue.Event.SWITCH_NUMERIC)
@@ -303,6 +325,50 @@ class StyleLayoutsTest {
             .map { it.getKeyValue(0)!!.getString() }
         assertThat(withHints).isEmpty()
         assertWithMessage("iOS has no number row").that(kw.embedded_number_row).isFalse()
+    }
+
+    @Test
+    fun samsungStyleLettersCarryNoVisibleHintsAndShiftAndDeleteAreOneAndAHalfKeys() {
+        // One UI's defaults: no number row, "Alternative characters" off (research §5).
+        val kw = parse(SAMSUNG)
+        val top = topLetterRow(kw)
+        assertThat(top).isEqualTo(0)
+        assertWithMessage("Samsung's default has no number row").that(kw.embedded_number_row).isFalse()
+        val withHints = (top until top + 3).flatMap { kw.rows[it].keys }
+            .filter { it.getKeyValue(0)?.getKind() == KeyValue.Kind.Char }
+            .filter { visibleCorners(it).isNotEmpty() }
+            .map { it.getKeyValue(0)!!.getString() }
+        assertThat(withHints).isEmpty()
+        val third = kw.rows[top + 2].keys
+        assertThat(third.first().getKeyValue(0)).isEqualTo(key("shift"))
+        assertThat(third.first().width).isEqualTo(1.5f)
+        assertThat(third.last().getKeyValue(0)).isEqualTo(key("backspace"))
+        assertThat(third.last().width).isEqualTo(1.5f)
+        // The emoji pane (Samsung's toolbar button) is the comma's top hint, as on Gboard-style.
+        val comma = kw.rows.last().keys.first { it.getKeyValue(0) == key(",") }
+        assertThat(comma.getKeyValue(7)).isEqualTo(key("switch_emoji"))
+    }
+
+    // ── keyboard looks ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun eachStyleLayoutDeclaresItsProductsLook() {
+        for ((id, look) in LOOKS) {
+            assertWithMessage("$id XML theme").that(parse(id).declared_theme).isEqualTo(look)
+            assertWithMessage("$id must declare a registered look")
+                .that(tribixbite.cleverkeys.theme.KeyboardLooks.byId(look)).isNotNull()
+        }
+    }
+
+    @Test
+    fun predefinedLayoutThemesMatchesEveryLayoutFilesXmlTheme() {
+        // Every predefined layout, not just the style ones: the map must say exactly what the XML
+        // says (the pure backup preview and Layout Manager cannot parse layouts).
+        val declared = LAYOUT_DIR.listFiles { f -> f.name.endsWith(".xml") }!!.associate { f ->
+            f.name.removeSuffix(".xml") to LayoutThemeBinding.declaredThemeOfXml(f.readText())
+        }.filterValues { it != null }
+        assertThat(declared).containsExactlyEntriesIn(PredefinedLayoutThemes.DECLARED)
+        assertThat(PredefinedLayoutThemes.DECLARED).containsExactlyEntriesIn(LOOKS)
     }
 
     @Test

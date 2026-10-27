@@ -374,7 +374,8 @@ class Keyboard2View @JvmOverloads constructor(
         val density = resources.displayMetrics.density
 
         _swipeTrailPaint = Paint().apply {
-            color = _previewTrailColor ?: snap.swipe_trail_color
+            // A keyboard look's trail colour wins while it is the effective theme (0 otherwise).
+            color = _previewTrailColor ?: _theme.swipeTrailColor.takeIf { it != 0 } ?: snap.swipe_trail_color
             strokeWidth = snap.swipe_trail_width * density
             style = Paint.Style.STROKE
             isAntiAlias = true
@@ -1729,7 +1730,9 @@ class Keyboard2View @JvmOverloads constructor(
             tc.row_height - tc.vertical_margin,
             (width / 10 - tc.horizontal_margin) * 3 / 2
         ) * snap.characterSize
-        _mainLabelSize = labelBaseSize * snap.labelTextSize
+        // A keyboard look scales the main label RELATIVE to the user's size (label_scale = 1
+        // for every other theme), so the user's size setting keeps counting.
+        _mainLabelSize = labelBaseSize * snap.labelTextSize * tc.label_scale
         // #133: secondary (flick) labels scale independently of the primary
         // label via secondary_label_size_scale (default 1.0 = unchanged).
         _subLabelSize = labelBaseSize * snap.sublabelTextSize * snap.secondary_label_size_scale
@@ -1838,8 +1841,10 @@ class Keyboard2View @JvmOverloads constructor(
                     _pointers.getKeyFlags(kv0).let {
                         it != -1 && (it and Pointers.FLAG_P_LOCKED) != 0
                     }
+                // Keyboard looks: Enter, the editor-action key and a look's function characters
+                // (Gboard's comma/period) get their own frames.
                 val tc_key = tc.keyForRole(
-                    Theme.Computed.roleOf(kv0?.getKind(), isKeyDown, isLocked)
+                    Theme.Computed.roleOf(kv0, isKeyDown, isLocked, _theme.functionChars)
                 )
 
                 drawKeyFrame(canvas, x, y, keyW, keyH, tc_key)
@@ -2002,6 +2007,13 @@ class Keyboard2View @JvmOverloads constructor(
         val w = tc.border_width
         val padding = w / 2f
         _tmpRect.set(x + padding, y + padding, x + keyW - padding, y + keyH - padding)
+        // A look's key shadow (iOS-style): the frame's shape offset downward, under the fill.
+        val shadow = tc.shadow_paint
+        if (shadow != null) {
+            _tmpRect.offset(0f, tc.shadow_dy)
+            canvas.drawRoundRect(_tmpRect, r, r, shadow)
+            _tmpRect.offset(0f, -tc.shadow_dy)
+        }
         canvas.drawRoundRect(_tmpRect, r, r, tc.bg_paint)
         if (w > 0f) {
             canvas.drawRoundRect(_tmpRect, r, r, tc.border_paint)
@@ -2029,7 +2041,14 @@ class Keyboard2View @JvmOverloads constructor(
     private fun drawLabel(canvas: Canvas, kv: KeyValue, x: Float, y: Float, keyH: Float, isKeyDown: Boolean, tc: Theme.Computed.Key): Float {
         val modifiedKv = modifyKey(kv, _mods) ?: return 0f
         val textSize = scaleTextSize(modifiedKv, true)
-        val p = tc.label_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, false), textSize)
+        // A look's modifier / action label colour applies to the frame's plain label at rest;
+        // pressed, locked, secondary and greyed labels keep their usual colours.
+        val color = labelColor(modifiedKv, isKeyDown, false)
+        val p = tc.label_paint(
+            modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
+            if (tc.labelColorOverride != 0 && color == _theme.labelColor) tc.labelColorOverride else color,
+            textSize,
+        )
         val label = modifiedKv.getString()
         canvas.drawText(label, x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
         return p.measureText(label)

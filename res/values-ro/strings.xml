@@ -1695,6 +1695,13 @@
     <string name="theme_builtin_monetlight_desc">Varianta luminoasă Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Întunecat</string>
     <string name="theme_builtin_monetdark_desc">Varianta întunecată Material You</string>
+    <string name="theme_section_looks">Aspecte cunoscute</string>
+    <string name="theme_looks_desc">Culori și forme de taste ale tastaturilor de telefon cunoscute; luminos sau întunecat urmează sistemul. Fără afiliere cu Apple, Google, Microsoft sau Samsung.</string>
+    <string name="theme_look_ios_name">Stil iOS</string>
+    <string name="theme_look_gboard_name">Stil Gboard</string>
+    <string name="theme_look_swiftkey_name">Stil SwiftKey</string>
+    <string name="theme_look_samsung_name">Stil Samsung</string>
+    <string name="theme_look_ios18_name">Stil iOS 18</string>
     <string name="theme_toast_applying">Se aplică tema: %1$s</string>
     <string name="theme_default_custom_name">Tema mea</string>
     <string name="swipe_debug_session_intro">=== Sesiune de test al glisării pornită ===\nGlisați în câmpul de text de mai sus. Fiecare glisare își afișează clasamentul candidaților\nși este înregistrată (puncte + geometria tastelor + clasament + cuvântul confirmat).</string>

@@ -8,6 +8,10 @@ import android.util.AttributeSet
 import android.view.ContextThemeWrapper
 import androidx.compose.ui.graphics.compositeOver
 import tribixbite.cleverkeys.theme.KeyboardColorScheme
+import tribixbite.cleverkeys.theme.KeyboardLookGeometry
+import tribixbite.cleverkeys.theme.LookGeometry
+import tribixbite.cleverkeys.theme.LookPalette
+import tribixbite.cleverkeys.theme.LookTypeface
 import kotlin.math.min
 
 /**
@@ -116,6 +120,60 @@ class Theme {
     @JvmField
     val colorKeyboardSurface: Int
 
+    // ---------------------------------------------------------------------------------
+    // Keyboard looks (2026-10-27, theme/KeyboardLook.kt). A look carries more than colours:
+    // an Enter/action-key fill and label, modifier-key labels, a key shadow, suggestion
+    // separators, a trail colour and geometry. Every other theme takes the values that keep
+    // its rendering unchanged (action fill = special fill, 0 = "not defined", null geometry).
+    // ---------------------------------------------------------------------------------
+
+    /** Background of plain Enter at rest (other themes: [colorKeySpecial]). */
+    @JvmField
+    val colorKeyEnter: Int
+
+    /** Main label colour on plain Enter; 0 = the ordinary label colour. */
+    @JvmField
+    val enterLabelColor: Int
+
+    /**
+     * Background of the editor-action key (the Enter replacement in Go / Search / Send / Done
+     * fields) at rest (other themes: [colorKeySpecial]).
+     */
+    @JvmField
+    val colorKeyAction: Int
+
+    /** Main label colour on the editor-action key; 0 = the ordinary label colour. */
+    @JvmField
+    val actionLabelColor: Int
+
+    /** Character keys a look draws as function keys (Gboard's `,` and `.`); empty otherwise. */
+    @JvmField
+    val functionChars: String
+
+    /** Main label colour on modifier and function keys; 0 = the ordinary label colour. */
+    @JvmField
+    val modifierLabelColor: Int
+
+    /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
+    @JvmField
+    val keyShadowColor: Int
+
+    /** Full ARGB of the suggestion-bar separators (alpha 0 = none drawn). */
+    @JvmField
+    val suggestionSeparatorColor: Int
+
+    /** Swipe trail colour this theme imposes; 0 = the user's `swipe_trail_color`. */
+    @JvmField
+    val swipeTrailColor: Int
+
+    /** Geometry of a look; null for every non-look theme (the user's settings apply). */
+    @JvmField
+    val lookGeometry: LookGeometry?
+
+    /** Pixels per dp used to convert [lookGeometry] (1 for XML themes, which have none). */
+    @JvmField
+    val density: Float
+
     /**
      * Primary constructor for XML-based themes.
      * Reads colors from styled attributes defined in res/values/themes.xml
@@ -164,6 +222,17 @@ class Theme {
         suggestionHighConfidenceColor = bar.highlight
         suggestionSecondaryTextColor = bar.secondary
         colorKeyboardSurface = colorKey
+        colorKeyEnter = colorKeySpecial
+        enterLabelColor = 0
+        colorKeyAction = colorKeySpecial
+        actionLabelColor = 0
+        functionChars = ""
+        modifierLabelColor = 0
+        keyShadowColor = 0
+        suggestionSeparatorColor = defaultSeparator(subLabelColor)
+        swipeTrailColor = 0
+        lookGeometry = null
+        density = 1f
     }
 
     /**
@@ -173,8 +242,19 @@ class Theme {
      *
      * This enables decorative themes (Ruby, Sapphire, etc.) and user-created themes
      * to work with the actual keyboard renderer.
+     *
+     * A keyboard look ([tribixbite.cleverkeys.theme.KeyboardLook]) passes its current-mode
+     * [lookPalette] (action key, modifier labels, shadow, separators, trail) and its
+     * [lookGeometry]; [colorScheme] is then the look's palette mapped by `KeyboardLookSchemes`.
      */
-    constructor(context: Context, colorScheme: KeyboardColorScheme, density: Float = context.resources.displayMetrics.density) {
+    constructor(
+        context: Context,
+        colorScheme: KeyboardColorScheme,
+        density: Float = context.resources.displayMetrics.density,
+        lookPalette: LookPalette? = null,
+        lookGeometry: LookGeometry? = null,
+        lookFunctionChars: String = "",
+    ) {
         getKeyFont(context) // Initialize font
 
         // Map KeyboardColorScheme to Theme properties
@@ -182,7 +262,8 @@ class Theme {
         colorKeyActivated = colorScheme.keyActivated.toArgb()
         labelColor = colorScheme.keyLabel.toArgb()
         activatedColor = colorScheme.keyLabel.toArgb() // Use same for activated
-        lockedColor = colorScheme.keyLabel.toArgb() // Use same for locked
+        // A look sets its own Caps Lock label (Gboard: onPrimary on primary; Samsung: blue icon).
+        lockedColor = lookPalette?.lockedLabel ?: colorScheme.keyLabel.toArgb()
         subLabelColor = colorScheme.keySubLabel.toArgb()
         secondaryLabelColor = colorScheme.keySecondaryLabel.toArgb()
         greyedLabelColor = adjustLight(labelColor, 0.5f)
@@ -231,6 +312,18 @@ class Theme {
         suggestionHighConfidenceColor = bar.highlight
         suggestionSecondaryTextColor = bar.secondary
         colorKeyboardSurface = colorScheme.keyboardSurface.toArgb()
+
+        colorKeyEnter = lookPalette?.enterKey ?: colorKeySpecial
+        enterLabelColor = lookPalette?.enterLabel ?: 0
+        colorKeyAction = lookPalette?.actionKey ?: colorKeySpecial
+        actionLabelColor = lookPalette?.actionLabel ?: 0
+        functionChars = lookFunctionChars
+        modifierLabelColor = lookPalette?.modifierLabel ?: 0
+        keyShadowColor = lookPalette?.keyShadow ?: 0
+        suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
+        swipeTrailColor = lookPalette?.swipeTrail ?: 0
+        this.lookGeometry = lookGeometry
+        this.density = density
     }
 
     /** Interpolate the 'value' component toward its opposite by 'alpha'. */
@@ -241,6 +334,9 @@ class Theme {
         hsv[2] = alpha - (2 * alpha - 1) * v
         return Color.HSVToColor(hsv)
     }
+
+    /** The separator the suggestion bar always drew: the sub-label colour at alpha 100/255. */
+    private fun defaultSeparator(subLabel: Int): Int = (subLabel and 0x00FFFFFF) or (100 shl 24)
 
     /** Determine if a color is light (for nav bar icon color) */
     private fun isColorLight(color: Int): Boolean {
@@ -299,6 +395,18 @@ class Theme {
         val key_modifier: Key
         @JvmField
         val key_special: Key
+        /** Plain Enter at rest (other themes: same fill as [key_special]). */
+        @JvmField
+        val key_enter: Key
+        /** The editor-action key at rest (other themes: same fill as [key_special]). */
+        @JvmField
+        val key_action: Key
+        /** Multiplier on the main label size (a look's `labelScale`; 1 otherwise). */
+        @JvmField
+        val label_scale: Float
+        /** Key geometry after the effective look's precedence ([KeyboardLookGeometry.resolve]). */
+        @JvmField
+        val geometry: KeyboardLookGeometry.Effective
 
         init {
             // Rows height is proportional to the keyboard height, meaning it doesn't
@@ -321,19 +429,32 @@ class Theme {
                 config.screenHeightPixels * config.keyboardHeightPercent / 100 / heightDivisor,
                 config.screenHeightPixels / layout.keysHeight
             )
-            vertical_margin = config.key_vertical_margin * row_height
-            horizontal_margin = config.key_horizontal_margin * keyWidth
+            // The user's geometry exactly as it was always derived; a look then overrides the
+            // attributes it defines (theme/KeyboardLook.kt, KeyboardLookGeometry.resolve).
+            val user = KeyboardLookGeometry.UserGeometry(
+                verticalMargin = config.key_vertical_margin * row_height,
+                horizontalMargin = config.key_horizontal_margin * keyWidth,
+                borderRadius = if (config.borderConfig) config.customBorderRadius * keyWidth else theme.keyBorderRadius,
+                borderWidth = if (config.borderConfig) config.customBorderLineWidth else theme.keyBorderWidth,
+                borderWidthActivated = if (config.borderConfig) config.customBorderLineWidth else theme.keyBorderWidthActivated,
+            )
+            geometry = KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density)
+            vertical_margin = geometry.verticalMargin
+            horizontal_margin = geometry.horizontalMargin
+            label_scale = geometry.labelScale
             // Add half of the key margin on the left and on the top as it's also
             // added on the right and on the bottom of every keys.
             margin_top = config.marginTop + vertical_margin / 2
             margin_left = horizontal_margin / 2
-            key = Key(theme, config, keyWidth, false)
-            key_activated = Key(theme, config, keyWidth, true)
+            key = Key(theme, config, keyWidth, false, geometry = geometry)
+            key_activated = Key(theme, config, keyWidth, true, geometry = geometry)
             // Locked keys keep the activated border/width treatment (they ARE held down),
-            // only the fill colour differs; modifier/special are at-rest variants.
-            key_locked = Key(theme, config, keyWidth, true, theme.colorKeyLocked)
-            key_modifier = Key(theme, config, keyWidth, false, theme.colorKeyModifier)
-            key_special = Key(theme, config, keyWidth, false, theme.colorKeySpecial)
+            // only the fill colour differs; modifier/special/action are at-rest variants.
+            key_locked = Key(theme, config, keyWidth, true, theme.colorKeyLocked, geometry)
+            key_modifier = Key(theme, config, keyWidth, false, theme.colorKeyModifier, geometry, theme.modifierLabelColor)
+            key_special = Key(theme, config, keyWidth, false, theme.colorKeySpecial, geometry, theme.modifierLabelColor)
+            key_enter = Key(theme, config, keyWidth, false, theme.colorKeyEnter, geometry, theme.enterLabelColor)
+            key_action = Key(theme, config, keyWidth, false, theme.colorKeyAction, geometry, theme.actionLabelColor)
             indication_paint = init_label_paint(config, null).apply {
                 color = theme.subLabelColor
             }
@@ -343,7 +464,7 @@ class Theme {
          * H-4: which computed key frame a key renders with — pure so the mapping is
          * pinnable off-device (the draw loop feeds it kind + pointer state).
          */
-        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL }
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION }
 
         /** The computed frame for [role] (see [roleOf]). */
         fun keyForRole(role: KeyRole): Key = when (role) {
@@ -352,6 +473,8 @@ class Theme {
             KeyRole.LOCKED -> key_locked
             KeyRole.MODIFIER -> key_modifier
             KeyRole.SPECIAL -> key_special
+            KeyRole.ENTER -> key_enter
+            KeyRole.ACTION -> key_action
         }
 
         class Key(
@@ -364,7 +487,14 @@ class Theme {
              * convention the rest of the theme plumbing uses). Border treatment still
              * follows [activated].
              */
-            bgColorOverride: Int = 0
+            bgColorOverride: Int = 0,
+            /**
+             * Border radius/width and shadow to draw with. Null (direct construction, e.g. the
+             * subkey popover tests) derives them from the user's settings as before.
+             */
+            geometry: KeyboardLookGeometry.Effective? = null,
+            /** Main label colour of this frame at rest; 0 = the theme's label colour. */
+            @JvmField val labelColorOverride: Int = 0,
         ) {
             @JvmField
             val bg_paint = Paint()
@@ -374,6 +504,11 @@ class Theme {
             val border_width: Float
             @JvmField
             val border_radius: Float
+            /** Shadow under the key (a look's), or null; drawn [shadow_dy] px below the frame. */
+            @JvmField
+            val shadow_paint: Paint?
+            @JvmField
+            val shadow_dy: Float
             private val _label_paint: Paint
             private val _special_label_paint: Paint
             private val _sublabel_paint: Paint
@@ -387,13 +522,24 @@ class Theme {
                     else -> theme.colorKey
                 }
 
-                if (config.borderConfig) {
+                if (geometry != null) {
+                    border_radius = geometry.borderRadius
+                    border_width = if (activated) geometry.borderWidthActivated else geometry.borderWidth
+                } else if (config.borderConfig) {
                     border_radius = config.customBorderRadius * keyWidth
                     border_width = config.customBorderLineWidth
                 } else {
                     border_radius = theme.keyBorderRadius
                     border_width = if (activated) theme.keyBorderWidthActivated else theme.keyBorderWidth
                 }
+                shadow_dy = geometry?.shadowDy ?: 0f
+                shadow_paint = if (shadow_dy > 0f && theme.keyShadowColor != 0) {
+                    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                        color = theme.keyShadowColor
+                        // Same opacity contract as the key fill (keyOpacity owns the alpha).
+                        alpha = (((theme.keyShadowColor ushr 24) and 0xFF) * config.keyOpacity) / 255
+                    }
+                } else null
 
                 bg_paint.alpha = if (activated) config.keyActivatedOpacity else config.keyOpacity
                 // H-4: the activated frame's border uses the Theme-Creator's "Border
@@ -403,7 +549,7 @@ class Theme {
                     border_width,
                     if (activated) theme.keyBorderColorActivated else theme.keyBorderColorTop
                 )
-                _label_paint = init_label_paint(config, null)
+                _label_paint = init_label_paint(config, LookTypeface.forWeight(geometry?.labelWeight))
                 _special_label_paint = init_label_paint(config, _key_font)
                 _sublabel_paint = init_label_paint(config, null)
                 _special_sublabel_paint = init_label_paint(config, _key_font)
@@ -447,6 +593,31 @@ class Theme {
                     kind == KeyValue.Kind.Event ||
                     kind == KeyValue.Kind.Editing -> KeyRole.SPECIAL
                 else -> KeyRole.NORMAL
+            }
+
+            /**
+             * [roleOf] for a key value, as the kind-based mapping except, at rest:
+             *  - plain Enter (`KEYCODE_ENTER`) → [KeyRole.ENTER];
+             *  - the editor-action key (`Event.ACTION`: the Enter replacement in Go / Search /
+             *    Send / Done fields, LayoutModifier) → [KeyRole.ACTION];
+             *  - a character in [functionChars] (a look's, e.g. Gboard's `,.`) → [KeyRole.MODIFIER].
+             * Every non-look theme gives the ENTER and ACTION frames the special fill and has no
+             * function characters, so it draws exactly as before.
+             */
+            @JvmStatic
+            @JvmOverloads
+            fun roleOf(kv: KeyValue?, isKeyDown: Boolean, isLocked: Boolean, functionChars: String = ""): KeyRole {
+                val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
+                if (kv == null) return role
+                return when {
+                    role == KeyRole.SPECIAL && kv.getKind() == KeyValue.Kind.Keyevent &&
+                        kv.getKeyevent() == android.view.KeyEvent.KEYCODE_ENTER -> KeyRole.ENTER
+                    role == KeyRole.SPECIAL && kv.getKind() == KeyValue.Kind.Event &&
+                        kv.getEvent() == KeyValue.Event.ACTION -> KeyRole.ACTION
+                    role == KeyRole.NORMAL && functionChars.isNotEmpty() &&
+                        kv.getKind() == KeyValue.Kind.Char && functionChars.indexOf(kv.getChar()) >= 0 -> KeyRole.MODIFIER
+                    else -> role
+                }
             }
 
             private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {

@@ -1624,6 +1624,13 @@
     <string name="theme_builtin_monetlight_desc">Biến thể sáng Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Tối</string>
     <string name="theme_builtin_monetdark_desc">Biến thể tối Material You</string>
+    <string name="theme_section_looks">Giao diện quen thuộc</string>
+    <string name="theme_looks_desc">Màu sắc và hình dạng phím của các bàn phím điện thoại quen thuộc; sáng hoặc tối theo hệ thống. Không liên kết với Apple, Google, Microsoft hay Samsung.</string>
+    <string name="theme_look_ios_name">Kiểu iOS</string>
+    <string name="theme_look_gboard_name">Kiểu Gboard</string>
+    <string name="theme_look_swiftkey_name">Kiểu SwiftKey</string>
+    <string name="theme_look_samsung_name">Kiểu Samsung</string>
+    <string name="theme_look_ios18_name">Kiểu iOS 18</string>
     <string name="theme_toast_applying">Đang áp dụng chủ đề: %1$s</string>
     <string name="theme_default_custom_name">Chủ đề của tôi</string>
     <string name="swipe_debug_session_intro">=== Đã bắt đầu phiên Sân thử vuốt ===\nVuốt trong ô văn bản ở trên. Mỗi lần vuốt hiển thị thứ hạng ứng viên\nvà được ghi lại (điểm + hình học phím + thứ hạng + từ đã nhập).</string>

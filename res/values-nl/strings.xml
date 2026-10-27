@@ -1632,6 +1632,13 @@
     <string name="theme_builtin_monetlight_desc">Lichte Material You-variant</string>
     <string name="theme_builtin_monetdark_name">Monet Donker</string>
     <string name="theme_builtin_monetdark_desc">Donkere Material You-variant</string>
+    <string name="theme_section_looks">Bekende looks</string>
+    <string name="theme_looks_desc">Kleuren en toetsvormen van bekende telefoontoetsenborden; licht of donker volgt het systeem. Niet verbonden aan Apple, Google, Microsoft of Samsung.</string>
+    <string name="theme_look_ios_name">iOS-stijl</string>
+    <string name="theme_look_gboard_name">Gboard-stijl</string>
+    <string name="theme_look_swiftkey_name">SwiftKey-stijl</string>
+    <string name="theme_look_samsung_name">Samsung-stijl</string>
+    <string name="theme_look_ios18_name">iOS 18-stijl</string>
     <string name="theme_toast_applying">Thema toepassen: %1$s</string>
     <string name="theme_default_custom_name">Mijn thema</string>
     <string name="swipe_debug_session_intro">=== Sessie veegtestomgeving gestart ===\nVeeg in het tekstveld hierboven. Elke veeg toont de rangschikking van kandidaten\nen wordt vastgelegd (punten + toetsgeometrie + rangschikking + ingevoerd woord).</string>

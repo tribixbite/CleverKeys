@@ -1,0 +1,174 @@
+package tribixbite.cleverkeys.theme
+
+/**
+ * A keyboard LOOK: a theme that carries geometry as well as colours, with a light and a dark
+ * palette that follow the system (like Monet Auto). The four built-in looks reproduce the
+ * default appearance of popular keyboards ([KeyboardLooks]); the familiar-style layouts bind to
+ * them through their XML `theme="look_…"` default, so switching layouts switches the whole look.
+ *
+ * A look is a FOURTH theme kind beside built-in XML, `decorative_` and `custom_` themes, told
+ * apart by the [KeyboardLooks.ID_PREFIX] id prefix. It renders through the runtime-theme path
+ * (`Theme(context, scheme, …)`), so per-layout binding, Theme Manager selection, the backup's
+ * `layouts` blob and the stale-view tracker need no parallel machinery.
+ *
+ * Pure JVM (ARGB ints, no Android or Compose types) so the definitions, their precedence rules
+ * and their contrast run in `runPureTests`. Spec: docs/specs/layout-system.md "Keyboard looks";
+ * research and sources: docs/research/2026-10-27-familiar-keyboard-looks.md.
+ */
+data class KeyboardLook(
+    /** Stored theme id (`theme` preference / layout binding), always [KeyboardLooks.ID_PREFIX]-prefixed. */
+    val id: String,
+    /** Colours while the system is in light mode. */
+    val light: LookPalette,
+    /** Colours while the system is in dark mode. */
+    val dark: LookPalette,
+    /** Geometry the look defines; undefined attributes keep the user's appearance settings. */
+    val geometry: LookGeometry,
+    /**
+     * Character keys this look draws as FUNCTION keys ([LookPalette.modifierKey] fill and label),
+     * e.g. Gboard's comma and period. Empty for most looks.
+     */
+    val functionChars: String = "",
+) {
+    /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
+    fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark
+}
+
+/**
+ * One system mode's colours of a [KeyboardLook], as opaque ARGB ints.
+ *
+ * Roles follow `Theme.Computed.roleOf`: letter keys (and space, comma, period: character keys)
+ * use [key]; modifiers (shift) and function keys (backspace, 123, emoji, switchers) use
+ * [modifierKey]; plain Enter uses [enterKey]; the editor-action key that replaces Enter in a
+ * Go / Search / Send field uses [actionKey] (iOS's blue return, Gboard's highlighted Enter).
+ */
+data class LookPalette(
+    val keyboardBackground: Int,
+    /** Letter-key fill. */
+    val key: Int,
+    /** Any key's fill while pressed. */
+    val keyPressed: Int,
+    /** Caps Lock (locked modifier) fill. */
+    val keyLocked: Int,
+    /** Label colour on a locked modifier ([keyLocked]). */
+    val lockedLabel: Int,
+    /** Modifier and function-key fill (shift, backspace, 123, emoji, switchers). */
+    val modifierKey: Int,
+    /** Plain Enter (new line) fill. */
+    val enterKey: Int,
+    /** Label / icon colour on [enterKey]. */
+    val enterLabel: Int,
+    /** Editor-action key fill (Go / Search / Send / Done fields). */
+    val actionKey: Int,
+    /** Letter label colour. */
+    val label: Int,
+    /** Label colour on [modifierKey] keys. */
+    val modifierLabel: Int,
+    /** Label / icon colour on [actionKey]. */
+    val actionLabel: Int,
+    /** Corner hint (secondary character) colour. */
+    val hint: Int,
+    /** Colour of the shadow drawn under each key; 0 = no shadow. */
+    val keyShadow: Int,
+    /** Key outline colour; only drawn when [LookGeometry.borderWidthDp] is positive. */
+    val keyBorder: Int,
+    val barBackground: Int,
+    val barText: Int,
+    /** The highlighted (commit-on-space) suggestion. */
+    val barHighlight: Int,
+    /** Separator between suggestions; a colour with alpha 0 draws none. */
+    val barSeparator: Int,
+    /** Swipe trail colour while this look is the effective theme. */
+    val swipeTrail: Int,
+)
+
+/**
+ * The geometry a [KeyboardLook] defines. A `null` attribute is NOT defined by the look: the
+ * user's own appearance setting applies to it ([KeyboardLookGeometry.resolve]).
+ *
+ * Gaps are fractions so they survive any keyboard height or screen width: [keyGapHorizontal] of
+ * one key unit's width (the width of a `width="1"` key slot), [keyGapVertical] of the row height —
+ * the same bases `Theme.Computed` uses for the user's key margins.
+ */
+data class LookGeometry(
+    val keyGapHorizontal: Float? = null,
+    val keyGapVertical: Float? = null,
+    val cornerRadiusDp: Float? = null,
+    /** Key outline width; 0 = no outline. */
+    val borderWidthDp: Float? = null,
+    /** Downward offset of the key shadow ([LookPalette.keyShadow]); 0 = no shadow. */
+    val shadowDyDp: Float? = null,
+    /** Multiplier on the user's main label size (relative, so the user's size setting still counts). */
+    val labelScale: Float? = null,
+    /** Main label font weight, 100..900 (400 = regular); applied on Android 9+. */
+    val labelWeight: Int? = null,
+)
+
+/**
+ * Which appearance values a keyboard view uses for key geometry: the effective look's where it
+ * defines them, otherwise the user's.
+ *
+ * Precedence (documented in docs/specs/layout-system.md "Keyboard looks"): while a look is the
+ * EFFECTIVE theme — selected in Theme Manager or bound to the current layout — every attribute
+ * it defines wins over the user's global setting, including a custom border radius/width
+ * (`border_config`), because choosing or binding a look is an explicit choice of that
+ * appearance. Attributes the look leaves `null` keep the user's value, and the label size stays
+ * relative to the user's size setting. The user's preferences are never written: switching to a
+ * non-look theme or layout restores them exactly.
+ */
+object KeyboardLookGeometry {
+
+    /** The user's (non-look) geometry, already in pixels, as `Theme.Computed` derives it today. */
+    data class UserGeometry(
+        val verticalMargin: Float,
+        val horizontalMargin: Float,
+        val borderRadius: Float,
+        val borderWidth: Float,
+        val borderWidthActivated: Float,
+    )
+
+    /** The geometry a keyboard view draws with, in pixels. */
+    data class Effective(
+        val verticalMargin: Float,
+        val horizontalMargin: Float,
+        val borderRadius: Float,
+        val borderWidth: Float,
+        val borderWidthActivated: Float,
+        /** Key shadow offset; 0 = none. */
+        val shadowDy: Float,
+        /** Multiplier on the main label size (1 = the user's size). */
+        val labelScale: Float,
+        /** Main label weight, or null for the default face. */
+        val labelWeight: Int?,
+    )
+
+    /**
+     * Resolve the effective geometry. [keyWidth] is one key unit in px, [rowHeight] one row in px,
+     * [density] px per dp. With [look] null (every non-look theme) the result is exactly [user].
+     */
+    fun resolve(look: LookGeometry?, user: UserGeometry, keyWidth: Float, rowHeight: Float, density: Float): Effective {
+        if (look == null) {
+            return Effective(
+                user.verticalMargin, user.horizontalMargin, user.borderRadius, user.borderWidth,
+                user.borderWidthActivated, shadowDy = 0f, labelScale = 1f, labelWeight = null,
+            )
+        }
+        val borderWidth = look.borderWidthDp?.let { it.coerceAtLeast(0f) * density }
+        return Effective(
+            verticalMargin = look.keyGapVertical?.let { it.coerceIn(0f, MAX_GAP) * rowHeight } ?: user.verticalMargin,
+            horizontalMargin = look.keyGapHorizontal?.let { it.coerceIn(0f, MAX_GAP) * keyWidth } ?: user.horizontalMargin,
+            borderRadius = look.cornerRadiusDp?.let { it.coerceAtLeast(0f) * density } ?: user.borderRadius,
+            borderWidth = borderWidth ?: user.borderWidth,
+            // A look draws one outline width in both states (pressed keys change fill, not frame).
+            borderWidthActivated = borderWidth ?: user.borderWidthActivated,
+            shadowDy = (look.shadowDyDp ?: 0f).coerceAtLeast(0f) * density,
+            labelScale = (look.labelScale ?: 1f).coerceIn(MIN_LABEL_SCALE, MAX_LABEL_SCALE),
+            labelWeight = look.labelWeight?.coerceIn(100, 900),
+        )
+    }
+
+    /** A gap above half the key would leave keys thinner than their gaps. */
+    const val MAX_GAP = 0.5f
+    const val MIN_LABEL_SCALE = 0.5f
+    const val MAX_LABEL_SCALE = 2f
+}

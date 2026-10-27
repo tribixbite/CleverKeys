@@ -174,4 +174,28 @@ class LayoutThemeBindingTest {
         val noRoot = "not a layout"
         assertThat(LayoutThemeBinding.applyToXml(noRoot, entry = "cobalt")).isEqualTo(noRoot)
     }
+
+    // ── predefined layouts that declare a look (familiar-style layouts, 2026-10-27) ─
+
+    @Test
+    fun aPredefinedStyleLayoutsLookIsItsBindingInTheBackupPreview() {
+        val ios = "latn_qwerty_us_ios_style"
+        assertThat(PredefinedLayoutThemes.declaredThemeOf(ios)).isEqualTo(tribixbite.cleverkeys.theme.KeyboardLooks.IOS)
+        assertThat(PredefinedLayoutThemes.declaredThemeOf("latn_qwerty_us")).isNull()
+        val parse = { json: String -> com.google.gson.JsonParser.parseString(json).asJsonArray }
+        // Importing "follow the global theme" over the layout's XML look is a theme change…
+        val changes = tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.themeChanges(
+            current = parse("[\"$ios\"]"),
+            proposed = parse("[{\"kind\":\"named\",\"name\":\"$ios\",\"theme\":\"none\"}]"),
+        )
+        assertThat(changes.map { it.from to it.to })
+            .containsExactly(tribixbite.cleverkeys.theme.KeyboardLooks.IOS to null)
+        // …while the plain entry and an entry naming the same look are not.
+        assertThat(
+            tribixbite.cleverkeys.backup.LayoutThemeBindingDiff.themeChanges(
+                current = parse("[\"$ios\"]"),
+                proposed = parse("[{\"kind\":\"named\",\"name\":\"$ios\"}]"),
+            )
+        ).isEmpty()
+    }
 }

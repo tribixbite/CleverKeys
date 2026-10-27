@@ -1594,6 +1594,13 @@
     <string name="theme_builtin_monetlight_desc">Material You 浅色版</string>
     <string name="theme_builtin_monetdark_name">Monet 深色</string>
     <string name="theme_builtin_monetdark_desc">Material You 深色版</string>
+    <string name="theme_section_looks">熟悉的外观</string>
+    <string name="theme_looks_desc">知名手机键盘的颜色和按键形状；浅色或深色跟随系统。与 Apple、Google、Microsoft 或 Samsung 无关联。</string>
+    <string name="theme_look_ios_name">iOS 风格</string>
+    <string name="theme_look_gboard_name">Gboard 风格</string>
+    <string name="theme_look_swiftkey_name">SwiftKey 风格</string>
+    <string name="theme_look_samsung_name">Samsung 风格</string>
+    <string name="theme_look_ios18_name">iOS 18 风格</string>
     <string name="theme_toast_applying">正在应用主题：%1$s</string>
     <string name="theme_default_custom_name">我的主题</string>
     <string name="swipe_debug_session_intro">=== 滑动练习场会话已开始 ===\n在上方文本框中滑动。每次滑动都会显示候选排名\n并被记录（轨迹点 + 按键几何 + 排名 + 提交的单词）。</string>

@@ -1608,6 +1608,13 @@
     <string name="theme_builtin_monetlight_desc">Varian terang Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Gelap</string>
     <string name="theme_builtin_monetdark_desc">Varian gelap Material You</string>
+    <string name="theme_section_looks">Tampilan yang familier</string>
+    <string name="theme_looks_desc">Warna dan bentuk tombol keyboard ponsel yang dikenal; terang atau gelap mengikuti sistem. Tidak berafiliasi dengan Apple, Google, Microsoft, atau Samsung.</string>
+    <string name="theme_look_ios_name">Gaya iOS</string>
+    <string name="theme_look_gboard_name">Gaya Gboard</string>
+    <string name="theme_look_swiftkey_name">Gaya SwiftKey</string>
+    <string name="theme_look_samsung_name">Gaya Samsung</string>
+    <string name="theme_look_ios18_name">Gaya iOS 18</string>
     <string name="theme_toast_applying">Menerapkan tema: %1$s</string>
     <string name="theme_default_custom_name">Tema Saya</string>
     <string name="swipe_debug_session_intro">=== Sesi Swipe Playground Dimulai ===\nGeser di kolom teks di atas. Setiap geseran menampilkan peringkat kandidatnya\ndan direkam (titik + geometri tombol + peringkat + kata yang dimasukkan).</string>

@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 import tribixbite.cleverkeys.theme.CustomTheme
+import tribixbite.cleverkeys.theme.KeyboardLooks
 import tribixbite.cleverkeys.theme.ThemeCategory
 import tribixbite.cleverkeys.theme.getAllPredefinedThemes
 import tribixbite.cleverkeys.theme.getThemeById
@@ -75,6 +76,19 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
                 label = Color(it.labelColor),
             )
         }
+    val looksSection = res.getString(R.string.theme_section_looks)
+    val systemLight = Config.isSystemLight(res)
+    val looks = ThemeSettingsActivity.LOOK_THEMES.mapNotNull { entry ->
+        val palette = KeyboardLooks.byId(entry.id)?.palette(systemLight) ?: return@mapNotNull null
+        LayoutThemeChoice(
+            id = entry.id,
+            name = res.getString(entry.nameRes),
+            section = looksSection,
+            background = Color(palette.keyboardBackground),
+            key = Color(palette.key),
+            label = Color(palette.label),
+        )
+    }
     val customSection = res.getString(R.string.theme_section_custom)
     val custom = customThemes.map {
         LayoutThemeChoice(
@@ -100,7 +114,7 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
             )
         }
     }
-    return builtIn + custom + decorative
+    return builtIn + looks + custom + decorative
 }
 
 /**
@@ -109,17 +123,22 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
  */
 fun layoutThemeDisplayName(id: String, res: Resources, customThemes: List<CustomTheme>): String {
     ThemeSettingsActivity.BUILTIN_THEMES.firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
+    ThemeSettingsActivity.LOOK_THEMES.firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
     if (id.startsWith("decorative_")) getThemeById(id.removePrefix("decorative_"))?.let { return it.displayName(res) }
     if (id.startsWith("custom_")) customThemes.firstOrNull { "custom_${it.id}" == id }?.let { return it.name }
     return id
 }
 
 /**
- * The XML `theme` default of a layout entry. Only custom layouts are inspected: predefined
- * layouts never declare a theme (their theme follows the user unless bound here).
+ * The XML `theme` default of a layout entry: a custom layout's parsed attribute, or a predefined
+ * layout's from [PredefinedLayoutThemes] (the familiar-style layouts bind their look; every other
+ * predefined layout declares none and follows the user unless bound here).
  */
-internal fun declaredThemeOf(layout: LayoutsPreference.Layout): String? =
-    (layout as? LayoutsPreference.CustomLayout)?.parsed?.declared_theme
+internal fun declaredThemeOf(layout: LayoutsPreference.Layout): String? = when (layout) {
+    is LayoutsPreference.CustomLayout -> layout.parsed?.declared_theme
+    is LayoutsPreference.NamedLayout -> PredefinedLayoutThemes.declaredThemeOf(layout.name)
+    else -> null
+}
 
 /** The effective theme binding of a layout entry, or null when it follows the global theme. */
 internal fun layoutThemeBindingOf(layout: LayoutsPreference.Layout): String? =

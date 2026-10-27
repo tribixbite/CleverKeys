@@ -44,6 +44,7 @@ class ThemeProvider(
         return when {
             themeId.startsWith("custom_") -> loadCustomTheme(themeId)
             themeId.startsWith("decorative_") -> loadDecorativeTheme(themeId)
+            themeId.startsWith(KeyboardLooks.ID_PREFIX) -> loadLook(themeId)
             else -> loadBuiltInTheme(themeId)
         }
     }
@@ -56,6 +57,9 @@ class ThemeProvider(
         return when {
             themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId)?.colors
             themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId)
+            // A look's scheme for the CURRENT system mode (it follows light/dark like Monet Auto).
+            themeId.startsWith(KeyboardLooks.ID_PREFIX) -> KeyboardLooks.byId(themeId)
+                ?.let { KeyboardLookSchemes.colorScheme(it, Config.isSystemLight(context.resources)) }
             else -> getBuiltInColorScheme(themeId)
         }
     }
@@ -207,9 +211,8 @@ class ThemeProvider(
      * Check if a theme ID refers to a runtime (non-XML) theme.
      * Runtime themes use KeyboardColorScheme and can be customized.
      */
-    fun isRuntimeTheme(themeId: String): Boolean {
-        return themeId.startsWith("custom_") || themeId.startsWith("decorative_")
-    }
+    fun isRuntimeTheme(themeId: String): Boolean =
+        tribixbite.cleverkeys.prefs.ConfigSnapshot.isRuntimeThemeName(themeId)
 
     /**
      * Whether [themeId] names a theme that exists on this device — a built-in theme, a known
@@ -220,6 +223,7 @@ class ThemeProvider(
     fun isAvailable(themeId: String): Boolean = when {
         themeId.startsWith("custom_") -> customThemeManager.getCustomTheme(themeId) != null
         themeId.startsWith("decorative_") -> getDecorativeColorScheme(themeId) != null
+        themeId.startsWith(KeyboardLooks.ID_PREFIX) -> KeyboardLooks.byId(themeId) != null
         else -> themeId in BUILT_IN_THEME_IDS
     }
 
@@ -231,6 +235,9 @@ class ThemeProvider(
 
         // Built-in XML themes
         themes["Built-in"] = BUILT_IN_THEME_IDS.toMutableList()
+
+        // Keyboard looks (colours + geometry, light/dark follow the system)
+        themes["Looks"] = KeyboardLooks.IDS.toMutableList()
 
         // Decorative themes (from PredefinedThemes) - IDs must match getDecorativeColorScheme()
         themes["Gemstone"] = mutableListOf("decorative_gemstone_ruby", "decorative_gemstone_sapphire", "decorative_gemstone_emerald")
@@ -269,6 +276,27 @@ class ThemeProvider(
             return fallbackTheme()
         }
         return Theme(context, colorScheme)
+    }
+
+    /**
+     * A keyboard look: its palette for the current system mode plus its geometry. The light/dark
+     * cue is the same one Monet Auto and the keyboard view's base style read, so a mode switch
+     * changes the style id and re-inflates the view with the other palette.
+     */
+    private fun loadLook(themeId: String): Theme {
+        val look = KeyboardLooks.byId(themeId)
+        if (look == null) {
+            android.util.Log.w(TAG, "Unknown keyboard look '$themeId' — falling back to $FALLBACK_THEME_ID")
+            return fallbackTheme()
+        }
+        val palette = look.palette(Config.isSystemLight(context.resources))
+        return Theme(
+            context,
+            KeyboardLookSchemes.colorScheme(palette),
+            lookPalette = palette,
+            lookGeometry = look.geometry,
+            lookFunctionChars = look.functionChars,
+        )
     }
 
     private fun loadCustomTheme(themeId: String): Theme {

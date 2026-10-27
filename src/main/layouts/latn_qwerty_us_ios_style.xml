@@ -23,8 +23,12 @@ How the iOS features map onto CleverKeys keys:
 - Ctrl, Fn, settings, clipboard, GIF and the arrow keys from CleverKeys' standard bottom
   row stay reachable as corner swipes on the bottom-row keys, Shift and Delete, so no
   letter key carries a visible corner symbol by default.
+
+Look: theme="look_ios" binds the matching keyboard look (colours, key shapes, gaps; light
+and dark follow the system; theme/KeyboardLooks.kt), so switching to this layout switches
+the whole appearance. Layout Manager's Theme chip can override it ("Follow global theme").
 -->
-<keyboard name="QWERTY (iOS-style)" script="latin" bottom_row="false">
+<keyboard name="QWERTY (iOS-style)" theme="look_ios" script="latin" bottom_row="false">
   <row>
     <key c="q"/>
     <key c="w"/>

@@ -1686,6 +1686,13 @@
     <string name="theme_builtin_monetlight_desc">Variante clara de Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Oscuro</string>
     <string name="theme_builtin_monetdark_desc">Variante oscura de Material You</string>
+    <string name="theme_section_looks">Aspectos conocidos</string>
+    <string name="theme_looks_desc">Colores y formas de teclas de teclados de móvil conocidos; claro u oscuro según el sistema. Sin relación con Apple, Google, Microsoft ni Samsung.</string>
+    <string name="theme_look_ios_name">Estilo iOS</string>
+    <string name="theme_look_gboard_name">Estilo Gboard</string>
+    <string name="theme_look_swiftkey_name">Estilo SwiftKey</string>
+    <string name="theme_look_samsung_name">Estilo Samsung</string>
+    <string name="theme_look_ios18_name">Estilo iOS 18</string>
     <string name="theme_toast_applying">Aplicando tema: %1$s</string>
     <string name="theme_default_custom_name">Mi tema</string>
     <string name="swipe_debug_session_intro">=== Sesión del área de pruebas de deslizamiento iniciada ===\nDesliza en el campo de texto de arriba. Cada deslizamiento muestra su clasificación de candidatas\ny se registra (puntos + geometría de teclas + clasificación + palabra confirmada).</string>

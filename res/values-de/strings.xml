@@ -1652,6 +1652,13 @@
     <string name="theme_builtin_monetlight_desc">Helle Material You-Variante</string>
     <string name="theme_builtin_monetdark_name">Monet Dunkel</string>
     <string name="theme_builtin_monetdark_desc">Dunkle Material You-Variante</string>
+    <string name="theme_section_looks">Bekannte Looks</string>
+    <string name="theme_looks_desc">Farben und Tastenformen bekannter Handy-Tastaturen; hell oder dunkel folgt dem System. Nicht mit Apple, Google, Microsoft oder Samsung verbunden.</string>
+    <string name="theme_look_ios_name">iOS-Stil</string>
+    <string name="theme_look_gboard_name">Gboard-Stil</string>
+    <string name="theme_look_swiftkey_name">SwiftKey-Stil</string>
+    <string name="theme_look_samsung_name">Samsung-Stil</string>
+    <string name="theme_look_ios18_name">iOS-18-Stil</string>
     <string name="theme_toast_applying">Theme wird angewendet: %1$s</string>
     <string name="theme_default_custom_name">Mein Theme</string>
     <string name="swipe_debug_session_intro">=== Sitzung der Wisch-Testumgebung gestartet ===\nWischen Sie im Textfeld oben. Jede Wischgeste zeigt ihre Kandidatenrangfolge\nund wird aufgezeichnet (Punkte + Tastengeometrie + Rangfolge + übernommenes Wort).</string>

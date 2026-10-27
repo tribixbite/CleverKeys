@@ -2042,6 +2042,13 @@
     <string name="theme_builtin_monetlight_desc">Material You light variant</string>
     <string name="theme_builtin_monetdark_name">Monet Dark</string>
     <string name="theme_builtin_monetdark_desc">Material You dark variant</string>
+    <string name="theme_section_looks">Familiar looks</string>
+    <string name="theme_looks_desc">Colours and key shapes of familiar phone keyboards; light or dark follows the system. Not affiliated with Apple, Google, Microsoft or Samsung.</string>
+    <string name="theme_look_ios_name">iOS-style</string>
+    <string name="theme_look_gboard_name">Gboard-style</string>
+    <string name="theme_look_swiftkey_name">SwiftKey-style</string>
+    <string name="theme_look_samsung_name">Samsung-style</string>
+    <string name="theme_look_ios18_name">iOS 18-style</string>
     <string name="theme_toast_applying">Applying theme: %1$s</string>
     <string name="theme_default_custom_name">My Theme</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground Session Started ===\nSwipe in the text field above. Each swipe shows its candidate ranking\nand is recorded (points + key geometry + ranking + committed word).</string>

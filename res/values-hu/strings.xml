@@ -1638,6 +1638,13 @@
     <string name="theme_builtin_monetlight_desc">Material You világos változat</string>
     <string name="theme_builtin_monetdark_name">Monet Sötét</string>
     <string name="theme_builtin_monetdark_desc">Material You sötét változat</string>
+    <string name="theme_section_looks">Ismerős megjelenések</string>
+    <string name="theme_looks_desc">Ismert telefonos billentyűzetek színei és billentyűformái; a világos vagy sötét mód a rendszert követi. Nem áll kapcsolatban az Apple, a Google, a Microsoft vagy a Samsung céggel.</string>
+    <string name="theme_look_ios_name">iOS-stílus</string>
+    <string name="theme_look_gboard_name">Gboard-stílus</string>
+    <string name="theme_look_swiftkey_name">SwiftKey-stílus</string>
+    <string name="theme_look_samsung_name">Samsung-stílus</string>
+    <string name="theme_look_ios18_name">iOS 18-stílus</string>
     <string name="theme_toast_applying">Téma alkalmazása: %1$s</string>
     <string name="theme_default_custom_name">Saját téma</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground munkamenet elindult ===\nCsúsztasson a fenti szövegmezőben. Minden csúsztatás megmutatja a jelöltek rangsorát,\nés rögzítésre kerül (pontok + billentyűgeometria + rangsor + véglegesített szó).</string>

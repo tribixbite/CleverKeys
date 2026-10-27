@@ -1643,6 +1643,13 @@
     <string name="theme_builtin_monetlight_desc">Material You açık varyantı</string>
     <string name="theme_builtin_monetdark_name">Monet Koyu</string>
     <string name="theme_builtin_monetdark_desc">Material You koyu varyantı</string>
+    <string name="theme_section_looks">Tanıdık görünümler</string>
+    <string name="theme_looks_desc">Bilinen telefon klavyelerinin renkleri ve tuş şekilleri; açık veya koyu mod sistemi izler. Apple, Google, Microsoft veya Samsung ile bağlantılı değildir.</string>
+    <string name="theme_look_ios_name">iOS tarzı</string>
+    <string name="theme_look_gboard_name">Gboard tarzı</string>
+    <string name="theme_look_swiftkey_name">SwiftKey tarzı</string>
+    <string name="theme_look_samsung_name">Samsung tarzı</string>
+    <string name="theme_look_ios18_name">iOS 18 tarzı</string>
     <string name="theme_toast_applying">Tema uygulanıyor: %1$s</string>
     <string name="theme_default_custom_name">Temam</string>
     <string name="swipe_debug_session_intro">=== Kaydırma Deneme Alanı Oturumu Başladı ===\nYukarıdaki metin alanında kaydırın. Her kaydırma aday sıralamasını gösterir\nve kaydedilir (noktalar + tuş geometrisi + sıralama + onaylanan kelime).</string>

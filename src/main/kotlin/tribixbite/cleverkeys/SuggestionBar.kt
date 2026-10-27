@@ -224,14 +224,11 @@ class SuggestionBar : LinearLayout {
                 setMargins(0, dpToPx(context, 4), 0, dpToPx(context, 4))
             }
 
-            // Use theme sublabel color with some transparency for divider
-            val dividerColor = theme?.subLabelColor ?: Color.GRAY
-            setBackgroundColor(Color.argb(
-                100,
-                Color.red(dividerColor),
-                Color.green(dividerColor),
-                Color.blue(dividerColor)
-            ))
+            // The theme's separator: the sub-label colour at alpha 100 for every theme except a
+            // keyboard look, which sets its own (alpha 0 = no separators, e.g. Gboard-style).
+            val dividerColor = theme?.suggestionSeparatorColor
+                ?: Color.argb(100, Color.red(Color.GRAY), Color.green(Color.GRAY), Color.blue(Color.GRAY))
+            setBackgroundColor(dividerColor)
         }
     }
 

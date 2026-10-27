@@ -27,8 +27,12 @@ How the Gboard features map onto CleverKeys keys:
   same way Gboard's number-row preference does.
 - Ctrl, Fn, the arrow keys and the remaining CleverKeys bottom-row keys stay reachable as
   corner swipes on ?123, enter, Shift and Delete.
+
+Look: theme="look_gboard" binds the matching keyboard look (colours, key shapes, gaps; light
+and dark follow the system; theme/KeyboardLooks.kt), so switching to this layout switches
+the whole appearance. Layout Manager's Theme chip can override it ("Follow global theme").
 -->
-<keyboard name="QWERTY (Gboard-style)" script="latin" bottom_row="false">
+<keyboard name="QWERTY (Gboard-style)" theme="look_gboard" script="latin" bottom_row="false">
   <row>
     <key c="q" ne="1"/>
     <key c="w" ne="2"/>

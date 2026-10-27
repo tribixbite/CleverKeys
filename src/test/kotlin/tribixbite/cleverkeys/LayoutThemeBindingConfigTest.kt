@@ -271,6 +271,17 @@ class LayoutThemeBindingConfigTest {
             .containsExactlyElementsIn(ThemeSettingsActivity.BUILTIN_THEMES.map { it.id })
     }
 
+    /** Keyboard looks: Theme Manager's "Familiar looks" offers exactly the registered looks. */
+    @Test
+    fun keyboardLookIdsMatchTheThemeManagerList() {
+        assertThat(ThemeSettingsActivity.LOOK_THEMES.map { it.id })
+            .containsExactlyElementsIn(tribixbite.cleverkeys.theme.KeyboardLooks.IDS).inOrder()
+        for (id in tribixbite.cleverkeys.theme.KeyboardLooks.IDS) {
+            assertWithMessage("$id is a look, not a built-in XML theme")
+                .that(ThemeProvider.BUILT_IN_THEME_IDS).doesNotContain(id)
+        }
+    }
+
     private companion object {
         const val THEMED_XML =
             "<keyboard name=\"Themed test\" script=\"latin\" theme=\"rosepine\">" +

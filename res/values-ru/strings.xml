@@ -1709,6 +1709,13 @@
     <string name="theme_builtin_monetlight_desc">Светлый вариант Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Тёмная</string>
     <string name="theme_builtin_monetdark_desc">Тёмный вариант Material You</string>
+    <string name="theme_section_looks">Знакомые стили</string>
+    <string name="theme_looks_desc">Цвета и форма клавиш известных клавиатур телефонов; светлая или тёмная тема — как в системе. Не связано с Apple, Google, Microsoft или Samsung.</string>
+    <string name="theme_look_ios_name">В стиле iOS</string>
+    <string name="theme_look_gboard_name">В стиле Gboard</string>
+    <string name="theme_look_swiftkey_name">В стиле SwiftKey</string>
+    <string name="theme_look_samsung_name">В стиле Samsung</string>
+    <string name="theme_look_ios18_name">В стиле iOS 18</string>
     <string name="theme_toast_applying">Применение темы: %1$s</string>
     <string name="theme_default_custom_name">Моя тема</string>
     <string name="swipe_debug_session_intro">=== Сеанс Swipe Playground начат ===\nПроводите свайпы в текстовом поле выше. Для каждого свайпа показывается ранжирование кандидатов,\nи он записывается (точки + геометрия клавиш + ранжирование + введённое слово).</string>

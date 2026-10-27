@@ -1956,6 +1956,10 @@ class Config private constructor(
             val monet = sdk >= Build.VERSION_CODES.S
             return when {
                 themeName.startsWith("decorative_") || themeName.startsWith("custom_") -> R.style.CleverKeysDark
+                // Keyboard looks follow the system: the base style flips with it, so a light/dark
+                // switch changes the style id and re-inflates the view with the other palette.
+                themeName.startsWith(tribixbite.cleverkeys.theme.KeyboardLooks.ID_PREFIX) ->
+                    if (systemLight) R.style.CleverKeysLight else R.style.CleverKeysDark
                 else -> when (themeName) {
                     "light" -> R.style.Light
                     "black" -> R.style.Black

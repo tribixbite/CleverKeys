@@ -1714,6 +1714,13 @@
     <string name="theme_builtin_monetlight_desc">Jasny wariant Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Ciemny</string>
     <string name="theme_builtin_monetdark_desc">Ciemny wariant Material You</string>
+    <string name="theme_section_looks">Znajome wyglądy</string>
+    <string name="theme_looks_desc">Kolory i kształty klawiszy znanych klawiatur telefonów; jasny lub ciemny zgodnie z systemem. Bez powiązań z Apple, Google, Microsoft ani Samsung.</string>
+    <string name="theme_look_ios_name">Styl iOS</string>
+    <string name="theme_look_gboard_name">Styl Gboard</string>
+    <string name="theme_look_swiftkey_name">Styl SwiftKey</string>
+    <string name="theme_look_samsung_name">Styl Samsung</string>
+    <string name="theme_look_ios18_name">Styl iOS 18</string>
     <string name="theme_toast_applying">Stosowanie motywu: %1$s</string>
     <string name="theme_default_custom_name">Mój motyw</string>
     <string name="swipe_debug_session_intro">=== Rozpoczęto sesję placu testowego gestów ===\nWykonuj gesty w polu tekstowym powyżej. Każdy gest pokazuje ranking kandydatów\ni jest zapisywany (punkty + geometria klawiszy + ranking + zatwierdzone słowo).</string>

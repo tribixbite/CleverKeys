@@ -1679,6 +1679,13 @@
     <string name="theme_builtin_monetlight_desc">Material You gaišais variants</string>
     <string name="theme_builtin_monetdark_name">Monet tumšā</string>
     <string name="theme_builtin_monetdark_desc">Material You tumšais variants</string>
+    <string name="theme_section_looks">Pazīstami izskati</string>
+    <string name="theme_looks_desc">Pazīstamu tālruņa tastatūru krāsas un taustiņu formas; gaišais vai tumšais režīms seko sistēmai. Nav saistīts ar Apple, Google, Microsoft vai Samsung.</string>
+    <string name="theme_look_ios_name">iOS stils</string>
+    <string name="theme_look_gboard_name">Gboard stils</string>
+    <string name="theme_look_swiftkey_name">SwiftKey stils</string>
+    <string name="theme_look_samsung_name">Samsung stils</string>
+    <string name="theme_look_ios18_name">iOS 18 stils</string>
     <string name="theme_toast_applying">Lieto tēmu: %1$s</string>
     <string name="theme_default_custom_name">Mana tēma</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground sesija sākta ===\nVelciet teksta laukā augstāk. Katrs vilkums parāda savu kandidātu rangu\nun tiek ierakstīts (punkti + taustiņu ģeometrija + rangs + apstiprinātais vārds).</string>

@@ -1704,6 +1704,13 @@
     <string name="theme_builtin_monetlight_desc">Světlá varianta Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Tmavý</string>
     <string name="theme_builtin_monetdark_desc">Tmavá varianta Material You</string>
+    <string name="theme_section_looks">Známé vzhledy</string>
+    <string name="theme_looks_desc">Barvy a tvary kláves známých klávesnic telefonů; světlý nebo tmavý režim podle systému. Bez spojení se společnostmi Apple, Google, Microsoft a Samsung.</string>
+    <string name="theme_look_ios_name">Styl iOS</string>
+    <string name="theme_look_gboard_name">Styl Gboard</string>
+    <string name="theme_look_swiftkey_name">Styl SwiftKey</string>
+    <string name="theme_look_samsung_name">Styl Samsung</string>
+    <string name="theme_look_ios18_name">Styl iOS 18</string>
     <string name="theme_toast_applying">Použije se motiv: %1$s</string>
     <string name="theme_default_custom_name">Můj motiv</string>
     <string name="swipe_debug_session_intro">=== Relace testovacího hřiště tahů zahájena ===\nTáhněte v textovém poli výše. Každý tah zobrazí pořadí kandidátů\na zaznamená se (body + geometrie kláves + pořadí + potvrzené slovo).</string>

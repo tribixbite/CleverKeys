@@ -1708,6 +1708,13 @@
     <string name="theme_builtin_monetlight_desc">Variante chiara Material You</string>
     <string name="theme_builtin_monetdark_name">Monet Scuro</string>
     <string name="theme_builtin_monetdark_desc">Variante scura Material You</string>
+    <string name="theme_section_looks">Aspetti familiari</string>
+    <string name="theme_looks_desc">Colori e forme dei tasti di tastiere per telefono note; chiaro o scuro segue il sistema. Non affiliato con Apple, Google, Microsoft o Samsung.</string>
+    <string name="theme_look_ios_name">Stile iOS</string>
+    <string name="theme_look_gboard_name">Stile Gboard</string>
+    <string name="theme_look_swiftkey_name">Stile SwiftKey</string>
+    <string name="theme_look_samsung_name">Stile Samsung</string>
+    <string name="theme_look_ios18_name">Stile iOS 18</string>
     <string name="theme_toast_applying">Applicazione del tema: %1$s</string>
     <string name="theme_default_custom_name">Il mio tema</string>
     <string name="swipe_debug_session_intro">=== Sessione Area di prova scorrimento avviata ===\nScorri nel campo di testo qui sopra. Ogni scorrimento mostra la classifica dei candidati\ne viene registrato (punti + geometria dei tasti + classifica + parola inserita).</string>

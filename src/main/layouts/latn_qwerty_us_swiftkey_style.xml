@@ -27,8 +27,12 @@ How the SwiftKey features map onto CleverKeys keys:
   also offers them).
 - Ctrl, Fn, the arrow keys and the remaining CleverKeys bottom-row keys stay reachable as
   corner swipes on 123, enter, Shift and Delete.
+
+Look: theme="look_swiftkey" binds the matching keyboard look (colours, key shapes, gaps; light
+and dark follow the system; theme/KeyboardLooks.kt), so switching to this layout switches
+the whole appearance. Layout Manager's Theme chip can override it ("Follow global theme").
 -->
-<keyboard name="QWERTY (SwiftKey-style)" script="latin" bottom_row="false" embedded_number_row="true">
+<keyboard name="QWERTY (SwiftKey-style)" theme="look_swiftkey" script="latin" bottom_row="false" embedded_number_row="true">
   <row height="0.75">
     <key c="1"/>
     <key c="2"/>

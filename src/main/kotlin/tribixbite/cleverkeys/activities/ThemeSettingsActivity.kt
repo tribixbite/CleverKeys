@@ -84,7 +84,22 @@ class ThemeSettingsActivity : ComponentActivity() {
             BuiltinTheme("monetlight", R.string.theme_builtin_monetlight_name, R.string.theme_builtin_monetlight_desc, 0xFFE3E3E3, 0xFFCCCCCC, 0xFF000000),
             BuiltinTheme("monetdark", R.string.theme_builtin_monetdark_name, R.string.theme_builtin_monetdark_desc, 0xFF1B1B1B, 0xFF333333, 0xFFFFFFFF),
         )
+
+        /**
+         * The keyboard looks Theme Manager offers ("Familiar looks"), with their display names.
+         * Drift-pinned against [KeyboardLooks.IDS] by KeyboardLookRegistrationTest.
+         */
+        val LOOK_THEMES = listOf(
+            LookTheme(KeyboardLooks.IOS, R.string.theme_look_ios_name),
+            LookTheme(KeyboardLooks.GBOARD, R.string.theme_look_gboard_name),
+            LookTheme(KeyboardLooks.SWIFTKEY, R.string.theme_look_swiftkey_name),
+            LookTheme(KeyboardLooks.SAMSUNG, R.string.theme_look_samsung_name),
+            LookTheme(KeyboardLooks.IOS18, R.string.theme_look_ios18_name),
+        )
     }
+
+    /** A keyboard look in Theme Manager: its stored id and display-name resource. */
+    data class LookTheme(val id: String, @StringRes val nameRes: Int)
 
     /**
      * Represents a built-in XML theme with preview colors.
@@ -201,7 +216,7 @@ class ThemeSettingsActivity : ComponentActivity() {
                                 // 2. Check decorative/custom themes
                                 // ThemeProvider isn't easily accessible here as a singleton without context, 
                                 // but we can check if it's custom/decorative
-                                if (themeId.startsWith("custom_") || themeId.startsWith("decorative_")) {
+                                if (ThemeProvider.getInstance(this).isRuntimeTheme(themeId)) {
                                     val themeProvider = ThemeProvider.getInstance(this)
                                     val colorScheme = themeProvider.getColorScheme(themeId)
                                     if (colorScheme != null) {
@@ -348,6 +363,42 @@ fun ThemeSettingsScreen(
                         onThemeSelected(builtinTheme.id, builtinName)
                     }
                 )
+            }
+
+            // Keyboard looks: colours AND key shapes of familiar keyboards, light/dark follow
+            // the system. The familiar-style layouts bind to them (layout XML theme="look_…").
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    stringResource(R.string.theme_section_looks),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    stringResource(R.string.theme_looks_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            items(ThemeSettingsActivity.LOOK_THEMES) { lookTheme ->
+                val lookName = stringResource(lookTheme.nameRes)
+                val lookScheme = remember(lookTheme.id) {
+                    ThemeProvider.getInstance(context).getColorScheme(lookTheme.id)
+                }
+                if (lookScheme != null) {
+                    ThemeCard(
+                        name = lookName,
+                        colorScheme = lookScheme,
+                        isCustom = false,
+                        isSelected = currentThemeId == lookTheme.id,
+                        onSelect = {
+                            currentThemeId = lookTheme.id
+                            onThemeSelected(lookTheme.id, lookName)
+                        }
+                    )
+                }
             }
 
             // Custom Themes Section (user-created)

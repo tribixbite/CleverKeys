@@ -1596,6 +1596,13 @@
     <string name="theme_builtin_monetlight_desc">Material You 라이트 버전</string>
     <string name="theme_builtin_monetdark_name">Monet 다크</string>
     <string name="theme_builtin_monetdark_desc">Material You 다크 버전</string>
+    <string name="theme_section_looks">익숙한 모양</string>
+    <string name="theme_looks_desc">잘 알려진 휴대폰 키보드의 색상과 키 모양. 라이트/다크는 시스템을 따릅니다. Apple, Google, Microsoft, Samsung과 제휴하지 않았습니다.</string>
+    <string name="theme_look_ios_name">iOS 스타일</string>
+    <string name="theme_look_gboard_name">Gboard 스타일</string>
+    <string name="theme_look_swiftkey_name">SwiftKey 스타일</string>
+    <string name="theme_look_samsung_name">Samsung 스타일</string>
+    <string name="theme_look_ios18_name">iOS 18 스타일</string>
     <string name="theme_toast_applying">테마 적용 중: %1$s</string>
     <string name="theme_default_custom_name">내 테마</string>
     <string name="swipe_debug_session_intro">=== 스와이프 플레이그라운드 세션 시작 ===\n위의 텍스트 필드에서 스와이프하세요. 각 스와이프의 후보 순위가 표시되며\n기록됩니다(좌표 + 키 배치 + 순위 + 확정된 단어).</string>
