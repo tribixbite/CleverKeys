@@ -489,6 +489,12 @@
     <string name="clipboard_swipe_delete_desc">یک ورودی را به چپ یا راست بکشید تا از زبانهٔ فعلی حذف شود. تا %1$d ثانیه می‌توانید آن را واگرد کنید.</string>
     <string name="clipboard_swipe_deleted">حذف شد</string>
     <string name="clipboard_swipe_undo">واگرد</string>
+    <string name="clipboard_reorder_handle_descr">برای تغییر ترتیب بکشید</string>
+    <string name="clipboard_move_up">انتقال به بالا</string>
+    <string name="clipboard_move_down">انتقال به پایین</string>
+    <string name="clipboard_move_to_top">انتقال به ابتدا</string>
+    <string name="clipboard_reorder_unavailable">برای تغییر ترتیب، جستجو و فیلترها را پاک کنید</string>
+    <string name="clipboard_reorder_moved">به جایگاه %1$d از %2$d منتقل شد</string>
     <string name="clipboard_private_copy_other_apps_title">کپی خصوصی در برنامه‌های دیگر</string>
     <string name="clipboard_private_copy_other_apps_desc">«کپی خصوصی» را به منوهای انتخاب متن برنامه‌های دیگر اضافه کنید. متن انتخاب‌شده را فقط در CleverKeys کپی می‌کند — هرگز در بریده‌دان سامانه. فعال‌سازی یک ورودی برنامه اضافه می‌کند که برنامه‌های دیگر می‌توانند ببینند.</string>
     <string name="clipboard_sanitize_links_title">پاک‌سازی پارامترهای ردگیری</string>

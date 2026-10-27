@@ -37,6 +37,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
 import tribixbite.cleverkeys.clipboard.ClipboardEditPages
 import tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicy
+import tribixbite.cleverkeys.clipboard.ClipboardReorderPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipePolicy
 import tribixbite.cleverkeys.clipboard.ClipboardSwipeTracker
 import tribixbite.cleverkeys.clipboard.ClipboardProvenance
@@ -401,6 +402,93 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         applyFilter(resetView = false)
     }
 
+    // ─── Reordering Pinned and To-dos rows (2026-10-27) ───
+    // A drag handle on each row (drag it), and TalkBack's "Move up / Move down / Move to top"
+    // custom actions. Both end in moveEntryTo: the service writes the midpoint between the
+    // two VISIBLE neighbours (ClipboardReorderPolicy, ClipboardDatabase.moveEntry) and the list
+    // shows the new order at once; the change notification's reload then confirms it.
+
+    /** Invoked when the dimmed handle is touched while a search or filter pauses reordering. */
+    var onReorderUnavailable: (() -> Unit)? = null
+
+    /**
+     * A search, date, size, private-only or tag filter is active. The status filter is not
+     * counted: it is the To-dos default view and hidden statuses keep their order.
+     */
+    private fun hasNonStatusFilter(): Boolean =
+        searchFilter.isNotEmpty() || dateFilterEnabled || privateOnlyFilter ||
+            tagFilterSelected.isNotEmpty() || sizeMinimum > 0 || sizeMaximum != null
+
+    /** Whether rows show the drag handle and accept moves right now. */
+    fun reorderAvailability(): ClipboardReorderPolicy.Availability =
+        ClipboardReorderPolicy.availability(
+            isHistory = currentTab == ClipboardTab.HISTORY,
+            selecting = selection != null,
+            editing = isEditing(),
+            bulkRunning = bulkRunning,
+            filtered = hasNonStatusFilter(),
+        )
+
+    /**
+     * Move [entry] to [targetIndex] of the current results (all pages, in display order).
+     * Refused unless reordering is AVAILABLE and the results are loaded; a drop where the row
+     * already is writes nothing. On success the loaded rows are reordered at once.
+     *
+     * @return true when the service changed the order.
+     */
+    fun moveEntryTo(entry: ClipboardEntry, targetIndex: Int): Boolean {
+        if (!dataReady || reorderAvailability() != ClipboardReorderPolicy.Availability.AVAILABLE) return false
+        val visible = filteredHistory
+        val (afterId, beforeId) = ClipboardReorderPolicy.neighbours(visible.map { it.rowId }, entry.rowId, targetIndex)
+            ?: return false
+        val after = afterId?.let { id -> visible.first { it.rowId == id } }
+        val before = beforeId?.let { id -> visible.first { it.rowId == id } }
+        if (service?.moveInTab(currentTab, entry, after, before) != true) {
+            loadDataAsync()  // the view was stale (refused): show the database's order
+            return false
+        }
+        // Same visible order as the database's write: between the neighbours, or past the end of
+        // the whole table (hidden rows included) for an open end.
+        val reordered = history.filterNot { it.rowId == entry.rowId }.toMutableList()
+        val at = when {
+            after != null && before != null -> reordered.indexOfFirst { it.rowId == after.rowId } + 1
+            before == null -> reordered.size
+            else -> 0
+        }
+        reordered.add(at, entry)
+        history = reordered
+        applyFilter(resetView = false)
+        return true
+    }
+
+    /** TalkBack moves offered for [entry]'s row (none unless reordering is available). */
+    fun moveActionsFor(entry: ClipboardEntry): List<ClipboardReorderPolicy.MoveAction> {
+        if (reorderAvailability() != ClipboardReorderPolicy.Availability.AVAILABLE) return emptyList()
+        val index = filteredHistory.indexOfFirst { it.rowId == entry.rowId }
+        return ClipboardReorderPolicy.moveActions(index, filteredHistory.size)
+    }
+
+    /** Run one TalkBack move on [entry] and announce its new place. */
+    fun performMoveAction(entry: ClipboardEntry, action: ClipboardReorderPolicy.MoveAction): Boolean {
+        if (action !in moveActionsFor(entry)) return false
+        val index = filteredHistory.indexOfFirst { it.rowId == entry.rowId }
+        if (!moveEntryTo(entry, ClipboardReorderPolicy.targetIndex(action, index))) return false
+        val now = filteredHistory.indexOfFirst { it.rowId == entry.rowId }
+        announceForAccessibility(context.getString(R.string.clipboard_reorder_moved, now + 1, filteredHistory.size))
+        return true
+    }
+
+    /**
+     * Custom actions (action id, label resource) for an accessibility host: the row text
+     * carries Delete (entry in the [R.id.clipboard_entry_delete] tag) and the moves (entry in
+     * the [R.id.clipboard_entry_drag_handle] tag); the handle carries the moves only.
+     */
+    internal fun rowAccessibilityActions(host: View): List<Pair<Int, Int>> = buildList {
+        if (host.getTag(R.id.clipboard_entry_delete) is ClipboardEntry) add(R.id.clipboard_entry_delete to R.string.common_delete)
+        val movable = host.getTag(R.id.clipboard_entry_drag_handle) as? ClipboardEntry ?: return@buildList
+        for (action in moveActionsFor(movable)) add(accessibilityIdFor(action) to moveLabelFor(action))
+    }
+
     // Pagination state
     private var currentPage = 0
     private var onPaginationChangeListener: ((needsPagination: Boolean, currentPage: Int, totalPages: Int) -> Unit)? = null
@@ -531,6 +619,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             R.id.clipboard_entry_done, R.id.clipboard_entry_status, R.id.clipboard_entry_tags,
             R.id.clipboard_entry_save, R.id.clipboard_entry_cancel, R.id.clipboard_entry_delete,
             R.id.clipboard_entry_edit_page_prev, R.id.clipboard_entry_edit_page_next,
+            R.id.clipboard_entry_drag_handle,
         )
 
         /** clipboard_history_entry.xml's android:maxLines for the edit field (single-page edits). */
@@ -538,6 +627,46 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
         /** Pager row: 32dp buttons + 4dp top margin (clipboard_history_entry.xml). */
         private const val PAGER_ROW_DP = 36
+
+        /** Opacity of the drag handle while a search or filter pauses reordering. */
+        const val REORDER_HANDLE_DIMMED_ALPHA = 0.3f
+
+        /** Extra width (dp) on each side of the 24dp handle icon that still starts a drag. */
+        private const val REORDER_HANDLE_SLOP_DP = 10
+
+        /** Height (dp) of the bands at the top and bottom of the pane that auto-scroll a drag. */
+        private const val REORDER_EDGE_DP = 40
+
+        /** Fastest auto-scroll (dp per frame), reached with the finger at the pane's edge. */
+        private const val REORDER_MAX_SCROLL_DP = 12
+
+        /** Elevation (dp) of the dragged row, so it draws above the rows it passes. */
+        private const val REORDER_DRAG_ELEVATION_DP = 8
+
+        /** Thickness (dp) of the drop-position line. */
+        private const val REORDER_DROP_LINE_DP = 3
+
+        /** The TalkBack move behind an accessibility action id, or null for any other id. */
+        fun moveActionForId(id: Int): ClipboardReorderPolicy.MoveAction? = when (id) {
+            R.id.clipboard_entry_move_up -> ClipboardReorderPolicy.MoveAction.UP
+            R.id.clipboard_entry_move_down -> ClipboardReorderPolicy.MoveAction.DOWN
+            R.id.clipboard_entry_move_top -> ClipboardReorderPolicy.MoveAction.TOP
+            else -> null
+        }
+
+        /** Accessibility action id of a TalkBack move. */
+        fun accessibilityIdFor(action: ClipboardReorderPolicy.MoveAction): Int = when (action) {
+            ClipboardReorderPolicy.MoveAction.UP -> R.id.clipboard_entry_move_up
+            ClipboardReorderPolicy.MoveAction.DOWN -> R.id.clipboard_entry_move_down
+            ClipboardReorderPolicy.MoveAction.TOP -> R.id.clipboard_entry_move_top
+        }
+
+        /** Label resource of a TalkBack move. */
+        fun moveLabelFor(action: ClipboardReorderPolicy.MoveAction): Int = when (action) {
+            ClipboardReorderPolicy.MoveAction.UP -> R.string.clipboard_move_up
+            ClipboardReorderPolicy.MoveAction.DOWN -> R.string.clipboard_move_down
+            ClipboardReorderPolicy.MoveAction.TOP -> R.string.clipboard_move_to_top
+        }
 
         /** Map MIME type to a fallback drawable icon when no thumbnail BLOB is available */
         fun getMimeTypeIcon(mimeType: String): Int = when {
@@ -574,6 +703,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     override fun onDetachedFromWindow() {
         // A gesture cannot survive the window; the pending row itself lives in the manager.
         abandonRowSwipe(springBack = false)
+        reorderDrag?.let { finishReorderDrag(it, commit = false) }
         // Unregister to break singleton→view reference and stop receiving callbacks
         service?.setOnClipboardHistoryChange(null)
         holder?.let { if (it.observer === holderObserver) it.observer = null }
@@ -742,6 +872,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     private fun applyPagination(clearExpandedStates: Boolean = false) {
+        // Rows are about to be rebound: a drag in progress would follow the wrong entry.
+        reorderDrag?.let { finishReorderDrag(it, commit = false) }
         val totalItems = filteredHistory.size
         val totalPages = getTotalPages()
 
@@ -1673,6 +1805,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private var swipeClaimed = false
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        // A drag on a row's reorder handle owns the whole gesture (no swipe, click or scroll).
+        if (handleReorderTouch(ev)) return true
         when (ev.actionMasked) {
             MotionEvent.ACTION_DOWN -> beginRowSwipe(ev)
             MotionEvent.ACTION_POINTER_DOWN ->
@@ -1792,6 +1926,213 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         swipeVelocity = null
     }
 
+    // ─── Reorder drag (2026-10-27) ───
+    // A DOWN on a row's visible handle (icon ± REORDER_HANDLE_SLOP_DP, full row height) starts
+    // the drag at once — no long press, so it never competes with long-press copy, and the
+    // swipe tracker never sees the gesture. The pane's ScrollView is told not to intercept; the
+    // row follows the finger (raised, opaque), a line marks where it will land, and holding it
+    // within REORDER_EDGE_DP of the pane's top or bottom scrolls the pane. Release writes the
+    // move through moveEntryTo; CANCEL (or a data change mid-drag) puts the row back unchanged.
+    // On a dimmed handle (search or filter active) the gesture only explains why, and is
+    // swallowed so the row does not also expand.
+
+    /** One drag in progress: [index] is the row's position in the current page. */
+    private class ReorderDrag(
+        val entry: ClipboardEntry,
+        val row: View,
+        val index: Int,
+        val startRawY: Float,
+        val startScrollY: Int,
+        var lastRawY: Float,
+        var dropIndex: Int,
+    )
+
+    private var reorderDrag: ReorderDrag? = null
+
+    /** A dimmed-handle gesture is being swallowed until its UP / CANCEL. */
+    private var reorderTouchSwallowed = false
+
+    // Lazily created: Objenesis-built test views skip property initializers.
+    private var autoScrollRunnable: Runnable? = null
+    private var dropLinePaint: android.graphics.Paint? = null
+
+    /** Show, dim or hide the row's [handle] and bind its TalkBack moves for [entry]. */
+    private fun bindReorderHandle(handle: View?, textView: TextView, entry: ClipboardEntry) {
+        val availability = reorderAvailability()
+        if (availability == ClipboardReorderPolicy.Availability.HIDDEN) {
+            handle?.visibility = GONE
+        } else {
+            handle?.visibility = VISIBLE
+            handle?.alpha = if (availability == ClipboardReorderPolicy.Availability.AVAILABLE) 1f
+                else REORDER_HANDLE_DIMMED_ALPHA
+        }
+        bindMoveAccessibilityActions(
+            textView, handle, entry.takeIf { availability == ClipboardReorderPolicy.Availability.AVAILABLE }
+        )
+    }
+
+    /**
+     * Route a touch to the reorder drag. Returns true when the event belongs to a drag (or to
+     * a swallowed dimmed-handle gesture) and must not reach the rows or the swipe tracker.
+     */
+    private fun handleReorderTouch(ev: MotionEvent): Boolean {
+        val drag = reorderDrag
+        when (ev.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                reorderTouchSwallowed = false
+                if (drag != null) finishReorderDrag(drag, commit = false)
+                val (pos, row) = reorderHandleHit(ev) ?: return false
+                when (reorderAvailability()) {
+                    ClipboardReorderPolicy.Availability.AVAILABLE -> startReorderDrag(pos, row, ev)
+                    ClipboardReorderPolicy.Availability.FILTERED -> {
+                        reorderTouchSwallowed = true
+                        onReorderUnavailable?.invoke()
+                    }
+                    ClipboardReorderPolicy.Availability.HIDDEN -> return false
+                }
+                return true
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (drag == null) return reorderTouchSwallowed
+                drag.lastRawY = ev.rawY
+                updateReorderDrag(drag)
+                return true
+            }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                if (drag != null) {
+                    finishReorderDrag(drag, commit = ev.actionMasked == MotionEvent.ACTION_UP)
+                    return true
+                }
+                val swallowed = reorderTouchSwallowed
+                reorderTouchSwallowed = false
+                return swallowed
+            }
+            // A second finger during a drag is ignored; the first one still owns the row.
+            else -> return drag != null || reorderTouchSwallowed
+        }
+    }
+
+    /** The (page position, row) whose visible handle is under the touch, or null. */
+    private fun reorderHandleHit(ev: MotionEvent): Pair<Int, View>? {
+        val pos = pointToPosition(ev.x.toInt(), ev.y.toInt())
+        if (pos == INVALID_POSITION || paginatedHistory.getOrNull(pos) == null) return null
+        val row = getChildAt(pos - firstVisiblePosition) ?: return null
+        val handle = row.findViewById<View?>(R.id.clipboard_entry_drag_handle) ?: return null
+        if (handle.visibility != VISIBLE) return null
+        val slop = REORDER_HANDLE_SLOP_DP * resources.displayMetrics.density
+        val left = row.left + handle.left - slop
+        val right = row.left + handle.right + slop
+        return if (ev.x in left..right) pos to row else null
+    }
+
+    private fun startReorderDrag(pos: Int, row: View, ev: MotionEvent) {
+        abandonRowSwipe(springBack = false)
+        // From the DOWN on, the pane's ScrollView must not turn this gesture into a scroll.
+        parent?.requestDisallowInterceptTouchEvent(true)
+        val density = resources.displayMetrics.density
+        row.animate().cancel()
+        row.translationZ = REORDER_DRAG_ELEVATION_DP * density
+        row.setBackgroundColor(dragRowColor())
+        row.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+        reorderDrag = ReorderDrag(
+            entry = paginatedHistory[pos], row = row, index = pos,
+            startRawY = ev.rawY, startScrollY = reorderScrollParent()?.scrollY ?: 0,
+            lastRawY = ev.rawY, dropIndex = pos - firstVisiblePosition,
+        )
+        invalidate()
+    }
+
+    /** Follow the finger, recompute the drop slot and keep the edge auto-scroll going. */
+    private fun updateReorderDrag(drag: ReorderDrag) {
+        val scrollDelta = (reorderScrollParent()?.scrollY ?: 0) - drag.startScrollY
+        val row = drag.row
+        val dy = (drag.lastRawY - drag.startRawY + scrollDelta)
+            .coerceIn(-row.top.toFloat(), (height - row.bottom).toFloat().coerceAtLeast(0f))
+        row.translationY = dy
+        val count = childCount
+        val tops = List(count) { getChildAt(it).top }
+        val bottoms = List(count) { getChildAt(it).bottom }
+        drag.dropIndex = ClipboardReorderPolicy.dropIndex(
+            tops, bottoms, drag.index - firstVisiblePosition, row.top + dy + row.height / 2f
+        )
+        invalidate()
+        scheduleReorderAutoScroll(drag)
+    }
+
+    /** Pixels the pane should scroll this frame for the finger's place in it. */
+    private fun reorderAutoScrollStep(drag: ReorderDrag, scroll: android.widget.ScrollView): Int {
+        val location = IntArray(2)
+        scroll.getLocationOnScreen(location)
+        val density = resources.displayMetrics.density
+        val step = ClipboardReorderPolicy.autoScrollStep(
+            fingerY = drag.lastRawY - location[1],
+            viewportHeight = scroll.height.toFloat(),
+            edge = REORDER_EDGE_DP * density,
+            maxStep = REORDER_MAX_SCROLL_DP * density,
+        )
+        return if (step != 0 && scroll.canScrollVertically(step)) step else 0
+    }
+
+    private fun scheduleReorderAutoScroll(drag: ReorderDrag) {
+        val runnable = autoScrollRunnable ?: Runnable { stepReorderAutoScroll() }.also { autoScrollRunnable = it }
+        removeCallbacks(runnable)
+        val scroll = reorderScrollParent() ?: return
+        if (reorderAutoScrollStep(drag, scroll) != 0) postOnAnimation(runnable)
+    }
+
+    /** One auto-scroll frame; [updateReorderDrag] schedules the next while still at an edge. */
+    private fun stepReorderAutoScroll() {
+        val drag = reorderDrag ?: return
+        val scroll = reorderScrollParent() ?: return
+        val step = reorderAutoScrollStep(drag, scroll)
+        if (step == 0) return
+        scroll.scrollBy(0, step)
+        updateReorderDrag(drag)
+    }
+
+    /** Put the dragged row back; with [commit], move its entry to the drop slot. */
+    private fun finishReorderDrag(drag: ReorderDrag, commit: Boolean) {
+        autoScrollRunnable?.let { removeCallbacks(it) }
+        reorderDrag = null
+        val row = drag.row
+        row.translationY = 0f
+        row.translationZ = 0f
+        row.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+        invalidate()
+        if (!commit) return
+        val offset = pageOffset()
+        val from = drag.index - firstVisiblePosition
+        if (drag.dropIndex != from) moveEntryTo(drag.entry, offset + drag.dropIndex)
+    }
+
+    /** Index in [filteredHistory] of the current page's first row. */
+    private fun pageOffset(): Int = if (filteredHistory.size > ITEMS_PER_PAGE) currentPage * ITEMS_PER_PAGE else 0
+
+    /** The pane's ScrollView around this list, which a drag auto-scrolls. */
+    private fun reorderScrollParent(): android.widget.ScrollView? {
+        var p = parent
+        while (p != null) {
+            if (p is android.widget.ScrollView) return p
+            p = p.parent
+        }
+        return null
+    }
+
+    override fun dispatchDraw(canvas: android.graphics.Canvas) {
+        super.dispatchDraw(canvas)
+        val drag = reorderDrag ?: return
+        // The drop line: above the row the dragged one will precede (below the last row).
+        val from = drag.index - firstVisiblePosition
+        if (drag.dropIndex == from) return  // dropping where it started
+        val others = (0 until childCount).filter { it != from }.map { getChildAt(it) }
+        if (others.isEmpty()) return
+        val y = if (drag.dropIndex < others.size) others[drag.dropIndex].top else others.last().bottom
+        val half = REORDER_DROP_LINE_DP * resources.displayMetrics.density / 2f
+        val paint = dropLinePaint ?: android.graphics.Paint().also { dropLinePaint = it }
+        paint.color = labelColor()
+        canvas.drawRect(0f, y - half, width.toFloat(), y + half, paint)
+    }
+
     /**
      * TalkBack equivalent of the swipe: a "Delete" custom action on the row's text, which is the
      * row's focus stop, through the same deferred path (Undo appears in the result row). Not
@@ -1802,25 +2143,48 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      */
     private fun bindDeleteAccessibilityAction(textView: TextView, entry: ClipboardEntry?) {
         textView.setTag(R.id.clipboard_entry_delete, entry)
-        textView.accessibilityDelegate = if (entry == null) null
-            else deleteActionDelegate ?: DeleteActionDelegate().also { deleteActionDelegate = it }
+        bindRowAccessibilityDelegate(textView)
+    }
+
+    /**
+     * Reordering's accessibility equivalent: "Move up / Move down / Move to top" on the row
+     * text and on the handle, for [entry] (null removes them). Which moves are offered is
+     * decided when TalkBack asks, from the current results.
+     */
+    private fun bindMoveAccessibilityActions(textView: TextView, handle: View?, entry: ClipboardEntry?) {
+        textView.setTag(R.id.clipboard_entry_drag_handle, entry)
+        bindRowAccessibilityDelegate(textView)
+        handle?.setTag(R.id.clipboard_entry_drag_handle, entry)
+        handle?.let { bindRowAccessibilityDelegate(it) }
+    }
+
+    /** The shared delegate on [host] while it carries an entry tag; none otherwise. */
+    private fun bindRowAccessibilityDelegate(host: View) {
+        val tagged = host.getTag(R.id.clipboard_entry_delete) is ClipboardEntry ||
+            host.getTag(R.id.clipboard_entry_drag_handle) is ClipboardEntry
+        host.accessibilityDelegate = if (!tagged) null
+            else deleteActionDelegate ?: RowActionDelegate().also { deleteActionDelegate = it }
     }
 
     // Created on first bind (Objenesis-built test views inject their own).
     private var deleteActionDelegate: View.AccessibilityDelegate? = null
 
-    /** Adds the "Delete" custom action and runs [deferDelete] for the host row's entry. */
-    private inner class DeleteActionDelegate : View.AccessibilityDelegate() {
+    /** Adds the row's custom actions ([rowAccessibilityActions]) and runs them. */
+    private inner class RowActionDelegate : View.AccessibilityDelegate() {
         override fun onInitializeAccessibilityNodeInfo(host: View, info: android.view.accessibility.AccessibilityNodeInfo) {
             super.onInitializeAccessibilityNodeInfo(host, info)
-            info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(
-                R.id.clipboard_entry_delete, context.getString(R.string.common_delete)))
+            for ((id, label) in rowAccessibilityActions(host)) {
+                info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction(id, context.getString(label)))
+            }
         }
 
         override fun performAccessibilityAction(host: View, action: Int, args: android.os.Bundle?): Boolean {
-            val entry = host.getTag(R.id.clipboard_entry_delete) as? ClipboardEntry
-            return if (action == R.id.clipboard_entry_delete && entry != null) deferDelete(entry)
-            else super.performAccessibilityAction(host, action, args)
+            val toDelete = host.getTag(R.id.clipboard_entry_delete) as? ClipboardEntry
+            if (action == R.id.clipboard_entry_delete && toDelete != null) return deferDelete(toDelete)
+            val move = moveActionForId(action)
+            val toMove = host.getTag(R.id.clipboard_entry_drag_handle) as? ClipboardEntry
+            if (move != null && toMove != null) return performMoveAction(toMove, move)
+            return super.performAccessibilityAction(host, action, args)
         }
     }
 
@@ -1903,16 +2267,25 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     /** Translucent label colour (runtime theme aware) behind selected rows. */
-    private fun selectedRowColor(): Int {
+    private fun selectedRowColor(): Int =
+        androidx.core.graphics.ColorUtils.setAlphaComponent(labelColor(), SELECTED_ROW_ALPHA)
+
+    /** The effective label colour (runtime theme aware); also the reorder drop line. */
+    private fun labelColor(): Int = themeColor(R.attr.colorLabel, runtimeColors?.label ?: 0, android.graphics.Color.WHITE)
+
+    /** Opaque keyboard background behind a dragged row, so the rows it passes do not show through. */
+    private fun dragRowColor(): Int =
+        themeColor(R.attr.colorKeyboard, runtimeColors?.keyboardBackground ?: 0, android.graphics.Color.DKGRAY)
+
+    private fun themeColor(attr: Int, runtimeColor: Int, fallback: Int): Int {
         val typed = android.util.TypedValue()
-        val xml = if (context.theme.resolveAttribute(R.attr.colorLabel, typed, true)) typed.data else null
-        val label = ClipboardPaneThemePolicy.effectiveColor(
+        val xml = if (context.theme.resolveAttribute(attr, typed, true)) typed.data else null
+        return ClipboardPaneThemePolicy.effectiveColor(
             isRuntimeTheme = runtimeColors != null,
-            runtimeColor = runtimeColors?.label ?: 0,
+            runtimeColor = runtimeColor,
             xmlResolved = xml,
-            fallback = android.graphics.Color.WHITE
+            fallback = fallback
         )
-        return androidx.core.graphics.ColorUtils.setAlphaComponent(label, SELECTED_ROW_ALPHA)
     }
 
     inner class ClipboardEntriesAdapter : BaseAdapter() {
@@ -1930,6 +2303,11 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 view.animate().cancel()
                 view.translationX = 0f
                 view.alpha = 1f
+            }
+            // Same for a reorder drag's lift and offset, except on the row being dragged.
+            if (view !== reorderDrag?.row) {
+                view.translationY = 0f
+                view.translationZ = 0f
             }
 
             val entry = paginatedHistory[pos]
@@ -1963,6 +2341,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             val deleteButton = view.findViewById<View>(R.id.clipboard_entry_delete)
             // Selection-mode checkbox (GONE outside selection mode)
             val selectBox = view.findViewById<CheckBox>(R.id.clipboard_entry_select)
+            // Reorder handle (Pinned / To-dos, normal mode only; 2026-10-27)
+            val dragHandle = view.findViewById<View?>(R.id.clipboard_entry_drag_handle)
 
             // #130: under a runtime theme, override the row's base-style ?attr colors
             // (entry text + button tints) with the active theme's — same colors the pane
@@ -1997,6 +2377,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // Edit and selection are mutually exclusive; reset recycled selection rows.
                 resetSelectionRow(view, textView, selectBox)
                 bindDeleteAccessibilityAction(textView, null)  // edit mode has its own delete
+                dragHandle?.visibility = GONE  // no reordering while editing
+                bindMoveAccessibilityActions(textView, dragHandle, null)
 
                 // D-7: render any pending save failure inline; cleared when the user types.
                 val errRes = editingErrorRes
@@ -2179,6 +2561,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             if (selection != null) {
                 bindSelectionRow(view, entry, textView, selectBox, thumbnailContainer)
                 bindDeleteAccessibilityAction(textView, null)  // bulk delete only in selection mode
+                dragHandle?.visibility = GONE  // rows toggle in selection mode; no reordering
+                bindMoveAccessibilityActions(textView, dragHandle, null)
                 primaryButtons.visibility = GONE
                 secondaryButtons.visibility = GONE
                 deleteRow.visibility = GONE
@@ -2188,6 +2572,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             resetSelectionRow(view, textView, selectBox)
             // ── Swipe-to-delete's accessibility equivalent (GH #175 part 2) ──
             bindDeleteAccessibilityAction(textView, entry)
+            // ── Reorder handle + TalkBack moves (2026-10-27) ──
+            bindReorderHandle(dragHandle, textView, entry)
 
             // ── Expand state: single tap toggles text expansion + secondary row ──
             val isMultiLine = text.contains("\n")

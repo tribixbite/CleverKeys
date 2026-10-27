@@ -20,4 +20,9 @@
   <item type="id" name="a11y_short_swipe_sw"/>
   <item type="id" name="a11y_short_swipe_w"/>
   <item type="id" name="a11y_short_swipe_nw"/>
+  <!-- Clipboard Pinned / To-dos reordering (2026-10-27): TalkBack custom-action ids for the
+       row's "Move up", "Move down" and "Move to top" (ClipboardHistoryView). -->
+  <item type="id" name="clipboard_entry_move_up"/>
+  <item type="id" name="clipboard_entry_move_down"/>
+  <item type="id" name="clipboard_entry_move_top"/>
 </resources>

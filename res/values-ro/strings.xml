@@ -478,6 +478,12 @@
     <string name="clipboard_swipe_delete_desc">Glisați o intrare spre stânga sau spre dreapta pentru a o șterge din fila curentă. Puteți anula timp de %1$d secunde.</string>
     <string name="clipboard_swipe_deleted">Șters</string>
     <string name="clipboard_swipe_undo">Anulează</string>
+    <string name="clipboard_reorder_handle_descr">Trageți pentru a reordona</string>
+    <string name="clipboard_move_up">Mută în sus</string>
+    <string name="clipboard_move_down">Mută în jos</string>
+    <string name="clipboard_move_to_top">Mută la început</string>
+    <string name="clipboard_reorder_unavailable">Ștergeți căutarea și filtrele pentru a reordona</string>
+    <string name="clipboard_reorder_moved">Mutat pe poziția %1$d din %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Copiere privată în alte aplicații</string>
     <string name="clipboard_private_copy_other_apps_desc">Adaugă „Copiere privată” la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
     <string name="clipboard_sanitize_links_title">Sanitizează parametrii de urmărire</string>

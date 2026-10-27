@@ -18,6 +18,20 @@
       android:buttonTint="?attr/colorLabel"
       android:visibility="gone"/>
 
+  <!-- Reorder handle (2026-10-27): Pinned and To-dos rows in normal mode; GONE on History, in
+       selection and edit mode. Touch-and-drag on it moves the row (ClipboardHistoryView handles
+       the gesture over the icon plus 10dp on each side, full row height); dimmed while a search
+       or filter pauses reordering. TalkBack: the row text and this handle carry "Move up /
+       Move down / Move to top" custom actions. Not clickable: the list routes its touches. -->
+  <View
+      android:id="@+id/clipboard_entry_drag_handle"
+      android:contentDescription="@string/clipboard_reorder_handle_descr"
+      style="@style/clipboardEntryButton"
+      android:layout_gravity="center_vertical"
+      android:layout_marginStart="8dp"
+      android:background="@drawable/ic_drag_handle"
+      android:visibility="gone"/>
+
   <!-- Media thumbnail container: GONE for text entries, VISIBLE for media -->
   <FrameLayout
       android:id="@+id/clipboard_entry_thumbnail_container"

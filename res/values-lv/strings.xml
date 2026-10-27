@@ -467,6 +467,12 @@
     <string name="clipboard_swipe_delete_desc">Velciet ierakstu pa kreisi vai pa labi, lai to dzēstu no pašreizējās cilnes. Atsaukt var %1$d sekunžu laikā.</string>
     <string name="clipboard_swipe_deleted">Dzēsts</string>
     <string name="clipboard_swipe_undo">Atsaukt</string>
+    <string name="clipboard_reorder_handle_descr">Velciet, lai pārkārtotu</string>
+    <string name="clipboard_move_up">Pārvietot uz augšu</string>
+    <string name="clipboard_move_down">Pārvietot uz leju</string>
+    <string name="clipboard_move_to_top">Pārvietot uz sākumu</string>
+    <string name="clipboard_reorder_unavailable">Lai pārkārtotu, notīriet meklēšanu un filtrus</string>
+    <string name="clipboard_reorder_moved">Pārvietots uz %1$d. vietu no %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Privāta kopēšana citās lietotnēs</string>
     <string name="clipboard_private_copy_other_apps_desc">Pievienot \"Privātā kopēšana\" citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē.</string>
     <string name="clipboard_sanitize_links_title">Attīrīt izsekošanas parametrus</string>

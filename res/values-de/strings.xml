@@ -473,6 +473,12 @@
     <string name="clipboard_swipe_delete_desc">Eintrag nach links oder rechts wischen, um ihn aus dem aktuellen Tab zu löschen. „Rückgängig“ ist %1$d Sekunden lang verfügbar.</string>
     <string name="clipboard_swipe_deleted">Gelöscht</string>
     <string name="clipboard_swipe_undo">Rückgängig</string>
+    <string name="clipboard_reorder_handle_descr">Ziehen zum Neuordnen</string>
+    <string name="clipboard_move_up">Nach oben</string>
+    <string name="clipboard_move_down">Nach unten</string>
+    <string name="clipboard_move_to_top">An den Anfang</string>
+    <string name="clipboard_reorder_unavailable">Suche und Filter löschen, um neu zu ordnen</string>
+    <string name="clipboard_reorder_moved">An Position %1$d von %2$d verschoben</string>
     <string name="clipboard_private_copy_other_apps_title">Private Kopie in anderen Apps</string>
     <string name="clipboard_private_copy_other_apps_desc">\"Private Kopie\" zu Textauswahlmenüs anderer Apps hinzufügen. Kopiert ausgewählten Text nur in CleverKeys – niemals in die Systemzwischenablage. Durch Aktivieren wird ein App-Eintrag hinzugefügt, den andere Apps sehen können.</string>
     <string name="clipboard_sanitize_links_title">Tracking-Parameter bereinigen</string>

@@ -469,6 +469,12 @@
     <string name="clipboard_swipe_delete_desc">Змахніть запис ліворуч або праворуч, щоб видалити його з поточної вкладки. Скасувати можна протягом %1$d секунд.</string>
     <string name="clipboard_swipe_deleted">Видалено</string>
     <string name="clipboard_swipe_undo">Скасувати</string>
+    <string name="clipboard_reorder_handle_descr">Перетягніть, щоб змінити порядок</string>
+    <string name="clipboard_move_up">Перемістити вгору</string>
+    <string name="clipboard_move_down">Перемістити вниз</string>
+    <string name="clipboard_move_to_top">Перемістити на початок</string>
+    <string name="clipboard_reorder_unavailable">Щоб змінити порядок, очистьте пошук і фільтри</string>
+    <string name="clipboard_reorder_moved">Переміщено на позицію %1$d з %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Приватне копіювання в інших застосунках</string>
     <string name="clipboard_private_copy_other_apps_desc">Додати «Приватне копіювання» до меню виділення тексту інших застосунків. Копіює виділений текст лише в CleverKeys — не в системний буфер обміну.</string>
     <string name="clipboard_sanitize_links_title">Очищення параметрів відстеження</string>

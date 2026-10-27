@@ -463,6 +463,12 @@
     <string name="clipboard_swipe_delete_desc">I-swipe pakaliwa o pakanan ang isang entry para i-delete ito sa kasalukuyang tab. Maaari itong i-undo sa loob ng %1$d segundo.</string>
     <string name="clipboard_swipe_deleted">Na-delete</string>
     <string name="clipboard_swipe_undo">I-undo</string>
+    <string name="clipboard_reorder_handle_descr">I-drag para baguhin ang pagkakasunod</string>
+    <string name="clipboard_move_up">Ilipat pataas</string>
+    <string name="clipboard_move_down">Ilipat pababa</string>
+    <string name="clipboard_move_to_top">Ilipat sa itaas</string>
+    <string name="clipboard_reorder_unavailable">I-clear ang paghahanap at mga filter para baguhin ang pagkakasunod</string>
+    <string name="clipboard_reorder_moved">Inilipat sa posisyon %1$d ng %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Private na copy sa ibang app</string>
     <string name="clipboard_private_copy_other_apps_desc">Magdagdag ng \"Private na copy\" sa mga text-selection menu ng ibang app. Kino-copy ang napiling teksto sa CleverKeys lamang — hindi sa system clipboard. Ang pag-enable ay nagdadagdag ng app entry na maaaring makita ng ibang app.</string>
     <string name="clipboard_sanitize_links_title">Linisin ang mga tracking parameter</string>

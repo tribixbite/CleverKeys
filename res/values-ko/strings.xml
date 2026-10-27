@@ -452,6 +452,12 @@
     <string name="clipboard_swipe_delete_desc">항목을 왼쪽이나 오른쪽으로 스와이프하면 현재 탭에서 삭제됩니다. %1$d초 동안 실행 취소할 수 있습니다.</string>
     <string name="clipboard_swipe_deleted">삭제됨</string>
     <string name="clipboard_swipe_undo">실행 취소</string>
+    <string name="clipboard_reorder_handle_descr">드래그하여 순서 변경</string>
+    <string name="clipboard_move_up">위로 이동</string>
+    <string name="clipboard_move_down">아래로 이동</string>
+    <string name="clipboard_move_to_top">맨 위로 이동</string>
+    <string name="clipboard_reorder_unavailable">순서를 바꾸려면 검색과 필터를 지우세요</string>
+    <string name="clipboard_reorder_moved">%2$d개 중 %1$d번째로 이동함</string>
     <string name="clipboard_private_copy_other_apps_title">다른 앱에서 개인 복사</string>
     <string name="clipboard_private_copy_other_apps_desc">다른 앱의 텍스트 선택 메뉴에 \"개인 복사\"를 추가합니다. 선택한 텍스트를 CleverKeys에만 복사하고 시스템 클립보드에는 저장하지 않습니다. 활성화하면 다른 앱에서 볼 수 있는 앱 항목이 추가됩니다.</string>
     <string name="clipboard_sanitize_links_title">추적 매개변수 제거</string>

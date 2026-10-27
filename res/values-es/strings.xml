@@ -473,6 +473,12 @@
     <string name="clipboard_swipe_delete_desc">Desliza una entrada hacia la izquierda o la derecha para eliminarla de la pestaña actual. Se puede deshacer durante %1$d segundos.</string>
     <string name="clipboard_swipe_deleted">Eliminado</string>
     <string name="clipboard_swipe_undo">Deshacer</string>
+    <string name="clipboard_reorder_handle_descr">Arrastrar para reordenar</string>
+    <string name="clipboard_move_up">Subir</string>
+    <string name="clipboard_move_down">Bajar</string>
+    <string name="clipboard_move_to_top">Mover al principio</string>
+    <string name="clipboard_reorder_unavailable">Borra la búsqueda y los filtros para reordenar</string>
+    <string name="clipboard_reorder_moved">Movido a la posición %1$d de %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Copia privada en otras apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Añade \"Copia privada\" a los menús de selección de texto de otras apps. Copia el texto seleccionado solo en CleverKeys, nunca en el portapapeles del sistema. Al activarlo se añade una entrada de app que otras apps pueden ver.</string>
     <string name="clipboard_sanitize_links_title">Limpiar parámetros de seguimiento</string>

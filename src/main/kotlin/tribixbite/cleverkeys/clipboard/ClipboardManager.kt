@@ -399,6 +399,11 @@ class ClipboardManager(
                 showTagPanel(entry, tab)
             }
 
+            // Reordering (2026-10-27): a touch on the dimmed handle says why it does not move.
+            clipboardHistoryView?.onReorderUnavailable = {
+                showBulkFeedback(context.getString(R.string.clipboard_reorder_unavailable))
+            }
+
             // Listen for pagination state changes
             clipboardHistoryView?.setOnPaginationChangeListener { needsPagination, currentPage, totalPages ->
                 paginationBar?.visibility = if (needsPagination) View.VISIBLE else View.GONE
@@ -1662,6 +1667,7 @@ class ClipboardManager(
         exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null
+        clipboardHistoryView?.onReorderUnavailable = null
         clipboardPane = null
         clipboardSearchBox = null
         clipboardSearchClear = null
@@ -1740,6 +1746,7 @@ class ClipboardManager(
         exitSelectionButton = null
         clipboardHistoryView?.onResultsChanged = null
         clipboardHistoryView?.onItemAddedToTab = null
+        clipboardHistoryView?.onReorderUnavailable = null
         clipboardHistoryView = null
         filterButton = null
         tabHistory = null

@@ -450,6 +450,12 @@
     <string name="clipboard_swipe_delete_desc">向左或向右滑动条目即可将其从当前标签页删除。%1$d 秒内可撤销。</string>
     <string name="clipboard_swipe_deleted">已删除</string>
     <string name="clipboard_swipe_undo">撤销</string>
+    <string name="clipboard_reorder_handle_descr">拖动以重新排序</string>
+    <string name="clipboard_move_up">上移</string>
+    <string name="clipboard_move_down">下移</string>
+    <string name="clipboard_move_to_top">移到顶部</string>
+    <string name="clipboard_reorder_unavailable">清除搜索和筛选后才能重新排序</string>
+    <string name="clipboard_reorder_moved">已移到第 %1$d 位（共 %2$d 项）</string>
     <string name="clipboard_private_copy_other_apps_title">在其他应用中私密复制</string>
     <string name="clipboard_private_copy_other_apps_desc">在其他应用的文本选择菜单中添加「私密复制」。将所选文本仅复制到 CleverKeys，而不存入系统剪贴板。启用后，其他应用可看到一个应用条目。</string>
     <string name="clipboard_sanitize_links_title">清除追踪参数</string>

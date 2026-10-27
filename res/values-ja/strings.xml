@@ -451,6 +451,12 @@
     <string name="clipboard_swipe_delete_desc">項目を左右にスワイプすると、現在のタブから削除されます。%1$d 秒間は元に戻せます。</string>
     <string name="clipboard_swipe_deleted">削除しました</string>
     <string name="clipboard_swipe_undo">元に戻す</string>
+    <string name="clipboard_reorder_handle_descr">ドラッグして並べ替え</string>
+    <string name="clipboard_move_up">上へ移動</string>
+    <string name="clipboard_move_down">下へ移動</string>
+    <string name="clipboard_move_to_top">先頭へ移動</string>
+    <string name="clipboard_reorder_unavailable">並べ替えるには検索とフィルタを解除してください</string>
+    <string name="clipboard_reorder_moved">%2$d 件中 %1$d 番目に移動しました</string>
     <string name="clipboard_private_copy_other_apps_title">他のアプリでプライベートコピー</string>
     <string name="clipboard_private_copy_other_apps_desc">他のアプリのテキスト選択メニューに「プライベートコピー」を追加します。選択したテキストをCleverKeysのみにコピーし、システムのクリップボードには保存しません。有効にすると、他のアプリから見えるアプリエントリーが追加されます。</string>
     <string name="clipboard_sanitize_links_title">トラッキングパラメーターを除去</string>

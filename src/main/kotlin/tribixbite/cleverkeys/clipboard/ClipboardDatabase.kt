@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
 import org.json.JSONArray
 import org.json.JSONObject
+import tribixbite.cleverkeys.clipboard.ClipboardReorderPolicy
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -768,7 +769,7 @@ class ClipboardDatabase private constructor(context: Context) :
             SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
                    $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS,
                    $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
-            FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
+            FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
@@ -804,7 +805,7 @@ class ClipboardDatabase private constructor(context: Context) :
                    $COLUMN_POSITION, $COLUMN_TAGS, $COLUMN_MIME_TYPE,
                    $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
                    $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
-            FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
+            FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
@@ -1091,7 +1092,7 @@ class ClipboardDatabase private constructor(context: Context) :
             SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
                    $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS,
                    $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
-            FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
+            FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
@@ -1128,7 +1129,7 @@ class ClipboardDatabase private constructor(context: Context) :
                    $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
                    $COLUMN_MIME_TYPE, $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
                    $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
-            FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
+            FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
@@ -1163,6 +1164,64 @@ class ClipboardDatabase private constructor(context: Context) :
         return db.rawQuery("SELECT MAX($COLUMN_POSITION) FROM $TABLE_TODO", null).use { cursor ->
             if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getDouble(0) else 0.0
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Reordering pinned / todo rows (2026-10-27)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /**
+     * Move row [movedId] of [tab]'s table between the rows [afterId] and [beforeId] (null = an
+     * open end), as planned by [ClipboardReorderPolicy.plan] against the table read INSIDE the
+     * transaction — so a view that is out of date is refused rather than trusted. Normally one
+     * UPDATE of `position` (the neighbours' midpoint); when the gap is too small the whole table
+     * is renumbered 1.0, 2.0, … in the same transaction. Only `position` is ever written, so a
+     * to-do keeps its status, tags and content. History rows are ordered by time and refused.
+     *
+     * @return true when a position was written.
+     */
+    fun moveEntry(tab: ClipboardTab, movedId: Long, afterId: Long?, beforeId: Long?): Boolean {
+        val table = when (tab) {
+            ClipboardTab.PINNED -> TABLE_PINNED
+            ClipboardTab.TODOS -> TABLE_TODO
+            ClipboardTab.HISTORY -> return false
+        }
+        return try {
+            val db = writableDatabase
+            db.beginTransaction()
+            try {
+                val rows = db.rawQuery(
+                    "SELECT $COLUMN_ID, $COLUMN_POSITION FROM $table ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC", null
+                ).use { cursor ->
+                    buildList {
+                        while (cursor.moveToNext()) add(ClipboardReorderPolicy.Row(cursor.getLong(0), cursor.getDouble(1)))
+                    }
+                }
+                val written = when (val plan = ClipboardReorderPolicy.plan(rows, movedId, afterId, beforeId)) {
+                    is ClipboardReorderPolicy.Plan.Place -> writePosition(db, table, plan.id, plan.position) > 0
+                    is ClipboardReorderPolicy.Plan.Renumber -> {
+                        val old = rows.associate { it.id to it.position }
+                        // Only rows whose position actually changes are written.
+                        plan.rows.filter { old[it.id] != it.position }
+                            .sumOf { writePosition(db, table, it.id, it.position) } > 0
+                    }
+                    ClipboardReorderPolicy.Plan.Unchanged, ClipboardReorderPolicy.Plan.Refused -> false
+                }
+                db.setTransactionSuccessful()
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Moved $table row $movedId (written=$written)")
+                written
+            } finally {
+                db.endTransaction()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error moving $table row: ${e.message}")
+            false
+        }
+    }
+
+    private fun writePosition(db: SQLiteDatabase, table: String, id: Long, position: Double): Int {
+        val values = ContentValues().apply { put(COLUMN_POSITION, position) }
+        return db.update(table, values, "$COLUMN_ID = ?", arrayOf(id.toString()))
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -1620,7 +1679,7 @@ class ClipboardDatabase private constructor(context: Context) :
                        $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_TAGS,
                        $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
                        $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
-                FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC
+                FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(6) ?: ClipboardEntry.MIME_TEXT_PLAIN
@@ -1657,7 +1716,7 @@ class ClipboardDatabase private constructor(context: Context) :
                        $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
                        $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
                        $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
-                FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC
+                FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
                     val mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN

@@ -455,6 +455,12 @@
     <string name="clipboard_swipe_delete_desc">Deslize uma entrada para a esquerda ou para a direita para excluí-la da aba atual. É possível desfazer por %1$d segundos.</string>
     <string name="clipboard_swipe_deleted">Excluído</string>
     <string name="clipboard_swipe_undo">Desfazer</string>
+    <string name="clipboard_reorder_handle_descr">Arraste para reordenar</string>
+    <string name="clipboard_move_up">Mover para cima</string>
+    <string name="clipboard_move_down">Mover para baixo</string>
+    <string name="clipboard_move_to_top">Mover para o início</string>
+    <string name="clipboard_reorder_unavailable">Limpe a pesquisa e os filtros para reordenar</string>
+    <string name="clipboard_reorder_moved">Movido para a posição %1$d de %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Cópia privada em outros aplicativos</string>
     <string name="clipboard_private_copy_other_apps_desc">Adicionar \"Cópia privada\" aos menus de seleção de texto de outros aplicativos. Copia o texto selecionado apenas para o CleverKeys — nunca para a área de transferência do sistema. Ativar adiciona uma entrada de aplicativo que outros apps podem ver.</string>
     <string name="clipboard_sanitize_links_title">Sanitizar parâmetros de rastreamento</string>

@@ -743,6 +743,20 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     /**
+     * Reorder (2026-10-27): move [moved] of [tab] (Pinned or To-dos) so it sits after [after]
+     * and before [before] — the visible rows it was dropped between, null for an open end.
+     * Rows are named by their row id; the database plans the write against its own current
+     * order and refuses a stale request (see [ClipboardDatabase.moveEntry]).
+     *
+     * @return true when the order changed.
+     */
+    fun moveInTab(tab: ClipboardTab, moved: ClipboardEntry, after: ClipboardEntry?, before: ClipboardEntry?): Boolean {
+        val written = _database.moveEntry(tab, moved.rowId, after?.rowId, before?.rowId)
+        if (written) notifyHistoryChanged()
+        return written
+    }
+
+    /**
      * Edit the content of a clipboard entry in-place (inline edit).
      * Routes to the correct database table based on [tab].
      * Validates size limit. Content is compared and stored EXACTLY (UT-4):

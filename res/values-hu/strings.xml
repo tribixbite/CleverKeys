@@ -459,6 +459,12 @@
     <string name="clipboard_swipe_delete_desc">Húzzon el egy bejegyzést balra vagy jobbra, hogy törölje az aktuális lapról. %1$d másodpercig visszavonható.</string>
     <string name="clipboard_swipe_deleted">Törölve</string>
     <string name="clipboard_swipe_undo">Visszavonás</string>
+    <string name="clipboard_reorder_handle_descr">Húzza az átrendezéshez</string>
+    <string name="clipboard_move_up">Feljebb</string>
+    <string name="clipboard_move_down">Lejjebb</string>
+    <string name="clipboard_move_to_top">Az elejére</string>
+    <string name="clipboard_reorder_unavailable">Az átrendezéshez törölje a keresést és a szűrőket</string>
+    <string name="clipboard_reorder_moved">Áthelyezve a(z) %1$d. helyre (összesen %2$d)</string>
     <string name="clipboard_private_copy_other_apps_title">Privát másolás más alkalmazásokban</string>
     <string name="clipboard_private_copy_other_apps_desc">\"Privát másolás\" hozzáadása más alkalmazások szövegkijelölési menüjéhez. A kijelölt szöveget csak a CleverKeys-be másolja — soha nem a rendszer vágólapjára. Az engedélyezés egy alkalmazásbejegyzést ad hozzá, amelyet más alkalmazások is láthatnak.</string>
     <string name="clipboard_sanitize_links_title">Nyomkövetési paraméterek eltávolítása</string>

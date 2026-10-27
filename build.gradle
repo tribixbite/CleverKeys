@@ -831,6 +831,10 @@ tasks.register('runPureTests', JavaExec) {
     // Per-layout theme binding: id validation, entry precedence, effective-theme resolution
     // (bound / unbound / missing theme) and the layout-XML `theme` attribute read/write.
     'tribixbite.cleverkeys.LayoutThemeBindingTest',
+    // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
+    // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
+    'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
+    'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',
@@ -863,6 +867,9 @@ tasks.register('runPureTests', JavaExec) {
     // Upgrade test 2026-10-25: v1.5.0 stored small images without a thumbnail; the startup
     // repair pass regenerates missing thumbnails from the saved media file.
     'tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepairTest',
+    // 2026-10-27: reordering Pinned / To-dos rows — midpoint write, renumbering threshold,
+    // visible-neighbour choice, drop slot, edge auto-scroll, availability, TalkBack moves.
+    'tribixbite.cleverkeys.clipboard.ClipboardReorderPolicyTest',
     'tribixbite.cleverkeys.customization.PrivateCopyCommandTest',
     // TalkBack accessibility (a11y) — pure geometry + labeller
     'tribixbite.cleverkeys.a11y.KeyboardGeometryTest',
@@ -1392,6 +1399,9 @@ tasks.register('runMockTests', JavaExec) {
     // 2026-10-26 (todo 22): paged editing on the real getView — one page in the field, the
     // pager, navigation with unsaved edits, one spliced save per tab, the conflict refusal.
     'tribixbite.cleverkeys.clipboard.ClipboardPagedEditViewTest',
+    // 2026-10-27: reordering in the list view — visible neighbours to the service, instant new
+    // order, filters pause it, no handle on History / Select / edit, TalkBack moves.
+    'tribixbite.cleverkeys.clipboard.ClipboardReorderViewTest',
     'tribixbite.cleverkeys.prefs.AndroidXPreferenceMigrationTest',
     // #169 (2026-09-03): the layout-switch keys were baked non-loc into the bottom row, so
     // unticking their extra-key checkboxes removed nothing. Mock-tier: loads
@@ -1590,6 +1600,9 @@ tasks.register('runMockTests', JavaExec) {
     // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an
     // effective-theme change), the layouts serializer (backup blob) and the XML `theme` attribute.
     'tribixbite.cleverkeys.LayoutThemeBindingConfigTest',
+    // 2026-10-27 keyboard looks reach Theme.Computed (gaps, radius, shadow, action/modifier
+    // frames), non-look themes compute as before, looks follow the system light/dark mode.
+    'tribixbite.cleverkeys.theme.KeyboardLookRenderTest',
     'tribixbite.cleverkeys.ThemeBorderPaintOpacityTest',
     // 2026-10-17 Pixel: suggestion-bar text colour vs the bar, every role, every built-in theme
     // (mock tier: the decorative schemes need Compose's Color on the classpath).

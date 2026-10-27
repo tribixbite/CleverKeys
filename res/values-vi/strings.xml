@@ -480,6 +480,12 @@
     <string name="clipboard_swipe_delete_desc">Vuốt một mục sang trái hoặc phải để xóa mục đó khỏi tab hiện tại. Có thể hoàn tác trong %1$d giây.</string>
     <string name="clipboard_swipe_deleted">Đã xóa</string>
     <string name="clipboard_swipe_undo">Hoàn tác</string>
+    <string name="clipboard_reorder_handle_descr">Kéo để sắp xếp lại</string>
+    <string name="clipboard_move_up">Di chuyển lên</string>
+    <string name="clipboard_move_down">Di chuyển xuống</string>
+    <string name="clipboard_move_to_top">Di chuyển lên đầu</string>
+    <string name="clipboard_reorder_unavailable">Xóa tìm kiếm và bộ lọc để sắp xếp lại</string>
+    <string name="clipboard_reorder_moved">Đã chuyển đến vị trí %1$d trong %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Sao chép riêng tư trong ứng dụng khác</string>
     <string name="clipboard_private_copy_other_apps_desc">Thêm \"Sao chép riêng tư\" vào menu chọn văn bản của các ứng dụng khác. Sao chép văn bản được chọn chỉ vào CleverKeys — không bao giờ vào bảng tạm hệ thống. Khi bật sẽ thêm mục ứng dụng mà các ứng dụng khác có thể thấy.</string>
     <string name="clipboard_sanitize_links_title">Làm sạch tham số theo dõi</string>

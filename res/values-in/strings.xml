@@ -463,6 +463,12 @@
     <string name="clipboard_swipe_delete_desc">Geser entri ke kiri atau kanan untuk menghapusnya dari tab saat ini. Dapat diurungkan selama %1$d detik.</string>
     <string name="clipboard_swipe_deleted">Dihapus</string>
     <string name="clipboard_swipe_undo">Urungkan</string>
+    <string name="clipboard_reorder_handle_descr">Seret untuk mengurutkan ulang</string>
+    <string name="clipboard_move_up">Pindahkan ke atas</string>
+    <string name="clipboard_move_down">Pindahkan ke bawah</string>
+    <string name="clipboard_move_to_top">Pindahkan ke paling atas</string>
+    <string name="clipboard_reorder_unavailable">Hapus pencarian dan filter untuk mengurutkan ulang</string>
+    <string name="clipboard_reorder_moved">Dipindahkan ke posisi %1$d dari %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Salinan pribadi di aplikasi lain</string>
     <string name="clipboard_private_copy_other_apps_desc">Tambahkan \"Salinan pribadi\" ke menu pemilihan teks aplikasi lain. Menyalin teks yang dipilih hanya ke CleverKeys — bukan clipboard sistem. Mengaktifkan menambahkan entri aplikasi yang dapat dilihat aplikasi lain.</string>
     <string name="clipboard_sanitize_links_title">Bersihkan parameter pelacakan</string>

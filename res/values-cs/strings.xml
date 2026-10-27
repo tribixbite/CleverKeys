@@ -458,6 +458,12 @@
     <string name="clipboard_swipe_delete_desc">Přejetím záznamu doleva nebo doprava jej smažete z aktuální záložky. Zpět je k dispozici %1$d sekund.</string>
     <string name="clipboard_swipe_deleted">Smazáno</string>
     <string name="clipboard_swipe_undo">Zpět</string>
+    <string name="clipboard_reorder_handle_descr">Přetažením změníte pořadí</string>
+    <string name="clipboard_move_up">Posunout nahoru</string>
+    <string name="clipboard_move_down">Posunout dolů</string>
+    <string name="clipboard_move_to_top">Přesunout na začátek</string>
+    <string name="clipboard_reorder_unavailable">Pro změnu pořadí zrušte hledání a filtry</string>
+    <string name="clipboard_reorder_moved">Přesunuto na pozici %1$d z %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Soukromé kopírování v jiných aplikacích</string>
     <string name="clipboard_private_copy_other_apps_desc">Přidat \"Soukromá kopie\" do nabídek výběru textu jiných aplikací. Zkopíruje vybraný text pouze do CleverKeys — nikdy do systémové schránky. Povolením přidáte položku aplikace, kterou mohou vidět jiné aplikace.</string>
     <string name="clipboard_sanitize_links_title">Odstranit parametry sledování</string>

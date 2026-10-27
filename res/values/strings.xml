@@ -678,6 +678,13 @@
     <string name="clipboard_swipe_delete_desc">Swipe an entry left or right to delete it from the current tab. Undo is offered for %1$d seconds.</string>
     <string name="clipboard_swipe_deleted">Deleted</string>
     <string name="clipboard_swipe_undo">Undo</string>
+    <!-- Clipboard Pinned / To-dos reordering (2026-10-27): drag handle, TalkBack moves, filter hint. -->
+    <string name="clipboard_reorder_handle_descr">Drag to reorder</string>
+    <string name="clipboard_move_up">Move up</string>
+    <string name="clipboard_move_down">Move down</string>
+    <string name="clipboard_move_to_top">Move to top</string>
+    <string name="clipboard_reorder_unavailable">Clear the search and filters to reorder</string>
+    <string name="clipboard_reorder_moved">Moved to position %1$d of %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Private copy in other apps</string>
     <string name="clipboard_private_copy_other_apps_desc">Add \"Private copy\" to other apps\' text-selection menus. Copies selected text into CleverKeys only — never the system clipboard. Enabling adds an app entry other apps can see.</string>
     <string name="clipboard_sanitize_links_title">Sanitize tracking parameters</string>
