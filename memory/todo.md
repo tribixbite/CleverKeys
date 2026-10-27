@@ -528,8 +528,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     "Page N of M" + prev/next, long-press first/last; unsaved edits kept across pages; Save = one
     update of the spliced text; a row changed meanwhile → `EntryChanged`, nothing written). Per key
     tap 20–70 ms main-thread CPU on the 520K entry; History (pages 1, 14, last), Pinned and To-do
-    edits pasted into Chrome with exact length + checksum. Not device-checked: the conflict message,
-    TalkBack labels, landscape. (b) FIXED `cf74c393`: history-change callbacks from IO
+    edits pasted into Chrome with exact length + checksum. Not device-checked: the conflict message
+    (no UI path changes a row behind an open editor: import only adds, expiry is >= 60 min; pinned
+    by `ClipboardPagedEditViewTest`), TalkBack labels. Landscape, Saga 144 2026-10-27 (evidence
+    `build/oct27pm-saga144/`, not in git): 47K-char entry opens on "Page 1 of 3" with Save/Cancel
+    and Delete; a drag inside the 2-line capped field scrolled the PANE (pager and Save/Cancel out
+    of sight) — FIXED `612356f2` (field keeps its drag; fail-first `ClipboardPagedEditViewTest`),
+    re-verified on release `16b4a500…`: the field's text scrolls, the pane stays. Still open: on
+    open the pane auto-scroll clips the pager row by about half a line (a drag outside the field
+    reveals it). (b) FIXED `cf74c393`: history-change callbacks from IO
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted
@@ -576,7 +583,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Pinned and To-dos back to 0 / 0 / 0 as recorded before). Open: (a) TalkBack moves not
     driven on a device (adb cannot run custom actions) — pinned by `ClipboardReorderViewTest`;
     (b) `ClipboardReorderDatabaseTest` (instrumented: SQL, renumbering, backup round trip) not
-    yet run on emulator.wtf; (c) Pinned tab not dragged on a device (same code path).
+    yet run on emulator.wtf; (c) DONE 2026-10-27, Saga 144 release `6bc336b2…` (acd3b79e): four
+    imported Pinned rows, row A dragged by its handle below B, order kept after pane close/reopen;
+    rows swiped away, History / Pinned / To-dos back to 0 / 0 / 0.
 25. [ ] agent, 2026-10-27 (maintainer: the familiar-style layouts should also bring the
     product's LOOK, so a space-bar swipe turns the keyboard from Gboard to SwiftKey to iOS).
     BUILT `ddefd3bd` + `fc30948d` + `d713457c`: keyboard looks (`look_` themes: light/dark
@@ -649,7 +658,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     iOS-style with gap 5 %, border on, radius 20 %, width 3 dp — overrides drawn over the look,
     System back to global, `Theme rebuild` 3 ms per switch, Appearance prefs unchanged (1.5 % /
     2.0 % / custom border off); Colemak removed, layouts back to [System], CleverKeys default.
-    Open: the Saga now runs this build; a light-mode / border-OFF device pass; the Add Layout
+    Light-mode / border-OFF pass 2026-10-27 (Saga 144, release `6bc336b2…`, evidence
+    `build/oct27pm-saga144/`): Colemak with gaps 5 % / 4.25 % and border OFF under a temporary
+    global custom border 3 dp — Colemak drew the theme frame, System the custom border, globals
+    unchanged; BUT the gaps drew like the global 2 % / 1.5 % (~10 px): XML themes fixed
+    `Theme.density` at 1 — FIXED `32c8c4bb` (fail-first `LayoutKeyGeometryConfigTest`); release
+    `6e98ada2…`: 27 px / 12–13 px vs System 11 px / 4–5 px. Restored: Colemak removed, layouts
+    [System], Appearance 2.0 % / 1.5 % / custom border off (width 0 dp), night mode yes. Add Layout
+    landscape: all 88 Predefined layouts reachable by scrolling (acd3b79e). Was open: the Add Layout
     dialog's Predefined list does not scroll in landscape on the Saga (pre-existing, only Colemak
     and QWERTY US reachable) — FIXED 2026-10-28, item 27.
 27. [ ] agent, 2026-10-28 (maintainer: "fully define a custom layout incl. custom theme with
