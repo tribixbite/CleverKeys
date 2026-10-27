@@ -638,8 +638,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Sans / Samsung One; Gboard's filled Shift glyph. FOUND, not fixed (other owners): space
     would commit `timor` for `tomorr`, `car` for `caf`, `rest` for `resta` (bar highlight,
     `build/oct27pm-pixel/20-autocorrect-tomorr-timor.png`); after a night-mode switch the keyboard
-    came back shorter (row pitch 151 → 137 px, same in both modes afterwards; unverified cause:
-    `Config.refresh` reads `resources.displayMetrics.heightPixels`).
+    came back shorter (row pitch 151 → 137 px, same in both modes afterwards) — FIXED `bd756a79`
+    (2026-10-27, agent): `Config.refresh` sized against `resources.displayMetrics.heightPixels`,
+    which on Android 15+ is the full display at service start and the display minus the system
+    bars after the first configuration change; now `ScreenSize` (maximum window bounds).
+    Reproduced fail-first on emulator.wtf API 36 (`NightModeKeyboardHeightInstrumentedTest`: row
+    164.05 → 159.49 px, metrics 2400 → 2337); fixed build passes on API 34/35/36. Side effect:
+    API ≤ 34 now sizes against 2400 not 2337 (≈2.7 % taller). Not device-checked (LAN down).
     PIXEL NOT RESTORED YET: this box lost Wi-Fi at 16:12 mid-check (still down 17:00). Left on the
     phone: night mode NO (was yes); the four style layouts still added (was System / Dvorak /
     QWERTY US, current QWERTY US); the Chrome test tab open (7 tabs before); release `4fdd840a`
@@ -701,7 +706,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     custom theme with `<dark>` colours shows its light colours in dark mode; the Theme Creator
     preview renders the first non-System layout, so a styled layout's row colours appear in a
     theme's preview; after a night-mode switch the IME window once came up 126 px short
-    (frame [0,1706], keys under the nav bar) and was right on the next show; hint/preview chip
+    (frame [0,1706], keys under the nav bar) and was right on the next show (NOT reproduced
+    2026-10-27 on emulator.wtf API 34/35/36: four switches, nav inset 126 every time, keys above
+    the bar; the row-height half is fixed by `bd756a79`; 126 px = the Saga's 48 dp nav bar, so the
+    suspect is one transient 0 inset dispatch to the rebuilt view — unproven, nothing changed); hint/preview chip
     rows overflow and scroll in fa. Not done: Add Layout in landscape (Saga left in portrait).
     17:58 (LAN back): the `ed022c9c` APK (sha256 b3667ea5…) installed on the Saga; in fa every
     Theme Creator hex reads `#…` first (17 colour rows and Keyboard Look rows) and the switch

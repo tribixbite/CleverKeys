@@ -118,7 +118,7 @@ delegators to `LayoutBridge` (see Public API below) used by subtype/config plumb
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| `keyboard_height` | Int (percent) | 27 portrait / 40 landscape | Keyboard height. `keyboard_height_unfolded` is used instead when the device is a folded-open foldable (`Config.kt:673`) |
+| `keyboard_height` | Int (percent) | 27 portrait / 40 landscape | Keyboard height, a percentage of the FULL display height in the current orientation (`ScreenSize`, `WindowLayoutUtils.kt`: WindowManager maximum window bounds, `getRealMetrics` below API 30; installed as `Config.screenSize` by the service). Not `Resources.displayMetrics`: on Android 15+ its height drops by the system bars after the IME's first configuration change (night-mode switch → shorter keyboard, 2026-10-27; `NightModeKeyboardHeightInstrumentedTest`). `keyboard_height_unfolded` is used instead when the device is a folded-open foldable (`Config.kt:673`) |
 | `hardware_acceleration` | Boolean | true | Enable GPU rendering (AndroidManifest) |
 | `longpress_timeout` | Int (ms) | 600 | Milliseconds before long-press triggers |
 | `vibration_enabled` | Boolean | true | Master haptic toggle; read into `Config.haptic_enabled` (`Config.kt:698`) |

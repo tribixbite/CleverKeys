@@ -440,6 +440,12 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The keyboard keeps its height after a light/dark (night-mode) switch or a rotation. On
+  Android 15 and newer it came back about a tenth shorter until the keyboard restarted, because
+  its size followed a screen height that Android reports differently after the first change. It
+  is now sized against the full display everywhere; on Android 14 and older this makes it
+  slightly taller than before (by the navigation bar's share of the screen, about 3 % on a
+  2400-pixel phone).
 - Backup, settings, dictionary and clipboard export results name the file you chose
   (`File: cleverkeys-dictionary.json`) instead of a storage number such as `File: 932`.
 - The theme editor's hex colour field no longer rewrites what you type. A complete six-digit
