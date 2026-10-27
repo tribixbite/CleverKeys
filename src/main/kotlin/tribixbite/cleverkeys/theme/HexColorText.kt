@@ -29,6 +29,16 @@ object HexColorText {
     fun format(argb: Int): String = String.format(Locale.ROOT, "#%08X", argb)
 
     /**
+     * [argb] for a read-only label: `#AARRGGBB`, or `#RRGGBB` when [withAlpha] is false.
+     *
+     * Led by U+200E LEFT-TO-RIGHT MARK so the `#` stays in front in a right-to-left UI: on its
+     * own, a `#` before a letter (`#E8EEF4`) took the paragraph's direction and was drawn last
+     * (`E8EEF4#`, Saga 2026-10-27, Persian). Not for text the user edits ([format]).
+     */
+    fun display(argb: Int, withAlpha: Boolean = true): String =
+        "\u200E" + if (withAlpha) format(argb) else String.format(Locale.ROOT, "#%06X", argb and 0xFFFFFF)
+
+    /**
      * The text the field must show now that the colour is [argb], or null to keep [text].
      *
      * [text] is kept whenever it already denotes [argb] in any accepted spelling (6 digits,

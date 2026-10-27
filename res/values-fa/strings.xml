@@ -2605,5 +2605,5 @@
     <string name="theme_pill_numbers">کلید 123 به شکل قرص</string>
     <string name="theme_letter_emoji">کلید ایموجی مانند کلید حرف</string>
     <string name="theme_function_chars">نویسه‌هایی که به شکل کلید عملکرد کشیده می‌شوند</string>
-    <string name="theme_dynamic_color">پیروی از رنگ‌های کاغذدیواری (Android 12+)</string>
+    <string name="theme_dynamic_color">پیروی از رنگ‌های کاغذدیواری (Android 12 و بالاتر)</string>
 </resources>

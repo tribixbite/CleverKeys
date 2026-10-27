@@ -1086,7 +1086,7 @@ fun ColorAttributeRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                String.format("#%06X", 0xFFFFFF and color.toArgb()),
+                HexColorText.display(color.toArgb(), withAlpha = false),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )

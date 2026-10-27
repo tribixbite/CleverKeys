@@ -39,7 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import java.util.Locale
+import tribixbite.cleverkeys.theme.HexColorText
 import tribixbite.cleverkeys.theme.LookHintStyle
 import tribixbite.cleverkeys.theme.LookLegends
 import tribixbite.cleverkeys.theme.LookLetterKey
@@ -251,7 +251,7 @@ private fun RoleColorRow(label: String, value: Int?, shown: Int?, onEdit: () -> 
         Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         Text(
             if (value == null) stringResource(R.string.theme_color_not_set)
-            else String.format(Locale.ROOT, "#%08X", value),
+            else HexColorText.display(value),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         )
