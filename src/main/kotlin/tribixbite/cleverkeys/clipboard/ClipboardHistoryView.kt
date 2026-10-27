@@ -415,19 +415,28 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
      * A search, date, size, private-only or tag filter is active. The status filter is not
      * counted: it is the To-dos default view and hidden statuses keep their order.
      */
+    // The casts read the fields as nullable on purpose: getView asks on every row, and views
+    // built by Objenesis in host tests skip property initializers, leaving these null.
+    @Suppress("USELESS_CAST")
     private fun hasNonStatusFilter(): Boolean =
-        searchFilter.isNotEmpty() || dateFilterEnabled || privateOnlyFilter ||
-            tagFilterSelected.isNotEmpty() || sizeMinimum > 0 || sizeMaximum != null
+        (searchFilter as String?)?.isNotEmpty() == true || dateFilterEnabled || privateOnlyFilter ||
+            (tagFilterSelected as Set<String>?)?.isNotEmpty() == true || sizeMinimum > 0 || sizeMaximum != null
 
     /** Whether rows show the drag handle and accept moves right now. */
-    fun reorderAvailability(): ClipboardReorderPolicy.Availability =
-        ClipboardReorderPolicy.availability(
+    fun reorderAvailability(): ClipboardReorderPolicy.Availability {
+        val hidden = ClipboardReorderPolicy.availability(
             isHistory = currentTab == ClipboardTab.HISTORY,
             selecting = selection != null,
             editing = isEditing(),
             bulkRunning = bulkRunning,
+            filtered = false,
+        ) == ClipboardReorderPolicy.Availability.HIDDEN
+        if (hidden) return ClipboardReorderPolicy.Availability.HIDDEN
+        return ClipboardReorderPolicy.availability(
+            isHistory = false, selecting = false, editing = false, bulkRunning = false,
             filtered = hasNonStatusFilter(),
         )
+    }
 
     /**
      * Move [entry] to [targetIndex] of the current results (all pages, in display order).
