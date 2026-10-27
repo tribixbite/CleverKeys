@@ -96,6 +96,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
    clipboard pane, fa/hu pane arrows + settings-search scroll.
+   AGENT 2026-10-27 pm (Pixel, release `4fdd840a`): NOT RUN — continuous swipe with auto-space
+   OFF / interrupted phrases (adb motionevent traces are too coarse to judge, and it needs two
+   settings changed on the maintainer's phone), templates in a password field (needs a template
+   assigned to a key), narrow split-screen (would rearrange the maintainer's apps), "." after
+   lift and enlarged font + clipboard pane (the host lost Wi-Fi at 16:12 before these ran).
 5. [ ] device: undo/redo leftovers. DONE on the Pixel 2026-10-17 (release `d8be659b`,
    `build/oct17-pixel/`): clipboard entry editor Ctrl+Z ×2 removes one word per step, Ctrl+Y
    restores, select + Ctrl+C adds a history entry; Chrome textarea Ctrl+Z / Ctrl+Y undo and
@@ -604,6 +609,32 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `LookPreviewPolicy`, new pref `look_key_preview` default on) and styles the long-press
     popover; look hints use `LookHintStyle` (size, weight, corner inset clear of pills). Research
     §9, spec "Keyboard looks", theme skill rule 13. Evidence `build/oct28-looks2/` (not in git).
+    ROUND 3 (2026-10-27 pm, agent, Pixel 8 Pro, release `acd3b79e`, then `4fdd840a` from a private
+    worktree, sha256 3c267a5d…; evidence `build/oct27pm-pixel/`, not in git): key-press previews
+    PASS light + dark (iOS balloon, Gboard bubble as in the real Gboard capture, SwiftKey column,
+    Samsung plate); the long-press popover takes each look's panel colours in both modes (subkey
+    popover switched on for the check, restored OFF); Gboard-style follows the wallpaper palette
+    (light function keys #D3E5F5 = the real Gboard's) and its emoji key is letter-coloured PASS.
+    "Show gesture hints on familiar looks" ON, all four looks both modes: hints stay inside the
+    ?123/Enter pills (no clipping) PASS, but on the 1-wide emoji / comma keys the bottom legend
+    "ABC" runs into "GIF" (Gboard-, Samsung-style) — open; restored OFF. Shift tint CONFIRMED
+    (auto-cap Shift drew the pressed grey, real Gboard keeps #2D3D4A) → FIXED `da6a6d9a` +
+    `4fdd840a`: LookPalette.latchedKey/latchedLabel, a LATCHED frame; Gboard keeps the
+    function-key fill, Samsung the fill with its blue icon (device-verified, both modes). Open:
+    no ThemeSpec colour role carries the latched colours (needs an editor label in 21 locales;
+    TODO in ThemeSpecs.render). SHOWCASE `build/oct27pm-pixel/showcase/` (four looks × light/dark
+    under a chat field with suggestions, plus grid-light/grid-dark). Structural differences left:
+    the bar shows 5 scrolling chips with the commit candidate first (the products: 3 slots,
+    centre = commit; iOS quotes the typed word); no toolbar row; system font, not SF / Google
+    Sans / Samsung One; Gboard's filled Shift glyph. FOUND, not fixed (other owners): space
+    would commit `timor` for `tomorr`, `car` for `caf`, `rest` for `resta` (bar highlight,
+    `build/oct27pm-pixel/20-autocorrect-tomorr-timor.png`); after a night-mode switch the keyboard
+    came back shorter (row pitch 151 → 137 px, same in both modes afterwards; unverified cause:
+    `Config.refresh` reads `resources.displayMetrics.heightPixels`).
+    PIXEL NOT RESTORED YET: this box lost Wi-Fi at 16:12 mid-check (still down 17:00). Left on the
+    phone: night mode NO (was yes); the four style layouts still added (was System / Dvorak /
+    QWERTY US, current QWERTY US); the Chrome test tab open (7 tabs before); release `4fdd840a`
+    installed. Already restored: subkey popover OFF, look hints OFF; font_scale untouched (1.15).
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
