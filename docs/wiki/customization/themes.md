@@ -61,6 +61,31 @@ CleverKeys includes many pre-designed themes:
 > [!NOTE]
 > Monet themes require Android 12+ for dynamic color extraction. On older devices, these themes fall back to default colors.
 
+### Familiar Looks
+
+A look changes more than colours: key shapes, gaps, the colour of function keys and Enter,
+key shadows and the suggestion bar. Each has a light and a dark version that follows your
+system's dark-mode setting.
+
+| Look | What it copies |
+|------|----------------|
+| **iOS-style** | iPhone (iOS 26): one key colour for every key, rounded keys with wide gaps, a blue Enter in Go / Search / Send fields |
+| **Gboard-style** | Gboard with Material You: white letter keys, tinted shift, delete, ?123, comma, period and Enter |
+| **SwiftKey-style** | SwiftKey's Fluent look: almost identical letter and function keys with a soft shadow |
+| **Samsung-style** | Samsung Keyboard (One UI 8): darker function keys, a blue shift glyph when locked, blue auto-replace suggestion |
+| **iOS 18-style** | the previous iPhone keyboard: grey function keys and a thin shadow under every key |
+
+While a look is in use, the key gaps, corner radius and borders it defines replace your
+**Appearance** settings for those items (including a custom border); everything else stays
+yours, and the label size stays relative to your label-size setting. Your settings are not
+changed: pick another theme and they apply again. The four familiar-style layouts (see
+[Adding Layouts](../layouts/adding-layouts.md#familiar-style-layouts)) use their look
+automatically.
+
+Looks are drawn with CleverKeys' own keys and the phone's standard font; no fonts, icons or
+artwork from those keyboards are included. CleverKeys is not affiliated with or endorsed by
+Apple, Google, Microsoft or Samsung.
+
 ## How to Change Theme
 
 ### Step 1: Open Theme Manager
@@ -94,6 +119,9 @@ theme for a layout never changes your global theme. If a layout's theme is delet
 restored backup names a DIY theme that is not on this device, the layout uses the global theme
 and Layout Manager shows the missing theme. Custom layouts can also declare a default theme in
 their XML (`theme="rosepine"`); see [Custom Layouts](../layouts/custom-layouts.md#default-theme-theme).
+The familiar-style layouts come with their look already chosen, so with them enabled a swipe on
+the space bar turns the keyboard from Gboard-style to SwiftKey-style to iOS-style; set their
+**Theme** chip to **Follow global theme** to keep your own theme on them.
 
 ## DIY Theme Creator
 

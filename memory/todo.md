@@ -563,6 +563,26 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     driven on a device (adb cannot run custom actions) — pinned by `ClipboardReorderViewTest`;
     (b) `ClipboardReorderDatabaseTest` (instrumented: SQL, renumbering, backup round trip) not
     yet run on emulator.wtf; (c) Pinned tab not dragged on a device (same code path).
+25. [ ] agent, 2026-10-27 (maintainer: the familiar-style layouts should also bring the
+    product's LOOK, so a space-bar swipe turns the keyboard from Gboard to SwiftKey to iOS).
+    BUILT `ddefd3bd` + `fc30948d` + `d713457c`: keyboard looks (`look_` themes: light/dark
+    palette following the system + geometry; spec `docs/specs/layout-system.md` "Keyboard
+    looks", research `docs/research/2026-10-27-familiar-keyboard-looks.md`), iOS-, Gboard-,
+    SwiftKey-, Samsung- and iOS 18-style; the four style layouts bind theirs via `theme=`; new
+    QWERTY (Samsung-style). Full suites at `d713457c`: pure 3370 OK, mock 1573 OK. Device
+    (release `fc30948d`, APK sha256 `70b60905…`; evidence `build/oct27-looks/`, not in git):
+    Pixel 8 Pro and Saga 202, the four layouts added, cycled by space-bar swipe in dark and light
+    — every switch re-themes the keyboard; `Theme rebuild` 2–6 ms per switch (logcat); side by
+    side with the real Gboard and SwiftKey on the Pixel (`compare-*-{light,dark}.png`). Restored:
+    layouts (Pixel System/Dvorak/QWERTY US, current QWERTY US; Saga System), night mode yes,
+    CleverKeys default IME, test tabs closed. Open: (a) the Gboard-style LAYOUT has emoji as the
+    comma's hint, the real Gboard (Pixel, 2026-10-27) has a dedicated emoji key between comma and
+    space; the SwiftKey-style layout has a number row, the Pixel's real SwiftKey has none by
+    default — layout research from 2026-10-15, not changed here; (b) Gboard-style uses one fixed
+    Material You palette, not the wallpaper's (could read the system dynamic colours on API 31+);
+    (c) no per-key shapes (Gboard's pill ?123/Enter) and no key-pop balloon; (d) Samsung and iOS
+    looks have no on-device reference capture (no Samsung Keyboard on the test phones, no
+    iPhone) — values come from the shipping app's own resources and from measured recreations.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

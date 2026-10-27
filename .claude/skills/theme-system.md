@@ -2,7 +2,8 @@
 
 Use this skill for anything about keyboard theming: the `theme` preference, Theme Manager,
 Monet / Material You, decorative themes, DIY (custom) themes and the Theme Creator, per-layout
-theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-23.
+theme bindings, keyboard LOOKS (iOS-/Gboard-/SwiftKey-/Samsung-style: colours + key geometry),
+key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 
 ## Rules
 
@@ -17,7 +18,7 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
      name follows it as `Light` / `Dark`.
    - `decorative_*` and `custom_*` take `R.style.CleverKeysDark` as the base style; their colours
      come from a `KeyboardColorScheme`, not from XML.
-2. **Three theme kinds, told apart by id prefix** (`ThemeProvider.getTheme`):
+2. **Four theme kinds, told apart by id prefix** (`ThemeProvider.getTheme`):
    - built-in XML: the 18 ids in `ThemeProvider.BUILT_IN_THEME_IDS`, drift-pinned against
      `ThemeSettingsActivity.BUILTIN_THEMES` by `LayoutThemeBindingConfigTest`; styles in
      `res/values/themes.xml`, `Theme(context, attrs)` reads them;
@@ -25,9 +26,11 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
      (gemstone, neon, pastel, nature, utilitarian, modern × 3 — e.g. `neon_electric_blue`,
      `neon_hot_pink`, `neon_cyberpunk`; there is no "Neon Cyan/Magenta");
    - `custom_<uuid>`: DIY themes in `CustomThemeManager` (its own prefs file
-     `custom_keyboard_themes`, JSON export/import, StateFlow list).
+     `custom_keyboard_themes`, JSON export/import, StateFlow list);
+   - `look_<name>`: keyboard LOOKS (`theme/KeyboardLook.kt`, registry `KeyboardLooks`, 2026-10-27)
+     — rule 12.
    `Keyboard2View` picks the constructor by `snap.isRuntimeTheme`: `Theme(context, colorScheme)`
-   for the last two, `Theme(getContext(), attrs)` for XML.
+   for the last three (`ConfigSnapshot.isRuntimeThemeName` is the one definition), `Theme(getContext(), attrs)` for XML.
 3. **`ThemeProvider.getTheme` must stay TOTAL** — it runs inside `Keyboard2View`'s constructor.
    A dangling `custom_` / `decorative_` id falls back to `FALLBACK_THEME_ID = "cleverkeysdark"`
    (audit H-2: a thrown exception there was an IME crash loop with no keyboard to fix the pref).
@@ -91,9 +94,37 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
    mid-entry).
 11. `MaterialThemeManager` is the Settings app's Material 3 (Compose) theming, with Device
    Encrypted storage; it is not the keyboard `Theme` and does not affect the IME window.
+12. **Keyboard looks carry geometry; only a look does** (2026-10-27, spec
+   `docs/specs/layout-system.md` "Keyboard looks"). `KeyboardLook` = id + light `LookPalette` +
+   dark `LookPalette` + `LookGeometry` (pure ARGB/fractions/dp; `KeyboardLooksTest` pins
+   registry, light-vs-dark and WCAG contrast). `ThemeProvider.loadLook` picks the palette by
+   `Config.isSystemLight` and builds `Theme(context, KeyboardLookSchemes.colorScheme(palette),
+   lookPalette = palette, lookGeometry = …)`; `builtInThemeStyleId("look_…")` is
+   CleverKeysLight/Dark by the same cue, so a light/dark switch changes the style id and
+   re-inflates (rule 6). `Theme.Computed` resolves geometry through `KeyboardLookGeometry.resolve`
+   (pure, `KeyboardLookGeometryTest`): attributes the effective look DEFINES win (gaps as
+   fractions of key width / row height, radius, outline, shadow, label weight, label scale —
+   relative to the user's size), everything else and every non-look theme keep the user's
+   prefs; prefs are never written. Look-only roles on `Theme` (via `roleOf(KeyValue, …)`; every
+   other theme gets `colorKeySpecial` for both and renders pixel-identically): `colorKeyEnter`
+   (plain Enter → `KeyRole.ENTER`) and `colorKeyAction` (the Go/Search/Send action key →
+   `KeyRole.ACTION`), `enterLabelColor` / `actionLabelColor` / `modifierLabelColor` (0 = none;
+   applied by `Theme.Computed.frameLabelColor`, which replaces the plain AND the secondary label
+   colour — function keys carry FLAG_SECONDARY, Pixel 2026-10-27), `functionChars` (Gboard's `,.`
+   → MODIFIER), `lockedColor` from the look's Caps Lock label, `keyShadowColor`,
+   `suggestionSeparatorColor` (others: sub-label at alpha 100, as always), `swipeTrailColor`
+   (0 = the user's trail). New look = a `KeyboardLooks` entry + a `ThemeSettingsActivity.LOOK_THEMES`
+   row (drift: `LayoutThemeBindingConfigTest`) + 6 strings × 22 locales; render pinned by
+   `theme/KeyboardLookRenderTest` (mock).
 
 ## Traps
 
+- Theme's runtime constructor converts colours through Compose float channels and TRUNCATES
+  (`(red * 255).toInt()`): a look colour can land one unit low per channel. Compare with a
+  ±1 tolerance in tests; `colorKeyAction` and the other look-only roles are passed as ints, exact.
+- A predefined layout's `theme=` default is read by Config from the parsed XML, but the pure
+  backup preview and Layout Manager's chip read `PredefinedLayoutThemes` — `StyleLayoutsTest`
+  pins the map against every layout file.
 - `jewel` is in the style map and `themes.xml` but NOT in `BUILT_IN_THEME_IDS`: Theme Manager
   never offers it, and a per-layout binding to it counts as missing. Do not "fix" one side alone.
 - `ThemeProvider.getBuiltInColorScheme` holds APPROXIMATE palettes of the XML themes (Theme
@@ -114,6 +145,7 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
 | `theme/PredefinedThemes.kt`, `theme/KeyboardColorScheme.kt` | decorative palettes, the 17-field scheme |
 | `theme/CustomThemeManager.kt`, `theme/CustomThemePrefPolicy.kt` | DIY store, pref coherence |
 | `theme/KeyboardViewThemeTracker.kt` | keyboard-view stale detection (id + name + runtime colours) |
+| `theme/KeyboardLook.kt`, `theme/KeyboardLooks.kt`, `theme/KeyboardLookSchemes.kt`, `theme/LookTypeface.kt`, `PredefinedLayoutThemes.kt` | looks: data + geometry precedence, the four built-ins, palette → scheme, label weight, predefined layouts' XML looks |
 | `theme/ThemeEditorPreview.kt`, `theme/ThemePreviewScene.kt` | Theme Creator preview |
 | `theme/MaterialThemeManager.kt`, `theme/CleverKeysTheme.kt`, `KeyboardShapes.kt`, `KeyboardTypography.kt` | Settings-app Compose theme |
 | `activities/ThemeSettingsActivity.kt` | Theme Manager + Theme Creator UI, `BUILTIN_THEMES` |
@@ -128,7 +160,8 @@ theme bindings, key-magnifier or suggestion-bar colours. As built at HEAD, 2026-
   `LayoutThemeBindingConfigTest`, `theme/ThemeProviderFallbackTest`,
   `theme/CustomThemePrefPolicyTest`, `theme/ThemeCreatorFieldWiringTest`,
   `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
-  `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip).
+  `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip),
+  `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest` (pure), `theme/KeyboardLookRenderTest` (mock).
 - Instrumented: `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.
 - Device: a custom-theme visual pass is pure-tier only so far (HANDOFF round 8); Monet (Auto)

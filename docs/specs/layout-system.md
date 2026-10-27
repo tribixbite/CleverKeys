@@ -265,7 +265,11 @@ theme id as Theme Manager stores it in `theme`: a built-in id (`ThemeProvider.BU
 `decorative_<predefined id>`, or `custom_<uuid>` — shape `^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$`,
 case kept (custom ids are store keys). The Layout Manager editor refuses to save a malformed
 value; a well-formed id of a theme that is not on this device is accepted (it may be a DIY theme
-from another device). Built-in layouts declare no theme. An imported or added custom layout's
+from another device). Four built-in layouts declare a theme: the familiar-style layouts bind
+their keyboard look (`theme="look_ios"`, `look_gboard`, `look_swiftkey`, `look_samsung`; see
+"Keyboard looks" below); every other built-in layout declares none. `PredefinedLayoutThemes`
+mirrors those declarations for the code that cannot parse layouts (the backup preview, Layout
+Manager's chip); `StyleLayoutsTest` pins it against every layout file. An imported or added custom layout's
 attribute applies as its binding until the user picks something else. **Export XML** writes the
 entry's stored choice onto the root (`LayoutThemeBinding.applyToXml`): a theme id sets
 `theme="…"`, "Follow global theme" over an XML default removes it, no choice leaves the XML as
@@ -350,6 +354,75 @@ ConfigurationManager re-inflate gate, serializer round trip, XML attribute, buil
 `SuggestionBarPaletteTest` and `PreferenceUIUpdateHandlerViewsTest` (mock),
 `LayoutThemeSuggestionBarInstrumentedTest` (ew-cli: the real IME, bound Light over Cyberpunk,
 EditText and Chrome).
+
+### Keyboard looks (`look_…` themes, 2026-10-27)
+
+A LOOK is a theme that carries geometry as well as colours, with a light and a dark palette that
+follow the system like Monet (Auto). It is the fourth theme kind (`look_` id prefix) beside
+built-in XML, `decorative_` and `custom_` themes and reuses everything above: the XML `theme`
+attribute, the Layout Manager chip, Theme Manager selection ("Familiar looks" section), the
+`layouts` backup blob and the stale-view tracker. There is no parallel system.
+
+**Data** (`theme/KeyboardLook.kt`, pure): `KeyboardLook(id, light, dark, geometry,
+functionChars)`. `LookPalette` holds opaque ARGB roles: keyboard background; letter, pressed,
+Caps Lock and modifier/function-key fills; plain Enter and editor-action (Go / Search / Send /
+Done) fills with their glyph colours; letter, modifier and Caps Lock label colours; hint; key
+shadow and outline; bar background, text, highlight and separator (alpha 0 = none); swipe trail.
+`LookGeometry` holds what the look DEFINES, each nullable: horizontal gap (fraction of one key
+unit's width), vertical gap (fraction of the row height), corner radius, outline width and
+shadow offset (dp), label scale (relative to the user's size) and label weight.
+`functionChars` lists character keys drawn as function keys (Gboard's `,.`).
+
+**Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
+`docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,
+8 dp corners, no shadow, blue editor-action key), `look_gboard` (Material You on the default
+seed: tonal function keys incl. comma/period and Enter, primary Caps Lock and editor action),
+`look_swiftkey` (Fluent Adaptive: near-identical keys, soft shadow, no separators),
+`look_samsung` (One UI 8: darker function keys, blue shift glyph when locked, blue auto-replace
+suggestion, light-mode shadow) and `look_ios18` (iOS 18: grey function keys and a 1 pt shadow;
+offered in Theme Manager, bound to no layout). Each uses the system sans-serif: SF Pro / SF
+Compact, Google Sans, Samsung One and SwiftKey's faces are not bundled, and no product artwork
+or icon is copied. Not affiliated with Apple, Google, Microsoft or Samsung.
+
+**Rendering.** `ThemeProvider.loadLook` takes the palette for `Config.isSystemLight` and builds
+`Theme(context, KeyboardLookSchemes.colorScheme(palette), lookPalette, lookGeometry,
+lookFunctionChars)`; the 17-field scheme feeds every existing runtime-theme consumer (keys,
+bar, clipboard/emoji panes, magnifier, Theme Creator starting colours). `builtInThemeStyleId`
+maps `look_…` to `CleverKeysLight`/`CleverKeysDark` by the same cue, so a system light/dark
+switch changes the style id and re-inflates the view with the other palette (as Monet Auto).
+`Theme.Computed` adds the `ENTER` and `ACTION` frames (`roleOf(KeyValue, …, functionChars)`:
+`KEYCODE_ENTER` → ENTER, `Event.ACTION` → ACTION, a function character → MODIFIER); for every
+non-look theme both frames take the special fill and `functionChars` is empty, so they render
+exactly as before. `Keyboard2View` draws a look's key shadow under the frame, its modifier /
+Enter / action glyph colours on plain labels at rest, its relative label scale, and its trail
+colour; the bar takes a look's separator colour (others keep the sub-label colour at alpha 100).
+
+**Precedence** (`KeyboardLookGeometry.resolve`, pinned by `KeyboardLookGeometryTest`). While a
+look is the EFFECTIVE theme — chosen in Theme Manager or bound to the current layout — each
+attribute it defines wins over the user's global appearance setting, including a custom border
+(`border_config` radius / line width) and the key margins: selecting or binding a look is an
+explicit choice of that appearance. Attributes it leaves null keep the user's values; the label
+size stays relative to the user's label-size setting (accessibility sizes keep counting); key
+opacity, keyboard height, label brightness and every non-geometry preference are untouched. No
+preference is written: switching to a non-look theme or layout restores the user's geometry
+exactly. The trail colour of a look applies while it is effective (the user's
+`swipe_trail_color` otherwise); this lifts the per-layout limitation above for looks only.
+
+**Switching.** A space-bar swipe onto a layout bound to another look is an ordinary theme
+change: `ConfigurationManager.refresh` sees the effective theme name change and
+`CleverKeysService.onThemeChanged` re-inflates the view and, while shown, rebuilds the input
+hierarchy. Each rebuild logs `Theme rebuild: theme=… shown=… took N ms` (tag
+`CleverKeysService`), the number measured on device for the switch budget: 2–6 ms per
+space-bar switch on the Pixel 8 Pro and the Saga (release `fc30948d`, 2026-10-27, light and
+dark; evidence `build/oct27-looks/`, not in git), with the new view drawn on the next frame.
+
+Tests: `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest` (registry, light vs dark,
+geometry defined, WCAG: letter and modifier labels 4.5:1, Enter/action glyphs, pressed and Caps
+Lock 3:1, hints 3:1, bar text 4.5:1 and highlight 3:1, bar colours pass `SuggestionBarPalette`
+unchanged), `theme/KeyboardLookRenderTest` (mock: computed frames, non-look parity, roles,
+provider light/dark and fallback), `StyleLayoutsTest` (each style layout's look,
+`PredefinedLayoutThemes` vs every layout file), `LayoutThemeBindingConfigTest` (Theme Manager
+list vs registry), `LayoutThemeBindingTest` (backup preview of a style layout's look).
 
 ### CTC swipe eligibility
 

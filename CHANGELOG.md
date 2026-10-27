@@ -78,12 +78,20 @@ editor that used to be listed here already ship in 2.0.)
   half-space). Built from Leipzig Corpora Collection news and Wikipedia counts blended with
   wordfreq, filtered with the Lilak Persian lexicon; it covers 97.5 % of the words in held-out
   Persian text (`docs/eval/2026-10-23-fa-wordlist.md`). Swipe uses the geometric engine.
-- **Familiar-style layouts**: QWERTY (iOS-style), QWERTY (Gboard-style) and QWERTY
-  (SwiftKey-style) copy the default US-English letter pane of those keyboards: rows, number
-  row, letter hints, key widths and the bottom row (123 / emoji / space / return; ?123 / comma /
-  space / period / enter; 123 / emoji / comma / space / period / enter). All three are complete
-  a–z Latin layouts, so both swipe engines serve them. Layout only; not affiliated with Apple,
-  Google or Microsoft.
+- **Familiar-style layouts and looks**: QWERTY (iOS-style), QWERTY (Gboard-style), QWERTY
+  (SwiftKey-style) and QWERTY (Samsung-style) copy the default US-English letter pane of those
+  keyboards: rows, number row, letter hints, key widths and the bottom row (123 / emoji / space /
+  return; ?123 / comma / space / period / enter; 123 / emoji / comma / space / period / enter;
+  !#1 / comma / space / period / enter). All four are complete a–z Latin layouts, so both swipe
+  engines serve them. Each now also brings that keyboard's **look** — key and background
+  colours, function-key and Enter colours, key shapes, gaps and shadows, suggestion-bar colours
+  and swipe trail, in light and dark following the system — so with the four layouts enabled a
+  space-bar swipe turns the keyboard from Gboard-style to SwiftKey-style to iOS-style to
+  Samsung-style. The looks (plus iOS 18-style) are also in Theme Manager under **Familiar
+  looks** and can be bound to any layout. While a look is in use, the gaps, corner radius and
+  borders it defines replace your Appearance settings for those items; your settings are never
+  changed. Drawn with CleverKeys' own keys and the system font; not affiliated with Apple,
+  Google, Microsoft or Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard
   entry editor (and tag, clipboard-search, emoji-search and GIF-search fields) instead of the
   app behind the panel. Bar alternatives replace the swiped word in the field, backspace right
