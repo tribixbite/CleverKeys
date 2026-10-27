@@ -485,6 +485,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     not evidence); long Pinned-entry editor NOT run (a Pinned entry can only come from history,
     i.e. the OS clipboard; the instrumented test covers History/To-dos caret, Pinned spell-check
     only). Left: CleverKeys default, Cyberpunk, layouts and themes restored.
+    FULL INSTRUMENTED 2026-10-27 at `0c3a2f56` (agent, separate worktree, 4 genuine `ctc_bench`
+    encoders, hashes = testing-strategy table; app `8637b738…`, test `44bcfd2f…`): unfiltered,
+    3 shards, orchestrator, Pixel7 — 1,623/1,623 on API 34 (`e7cbf97c`), 35 (`01297cd7`),
+    36 (`f2e3288c`) and 37 (`764b3dce`); 0 failed / 0 skipped / 0 flaky, 0 AssumptionViolated.
+    First cloud runs of ClipboardReorderDatabaseTest (6), the 9 KeyboardAccessibility cases on
+    35–37 and ClipboardDatabaseTest (110, paged editor). Looks/StyleLayouts and the thumbnail
+    repair have no dedicated instrumented test (covered by pure tests and the upgrade test);
+    the looks code ran only inside the keyboard-view tests. Evidence `~/ew-output/full-0c3a2f56/`.
 22. [ ] Saga 202 backup round trip + real 1.x upgrade, 2026-10-25 (agent; evidence
     `build/oct25-saga/`, original backup in `backup-original/`, not in git). Plaintext full ZIP,
     the same ZIP twice, encrypted `.ckenc`, clipboard JSON and ZIP, config Merge/Replace: every
