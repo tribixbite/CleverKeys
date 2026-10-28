@@ -2,6 +2,8 @@ package tribixbite.cleverkeys
 
 import android.content.ClipData
 import android.content.Context
+import android.text.Spanned
+import android.text.style.SuggestionSpan
 import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -54,6 +56,13 @@ class EditingCommandParityTest {
     private var editMode = false
     /** What the connection answers to performContextMenuAction (on a device: IPC success, always true). */
     private var contextMenuAccepted = true
+    /**
+     * What the editor hands back for the text before / after the cursor. Plain strings by
+     * default — Compose and Chrome never return spans; a stock EditText returns its
+     * SuggestionSpans when asked with GET_TEXT_WITH_STYLES ([withReplacementSpan]).
+     */
+    private var textBefore: CharSequence = ""
+    private var textAfter: CharSequence = ""
     // An ordinary text field unless a test says otherwise: objenesis leaves inputType 0, which
     // is TYPE_NULL — a blind-field signal since 2026-10-13 (TerminalUtils.editorKind).
     private val editorInfo: EditorInfo = objenesis.newInstance(EditorInfo::class.java).apply {
@@ -104,7 +113,8 @@ class EditingCommandParityTest {
         inputConnection = recordingProxy(InputConnection::class.java, IC_EFFECTS, defaultBoolean = true) { name ->
             when (name) {
                 "getSelectedText" -> selection
-                "getTextBeforeCursor", "getTextAfterCursor" -> ""
+                "getTextBeforeCursor" -> textBefore
+                "getTextAfterCursor" -> textAfter
                 "performContextMenuAction" -> contextMenuAccepted
                 else -> NO_ANSWER
             }
@@ -264,15 +274,19 @@ class EditingCommandParityTest {
     /**
      * Maintainer decision 2026-10-13: textAssist/replaceText keep the app chooser, and the
      * editor's own context-menu replace action (the layout key's behaviour before 7d1a3271) is
-     * its own command — no chooser, no selection precondition (the editor decides).
+     * its own command — no chooser, no selection precondition (the editor decides). The bare id
+     * goes out whenever a usable SuggestionSpan touches the cursor (see
+     * [replacePopupWithoutASuggestionSpanAtTheCursorSaysUnavailable] for the other case).
      */
     @Test
     fun editorMenuReplaceSendsTheBareContextMenuIdWithoutAChooser() {
-        for (sel in listOf<CharSequence?>("sel", null)) {
-            selection = sel
-            val expected = listOf("handle_non_text_input()", "performContextMenuAction(${android.R.id.replaceText})")
-            assertEquals("key sel=${sel != null}", expected, layoutEffects("replaceTextMenu"))
-            assertEquals("mapping sel=${sel != null}", expected, mappingEffects("replaceTextMenu"))
+        withReplacementSpan {
+            for (sel in listOf<CharSequence?>("sel", null)) {
+                selection = sel
+                val expected = listOf("handle_non_text_input()", "performContextMenuAction(${android.R.id.replaceText})")
+                assertEquals("key sel=${sel != null}", expected, layoutEffects("replaceTextMenu"))
+                assertEquals("mapping sel=${sel != null}", expected, mappingEffects("replaceTextMenu"))
+            }
         }
         // The chooser variants never send the bare id when nothing is selected: they report
         // "no text selected" instead (the chooser itself needs a real Intent, absent here).
@@ -291,15 +305,77 @@ class EditingCommandParityTest {
      */
     @Test
     fun editorMenuActionsDoNotInferAnythingFromTheConnectionsAnswer() {
-        for ((name, id) in listOf("replaceTextMenu" to android.R.id.replaceText, "autofill" to android.R.id.autofill)) {
-            val expected = listOf("handle_non_text_input()", "performContextMenuAction($id)")
-            for (answer in listOf(true, false)) {
-                contextMenuAccepted = answer
-                assertEquals("$name key answer=$answer", expected, layoutEffects(name))
-                assertEquals("$name mapping answer=$answer", expected, mappingEffects(name))
+        withReplacementSpan {
+            for ((name, id) in listOf("replaceTextMenu" to android.R.id.replaceText, "autofill" to android.R.id.autofill)) {
+                val expected = listOf("handle_non_text_input()", "performContextMenuAction($id)")
+                for (answer in listOf(true, false)) {
+                    contextMenuAccepted = answer
+                    assertEquals("$name key answer=$answer", expected, layoutEffects(name))
+                    assertEquals("$name mapping answer=$answer", expected, mappingEffects(name))
+                }
             }
         }
         contextMenuAccepted = true
+    }
+
+    /**
+     * Todo item 7 (Saga 2026-10-21): in a Compose field (CleverKeys' settings search) the Replace
+     * popup command was a SILENT no-op. The editor's answer is invisible to the IME, but the
+     * popup's precondition is not: stock EditText shows it only for a SuggestionSpan touching
+     * the selection start (Editor.SuggestionsPopupWindow.updateSuggestions returns false
+     * otherwise), and Compose and Chrome implement no replaceText and return plain text. So
+     * when the styled text around the cursor carries no usable span the popup cannot appear in
+     * ANY editor: say so in the bar and send nothing (EditText's replace() would still move a
+     * selection to its midpoint).
+     */
+    @Test
+    fun replacePopupWithoutASuggestionSpanAtTheCursorSaysUnavailable() {
+        val unavailable = listOf("handle_non_text_input()", "feedback(str#${R.string.dynamic_action_unavailable})")
+        val sent = listOf("handle_non_text_input()", "performContextMenuAction(${android.R.id.replaceText})")
+        // Plain text (Compose, Chrome): unavailable, with or without a selection.
+        for (sel in listOf<CharSequence?>("sel", null)) {
+            selection = sel
+            textBefore = "hello wor"; textAfter = "ld"
+            assertEquals("key plain sel=${sel != null}", unavailable, layoutEffects("replaceTextMenu"))
+            assertEquals("mapping plain sel=${sel != null}", unavailable, mappingEffects("replaceTextMenu"))
+        }
+        selection = null
+        // A span that ends before the cursor (an earlier word) does not count.
+        textBefore = spannedWith(length = 10, start = 0, end = 5, span = suggestionSpan(arrayOf("help")))
+        textAfter = ""
+        assertEquals("span not touching", unavailable, layoutEffects("replaceTextMenu"))
+        // A span with no suggestions and no misspelled/grammar flag shows nothing either.
+        textBefore = spannedWith(length = 5, start = 0, end = 5, span = suggestionSpan(emptyArray()))
+        assertEquals("empty span", unavailable, layoutEffects("replaceTextMenu"))
+        // A misspelled span with no suggestions still opens the popup ("Add to dictionary").
+        textBefore = spannedWith(length = 5, start = 0, end = 5, span = suggestionSpan(emptyArray(), SuggestionSpan.FLAG_MISSPELLED))
+        assertEquals("misspelled span", sent, layoutEffects("replaceTextMenu"))
+        // The word AFTER the cursor (span starting at the cursor) counts.
+        textBefore = "go "
+        textAfter = spannedWith(length = 5, start = 0, end = 5, span = suggestionSpan(arrayOf("help")))
+        assertEquals("span after cursor", sent, layoutEffects("replaceTextMenu"))
+        assertEquals("span after cursor mapping", sent, mappingEffects("replaceTextMenu"))
+        textBefore = ""; textAfter = ""
+    }
+
+    /** Runs [block] with a swiped word (SuggestionSpan with alternatives) just before the cursor. */
+    private fun withReplacementSpan(block: () -> Unit) {
+        textBefore = spannedWith(length = 4, start = 0, end = 4, span = suggestionSpan(arrayOf("held", "hello")))
+        try { block() } finally { textBefore = ""; textAfter = "" }
+    }
+
+    private fun suggestionSpan(suggestions: Array<String>, flags: Int = 0): SuggestionSpan = mockk {
+        every { this@mockk.suggestions } returns suggestions
+        every { this@mockk.flags } returns flags
+    }
+
+    /** A [Spanned] of [length] chars carrying [span] over [start]..[end] (android.jar's are stubs here). */
+    private fun spannedWith(length: Int, start: Int, end: Int, span: SuggestionSpan): Spanned = mockk {
+        every { this@mockk.length } returns length
+        every { getSpans(any(), any(), SuggestionSpan::class.java) } returns arrayOf(span)
+        every { getSpanStart(span) } returns start
+        every { getSpanEnd(span) } returns end
+        every { this@mockk.toString() } returns "x".repeat(length)
     }
 
     /**

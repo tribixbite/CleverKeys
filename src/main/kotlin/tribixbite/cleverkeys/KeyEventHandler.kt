@@ -6,6 +6,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
+import android.text.Spanned
+import android.text.style.SuggestionSpan
 import android.util.Log
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
@@ -625,6 +627,52 @@ class KeyEventHandler(
     }
 
     /**
+     * The editor's own Replace popup (`android.R.id.replaceText`) for the word at the cursor.
+     *
+     * Whether the editor TOOK the id is invisible here ([sendContextMenuAction]), but the popup's
+     * precondition is not: a stock EditText opens it only when a SuggestionSpan with suggestions,
+     * or with a misspelled/grammar flag, touches the selection start
+     * (`Editor.SuggestionsPopupWindow.updateSuggestions` returns false otherwise, AOSP
+     * lineage-22.2), and Compose (1.6.8 implements no replaceText) and Chrome never hand spans
+     * to the IME at all. So the styled text around the selection start is read; without a
+     * usable span the popup cannot appear in ANY editor, and the bar says so instead of a silent
+     * no-op (todo 7, Saga 2026-10-21). Nothing is sent then: EditText's `replace()` would still
+     * collapse a selection to its midpoint.
+     */
+    private fun sendReplacePopup() {
+        val conn = recv.getCurrentInputConnection() ?: return
+        if (!replacementSpanTouchesSelectionStart(conn)) {
+            showFeedback(R.string.dynamic_action_unavailable)
+            return
+        }
+        conn.performContextMenuAction(android.R.id.replaceText)
+    }
+
+    /**
+     * True when a usable SuggestionSpan touches the selection start: one ending there in the
+     * text before it, or one starting there in the selection (or, when nothing is selected, the
+     * text after the cursor). Spans are only returned with GET_TEXT_WITH_STYLES and survive the
+     * IPC as ParcelableSpans; a span crossing the cursor is clipped to both windows' edges.
+     */
+    private fun replacementSpanTouchesSelectionStart(conn: InputConnection): Boolean {
+        val styles = InputConnection.GET_TEXT_WITH_STYLES
+        val before = runCatching { conn.getTextBeforeCursor(REPLACE_SPAN_PROBE_CHARS, styles) }.getOrNull()
+        if (before is Spanned && hasReplacementSpan(before) { _, end -> end == before.length }) return true
+        val selected = runCatching { conn.getSelectedText(styles) }.getOrNull()
+        val forward = if (!selected.isNullOrEmpty()) selected
+            else runCatching { conn.getTextAfterCursor(REPLACE_SPAN_PROBE_CHARS, styles) }.getOrNull()
+        return forward is Spanned && hasReplacementSpan(forward) { start, _ -> start == 0 }
+    }
+
+    /** A span the Replace popup would list: it has suggestions or is flagged misspelled/grammar. */
+    private inline fun hasReplacementSpan(text: Spanned, touches: (start: Int, end: Int) -> Boolean): Boolean =
+        text.getSpans(0, text.length, SuggestionSpan::class.java).orEmpty().any { span ->
+            touches(text.getSpanStart(span), text.getSpanEnd(span)) &&
+                (span.suggestions.orEmpty().isNotEmpty() ||
+                    span.flags and (SuggestionSpan.FLAG_MISSPELLED or SUGGESTION_FLAG_GRAMMAR_ERROR) != 0)
+        }
+
+    /**
      * App-facing undo/redo as the Ctrl+Z / Ctrl+Shift+Z key events, NOT
      * `performContextMenuAction(undo/redo)`: only a stock EditText honours those ids, while
      * Chrome/WebView (ImeAdapterImpl) and Compose (StatelessInputConnection) return false. The
@@ -958,7 +1006,7 @@ class KeyEventHandler(
             // The editor's own replace action, no chooser and no selection precondition: stock
             // EditText shows its suggestion popup (spelling fixes, our SuggestionSpan swipe
             // alternatives) for the word at the cursor (maintainer decision 2026-10-13).
-            KeyValue.Editing.REPLACE_MENU -> sendContextMenuAction(android.R.id.replaceText)
+            KeyValue.Editing.REPLACE_MENU -> sendReplacePopup()
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
             KeyValue.Editing.DELETE_WORD -> send_key_down_up(
                 KeyEvent.KEYCODE_DEL,
@@ -1744,6 +1792,10 @@ class KeyEventHandler(
 
     companion object {
         private const val TAG = "KeyEventHandler"
+        /** Chars read on each side of the cursor when looking for a Replace-popup span. */
+        private const val REPLACE_SPAN_PROBE_CHARS = 64
+        /** `SuggestionSpan.FLAG_GRAMMAR_ERROR` (API 31); the value is stable, the field is not on minSdk. */
+        private const val SUGGESTION_FLAG_GRAMMAR_ERROR = 0x0008
         private var moveCursorReq: ExtractedTextRequest? = null
 
         // Key events that should be dispatched to the clipboard edit EditText
