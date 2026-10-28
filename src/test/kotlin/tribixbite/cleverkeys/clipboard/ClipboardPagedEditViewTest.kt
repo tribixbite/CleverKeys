@@ -306,8 +306,91 @@ class ClipboardPagedEditViewTest {
         view.edit_entry(0)
         render()
 
-        // 1,000 − 20 padding − 36 dp × 2 (pager row)
-        verify { (widgets.getValue(R.id.clipboard_entry_edit_field) as EditText).maxHeight = 908 }
+        // 1,000 − 20 padding − 36 dp × 2 (pager row) − 14 dp × 2 (the field's own top margin,
+        // the clipboardEntry style's value when the field carries no margin params)
+        verify { (widgets.getValue(R.id.clipboard_entry_edit_field) as EditText).maxHeight = 880 }
+    }
+
+    /**
+     * Saga 144 landscape, 2026-10-27: on open, the pane's ScrollView brings the focused field
+     * into view by aligning its BOTTOM with the viewport's, so everything between the field's
+     * top and the pager's top must fit above it — the pager row (32 dp + 4 dp margin) AND the
+     * field's own 14 dp top margin. The cap subtracted only the pager row, and the pager was
+     * cut by about half its height. The cap now subtracts the margin the field actually has.
+     */
+    @Test
+    fun theCapLeavesRoomForTheFieldsTopMarginSoTheWholePagerRowIsVisible() {
+        buildView(listOf(entry(huge)))
+        val pane = mockk<android.widget.ScrollView>(relaxed = true)
+        every { pane.height } returns 1_000
+        every { pane.paddingTop } returns 0
+        every { pane.paddingBottom } returns 0
+        every { pane.parent } returns null
+        every { view.parent } returns pane
+        val metrics = objenesis.newInstance(android.util.DisplayMetrics::class.java).apply { density = 3f }
+        val res = mockk<android.content.res.Resources>(relaxed = true)
+        every { res.displayMetrics } returns metrics
+        every { view.resources } returns res
+        val field = widgets.getValue(R.id.clipboard_entry_edit_field) as EditText
+        val params = objenesis.newInstance(ViewGroup.MarginLayoutParams::class.java).apply { topMargin = 42 }
+        every { field.layoutParams } returns params
+
+        view.edit_entry(0)
+        render()
+
+        // Field bottom at the viewport bottom → its top sits maxHeight above it; the pager row
+        // (36 dp × 3 = 108) plus the field's 42 px top margin must fit in what is left.
+        val cap = slot<Int>()
+        verify { field.maxHeight = capture(cap) }
+        assertThat(1_000 - cap.captured).isAtLeast(108 + 42)
+        assertThat(cap.captured).isEqualTo(1_000 - 108 - 42)
+    }
+
+    /**
+     * Saga 144 landscape, 2026-10-28 (release 3cf3738a, `build/oct28-saga144/19`): the pane's
+     * viewport there (~204 px) is smaller than pager row + field margin + the field's two-line
+     * minimum, so no cap can make everything fit and the focus scroll (field bottom at the
+     * viewport bottom) still cut the pager's top half. After focusing, the editor scrolls the
+     * pane back up so the pager row's top is the first thing in view; the field scrolls its own
+     * text, so a clipped field bottom loses nothing.
+     */
+    @Test
+    fun afterFocusThePaneIsScrolledBackSoThePagerRowIsVisible() {
+        buildView(listOf(entry(huge)))
+        val pane = mockk<android.widget.ScrollView>(relaxed = true)
+        every { pane.parent } returns null
+        every { pane.scrollX } returns 0
+        every { pane.scrollY } returns 300
+        every { view.parent } returns pane
+        val pager = widgets.getValue(R.id.clipboard_entry_edit_pager)
+        every { pager.visibility } returns View.VISIBLE
+        // The pager row starts 250 px into the pane's content (pager 10 in its row, row 200 in
+        // the list, list 40 in the pane): 50 px above the scrolled top.
+        placePager(pager)
+
+        view.edit_entry(0)
+        render()
+        view.revealEditPager(rowView)
+
+        verify { pane.scrollTo(0, 250) }
+    }
+
+    @Test
+    fun aPagerAlreadyInViewDoesNotMoveThePane() {
+        buildView(listOf(entry(huge)))
+        val pane = mockk<android.widget.ScrollView>(relaxed = true)
+        every { pane.parent } returns null
+        every { pane.scrollY } returns 200
+        every { view.parent } returns pane
+        val pager = widgets.getValue(R.id.clipboard_entry_edit_pager)
+        every { pager.visibility } returns View.VISIBLE
+        placePager(pager)
+
+        view.edit_entry(0)
+        render()
+        view.revealEditPager(rowView)
+
+        verify(exactly = 0) { pane.scrollTo(any(), any()) }
     }
 
     /**
@@ -364,6 +447,16 @@ class ClipboardPagedEditViewTest {
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /** Pager 10 px into its row, the row 200 px into the list, the list 40 px into the pane. */
+    private fun placePager(pager: View) {
+        val row = mockk<LinearLayout>(relaxed = true)
+        every { pager.top } returns 10
+        every { pager.parent } returns row
+        every { row.top } returns 200
+        every { row.parent } returns view
+        every { view.top } returns 40
+    }
 
     private fun setGlobalConfig(config: Config?) {
         val field = Config::class.java.getDeclaredField("_globalConfig")

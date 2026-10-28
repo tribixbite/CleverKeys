@@ -657,6 +657,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         /** Pager row: 32dp buttons + 4dp top margin (clipboard_history_entry.xml). */
         private const val PAGER_ROW_DP = 36
 
+        /**
+         * The edit field's top margin from the `clipboardEntry` style (styles.xml), used only
+         * when the field carries no [ViewGroup.MarginLayoutParams] to read it from.
+         */
+        private const val EDIT_FIELD_TOP_MARGIN_DP = 14
+
         /** Opacity of the drag handle while a search or filter pauses reordering. */
         const val REORDER_HANDLE_DIMMED_ALPHA = 0.3f
 
@@ -1210,11 +1216,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     /**
-     * A paged field is capped to the pane's visible height minus the pager row, so the pager
-     * and Save/Cancel stay on screen and the field scrolls its own text. Otherwise the pane's
-     * ScrollView, on focusing a field taller than itself, aligns the field's top with its own
-     * and scrolls the pager out of sight (Saga 2026-10-26). Single-page edits keep the XML
-     * line cap ([EDIT_FIELD_MAX_LINES]); recycled rows are reset to it.
+     * A paged field is capped to the pane's visible height minus everything between the
+     * field's top and the pager's top, so the pager and Save/Cancel stay on screen and the field
+     * scrolls its own text. Otherwise the pane's ScrollView, on focusing a field taller than
+     * itself, aligns the field's top with its own and scrolls the pager out of sight (Saga
+     * 2026-10-26). On focus the ScrollView aligns a field that fits with the viewport's BOTTOM,
+     * so the space above it must hold the pager row AND the field's own top margin: subtracting
+     * only the pager row cut the pager by about half its height (Saga 144 landscape,
+     * 2026-10-27, todo 22). Single-page edits keep the XML line cap ([EDIT_FIELD_MAX_LINES]);
+     * recycled rows are reset to it.
      */
     private fun fitEditFieldHeight(editField: EditText) {
         if (editingPages == null) {
@@ -1223,8 +1233,38 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         }
         val viewport = contentViewportHeight()
         if (viewport <= 0) return  // not laid out yet; the next bind fits it
-        val pagerRow = (PAGER_ROW_DP * resources.displayMetrics.density).toInt()
-        editField.maxHeight = (viewport - pagerRow).coerceAtLeast(editField.lineHeight * 2)
+        val density = resources.displayMetrics.density
+        val pagerRow = (PAGER_ROW_DP * density).toInt()
+        val fieldTopMargin = (editField.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin
+            ?: (EDIT_FIELD_TOP_MARGIN_DP * density).toInt()
+        editField.maxHeight = (viewport - pagerRow - fieldTopMargin).coerceAtLeast(editField.lineHeight * 2)
+    }
+
+    /**
+     * Scrolls the pane back up when the paged editor's pager row ("Page N of M", prev / next)
+     * is above its visible top, so the row is fully in view (todo 22). On the Saga in landscape
+     * the pane's viewport (~204 px) is smaller than the pager row + the field's top margin + the
+     * field's two-line minimum, so [fitEditFieldHeight] cannot make everything fit, and the
+     * ScrollView's focus scroll (field bottom at the viewport bottom) cut the pager in half.
+     * Showing the pager first costs only the field's lower edge, and the field scrolls its own
+     * text. Positions are summed up the parent chain (`top` of each view up to the ScrollView's
+     * child); none of those views scrolls itself, the list being a [NonScrollListView].
+     */
+    internal fun revealEditPager(row: View) {
+        val pager = row.findViewById<View?>(R.id.clipboard_entry_edit_pager) ?: return
+        if (pager.visibility != VISIBLE) return
+        val scroll = reorderScrollParent() ?: return
+        var top = 0
+        var v: View = pager
+        while (true) {
+            top += v.top
+            val p = v.parent
+            if (p === scroll) break
+            v = p as? View ?: return  // not inside the pane (a detached scrap row)
+        }
+        // The visible content starts paddingTop below scrollY (the ScrollView clips to padding).
+        val target = top - scroll.paddingTop
+        if (target < scroll.scrollY) scroll.scrollTo(scroll.scrollX, target.coerceAtLeast(0))
     }
 
     /** Inner height of the pane's ScrollView holding this list, or 0 when there is none. */
@@ -2505,7 +2545,13 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // (showSoftInputOnFocus has no public XML attribute).
                 editField.showSoftInputOnFocus = false
                 editField.post {
-                    if (editField === activeEditingEditText && !editField.isFocused) editField.requestFocus()
+                    if (editField === activeEditingEditText && !editField.isFocused) {
+                        editField.requestFocus()
+                        // Paged edit (todo 22): the focus scroll aligns the field's bottom with
+                        // the pane's; a pane too small for pager + field then hides the pager.
+                        // Posted again so it runs after any layout the focus scroll waits for.
+                        if (editingPages != null) editField.post { revealEditPager(view) }
+                    }
                 }
 
                 return view
