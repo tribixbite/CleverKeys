@@ -68,7 +68,13 @@ class KeyboardData private constructor(
      * "`<element> name="value"`"). Loading stays lenient; the layout editor refuses to save
      * while this is not empty.
      */
-    val style_problems: List<String> = emptyList()
+    val style_problems: List<String> = emptyList(),
+    /**
+     * The layout's own symbol pane (`<keyboard symbols="samsung_symbols_1">`: the file name of an
+     * unnamed layout under `src/main/layouts`), opened by `switch_symbols`; null = CleverKeys'
+     * number pane. A symbol page names the page its own `switch_symbols` key turns to.
+     */
+    val symbols_pane: String? = null,
 ) {
     /** Position of every keys on the layout, see [getKeys()]. */
     private var _key_pos: Map<KeyValue, KeyPos>? = null
@@ -232,7 +238,8 @@ class KeyboardData private constructor(
         src.declared_theme,
         src.declared_key_geometry,
         src.embedded_theme,
-        src.style_problems
+        src.style_problems,
+        src.symbols_pane,
     )
 
     data class Row(
@@ -527,6 +534,9 @@ class KeyboardData private constructor(
     companion object {
         private val _layoutCache = HashMap<Int, KeyboardData?>()
 
+        /** A `symbols` pane name: a raw-resource-safe layout file name. */
+        val SYMBOLS_PANE_NAME = Regex("[a-z][a-z0-9_]{0,63}")
+
         @JvmStatic
         @Throws(Exception::class)
         fun load_row(res: Resources, res_id: Int): Row {
@@ -615,6 +625,8 @@ class KeyboardData private constructor(
             val declared_language = parser.getAttributeValue(null, "language")?.trim()
             // Optional default theme binding, e.g. theme="rosepine" (see LayoutThemeBinding).
             val declared_theme = parser.getAttributeValue(null, LayoutThemeBinding.XML_ATTRIBUTE)?.trim()
+            // Optional own symbol pane (switch_symbols); a resource-safe file name or nothing.
+            val symbols_pane = parser.getAttributeValue(null, "symbols")?.trim()?.takeIf { SYMBOLS_PANE_NAME.matches(it) }
             // Optional per-layout key-geometry defaults (see LayoutKeyGeometry); kept raw.
             val declared_key_geometry = KeyGeometryField.entries.mapNotNull { f ->
                 parser.getAttributeValue(null, f.xmlAttribute)?.let { f.xmlAttribute to it.trim() }
@@ -653,7 +665,7 @@ class KeyboardData private constructor(
             }
             return KeyboardData(rows, maxOf(kw, 1f), kh, modmap, script, numpad_script, name,
                 bottom_row, embedded_number_row, locale_extra_keys, numpad_height, declared_language,
-                declared_theme, declared_key_geometry, embeddedTheme, problems)
+                declared_theme, declared_key_geometry, embeddedTheme, problems, symbols_pane)
         }
 
         /** Attribute name → value of the current start tag. */

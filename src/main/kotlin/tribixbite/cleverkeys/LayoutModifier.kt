@@ -189,7 +189,17 @@ object LayoutModifier {
      * the main layout's script.
      */
     @JvmStatic
-    fun modify_numpad(kw: KeyboardData, main_kw: KeyboardData): KeyboardData {
+    fun modify_numpad(kw: KeyboardData, main_kw: KeyboardData): KeyboardData = modifyPane(kw, main_kw, invertDigits = true)
+
+    /**
+     * Modify a layout's own symbol pane (`switch_symbols`, e.g. Samsung-style's pages) like the
+     * number pane — digits in the layout's script, `loc` keys, the action key — but never with
+     * the numpad's digit inversion: a symbol page's digits are a ROW, not a keypad.
+     */
+    @JvmStatic
+    fun modify_symbols(kw: KeyboardData, main_kw: KeyboardData): KeyboardData = modifyPane(kw, main_kw, invertDigits = false)
+
+    private fun modifyPane(kw: KeyboardData, main_kw: KeyboardData, invertDigits: Boolean): KeyboardData {
         val map_digit = KeyModifier.modify_numpad_script(main_kw.numpad_script)
         return kw.mapKeys(object : KeyboardData.MapKeyValues() {
             override fun apply(key: KeyValue, localized: Boolean): KeyValue? {
@@ -206,7 +216,7 @@ object LayoutModifier {
                     KeyValue.Kind.Char -> {
                         val prev_c = key.getChar()
                         var c = prev_c
-                        if (globalConfig.inverse_numpad) {
+                        if (invertDigits && globalConfig.inverse_numpad) {
                             c = inverse_numpad_char(c)
                         }
                         if (map_digit != -1) {

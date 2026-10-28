@@ -152,6 +152,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "look_key_preview" -> {
                 lookKeyPreview = prefs.getBoolean(key, Defaults.LOOK_KEY_PREVIEW)
             }
+            "look_space_language" -> {
+                lookSpaceLanguage = prefs.getBoolean(key, Defaults.LOOK_SPACE_LANGUAGE)
+            }
             "custom_border_radius" -> {
                 customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
@@ -283,6 +286,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         borderConfigEnabled = prefs.getSafeBoolean("border_config", Defaults.BORDER_CONFIG)
         lookShowHints = prefs.getSafeBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
         lookKeyPreview = prefs.getSafeBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
+        lookSpaceLanguage = prefs.getSafeBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

@@ -313,6 +313,18 @@ internal fun SettingsActivity.AppearanceSection() {
                     }
                 )
 
+                // Samsung-style prints the language on the space bar (KeyboardLook.spaceLanguage);
+                // this turns it off. Other themes never draw it.
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_look_space_language_title),
+                    description = stringResource(R.string.appearance_look_space_language_desc),
+                    checked = lookSpaceLanguage,
+                    onCheckedChange = {
+                        lookSpaceLanguage = it
+                        saveSetting("look_space_language", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_custom_border_title),
                     description = stringResource(R.string.appearance_custom_border_desc),

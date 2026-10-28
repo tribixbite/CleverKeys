@@ -128,11 +128,12 @@ class Keyboard2ViewContinuousLifecycleTest {
         listOf(KeyValue.makeCharKey(c), null, null, null, null, null, null, null, null), null, 0, 1f, 0f, null)
 
     private fun layoutWith(vararg keys: KeyboardData.Key): KeyboardData {
-        // The private primary constructor (16 parameters since embedded_theme / style_problems, 2026-10-28).
-        val ctor = KeyboardData::class.java.declaredConstructors.first { it.parameterCount == 16 }
+        // The private primary constructor (17 parameters since symbols_pane, 2026-10-28).
+        val ctor = KeyboardData::class.java.declaredConstructors.first { it.parameterCount == 17 }
         ctor.isAccessible = true
         return ctor.newInstance(listOf(KeyboardData.Row(keys.toList(), 1f, 0f)), keys.size.toFloat(), 1f,
-            null, null, null, "test", false, false, false, false, null, null, emptyMap<String, String>(), null, emptyList<String>()) as KeyboardData
+            null, null, null, "test", false, false, false, false, null, null, emptyMap<String, String>(), null, emptyList<String>(),
+            null) as KeyboardData
     }
 
     private fun collapsedReadback(): EditorReadback =

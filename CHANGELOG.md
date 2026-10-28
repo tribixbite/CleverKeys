@@ -128,7 +128,12 @@ editor that used to be listed here already ship in 2.0.)
   word space would type, and SwiftKey-style dims the side suggestions. The key that replaces Enter
   in Go / Search / Send / Next / Done fields also follows the keyboard: an arrow, magnifier,
   paper plane, check mark… on Gboard- and SwiftKey-style (each with that keyboard's choices and
-  key colour), a blue key with an icon on iOS-style and lower-case words on iOS 18-style. Drawn with
+  key colour), a blue key with an icon on iOS-style and lower-case words on iOS 18-style.
+  Samsung-style now matches real One UI screenshots: measured dark colours and key spacing, a
+  blue icon on the action key, the language name on the space bar (Appearance → **Language name
+  on the space bar** turns it off), Samsung's alternative characters on the letters when
+  gesture hints are shown, and !#1 opens Samsung's two symbol pages (1/2 and 2/2) — CleverKeys'
+  own number pane is a swipe right on !#1. Drawn with
   CleverKeys' own keys and the system font; not affiliated with Apple, Google, Microsoft or
   Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard

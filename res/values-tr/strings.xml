@@ -408,6 +408,8 @@
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler köşe ipuçlarını bu klavyeler gibi gizler; tümünü göstermek için açın. Hareketler her iki durumda da çalışır.</string>
     <string name="appearance_look_key_preview_title">Tanıdık görünümlerde tuş önizlemesi</string>
     <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler basılan karakteri bu klavyelerinkine benzeyen bir açılır pencerede gösterir.</string>
+    <string name="appearance_look_space_language_title">Boşluk tuşunda dil adı</string>
+    <string name="appearance_look_space_language_desc">Samsung tarzı görünüm, Samsung Klavye gibi boşluk tuşunda geçerli dili gösterir.</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>

@@ -71,12 +71,24 @@ sealed interface IconPart {
  *   `actionLabel`: iOS's blue prominent return); the others take the Enter key's colours. null =
  *   every action (the behaviour without a style).
  * @property lowercase whether a text label is shown in lower case (iOS 18: "go", "search").
+ * @property iconScale the icons' size relative to CleverKeys' default ([LookActionKeys.BOX_SCALE]);
+ *   One UI draws them about 1.3 times larger (research §12).
  */
 data class LookActionStyle(
     val icons: Map<ActionKind, ActionGlyph> = emptyMap(),
     val accent: Set<ActionKind>? = null,
     val lowercase: Boolean = false,
-)
+    val iconScale: Float = 1f,
+) {
+    init {
+        require(iconScale in ICON_SCALE_RANGE) { "action icon scale $iconScale outside $ICON_SCALE_RANGE" }
+    }
+
+    companion object {
+        /** Allowed [iconScale] values. */
+        val ICON_SCALE_RANGE = 0.5f..2f
+    }
+}
 
 /** Pure decisions for a look's editor-action key; `LookActionKeysTest`. */
 object LookActionKeys {

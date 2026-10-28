@@ -64,6 +64,7 @@ Your Appearance settings are never changed by a layout.
 | `embedded_number_row` | `true` / `false` (default) | The layout has its own number row; none is added. |
 | `locale_extra_keys` | `true` (default) / `false` | Add the language's extra keys. |
 | `numpad_height` | `true` / `false` (default) | Opt in to **Scale numpad height**. |
+| `symbols` | built-in pane name (`symbols_samsung_1`) | The pane a `switch_symbols` key opens instead of CleverKeys' number pane (QWERTY (Samsung-style)'s two pages; each page names the next). Without it `switch_symbols` opens the number pane. |
 | `width` | number | Total width in key units (default: the widest row). |
 | `language` | language code (`de`, `fa`, `pt_br`) | Default language binding. |
 | `theme` | theme ID (`rosepine`, `look_gboard`, `custom_…`) | Default theme binding (beats `<theme>`). |
@@ -157,6 +158,8 @@ Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<ke
 | `action_icons` | `kind:icon` pairs | Draw the action key (it replaces Enter in Go / Search / Send / Next / Done / Previous fields) as an icon instead of its word. Kinds `go`, `search`, `send`, `next`, `done`, `previous`, and `enter` for plain Enter; icons `arrow`, `search`, `send`, `send_outline`, `next`, `previous`, `done`, `return`, `arrow_up` (CleverKeys' own line icons). An action not listed shows its word. |
 | `action_accent` | kinds | The actions drawn in the `action_key` / `action_label` colours; the others use the Enter key's (`enter_key` / `enter_label`). Leave it out for all; `""` for none (Gboard). |
 | `action_lowercase` | `true` / `false` | Show the action's word in lower case ("go", "search"), as iOS 18 does (default `false`). |
+| `action_icon_scale` | 0.5–2 | Size of the action-key icons relative to CleverKeys' default (Samsung-style uses 1.3). |
+| `space_language` | `true` / `false` | Print the current language on the space bar ("English (US)"), as Samsung Keyboard does (default `false`). Appearance → "Language name on the space bar" turns it off everywhere. |
 | `name` | text | Name for the theme when it is saved or exported. |
 
 ## `<row>`
@@ -299,7 +302,9 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       bar_emphasis="commit"
       action_icons="go:arrow search:search send:send next:next done:done previous:previous enter:return"
       action_accent="search send"
-      action_lowercase="false">
+      action_lowercase="false"
+      action_icon_scale="1"
+      space_language="false">
     <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
     <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
   </theme>

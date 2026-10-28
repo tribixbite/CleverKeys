@@ -426,6 +426,8 @@
     <string name="appearance_look_show_hints_desc">Các giao diện kiểu iOS, Gboard, SwiftKey và Samsung ẩn gợi ý ở góc giống các bàn phím đó; bật để hiện tất cả. Cử chỉ vẫn hoạt động.</string>
     <string name="appearance_look_key_preview_title">Xem trước phím nhấn trên giao diện quen thuộc</string>
     <string name="appearance_look_key_preview_desc">Các giao diện kiểu iOS, Gboard, SwiftKey và Samsung hiện ký tự đã nhấn trong cửa sổ bật lên có hình dạng giống các bàn phím đó.</string>
+    <string name="appearance_look_space_language_title">Tên ngôn ngữ trên phím cách</string>
+    <string name="appearance_look_space_language_desc">Giao diện kiểu Samsung hiện ngôn ngữ hiện tại trên phím cách, giống Bàn phím Samsung.</string>
     <string name="appearance_custom_border_title">Cấu hình viền tùy chỉnh</string>
     <string name="appearance_custom_border_desc">Bật kiểu viền phím tùy chỉnh</string>
     <string name="appearance_border_radius_title">Bán kính viền</string>

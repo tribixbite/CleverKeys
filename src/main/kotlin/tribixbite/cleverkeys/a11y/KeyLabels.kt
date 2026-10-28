@@ -107,7 +107,8 @@ object KeyLabels {
             KeyValue.Event.SWITCH_BACK_EMOJI,
             KeyValue.Event.SWITCH_BACK_CLIPBOARD,
             KeyValue.Event.SWITCH_BACK_GIF -> getString(R.string.key_descr_switch_text)
-            KeyValue.Event.SWITCH_NUMERIC -> getString(R.string.key_descr_switch_numeric)
+            KeyValue.Event.SWITCH_NUMERIC,
+            KeyValue.Event.SWITCH_SYMBOLS -> getString(R.string.key_descr_switch_numeric)
             KeyValue.Event.SWITCH_EMOJI -> getString(R.string.key_descr_switch_emoji)
             KeyValue.Event.SWITCH_GIF -> getString(R.string.key_descr_switch_gif)
             KeyValue.Event.SWITCH_CLIPBOARD -> getString(R.string.key_descr_clipboard)

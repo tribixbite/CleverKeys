@@ -83,7 +83,7 @@ class LookActionKeysTest {
         val gboard = look(KeyboardLooks.GBOARD).action!!
         assertWithMessage("a custom label / unspecified action").that(LookActionKeys.glyph(gboard, null)).isNull()
         assertThat(LookActionKeys.text(null, "Go", java.util.Locale.US)).isEqualTo("Go")
-        assertWithMessage("Samsung: no device reference, unchanged").that(look(KeyboardLooks.SAMSUNG).action).isNull()
+
     }
 
     @Test
@@ -130,5 +130,30 @@ class LookActionKeysTest {
         val bad = ArrayList<String>()
         ThemeSpecXml.parse(mapOf("action_icons" to "go:rocket"), null, null, bad)
         assertThat(bad).containsExactly("<theme> action_icons=\"go:rocket\"")
+    }
+
+    /** Samsung (1.jpg): a blue icon on the dark function-key fill; plain Enter a white ↵. */
+    @Test
+    fun samsungDrawsABlueIconOnTheFunctionFill() {
+        val s = look(KeyboardLooks.SAMSUNG).action!!
+        assertThat(LookActionKeys.glyph(s, ActionKind.SEARCH)).isEqualTo(ActionGlyph.SEARCH)
+        for (k in IME_KINDS) {
+            assertWithMessage("$k icon").that(LookActionKeys.glyph(s, k)).isNotNull()
+            assertWithMessage("$k on the action colours").that(LookActionKeys.usesActionFill(s, k)).isTrue()
+        }
+        assertThat(LookActionKeys.glyph(s, ActionKind.ENTER)).isEqualTo(ActionGlyph.RETURN)
+        // 1.jpg: the magnifier is 51 px beside 45 px letters; ours drew 32 px beside 37 px at
+        // scale 1 on the Pixel — One UI's icons are about 1.3 times CleverKeys' default.
+        assertThat(s.iconScale).isWithin(0.01f).of(1.3f)
+        for (id in listOf(KeyboardLooks.GBOARD, KeyboardLooks.SWIFTKEY, KeyboardLooks.IOS)) {
+            assertWithMessage(id).that(look(id).action!!.iconScale).isEqualTo(1f)
+        }
+        val spec = ThemeSpecXml.parse(mapOf("action_icon_scale" to "1.3"), null, null, ArrayList())
+        assertThat(spec.action?.iconScale).isWithin(0.001f).of(1.3f)
+        assertThat(ThemeSpecJson.fromJson(org.json.JSONObject(ThemeSpecJson.toJson(spec).toString())).action?.iconScale)
+            .isWithin(0.001f).of(1.3f)
+        val bad = ArrayList<String>()
+        ThemeSpecXml.parse(mapOf("action_icon_scale" to "9"), null, null, bad)
+        assertThat(bad).containsExactly("<theme> action_icon_scale=\"9\"")
     }
 }

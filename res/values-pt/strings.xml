@@ -401,6 +401,8 @@
     <string name="appearance_look_show_hints_desc">Os visuais estilo iOS, Gboard, SwiftKey e Samsung ocultam as dicas dos cantos como esses teclados; ative para mostrar todas. Os gestos funcionam de qualquer forma.</string>
     <string name="appearance_look_key_preview_title">Prévia da tecla nos visuais conhecidos</string>
     <string name="appearance_look_key_preview_desc">Os visuais estilo iOS, Gboard, SwiftKey e Samsung mostram o caractere pressionado num pop-up com o formato desses teclados.</string>
+    <string name="appearance_look_space_language_title">Nome do idioma na barra de espaço</string>
+    <string name="appearance_look_space_language_desc">O visual Samsung mostra o idioma atual na barra de espaço, como o teclado Samsung.</string>
     <string name="appearance_custom_border_title">Borda personalizada</string>
     <string name="appearance_custom_border_desc">Ativar estilo de borda personalizada para teclas</string>
     <string name="appearance_border_radius_title">Raio de borda</string>

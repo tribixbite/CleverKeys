@@ -44,6 +44,8 @@ src/main/assets/dictionaries/contractions.bin
 test_onnx_cli.jar
 onnxruntime-1.20.0-android.jar
 res/raw/*.xml
+# …except the resource-shrinker keep rules for layout symbol panes (switch_symbols).
+!res/raw/keep_symbol_panes.xml
 
 # Build comparison artifacts (never commit)
 local_apk/

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Layout symbol panes (`<keyboard symbols="symbols_…">`, switch_symbols) are reached only through
+     Resources.getIdentifier, which the release resource shrinker cannot see: keep them. Not
+     packaged (a tools-only resources file). Pinned by StyleLayoutsTest. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@raw/symbols_*" />

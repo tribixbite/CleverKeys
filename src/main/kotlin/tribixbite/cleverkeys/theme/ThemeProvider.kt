@@ -334,6 +334,7 @@ class ThemeProvider(
             pressedLabelColor = r.labelPressed,
             lookBar = r.bar,
             lookAction = r.action,
+            lookSpaceLanguage = r.spaceLanguage,
         )
     }
 
@@ -431,6 +432,7 @@ class ThemeProvider(
             lookHintStyle = look.hintStyle,
             lookBar = look.bar,
             lookAction = look.action,
+            lookSpaceLanguage = look.spaceLanguage,
         )
     }
 

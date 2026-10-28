@@ -179,8 +179,13 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    ACTION role for ENTER when `usesActionFill` is false and strokes `LookActionKeys.parts` (our
    own line icons, never product artwork) in place of the label. Gboard: icons, function fill;
    SwiftKey: its own icon mapping (Go = ✓); iOS 26: blue + icon for Go/Search/Send/Done; iOS 18:
-   lower-case text; Samsung: unchanged (no reference). XML `action_icons` / `action_accent` /
-   `action_lowercase`, JSON `action`.
+   lower-case text; Samsung: blue icon on the dark function fill (One UI screenshots, 2026-10-28).
+   XML `action_icons` / `action_accent` / `action_lowercase`, JSON `action`.
+19. **Space-bar language, layout symbol panes** (2026-10-28, research §12). `KeyboardLook.spaceLanguage`
+   → `Theme.lookSpaceLanguage`; drawn only with `snap.look_space_language` (Appearance switch,
+   default on) via `SpaceLanguageLabel`. `<keyboard symbols="symbols_…">` + `switch_symbols`
+   (`LayoutManager.loadSymbols(view's keyboard)`, resolved by `getIdentifier`): name new panes
+   `symbols_*` or the release shrinker drops them (`res/raw/keep_symbol_panes.xml`).
 
 15. **Layouts style themselves** (2026-10-28, spec `docs/specs/layout-system.md` "Layout themes
    and per-key styling", user reference `docs/wiki/layouts/layout-xml-reference.md`). A layout

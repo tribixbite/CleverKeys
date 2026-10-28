@@ -419,6 +419,8 @@
     <string name="appearance_look_show_hints_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung blenden Eckhinweise wie diese Tastaturen aus; einschalten, um alle Hinweise anzuzeigen. Gesten funktionieren in beiden Fällen.</string>
     <string name="appearance_look_key_preview_title">Tastenvorschau bei bekannten Looks</string>
     <string name="appearance_look_key_preview_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung zeigen das gedrückte Zeichen in einem Pop-up wie bei diesen Tastaturen.</string>
+    <string name="appearance_look_space_language_title">Sprachname auf der Leertaste</string>
+    <string name="appearance_look_space_language_desc">Der Samsung-Look zeigt die aktuelle Sprache auf der Leertaste, wie die Samsung-Tastatur.</string>
     <string name="appearance_custom_border_title">Benutzerdefinierte Rahmenkonfiguration</string>
     <string name="appearance_custom_border_desc">Benutzerdefiniertes Tastenkanten-Styling aktivieren</string>
     <string name="appearance_border_radius_title">Eckenradius</string>

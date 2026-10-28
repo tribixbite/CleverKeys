@@ -55,6 +55,8 @@ object ThemeSpecXml {
     const val ACTION_ICONS = "action_icons"
     const val ACTION_ACCENT = "action_accent"
     const val ACTION_LOWERCASE = "action_lowercase"
+    const val SPACE_LANGUAGE = "space_language"
+    const val ACTION_ICON_SCALE = "action_icon_scale"
 
     val GAP_RANGE = 0f..KeyboardLookGeometry.MAX_GAP
     val CORNER_RADIUS_RANGE = 0f..64f
@@ -73,7 +75,7 @@ object ThemeSpecXml {
         LABEL_WEIGHT, FUNCTION_CHARS, HINTS, PILL_KEYS, LETTER_KEYS, PREVIEW, PREVIEW_WIDTH,
         PREVIEW_HEIGHT, PREVIEW_LABEL_SCALE, PREVIEW_CORNER, PREVIEW_SHADOW, HINT_SIZE, HINT_WEIGHT,
         DYNAMIC_COLOR, BAR_SLOTS, BAR_CENTRE, BAR_QUOTE_TYPED, BAR_EMPHASIS,
-        ACTION_ICONS, ACTION_ACCENT, ACTION_LOWERCASE,
+        ACTION_ICONS, ACTION_ACCENT, ACTION_LOWERCASE, ACTION_ICON_SCALE, SPACE_LANGUAGE,
     )
 
     private val PILL_NAMES = mapOf("enter" to LookPillKey.ENTER, "action" to LookPillKey.ACTION, "numbers" to LookPillKey.NUMBERS)
@@ -190,8 +192,10 @@ object ThemeSpecXml {
             LookActionKeys.parseKinds(raw) ?: run { bad(TAG, ACTION_ACCENT, raw); null }
         }
         val actionLower = boolAttr(ACTION_LOWERCASE)
-        val action = if (actionIcons == null && actionAccent == null && actionLower == null) null else LookActionStyle(
+        val actionScale = floatAttr(ACTION_ICON_SCALE, LookActionStyle.ICON_SCALE_RANGE)
+        val action = if (actionIcons == null && actionAccent == null && actionLower == null && actionScale == null) null else LookActionStyle(
             icons = actionIcons ?: emptyMap(), accent = actionAccent, lowercase = actionLower ?: false,
+            iconScale = actionScale ?: 1f,
         )
         return ThemeSpec(
             name = theme[NAME]?.trim()?.takeIf { it.isNotEmpty() },
@@ -208,6 +212,7 @@ object ThemeSpecXml {
             dynamicColor = boolAttr(DYNAMIC_COLOR),
             bar = bar,
             action = action,
+            spaceLanguage = boolAttr(SPACE_LANGUAGE),
         )
     }
 
@@ -255,7 +260,9 @@ object ThemeSpecXml {
             attrs.add(ACTION_ICONS to LookActionKeys.formatIcons(it.icons))
             it.accent?.let { a -> attrs.add(ACTION_ACCENT to LookActionKeys.formatKinds(a)) }
             attrs.add(ACTION_LOWERCASE to it.lowercase.toString())
+            attrs.add(ACTION_ICON_SCALE to ThemeValues.formatFloat(it.iconScale))
         }
+        spec.spaceLanguage?.let { attrs.add(SPACE_LANGUAGE to it.toString()) }
 
         val inner = "$indent  "
         val sb = StringBuilder()
@@ -379,8 +386,10 @@ object ThemeSpecJson {
                 put("icons", LookActionKeys.formatIcons(a.icons))
                 a.accent?.let { put("accent", LookActionKeys.formatKinds(it)) }
                 put("lowercase", a.lowercase)
+                put("iconScale", num(a.iconScale))
             })
         }
+        spec.spaceLanguage?.let { put("spaceLanguage", it) }
     }
 
     /**
@@ -459,8 +468,12 @@ object ThemeSpecJson {
                         a.getString("accent").split(Regex("\\s+")).filter { ActionKind.byXmlName(it) != null }.joinToString(" ")
                     ) else null,
                     lowercase = a.optBoolean("lowercase", false),
+                    // Out of range (hand-edited or newer build): the default size.
+                    iconScale = (if (a.has("iconScale")) a.getDouble("iconScale").toFloat() else 1f)
+                        .takeIf { it in LookActionStyle.ICON_SCALE_RANGE } ?: 1f,
                 )
             },
+            spaceLanguage = if (json.has("spaceLanguage")) json.getBoolean("spaceLanguage") else null,
         ))
     }
 

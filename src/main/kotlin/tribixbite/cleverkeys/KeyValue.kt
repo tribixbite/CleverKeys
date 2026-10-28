@@ -44,6 +44,9 @@ class KeyValue private constructor(
         MINIMIZE_FAB,
         // gh #175 (2026-10-07): explicit dismiss, like the "∨" button in other keyboards.
         HIDE_KEYBOARD,
+        // 2026-10-28: open the layout's own symbol pane (`<keyboard symbols="…">`, Samsung-style's
+        // two pages); CleverKeys' number pane when the layout declares none. Appended (ordinal).
+        SWITCH_SYMBOLS,
     }
 
     /**
@@ -644,6 +647,7 @@ class KeyValue private constructor(
             "config" -> eventKey(0xE004, Event.CONFIG, FLAG_SMALLER_FONT)
             "switch_text" -> eventKey("ABC", Event.SWITCH_TEXT, FLAG_SMALLER_FONT)
             "switch_numeric" -> eventKey("123+", Event.SWITCH_NUMERIC, FLAG_SMALLER_FONT)
+            "switch_symbols" -> eventKey("!#1", Event.SWITCH_SYMBOLS, FLAG_SMALLER_FONT)
             "switch_emoji" -> eventKey(0xE001, Event.SWITCH_EMOJI, FLAG_SMALLER_FONT)
             "switch_back_emoji" -> eventKey("ABC", Event.SWITCH_BACK_EMOJI, 0)
             "switch_clipboard" -> eventKey(0xE017, Event.SWITCH_CLIPBOARD, 0)

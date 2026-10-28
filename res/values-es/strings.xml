@@ -419,6 +419,8 @@
     <string name="appearance_look_show_hints_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung ocultan las pistas de las esquinas como esos teclados; actívalo para mostrarlas todas. Los gestos funcionan igual.</string>
     <string name="appearance_look_key_preview_title">Vista previa de tecla en aspectos conocidos</string>
     <string name="appearance_look_key_preview_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung muestran el carácter pulsado en una ventana emergente con la forma de esos teclados.</string>
+    <string name="appearance_look_space_language_title">Nombre del idioma en la barra espaciadora</string>
+    <string name="appearance_look_space_language_desc">El aspecto Samsung muestra el idioma actual en la barra espaciadora, como el teclado de Samsung.</string>
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
     <string name="appearance_custom_border_desc">Activar estilo de borde de tecla personalizado</string>
     <string name="appearance_border_radius_title">Radio de borde</string>

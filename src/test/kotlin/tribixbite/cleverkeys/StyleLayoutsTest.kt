@@ -70,6 +70,10 @@ class StyleLayoutsTest {
         val VALUE_ATTRS = listOf("c", "nw", "ne", "sw", "se", "w", "e", "n", "s")
 
         val QWERTY_ROWS = listOf("qwertyuiop", "asdfghjkl", "zxcvbnm")
+
+        /** Samsung-style's two symbol pages (unnamed layouts: not in the picker). */
+        const val SAMSUNG_SYMBOLS_1 = "symbols_samsung_1"
+        const val SAMSUNG_SYMBOLS_2 = "symbols_samsung_2"
     }
 
     @Before
@@ -231,7 +235,7 @@ class StyleLayoutsTest {
             // Samsung (One UI 8 settings preview at 360 dp: 47 / 29.5 / 169.5 / 29.5 / 47 dp keys
             // with 5.5 dp gaps = 1.5 / 1 / 5 / 1 / 1.5 key slots): !#1 | , | space | . | enter
             SAMSUNG to listOf(
-                numeric("!#1", 1.5f), Slot(key(","), 1f), Slot(key("space"), 5f),
+                Slot(key("!#1:switch_symbols"), 1.5f), Slot(key(","), 1f), Slot(key("space"), 5f),
                 Slot(key("."), 1f), Slot(key("enter"), 1.5f),
             ),
         )
@@ -249,12 +253,18 @@ class StyleLayoutsTest {
 
     @Test
     fun theRelabelledNumbersKeyStillSwitchesToTheNumberPane() {
-        for ((id, label) in mapOf(IOS to "123", GBOARD to "?123", SWIFTKEY to "123", SAMSUNG to "!#1")) {
+        for ((id, label) in mapOf(IOS to "123", GBOARD to "?123", SWIFTKEY to "123")) {
             val kv = parse(id).rows.last().keys.first().getKeyValue(0)!!
             assertThat(kv.getKind()).isEqualTo(KeyValue.Kind.Event)
             assertThat(kv.getEvent()).isEqualTo(KeyValue.Event.SWITCH_NUMERIC)
             assertWithMessage("$id numbers-key label").that(kv.getString()).isEqualTo(label)
         }
+        // Samsung's !#1 opens its own two symbol pages; CleverKeys' number pane stays a corner.
+        val bang = parse(SAMSUNG).rows.last().keys.first()
+        assertThat(bang.getKeyValue(0)!!.getEvent()).isEqualTo(KeyValue.Event.SWITCH_SYMBOLS)
+        assertThat(bang.getKeyValue(0)!!.getString()).isEqualTo("!#1")
+        assertThat(bang.keys.filterNotNull().any { it.getKind() == KeyValue.Kind.Event && it.getEvent() == KeyValue.Event.SWITCH_NUMERIC })
+            .isTrue()
     }
 
     @Test
@@ -329,22 +339,38 @@ class StyleLayoutsTest {
     }
 
     @Test
-    fun samsungStyleLettersCarryNoVisibleHintsAndShiftAndDeleteAreOneAndAHalfKeys() {
-        // One UI's defaults: no number row, "Alternative characters" off (research §5).
+    fun samsungStyleLettersCarryTheAlternativeCharactersAndShiftAndDeleteMatchOneUi() {
+        // One UI's defaults: no number row. The letters carry Samsung's "Alternative characters"
+        // up-right (ne = index 2), exactly as the maintainer's reference shows them
+        // (build/oct28-samsung-ref/1.jpg); the look hides them unless "Show gesture hints on
+        // familiar looks" is on (Samsung's own toggle is off by default). n's "," is left out:
+        // the comma key is on the bottom row and a value may appear only once per layout.
         val kw = parse(SAMSUNG)
         val top = topLetterRow(kw)
         assertThat(top).isEqualTo(0)
         assertWithMessage("Samsung's default has no number row").that(kw.embedded_number_row).isFalse()
-        val withHints = (top until top + 3).flatMap { kw.rows[it].keys }
-            .filter { it.getKeyValue(0)?.getKind() == KeyValue.Kind.Char }
-            .filter { visibleCorners(it).isNotEmpty() }
-            .map { it.getKeyValue(0)!!.getString() }
-        assertThat(withHints).isEmpty()
+        val expected = mapOf(
+            'q' to "+", 'w' to "×", 'e' to "÷", 'r' to "=", 't' to "/", 'y' to "_", 'u' to "<", 'i' to ">",
+            'o' to "[", 'p' to "]",
+            'a' to "!", 's' to "@", 'd' to "#", 'f' to "$", 'g' to "%", 'h' to "&", 'j' to "*", 'k' to "(", 'l' to ")",
+            'z' to "-", 'x' to "'", 'c' to "\"", 'v' to ":", 'b' to ";", 'm' to "?",
+        )
+        val letters = (top until top + 3).flatMap { kw.rows[it].keys }.filter { it.getKeyValue(0)?.getKind() == KeyValue.Kind.Char }
+        assertThat(letters.filter { it.getKeyValue(2) != null }.associate { it.getKeyValue(0)!!.getChar() to it.getKeyValue(2)!!.getString() })
+            .containsExactlyEntriesIn(expected)
+        assertWithMessage("the alternative characters are the only visible corners on letters")
+            .that(letters.flatMap { visibleCorners(it) }.map { it.getString() }).containsExactlyElementsIn(expected.values)
+        // Shift and Delete: 125 px keys in 157.5 px slots, the spare 33 px between them and the
+        // letters (1.jpg) — 1.35-key keys plus a 0.15-key offset on the letter side.
         val third = kw.rows[top + 2].keys
         assertThat(third.first().getKeyValue(0)).isEqualTo(key("shift"))
-        assertThat(third.first().width).isEqualTo(1.5f)
+        assertThat(third.first().width).isEqualTo(1.35f)
+        assertThat(third[1].shift).isEqualTo(0.15f)
         assertThat(third.last().getKeyValue(0)).isEqualTo(key("backspace"))
-        assertThat(third.last().width).isEqualTo(1.5f)
+        assertThat(third.last().width).isEqualTo(1.35f)
+        assertThat(third.last().shift).isEqualTo(0.15f)
+        assertThat(third.sumOf { (it.width + it.shift).toDouble() }).isWithin(1e-4).of(10.0)
+        assertWithMessage("!#1 opens Samsung's symbol pages").that(kw.symbols_pane).isEqualTo(SAMSUNG_SYMBOLS_1)
         // The emoji pane (Samsung's toolbar button) is the comma's top hint, as on Gboard-style.
         val comma = kw.rows.last().keys.first { it.getKeyValue(0) == key(",") }
         assertThat(comma.getKeyValue(7)).isEqualTo(key("switch_emoji"))
@@ -426,5 +452,78 @@ class StyleLayoutsTest {
         assertThat(comma.getKeyValue(7)).isEqualTo(key("voice_typing"))
         val period = bottom.first { it.getKeyValue(0) == key(".") }
         assertThat(visibleCorners(period).map { it.getString() }).containsExactly("?", "!")
+    }
+
+    // ── Samsung-style symbol pages (build/oct28-samsung-ref/2.jpg, 3.jpg) ──────────────
+
+    private fun centres(kw: KeyboardData, row: Int) = kw.rows[row].keys.map { it.getKeyValue(0)!! }
+
+    @Test
+    fun samsungSymbolPagesMatchOneUiAndPointAtEachOther() {
+        val p1 = parse(SAMSUNG_SYMBOLS_1)
+        val p2 = parse(SAMSUNG_SYMBOLS_2)
+        for (p in listOf(p1, p2)) {
+            assertWithMessage("a symbol page is not a picker layout").that(p.name).isNull()
+            assertThat(p.bottom_row).isFalse()
+            assertThat(centres(p, 0).map { it.getString() }).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "0").inOrder()
+            val bottom = p.rows.last().keys
+            assertThat(bottom.map { Slot(it.getKeyValue(0)!!, it.width) }).containsExactly(
+                Slot(key("switch_text"), 1.5f), Slot(key(","), 1f), Slot(key("space"), 5f),
+                Slot(key("."), 1f), Slot(key("enter"), 1.5f),
+            ).inOrder()
+            val third = p.rows[3].keys
+            assertThat(third.last().getKeyValue(0)).isEqualTo(key("backspace"))
+            assertThat(third.first().getKeyValue(0)!!.getEvent()).isEqualTo(KeyValue.Event.SWITCH_SYMBOLS)
+        }
+        assertThat(centres(p1, 1).map { it.getString() }).containsExactly("+", "×", "÷", "=", "/", "_", "<", ">", "[", "]").inOrder()
+        assertThat(centres(p1, 2).map { it.getString() }).containsExactly("!", "@", "#", "$", "%", "^", "&", "*", "(", ")").inOrder()
+        assertThat(centres(p1, 3).drop(1).dropLast(1).map { it.getString() }).containsExactly("-", "'", "\"", ":", ";", ",", "?").inOrder()
+        assertThat(centres(p2, 1).map { it.getString() }).containsExactly("`", "~", "\\", "|", "{", "}", "€", "£", "¥", "₩").inOrder()
+        assertThat(centres(p2, 2).map { it.getString() }).containsExactly("°", "•", "○", "●", "□", "■", "♤", "♡", "◇", "♧").inOrder()
+        assertThat(centres(p2, 3).drop(1).dropLast(1).map { it.getString() }).containsExactly("☆", "▪", "¤", "《", "》", "¡", "¿").inOrder()
+        assertThat(centres(p1, 3).first().getString()).isEqualTo("1/2")
+        assertThat(centres(p2, 3).first().getString()).isEqualTo("2/2")
+        assertWithMessage("1/2 turns to page 2").that(p1.symbols_pane).isEqualTo(SAMSUNG_SYMBOLS_2)
+        assertWithMessage("2/2 turns back to page 1").that(p2.symbols_pane).isEqualTo(SAMSUNG_SYMBOLS_1)
+    }
+
+    @Test
+    fun samsungSymbolPagesUseRealKeysOnceEach() {
+        for (id in listOf(SAMSUNG_SYMBOLS_1, SAMSUNG_SYMBOLS_2)) {
+            val kw = parse(id)
+            val all = kw.rows.flatMap { row -> row.keys.flatMap { it.keys.filterNotNull() } }
+            // One UI's page 1 has a comma in its third row AND on the bottom row (2.jpg): the one
+            // duplicate allowed (a symbol page has no swipe typing or value lookups that care).
+            val allowed = if (id == SAMSUNG_SYMBOLS_1) setOf(key(",")) else emptySet()
+            assertWithMessage("$id duplicate values").that(all.groupingBy { it }.eachCount().filterValues { it > 1 }.keys)
+                .containsExactlyElementsIn(allowed)
+            val unresolved = xmlRows(id).flatten().flatMap { it.values }.map { it.removePrefix("loc ") }
+                .filter { it.removePrefix("\\").length > 1 }
+                .filterNot { name -> if (':' in name) KeyValue.getKeyByName(name).getKind() == KeyValue.Kind.Event else KeyValue.getSpecialKeyByName(name) != null }
+            assertWithMessage("$id unresolved names").that(unresolved).isEmpty()
+            assertWithMessage("$id is not in the layout picker").that(stringArray("pref_layout_values")).doesNotContain(id)
+        }
+        // Drift: every `symbols` pane a layout names exists and is a `symbols_*` file, which the
+        // release resource shrinker keeps (res/raw/keep_symbol_panes.xml) although only
+        // Resources.getIdentifier reaches it.
+        for (f in LAYOUT_DIR.listFiles()!!.filter { it.name.endsWith(".xml") }) {
+            val pane = KeyboardData.load_string_exn(f.readText()).symbols_pane ?: continue
+            assertWithMessage("${f.name} symbols=$pane").that(pane).startsWith("symbols_")
+            assertWithMessage("${f.name} symbols=$pane exists").that(File(LAYOUT_DIR, "$pane.xml").exists()).isTrue()
+        }
+        assertThat(File("res/raw/keep_symbol_panes.xml").readText()).contains("@raw/symbols_*")
+    }
+
+    /**
+     * Every symbol and function the letters offered before the symbol pages existed stays
+     * reachable from Samsung-style: on the letters, on a page, or through CleverKeys' own
+     * number pane (a corner of !#1).
+     */
+    @Test
+    fun samsungStyleLosesNoSymbol() {
+        val reachable = (parse(SAMSUNG).getKeys().keys + parse(SAMSUNG_SYMBOLS_1).getKeys().keys + parse(SAMSUNG_SYMBOLS_2).getKeys().keys)
+        for (name in listOf("'", "?", "!", "-", ":", "switch_numeric", "switch_text", "switch_emoji", "€", "ß", "†")) {
+            assertWithMessage(name).that(key(name) in reachable).isTrue()
+        }
     }
 }

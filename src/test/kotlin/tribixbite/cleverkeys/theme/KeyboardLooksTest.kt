@@ -144,4 +144,34 @@ class KeyboardLooksTest {
                 .that(resolved.secondary).isEqualTo(p.hint)
         }
     }
+
+    /**
+     * Samsung Keyboard (One UI), dark, measured from the maintainer's screenshots
+     * (`build/oct28-samsung-ref/1.jpg`, 1080 px wide, 2026-10-28): background #010101, letter /
+     * comma / period / space keys #3A3A3C, shift / delete / !#1 / action #171719, labels #FBFAFF,
+     * alternative-character hints #9A999E, the search icon blue #678EED on the dark function fill.
+     * Key pitch 105 px with 89 px keys (gap 0.15 of a key unit), rows 150 px apart with 116 px keys
+     * (gap 0.23 of the row), corners about 14 px on a 116 px key (6 dp).
+     */
+    @Test
+    fun samsungDarkMatchesTheOneUiReference() {
+        val look = KeyboardLooks.byId(KeyboardLooks.SAMSUNG)!!
+        val d = look.dark
+        fun hex(c: Int) = "#%06X".format(c and 0xFFFFFF)
+        assertThat(listOf(d.keyboardBackground, d.key, d.modifierKey, d.enterKey, d.actionKey, d.label, d.modifierLabel, d.hint, d.actionLabel).map(::hex))
+            .containsExactly("#010101", "#3A3A3C", "#171719", "#171719", "#171719", "#FBFAFF", "#FBFAFF", "#9A999E", "#678EED").inOrder()
+        assertWithMessage("plain Enter keeps a white icon").that(hex(d.enterLabel)).isEqualTo("#FBFAFF")
+        assertThat(look.geometry.keyGapHorizontal).isEqualTo(0.15f)
+        assertThat(look.geometry.keyGapVertical).isEqualTo(0.23f)
+        assertThat(look.geometry.cornerRadiusDp).isEqualTo(6f)
+        assertWithMessage("light keeps its blue action glyph too").that(look.light.actionLabel).isEqualTo(look.light.lockedLabel)
+    }
+
+    /** Only Samsung prints the language on the space bar ("English (US)", 1.jpg). */
+    @Test
+    fun onlySamsungShowsTheLanguageOnTheSpaceBar() {
+        for (look in KeyboardLooks.ALL) {
+            assertWithMessage(look.id).that(look.spaceLanguage).isEqualTo(look.id == KeyboardLooks.SAMSUNG)
+        }
+    }
 }

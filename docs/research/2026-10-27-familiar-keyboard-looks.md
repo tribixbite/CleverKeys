@@ -521,3 +521,41 @@ iOS follows §1a (iOS 26: blue `#007AFF` with →, magnifier, ↑, ✓ for Go / 
 §1b (iOS 18: lower-case words); Next / Previous on iOS are not documented and use the plain
 return (low confidence). Samsung Keyboard could not be checked (no Samsung phone) and is left
 unchanged. CleverKeys draws its own line icons (`LookActionKeys.parts`), not the products'.
+
+## 12. Follow-up 2026-10-28: Samsung Keyboard references (One UI, dark)
+
+The maintainer supplied five One UI screenshots, dark mode, 1080 px wide (evidence
+`build/oct28-samsung-ref/{1..5}.jpg`, not in git): 1 letters with the number row and
+"Alternative characters" on, a search field; 2 and 3 the symbol pages 1/2 and 2/2; 4 the toolbar
+"more" panel; 5 its clipboard. Measured from 1.jpg by pixel sampling:
+
+| Element | Value |
+|---|---|
+| Keyboard background | `#010101` |
+| Letter keys, comma, period, space | `#3A3A3C` |
+| Shift, Delete, !#1, the action key (and the toolbar) | `#171719` |
+| Labels, space text | `#FBFAFF` |
+| Alternative-character hints (top right, ~0.43 of the letter size) | `#9A999E` |
+| Search icon on the action key | blue `#678EED` |
+| Key pitch / key width | 105 px / 89 px (gap 0.15 of a key unit) |
+| Row pitch / key height | 150 px / 116 px (gap 0.23 of a row) |
+| Corner radius | ~14 px on a 116 px key (6 dp) |
+| Shift / Delete | 125 px keys in 157.5 px slots, the spare 33 px on the letter side |
+| Space label | "English (US)", cap height 0.55 of the letters |
+
+The hints (1.jpg): q + w × e ÷ r = t / y _ u < i > o [ p ], a ! s @ d # f $ g % h & j * k ( l ),
+z - x ' c " v : b ; n , m ?. Page 1/2 (2.jpg): digits; + × ÷ = / _ < > [ ]; ! @ # $ % ^ & * ( );
+1/2 - ' " : ; , ? ⌫; ABC , space . action. Page 2/2 (3.jpg): digits; ` ~ \ | { } € £ ¥ ₩;
+° • ○ ● □ ■ ♤ ♡ ◇ ♧; 2/2 ☆ ▪ ¤ 《 》 ¡ ¿ ⌫; the same bottom row.
+
+CleverKeys (2026-10-28): the dark palette and gaps above; the action key a blue icon on the dark
+fill, 1.3 times CleverKeys' default icon size (the magnifier is 51 px beside 45 px letters) (search measured; go / send / next / done / previous use CleverKeys' icon set, not checked
+against One UI); the language on the space bar (`KeyboardLook.spaceLanguage`, Appearance
+"Language name on the space bar"); the hints as `ne` corners shown only when "Show gesture hints
+on familiar looks" is on (n's comma left out — the comma key is on the bottom row); !#1 =
+`switch_symbols` opening `symbols_samsung_1` / `symbols_samsung_2` (CleverKeys' number pane stays
+a right swipe on !#1 and ABC). Not reproduced (structural): the toolbar row (4.jpg: AI tools,
+emoji, translate, clipboard, settings, more — CleverKeys' suggestion bar sits there instead) and
+the card-grid clipboard (5.jpg, three columns of cards); Samsung's number row stays the layout's
+choice (off by default, as One UI). The light palette keeps §4's values with a blue action icon
+(`#2E65D4`, the light Shift-engaged blue); it has no screenshot reference.

@@ -40,8 +40,11 @@ class LayoutScriptDeclarationTest {
      */
     private val incompleteButCorrectlyLatin = setOf("latn_qwerty_az", "latn_qwerty_tly")
 
-    /** Layouts with no `script` attribute at all — legitimately not letter layouts. */
-    private val nonLetterLayouts = setOf("numeric", "pin")
+    /**
+     * Layouts with no `script` attribute at all — legitimately not letter layouts: the number
+     * and PIN panes and the `switch_symbols` panes (Samsung-style's two symbol pages, 2026-10-28).
+     */
+    private val nonLetterLayouts = setOf("numeric", "pin", "symbols_samsung_1", "symbols_samsung_2")
 
     private val scriptAttr = Regex("""<keyboard\b[^>]*\bscript="([^"]*)"""")
 

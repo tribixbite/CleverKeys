@@ -466,7 +466,24 @@ icons → ⌕ ➤ →| ✓ |← on the function-key fill (no primary highlight, 
 SwiftKey ✓ (Go) ⌕ outlined plane → ↵ ↵ on its key fill; iOS-style blue + → ⌕ ↑ ✓ for Go / Search /
 Send / Done, plain ↵ for Next / Previous; iOS 18-style lower-case words, blue for the same four;
 Samsung-style unchanged (no device reference). XML `action_icons` / `action_accent` /
-`action_lowercase`, JSON `action`. Tests: `theme/LookActionKeysTest` (pure).
+`action_lowercase`, `action_icon_scale` (0.5–2; Samsung-style 1.3: One UI's icons are larger),
+JSON `action`. Tests: `theme/LookActionKeysTest` (pure).
+
+**Space-bar language and symbol panes** (2026-10-28, research §12). `KeyboardLook.spaceLanguage`
+(Samsung-style) makes `Keyboard2View.drawSpaceLanguage` print `SpaceLanguageLabel.text(primary
+language, system locale)` — "English (US)": the language in its own name, the region when the
+tag or the matching system locale has one — at 0.55 of the main label size, shrunk to fit; the
+Appearance switch `look_space_language` (default on) turns it off. XML `space_language`, JSON
+`spaceLanguage`. A layout may name its own symbol pane, `<keyboard symbols="symbols_samsung_1">`
+(an unnamed file under `src/main/layouts`, named `symbols_*` so `res/raw/keep_symbol_panes.xml`
+keeps it through the release resource shrinker — it is reached only by `getIdentifier`); the
+`switch_symbols` key (`Event.SWITCH_SYMBOLS`, appended) opens the `symbols` pane of the layout ON
+SCREEN (`LayoutManager.loadSymbols`), so a page names the next page; `LayoutModifier.modify_symbols`
+maps it like the number pane without the numpad's digit inversion; with no pane (or one that does
+not resolve) it opens CleverKeys' number pane. Like the number pane it is not a special layout:
+ABC (`switch_text`) returns to the letters. QWERTY (Samsung-style) uses it for One UI's two pages.
+Tests: `StyleLayoutsTest` (pages, drift: every `symbols` names an existing `symbols_*` file),
+`theme/SpaceLanguageLabelTest`, `theme/KeyboardLooksTest`.
 
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,

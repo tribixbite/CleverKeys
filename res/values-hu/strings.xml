@@ -405,6 +405,8 @@
     <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A mozdulatok mindkét esetben működnek.</string>
     <string name="appearance_look_key_preview_title">Billentyű-előnézet ismerős megjelenéseknél</string>
     <string name="appearance_look_key_preview_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések a lenyomott karaktert az adott billentyűzetéhez hasonló felugró ablakban mutatják.</string>
+    <string name="appearance_look_space_language_title">Nyelv neve a szóköz billentyűn</string>
+    <string name="appearance_look_space_language_desc">A Samsung megjelenés a szóköz billentyűn mutatja az aktuális nyelvet, ahogy a Samsung billentyűzet.</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
     <string name="appearance_custom_border_desc">Egyéni billentyűszegély stílus engedélyezése</string>
     <string name="appearance_border_radius_title">Szegély sugara</string>

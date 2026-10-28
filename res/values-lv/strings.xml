@@ -413,6 +413,8 @@
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey un Samsung stila izskati slēpj stūru norādes tāpat kā šīs tastatūras; ieslēdziet, lai rādītu visas. Žesti darbojas jebkurā gadījumā.</string>
     <string name="appearance_look_key_preview_title">Taustiņa priekšskatījums pazīstamiem izskatiem</string>
     <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey un Samsung stila izskati rāda nospiesto rakstzīmi uznirstošā logā, kas veidots kā šīm tastatūrām.</string>
+    <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
+    <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>

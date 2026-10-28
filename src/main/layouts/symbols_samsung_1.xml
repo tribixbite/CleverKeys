@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Samsung-style symbol page 1/2: what Samsung Keyboard's "!#1" opens (One UI, the maintainer's
+reference build/oct28-samsung-ref/2.jpg). Unnamed, so it is not in the layout picker; opened by
+`switch_symbols` from QWERTY (Samsung-style) and from page 2's "2/2" key. "1/2" turns to page 2,
+ABC returns to the letters. Layout only; not affiliated with Samsung. -->
+<keyboard bottom_row="false" symbols="symbols_samsung_2">
+  <row>
+    <key c="1"/><key c="2"/><key c="3"/><key c="4"/><key c="5"/><key c="6"/><key c="7"/><key c="8"/><key c="9"/><key c="0"/>
+  </row>
+  <row>
+    <key c="+"/><key c="×"/><key c="÷"/><key c="="/><key c="/"/><key c="_"/><key c="&lt;"/><key c="&gt;"/><key c="["/><key c="]"/>
+  </row>
+  <row>
+    <key c="!"/><key c="\@"/><key c="\#"/><key c="$"/><key c="%"/><key c="^"/><key c="&amp;"/><key c="*"/><key c="("/><key c=")"/>
+  </row>
+  <row>
+    <key width="1.35" c="1/2:switch_symbols"/>
+    <key shift="0.15" c="-"/><key c="'"/><key c="&quot;"/><key c=":"/><key c=";"/><key c=","/><key c="\?"/>
+    <key shift="0.15" width="1.35" c="backspace" nw="delete_last_word" ne="delete"/>
+  </row>
+  <row height="0.95">
+    <key width="1.5" c="switch_text" ne="switch_numeric"/>
+    <key c="," n="switch_emoji"/>
+    <key width="5" c="space" n="loc switch_forward" s="loc switch_backward" w="cursor_left" e="cursor_right"/>
+    <key c="."/>
+    <key width="1.5" c="enter" ne="action"/>
+  </row>
+</keyboard>

@@ -202,6 +202,20 @@ class LayoutManager(
     }
 
     /**
+     * The pane `switch_symbols` opens from [shown], the layout on screen: its own `symbols` pane
+     * (a symbol page names the next page) as a raw layout resource, modified like the number
+     * pane but without digit inversion; CleverKeys' number pane when it declares none or the name
+     * does not resolve. Like the number pane it is not a "special layout": ABC returns to text.
+     */
+    fun loadSymbols(shown: KeyboardData?): KeyboardData? {
+        val text = current_layout_unmodified()
+        val name = (shown ?: text).symbols_pane
+        val id = if (name == null) 0 else context.resources.getIdentifier(name, "raw", context.packageName)
+        val pane = if (id == 0) null else loadLayout(id)
+        return if (pane == null) loadNumpad(R.raw.numeric) else LayoutModifier.modify_symbols(pane, text)
+    }
+
+    /**
      * Load a pinentry layout, modified with current layout keys.
      *
      * @param layoutId Resource ID of layout XML

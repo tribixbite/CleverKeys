@@ -61,6 +61,12 @@ data class KeyboardLook(
      * Enter colours); null = the action's text on the action colours.
      */
     val action: LookActionStyle? = null,
+    /**
+     * Whether the space bar shows the active language's name ("English (US)", Samsung Keyboard;
+     * [SpaceLanguageLabel]) while the look is effective. Appearance → "Language name on the space
+     * bar" (`look_space_language`) turns it off.
+     */
+    val spaceLanguage: Boolean = false,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark

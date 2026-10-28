@@ -396,6 +396,8 @@
     <string name="appearance_look_show_hints_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会像原键盘一样隐藏角落提示；开启后显示全部提示。手势在两种情况下都可用。</string>
     <string name="appearance_look_key_preview_title">在熟悉的外观中显示按键预览</string>
     <string name="appearance_look_key_preview_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会以与原键盘相同形状的弹出框显示按下的字符。</string>
+    <string name="appearance_look_space_language_title">在空格键上显示语言名称</string>
+    <string name="appearance_look_space_language_desc">Samsung 风格外观会像三星键盘一样在空格键上显示当前语言。</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
     <string name="appearance_custom_border_desc">启用自定义按键边框样式。</string>
     <string name="appearance_border_radius_title">边框圆角</string>

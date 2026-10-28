@@ -1917,7 +1917,8 @@ class Keyboard2View @JvmOverloads constructor(
                             pills,
                             isEnter = kv0.getKind() == KeyValue.Kind.Keyevent && kv0.getKeyevent() == android.view.KeyEvent.KEYCODE_ENTER,
                             isAction = kv0.getKind() == KeyValue.Kind.Event && kv0.getEvent() == KeyValue.Event.ACTION,
-                            isNumbers = kv0.getKind() == KeyValue.Kind.Event && kv0.getEvent() == KeyValue.Event.SWITCH_NUMERIC,
+                            isNumbers = kv0.getKind() == KeyValue.Kind.Event &&
+                                (kv0.getEvent() == KeyValue.Event.SWITCH_NUMERIC || kv0.getEvent() == KeyValue.Event.SWITCH_SYMBOLS),
                         ),
                         tc_key.border_radius, keyW, keyH,
                     )
@@ -1933,8 +1934,10 @@ class Keyboard2View @JvmOverloads constructor(
                 }
                 // The main label's drawn width bounds the W/E sublabel slots (SubLabelSizing).
                 // A look hides CleverKeys' space-bar glyph with the other hints (LookLegendPolicy).
-                val mainLabelW = if (k.keys[0] != null && (tribixbite.cleverkeys.theme.LookLegendPolicy.drawsSpaceBarGlyph(legends) ||
-                        !(kv0!!.getKind() == KeyValue.Kind.Char && kv0.getChar() == ' ')))
+                val isSpace = kv0 != null && kv0.getKind() == KeyValue.Kind.Char && kv0.getChar() == ' '
+                val mainLabelW = if (isSpace && _theme.lookSpaceLanguage && snap.look_space_language)
+                    drawSpaceLanguage(canvas, snap.primary_language, keyW / 2f + x, y, keyW, keyH, isKeyDown, tc_key)
+                else if (k.keys[0] != null && (tribixbite.cleverkeys.theme.LookLegendPolicy.drawsSpaceBarGlyph(legends) || !isSpace))
                     drawLabel(canvas, k.keys[0]!!, keyW / 2f + x, y, keyH, isKeyDown, tc_key)
                 else 0f
                 // #171: a custom short-swipe mapping REPLACES the default sublabel in its
@@ -2168,7 +2171,7 @@ class Keyboard2View @JvmOverloads constructor(
             )
             if (glyph != null) {
                 // CleverKeys' own line icon in the label colour, sized like a function-key glyph.
-                val box = _mainLabelSize * tribixbite.cleverkeys.theme.LookActionKeys.BOX_SCALE
+                val box = _mainLabelSize * tribixbite.cleverkeys.theme.LookActionKeys.BOX_SCALE * lookAction.iconScale
                 drawActionIcon(canvas, glyph, x - box / 2f, y + (keyH - box) / 2f, box, p.color)
                 return box
             }
@@ -2178,6 +2181,31 @@ class Keyboard2View @JvmOverloads constructor(
         ) else modifiedKv.getString()
         canvas.drawText(label, x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
         return p.measureText(label)
+    }
+
+    /**
+     * A look's language name on the space bar ([tribixbite.cleverkeys.theme.SpaceLanguageLabel]:
+     * "English (US)") in the key's label colour, [tribixbite.cleverkeys.theme.SpaceLanguageLabel.SIZE]
+     * of the main label size, shrunk to fit the key. Returns the drawn width.
+     */
+    private fun drawSpaceLanguage(
+        canvas: Canvas, language: String, x: Float, y: Float, keyW: Float, keyH: Float,
+        isKeyDown: Boolean, tc: Theme.Computed.Key,
+    ): Float {
+        val text = tribixbite.cleverkeys.theme.SpaceLanguageLabel.text(language, resources.configuration.locales[0])
+        if (text.isEmpty()) return 0f
+        val size = _mainLabelSize * tribixbite.cleverkeys.theme.SpaceLanguageLabel.SIZE
+        val p = tc.label_paint(
+            false,
+            if (isKeyDown && tc.pressedLabelColorOverride != 0) tc.pressedLabelColorOverride
+            else Theme.Computed.frameLabelColor(_theme.labelColor, tc.labelColorOverride, _theme),
+            size,
+        )
+        val room = keyW * 0.9f
+        val w = p.measureText(text)
+        if (w > room) p.textSize = size * room / w
+        canvas.drawText(text, x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
+        return minOf(w, room)
     }
 
     /** Draw [glyph]'s strokes ([tribixbite.cleverkeys.theme.LookActionKeys.parts]) in a [box]-sized square at ([left], [top]). */

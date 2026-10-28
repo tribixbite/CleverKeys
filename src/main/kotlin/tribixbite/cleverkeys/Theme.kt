@@ -213,6 +213,10 @@ class Theme {
     @JvmField
     val lookAction: tribixbite.cleverkeys.theme.LookActionStyle?
 
+    /** A look prints the active language on the space bar (Samsung-style); false elsewhere. */
+    @JvmField
+    val lookSpaceLanguage: Boolean
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -301,6 +305,7 @@ class Theme {
         lookHintStyle = null
         lookBar = null
         lookAction = null
+        lookSpaceLanguage = false
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -352,6 +357,8 @@ class Theme {
         lookBar: tribixbite.cleverkeys.theme.LookBar? = null,
         /** A look's editor-action key style; null = text on the action colours. */
         lookAction: tribixbite.cleverkeys.theme.LookActionStyle? = null,
+        /** A look prints the language name on the space bar. */
+        lookSpaceLanguage: Boolean = false,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -427,6 +434,7 @@ class Theme {
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
         this.lookBar = lookBar?.takeIf { lookPalette != null }
         this.lookAction = lookAction?.takeIf { lookPalette != null }
+        this.lookSpaceLanguage = lookSpaceLanguage && lookPalette != null
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0

@@ -397,6 +397,8 @@
     <string name="appearance_look_show_hints_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観は、元のキーボードと同じく角のヒントを表示しません。オンにするとすべて表示します。ジェスチャーはどちらでも使えます。</string>
     <string name="appearance_look_key_preview_title">おなじみの外観でキーのプレビューを表示</string>
     <string name="appearance_look_key_preview_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観で、押した文字を元のキーボードと同じ形のポップアップで表示します。</string>
+    <string name="appearance_look_space_language_title">スペースキーに言語名を表示</string>
+    <string name="appearance_look_space_language_desc">Samsung 風の外観では、Samsung キーボードと同じくスペースキーに現在の言語を表示します。</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
     <string name="appearance_custom_border_desc">キーのカスタム枠線スタイルを有効にします</string>
     <string name="appearance_border_radius_title">枠線の角丸</string>

@@ -257,7 +257,7 @@ object KeyboardLooks {
             keyboardBackground = argb(0xE4E4E7), key = argb(0xFCFCFF), keyPressed = argb(0xA6A6A9),
             keyLocked = argb(0xC9C9CC), lockedLabel = argb(0x2E65D4),
             modifierKey = argb(0xC9C9CC), enterKey = argb(0xC9C9CC), enterLabel = argb(0x252528),
-            actionKey = argb(0xC9C9CC), actionLabel = argb(0x252528),
+            actionKey = argb(0xC9C9CC), actionLabel = argb(0x2E65D4),
             label = argb(0x252528), modifierLabel = argb(0x252528), hint = argb(0x7E7E82),
             keyShadow = 0x24000000, keyBorder = argb(0xFCFCFF),
             barBackground = argb(0xE4E4E7), barText = argb(0x252528), barHighlight = argb(0x387AFF),
@@ -268,20 +268,23 @@ object KeyboardLooks {
             latchedKey = argb(0xC9C9CC), latchedLabel = argb(0x2E65D4),
         ),
         dark = LookPalette(
-            keyboardBackground = argb(0x010102), key = argb(0x3A3A3D), keyPressed = argb(0x47474A),
-            keyLocked = argb(0x17171A), lockedLabel = argb(0x578FFF),
-            modifierKey = argb(0x17171A), enterKey = argb(0x17171A), enterLabel = argb(0xFAFAFF),
-            actionKey = argb(0x17171A), actionLabel = argb(0xFAFAFF),
-            label = argb(0xFAFAFF), modifierLabel = argb(0xFAFAFF), hint = argb(0x9A9A9E),
-            keyShadow = 0, keyBorder = argb(0x3A3A3D),
-            barBackground = argb(0x010102), barText = argb(0xFAFAFF), barHighlight = argb(0x387AFF),
+            // Measured from the maintainer's One UI screenshots (build/oct28-samsung-ref/1.jpg).
+            keyboardBackground = argb(0x010101), key = argb(0x3A3A3C), keyPressed = argb(0x47474A),
+            keyLocked = argb(0x171719), lockedLabel = argb(0x578FFF),
+            modifierKey = argb(0x171719), enterKey = argb(0x171719), enterLabel = argb(0xFBFAFF),
+            // The editor-action icon is blue on the dark function fill (search, 1.jpg).
+            actionKey = argb(0x171719), actionLabel = argb(0x678EED),
+            label = argb(0xFBFAFF), modifierLabel = argb(0xFBFAFF), hint = argb(0x9A999E),
+            keyShadow = 0, keyBorder = argb(0x3A3A3C),
+            barBackground = argb(0x010101), barText = argb(0xFBFAFF), barHighlight = argb(0x387AFF),
             barSeparator = NO_SEPARATOR, swipeTrail = argb(0x2793FC),
             popup = argb(0x2D2D30), popupLabel = argb(0xFAFAFF),
             popupSelected = argb(0x376FDE), popupSelectedLabel = argb(0xFFFFFF),
-            latchedKey = argb(0x17171A), latchedLabel = argb(0x578FFF),
+            latchedKey = argb(0x171719), latchedLabel = argb(0x578FFF),
         ),
         geometry = LookGeometry(
-            keyGapHorizontal = 0.16f, keyGapVertical = 0.14f, cornerRadiusDp = 6f,
+            // 1.jpg: 89 px keys at a 105 px pitch, 116 px keys 150 px apart, ~14 px corners.
+            keyGapHorizontal = 0.15f, keyGapVertical = 0.23f, cornerRadiusDp = 6f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.1f, labelWeight = 400,
         ),
         legends = LookLegends.NONE,
@@ -290,6 +293,18 @@ object KeyboardLooks {
         // "Alternative characters": top-right, the label at 50 %.
         hintStyle = LookHintStyle(sizeFraction = 0.42f, weight = 400),
         bar = LookBar(slots = 3),
+        // A blue icon on the function fill for every action (search in 1.jpg; the other actions
+        // use CleverKeys' icon set, not checked against One UI); plain Enter a white ↵.
+        action = LookActionStyle(
+            icons = mapOf(
+                ActionKind.GO to ActionGlyph.ARROW, ActionKind.SEARCH to ActionGlyph.SEARCH,
+                ActionKind.SEND to ActionGlyph.SEND_OUTLINE, ActionKind.NEXT to ActionGlyph.NEXT,
+                ActionKind.DONE to ActionGlyph.DONE, ActionKind.PREVIOUS to ActionGlyph.PREVIOUS,
+                ActionKind.ENTER to ActionGlyph.RETURN,
+            ),
+            iconScale = 1.3f,
+        ),
+        spaceLanguage = true,
     )
 
     /** Every look, in Theme Manager order. */

@@ -109,6 +109,8 @@ data class ConfigSnapshot(
     val look_show_hints: Boolean = false,
     /** Looks draw their product's key-press preview (`look_key_preview`). */
     val look_key_preview: Boolean = true,
+    /** Looks print the language on the space bar (`look_space_language`, Samsung-style). */
+    val look_space_language: Boolean = true,
     val characterSize: Float,
     val keyboardOpacity: Int,
     val themeName: String,

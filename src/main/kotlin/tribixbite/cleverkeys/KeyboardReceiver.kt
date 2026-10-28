@@ -295,6 +295,11 @@ class KeyboardReceiver(
                 }
             }
 
+            KeyValue.Event.SWITCH_SYMBOLS -> {
+                // The layout's own symbol pane (Samsung-style's pages), else the number pane.
+                layoutManager.loadSymbols(keyboardView.getKeyboard())?.let { keyboardView.setKeyboard(it) }
+            }
+
             KeyValue.Event.SWITCH_EMOJI -> {
                 // Toggle behavior: if emoji pane already visible, close it
                 if (currentPaneType == PaneType.EMOJI && isContentPaneShowing) {

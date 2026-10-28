@@ -407,6 +407,8 @@
     <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indices d’angle comme ces claviers ; activer pour tous les afficher. Les gestes fonctionnent dans les deux cas.</string>
     <string name="appearance_look_key_preview_title">Aperçu de la touche sur les apparences familières</string>
     <string name="appearance_look_key_preview_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung affichent le caractère appuyé dans une bulle à la forme de ces claviers.</string>
+    <string name="appearance_look_space_language_title">Nom de la langue sur la barre d’espace</string>
+    <string name="appearance_look_space_language_desc">L’apparence Samsung affiche la langue actuelle sur la barre d’espace, comme le clavier Samsung.</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
     <string name="appearance_custom_border_desc">Activer le style de bordure de touche personnalisé</string>
     <string name="appearance_border_radius_title">Rayon de bordure</string>
