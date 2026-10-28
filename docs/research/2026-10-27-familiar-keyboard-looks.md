@@ -477,3 +477,23 @@ its ranking order, the highlight index, what a slot's tap commits, swipe alterna
 unchanged, and TalkBack reads the slots left to right as drawn. Entries past the third are not shown
 on a look (the products show three). Every non-look theme keeps CleverKeys' scrolling chips. Layout
 `<theme>` and custom themes carry it as `bar_slots` / `bar_centre` / `bar_quote_typed` (JSON `bar`).
+
+### 10a. Device references for the bar (Pixel 8 Pro, 2026-10-27 night)
+
+Same chat scene (Chrome `data:` page, "Sounds good, see you " then typed "tomorr"), the real
+Gboard and SwiftKey selected for the capture only, light and dark (evidence
+`build/oct27-night-pixel/`, not in git):
+
+| | typed "tomorr" | after "tomorrow " (next word) |
+|---|---|---|
+| Gboard | `tomorr` · **`tomorrow`** · `tomorrow's` — all #E0E6EE dark, centre bold | `at` · `morning` · `and` — nothing bold |
+| SwiftKey | `tomorr` · `tomorrow` · `tomorrow's` — centre #FFFFFF / sides #939393 dark, #292929 / #777777 light, regular weight | `and` · `morning` · `evening`, same inking |
+
+Neither shows a "+" or italics on the unknown prefix: it is an ordinary candidate, and both learn
+a word tapped there (Gboard's learned words, SwiftKey's verbatim slot). Both also draw a toolbar
+row (Gboard: apps grid left, mic right; SwiftKey: a collapse chevron left of the predictions and a
+toolbar above) that CleverKeys does not have. Changes: a look's slot shows the plain word
+(`LookBarArrangement.slotText`), `LookBar.emphasis` COMMIT / CENTRE inks the slots as above, and
+next-word predictions are never drawn as the space commit. The "+word" tap still commits the word
+as typed and adds it to the dictionary (the closest CleverKeys equivalent of the products'
+learn-on-tap); the plain bar keeps the "+word" chip.

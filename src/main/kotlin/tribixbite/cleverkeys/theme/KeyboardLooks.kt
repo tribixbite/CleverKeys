@@ -203,7 +203,8 @@ object KeyboardLooks {
         // Fluent draws its symbol hints small and light.
         hintStyle = LookHintStyle(sizeFraction = 0.45f, weight = 300),
         // "Press the spacebar to insert the middle prediction"; verbatim text on the left (§10).
-        bar = LookBar(slots = 3),
+        // The centre is always the emphasised slot, sides dimmed, nothing bold (Pixel 2026-10-27).
+        bar = LookBar(slots = 3, emphasis = BarEmphasis.CENTRE),
     )
 
     /**

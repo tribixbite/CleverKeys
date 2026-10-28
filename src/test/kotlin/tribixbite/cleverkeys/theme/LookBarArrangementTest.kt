@@ -23,8 +23,7 @@ class LookBarArrangementTest {
     /** Visual texts: entry wire, quoted with “ ” when the slot says so, "_" for an empty slot. */
     private fun shown(entries: List<Suggestion>, slots: List<BarSlot>?): List<String> = slots!!.map { s ->
         val e = s.entry ?: return@map "_"
-        if (s.quoted) LookBarArrangement.quote((entries[e] as? Suggestion.ExactAdd)?.word ?: entries[e].wire, "“", "”")
-        else (entries[e] as? Suggestion.ExactAdd)?.label ?: entries[e].wire
+        LookBarArrangement.slotText(entries[e], s.quoted, "“", "”")
     }
 
     @Test
@@ -66,8 +65,71 @@ class LookBarArrangementTest {
         val slots = LookBarArrangement.arrange(e, null, "cleverkeys", ios)!!
         assertThat(shown(e, slots)).containsExactly("“cleverkeys”", "cleverly", "clever").inOrder()
         assertWithMessage("the slot still taps the tap-to-add entry").that(e[slots[0].entry!!]).isInstanceOf(Suggestion.ExactAdd::class.java)
-        assertThat(shown(e, LookBarArrangement.arrange(e, null, "cleverkeys", gboard)))
-            .containsExactly("+cleverkeys", "cleverly", "clever").inOrder()
+        assertWithMessage("a look draws the typed word plain, as the real products do (Pixel 2026-10-27)")
+            .that(shown(e, LookBarArrangement.arrange(e, null, "cleverkeys", gboard)))
+            .containsExactly("cleverkeys", "cleverly", "clever").inOrder()
+    }
+
+    /**
+     * Device references (Pixel 8 Pro, 2026-10-27 night, `build/oct27-night-pixel/`): for the
+     * unknown prefix "tomorr" the real Gboard shows `tomorr | **tomorrow** | tomorrow's` and the
+     * real SwiftKey `tomorr | tomorrow | tomorrow's` — the typed word as a plain candidate, no "+",
+     * no italic. Tapping it still commits it and adds it to the dictionary (both products learn a
+     * word tapped there), so only the drawing changes.
+     */
+    @Test
+    fun aLooksTypedSlotIsThePlainWordNeverThePlusChip() {
+        val add = Suggestion.ExactAdd("tomorr")
+        assertThat(LookBarArrangement.slotText(add, quoted = false, open = "“", close = "”")).isEqualTo("tomorr")
+        assertThat(LookBarArrangement.slotText(add, quoted = true, open = "“", close = "”")).isEqualTo("“tomorr”")
+        assertThat(LookBarArrangement.slotText(Suggestion.Word("tomorrow"), quoted = false, open = "“", close = "”"))
+            .isEqualTo("tomorrow")
+        assertWithMessage("a tap on the slot still routes as the tap-to-add entry")
+            .that(Suggestion.parse(add.wire)).isEqualTo(add)
+    }
+
+    /**
+     * Gboard (and iOS, Samsung) emphasise the centre only while it is what space commits: bold for
+     * a pending correction, plain for next-word predictions (`at | morning | and`, nothing bold).
+     * SwiftKey always draws the centre in the text colour at regular weight and both sides dimmed
+     * (dark #FFFFFF / #939393, light #292929 / #777777).
+     */
+    @Test
+    fun slotPaintFollowsEachProduct() {
+        val commit = LookBar(3)
+        assertThat(LookBarArrangement.paint(commit, centre = true, commit = true)).isEqualTo(SlotPaint(SlotInk.HIGHLIGHT, bold = true))
+        assertWithMessage("next-word centre").that(LookBarArrangement.paint(commit, centre = true, commit = false))
+            .isEqualTo(SlotPaint(SlotInk.TEXT, bold = false))
+        assertThat(LookBarArrangement.paint(commit, centre = false, commit = false)).isEqualTo(SlotPaint(SlotInk.TEXT, bold = false))
+        val centre = LookBar(3, emphasis = BarEmphasis.CENTRE)
+        for (c in listOf(true, false)) {
+            assertThat(LookBarArrangement.paint(centre, centre = true, commit = c)).isEqualTo(SlotPaint(SlotInk.TEXT, bold = false))
+            assertThat(LookBarArrangement.paint(centre, centre = false, commit = c)).isEqualTo(SlotPaint(SlotInk.SIDE, bold = false))
+        }
+    }
+
+    @Test
+    fun nextWordPredictionsHaveNoCommitEntry() {
+        assertThat(LookBarArrangement.commitIndex(0, nextWordOnly = true)).isNull()
+        assertThat(LookBarArrangement.commitIndex(2, nextWordOnly = false)).isEqualTo(2)
+        assertThat(LookBarArrangement.commitIndex(null, nextWordOnly = false)).isNull()
+    }
+
+    @Test
+    fun arrangeMarksTheCentreSlot() {
+        val e = words("dinner", "dinners", "dinnertime")
+        val slots = LookBarArrangement.arrange(e, 0, null, gboard)!!
+        assertThat(slots.map { it.centre }).containsExactly(false, true, false).inOrder()
+    }
+
+    @Test
+    fun swiftKeySideInkIsWithinAFewLevelsOfTheRealOne() {
+        fun grey(c: Int) = c and 0xFF
+        val dark = LookBarArrangement.sideColor(0xFFFFFFFF.toInt(), 0xFF141414.toInt())
+        val light = LookBarArrangement.sideColor(0xFF292929.toInt(), 0xFFF1F1F1.toInt())
+        assertThat(grey(dark)).isIn(0x93 - 10..0x93 + 10)
+        assertThat(grey(light)).isIn(0x77 - 10..0x77 + 10)
+        assertThat(dark ushr 24).isEqualTo(0xFF)
     }
 
     @Test
@@ -148,6 +210,8 @@ class LookBarArrangementTest {
             assertThat(bar.centreBest).isTrue()
             assertWithMessage("${look.id} quoting").that(bar.quoteTyped)
                 .isEqualTo(look.id == KeyboardLooks.IOS || look.id == KeyboardLooks.IOS18)
+            assertWithMessage("${look.id} emphasis").that(bar.emphasis)
+                .isEqualTo(if (look.id == KeyboardLooks.SWIFTKEY) BarEmphasis.CENTRE else BarEmphasis.COMMIT)
         }
     }
 
@@ -161,6 +225,13 @@ class LookBarArrangementTest {
             .that(ThemeSpecs.ofLook(KeyboardLooks.byId(KeyboardLooks.IOS)!!).bar).isEqualTo(LookBar(3, quoteTyped = true))
         val json = org.json.JSONObject(ThemeSpecJson.toJson(spec).toString())
         assertThat(ThemeSpecJson.fromJson(json).bar).isEqualTo(spec.bar)
+        val centred = ThemeSpecXml.parse(mapOf("bar_emphasis" to "centre"), null, null, problems)
+        assertThat(problems).isEmpty()
+        assertThat(centred.bar).isEqualTo(LookBar(emphasis = BarEmphasis.CENTRE))
+        assertThat(ThemeSpecJson.fromJson(org.json.JSONObject(ThemeSpecJson.toJson(centred).toString())).bar)
+            .isEqualTo(centred.bar)
+        assertWithMessage("SwiftKey saved as a custom theme keeps its emphasis")
+            .that(ThemeSpecs.ofLook(KeyboardLooks.byId(KeyboardLooks.SWIFTKEY)!!).bar?.emphasis).isEqualTo(BarEmphasis.CENTRE)
         assertWithMessage("an impossible slot count from a hand-edited backup drops the arrangement")
             .that(ThemeSpecJson.fromJson(org.json.JSONObject("""{"bar":{"slots":9}}""")).bar).isNull()
         val bad = ArrayList<String>()

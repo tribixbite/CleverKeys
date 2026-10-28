@@ -153,6 +153,7 @@ Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<ke
 | `bar_slots` | 1–5 | Show the suggestion bar as this many equal slots instead of scrolling suggestions, like the familiar keyboards (they use 3). Suggestions that do not fit are not shown. |
 | `bar_centre` | `true` / `false` | With `bar_slots`: put the best suggestion — the one space types — in the centre slot and the word you typed left of it (default `true`); `false` fills the slots left to right. |
 | `bar_quote_typed` | `true` / `false` | With `bar_slots`: show the word you typed in quotation marks when it is not the best suggestion, as iOS does (default `false`). |
+| `bar_emphasis` | `commit` / `centre` | With `bar_slots`: `commit` (default) draws the centre bold in the highlight colour only while it is what space types, as Gboard does (next-word suggestions stay plain); `centre` always draws the centre in the text colour and dims the side slots, as SwiftKey does. |
 | `name` | text | Name for the theme when it is saved or exported. |
 
 ## `<row>`
@@ -291,7 +292,8 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       dynamic_color="false"
       bar_slots="3"
       bar_centre="true"
-      bar_quote_typed="false">
+      bar_quote_typed="false"
+      bar_emphasis="commit">
     <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
     <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
   </theme>

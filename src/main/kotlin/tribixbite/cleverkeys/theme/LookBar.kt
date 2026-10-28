@@ -23,11 +23,18 @@ import tribixbite.cleverkeys.Suggestion
  *   left to right in ranking order).
  * @property quoteTyped whether the typed word is shown in quotation marks when it is not the best
  *   candidate (iOS).
+ * @property emphasis how the slots are inked ([BarEmphasis]).
+ *
+ * On every look the typed word's slot shows the plain word, never CleverKeys' "+word" chip: the
+ * real Gboard and SwiftKey show an unknown prefix as an ordinary candidate (`tomorr | tomorrow |
+ * tomorrow's`, Pixel 8 Pro 2026-10-27) and learn a word tapped there. The slot still taps the
+ * tap-to-add entry, so a tap commits the word as typed and adds it to the dictionary, as before.
  */
 data class LookBar(
     val slots: Int = DEFAULT_SLOTS,
     val centreBest: Boolean = true,
     val quoteTyped: Boolean = false,
+    val emphasis: BarEmphasis = BarEmphasis.COMMIT,
 ) {
     init {
         require(slots in MIN_SLOTS..MAX_SLOTS) { "bar slots $slots outside $MIN_SLOTS..$MAX_SLOTS" }
@@ -41,13 +48,48 @@ data class LookBar(
 }
 
 /**
+ * How a look's bar inks its slots (device references, Pixel 8 Pro 2026-10-27,
+ * `build/oct27-night-pixel/`).
+ */
+enum class BarEmphasis {
+    /**
+     * Gboard (also iOS, Samsung): every slot in the text colour; the centre is bold in the
+     * highlight colour only while it is what space commits — a pending correction — and plain for
+     * next-word predictions (the real Gboard: `at | morning | and`, nothing bold).
+     */
+    COMMIT,
+
+    /**
+     * SwiftKey: the centre always in the text colour at regular weight, both sides dimmed
+     * ([LookBarArrangement.sideColor]: real dark #FFFFFF / #939393, light #292929 / #777777).
+     */
+    CENTRE,
+}
+
+/** Which colour a filled slot's text takes. */
+enum class SlotInk {
+    /** The bar's highlight (commit-on-space) colour. */
+    HIGHLIGHT,
+
+    /** The bar's text colour. */
+    TEXT,
+
+    /** The text colour dimmed toward the bar background ([LookBarArrangement.sideColor]). */
+    SIDE,
+}
+
+/** How one filled slot of a look's bar is drawn: [ink] and weight. */
+data class SlotPaint(val ink: SlotInk, val bold: Boolean)
+
+/**
  * One visual slot of an arranged bar.
  *
  * @property entry index into the bar's entry list (ranking order) shown here, or null for an
  *   empty slot (fewer candidates than slots).
  * @property quoted whether the entry is shown in quotation marks ([LookBar.quoteTyped]).
+ * @property centre whether this is the centre slot (the best candidate's place).
  */
-data class BarSlot(val entry: Int?, val quoted: Boolean = false)
+data class BarSlot(val entry: Int?, val quoted: Boolean = false, val centre: Boolean = false)
 
 /** Which entry each visual slot of a look's bar shows. Pure; `SuggestionBarArrangementTest`. */
 object LookBarArrangement {
@@ -89,10 +131,64 @@ object LookBarArrangement {
         val slots = arrayOfNulls<BarSlot>(bar.slots)
         for ((k, pos) in positions.withIndex()) {
             val entry = order.getOrNull(k)
-            slots[pos] = BarSlot(entry, quoted = bar.quoteTyped && entry != null && entry == typed)
+            slots[pos] = BarSlot(entry, quoted = bar.quoteTyped && entry != null && entry == typed, centre = k == 0)
         }
         return slots.map { it ?: BarSlot(null) }
     }
+
+    /**
+     * The text a slot shows for [entry]: the word (the tap-to-add chip's word without its "+"),
+     * in [open] / [close] quotation marks when [quoted].
+     */
+    fun slotText(entry: Suggestion, quoted: Boolean, open: String, close: String): String {
+        val word = when (entry) {
+            is Suggestion.ExactAdd -> entry.word
+            is Suggestion.Word -> entry.text
+            else -> entry.wire
+        }
+        return if (quoted) quote(word, open, close) else word
+    }
+
+    /**
+     * The entry whose slot is emphasised as the space commit: [highlightIndex] (what space
+     * commits, `BarHighlightPlanner`), or none for next-word predictions — after a completed word
+     * space inserts a space and commits none of them.
+     */
+    fun commitIndex(highlightIndex: Int?, nextWordOnly: Boolean): Int? = highlightIndex.takeUnless { nextWordOnly }
+
+    /** How a filled slot is drawn under [bar]'s [LookBar.emphasis]. */
+    fun paint(bar: LookBar, centre: Boolean, commit: Boolean): SlotPaint = when (bar.emphasis) {
+        BarEmphasis.COMMIT ->
+            if (commit) SlotPaint(SlotInk.HIGHLIGHT, bold = true) else SlotPaint(SlotInk.TEXT, bold = false)
+        BarEmphasis.CENTRE ->
+            if (centre) SlotPaint(SlotInk.TEXT, bold = false) else SlotPaint(SlotInk.SIDE, bold = false)
+    }
+
+    /**
+     * SwiftKey's dimmed side-slot colour: [text] at [SIDE_ALPHA] over [background], opaque. One
+     * fraction for both modes: 0.54 matches dark exactly and 0.61 light; 0.58 lands 9 and 6
+     * levels from the real #939393 / #777777.
+     */
+    fun sideColor(text: Int, background: Int): Int {
+        fun mix(shift: Int): Int {
+            val t = (text ushr shift) and 0xFF
+            val b = (background ushr shift) and 0xFF
+            return (b + (t - b) * SIDE_ALPHA + 0.5f).toInt().coerceIn(0, 255)
+        }
+        return (0xFF shl 24) or (mix(16) shl 16) or (mix(8) shl 8) or mix(0)
+    }
+
+    /** See [sideColor]. */
+    const val SIDE_ALPHA = 0.58f
+
+    /**
+     * A slot's smallest auto-sized text (sp) before its word is elided in the middle; the bar's
+     * text is 16 sp. Real SwiftKey draws a long side candidate at about 0.75 of its centre size.
+     */
+    const val SLOT_MIN_TEXT_SP = 11
+
+    /** A slot's horizontal padding (dp): three slots share the bar, so less than a chip's 12. */
+    const val SLOT_PADDING_DP = 4
 
     /**
      * The visual position of each place in ranking order: centre first, then left, right, left…

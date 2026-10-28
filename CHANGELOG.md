@@ -122,7 +122,10 @@ editor that used to be listed here already ship in 2.0.)
   and draws its emoji key like a letter key. The suggestion bar also follows the keyboard: three
   equal slots with the best suggestion — the one space types — in the centre and the word you
   typed on the left (in quotation marks on iOS-style), instead of CleverKeys' scrolling list;
-  tapping a slot types that slot's word, and other themes keep the scrolling list. Drawn with
+  tapping a slot types that slot's word, and other themes keep the scrolling list. As in the
+  real keyboards, a word the dictionary does not know shows as a plain suggestion (tapping it
+  still types it and adds it to your dictionary), next-word suggestions are not drawn as the
+  word space would type, and SwiftKey-style dims the side suggestions. Drawn with
   CleverKeys' own keys and the system font; not affiliated with Apple, Google, Microsoft or
   Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard

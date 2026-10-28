@@ -437,9 +437,19 @@ arrangement is DRAWING ONLY: pool view *i* still renders and commits entry *i*, 
 scores, metas, highlight index and every accessor keep ranking order, and children are added in
 visual order (TalkBack reads left to right). Prompts ("Add to dictionary?", "Prefer … when
 swiping?" with "Don't ask") are not arranged. Every non-look theme (no `lookBar`) keeps the
-scrolling chips, best first. A layout `<theme>` / custom theme carries it as `bar_slots` (1–5),
-`bar_centre`, `bar_quote_typed` (JSON `bar`). Tests: `theme/LookBarArrangementTest` (pure),
-`LookSuggestionBarInstrumentedTest`.
+scrolling chips, best first. On a look the typed slot shows the plain word — the "+word"
+tap-to-add chip too, without "+" or italic — because the real Gboard and SwiftKey show an
+unknown prefix as an ordinary candidate (`tomorr | tomorrow | tomorrow's`, Pixel 8 Pro
+2026-10-27) and learn a word tapped there; the slot still taps the tap-to-add entry (commit as
+typed + add to the dictionary), and the post-space "Add to dictionary?" prompt is unchanged.
+Inking follows `LookBar.emphasis` (`LookBarArrangement.paint`): COMMIT (Gboard, iOS, Samsung) —
+every slot in the bar text colour, the centre bold in the highlight colour only while it is the
+space commit, never for next-word predictions (`commitIndex`; real Gboard `at | morning | and`,
+nothing bold); CENTRE (SwiftKey) — the centre always in the text colour at regular weight, the
+sides at `sideColor` (text at 0.58 over the bar background; real #939393 dark / #777777 light).
+A layout `<theme>` / custom theme carries it as `bar_slots` (1–5), `bar_centre`,
+`bar_quote_typed`, `bar_emphasis` (`commit` / `centre`) (JSON `bar`). Tests:
+`theme/LookBarArrangementTest` (pure), `LookSuggestionBarInstrumentedTest`.
 
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,

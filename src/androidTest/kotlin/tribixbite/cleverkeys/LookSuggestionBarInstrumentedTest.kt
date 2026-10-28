@@ -121,7 +121,54 @@ class LookSuggestionBarInstrumentedTest {
             assertTrue("nothing highlighted: space keeps 'hel'", slots(bar).none { it.typeface?.isBold == true })
             bar.setSuggestionsWithScores(words, scores, null, 0, "tomorr")
             layout(scroll, 1080, dp(40))
-            assertEquals(listOf("+tomorr", "tomorrow", "tomorrows"), slots(bar).map { it.text.toString() })
+            // The real Gboard shows an unknown typed word plain (Pixel 2026-10-27): no "+", no italic.
+            assertEquals(listOf("tomorr", "tomorrow", "tomorrows"), slots(bar).map { it.text.toString() })
+            assertTrue("the typed slot is not italic", slots(bar)[0].typeface?.isItalic != true)
+            assertEquals("the pending correction is bold", true, slots(bar)[1].typeface?.isBold)
+            // Next-word predictions: space commits none of them, so nothing is bold (real Gboard).
+            val nextWord = listOf("morning", "afternoon", "I")
+            bar.setSuggestionsWithScores(nextWord, listOf(3, 2, 1), nextWord.map { SuggestionMeta(SuggestionOrigin.NEXT_WORD) })
+            layout(scroll, 1080, dp(40))
+            assertEquals(listOf("afternoon", "morning", "I"), slots(bar).map { it.text.toString() })
+            assertTrue("next-word: nothing bold", slots(bar).none { it.typeface?.isBold == true })
+        }
+    }
+
+    /** Long words: shrink, then elide the middle so the endings still tell the slots apart. */
+    @Test
+    fun longWordsShrinkAndKeepTheirEndings() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val (scroll, bar) = barIn(lookTheme(KeyboardLooks.GBOARD, light = true), 1008)
+            val long = listOf("uncharacteristically", "uncharacteristic", "uncharacteristical")
+            bar.setSuggestionsWithScores(long, listOf(3, 2, 1), null, 0, "uncharacteristical")
+            layout(scroll, 1008, dp(40))
+            val visible = slots(bar)
+            assertTrue(visible.all { it.ellipsize == android.text.TextUtils.TruncateAt.MIDDLE })
+            val base = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 16f, context.resources.displayMetrics)
+            assertTrue("a long word is drawn smaller: ${visible.map { it.textSize }}", visible.any { it.textSize < base })
+            // Back on a plain theme the pooled views return to the chip size.
+            val plain = ThemeProvider.getInstance(context).getTheme("cleverkeysdark")
+            val (scroll2, bar2) = barIn(plain, 1008)
+            bar2.setSuggestionsWithScores(long, listOf(3, 2, 1), null, 0, null)
+            layout(scroll2, 1008, dp(40))
+            assertTrue(slots(bar2).all { kotlin.math.abs(it.textSize - base) < 0.5f && it.ellipsize == null })
+        }
+    }
+
+    @Test
+    fun swiftKeyStyleAlwaysInksTheCentreAndDimsTheSides() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val theme = lookTheme(KeyboardLooks.SWIFTKEY, light = false)
+            val (scroll, bar) = barIn(theme, 1080)
+            bar.setSuggestionsWithScores(words, scores, null, 0, "tomorr")
+            layout(scroll, 1080, dp(40))
+            val visible = slots(bar)
+            assertEquals(listOf("tomorr", "tomorrow", "tomorrows"), visible.map { it.text.toString() })
+            assertTrue("nothing bold", visible.none { it.typeface?.isBold == true })
+            assertEquals(theme.suggestionTextColor, visible[1].currentTextColor)
+            val side = tribixbite.cleverkeys.theme.LookBarArrangement.sideColor(theme.suggestionTextColor, theme.suggestionBackgroundColor)
+            assertEquals(side, visible[0].currentTextColor)
+            assertEquals(side, visible[2].currentTextColor)
         }
     }
 

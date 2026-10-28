@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import tribixbite.cleverkeys.theme.BarSlot
 import tribixbite.cleverkeys.theme.LookBar
 import tribixbite.cleverkeys.theme.LookBarArrangement
+import tribixbite.cleverkeys.theme.SlotInk
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.round
@@ -195,7 +196,7 @@ class SuggestionBar : LinearLayout {
                 setMargins(0, 0, dpToPx(context, 4), 0) // Small right margin
             }
             gravity = Gravity.CENTER
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, SUGGESTION_TEXT_SP.toFloat())
 
             // Audit H-4: use the theme's dedicated suggestion-text colour (falls back
             // to white if the theme is not initialized / carries no colour).
@@ -327,6 +328,9 @@ class SuggestionBar : LinearLayout {
      */
     private fun rebindSlots(parsed: List<Suggestion>, slots: List<BarSlot>) {
         slotMode = true
+        // Next-word predictions: space commits none of them, so no slot is emphasised as the commit.
+        val nextWordOnly = currentMetas.isNotEmpty() && currentMetas.all { it.origin == SuggestionOrigin.NEXT_WORD }
+        val commit = LookBarArrangement.commitIndex(currentHighlightIndex, nextWordOnly)
         while (suggestionViews.size < parsed.size) {
             suggestionViews.add(createSuggestionView(context, suggestionViews.size))
         }
@@ -343,7 +347,10 @@ class SuggestionBar : LinearLayout {
                 while (spacerViews.size <= spacers) spacerViews.add(createSpacer(context))
                 desired.add(spacerViews[spacers++])
             } else {
-                bindSuggestionView(suggestionViews[entry], entry, parsed[entry], isCenteredPrompt = false, slot = slot)
+                bindSuggestionView(
+                    suggestionViews[entry], entry, parsed[entry], isCenteredPrompt = false, slot = slot,
+                    slotCommit = entry == commit,
+                )
                 desired.add(suggestionViews[entry])
             }
         }
@@ -378,17 +385,14 @@ class SuggestionBar : LinearLayout {
     }
 
     /** The locale's quotation marks for [LookBar.quoteTyped] (“ ” in English, « » in French…). */
-    private fun quoted(word: String): String {
-        val (open, close) = try {
-            val data = android.icu.util.LocaleData.getInstance(
-                android.icu.util.ULocale.forLocale(resources.configuration.locales[0])
-            )
-            data.getDelimiter(android.icu.util.LocaleData.QUOTATION_START) to
-                data.getDelimiter(android.icu.util.LocaleData.QUOTATION_END)
-        } catch (e: RuntimeException) {
-            "\u201C" to "\u201D"
-        }
-        return LookBarArrangement.quote(word, open, close)
+    private fun quoteMarks(): Pair<String, String> = try {
+        val data = android.icu.util.LocaleData.getInstance(
+            android.icu.util.ULocale.forLocale(resources.configuration.locales[0])
+        )
+        data.getDelimiter(android.icu.util.LocaleData.QUOTATION_START) to
+            data.getDelimiter(android.icu.util.LocaleData.QUOTATION_END)
+    } catch (e: RuntimeException) {
+        "\u201C" to "\u201D"
     }
 
     /**
@@ -403,16 +407,18 @@ class SuggestionBar : LinearLayout {
         isCenteredPrompt: Boolean,
         /** The look-bar slot showing this entry, or null on the plain scrolling bar. */
         slot: BarSlot? = null,
+        /** On a look's bar: whether this entry is what space commits (drawn emphasised). */
+        slotCommit: Boolean = false,
     ) {
-        // Display text derived from the typed suggestion. A look that quotes the typed word
-        // (iOS) shows it — or the "+word" tap-to-add chip of an unknown word — as “word”.
-        val quotedWord = when {
-            slot?.quoted != true -> null
-            suggestion is Suggestion.ExactAdd -> suggestion.word
-            suggestion is Suggestion.Word -> suggestion.text
-            else -> null
-        }
-        val baseText: CharSequence = if (quotedWord != null) quoted(quotedWord) else when (suggestion) {
+        // Display text derived from the typed suggestion. A look's slot shows the plain word, the
+        // "+word" tap-to-add chip included (the real products show an unknown typed word as an
+        // ordinary candidate; the tap still adds it), in “quotes” on a look that quotes the typed
+        // word (iOS). The plain bar keeps the "+word" chip.
+        val slotWord = if (slot != null && (suggestion is Suggestion.ExactAdd || suggestion is Suggestion.Word)) {
+            val (open, close) = if (slot.quoted) quoteMarks() else "" to ""
+            LookBarArrangement.slotText(suggestion, slot.quoted, open, close)
+        } else null
+        val baseText: CharSequence = if (slotWord != null) slotWord else when (suggestion) {
             is Suggestion.AddToDictionary ->
                 context.getString(R.string.suggestion_add_to_dictionary, suggestion.word)
             is Suggestion.ExactAdd -> suggestion.label
@@ -461,11 +467,26 @@ class SuggestionBar : LinearLayout {
 
         // A look's slot: one line, ellipsized, any width; the scrolling chip: up to two lines
         // (debug scores) with a minimum touch width. Pooled views move between the two.
+        // A look's slot shrinks a long word to fit and then elides its MIDDLE, keeping the ending
+        // that tells candidates apart, as the real products do (Pixel 2026-10-27: Gboard
+        // "unchar…stically", SwiftKey shrinks the side slots); END-ellipsis drew three identical
+        // "uncharacteri…" slots for "uncharacteristical".
         if (slot != null) {
             view.maxLines = 1
-            view.ellipsize = android.text.TextUtils.TruncateAt.END
+            view.ellipsize = android.text.TextUtils.TruncateAt.MIDDLE
             view.minWidth = 0
+            val pad = dpToPx(context, LookBarArrangement.SLOT_PADDING_DP)
+            view.setPadding(pad, 0, pad, 0)
+            androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                view, LookBarArrangement.SLOT_MIN_TEXT_SP, SUGGESTION_TEXT_SP, 1, TypedValue.COMPLEX_UNIT_SP
+            )
         } else {
+            androidx.core.widget.TextViewCompat.setAutoSizeTextTypeWithDefaults(
+                view, androidx.core.widget.TextViewCompat.AUTO_SIZE_TEXT_TYPE_NONE
+            )
+            view.setTextSize(TypedValue.COMPLEX_UNIT_SP, SUGGESTION_TEXT_SP.toFloat())
+            val pad = dpToPx(context, 12)
+            view.setPadding(pad, 0, pad, 0)
             view.maxLines = 2
             view.ellipsize = null
             view.minWidth = dpToPx(context, 80)
@@ -496,10 +517,30 @@ class SuggestionBar : LinearLayout {
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
             }
-            // #42: Exact typed word (italic, sublabel color for "tap to add"). Quoted on a look
-            // that quotes the typed word (iOS), it reads as an ordinary candidate instead.
-            suggestion is Suggestion.ExactAdd && quotedWord == null -> {
-                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
+            // A look's slot: the product's inking (LookBarArrangement.paint) — the typed word,
+            // the tap-to-add chip included, reads as an ordinary candidate.
+            slot != null -> {
+                view.layoutParams = slotLayoutParams()
+                view.gravity = Gravity.CENTER
+                val paint = LookBarArrangement.paint(lookBar ?: LookBar(), slot.centre, slotCommit)
+                view.setTypeface(
+                    if (paint.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT,
+                    if (paint.bold) Typeface.BOLD else Typeface.NORMAL,
+                )
+                val text = theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE
+                view.setTextColor(
+                    when (paint.ink) {
+                        SlotInk.HIGHLIGHT -> theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN
+                        SlotInk.TEXT -> text
+                        SlotInk.SIDE -> LookBarArrangement.sideColor(
+                            text, theme?.suggestionBackgroundColor?.takeIf { it != 0 } ?: Color.BLACK
+                        )
+                    }
+                )
+            }
+            // #42: Exact typed word (italic, sublabel color for "tap to add").
+            suggestion is Suggestion.ExactAdd -> {
+                view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD_ITALIC)
                 view.setTextColor(theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY)
@@ -509,13 +550,13 @@ class SuggestionBar : LinearLayout {
             // activated colour). The first entry unless the caller chose another or none
             // (tap typing: the word space commits — 2026-10-11).
             index == currentHighlightIndex -> {
-                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
+                view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)
                 view.setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             }
             else -> {
-                view.layoutParams = if (slot != null) slotLayoutParams() else defaultSuggestionLayoutParams()
+                view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT, Typeface.NORMAL)
                 // Audit H-4: the Theme-Creator's "Suggestion Text" colour.
@@ -1175,6 +1216,9 @@ class SuggestionBar : LinearLayout {
 
     companion object {
         private const val TAG = "SuggestionBar"
+
+        /** Suggestion text size (sp); a look's slot auto-sizes down from it. */
+        private const val SUGGESTION_TEXT_SP = 16
 
         /**
          * Check if the given EditorInfo indicates a password or PIN field.

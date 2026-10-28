@@ -159,7 +159,11 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    scores, metas or the highlight index: pool view *i* taps entry *i* and children are added in
    visual order. The typing path passes the typed word (`setSuggestionsWithScores(…, typedWord)`).
    `SuggestionBar.onMeasure` gives the slots the scroll view's width. Separators stay a colour
-   (`barSeparator`), drawn only between filled slots.
+   (`barSeparator`), drawn only between filled slots. A slot shows the plain word
+   (`LookBarArrangement.slotText`; the "+word" chip loses its "+" and italic but still taps the
+   tap-to-add entry) and is inked by `paint(bar, centre, commit)` per `LookBar.emphasis`
+   (COMMIT: bold highlight only on the space commit, none for next-word; CENTRE = SwiftKey: centre
+   text colour, sides `sideColor`). Never infer "commit" from the centre position.
 17. **Sublabel bands never overlap** (Pixel 2026-10-27, "ABC" over "GIF"). A key's top (NW, N,
    NE) and bottom (SW, S, SE) labels share one shrink factor, `SubLabelSizing.bandScale`, measured
    at their individually fitted sizes (`Keyboard2View.bandScale` / `subLabelPaint`); bands with
