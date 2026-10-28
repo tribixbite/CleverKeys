@@ -498,6 +498,77 @@ Effort is a working estimate **[U]**; the spike will sharpen it.
 
 ---
 
+## Corrections and updates (2026-10-28, after the engine deep dive)
+
+Written after cloning `github.com/cactus-compute/needle`, running Cactus's own Android engine and
+the ONNX export on this Snapdragon box, and reading the issue tracker. Full evidence, commands
+and numbers: `docs/research/2026-10-28-stt-engine-deep-dive.md`.
+
+**Confirmed, with primary evidence now.** The central claim stands: the engine source is not
+public. The repository (365 commits, 2026-02-24 → 2026-10-19) has never contained a C, C++,
+CMake, Rust or Zig file — its whole history is `.py/.md/.txt/.toml/.tex/.svg/.js/.css`
+(`git log --all --name-only` extension census) — and `needle/agent/fetch.py` downloads the
+prebuilt engine from `Cactus-Compute/needle3` on Hugging Face at import time (engine pin
+`3.3.3`, weights `whistle 2.0.0`). The maintainer said so in issue #118 ("Where are the
+libneedle sources?", 2026-09-19): *"The engine source isn't public; the Python package, training
+and export code are … the Linux archives are built with zig."* The licence history is as stated
+(MIT → Apache-2.0, commit `b188e11`, 2026-08-17).
+
+**Wrong or imprecise in the text above, corrected:**
+
+1. *"`libneedle.a` per platform; no source"* — right, but the Android folder also holds a
+   `needle` CLI that is a **Bionic, NDK r28c, minSdk 24, PIE** executable (`file`,
+   `llvm-readelf`: NEEDED libm/libdl/libc only). It runs unmodified on this Termux box
+   (`./android-arm64/needle --model whistle.cact --audio clip.wav`, 0.35 s wall including load,
+   39 MB peak RSS), which is how the official engine was measured. Issue #164 records Cactus
+   recommending exactly that for Termux; `pip install cactus-needle` on Android is refused by
+   design (`_is_android()` in `fetch.py`).
+2. *"Whether the Android `libneedle.a` contains any network code is [U]"* — resolved: a
+   plaintext symbol scan of `libneedle.a` finds no `socket/connect/getaddrinfo/sendto/recv`
+   references at all; the `needle` CLI has `socket/bind/listen/accept` for its `--serve`
+   loopback server (`http://127.0.0.1` is the only URL string) and no outbound client. The
+   telemetry is in the Python package (`needle/_telemetry.py`), not in the engine. The "Tracking"
+   anti-feature concern applies to the Python SDK, not to a JNI-linked `libneedle.a`.
+3. *"Streaming: not implemented in the port … reproducible on top of batch transcription [U]"* —
+   implemented and measured (`scripts/research/stt/whistle_ort.py stream`). The two-pass commit
+   rule works on top of the ONNX graphs; stream WER equals batch WER within noise. True
+   streaming with encoder state caching is **not possible**: the JAX reference
+   (`needle/model/whistle.py`) shows a bidirectional full-attention encoder with a non-causal
+   depthwise conv (kernel 9, SAME), per-utterance CMVN of the log-mel, and an absolute sinusoidal
+   PE added to the memory for an attention (AED) decoder — every pass re-encodes the window.
+4. *"Opset and operator coverage against `onnxruntime-android:1.21.1` are [U]"* — the graphs are
+   IR 8, opset 17 (torch 2.14 exporter), 32 plain op types; both are inside ORT 1.21.1's range
+   (IR ≤ 10, opset ≤ 21). Not yet loaded on 1.21.1 itself (this box has ORT 1.26.0); that is the
+   first Android step.
+5. *"fp16 36.1 MB + 36.5 MB"* as the small option — the published fp16 graphs return **empty
+   transcripts on the CPU EP** here (encoder finite, decoder emits EOS at step 1; the author
+   validated them on WebGPU). The realistic small build is dynamic int8 of the fp32 graphs after
+   ORT constant folding: encoder 19.1 MB + decoder 35.9 MB = 55 MB, same transcripts
+   (`scripts/research/stt/quantize_whistle_int8.py`).
+6. *"resident ≈ 75–150 MB while a session is open [U]"* — measured on this box (Python process,
+   includes ~45 MB interpreter/numpy baseline): fp32 graphs 254–347 MB peak, int8 graphs
+   152–179 MB; the official 2-bit engine 39 MB. The 2.4 MB-per-site engram tables stay packed
+   (2-bit) and are dequantised per row on demand, as in the JS reference.
+7. *"A phone big core … well under real time [U]"* — measured: batch RTF 0.07–0.21 (fp32,
+   4 threads, load average 15–21 from other sessions' builds); the official engine's net RTF
+   0.11–0.14 at 5 beams under the same load. Tables and the quieter re-run are in the deep dive.
+8. Section 2's claim that only the ESP32 C99 port and the ONNX export exist as FLOSS runtimes is
+   incomplete: `geekgineer/needle-rs` (MIT, Rust + WASM, "token-exact with the JAX reference")
+   runs Needle 1/2/3 **text** models from the `.cact`, not Whistle (no speech path as of its
+   2026-09-19 push). It is a precedent that a from-scratch runtime is feasible; it is not a
+   Whistle runtime. Cactus's source-available `cactus` C++ engine cannot load a `.cact` at all
+   (cactus-compute/cactus issue #813: needs its own bundle format; its converter misdetects the
+   Needle family), so it is not a route either.
+9. New facts from the tracker worth knowing: #179 — Whistle writes a short phrase (mostly "Thank
+   you.") on 1,945 of 2,000 ESC-50 non-speech clips (Moonshine tiny-streaming: 12/2,000; Silero
+   VAD in front: 87/2,000), closed as documented behaviour; #169 — the exact front end (99th-
+   percentile block-RMS loudness gain to 0.1, symmetric Hann, centred zero-padded frames, power
+   spectrum, filterbank read from the `.cact`, `log(x + 2^-24)`, per-channel CMVN over the whole
+   utterance) was published by the maintainer in a comment, which is what the ONNX pipeline here
+   implements; #172 (pt-BR) and #177 (Chinese) are open language requests.
+
+---
+
 ## Sources
 
 Cactus: https://cactuscompute.com/blog/whistle · https://cactuscompute.com/blog/whistle-best-practices ·
