@@ -840,6 +840,21 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (Creator closed unsaved), my Chrome `data:` tab closed (3 pre-existing tabs kept),
     CleverKeys Dark selected, night mode yes, default IME CleverKeys, launcher in front, no
     files left in Download. Scratch worktrees ck-wt-saga202/202c removed (content = HEAD).
+28. [x] agent, 2026-10-28 (maintainer: "swipe to delete word doesn't work while editing a
+    clipboard clipping"; "automatic space insertion for tap typing after a swiped word is not
+    honoured"). FIXED `0a6dddf9`. Root causes: `KeyEventHandler.handleEditingKey`'s inline
+    branches swallowed `delete_last_word`/`delete_word`/`forward_delete_word` (`else -> {}`), and
+    Ctrl+Backspace reached the field as a one-character `backspaceClipboardEdit`; the inline swipe
+    planner leaves no trailing space and nothing owed it to the next tap (`help`+`t` → `helpt`).
+    App fields were NOT affected (Chrome: `help t` before and after). Now `InlineWordDelete` + the
+    deferred space `InlineSwipeSession.spaceBeforeTap` (gated by Auto-Space After Suggestion).
+    Fail-first: 3 behavioural reds in `InlineSwipeRoutingTest`; green + full runPureTests 3,484 /
+    runMockTests 1,623. DEVICE PASS (Saga 192.168.0.202, release sha256 9eaf09d1…, evidence
+    `build/oct28-inline/`): editor `Meet at noon` + Backspace NW flick → `Meet at ` (old build:
+    unchanged), swipe `help` + tap `t` → `Meet at help t` (old: `helpt`), Ctrl+Z restores, Ctrl +
+    Backspace deletes a word; clipboard search `help t` then flick → `help`. Restored: test entry
+    deleted, Download file removed, Chrome data: tab closed (3 tabs), CleverKeys default, launcher.
+    Not device-checked: emoji/GIF/tag fields (same code path, mock-tested).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
