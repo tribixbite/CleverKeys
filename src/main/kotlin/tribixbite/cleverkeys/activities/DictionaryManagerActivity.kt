@@ -103,6 +103,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private var primaryLanguage = "en"
     private var secondaryLanguage: String? = null
     private var multiLangEnabled = false
+    // Languages bound to a layout (GH #186/#61), each shown with its own tabs.
+    private var boundLanguages: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -139,16 +141,31 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private fun loadLanguagePreferences() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         // The user's choice, as Settings shows it (the shared rule, audit L6).
-        // TODO: a layout bound to a language (GH #186/#61) gets no tab of its own here, so its
-        //  personal dictionary is reachable only by choosing that language in Multi-Language. The
-        //  bindings live in the IME's Config, which this Settings-process activity may not have;
-        //  surfacing them needs LayoutLanguageBinding read from the `layouts` preference here.
         val languages = LanguagePrefs.userLanguages(prefs)
         primaryLanguage = languages.primary
         multiLangEnabled = Config.safeGetBoolean(prefs, LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
         secondaryLanguage = languages.secondary
+        boundLanguages = readBoundLanguages(prefs)
 
-        android.util.Log.d(TAG, "Language prefs: primary=$primaryLanguage, secondary=$secondaryLanguage, multilang=$multiLangEnabled")
+        android.util.Log.d(TAG, "Language prefs: primary=$primaryLanguage, secondary=$secondaryLanguage, " +
+            "multilang=$multiLangEnabled, bound=$boundLanguages")
+    }
+
+    /**
+     * The languages layouts are bound to (GH #186/#61): the user's per-layout choice or the
+     * layout XML's `language` default, resolved from the `layouts` preference exactly as the
+     * keyboard and Settings' Multi-Language note resolve them
+     * ([LayoutsPreference.loadLayoutsWithBindings]). Before (audit 2026-10-20, todo 13c), such a
+     * language got no tab, so its custom and disabled words were reachable only by choosing it
+     * in Multi-Language. On a parse failure no bound tabs are added; the rest is unaffected.
+     */
+    private fun readBoundLanguages(prefs: android.content.SharedPreferences): List<String> = try {
+        DictionaryTabPlan.boundLanguages(
+            tribixbite.cleverkeys.prefs.LayoutsPreference.loadLayoutsWithBindings(resources, prefs).languages
+        )
+    } catch (e: Exception) {
+        android.util.Log.w(TAG, "Could not read layout language bindings", e)
+        emptyList()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -200,14 +217,9 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     /**
-     * Setup ViewPager with language-specific tabs.
-     *
-     * Tab structure:
-     * - Single language mode: Active, Disabled, User Dict, Custom (all for primary language)
-     * - Multilang mode: Active [P], Disabled [P], Custom [P], User Dict, Active [S], Disabled [S], Custom [S]
-     * - Imported language packs: Custom [lang] tab for each installed pack (if not already shown)
-     *
-     * Where [P] = primary language code, [S] = secondary language code
+     * Setup ViewPager with language-specific tabs, in the order [DictionaryTabPlan] gives:
+     * the user's language(s) and User Dict, then Active / Disabled / Custom for each language
+     * a layout is bound to (GH #186/#61), then a Custom tab per installed pack not yet shown.
      *
      * @since v1.1.86 - Added language-specific tab generation
      * @since v1.1.87 - Added support for user-imported language pack tabs
@@ -216,46 +228,23 @@ class DictionaryManagerActivity : AppCompatActivity() {
         val fragmentList = mutableListOf<WordListFragment>()
         tabTitles.clear()
 
-        val primaryLangLabel = LANGUAGE_NAMES[primaryLanguage] ?: primaryLanguage.uppercase()
-
-        // Track which languages already have tabs
-        val languagesWithTabs = mutableSetOf<String>()
-
-        if (secondaryLanguage != null) {
-            // Multilang mode: Show language-specific tabs for each language
-            val secondaryLangLabel = LANGUAGE_NAMES[secondaryLanguage] ?: secondaryLanguage!!.uppercase()
-
-            // Primary language tabs
-            addLanguageTabs(fragmentList, primaryLanguage, primaryLangLabel)
-            languagesWithTabs.add(primaryLanguage)
-
-            // User Dict (global - Android system dictionary is not language-specific)
-            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
-            tabTitles.add(getString(R.string.dict_tab_user))
-
-            // Secondary language tabs
-            addLanguageTabs(fragmentList, secondaryLanguage!!, secondaryLangLabel)
-            languagesWithTabs.add(secondaryLanguage!!)
-
-        } else {
-            // Single language mode: Standard tabs with primary language
-            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, primaryLanguage))
-            tabTitles.add(tabTitle(R.string.dict_tab_active, R.string.dict_tab_active_lang, primaryLangLabel))
-
-            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, primaryLanguage))
-            tabTitles.add(tabTitle(R.string.dict_tab_disabled, R.string.dict_tab_disabled_lang, primaryLangLabel))
-
-            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.USER))
-            tabTitles.add(getString(R.string.dict_tab_user))
-
-            fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, primaryLanguage))
-            tabTitles.add(tabTitle(R.string.dict_tab_custom, R.string.dict_tab_custom_lang, primaryLangLabel))
-
-            languagesWithTabs.add(primaryLanguage)
+        val installedPacks = try {
+            LanguagePackManager.getInstance(this).getInstalledPacks().map { it.code }
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "Failed to list imported language packs", e)
+            emptyList()
         }
-
-        // Add tabs for user-imported language packs that aren't already shown
-        addImportedLanguagePackTabs(fragmentList, languagesWithTabs)
+        for (tab in DictionaryTabPlan.plan(primaryLanguage, secondaryLanguage, boundLanguages, installedPacks)) {
+            val type = when (tab.kind) {
+                DictionaryTabPlan.Kind.ACTIVE -> WordListFragment.TabType.ACTIVE
+                DictionaryTabPlan.Kind.DISABLED -> WordListFragment.TabType.DISABLED
+                DictionaryTabPlan.Kind.USER -> WordListFragment.TabType.USER
+                DictionaryTabPlan.Kind.CUSTOM -> WordListFragment.TabType.CUSTOM
+            }
+            val code = tab.language
+            fragmentList.add(WordListFragment.newInstance(type, code))
+            tabTitles.add(tabTitle(tab, code?.let { LANGUAGE_NAMES[it] ?: it.uppercase() }))
+        }
 
         fragments = fragmentList
 
@@ -281,57 +270,30 @@ class DictionaryManagerActivity : AppCompatActivity() {
     }
 
     /**
-     * Single-language tab title: the bare label for English (the historical default, where
-     * the language suffix adds nothing), otherwise the label tagged with [langLabel].
+     * A tab's title: the bare label when the plan leaves the language out (single-language
+     * English, the historical default, and User Dict), otherwise the label tagged with
+     * [langLabel].
      */
-    private fun tabTitle(@androidx.annotation.StringRes plainRes: Int,
-                         @androidx.annotation.StringRes withLangRes: Int,
-                         langLabel: String): String =
-        if (primaryLanguage != "en") getString(withLangRes, langLabel) else getString(plainRes)
-
-    /**
-     * Add standard tabs (Active, Disabled, Custom) for a language.
-     * Helper for setupViewPager to reduce code duplication.
-     */
-    private fun addLanguageTabs(fragmentList: MutableList<WordListFragment>, langCode: String, langLabel: String) {
-        fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.ACTIVE, langCode))
-        tabTitles.add(getString(R.string.dict_tab_active_lang, langLabel))
-
-        fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.DISABLED, langCode))
-        tabTitles.add(getString(R.string.dict_tab_disabled_lang, langLabel))
-
-        fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, langCode))
-        tabTitles.add(getString(R.string.dict_tab_custom_lang, langLabel))
-    }
-
-    /**
-     * Add Custom tabs for user-imported language packs.
-     * Only adds tabs for languages not already shown via primary/secondary.
-     *
-     * @param fragmentList List to add fragments to
-     * @param languagesWithTabs Languages that already have tabs
-     * @since v1.1.87
-     */
-    private fun addImportedLanguagePackTabs(fragmentList: MutableList<WordListFragment>, languagesWithTabs: Set<String>) {
-        try {
-            val langPackManager = LanguagePackManager.getInstance(this)
-            val installedPacks = langPackManager.getInstalledPacks()
-
-            for (pack in installedPacks) {
-                // Skip languages that already have tabs
-                if (pack.code in languagesWithTabs) continue
-
-                val langLabel = LANGUAGE_NAMES[pack.code] ?: pack.code.uppercase()
-
-                // Add Custom tab for this imported language
-                fragmentList.add(WordListFragment.newInstance(WordListFragment.TabType.CUSTOM, pack.code))
-                tabTitles.add(getString(R.string.dict_tab_custom_lang, langLabel))
-
-                android.util.Log.d(TAG, "Added tab for imported language pack: ${pack.name} (${pack.code})")
-            }
-        } catch (e: Exception) {
-            android.util.Log.e(TAG, "Failed to add imported language pack tabs", e)
+    private fun tabTitle(tab: DictionaryTabPlan.Tab, langLabel: String?): String {
+        if (!tab.languageInTitle || langLabel == null) {
+            return getString(
+                when (tab.kind) {
+                    DictionaryTabPlan.Kind.ACTIVE -> R.string.dict_tab_active
+                    DictionaryTabPlan.Kind.DISABLED -> R.string.dict_tab_disabled
+                    DictionaryTabPlan.Kind.USER -> R.string.dict_tab_user
+                    DictionaryTabPlan.Kind.CUSTOM -> R.string.dict_tab_custom
+                }
+            )
         }
+        return getString(
+            when (tab.kind) {
+                DictionaryTabPlan.Kind.ACTIVE -> R.string.dict_tab_active_lang
+                DictionaryTabPlan.Kind.DISABLED -> R.string.dict_tab_disabled_lang
+                DictionaryTabPlan.Kind.USER -> R.string.dict_tab_user
+                DictionaryTabPlan.Kind.CUSTOM -> R.string.dict_tab_custom_lang
+            },
+            langLabel,
+        )
     }
 
     private fun setupSearch() {
@@ -480,12 +442,13 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private fun rebuildTabsForLanguageChange() {
         val oldPrimary = primaryLanguage
         val oldSecondary = secondaryLanguage
+        val oldBound = boundLanguages
 
         // Reload language preferences
         loadLanguagePreferences()
 
-        // Only rebuild if languages actually changed
-        if (primaryLanguage != oldPrimary || secondaryLanguage != oldSecondary) {
+        // Only rebuild if languages actually changed (a layout's binding counts: GH #186/#61)
+        if (primaryLanguage != oldPrimary || secondaryLanguage != oldSecondary || boundLanguages != oldBound) {
             android.util.Log.d(TAG, "Languages changed: $oldPrimary/$oldSecondary -> $primaryLanguage/$secondaryLanguage")
 
             // Clear current search
@@ -535,8 +498,12 @@ class DictionaryManagerActivity : AppCompatActivity() {
         )
 
         // Check if languages changed while we were paused
-        val current = LanguagePrefs.userLanguages(DirectBootAwarePreferences.get_shared_preferences(this))
-        if (current.primary != primaryLanguage || current.secondary != secondaryLanguage) {
+        // (Also when a layout's language binding changed in Layout Manager meanwhile.)
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val current = LanguagePrefs.userLanguages(prefs)
+        if (current.primary != primaryLanguage || current.secondary != secondaryLanguage ||
+            readBoundLanguages(prefs) != boundLanguages
+        ) {
             rebuildTabsForLanguageChange()
         }
     }
@@ -552,4 +519,61 @@ class DictionaryManagerActivity : AppCompatActivity() {
 // Extension function to capitalize first letter
 private fun String.capitalize(): String {
     return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}
+/**
+ * Which tabs Dictionary Manager shows, in order (pure, so `runPureTests` pins it).
+ *
+ * - Single language: Active, Disabled, User Dict, Custom for the primary; the language is named
+ *   in the title unless it is English (the historical default, where the suffix adds nothing).
+ * - Multi-Language with a secondary: Active / Disabled / Custom for the primary, User Dict, then
+ *   the same three for the secondary.
+ * - Then Active / Disabled / Custom for every language a layout is BOUND to (GH #186/#61) that
+ *   is not already shown, in layout order — the same tabs a secondary language gets.
+ * - Then a Custom tab for each installed language pack not already shown (v1.1.87).
+ */
+internal object DictionaryTabPlan {
+    enum class Kind { ACTIVE, DISABLED, USER, CUSTOM }
+
+    /** One tab: [language] is null only for the (language-independent) User Dict tab. */
+    data class Tab(val kind: Kind, val language: String?, val languageInTitle: Boolean)
+
+    /**
+     * @param primary the user's primary language (`LanguagePrefs.userLanguages`).
+     * @param secondary the user's secondary, or null outside Multi-Language.
+     * @param bindings each layout's EFFECTIVE language binding, index-aligned with the
+     *   `layouts` preference (`LayoutsPreference.loadLayoutsWithBindings(...).languages`).
+     * @param installedPacks codes of the installed language packs.
+     */
+    fun plan(primary: String, secondary: String?, bindings: List<String?>, installedPacks: List<String>): List<Tab> {
+        val tabs = mutableListOf<Tab>()
+        val shown = mutableSetOf<String>()
+        fun addLanguage(code: String) {
+            tabs += Tab(Kind.ACTIVE, code, true)
+            tabs += Tab(Kind.DISABLED, code, true)
+            tabs += Tab(Kind.CUSTOM, code, true)
+            shown += code
+        }
+        if (secondary != null) {
+            addLanguage(primary)
+            tabs += Tab(Kind.USER, null, false)
+            addLanguage(secondary)
+        } else {
+            val named = primary != "en"
+            tabs += Tab(Kind.ACTIVE, primary, named)
+            tabs += Tab(Kind.DISABLED, primary, named)
+            tabs += Tab(Kind.USER, null, false)
+            tabs += Tab(Kind.CUSTOM, primary, named)
+            shown += primary
+        }
+        for (code in boundLanguages(bindings)) {
+            if (code !in shown) addLanguage(code)
+        }
+        for (code in installedPacks) {
+            if (shown.add(code)) tabs += Tab(Kind.CUSTOM, code, true)
+        }
+        return tabs
+    }
+
+    /** The distinct bound languages of [bindings], in layout order. */
+    fun boundLanguages(bindings: List<String?>): List<String> = bindings.filterNotNull().distinct()
 }

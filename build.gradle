@@ -602,6 +602,8 @@ tasks.register('runPureTests', JavaExec) {
 
   def pureTestClasses = [
     'tribixbite.cleverkeys.DictionaryLoadRequestsTest',
+    // 2026-10-28 (todo 13c): Dictionary Manager tabs for layout-bound languages.
+    'tribixbite.cleverkeys.DictionaryTabPlanTest',
     // 2026-10-15 Pixel: Ctrl+Z did nothing in the inline clipboard editor; its own undo history.
     'tribixbite.cleverkeys.InlineEditHistoryTest',
     // 2026-10-20: swipe typing into inline fields — spacing, bar replacement, backspace undo.
