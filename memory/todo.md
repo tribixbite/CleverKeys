@@ -92,6 +92,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    "<action> (<direction>)", e.g. Ctrl "Clipboard manager (Southwest)", dispatched through the
    real short-swipe path (`Pointers.performAccessibilityShortSwipe`). Pure + mock + instrumented
    tests; not tried with TalkBack on a phone → maintainer: Ctrl → TalkBack Actions menu → that entry.
+   #181 (agent, Saga 144, 2026-10-28): NOT RUN — this Saga HAS a downloadable-fonts provider
+   (`com.google.android.gms/.fonts.provider.FontsProvider`, authority `com.google.android.gms.fonts`,
+   GMS 26.42.31), so it is not a device without one; still needs a GMS-free phone or emulator.
+   #184 PASS (agent, Saga 144, release `16b4a500`, 2026-10-28, `build/oct28-saga144/10–12, 25`): sw
+   pack (20,000 words) imported, then an UPDATE pack built locally with the same code and 100,001
+   real dictionary entries (sw words + synthetic filler, `build_langpack.py`) → refused "This
+   dictionary contains 100001 words; the limit is 100000", logcat `Language pack import refused`;
+   Manage still listed "sw • 20000 words" and, on release `3cf3738a`, a layout bound to sw showed
+   Active [SW] (17,455 entries) in Dictionary Manager, i.e. the old dictionary still loads. Pack
+   deleted, Multi-Language off again, test ZIPs removed from Download.
 4. [ ] device: leftovers of the plan's "Maintainer device checks" — continuous swipe with
    auto-space OFF and interrupted phrases, "." tapped right after lift, templates in
    password/inline editors and media-only clipboard, enlarged text + narrow split-screen
@@ -438,9 +448,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     H1's `KeyboardHeightPrefs.followOuter`), L5's 0..80 clamp (aligned in `ce79c881`), L10's
     `SettingsValidation` "50" / `SettingsDefaults` "SettingsActivity" / KeyboardDimensionsHelper
     KDoc items (already fixed). Found: KeyboardDimensionsHelper's two height methods have no
-    production caller (TODO in the class: delete like ARC-084/099); KeyboardPreviewView's
-    "jewel" fallback is unreachable while `globalConfig()` throws (TODO; changing it changes
-    the preview colours). Dictionary Manager shows no tab for a layout-bound language (TODO).
+    production caller → DONE `ef9de5ce` (2026-10-28): class deleted with its service field and
+    wrappers, graph slot, ConfigPropagator slot/setter and proguard keep; DeadPlumbingDriftTest
+    case red before, green after. KeyboardPreviewView's "jewel" fallback is unreachable while
+    `globalConfig()` throws — LEFT AS IS (not trivially safe: making it reachable changes the
+    preview colours; TODO stays in the class). Dictionary Manager tab for a layout-bound language
+    → DONE `8cd92dff`: Active / Disabled / Custom per bound language (`DictionaryTabPlan`, pure
+    test 4 cases red → 8/8 green); Saga 144 PASS (System layout bound to sw: Active [SW] 17,455,
+    Disabled [SW], Custom [SW]; binding restored to Follow).
     Pure 3,178 / mock 1,426 green at `0b3bb5ac`; not run on instrumented or a device.
 14. [ ] agent drafts every close comment / PR review into a file; maintainer approves per item before anything is posted (2026-10-25). GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
@@ -566,9 +581,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `build/oct27pm-saga144/`, not in git): 47K-char entry opens on "Page 1 of 3" with Save/Cancel
     and Delete; a drag inside the 2-line capped field scrolled the PANE (pager and Save/Cancel out
     of sight) — FIXED `612356f2` (field keeps its drag; fail-first `ClipboardPagedEditViewTest`),
-    re-verified on release `16b4a500…`: the field's text scrolls, the pane stays. Still open: on
-    open the pane auto-scroll clips the pager row by about half a line (a drag outside the field
-    reveals it). (b) FIXED `cf74c393`: history-change callbacks from IO
+    re-verified on release `16b4a500…`: the field's text scrolls, the pane stays. Pager clipped on
+    open (about half a line) FIXED `5b88a684` 2026-10-28: the cap ignored the field's 14 dp top
+    margin, and the Saga's landscape pane (~204 px) cannot hold pager + margin + the field's
+    two-line minimum anyway, so after focus the pane is scrolled back to the pager row
+    (`revealEditPager`). Fail-first: `ClipboardPagedEditViewTest` cap cases red; device: release
+    `3cf3738a` (cap only) still cut it (`build/oct28-saga144/19`), `fdf697f6` shows the whole row
+    on pages 1 and 2 (`29`, `30`). 47K test entry imported via Import Clip, deleted afterwards. (b) FIXED `cf74c393`: history-change callbacks from IO
     are posted to the main thread, a listener failure is logged with its stack; Saga: image
     copied with the pane open → pane shows it, no "Loading results…", no error (both reproduced
     on the old build first; evidence `build/oct25-saga/clipfix/`). Instrumented tests adjusted
