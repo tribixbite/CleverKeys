@@ -851,6 +851,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.ThemeManagerCustomCardColoursTest',
     // 2026-10-27: a look's suggestion bar — 3 slots, best (= space commit) centred, typed word left.
     'tribixbite.cleverkeys.theme.LookBarArrangementTest',
+    // 2026-10-28: a look's editor-action key — icon per action, action vs Enter fill.
+    'tribixbite.cleverkeys.theme.LookActionKeysTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',
     'tribixbite.cleverkeys.TestRunnerListDriftTest',
     'tribixbite.cleverkeys.onnx.ModelLoaderReadBytesTest',

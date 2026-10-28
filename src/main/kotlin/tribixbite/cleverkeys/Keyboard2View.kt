@@ -482,6 +482,20 @@ class Keyboard2View @JvmOverloads constructor(
     /** Get the current keyboard layout data (#9: used for swipe support check). */
     fun getKeyboard(): KeyboardData? = _keyboard
 
+    /**
+     * The field's standard editor action (null: none, or the editor's own label), set by the
+     * service at every field start before [setKeyboard]. A keyboard look draws its icon on the
+     * action key and decides its fill from it (`theme/LookActionKeys.kt`).
+     */
+    private var _editorAction: tribixbite.cleverkeys.theme.ActionKind? = null
+
+    fun setEditorAction(kind: tribixbite.cleverkeys.theme.ActionKind?) {
+        if (_editorAction != kind) {
+            _editorAction = kind
+            invalidate()
+        }
+    }
+
     fun setKeyboard(kw: KeyboardData) {
         cancelContinuousSwipe()
         _keyboard = kw
@@ -1865,10 +1879,15 @@ class Keyboard2View @JvmOverloads constructor(
                 // Keyboard looks: Enter, the editor-action key and a look's function characters
                 // (Gboard's comma/period) get their own frames; a latched Shift at rest draws the
                 // look's latched fill (Gboard, Samsung: the function-key fill, Samsung's blue icon).
-                val role = Theme.Computed.roleOf(
+                val baseRole = Theme.Computed.roleOf(
                     kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys,
                     Theme.Computed.isRestingLatch(kv0Flags, _theme.colorKeyLatched != 0),
                 )
+                // A look's editor-action key takes the Enter key's colours for the actions its
+                // product does not highlight (Gboard, SwiftKey: all; iOS: Next / Previous).
+                val role = if (baseRole == Theme.Computed.KeyRole.ACTION && !tribixbite.cleverkeys.theme.LookActionKeys
+                        .usesActionFill(_theme.lookAction, _editorAction)
+                ) Theme.Computed.KeyRole.ENTER else baseRole
                 // Per-key XML styling (KeyStyle): its own fill/border/label colours and gaps. The
                 // frame stays centred on the key's cell (KeyStyles.frame), so hit-testing and the
                 // swipe engines' key centres are unaffected.
@@ -2138,9 +2157,53 @@ class Keyboard2View @JvmOverloads constructor(
             else Theme.Computed.frameLabelColor(labelColor(modifiedKv, isKeyDown, false), tc.labelColorOverride, _theme),
             textSize,
         )
-        val label = modifiedKv.getString()
+        val lookAction = _theme.lookAction
+        val isAction = modifiedKv.getKind() == KeyValue.Kind.Event && modifiedKv.getEvent() == KeyValue.Event.ACTION
+        val isEnter = modifiedKv.getKind() == KeyValue.Kind.Keyevent && modifiedKv.getKeyevent() == android.view.KeyEvent.KEYCODE_ENTER
+        if ((isAction || isEnter) && lookAction != null) {
+            val glyph = tribixbite.cleverkeys.theme.LookActionKeys.glyph(
+                lookAction,
+                if (isEnter) tribixbite.cleverkeys.theme.ActionKind.ENTER
+                else _editorAction,
+            )
+            if (glyph != null) {
+                // CleverKeys' own line icon in the label colour, sized like a function-key glyph.
+                val box = _mainLabelSize * tribixbite.cleverkeys.theme.LookActionKeys.BOX_SCALE
+                drawActionIcon(canvas, glyph, x - box / 2f, y + (keyH - box) / 2f, box, p.color)
+                return box
+            }
+        }
+        val label = if (isAction) tribixbite.cleverkeys.theme.LookActionKeys.text(
+            lookAction, modifiedKv.getString(), resources.configuration.locales[0],
+        ) else modifiedKv.getString()
         canvas.drawText(label, x, (keyH - p.ascent() - p.descent()) / 2f + y, p)
         return p.measureText(label)
+    }
+
+    /** Draw [glyph]'s strokes ([tribixbite.cleverkeys.theme.LookActionKeys.parts]) in a [box]-sized square at ([left], [top]). */
+    private fun drawActionIcon(canvas: Canvas, glyph: tribixbite.cleverkeys.theme.ActionGlyph, left: Float, top: Float, box: Float, color: Int) {
+        val paint = _actionIconPaint
+        // Round caps and joins, like the products' line icons.
+        paint.strokeCap = Paint.Cap.ROUND
+        paint.strokeJoin = Paint.Join.ROUND
+        paint.color = color
+        paint.strokeWidth = box * tribixbite.cleverkeys.theme.LookActionKeys.STROKE
+        for (part in tribixbite.cleverkeys.theme.LookActionKeys.parts(glyph)) when (part) {
+            is tribixbite.cleverkeys.theme.IconPart.Circle -> {
+                paint.style = Paint.Style.STROKE
+                canvas.drawCircle(left + part.cx * box, top + part.cy * box, part.r * box, paint)
+            }
+            is tribixbite.cleverkeys.theme.IconPart.Path -> {
+                val path = _actionIconPath
+                path.rewind()
+                part.points.forEachIndexed { i, (px, py) ->
+                    if (i == 0) path.moveTo(left + px * box, top + py * box) else path.lineTo(left + px * box, top + py * box)
+                }
+                if (part.closed) path.close()
+                paint.style = if (part.filled) Paint.Style.FILL_AND_STROKE else Paint.Style.STROKE
+                canvas.drawPath(path, paint)
+            }
+        }
     }
 
     /**
@@ -2441,6 +2504,14 @@ class Keyboard2View @JvmOverloads constructor(
         /** Key-press preview paints (a look's), allocated once. */
         private val _previewFillPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         private val _previewShadowPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        /**
+         * A look's editor-action icon. Caps and joins are set where it is drawn, not here: this
+         * companion initialises with the class, and the host tests' android stubs have no
+         * `setStrokeCap` (a static-init call made 56 mock tests fail to load Keyboard2View).
+         */
+        private val _actionIconPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+        /** Lazy: the host tests' android stubs throw from `Path()`, and this companion initialises with the class. */
+        private val _actionIconPath by lazy { android.graphics.Path() }
         /** Gboard-style preview elevation: a soft offset shadow. */
         private const val PREVIEW_SHADOW_DY_DP = 1.5f
         private const val PREVIEW_SHADOW_COLOR = 0x33000000

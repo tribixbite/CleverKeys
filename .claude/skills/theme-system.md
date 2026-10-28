@@ -169,6 +169,18 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    at their individually fitted sizes (`Keyboard2View.bandScale` / `subLabelPaint`); bands with
    one label draw exactly as before. Pinned by `SubLabelSizingTest` (pure) and
    `LookHintOverlapRenderTest` (instrumented, measured ink bounds).
+18. **A look draws its product's editor-action key** (2026-10-28, `theme/LookActionKeys.kt`,
+   research §11). `KeyboardLook.action` / `ThemeSpec.action` → `Theme.lookAction`
+   (`LookActionStyle`: icon per `ActionKind`, `accent` = actions on the action colours, the rest
+   on the Enter frame; `lowercase` text; `ENTER` = plain Enter). The service pushes the field's
+   standard action with `Keyboard2View.setEditorAction` before every `setKeyboard` (null when the
+   editor gives its own label → text; never a live `Config` read — `ConfigSnapshotRatchetTest`).
+   `Keyboard2View` swaps the
+   ACTION role for ENTER when `usesActionFill` is false and strokes `LookActionKeys.parts` (our
+   own line icons, never product artwork) in place of the label. Gboard: icons, function fill;
+   SwiftKey: its own icon mapping (Go = ✓); iOS 26: blue + icon for Go/Search/Send/Done; iOS 18:
+   lower-case text; Samsung: unchanged (no reference). XML `action_icons` / `action_accent` /
+   `action_lowercase`, JSON `action`.
 
 15. **Layouts style themselves** (2026-10-28, spec `docs/specs/layout-system.md` "Layout themes
    and per-key styling", user reference `docs/wiki/layouts/layout-xml-reference.md`). A layout

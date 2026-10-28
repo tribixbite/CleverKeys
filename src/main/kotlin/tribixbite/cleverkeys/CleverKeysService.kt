@@ -90,6 +90,9 @@ class CleverKeysService : InputMethodService(),
     private var _topPane: FrameLayout? = null // TopPane that holds scrollView or contentPaneContainer
     private var _scrollView: android.widget.HorizontalScrollView? = null // ScrollView with suggestion bar
     var actionId: Int = 0 // Action performed by the Action key.
+
+    /** The field's standard editor action, pushed to the keyboard view with every layout (a look's action icon). */
+    private var editorAction: tribixbite.cleverkeys.theme.ActionKind? = null
     private lateinit var _handler: Handler
 
     // Clipboard management (v1.32.349: extracted to ClipboardManager)
@@ -620,6 +623,9 @@ class CleverKeysService : InputMethodService(),
 
         _config?.actionLabel = actionInfo.actionLabel
         actionId = actionInfo.actionId
+        // A look draws the action's icon (LookActionKeys) only for a standard action; an editor's
+        // own label (EditorInfo.actionLabel) is shown as text, so it has no kind.
+        editorAction = if (info.actionLabel != null) null else tribixbite.cleverkeys.theme.ActionKind.of(actionInfo.actionId)
         _config?.swapEnterActionKey = actionInfo.swapEnterActionKey
     }
 
@@ -724,6 +730,7 @@ class CleverKeysService : InputMethodService(),
 
         // CRITICAL: Set the keyboard layout on the new view to enable swipe/touch handling
         // Without this, _keyboard is null and key positions aren't calculated
+        _keyboardView.setEditorAction(editorAction)
         _keyboardView.setKeyboard(current_layout())
 
         // Re-initialize swipe typing components on the new view
@@ -809,6 +816,7 @@ class CleverKeysService : InputMethodService(),
             _layoutManager?.clearSpecialLayout()
         }
 
+        _keyboardView.setEditorAction(editorAction)
         _keyboardView.setKeyboard(current_layout())
         // WP9 R-1 step 8: background-warm the geometric engine when this layout routes to it,
         // so the first non-QWERTY swipe avoids the synchronous template-index build. No-op
@@ -1145,6 +1153,7 @@ class CleverKeysService : InputMethodService(),
         // callback can return the old subtype, and tag-only matching aliases duplicate
         // languageTags (ar/ar_TN); either way the switch was invisible.
         refreshSubtypeImm(changedTo = subtype)
+        _keyboardView.setEditorAction(editorAction)
         _keyboardView.setKeyboard(current_layout())
         // REMOVED: Redundant layout update - now handled exclusively by PredictionViewSetup's GlobalLayoutListener
         // This eliminates double initialization and input lag on app switches

@@ -206,6 +206,13 @@ class Theme {
     @JvmField
     val lookBar: tribixbite.cleverkeys.theme.LookBar?
 
+    /**
+     * A look's editor-action key style (icon per action, which actions take the action colours —
+     * `theme/LookActionKeys.kt`); null for every non-look theme (the action's text, action colours).
+     */
+    @JvmField
+    val lookAction: tribixbite.cleverkeys.theme.LookActionStyle?
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -293,6 +300,7 @@ class Theme {
         lookPopupColors = null
         lookHintStyle = null
         lookBar = null
+        lookAction = null
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -342,6 +350,8 @@ class Theme {
         pressedLabelColor: Int = 0,
         /** A look's suggestion-bar arrangement; null = scrolling chips. */
         lookBar: tribixbite.cleverkeys.theme.LookBar? = null,
+        /** A look's editor-action key style; null = text on the action colours. */
+        lookAction: tribixbite.cleverkeys.theme.LookActionStyle? = null,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -416,6 +426,7 @@ class Theme {
         this.lookPopupColors = lookPopupColors?.takeIf { lookPalette != null }
         this.lookHintStyle = lookHintStyle?.takeIf { lookPalette != null }
         this.lookBar = lookBar?.takeIf { lookPalette != null }
+        this.lookAction = lookAction?.takeIf { lookPalette != null }
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0

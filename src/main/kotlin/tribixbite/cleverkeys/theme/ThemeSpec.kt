@@ -93,6 +93,7 @@ enum class ThemeColorRole(val xmlName: String, val jsonKey: String, val diy: Boo
  * @property dark colours that replace [colors] while the system is in dark mode.
  * @property pillKeys null = not defined; empty = defined as "no pills".
  * @property bar the suggestion-bar arrangement ([LookBar]); null = not defined (scrolling chips).
+ * @property action the editor-action key's style ([LookActionStyle]); null = not defined.
  */
 data class ThemeSpec(
     val name: String? = null,
@@ -108,12 +109,13 @@ data class ThemeSpec(
     val hintStyle: LookHintStyle? = null,
     val dynamicColor: Boolean? = null,
     val bar: LookBar? = null,
+    val action: LookActionStyle? = null,
 ) {
     /** True when the spec defines nothing at all (a `<theme/>` with no attributes). */
     val isEmpty: Boolean
         get() = colors.isEmpty() && light.isEmpty() && dark.isEmpty() && geometry == LookGeometry() &&
             functionChars == null && legends == null && pillKeys == null && letterKeys == null &&
-            preview == null && hintStyle == null && dynamicColor == null && bar == null
+            preview == null && hintStyle == null && dynamicColor == null && bar == null && action == null
 
     /** The colours for one system mode: [colors] with that mode's variant on top. */
     fun colorsFor(systemLight: Boolean): Map<ThemeColorRole, Int> = colors + (if (systemLight) light else dark)
@@ -143,6 +145,8 @@ data class RenderedThemeSpec(
     val labelPressed: Int,
     /** The suggestion-bar arrangement; null = CleverKeys' scrolling chips. */
     val bar: LookBar? = null,
+    /** The editor-action key's style; null = text on the action colours. */
+    val action: LookActionStyle? = null,
 )
 
 /** Resolution of specs: flatten a mode, layer a spec over its base, render, convert. Pure. */
@@ -179,6 +183,7 @@ object ThemeSpecs {
             hintStyle = t.hintStyle ?: b.hintStyle,
             dynamicColor = t.dynamicColor ?: b.dynamicColor,
             bar = t.bar ?: b.bar,
+            action = t.action ?: b.action,
         )
     }
 
@@ -263,6 +268,7 @@ object ThemeSpecs {
             dynamicColor = flat.dynamicColor == true,
             labelPressed = c[ThemeColorRole.LABEL_PRESSED] ?: 0,
             bar = flat.bar,
+            action = flat.action,
         )
     }
 
@@ -306,6 +312,7 @@ object ThemeSpecs {
         preview = look.preview,
         hintStyle = look.hintStyle,
         bar = look.bar,
+        action = look.action,
     )
 
     /**

@@ -497,3 +497,27 @@ toolbar above) that CleverKeys does not have. Changes: a look's slot shows the p
 next-word predictions are never drawn as the space commit. The "+word" tap still commits the word
 as typed and adds it to the dictionary (the closest CleverKeys equivalent of the products'
 learn-on-tap); the plain bar keeps the "+word" chip.
+
+## 11. Follow-up 2026-10-28: the editor-action key
+
+Pixel 8 Pro, one Chrome `data:` page with an input per `enterkeyhint` (go, search, send, next,
+done, previous, enter), the real keyboard selected for the capture only, light and dark (evidence
+`build/oct27-night-pixel/action/`, not in git):
+
+| Action | Gboard | SwiftKey |
+|---|---|---|
+| go | → | ✓ |
+| search | magnifier | magnifier |
+| send | filled paper plane | outlined paper plane |
+| next | →\| | → |
+| done | ✓ | ↵ |
+| previous | \|← | ↵ |
+| enter (multi-line) | ↵ | ↵ |
+
+Gboard draws every action on the function-key pill (light `#D3E5F5`-family, dark slate — the same
+fill as period and shift), never the primary colour; this corrects §2a's "highlighted Enter in
+search/send fields", which this Gboard build does not do. SwiftKey keeps its ordinary key fill.
+iOS follows §1a (iOS 26: blue `#007AFF` with →, magnifier, ↑, ✓ for Go / Search / Send / Done) and
+§1b (iOS 18: lower-case words); Next / Previous on iOS are not documented and use the plain
+return (low confidence). Samsung Keyboard could not be checked (no Samsung phone) and is left
+unchanged. CleverKeys draws its own line icons (`LookActionKeys.parts`), not the products'.

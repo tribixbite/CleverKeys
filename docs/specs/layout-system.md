@@ -451,6 +451,23 @@ A layout `<theme>` / custom theme carries it as `bar_slots` (1–5), `bar_centre
 `bar_quote_typed`, `bar_emphasis` (`commit` / `centre`) (JSON `bar`). Tests:
 `theme/LookBarArrangementTest` (pure), `LookSuggestionBarInstrumentedTest`.
 
+**Editor-action key** (`KeyboardLook.action`, `theme/LookActionKeys.kt`, 2026-10-28; research
+§11). The key that replaces Enter in Go / Search / Send / Next / Done / Previous fields is drawn
+the product's way: `LookActionStyle.icons` maps each `ActionKind` (IME action 2–7) to one of
+CleverKeys' own line icons (`ActionGlyph`: arrow, search, send, send_outline, next, previous,
+done, return, arrow_up — drawn as paths by `Keyboard2View.drawActionIcon`, no product
+artwork); `accent` lists the actions drawn in the look's action colours, the others take the
+Enter key's colours (null = all, the behaviour without a style); `lowercase` shows a text label
+in lower case; `ActionKind.ENTER` gives plain Enter an icon too (Gboard, SwiftKey, iOS: a thin
+↵). The service pushes the field's standard action to `Keyboard2View.setEditorAction` before
+every `setKeyboard` — null when the editor supplies its own `actionLabel`, which is always drawn
+as text. Built-ins: Gboard
+icons → ⌕ ➤ →| ✓ |← on the function-key fill (no primary highlight, Pixel 2026-10-28);
+SwiftKey ✓ (Go) ⌕ outlined plane → ↵ ↵ on its key fill; iOS-style blue + → ⌕ ↑ ✓ for Go / Search /
+Send / Done, plain ↵ for Next / Previous; iOS 18-style lower-case words, blue for the same four;
+Samsung-style unchanged (no device reference). XML `action_icons` / `action_accent` /
+`action_lowercase`, JSON `action`. Tests: `theme/LookActionKeysTest` (pure).
+
 **Built-ins** (`theme/KeyboardLooks.kt`; values, sources and confidence in
 `docs/research/2026-10-27-familiar-keyboard-looks.md`): `look_ios` (iOS 26: one key colour,
 8 dp corners, no shadow, blue editor-action key), `look_gboard` (Material You on the default

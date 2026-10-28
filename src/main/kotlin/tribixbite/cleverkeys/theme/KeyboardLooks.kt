@@ -36,6 +36,9 @@ object KeyboardLooks {
     /** A separator colour with alpha 0: no separators are drawn. */
     private const val NO_SEPARATOR = 0x00FFFFFF
 
+    /** iOS's prominent (blue) return types (declared before the looks that use it). */
+    private val IOS_PROMINENT = setOf(ActionKind.GO, ActionKind.SEARCH, ActionKind.SEND, ActionKind.DONE)
+
     /**
      * iOS 26 (default since 2025): ONE colour for every key over the "Liquid Glass" background
      * (drawn as its composited flat colour), 8 pt corners, no shadow, return a plain key with an
@@ -74,6 +77,17 @@ object KeyboardLooks {
         hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 400),
         // QuickType: three slots, autocorrection centred, the typed word quoted on the left (§10).
         bar = LookBar(slots = 3, quoteTyped = true),
+        // iOS 26: the prominent return (Go / Search / Send / Done) is blue with an icon (research
+        // §1a: →, magnifier, ↑, ✓); Next / Previous keep the plain return. Not device-checked.
+        action = LookActionStyle(
+            icons = mapOf(
+                ActionKind.GO to ActionGlyph.ARROW, ActionKind.SEARCH to ActionGlyph.SEARCH,
+                ActionKind.SEND to ActionGlyph.ARROW_UP, ActionKind.DONE to ActionGlyph.DONE,
+                ActionKind.NEXT to ActionGlyph.RETURN, ActionKind.PREVIOUS to ActionGlyph.RETURN,
+                ActionKind.ENTER to ActionGlyph.RETURN,
+            ),
+            accent = IOS_PROMINENT,
+        ),
     )
 
     /**
@@ -112,6 +126,8 @@ object KeyboardLooks {
         preview = IOS_BALLOON,
         hintStyle = LookHintStyle(sizeFraction = 0.38f, weight = 300),
         bar = LookBar(slots = 3, quoteTyped = true),
+        // iOS 18: text labels in lower case ("go", "search"), blue for the prominent ones (§1b).
+        action = LookActionStyle(accent = IOS_PROMINENT, lowercase = true),
     )
 
     /**
@@ -161,6 +177,17 @@ object KeyboardLooks {
         dynamicColor = true,
         // Three slots, best centred, separators between them (research §10).
         bar = LookBar(slots = 3),
+        // Every action on the function-key fill with its own icon (Pixel 2026-10-28, real Gboard:
+        // → ⌕ ➤ →| ✓ |←); never the primary colour.
+        action = LookActionStyle(
+            icons = mapOf(
+                ActionKind.GO to ActionGlyph.ARROW, ActionKind.SEARCH to ActionGlyph.SEARCH,
+                ActionKind.SEND to ActionGlyph.SEND, ActionKind.NEXT to ActionGlyph.NEXT,
+                ActionKind.DONE to ActionGlyph.DONE, ActionKind.PREVIOUS to ActionGlyph.PREVIOUS,
+                ActionKind.ENTER to ActionGlyph.RETURN,
+            ),
+            accent = emptySet(),
+        ),
     )
 
     /**
@@ -205,6 +232,17 @@ object KeyboardLooks {
         // "Press the spacebar to insert the middle prediction"; verbatim text on the left (§10).
         // The centre is always the emphasised slot, sides dimmed, nothing bold (Pixel 2026-10-27).
         bar = LookBar(slots = 3, emphasis = BarEmphasis.CENTRE),
+        // Real SwiftKey (Pixel 2026-10-28): Go ✓, Search magnifier, Send outlined plane, Next →,
+        // Done and Previous ↵; the key keeps the function-key fill.
+        action = LookActionStyle(
+            icons = mapOf(
+                ActionKind.GO to ActionGlyph.DONE, ActionKind.SEARCH to ActionGlyph.SEARCH,
+                ActionKind.SEND to ActionGlyph.SEND_OUTLINE, ActionKind.NEXT to ActionGlyph.ARROW,
+                ActionKind.DONE to ActionGlyph.RETURN, ActionKind.PREVIOUS to ActionGlyph.RETURN,
+                ActionKind.ENTER to ActionGlyph.RETURN,
+            ),
+            accent = emptySet(),
+        ),
     )
 
     /**

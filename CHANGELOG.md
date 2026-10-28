@@ -125,7 +125,10 @@ editor that used to be listed here already ship in 2.0.)
   tapping a slot types that slot's word, and other themes keep the scrolling list. As in the
   real keyboards, a word the dictionary does not know shows as a plain suggestion (tapping it
   still types it and adds it to your dictionary), next-word suggestions are not drawn as the
-  word space would type, and SwiftKey-style dims the side suggestions. Drawn with
+  word space would type, and SwiftKey-style dims the side suggestions. The key that replaces Enter
+  in Go / Search / Send / Next / Done fields also follows the keyboard: an arrow, magnifier,
+  paper plane, check mark… on Gboard- and SwiftKey-style (each with that keyboard's choices and
+  key colour), a blue key with an icon on iOS-style and lower-case words on iOS 18-style. Drawn with
   CleverKeys' own keys and the system font; not affiliated with Apple, Google, Microsoft or
   Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard

@@ -333,6 +333,7 @@ class ThemeProvider(
             baseFrame = frame,
             pressedLabelColor = r.labelPressed,
             lookBar = r.bar,
+            lookAction = r.action,
         )
     }
 
@@ -429,6 +430,7 @@ class ThemeProvider(
             lookPreview = look.preview,
             lookHintStyle = look.hintStyle,
             lookBar = look.bar,
+            lookAction = look.action,
         )
     }
 

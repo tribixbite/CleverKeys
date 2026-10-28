@@ -56,6 +56,11 @@ data class KeyboardLook(
      * best candidate centred); null = CleverKeys' scrolling chips.
      */
     val bar: LookBar? = null,
+    /**
+     * How the editor-action key looks per action ([LookActionStyle]: icon or text, action or
+     * Enter colours); null = the action's text on the action colours.
+     */
+    val action: LookActionStyle? = null,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark

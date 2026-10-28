@@ -52,6 +52,9 @@ object ThemeSpecXml {
     const val BAR_CENTRE = "bar_centre"
     const val BAR_QUOTE_TYPED = "bar_quote_typed"
     const val BAR_EMPHASIS = "bar_emphasis"
+    const val ACTION_ICONS = "action_icons"
+    const val ACTION_ACCENT = "action_accent"
+    const val ACTION_LOWERCASE = "action_lowercase"
 
     val GAP_RANGE = 0f..KeyboardLookGeometry.MAX_GAP
     val CORNER_RADIUS_RANGE = 0f..64f
@@ -70,6 +73,7 @@ object ThemeSpecXml {
         LABEL_WEIGHT, FUNCTION_CHARS, HINTS, PILL_KEYS, LETTER_KEYS, PREVIEW, PREVIEW_WIDTH,
         PREVIEW_HEIGHT, PREVIEW_LABEL_SCALE, PREVIEW_CORNER, PREVIEW_SHADOW, HINT_SIZE, HINT_WEIGHT,
         DYNAMIC_COLOR, BAR_SLOTS, BAR_CENTRE, BAR_QUOTE_TYPED, BAR_EMPHASIS,
+        ACTION_ICONS, ACTION_ACCENT, ACTION_LOWERCASE,
     )
 
     private val PILL_NAMES = mapOf("enter" to LookPillKey.ENTER, "action" to LookPillKey.ACTION, "numbers" to LookPillKey.NUMBERS)
@@ -178,6 +182,17 @@ object ThemeSpecXml {
             quoteTyped = barQuote ?: false,
             emphasis = barEmphasis ?: BarEmphasis.COMMIT,
         )
+        // The editor-action key (LookActionStyle): any of its attributes defines it.
+        val actionIcons = theme[ACTION_ICONS]?.let { raw ->
+            LookActionKeys.parseIcons(raw) ?: run { bad(TAG, ACTION_ICONS, raw); null }
+        }
+        val actionAccent = theme[ACTION_ACCENT]?.let { raw ->
+            LookActionKeys.parseKinds(raw) ?: run { bad(TAG, ACTION_ACCENT, raw); null }
+        }
+        val actionLower = boolAttr(ACTION_LOWERCASE)
+        val action = if (actionIcons == null && actionAccent == null && actionLower == null) null else LookActionStyle(
+            icons = actionIcons ?: emptyMap(), accent = actionAccent, lowercase = actionLower ?: false,
+        )
         return ThemeSpec(
             name = theme[NAME]?.trim()?.takeIf { it.isNotEmpty() },
             colors = common,
@@ -192,6 +207,7 @@ object ThemeSpecXml {
             hintStyle = hintStyle,
             dynamicColor = boolAttr(DYNAMIC_COLOR),
             bar = bar,
+            action = action,
         )
     }
 
@@ -234,6 +250,11 @@ object ThemeSpecXml {
             attrs.add(BAR_CENTRE to it.centreBest.toString())
             attrs.add(BAR_QUOTE_TYPED to it.quoteTyped.toString())
             attrs.add(BAR_EMPHASIS to it.emphasis.name.lowercase())
+        }
+        spec.action?.let {
+            attrs.add(ACTION_ICONS to LookActionKeys.formatIcons(it.icons))
+            it.accent?.let { a -> attrs.add(ACTION_ACCENT to LookActionKeys.formatKinds(a)) }
+            attrs.add(ACTION_LOWERCASE to it.lowercase.toString())
         }
 
         val inner = "$indent  "
@@ -353,6 +374,13 @@ object ThemeSpecJson {
                 put("emphasis", b.emphasis.name)
             })
         }
+        spec.action?.let { a ->
+            put("action", JSONObject().apply {
+                put("icons", LookActionKeys.formatIcons(a.icons))
+                a.accent?.let { put("accent", LookActionKeys.formatKinds(it)) }
+                put("lowercase", a.lowercase)
+            })
+        }
     }
 
     /**
@@ -421,6 +449,18 @@ object ThemeSpecJson {
             },
             dynamicColor = if (json.has("dynamicColor")) json.getBoolean("dynamicColor") else null,
             bar = bar,
+            // Unknown names from a newer build drop that entry rather than the whole theme.
+            action = json.optJSONObject("action")?.let { a ->
+                LookActionStyle(
+                    icons = LookActionKeys.parseIcons(
+                        a.getString("icons").split(Regex("\\s+")).filter { LookActionKeys.parseIcons(it) != null }.joinToString(" ")
+                    ) ?: emptyMap(),
+                    accent = if (a.has("accent")) LookActionKeys.parseKinds(
+                        a.getString("accent").split(Regex("\\s+")).filter { ActionKind.byXmlName(it) != null }.joinToString(" ")
+                    ) else null,
+                    lowercase = a.optBoolean("lowercase", false),
+                )
+            },
         ))
     }
 
