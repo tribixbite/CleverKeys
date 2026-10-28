@@ -408,6 +408,37 @@ CleverKeys' custom Canvas rendering is one of its greatest assets. It should be 
   - include the button and its action list in backup and restore.
 * **Effort**: Medium (overlay service, radial menu, actions editor, permission flow).
 
+### 4.4 Toolbar row above the keys (target: 2.1)
+* **Requested**: maintainer, 2026-10-28, from real Samsung Keyboard screenshots (One UI: a row of
+  round icon buttons — AI tools, emoji, translate, clipboard, settings, "…"; "…" opens a grid of
+  more actions with a "+" to add one). Scheduled for 2.1; not started.
+* **Feature**: an optional toolbar row available to EVERY theme and layout, not only the looks. It
+  shows when no suggestions are pending (like Gboard and Samsung) or always (setting). Buttons
+  are CleverKeys commands from the existing command catalogue (clipboard pane, emoji, settings,
+  undo/redo, select all, a custom key action…), user-chosen and reorderable, with an overflow
+  "…" panel. Own icons only, no product artwork.
+* **Looks**: Samsung-style turns it on with round buttons; Gboard-style uses its grid/mic row;
+  SwiftKey-style its toolbar; iOS-style keeps it off. A look's choice applies only while the look
+  is effective; the user's explicit setting wins (same precedence as other look attributes).
+* **Open design points**: how it shares the strip with the suggestion bar (swap vs. stacked
+  row and the height cost on short landscape panes); TalkBack labels; inclusion in layout XML
+  (`<toolbar>`) and in backup/restore; interaction with blind (REMOTE) fields.
+* **Effort**: Medium.
+
+### 4.5 Card-grid clipboard presentation (target: 2.1)
+* **Requested**: maintainer, 2026-10-28 (Samsung Keyboard's clipboard: a "Clipboard" header with
+  pin and delete actions above a grid of rounded cards, three columns, text clipped inside
+  each card). Scheduled for 2.1; not started.
+* **Feature**: an alternative presentation of the clipboard pane — a grid of cards — selectable
+  by any theme/layout and turned on by the Samsung-style look. It must keep every capability of
+  the list pane: History / Pinned / To-dos tabs, search and filters, Select mode and bulk
+  actions, swipe-to-delete (or an equivalent gesture), drag-to-reorder for Pinned and To-dos,
+  media thumbnails, the paged long-entry editor, TalkBack custom actions, and the bounded
+  previews that keep 0.5 MB entries from freezing the pane (`ClipboardPreviewPolicy`).
+* **Open design points**: column count by width (3 portrait, more in landscape), card height and
+  preview length, how reorder and swipe work in a grid, and the short landscape pane.
+* **Effort**: Medium–High (the list view carries most of the pane's behaviour).
+
 ---
 
 ## 6. What NOT to Do: Traps & Anti-Patterns to Avoid
