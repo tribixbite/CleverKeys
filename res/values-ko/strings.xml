@@ -1218,6 +1218,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">교정이 글자를 빼서 한두 글자 단어가 될 때 더하는 비용입니다. 잘못 입력한 첫 글자가 그냥 지워지지 않도록 합니다. 0 = 추가 비용 없음.</string>
     <string name="autocorrect_channel_max_correction_cost_title">최대 교정 거리</string>
     <string name="autocorrect_channel_max_correction_cost_desc">이보다 편집 비용이 큰 교정은 하지 않으므로, 사전에 없는 올바른 단어가 다른 단어로 바뀌지 않습니다. 이웃 키 하나를 잘못 누르면 약 1.3입니다.</string>
+    <string name="autocorrect_channel_completion_cost_title">미완성 단어 비용</string>
+    <string name="autocorrect_channel_completion_cost_desc">입력을 끝내지 않은 단어(tomorr)가 흔한 단어의 앞부분이면 다른 단어(timor)로 바뀌지 않고 입력한 그대로 남습니다. 낮을수록 미완성 단어를 더 많이 남기며, 끔으로 두면 남기지 않습니다.</string>
     <string name="autocorrect_max_correction_cost_off">끔</string>
     <string name="autocorrect_short_deletion_scope_title">삭제 비용 적용 범위</string>
     <string name="autocorrect_short_deletion_scope_desc">히브리어의 한 글자 접두사 때문에 이 비용이 유용합니다. 영어에서는 두 글자 단어 옆의 여분 글자(tpo → to)가 실제 오타이므로 다른 문자에서는 기본적으로 꺼져 있습니다.</string>

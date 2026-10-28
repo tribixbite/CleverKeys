@@ -1221,6 +1221,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Extra kosten wanneer een correctie letters weglaat om een woord van één of twee letters te krijgen, zodat een verkeerd getypte eerste letter niet zomaar verdwijnt. 0 = geen extra kosten.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Maximale correctieafstand</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Correcties met hogere bewerkingskosten worden niet uitgevoerd, zodat een geldig woord dat in het woordenboek ontbreekt niet in een ander woord verandert. Eén verkeerde buurtoets kost ongeveer 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Kosten onvoltooid woord</string>
+    <string name="autocorrect_channel_completion_cost_desc">Een woord dat je nog niet af hebt getypt (tomorr) blijft zoals getypt in plaats van een ander woord te worden (timor) wanneer een veelgebruikt woord zo begint. Lager behoudt meer onvoltooide woorden; Uit behoudt er geen.</string>
     <string name="autocorrect_max_correction_cost_off">Uit</string>
     <string name="autocorrect_short_deletion_scope_title">Inkortkosten gelden voor</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebreeuwse voorvoegsels van één letter maken deze kosten daar nuttig; in het Engels is een extra letter naast een woord van twee letters (tpo → to) een echte tikfout, dus voor andere schriften staat het standaard uit.</string>

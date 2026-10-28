@@ -3748,6 +3748,24 @@ class WordPredictor : Predictor {
                 return typedWord
             }
         }
+        // ρ (round 6, eval doc §16): a typed word that is the start of a dictionary word may be
+        // unfinished (`tomorr` → `tomorrow`, not `timor`). Keep it when believing so is no worse
+        // than the winner, unless the winner itself completes the typed word (`thi` → `this`).
+        if (weights.completionCost != Float.POSITIVE_INFINITY &&
+            lowerTyped.length >= weights.completionMinLength &&
+            !winner.word.startsWith(lowerTyped)
+        ) {
+            val completionFrequency = bestCompletionFrequency(lowerTyped)
+            if (completionFrequency > 0) {
+                val keepCost = weights.completionCost +
+                    weights.frequencyWeight * ChannelRanker.rankSteps(completionFrequency, maxFrequency)
+                if (keepCost <= winnerCost) {
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (unfinished word, " +
+                        "keep=${"%.3f".format(keepCost)} <= ${winner.word}=${"%.3f".format(winnerCost)}): '$typedWord'")
+                    return typedWord
+                }
+            }
+        }
         // κ (round 5, eval doc §13): a correction farther than the maximum cost is not made.
         if (editCosts[index] > weights.maxCorrectionCost) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
@@ -3763,6 +3781,31 @@ class WordPredictor : Predictor {
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (channel): '$typedWord' → '$corrected' " +
             "(edit=${"%.3f".format(editCosts[index])} total=${"%.3f".format(winnerCost)} freq=${winner.frequency})")
         return corrected
+    }
+
+    /**
+     * The frequency of the most frequent enabled dictionary word that strictly extends
+     * [lowerTyped] (`tomorr` → tomorrow), or 0 when there is none — rule ρ's completion. Reads
+     * the prefix index's bucket for the first [PREFIX_INDEX_MAX_LENGTH] letters; a predictor
+     * without an index (test fixtures built by reflection) scans the dictionary.
+     */
+    internal fun bestCompletionFrequency(lowerTyped: String): Int {
+        val dict = dictionary.get()
+        // The field is null only on an Objenesis-built predictor (constructor skipped).
+        @Suppress("USELESS_CAST")
+        val index = (prefixIndex as AtomicReference<MutableMap<String, MutableSet<String>>>?)?.get()
+        val bucket: Collection<String> =
+            if (index.isNullOrEmpty()) dict.keys
+            else index[lowerTyped.take(PREFIX_INDEX_MAX_LENGTH)] ?: return 0
+        var best = 0
+        for (word in bucket) {
+            if (word.length <= lowerTyped.length || !word.startsWith(lowerTyped)) continue
+            val freq = dict[word] ?: continue
+            if (freq <= best) continue
+            if (disabledWords.isNotEmpty() && isWordDisabled(word)) continue
+            best = freq
+        }
+        return best
     }
 
     /** Step-5 commit test: clears the frequency floor, or is the user's own word (AC-2). */

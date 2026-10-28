@@ -1235,6 +1235,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Papildu izmaksas, ja labojums izmet burtus un iegūst viena vai divu burtu vārdu, lai kļūdaini ierakstīts pirmais burts netiktu vienkārši izdzēsts. 0 = bez papildu izmaksām.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Lielākais labojuma attālums</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Labojumi ar lielākām rediģēšanas izmaksām netiek veikti, lai vārdnīcā trūkstošs derīgs vārds netiktu pārrakstīts par citu. Viens nepareizs blakus taustiņš maksā apmēram 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Nepabeigta vārda izmaksas</string>
+    <string name="autocorrect_channel_completion_cost_desc">Vārds, kuru neesat pabeidzis rakstīt (tomorr), paliek kā ierakstīts, nevis kļūst par citu vārdu (timor), ja ar to sākas bieži lietots vārds. Zemāka vērtība saglabā vairāk nepabeigtu vārdu; Izslēgts nesaglabā nevienu.</string>
     <string name="autocorrect_max_correction_cost_off">Izslēgts</string>
     <string name="autocorrect_short_deletion_scope_title">Dzēšanas izmaksas attiecas uz</string>
     <string name="autocorrect_short_deletion_scope_desc">Ivrita viena burta priedēkļi padara šīs izmaksas tur noderīgas; angļu valodā lieks burts blakus divu burtu vārdam (tpo → to) ir īsta drukas kļūda, tāpēc citām rakstībām tās pēc noklusējuma ir izslēgtas.</string>

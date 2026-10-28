@@ -82,8 +82,10 @@ class ChannelRankingEval {
         /** κ, the maximum correction cost (round 5, §13.1); ∞ = off. */
         val kappa: Float = Float.POSITIVE_INFINITY,
     ) {
+        // ρ off: rounds 1–5 measured, and their replica models, the stack before round 6.
         val weights get() = ChannelWeights(s1, g, g2, tau, lambda, aliasBonus = beta,
-            shortWordDeletionCost = delta, maxCorrectionCost = kappa, inflectionCost = gamma)
+            shortWordDeletionCost = delta, maxCorrectionCost = kappa, inflectionCost = gamma,
+            completionCost = Float.POSITIVE_INFINITY)
         override fun toString() = "s1=$s1 g=$g g2=$g2 tau=$tau lambda=$lambda beta=$beta gamma=" +
             (if (gamma == Float.POSITIVE_INFINITY) "inf" else "$gamma") + " delta=$delta kappa=$kappa"
         /** The `CK_CH_CONFIG` spelling: `s1,g,g2,tau,lambda,beta,gamma[,delta]`. */
@@ -178,8 +180,13 @@ class ChannelRankingEval {
         /** Probe tuning: channel, finite γ (so guard G defers and reports its stem). */
         val PROBE_TUNING = AutocorrectTuning.DEFAULT.copy(
             ranking = AutocorrectRanking.CHANNEL,
-            channel = AutocorrectTuning.DEFAULT.channel.copy(inflectionCost = 1f, shortWordDeletionCost = 0f),
+            channel = AutocorrectTuning.DEFAULT.channel.copy(inflectionCost = 1f, shortWordDeletionCost = 0f,
+                completionCost = Float.POSITIVE_INFINITY),
         )
+
+        /** The shipped default before round 6 (ρ off): round 6's baseline (§16.2) and the stack rounds 1–5 measured. */
+        val BASE6 = AutocorrectTuning.DEFAULT.copy(
+            channel = AutocorrectTuning.DEFAULT.channel.copy(completionCost = Float.POSITIVE_INFINITY))
 
         /** Round 1 grid (doc §1.4): γ is chosen in a second stage, β is always 0. */
         private val ROUND1 = Grid(
@@ -214,7 +221,8 @@ class ChannelRankingEval {
                 delta = floatArrayOf(c.delta),
                 kappa = floatArrayOf(1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f, 3.5f, 4.0f))
         }
-        private val GRID: Grid = when (ROUND) { 1 -> ROUND1; 3 -> ROUND3; 5 -> ROUND5; else -> ROUND2 }
+        // Round 6 replays the shipped default exactly (no edit-weight grid): its pre-filter grid is round 5's.
+        private val GRID: Grid = when (ROUND) { 1 -> ROUND1; 3 -> ROUND3; 5, 6 -> ROUND5; else -> ROUND2 }
         private val LAMBDA get() = GRID.lambda
 
         /** The 16 corners of the edit-weight grid plus its centre: the alignment references. */
@@ -272,6 +280,13 @@ class ChannelRankingEval {
             "devixe" to "device",
         )
         const val SHATED = "shated"
+
+        /** Round 6 (§16.3): the pre-registered grid of ρ and of its minimum typed length. */
+        val RHO6 = floatArrayOf(1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.5f)
+        val MIN_LENGTH6 = intArrayOf(3, 4, 5)
+
+        /** The 2026-10-27 Pixel report (§16), reported under every configuration. */
+        val REPORT6 = listOf("tomorr", "caf", "resta", "becau", "restau", "tomo", "beautif")
 
         /** Doc §1.5 T5, Hebrew: the HebrewLayoutAutoCorrectTest cases plus the item-20 case. */
         val NAMED_HE = linkedMapOf(
@@ -593,8 +608,8 @@ class ChannelRankingEval {
         val report = StringBuilder()
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
-            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); else -> devPhase2(::say) }
-            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); else -> testPhase(::say) }
+            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); 6 -> devPhase6(::say); else -> devPhase2(::say) }
+            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); 6 -> testPhase6(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
             "prefix" -> prefixPhase(::say)
             "neighbour" -> neighbourPhase(::say)
@@ -944,7 +959,7 @@ class ChannelRankingEval {
                 val lang = if (inHe) he else en
                 val probe = heProbe[t] ?: gProbe[t] ?: aProbe[t] ?: oProbe.getValue(t)
                 decide(lang, probe, c, scratch) != lang.predictor.autoCorrect(t, prodTuning(c)) ||
-                    decide(lang, probe, Cfg.SHIPPED, scratch) != lang.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    decide(lang, probe, Cfg.SHIPPED, scratch) != lang.predictor.autoCorrect(t, BASE6)
             } finally {
                 KeyAdjacency.setLayoutLetters(emptyMap())
             }
@@ -978,7 +993,7 @@ class ChannelRankingEval {
                 check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
             } else {
                 inputs.parallelStream().forEach { t ->
-                    base[t] = lang.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    base[t] = lang.predictor.autoCorrect(t, BASE6)
                     cand[t] = lang.predictor.autoCorrect(t, tuning)
                 }
                 checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
@@ -1028,7 +1043,7 @@ class ChannelRankingEval {
         val cand = ConcurrentHashMap<String, String>()
         val start = System.nanoTime()
         inputs.parallelStream().forEach { t ->
-            base[t] = he.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+            base[t] = he.predictor.autoCorrect(t, BASE6)
             cand[t] = he.predictor.autoCorrect(t, tuning)
         }
         say("  HE-adj3: ${inputs.size} inputs in ${(System.nanoTime() - start) / 1_000_000_000}s")
@@ -1041,7 +1056,7 @@ class ChannelRankingEval {
         val english = (readGtc("TEST").map { it.typed }.distinct() +
             sAdj(dev = false).map { it.typed }.distinct().shuffled(java.util.Random(20261020)).take(20_000)).distinct()
         val diffs = english.parallelStream().filter { t ->
-            en.predictor.autoCorrect(t, tuning) != en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+            en.predictor.autoCorrect(t, tuning) != en.predictor.autoCorrect(t, BASE6)
         }.collect(java.util.stream.Collectors.toList())
         say("  English invariance: ${english.size} inputs, differences=${diffs.size} ${diffs.take(20)}")
         val q1 = th.netDistinct > 0 && th.d(th.breaks) <= 0.25 * th.d(th.fixes)
@@ -1122,7 +1137,7 @@ class ChannelRankingEval {
         val mismatches = sample.filter { t ->
             val probe = gProbe[t] ?: aProbe[t] ?: oProbe.getValue(t)
             decide(en, probe, c, scratch) != en.predictor.autoCorrect(t, prodTuning(c)) ||
-                decide(en, probe, base, scratch) != en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                decide(en, probe, base, scratch) != en.predictor.autoCorrect(t, BASE6)
         }
         say("  soundness: ${sample.size} inputs, mismatches=${mismatches.size} ${mismatches.take(20)}")
         check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
@@ -1152,7 +1167,7 @@ class ChannelRankingEval {
                 check(base.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
             } else {
                 inputs.parallelStream().forEach { t ->
-                    base[t] = en.predictor.autoCorrect(t, AutocorrectTuning.DEFAULT)
+                    base[t] = en.predictor.autoCorrect(t, BASE6)
                     cand[t] = en.predictor.autoCorrect(t, tuning)
                 }
                 checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { "$it\t${base[it]}\t${cand[it]}" } + "\n")
@@ -1175,6 +1190,263 @@ class ChannelRankingEval {
             "C-oov-TEST protected=${to.d(to.fixes)} of $oChanged changed (${"%.1f".format(100.0 * to.d(to.fixes) / oChanged)}%); named=$named")
         say("GATE: L1=$l1 L2=$l2 L3=$l3 L4=$l4 → " + if (l1 && l2 && l3 && l4) "PASS" else "FAIL")
         File(outDir, "rows5-test.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    // ── Round 6 (§16): the unfinished-word cost ρ ────────────────────────────────────────────
+
+    /**
+     * What the shipped default does with one input and what rule ρ needs to replay it: the
+     * shipped output, whether ρ can apply at all (the channel path produced a correction whose
+     * winner does not extend the typed word, and the typed word has a completion), the winner's
+     * total cost and the completion's rank steps.
+     */
+    private class Completion(val typed: String, val base: String, val eligible: Boolean,
+                             val winnerCost: Float, val completionRank: Float)
+
+    /** Shipped output plus ρ's inputs for [t], from production with a probe attached. */
+    private fun completionProbe(lang: Lang, t: String): Completion {
+        var seen: WordPredictor.ChannelProbe? = null
+        val base = lang.predictor.autoCorrect(t, BASE6) { seen = it }
+        val p = seen
+        if (p == null || base == t) return Completion(t, base, false, 0f, 0f)
+        val w = AutocorrectTuning.DEFAULT.channel
+        val costs = FloatArray(p.candidates.size) { ChannelEditCost.cost(p.lowerTypedWord, p.candidates[it].word, w) }
+        val i = ChannelRanker.pick(p.candidates, costs, p.maxFrequency, w.frequencyWeight, w.aliasBonus)
+        if (i < 0) return Completion(t, base, false, 0f, 0f)
+        val winner = p.candidates[i]
+        val completion = lang.predictor.bestCompletionFrequency(p.lowerTypedWord)
+        val eligible = completion > 0 && !winner.word.startsWith(p.lowerTypedWord)
+        return Completion(t, base, eligible,
+            ChannelRanker.totalCost(costs[i], winner.frequency, p.maxFrequency, w.frequencyWeight, winner.isAlias, w.aliasBonus),
+            ChannelRanker.rankSteps(completion, p.maxFrequency))
+    }
+
+    /** Rule ρ's output for [c] under (ρ, minimum length): the replica of `WordPredictor.channelDecide`'s ρ step. */
+    private fun decide6(c: Completion, rho: Float, minLength: Int): String =
+        if (c.eligible && c.typed.length >= minLength &&
+            rho + AutocorrectTuning.DEFAULT.channel.frequencyWeight * c.completionRank <= c.winnerCost
+        ) c.typed else c.base
+
+    private fun tuning6(rho: Float, minLength: Int) = BASE6.copy(
+        channel = BASE6.channel.copy(completionCost = rho, completionMinLength = minLength))
+
+    /**
+     * T-trunc (§16.2): the unfinished words. Every prefix of 3+ letters, one letter or more short,
+     * of each top-10,000 word (letters only, not an alias key) that is itself neither a
+     * dictionary word nor an alias key; its target is the most frequent top-10,000 word it
+     * starts. Split by the TARGET's hash, so a target's prefixes never straddle DEV and TEST.
+     */
+    private fun tTrunc(dev: Boolean): List<P> {
+        val top = en.dict.entries.filter { it.key.length >= 4 && letters.matches(it.key) && it.key !in en.aliases }
+            .sortedByDescending { it.value }.take(10_000).map { it.key }
+        val target = LinkedHashMap<String, String>()
+        for (w in top) for (n in 3 until w.length) {
+            val p = w.substring(0, n)
+            if (!en.dict.containsKey(p) && p !in en.aliases && p !in target) target[p] = w
+        }
+        return target.entries.filter { isDevWord(it.value) == dev }.map { P(it.key, it.value) }
+    }
+
+    /** Production shipped output + ρ inputs for every distinct typed word of [pairs] that has a completion. */
+    private fun probe6(pairs: List<P>, label: String, say: (String) -> Unit, all: Boolean = false): Map<String, Completion> {
+        val typed = pairs.map { it.typed }.distinct()
+        val out = ConcurrentHashMap<String, Completion>()
+        val start = System.nanoTime()
+        typed.parallelStream().forEach { t ->
+            out[t] = if (all || en.predictor.bestCompletionFrequency(t) > 0) completionProbe(en, t)
+                else Completion(t, "", false, 0f, 0f)
+        }
+        say("$label: ${typed.size} distinct inputs, ${out.values.count { it.eligible }} eligible for ρ, " +
+            "probed in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        return out
+    }
+
+    /** Distinct targets broken / fixed by (ρ, L) against the shipped output, plus raw breaks. */
+    private fun vs6(pairs: List<P>, probe: Map<String, Completion>, rho: Float, minLength: Int,
+                    rows: MutableList<String>? = null, set: String = ""): IntArray {
+        val fix = HashSet<String>(); val brk = HashSet<String>(); var brkRaw = 0
+        for (p in pairs) {
+            val c = probe.getValue(p.typed)
+            if (!c.eligible) continue
+            val b = c.base; val n = decide6(c, rho, minLength)
+            if (b == n) continue
+            val bOk = en.ok(b, p.target); val nOk = en.ok(n, p.target)
+            if (!bOk && nOk) fix += p.target
+            if (bOk && !nOk) { brk += p.target; brkRaw++ }
+            rows?.add("$set\trho=$rho,L=$minLength\t${p.typed}\t${p.target}\t${p.occ}\t$b\t$n\t" +
+                (if (bOk && !nOk) "break" else if (!bOk && nOk) "fix" else "kept") + "\t${typoClass(p)}")
+        }
+        return intArrayOf(fix.size, brk.size, brkRaw)
+    }
+
+    /** T-trunc / C-oov "protected": the shipped default changed the word into a non-completion, ρ keeps it. */
+    private fun protected6(pairs: List<P>, probe: Map<String, Completion>, rho: Float, minLength: Int): Pair<Int, Int> {
+        val targets = HashSet<String>(); var raw = 0
+        for (p in pairs) {
+            val c = probe.getValue(p.typed)
+            if (c.eligible && decide6(c, rho, minLength) == p.typed) { targets += p.target; raw++ }
+        }
+        return targets.size to raw
+    }
+
+    /** Inputs the shipped default rewrites into a word that does not extend them (T-trunc "hijacked"). */
+    private fun hijacked6(pairs: List<P>, probe: Map<String, Completion>): Pair<Int, Int> {
+        val hit = pairs.filter { probe.getValue(it.typed).eligible }
+        return hit.mapTo(HashSet()) { it.target }.size to hit.size
+    }
+
+    /** Named cases through FULL production under (ρ, L): §1.5 T5 + `shated`, Hebrew included. */
+    private fun namedFailures6(rho: Float, minLength: Int): List<String> {
+        val bad = mutableListOf<String>()
+        val tuning = tuning6(rho, minLength)
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        for ((typo, want) in NAMED_EN + (SHATED to "shared")) {
+            val out = en.predictor.autoCorrect(typo, tuning)
+            if (out != want) bad += "$typo → $out (want $want)"
+        }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        try {
+            for ((typo, want) in NAMED_HE) {
+                val out = he.predictor.autoCorrect(typo, tuning)
+                if (out != want) bad += "$typo → $out (want $want)"
+            }
+        } finally {
+            KeyAdjacency.setLayoutLetters(emptyMap())
+        }
+        return bad
+    }
+
+    /** The report cases (§16.1), reported under each configuration, not gated. */
+    private fun reportCases6(rho: Float, minLength: Int): String {
+        val tuning = tuning6(rho, minLength)
+        return REPORT6.joinToString(" ") { "$it→${en.predictor.autoCorrect(it, tuning)}" }
+    }
+
+    /** Round 6 DEV (§16.3). */
+    private fun devPhase6(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("DEV")
+        val adj = sAdj(dev = true)
+        val oov = cOov(dev = true)
+        val trunc = tTrunc(dev = true)
+        val adjWords = adj.map { it.target }.toSet().size
+        say("ROUND 6 DEV. GTC-DEV ${gtc.size}; S-adj-DEV ${adj.size} ($adjWords words); C-oov-DEV ${oov.size}; " +
+            "T-trunc-DEV ${trunc.size} (${trunc.map { it.target }.toSet().size} targets)")
+        val gProbe = probe6(gtc, "GTC-DEV", say, all = true)
+        val aProbe = probe6(adj, "S-adj-DEV", say)
+        val oProbe = probe6(oov, "C-oov-DEV", say)
+        val tProbe = probe6(trunc, "T-trunc-DEV", say)
+        val gRight = gtc.filter { en.ok(gProbe.getValue(it.typed).base, it.target) }.mapTo(HashSet()) { it.target }.size
+        val (hijackD, hijackR) = hijacked6(trunc, tProbe)
+        say("baseline (shipped): GTC-DEV distinct targets right=$gRight; T-trunc-DEV hijacked=$hijackD targets ($hijackR prefixes)")
+        say("report cases, shipped: ${reportCases6(Float.POSITIVE_INFINITY, 3)}")
+        var chosen: Pair<Float, Int>? = null
+        var best = -1
+        for (rho in RHO6) for (minLength in MIN_LENGTH6) {
+            val g = vs6(gtc, gProbe, rho, minLength)
+            val a = vs6(adj, aProbe, rho, minLength)
+            val (tp, tpRaw) = protected6(trunc, tProbe, rho, minLength)
+            val (op, _) = protected6(oov, oProbe, rho, minLength)
+            val named = namedFailures6(rho, minLength)
+            val q1 = g[1] <= 0.005 * gRight
+            val q2 = a[1] <= 0.005 * adjWords
+            val adm = q1 && q2 && named.isEmpty()
+            say("  ρ=$rho L=$minLength: GTC-DEV breaks=${g[1]} (${g[2]} pairs; limit ${"%.1f".format(0.005 * gRight)}); " +
+                "S-adj-DEV breaks=${a[1]} (${a[2]} pairs; limit ${"%.1f".format(0.005 * adjWords)}); " +
+                "T-trunc-DEV protected=$tp of $hijackD targets ($tpRaw prefixes); C-oov-DEV protected=$op; " +
+                "named=$named; ${reportCases6(rho, minLength)} → ${if (adm) "admissible" else "-"}")
+            // RHO6 and MIN_LENGTH6 ascend; ties go to the larger ρ, then the larger L: an equal later count replaces.
+            if (adm && tp >= best) { chosen = rho to minLength; best = tp }
+        }
+        val c = chosen
+        if (c == null) {
+            say("\nDEV choice (§16.3): NONE — ρ stays off, TEST not run")
+            return
+        }
+        say("\nDEV choice (§16.3): ρ=${c.first} L=${c.second}")
+        val all = gProbe + aProbe.filterValues { it.eligible } + tProbe + oProbe.filterValues { it.eligible }
+        val sample = all.keys.sorted().shuffled(java.util.Random(20261027)).take(2_000)
+        val tuning = tuning6(c.first, c.second)
+        val mismatches = sample.filter { t ->
+            val p = all.getValue(t)
+            val base = en.predictor.autoCorrect(t, BASE6)
+            (p.base.isNotEmpty() && p.base != base) || (p.eligible && decide6(p, c.first, c.second) != en.predictor.autoCorrect(t, tuning))
+        }
+        say("  soundness: ${sample.size} inputs, mismatches=${mismatches.size} ${mismatches.take(20)}")
+        check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
+        say("CK_CH_RHO=${c.first} CK_CH_RHO_MIN_LENGTH=${c.second}")
+    }
+
+    /** Round 6 TEST (§16.4): production shipped default against production with (ρ, L); one evaluation. */
+    private fun testPhase6(say: (String) -> Unit) {
+        val rho = (System.getenv("CK_CH_RHO") ?: error("CK_CH_RHO required")).toFloat()
+        val minLength = (System.getenv("CK_CH_RHO_MIN_LENGTH") ?: error("CK_CH_RHO_MIN_LENGTH required")).toInt()
+        val tuning = tuning6(rho, minLength)
+        say("ROUND 6 TEST, ρ=$rho L=$minLength")
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("TEST")
+        val adj = sAdj(dev = false)
+        val oov = cOov(dev = false)
+        val trunc = tTrunc(dev = false)
+        val birkbeck = (readDat("wikipedia.dat") + readDat("aspell.dat") + readDat("missp.dat") + readDat("holbrook-missp.dat")).distinct()
+        val adjWords = adj.map { it.target }.toSet().size
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tocc\tbaseline\tcandidate\tkind\tclass")
+        /** Shipped and candidate output through production for every input that has a completion. */
+        fun run(pairs: List<P>, set: String, all: Boolean): Pair<Map<String, String>, Map<String, String>> {
+            val inputs = pairs.map { it.typed }.distinct()
+            val base = ConcurrentHashMap<String, String>()
+            val cand = ConcurrentHashMap<String, String>()
+            val start = System.nanoTime()
+            inputs.parallelStream().forEach { t ->
+                if (all || en.predictor.bestCompletionFrequency(t) > 0) {
+                    base[t] = en.predictor.autoCorrect(t, BASE6)
+                    cand[t] = en.predictor.autoCorrect(t, tuning)
+                }
+            }
+            say("  $set: ${inputs.size} inputs, ${base.size} run in ${(System.nanoTime() - start) / 1_000_000_000}s")
+            return base to cand
+        }
+        fun outcome(pairs: List<P>, base: Map<String, String>, cand: Map<String, String>, set: String): IntArray {
+            val fix = HashSet<String>(); val brk = HashSet<String>(); var brkRaw = 0; var fixRaw = 0
+            for (p in pairs) {
+                val b = base[p.typed] ?: continue
+                val n = cand.getValue(p.typed)
+                if (b == n) continue
+                val bOk = en.ok(b, p.target); val nOk = en.ok(n, p.target)
+                if (!bOk && nOk) { fix += p.target; fixRaw++ }
+                if (bOk && !nOk) { brk += p.target; brkRaw++ }
+                rows.add("$set\trho=$rho,L=$minLength\t${p.typed}\t${p.target}\t${p.occ}\t$b\t$n\t" +
+                    (if (bOk && !nOk) "break" else if (!bOk && nOk) "fix" else "kept") + "\t${typoClass(p)}")
+            }
+            return intArrayOf(fix.size, fixRaw, brk.size, brkRaw)
+        }
+        val (gb, gc) = run(gtc, "GTC-TEST", all = true)
+        val (ab, ac) = run(adj, "S-adj-TEST", all = false)
+        val (ob, oc) = run(oov, "C-oov-TEST", all = false)
+        val (tb, tc) = run(trunc, "T-trunc-TEST", all = false)
+        val (rb, rc) = run(birkbeck, "R-union", all = false)
+        val gRight = gtc.filter { en.ok(gb.getValue(it.typed), it.target) }.mapTo(HashSet()) { it.target }.size
+        val g = outcome(gtc, gb, gc, "GTC-TEST")
+        val a = outcome(adj, ab, ac, "S-adj-TEST")
+        val r = outcome(birkbeck, rb, rc, "R-union")
+        outcome(oov, ob, oc, "C-oov-TEST"); outcome(trunc, tb, tc, "T-trunc-TEST")
+        val hijacked = trunc.filter { p -> tb[p.typed]?.let { it != p.typed && !it.lowercase().startsWith(p.typed) } == true }
+        val protectedT = hijacked.filter { tc.getValue(it.typed) == it.typed }
+        val oProtected = oov.filter { p -> ob[p.typed]?.let { it != p.typed } == true && oc.getValue(p.typed) == p.typed }
+        val hijackedD = hijacked.mapTo(HashSet()) { it.target }.size
+        val protectedD = protectedT.mapTo(HashSet()) { it.target }.size
+        val named = namedFailures6(rho, minLength)
+        say("GTC-TEST distinct breaks=${g[2]} (${g[3]} pairs) of $gRight right; fixes=${g[0]}")
+        say("S-adj-TEST distinct breaks=${a[2]} (${a[3]} pairs) of $adjWords base words")
+        say("T-trunc-TEST hijacked by shipped=$hijackedD targets (${hijacked.size} prefixes); protected=$protectedD (${protectedT.size})")
+        say("C-oov-TEST protected=${oProtected.size} of ${oov.size}; R-union breaks=${r[2]} (${r[3]}) fixes=${r[0]} (${r[1]})")
+        say("named failures=$named; report: ${reportCases6(rho, minLength)}")
+        val r1 = g[2] <= 0.005 * gRight
+        val r2 = a[2] <= 0.005 * adjWords
+        val r3 = protectedD >= 0.25 * hijackedD
+        val r4 = named.isEmpty()
+        say("GATE: R1=$r1 R2=$r2 R3=$r3 R4=$r4 → " + if (r1 && r2 && r3 && r4) "PASS" else "FAIL")
+        File(outDir, "rows6-test.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**

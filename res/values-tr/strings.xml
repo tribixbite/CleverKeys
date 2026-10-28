@@ -1232,6 +1232,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Düzeltme harf atarak bir veya iki harfli bir kelimeye ulaştığında eklenen maliyet; yanlış yazılan ilk harf öylece silinmez. 0 = ek maliyet yok.</string>
     <string name="autocorrect_channel_max_correction_cost_title">En Büyük Düzeltme Uzaklığı</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Düzenleme maliyeti bundan büyük düzeltmeler yapılmaz; böylece sözlükte olmayan geçerli bir kelime başka bir kelimeye dönüştürülmez. Yanlış bir komşu tuşun maliyeti yaklaşık 1,3’tür.</string>
+    <string name="autocorrect_channel_completion_cost_title">Bitmemiş kelime maliyeti</string>
+    <string name="autocorrect_channel_completion_cost_desc">Yazmayı bitirmediğiniz bir kelime (tomorr), yaygın bir kelime onunla başlıyorsa başka bir kelimeye (timor) dönüşmek yerine yazıldığı gibi kalır. Düşük değer daha çok bitmemiş kelimeyi korur; Kapalı hiçbirini korumaz.</string>
     <string name="autocorrect_max_correction_cost_off">Kapalı</string>
     <string name="autocorrect_short_deletion_scope_title">Silme Maliyetinin Kapsamı</string>
     <string name="autocorrect_short_deletion_scope_desc">İbranicedeki tek harfli önekler bu maliyeti orada yararlı kılar; İngilizcede iki harfli bir kelimenin yanındaki fazla harf (tpo → to) gerçek bir yazım hatasıdır, bu yüzden diğer yazılarda varsayılan olarak kapalıdır.</string>

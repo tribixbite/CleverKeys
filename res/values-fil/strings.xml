@@ -1233,6 +1233,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Dagdag na gastos kapag nag-aalis ng mga titik ang pagwawasto para maging salitang may isa o dalawang titik, para hindi basta maalis ang maling unang titik. 0 = walang dagdag na gastos.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Pinakamalayong Pagwawasto</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Hindi ginagawa ang mga pagwawastong may mas mataas na gastos sa pag-edit, kaya hindi napapalitan ng ibang salita ang tamang salitang wala sa diksiyonaryo. Ang isang maling katabing key ay mga 1.3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Gastos ng Hindi Tapos na Salita</string>
+    <string name="autocorrect_channel_completion_cost_desc">Ang salitang hindi mo pa natatapos i-type (tomorr) ay mananatili gaya ng pagkaka-type sa halip na maging ibang salita (timor) kapag may karaniwang salita na nagsisimula rito. Ang mas mababa ay nagpapanatili ng mas maraming hindi tapos na salita; ang Naka-off ay hindi kailanman nagpapanatili.</string>
     <string name="autocorrect_max_correction_cost_off">Naka-off</string>
     <string name="autocorrect_short_deletion_scope_title">Saan Gagamitin ang Gastos sa Pagbura</string>
     <string name="autocorrect_short_deletion_scope_desc">Dahil sa mga isang-titik na unlapi ng Hebreo, kapaki-pakinabang ang gastos na ito roon; sa Ingles, ang sobrang titik sa tabi ng salitang may dalawang titik (tpo → to) ay tunay na typo, kaya nakapatay ito bilang default sa ibang sulat.</string>

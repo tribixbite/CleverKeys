@@ -280,6 +280,18 @@ object Defaults {
     const val AUTOCORRECT_CHANNEL_ALIAS_BONUS = 0.25f
     /** γ (round 2 choice 1.0); 10, the slider's top, means "always keep", the band ranking's guard. */
     const val AUTOCORRECT_CHANNEL_INFLECTION_COST = 1.0f
+    /**
+     * ρ: cost of believing a typed word is unfinished (`tomorr` → kept, not `timor`); 10 (the
+     * slider's top) = off. 1.5 since round 6 (eval doc §16–§18: on TEST 43 % of hijacked unfinished
+     * words kept; GTC −7 of 4,883 right targets, S-adj −3 of 5,075 words).
+     */
+    const val AUTOCORRECT_CHANNEL_COMPLETION_COST = 1.5f
+    /**
+     * Shortest typed word ρ applies to (round 6 choice 3, eval doc §17). Not a setting: L = 3, 4
+     * and 5 were within 10 % of each other on DEV.
+     */
+    // TODO(2026-10-27): expose as a Ranking & Tuning slider if a user ever needs it (2 strings × 22 files).
+    const val AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH = 3
 
     // Issue #72: Auto-capitalize "I" and its contractions
     // When enabled, automatically capitalizes "i", "i'm", "i'll", "i'd", "i've"

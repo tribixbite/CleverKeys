@@ -84,12 +84,14 @@ internal object AutocorrectTuningSliders {
     val CHANNEL_MAX_CORRECTION_COST = FloatSpec(Keys.CHANNEL_MAX_CORRECTION_COST, 0.25f, 2)
     /** The last position (10) is [ChannelWeights.INFLECTION_ALWAYS_KEEP]. */
     val CHANNEL_INFLECTION_COST = FloatSpec(Keys.CHANNEL_INFLECTION_COST, 0.25f, 2)
+    /** ρ: 0.25 per position covers the round-6 grid (1.0 … 2.5); the last position (10) is off. */
+    val CHANNEL_COMPLETION_COST = FloatSpec(Keys.CHANNEL_COMPLETION_COST, 0.25f, 2)
 
     val FLOATS: List<FloatSpec> = listOf(
         BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
         CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
         CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_MAX_CORRECTION_COST,
-        CHANNEL_INFLECTION_COST,
+        CHANNEL_INFLECTION_COST, CHANNEL_COMPLETION_COST,
     )
     val INTS: List<IntSpec> = listOf(DROPPED_DOUBLE_MARGIN, MAX_SUBSTITUTIONS, INFLECTION_GUARD_MIN_STEM)
 
@@ -119,6 +121,17 @@ internal object AutocorrectTuningSliders {
 
     /** True when the κ slider value means "no maximum". */
     fun isMaxCorrectionOff(sliderValue: Float): Boolean = sliderValue >= ChannelWeights.MAX_CORRECTION_OFF
+
+    /** ρ as a slider position: "off" (∞) sits on the last position. */
+    fun completionCostSliderValue(completionCost: Float): Float =
+        if (completionCost.isInfinite() || completionCost >= ChannelWeights.COMPLETION_OFF) {
+            ChannelWeights.COMPLETION_OFF
+        } else {
+            completionCost
+        }
+
+    /** True when the ρ slider value means "never keep an unfinished word". */
+    fun isCompletionOff(sliderValue: Float): Boolean = sliderValue >= ChannelWeights.COMPLETION_OFF
 
     /** True when the γ slider value means "always keep the word form". */
     fun isAlwaysKeep(sliderValue: Float): Boolean = sliderValue >= ChannelWeights.INFLECTION_ALWAYS_KEEP

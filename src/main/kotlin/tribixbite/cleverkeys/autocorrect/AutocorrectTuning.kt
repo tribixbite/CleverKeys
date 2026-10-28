@@ -68,6 +68,11 @@ enum class ShortDeletionScope(val prefValue: String) {
  * @property inflectionCost γ — guard G: the cost of believing a typed word is an unlisted
  *   inflection of a known stem. [Float.POSITIVE_INFINITY] keeps every such word (the band
  *   ranking's guard).
+ * @property completionCost ρ — the cost of believing the typed word is an UNFINISHED word: when
+ *   it is a strict prefix of a dictionary word (`tomorr` of `tomorrow`), the typed word is kept
+ *   if `ρ + λ · rank(most frequent completion)` is no worse than the winner's total cost and the
+ *   winner is not itself a completion (round 6, eval doc §16–§18). [Float.POSITIVE_INFINITY] = off.
+ * @property completionMinLength the shortest typed word ρ applies to (round 6, eval doc §17).
  */
 data class ChannelWeights(
     val distanceCost: Float = Defaults.AUTOCORRECT_CHANNEL_DISTANCE_COST,
@@ -80,6 +85,8 @@ data class ChannelWeights(
     val shortDeletionScope: ShortDeletionScope = ShortDeletionScope.fromPref(Defaults.AUTOCORRECT_CHANNEL_SHORT_DELETION_SCOPE),
     val maxCorrectionCost: Float = maxCorrectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_MAX_CORRECTION_COST),
     val inflectionCost: Float = inflectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST),
+    val completionCost: Float = completionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_COMPLETION_COST),
+    val completionMinLength: Int = Defaults.AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH,
 ) {
     companion object {
         /**
@@ -95,6 +102,14 @@ data class ChannelWeights(
         /** Pref value → κ, mapping the "off" position to [Float.POSITIVE_INFINITY]. */
         fun maxCorrectionCostFromPref(stored: Float): Float =
             if (stored.isNaN() || stored >= MAX_CORRECTION_OFF) Float.POSITIVE_INFINITY
+            else stored.coerceAtLeast(0f)
+
+        /** Stored ρ at or above this value means "off" (∞); the top of its slider. */
+        const val COMPLETION_OFF = 10f
+
+        /** Pref value → ρ, mapping the "off" position to [Float.POSITIVE_INFINITY]. */
+        fun completionCostFromPref(stored: Float): Float =
+            if (stored.isNaN() || stored >= COMPLETION_OFF) Float.POSITIVE_INFINITY
             else stored.coerceAtLeast(0f)
 
         /** Pref value → γ, mapping the "always keep" position to [Float.POSITIVE_INFINITY]. */
@@ -197,11 +212,13 @@ data class AutocorrectTuning(
             Defaults.AUTOCORRECT_CHANNEL_ALIAS_BONUS, 0f..1f)
         val CHANNEL_INFLECTION_COST = FloatKey("autocorrect_channel_inflection_cost",
             Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST, 0f..ChannelWeights.INFLECTION_ALWAYS_KEEP)
+        val CHANNEL_COMPLETION_COST = FloatKey("autocorrect_channel_completion_cost",
+            Defaults.AUTOCORRECT_CHANNEL_COMPLETION_COST, 0f..ChannelWeights.COMPLETION_OFF)
 
         val FLOATS = listOf(BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
             CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
             CHANNEL_FREQUENCY_WEIGHT, CHANNEL_ALIAS_BONUS, CHANNEL_SHORT_DELETION_COST, CHANNEL_MAX_CORRECTION_COST,
-            CHANNEL_INFLECTION_COST)
+            CHANNEL_INFLECTION_COST, CHANNEL_COMPLETION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
         val STRINGS = listOf(RANKING, CHANNEL_SHORT_DELETION_SCOPE)
@@ -253,6 +270,7 @@ data class AutocorrectTuning(
                     shortDeletionScope = ShortDeletionScope.fromPref(s(Keys.CHANNEL_SHORT_DELETION_SCOPE)),
                     maxCorrectionCost = ChannelWeights.maxCorrectionCostFromPref(f(Keys.CHANNEL_MAX_CORRECTION_COST)),
                     inflectionCost = ChannelWeights.inflectionCostFromPref(f(Keys.CHANNEL_INFLECTION_COST)),
+                    completionCost = ChannelWeights.completionCostFromPref(f(Keys.CHANNEL_COMPLETION_COST)),
                 ),
             )
         }

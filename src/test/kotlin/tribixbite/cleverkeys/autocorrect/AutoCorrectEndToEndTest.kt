@@ -102,6 +102,49 @@ class AutoCorrectEndToEndTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // Round 6 ρ = 1.5, L = 3: an unfinished word (eval doc §16–§18, Pixel 2026-10-27)
+    // ─────────────────────────────────────────────────────────────────────
+
+    private fun withCompletionCost(rho: Float) = AutocorrectTuning.DEFAULT.copy(
+        channel = AutocorrectTuning.DEFAULT.channel.copy(completionCost = rho))
+
+    @Test
+    fun unfinishedWord_spaceKeepsTheTypedStartOfACommonWord() {
+        // timor (total 3.06) beat tomorrow's two insertions (3.51); keeping `tomorr` costs
+        // ρ + λ·rank(tomorrow) = 1.5 + 0.51. Same for `becau` (beau 2.28 vs 1.5 + 0.32).
+        assertEquals("tomorr", predictor.autoCorrect("tomorr"))
+        assertEquals("Tomorr", predictor.autoCorrect("Tomorr"))
+        assertEquals("becau", predictor.autoCorrect("becau"))
+        // With ρ off (the slider's top) the old rewrite returns.
+        assertEquals("timor", predictor.autoCorrect("tomorr", withCompletionCost(Float.POSITIVE_INFINITY)))
+    }
+
+    @Test
+    fun unfinishedWord_closeCorrectionsStillWin() {
+        // The other two report cases stay corrected at the shipped ρ (eval doc §17): car (1.68)
+        // and rest (1.97) are cheaper than believing `caf` / `resta` unfinished (1.5 + 0.68,
+        // 1.5 + 0.57). A lower ρ keeps `resta` but loses real GTC corrections (§17).
+        assertEquals("car", predictor.autoCorrect("caf"))
+        assertEquals("rest", predictor.autoCorrect("resta"))
+        assertEquals("resta", predictor.autoCorrect("resta", withCompletionCost(1.25f)))
+        // Named case: `kne` → one, although `knew` starts with it.
+        assertEquals("one", predictor.autoCorrect("kne"))
+    }
+
+    @Test
+    fun unfinishedWord_aWinnerThatFinishesTheWordIsStillCommitted() {
+        // beautify extends `beautif`: the rule never withholds a completion.
+        assertEquals("beautify", predictor.autoCorrect("beautif", withCompletionCost(0f)))
+    }
+
+    @Test
+    fun unfinishedWord_bestCompletionIsTheMostFrequentStrictExtension() {
+        val dict = ShippedTapDictionary.frequencies()
+        assertEquals(dict.getValue("tomorrow"), predictor.bestCompletionFrequency("tomorr"))
+        assertEquals(0, predictor.bestCompletionFrequency("zqxj"))
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // AC-4: possessive-typo — correct the BASE, re-append the suffix
     // ─────────────────────────────────────────────────────────────────────
 

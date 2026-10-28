@@ -1238,6 +1238,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Доплата, коли виправлення прибирає літери й виходить слово з однієї-двох літер, щоб помилкова перша літера не просто видалялася. 0 = без доплати.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Найбільша відстань виправлення</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Виправлення з більшою ціною правки не виконуються, щоб правильне слово, якого немає в словнику, не замінювалося іншим. Одна хибна сусідня клавіша коштує близько 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Вартість недописаного слова</string>
+    <string name="autocorrect_channel_completion_cost_desc">Недописане слово (tomorr) залишається як набрано, а не перетворюється на інше слово (timor), якщо з нього починається поширене слово. Менше значення зберігає більше недописаних слів; «Вимк.» не зберігає жодного.</string>
     <string name="autocorrect_max_correction_cost_off">Вимк.</string>
     <string name="autocorrect_short_deletion_scope_title">Ціна видалення застосовується до</string>
     <string name="autocorrect_short_deletion_scope_desc">Однолітерні префікси івриту роблять цю ціну корисною там; в англійській зайва літера поруч із дволітерним словом (tpo → to) — справжня помилка, тому для інших письменностей вона за замовчуванням вимкнена.</string>

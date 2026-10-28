@@ -1242,6 +1242,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Coste extra cuando una corrección quita letras para llegar a una palabra de una o dos letras, para que una primera letra mal escrita no se elimine sin más. 0 = sin coste extra.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Distancia máxima de corrección</string>
     <string name="autocorrect_channel_max_correction_cost_desc">No se hacen correcciones con un coste de edición mayor, así una palabra válida que falta en el diccionario no se reescribe como otra. Una tecla vecina equivocada cuesta alrededor de 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Coste de palabra sin terminar</string>
+    <string name="autocorrect_channel_completion_cost_desc">Una palabra que no ha terminado de escribir (tomorr) se queda como la escribió en lugar de convertirse en otra palabra (timor) cuando una palabra común empieza así. Un valor más bajo conserva más palabras sin terminar; Desactivado no conserva ninguna.</string>
     <string name="autocorrect_max_correction_cost_off">Desactivado</string>
     <string name="autocorrect_short_deletion_scope_title">El coste de borrar se aplica a</string>
     <string name="autocorrect_short_deletion_scope_desc">Los prefijos hebreos de una letra hacen útil este coste allí; en inglés, una letra de más junto a una palabra de dos letras (tpo → to) es una errata real, por eso está desactivado para otras escrituras por defecto.</string>

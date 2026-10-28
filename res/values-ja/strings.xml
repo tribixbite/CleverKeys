@@ -1217,6 +1217,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">修正で文字を削って1〜2文字の単語にする場合の追加コストです。打ち間違えた先頭の文字が単に消されないようにします。0 = 追加コストなし。</string>
     <string name="autocorrect_channel_max_correction_cost_title">最大修正距離</string>
     <string name="autocorrect_channel_max_correction_cost_desc">これより編集コストが大きい修正は行いません。辞書にない正しい単語が別の単語に書き換えられないようにします。隣のキーの打ち間違い1つは約1.3です。</string>
+    <string name="autocorrect_channel_completion_cost_title">未完成の単語のコスト</string>
+    <string name="autocorrect_channel_completion_cost_desc">入力途中の単語（tomorr）は、よく使われる単語がそれで始まる場合、別の単語（timor）に変えずに入力どおり残します。低いほど多くの未完成の単語を残し、オフでは残しません。</string>
     <string name="autocorrect_max_correction_cost_off">オフ</string>
     <string name="autocorrect_short_deletion_scope_title">削除コストの適用範囲</string>
     <string name="autocorrect_short_deletion_scope_desc">ヘブライ語の1文字の接頭辞にはこのコストが役立ちます。英語では2文字の単語の横の余分な文字(tpo → to)は本当の打ち間違いなので、他の文字では既定でオフです。</string>

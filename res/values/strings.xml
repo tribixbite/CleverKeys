@@ -1631,6 +1631,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Extra cost when a correction drops letters to reach a word of one or two letters, so a mistyped first letter is not simply removed. 0 = no extra cost.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Maximum Correction Distance</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Corrections farther than this edit cost are not made, so a valid word missing from the dictionary is not rewritten into a different word. One wrong neighbouring key costs about 1.3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Unfinished Word Cost</string>
+    <string name="autocorrect_channel_completion_cost_desc">A word you have not finished typing (tomorr) stays as typed instead of becoming a different word (timor) when a common word starts with it. Lower keeps more unfinished words; Off never keeps them.</string>
     <string name="autocorrect_max_correction_cost_off">Off</string>
     <string name="autocorrect_short_deletion_scope_title">Short-Word Deletion Applies To</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebrew one-letter prefixes make this cost useful there; in English an extra letter next to a two-letter word (tpo → to) is a real typo, so it stays off for other scripts by default.</string>

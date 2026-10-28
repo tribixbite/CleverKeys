@@ -1264,6 +1264,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Costo extra quando una correzione toglie lettere per arrivare a una parola di una o due lettere, così una prima lettera sbagliata non viene semplicemente rimossa. 0 = nessun costo extra.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Distanza massima di correzione</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Le correzioni con un costo di modifica maggiore non vengono fatte, così una parola valida assente dal dizionario non viene riscritta in un\'altra. Un tasto vicino sbagliato costa circa 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Costo della parola incompleta</string>
+    <string name="autocorrect_channel_completion_cost_desc">Una parola che non hai finito di digitare (tomorr) resta com\'è invece di diventare un\'altra parola (timor) quando una parola comune inizia così. Più basso mantiene più parole incomplete; Disattivato non ne mantiene nessuna.</string>
     <string name="autocorrect_max_correction_cost_off">Disattivato</string>
     <string name="autocorrect_short_deletion_scope_title">Il costo di cancellazione vale per</string>
     <string name="autocorrect_short_deletion_scope_desc">I prefissi ebraici di una lettera rendono utile questo costo; in inglese una lettera in più accanto a una parola di due lettere (tpo → to) è un vero refuso, quindi per le altre scritture è disattivato per impostazione predefinita.</string>

@@ -1259,6 +1259,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">هزینهٔ اضافه وقتی اصلاح با حذف حروف به واژه‌ای یک یا دوحرفی می‌رسد، تا حرف اولِ اشتباه‌تایپ‌شده صرفاً حذف نشود. ۰ = بدون هزینهٔ اضافه.</string>
     <string name="autocorrect_channel_max_correction_cost_title">بیشترین فاصلهٔ اصلاح</string>
     <string name="autocorrect_channel_max_correction_cost_desc">اصلاح‌هایی با هزینهٔ ویرایش بیشتر از این انجام نمی‌شوند، تا واژهٔ درستی که در واژه‌نامه نیست به واژهٔ دیگری بازنویسی نشود. یک کلید همسایهٔ اشتباه حدود ۱٫۳ هزینه دارد.</string>
+    <string name="autocorrect_channel_completion_cost_title">هزینهٔ واژهٔ ناتمام</string>
+    <string name="autocorrect_channel_completion_cost_desc">واژه‌ای که تایپش را تمام نکرده‌اید (tomorr) به‌جای تبدیل شدن به واژه‌ای دیگر (timor) همان‌طور که تایپ شده می‌ماند، اگر واژه‌ای رایج با آن شروع شود. مقدار کمتر واژه‌های ناتمام بیشتری را نگه می‌دارد؛ خاموش هیچ‌کدام را نگه نمی‌دارد.</string>
     <string name="autocorrect_max_correction_cost_off">خاموش</string>
     <string name="autocorrect_short_deletion_scope_title">هزینهٔ حذف برای</string>
     <string name="autocorrect_short_deletion_scope_desc">پیشوندهای یک‌حرفی عبری این هزینه را آنجا سودمند می‌کنند؛ در انگلیسی یک حرف اضافه کنار واژهٔ دوحرفی (tpo → to) غلط تایپی واقعی است، پس برای خط‌های دیگر به‌طور پیش‌فرض خاموش است.</string>

@@ -1227,6 +1227,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Příplatek, když oprava vypustí písmena a vznikne slovo o jednom nebo dvou písmenech, aby se chybně napsané první písmeno jen neodstranilo. 0 = bez příplatku.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Největší vzdálenost opravy</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Opravy s vyšší cenou úprav se neprovedou, takže platné slovo, které ve slovníku chybí, se nepřepíše na jiné. Jedna chybná sousední klávesa stojí asi 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Cena nedokončeného slova</string>
+    <string name="autocorrect_channel_completion_cost_desc">Slovo, které jste nedopsali (tomorr), zůstane tak, jak je napsané, místo aby se změnilo na jiné slovo (timor), pokud jím začíná běžné slovo. Nižší hodnota ponechá více nedokončených slov; Vypnuto je nikdy neponechá.</string>
     <string name="autocorrect_max_correction_cost_off">Vypnuto</string>
     <string name="autocorrect_short_deletion_scope_title">Cena smazání platí pro</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebrejské jednopísmenné předpony ji tam činí užitečnou; v angličtině je písmeno navíc u dvoupísmenného slova (tpo → to) skutečný překlep, proto je pro ostatní písma ve výchozím stavu vypnutá.</string>

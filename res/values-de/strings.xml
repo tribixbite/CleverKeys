@@ -1241,6 +1241,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Zusatzkosten, wenn eine Korrektur Buchstaben weglässt und ein Wort mit einem oder zwei Buchstaben ergibt, damit ein vertippter erster Buchstabe nicht einfach entfällt. 0 = keine Zusatzkosten.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Maximaler Korrekturabstand</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Korrekturen mit höheren Bearbeitungskosten werden nicht ausgeführt, damit ein gültiges Wort, das im Wörterbuch fehlt, nicht in ein anderes umgeschrieben wird. Eine falsche Nachbartaste kostet etwa 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Kosten für unfertige Wörter</string>
+    <string name="autocorrect_channel_completion_cost_desc">Ein noch nicht fertig getipptes Wort (tomorr) bleibt wie getippt, statt zu einem anderen Wort (timor) zu werden, wenn ein häufiges Wort damit beginnt. Niedriger behält mehr unfertige Wörter; Aus behält keine.</string>
     <string name="autocorrect_max_correction_cost_off">Aus</string>
     <string name="autocorrect_short_deletion_scope_title">Kürzungskosten gelten für</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebräische Ein-Buchstaben-Präfixe machen diese Kosten dort sinnvoll; im Englischen ist ein zusätzlicher Buchstabe neben einem Zwei-Buchstaben-Wort (tpo → to) ein echter Tippfehler, daher ist sie für andere Schriften standardmäßig aus.</string>

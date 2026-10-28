@@ -1232,6 +1232,8 @@
     <string name="autocorrect_channel_short_deletion_cost_desc">Доплата, когда исправление убирает буквы и получается слово из одной-двух букв, чтобы ошибочная первая буква не просто удалялась. 0 = без доплаты.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Наибольшее расстояние исправления</string>
     <string name="autocorrect_channel_max_correction_cost_desc">Исправления с большей ценой правки не выполняются, чтобы верное слово, которого нет в словаре, не заменялось другим. Одна ошибочная соседняя клавиша стоит около 1,3.</string>
+    <string name="autocorrect_channel_completion_cost_title">Стоимость недописанного слова</string>
+    <string name="autocorrect_channel_completion_cost_desc">Недописанное слово (tomorr) остаётся как набрано, а не превращается в другое слово (timor), если с него начинается частое слово. Меньшее значение сохраняет больше недописанных слов; «Выкл.» не сохраняет ни одного.</string>
     <string name="autocorrect_max_correction_cost_off">Выкл.</string>
     <string name="autocorrect_short_deletion_scope_title">Цена удаления применяется к</string>
     <string name="autocorrect_short_deletion_scope_desc">Однобуквенные приставки иврита делают эту цену полезной там; в английском лишняя буква рядом с двухбуквенным словом (tpo → to) — настоящая опечатка, поэтому для других письменностей она по умолчанию выключена.</string>
