@@ -455,6 +455,12 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- In the clipboard entry editor and the keyboard's other own fields (tag, clipboard search,
+  emoji and GIF search), deleting a word works: the swipe up-left on Backspace, the
+  `delete_word` / `forward_delete_word` commands and Ctrl+Backspace / Ctrl+Delete delete a word
+  there (one undo step in the editor) instead of doing nothing or one character. A letter tapped
+  right after a word swiped into those fields now gets the automatic space first (`help t`, not
+  `helpt`); punctuation still attaches, and **Auto-Space After Suggestion** off turns it off.
 - With **Show gesture hints on familiar looks** on, the small labels along the bottom of the
   narrow emoji / comma key ("ABC" and "GIF") no longer run into each other: labels sharing a
   key's top or bottom edge shrink together until they fit.

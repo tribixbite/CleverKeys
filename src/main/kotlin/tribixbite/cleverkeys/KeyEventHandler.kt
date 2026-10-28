@@ -123,9 +123,15 @@ class KeyEventHandler(
                 if (key.getKeyevent() == KeyEvent.KEYCODE_DEL) {
                     lastTypedChar = '\u0000'
                 }
+                // Ctrl+Backspace / Ctrl+Delete in an inline field: the app gets these as
+                // word-deleting key events, which the IME's own fields never receive — delete the
+                // word in the field instead of one character (maintainer report 2026-10-28).
+                if ((key.getKeyevent() == KeyEvent.KEYCODE_DEL || key.getKeyevent() == KeyEvent.KEYCODE_FORWARD_DEL) &&
+                    isInlineFieldActive() && (metaState and KeyEvent.META_CTRL_ON) != 0) {
+                    deleteInlineWord(forward = key.getKeyevent() == KeyEvent.KEYCODE_FORWARD_DEL)
                 // Backspace right after a swipe into an inline field removes that word there
                 // (the inline twin of #110's swipe undo; never touches the app behind the panel).
-                if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && isInlineFieldActive() &&
+                } else if (key.getKeyevent() == KeyEvent.KEYCODE_DEL && isInlineFieldActive() &&
                     learningHooks?.undoInlineSwipe() == true) {
                     // Consumed by the inline swipe undo.
                 // Tag dialog mode — highest priority modal overlay
@@ -367,9 +373,17 @@ class KeyEventHandler(
     }
 
     private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {
+        // Inline fields: a letter tapped right after a swiped word gets the automatic space the
+        // swipe left out there (InlineSwipeSession.spaceBeforeTap; maintainer report 2026-10-28).
+        val inline = if (isInlineFieldActive()) {
+            (learningHooks?.inlineSpaceBeforeTap(text) ?: "") + text
+        } else {
+            ""
+        }
+
         // Tag dialog mode — highest priority modal overlay
         if (recv.isClipboardTagMode()) {
-            recv.insertToClipboardTag(text.toString())
+            recv.insertToClipboardTag(inline)
             return
         }
 
@@ -377,25 +391,25 @@ class KeyEventHandler(
         // Primary defense is mutual exclusion (entering edit clears search), but
         // checking edit first guards against timing races.
         if (recv.isClipboardEditMode()) {
-            recv.insertToClipboardEdit(text.toString())
+            recv.insertToClipboardEdit(inline)
             return
         }
 
         // Route to clipboard search box if in search mode
         if (recv.isClipboardSearchMode()) {
-            recv.appendToClipboardSearch(text.toString())
+            recv.appendToClipboardSearch(inline)
             return
         }
 
         // #41 v5: Route to emoji search EditText when emoji pane is open
         if (recv.isEmojiPaneOpen()) {
-            recv.appendToEmojiSearch(text.toString())
+            recv.appendToEmojiSearch(inline)
             return
         }
 
         // Route to GIF search EditText when GIF pane is open
         if (recv.isGifPaneOpen()) {
-            recv.appendToGifSearch(text.toString())
+            recv.appendToGifSearch(inline)
             return
         }
 
@@ -890,6 +904,18 @@ class KeyEventHandler(
     }
 
     /**
+     * Delete one word in the active inline field ([InlineWordDelete]): `delete_last_word`,
+     * `delete_word` and Ctrl+Backspace backward, `forward_delete_word` and Ctrl+Delete forward.
+     * In the clipboard entry editor the edit is one undo step (`replaceEditRange` records it in
+     * InlineEditHistory); an append-only field (search, tag) only deletes backward. Nothing
+     * reaches the app behind the panel.
+     */
+    private fun deleteInlineWord(forward: Boolean) {
+        val target = activeInlineTarget() ?: return
+        InlineWordDelete.delete(target, forward)
+    }
+
+    /**
      * A Ctrl/Alt/Meta shortcut pressed while an inline field is active. In the clipboard entry
      * editor the standard text-field shortcuts act on the editor: Ctrl+V/X/C/A paste, cut, copy
      * and select all; Ctrl+Z undoes; Ctrl+Shift+Z and Ctrl+Y redo (Pixel 2026-10-14). In the other
@@ -953,6 +979,9 @@ class KeyEventHandler(
                     recv.selectAllClipboardEdit()
                     recv.backspaceClipboardEdit()
                 }
+                // Word deletion runs over the editor's own text, as one InlineEditHistory step.
+                KeyValue.Editing.DELETE_WORD, KeyValue.Editing.DELETE_LAST_WORD -> deleteInlineWord(forward = false)
+                KeyValue.Editing.FORWARD_DELETE_WORD -> deleteInlineWord(forward = true)
                 // Case cycling rewrites text in place; the inline editor's own undo history and
                 // privacy gate are not built for it, so it is refused there, visibly.
                 KeyValue.Editing.CASE_CYCLE -> showFeedback(R.string.dynamic_action_unavailable)
@@ -978,6 +1007,8 @@ class KeyEventHandler(
         if (isInlineFieldActive()) {
             if (ev == KeyValue.Editing.PASTE || ev == KeyValue.Editing.PASTE_PLAIN) {
                 readSystemClipText()?.let { sendText(it) }
+            } else if (ev == KeyValue.Editing.DELETE_WORD || ev == KeyValue.Editing.DELETE_LAST_WORD) {
+                deleteInlineWord(forward = false)
             } else if (ev == KeyValue.Editing.CASE_CYCLE) {
                 showFeedback(R.string.dynamic_action_unavailable)
             }
@@ -1685,6 +1716,11 @@ class KeyEventHandler(
          * field's ordinary backspace.
          */
         fun undoInlineSwipe(): Boolean = false
+        /**
+         * The separator owed before [typed] when it is tap-typed into an inline field right after
+         * a swiped word ([InlineSwipeSession.spaceBeforeTap]): " " or "".
+         */
+        fun inlineSpaceBeforeTap(typed: CharSequence): String = ""
         /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
         fun onEditorWordBoundary(ic: InputConnection?)
 

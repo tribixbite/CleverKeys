@@ -1327,6 +1327,15 @@ class SuggestionHandler(
         return committed.takeIf { inlineSwipe.commitTap(target, it) }
     }
 
+    /**
+     * [KeyEventHandler.LearningHooks.inlineSpaceBeforeTap]: the automatic space a swiped word
+     * owes the next tapped letter in an inline field, under `auto_space_after_suggestion`.
+     */
+    override fun inlineSpaceBeforeTap(typed: CharSequence): String {
+        val target = inlineTargetProvider?.invoke() ?: return ""
+        return inlineSwipe.spaceBeforeTap(target, typed, config.auto_space_after_suggestion)
+    }
+
     /** [KeyEventHandler.LearningHooks.undoInlineSwipe]: #110's swipe undo, in the inline field. */
     override fun undoInlineSwipe(): Boolean {
         if (!config.backspace_undo_swipe) return false

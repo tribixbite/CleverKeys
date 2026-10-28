@@ -493,6 +493,18 @@ backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() →
   is a letter/digit (a swipe into the middle of text); no trailing auto-space at the end (the
   inline fields have no smart-punctuation swallow, and a query keeps no stray space). A
   selection is replaced.
+- **Tap after a swipe** (2026-10-28): with no trailing auto-space, the space is owed to the next
+  tap. `sendText` asks `LearningHooks.inlineSpaceBeforeTap` before every inline route →
+  `InlineSwipeSession.spaceBeforeTap`: " " when ownership is valid, the insertion ended with the
+  word (no trail), the typed text starts with a letter/digit and `auto_space_after_suggestion`
+  is on; else "" (punctuation attaches: `word.`).
+- **Word deletion** (2026-10-28): `delete_last_word` (Backspace NW flick), `delete_word`
+  (round-trip gesture, palette) and `forward_delete_word` in `handleEditingKey`, plus
+  Ctrl+Backspace / Ctrl+Delete in `key_up` (checked BEFORE the inline backspace branches; they
+  arrive as KEYCODE_DEL/FORWARD_DEL with Ctrl meta), go to `KeyEventHandler.deleteInlineWord` →
+  `InlineWordDelete` (pure; `EditorTextNavigation` word boundaries, a selection is deleted as
+  is) → `InlineTextTarget.replace(range, "")` — one `InlineEditHistory` step in the editor;
+  append-only fields delete backward only. They used to be swallowed (`else -> {}`).
 - **Ownership** (`InlineSwipeSession`, pure): valid only while field, session (editor:
   `editingSession`, bumped per `edit_entry`; others: the view's identity), whole text and
   collapsed caret are exactly what the swipe/tap left. Any typed char, backspace, caret move,

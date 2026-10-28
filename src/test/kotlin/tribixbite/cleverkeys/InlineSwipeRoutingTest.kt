@@ -270,6 +270,8 @@ class InlineSwipeRoutingTest {
 
     private val log = mutableListOf<String>()
     private var mode: String? = null
+    /** What the proxy receiver reports for the clipboard entry editor. */
+    private var editState = InlineFieldState("x", 1, 1, 3L)
 
     private fun <T> recordingProxy(type: Class<T>, answer: (String, Array<Any?>?) -> Any?): T =
         @Suppress("UNCHECKED_CAST")
@@ -292,7 +294,11 @@ class InlineSwipeRoutingTest {
                 "isClipboardSearchMode" -> mode == "search" || mode == "edit+search"
                 "isEmojiPaneOpen" -> mode == "emoji"
                 "isGifPaneOpen" -> mode == "gif"
-                "inlineFieldState" -> InlineFieldState("x", 1, 1, 3L).takeIf { args?.get(0) == InlineField.CLIPBOARD_EDIT }
+                "inlineFieldState" -> when (args?.get(0)) {
+                    InlineField.CLIPBOARD_EDIT -> editState
+                    InlineField.CLIPBOARD_SEARCH -> InlineFieldState.appendOnly("red car", 4L)
+                    else -> null
+                }
                 "replaceInInlineField" -> true
                 else -> null
             }
@@ -351,6 +357,90 @@ class InlineSwipeRoutingTest {
         // the point where the inline hook would have been consulted.
         runCatching { backspace(keyHandler(hooks)) }
         verify(exactly = 0) { hooks.undoInlineSwipe() }
+    }
+
+    // ── word deletion in inline fields (maintainer report 2026-10-28) ─────────────
+
+    /** Press [key] with [meta] held, the way updateMetaState leaves it; the field-side calls. */
+    private fun press(keys: KeyEventHandler, key: KeyValue, meta: Int = 0): List<String> {
+        log.clear()
+        keys.setField("metaState", meta)
+        keys.key_up(key, Pointers.Modifiers.EMPTY, false)
+        return log.filter { !it.startsWith("is") && !it.startsWith("get") && !it.startsWith("inlineFieldState") }
+    }
+
+    private val ctrlMeta = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+
+    @Test
+    fun everyDeleteWordPathDeletesAWordInTheEntryEditor() {
+        mode = "edit"
+        val keys = keyHandler(mockk(relaxed = true))
+        val backward = "replaceInInlineField(CLIPBOARD_EDIT,5,10,)"
+        // The Backspace NW flick (delete_last_word), the delete_word command, Ctrl+Backspace.
+        editState = InlineFieldState("Meet noon", 9, 9, 3L)
+        assertEquals(listOf("replaceInInlineField(CLIPBOARD_EDIT,5,9,)"), press(keys, KeyValue.getKeyByName("delete_last_word")))
+        editState = InlineFieldState("Meet noon!", 10, 10, 3L)
+        assertEquals(listOf(backward), press(keys, KeyValue.getKeyByName("delete_word")))
+        assertEquals(listOf(backward),
+            press(keys, KeyValue.keyeventKey("del", KeyEvent.KEYCODE_DEL, 0), ctrlMeta))
+        // forward_delete_word and Ctrl+Delete.
+        editState = InlineFieldState("Meet noon", 4, 4, 3L)
+        val forward = listOf("replaceInInlineField(CLIPBOARD_EDIT,4,9,)")
+        assertEquals(forward, press(keys, KeyValue.getKeyByName("forward_delete_word")))
+        assertEquals(forward,
+            press(keys, KeyValue.keyeventKey("fdel", KeyEvent.KEYCODE_FORWARD_DEL, 0), ctrlMeta))
+        assertAppUntouched()
+    }
+
+    @Test
+    fun deleteWordInAnAppendOnlyFieldDeletesItsLastWord() {
+        mode = "search"
+        val keys = keyHandler(mockk(relaxed = true))
+        val last = listOf("replaceInInlineField(CLIPBOARD_SEARCH,4,7,)")
+        assertEquals(last, press(keys, KeyValue.getKeyByName("delete_last_word")))
+        assertEquals(last, press(keys, KeyValue.getKeyByName("delete_word")))
+        assertEquals(last, press(keys, KeyValue.keyeventKey("del", KeyEvent.KEYCODE_DEL, 0), ctrlMeta))
+        assertEquals("nothing after the end of an append-only field", emptyList<String>(),
+            press(keys, KeyValue.getKeyByName("forward_delete_word")))
+        assertAppUntouched()
+    }
+
+    @Test
+    fun aPlainBackspaceInAnInlineFieldIsStillOneCharacter() {
+        mode = "edit"
+        assertEquals(listOf("backspaceClipboardEdit()"),
+            press(keyHandler(mockk(relaxed = true)), KeyValue.keyeventKey("del", KeyEvent.KEYCODE_DEL, 0)))
+    }
+
+    // ── tap after a swiped word: the deferred automatic space (2026-10-28) ────────
+
+    @Test
+    fun aLetterTappedAfterAnInlineSwipeGetsTheAutomaticSpace() {
+        val editor = FakeEditor("")
+        inlineTarget = editor
+        val handler = handler()
+        handler.swipe("help")
+        assertEquals("help", editor.text)
+        assertEquals(" ", handler.inlineSpaceBeforeTap("t"))
+        assertEquals("punctuation attaches", "", handler.inlineSpaceBeforeTap("."))
+        config.auto_space_after_suggestion = false
+        assertEquals("the setting off: no automatic space", "", handler.inlineSpaceBeforeTap("t"))
+    }
+
+    @Test
+    fun sendTextPutsTheOwedSpaceBeforeTheTappedLetterInEveryInlineField() {
+        val hooks = mockk<KeyEventHandler.LearningHooks>(relaxed = true)
+        every { hooks.inlineSpaceBeforeTap(any()) } answers { if (firstArg<CharSequence>()[0].isLetter()) " " else "" }
+        val calls = mapOf(
+            "edit" to "insertToClipboardEdit( t)", "search" to "appendToClipboardSearch( t)",
+            "tag" to "insertToClipboardTag( t)", "emoji" to "appendToEmojiSearch( t)", "gif" to "appendToGifSearch( t)",
+        )
+        for ((m, expected) in calls) {
+            mode = m
+            assertEquals(m, listOf(expected), press(keyHandler(hooks), KeyValue.getKeyByName("t")))
+        }
+        mode = "edit"
+        assertEquals(listOf("insertToClipboardEdit(.)"), press(keyHandler(hooks), KeyValue.getKeyByName(".")))
     }
 
     // ── bridge delegation of the new IReceiver methods ────────────────────────────

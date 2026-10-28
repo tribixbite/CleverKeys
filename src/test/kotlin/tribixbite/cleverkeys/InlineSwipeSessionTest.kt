@@ -256,4 +256,136 @@ class InlineSwipeSessionTest {
         assertNull(InlineFieldState.appendOnlyReplace("axy", 0, 1, "b"))
         assertNull(InlineFieldState.appendOnlyReplace("axy", 4, 3, ""))
     }
+
+    // ── tap after a swiped word: the deferred automatic space (2026-10-28) ────────────
+
+    @Test
+    fun aLetterTappedRightAfterASwipedWordOwesASpace() {
+        val f = editor("")
+        val session = InlineSwipeSession()
+        session.insert(f, "help")
+        assertEquals(" ", session.spaceBeforeTap(f, "t", autoSpaceAfter = true))
+        f.type(" t")
+        assertEquals("help t", f.text)
+        assertEquals("only the first tap after the swipe", "", session.spaceBeforeTap(f, "o", autoSpaceAfter = true))
+    }
+
+    @Test
+    fun theDeferredSpaceAlsoAppliesInAppendOnlyFieldsAndToDigits() {
+        val f = FakeField(InlineField.CLIPBOARD_SEARCH, "red")
+        val session = InlineSwipeSession()
+        session.insert(f, "car")
+        assertEquals("red car", f.text)
+        assertEquals(" ", session.spaceBeforeTap(f, "2", autoSpaceAfter = true))
+    }
+
+    @Test
+    fun punctuationAttachesToTheSwipedWord() {
+        val f = editor("")
+        val session = InlineSwipeSession()
+        session.insert(f, "word")
+        for (p in listOf(".", ",", "?", "'", " ", "\n")) {
+            assertEquals("'$p' attaches", "", session.spaceBeforeTap(f, p, autoSpaceAfter = true))
+        }
+    }
+
+    @Test
+    fun noDeferredSpaceWhenTheSettingIsOff() {
+        val f = editor("")
+        val session = InlineSwipeSession()
+        session.insert(f, "help")
+        assertEquals("", session.spaceBeforeTap(f, "t", autoSpaceAfter = false))
+    }
+
+    @Test
+    fun noDeferredSpaceWhenTheSwipeAlreadyLeftASeparatorOrTheFieldChanged() {
+        // A swipe into the middle of text gets its trailing space at once.
+        val mid = editor("ab cd", at = 3)
+        val s1 = InlineSwipeSession()
+        s1.insert(mid, "xy")
+        assertEquals("ab xy cd", mid.text)
+        assertEquals("", s1.spaceBeforeTap(mid, "t", autoSpaceAfter = true))
+        // The caret moved since the swipe: the space before it is not the swipe's to owe.
+        val moved = editor("")
+        val s2 = InlineSwipeSession()
+        s2.insert(moved, "help")
+        moved.selStart = 2; moved.selEnd = 2
+        assertEquals("", s2.spaceBeforeTap(moved, "t", autoSpaceAfter = true))
+        // No swipe at all.
+        assertEquals("", InlineSwipeSession().spaceBeforeTap(editor("help"), "t", autoSpaceAfter = true))
+    }
+
+    // ── word deletion (2026-10-28) ────────────────────────────────────────────────────
+
+    @Test
+    fun deleteWordBackwardRemovesTheWordBeforeTheCaret() {
+        val f = editor("Meet at noon")
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("Meet at ", f.text)
+        assertEquals(8, f.selStart)
+        // Separators before the caret go with the next word, like word_left.
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("Meet ", f.text)
+    }
+
+    @Test
+    fun deleteWordBackwardInTheMiddleOfText() {
+        val f = editor("one two three", at = 7)
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("one  three", f.text)
+        assertEquals(4, f.selStart)
+    }
+
+    @Test
+    fun deleteWordForwardRemovesTheWordAfterTheCaret() {
+        val f = editor("one two three", at = 3)
+        assertTrue(InlineWordDelete.delete(f, forward = true))
+        assertEquals("one three", f.text)
+        assertEquals(3, f.selStart)
+    }
+
+    @Test
+    fun aSelectionIsDeletedAsItIs() {
+        val f = editor("one two three", at = 2, end = 9)
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("onhree", f.text)
+    }
+
+    @Test
+    fun contractionsAreOneWord() {
+        val f = editor("I don't")
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("I ", f.text)
+    }
+
+    @Test
+    fun appendOnlyFieldsDeleteTheLastWordAndNothingForward() {
+        val f = FakeField(InlineField.CLIPBOARD_SEARCH, "red car")
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("red ", f.text)
+        assertFalse(InlineWordDelete.delete(f, forward = true))
+        assertEquals("red ", f.text)
+    }
+
+    @Test
+    fun nothingToDeleteWritesNothing() {
+        val start = editor("abc", at = 0)
+        assertFalse(InlineWordDelete.delete(start, forward = false))
+        val end = editor("abc")
+        assertFalse(InlineWordDelete.delete(end, forward = true))
+        val inactive = editor("abc").apply { active = false }
+        assertFalse(InlineWordDelete.delete(inactive, forward = false))
+        assertTrue(start.writes.isEmpty() && end.writes.isEmpty() && inactive.writes.isEmpty())
+    }
+
+    @Test
+    fun deletingAWordVoidsTheSwipeOwnership() {
+        val f = editor("Meet at")
+        val session = InlineSwipeSession()
+        session.insert(f, "noon")
+        InlineWordDelete.delete(f, forward = false)
+        assertEquals("Meet at ", f.text)
+        assertFalse("backspace after a word delete is ordinary", session.undo(f))
+        assertEquals("", session.spaceBeforeTap(f, "t", autoSpaceAfter = true))
+    }
 }

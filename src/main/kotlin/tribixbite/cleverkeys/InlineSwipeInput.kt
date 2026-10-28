@@ -113,6 +113,39 @@ object InlineWordPlanner {
 }
 
 /**
+ * Word deletion in an inline field (maintainer report 2026-10-28: "swipe to delete word doesn't
+ * work while editing a clipboard clipping"). The delete-word commands — `delete_last_word` (the
+ * Backspace NW flick), `delete_word` (Backspace round-trip gesture, palette, Ctrl+Backspace),
+ * `forward_delete_word` (Ctrl+Delete) — reach an app as a Ctrl+Del key event or an
+ * InputConnection rewrite, neither of which the IME's own fields receive, so they were
+ * swallowed there. This plans the same edit over the FIELD's text. Pure.
+ *
+ * Boundaries are [EditorTextNavigation]'s (the inline editor's word_left/word_right rules):
+ * backward skips the separators before the caret, then the word; forward skips separators after
+ * it, then the word. A selection is deleted as it is, the way Ctrl+Backspace treats one in a
+ * text field. Append-only fields (caret always at the end) can only delete backward.
+ */
+object InlineWordDelete {
+
+    /** The range [start, end) a word deletion removes from [state], or null when nothing would go. */
+    fun range(state: InlineFieldState, forward: Boolean): IntRange? {
+        val lo = state.lo
+        val hi = state.hi
+        if (lo != hi) return lo until hi
+        val start = if (forward) lo else EditorTextNavigation.previousWordStart(state.text, lo)
+        val end = if (forward) EditorTextNavigation.nextWordEnd(state.text, hi) else hi
+        return if (start < end) start until end else null
+    }
+
+    /** Delete one word at [target]'s caret (see [range]). False when nothing was deleted. */
+    fun delete(target: InlineTextTarget, forward: Boolean): Boolean {
+        val state = target.state() ?: return false
+        val range = range(state, forward) ?: return false
+        return target.replace(range.first, range.last + 1, "")
+    }
+}
+
+/**
  * The word most recently swiped into an inline field, so that a suggestion-bar tap replaces it
  * and backspace removes it — in THAT field, the way the app path's swipe ownership
  * (`lastAutoInsertedWord`) works for the app.
@@ -199,6 +232,25 @@ class InlineSwipeSession {
         val current = validOwned(target) ?: return false
         owned = null
         return target.replace(current.insertionStart, current.caret, current.replaced)
+    }
+
+    /**
+     * The separator a tap-typed [typed] needs right after a swiped word (maintainer report
+     * 2026-10-28: tapping after a swiped word fused with it, `help` + `t` → `helpt`).
+     *
+     * The app path appends the automatic space when it commits the swipe; an inline field
+     * does not ([InlineWordPlanner]: a query keeps no stray space, and punctuation attaches),
+     * so the space is owed to the NEXT tap instead — the same deferred space Gboard uses.
+     * A single space when the field is untouched since the swipe, the swipe left no separator
+     * after the word, and [typed] starts with a letter or digit (punctuation still attaches:
+     * `word.`); else "". [autoSpaceAfter] is `auto_space_after_suggestion`: off means the user
+     * wants no automatic space after a swiped word, here as in apps.
+     */
+    fun spaceBeforeTap(target: InlineTextTarget, typed: CharSequence, autoSpaceAfter: Boolean): String {
+        if (!autoSpaceAfter || typed.isEmpty() || !Character.isLetterOrDigit(Character.codePointAt(typed, 0))) return ""
+        val current = validOwned(target) ?: return ""
+        val trailing = current.inserted.length - (current.wordOffset + current.wordLength)
+        return if (trailing == 0) " " else ""
     }
 
     /** The ownership, when [target]'s field is exactly as the last swipe/tap left it. */
