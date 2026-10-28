@@ -684,6 +684,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     layouts System / Dvorak / QWERTY US (portrait current System, landscape QWERTY US), night
     yes, Next-Word Prediction OFF (was on only for the captures), theme Cyberpunk, look hints
     OFF / key preview ON untouched, rotation auto, 7 Chrome tabs, launcher.
+    ROUND 6 (2026-10-28, agent, Pixel): editor-action key per product `cd69b918` — real Gboard
+    and SwiftKey captured for every enterkeyhint (go/search/send/next/done/previous/enter), light
+    + dark. Gboard: icons → ⌕ ➤ →| ✓ |← on the FUNCTION pill (never primary; corrects research
+    §2a); SwiftKey: ✓ (Go) ⌕ outlined plane → ↵ ↵; iOS-style blue + → ⌕ ↑ ✓ (research §1a), iOS
+    18-style lower-case words; plain Enter a thin ↵ on the three icon looks. CleverKeys' own line
+    icons (`LookActionKeys`), no product artwork. Samsung-style UNCHANGED (no Samsung Keyboard to
+    check — open). LookActionKeysTest red → 8/8, runPureTests 3457 OK, runMockTests 1611 OK.
+    Evidence `build/oct27-night-pixel/showcase/action-keys-{light,dark}.png`. Release `cd69b918`
+    installed; Pixel restored (3 layouts, night yes, next-word OFF, 7 tabs). Waiting: re-shoot the
+    bar showcase once the `tomorr` → `timor` ranking fix lands on main.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
