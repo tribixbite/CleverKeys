@@ -777,6 +777,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     cause: a missing-element tap; scripts now abort instead) — restored to Cyberpunk. A Chrome
     "File might be harmful … CleverKeys-v2.0.0-arm64-v8a.apk from s3" prompt appeared on the Pixel
     (not started by me) — left untouched; my test tab was gone (7 tabs). Pixel restored otherwise.
+    ROUND 8 (2026-10-28 midday, agent, Pixel; release from bbaf814b + `4ee8bd19`, source-equal to
+    `4ee8bd19`, left installed): bar RESHOOT after the round-6 unfinished-word fix. `tomorr` is no
+    longer autocorrected (centre was `timor`); space keeps it, so the bar had no highlight and the
+    looks centred `tomorrow` with `tomorr` left — the real Gboard/SwiftKey centre the verbatim word
+    when not correcting (`kwazb` captures) → FIXED `4ee8bd19` (typed word centred, plain; quoted on
+    iOS). Bar now `tomorrow | tomorr | tomorrows`; taps PASS (space and centre → `tomorr`, left →
+    `tomorrow`); next word `afternoon | morning | I`. Suites pure 3485, mock 1627 OK. Showcase
+    `build/oct27-night-pixel/showcase/` (old set in `showcase-old/`), Samsung compares redone in a
+    Chrome search field. Side effects cleaned: an accidental custom word `tomorr` (from a centre
+    tap) deleted in Dictionary Manager; learned word `tomorr` and four test bigrams
+    (`tomorrow → tomorr/the/morning/afternoon`) deleted in Learning & Data. NOT removable per word:
+    the selection-history count for `tomorr` (decays; no UI) — until then typing `tomorr` shows no
+    "+" entry. Earlier test sessions' learned words (`tomorrow` 33×, `at`, `you`, `see`, `good`…)
+    are from all agents' runs, baseline unknown — left. Restored: layouts System/Dvorak/QWERTY US,
+    night yes, Cyberpunk, Next-Word OFF, look hints OFF, Learn From My Typing ON (turned off
+    during captures, "Keep it" chosen, data kept), 7 tabs, launcher.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
