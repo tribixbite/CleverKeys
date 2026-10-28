@@ -332,7 +332,10 @@ editor/receiver effects — add any new Editing value there (it fails on an unco
 chooser. `replaceTextMenu` (Editing.REPLACE_MENU, "Replacement Suggestions (Editor)") sends
 the bare `android.R.id.replaceText` context-menu action — the pre-7d1a3271 layout-key
 behaviour — with no chooser and no selection precondition; stock EditText shows its
-SuggestionSpan popup for the word at the cursor. Text label "rplc" (single-font rule).
+SuggestionSpan popup for the word at the cursor. Since `d1acb09b` it first reads the text around the selection
+start WITH styles: no SuggestionSpan (with suggestions, or misspelled/grammar) touching it →
+"Action unavailable" and nothing sent — the popup could not open in any editor (Compose and
+Chrome never return spans); the connection's own answer is IPC success and proves nothing. Text label "rplc" (single-font rule).
 
 **Removed command `textAssistMenu` (2026-10-17).** `android.R.id.textAssist` is handled by no
 editor (EditText's `onTextContextMenuItem` has no case; Chrome, Compose neither), so it was a

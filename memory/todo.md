@@ -101,6 +101,26 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    settings changed on the maintainer's phone), templates in a password field (needs a template
    assigned to a key), narrow split-screen (would rearrange the maintainer's apps), "." after
    lift and enlarged font + clipboard pane (the host lost Wi-Fi at 16:12 before these ran).
+   AGENT 2026-10-28 (Saga 202 portrait, release 3e49b983 + `d1acb09b`, sha256 ec404959…,
+   `build/oct28-saga202/`): "." right after a swipe lift PASS — swipe `hello`, "." (C SW) 2 s
+   later → `Hello. `; swipe `world` then "." in the same adb burst (≈70 ms after lift) →
+   `World. ` (auto-space swallowed, re-added, next word capitalised). Templates (temporary g NW
+   `AB{cursor}CD`): Chrome textarea → `AB|CD` PASS; Chrome `<input type=password>` → nothing
+   typed PASS, but no bar message (the bar suppresses messages in password mode by design);
+   clipboard-pane search field → nothing typed there or in the app PASS, no visible message
+   (the bar is hidden behind the pane). Media-only clip NOT RUN (would replace the real clip).
+   Font scale 2.0: the clipboard pane header/results/Select fit, text scales; entries NOT
+   checked (history, pinned and to-dos all empty, clip not touched). Finding: a font-scale
+   change does not reach an already-inflated pane — it stayed 1.0-sized until the IME process
+   restarted (reinstall). fa/hu settings search: hu `mentes` → "Médiaelemek mentése" scrolled to
+   the top of the viewport PASS; fa `GIF` → GIF panel section expanded and in view PASS (the ZIP
+   row is hidden while the panel is off). fa/hu pane page arrows NOT RUN (no entries to page;
+   `RtlMirroringDriftTest` covers the glyph swap). Continuous swipe with auto-space OFF /
+   interrupted phrases: device NOT RUN (adb traces too coarse); JVM evidence only —
+   `ContinuousSwipePureTest` (auto-space-off separator callbacks, cancel paths) and
+   `Keyboard2ViewContinuousLifecycleTest` ("." while the last segment decodes → feedback;
+   cancel with/without boundary) green in the full suites. Restored: font_scale 1.0, app
+   locale [], 0 custom mappings, both added Chrome tabs closed (3 left), launcher.
 5. [ ] device: undo/redo leftovers. DONE on the Pixel 2026-10-17 (release `d8be659b`,
    `build/oct17-pixel/`): clipboard entry editor Ctrl+Z ×2 removes one word per step, Ctrl+Y
    restores, select + Ctrl+C adds a history entry; Chrome textarea Ctrl+Z / Ctrl+Y undo and
@@ -160,6 +180,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    Compose 1.6.8 does not implement android.R.id.replaceText and the IME cannot detect the
    refusal (the connection returns IPC success; a check added in `68e779ef` never fired and was
    removed in `34dbb8e9`). Found on the way: Reset all left stale labels → fixed `9c909048`.
+   FIXED 2026-10-28 `d1acb09b`: the popup's own precondition IS readable — a stock EditText
+   opens it only for a SuggestionSpan (with suggestions, or misspelled/grammar) touching the
+   selection start (AOSP `Editor.SuggestionsPopupWindow.updateSuggestions`), and Compose and
+   Chrome hand no spans to the IME. The command reads the text around the selection start with
+   GET_TEXT_WITH_STYLES; no usable span → bar "Action unavailable", nothing sent. Test
+   `EditingCommandParityTest.replacePopupWithoutASuggestionSpanAtTheCursorSaysUnavailable` red
+   before, green after; full pure 3,457 / mock 1,612 OK. Saga 202: Compose settings search →
+   message, text untouched PASS; Dictionary Manager search (View EditText), swiped `hello`, caret
+   at the word end → the editor's popup help/hell/he'll/held/hero PASS (spans cross the IPC).
+   Note: with the caret after the swipe's auto-space the span does not touch it, so Replace
+   reports unavailable there (EditText would show nothing either). Still open: a real app that
+   RETURNS process-text on a phone.
 8. [ ] maintainer soak: running every release as generated (2026-10-25). Bugs found: (a) `they've`
    hard to swipe; (b) clipboard TO-DO panel entries — text input/editing broken for long
    entries (no text inserts); (c) bépo `é` discarded in swipe: swiping `été` gives `tp`, swiping
