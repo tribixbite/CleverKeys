@@ -95,6 +95,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    #181 (agent, Saga 144, 2026-10-28): NOT RUN — this Saga HAS a downloadable-fonts provider
    (`com.google.android.gms/.fonts.provider.FontsProvider`, authority `com.google.android.gms.fonts`,
    GMS 26.42.31), so it is not a device without one; still needs a GMS-free phone or emulator.
+   #181 (agent, emulator.wtf, 2026-10-28): NO GMS-FREE IMAGE EXISTS there. `ew-cli --models` lists 9
+   models (Pixel2/7, Tablet10, NexusLowRes, Monitor + 4 `*Atd`); new `Issue181NoFontProviderTest`
+   probed 10 images (Pixel7Atd 31/34, Pixel7 34/37, Pixel2 34, Tablet10 35, NexusLowRes 36,
+   Monitor 34, NexusLowResAtd 34, Tablet10Atd 36) and every one has GMS and
+   `com.google.android.gms/com.google.android.gms.fonts` answering LOAD_EMOJI_FONT, EmojiCompat
+   configured (ATD = google_atd); API ≤30 images are 32-bit x86, which the x86_64 APK cannot use.
+   The test skips (assumption) on a provider device and, on a GMS-free one, asserts no provider,
+   EmojiCompat not loaded, and that every category + 4 searches show exactly the `Paint.hasGlyph`-
+   drawable entries in order (dropped ones undrawable); its no-provider branch has never executed.
+   Still needs a GMS-free phone (e.g. LineageOS without GApps): run that one class there.
    #184 PASS (agent, Saga 144, release `16b4a500`, 2026-10-28, `build/oct28-saga144/10–12, 25`): sw
    pack (20,000 words) imported, then an UPDATE pack built locally with the same code and 100,001
    real dictionary entries (sw words + synthetic filler, `build_langpack.py`) → refused "This
