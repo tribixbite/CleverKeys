@@ -665,6 +665,25 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     failures fixed: 5-argument call), reruns green. Open: device pass of the bar (taps, TalkBack
     order, landscape width, long words ellipsize); entries past the third are not shown on a
     look; the Theme Creator does not edit the bar arrangement (XML / JSON only).
+    ROUND 5 (2026-10-27 night, agent, Pixel 8 Pro; evidence `build/oct27-night-pixel/`, not in
+    git; showcase `showcase/`): device pass of the bar, real Gboard + SwiftKey captured for the
+    same scene (light + dark), CleverKeys restored as IME after each. The real products show an
+    unknown prefix PLAIN (`tomorr | tomorrow | tomorrow's`), Gboard bolds the centre only for a
+    pending correction (next word `at | morning | and`, none bold), SwiftKey always inks the
+    centre and dims the sides, and both shrink / middle-elide long words. FIXED `8e449574`: a
+    look's slot shows the plain word (the "+word" tap still commits as typed + adds to the
+    dictionary — kept, the products learn a tapped word too; plain bar unchanged),
+    `LookBar.emphasis` COMMIT / CENTRE (`bar_emphasis`), next-word bars have no commit slot,
+    slots auto-size to 11 sp and elide the middle. LookBarArrangementTest red → 17/17,
+    LookSuggestionBarInstrumentedTest 6/6 (ew API 34). Taps PASS on device: left, centre and
+    right slot commit their own word, space commits the centre (`teh` → `the`). Landscape: three
+    slots span the bar, fine. Release `8e449574` (sha256 1286b85a…) left installed. Open /
+    structural: no toolbar row (Gboard grid + mic, SwiftKey toolbar + chevron); system font; the
+    centre for `tomorr` is `timor` on this build (ranking, other owner); the plain (non-look)
+    bar still highlights the first next-word chip though space types none of them. Restored:
+    layouts System / Dvorak / QWERTY US (portrait current System, landscape QWERTY US), night
+    yes, Next-Word Prediction OFF (was on only for the captures), theme Cyberpunk, look hints
+    OFF / key preview ON untouched, rotation auto, 7 Chrome tabs, launcher.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
