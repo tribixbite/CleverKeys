@@ -384,8 +384,17 @@ class SuggestionBar : LinearLayout {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
-    /** The locale's quotation marks for [LookBar.quoteTyped] (“ ” in English, « » in French…). */
-    private fun quoteMarks(): Pair<String, String> = try {
+    /**
+     * The locale's quotation marks for [LookBar.quoteTyped] (“ ” in English, « » in French…).
+     * ICU's LocaleData exists only from API 28; below it the call would throw NoSuchMethodError,
+     * an Error the catch below does not cover, so older releases use English marks.
+     */
+    private fun quoteMarks(): Pair<String, String> =
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) "“" to "”"
+        else localeQuoteMarks()
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.P)
+    private fun localeQuoteMarks(): Pair<String, String> = try {
         val data = android.icu.util.LocaleData.getInstance(
             android.icu.util.ULocale.forLocale(resources.configuration.locales[0])
         )
