@@ -819,3 +819,31 @@ the choice: `tomorr` → tomorr (kept), `becau` → becau, `restau` → restau; 
 → rest unchanged (as §16.1 predicted for `caf`; `resta` needs ρ ≤ 1.4, which breaks 48+ GTC-DEV
 targets); `tomo` → too and `beautif` → beautify (a completion, never withheld). TEST runs once at
 ρ = 1.5, L = 3.
+
+## 18. Round 6 TEST (run 2026-10-27, ρ = 1.5, L = 3; one evaluation)
+
+Production shipped default (ρ off) against production with ρ = 1.5, L = 3. Inputs without a
+completion cannot change and were not run on S-adj, C-oov and Birkbeck (2,915 of 139,577 S-adj,
+755 of 36,491 C-oov, 1,743 of 31,502 R-union inputs run); GTC and T-trunc ran in full.
+
+| set | outcome | gate |
+|---|---|---|
+| GTC-TEST | 7 distinct breaks (7 pairs), 0 fixes; 4,883 targets right | R1: 7 ≤ 24.4 ✓ |
+| S-adj-TEST | 3 distinct breaks (3 pairs) of 5,075 base words | R2: 3 ≤ 25.4 ✓ |
+| T-trunc-TEST | the shipped default hijacks 2,535 targets (3,734 prefixes); ρ protects **1,099 (43.4 %)** (1,531 prefixes) | R3: ≥ 25 % ✓ |
+| named cases | all hold | R4 ✓ |
+| C-oov-TEST (reported) | 137 valid unlisted words protected | — |
+| R-union (reported) | 11 distinct breaks (11 pairs), 0 fixes | — |
+
+**PASS. Shipped: ρ = 1.5, L = 3** (`Defaults.AUTOCORRECT_CHANNEL_COMPLETION_COST`,
+`AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH`; slider "Unfinished Word Cost" in Ranking & Tuning,
+top = Off; L is a constant). The seven GTC breaks are themselves unfinished words whose commit
+truncated a word the corpus then pairs with a shorter one (`authe`→auth, `brewi`→brew,
+`buildi`→build, `contin`→contain, `convers`→covers, `expone`→expose, `simplist`→simplest);
+rows in `build/eval/round6/rows6-test.tsv` (not in git). Report cases on TEST as on DEV:
+`tomorr`, `becau` and `restau` are kept; `caf` → car and `resta` → rest are unchanged (§16.1,
+§17); `tomo` → too and `beautif` → beautify are outside the rule (a completion, or cheaper than
+the completion). Disclosure: T-trunc's "hijacked" on TEST is counted from production outputs (a
+correction that does not extend the typed word); on DEV it was the replica's eligibility test,
+which also requires a completion — every T-trunc prefix has one, so the two counts agree by
+construction.

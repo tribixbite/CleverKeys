@@ -698,7 +698,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     centre = commit; iOS quotes the typed word); no toolbar row; system font, not SF / Google
     Sans / Samsung One; Gboard's filled Shift glyph. FOUND, not fixed (other owners): space
     would commit `timor` for `tomorr`, `car` for `caf`, `rest` for `resta` (bar highlight,
-    `build/oct27pm-pixel/20-autocorrect-tomorr-timor.png`); after a night-mode switch the keyboard
+    `build/oct27pm-pixel/20-autocorrect-tomorr-timor.png`) — ADDRESSED 2026-10-27 (agent): new
+    channel step ρ "unfinished word" (pre-registered round 6, eval doc §16–§18; TEST PASS: 43.4 %
+    of 2,535 hijacked unfinished-word targets kept, GTC −7 of 4,883, S-adj −3 of 5,075, named
+    cases hold). `tomorr`, `becau`, `restau` now stay as typed; `caf` → car and `resta` → rest
+    are UNCHANGED (cheaper than the unfinished reading at ρ = 1.5; a ρ that keeps `resta` broke
+    48+ GTC-DEV targets). Slider "Unfinished Word Cost" (22 locale files, machine-drafted, native
+    review owed). Not device-checked (LAN down); after a night-mode switch the keyboard
     came back shorter (row pitch 151 → 137 px, same in both modes afterwards) — FIXED `bd756a79`
     (2026-10-27, agent): `Config.refresh` sized against `resources.displayMetrics.heightPixels`,
     which on Android 15+ is the full display at service start and the display minus the system

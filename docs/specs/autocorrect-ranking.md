@@ -1,6 +1,6 @@
 # Autocorrect ranking (tap-typing space-bar autocorrect)
 
-**Status (2026-10-23):** as built. Scope: `WordPredictor.autoCorrect` — what the space bar
+**Status (2026-10-27):** as built (round 6 ρ added). Scope: `WordPredictor.autoCorrect` — what the space bar
 commits for a tap-typed word. Swipe decoding is a different pipeline (`ctc-swipe-engine.md`).
 Every number below is read from `Config.kt` `object Defaults`, `autocorrect/AutocorrectTuning.kt`
 and `autocorrect/ChannelRanking.kt` at HEAD; the measurements that chose them are in the two
@@ -102,6 +102,14 @@ Then, in `WordPredictor`'s channel decision:
 - **guard G as a price** (rule C2): when step 1.5 found a stem, the typed word is kept if
   `inflectionCost + λ · rankSteps(stemFreq) ≤ winner's totalCost` (a re-doubling bypasses the
   guard, as DD-M ran before it in the band path);
+- **ρ, unfinished word** (round 6, eval §16–§18): when the typed word has at least
+  `completionMinLength` (3) letters, is a strict prefix of a dictionary word and the winner does
+  not itself extend it, the typed word is kept if
+  `completionCost + λ · rankSteps(most frequent completion) ≤ winner's totalCost`
+  (`WordPredictor.bestCompletionFrequency`). `tomorr` stays `tomorr` (was `timor`), `becau`
+  stays (was `beau`); `caf` → car and `resta` → rest stay corrected (cheaper than 1.5 + λ·rank);
+  `thi` → this is untouched (the winner completes the word). The bar still offers the completion;
+  space never commits letters the user did not type;
 - **κ** (`maxCorrectionCost`): if the winner's *edit* cost exceeds κ, no correction (§5);
 - the frequency floor / user-word commit test of step 5.
 
@@ -119,6 +127,8 @@ Then, in `WordPredictor`'s channel decision:
 | δ scope `shortDeletionScope` | `autocorrect_channel_short_deletion_scope` | `hebrew` | `hebrew` \| `all` | where δ applies (§5) |
 | κ `maxCorrectionCost` | `autocorrect_channel_max_correction_cost` | 3.0 | 1..10 (10 = off, ∞) | a correction whose edit cost exceeds κ is not made |
 | γ `inflectionCost` | `autocorrect_channel_inflection_cost` | 1.0 | 0..10 (10 = always keep, ∞) | the cost of believing the typed word is an unlisted inflection |
+| ρ `completionCost` | `autocorrect_channel_completion_cost` | 1.5 | 0..10 (10 = off, ∞) | the cost of believing the typed word is unfinished (round 6) |
+| L `completionMinLength` | none (`Defaults.AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH`) | 3 | — | shortest typed word ρ applies to; L = 3/4/5 were within 10 % on DEV |
 
 ### 4.2 BAND — the original fold ("Score band, then frequency")
 
@@ -194,8 +204,9 @@ the Persian word list in `docs/eval/2026-10-23-fa-wordlist.md`.
 - `docs/eval/2026-10-18-channel-autocorrect-ranking.md` — pre-registered rounds 1–5: rule C,
   C2 (alias bonus β, guard G as γ), the 2026-10-19 maintainer override that made `channel`
   the default against a failed T6 ceiling (Hebrew short-prefix deletions, since fixed by δ),
-  δ (rounds 3–4) and κ (round 5). Data: GTC (GitHub Typo Corpus), S-adj (synthetic one-key
-  slips), C-oov (valid unlisted words), HE-adj/HE-adj2/HE-adj3 (Hebrew). Counts are reported
+  δ (rounds 3–4), κ (round 5) and ρ (round 6: TEST protects 43 % of hijacked unfinished words,
+  GTC −7 of 4,883 right targets, S-adj −3 of 5,075 words). Data: GTC (GitHub Typo Corpus), S-adj (synthetic one-key
+  slips), C-oov (valid unlisted words), T-trunc (unfinished words, round 6), HE-adj/HE-adj2/HE-adj3 (Hebrew). Counts are reported
   as raw pairs with distinct target words — report both.
 - `docs/eval/2026-10-21-autocorrect-prefix-length.md` — prefix length 1 vs 0 (§6).
 - `docs/eval/2026-10-11-dropped-double-margin.md`, `2026-10-11-dropped-double-autocorrect.md`,
