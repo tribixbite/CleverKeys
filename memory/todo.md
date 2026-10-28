@@ -745,6 +745,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Evidence `build/oct27-night-pixel/showcase/action-keys-{light,dark}.png`. Release `cd69b918`
     installed; Pixel restored (3 layouts, night yes, next-word OFF, 7 tabs). Waiting: re-shoot the
     bar showcase once the `tomorr` → `timor` ranking fix lands on main.
+    ROUND 7 (2026-10-28 night, agent, Pixel): Samsung-style vs the maintainer's REAL One UI
+    screenshots (dark, `build/oct28-samsung-ref/1-5.jpg`, not in git) `ccaeb232`: dark palette and
+    gaps measured by pixel sampling (#010101 / #3A3A3C / #171719 / #FBFAFF / hints #9A999E; gaps
+    0.15 key, 0.23 row), blue action icon #678EED at 1.3× on the dark fill, "English (US)" on the
+    space bar (new Appearance switch, default on; 22 locale files machine-drafted, native review
+    owed), Samsung's alternative characters up-right on the letters when look hints are on, and
+    !#1 opens Samsung's two symbol pages via the new `switch_symbols` + `<keyboard symbols>`
+    (CleverKeys' number pane stays a right swipe on !#1). Tests red → green; runPureTests 3463,
+    runMockTests 1614 OK. Device PASS (letters, both pages, 1/2 ↔ 2/2, ABC; compare-*.png).
+    Open / structural: toolbar row and card-grid clipboard (4.jpg, 5.jpg); Samsung's "!#1" / "1/2"
+    / "ABC" are drawn larger than our function-key labels; SamsungOne font; light palette not
+    checked against a screenshot; go/send/next/done icons inferred (only search seen). Note: the
+    global theme had been switched to Gboard-style by a blind tap in one of my UI scripts (root
+    cause: a missing-element tap; scripts now abort instead) — restored to Cyberpunk. A Chrome
+    "File might be harmful … CleverKeys-v2.0.0-arm64-v8a.apk from s3" prompt appeared on the Pixel
+    (not started by me) — left untouched; my test tab was gone (7 tabs). Pixel restored otherwise.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
