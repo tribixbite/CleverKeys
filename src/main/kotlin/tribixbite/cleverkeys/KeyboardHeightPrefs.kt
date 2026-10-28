@@ -13,7 +13,7 @@ import android.content.SharedPreferences
  * keys, so every unfolded inner screen fell back to the default height (user report: "keyboard
  * height always changes to default when using the inner screen").
  *
- * Every reader — `Config.refresh`, `KeyboardDimensionsHelper`, the Settings sliders — goes
+ * Every reader — `Config.refresh` and the Settings sliders — goes
  * through [percent], so the rule cannot drift between them.
  */
 object KeyboardHeightPrefs {

@@ -103,7 +103,7 @@ class CrashGuardInstrumentedTest {
         )
     }
 
-    private fun nullPropagator() = ConfigPropagator(null, null, null, null, null, null, null, null)
+    private fun nullPropagator() = ConfigPropagator(null, null, null, null, null, null, null)
 
     // =========================================================================
     // ConfigPropagator — null managers should not crash
@@ -170,7 +170,6 @@ class CrashGuardInstrumentedTest {
         assertSame("setPredictionCoordinator must return this", builder, builder.setPredictionCoordinator(null))
         assertSame("setInputCoordinator must return this", builder, builder.setInputCoordinator(null))
         assertSame("setSuggestionHandler must return this", builder, builder.setSuggestionHandler(null))
-        assertSame("setKeyboardDimensionsHelper must return this", builder, builder.setKeyboardDimensionsHelper(null))
         assertSame("setLayoutManager must return this", builder, builder.setLayoutManager(null))
         assertSame("setKeyboardViewProvider must return this", builder, builder.setKeyboardViewProvider(null))
         assertSame("setSubtypeManager must return this", builder, builder.setSubtypeManager(null))
@@ -205,7 +204,7 @@ class CrashGuardInstrumentedTest {
         val before = snapshot(config)
         var probeInvoked = false
         val propagator = ConfigPropagator(
-            null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null,
             ConfigPropagationProbe {
                 probeInvoked = true
                 throw DeliberatePropagationError()

@@ -80,8 +80,8 @@ class KeyboardHeightOrientationDriftTest {
         assertWithMessage("portrait branch must resolve landscape = false with the fold state")
             .that(section.contains("KeyboardHeightPrefs.percent(_prefs, landscape = false, unfolded = this.foldable_unfolded)"))
             .isTrue()
-        assertWithMessage("KeyboardDimensionsHelper must use the shared rule, not its own key literals")
-            .that(read("KeyboardDimensionsHelper.kt").contains("\"keyboard_height")).isFalse()
+        // KeyboardDimensionsHelper, the other reader this used to check, was deleted (todo 13c,
+        // DeadPlumbingDriftTest); Config.refresh is the one runtime reader of the height prefs.
     }
 
     /**

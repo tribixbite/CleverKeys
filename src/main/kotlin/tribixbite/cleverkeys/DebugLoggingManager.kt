@@ -34,7 +34,7 @@ import java.io.IOException
  *
  * NOT included (remains in CleverKeysService):
  * - Lifecycle management (onCreate/onDestroy calls)
- * - Component reference management (SuggestionHandler, KeyboardDimensionsHelper)
+ * - Component reference management (SuggestionHandler)
  * - Actual component initialization
  *
  * This utility is extracted from CleverKeysService.java for better code organization

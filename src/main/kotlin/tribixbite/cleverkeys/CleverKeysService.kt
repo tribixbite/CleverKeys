@@ -128,9 +128,6 @@ class CleverKeysService : InputMethodService(),
     // Suggestion handling (v1.32.361: extracted to SuggestionHandler)
     private lateinit var _suggestionHandler: SuggestionHandler
 
-    // Keyboard dimensions helper (v1.32.362: extracted from this class)
-    private lateinit var _keyboardDimensionsHelper: KeyboardDimensionsHelper
-
     // Subtype management (v1.32.365: extracted to SubtypeManager)
     private var _subtypeManager: SubtypeManager? = null
 
@@ -471,7 +468,7 @@ class CleverKeysService : InputMethodService(),
         // A-2: hand the graph a PROVIDER, not the view instance — onThemeChanged (and the
         // stale-theme branch of onStartInputView) replace _keyboardView, and everything the
         // graph wires (receiver, bridges, coordinators, propagator) must follow to the live view.
-        _graph = KeyboardComponentGraph(this, config, { _keyboardView }, _keyeventhandler, _handler, _receiverBridge, foldStateTracker)
+        _graph = KeyboardComponentGraph(this, config, { _keyboardView }, _keyeventhandler, _handler, _receiverBridge)
 
         // Managers (first read constructs the whole cluster in dependency order)
         _contractionManager = _graph.contractionManager
@@ -484,7 +481,6 @@ class CleverKeysService : InputMethodService(),
         // Learning-system audit 2026-09-26 (W2/W5): the #110 backspace undos and Enter / the IME
         // action are only visible to KeyEventHandler; route them to the learn-funnel owner.
         _keyeventhandler.learningHooks = _suggestionHandler
-        _keyboardDimensionsHelper = _graph.keyboardDimensionsHelper
         _mlDataCollector = _graph.mlDataCollector
         // Read right after the managers so its seed is the languages they were built with.
         _activeLanguageSync = _graph.activeLanguageSync
@@ -1373,13 +1369,10 @@ class CleverKeysService : InputMethodService(),
         _receiver?.handle_event_key(event)
     }
 
-    // Keyboard dimension helpers (the NeuralLayoutBridge indirection was deleted with the
-    // neural engine on 2026-08-18 — KeyboardDimensionsHelper is called directly).
-    private fun calculateDynamicKeyboardHeight(): Float =
-        _keyboardDimensionsHelper.calculateDynamicKeyboardHeight()
-
-    private fun getUserKeyboardHeightPercent(): Int =
-        _keyboardDimensionsHelper.getUserKeyboardHeightPercent()
+    // Todo 13c (2026-10-28): the private calculateDynamicKeyboardHeight /
+    // getUserKeyboardHeightPercent wrappers had no caller, and they were the only callers of
+    // KeyboardDimensionsHelper's height methods; the helper is deleted (DeadPlumbingDriftTest).
+    // The keyboard height comes from Config.refresh (KeyboardHeightPrefs.percent).
 
     // Called by Keyboard2View when swipe typing completes.
     // wasShiftActive (v1.32.926): shift state for capitalize-first-letter;

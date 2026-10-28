@@ -29,7 +29,6 @@ internal fun interface ConfigPropagationProbe {
  * - PredictionCoordinator: Prediction engine settings
  * - InputCoordinator: Input handling settings
  * - SuggestionHandler: Suggestion display settings
- * - KeyboardDimensionsHelper: keyboard dimension settings
  * - LayoutManager: Keyboard layout settings
  *
  * NOT included (remains in CleverKeysService):
@@ -47,7 +46,6 @@ class ConfigPropagator(
     private val predictionCoordinator: PredictionCoordinator?,
     private val inputCoordinator: InputCoordinator?,
     private val suggestionHandler: SuggestionHandler?,
-    private val keyboardDimensionsHelper: KeyboardDimensionsHelper?,
     private val layoutManager: LayoutManager?,
     private val keyboardViewProvider: (() -> Keyboard2View)?,
     private val subtypeManager: SubtypeManager?
@@ -67,14 +65,13 @@ class ConfigPropagator(
         predictionCoordinator: PredictionCoordinator?,
         inputCoordinator: InputCoordinator?,
         suggestionHandler: SuggestionHandler?,
-        keyboardDimensionsHelper: KeyboardDimensionsHelper?,
         layoutManager: LayoutManager?,
         keyboardViewProvider: (() -> Keyboard2View)?,
         subtypeManager: SubtypeManager?,
         propagationProbe: ConfigPropagationProbe
     ) : this(
         clipboardManager, predictionCoordinator, inputCoordinator, suggestionHandler,
-        keyboardDimensionsHelper, layoutManager, keyboardViewProvider, subtypeManager
+        layoutManager, keyboardViewProvider, subtypeManager
     ) {
         this.propagationProbe = propagationProbe
     }
@@ -113,9 +110,6 @@ class ConfigPropagator(
             // Update suggestion handler config
             suggestionHandler?.setConfig(config)
 
-            // Update keyboard-dimensions helper config
-            keyboardDimensionsHelper?.setConfig(config)
-
             // Update layout manager config
             layoutManager?.setConfig(config)
 
@@ -149,7 +143,6 @@ class ConfigPropagator(
         private var predictionCoordinator: PredictionCoordinator? = null
         private var inputCoordinator: InputCoordinator? = null
         private var suggestionHandler: SuggestionHandler? = null
-        private var keyboardDimensionsHelper: KeyboardDimensionsHelper? = null
         private var layoutManager: LayoutManager? = null
         private var keyboardViewProvider: (() -> Keyboard2View)? = null
         private var subtypeManager: SubtypeManager? = null
@@ -171,11 +164,6 @@ class ConfigPropagator(
 
         fun setSuggestionHandler(handler: SuggestionHandler?): Builder {
             this.suggestionHandler = handler
-            return this
-        }
-
-        fun setKeyboardDimensionsHelper(helper: KeyboardDimensionsHelper?): Builder {
-            this.keyboardDimensionsHelper = helper
             return this
         }
 
@@ -201,7 +189,6 @@ class ConfigPropagator(
                 predictionCoordinator,
                 inputCoordinator,
                 suggestionHandler,
-                keyboardDimensionsHelper,
                 layoutManager,
                 keyboardViewProvider,
                 subtypeManager

@@ -43,7 +43,6 @@ class KeyboardComponentGraph(
     private val keyEventHandler: KeyEventHandler,
     private val handler: Handler,
     private val receiverBridge: KeyEventReceiverBridge,
-    private val foldStateTracker: FoldStateTracker,
 ) {
 
     /**
@@ -61,7 +60,6 @@ class KeyboardComponentGraph(
      *  - InputCoordinator requires contextTracker, predictionCoordinator, keyboardView
      *  - SuggestionHandler requires contextTracker, predictionCoordinator,
      *    contractionManager, keyEventHandler
-     *  - KeyboardDimensionsHelper requires keyboardView
      *
      * SuggestionBar references are set later (onStartInputView) via SuggestionBarPropagator.
      */
@@ -72,7 +70,6 @@ class KeyboardComponentGraph(
         val predictionCoordinator: PredictionCoordinator,
         val inputCoordinator: InputCoordinator,
         val suggestionHandler: SuggestionHandler,
-        val keyboardDimensionsHelper: KeyboardDimensionsHelper,
         val mlDataCollector: MLDataCollector,
     )
 
@@ -82,7 +79,8 @@ class KeyboardComponentGraph(
      *
      * Order (unchanged): ContractionManager → ClipboardManager → PredictionContextTracker →
      * PredictionCoordinator (+`initialize()`, which loads the dictionary) → InputCoordinator →
-     * SuggestionHandler (+ delegate wiring) → KeyboardDimensionsHelper → MLDataCollector.
+     * SuggestionHandler (+ delegate wiring) → MLDataCollector. (KeyboardDimensionsHelper, built
+     * between those two until 2026-10-28, was deleted: no production caller — todo 13c.)
      */
     val managers: Managers by lazy {
         MemoryProbe.reset()
@@ -148,10 +146,6 @@ class KeyboardComponentGraph(
         suggestionHandler.setInlineTargetProvider(keyEventHandler::activeInlineTarget)
         inputCoordinator.setCursorSyncDelegate(suggestionHandler)
 
-        // Keyboard-dimensions helper (v1.32.362)
-        val keyboardDimensionsHelper = KeyboardDimensionsHelper(service, config, foldStateTracker)
-        keyboardDimensionsHelper.setKeyboardView(keyboardView)
-
         // ML data collector (v1.32.370)
         val mlDataCollector = MLDataCollector(service)
         MemoryProbe.mark("init.done", settle = true)
@@ -163,7 +157,6 @@ class KeyboardComponentGraph(
             predictionCoordinator,
             inputCoordinator,
             suggestionHandler,
-            keyboardDimensionsHelper,
             mlDataCollector
         )
     }
@@ -204,7 +197,6 @@ class KeyboardComponentGraph(
     val predictionCoordinator: PredictionCoordinator get() = managers.predictionCoordinator
     val inputCoordinator: InputCoordinator get() = managers.inputCoordinator
     val suggestionHandler: SuggestionHandler get() = managers.suggestionHandler
-    val keyboardDimensionsHelper: KeyboardDimensionsHelper get() = managers.keyboardDimensionsHelper
     val mlDataCollector: MLDataCollector get() = managers.mlDataCollector
 
     /**
@@ -312,7 +304,6 @@ class KeyboardComponentGraph(
             .setPredictionCoordinator(predictionCoordinator)
             .setInputCoordinator(inputCoordinator)
             .setSuggestionHandler(suggestionHandler)
-            .setKeyboardDimensionsHelper(keyboardDimensionsHelper)
             .setLayoutManager(layoutManager)
             .setKeyboardViewProvider(keyboardViewProvider)
             .setSubtypeManager(subtypeManager)

@@ -420,19 +420,23 @@ class DeadPlumbingDriftTest {
     // ------------------------------------------------- audit L1 (2026-10-20)
 
     @Test
-    fun `audit L1 - KeyboardDimensionsHelper holds no suggestion bar and no debug logger`() {
-        // ARC-099 left `_suggestionBar`/`setSuggestionBar` write-only, and the debug-mode
-        // plumbing (`setDebugMode`, `DebugLogger`, `sendDebugLog`) had no reader inside the
-        // class either; both were fed only by SuggestionBarPropagator / DebugModePropagator.
-        // Like the chains above, the blanket proguard keep hid them from every build signal.
-        val helper = source("tribixbite/cleverkeys/KeyboardDimensionsHelper.kt")
-        for (member in listOf("_suggestionBar", "setSuggestionBar", "setDebugMode", "DebugLogger", "sendDebugLog")) {
-            assertWithMessage("KeyboardDimensionsHelper must not reintroduce dead member $member")
-                .that(helper.lines().filterNot(::isCommentOnly).joinToString("\n")).doesNotContain(member)
-        }
-        val hits = occurrences(Regex("""keyboardDimensionsHelper\??\.(setSuggestionBar|setDebugMode)\b"""))
-        assertWithMessage("no propagator may feed the deleted helper setters.\nFound:\n" + hits.joinToString("\n"))
+    fun `audit 13c - the dead KeyboardDimensionsHelper is gone`() {
+        // After ARC-084, ARC-099 and audit L1 the class held two height methods,
+        // calculateDynamicKeyboardHeight and getUserKeyboardHeightPercent, whose only callers
+        // were two private CleverKeysService wrappers that nothing called (found 2026-10-21).
+        // The height the user sees comes from Config.refresh (KeyboardHeightPrefs.percent).
+        // The class, its graph / ConfigPropagator edges, the service field and the blanket
+        // proguard keep that hid it from R8 were deleted together (2026-10-28, todo 13c).
+        assertWithMessage("KeyboardDimensionsHelper.kt must stay deleted")
+            .that(File(mainKotlin, "tribixbite/cleverkeys/KeyboardDimensionsHelper.kt").exists()).isFalse()
+        val hits = occurrences(
+            Regex("""\bKeyboardDimensionsHelper\b|keyboardDimensionsHelper|calculateDynamicKeyboardHeight|getUserKeyboardHeightPercent""")
+        )
+        assertWithMessage("no code may reintroduce the helper or its height methods.\nFound:\n" + hits.joinToString("\n"))
             .that(hits).isEmpty()
+        val proguard = File("proguard-rules.pro").readLines().filterNot { it.trim().startsWith("#") }
+        assertWithMessage("proguard-rules.pro must not keep the deleted class")
+            .that(proguard.filter { "KeyboardDimensionsHelper" in it }).isEmpty()
     }
 
     @Test

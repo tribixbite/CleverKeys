@@ -88,7 +88,8 @@
 
 # Keep swipe processing classes
 # (SwipeResampler deleted before 2026-08-29 — dead rule removed, ARC-008)
--keep class tribixbite.cleverkeys.KeyboardDimensionsHelper { *; }
+# KeyboardDimensionsHelper keep removed 2026-10-28: the class was deleted (no production
+# caller, todo 13c; pinned by DeadPlumbingDriftTest).
 
 # KeyboardGrid keep removed 2026-09-07: zero-caller neural-era orphan deleted;
 # its "nearest key detection" claim describes ProbabilisticKeyDetector, not this class.
