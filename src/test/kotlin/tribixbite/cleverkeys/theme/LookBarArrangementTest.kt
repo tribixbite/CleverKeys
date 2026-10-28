@@ -62,12 +62,32 @@ class LookBarArrangementTest {
     fun theTapToAddChipForAnUnknownWordAlwaysGetsASlot() {
         // "#42": the exact typed word, appended LAST by the handler; with three slots it would fall off.
         val e = words("cleverly", "clever", "cleverness", "clevers", Suggestion.ExactAdd("cleverkeys").wire)
-        val slots = LookBarArrangement.arrange(e, null, "cleverkeys", ios)!!
+        // A correction pending (highlight on "cleverly"): the typed chip is left of it.
+        val slots = LookBarArrangement.arrange(e, 0, "cleverkeys", ios)!!
         assertThat(shown(e, slots)).containsExactly("“cleverkeys”", "cleverly", "clever").inOrder()
         assertWithMessage("the slot still taps the tap-to-add entry").that(e[slots[0].entry!!]).isInstanceOf(Suggestion.ExactAdd::class.java)
         assertWithMessage("a look draws the typed word plain, as the real products do (Pixel 2026-10-27)")
-            .that(shown(e, LookBarArrangement.arrange(e, null, "cleverkeys", gboard)))
+            .that(shown(e, LookBarArrangement.arrange(e, 0, "cleverkeys", gboard)))
             .containsExactly("cleverkeys", "cleverly", "clever").inOrder()
+    }
+
+    /**
+     * Space keeps the typed word (no highlight: the round-6 "unfinished word" rule keeps `tomorr`):
+     * the real Gboard and SwiftKey then put the verbatim word in the CENTRE (Pixel 2026-10-28,
+     * `build/oct27-night-pixel/final2/real-*-kwazb.png`: Gboard `kwazb` alone in the centre,
+     * SwiftKey `Kwan | kwazb | leash`). The centre is what space commits, so it is the typed word.
+     */
+    @Test
+    fun whenSpaceKeepsTheTypedWordItTakesTheCentre() {
+        val e = words("tomorrow", "tomorrows", Suggestion.ExactAdd("tomorr").wire)
+        val g = LookBarArrangement.arrange(e, null, "tomorr", gboard)!!
+        assertThat(shown(e, g)).containsExactly("tomorrow", "tomorr", "tomorrows").inOrder()
+        assertThat(g[1].centre).isTrue()
+        assertWithMessage("iOS still quotes the typed word").that(shown(e, LookBarArrangement.arrange(e, null, "tomorr", ios)))
+            .containsExactly("tomorrow", "“tomorr”", "tomorrows").inOrder()
+        // Not listed at all: the top prediction keeps the centre, as before.
+        val n = words("hello", "help", "helmet")
+        assertThat(shown(n, LookBarArrangement.arrange(n, null, "hel", gboard))).containsExactly("help", "hello", "helmet").inOrder()
     }
 
     /**

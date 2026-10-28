@@ -427,8 +427,10 @@ keyboard show re-inflates (rule 6 of the theme skill).
 **Suggestion-bar arrangement** (`KeyboardLook.bar`, `theme/LookBar.kt`, 2026-10-27; research
 §10). The four products show three equal slots with the best candidate in the centre. While a
 look is effective, `SuggestionBar` arranges its entries with `LookBarArrangement.arrange`:
-the BEST entry — the highlighted one, i.e. what space commits (`BarHighlightPlanner`), else the
-first word — takes the centre slot; the TYPED entry (the word equal to the typed word the
+the BEST entry — the highlighted one, i.e. what space commits (`BarHighlightPlanner`); with no
+highlight (space keeps the typed word, e.g. the round-6 unfinished `tomorr`) the listed typed
+entry, as the real Gboard and SwiftKey centre the verbatim word; else the first word — takes the
+centre slot; the TYPED entry (the word equal to the typed word the
 typing path passes, or the "+word" tap-to-add chip) takes the slot left of it when it is not the
 best, quoted with the locale's quotation marks on iOS-style and iOS 18-style (`quoteTyped`); the
 rest follow in ranking order right / left outwards; entries past the slot count are not shown.

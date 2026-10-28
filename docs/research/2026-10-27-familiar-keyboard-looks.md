@@ -498,6 +498,12 @@ next-word predictions are never drawn as the space commit. The "+word" tap still
 as typed and adds it to the dictionary (the closest CleverKeys equivalent of the products'
 learn-on-tap); the plain bar keeps the "+word" chip.
 
+When space keeps the typed word (no correction: Pixel 2026-10-28, an unknown "kwazb"), the real
+Gboard shows only `kwazb` in the centre, plain, and SwiftKey `Kwan | kwazb | leash` — the verbatim
+word takes the centre. CleverKeys' look bars follow: with no highlight (the round-6 unfinished-word
+rule keeps `tomorr`) the listed typed entry is centred, drawn plain (not the bold commit style,
+which marks a pending correction); quoted on iOS-style.
+
 ## 11. Follow-up 2026-10-28: the editor-action key
 
 Pixel 8 Pro, one Chrome `data:` page with an input per `enterkeyhint` (go, search, send, next,

@@ -101,7 +101,8 @@ object LookBarArrangement {
      * question rather than candidates and is shown as before.
      *
      * - The BEST entry is [highlightIndex] (what space commits, `BarHighlightPlanner`) when that is
-     *   a word, else the first word. It takes the centre slot (`(slots - 1) / 2`).
+     *   a word; with no highlight (space keeps the typed word) the listed typed entry; else the
+     *   first word. It takes the centre slot (`(slots - 1) / 2`).
      * - The TYPED entry — the word equal to [typedWord], or the "+word" tap-to-add chip (always the
      *   typed word) — takes the slot left of the centre when it is not the best, so typing an
      *   unknown word always leaves a way to keep it. Quoted under [LookBar.quoteTyped].
@@ -112,16 +113,20 @@ object LookBarArrangement {
         if (bar == null || entries.isEmpty()) return null
         if (entries.any { it.isPrompt() }) return null
 
-        val best = highlightIndex?.takeIf { it in entries.indices && entries[it] is Suggestion.Word }
+        fun isTyped(e: Suggestion) = when (e) {
+            is Suggestion.ExactAdd -> true
+            is Suggestion.Word -> typedWord != null && e.text == typedWord
+            else -> false
+        }
+        val highlighted = highlightIndex?.takeIf { it in entries.indices && entries[it] is Suggestion.Word }
+        // No highlight in a tap-typing bar = space keeps the typed word (BarHighlightPlanner): when
+        // the bar lists it (the "+word" entry), it is what space commits, so it takes the centre,
+        // as the real Gboard and SwiftKey put the verbatim word there (Pixel 2026-10-28).
+        val keptTyped = if (highlightIndex == null && typedWord != null) entries.indexOfFirst(::isTyped).takeIf { it >= 0 } else null
+        val best = highlighted ?: keptTyped
             ?: entries.indexOfFirst { it is Suggestion.Word }.takeIf { it >= 0 }
             ?: 0
-        val typed = entries.indices.firstOrNull { i ->
-            i != best && when (val e = entries[i]) {
-                is Suggestion.ExactAdd -> true
-                is Suggestion.Word -> typedWord != null && e.text == typedWord
-                else -> false
-            }
-        }
+        val typed = entries.indices.firstOrNull { i -> i != best && isTyped(entries[i]) }
         val order = ArrayList<Int>(entries.size)
         order.add(best)
         typed?.let { order.add(it) }
@@ -131,7 +136,9 @@ object LookBarArrangement {
         val slots = arrayOfNulls<BarSlot>(bar.slots)
         for ((k, pos) in positions.withIndex()) {
             val entry = order.getOrNull(k)
-            slots[pos] = BarSlot(entry, quoted = bar.quoteTyped && entry != null && entry == typed, centre = k == 0)
+            // iOS quotes the typed word wherever it sits; a highlighted correction is never quoted.
+            val isTypedEntry = entry != null && (entry == typed || (entry == keptTyped && entry == best))
+            slots[pos] = BarSlot(entry, quoted = bar.quoteTyped && isTypedEntry, centre = k == 0)
         }
         return slots.map { it ?: BarSlot(null) }
     }

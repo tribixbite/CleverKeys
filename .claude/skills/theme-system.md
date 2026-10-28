@@ -153,8 +153,8 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 16. **A look arranges the suggestion bar** (2026-10-27, `theme/LookBar.kt`, research §10, spec
    "Keyboard looks"). `KeyboardLook.bar` / `ThemeSpec.bar` → `Theme.lookBar` (null on every
    non-look theme = scrolling chips). `LookBarArrangement.arrange` (pure) maps the bar's entries
-   (RANKING order) to visual slots: best (= highlighted = what space commits, else the first
-   word) in the centre, the typed word or "+word" chip left of it (quoted on iOS), the rest
+   (RANKING order) to visual slots: best (= highlighted = what space commits; with no highlight
+   the listed typed word, which space keeps; else the first word) in the centre, the typed word or "+word" chip left of it (quoted on iOS), the rest
    outwards; prompts are never arranged. DRAWING ONLY — never reorder `currentSuggestions`,
    scores, metas or the highlight index: pool view *i* taps entry *i* and children are added in
    visual order. The typing path passes the typed word (`setSuggestionsWithScores(…, typedWord)`).
