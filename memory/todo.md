@@ -860,7 +860,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     unchanged), swipe `help` + tap `t` → `Meet at help t` (old: `helpt`), Ctrl+Z restores, Ctrl +
     Backspace deletes a word; clipboard search `help t` then flick → `help`. Restored: test entry
     deleted, Download file removed, Chrome data: tab closed (3 tabs), CleverKeys default, launcher.
-    Not device-checked: emoji/GIF/tag fields (same code path, mock-tested).
+    Emoji search, GIF search and clipboard tag field: DEVICE PASS 2026-10-28 (same Saga and
+    release 9eaf09d1…, evidence `build/oct28-inline2/`): in each, swipe `help` + tap `t` →
+    `help t`, Backspace NW flick → `help `, Ctrl + Backspace → empty. GIF was off (turned on for
+    the test, off again); the tag field used an imported `Meet at noon` entry pinned for the test
+    (unpinned and deleted; history, pinned and todos empty again; Download file removed; Chrome
+    back to 3 tabs; CleverKeys default; launcher). INCIDENT: a long-press on that history row
+    (`ClipboardHistoryView.kt:2783`) copies it to the OS clipboard — the phone's previous clip
+    was replaced by `Meet at noon` and could not be restored (no root, history was empty).
+    Device agents: expand a row with a single tap, never long-press it.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
