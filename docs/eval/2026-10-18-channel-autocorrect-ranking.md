@@ -963,3 +963,56 @@ not writing.
 Reported, not gated: R-union fixes/breaks/wrong changes, distinct-target counts for every weighted
 figure, the round-6 report cases, and choice 3 against choice 1 on the same TEST inputs. Whatever
 TEST says, the default stays **choice 1** (maintainer decision). These thresholds are fixed now.
+
+### 19.5 Round 7 DEV (run 2026-10-29, harness at the round-7 seam commit, separate worktree): nothing admissible
+
+Command: `CK_CH_ROUND=7 CK_CH_PHASE=dev CK_EVAL_OUT=build/eval/round7 … runMockTests
+-PtestClass=autocorrect.ChannelRankingEval` (12 min). Sets: GTC-DEV 16,358 pairs (16,095 inputs);
+S-adj-DEV 137,871 (4,925 words; 2,642 inputs have a completion); C-oov-DEV 36,241 (770 with a
+completion); **T-trunc-L-DEV 12,127 pairs, 4,160 targets, 8,499 prefixes, Leipzig weight
+2,100,122**. Baseline (choice 1): GTC-DEV distinct targets right 4,962; limits N1 24.8, N2 24.6,
+N4 362.4.
+
+Where choice 1 leaves the T-trunc-L-DEV prefixes: ρ keeps 2,311 (case a), the winner is already a
+completion for 3,297 (case c), no correction for 6 (case b), and 2,885 are corrected into a word
+that does not extend them or exit earlier (C7 never touches those). Rows: `build/eval/round7/grid7-dev.tsv`,
+`rows7-dev.tsv` is not written when nothing is admissible.
+
+| configuration | GTC fix / wrong / break (distinct) | S-adj bad | C-oov changed | T-trunc-L accuracy (N3a ≥ 20 %) | wrong rate (N3b ≤ 15 %) |
+|---|---|---|---|---|---|
+| B off W off L₂ 3 G 3 μ 0 | 12 / 11 / 0 | 1 | 106 | 18.2 % | 29.0 % |
+| B off W off L₂ 4 G 5 μ 8 | 12 / 11 / 0 | 1 | 118 | 17.9 % | 23.4 % |
+| **B off W off L₂ 4 G 5 μ 16** (best accuracy with N3b met) | 10 / 9 / 0 | 1 | 100 | **14.5 %** | 14.9 % |
+| B off W off L₂ 3 G 3 μ 16 | 10 / 6 / 0 | 1 | 79 | 13.2 % | 14.2 % |
+| B on W on L₂ 3 G ∞ μ 16 | 12 / 14 / 6 | 5 | 112 | 17.2 % | 18.6 % |
+| B off W on L₂ 4 G 5 μ 8 (best wrong rate with N3a met) | 14 / 12 / 15 | 5 | 132 | 20.7 % | 26.8 % |
+| B on W on L₂ 3 G ∞ μ 0 (highest accuracy) | 14 / 29 / 43 | 13 | 186 | 27.6 % | 38.5 % |
+| B off W off L₂ 5 G 3 μ 64 (most conservative) | 3 / 2 / 0 | 0 | 59 | 3.0 % | 0.0 % |
+
+Gate failures over the 252 configurations: N3a alone 85, N1 + N3a 68, N3a + N3b 43, N1 + N3b 26,
+N1 + N3a + N3b 26, N3b alone 4. N2, N4 and N5 hold everywhere (all named cases, `tomorr` →
+tomorrow and `becau` → because included, pass under every configuration). **No configuration
+meets N3a and N3b together**: every one that completes 20 % of the not-right weight right also
+completes more than 15 % of its changes into a word the user was not writing (the best of them
+26.8 %, above even the 20 % TEST bound), and every one at or under 15 % wrong finishes at most
+14.5 %. Under the pre-registered rule (§19.3) **choice 2 is not offered and TEST was not run**;
+the TEST split is untouched for round 7.
+
+Why, from the table (descriptive): without flag W, C7 can only act on the prefixes ρ already
+keeps, about a quarter of the unfinished-word weight, so even μ = 0 caps out at 18 %; flag W reaches
+the completions the sweep picks by edit cost (`beautif` → beautify) but replacing them by the most
+frequent completion is wrong for a quarter of the weight or more, because the Leipzig usage of
+inflected and derived forms (`restaurant` / `restaurants`, `informat…`) is spread across several
+completions that a single frequency lead cannot separate. A context-free frequency lead is not
+enough evidence to type letters for the user; a future attempt needs a different signal (the
+next-word context the bar already has), and a new pre-registration.
+
+**What shipped (maintainer decision, 2026-10-29):** the setting **Unfinished Words** in Auto-correction →
+Ranking & Tuning with the two measured choices, **Keep what I typed** (rule ρ, default) and **Off**
+(the stack before round 6). Pref `autocorrect_unfinished_word_mode` (`keep` | `off`;
+`AutocorrectTuning.Keys.UNFINISHED_WORD_MODE`, so backup, validation and reset classify it; a backup
+value `complete` is rejected). The "Unfinished Word Cost" ρ slider stays and is greyed out under Off.
+Rule C7 stays in the code only as the unoffered evaluation seam (`UnfinishedWordMode.COMPLETE`,
+`WordPredictor.confidentCompletion`), with its constants at the grid's conservative corner; nothing
+can select it. The bar test pins that if a completion is ever what space commits, the look bar
+centres it bold through the existing "what space commits" path.

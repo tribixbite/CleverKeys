@@ -477,6 +477,10 @@ editor that used to be listed here already ship in 2.0.)
   Auto-Correction → Ranking & Tuning → "Unfinished Word Cost"; Off restores the old behaviour).
   Close corrections still happen (`caf` → car, `resta` → rest). Measured on held-out data: 43 %
   of such rewrites avoided, 7 of 4,883 real-typo corrections lost.
+  The behaviour is a choice, Auto-Correction → Ranking & Tuning → "Unfinished Words": Keep what
+  I typed (default) or Off. A third choice, completing the word on space (`tomorr` →
+  `tomorrow`), was measured and not added: no setting finished at least 20 % of unfinished words
+  right while keeping wrong completions under 15 %.
 - The keyboard keeps its height after a light/dark (night-mode) switch or a rotation. On
   Android 15 and newer it came back about a tenth shorter until the keyboard restarted, because
   its size followed a screen height that Android reports differently after the first change. It

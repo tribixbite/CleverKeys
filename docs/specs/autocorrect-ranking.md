@@ -110,6 +110,14 @@ Then, in `WordPredictor`'s channel decision:
   stays (was `beau`); `caf` → car and `resta` → rest stay corrected (cheaper than 1.5 + λ·rank);
   `thi` → this is untouched (the winner completes the word). The bar still offers the completion;
   space never commits letters the user did not type;
+  **"Unfinished Words"** (round 7, eval §19): `UnfinishedWordMode` `keep` (this step; default) or
+  `off` (step skipped, the stack before round 6; ρ is ignored and its slider greyed). A third
+  mode, `complete` (rule C7: commit the most frequent completion when it is confident, at the
+  ρ-keep site and optionally where no correction is made or a rarer completion would win), failed
+  round 7's DEV gates — completion accuracy ≤ 14.5 % at ≤ 15 % wrong completions on the
+  Leipzig-weighted T-trunc-L set (§19.5) — and is not offered (`UnfinishedWordMode.OFFERED`); it
+  remains as the evaluation seam (`WordPredictor.confidentCompletion`, constants at the grid's
+  conservative corner in `Defaults.AUTOCORRECT_COMPLETE_*`);
 - **κ** (`maxCorrectionCost`): if the winner's *edit* cost exceeds κ, no correction (§5);
 - the frequency floor / user-word commit test of step 5.
 
@@ -128,6 +136,7 @@ Then, in `WordPredictor`'s channel decision:
 | κ `maxCorrectionCost` | `autocorrect_channel_max_correction_cost` | 3.0 | 1..10 (10 = off, ∞) | a correction whose edit cost exceeds κ is not made |
 | γ `inflectionCost` | `autocorrect_channel_inflection_cost` | 1.0 | 0..10 (10 = always keep, ∞) | the cost of believing the typed word is an unlisted inflection |
 | ρ `completionCost` | `autocorrect_channel_completion_cost` | 1.5 | 0..10 (10 = off, ∞) | the cost of believing the typed word is unfinished (round 6) |
+| mode `unfinishedWordMode` | `autocorrect_unfinished_word_mode` | `keep` | `keep` \| `off` (`complete` not offered) | "Unfinished Words": keep an unfinished word (ρ) or no ρ step (round 7) |
 | L `completionMinLength` | none (`Defaults.AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH`) | 3 | — | shortest typed word ρ applies to; L = 3/4/5 were within 10 % on DEV |
 
 ### 4.2 BAND — the original fold ("Score band, then frequency")

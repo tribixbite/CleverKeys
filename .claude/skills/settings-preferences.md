@@ -174,7 +174,10 @@ Ranking and every selection constant are settings since 2026-10-18: `autocorrect
 `Config.autocorrect_tuning` (null on an Objenesis test Config = DEFAULT), `SettingsValidation`,
 `SettingsDefaults` and the "Ranking & Tuning" group. Adding a tuning key there classifies it
 everywhere; add its slider in `AutocorrectTuningSliders` + `AutoCorrectionSection` and its two
-strings in all 22 string files. Default ranking is `channel` (edit cost + λ·rank); weights and
+strings in all 22 string files. A choice (StringKey) restricts its `values` to what the UI
+offers: `autocorrect_unfinished_word_mode` lists `UnfinishedWordMode.OFFERED` (`keep`, `off`),
+so the unoffered `complete` eval seam can be reached neither from a backup nor a hand-edited pref
+(round 7, eval doc §19.5). Default ranking is `channel` (edit cost + λ·rank); weights and
 evidence: `docs/wiki/specs/typing/autocorrect-spec.md` "Channel Ranking".
 
 ## Backup/Restore + Spec Site Integration

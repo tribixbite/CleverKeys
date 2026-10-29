@@ -885,6 +885,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (`ClipboardHistoryView.kt:2783`) copies it to the OS clipboard — the phone's previous clip
     was replaced by `Meet at noon` and could not be restored (no root, history was empty).
     Device agents: expand a row with a single tap, never long-press it.
+29. [ ] agent, 2026-10-29 (maintainer: unfinished-word behaviour as a setting — Keep what I typed /
+    Complete the word / Off; follows item 25's `tomorr` finding). Round 7 pre-registered
+    (`836f133c`, eval doc §19): rule C7, 252-config DEV grid, new Leipzig-weighted T-trunc-L.
+    DEV: NOTHING ADMISSIBLE (§19.5) — best completion accuracy 14.5 % at ≤ 15 % wrong (needs 20 %),
+    any config reaching 20 % completes ≥ 26.8 % of its changes into the wrong word. TEST not run;
+    "Complete the word" NOT offered. SHIPPED: Ranking & Tuning "Unfinished Words" = Keep what I
+    typed (default, ρ) | Off (pre-round-6), pref `autocorrect_unfinished_word_mode`, 5 strings ×
+    22 files; ρ slider greyed under Off. C7 kept only as the unoffered eval seam. Open (device):
+    the dropdown and greyed slider not yet looked at on a phone.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
