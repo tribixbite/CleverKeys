@@ -379,6 +379,9 @@ object Defaults {
 
     // GIF Panel — opt-in, off by default, zero data shipped in APK
     const val GIF_ENABLED = false           // Master toggle — enables GIF key + pane
+    // On-device voice input (docs/specs/voice-input.md). OFF until the user opts in: turning it on
+    // is the only moment the microphone permission is requested (maintainer decision 2026-10-29).
+    const val VOICE_INPUT_ENABLED = false
     const val GIF_THUMBNAIL_COLUMNS = 3     // Grid columns in GIF picker
 
     // Common password manager package names (for clipboard exclusion)
@@ -972,6 +975,8 @@ class Config private constructor(
 
     // GIF Panel
     @JvmField var gif_enabled = Defaults.GIF_ENABLED
+    /** Voice input master switch; key [tribixbite.cleverkeys.stt.VoicePacks.PREF_ENABLED]. */
+    @JvmField var voice_input_enabled = Defaults.VOICE_INPUT_ENABLED
     @JvmField var gif_thumbnail_columns = Defaults.GIF_THUMBNAIL_COLUMNS
 
     @JvmField var continuous_swipe_enabled = Defaults.CONTINUOUS_SWIPE_ENABLED
@@ -1335,6 +1340,7 @@ class Config private constructor(
 
         // GIF Panel
         gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
+        voice_input_enabled = safeGetBoolean(_prefs, "voice_input_enabled", Defaults.VOICE_INPUT_ENABLED)
         gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS)
             .coerceIn(SettingsRanges.GIF_THUMBNAIL_COLUMNS)
 

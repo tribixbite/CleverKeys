@@ -223,6 +223,10 @@ class ReleasePackagingDriftTest {
                 // Scoped to the variant's applicationId so debug and release coexist
                 // ([selfDefinedNamesAreScopedToTheApplicationId]).
                 "\${applicationId}.permission.SET_DEBUG_MODE",
+                // On-device voice input (maintainer decision 2026-10-29): runtime permission,
+                // requested ONLY when the user turns voice input on or imports a voice pack
+                // (stt.MicPermissionGate, MicPermissionGateTest). Audio never leaves the device.
+                "android.permission.RECORD_AUDIO",
             )
         // The debug overlay merges into the debug APK; assert it adds none either, so an
         // instrumented-test convenience cannot become a shipped permission.

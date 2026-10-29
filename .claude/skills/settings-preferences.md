@@ -273,6 +273,12 @@ Do not add prefs or `SettingsDefaults` entries for it. Spec: `docs/specs/layout-
 
 ## Internal prefs added October 2026 (classify as INTERNAL, never exported)
 
+- `voice_input_enabled` and `voice_mic_permission_blocked` (2026-10-29, voice input): the switch is
+  this device's opt-in to the microphone, so a restore elsewhere must not turn it on (the
+  maintainer rule: no microphone request until the user turns voice input on). Keys live in
+  `stt.VoicePacks`; Settings → Voice input is `ui/settings/sections/VoiceInputSection.kt`
+  (section key `voice`), its SAF/permission plumbing `ui/settings/io/SettingsVoiceHandlers.kt`.
+
 - `legacy_custom_freq_offer_dismissed` (per language): the Custom-tab offer to raise
   frequency-100 words was dismissed for the listed words; the offer returns only when a word at
   100 outside that set appears (e.g. from a backup import). Policy: `LegacyCustomWordFrequency`.

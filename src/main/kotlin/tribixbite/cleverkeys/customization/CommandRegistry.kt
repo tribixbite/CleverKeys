@@ -229,6 +229,9 @@ object CommandRegistry {
             keywords = listOf("voice", "speech", "dictate", "microphone")),
         Command("voice_typing_chooser", R.string.cmd_voice_typing_chooser, R.string.cmd_voice_typing_chooser_desc, Category.EVENTS,
             keywords = listOf("voice", "speech", "picker", "choose")),
+        // 2026-10-29: on-device dictation with an imported voice pack (docs/specs/voice-input.md).
+        Command("voice_input", R.string.cmd_voice_input, R.string.cmd_voice_input_desc, Category.EVENTS,
+            keywords = listOf("voice", "speech", "dictate", "dictation", "microphone", "mic", "offline", "talk")),
         // gh #175: collapse to a low-profile bar or a floating button; a tap expands it again.
         Command("minimize_bar", R.string.cmd_minimize_bar, R.string.cmd_minimize_bar_desc, Category.EVENTS,
             keywords = listOf("minimize", "minimise", "collapse", "hide", "bar", "small", "shrink")),

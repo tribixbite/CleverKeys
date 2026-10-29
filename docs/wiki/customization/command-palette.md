@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 240 commands, four quick actions |
+| **Features** | Search, 21 categories, 241 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 240 commands are grouped into these categories, in this order. Category headers stay
+The 241 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -70,7 +70,7 @@ at the top while their commands scroll.
 | **Navigation** | 6 | `home`, `end`, `doc_home`, `doc_end`, `page_up`, `page_down` |
 | **Selection** | 8 | `selection_cursor_left`, `selection_cursor_right`, `selection_cancel`, `selection_mode`, `select_word_left`, `select_word_right`, `select_word`, `select_line` |
 | **Delete** | 5 | `backspace`, `delete`, `delete_word`, `forward_delete_word`, `delete_last_word` |
-| **Keyboard Events** | 19 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `minimize_bar`, `minimize_fab`, `hide_keyboard` |
+| **Keyboard Events** | 20 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `voice_input`, `minimize_bar`, `minimize_fab`, `hide_keyboard` |
 | **Modifiers** | 5 | `shift`, `ctrl`, `alt`, `meta`, `fn` |
 | **Function Keys** | 12 | `f1`–`f12` |
 | **Special Keys** | 9 | `esc`, `enter`, `tab`, `menu`, `insert`, `compose`, `removed` |
@@ -174,7 +174,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 240 commands. Use search to find one quickly.
+> The palette lists 241 commands. Use search to find one quickly.
 
 ## Common Questions
 

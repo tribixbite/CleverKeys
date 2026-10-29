@@ -625,6 +625,9 @@ class KeyboardReceiver(
                 }
             }
 
+            // On-device voice input (docs/specs/voice-input.md): start/stop listening.
+            KeyValue.Event.VOICE_INPUT -> keyboard2.onVoiceInputKey()
+
             KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER -> {
                 VoiceImeSwitcher.choose_voice_ime(
                     keyboard2,

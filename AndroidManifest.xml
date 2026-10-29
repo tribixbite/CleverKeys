@@ -6,9 +6,12 @@
 
   <!-- PRIVACY: No INTERNET permission - CleverKeys is fully offline, no data leaves your device -->
 
-  <!-- Optional: Voice input support (not required for core keyboard functionality) -->
-  <!-- Uncomment if you want voice typing: -->
-  <!-- <uses-permission android:name="android.permission.RECORD_AUDIO"/> -->
+  <!-- On-device voice input (docs/specs/voice-input.md, maintainer decision 2026-10-29).
+       Declared here because <uses-permission> is static, but RECORD_AUDIO is a runtime
+       permission: it is GRANTED only through a request, and CleverKeys requests it only when
+       the user turns Settings → Voice input on or imports a voice pack (MicPermissionGate).
+       Audio is recognised on the device and never stored or sent: there is still no INTERNET. -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
   <!-- User dictionary access for word suggestions (system dictionary only) -->
   <uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
@@ -160,6 +163,20 @@
         android:exported="false"
         android:theme="@android:style/Theme.Translucent.NoTitleBar"
         android:excludeFromRecents="true"
+        android:taskAffinity=""
+        android:directBootAware="false"
+        tools:targetApi="24"/>
+
+    <!-- Voice input: the keyboard service cannot request a runtime permission, so this
+         transparent activity shows the system microphone prompt and finishes (like AOSP
+         LatinIME's PermissionsActivity). Not exported; own task so finishing returns to the app
+         being typed in. -->
+    <activity
+        android:name="tribixbite.cleverkeys.stt.MicPermissionActivity"
+        android:exported="false"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:excludeFromRecents="true"
+        android:noHistory="false"
         android:taskAffinity=""
         android:directBootAware="false"
         tools:targetApi="24"/>

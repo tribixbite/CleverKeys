@@ -57,6 +57,7 @@ committed coordination over working-tree edits.
 | "editor commands", "RustDesk", "blind field", "terminal", "TYPE_NULL", "process-text", "inline field" | `.claude/skills/ime-key-routing.md` |
 | "swipe-to-delete", "Undo" (clipboard rows) | `.claude/skills/clipboard-panel-architecture.md` § Swipe to delete a row |
 | "Persian", "half-space", "ZWNJ", "U+200C", "ArabicScriptFold", "WordChars" | `.claude/skills/dictionary-pipeline.md` § Arabic-script lookup fold, `ime-key-routing.md`, `contraction-system.md`; spec `docs/specs/dictionary-and-language-system.md` |
+| "voice input", "speech", "dictation", "STT", "voice pack", "Moonshine", "microphone" | `docs/specs/voice-input.md` (engine-neutral `stt/`, only `stt/moonshine/` knows the engine — `SttArchitectureDriftTest`); research `docs/research/2026-10-28-stt-engine-deep-dive.md` |
 | "translations", "strings audit", "locale", `formatted="false"`, escaped quotes | this file § "String resources and translations" + `docs/audit/2026-10-22-translation-audit.md` (tool matrix) + `TranslationFormatParityTest` |
 
 **Release-specific reminder**: When user says any release-related word, READ `.claude/skills/release-process.md` FIRST. It documents the fastlane changelog model (`fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt`), the F-Droid API queries for current state, and the version-code math. Do NOT confuse `metadata/fdroid/tribixbite.cleverkeys.yml` (build recipe) with the fastlane changelogs (release notes).

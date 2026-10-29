@@ -112,6 +112,7 @@ internal fun SettingsActivity.collapseAllSections() {
     // v1.2.6: dictionarySectionExpanded removed
     clipboardSectionExpanded = false
     gifSectionExpanded = false
+    voiceSectionExpanded = false
     backupRestoreSectionExpanded = false
     advancedSectionExpanded = false
     infoSectionExpanded = false
@@ -173,6 +174,7 @@ internal fun sectionTitleRes(sectionKey: String): Int = when (sectionKey) {
     "accessibility" -> R.string.settings_section_accessibility
     "clipboard" -> R.string.settings_section_clipboard
     "gif" -> R.string.settings_section_gif_panel
+    "voice" -> R.string.settings_section_voice_input
     "multiLang" -> R.string.settings_section_multilang
     "privacy" -> R.string.settings_section_privacy
     "advanced" -> R.string.settings_section_advanced
@@ -203,6 +205,7 @@ internal fun SettingsActivity.expanderFor(sectionKey: String): () -> Unit = {
         "accessibility" -> accessibilitySectionExpanded = true
         "clipboard" -> clipboardSectionExpanded = true
         "gif" -> gifSectionExpanded = true
+        "voice" -> voiceSectionExpanded = true
         "multiLang" -> multiLangSectionExpanded = true
         "privacy" -> privacySectionExpanded = true
         "advanced" -> advancedSectionExpanded = true

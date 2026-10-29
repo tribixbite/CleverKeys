@@ -47,6 +47,9 @@ class KeyValue private constructor(
         // 2026-10-28: open the layout's own symbol pane (`<keyboard symbols="…">`, Samsung-style's
         // two pages); CleverKeys' number pane when the layout declares none. Appended (ordinal).
         SWITCH_SYMBOLS,
+        // 2026-10-29: on-device voice input (docs/specs/voice-input.md); NOT the voice-IME switch
+        // (SWITCH_VOICE_TYPING). Appended (ordinal).
+        VOICE_INPUT,
     }
 
     /**
@@ -661,6 +664,8 @@ class KeyValue private constructor(
             "capslock" -> eventKey(0xE012, Event.CAPS_LOCK, 0)
             "voice_typing" -> eventKey(0xE015, Event.SWITCH_VOICE_TYPING, FLAG_SMALLER_FONT)
             "voice_typing_chooser" -> eventKey(0xE015, Event.SWITCH_VOICE_TYPING_CHOOSER, FLAG_SMALLER_FONT)
+            // On-device dictation with an imported voice pack (same microphone glyph).
+            "voice_input" -> eventKey(0xE015, Event.VOICE_INPUT, FLAG_SMALLER_FONT)
             "switch_gif" -> eventKey("GIF", Event.SWITCH_GIF, FLAG_SMALLER_FONT)
             // gh #175: collapse the keyboard to a thin bar / a floating button.
             "minimize_bar" -> eventKey("▁", Event.MINIMIZE_BAR, 0)

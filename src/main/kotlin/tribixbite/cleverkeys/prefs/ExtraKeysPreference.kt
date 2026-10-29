@@ -63,6 +63,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "meta",
             "compose",
             "voice_typing",
+            "voice_input", // 2026-10-29: on-device dictation (opt-in voice pack)
             "switch_clipboard",
             "accent_aigu",
             "accent_grave",
@@ -193,7 +194,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         internal fun categorizedKeys(keys: List<String>): Map<Int, List<String>> =
             mapOf(
                 R.string.extra_keys_group_layout_switching to keys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
-                R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "switch_clipboard", "change_method", "capslock", "autofill") },
+                R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "voice_input", "switch_clipboard", "change_method", "capslock", "autofill") },
                 R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end", "word_left", "word_right") },
                 R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" || it.startsWith("append_") || it in EDITOR_SELECTION_KEYS },
                 R.string.extra_keys_group_formatting to keys.filter { it in listOf("superscript", "subscript") },
@@ -286,6 +287,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "switch_backward" -> id = R.string.key_descr_switch_backward
                 "undo" -> id = R.string.key_descr_undo
                 "voice_typing" -> id = R.string.key_descr_voice_typing
+                "voice_input" -> id = R.string.cmd_voice_input_desc
                 "ª" -> id = R.string.key_descr_ª
                 "º" -> id = R.string.key_descr_º
                 "switch_clipboard" -> id = R.string.key_descr_clipboard
@@ -364,6 +366,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "meta" to R.string.key_descr_meta,
             "compose" to R.string.key_descr_compose,
             "voice_typing" to R.string.extra_key_title_voice,
+            "voice_input" to R.string.cmd_voice_input,
             "switch_clipboard" to R.string.extra_key_title_clipboard,
             "change_method" to R.string.extra_key_title_switch_ime,
             "capslock" to R.string.extra_key_title_caps_lock,

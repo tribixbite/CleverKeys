@@ -66,6 +66,13 @@ interface PackFileOps {
 class LanguagePackSwap(
     private val root: File,
     private val ops: PackFileOps = PackFileOps.Real,
+    /**
+     * The members whose presence makes a directory a COMPLETE pack. Language packs: manifest +
+     * dictionary (the default). Voice packs (`stt.VoicePackManager`, 2026-10-29) pass only the
+     * manifest: their importer copies the manifest last too, so its presence alone proves the
+     * declared files were all copied.
+     */
+    private val completeMembers: List<String> = listOf(MANIFEST_FILE, DICTIONARY_FILE),
 ) {
 
     /** Result of [install]. */
@@ -111,9 +118,8 @@ class LanguagePackSwap(
     private fun backupDir(code: String) = File(root, "$BACKUP_PREFIX$code")
     private fun finalDir(code: String) = File(root, code)
 
-    /** A pack directory the importer finished: manifest (written last) and dictionary present. */
-    private fun isComplete(dir: File): Boolean =
-        ops.exists(File(dir, MANIFEST_FILE)) && ops.exists(File(dir, DICTIONARY_FILE))
+    /** A pack directory the importer finished: every [completeMembers] file present. */
+    private fun isComplete(dir: File): Boolean = completeMembers.all { ops.exists(File(dir, it)) }
 
     /**
      * Move the complete [staged] directory into place as pack [code]. On anything other than

@@ -96,6 +96,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         const val LANGUAGE_PACKS_URL =
             "https://github.com/tribixbite/CleverKeys/releases/tag/langpacks"
 
+        /** Intent extra naming a section to expand on launch (see the `scroll_to` handling). */
+        const val EXTRA_SCROLL_TO = "scroll_to"
+
+        /** [EXTRA_SCROLL_TO] value the keyboard sends when voice input needs setting up. */
+        const val SCROLL_TO_VOICE_INPUT = "voice_input"
+
         /**
          * Test-only override for the inline Backup & Restore flow's manager.
          * Instrumented tests set this in @Before, clear it in @After. Mirrors
@@ -247,6 +253,29 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     ) { uri: Uri? ->
         uri?.let { performGifPackImport(it) }
     }
+
+    // Voice input (docs/specs/voice-input.md): SAF import of a voice pack, and the one place
+    // Settings asks for the microphone — only after the user turned voice input on or imported
+    // a pack (MicPermissionGate).
+    internal val voicePackImportLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { tribixbite.cleverkeys.ui.settings.io.performVoicePackImport(this, it) }
+    }
+
+    internal val micPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted: Boolean ->
+        tribixbite.cleverkeys.ui.settings.io.onMicPermissionResult(this, granted)
+    }
+
+    internal var voiceSectionExpanded by mutableStateOf(false)
+    internal var voiceInputEnabled by mutableStateOf(tribixbite.cleverkeys.stt.VoicePacks.DEFAULT_ENABLED)
+    internal var voicePermissionBlocked by mutableStateOf(false)
+    internal var voiceImportInProgress by mutableStateOf(false)
+    internal var voiceImportStatus by mutableStateOf<tribixbite.cleverkeys.ui.settings.io.VoiceImportStatus?>(null)
+    internal var installedVoicePacks by mutableStateOf(listOf<tribixbite.cleverkeys.stt.VoicePackManager.InstalledPack>())
+    internal var unsupportedVoicePacks by mutableStateOf(listOf<tribixbite.cleverkeys.stt.VoicePackManager.InstalledPack>())
 
     // Custom URL-sanitization rules (Chunk 4). SAF-only, mime-restricted to JSON.
     internal val customRulesPickerLauncher = registerForActivityResult(
@@ -820,6 +849,13 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // action so the inline Backup & Restore section is the landing target.
         intent.getStringExtra("scroll_to")?.let { target ->
             when (target) {
+                SCROLL_TO_VOICE_INPUT -> {
+                    voiceSectionExpanded = true
+                    lifecycleScope.launch {
+                        kotlinx.coroutines.delay(300)
+                        scrollToSetting("voice_input")
+                    }
+                }
                 "backup_restore" -> {
                     backupRestoreSectionExpanded = true
                     lifecycleScope.launch {
@@ -912,6 +948,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         prefs.registerOnSharedPreferenceChangeListener(this)
         // Layout Manager is a separate activity whose edits land while this one is paused.
         refreshBoundLayoutLanguages()
+        // The microphone may have been granted in system settings, or by the keyboard's prompt.
+        tribixbite.cleverkeys.ui.settings.io.refreshVoiceInputState(this)
     }
 
     override fun onPause() {

@@ -78,6 +78,18 @@ class ExtraKeysConfigActivityComposeTest {
         composeTestRule.onNode(hasText("Clear system clipboard") and !hasSetTextAction()).assertIsDisplayed()
     }
 
+    /** 2026-10-29: the on-device voice input key is listed (System group) and opt-in. */
+    @Test
+    fun voiceInputIsVisibleInSystemCategoryAndOptIn() {
+        composeTestRule.onNode(hasSetTextAction()).performTextInput("voice_input")
+        composeTestRule.onNodeWithText("System", substring = true).assertExists()
+        composeTestRule.onNode(hasText("voice_input") and !hasSetTextAction(), useUnmergedTree = true)
+            .performScrollTo().assertIsDisplayed()
+        composeTestRule.onNode(hasText("Voice input (on device)") and !hasSetTextAction()).assertIsDisplayed()
+        composeTestRule.onAllNodes(isToggleable()).assertCountEquals(1)
+        composeTestRule.onNode(isToggleable()).assertIsOff()
+    }
+
     @Test
     fun resetToDefaults_buttonReachable() {
         composeTestRule.onNodeWithText("Reset to Defaults", substring = true)

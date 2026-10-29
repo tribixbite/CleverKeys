@@ -368,7 +368,7 @@ class CustomShortSwipeExecutor(private val context: Context) {
                 "switch_back_emoji", "switch_clipboard", "switch_back_clipboard",
                 "switch_forward", "switch_backward", "switch_greekmath",
                 "change_method", "change_method_prev", "action", "capslock",
-                "voice_typing", "voice_typing_chooser",
+                "voice_typing", "voice_typing_chooser", "voice_input",
                 // Text action command (textAssist/replaceText are editing keys, routed above)
                 "showTextMenu",
                 // Timestamp commands

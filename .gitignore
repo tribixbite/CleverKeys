@@ -246,3 +246,6 @@ src/androidTest/assets/ctc_bench/*.onnx
 
 # Decoded at deploy/dev time from ctc_vocab.bin.b64 (F-Droid scanner cleanliness)
 web_demo/demo/models/ctc_vocab.bin
+
+# Voice input androidTest assets (2026-10-29): the Moonshine pack + a LibriSpeech sample, never committed
+src/androidTest/assets/voicepack/

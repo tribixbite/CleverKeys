@@ -448,17 +448,8 @@ class LanguagePackManager(
      * Streamed in fixed-size chunks for the same reason every other entry is: peak memory must
      * not scale with what the pack claims to contain.
      */
-    private fun copyBounded(input: InputStream, output: java.io.OutputStream, limit: Long): Boolean {
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        var written = 0L
-        while (true) {
-            val read = input.read(buffer)
-            if (read <= 0) return true
-            written += read
-            if (written > limit) return false
-            output.write(buffer, 0, read)
-        }
-    }
+    private fun copyBounded(input: InputStream, output: java.io.OutputStream, limit: Long): Boolean =
+        PackFiles.copyBounded(input, output, limit)
 
     /**
      * Lowercase hex sha256 of [file], read in fixed-size chunks.
@@ -467,18 +458,7 @@ class LanguagePackManager(
      * entry is ever materialised whole, whatever its declared size (the v1.1.96/v1.1.97 OOM
      * fix, pinned by `theImportPathNeverReadsAWholeEntryIntoMemory`).
      */
-    private fun sha256OfFile(file: File): String {
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
-        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-        file.inputStream().use { input ->
-            while (true) {
-                val read = input.read(buffer)
-                if (read <= 0) break
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString("") { "%02x".format(it) }
-    }
+    private fun sha256OfFile(file: File): String = PackFiles.sha256OfFile(file)
 
     /**
      * Validate dictionary binary has correct magic number and version.
@@ -611,21 +591,9 @@ class LanguagePackManager(
      */
     fun readNotice(code: String): String? {
         val noticeFile = getNoticePath(code) ?: return null
-        return try {
-            noticeFile.reader(Charsets.UTF_8).use { reader ->
-                val out = StringBuilder()
-                val buffer = CharArray(DEFAULT_BUFFER_SIZE)
-                while (out.length < MAX_NOTICE_CHARS) {
-                    val read = reader.read(buffer, 0, minOf(buffer.size, MAX_NOTICE_CHARS - out.length))
-                    if (read <= 0) break
-                    out.append(buffer, 0, read)
-                }
-                out.toString()
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to read $NOTICE_FILE for $code", e)
-            null
-        }
+        val text = PackFiles.readTextCapped(noticeFile, MAX_NOTICE_CHARS)
+        if (text == null) Log.e(TAG, "Failed to read $NOTICE_FILE for $code")
+        return text
     }
 
     /**

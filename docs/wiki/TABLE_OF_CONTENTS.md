@@ -37,6 +37,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [User Dictionary](./typing/user-dictionary.md) | Custom words and case preservation |
 | [Special Characters](./typing/special-characters.md) | Symbols, accents, and compose key |
 | [Emoji & Symbols](./typing/emoji.md) | Emoji picker and symbol input |
+| [Voice Input](./typing/voice-input.md) | Offline dictation with an imported voice pack (no network, no stored audio) |
 
 ### 3. Gestures (P0)
 | Page | Description |
@@ -53,7 +54,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [Per-Key Actions](./customization/per-key-actions.md) | Customize actions, dynamic templates and explicit apostrophe suffixes |
 | [Extra Keys](./customization/extra-keys.md) | Add function keys, arrows, Tab, Ctrl |
 | [Themes](./customization/themes.md) | Color schemes and appearance |
-| [Command Palette](./customization/command-palette.md) | Searchable list of 240 assignable commands, plus minimize and hide |
+| [Command Palette](./customization/command-palette.md) | Searchable list of 241 assignable commands, plus minimize and hide |
 | [Timestamp Keys](./customization/timestamp-keys.md) | Insert formatted date/time |
 
 ### 5. Layouts and Languages (P1)

@@ -1,6 +1,6 @@
 ---
 title: Per-Key Actions — Technical Specification
-description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP/TEMPLATE action types and a 240-command registry
+description: Full short-swipe customization system covering all 8 directions per key with TEXT/COMMAND/KEY_EVENT/INTENT/TIMESTAMP/TEMPLATE action types and a 241-command registry
 user_guide: /wiki/customization/per-key-actions/
 status: implemented
 version: development
@@ -24,7 +24,7 @@ Short Swipe Customization allows users to fully customize the 8-direction swipe 
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `CustomShortSwipeExecutor` | Executes commands via InputConnection |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt` | `IntentDefinition`, `IntentTargetType` | Intent data model, presets, Gson-safe parsing |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt` | `IntentEditorDialog` | UI for configuring intents (presets, manual fields, extras) |
-| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 240 searchable commands in 21 categories (2026-10-20 count) |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | 241 searchable commands in 21 categories (2026-10-29 count) |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | XML round-trip for all action types incl. INTENT |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt` | `parseIntentKeydef()` | Parses `intent:'json'` from layout XML |
 | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | `handleShortGesture()` | Checks custom mappings first |
@@ -134,7 +134,7 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-CommandRegistry contains 240 commands in 21 categories (`Category` enum, `CommandRegistry.kt:56`; count as of 2026-10-20):
+CommandRegistry contains 241 commands in 21 categories (`Category` enum, `CommandRegistry.kt:56`; count as of 2026-10-29):
 
 ### Core Categories
 

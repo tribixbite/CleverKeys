@@ -539,3 +539,15 @@ it now matches the other scanners. Call-site list and rationale:
 `docs/specs/dictionary-and-language-system.md` "Persian half-space and Arabic-script lookup
 fold"; tests `WordCharsTest`, `PersianHalfSpaceBoundaryTest` (pure), `PersianHalfSpaceTypingTest`
 (mock).
+
+## Voice input: dictation routing (2026-10-29)
+
+`voice_input` (KeyValue.Event.VOICE_INPUT → KeyboardReceiver → `CleverKeysService.onVoiceInputKey`
+→ `stt.VoiceInputController`) classifies the field ONCE at start through `VoiceInputBridge.fieldKind`,
+with the keyboard's own rules: active inline field (`KeyEventHandler.activeInlineTarget`) → INLINE
+(final words via `InlineTextTarget.replace`, the app untouched); `SuggestionBar.isPasswordField` →
+PASSWORD (refused); `TerminalUtils.isTerminalApp` → BLIND (commitText of confirmed words only — no
+composing span, no read); else TEXT (composing tail + `commitText` of stable words). The pure
+`stt.VoiceTextPlanner` decides the ops (spacing/case from the text before the caret, read once;
+cancel = ClearComposing only). `onStartInputView`/`onFinishInputView`/`onWindowHidden` cancel.
+Dictation does not learn (it never enters `sendText`). Spec: `docs/specs/voice-input.md`.

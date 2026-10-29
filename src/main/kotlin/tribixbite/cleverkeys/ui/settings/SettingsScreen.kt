@@ -51,6 +51,7 @@ import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.sections.AccessibilitySection
 import tribixbite.cleverkeys.ui.settings.sections.ActivitiesSection
 import tribixbite.cleverkeys.ui.settings.sections.AdvancedSection
+import tribixbite.cleverkeys.ui.settings.sections.VoiceInputSection
 import tribixbite.cleverkeys.ui.settings.sections.AppearanceSection
 import tribixbite.cleverkeys.ui.settings.sections.AutoCorrectionSection
 import tribixbite.cleverkeys.ui.settings.sections.BackupRestoreSection
@@ -257,6 +258,9 @@ internal fun SettingsActivity.SettingsScreen() {
 
             // GIF Panel Section (Collapsible) — opt-in, off by default
             GifPanelSection()
+
+            // Voice Input Section (Collapsible) — opt-in, off by default (docs/specs/voice-input.md)
+            VoiceInputSection()
 
             // Backup & Restore Section (Collapsible)
             BackupRestoreSection()

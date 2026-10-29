@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Proposed for **2.1.0** (a large new feature; not part of the 2.0.0 soak). Not tagged.
+
+### Added
+
+- **Voice input — offline dictation in the keyboard.** A new **Voice input** key (Extra Keys) and
+  `voice_input` command type what you say, recognised on the phone by a speech model you import
+  once as a voice pack (`voicepack-moonshine-v2-tiny-en.zip`, English, Moonshine v2 tiny
+  streaming, MIT, about 45 MB, from the `langpacks` release; Settings → Voice input → Import
+  voice pack). Words appear as you speak — the newest underlined until the model confirms them —
+  and stop on a second tap; ✕ cancels and drops the unconfirmed words. Terminals and
+  remote-desktop fields receive confirmed words only, appended; the keyboard's own search and
+  edit fields receive the text instead of the app behind them; password fields refuse it.
+  Off by default. The microphone permission is new, and is asked for only when you turn voice
+  input on or import a pack; audio is never stored and never leaves the device (still no
+  internet permission). Packs are checked file by file (size and SHA-256) and installed
+  atomically; a pack for a newer engine is refused with "needs a newer version of CleverKeys".
+  The speech engine is a replaceable module (`stt/`), so a later model is a new pack, not a
+  rewrite. Spec: `docs/specs/voice-input.md`.
+
 ### Planned for v2.1
 
 - 50k dictionary assets for 20 languages

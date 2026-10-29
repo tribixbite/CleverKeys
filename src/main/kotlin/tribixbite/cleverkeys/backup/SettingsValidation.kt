@@ -76,6 +76,14 @@ object SettingsValidation {
         // Per-device UI state: NOT exported, so a restore elsewhere re-offers imported legacy
         // entries instead of inheriting another device's "not now".
         "legacy_custom_freq_offer_dismissed",
+        // Voice input (2026-10-29, docs/specs/voice-input.md). Both are DEVICE-BOUND consent
+        // state: the switch is the user's opt-in to the microphone on THIS device, and restoring
+        // it elsewhere would turn voice input on (and so ask for the microphone) without that
+        // device's user ever opting in — the maintainer rule is "no microphone request until the
+        // user turns voice input on". The "don't ask again" flag mirrors this device's
+        // permission state. The voice pack itself is files, not prefs, and is not backed up.
+        "voice_input_enabled",
+        "voice_mic_permission_blocked",
     )
 
     fun isInternalPreference(key: String): Boolean = key in INTERNAL_KEYS

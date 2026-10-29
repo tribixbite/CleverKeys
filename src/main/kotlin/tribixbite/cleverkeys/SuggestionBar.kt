@@ -783,6 +783,9 @@ class SuggestionBar : LinearLayout {
             return
         }
 
+        // Voice input owns the bar while it listens (showVoiceStatus); predictions wait.
+        if (isInVoiceMode) return
+
         // v1.2.6: Don't overwrite temporary messages (e.g., "Added to dictionary")
         if (isShowingTemporaryMessage) {
             Log.d(TAG, "setSuggestionsWithScores: skipped - temporary message is showing")
@@ -947,6 +950,8 @@ class SuggestionBar : LinearLayout {
         undoable: UndoableBarMessage?,
     ) {
         if (isPasswordMode) return  // Don't interrupt password mode
+        // A message replaces the voice indicator (the controller shows one only once it stopped).
+        isInVoiceMode = false
 
         // A newer message replaces a live undoable confirmation — its undo is no longer offered.
         activeUndoable?.finish()
@@ -1021,6 +1026,98 @@ class SuggestionBar : LinearLayout {
         savedSuggestions = emptyList()
         savedScores = emptyList()
     }
+
+    // ==================== Voice input (docs/specs/voice-input.md) ====================
+
+    /** True while [showVoiceStatus] owns the bar; suggestion updates are ignored meanwhile. */
+    private var isInVoiceMode = false
+
+    /**
+     * The voice-input indicator: "🎤 Listening… <pending words>" (tap = stop and keep the text)
+     * and a ✕ (cancel, the pending words are dropped). Called on every partial result, so the
+     * views are rebuilt each time — cheap at one or two updates a second.
+     *
+     * Shown in password mode too? Never: voice input refuses password fields before this.
+     */
+    fun showVoiceStatus(
+        status: String,
+        pending: String,
+        stopDescription: String,
+        cancelDescription: String,
+        onStop: () -> Unit,
+        onCancel: () -> Unit,
+    ) {
+        mainHandler.removeCallbacks(restoreRunnable)
+        isShowingTemporaryMessage = false
+        activeUndoable?.finish()
+        activeUndoable = null
+        dismissProvenancePopup()
+        contentGeneration++
+        isInVoiceMode = true
+
+        removeAllViews()
+        suggestionViews.clear()
+        dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
+        currentSuggestions.clear()
+        currentScores.clear()
+        currentMetas.clear()
+        visibility = VISIBLE
+
+        val accent = theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN
+        val secondary = theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.LTGRAY
+        val label = TextView(context).apply {
+            layoutParams = LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+            gravity = Gravity.CENTER_VERTICAL or Gravity.START
+            setPadding(dpToPx(context, 12), 0, dpToPx(context, 8), 0)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.START // keep the newest words visible
+            val spannable = android.text.SpannableStringBuilder("\uD83C\uDF99 ").append(status)
+            spannable.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, spannable.length, 0)
+            spannable.setSpan(android.text.style.ForegroundColorSpan(accent), 0, spannable.length, 0)
+            if (pending.isNotEmpty()) {
+                val start = spannable.length
+                spannable.append("  ").append(pending)
+                spannable.setSpan(android.text.style.ForegroundColorSpan(secondary), start, spannable.length, 0)
+            }
+            text = spannable
+            contentDescription = stopDescription
+            isClickable = true
+            setOnClickListener { onStop() }
+        }
+        val cancel = TextView(context).apply {
+            layoutParams = LayoutParams(dpToPx(context, 48), ViewGroup.LayoutParams.MATCH_PARENT)
+            gravity = Gravity.CENTER
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            setTextColor(secondary)
+            text = "\u2715"
+            contentDescription = cancelDescription
+            isClickable = true
+            setOnClickListener { onCancel() }
+        }
+        addView(label)
+        addView(cancel)
+    }
+
+    /** Leave voice mode and return the bar to normal (empty until the next prediction). */
+    fun clearVoiceStatus() {
+        if (!isInVoiceMode) return
+        isInVoiceMode = false
+        removeAllViews()
+        suggestionViews.clear()
+        dividerViews.clear()
+        spacerViews.clear()
+        slotMode = false
+        currentSuggestions.clear()
+        currentScores.clear()
+        currentMetas.clear()
+        visibility = if (alwaysVisible) VISIBLE else GONE
+    }
+
+    /** True while the voice indicator owns the bar. */
+    fun isInVoiceMode(): Boolean = isInVoiceMode
 
     // ==================== Emoji Search Mode (#41) ====================
 

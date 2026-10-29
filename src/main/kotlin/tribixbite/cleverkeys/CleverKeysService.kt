@@ -114,6 +114,12 @@ class CleverKeysService : InputMethodService(),
 
     // UI components (remain in CleverKeysService for view integration)
     private var _suggestionBar: SuggestionBar? = null
+
+    /**
+     * On-device voice input (docs/specs/voice-input.md), created on the first voice_input key
+     * press — nothing about it (no thread, no model, no microphone) exists before that.
+     */
+    private var _voiceInput: tribixbite.cleverkeys.stt.VoiceInputController? = null
     private var _inputViewContainer: LinearLayout? = null
 
     // Prediction context tracking (v1.32.342: extracted to PredictionContextTracker)
@@ -521,6 +527,8 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+        _voiceInput?.release()
+        _voiceInput = null
         // Tile: stop the deferred-show loop so no callback outlives the service.
         _tileShow.cancel()
         if (::_handler.isInitialized) _handler.removeCallbacks(_tileShowTick)
@@ -759,6 +767,8 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
+        // Voice input belongs to the field it started in: a new field ends it (FR-8).
+        _voiceInput?.cancel()
         _formAtFinishView = null
         _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
@@ -1087,6 +1097,7 @@ class CleverKeysService : InputMethodService(),
 
     override fun onWindowHidden() {
         super.onWindowHidden()
+        _voiceInput?.cancel()
         _windowVisible = false
         val form = hiddenForm()
         _tileShow.onWindowHidden(form, _viewEditor, android.os.SystemClock.uptimeMillis())
@@ -1194,6 +1205,8 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onFinishInputView(finishingInput: Boolean) {
+        // Keyboard hidden / field left: stop listening and drop the uncommitted tail (FR-8).
+        _voiceInput?.cancel()
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
         super.onFinishInputView(finishingInput)
@@ -1367,6 +1380,28 @@ class CleverKeysService : InputMethodService(),
      */
     fun triggerKeyboardEvent(event: KeyValue.Event) {
         _receiver?.handle_event_key(event)
+    }
+
+    /** The voice_input key / command (KeyboardReceiver → here). */
+    fun onVoiceInputKey() {
+        val controller = _voiceInput ?: tribixbite.cleverkeys.stt.VoiceInputController(
+            VoiceInputBridge(
+                context = this,
+                prefsProvider = { DirectBootAwarePreferences.get_shared_preferences(this) },
+                editorInfo = { currentInputEditorInfo },
+                inputConnection = { currentInputConnection },
+                inlineTarget = { if (::_keyeventhandler.isInitialized) _keyeventhandler.activeInlineTarget() else null },
+                suggestionBar = { _suggestionBar },
+                announcer = { if (::_keyboardView.isInitialized) _keyboardView else null },
+                config = { _config },
+                onExternalEdit = {
+                    // Dictation wrote to the field: the typed-word state no longer describes it.
+                    if (::_contextTracker.isInitialized) _contextTracker.clearCurrentWord()
+                    if (::_suggestionHandler.isInitialized) _suggestionHandler.onEditorSessionChanged()
+                },
+            )
+        ).also { _voiceInput = it }
+        controller.onKeyPressed()
     }
 
     // Todo 13c (2026-10-28): the private calculateDynamicKeyboardHeight /

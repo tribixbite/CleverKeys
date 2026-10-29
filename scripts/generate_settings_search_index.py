@@ -56,6 +56,7 @@ SYNONYMS = {
     "correction": ["autocorrect", "spelling"],
     "numpad": ["numbers", "keypad"],
     "gif": ["sticker", "meme", "reaction"],
+    "voice": ["speech", "dictation", "dictate", "microphone", "mic"],
     "clipboard": ["copy", "paste"],
     "sanitize": ["clean", "tracking", "utm", "clearurls"],
     "embed": ["embeds", "share", "fxtwitter", "rxddit"],

@@ -305,6 +305,10 @@ class SettingsImportPlanBuilderTest {
             // 2026-10-10: Dictionary Manager legacy-frequency offer dismissals — per-device UI
             // state, so a restore elsewhere re-offers imported old-default entries.
             "legacy_custom_freq_offer_dismissed",
+            // 2026-10-29: voice input — this device's microphone opt-in and its "don't ask
+            // again" state; a restore elsewhere must not turn voice input on.
+            "voice_input_enabled",
+            "voice_mic_permission_blocked",
         )
         assertThat(SettingsValidation.INTERNAL_KEYS).isEqualTo(expected)
     }

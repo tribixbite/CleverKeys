@@ -646,6 +646,19 @@ tasks.register('runPureTests', JavaExec) {
     // Todo item 11 (2026-10-12): crash-safe language-pack install swap and its recovery,
     // with every rename/delete failed or interrupted through the PackFileOps seam.
     'tribixbite.cleverkeys.langpack.LanguagePackSwapTest',
+    // 2026-10-29: on-device voice input (docs/specs/voice-input.md) — engine-neutral stt/ core,
+    // voice-pack import over the language-pack swap, the modularity drift guard, and the real
+    // Moonshine v2 model (skipped unless build/voicepacks/ + ~/.cache/cleverkeys-test/voice-samples exist).
+    'tribixbite.cleverkeys.stt.VoicePackManifestTest',
+    'tribixbite.cleverkeys.stt.SpeechEngineRegistryTest',
+    'tribixbite.cleverkeys.stt.HypothesisStabilizerTest',
+    'tribixbite.cleverkeys.stt.VoiceSessionMachineTest',
+    'tribixbite.cleverkeys.stt.VoiceTextPolicyTest',
+    'tribixbite.cleverkeys.stt.MicPermissionGateTest',
+    'tribixbite.cleverkeys.stt.VoicePackManagerTest',
+    'tribixbite.cleverkeys.stt.SttArchitectureDriftTest',
+    'tribixbite.cleverkeys.stt.moonshine.MoonshineTokenizerTest',
+    'tribixbite.cleverkeys.stt.moonshine.MoonshineV2StreamingEngineTest',
     // RTL (fa): directional arrows must be Icons.AutoMirrored.*.
     'tribixbite.cleverkeys.RtlMirroringDriftTest',
     // ARC-112 (2026-09-02): the swipe key-registration filter's pure core. Pins the
@@ -1255,7 +1268,7 @@ tasks.register('runPureTests', JavaExec) {
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,
   // and the replay prints whichever values it ran with.
-  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus', 'replayStaticCtx'].each { knob ->
+  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus', 'replayStaticCtx', 'voicePack', 'voiceSamples'].each { knob ->
     if (project.hasProperty(knob)) systemProperty knob, project.property(knob)
   }
   // ONNX in PURE JVM tests on Termux.
