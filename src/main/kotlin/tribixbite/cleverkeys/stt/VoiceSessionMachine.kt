@@ -29,8 +29,15 @@ sealed interface VoiceEvent {
     /** The final hypothesis arrived after a stop. */
     data class Final(val hypothesis: SpeechHypothesis) : VoiceEvent
 
-    /** The bar's ✕, keyboard hidden, field changed, editor switched, service destroyed. */
+    /** The bar's ✕, keyboard hidden, service destroyed: drop the composing tail. */
     data object Cancel : VoiceEvent
+
+    /**
+     * Another field took the input. The keyboard's connection already belongs to the new
+     * field, and the old one finished its own composition on blur (Chrome and EditText both
+     * keep the underlined words), so nothing may be written: [VoiceAction.Release].
+     */
+    data object FieldChanged : VoiceEvent
 
     /** Load, capture or inference failed. */
     data class Failed(val reason: VoiceFailure) : VoiceEvent
@@ -56,6 +63,12 @@ sealed interface VoiceAction {
     /** Stop everything and drop the composing tail (cancel). */
     data object Abort : VoiceAction
 
+    /**
+     * Stop everything WITHOUT any text operation (field change): a clear sent now would reach
+     * the new field and `setComposingText("")` would replace its selection (Saga 2026-10-29).
+     */
+    data object Release : VoiceAction
+
     /** Session over (final applied): release the recorder/session, hide the indicator. */
     data object Done : VoiceAction
 
@@ -69,6 +82,7 @@ sealed interface VoiceAction {
  * ```
  * IDLE ─Toggle→ PREPARING ─Ready→ LISTENING ─Toggle→ FINISHING ─Final→ IDLE (Apply, Done)
  *   any state ─Cancel→ IDLE (Abort)          any active state ─Failed→ IDLE (Report)
+ *   any state ─FieldChanged→ IDLE (Release: no text operation)
  * PREPARING ─Toggle→ IDLE (Abort): a second tap while loading is "never mind".
  * ```
  * Events that do not fit the current state (a partial after cancel, a late Ready) are
@@ -99,6 +113,8 @@ class VoiceSessionMachine {
             }
         VoiceEvent.Cancel ->
             if (state == VoiceState.IDLE) emptyList() else move(VoiceState.IDLE, VoiceAction.Abort)
+        VoiceEvent.FieldChanged ->
+            if (state == VoiceState.IDLE) emptyList() else move(VoiceState.IDLE, VoiceAction.Release)
         is VoiceEvent.Failed ->
             if (state == VoiceState.IDLE) emptyList() else move(VoiceState.IDLE, VoiceAction.Report(event.reason))
     }

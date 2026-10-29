@@ -38,6 +38,38 @@ class VoiceSessionMachineTest {
         assertThat(VoiceSessionMachine().on(VoiceEvent.Cancel)).isEmpty()
     }
 
+    /**
+     * Saga 2026-10-29: a field change used to cancel, and cancel clears the composing tail
+     * through the CURRENT connection — by then the NEW field's, so `setComposingText("")`
+     * replaced whatever the new field had selected. The old field already finished its own
+     * composition on blur, which the keyboard cannot undo. A field change releases the session
+     * without any text operation (spec FR-8: field change stops; only cancel discards).
+     */
+    @Test
+    fun aFieldChangeReleasesWithoutTouchingAnyField() {
+        for (setup in listOf<(VoiceSessionMachine) -> Unit>(
+            { it.on(VoiceEvent.Toggle) },
+            { it.on(VoiceEvent.Toggle); it.on(VoiceEvent.Ready) },
+            { it.on(VoiceEvent.Toggle); it.on(VoiceEvent.Ready); it.on(VoiceEvent.Toggle) },
+        )) {
+            val m = VoiceSessionMachine().also(setup)
+            assertThat(m.on(VoiceEvent.FieldChanged)).containsExactly(VoiceAction.Release)
+            assertThat(m.state).isEqualTo(VoiceState.IDLE)
+            // A final result that arrives later belongs to the old field: ignored.
+            assertThat(m.on(VoiceEvent.Final(final))).isEmpty()
+        }
+        assertThat(VoiceSessionMachine().on(VoiceEvent.FieldChanged)).isEmpty()
+    }
+
+    /** The service routes a new field to the release path, never to cancel (which writes). */
+    @Test
+    fun theServiceReleasesOnANewFieldInsteadOfCancelling() {
+        val src = java.io.File("src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt").readText()
+        val body = src.substringAfter("override fun onStartInputView(").substringBefore("override fun ")
+        assertThat(body).contains("_voiceInput?.onFieldChanged()")
+        assertThat(body).doesNotContain("_voiceInput?.cancel()")
+    }
+
     @Test
     fun aSecondTapWhileLoadingIsNeverMind() {
         val m = VoiceSessionMachine()

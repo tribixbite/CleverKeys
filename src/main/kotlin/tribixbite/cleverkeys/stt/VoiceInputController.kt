@@ -152,9 +152,18 @@ class VoiceInputController(
         host.announce(msg)
     }
 
-    /** Keyboard hidden, field changed, editor switched: abandon any listening period. */
+    /** The bar's ✕, keyboard hidden: abandon any listening period and drop the composing tail. */
     fun cancel() {
         if (machine.isActive) dispatch(VoiceEvent.Cancel)
+    }
+
+    /**
+     * Another field took the input (`onStartInputView`): end the period without writing.
+     * The current connection is the NEW field's; the old field already kept its underlined
+     * words when it lost focus, and the keyboard can no longer reach it (spec FR-8).
+     */
+    fun onFieldChanged() {
+        if (machine.isActive) dispatch(VoiceEvent.FieldChanged)
     }
 
     /** Service destroyed: cancel and free the model and the worker thread. */
@@ -186,6 +195,11 @@ class VoiceInputController(
                 planner?.let { host.apply(kind, it.onCancel()) }
                 endPeriod()
                 host.announce(text(R.string.voice_announce_cancelled))
+            }
+            VoiceAction.Release -> {
+                abortCapture()
+                endPeriod()
+                host.announce(text(R.string.voice_announce_stopped))
             }
             VoiceAction.Done -> {
                 endPeriod()

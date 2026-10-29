@@ -58,7 +58,11 @@ graphs, ~112 MB steady RSS with the ORT arena off).
 7. **FR-7** Denied permission → voice stays off and the section/bar explains why; "don't ask
    again" → a button opens the app's system settings page.
 8. **FR-8** Capture only while listening; stop on keyboard hide, field change, editor switch,
-   `onDestroy`, cancel; cancel discards uncommitted (composing) text.
+   `onDestroy`, cancel; cancel (✕, keyboard hide) discards uncommitted (composing) text. A field
+   change ends the period WITHOUT any text operation (`VoiceEvent.FieldChanged` →
+   `VoiceAction.Release`): the old field already finished its own composition on blur (Chrome
+   and EditText keep the underlined words; the keyboard cannot reach that field any more), and
+   the connection now belongs to the new field, where a clear would replace its selection.
 9. **FR-9** TalkBack: the key's content description carries the state; start/stop/cancel and
    errors are announced; partials are not announced.
 
@@ -181,7 +185,8 @@ interface SpeechSession : Closeable { fun accept(pcm: FloatArray): SpeechHypothe
 ### State Management
 `VoiceSessionMachine`: IDLE → PREPARING (pack load, off main thread) → LISTENING → (partials) →
 FINISHING (stop: last audio flushed, final pass) → IDLE. Cancel from any state → IDLE with the
-composing text cleared. Any engine/capture error → ERROR → IDLE after the bar message. Only the
+composing text cleared; FieldChanged from any state → IDLE with no text operation (FR-8). Any
+engine/capture error → ERROR → IDLE after the bar message. Only the
 `voice_input_enabled` preference persists; the active pack is the installed pack whose languages
 contain the current language, else the first installed one.
 
@@ -234,8 +239,11 @@ keyboard listened in another field (no audio file on the phone; acoustic path sp
   dropped when notifications are off) → a notice in the password bar; (5) a pass that inserted
   a word before the committed boundary repeated the last committed word ("after all. all.") →
   `HypothesisStabilizer` aligns a pass's tail on the last committed words.
-- Known: when the field changes while words are underlined, Chrome keeps the composing words as
-  typed text (as it does for typed composing text).
+- Field change while words are underlined: Chrome keeps the composing words as typed text (it
+  finishes the composition on blur, as for typed composing text). Until 2026-10-29 the keyboard
+  then "cancelled" into the NEW field: `setComposingText("")` on the new connection deleted a
+  focused input's selected value ("KEEP-ME-SELECTED" → empty, Saga, `deleteContentBackward`).
+  Fixed by the FieldChanged/Release path (`VoiceSessionMachineTest`); re-checked on the Saga.
 
 ## Testing Strategy
 

@@ -767,8 +767,9 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onStartInputView(info: EditorInfo, restarting: Boolean) {
-        // Voice input belongs to the field it started in: a new field ends it (FR-8).
-        _voiceInput?.cancel()
+        // Voice input belongs to the field it started in: a new field ends it (FR-8) without a
+        // write — the connection is already the new field's (a clear would delete its selection).
+        _voiceInput?.onFieldChanged()
         _formAtFinishView = null
         _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
