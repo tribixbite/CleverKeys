@@ -47,6 +47,32 @@ class HypothesisStabilizerTest {
         assertThat(p.stableWords).containsExactly("the", "cat", "sat", "on").inOrder()
     }
 
+    /**
+     * Saga 2026-10-29: "…but it spit us unusual after all. all." — a pass after the speech ended
+     * inserted a word BEFORE the committed boundary, and the tail was taken by position, so the
+     * last committed word came back as a new one. The tail must follow the committed words.
+     */
+    @Test
+    fun aWordInsertedBeforeTheBoundaryDoesNotRepeatACommittedWord() {
+        val s = HypothesisStabilizer()
+        s.update("but it spit us unusual after all.", isFinal = false)
+        s.update("but it spit us unusual after all.", isFinal = false) // all 7 committed
+        val p = s.update("but it spit out us unusual after all.", isFinal = false)
+        assertThat(p.text).isEqualTo("but it spit us unusual after all.")
+        assertThat(p.pendingWords).isEmpty()
+        val f = s.update("but it spit out us unusual after all.", isFinal = true)
+        assertThat(f.text).isEqualTo("but it spit us unusual after all.")
+    }
+
+    @Test
+    fun aWordDroppedBeforeTheBoundaryDoesNotLoseTheNextWord() {
+        val s = HypothesisStabilizer()
+        s.update("the cat sat on", isFinal = false)
+        s.update("the cat sat on", isFinal = false) // "the cat sat on" committed
+        val f = s.update("the cat on the mat", isFinal = true)
+        assertThat(f.text).isEqualTo("the cat sat on the mat")
+    }
+
     @Test
     fun theFinalPassMakesEveryWordStable() {
         val s = HypothesisStabilizer()

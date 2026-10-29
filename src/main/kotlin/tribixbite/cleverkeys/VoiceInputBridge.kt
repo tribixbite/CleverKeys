@@ -115,7 +115,11 @@ internal class VoiceInputBridge(
     }
 
     override fun message(text: String) {
-        suggestionBar()?.showTemporaryMessage(text, MESSAGE_MILLIS, clearAfter = true)
+        val bar = suggestionBar() ?: return
+        // The bar ignores messages in password mode, and the password refusal is said exactly
+        // there: it was silent (Saga 2026-10-29).
+        if (bar.isInPasswordMode()) bar.showPasswordModeNotice(text, MESSAGE_MILLIS)
+        else bar.showTemporaryMessage(text, MESSAGE_MILLIS, clearAfter = true)
     }
 
     override fun announce(text: String) {

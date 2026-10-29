@@ -178,6 +178,8 @@ class SuggestionBar : LinearLayout {
 
         val padding = dpToPx(context, 8)
         setPadding(padding, padding, padding, padding)
+        // A two-line temporary message reaches into the vertical padding (showMessage): draw it.
+        clipToPadding = false
 
         // Ensure minimum width to prevent UI collapse when empty
         // Without this, the bar appears as just a few pixels when there are no suggestions
@@ -370,10 +372,15 @@ class SuggestionBar : LinearLayout {
     /**
      * A look's slots share the bar's width. The parent HorizontalScrollView measures its child
      * with an UNSPECIFIED width, where weights have nothing to share; measure at the viewport's
-     * width instead (fillViewport then keeps it). Non-look bars are measured exactly as before.
+     * width instead (fillViewport then keeps it). The same holds for the voice indicator (its
+     * label takes the width the ✕ leaves; measured unbounded, a long partial pushed the ✕ off
+     * the screen — Saga 2026-10-29) and for a temporary message (it must fit, not scroll: the
+     * voice explanations end in "tap again", which was cut off). Suggestion bars are measured
+     * exactly as before.
      */
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        if (slotMode && MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+        val fitsViewport = slotMode || isInVoiceMode || isShowingTemporaryMessage
+        if (fitsViewport && MeasureSpec.getMode(widthMeasureSpec) == MeasureSpec.UNSPECIFIED) {
             val parentView = parent as? View
             val viewport = parentView?.let { it.width - it.paddingLeft - it.paddingRight } ?: 0
             val spec = if (viewport > 0) MeasureSpec.makeMeasureSpec(viewport, MeasureSpec.EXACTLY)
@@ -992,16 +999,30 @@ class SuggestionBar : LinearLayout {
         currentMetas.clear()
 
         val messageView = TextView(context).apply {
+            // The bar's 8 dp vertical padding leaves 24 dp: room for ONE line. A message takes the
+            // bar's full height (negative margins; clipToPadding is off) so two lines fit.
             layoutParams = LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
-            )
+            ).apply {
+                topMargin = -this@SuggestionBar.paddingTop
+                bottomMargin = -this@SuggestionBar.paddingBottom
+            }
+            includeFontPadding = false
             gravity = Gravity.CENTER
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, MESSAGE_TEXT_SP.toFloat())
             // The bar's accent role, checked against the bar background (SuggestionBarPalette);
             // the raw activated label colour was unreadable on several XML themes' bars.
             setTextColor(theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN)
             typeface = Typeface.DEFAULT_BOLD
+            // The bar is measured at the viewport's width for a message (onMeasure): wrap to two
+            // lines and shrink before cutting anything off.
+            setPadding(dpToPx(context, 8), 0, dpToPx(context, 8), 0)
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                this, MESSAGE_MIN_TEXT_SP, MESSAGE_TEXT_SP, 1, TypedValue.COMPLEX_UNIT_SP
+            )
             text = message
         }
         if (undoable != null) {
@@ -1321,6 +1342,17 @@ class SuggestionBar : LinearLayout {
     // ==================== Password Mode Methods ====================
 
     companion object {
+        /** Temporary message text size, and the smallest it shrinks to before ellipsizing. */
+        private const val MESSAGE_TEXT_SP = 16
+        private const val MESSAGE_MIN_TEXT_SP = 11
+
+        /** The password text's letter spacing (dots or revealed characters) and size. */
+        private const val PASSWORD_LETTER_SPACING = 0.15f
+        private const val PASSWORD_TEXT_SP = 18f
+
+        /** A password-mode notice: one line beside the eye toggle on a phone held upright. */
+        private const val PASSWORD_NOTICE_TEXT_SP = 13f
+
         private const val TAG = "SuggestionBar"
 
         /** Suggestion text size (sp); a look's slot auto-sizes down from it. */
@@ -1393,6 +1425,31 @@ class SuggestionBar : LinearLayout {
      * Check if currently in password mode.
      */
     fun isInPasswordMode(): Boolean = isPasswordMode
+
+    /**
+     * A short notice in password mode, where [showTemporaryMessage] is ignored (the bar keeps
+     * its password UI). Shown in the password text's place for [durationMs], then the dots come
+     * back. Voice input's refusal is said exactly there; a toast is no substitute — Android
+     * drops them when the app's notifications are off (Saga 2026-10-29).
+     */
+    fun showPasswordModeNotice(message: String, durationMs: Long) {
+        val view = passwordTextView ?: return
+        mainHandler.removeCallbacks(passwordNoticeRestore)
+        view.typeface = Typeface.DEFAULT
+        view.letterSpacing = 0f
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, PASSWORD_NOTICE_TEXT_SP)
+        view.text = message
+        mainHandler.postDelayed(passwordNoticeRestore, durationMs)
+    }
+
+    private val passwordNoticeRestore = Runnable {
+        passwordTextView?.apply {
+            typeface = Typeface.MONOSPACE
+            letterSpacing = PASSWORD_LETTER_SPACING
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, PASSWORD_TEXT_SP)
+        }
+        updatePasswordDisplay()
+    }
 
     /**
      * #39: Enable/disable swipe predictions in password mode.
@@ -1555,11 +1612,11 @@ class SuggestionBar : LinearLayout {
             )
             
             setPadding(dpToPx(context, 16), 0, dpToPx(context, 16), 0)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, PASSWORD_TEXT_SP)
             setTextColor(theme?.suggestionTextColor?.takeIf { it != 0 } ?: Color.WHITE)
             typeface = Typeface.MONOSPACE
             text = ""
-            letterSpacing = 0.15f
+            letterSpacing = PASSWORD_LETTER_SPACING
             
             // Single line settings
             maxLines = 1

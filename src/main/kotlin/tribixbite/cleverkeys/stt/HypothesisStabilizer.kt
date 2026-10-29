@@ -30,7 +30,7 @@ class HypothesisStabilizer {
      */
     fun update(passText: String, isFinal: Boolean): SpeechHypothesis {
         val words = SpeechHypothesis.splitWords(passText)
-        val tail = words.drop(committed.size)
+        val tail = tailAfterCommitted(words)
         if (isFinal) {
             committed += tail
             previous = words
@@ -39,12 +39,34 @@ class HypothesisStabilizer {
         // Agreement is measured past the committed boundary only: the committed words are
         // fixed whatever a pass says about them, so a pass that flips an early (committed)
         // word must not block the words after it from stabilising.
-        val c = committed.size
-        val agree = c + agreedPrefix(previous.drop(c), words.drop(c))
-        if (agree > c) committed += words.subList(c, agree)
+        val agree = agreedPrefix(tailAfterCommitted(previous), tail)
+        if (agree > 0) committed += tail.subList(0, agree)
         previous = words
-        val display = committed + words.drop(committed.size)
+        val display = committed + tail.drop(agree)
         return SpeechHypothesis(display.joinToString(" "), committed.size, isFinal = false)
+    }
+
+    /**
+     * The words of [words] that come after the committed ones. Taken by POSITION, a pass that
+     * inserted or dropped a word before the boundary shifted the tail by one: the last committed
+     * word came back ("after all. all.", Saga 2026-10-29) or the next word was lost. So the tail
+     * starts after the pass's own copy of the last committed words (two, else one) when it is
+     * found within [MAX_SHIFT] of the boundary; otherwise by position as before.
+     */
+    private fun tailAfterCommitted(words: List<String>): List<String> {
+        val c = committed.size
+        if (c == 0) return words
+        for (k in minOf(ANCHOR_WORDS, c) downTo 1) {
+            val anchor = committed.subList(c - k, c).map(::normalise)
+            var best = -1
+            for (end in maxOf(k, c - MAX_SHIFT)..minOf(words.size, c + MAX_SHIFT)) {
+                if ((0 until k).all { normalise(words[end - k + it]) == anchor[it] }) {
+                    if (best < 0 || kotlin.math.abs(end - c) < kotlin.math.abs(best - c)) best = end
+                }
+            }
+            if (best >= 0) return words.drop(best)
+        }
+        return words.drop(c)
     }
 
     /** Forget everything (a new utterance). */
@@ -54,6 +76,12 @@ class HypothesisStabilizer {
     }
 
     companion object {
+        /** Committed words matched to find where a pass's tail starts ([tailAfterCommitted]). */
+        private const val ANCHOR_WORDS = 2
+
+        /** How far (words) a pass may have shifted the committed boundary and still be aligned. */
+        private const val MAX_SHIFT = 3
+
         /** Number of leading words [a] and [b] share under [normalise]. */
         fun agreedPrefix(a: List<String>, b: List<String>): Int {
             val n = minOf(a.size, b.size)

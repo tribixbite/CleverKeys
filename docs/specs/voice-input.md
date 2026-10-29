@@ -201,8 +201,41 @@ contain the current language, else the first installed one.
 ### Phase 3 — outstanding
 - [ ] Device test (Saga/Pixel): permission flow, latency, RSS, composing behaviour in Chrome,
       Termux (append-only), RustDesk, inline fields, TalkBack
+  Done 2026-10-29 on the second Saga (Android 13, release of this branch; the other Saga was off
+  the network, the Pixel and RustDesk were not tested; TalkBack not driven): see below.
 - [ ] Upload `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` to the `langpacks` release
-- [ ] Voice activity detection / endpointing to bound re-decodes on long utterances
+- [ ] Voice activity detection / endpointing: end a segment at a pause and keep listening, so a
+      period is not capped at the engine's `maxUtteranceSeconds` (30 s for Moonshine tiny)
+
+### Device test 2026-10-29 (Saga, real microphone)
+LibriSpeech test-clean clips played through the phone's own speaker from a Chrome tab while the
+keyboard listened in another field (no audio file on the phone; acoustic path speaker → mic).
+- Permission: `RECORD_AUDIO` declared, `granted=false` after install and after opening Settings;
+  the prompt appears only on the switch (Settings' own request) or a key press (the transparent
+  activity); deny keeps the switch off with a toast; "don't ask again" → the bar explains and a
+  second press opens the app's system page. Import: 45 MB pack in ~3 s; a one-byte-changed
+  `encoder.ort` is refused (checksum), an unknown engine id is refused ("needs a newer version").
+- Tap → microphone open 0.25–0.33 s (engine load 112 ms); partials every ~1.0 s, the first
+  ~0.2–1.4 s after speech starts; final ~1 s after stop. WER through the speaker: 0/12 (one
+  clip), 1/57 and 14/68 (two 4-clip, ~24 s sessions) = 15/125 (12 %) vs 4.0 % on the clean JVM
+  path — the loss is acoustic. Keyboard process RSS 350 MB idle with the model → 394 MB (7 s),
+  484/524 MB (24 s); CPU ≈ 0.45–0.6 of one core while listening. The mic indicator turns off on
+  stop, cancel, keyboard hide, field change and auto-stop (AudioService `rec stop` events).
+- Fields: Chrome textarea (composing partials, committed finals); Termux (append-only, no
+  composing, one clean line); CleverKeys clipboard search (inline; the app field untouched);
+  Settings search. Password field: refused, no microphone.
+- Bugs found and fixed on this branch: (1) a recognition pass on the capture thread overran the
+  recorder's 4 s ring after ~35 s ("RecordThread: buffer overflow" ×5, sentences lost) →
+  `BufferedPcmSource` + the engine decodes a backlog once; (2) beyond ~40 s Moonshine tiny loops
+  ("some use of some use of…") → `SpeechEngine.maxUtteranceSeconds`, 30 s for Moonshine (34.7 s:
+  2/89 errors; 46 s: 151/125); (3) a long partial pushed the bar's ✕ off screen and long bar
+  messages were cut off ("tap again" unreadable) → measured at the viewport, two lines;
+  (4) the password refusal was silent (bar messages are ignored in password mode; a toast is
+  dropped when notifications are off) → a notice in the password bar; (5) a pass that inserted
+  a word before the committed boundary repeated the last committed word ("after all. all.") →
+  `HypothesisStabilizer` aligns a pass's tail on the last committed words.
+- Known: when the field changes while words are underlined, Chrome keeps the composing words as
+  typed text (as it does for typed composing text).
 
 ## Testing Strategy
 
