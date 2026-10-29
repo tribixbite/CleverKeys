@@ -118,6 +118,7 @@ class SpaceCommitPreviewTest {
         config.context_source = Defaults.CONTEXT_SOURCE
         config.personalization_weight = Defaults.PERSONALIZATION_WEIGHT
         config.secondary_prediction_weight = Defaults.SECONDARY_PREDICTION_WEIGHT
+        config.autocorrect_tuning = null // null = AutocorrectTuning.DEFAULT
     }
 
     // ── helpers ───────────────────────────────────────────────────────────
@@ -200,6 +201,40 @@ class SpaceCommitPreviewTest {
                     plan.highlighted() == null || plan.highlighted() == typed)
             }
         }
+    }
+
+    // ── "Complete the word" (round 7, eval doc §19): the bar follows what space commits ──
+
+    /**
+     * The unoffered rule-C7 seam (round 7 failed DEV, eval doc §19.5): if a completion is ever
+     * what space commits, the bar's "what space commits" path centres it bold with no extra code.
+     */
+    @Test
+    fun completeTheWord_barCentresTheCompletionBoldOnALook() {
+        config.autocorrect_tuning = AutocorrectTuning.DEFAULT.copy(
+            channel = AutocorrectTuning.DEFAULT.channel.copy(unfinishedWordMode = UnfinishedWordMode.COMPLETE))
+        val commit = resolve("tomorr")
+        assertEquals(SpaceCommit(SpaceCommit.Kind.AUTOCORRECT, "tomorrow"), commit)
+        val plan = planFor("tomorr", commit)
+        assertEquals("tomorrow", plan.highlighted())
+        // A look bar (Gboard-style, three slots) centres the highlighted entry and draws it bold.
+        val bar = tribixbite.cleverkeys.theme.LookBar(slots = 3)
+        val entries = plan.words.map { Suggestion.parse(it) }
+        val slots = tribixbite.cleverkeys.theme.LookBarArrangement.arrange(entries, plan.highlightIndex, "tomorr", bar)!!
+        val centre = slots.single { it.centre }
+        assertEquals(plan.highlightIndex, centre.entry)
+        val commitIndex = tribixbite.cleverkeys.theme.LookBarArrangement.commitIndex(plan.highlightIndex, nextWordOnly = false)
+        assertEquals(centre.entry, commitIndex)
+        assertTrue(tribixbite.cleverkeys.theme.LookBarArrangement.paint(bar, centre = true, commit = true).bold)
+    }
+
+    @Test
+    fun keepWhatITyped_barHighlightsNoCompletionForAnUnfinishedWord() {
+        // The shipped choice: space keeps `tomorr`, so no completion may be highlighted.
+        val commit = resolve("tomorr")
+        assertEquals(SpaceCommit(SpaceCommit.Kind.KEEP, "tomorr"), commit)
+        val plan = planFor("tomorr", commit)
+        assertNull(plan.highlightIndex?.takeIf { plan.words[it] != "tomorr" })
     }
 
     // ── no correction → no replacement highlighted ────────────────────────

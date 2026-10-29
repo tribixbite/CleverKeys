@@ -22,6 +22,7 @@ import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
 import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
 import tribixbite.cleverkeys.autocorrect.ShortDeletionScope
+import tribixbite.cleverkeys.autocorrect.UnfinishedWordMode
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys
 import tribixbite.cleverkeys.autocorrect.ChannelWeights
@@ -577,6 +578,33 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
         }
     )
 
+    // "Unfinished Words" (round 7, eval doc §19): choice 1 keeps an unfinished word (rule ρ, the
+    // default), Off is the stack before round 6. "Complete the word" failed round 7's DEV gates
+    // (§19.5) and is not offered. The selected choice's one-line explanation follows the title's.
+    val modes = UnfinishedWordMode.OFFERED
+    val modeLabel = { m: UnfinishedWordMode ->
+        when (m) {
+            UnfinishedWordMode.KEEP -> R.string.autocorrect_unfinished_word_mode_keep
+            UnfinishedWordMode.OFF -> R.string.autocorrect_max_correction_cost_off
+            UnfinishedWordMode.COMPLETE -> error("not offered (eval doc §19.5)")
+        }
+    }
+    val modeExplanation = when (weights.unfinishedWordMode) {
+        UnfinishedWordMode.OFF -> R.string.autocorrect_unfinished_word_mode_off_desc
+        else -> R.string.autocorrect_unfinished_word_mode_keep_desc
+    }
+    SettingsDropdown(
+        title = stringResource(R.string.autocorrect_unfinished_word_mode_title),
+        description = stringResource(R.string.autocorrect_unfinished_word_mode_desc) + "\n" + stringResource(modeExplanation),
+        options = modes.map { stringResource(modeLabel(it)) },
+        selectedIndex = modes.indexOf(weights.unfinishedWordMode).coerceAtLeast(0),
+        onSelectionChange = { index ->
+            val mode = modes[index]
+            autocorrectTuning = tuning.copy(channel = weights.copy(unfinishedWordMode = mode))
+            saveSetting(Keys.UNFINISHED_WORD_MODE.key, mode.prefValue)
+        }
+    )
+
     val rhoSlider = sliders.completionCostSliderValue(weights.completionCost)
     SettingsSlider(
         title = stringResource(R.string.autocorrect_channel_completion_cost_title),
@@ -594,7 +622,9 @@ private fun SettingsActivity.ChannelRankingControls(tuning: AutocorrectTuning) {
             stringResource(R.string.autocorrect_max_correction_cost_off)
         } else {
             sliders.CHANNEL_COMPLETION_COST.format(rhoSlider)
-        }
+        },
+        // ρ is the advanced knob of "Keep what I typed"; Off ignores it.
+        enabled = weights.unfinishedWordMode == UnfinishedWordMode.KEEP
     )
 
     // Option order = ShortDeletionScope.entries order (HEBREW, ALL).

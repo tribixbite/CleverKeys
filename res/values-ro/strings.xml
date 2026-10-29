@@ -1253,6 +1253,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">Corecturile cu un cost de editare mai mare nu se fac, astfel încât un cuvânt valid care lipsește din dicționar să nu fie rescris în altul. O tastă vecină greșită costă aproximativ 1,3.</string>
     <string name="autocorrect_channel_completion_cost_title">Cost pentru cuvânt neterminat</string>
     <string name="autocorrect_channel_completion_cost_desc">Un cuvânt pe care nu l-ați terminat de scris (tomorr) rămâne cum a fost scris în loc să devină alt cuvânt (timor) când un cuvânt uzual începe așa. O valoare mai mică păstrează mai multe cuvinte neterminate; Dezactivat nu păstrează niciunul.</string>
+    <string name="autocorrect_unfinished_word_mode_title">Cuvinte neterminate</string>
+    <string name="autocorrect_unfinished_word_mode_desc">Ce face bara de spațiu după un cuvânt pe care nu l-ați terminat de scris, de exemplu tomorr.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Păstrează ce am scris</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">Bara de spațiu lasă tomorr așa cum a fost scris, în loc să îl schimbe într-un alt cuvânt (timor). Bara oferă în continuare tomorrow.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">Bara de spațiu tratează tomorr ca pe orice greșeală de tastare și îl poate schimba într-un alt cuvânt (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Dezactivat</string>
     <string name="autocorrect_short_deletion_scope_title">Costul de ștergere se aplică la</string>
     <string name="autocorrect_short_deletion_scope_desc">Prefixele ebraice de o literă fac acest cost util acolo; în engleză, o literă în plus lângă un cuvânt de două litere (tpo → to) este o greșeală reală de tastare, așa că pentru alte scrieri este dezactivat implicit.</string>

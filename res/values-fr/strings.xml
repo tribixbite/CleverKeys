@@ -1236,6 +1236,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">Les corrections au coût d\'édition plus élevé ne sont pas faites, afin qu\'un mot valide absent du dictionnaire ne soit pas réécrit en un autre. Une touche voisine erronée coûte environ 1,3.</string>
     <string name="autocorrect_channel_completion_cost_title">Coût d\'un mot inachevé</string>
     <string name="autocorrect_channel_completion_cost_desc">Un mot que vous n\'avez pas fini de taper (tomorr) reste tel quel au lieu de devenir un autre mot (timor) lorsqu\'un mot courant commence ainsi. Plus bas garde davantage de mots inachevés ; Désactivé n\'en garde aucun.</string>
+    <string name="autocorrect_unfinished_word_mode_title">Mots inachevés</string>
+    <string name="autocorrect_unfinished_word_mode_desc">Ce que fait la barre d\'espace après un mot que vous n\'avez pas fini de taper, comme tomorr.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Garder ce que j\'ai tapé</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">La barre d\'espace laisse tomorr tel quel au lieu de le changer en un autre mot (timor). La barre propose toujours tomorrow.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">La barre d\'espace traite tomorr comme n\'importe quelle faute de frappe et peut le changer en un autre mot (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Désactivé</string>
     <string name="autocorrect_short_deletion_scope_title">Coût de suppression appliqué à</string>
     <string name="autocorrect_short_deletion_scope_desc">Les préfixes hébreux d\'une lettre rendent ce coût utile en hébreu ; en anglais, une lettre en trop à côté d\'un mot de deux lettres (tpo → to) est une vraie faute de frappe, donc il est désactivé par défaut pour les autres écritures.</string>

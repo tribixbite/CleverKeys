@@ -292,6 +292,25 @@ object Defaults {
      */
     // TODO(2026-10-27): expose as a Ranking & Tuning slider if a user ever needs it (2 strings × 22 files).
     const val AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH = 3
+    /**
+     * "Unfinished words" (round 7, eval doc §19): `keep` = rule ρ (the default, maintainer
+     * decision 2026-10-29), `off` = no ρ step. `complete` (rule C7) failed round 7's DEV gates and
+     * is not offered (§19.5).
+     */
+    const val AUTOCORRECT_UNFINISHED_WORD_MODE = "keep"
+    // Rule C7's constants (eval doc §19.1), used only by the unoffered `complete` seam. Round 7's
+    // DEV admitted no configuration, so none was chosen; they sit at the grid's most conservative
+    // corner (μ 64, G 3, L₂ 5, flags off).
+    /** L₂: shortest typed word "Complete the word" finishes. */
+    const val AUTOCORRECT_COMPLETE_MIN_LENGTH = 5
+    /** G: most letters a completion may add. */
+    const val AUTOCORRECT_COMPLETE_MAX_GAP = 3
+    /** μ: rank steps the best completion must lead the second by. */
+    const val AUTOCORRECT_COMPLETE_MARGIN = 64f
+    /** Flag B: also finish a word kept for want of a correction (no candidate, κ, floor). */
+    const val AUTOCORRECT_COMPLETE_WHEN_UNCORRECTED = false
+    /** Flag W: also replace a winner that is itself a rarer completion. */
+    const val AUTOCORRECT_COMPLETE_OVER_COMPLETION = false
 
     // Issue #72: Auto-capitalize "I" and its contractions
     // When enabled, automatically capitalizes "i", "i'm", "i'll", "i'd", "i've"

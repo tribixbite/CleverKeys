@@ -1218,6 +1218,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">编辑代价高于此值的纠错不会执行,这样词典中没有的正确单词不会被改写成别的单词。按错一个相邻键约为 1.3。</string>
     <string name="autocorrect_channel_completion_cost_title">未完成单词成本</string>
     <string name="autocorrect_channel_completion_cost_desc">当常用词以你未输完的单词（tomorr）开头时，该单词按输入保留，而不会被改成另一个词（timor）。数值越低，保留的未完成单词越多；关闭则从不保留。</string>
+    <string name="autocorrect_unfinished_word_mode_title">未写完的单词</string>
+    <string name="autocorrect_unfinished_word_mode_desc">在没有输完的单词（如 tomorr）之后按空格时的行为。</string>
+    <string name="autocorrect_unfinished_word_mode_keep">保留我输入的内容</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">空格会保留 tomorr 原样，而不是改成另一个单词（timor）。候选栏仍会提供 tomorrow。</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">空格把 tomorr 当作普通拼写错误，可能把它改成另一个单词（timor）。</string>
     <string name="autocorrect_max_correction_cost_off">关闭</string>
     <string name="autocorrect_short_deletion_scope_title">删除代价的适用范围</string>
     <string name="autocorrect_short_deletion_scope_desc">希伯来语的单字母前缀让这项代价在那里有用;在英语中,两字母单词旁多出的字母(tpo → to)是真正的打字错误,所以其他文字默认关闭。</string>

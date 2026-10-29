@@ -13,6 +13,7 @@ import tribixbite.cleverkeys.autocorrect.ChannelWeights
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.FuzzyPrefixMatcher
 import tribixbite.cleverkeys.autocorrect.isDoubleReduction
+import tribixbite.cleverkeys.autocorrect.UnfinishedWordMode
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import tribixbite.cleverkeys.autocorrect.Morphology
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
@@ -3715,7 +3716,7 @@ class WordPredictor : Predictor {
         var index = ChannelRanker.pick(candidates, editCosts, maxFrequency, weights.frequencyWeight, weights.aliasBonus)
         if (index < 0) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' [no candidate]")
-            return typedWord
+            return completeUncorrected(typedWord, weights, frequencyFloor, maxFrequency)
         }
         // The user's own word outranks a re-doubling guess — the band path's DD-M rule ("a W the
         // user added by hand keeps it"): with `help` added by hand, `helo` stays `help` rather
@@ -3751,9 +3752,12 @@ class WordPredictor : Predictor {
         // ρ (round 6, eval doc §16): a typed word that is the start of a dictionary word may be
         // unfinished (`tomorr` → `tomorrow`, not `timor`). Keep it when believing so is no worse
         // than the winner, unless the winner itself completes the typed word (`thi` → `this`).
-        if (weights.completionCost != Float.POSITIVE_INFINITY &&
+        // "Unfinished words" = Off (round 7, eval doc §19) skips this step: the stack before round 6.
+        val winnerCompletes = winner.word.startsWith(lowerTyped)
+        if (weights.unfinishedWordMode != UnfinishedWordMode.OFF &&
+            weights.completionCost != Float.POSITIVE_INFINITY &&
             lowerTyped.length >= weights.completionMinLength &&
-            !winner.word.startsWith(lowerTyped)
+            !winnerCompletes
         ) {
             val completionFrequency = bestCompletionFrequency(lowerTyped)
             if (completionFrequency > 0) {
@@ -3762,6 +3766,12 @@ class WordPredictor : Predictor {
                 if (keepCost <= winnerCost) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT skip (unfinished word, " +
                         "keep=${"%.3f".format(keepCost)} <= ${winner.word}=${"%.3f".format(winnerCost)}): '$typedWord'")
+                    // "Complete the word" (rule C7 case a): finish it when the completion is confident.
+                    if (weights.unfinishedWordMode == UnfinishedWordMode.COMPLETE) {
+                        confidentCompletion(lowerTyped, weights, frequencyFloor, maxFrequency)?.let {
+                            return finalizeCorrection(typedWord, it)
+                        }
+                    }
                     return typedWord
                 }
             }
@@ -3770,12 +3780,18 @@ class WordPredictor : Predictor {
         if (editCosts[index] > weights.maxCorrectionCost) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
                 "[best='${winner.word}' edit=${"%.3f".format(editCosts[index])} > max=${weights.maxCorrectionCost}]")
-            return typedWord
+            return completeUncorrected(typedWord, weights, frequencyFloor, maxFrequency)
         }
         if (winner.frequency < frequencyFloor && winner.word !in customAndUserWords) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT-REJECT (channel): '$typedWord' " +
                 "[best='${winner.word}' freq=${winner.frequency} < floor=$frequencyFloor]")
-            return typedWord
+            return completeUncorrected(typedWord, weights, frequencyFloor, maxFrequency)
+        }
+        // Rule C7 case c (flag W): the winner is a completion, but a confident, more frequent one wins.
+        if (winnerCompletes && weights.unfinishedWordMode == UnfinishedWordMode.COMPLETE && weights.completeOverCompletion) {
+            confidentCompletion(lowerTyped, weights, frequencyFloor, maxFrequency)
+                ?.takeIf { it != winner.word }
+                ?.let { return finalizeCorrection(typedWord, it) }
         }
         val corrected = finalizeCorrection(typedWord, winner.word)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (channel): '$typedWord' → '$corrected' " +
@@ -3789,23 +3805,89 @@ class WordPredictor : Predictor {
      * the prefix index's bucket for the first [PREFIX_INDEX_MAX_LENGTH] letters; a predictor
      * without an index (test fixtures built by reflection) scans the dictionary.
      */
-    internal fun bestCompletionFrequency(lowerTyped: String): Int {
+    internal fun bestCompletionFrequency(lowerTyped: String): Int = completionsOf(lowerTyped).bestFrequency
+
+    /**
+     * The two most frequent enabled dictionary words that strictly extend a typed word: [best]
+     * (ties: the alphabetically first) with [bestFrequency], and the runner-up's
+     * [secondFrequency] (0 when there is at most one completion). Rule ρ reads [bestFrequency];
+     * rule C7 also reads [best] and the lead over [secondFrequency] (eval doc §19.1).
+     */
+    internal data class Completions(val best: String?, val bestFrequency: Int, val secondFrequency: Int)
+
+    /**
+     * [Completions] of [lowerTyped]. Reads the prefix index's bucket for the first
+     * [PREFIX_INDEX_MAX_LENGTH] letters; a predictor without an index (test fixtures built by
+     * reflection) scans the dictionary.
+     */
+    internal fun completionsOf(lowerTyped: String): Completions {
         val dict = dictionary.get()
         // The field is null only on an Objenesis-built predictor (constructor skipped).
         @Suppress("USELESS_CAST")
         val index = (prefixIndex as AtomicReference<MutableMap<String, MutableSet<String>>>?)?.get()
         val bucket: Collection<String> =
             if (index.isNullOrEmpty()) dict.keys
-            else index[lowerTyped.take(PREFIX_INDEX_MAX_LENGTH)] ?: return 0
-        var best = 0
+            else index[lowerTyped.take(PREFIX_INDEX_MAX_LENGTH)] ?: return Completions(null, 0, 0)
+        var best: String? = null
+        var bestFreq = 0
+        var second = 0
         for (word in bucket) {
             if (word.length <= lowerTyped.length || !word.startsWith(lowerTyped)) continue
             val freq = dict[word] ?: continue
-            if (freq <= best) continue
+            // Below the runner-up it can change nothing (skips the disabled-word lookup).
+            if (freq <= 0 || freq < second) continue
             if (disabledWords.isNotEmpty() && isWordDisabled(word)) continue
-            best = freq
+            val current = best
+            if (current == null || freq > bestFreq || (freq == bestFreq && word < current)) {
+                if (current != null) second = bestFreq // the previous best becomes the runner-up
+                best = word
+                bestFreq = freq
+            } else if (freq > second) {
+                second = freq
+            }
         }
+        return Completions(best, bestFreq, second)
+    }
+
+    /**
+     * Rule C7's completion (round 7, eval doc §19.1): the most frequent completion of
+     * [lowerTyped] when it is confident — the typed word has at least `completeMinLength` letters,
+     * the completion adds at most `completeMaxGap` letters, clears the frequency floor (or is the
+     * user's own word) and leads the second completion by at least `completeMargin` rank steps.
+     * Null otherwise.
+     */
+    internal fun confidentCompletion(
+        lowerTyped: String,
+        weights: ChannelWeights,
+        frequencyFloor: Int,
+        maxFrequency: Int,
+    ): String? {
+        if (lowerTyped.length < weights.completeMinLength) return null
+        val c = completionsOf(lowerTyped)
+        val best = c.best ?: return null
+        if (best.length - lowerTyped.length > weights.completeMaxGap) return null
+        if (c.bestFrequency < frequencyFloor && best !in customAndUserWords) return null
+        if (c.secondFrequency > 0 &&
+            ChannelRanker.rankSteps(c.secondFrequency, maxFrequency) -
+            ChannelRanker.rankSteps(c.bestFrequency, maxFrequency) < weights.completeMargin
+        ) return null
         return best
+    }
+
+    /**
+     * The channel path's "no correction" exit: the typed word, or under "Complete the word" with
+     * flag B (rule C7 case b) its confident completion.
+     */
+    private fun completeUncorrected(
+        typedWord: String,
+        weights: ChannelWeights,
+        frequencyFloor: Int,
+        maxFrequency: Int,
+    ): String {
+        if (weights.unfinishedWordMode != UnfinishedWordMode.COMPLETE || !weights.completeWhenUncorrected) return typedWord
+        val completion = confidentCompletion(typedWord.lowercase(), weights, frequencyFloor, maxFrequency) ?: return typedWord
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (complete, uncorrected): '$typedWord' → '$completion'")
+        return finalizeCorrection(typedWord, completion)
     }
 
     /** Step-5 commit test: clears the frequency floor, or is the user's own word (AC-2). */

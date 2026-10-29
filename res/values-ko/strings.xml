@@ -1220,6 +1220,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">이보다 편집 비용이 큰 교정은 하지 않으므로, 사전에 없는 올바른 단어가 다른 단어로 바뀌지 않습니다. 이웃 키 하나를 잘못 누르면 약 1.3입니다.</string>
     <string name="autocorrect_channel_completion_cost_title">미완성 단어 비용</string>
     <string name="autocorrect_channel_completion_cost_desc">입력을 끝내지 않은 단어(tomorr)가 흔한 단어의 앞부분이면 다른 단어(timor)로 바뀌지 않고 입력한 그대로 남습니다. 낮을수록 미완성 단어를 더 많이 남기며, 끔으로 두면 남기지 않습니다.</string>
+    <string name="autocorrect_unfinished_word_mode_title">완성되지 않은 단어</string>
+    <string name="autocorrect_unfinished_word_mode_desc">tomorr처럼 입력을 끝내지 않은 단어 뒤에서 스페이스가 하는 동작입니다.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">입력한 그대로 유지</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">스페이스는 tomorr를 다른 단어(timor)로 바꾸지 않고 입력한 그대로 둡니다. 추천 바에는 계속 tomorrow가 표시됩니다.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">스페이스는 tomorr를 일반 오타처럼 처리하며 다른 단어(timor)로 바꿀 수 있습니다.</string>
     <string name="autocorrect_max_correction_cost_off">끔</string>
     <string name="autocorrect_short_deletion_scope_title">삭제 비용 적용 범위</string>
     <string name="autocorrect_short_deletion_scope_desc">히브리어의 한 글자 접두사 때문에 이 비용이 유용합니다. 영어에서는 두 글자 단어 옆의 여분 글자(tpo → to)가 실제 오타이므로 다른 문자에서는 기본적으로 꺼져 있습니다.</string>

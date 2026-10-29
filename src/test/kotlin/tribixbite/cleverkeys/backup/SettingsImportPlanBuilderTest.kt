@@ -27,6 +27,30 @@ class SettingsImportPlanBuilderTest {
     private val screen = ScreenMetrics(width = 1080, height = 2400, density = 3.0f)
 
     @Test
+    fun unfinishedWordMode_backupRoundTripsEveryOfferedChoiceAndRejectsOthers() {
+        val key = tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys.UNFINISHED_WORD_MODE.key
+        assertThat(key).isEqualTo("autocorrect_unfinished_word_mode")
+        assertThat(SETTINGS_DEFAULTS[key]).isEqualTo(PrefValue.Str("keep"))
+        for (mode in tribixbite.cleverkeys.autocorrect.UnfinishedWordMode.OFFERED) {
+            val (obj, _) = SettingsExporter.buildPreferencesJson(mapOf(key to mode.prefValue))
+            // The device currently holds the other choice, so the import is a real change (an
+            // absent key reads as the default "keep", which would make importing "keep" a no-op).
+            val other = tribixbite.cleverkeys.autocorrect.UnfinishedWordMode.OFFERED.first { it != mode }.prefValue
+            val plan = SettingsImportPlanBuilder.fromJson("""{"preferences":$obj}""", mapOf(key to other), screen)
+            assertThat(plan.changes.single().proposed).isEqualTo(PrefValue.Str(mode.prefValue))
+            assertThat(plan.parseSkippedKeys).isEmpty()
+        }
+        // "complete" (round 7, failed DEV — eval doc §19.5) is not offered, so a backup cannot set it.
+        for (v in listOf("always", "complete")) {
+            val bogus = SettingsImportPlanBuilder.fromJson("""{"preferences":{"$key":"$v"}}""", emptyMap(), screen)
+            assertThat(bogus.changes).isEmpty()
+            assertThat(bogus.parseSkippedKeys.map { it.key }).contains(key)
+        }
+        assertThat(SettingsValidation.validate(key, PrefValue.Bool(true))).isNotNull()
+    }
+
+
+    @Test
     fun emptyDelta_whenJsonMatchesCurrentSnapshot() {
         val json = """{"metadata":{"app_version":"1.4.0","screen_width":1080,"screen_height":2400},"preferences":{"key_height":50}}"""
         val current = mapOf<String, Any?>("key_height" to 50)

@@ -44,6 +44,43 @@ enum class ShortDeletionScope(val prefValue: String) {
 }
 
 /**
+ * What space does with a typed word that is the start of a dictionary word (`tomorr` of
+ * `tomorrow`) when the channel ranking would otherwise rewrite it into a different word (round 6
+ * and round 7, eval doc §16–§19). One user setting, "Unfinished words".
+ */
+enum class UnfinishedWordMode(val prefValue: String) {
+    /** Rule ρ: keep the typed word when believing it unfinished is no worse than the correction. */
+    KEEP("keep"),
+    /**
+     * Rule C7 (round 7, §19.1): where [KEEP] would keep the word — and, per its flags, where no
+     * correction is made or the winner is a rarer completion — commit the most frequent
+     * completion when it is confident (Gboard-like: `tomorr` → `tomorrow`).
+     *
+     * NOT OFFERED: no configuration passed round 7's DEV gates (eval doc §19.5: at most 14.5 %
+     * completion accuracy where 20 % was required, with ≤ 15 % wrong completions). It is not in
+     * [OFFERED], so no setting, backup or pref can select it; it stays as the evaluation seam
+     * `ChannelRankingEval` replays and its soundness check runs against.
+     */
+    // TODO(2026-10-29): re-run round 7 only with a new stated reason (e.g. a context-aware completion score).
+    COMPLETE("complete"),
+    /** The stack before round 6: no unfinished-word step (ρ = ∞). */
+    OFF("off");
+
+    companion object {
+        /** The choices the setting offers, in display order (round 7 failed DEV for [COMPLETE]). */
+        val OFFERED: List<UnfinishedWordMode> = listOf(KEEP, OFF)
+
+        /**
+         * Unknown, missing or not-[OFFERED] pref strings fall back to
+         * [Defaults.AUTOCORRECT_UNFINISHED_WORD_MODE].
+         */
+        fun fromPref(value: String?): UnfinishedWordMode =
+            OFFERED.firstOrNull { it.prefValue == value }
+                ?: OFFERED.first { it.prefValue == Defaults.AUTOCORRECT_UNFINISHED_WORD_MODE }
+    }
+}
+
+/**
  * Rule C's edit weights (eval doc §1.1). A substitution `a → b` costs
  * `1 + distanceCost · keyDistance(a, b)` with `keyDistance ∈ [0, 1]`; one wrong key at the
  * nearest position is the unit every other weight is measured against.
@@ -73,6 +110,15 @@ enum class ShortDeletionScope(val prefValue: String) {
  *   if `ρ + λ · rank(most frequent completion)` is no worse than the winner's total cost and the
  *   winner is not itself a completion (round 6, eval doc §16–§18). [Float.POSITIVE_INFINITY] = off.
  * @property completionMinLength the shortest typed word ρ applies to (round 6, eval doc §17).
+ * @property unfinishedWordMode the "Unfinished words" choice ([UnfinishedWordMode]); [UnfinishedWordMode.OFF]
+ *   ignores ρ, [UnfinishedWordMode.COMPLETE] uses ρ to decide that the word is unfinished.
+ * @property completeMinLength L₂ — the shortest typed word [UnfinishedWordMode.COMPLETE] finishes.
+ * @property completeMaxGap G — the most letters a completion may add ([Int.MAX_VALUE] = any).
+ * @property completeMargin μ — rank steps by which the best completion must be more frequent than
+ *   the second ("clearly more likely").
+ * @property completeWhenUncorrected flag B — also finish a word the channel path keeps for want of
+ *   a correction (no candidate, κ, or the frequency floor).
+ * @property completeOverCompletion flag W — also replace a winner that is itself a rarer completion.
  */
 data class ChannelWeights(
     val distanceCost: Float = Defaults.AUTOCORRECT_CHANNEL_DISTANCE_COST,
@@ -87,6 +133,12 @@ data class ChannelWeights(
     val inflectionCost: Float = inflectionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST),
     val completionCost: Float = completionCostFromPref(Defaults.AUTOCORRECT_CHANNEL_COMPLETION_COST),
     val completionMinLength: Int = Defaults.AUTOCORRECT_CHANNEL_COMPLETION_MIN_LENGTH,
+    val unfinishedWordMode: UnfinishedWordMode = UnfinishedWordMode.fromPref(Defaults.AUTOCORRECT_UNFINISHED_WORD_MODE),
+    val completeMinLength: Int = Defaults.AUTOCORRECT_COMPLETE_MIN_LENGTH,
+    val completeMaxGap: Int = Defaults.AUTOCORRECT_COMPLETE_MAX_GAP,
+    val completeMargin: Float = Defaults.AUTOCORRECT_COMPLETE_MARGIN,
+    val completeWhenUncorrected: Boolean = Defaults.AUTOCORRECT_COMPLETE_WHEN_UNCORRECTED,
+    val completeOverCompletion: Boolean = Defaults.AUTOCORRECT_COMPLETE_OVER_COMPLETION,
 ) {
     companion object {
         /**
@@ -214,6 +266,8 @@ data class AutocorrectTuning(
             Defaults.AUTOCORRECT_CHANNEL_INFLECTION_COST, 0f..ChannelWeights.INFLECTION_ALWAYS_KEEP)
         val CHANNEL_COMPLETION_COST = FloatKey("autocorrect_channel_completion_cost",
             Defaults.AUTOCORRECT_CHANNEL_COMPLETION_COST, 0f..ChannelWeights.COMPLETION_OFF)
+        val UNFINISHED_WORD_MODE = StringKey("autocorrect_unfinished_word_mode",
+            Defaults.AUTOCORRECT_UNFINISHED_WORD_MODE, UnfinishedWordMode.OFFERED.map { it.prefValue })
 
         val FLOATS = listOf(BAND_GAP, TRANSPOSITION_PENALTY, MIN_EXACT_RATIO, LENGTH_EDIT_BUDGET,
             CHANNEL_DISTANCE_COST, CHANNEL_INDEL_COST, CHANNEL_DOUBLE_COST, CHANNEL_TRANSPOSITION_COST,
@@ -221,7 +275,7 @@ data class AutocorrectTuning(
             CHANNEL_INFLECTION_COST, CHANNEL_COMPLETION_COST)
         val INTS = listOf(MAX_SUBSTITUTIONS, DROPPED_DOUBLE_MARGIN, INFLECTION_GUARD_MIN_STEM)
         val BOOLS = listOf(DROPPED_DOUBLE_ENABLED, ELONGATION_COLLAPSE_ENABLED, INFLECTION_GUARD_ENABLED)
-        val STRINGS = listOf(RANKING, CHANNEL_SHORT_DELETION_SCOPE)
+        val STRINGS = listOf(RANKING, CHANNEL_SHORT_DELETION_SCOPE, UNFINISHED_WORD_MODE)
 
         /** Every key above, for "reset to defaults" and backup classification. */
         val ALL_KEYS: List<String> =
@@ -271,6 +325,7 @@ data class AutocorrectTuning(
                     maxCorrectionCost = ChannelWeights.maxCorrectionCostFromPref(f(Keys.CHANNEL_MAX_CORRECTION_COST)),
                     inflectionCost = ChannelWeights.inflectionCostFromPref(f(Keys.CHANNEL_INFLECTION_COST)),
                     completionCost = ChannelWeights.completionCostFromPref(f(Keys.CHANNEL_COMPLETION_COST)),
+                    unfinishedWordMode = UnfinishedWordMode.fromPref(s(Keys.UNFINISHED_WORD_MODE)),
                 ),
             )
         }

@@ -145,6 +145,69 @@ class AutoCorrectEndToEndTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
+    // Round 7: the "Unfinished words" choice (eval doc §19, maintainer 2026-10-29)
+    // ─────────────────────────────────────────────────────────────────────
+
+    private fun withMode(mode: UnfinishedWordMode) = AutocorrectTuning.DEFAULT.copy(
+        channel = AutocorrectTuning.DEFAULT.channel.copy(unfinishedWordMode = mode))
+
+    @Test
+    fun unfinishedWordMode_keepWhatITypedIsTheDefault() {
+        assertEquals(UnfinishedWordMode.KEEP, AutocorrectTuning.DEFAULT.channel.unfinishedWordMode)
+        assertEquals(UnfinishedWordMode.KEEP, UnfinishedWordMode.fromPref(null))
+        assertEquals(UnfinishedWordMode.KEEP, UnfinishedWordMode.fromPref("bogus"))
+        for (m in UnfinishedWordMode.OFFERED) assertEquals(m, UnfinishedWordMode.fromPref(m.prefValue))
+        // Round 7 failed DEV (eval doc §19.5): "complete" is not a selectable choice.
+        assertEquals(listOf(UnfinishedWordMode.KEEP, UnfinishedWordMode.OFF), UnfinishedWordMode.OFFERED)
+        assertEquals(UnfinishedWordMode.KEEP, UnfinishedWordMode.fromPref("complete"))
+        assertEquals(predictor.autoCorrect("tomorr", withMode(UnfinishedWordMode.KEEP)), predictor.autoCorrect("tomorr"))
+        assertEquals("tomorr", predictor.autoCorrect("tomorr"))
+    }
+
+    /** The unoffered rule-C7 seam (eval doc §19.1), as `ChannelRankingEval` replays it. */
+    @Test
+    fun unfinishedWordMode_completeSeamCommitsTheConfidentCompletion() {
+        val complete = withMode(UnfinishedWordMode.COMPLETE)
+        // The maintainer's examples (§19, named for choice 2).
+        assertEquals("tomorrow", predictor.autoCorrect("tomorr", complete))
+        assertEquals("Tomorrow", predictor.autoCorrect("Tomorr", complete))
+        assertEquals("because", predictor.autoCorrect("becau", complete))
+        // Real corrections are untouched: C7 only acts where choice 1 keeps the typed word.
+        for ((typo, want) in listOf("kne" to "one", "tfe" to "the", "devixe" to "device", "helo" to "hello",
+            "thier" to "their", "donr" to "don't", "caf" to "car", "resta" to "rest")) {
+            assertEquals(typo, want, predictor.autoCorrect(typo, complete))
+        }
+        // A dictionary word is never completed (step 1 returns it first).
+        assertEquals("rest", predictor.autoCorrect("rest", complete))
+        assertEquals("tomato", predictor.autoCorrect("tomato", complete))
+    }
+
+    @Test
+    fun unfinishedWordMode_offIsTheStackBeforeRound6() {
+        val off = withMode(UnfinishedWordMode.OFF)
+        val rhoOff = withCompletionCost(Float.POSITIVE_INFINITY)
+        for (w in listOf("tomorr", "becau", "restau", "caf", "resta", "kne", "tomo", "beautif", "devixe", "helo",
+            "shated", "questin", "thier", "authe", "contin", "simplist")) {
+            assertEquals(w, predictor.autoCorrect(w, rhoOff), predictor.autoCorrect(w, off))
+        }
+        assertEquals("timor", predictor.autoCorrect("tomorr", off))
+        // Off ignores the Unfinished Word Cost slider: ρ = 1.5 stays without effect.
+        assertEquals("timor", predictor.autoCorrect("tomorr", off.copy(channel = off.channel.copy(completionCost = 1.5f))))
+    }
+
+    @Test
+    fun completionsOf_bestAndRunnerUp() {
+        val dict = ShippedTapDictionary.frequencies()
+        val c = predictor.completionsOf("tomorr")
+        assertEquals("tomorrow", c.best)
+        assertEquals(dict.getValue("tomorrow"), c.bestFrequency)
+        assertEquals(c.bestFrequency, predictor.bestCompletionFrequency("tomorr"))
+        val runnerUp = dict.filter { (w, f) -> w.length > 6 && w.startsWith("tomorr") && w != "tomorrow" && f > 0 }.values.maxOrNull() ?: 0
+        assertEquals(runnerUp, c.secondFrequency)
+        assertEquals(WordPredictor.Completions(null, 0, 0), predictor.completionsOf("zqxj"))
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
     // AC-4: possessive-typo — correct the BASE, re-append the suffix
     // ─────────────────────────────────────────────────────────────────────
 

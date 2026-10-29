@@ -1237,6 +1237,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">Labojumi ar lielākām rediģēšanas izmaksām netiek veikti, lai vārdnīcā trūkstošs derīgs vārds netiktu pārrakstīts par citu. Viens nepareizs blakus taustiņš maksā apmēram 1,3.</string>
     <string name="autocorrect_channel_completion_cost_title">Nepabeigta vārda izmaksas</string>
     <string name="autocorrect_channel_completion_cost_desc">Vārds, kuru neesat pabeidzis rakstīt (tomorr), paliek kā ierakstīts, nevis kļūst par citu vārdu (timor), ja ar to sākas bieži lietots vārds. Zemāka vērtība saglabā vairāk nepabeigtu vārdu; Izslēgts nesaglabā nevienu.</string>
+    <string name="autocorrect_unfinished_word_mode_title">Nepabeigti vārdi</string>
+    <string name="autocorrect_unfinished_word_mode_desc">Ko atstarpe dara pēc vārda, kuru neesat pabeidzis rakstīt, piemēram, tomorr.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Paturēt to, ko ierakstīju</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">Atstarpe atstāj tomorr, kā ierakstīts, nevis maina to uz citu vārdu (timor). Josla joprojām piedāvā tomorrow.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">Atstarpe uztver tomorr kā jebkuru drukas kļūdu un var to mainīt uz citu vārdu (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Izslēgts</string>
     <string name="autocorrect_short_deletion_scope_title">Dzēšanas izmaksas attiecas uz</string>
     <string name="autocorrect_short_deletion_scope_desc">Ivrita viena burta priedēkļi padara šīs izmaksas tur noderīgas; angļu valodā lieks burts blakus divu burtu vārdam (tpo → to) ir īsta drukas kļūda, tāpēc citām rakstībām tās pēc noklusējuma ir izslēgtas.</string>

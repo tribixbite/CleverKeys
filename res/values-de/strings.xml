@@ -1243,6 +1243,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">Korrekturen mit höheren Bearbeitungskosten werden nicht ausgeführt, damit ein gültiges Wort, das im Wörterbuch fehlt, nicht in ein anderes umgeschrieben wird. Eine falsche Nachbartaste kostet etwa 1,3.</string>
     <string name="autocorrect_channel_completion_cost_title">Kosten für unfertige Wörter</string>
     <string name="autocorrect_channel_completion_cost_desc">Ein noch nicht fertig getipptes Wort (tomorr) bleibt wie getippt, statt zu einem anderen Wort (timor) zu werden, wenn ein häufiges Wort damit beginnt. Niedriger behält mehr unfertige Wörter; Aus behält keine.</string>
+    <string name="autocorrect_unfinished_word_mode_title">Unfertige Wörter</string>
+    <string name="autocorrect_unfinished_word_mode_desc">Was die Leertaste nach einem noch nicht fertig getippten Wort wie tomorr tut.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Behalten, was ich getippt habe</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">Die Leertaste lässt tomorr wie getippt, statt es in ein anderes Wort (timor) zu ändern. Die Leiste bietet weiterhin tomorrow an.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">Die Leertaste behandelt tomorr wie jeden Tippfehler und kann es in ein anderes Wort (timor) ändern.</string>
     <string name="autocorrect_max_correction_cost_off">Aus</string>
     <string name="autocorrect_short_deletion_scope_title">Kürzungskosten gelten für</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebräische Ein-Buchstaben-Präfixe machen diese Kosten dort sinnvoll; im Englischen ist ein zusätzlicher Buchstabe neben einem Zwei-Buchstaben-Wort (tpo → to) ein echter Tippfehler, daher ist sie für andere Schriften standardmäßig aus.</string>

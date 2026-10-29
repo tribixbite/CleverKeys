@@ -1219,6 +1219,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">これより編集コストが大きい修正は行いません。辞書にない正しい単語が別の単語に書き換えられないようにします。隣のキーの打ち間違い1つは約1.3です。</string>
     <string name="autocorrect_channel_completion_cost_title">未完成の単語のコスト</string>
     <string name="autocorrect_channel_completion_cost_desc">入力途中の単語（tomorr）は、よく使われる単語がそれで始まる場合、別の単語（timor）に変えずに入力どおり残します。低いほど多くの未完成の単語を残し、オフでは残しません。</string>
+    <string name="autocorrect_unfinished_word_mode_title">未完成の単語</string>
+    <string name="autocorrect_unfinished_word_mode_desc">入力途中の単語（tomorr など）の後でスペースを押したときの動作です。</string>
+    <string name="autocorrect_unfinished_word_mode_keep">入力したとおりに残す</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">スペースは tomorr を別の単語（timor）に変えずに入力どおり残します。候補バーには引き続き tomorrow が表示されます。</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">スペースは tomorr を通常の入力ミスとして扱い、別の単語（timor）に変えることがあります。</string>
     <string name="autocorrect_max_correction_cost_off">オフ</string>
     <string name="autocorrect_short_deletion_scope_title">削除コストの適用範囲</string>
     <string name="autocorrect_short_deletion_scope_desc">ヘブライ語の1文字の接頭辞にはこのコストが役立ちます。英語では2文字の単語の横の余分な文字(tpo → to)は本当の打ち間違いなので、他の文字では既定でオフです。</string>

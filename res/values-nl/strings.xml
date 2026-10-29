@@ -1223,6 +1223,11 @@
     <string name="autocorrect_channel_max_correction_cost_desc">Correcties met hogere bewerkingskosten worden niet uitgevoerd, zodat een geldig woord dat in het woordenboek ontbreekt niet in een ander woord verandert. Eén verkeerde buurtoets kost ongeveer 1,3.</string>
     <string name="autocorrect_channel_completion_cost_title">Kosten onvoltooid woord</string>
     <string name="autocorrect_channel_completion_cost_desc">Een woord dat je nog niet af hebt getypt (tomorr) blijft zoals getypt in plaats van een ander woord te worden (timor) wanneer een veelgebruikt woord zo begint. Lager behoudt meer onvoltooide woorden; Uit behoudt er geen.</string>
+    <string name="autocorrect_unfinished_word_mode_title">Onvoltooide woorden</string>
+    <string name="autocorrect_unfinished_word_mode_desc">Wat de spatiebalk doet na een woord dat je nog niet af hebt getypt, zoals tomorr.</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Houden wat ik typte</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">De spatiebalk laat tomorr staan zoals getypt in plaats van het in een ander woord (timor) te veranderen. De balk biedt nog steeds tomorrow aan.</string>
+    <string name="autocorrect_unfinished_word_mode_off_desc">De spatiebalk behandelt tomorr als elke andere typfout en kan het in een ander woord (timor) veranderen.</string>
     <string name="autocorrect_max_correction_cost_off">Uit</string>
     <string name="autocorrect_short_deletion_scope_title">Inkortkosten gelden voor</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebreeuwse voorvoegsels van één letter maken deze kosten daar nuttig; in het Engels is een extra letter naast een woord van twee letters (tpo → to) een echte tikfout, dus voor andere schriften staat het standaard uit.</string>

@@ -188,6 +188,17 @@ class ChannelRankingEval {
         val BASE6 = AutocorrectTuning.DEFAULT.copy(
             channel = AutocorrectTuning.DEFAULT.channel.copy(completionCost = Float.POSITIVE_INFINITY))
 
+        /** The shipped default at round 7 (choice 1, "Keep what I typed", ρ shipped): its baseline (§19.2). */
+        val BASE7 = AutocorrectTuning.DEFAULT.copy(
+            channel = AutocorrectTuning.DEFAULT.channel.copy(unfinishedWordMode = UnfinishedWordMode.KEEP))
+
+        /** Round 7's own named cases for choice 2 (§19.2). */
+        val NAMED7 = linkedMapOf("tomorr" to "tomorrow", "becau" to "because")
+
+        /** The Leipzig English word counts (§19.2, T-trunc-L), `$CK_LEIPZIG_WORDS` or the corpora cache. */
+        private val LEIPZIG_WORDS = File(System.getenv("CK_LEIPZIG_WORDS")
+            ?: "${System.getProperty("user.home")}/.cache/cleverkeys-corpora/leipzig/eng-com_web-public_2018_300K/eng-com_web-public_2018_300K-words.txt")
+
         /** Round 1 grid (doc §1.4): γ is chosen in a second stage, β is always 0. */
         private val ROUND1 = Grid(
             s1 = floatArrayOf(0f, 0.5f, 1f, 2f, 4f), g = floatArrayOf(0.8f, 1.0f, 1.25f, 1.5f),
@@ -608,8 +619,8 @@ class ChannelRankingEval {
         val report = StringBuilder()
         fun say(s: String) { println(s); report.appendLine(s); File(outDir, "summary-$phase.txt").writeText(report.toString()) }
         when (phase) {
-            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); 6 -> devPhase6(::say); else -> devPhase2(::say) }
-            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); 6 -> testPhase6(::say); else -> testPhase(::say) }
+            "dev" -> when (ROUND) { 1 -> devPhase(::say); 3 -> devPhase3(::say); 5 -> devPhase5(::say); 6 -> devPhase6(::say); 7 -> devPhase7(::say); else -> devPhase2(::say) }
+            "test" -> when (ROUND) { 3 -> testPhase3(::say); 4 -> testPhase4(::say); 5 -> testPhase5(::say); 6 -> testPhase6(::say); 7 -> testPhase7(::say); else -> testPhase(::say) }
             "inspect" -> inspectPhase(::say)
             "prefix" -> prefixPhase(::say)
             "neighbour" -> neighbourPhase(::say)
@@ -1447,6 +1458,341 @@ class ChannelRankingEval {
         val r4 = named.isEmpty()
         say("GATE: R1=$r1 R2=$r2 R3=$r3 R4=$r4 → " + if (r1 && r2 && r3 && r4) "PASS" else "FAIL")
         File(outDir, "rows6-test.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    // ── Round 7 (§19): "Complete the word" (rule C7) ─────────────────────────────────────────
+
+    /** Where the shipped default (choice 1) left an input, in rule C7's terms (§19.1). */
+    private enum class Case7 {
+        /** (a) ρ kept the typed word as unfinished. */
+        RHO_KEPT,
+        /** (b) the channel path kept it for want of a correction: no candidate, κ or the floor. */
+        UNCORRECTED,
+        /** (c) the committed winner is itself a completion of the typed word. */
+        WINNER_COMPLETES,
+        /** Anything C7 never changes (a real correction, guard G, an early exit, no completion). */
+        OTHER,
+    }
+
+    /** The shipped output for one input plus C7's inputs: its case, the winner, and C₁ / C₂. */
+    private class Probe7(
+        val typed: String, val base: String, val case: Case7, val winner: String?,
+        val best: String?, val bestFrequency: Int, val bestRank: Float, val secondRank: Float, val floor: Int,
+    )
+
+    /** One rule-C7 configuration (§19.1): flags B and W, L₂, G ([Int.MAX_VALUE] = ∞), μ. */
+    private data class Cfg7(val b: Boolean, val w: Boolean, val minLength: Int, val maxGap: Int, val margin: Float) {
+        override fun toString() = "B=${if (b) "on" else "off"} W=${if (w) "on" else "off"} L2=$minLength " +
+            "G=${if (maxGap == Int.MAX_VALUE) "inf" else "$maxGap"} mu=$margin"
+        /** The `CK_CH_C7` spelling: `B,W,L2,G,mu` with B/W as 0/1 and G possibly `inf`. */
+        val spec get() = "${if (b) 1 else 0},${if (w) 1 else 0},$minLength,${if (maxGap == Int.MAX_VALUE) "inf" else "$maxGap"},$margin"
+
+        companion object {
+            fun parse(spec: String): Cfg7 {
+                val v = spec.split(',')
+                require(v.size == 5) { "CK_CH_C7 needs B,W,L2,G,mu: $spec" }
+                return Cfg7(v[0] == "1", v[1] == "1", v[2].toInt(), if (v[3] == "inf") Int.MAX_VALUE else v[3].toInt(), v[4].toFloat())
+            }
+        }
+    }
+
+    /** Production tuning for choice 2 under [c]; everything else shipped. */
+    private fun tuning7(c: Cfg7) = BASE7.copy(channel = BASE7.channel.copy(
+        unfinishedWordMode = UnfinishedWordMode.COMPLETE, completeMinLength = c.minLength, completeMaxGap = c.maxGap,
+        completeMargin = c.margin, completeWhenUncorrected = c.b, completeOverCompletion = c.w))
+
+    /** The shipped default (choice 1) through production, with C7's inputs recovered by the replica. */
+    private fun probe7(t: String): Probe7 {
+        var seen: WordPredictor.ChannelProbe? = null
+        val base = en.predictor.autoCorrect(t, BASE7) { seen = it }
+        val comps = en.predictor.completionsOf(t)
+        val p = seen
+        fun out(case: Case7, winner: String? = null, maxFrequency: Int = p?.maxFrequency ?: 1) = Probe7(
+            t, base, case, winner, comps.best, comps.bestFrequency,
+            ChannelRanker.rankSteps(comps.bestFrequency, maxFrequency),
+            if (comps.secondFrequency > 0) ChannelRanker.rankSteps(comps.secondFrequency, maxFrequency) else Float.POSITIVE_INFINITY,
+            p?.frequencyFloor ?: 0)
+        if (p == null || comps.best == null) return out(Case7.OTHER)
+        val w = BASE7.channel
+        val costs = FloatArray(p.candidates.size) { ChannelEditCost.cost(p.lowerTypedWord, p.candidates[it].word, w) }
+        val i = ChannelRanker.pick(p.candidates, costs, p.maxFrequency, w.frequencyWeight, w.aliasBonus)
+        if (i < 0) return out(Case7.UNCORRECTED)
+        val winner = p.candidates[i]
+        val winnerCost = ChannelRanker.totalCost(costs[i], winner.frequency, p.maxFrequency, w.frequencyWeight, winner.isAlias, w.aliasBonus)
+        val stem = p.guardStem
+        if (stem != null && !isDoubleReduction(p.lowerTypedWord, winner.word) &&
+            w.inflectionCost + w.frequencyWeight * ChannelRanker.rankSteps(en.dict[stem] ?: 0, p.maxFrequency) <= winnerCost
+        ) return out(Case7.OTHER)
+        val completes = winner.word.startsWith(p.lowerTypedWord)
+        if (!completes && p.lowerTypedWord.length >= w.completionMinLength &&
+            w.completionCost + w.frequencyWeight * ChannelRanker.rankSteps(comps.bestFrequency, p.maxFrequency) <= winnerCost
+        ) return out(Case7.RHO_KEPT, winner.word)
+        if (costs[i] > w.maxCorrectionCost || winner.frequency < p.frequencyFloor) return out(Case7.UNCORRECTED, winner.word)
+        return out(if (completes) Case7.WINNER_COMPLETES else Case7.OTHER, winner.word)
+    }
+
+    /** `finalizeCorrection` for a lowercase input with no user words: alias keys to their contraction. */
+    private fun finalize7(word: String): String {
+        val alias = en.aliases[word] ?: return word
+        return if (alias.startsWith("i'")) alias.replaceFirstChar { it.uppercase() } else alias
+    }
+
+    /** Rule C7's confidence test (§19.1), the replica of `WordPredictor.confidentCompletion`. */
+    private fun confident7(p: Probe7, c: Cfg7): Boolean {
+        val best = p.best ?: return false
+        return p.typed.length >= c.minLength && best.length - p.typed.length <= c.maxGap &&
+            p.bestFrequency >= p.floor && p.secondRank - p.bestRank >= c.margin
+    }
+
+    /** Choice 2's output for [p] under [c] (replica). */
+    private fun decide7(p: Probe7, c: Cfg7): String = when (p.case) {
+        Case7.RHO_KEPT -> if (confident7(p, c)) finalize7(p.best!!) else p.typed
+        Case7.UNCORRECTED -> if (c.b && confident7(p, c)) finalize7(p.best!!) else p.base
+        Case7.WINNER_COMPLETES -> if (c.w && confident7(p, c) && p.best != p.winner) finalize7(p.best!!) else p.base
+        Case7.OTHER -> p.base
+    }
+
+    /**
+     * T-trunc-L (§19.2): unfinished words with targets and weights from the Leipzig word counts,
+     * independent of the dictionary's own frequencies. [P.occ] is the target's Leipzig count.
+     */
+    private fun tTruncL(dev: Boolean): List<P> {
+        val counts = HashMap<String, Long>()
+        LEIPZIG_WORDS.forEachLine { line ->
+            val f = line.split('\t')
+            if (f.size >= 3) counts.merge(f[1].lowercase(), f[2].toLong(), Long::plus)
+        }
+        val top = counts.entries
+            .filter { it.key.length >= 4 && letters.matches(it.key) && en.dict.containsKey(it.key) && it.key !in en.aliases }
+            .sortedWith(compareByDescending<Map.Entry<String, Long>> { it.value }.thenBy { it.key })
+            .take(10_000)
+        val out = ArrayList<P>()
+        for ((w, n) in top) {
+            if (isDevWord(w) != dev) continue
+            for (k in 3 until w.length) {
+                val p = w.substring(0, k)
+                if (!en.dict.containsKey(p) && p !in en.aliases) out += P(p, w, n.toInt())
+            }
+        }
+        return out
+    }
+
+    /** Probes every distinct input of [pairs] (all, or only those with a completion). */
+    private fun probeAll7(pairs: List<P>, label: String, say: (String) -> Unit, all: Boolean): Map<String, Probe7> {
+        val typed = pairs.map { it.typed }.distinct()
+        val out = ConcurrentHashMap<String, Probe7>()
+        val start = System.nanoTime()
+        typed.parallelStream().forEach { t ->
+            if (all || en.predictor.completionsOf(t).best != null) out[t] = probe7(t)
+        }
+        val byCase = out.values.groupingBy { it.case }.eachCount().toSortedMap()
+        say("$label: ${typed.size} distinct inputs, ${out.size} probed $byCase in ${(System.nanoTime() - start) / 1_000_000_000}s")
+        return out
+    }
+
+    /** Outcome of a candidate output map against the baseline on one set (§19.2), raw, distinct and weighted. */
+    private class Outcome7 {
+        val fix = HashSet<String>(); val brk = HashSet<String>(); val wrong = HashSet<String>()
+        var fixRaw = 0; var brkRaw = 0; var wrongRaw = 0
+        var fixW = 0.0; var brkW = 0.0; var wrongW = 0.0; var notRightW = 0.0
+        val changedW get() = fixW + brkW + wrongW
+        /** N3a / M3a: weighted (fix − break) over the weight the baseline does not get right. */
+        val accuracy get() = if (notRightW == 0.0) 0.0 else (fixW - brkW) / notRightW
+        /** N3b / M3b: weighted (break + wrong change) over the changed weight. */
+        val wrongRate get() = if (changedW == 0.0) 0.0 else (brkW + wrongW) / changedW
+        override fun toString() = "fix=${fix.size} (${fixRaw}) break=${brk.size} (${brkRaw}) wrong=${wrong.size} (${wrongRaw})"
+    }
+
+    private fun outcome7(pairs: List<P>, base: (String) -> String?, cand: (String) -> String?, weighted: Boolean,
+                         rows: MutableList<String>? = null, set: String = "", cfg: String = ""): Outcome7 {
+        val o = Outcome7()
+        for (p in pairs) {
+            val b = base(p.typed) ?: continue
+            val n = cand(p.typed) ?: continue
+            val wgt = if (weighted) p.occ.toDouble() else 1.0
+            val bOk = en.ok(b, p.target); val nOk = en.ok(n, p.target)
+            if (!bOk) o.notRightW += wgt
+            if (b == n) continue
+            when {
+                !bOk && nOk -> { o.fix += p.target; o.fixRaw++; o.fixW += wgt }
+                bOk && !nOk -> { o.brk += p.target; o.brkRaw++; o.brkW += wgt }
+                else -> { o.wrong += p.target; o.wrongRaw++; o.wrongW += wgt }
+            }
+            rows?.add("$set\t$cfg\t${p.typed}\t${p.target}\t${p.occ}\t$b\t$n\t" +
+                (if (!bOk && nOk) "fix" else if (bOk && !nOk) "break" else "wrong") + "\t${typoClass(p)}")
+        }
+        return o
+    }
+
+    /** Named cases through FULL production under [tuning] (§19.2 / N5): T5, `shated`, Hebrew, plus [extra]. */
+    private fun namedFailures7(tuning: AutocorrectTuning, extra: Map<String, String>): List<String> {
+        val bad = mutableListOf<String>()
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        for ((typo, want) in NAMED_EN + (SHATED to "shared") + extra) {
+            val out = en.predictor.autoCorrect(typo, tuning)
+            if (out != want) bad += "$typo → $out (want $want)"
+        }
+        KeyAdjacency.setLayoutLetters(heGrid)
+        try {
+            for ((typo, want) in NAMED_HE) {
+                val out = he.predictor.autoCorrect(typo, tuning)
+                if (out != want) bad += "$typo → $out (want $want)"
+            }
+        } finally {
+            KeyAdjacency.setLayoutLetters(emptyMap())
+        }
+        return bad
+    }
+
+    private fun pct(x: Double) = "%.1f %%".format(100 * x)
+
+    /** Round 7 DEV (§19.3). */
+    private fun devPhase7(say: (String) -> Unit) {
+        assumeTrue("Leipzig word list missing: $LEIPZIG_WORDS", LEIPZIG_WORDS.isFile)
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("DEV")
+        val adj = sAdj(dev = true)
+        val oov = cOov(dev = true)
+        val trunc = tTruncL(dev = true)
+        val adjWords = adj.map { it.target }.toSet().size
+        say("ROUND 7 DEV. GTC-DEV ${gtc.size}; S-adj-DEV ${adj.size} ($adjWords words); C-oov-DEV ${oov.size}; " +
+            "T-trunc-L-DEV ${trunc.size} pairs (${trunc.map { it.target }.toSet().size} targets, " +
+            "${trunc.map { it.typed }.toSet().size} prefixes, weight ${trunc.sumOf { it.occ.toLong() }})")
+        val gP = probeAll7(gtc, "GTC-DEV", say, all = true)
+        val aP = probeAll7(adj, "S-adj-DEV", say, all = false)
+        val oP = probeAll7(oov, "C-oov-DEV", say, all = false)
+        val tP = probeAll7(trunc, "T-trunc-L-DEV", say, all = true)
+        val gRight = gtc.filter { en.ok(gP.getValue(it.typed).base, it.target) }.mapTo(HashSet()) { it.target }.size
+        say("baseline (choice 1): GTC-DEV distinct targets right=$gRight; limits N1 ${"%.1f".format(0.005 * gRight)}, " +
+            "N2 ${"%.1f".format(0.005 * adjWords)}, N4 ${"%.1f".format(0.01 * oov.size)}")
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tweight\tbaseline\tcandidate\tkind\tclass")
+        val grid = ArrayList<Cfg7>()
+        for (b in listOf(false, true)) for (w in listOf(false, true)) for (l in intArrayOf(3, 4, 5))
+            for (g in intArrayOf(3, 5, Int.MAX_VALUE)) for (mu in floatArrayOf(0f, 8f, 16f, 24f, 32f, 48f, 64f)) grid += Cfg7(b, w, l, g, mu)
+        // Tie order (§19.3): larger μ, smaller G, larger L₂, B off, W off.
+        val tieKey = compareBy<Cfg7>({ it.margin }, { -it.maxGap.toLong() }, { it.minLength }, { if (it.b) 0 else 1 }, { if (it.w) 0 else 1 })
+        var chosen: Cfg7? = null
+        var bestScore = Double.NEGATIVE_INFINITY
+        val tsv = mutableListOf("config\tgtc_fix\tgtc_break\tgtc_wrong\tadj_bad\toov_changed\ttrunc_fix\ttrunc_break\ttrunc_wrong\tacc\twrong_rate\tnamed\tadmissible")
+        for (c in grid) {
+            val g = outcome7(gtc, { gP[it]?.base }, { gP[it]?.let { p -> decide7(p, c) } }, weighted = false)
+            val a = outcome7(adj, { aP[it]?.base }, { aP[it]?.let { p -> decide7(p, c) } }, weighted = false)
+            val oChanged = oov.count { p -> oP[p.typed]?.let { it.base != decide7(it, c) } == true }
+            val t = outcome7(trunc, { tP[it]?.base }, { tP[it]?.let { p -> decide7(p, c) } }, weighted = true)
+            val adjBad = (a.brk + a.wrong).size
+            val named = namedFailures7(tuning7(c), NAMED7)
+            val n1 = g.brk.size <= 0.005 * gRight && g.wrong.size <= g.fix.size
+            val n2 = adjBad <= 0.005 * adjWords
+            val n3a = t.accuracy >= 0.20
+            val n3b = t.wrongRate <= 0.15
+            val n4 = oChanged <= 0.01 * oov.size
+            val adm = n1 && n2 && n3a && n3b && n4 && named.isEmpty()
+            val score = t.fixW - t.brkW
+            say("  $c: GTC $g; S-adj bad=$adjBad (${a.brkRaw + a.wrongRaw}); C-oov changed=$oChanged; " +
+                "T-trunc-L $t acc=${pct(t.accuracy)} wrongRate=${pct(t.wrongRate)}; named=${named.size} " +
+                "[N1=$n1 N2=$n2 N3a=$n3a N3b=$n3b N4=$n4 N5=${named.isEmpty()}]${if (adm) " admissible" else ""}")
+            tsv += "$c\t${g.fix.size}\t${g.brk.size}\t${g.wrong.size}\t$adjBad\t$oChanged\t${t.fix.size}\t${t.brk.size}\t" +
+                "${t.wrong.size}\t${"%.4f".format(t.accuracy)}\t${"%.4f".format(t.wrongRate)}\t${named.joinToString("; ")}\t$adm"
+            val cur = chosen
+            if (adm && (score > bestScore || (score == bestScore && cur != null && tieKey.compare(c, cur) > 0))) {
+                chosen = c; bestScore = score
+            }
+        }
+        File(outDir, "grid7-dev.tsv").writeText(tsv.joinToString("\n") + "\n")
+        val c = chosen
+        if (c == null) {
+            say("\nDEV choice (§19.3): NONE admissible — choice 2 is not offered; TEST not run")
+            return
+        }
+        say("\nDEV choice (§19.3): $c")
+        outcome7(gtc, { gP[it]?.base }, { gP[it]?.let { p -> decide7(p, c) } }, false, rows, "GTC-DEV", "$c")
+        outcome7(adj, { aP[it]?.base }, { aP[it]?.let { p -> decide7(p, c) } }, false, rows, "S-adj-DEV", "$c")
+        outcome7(trunc, { tP[it]?.base }, { tP[it]?.let { p -> decide7(p, c) } }, true, rows, "T-trunc-L-DEV", "$c")
+        for (p in oov) oP[p.typed]?.let { pr -> val n = decide7(pr, c); if (n != pr.base) rows += "C-oov-DEV\t$c\t${p.typed}\t${p.target}\t1\t${pr.base}\t$n\tchanged\t-" }
+        File(outDir, "rows7-dev.tsv").writeText(rows.joinToString("\n") + "\n")
+        say("report cases, choice 2: " + (REPORT6 + NAMED7.keys).distinct().joinToString(" ") { "$it→${en.predictor.autoCorrect(it, tuning7(c))}" })
+        // Soundness (§19.2): the replica against full production on 2,000 seeded DEV inputs.
+        val all = gP + aP + oP + tP
+        val sample = all.keys.sorted().shuffled(java.util.Random(20261029)).take(2_000)
+        val tuning = tuning7(c)
+        val mismatches = sample.filter { t ->
+            val p = all.getValue(t)
+            p.base != en.predictor.autoCorrect(t, BASE7) || decide7(p, c) != en.predictor.autoCorrect(t, tuning)
+        }
+        say("  soundness: ${sample.size} inputs, mismatches=${mismatches.size} ${mismatches.take(20)}")
+        check(mismatches.isEmpty()) { "replica disagrees with production: run void" }
+        say("CK_CH_C7=${c.spec}")
+    }
+
+    /** Round 7 TEST (§19.4): production choice 1 against production choice 2 at [Cfg7]; one evaluation. */
+    private fun testPhase7(say: (String) -> Unit) {
+        assumeTrue("Leipzig word list missing: $LEIPZIG_WORDS", LEIPZIG_WORDS.isFile)
+        val c = Cfg7.parse(System.getenv("CK_CH_C7") ?: error("CK_CH_C7 required"))
+        val tuning = tuning7(c)
+        val off = BASE7.copy(channel = BASE7.channel.copy(unfinishedWordMode = UnfinishedWordMode.OFF))
+        say("ROUND 7 TEST, $c")
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val gtc = readGtc("TEST")
+        val adj = sAdj(dev = false)
+        val oov = cOov(dev = false)
+        val trunc = tTruncL(dev = false)
+        val birkbeck = (readDat("wikipedia.dat") + readDat("aspell.dat") + readDat("missp.dat") + readDat("holbrook-missp.dat")).distinct()
+        val adjWords = adj.map { it.target }.toSet().size
+        say("GTC-TEST ${gtc.size}; S-adj-TEST ${adj.size} ($adjWords words); C-oov-TEST ${oov.size}; " +
+            "T-trunc-L-TEST ${trunc.size} pairs (${trunc.map { it.target }.toSet().size} targets, ${trunc.map { it.typed }.toSet().size} prefixes); R-union ${birkbeck.size}")
+        val rows = mutableListOf("set\tconfig\ttyped\ttarget\tweight\tbaseline\tcandidate\tkind\tclass")
+        /** Choice 1, choice 2 and choice 3 through production for every input that has a completion. */
+        class Run(val base: Map<String, String>, val cand: Map<String, String>, val off: Map<String, String>)
+        fun run(pairs: List<P>, set: String, all: Boolean): Run {
+            val inputs = pairs.map { it.typed }.distinct()
+            val base = ConcurrentHashMap<String, String>(); val cand = ConcurrentHashMap<String, String>()
+            val offOut = ConcurrentHashMap<String, String>()
+            val start = System.nanoTime()
+            inputs.parallelStream().forEach { t ->
+                if (all || en.predictor.completionsOf(t).best != null) {
+                    base[t] = en.predictor.autoCorrect(t, BASE7)
+                    cand[t] = en.predictor.autoCorrect(t, tuning)
+                    offOut[t] = en.predictor.autoCorrect(t, off)
+                }
+            }
+            say("  $set: ${inputs.size} inputs, ${base.size} run in ${(System.nanoTime() - start) / 1_000_000_000}s")
+            return Run(base, cand, offOut)
+        }
+        val g = run(gtc, "GTC-TEST", all = true)
+        val a = run(adj, "S-adj-TEST", all = false)
+        val o = run(oov, "C-oov-TEST", all = false)
+        val t = run(trunc, "T-trunc-L-TEST", all = true)
+        val r = run(birkbeck, "R-union", all = false)
+        val gRight = gtc.filter { en.ok(g.base.getValue(it.typed), it.target) }.mapTo(HashSet()) { it.target }.size
+        val go = outcome7(gtc, g.base::get, g.cand::get, false, rows, "GTC-TEST", "$c")
+        val ao = outcome7(adj, a.base::get, a.cand::get, false, rows, "S-adj-TEST", "$c")
+        val to = outcome7(trunc, t.base::get, t.cand::get, true, rows, "T-trunc-L-TEST", "$c")
+        val ro = outcome7(birkbeck, r.base::get, r.cand::get, false, rows, "R-union", "$c")
+        val oChanged = oov.filter { p -> o.base[p.typed]?.let { it != o.cand.getValue(p.typed) } == true }
+        for (p in oChanged) rows += "C-oov-TEST\t$c\t${p.typed}\t${p.target}\t1\t${o.base.getValue(p.typed)}\t${o.cand.getValue(p.typed)}\tchanged\t-"
+        val adjBad = (ao.brk + ao.wrong).size
+        val named = namedFailures7(tuning, NAMED7)
+        say("GTC-TEST (choice 2 vs 1): $go; distinct targets right under choice 1=$gRight")
+        say("S-adj-TEST: $ao; bad base words=$adjBad of $adjWords")
+        say("T-trunc-L-TEST: $to; weighted fix=${"%.0f".format(to.fixW)} break=${"%.0f".format(to.brkW)} " +
+            "wrong=${"%.0f".format(to.wrongW)} not-right=${"%.0f".format(to.notRightW)}; accuracy=${pct(to.accuracy)} wrongRate=${pct(to.wrongRate)}")
+        say("C-oov-TEST changed=${oChanged.size} of ${oov.size} (${pct(oChanged.size.toDouble() / oov.size)})")
+        say("R-union (reported): $ro")
+        say("named failures=$named")
+        say("report cases, choice 2: " + (REPORT6 + NAMED7.keys).distinct().joinToString(" ") { "$it→${en.predictor.autoCorrect(it, tuning)}" })
+        // Reported: choice 3 (Off) against choice 1 on the same inputs.
+        val g3 = outcome7(gtc, g.base::get, g.off::get, false)
+        val a3 = outcome7(adj, a.base::get, a.off::get, false)
+        val t3 = outcome7(trunc, t.base::get, t.off::get, true)
+        say("choice 3 vs choice 1 (reported): GTC $g3; S-adj $a3; T-trunc-L $t3")
+        val m1 = go.brk.size <= 0.005 * gRight && go.wrong.size <= go.fix.size
+        val m2 = adjBad <= 0.005 * adjWords
+        val m3a = to.accuracy >= 0.20
+        val m3b = to.wrongRate <= 0.20
+        val m4 = oChanged.size <= 0.01 * oov.size
+        val m5 = named.isEmpty()
+        say("GATE: M1=$m1 M2=$m2 M3a=$m3a M3b=$m3b M4=$m4 M5=$m5 → " + if (m1 && m2 && m3a && m3b && m4 && m5) "PASS" else "FAIL")
+        File(outDir, "rows7-test.tsv").writeText(rows.joinToString("\n") + "\n")
     }
 
     /**
