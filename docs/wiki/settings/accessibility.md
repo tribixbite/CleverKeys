@@ -79,6 +79,8 @@ pane. The menu lists exactly what a swipe would do at that moment: your custom s
 mappings replace the layout's subkeys, a direction set to "removed" is left out, a latched Shift
 applies, and nothing is listed while **Short gestures** is turned off.
 
+[Voice input](../typing/voice-input.md) announces when listening starts, stops or is cancelled.
+
 The subkey popover (hold a key) does not open under TalkBack; its slots are the same short
 swipes, so the Actions menu covers them.
 

@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, 241 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, opt-in on-device voice input, 241 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -188,6 +188,13 @@ pending words stop when editor/session ownership changes. See the
 - **Per-language custom dictionaries** — add words, adjust frequency weights, disable entries
 - **Smart contractions** — language-aware handling across English, French, and more
 
+### 🎙️ Voice Input (on device, opt-in)
+- **Offline dictation** — a Voice input key (Extra Keys) or the `voice_input` command types what you say; the newest words stay underlined until the model confirms them
+- **Opt-in voice pack** — import `voicepack-moonshine-v2-tiny-en.zip` (English, Moonshine v2 tiny streaming, MIT, ~45 MB) once from the [`langpacks` release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks); nothing of the model ships in the APK
+- **Microphone only when you turn it on** — the permission is requested only when you enable voice input or import a pack; audio is never stored and never leaves the device
+- **Safe everywhere** — terminals and remote-desktop fields get confirmed words only, appended; password fields refuse voice input
+- See the [voice input guide](docs/wiki/typing/voice-input.md)
+
 ### 📋 Clipboard System
 As an IME, CleverKeys has legitimate clipboard access that other apps don't:
 - **Unlimited history** — configurable by count or storage size, persistent across reboots
@@ -227,6 +234,7 @@ Assign custom actions to any key's 8 swipe directions:
 
 ### 🔒 Privacy First
 - **Zero network permissions** — literally cannot phone home
+- **Microphone only on opt-in** — voice input is off by default; the microphone is requested only when you turn it on, and audio is recognised on the device and never stored
 - **No analytics, telemetry, or cloud sync**
 - **One-switch learning control** — "Learn From My Typing" gates ALL on-device learning (phrases, word usage, selection adaptation, swipe traces); turning it off stops recording AND stops using what was learned, with a one-tap forget
 - **Learned-data manager** — browse and delete individual learned phrases and words, per language

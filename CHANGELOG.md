@@ -9,25 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Proposed for **2.1.0** (a large new feature; not part of the 2.0.0 soak). Not tagged.
-
-### Added
-
-- **Voice input — offline dictation in the keyboard.** A new **Voice input** key (Extra Keys) and
-  `voice_input` command type what you say, recognised on the phone by a speech model you import
-  once as a voice pack (`voicepack-moonshine-v2-tiny-en.zip`, English, Moonshine v2 tiny
-  streaming, MIT, about 45 MB, from the `langpacks` release; Settings → Voice input → Import
-  voice pack). Words appear as you speak — the newest underlined until the model confirms them —
-  and stop on a second tap; ✕ cancels and drops the unconfirmed words. Terminals and
-  remote-desktop fields receive confirmed words only, appended; the keyboard's own search and
-  edit fields receive the text instead of the app behind them; password fields refuse it.
-  Off by default. The microphone permission is new, and is asked for only when you turn voice
-  input on or import a pack; audio is never stored and never leaves the device (still no
-  internet permission). Packs are checked file by file (size and SHA-256) and installed
-  atomically; a pack for a newer engine is refused with "needs a newer version of CleverKeys".
-  The speech engine is a replaceable module (`stt/`), so a later model is a new pack, not a
-  rewrite. Spec: `docs/specs/voice-input.md`.
-
 ### Planned for v2.1
 
 - 50k dictionary assets for 20 languages
@@ -41,13 +22,33 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; items merged up to
-> 2026-10-22 are folded in.
+> 2026-10-22 are folded in, plus on-device voice input (2026-10-29: moved here from the
+> proposed 2.1.0 by maintainer decision).
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
 
 ### Added
 
+- **Voice input — offline dictation in the keyboard.** A new **Voice input** key (Extra Keys) and
+  `voice_input` command type what you say, recognised on the phone by a speech model you import
+  once as a voice pack (`voicepack-moonshine-v2-tiny-en.zip`, English, Moonshine v2 tiny
+  streaming, MIT, about 45 MB, from the `langpacks` release; Settings → Voice input → Import
+  voice pack). Words appear as you speak — the newest underlined until the model confirms them —
+  and stop on a second tap; ✕ cancels and drops the unconfirmed words; moving to another field
+  ends dictation without writing anything into the new field. Terminals and
+  remote-desktop fields receive confirmed words only, appended; the keyboard's own search and
+  edit fields receive the text instead of the app behind them; password fields refuse it and
+  say so in the password bar. Off by default. The microphone permission is new, and is asked for only when you turn voice
+  input on or import a pack; audio is never stored and never leaves the device (still no
+  internet permission). Packs are checked file by file (size and SHA-256) and installed
+  atomically; a pack for a newer engine is refused with "needs a newer version of CleverKeys".
+  Listening stops by itself after about 30 seconds with this pack (the model loses track of
+  longer stretches); audio is buffered on its own thread so a slow recognition pass loses none.
+  The voice pack is a separate opt-in download — nothing of the speech model ships in the APK, and
+  the runtime is the keyboard's existing ONNX Runtime (no new library). The speech engine is a
+  replaceable module (`stt/`), so a later model is a new pack, not a rewrite. Spec:
+  `docs/specs/voice-input.md`.
 - **Layouts can bring their own look.** A layout file can now define its whole appearance: a
   `<theme>` with every colour of the Theme Creator plus Enter/action/modifier colours, key gaps,
   corners, shadows, hints, a key-press preview, and separate light- and dark-mode colours — anything

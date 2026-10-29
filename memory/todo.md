@@ -894,6 +894,28 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     typed (default, ρ) | Off (pre-round-6), pref `autocorrect_unfinished_word_mode`, 5 strings ×
     22 files; ρ slider greyed under Off. C7 kept only as the unoffered eval seam. Open (device):
     the dropdown and greyed slider not yet looked at on a phone.
+30. [ ] maintainer + device: on-device voice input — SHIPS IN 2.0.0 (maintainer decision 2026-10-29;
+    was proposed for 2.1). Built `02de7f61`, fixes `c6734644` (no lost audio, 30 s auto-stop) and
+    `1a26da24` (bar ✕/messages fit, password notice, no repeated word), `30983ed1` (a field
+    change never writes into the new field); spec
+    `docs/specs/voice-input.md`, record rows in `docs/RELEASE_RECORD.md` v2.0.0 "Additions
+    2026-10-29". DEVICE-VERIFIED (agent, second Saga 192.168.0.144, Android 13, release of the
+    branch, LibriSpeech played through the phone's speaker): permission asked only by the switch or
+    a key press, deny / don't-ask-again paths; 45 MB pack import ~3 s, a corrupted `encoder.ort`
+    and an unknown engine refused; Chrome textarea (composing partials, committed finals), Termux
+    (append-only), clipboard search and Settings search (inline), password field refused with the
+    bar notice; mic indicator off on stop/cancel/hide/field change/auto-stop; 0 recorder
+    overflows, auto-stop at 30 s, peak RSS 451 MB; WER through the speaker 15/125 (12 %) vs 4.0 %
+    on the JVM. NOT VERIFIED — needs the maintainer: TalkBack (start/stop/cancel announcements;
+    agents cannot drive TalkBack over adb, item 3); RustDesk / a blind remote field (item 6's
+    setup); dictating into the clipboard pane's inline entry editor; real-voice accuracy with a
+    person speaking (only speaker-played LibriSpeech was measured); the Pixel. OPEN (maintainer
+    authorization needed): upload `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` (built by
+    `scripts/build_voice_pack.py` under `build/`) to the `langpacks` release — every doc already
+    points users there; native review of the 45 new voice strings in 21 locales (fold into item 10);
+    whether to add voice lines to `docs/plans/v2.0.0-manual-test-checklist.md` (maintainer-owned,
+    not edited by agents). Later: VAD/endpointing instead of stopping at the engine's 30 s bound
+    (# TODO in `SpeechEngine`).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

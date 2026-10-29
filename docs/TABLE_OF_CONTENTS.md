@@ -98,6 +98,7 @@ review counts are not a current full-tree audit.
 | `quick-settings-tile.md` | Shade tile: minimize / restore / show the keyboard, picker fallback (2026-10-20) | ✅ Implemented |
 | `timestamp-keys.md` | Date/time insertion keys | ✅ Implemented |
 | `termux_integration.md` | Terminal keyboard behaviour and custom terminal packages | ✅ Implemented |
+| `voice-input.md` | On-device voice input: engine-neutral `stt/`, voice pack format (manifest v1), Moonshine v2 pack, microphone opt-in; ships in 2.0.0 | ✅ Implemented 2026-10-29 |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
 ### `/docs/eval/` Decoder and typing evaluations (2026-07 → 10)
@@ -142,6 +143,10 @@ autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule 
 |------|---------|--------|
 | `README.md` + `*.csv` | Dictionary optimisation research outputs (AOSP comparison, typo candidates) | 📁 Reference |
 | `2026-10-15-ime-editor-actions.md` | How Android editors (EditText, Chrome/WebView, Compose) handle IME context-menu ids, undo paths and process-text results; the source of the 2026-10-17 editor commands and the `textAssistMenu` removal | ✅ Complete |
+| `2026-10-21-persian-zwnj.md` | Persian half-space (ZWNJ): how other keyboards type it, word-character rule, fold rules | ✅ Complete |
+| `2026-10-27-familiar-keyboard-looks.md` | Default looks of iOS, Gboard, SwiftKey and Samsung Keyboard, input for the "-style" looks | ✅ Complete |
+| `2026-10-28-stt-engine-deep-dive.md` | On-device speech-to-text engine comparison; recommends Moonshine v2 tiny-streaming on the app's ORT (the engine voice input ships with) | ✅ Complete |
+| `2026-10-28-whistle-offline-stt.md` | Cactus Whistle as an optional offline STT plugin: weights fit the pack model, the prebuilt runtime does not | ✅ Complete |
 
 ### `/docs/guides/` Guides
 

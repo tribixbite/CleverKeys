@@ -76,6 +76,7 @@ CleverKeys requests minimal permissions:
 |------------|-------------|---------|
 | Vibration | `android.permission.VIBRATE` | Haptic feedback on key presses |
 | User Dictionary | `android.permission.READ_USER_DICTIONARY` | Reading system user dictionary for word suggestions |
+| Microphone | `android.permission.RECORD_AUDIO` | [Voice input](../typing/voice-input.md) only. Off by default: Android asks for it only when you turn voice input on or import a voice pack, and audio never leaves the device |
 
 **No internet permission** — CleverKeys never sends data to any server.
 **No storage permission** — Uses app-private storage and Android's Storage Access Framework (SAF) for backup/restore.

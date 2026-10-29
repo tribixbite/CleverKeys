@@ -46,7 +46,7 @@ export function pageSlug(entry: CollectionEntry<'wiki'>): string {
 /** Preferred order for index cards. Missing pages drop to alpha. */
 export const PRIORITY: Record<string, string[]> = {
   'getting-started': ['installation', 'enabling-keyboard', 'first-time-setup', 'basic-typing', 'quick-settings'],
-  typing:            ['swipe-typing', 'autocorrect', 'emoji', 'smart-punctuation', 'special-characters', 'user-dictionary'],
+  typing:            ['swipe-typing', 'autocorrect', 'emoji', 'smart-punctuation', 'special-characters', 'user-dictionary', 'voice-input'],
   gestures:          ['short-swipes', 'subkey-popover', 'cursor-navigation', 'selection-delete', 'trackpoint-mode'],
   customization:     ['per-key-actions', 'extra-keys', 'themes', 'timestamp-keys', 'command-palette'],
   layouts:           ['adding-layouts', 'switching-layouts', 'multi-language', 'language-packs', 'custom-layouts', 'layout-xml-reference'],

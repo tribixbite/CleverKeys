@@ -70,6 +70,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 | [Keyboard Minimize](./keyboard-minimize.md) | Assignable bar and floating-button minimize commands, lifecycle and touch geometry |
 | [Timestamp Keys](./timestamp-keys.md) | Date/time insertion keys |
 | [Termux Integration](./termux_integration.md) | Terminal keyboard optimizations |
+| [Voice Input](./voice-input.md) | On-device dictation with an imported voice pack; engine-neutral `stt/`, microphone opt-in (2.0.0) |
 | [GIF Panel](./gif-panel-spec.md) | Offline GIF panel and pack system |
 
 ### Reference

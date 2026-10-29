@@ -163,6 +163,7 @@ A: That's intentional. Autocorrect stays out of the way while you type URLs, ema
 A: **No.** CleverKeys is fully offline:
 - All prediction runs on-device via ONNX Runtime
 - **No INTERNET permission** in the manifest
+- Voice input (off by default) recognises speech on the device; the microphone is requested only when you turn it on, and audio is never stored or sent
 - Your personal dictionary stays on your device
 - Open source: verify the code on GitHub
 

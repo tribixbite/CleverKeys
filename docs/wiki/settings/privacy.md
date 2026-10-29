@@ -147,6 +147,7 @@ nothing from the clipboard, turn off **Clipboard History** (Clipboard).
 | **Profiles** | App data | Saved configurations |
 | **Clipboard** | App data | Recent clips (up to limit) |
 | **Clipboard Media** | App data | Copied images, videos, PDFs |
+| **Voice pack** | App data | The speech model you imported for [voice input](../typing/voice-input.md); audio itself is never stored |
 
 ### Storage Location
 
@@ -206,6 +207,14 @@ Use Settings > Backup & Restore to:
 | **Exclude Password Managers** | Clipboard | On |
 | **Respect Sensitive Flag** | Clipboard | On |
 
+## Microphone
+
+Voice input is off by default, and CleverKeys asks for the microphone only when you turn
+**Settings → Voice input → Enable voice input** on or import a voice pack. The microphone is open
+only while you dictate; audio is recognised on the device, never written to storage and never
+sent anywhere. The switch is not restored from a backup, so a restore on another phone never turns
+the microphone on. See [Voice Input](../typing/voice-input.md).
+
 ## Network Privacy
 
 CleverKeys does not require network access for core functionality:
@@ -216,6 +225,7 @@ CleverKeys does not require network access for core functionality:
 | **Predictions** | No |
 | **Autocorrect** | No |
 | **Themes** | No |
+| **Voice input** | No — the voice pack is a file you import; recognition runs on the device |
 
 All processing happens locally on your device.
 
@@ -248,4 +258,5 @@ everything already learned.
 - [Clipboard History](../clipboard/clipboard-history.md) - Manage clipboard
 - [Backup & Restore](../troubleshooting/backup-restore.md) - Data management
 - [Next-Word Prediction](../typing/next-word-prediction.md) - Built-in continuations; adds learned phrases when learning is on
+- [Voice Input](../typing/voice-input.md) - Offline dictation; microphone only on opt-in
 - [Input Behavior Settings](./input-behavior.md) - Learning & Data manager

@@ -5,7 +5,7 @@
 **Priority**: P1
 **Status**: In Progress (engine, pack format, import, IME wiring and settings implemented
 2026-10-29; device test and the `langpacks` upload outstanding)
-**Target Version**: 2.1.0 (proposed; a large new feature, not part of the 2.0.0 soak)
+**Target Version**: 2.0.0 (maintainer decision 2026-10-29; first proposed for 2.1.0)
 
 ### Summary
 A `voice_input` key/command records from the microphone while the keyboard is visible and types
@@ -201,7 +201,7 @@ contain the current language, else the first installed one.
 ### Phase 2 — IME (done 2026-10-29, device-unverified)
 - [x] `voice_input` key/command/extra key, receiver routing, controller, AudioRecord capture
 - [x] Transparent permission activity, Settings → Voice input, bar voice mode, TalkBack
-- [x] Strings in 21 locales, wiki page, CHANGELOG (Unreleased 2.1), NOTICE
+- [x] Strings in 21 locales, wiki page, CHANGELOG (2.0.0; first drafted under Unreleased 2.1), NOTICE
 
 ### Phase 3 — outstanding
 - [ ] Device test (Saga/Pixel): permission flow, latency, RSS, composing behaviour in Chrome,
@@ -294,7 +294,8 @@ test-clean clips (4.5–5.9 s, 125 words) at **5/125 = 4.0 % WER** with 4–5 pa
 
 ## Documentation Updates
 - [x] This spec; wiki page `docs/wiki/voice-input.md`
-- [x] CHANGELOG Unreleased (2.1.0)
+- [x] CHANGELOG 2.0.0 (moved from Unreleased 2.1.0 on 2026-10-29), fastlane 2.0.0 note,
+      `docs/RELEASE_RECORD.md` v2.0.0 rows
 - [x] NOTICE (Moonshine, MIT — only for the pack; nothing of Moonshine ships in the APK)
 
 ## Open Questions

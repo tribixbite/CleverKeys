@@ -10,6 +10,12 @@ CleverKeys is the only open-source keyboard with stable, production-ready gestur
 • Tunable beam search (width, length normalization, pruning, early stopping)
 • Open training code and datasets at github.com/tribixbite/CleverKeys-ML
 
+<b>ON-DEVICE VOICE INPUT (OPT-IN)</b>
+• Dictate with a Voice input key; recognition runs on the phone, offline
+• Uses a voice pack you import once (English, Moonshine v2, MIT, about 45 MB); no speech model is bundled
+• Off by default: the microphone permission is requested only when you turn voice input on or import a voice pack
+• Audio is never stored and never leaves the device
+
 <b>208 CUSTOMIZABLE SHORT-SWIPE GESTURES</b>
 • 8 directions × 26 letter keys = 208 one-touch gestures
 • Per-key customization — assign any action to any direction on any key
@@ -28,6 +34,7 @@ As an Input Method Editor, CleverKeys has legitimate clipboard access that other
 
 <b>PRIVACY FIRST</b>
 • Zero network permissions — literally cannot phone home
+• Microphone only for opt-in voice input, requested when you enable it
 • No analytics, telemetry, or tracking
 • No cloud sync or data collection
 • All processing on-device
