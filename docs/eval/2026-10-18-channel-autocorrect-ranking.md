@@ -847,3 +847,119 @@ the completion). Disclosure: T-trunc's "hijacked" on TEST is counted from produc
 correction that does not extend the typed word); on DEV it was the replica's eligibility test,
 which also requires a completion — every T-trunc prefix has one, so the two counts agree by
 construction.
+
+## 19. Round 7: "Complete the word" as a user choice (pre-registration written before any round-7 outcome)
+
+**Maintainer decision (2026-10-29).** The unfinished-word behaviour becomes one setting with three
+choices: **Keep what I typed** (rule C6, ρ; the shipped behaviour and the default), **Complete the
+word** (Gboard-like: space commits the completion when it is clearly the likely word, `tomorr` →
+`tomorrow`, `becau` → `because`) and **Off** (the stack before round 6, ρ = ∞). §16.1 rejected
+committing a completion *as the default*; this round measures it as an opt-in. Choices 1 and 3
+are existing, measured behaviours and ship as choices regardless. Choice 2 ships only if TEST below
+passes; if it fails, nothing user-facing is added for it and the failure is recorded here.
+
+When this section was written no output under rule C7 had been computed on any set; the only
+round-7 input looked at was the source of the new data set (the Leipzig word list's format).
+
+### 19.1 Rule C7 (choice 2)
+
+Notation as §16.1. For the lowercase typed word t, the **completions** are the enabled dictionary
+words that strictly extend t (the set `bestCompletionFrequency` already scans). C₁ is the most
+frequent (ties: the alphabetically first), C₂ the next. C₁ is **confident** when all hold:
+
+- |t| ≥ L₂;
+- |C₁| − |t| ≤ G (at most G letters the user has not typed);
+- C₁ clears the frequency floor, or is the user's own word (the commit test of every correction);
+- `rankSteps(C₂) − rankSteps(C₁) ≥ μ`, or there is no C₂ ("clearly more likely" than any other
+  completion; on the shipped `.bin` a rank step is one byte of the log-frequency scale).
+
+Choice 2 changes the shipped decision (choice 1) only here, and commits C₁ (through the same
+alias/capitalisation finalisation as any correction) when C₁ is confident:
+
+- **(a) ρ keeps t as unfinished** (the §16.1 step fires: |t| ≥ L = 3, the winner does not extend t,
+  `ρ + λ · rankSteps(C₁) ≤ totalCost(winner)`). Otherwise t is kept, as in choice 1.
+- **(b) [flag B] the channel path keeps t for want of a correction**: no gated candidate, κ rejects
+  the winner, or the winner fails the frequency floor.
+- **(c) [flag W] the winner W is itself a completion** within the length gate (`beautif` →
+  `beautify`) and C₁ ≠ W: C₁ replaces W.
+
+Never changed: a dictionary or user word (step 1 returns first, so a valid listed word is never
+completed), guard G's keeps, and every earlier exit (contraction, collapse, possessive, minimum
+length). ρ is the same setting in choices 1 and 2: it decides *whether* the word is unfinished;
+μ, G, L₂, B and W decide *whether to finish it* and are constants chosen here on DEV, not
+settings. Choice 3 skips the ρ step entirely (every other step unchanged).
+
+DEV grid (252 configurations): B ∈ {off, on} × W ∈ {off, on} × L₂ ∈ {3, 4, 5} × G ∈ {3, 5, ∞} ×
+μ ∈ {0, 8, 16, 24, 32, 48, 64}. ρ, L and every other weight stay at the shipped values.
+
+### 19.2 Data and baseline
+
+Baseline = the shipped default (choice 1). Per input, against the baseline: **unchanged**, **fix**
+(baseline wrong, C7 right), **break** (baseline right, C7 wrong), **wrong change** (both wrong, C7
+changed the output). Distinct unit = target word; T-trunc-L is also weighted (below).
+
+- **GTC, S-adj, C-oov, Birkbeck R-union**: the §1.2 splits. On S-adj and C-oov an input without a
+  completion cannot change and is not run (as round 6); GTC runs in full for its denominator.
+  Without flag W a baseline-right GTC/S-adj output cannot change (C7 only replaces an output equal
+  to the typed word, and no typo is its own target), so breaks are 0 by construction there; the
+  gates still state them.
+- **T-trunc-L (new, replaces the round-6 T-trunc for this round).** The round-6 T-trunc took as
+  target the most frequent dictionary-ranked word a prefix starts, which is C₁ itself by
+  construction, so it cannot measure whether a completion is right. T-trunc-L takes its targets and
+  weights from an independent source: the Leipzig `eng-com_web-public_2018_300K` word counts
+  (CC BY 4.0, `scripts/data/PROVENANCE.md`; counts summed over case variants). Targets: the 10,000
+  most frequent such words that are enabled dictionary words of 4+ letters, letters only, not alias
+  keys. Pairs: every prefix p of a target with 3 ≤ |p| < |target| that is neither a dictionary word
+  nor an alias key; weight = the target's Leipzig count (a user who stops at p is assumed to be
+  writing each target in proportion to its corpus frequency, each stopping length equally likely).
+  DEV when the FNV-1a hash of the target is even. Distinct unit = target.
+- **Named**: §1.5 T5 (English and Hebrew) plus `shated` → shared, all through production under
+  choice 2; and for choice 2 also `tomorr` → tomorrow and `becau` → because. The round-6 report
+  cases are reported.
+
+Harness: `ChannelRankingEval`, `CK_CH_ROUND=7`. Each input runs once through production
+`autoCorrect` (shipped tuning) with the probe; the replica recomputes the winner, guard G, the ρ
+step, κ and the floor with the production functions to classify the input as (a), (b), (c) or
+other, and production's completion function gives C₁/C₂. **Soundness:** at the chosen
+configuration, 2,000 seeded inputs (DEV sets) must give exactly production's output under choice 2
+(0 mismatches, or the run is void).
+
+### 19.3 Choice on DEV
+
+A configuration is admissible when:
+
+1. **N1.** GTC-DEV distinct breaks ≤ 0.5 % of the distinct targets the baseline gets right, and
+   distinct wrong-changed targets ≤ distinct fixed targets.
+2. **N2.** S-adj-DEV distinct base words broken or wrong-changed ≤ 0.5 % of base words.
+3. **N3a.** T-trunc-L-DEV completion accuracy: weighted (fix − break) ≥ **20 %** of the weight of
+   the pairs the baseline does not get right.
+4. **N3b.** T-trunc-L-DEV wrong-completion rate: weighted (break + wrong change) ≤ **15 %** of the
+   weight of the changed pairs (TEST bound 20 %: a choice made at the TEST bound on DEV would leave
+   no room for the DEV→TEST difference).
+5. **N4.** C-oov-DEV changed words ≤ **1.0 %** of C-oov-DEV words.
+6. **N5.** Every named case holds.
+
+Choice: the admissible configuration with the largest T-trunc-L-DEV weighted (fix − break); ties
+go to the larger μ, then the smaller G, the larger L₂, B off, W off (the more conservative). If none
+is admissible, choice 2 is not offered and TEST is not run.
+
+The bounds: wrong changes are allowed on GTC because a typo that C7 completes into a different word
+was already wrong when kept, but C7 must finish at least as many real typos right as wrong. C-oov
+allows 1.0 % against guard G's 0.5 % (§1.4) because choice 2 is opt-in and a valid unlisted word
+that starts a common word is exactly what a completing keyboard finishes. The wrong-completion
+rate is the cost a user of choice 2 pays: at most one completion in five may be a word they were
+not writing.
+
+### 19.4 Ship gate on TEST (one evaluation of the chosen configuration; all must hold)
+
+- **M1.** GTC-TEST distinct breaks ≤ 0.5 % of the distinct targets the baseline gets right, and
+  distinct wrong-changed targets ≤ distinct fixed targets.
+- **M2.** S-adj-TEST distinct base words broken or wrong-changed ≤ 0.5 % of base words.
+- **M3a.** T-trunc-L-TEST weighted (fix − break) ≥ 20 % of the weight the baseline does not get right.
+- **M3b.** T-trunc-L-TEST weighted (break + wrong change) ≤ 20 % of the changed weight.
+- **M4.** C-oov-TEST changed words ≤ 1.0 % of C-oov-TEST words.
+- **M5.** Named cases hold (including `tomorr` → tomorrow, `becau` → because).
+
+Reported, not gated: R-union fixes/breaks/wrong changes, distinct-target counts for every weighted
+figure, the round-6 report cases, and choice 3 against choice 1 on the same TEST inputs. Whatever
+TEST says, the default stays **choice 1** (maintainer decision). These thresholds are fixed now.
