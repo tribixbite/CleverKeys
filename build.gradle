@@ -655,6 +655,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.stt.VoiceSessionMachineTest',
     'tribixbite.cleverkeys.stt.VoiceTextPolicyTest',
     'tribixbite.cleverkeys.stt.MicPermissionGateTest',
+    'tribixbite.cleverkeys.stt.BufferedPcmSourceTest',
     'tribixbite.cleverkeys.stt.VoicePackManagerTest',
     'tribixbite.cleverkeys.stt.SttArchitectureDriftTest',
     'tribixbite.cleverkeys.stt.moonshine.MoonshineTokenizerTest',
@@ -1283,10 +1284,10 @@ tasks.register('runPureTests', JavaExec) {
   def ortNativeDir = project.findProperty('ortNative') ?: "${buildDir}/ort-native/arm64-v8a"
   systemProperty 'onnxruntime.native.path', ortNativeDir
 
-  // Allow single test via -PtestClass=ClassName
+  // Allow single test via -PtestClass=ClassName (or several: -PtestClass=A,sub.B)
   if (project.hasProperty('testClass')) {
     def cls = project.property('testClass')
-    args = ["tribixbite.cleverkeys.${cls}"]
+    args = cls.toString().split(',').collect { "tribixbite.cleverkeys.${it.trim()}" }
   } else {
     args = pureTestClasses
   }

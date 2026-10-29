@@ -121,6 +121,96 @@ class MoonshineV2StreamingEngineTest {
         }
     }
 
+    /**
+     * A recogniser that fell behind real time gets the backlog in ONE accept (the buffered
+     * microphone drains everything queued). Decoding it once — not once per second of
+     * backlog — is what lets it catch up: each decode re-reads the whole utterance, so
+     * per-second decoding of a backlog only grows it (Saga 2026-10-29: passes 2–6 s apart
+     * after ~40 s of speech). The text must be as good as streaming it.
+     */
+    @Test
+    fun aBacklogDeliveredInOneAcceptIsDecodedOnce() {
+        assumeTrue("voice pack not built ($pack)", pack.isFile)
+        val clips = clips()
+        assumeTrue("no sample clips in $samples", clips.isNotEmpty())
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-backlog").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            manager.import(pack.inputStream())
+            val installed = manager.activePack("en")!!
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions(threads = 2)).use { engine ->
+                var errors = 0
+                var words = 0
+                for ((wav, reference) in clips.take(4)) {
+                    val pcm = readWav(wav)
+                    val s = engine.newSession() as MoonshineV2StreamingEngine.Session
+                    // 1 s of live audio, then a 3.5 s backlog in one call.
+                    s.accept(pcm.copyOfRange(0, 16_000))
+                    assertThat(s.decodePasses).isEqualTo(1)
+                    val backlog = s.accept(pcm.copyOfRange(16_000, minOf(pcm.size, 72_000)))
+                    assertWithMessage("a backlog of whole chunks yields one partial").that(backlog).isNotNull()
+                    assertWithMessage("the backlog is decoded once").that(s.decodePasses).isEqualTo(2)
+                    if (pcm.size > 72_000) s.accept(pcm.copyOfRange(72_000, pcm.size))
+                    val final = s.finish()
+                    s.close()
+                    errors += wordErrors(reference, final.text)
+                    words += norm(reference).size
+                    println("backlog ${wav.name} decodes=${s.decodePasses} | ${final.text}")
+                }
+                assertWithMessage("WER with a coalesced backlog").that(errors.toDouble() / words).isLessThan(0.10)
+            }
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
+    /**
+     * The engine's declared [MoonshineV2StreamingEngine.maxUtteranceSeconds] is where the
+     * keyboard stops listening by itself, so an utterance that long must still come out right.
+     * LibriSpeech clips joined with 0.8 s pauses, streamed in 320 ms pieces. Beyond the bound
+     * the decoder loops (46 s: "some use of some use of…", 151 errors for 125 words).
+     */
+    @Test
+    fun anUtteranceAsLongAsTheEngineAllowsStaysCoherent() {
+        assumeTrue("voice pack not built ($pack)", pack.isFile)
+        val clips = clips()
+        assumeTrue("no sample clips in $samples", clips.isNotEmpty())
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-long").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            manager.import(pack.inputStream())
+            val installed = manager.activePack("en")!!
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions(threads = 2)).use { engine ->
+                val limitSamples = engine.maxUtteranceSeconds * 16_000
+                val gap = FloatArray(12_800)
+                var pcm = FloatArray(0)
+                val used = ArrayList<String>()
+                for ((wav, reference) in clips) {
+                    if (pcm.size >= limitSamples) break
+                    pcm = if (pcm.isEmpty()) readWav(wav) else pcm + gap + readWav(wav)
+                    used += reference
+                }
+                assumeTrue("the sample clips are shorter than the bound", pcm.size >= limitSamples)
+                val s = engine.newSession()
+                var off = 0
+                while (off < pcm.size) {
+                    val k = minOf(5_120, pcm.size - off)
+                    s.accept(pcm.copyOfRange(off, off + k))
+                    off += k
+                }
+                val final = s.finish()
+                s.close()
+                val reference = used.joinToString(" ")
+                val errors = wordErrors(reference, final.text)
+                val words = norm(reference).size
+                println("long ${pcm.size / 16_000.0}s errors=$errors/$words | ${final.text}")
+                assertWithMessage("WER at ${pcm.size / 16_000.0} s: ${final.text}").that(errors.toDouble() / words).isLessThan(0.10)
+            }
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
     @Test
     fun loadingAPackWithAMissingFileFailsWithASpeechEngineException() {
         val dir = kotlin.io.path.createTempDirectory("ck-voice-missing").toFile()

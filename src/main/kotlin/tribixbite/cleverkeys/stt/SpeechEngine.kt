@@ -104,6 +104,16 @@ interface SpeechEngine : Closeable {
     fun newSession(): SpeechSession
 
     fun memoryReport(): SpeechMemoryReport
+
+    /**
+     * The longest utterance (seconds) this engine transcribes coherently in one session. The
+     * keyboard ends a listening period there by itself (never later than its own one-minute
+     * limit). An engine that decodes a whole utterance at once can fall apart beyond its
+     * training length: Moonshine v2 tiny looped "some use of some use of…" on 46 s of
+     * LibriSpeech (2026-10-29). # TODO: voice activity detection — end a segment at a pause
+     * and continue, instead of stopping.
+     */
+    val maxUtteranceSeconds: Int get() = 60
 }
 
 /** One listening period. */

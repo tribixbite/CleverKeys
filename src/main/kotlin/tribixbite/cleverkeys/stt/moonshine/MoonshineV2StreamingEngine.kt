@@ -60,6 +60,13 @@ class MoonshineV2StreamingEngine private constructor(
 
     override val sampleRate: Int = SAMPLE_RATE
 
+    /**
+     * Measured on LibriSpeech test-clean concatenations, streamed (2026-10-29, JVM, ORT 1.21.1):
+     * 23.6 s → 0/57 errors, 34.7 s → 2/89, 46.2 s → a repetition loop (151/125). The engine
+     * test pins this bound (`anUtteranceAsLongAsTheEngineAllowsStaysCoherent`).
+     */
+    override val maxUtteranceSeconds: Int = MAX_UTTERANCE_SECONDS
+
     override fun newSession(): SpeechSession = Session()
 
     override fun memoryReport(): SpeechMemoryReport = report
@@ -130,8 +137,10 @@ class MoonshineV2StreamingEngine private constructor(
     /**
      * One listening period: the frontend states, the accumulated features, the decoder memory
      * and the previous pass's tokens. Not thread-safe except [cancel].
+     *
+     * `internal` (not private) only so the engine test can read [decodePasses].
      */
-    private inner class Session : SpeechSession {
+    internal inner class Session : SpeechSession {
         private val states = HashMap<String, Any>() // name → FloatArray | LongArray
         private val featureDim = config.encoderDim
 
@@ -156,6 +165,10 @@ class MoonshineV2StreamingEngine private constructor(
 
         private var finished = false
 
+        /** Decoder passes run so far (the expensive step); read by the engine test. */
+        internal var decodePasses = 0
+            private set
+
         init {
             for ((name, shape) in config.stateShapes) {
                 val n = shape.fold(1L) { a, b -> a * b }.toInt()
@@ -163,21 +176,28 @@ class MoonshineV2StreamingEngine private constructor(
             }
         }
 
+        /**
+         * Every whole [CHUNK_SECONDS] of [pcm] goes through the frontend and the encoder, but the
+         * decoder (the expensive step: it re-reads the whole utterance) runs ONCE per call. A
+         * caller that fell behind real time hands over its backlog in one call and catches up;
+         * decoding it chunk by chunk would only grow the backlog (Saga 2026-10-29).
+         */
         override fun accept(pcm: FloatArray): SpeechHypothesis? {
             if (cancelled || finished || closed) return null
             var offset = 0
-            var latest: SpeechHypothesis? = null
+            var fed = false
             while (offset < pcm.size) {
                 val take = min(CHUNK_SAMPLES - pendingLen, pcm.size - offset)
                 System.arraycopy(pcm, offset, pending, pendingLen, take)
                 pendingLen += take
                 offset += take
                 if (pendingLen == CHUNK_SAMPLES) {
-                    latest = pass(pending.copyOf(pendingLen), final = false) ?: latest
+                    if (!feed(pending.copyOf(pendingLen), final = false)) return null
                     pendingLen = 0
+                    fed = true
                 }
             }
-            return latest
+            return if (fed) decodePass(final = false) else null
         }
 
         override fun finish(): SpeechHypothesis {
@@ -198,17 +218,29 @@ class MoonshineV2StreamingEngine private constructor(
         }
 
         /** Feed [chunk], decode, fold into the stabilizer. Null when cancelled mid-pass. */
-        private fun pass(chunk: FloatArray, final: Boolean): SpeechHypothesis? {
+        private fun pass(chunk: FloatArray, final: Boolean): SpeechHypothesis? =
+            if (feed(chunk, final)) decodePass(final) else null
+
+        /** Frontend + encoder for [chunk] (memory grows). False when cancelled mid-way. */
+        private fun feed(chunk: FloatArray, final: Boolean): Boolean {
             try {
                 runFrontend(chunk)
-                if (cancelled) return null
+                if (cancelled) return false
                 encodeStable(final)
-                if (cancelled) return null
-                tokens = decode()
-                if (cancelled) return null
             } catch (e: OrtException) {
                 throw SpeechEngineException("Moonshine inference failed: ${e.message}", e)
             }
+            return !cancelled
+        }
+
+        /** Decode the memory so far and fold it into the stabilizer. Null when cancelled. */
+        private fun decodePass(final: Boolean): SpeechHypothesis? {
+            try {
+                tokens = decode()
+            } catch (e: OrtException) {
+                throw SpeechEngineException("Moonshine inference failed: ${e.message}", e)
+            }
+            if (cancelled) return null
             return stabilizer.update(tokenizer.decode(tokens), isFinal = final)
         }
 
@@ -318,6 +350,7 @@ class MoonshineV2StreamingEngine private constructor(
         /** Greedy decode over the current memory with the previous tokens as a speculative prefix. */
         private fun decode(): IntArray {
             if (memoryLen == 0) return IntArray(0)
+            decodePasses++
             val maxTokens = min(ceil(memoryLen * FRAME_SECONDS * TOKENS_PER_SECOND).toInt(), config.maxSeqLen)
             val memTensor = OnnxTensor.createTensor(
                 env, FloatBuffer.wrap(memory, 0, memoryLen * config.decoderDim).slice(),
@@ -502,6 +535,9 @@ class MoonshineV2StreamingEngine private constructor(
 
         /** Seconds of audio per recognition pass (two-pass agreement floor, research §5.2). */
         const val CHUNK_SECONDS = 1.0
+
+        /** See [maxUtteranceSeconds]. */
+        const val MAX_UTTERANCE_SECONDS = 30
         val CHUNK_SAMPLES = (SAMPLE_RATE * CHUNK_SECONDS).toInt()
 
         /** Encoder frame period (50 Hz) and the runtime's decode budget per second of audio. */

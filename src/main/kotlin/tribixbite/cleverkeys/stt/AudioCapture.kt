@@ -89,3 +89,122 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
         const val BUFFER_SECONDS = 4
     }
 }
+
+/**
+ * Decouples reading the microphone from recognising it (device test 2026-10-29).
+ *
+ * The recogniser runs one pass per second of audio and every pass re-decodes the utterance, so
+ * passes get slower as the utterance grows. When the capture thread both read the recorder and
+ * ran those passes, a pass longer than the recorder's ring (4 s) overran it: on the Saga
+ * AudioFlinger logged "RecordThread: buffer overflow" after ~35 s of speech and whole sentences
+ * were missing from the final text. Here a dedicated thread ([THREAD_NAME]) keeps draining
+ * [inner] into a queue, so the device ring never fills; the recogniser takes from the queue at
+ * its own pace, and [read] hands it EVERYTHING queued (up to its buffer) so a recogniser that
+ * fell behind can decode the backlog in one pass and catch up.
+ *
+ * Memory is bounded: after [maxSamples] the reader stops and the source ends, as if the
+ * recorder had (the listening period's own limit is shorter). Audio stays in memory only.
+ *
+ * [read] keeps returning queued audio after [close], then 0 — the caller drains what was
+ * spoken before stop was pressed. A device error ends the stream with -1 after the audio
+ * queued before it.
+ */
+class BufferedPcmSource(
+    private val inner: PcmSource,
+    private val maxSamples: Int,
+    private val blockSamples: Int = DEFAULT_BLOCK_SAMPLES,
+) : PcmSource {
+
+    private val queue = java.util.concurrent.LinkedBlockingQueue<FloatArray>()
+
+    @Volatile
+    private var running = false
+    private var reader: Thread? = null
+
+    /** The queue head being consumed (or a sticky end marker), and how far into it. */
+    private var carry: FloatArray? = null
+    private var carryOffset = 0
+
+    override fun start() {
+        inner.start() // a refusal reaches the caller before any thread exists
+        running = true
+        reader = Thread(::readLoop, THREAD_NAME).apply {
+            isDaemon = true
+            start()
+        }
+    }
+
+    private fun readLoop() {
+        val block = FloatArray(blockSamples)
+        var total = 0L
+        var failed = false
+        try {
+            while (running && total < maxSamples) {
+                val n = inner.read(block)
+                if (n < 0) {
+                    failed = true
+                    break
+                }
+                if (n == 0) break
+                val take = minOf(n.toLong(), maxSamples - total).toInt()
+                queue.put(block.copyOf(take))
+                total += take
+            }
+        } catch (e: Exception) {
+            // The recorder failed mid-read (released under us, device error): end with an error
+            // unless we were closing anyway.
+            failed = running
+        } finally {
+            queue.put(if (failed) ERROR else END)
+        }
+    }
+
+    override fun read(buffer: FloatArray): Int {
+        var n = 0
+        while (n < buffer.size) {
+            // Block only for the first piece; after that take what is already queued.
+            val piece = carry ?: (if (n == 0) queue.take() else queue.poll()) ?: break
+            if (piece === END || piece === ERROR) {
+                carry = piece // sticky: every later read reports the end too
+                return if (n > 0) n else if (piece === ERROR) -1 else 0
+            }
+            val k = minOf(buffer.size - n, piece.size - carryOffset)
+            System.arraycopy(piece, carryOffset, buffer, n, k)
+            n += k
+            carryOffset += k
+            if (carryOffset == piece.size) {
+                carry = null
+                carryOffset = 0
+            } else {
+                carry = piece
+            }
+        }
+        return n
+    }
+
+    override fun close() {
+        if (!running && reader == null) {
+            inner.close()
+            return
+        }
+        running = false
+        // Let the reader finish its current block (≤ blockSamples of audio) before the recorder
+        // is released, so it never reads a released AudioRecord.
+        reader?.join(JOIN_MILLIS)
+        inner.close()
+        reader?.join(JOIN_MILLIS)
+        reader = null
+    }
+
+    companion object {
+        const val THREAD_NAME = "voice-mic-reader"
+
+        /** 100 ms reads: low latency, and the reader re-checks [running] ten times a second. */
+        const val DEFAULT_BLOCK_SAMPLES = 1_600
+
+        private const val JOIN_MILLIS = 1_000L
+
+        private val END = FloatArray(0)
+        private val ERROR = FloatArray(0)
+    }
+}

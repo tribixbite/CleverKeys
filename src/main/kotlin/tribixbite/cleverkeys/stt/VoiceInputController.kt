@@ -77,7 +77,8 @@ class VoiceInputController(
     private val host: VoiceHost,
     private val registry: SpeechEngineRegistry = SpeechEngineRegistry.DEFAULT,
     private val packs: () -> VoicePackManager = { VoicePacks.manager(host.context) },
-    private val capture: (sampleRate: Int) -> PcmSource = { MicrophoneCapture(it) },
+    // The recorder is drained on its own thread so a slow recognition pass never overruns it.
+    private val capture: (sampleRate: Int) -> PcmSource = { BufferedPcmSource(MicrophoneCapture(it), maxSamples = it * MAX_BUFFER_SECONDS) },
 ) {
     private val main = Handler(Looper.getMainLooper())
     private val workerThread = HandlerThread("voice-input").apply { start() }
@@ -255,12 +256,15 @@ class VoiceInputController(
         host.announce(text(R.string.voice_announce_listening))
         val s = eng.newSession().also { session = it }
         val source = capture(eng.sampleRate)
-        Thread({ captureLoop(gen, s, source, eng.sampleRate) }, "voice-capture").start()
+        val limitNanos = minOf(MAX_LISTEN_SECONDS, eng.maxUtteranceSeconds.coerceAtLeast(1).toLong()) * 1_000_000_000L
+        Thread({ captureLoop(gen, s, source, eng.sampleRate, limitNanos) }, "voice-capture").start()
     }
 
     /** Capture thread: microphone → session; results posted to the main thread. */
-    private fun captureLoop(gen: Int, s: SpeechSession, source: PcmSource, sampleRate: Int) {
-        val buffer = FloatArray(sampleRate * READ_MILLIS / 1000)
+    private fun captureLoop(gen: Int, s: SpeechSession, source: PcmSource, sampleRate: Int, limitNanos: Long) {
+        // Large enough to take a whole backlog in one read: one accept = one decode, so a
+        // recogniser that fell behind catches up (BufferedPcmSource returns what is queued).
+        val buffer = FloatArray(sampleRate * READ_MAX_SECONDS)
         val started = System.nanoTime()
         try {
             try {
@@ -283,14 +287,21 @@ class VoiceInputController(
                 if (n == 0) break
                 val h = s.accept(if (n == buffer.size) buffer.copyOf() else buffer.copyOf(n))
                 if (h != null) post(gen) { dispatch(VoiceEvent.Partial(h)) }
-                if (!autoStopped && System.nanoTime() - started > MAX_LISTEN_NANOS) {
+                if (!autoStopped && System.nanoTime() - started > limitNanos) {
                     autoStopped = true
                     post(gen) { if (machine.state == VoiceState.LISTENING) dispatch(VoiceEvent.Toggle) }
                 }
             }
             source.close()
             if (s.isCancelled) return
-            // Stop pressed: the recorder is closed; decode what is buffered.
+            // Stop pressed: the recorder is closed. Audio spoken before stop that the recogniser
+            // had not reached yet is still queued — decode it, then the final pass.
+            while (!s.isCancelled) {
+                val n = source.read(buffer)
+                if (n <= 0) break
+                s.accept(buffer.copyOf(n))
+            }
+            if (s.isCancelled) return
             val final = s.finish()
             post(gen) { dispatch(VoiceEvent.Final(final)) }
         } catch (e: Exception) {
@@ -352,15 +363,18 @@ class VoiceInputController(
     companion object {
         private const val TAG = "VoiceInput"
 
-        /** Microphone read size: 320 ms of audio per read. */
-        private const val READ_MILLIS = 320
+        /** Largest single read from the buffered microphone (a backlog decoded in one pass). */
+        private const val READ_MAX_SECONDS = 8
+
+        /** Audio the buffered microphone may hold: the 60 s period plus slack, ~4.5 MB. */
+        private const val MAX_BUFFER_SECONDS = 70
 
         /**
          * One listening period stops by itself after a minute: every pass re-decodes the whole
          * utterance, so cost grows with its length (research §5.2), and a forgotten open
          * microphone must not run on.
          */
-        private const val MAX_LISTEN_NANOS = 60L * 1_000_000_000
+        private const val MAX_LISTEN_SECONDS = 60L
 
         /** A second key press within this window opens the screen an explanation names. */
         private const val EXPLAIN_REPEAT_MILLIS = 4_000L
