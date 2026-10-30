@@ -299,7 +299,6 @@
     <string name="short_swipe_tap_hint">برای سفارشی‌سازی اشاره کشیدن کوتاه، روی هر کلید زیر ضربه بزنید</string>
     <string name="short_swipe_instruction_title">برای سفارشی‌سازی یک کلید، آن را تایپ کنید</string>
     <string name="short_swipe_instruction_body">صفحه‌کلید زیر همان صفحه‌کلید واقعی CleverKeys شماست.\nبرای افزودن اشاره کشیدن کوتاه، روی یک کلید ضربه بزنید.</string>
-    <string name="short_swipe_custom_mappings">نگاشت‌های سفارشی</string>
 
     <!-- تنظیمات تم / Theme Settings -->
     <string name="theme_settings_title">تم‌های صفحه‌کلید</string>
@@ -907,6 +906,30 @@
     <string name="subkey_edit_remove">برداشتن</string>
     <string name="subkey_toast_removed">زیرکلید %1$s از کلید %2$s برداشته شد</string>
     <string name="subkey_toast_restored">زیرکلید پیش‌فرض %1$s روی کلید %2$s بازگردانده شد</string>
+    <string name="subkey_source_layout">چیدمان</string>
+    <string name="subkey_source_shared">داخلی</string>
+    <string name="subkey_source_extra_key">کلید اضافه</string>
+    <string name="subkey_source_hidden">پنهان</string>
+    <string name="subkey_source_custom">سفارشی</string>
+    <string name="subkey_source_removed">برداشته‌شده</string>
+    <string name="subkey_slot_empty">خالی</string>
+    <string name="subkey_slot_nothing">هیچ</string>
+    <string name="subkey_slot_replaces">به‌جای %1$s</string>
+    <string name="subkey_dialog_subkeys_header">زیرکلیدها</string>
+    <string name="subkey_dialog_layout_hint">زیرکلیدهای %1$s و کشیدن‌های کوتاه سفارشی. برای تغییر، روی یک جهت ضربه بزنید.</string>
+    <string name="subkey_layout_copy_title">زیرکلید چیدمان تغییر کند؟</string>
+    <string name="subkey_layout_copy_body">این زیرکلید را %1$s تعریف کرده است. چیدمان داخلی بدون تغییر می‌ماند: تغییر در یک رونوشت به نام %2$s ذخیره می‌شود که در فهرست چیدمان‌ها جای آن را می‌گیرد. در مدیریت چیدمان‌ها می‌توان به نسخه اصلی برگشت.</string>
+    <string name="subkey_layout_copy_confirm">ساخت رونوشت</string>
+    <string name="subkey_layout_copy_global">تغییر در همه چیدمان‌ها</string>
+    <string name="subkey_layout_copy_name">%1$s (تغییریافته)</string>
+    <string name="subkey_layout_toast_copied">%1$s ساخته شد</string>
+    <string name="subkey_layout_toast_saved">در %1$s ذخیره شد</string>
+    <string name="subkey_layout_toast_failed">چیدمان تغییر نکرد: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">این کنش نمی‌تواند بخشی از چیدمان باشد، پس به‌صورت کشیدن کوتاه سفارشی ذخیره شد.</string>
+    <string name="layout_manager_badge_modified_copy">رونوشت تغییریافته %1$s</string>
+    <string name="layout_manager_revert">بازگشت به اصلی</string>
+    <string name="layout_manager_revert_title">به چیدمان اصلی برگردد؟</string>
+    <string name="layout_manager_revert_body">%1$s جای این رونوشت تغییریافته را می‌گیرد. زیرکلیدهای تغییریافته کنار گذاشته می‌شوند؛ انتخاب‌های زبان، پوسته و فاصله کلیدها می‌مانند.</string>
     <string name="gesture_selection_delete_header">حالت انتخاب و حذف</string>
     <string name="gesture_selection_delete_desc">کشیدن کوتاه + نگه داشتن روی پس‌بر برای انتخاب متن؛ سپس رها کنید تا حذف شود.</string>
     <string name="gesture_tap_typing_header">ضربه و تایپ</string>
@@ -1619,7 +1642,6 @@
     <string name="extra_keys_group_functions">کلیدهای تابعی</string>
     <string name="short_swipe_toast_all_reset">همهٔ سفارشی‌سازی‌ها بازنشانی شد</string>
     <string name="short_swipe_toast_mapped">%1$s ← «%2$s» اختصاص یافت (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">نگاشت‌های موجود چیدمان + نگاشت‌های سفارشی را نشان می‌دهد</string>
     <string name="short_swipe_dialog_hint_no_layout">برای افزودن یا ویرایش اشارهٔ کشیدن کوتاه، روی یک جهت ضربه بزنید</string>
     <string name="short_swipe_action_desc_command">فرمان: %1$s</string>
     <string name="short_swipe_action_desc_text">متن: «%1$s»</string>

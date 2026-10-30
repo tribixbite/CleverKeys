@@ -41,6 +41,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.toArgb
+import tribixbite.cleverkeys.a11y.KeyLabels
+import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.customization.*
@@ -96,8 +101,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
     val focusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
     val rootView = LocalView.current
+    val layoutEditor = remember {
+        LayoutSubkeyEditor(
+            DirectBootAwarePreferences.get_shared_preferences(context),
+            context.resources,
+            resolveSystemName = { CleverKeysService.layoutSourceSnapshot()?.builtInName },
+        )
+    }
 
     // Load mappings on first composition
     LaunchedEffect(Unit) {
@@ -110,21 +121,38 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     // Text field state for capturing key presses
     var textFieldValue by remember { mutableStateOf(TextFieldValue("")) }
 
-    // Selected key for customization modal - now includes both keyCode and optional KeyboardData.Key
-    // Saveable (with the direction and the palette flag): rotating with the palette open keeps it
-    // open on the same key and direction (audit 2026-10-08). The Key itself is display-only.
+    // The captured key: the TEXT it typed (saveable, to find the key again after rotation), its
+    // runtime short-swipe code (ShortSwipeKeyCodes — Enter is its glyph, not "\n"), the live key
+    // and where its subkeys come from (SubkeyKeyContext). Saveable with the direction and the
+    // palette flags: rotating with the palette open keeps it open (audit 2026-10-08).
+    var selectedTyped by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedKeyCode by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedKey by remember { mutableStateOf<KeyboardData.Key?>(null) }
-    var selectedKeyRowHeight by remember { mutableFloatStateOf(1.0f) }
+    var keyContext by remember { mutableStateOf<SubkeyKeyContext?>(null) }
 
-    // Direction being edited
+    // Direction being edited, and whether the edit goes into the layout (copy) or a custom mapping
     var editingDirection by rememberSaveable { mutableStateOf<SwipeDirection?>(null) }
+    var editTarget by rememberSaveable { mutableStateOf(SlotEditTarget.GLOBAL) }
 
     // Show command palette
     var showCommandPalette by rememberSaveable { mutableStateOf(false) }
 
     // Track last captured key for customization
     var lastCapturedKey by remember { mutableStateOf<String?>(null) }
+
+    fun openKey(typed: String) {
+        val liveKey = CleverKeysService.findKeyByChar(typed)
+        val code = ShortSwipeKeyCodes.ofKey(liveKey?.keys?.getOrNull(0)) ?: ShortSwipeKeyCodes.canonical(typed)
+        selectedTyped = typed
+        selectedKeyCode = code
+        keyContext = SubkeyKeyContext.resolve(context, layoutEditor, liveKey)
+        lastCapturedKey = ShortSwipeKeyCodes.displayName(code, liveKey?.keys?.getOrNull(0), context::getString)
+    }
+
+    // After rotation the saveable key text survives but the live key does not: find it again.
+    LaunchedEffect(selectedTyped) {
+        val typed = selectedTyped
+        if (typed != null && keyContext == null) openKey(typed)
+    }
 
     // Request focus when the screen opens to show keyboard
     LaunchedEffect(Unit) {
@@ -142,18 +170,10 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     LaunchedEffect(textFieldValue.text) {
         val text = textFieldValue.text
         if (text.isNotEmpty()) {
-            // Get the last character typed
-            val lastChar = text.last().toString()
-            lastCapturedKey = lastChar.lowercase()
-            selectedKeyCode = lastChar.lowercase()
-
-            // Try to find the full KeyboardData.Key from the loaded layout
-            val foundKey = CleverKeysService.findKeyByChar(lastChar)
-            selectedKey = foundKey
-            if (foundKey != null) {
-                selectedKeyRowHeight = CleverKeysService.getRowHeightForKey(foundKey)
-            }
-
+            // The last code point typed (an emoji is two chars). Enter types "\n" and Space " ":
+            // openKey maps them to their keys, never to a mapping stored under the raw text.
+            val lastChar = String(Character.toChars(text.codePointBefore(text.length)))
+            openKey(lastChar)
             // Clear the text field
             textFieldValue = TextFieldValue("")
         }
@@ -291,7 +311,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     if (lastCapturedKey != null) {
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            text = stringResource(R.string.short_swipe_last_key, lastCapturedKey?.uppercase().orEmpty()),
+                            text = stringResource(R.string.short_swipe_last_key, lastCapturedKey.orEmpty()),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -300,19 +320,54 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
             }
         }
 
+        /** Apply a layout edit (set, or remove with a null value) and refresh the dialog. */
+        fun applyLayoutEdit(direction: SwipeDirection, value: String?): Boolean {
+            val ctx = keyContext ?: return false
+            val entry = ctx.entry ?: return false
+            val outcome = layoutEditor.apply(ctx.entryIndex, entry, ctx.row, ctx.col, direction, value)
+            when (outcome) {
+                is LayoutSubkeyEditor.Outcome.Saved -> {
+                    keyContext = ctx.afterLayoutEdit(context, layoutEditor, outcome.entry, direction)
+                    val name = layoutEditor.displayName(outcome.entry)
+                    Toast.makeText(
+                        context,
+                        context.getString(
+                            if (outcome.copyCreated) R.string.subkey_layout_toast_copied else R.string.subkey_layout_toast_saved,
+                            name
+                        ),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return true
+                }
+                is LayoutSubkeyEditor.Outcome.Failed -> {
+                    Toast.makeText(
+                        context, context.getString(R.string.subkey_layout_toast_failed, outcome.reason), Toast.LENGTH_LONG
+                    ).show()
+                    return false
+                }
+            }
+        }
+
         // Key customization modal
         selectedKeyCode?.let { keyCode ->
-            val keyMappings = mappings.filter { it.keyCode == keyCode }
-                .associateBy { it.direction }
+            val ctx = keyContext
+            val keyMappings = mappings.filter { it.keyCode == keyCode }.associateBy { it.direction }
+            val slots = remember(ctx, keyMappings) {
+                KeySubkeySources.resolve(ctx?.definedKey, ctx?.layoutOwned == true, ctx?.liveKey, keyMappings)
+            }
+            val title = ShortSwipeKeyCodes.displayName(keyCode, ctx?.liveKey?.keys?.getOrNull(0), context::getString)
 
             KeyCustomizationDialog(
-                keyCode = keyCode,
-                key = selectedKey,  // Pass the full key if available
-                rowHeight = selectedKeyRowHeight,
-                existingMappings = keyMappings,
+                title = title,
+                key = ctx?.liveKey,
+                rowHeight = ctx?.rowHeight ?: 1.0f,
+                slots = slots,
+                layoutName = ctx?.layoutName,
+                copyName = ctx?.copyName,
                 onDismiss = {
                     selectedKeyCode = null
-                    selectedKey = null
+                    selectedTyped = null
+                    keyContext = null
                     editingDirection = null
                     // Refocus the text field to keep keyboard visible
                     scope.launch {
@@ -320,14 +375,28 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         focusRequester.requestFocus()
                     }
                 },
-                onDirectionTapped = { direction ->
-                    android.util.Log.d("ShortSwipe", "Direction tapped: $direction, showing command palette")
+                onEditSlot = { direction, target ->
                     editingDirection = direction
+                    editTarget = target
                     showCommandPalette = true
                 },
-                onDeleteMapping = { direction ->
+                onRemoveSlot = { direction, target ->
+                    if (target == SlotEditTarget.LAYOUT) {
+                        applyLayoutEdit(direction, null)
+                    } else {
+                        // A subkey the keyboard shows here (shared row, Extra Keys) is hidden by a
+                        // `removed` mapping; a custom mapping alone is simply deleted.
+                        val shown = slots.firstOrNull { it.direction == direction }?.shownValue != null
+                        scope.launch { ShortSwipeAssignment.remove(context, manager, keyCode, direction, shown) }
+                    }
+                },
+                onRestoreSlot = { direction ->
+                    // Over a subkey the "restored" toast is true; a custom mapping on an empty slot
+                    // is just deleted (its row empties).
+                    val hidesSomething = slots.firstOrNull { it.direction == direction }?.shadowedValue != null
                     scope.launch {
-                        manager.removeMapping(keyCode, direction)
+                        if (hidesSomething) ShortSwipeAssignment.restoreDefault(context, manager, keyCode, direction)
+                        else manager.removeMapping(keyCode, direction)
                     }
                 }
             )
@@ -335,61 +404,188 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
 
         // Command palette for selecting action
         // Uses onMappingSelected to get both custom label and action separately
-        if (showCommandPalette && selectedKeyCode != null && editingDirection != null) {
+        val paletteKeyCode = selectedKeyCode
+        val paletteDirection = editingDirection
+        if (showCommandPalette && paletteKeyCode != null && paletteDirection != null) {
             CommandPaletteDialog(
                 onDismiss = {
                     showCommandPalette = false
                     editingDirection = null
                 },
                 onMappingSelected = { selection ->
-                    // This callback receives separate label and action from the dialog
+                    val mapping = ShortSwipeMapping(
+                        keyCode = paletteKeyCode,
+                        direction = paletteDirection,
+                        displayText = selection.displayLabel,
+                        actionType = selection.actionType,
+                        actionValue = selection.actionValue,
+                        useKeyFont = selection.useKeyFont
+                    )
+                    val layoutValue = XmlAttributeMapper.layoutValue(mapping)
                     scope.launch {
-                        // Shared with the subkey popover's assign screen (ShortSwipeAssignment).
-                        ShortSwipeAssignment.apply(context, manager, selectedKeyCode!!, editingDirection!!, selection)
+                        if (editTarget == SlotEditTarget.LAYOUT && layoutValue != null) {
+                            applyLayoutEdit(paletteDirection, layoutValue)
+                        } else {
+                            if (editTarget == SlotEditTarget.LAYOUT) {
+                                // An action a layout cannot hold (a name-only command): a custom
+                                // short swipe instead, and say so.
+                                Toast.makeText(context, R.string.subkey_layout_toast_not_layout, Toast.LENGTH_LONG).show()
+                            }
+                            // Shared with the subkey popover's assign screen (ShortSwipeAssignment).
+                            ShortSwipeAssignment.apply(context, manager, paletteKeyCode, paletteDirection, selection)
+                        }
                         showCommandPalette = false
                         editingDirection = null
                     }
                 },
                 subtitle = stringResource(
                     R.string.subkey_assign_title,
-                    selectedKeyCode!!.uppercase(),
-                    stringResource(editingDirection!!.displayNameRes)
+                    ShortSwipeKeyCodes.displayName(paletteKeyCode, keyContext?.liveKey?.keys?.getOrNull(0), context::getString),
+                    stringResource(paletteDirection.displayNameRes)
                 ),
-                // An existing mapping opens in its own editor, filled in (shared with the
-                // subkey popover's edit screen); backing out of it reaches the full list.
-                initialMapping = mappings.firstOrNull {
-                    it.keyCode == selectedKeyCode && it.direction == editingDirection
+                // An existing custom mapping opens in its own editor, filled in (shared with the
+                // subkey popover's edit screen); backing out of it reaches the full list. A layout
+                // subkey starts from the list.
+                initialMapping = if (editTarget == SlotEditTarget.LAYOUT) null else mappings.firstOrNull {
+                    it.keyCode == paletteKeyCode && it.direction == paletteDirection
                 }
             )
         }
     }
 }
 
+/** Where an edit of a slot goes: the layout's own XML (copying a built-in first) or a custom mapping. */
+enum class SlotEditTarget { LAYOUT, GLOBAL }
+
 /**
- * Key customization dialog that shows the magnified key with all 8 direction zones.
- * If a KeyboardData.Key is available, it shows the full layout-defined sub-labels.
- * Otherwise, falls back to showing just the key code with custom mappings.
+ * The captured key and where its subkeys come from (docs/specs/subkey-customization-current.md
+ * "Sources in the per-key dialog").
  *
- * @param keyCode The key code string (e.g., "h")
- * @param key Optional full KeyboardData.Key from the loaded layout
- * @param rowHeight The row height for proper aspect ratio
- * @param existingMappings Custom short swipe mappings for this key
- * @param onDismiss Called when dialog is dismissed
- * @param onDirectionTapped Called when a direction zone is tapped
- * @param onDeleteMapping Called when a mapping should be deleted
+ * @property liveKey the key as the keyboard shows it (null when it could not be found)
+ * @property definedKey the key as its definition declares it: the layout's own XML key when
+ *   [layoutOwned], the shared bottom-row key, or [liveKey] when no definition is known
+ * @property entryIndex / [entry] the `layouts` preference entry the key belongs to
+ * @property row / [col] the key's position in that entry's XML
+ * @property layoutName the entry's display name; [copyName] the name of the copy a LAYOUT edit
+ *   would create (null when the entry is already a custom layout, edited in place)
+ */
+internal data class SubkeyKeyContext(
+    val liveKey: KeyboardData.Key?,
+    val rowHeight: Float,
+    val definedKey: KeyboardData.Key?,
+    val layoutOwned: Boolean,
+    val entryIndex: Int,
+    val entry: tribixbite.cleverkeys.prefs.LayoutsPreference.Layout?,
+    val row: Int,
+    val col: Int,
+    val layoutName: String?,
+    val copyName: String?,
+) {
+    /**
+     * The context after [newEntry] replaced the entry with [direction] edited: the dialog shows
+     * the edit at once, before the keyboard has reloaded its layouts.
+     */
+    fun afterLayoutEdit(
+        context: Context,
+        editor: LayoutSubkeyEditor,
+        newEntry: tribixbite.cleverkeys.prefs.LayoutsPreference.Layout,
+        direction: SwipeDirection,
+    ): SubkeyKeyContext {
+        val definition = editor.definition(newEntry)
+        val newDefined = definition?.rows?.getOrNull(row)?.keys?.getOrNull(col) ?: definedKey
+        val newValue = newDefined?.keys?.getOrNull(direction.subLabelIndex)
+        return copy(
+            liveKey = liveKey?.let { KeySubkeySources.withSubkey(it, direction, newValue) },
+            definedKey = newDefined,
+            entry = newEntry,
+            layoutName = editor.displayName(newEntry),
+            copyName = null,
+        )
+    }
+
+    companion object {
+        /** Resolve [liveKey] against the keyboard's current layout entry (see the class doc). */
+        fun resolve(context: Context, editor: LayoutSubkeyEditor, liveKey: KeyboardData.Key?): SubkeyKeyContext {
+            val rowHeight = liveKey?.let { CleverKeysService.getRowHeightForKey(it) } ?: 1.0f
+            val main = liveKey?.keys?.getOrNull(0)
+            val fallback = SubkeyKeyContext(liveKey, rowHeight, liveKey, false, -1, null, -1, -1, null, null)
+            if (main == null) return fallback
+            val snapshot = CleverKeysService.layoutSourceSnapshot()
+            if (snapshot != null && !snapshot.paneShowing) {
+                val entry = editor.entries().getOrNull(snapshot.entryIndex)
+                // The System entry is the locale layout the keyboard resolved; others are read
+                // from the entry itself so a copy edits exactly what is stored.
+                val definition = when {
+                    entry == null -> null
+                    entry is tribixbite.cleverkeys.prefs.LayoutsPreference.SystemLayout &&
+                        snapshot.builtInName == null -> null
+                    else -> editor.definition(entry)
+                }
+                val position = definition?.let { KeySubkeySources.locate(it, main) }
+                if (entry != null && definition != null && position != null && editor.sourceXml(entry) != null) {
+                    val (r, c) = position
+                    return SubkeyKeyContext(
+                        liveKey, rowHeight, definition.rows[r].keys[c], true, snapshot.entryIndex, entry, r, c,
+                        editor.displayName(entry),
+                        if (editor.needsCopy(entry)) editor.copyName(entry) else null,
+                    )
+                }
+            }
+            // Not the layout's own key: the shared bottom row (Space, Enter, Ctrl …) or a key the
+            // keyboard adds (number row, Extra Keys). Its subkeys are edited by custom mappings.
+            val bottom = try {
+                KeyboardData.load_row(context.resources, R.xml.bottom_row)
+            } catch (e: Exception) {
+                null
+            }
+            val shared = bottom?.keys?.firstOrNull { it.keys.getOrNull(0) == main }
+            return fallback.copy(definedKey = shared ?: liveKey)
+        }
+    }
+}
+
+/**
+ * Per-key customization dialog: the magnified key, then every direction with what a swipe that
+ * way does now and where that comes from (Layout / Built-in / Extra key / Custom / Removed —
+ * [SubkeySource]); a custom mapping that replaces a layout subkey says which.
+ *
+ * Changing or removing a LAYOUT subkey writes the layout itself: when [copyName] is set (a
+ * built-in layout) the dialog first asks to create that modified copy, or to change the key in
+ * all layouts instead (a custom mapping, as before). Every other edit is a custom mapping.
+ *
+ * @param title the key's display name (ShortSwipeKeyCodes.displayName — never a raw control char)
+ * @param key the live key for the magnifier, or null (then [title] is drawn)
+ * @param layoutName the name of the layout that owns LAYOUT slots
+ * @param copyName the name of the copy a LAYOUT edit creates, or null to edit in place
  */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun KeyCustomizationDialog(
-    keyCode: String,
+    title: String,
     key: KeyboardData.Key?,
     rowHeight: Float = 1.0f,
-    existingMappings: Map<SwipeDirection, ShortSwipeMapping>,
+    slots: List<SubkeySlot>,
+    layoutName: String?,
+    copyName: String?,
     onDismiss: () -> Unit,
-    onDirectionTapped: (SwipeDirection) -> Unit,
-    onDeleteMapping: (SwipeDirection) -> Unit
+    onEditSlot: (SwipeDirection, SlotEditTarget) -> Unit,
+    onRemoveSlot: (SwipeDirection, SlotEditTarget) -> Unit,
+    onRestoreSlot: (SwipeDirection) -> Unit,
 ) {
-    var selectedDirection by remember { mutableStateOf<SwipeDirection?>(null) }
+    // A LAYOUT edit of a built-in layout waiting for the copy confirmation: direction + remove?
+    var pendingCopy by rememberSaveable { mutableStateOf<Pair<SwipeDirection, Boolean>?>(null) }
+    val customMappings = remember(slots) { slots.mapNotNull { s -> s.custom?.let { s.direction to it } }.toMap() }
+
+    /** Route an edit (or removal) of [slot]: layout (maybe after the copy question) or custom. */
+    fun route(slot: SubkeySlot, remove: Boolean) {
+        when {
+            slot.editsLayout && copyName != null -> pendingCopy = slot.direction to remove
+            slot.editsLayout ->
+                if (remove) onRemoveSlot(slot.direction, SlotEditTarget.LAYOUT) else onEditSlot(slot.direction, SlotEditTarget.LAYOUT)
+            remove -> onRemoveSlot(slot.direction, SlotEditTarget.GLOBAL)
+            else -> onEditSlot(slot.direction, SlotEditTarget.GLOBAL)
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -402,19 +598,22 @@ fun KeyCustomizationDialog(
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Header
                 Text(
-                    text = stringResource(R.string.short_swipe_customize_key, keyCode.uppercase()),
+                    text = stringResource(R.string.short_swipe_customize_key, title),
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
 
                 Text(
-                    text = if (key != null) {
-                        stringResource(R.string.short_swipe_dialog_hint_with_layout)
+                    text = if (layoutName != null) {
+                        stringResource(R.string.subkey_dialog_layout_hint, layoutName)
                     } else {
                         stringResource(R.string.short_swipe_dialog_hint_no_layout)
                     },
@@ -425,7 +624,6 @@ fun KeyCustomizationDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Magnified key view - uses full Key if available
                 // Calculate aspect ratio for the container: keyWidth / rowHeight
                 // Keys are typically slightly taller than wide (e.g., 1.0 width / 1.1 height = 0.91)
                 val keyAspectRatio = if (key != null && rowHeight > 0) {
@@ -448,23 +646,12 @@ fun KeyCustomizationDialog(
                 ) {
                     // Use the KeyMagnifierView for visual display only
                     AndroidView(
-                        factory = { ctx ->
-                            KeyMagnifierView(ctx).apply {
-                                // Use full key if available, otherwise fall back to keyCode mode
-                                if (key != null) {
-                                    setKey(key, existingMappings, rowHeight)
-                                } else {
-                                    setKeyCode(keyCode, existingMappings)
-                                }
-                                // Touch handling is done via Compose overlay below
-                            }
-                        },
+                        factory = { ctx -> KeyMagnifierView(ctx) },
                         update = { view ->
-                            if (key != null) {
-                                view.setKey(key, existingMappings, rowHeight)
-                            } else {
-                                view.setKeyCode(keyCode, existingMappings)
-                            }
+                            // The live key (layout + Extra Keys + custom); without one, the key's
+                            // NAME — a raw glyph code drawn in a text font is an unrelated character.
+                            if (key != null) view.setKey(key, customMappings, rowHeight)
+                            else view.setKeyCode(title, customMappings)
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -483,33 +670,29 @@ fun KeyCustomizationDialog(
                             .padding(16.dp),
                         labelColor = overlayLabelColor,
                         onDirectionTapped = { direction ->
-                            selectedDirection = direction
-                            onDirectionTapped(direction)
+                            slots.firstOrNull { it.direction == direction }?.let { route(it, remove = false) }
                         }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Current mappings list
-                if (existingMappings.isNotEmpty()) {
-                    Text(
-                        text = stringResource(R.string.short_swipe_custom_mappings),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = stringResource(R.string.subkey_dialog_subkeys_header),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                slots.forEach { slot ->
+                    SubkeySlotItem(
+                        slot = slot,
+                        onEdit = { route(slot, remove = false) },
+                        onRemove = { route(slot, remove = true) },
+                        onRestore = { onRestoreSlot(slot.direction) }
                     )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    existingMappings.forEach { (direction, mapping) ->
-                        MappingListItem(
-                            direction = direction,
-                            mapping = mapping,
-                            onEdit = { onDirectionTapped(direction) },
-                            onDelete = { onDeleteMapping(direction) }
-                        )
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -521,25 +704,79 @@ fun KeyCustomizationDialog(
             }
         }
     }
+
+    // Composed AFTER the parent Dialog so it stacks above it (CLAUDE.md "Compose dialog stacking").
+    pendingCopy?.let { (direction, remove) ->
+        AlertDialog(
+            onDismissRequest = { pendingCopy = null },
+            title = { Text(stringResource(R.string.subkey_layout_copy_title)) },
+            text = {
+                Text(stringResource(R.string.subkey_layout_copy_body, layoutName.orEmpty(), copyName.orEmpty()))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingCopy = null
+                    if (remove) onRemoveSlot(direction, SlotEditTarget.LAYOUT) else onEditSlot(direction, SlotEditTarget.LAYOUT)
+                }) { Text(stringResource(R.string.subkey_layout_copy_confirm)) }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { pendingCopy = null }) { Text(stringResource(R.string.common_cancel)) }
+                    TextButton(onClick = {
+                        pendingCopy = null
+                        if (remove) onRemoveSlot(direction, SlotEditTarget.GLOBAL) else onEditSlot(direction, SlotEditTarget.GLOBAL)
+                    }) { Text(stringResource(R.string.subkey_layout_copy_global)) }
+                }
+            }
+        )
+    }
 }
 
+/**
+ * One direction of the per-key dialog: what it does now, a badge saying where that comes from,
+ * and (for a custom mapping or removal over a layout subkey) what it replaces. Tap to change;
+ * the trailing button removes it, or restores what a custom mapping hides.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MappingListItem(
-    direction: SwipeDirection,
-    mapping: ShortSwipeMapping,
+private fun SubkeySlotItem(
+    slot: SubkeySlot,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onRemove: () -> Unit,
+    onRestore: () -> Unit,
 ) {
     val context = LocalContext.current
+    val getString: (Int) -> String = context::getString
+    val source = slot.source
+    val custom = slot.custom
+    val shown = slot.shownValue ?: slot.definedValue
+    val sourceLabel = stringResource(source.labelRes)
+    val directionName = stringResource(slot.direction.displayNameRes)
+
+    // What a swipe this way does now, in words (a key-font glyph is never read out or printed).
+    val what: String = when {
+        custom != null && custom.isRemoval -> stringResource(R.string.subkey_slot_nothing)
+        custom != null -> ShortSwipeAccessibilityActions.describeMapping(custom, getString)
+        shown != null -> KeyLabels.describe(shown, getString)
+        else -> stringResource(R.string.subkey_slot_nothing)
+    }
+    // A custom mapping (or removal) hides this layout or built-in subkey.
+    val replaced = slot.shadowedValue?.let { KeyLabels.describe(it, getString) }
+    val replacedText = replaced?.let { stringResource(R.string.subkey_slot_replaces, it) }
+    val a11y = listOfNotNull(directionName, what, sourceLabel, replacedText).joinToString(", ")
 
     Card(
         onClick = onEdit,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 2.dp)
+            .semantics(mergeDescendants = true) { contentDescription = a11y },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            containerColor = if (source == SubkeySource.NONE) {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+            } else {
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            }
         )
     ) {
         Row(
@@ -551,14 +788,11 @@ private fun MappingListItem(
             // Direction badge
             Box(
                 modifier = Modifier
-                    .background(
-                        MaterialTheme.colorScheme.primary,
-                        RoundedCornerShape(4.dp)
-                    )
+                    .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(4.dp))
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
-                    text = stringResource(swipeDirectionShortRes(direction)),
+                    text = stringResource(swipeDirectionShortRes(slot.direction)),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
@@ -567,68 +801,104 @@ private fun MappingListItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Mapping info
-            Column(modifier = Modifier.weight(1f)) {
-                // Use AndroidView with special font for icon characters when useKeyFont is true
-                if (mapping.useKeyFont) {
-                    // Show icon using special font via AndroidView, at the keyboard's icon
-                    // factor against the row's 13 sp label text (SubLabelSizing)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "\"",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 13.sp
-                        )
-                        AndroidView(
-                            factory = { ctx ->
-                                android.widget.TextView(ctx).apply {
-                                    typeface = Theme.getKeyFont(ctx)
-                                    setTextSize(
-                                        android.util.TypedValue.COMPLEX_UNIT_SP,
-                                        SubLabelSizing.previewSp(13f, true, mapping.displayText)
-                                    )
-                                    setTextColor(android.graphics.Color.WHITE)
-                                    text = mapping.displayText
-                                }
-                            },
-                            modifier = Modifier.padding(horizontal = 2.dp)
-                        )
-                        Text(
-                            text = "\"",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 13.sp
-                        )
+            // The slot's label as the key draws it (key font for icons), when it has one
+            SlotLabel(slot)
+
+            Column(modifier = Modifier.weight(1f).padding(start = 6.dp)) {
+                Text(text = what, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 2)
+                if (custom != null && !custom.isRemoval) {
+                    val actionDesc = remember(custom.actionType, custom.actionValue, context) {
+                        shortSwipeActionDescription(context, custom.actionType, custom.actionValue)
                     }
-                } else {
-                    Text(
-                        text = "\"${mapping.displayText}\"",
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp
-                    )
+                    Text(text = actionDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                 }
-                val actionDesc = remember(mapping.actionType, mapping.actionValue, context) {
-                    shortSwipeActionDescription(context, mapping.actionType, mapping.actionValue)
+                if (replacedText != null) {
+                    Text(text = replacedText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                 }
-                Text(
-                    text = actionDesc,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
 
-            // Delete button
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.common_delete),
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.error
-                )
+            SourceBadge(source, sourceLabel)
+
+            // Trailing action: restore what a custom mapping hides, delete a custom mapping, or
+            // remove the subkey (a layout subkey via the layout; others with a `removed` blank).
+            when (source) {
+                SubkeySource.CUSTOM, SubkeySource.REMOVED -> IconButton(
+                    onClick = onRestore,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        if (slot.shadowedValue != null) Icons.Filled.Refresh else Icons.Filled.Delete,
+                        contentDescription = stringResource(
+                            if (slot.shadowedValue != null) R.string.subkey_edit_restore else R.string.common_delete
+                        ),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+                SubkeySource.NONE -> Spacer(modifier = Modifier.size(36.dp))
+                else -> IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.subkey_edit_remove),
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
+    }
+}
+
+/** The slot's on-key label, drawn in the key font when it is an icon; nothing for an empty slot. */
+@Composable
+private fun SlotLabel(slot: SubkeySlot) {
+    val custom = slot.custom
+    val (label, keyFont) = when {
+        custom != null && custom.isRemoval -> return
+        custom != null -> custom.displayText to custom.useKeyFont
+        else -> {
+            val kv = slot.shownValue ?: slot.definedValue ?: return
+            kv.getString().take(4) to kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
+        }
+    }
+    if (label.isBlank()) return
+    val color = MaterialTheme.colorScheme.onSurface.toArgb()
+    Box(modifier = Modifier.widthIn(min = 28.dp), contentAlignment = Alignment.Center) {
+        if (keyFont) {
+            AndroidView(
+                factory = { ctx -> android.widget.TextView(ctx) },
+                update = { tv ->
+                    tv.typeface = Theme.getKeyFont(tv.context)
+                    tv.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, SubLabelSizing.previewSp(15f, true, label))
+                    tv.setTextColor(color)
+                    tv.text = label
+                    // The row's merged description names it; the glyph itself is not readable.
+                    tv.importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                }
+            )
+        } else {
+            Text(text = label, fontSize = SubLabelSizing.previewSp(15f, false, label).sp, maxLines = 1)
+        }
+    }
+}
+
+/** Small tinted badge naming a slot's [SubkeySource]. */
+@Composable
+private fun SourceBadge(source: SubkeySource, label: String) {
+    if (source == SubkeySource.NONE) return
+    val (bg, fg) = when (source) {
+        SubkeySource.LAYOUT -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        SubkeySource.CUSTOM -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+        SubkeySource.REMOVED -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 4.dp)
+            .background(bg, RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(text = label, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = fg, maxLines = 1)
     }
 }
 
@@ -728,7 +998,12 @@ private const val ACTION_TEXT_PREVIEW_CHARS = 20
  */
 internal fun shortSwipeActionDescription(context: Context, type: ActionType, value: String): String =
     when (type) {
-        ActionType.COMMAND -> context.getString(R.string.short_swipe_action_desc_command, value)
+        // The command's localized name ("Voice input (on device)"), never its id ("voice_input");
+        // an id the catalogue does not know (a legacy AvailableCommand name) is shown as stored.
+        ActionType.COMMAND -> context.getString(
+            R.string.short_swipe_action_desc_command,
+            CommandRegistry.getByName(value)?.let { context.getString(it.nameRes) } ?: value
+        )
         ActionType.TEXT -> context.getString(
             R.string.short_swipe_action_desc_text,
             if (value.length > ACTION_TEXT_PREVIEW_CHARS) value.take(ACTION_TEXT_PREVIEW_CHARS) + "…" else value

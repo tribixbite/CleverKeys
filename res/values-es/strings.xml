@@ -283,7 +283,6 @@
     <string name="short_swipe_tap_hint">Toca cualquier tecla de abajo para personalizar sus deslizamientos cortos</string>
     <string name="short_swipe_instruction_title">Toca una tecla para personalizarla</string>
     <string name="short_swipe_instruction_body">El teclado de abajo es tu teclado CleverKeys real.\nToca una tecla para añadirle acciones de deslizamiento corto.</string>
-    <string name="short_swipe_custom_mappings">Asignaciones personalizadas</string>
 
     <!-- Ajustes de tema -->
     <string name="theme_settings_title">Temas de teclado</string>
@@ -892,6 +891,30 @@
     <string name="subkey_edit_remove">Quitar</string>
     <string name="subkey_toast_removed">Se quitó la subtecla %1$s de la tecla %2$s</string>
     <string name="subkey_toast_restored">Se restauró la subtecla %1$s predeterminada en la tecla %2$s</string>
+    <string name="subkey_source_layout">Distribución</string>
+    <string name="subkey_source_shared">Integrada</string>
+    <string name="subkey_source_extra_key">Tecla extra</string>
+    <string name="subkey_source_hidden">Oculta</string>
+    <string name="subkey_source_custom">Personalizada</string>
+    <string name="subkey_source_removed">Quitada</string>
+    <string name="subkey_slot_empty">Vacía</string>
+    <string name="subkey_slot_nothing">Nada</string>
+    <string name="subkey_slot_replaces">Sustituye a %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Subteclas</string>
+    <string name="subkey_dialog_layout_hint">Subteclas de %1$s y deslizamientos cortos personalizados. Toca una dirección para cambiarla.</string>
+    <string name="subkey_layout_copy_title">¿Cambiar una subtecla de la distribución?</string>
+    <string name="subkey_layout_copy_body">%1$s define esta subtecla. La distribución integrada no cambia: el cambio se guarda en una copia, %2$s, que ocupa su lugar en la lista de distribuciones. El gestor de distribuciones permite volver a la original.</string>
+    <string name="subkey_layout_copy_confirm">Crear copia</string>
+    <string name="subkey_layout_copy_global">Cambiar en todas</string>
+    <string name="subkey_layout_copy_name">%1$s (modificada)</string>
+    <string name="subkey_layout_toast_copied">Se creó %1$s</string>
+    <string name="subkey_layout_toast_saved">Guardado en %1$s</string>
+    <string name="subkey_layout_toast_failed">La distribución no se cambió: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Esta acción no puede formar parte de una distribución, así que se guardó como deslizamiento corto personalizado.</string>
+    <string name="layout_manager_badge_modified_copy">Copia modificada de %1$s</string>
+    <string name="layout_manager_revert">Volver a la original</string>
+    <string name="layout_manager_revert_title">¿Volver a la distribución original?</string>
+    <string name="layout_manager_revert_body">%1$s ocupa el lugar de esta copia modificada. Las subteclas cambiadas se descartan; se conservan las opciones de idioma, tema y espaciado de teclas.</string>
     <string name="gesture_selection_delete_header">Modo de selección y borrado</string>
     <string name="gesture_selection_delete_desc">Desliza corto + mantén en retroceso para seleccionar texto; suelta para borrarlo.</string>
     <string name="gesture_tap_typing_header">Toque y escritura</string>
@@ -1635,7 +1658,6 @@
     <string name="extra_keys_group_functions">Funciones</string>
     <string name="short_swipe_toast_all_reset">Se restablecieron todas las personalizaciones</string>
     <string name="short_swipe_toast_mapped">Asignado: %1$s → «%2$s» (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Muestra las asignaciones de la distribución + las personalizadas</string>
     <string name="short_swipe_dialog_hint_no_layout">Toca una dirección para añadir o editar un deslizamiento corto</string>
     <string name="short_swipe_action_desc_command">Comando: %1$s</string>
     <string name="short_swipe_action_desc_text">Texto: «%1$s»</string>

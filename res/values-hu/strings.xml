@@ -270,7 +270,6 @@
     <string name="short_swipe_tap_hint">Koppintson az alábbi billentyűk bármelyikére a rövid csúsztatási geszt testreszabásához</string>
     <string name="short_swipe_instruction_title">Koppintson bármelyik billentyűre a testreszabáshoz</string>
     <string name="short_swipe_instruction_body">Az alábbi billentyűzet a valódi CleverKeys billentyűzete.\nKoppintson egy billentyűre rövid csúsztatási műveletek hozzáadásához.</string>
-    <string name="short_swipe_custom_mappings">Egyéni leképezések</string>
 
     <!-- Témabeállítások / Theme Settings -->
     <string name="theme_settings_title">Billentyűzet-témák</string>
@@ -878,6 +877,30 @@
     <string name="subkey_edit_remove">Eltávolítás</string>
     <string name="subkey_toast_removed">%2$s billentyű: %1$s albillentyű eltávolítva</string>
     <string name="subkey_toast_restored">%2$s billentyű: alapértelmezett %1$s albillentyű visszaállítva</string>
+    <string name="subkey_source_layout">Kiosztás</string>
+    <string name="subkey_source_shared">Beépített</string>
+    <string name="subkey_source_extra_key">Extra billentyű</string>
+    <string name="subkey_source_hidden">Rejtett</string>
+    <string name="subkey_source_custom">Egyéni</string>
+    <string name="subkey_source_removed">Eltávolítva</string>
+    <string name="subkey_slot_empty">Üres</string>
+    <string name="subkey_slot_nothing">Semmi</string>
+    <string name="subkey_slot_replaces">Helyettesíti: %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Albillentyűk</string>
+    <string name="subkey_dialog_layout_hint">A(z) %1$s albillentyűi és az egyéni rövid csúsztatások. Egy irányra koppintva módosítható.</string>
+    <string name="subkey_layout_copy_title">Módosítja a kiosztás albillentyűjét?</string>
+    <string name="subkey_layout_copy_body">Ezt az albillentyűt a(z) %1$s határozza meg. A beépített kiosztás nem változik: a módosítás egy másolatba kerül (%2$s), amely átveszi a helyét a kiosztások listájában. Az Elrendezéskezelőben vissza lehet váltani az eredetire.</string>
+    <string name="subkey_layout_copy_confirm">Másolat készítése</string>
+    <string name="subkey_layout_copy_global">Módosítás minden kiosztásban</string>
+    <string name="subkey_layout_copy_name">%1$s (módosított)</string>
+    <string name="subkey_layout_toast_copied">Létrehozva: %1$s</string>
+    <string name="subkey_layout_toast_saved">Mentve ide: %1$s</string>
+    <string name="subkey_layout_toast_failed">A kiosztás nem változott: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Ez a művelet nem lehet egy kiosztás része, ezért egyéni rövid csúsztatásként lett mentve.</string>
+    <string name="layout_manager_badge_modified_copy">A(z) %1$s módosított másolata</string>
+    <string name="layout_manager_revert">Eredeti visszaállítása</string>
+    <string name="layout_manager_revert_title">Visszaállítja az eredeti kiosztást?</string>
+    <string name="layout_manager_revert_body">Ennek a módosított másolatnak a helyére a(z) %1$s kerül. A módosított albillentyűk elvesznek; a nyelv, a téma és a billentyűtávolság beállításai megmaradnak.</string>
     <string name="gesture_selection_delete_header">Kijelölés-törlés mód</string>
     <string name="gesture_selection_delete_desc">Rövid csúsztatás + nyomva tartás a törlőbillentyűn a szöveg kijelöléséhez, majd elengedés a törléshez.</string>
     <string name="gesture_tap_typing_header">Érintés és gépelés</string>
@@ -1587,7 +1610,6 @@
     <string name="extra_keys_group_functions">Funkciók</string>
     <string name="short_swipe_toast_all_reset">Minden testreszabás visszaállítva</string>
     <string name="short_swipe_toast_mapped">%1$s hozzárendelve → „%2$s” (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">A kiosztás meglévő hozzárendeléseit és az egyéni hozzárendeléseket mutatja</string>
     <string name="short_swipe_dialog_hint_no_layout">Koppintson egy irányra rövid csúsztatási gesztus hozzáadásához vagy szerkesztéséhez</string>
     <string name="short_swipe_action_desc_command">Parancs: %1$s</string>
     <string name="short_swipe_action_desc_text">Szöveg: „%1$s”</string>

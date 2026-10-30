@@ -750,6 +750,13 @@ See [testing strategy](testing-strategy.md) for the full cloud verdict.
 - **#187 below-accent dead keys (FIXED, unreleased `d0ab58af`).** Four below-accent combining
   commands joined the catalogue (240 commands as of 2026-10-20); the dead keys compose on the
   following letter like the existing accent keys. Status per `docs/audit/gh-issue-resolution.md`.
+- **Modified copies (2026-10-30).** Changing a subkey a built-in layout defines (Short Swipe
+  Customization's per-key dialog) replaces that `layouts` entry in place with a custom layout:
+  the built-in XML with the edit (`LayoutSubkeyXml`, row/key position), renamed
+  "<name> (modified)", carrying the entry's `language`/`theme`/`key_*` choices and an `origin`
+  field (the built-in name, or `system`) in the entry JSON. Layout Manager badges it "Modified
+  copy of <name>" and offers **Revert to original**; Backup & Restore carries it with the
+  `layouts` blob. Details: [subkey-customization-current.md](subkey-customization-current.md#layout-subkeys-and-modified-copies-2026-10-30).
 - **Per-layout bindings.** The `language` (GH #186/#61) and `theme` (2026-10-15) root attributes
   above, and the `key_*` geometry attributes (2026-10-27, per field), are the per-layout
   bindings; all are three-state in Layout Manager and stored with the layout.

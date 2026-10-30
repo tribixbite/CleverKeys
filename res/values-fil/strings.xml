@@ -273,7 +273,6 @@
     <string name="short_swipe_tap_hint">I-tap ang anumang key sa ibaba para i-customize ang mga maikling swipe gesture nito</string>
     <string name="short_swipe_instruction_title">I-type ang anumang key para i-customize ito</string>
     <string name="short_swipe_instruction_body">Ang keyboard sa ibaba ay ang iyong tunay na CleverKeys keyboard.\nI-tap ang isang key para magdagdag ng mga maikling swipe action dito.</string>
-    <string name="short_swipe_custom_mappings">Mga Custom na Mapping</string>
 
     <!-- Mga setting ng tema / Theme Settings -->
     <string name="theme_settings_title">Mga Tema ng Keyboard</string>
@@ -881,6 +880,30 @@
     <string name="subkey_edit_remove">Alisin</string>
     <string name="subkey_toast_removed">Inalis ang %1$s subkey mula sa %2$s</string>
     <string name="subkey_toast_restored">Naibalik ang default na %1$s subkey sa %2$s</string>
+    <string name="subkey_source_layout">Layout</string>
+    <string name="subkey_source_shared">Built-in</string>
+    <string name="subkey_source_extra_key">Dagdag na key</string>
+    <string name="subkey_source_hidden">Nakatago</string>
+    <string name="subkey_source_custom">Custom</string>
+    <string name="subkey_source_removed">Inalis</string>
+    <string name="subkey_slot_empty">Walang laman</string>
+    <string name="subkey_slot_nothing">Wala</string>
+    <string name="subkey_slot_replaces">Pumapalit sa %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Mga subkey</string>
+    <string name="subkey_dialog_layout_hint">Mga subkey ng %1$s at mga custom na maikling swipe. I-tap ang isang direksyon para baguhin ito.</string>
+    <string name="subkey_layout_copy_title">Baguhin ang subkey ng layout?</string>
+    <string name="subkey_layout_copy_body">Ang %1$s ang nagtatakda ng subkey na ito. Hindi nagbabago ang built-in na layout: ang pagbabago ay naka-save sa isang kopya, %2$s, na papalit dito sa listahan ng layout. Sa Layout Manager, puwedeng bumalik sa orihinal.</string>
+    <string name="subkey_layout_copy_confirm">Gumawa ng kopya</string>
+    <string name="subkey_layout_copy_global">Baguhin sa lahat ng layout</string>
+    <string name="subkey_layout_copy_name">%1$s (binago)</string>
+    <string name="subkey_layout_toast_copied">Nagawa ang %1$s</string>
+    <string name="subkey_layout_toast_saved">Naka-save sa %1$s</string>
+    <string name="subkey_layout_toast_failed">Hindi nabago ang layout: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Hindi puwedeng maging bahagi ng layout ang aksyong ito, kaya naka-save ito bilang custom na maikling swipe.</string>
+    <string name="layout_manager_badge_modified_copy">Binagong kopya ng %1$s</string>
+    <string name="layout_manager_revert">Ibalik ang orihinal</string>
+    <string name="layout_manager_revert_title">Bumalik sa orihinal na layout?</string>
+    <string name="layout_manager_revert_body">Papalitan ng %1$s ang binagong kopyang ito. Itatapon ang mga binagong subkey; mananatili ang mga pinili sa wika, tema at pagitan ng key.</string>
     <string name="gesture_selection_delete_header">Mode ng Pagpili at Pagbura</string>
     <string name="gesture_selection_delete_desc">Maikling swipe + hawak sa backspace para pumili ng teksto, pagkatapos ay bitawan para tanggalin.</string>
     <string name="gesture_tap_typing_header">Tap at Pag-type</string>
@@ -1593,7 +1616,6 @@
     <string name="extra_keys_group_functions">Mga Function</string>
     <string name="short_swipe_toast_all_reset">Na-reset ang lahat ng customization</string>
     <string name="short_swipe_toast_mapped">Na-map ang %1$s → \"%2$s\" (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Ipinapakita ang mga kasalukuyang layout mapping + custom na mapping</string>
     <string name="short_swipe_dialog_hint_no_layout">I-tap ang isang direksyon para magdagdag o mag-edit ng maikling swipe gesture</string>
     <string name="short_swipe_action_desc_command">Command: %1$s</string>
     <string name="short_swipe_action_desc_text">Teksto: \"%1$s\"</string>

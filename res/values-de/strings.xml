@@ -283,7 +283,6 @@
     <string name="short_swipe_tap_hint">Tippen Sie unten auf eine Taste, um ihre kurzen Wischgesten anzupassen</string>
     <string name="short_swipe_instruction_title">Tippen Sie auf eine Taste, um sie anzupassen</string>
     <string name="short_swipe_instruction_body">Die folgende Tastatur ist Ihre eigentliche CleverKeys-Tastatur.\nTippen Sie auf eine Taste, um ihr kurze Wischaktionen hinzuzufügen.</string>
-    <string name="short_swipe_custom_mappings">Benutzerdefinierte Zuordnungen</string>
 
     <!-- Theme-Einstellungen -->
     <string name="theme_settings_title">Tastatur-Themes</string>
@@ -892,6 +891,30 @@
     <string name="subkey_edit_remove">Entfernen</string>
     <string name="subkey_toast_removed">Untertaste „%1$s“ von Taste %2$s entfernt</string>
     <string name="subkey_toast_restored">Standard-Untertaste „%1$s“ auf Taste %2$s wiederhergestellt</string>
+    <string name="subkey_source_layout">Layout</string>
+    <string name="subkey_source_shared">Eingebaut</string>
+    <string name="subkey_source_extra_key">Zusatztaste</string>
+    <string name="subkey_source_hidden">Ausgeblendet</string>
+    <string name="subkey_source_custom">Eigene</string>
+    <string name="subkey_source_removed">Entfernt</string>
+    <string name="subkey_slot_empty">Leer</string>
+    <string name="subkey_slot_nothing">Nichts</string>
+    <string name="subkey_slot_replaces">Ersetzt %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Untertasten</string>
+    <string name="subkey_dialog_layout_hint">Untertasten von %1$s und eigene kurze Wischgesten. Eine Richtung antippen, um sie zu ändern.</string>
+    <string name="subkey_layout_copy_title">Eine Untertaste des Layouts ändern?</string>
+    <string name="subkey_layout_copy_body">%1$s legt diese Untertaste fest. Das eingebaute Layout bleibt unverändert: Die Änderung wird in einer Kopie, %2$s, gespeichert, die es in der Layoutliste ersetzt. In der Layoutverwaltung lässt sich zum Original zurückkehren.</string>
+    <string name="subkey_layout_copy_confirm">Kopie erstellen</string>
+    <string name="subkey_layout_copy_global">In allen Layouts ändern</string>
+    <string name="subkey_layout_copy_name">%1$s (geändert)</string>
+    <string name="subkey_layout_toast_copied">%1$s erstellt</string>
+    <string name="subkey_layout_toast_saved">In %1$s gespeichert</string>
+    <string name="subkey_layout_toast_failed">Das Layout wurde nicht geändert: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Diese Aktion kann nicht Teil eines Layouts sein und wurde als eigene kurze Wischgeste gespeichert.</string>
+    <string name="layout_manager_badge_modified_copy">Geänderte Kopie von %1$s</string>
+    <string name="layout_manager_revert">Original wiederherstellen</string>
+    <string name="layout_manager_revert_title">Zum ursprünglichen Layout zurückkehren?</string>
+    <string name="layout_manager_revert_body">%1$s ersetzt diese geänderte Kopie. Die geänderten Untertasten werden verworfen; die Einstellungen für Sprache, Design und Tastenabstand bleiben erhalten.</string>
     <string name="gesture_selection_delete_header">Auswahl-Lösch-Modus</string>
     <string name="gesture_selection_delete_desc">Auf der Rücktaste kurz wischen + halten, um Text auszuwählen; Loslassen löscht ihn.</string>
     <string name="gesture_tap_typing_header">Tippen und Eingabe</string>
@@ -1601,7 +1624,6 @@
     <string name="extra_keys_group_functions">Funktionen</string>
     <string name="short_swipe_toast_all_reset">Alle Anpassungen zurückgesetzt</string>
     <string name="short_swipe_toast_mapped">%1$s → „%2$s“ zugewiesen (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Zeigt vorhandene Layout-Zuordnungen + eigene Zuordnungen</string>
     <string name="short_swipe_dialog_hint_no_layout">Auf eine Richtung tippen, um eine kurze Wischgeste hinzuzufügen oder zu bearbeiten</string>
     <string name="short_swipe_action_desc_command">Befehl: %1$s</string>
     <string name="short_swipe_action_desc_text">Text: „%1$s“</string>

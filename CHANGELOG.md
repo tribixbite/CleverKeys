@@ -52,6 +52,16 @@ editor that used to be listed here already ship in 2.0.)
   (`voice_typing_chooser`) lists "CleverKeys voice (offline)" beside the system voice keyboards;
   with no voice keyboard at all the mic key now explains what to turn on in Settings → Voice
   input instead of "No voice typing app installed". Spec: `docs/specs/voice-input.md`.
+- **Per-key dialog shows every subkey and where it comes from; layout subkeys edit a copy of the
+  layout.** Settings → Short Swipe Customization now lists all eight directions of a key with
+  what each does and a badge — Layout, Built-in (the shared bottom row), Extra key, Hidden (a
+  layout subkey Extra Keys has off), Custom or Removed — and a custom short swipe says which
+  subkey it replaces. Changing or removing a subkey the current built-in layout defines asks
+  first and then saves the change in a copy of the layout, "<name> (modified)", which takes the
+  layout's place with its language, theme and key-spacing choices; the built-in layout itself
+  never changes. Later edits change the copy. **Change in all layouts** keeps the old behaviour
+  (a custom short swipe in every layout). Layout Manager marks the copy and offers **Revert to
+  original**; Backup & Restore and Export XML carry it like any custom layout.
 - **Layouts can bring their own look.** A layout file can now define its whole appearance: a
   `<theme>` with every colour of the Theme Creator plus Enter/action/modifier colours, key gaps,
   corners, shadows, hints, a key-press preview, and separate light- and dark-mode colours — anything
@@ -487,6 +497,17 @@ editor that used to be listed here already ship in 2.0.)
 - On iOS-style, the typed word in the suggestion bar is quoted with the interface language's own
   quotation marks („…“ German, « … » French, 「…」 Japanese…) on every Android version; Android
   7–8.1 always showed English marks.
+- Short Swipe Customization on Enter, Space or Tab: the dialog title printed the key's raw text
+  (`Customize "` + a line break + `" Key`) and the mapping was stored under that text, so it never
+  worked or showed on the keyboard — swiping Enter's north-west kept switching to another
+  keyboard's voice typing while the dialog showed voice input as mapped. The key is now named
+  ("Enter"), mappings are stored for the key itself, and ones saved before this fix move to their
+  key. A mapping stored with capital letters is also drawn on its key now, not only performed.
+- The "Mapped …" message and the mapping list name the command ("Voice input (on device)")
+  instead of its id (`voice_input`) and never show an icon as an unrelated character (the
+  microphone appeared as a Chinese character).
+- Export XML: a mapping on a direction the layout writes as `key1`…`key8` no longer produces a
+  file the keyboard refuses to import ("synonyms"), and mappings on Enter are exported onto it.
 - In the clipboard entry editor and the keyboard's other own fields (tag, clipboard search,
   emoji and GIF search), deleting a word works: the swipe up-left on Backspace, the
   `delete_word` / `forward_delete_word` commands and Ctrl+Backspace / Ctrl+Delete delete a word

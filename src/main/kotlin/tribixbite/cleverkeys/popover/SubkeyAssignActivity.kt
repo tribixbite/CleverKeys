@@ -53,6 +53,7 @@ import tribixbite.cleverkeys.customization.CommandPaletteDialog
 import tribixbite.cleverkeys.customization.CommandRegistry
 import tribixbite.cleverkeys.customization.ShortSwipeAssignment
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
+import tribixbite.cleverkeys.customization.ShortSwipeKeyCodes
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
 import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.theme.CleverKeysTheme
@@ -137,7 +138,9 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
     var palette by rememberSaveable { mutableStateOf(if (startWithPalette) PaletteMode.NEW else null) }
     val title = stringResource(
         R.string.subkey_assign_title,
-        request.keyCode.uppercase(),
+        // The key's name ("Space", "A"), never its raw code: a key-font glyph prints as an
+        // unrelated character in the system font (ShortSwipeKeyCodes).
+        ShortSwipeKeyCodes.displayName(request.keyCode, null, context::getString),
         stringResource(request.direction.displayNameRes)
     )
 

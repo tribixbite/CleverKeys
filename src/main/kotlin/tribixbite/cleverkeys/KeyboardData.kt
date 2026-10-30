@@ -534,6 +534,16 @@ class KeyboardData private constructor(
     companion object {
         private val _layoutCache = HashMap<Int, KeyboardData?>()
 
+        /**
+         * The raw resource id [kw] was loaded from by [load], or null when it was not loaded from
+         * a resource (a custom layout) or is no longer cached. Identity, not equality: two
+         * resources may parse equal. Used to name the System entry's locale layout when the user
+         * makes a modified copy of it (Short Swipe Customization).
+         */
+        @JvmStatic
+        fun cachedResourceIdOf(kw: KeyboardData): Int? =
+            _layoutCache.entries.firstOrNull { it.value === kw }?.key
+
         /** A `symbols` pane name: a raw-resource-safe layout file name. */
         val SYMBOLS_PANE_NAME = Regex("[a-z][a-z0-9_]{0,63}")
 

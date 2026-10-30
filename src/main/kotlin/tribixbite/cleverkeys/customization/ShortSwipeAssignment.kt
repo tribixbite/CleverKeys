@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.customization
 import android.content.Context
 import android.widget.Toast
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
 import tribixbite.cleverkeys.shortSwipeActionDescription
 
 /**
@@ -30,19 +31,37 @@ object ShortSwipeAssignment {
             useKeyFont = selection.useKeyFont      // Use icon font if applicable
         )
         manager.setMapping(mapping)
-        val actionDesc = shortSwipeActionDescription(context, selection.actionType, selection.actionValue)
-        Toast.makeText(
-            context,
-            context.getString(
-                R.string.short_swipe_toast_mapped,
-                context.getString(direction.displayNameRes),
-                selection.displayLabel,
-                actionDesc
-            ),
-            Toast.LENGTH_SHORT
-        ).show()
+        Toast.makeText(context, mappedMessage(context, mapping), Toast.LENGTH_SHORT).show()
         return mapping
     }
+
+    /**
+     * The confirmation after [mapping] was saved, e.g. `Mapped Northwest → "@" (Text: "@")` or
+     * `Mapped Northwest → "Voice input (on device)" (Command: Voice input (on device))`.
+     */
+    fun mappedMessage(context: Context, mapping: ShortSwipeMapping): String = context.getString(
+        R.string.short_swipe_toast_mapped,
+        context.getString(mapping.direction.displayNameRes),
+        textLabel(mapping, context::getString),
+        shortSwipeActionDescription(context, mapping.actionType, mapping.actionValue)
+    )
+
+    /**
+     * [mapping]'s label for text drawn in the SYSTEM font (toasts, lists): its on-key label when
+     * that is plain text, else its spoken name. A key-font label is a private-use glyph that the
+     * system font draws as an unrelated character — the microphone showed as a CJK ideograph in
+     * the "Mapped" toast (2026-10-30, screenshot 9).
+     */
+    fun textLabel(mapping: ShortSwipeMapping, getString: (Int) -> String): String {
+        val label = mapping.displayText
+        val plain = !mapping.useKeyFont && label.isNotBlank() &&
+            label.none { Character.isISOControl(it) || it.code in 0xE000..0xF8FF }
+        return if (plain) label else ShortSwipeAccessibilityActions.describeMapping(mapping, getString)
+    }
+
+    /** The name of the key [keyCode] for a toast: "Enter", "Space", "A" (never a raw glyph). */
+    private fun keyName(context: Context, keyCode: String): String =
+        ShortSwipeKeyCodes.displayName(keyCode, null, context::getString)
 
     /**
      * Blank the slot. When the layout has a subkey there ([hasDefault]) a `removed` mapping
@@ -59,7 +78,7 @@ object ShortSwipeAssignment {
         else manager.removeMapping(keyCode, direction)
         Toast.makeText(
             context,
-            context.getString(R.string.subkey_toast_removed, context.getString(direction.displayNameRes), keyCode.uppercase()),
+            context.getString(R.string.subkey_toast_removed, context.getString(direction.displayNameRes), keyName(context, keyCode)),
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -74,7 +93,7 @@ object ShortSwipeAssignment {
         manager.removeMapping(keyCode, direction)
         Toast.makeText(
             context,
-            context.getString(R.string.subkey_toast_restored, context.getString(direction.displayNameRes), keyCode.uppercase()),
+            context.getString(R.string.subkey_toast_restored, context.getString(direction.displayNameRes), keyName(context, keyCode)),
             Toast.LENGTH_SHORT
         ).show()
     }

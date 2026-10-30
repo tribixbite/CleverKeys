@@ -273,7 +273,6 @@
     <string name="short_swipe_tap_hint">Ketuk tombol mana saja di bawah untuk menyesuaikan gestur geser pendeknya</string>
     <string name="short_swipe_instruction_title">Ketuk tombol apa saja untuk menyesuaikannya</string>
     <string name="short_swipe_instruction_body">Keyboard di bawah ini adalah keyboard CleverKeys Anda yang sebenarnya.\nKetuk tombol untuk menambahkan aksi geser pendek padanya.</string>
-    <string name="short_swipe_custom_mappings">Pemetaan Kustom</string>
 
     <!-- Pengaturan tema / Theme Settings -->
     <string name="theme_settings_title">Tema Keyboard</string>
@@ -882,6 +881,30 @@
     <string name="subkey_edit_remove">Hapus</string>
     <string name="subkey_toast_removed">Subtombol %1$s dihapus dari tombol %2$s</string>
     <string name="subkey_toast_restored">Subtombol %1$s default dipulihkan pada tombol %2$s</string>
+    <string name="subkey_source_layout">Tata letak</string>
+    <string name="subkey_source_shared">Bawaan</string>
+    <string name="subkey_source_extra_key">Tombol ekstra</string>
+    <string name="subkey_source_hidden">Tersembunyi</string>
+    <string name="subkey_source_custom">Kustom</string>
+    <string name="subkey_source_removed">Dihapus</string>
+    <string name="subkey_slot_empty">Kosong</string>
+    <string name="subkey_slot_nothing">Tidak ada</string>
+    <string name="subkey_slot_replaces">Menggantikan %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Subtombol</string>
+    <string name="subkey_dialog_layout_hint">Subtombol %1$s dan geser pendek kustom. Ketuk arah untuk mengubahnya.</string>
+    <string name="subkey_layout_copy_title">Ubah subtombol tata letak?</string>
+    <string name="subkey_layout_copy_body">%1$s menetapkan subtombol ini. Tata letak bawaan tidak berubah: perubahan disimpan di salinan, %2$s, yang menggantikannya di daftar tata letak. Pengelola Tata Letak dapat kembali ke yang asli.</string>
+    <string name="subkey_layout_copy_confirm">Buat salinan</string>
+    <string name="subkey_layout_copy_global">Ubah di semua tata letak</string>
+    <string name="subkey_layout_copy_name">%1$s (diubah)</string>
+    <string name="subkey_layout_toast_copied">%1$s dibuat</string>
+    <string name="subkey_layout_toast_saved">Disimpan di %1$s</string>
+    <string name="subkey_layout_toast_failed">Tata letak tidak diubah: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Tindakan ini tidak dapat menjadi bagian tata letak, jadi disimpan sebagai geser pendek kustom.</string>
+    <string name="layout_manager_badge_modified_copy">Salinan ubahan dari %1$s</string>
+    <string name="layout_manager_revert">Kembali ke asli</string>
+    <string name="layout_manager_revert_title">Kembali ke tata letak asli?</string>
+    <string name="layout_manager_revert_body">%1$s menggantikan salinan ubahan ini. Subtombol yang diubah dibuang; pilihan bahasa, tema, dan jarak tombol tetap disimpan.</string>
     <string name="gesture_selection_delete_header">Mode Seleksi-Hapus</string>
     <string name="gesture_selection_delete_desc">Geser pendek + tahan pada backspace untuk memilih teks, lalu lepaskan untuk menghapus.</string>
     <string name="gesture_tap_typing_header">Ketuk dan Pengetikan</string>
@@ -1557,7 +1580,6 @@
     <string name="extra_keys_group_functions">Fungsi</string>
     <string name="short_swipe_toast_all_reset">Semua kustomisasi disetel ulang</string>
     <string name="short_swipe_toast_mapped">%1$s dipetakan → \"%2$s\" (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Menampilkan pemetaan tata letak yang ada + pemetaan kustom</string>
     <string name="short_swipe_dialog_hint_no_layout">Ketuk arah untuk menambah atau mengedit gestur geser pendek</string>
     <string name="short_swipe_action_desc_command">Perintah: %1$s</string>
     <string name="short_swipe_action_desc_text">Teks: \"%1$s\"</string>

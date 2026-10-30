@@ -255,23 +255,72 @@ class CleverKeysService : InputMethodService(),
                 return null
             }
 
-            // Search through all rows and keys
+            return findKeyByTypedText(layout, char)
+        }
+
+        /**
+         * The key of [layout] that types [text]: a character or string key whose value is [text],
+         * or a key-font key (Enter, Space, Tab) whose runtime short-swipe code
+         * ([tribixbite.cleverkeys.customization.ShortSwipeKeyCodes]) is the one [text] maps to —
+         * the customization screen captures Enter as "\n", which matches no character key.
+         */
+        @JvmStatic
+        fun findKeyByTypedText(layout: KeyboardData, text: String): KeyboardData.Key? {
+            val lower = text.lowercase()
+            val code = tribixbite.cleverkeys.customization.ShortSwipeKeyCodes.canonical(text)
             for (row in layout.rows) {
                 for (key in row.keys) {
-                    // Check if the main key (index 0) matches the character
                     val mainKv = key.keys.getOrNull(0) ?: continue
-                    val mainChar = when (mainKv.getKind()) {
+                    val typed = when (mainKv.getKind()) {
                         KeyValue.Kind.Char -> mainKv.getChar().lowercaseChar().toString()
                         KeyValue.Kind.String -> mainKv.getString().lowercase()
-                        else -> continue
+                        else -> null
                     }
-                    if (mainChar == char.lowercase()) {
-                        return key
-                    }
+                    if (typed == lower) return key
+                }
+            }
+            // No key types it as text: the key whose glyph code it maps to (Enter for "\n").
+            for (row in layout.rows) {
+                for (key in row.keys) {
+                    if (tribixbite.cleverkeys.customization.ShortSwipeKeyCodes.ofKey(key.keys.getOrNull(0)) == code) return key
                 }
             }
             return null
         }
+
+        /**
+         * Where the keyboard's current layout comes from, for Short Swipe Customization's
+         * subkey sources (docs/specs/subkey-customization-current.md): the index of the current
+         * entry of the `layouts` preference, the layout as that entry defines it (before Extra
+         * Keys and the bottom row are added), whether a pane (numeric, emoji …) is showing
+         * instead, and — for the System entry — which built-in layout it resolves to.
+         * Null when the keyboard is not running.
+         */
+        @JvmStatic
+        fun layoutSourceSnapshot(): LayoutSourceSnapshot? {
+            val instance = _instance ?: return null
+            val manager = instance._layoutManager ?: return null
+            return try {
+                val unmodified = manager.current_layout_unmodified()
+                LayoutSourceSnapshot(
+                    entryIndex = manager.getCurrentLayoutIndex(),
+                    unmodified = unmodified,
+                    paneShowing = manager.getCurrentSpecialLayout() != null,
+                    builtInName = KeyboardData.cachedResourceIdOf(unmodified)
+                        ?.let { tribixbite.cleverkeys.prefs.LayoutsPreference.nameOfLayoutId(instance.resources, it) },
+                )
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        /** See [layoutSourceSnapshot]. */
+        data class LayoutSourceSnapshot(
+            val entryIndex: Int,
+            val unmodified: KeyboardData,
+            val paneShowing: Boolean,
+            val builtInName: String?,
+        )
 
         /**
          * Get the row height for a key in the current layout.

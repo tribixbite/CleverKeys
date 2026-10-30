@@ -305,7 +305,6 @@
     <string name="short_swipe_tap_hint">Tocca un tasto qui sotto per personalizzare i suoi scorrimenti brevi</string>
     <string name="short_swipe_instruction_title">Tocca un tasto per personalizzarlo</string>
     <string name="short_swipe_instruction_body">La tastiera qui sotto è la tua vera tastiera CleverKeys.\nTocca un tasto per aggiungere azioni di scorrimento breve.</string>
-    <string name="short_swipe_custom_mappings">Mappature personalizzate</string>
 
     <!-- Impostazioni tema -->
     <string name="theme_settings_title">Temi tastiera</string>
@@ -914,6 +913,30 @@
     <string name="subkey_edit_remove">Rimuovi</string>
     <string name="subkey_toast_removed">Sottotasto %1$s rimosso dal tasto %2$s</string>
     <string name="subkey_toast_restored">Sottotasto %1$s predefinito ripristinato sul tasto %2$s</string>
+    <string name="subkey_source_layout">Layout</string>
+    <string name="subkey_source_shared">Integrato</string>
+    <string name="subkey_source_extra_key">Tasto extra</string>
+    <string name="subkey_source_hidden">Nascosto</string>
+    <string name="subkey_source_custom">Personalizzato</string>
+    <string name="subkey_source_removed">Rimosso</string>
+    <string name="subkey_slot_empty">Vuoto</string>
+    <string name="subkey_slot_nothing">Niente</string>
+    <string name="subkey_slot_replaces">Sostituisce %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Sottotasti</string>
+    <string name="subkey_dialog_layout_hint">Sottotasti di %1$s e scorrimenti brevi personalizzati. Tocca una direzione per cambiarla.</string>
+    <string name="subkey_layout_copy_title">Cambiare un sottotasto del layout?</string>
+    <string name="subkey_layout_copy_body">%1$s definisce questo sottotasto. Il layout integrato resta invariato: la modifica viene salvata in una copia, %2$s, che lo sostituisce nell’elenco dei layout. Il Gestore layout permette di tornare all’originale.</string>
+    <string name="subkey_layout_copy_confirm">Crea copia</string>
+    <string name="subkey_layout_copy_global">Cambia in tutti i layout</string>
+    <string name="subkey_layout_copy_name">%1$s (modificato)</string>
+    <string name="subkey_layout_toast_copied">Creato %1$s</string>
+    <string name="subkey_layout_toast_saved">Salvato in %1$s</string>
+    <string name="subkey_layout_toast_failed">Il layout non è stato modificato: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Questa azione non può far parte di un layout, quindi è stata salvata come scorrimento breve personalizzato.</string>
+    <string name="layout_manager_badge_modified_copy">Copia modificata di %1$s</string>
+    <string name="layout_manager_revert">Torna all’originale</string>
+    <string name="layout_manager_revert_title">Tornare al layout originale?</string>
+    <string name="layout_manager_revert_body">%1$s prende il posto di questa copia modificata. I sottotasti modificati vengono scartati; le scelte di lingua, tema e spaziatura dei tasti restano.</string>
     <string name="gesture_selection_delete_header">Modalità selezione-eliminazione</string>
     <string name="gesture_selection_delete_desc">Scorrimento breve + tieni premuto su Backspace per selezionare il testo, poi rilascia per eliminare.</string>
     <string name="gesture_tap_typing_header">Tocco e digitazione</string>
@@ -1657,7 +1680,6 @@
     <string name="extra_keys_group_functions">Funzioni</string>
     <string name="short_swipe_toast_all_reset">Tutte le personalizzazioni reimpostate</string>
     <string name="short_swipe_toast_mapped">Assegnato: %1$s → \"%2$s\" (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Mostra le associazioni del layout + quelle personalizzate</string>
     <string name="short_swipe_dialog_hint_no_layout">Tocca una direzione per aggiungere o modificare uno scorrimento breve</string>
     <string name="short_swipe_action_desc_command">Comando: %1$s</string>
     <string name="short_swipe_action_desc_text">Testo: \"%1$s\"</string>

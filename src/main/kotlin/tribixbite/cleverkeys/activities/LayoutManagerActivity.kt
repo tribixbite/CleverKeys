@@ -138,6 +138,8 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     var showKeyGeometryFor by remember { mutableStateOf<Int?>(null) }
     var showCustomLayoutDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showDeleteConfirmDialog by remember { mutableStateOf<Int?>(null) }
+    // A modified copy (Short Swipe Customization) waiting for the revert confirmation
+    var showRevertConfirmFor by remember { mutableStateOf<Int?>(null) }
 
     // Reorderable state for drag-and-drop
     val reorderState = rememberReorderableLazyListState(
@@ -259,6 +261,8 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                                 }
                             },
                             reorderState = reorderState,
+                            originalName = modifiedCopyOriginName(context, layoutWithId.layout, layoutNames, layoutDisplayNames),
+                            onRevert = { showRevertConfirmFor = index },
                             onSaveTheme = embeddedThemeOf(layoutWithId.layout)?.let { spec ->
                                 { saveLayoutThemeAsCustom(context, themeProvider, prefs, layoutWithId.layout, spec) }
                             }
@@ -309,7 +313,9 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                     xml,
                     language = existing?.language,
                     theme = existing?.theme,
-                    keyGeometry = existing?.keyGeometry
+                    keyGeometry = existing?.keyGeometry,
+                    // A modified copy stays revertible after its XML is edited here.
+                    origin = (existing as? LayoutsPreference.CustomLayout)?.origin
                 )
                 if (index >= 0) {
                     // Edit existing - create new list with updated item
@@ -421,6 +427,43 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
         }
     }
 
+    // Revert a modified copy to its built-in original (docs/specs/subkey-customization-current.md)
+    showRevertConfirmFor?.let { index ->
+        val entry = layoutsWithIds.getOrNull(index)
+        val copy = entry?.layout as? LayoutsPreference.CustomLayout
+        val original = copy?.revertedFrom()
+        if (entry == null || original == null) {
+            showRevertConfirmFor = null
+        } else {
+            AlertDialog(
+                onDismissRequest = { showRevertConfirmFor = null },
+                title = { Text(stringResource(R.string.layout_manager_revert_title)) },
+                text = {
+                    Text(
+                        stringResource(
+                            R.string.layout_manager_revert_body,
+                            modifiedCopyOriginName(context, copy, layoutNames, layoutDisplayNames).orEmpty()
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        layoutsWithIds = layoutsWithIds.toMutableList().apply {
+                            this[index] = LayoutWithId(id = entry.id, layout = original)
+                        }
+                        saveLayouts(prefs, getLayoutsForSaving())
+                        showRevertConfirmFor = null
+                    }) { Text(stringResource(R.string.layout_manager_revert)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRevertConfirmFor = null }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                }
+            )
+        }
+    }
+
     // Delete Confirmation Dialog
     showDeleteConfirmDialog?.let { index ->
         AlertDialog(
@@ -470,6 +513,9 @@ fun LayoutItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     reorderState: ReorderableLazyListState,
+    /** For a modified copy of a built-in layout: the original's name (offers "Revert"). */
+    originalName: String? = null,
+    onRevert: () -> Unit = {},
     /** The layout XML carries its own `<theme>`: offer "Save theme as custom theme". */
     onSaveTheme: (() -> Unit)? = null,
 ) {
@@ -541,7 +587,11 @@ fun LayoutItem(
                     text = when (layout) {
                         is LayoutsPreference.SystemLayout -> stringResource(R.string.layout_manager_tab_system)
                         is LayoutsPreference.NamedLayout -> stringResource(R.string.layout_manager_tab_predefined)
-                        is LayoutsPreference.CustomLayout -> stringResource(R.string.layout_manager_badge_custom_xml)
+                        is LayoutsPreference.CustomLayout -> if (originalName != null) {
+                            stringResource(R.string.layout_manager_badge_modified_copy, originalName)
+                        } else {
+                            stringResource(R.string.layout_manager_badge_custom_xml)
+                        }
                         else -> ""
                     },
                     style = MaterialTheme.typography.labelSmall,
@@ -605,6 +655,20 @@ fun LayoutItem(
                     }
                 )
 
+                // A modified copy (Short Swipe Customization): back to the built-in layout.
+                if (originalName != null) {
+                    AssistChip(
+                        onClick = onRevert,
+                        label = {
+                            Text(
+                                text = stringResource(R.string.layout_manager_revert),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    )
+                }
+
                 // A layout with its own <theme>: store it as a custom theme (Theme Manager / Creator).
                 if (onSaveTheme != null) {
                     AssistChip(
@@ -642,6 +706,24 @@ fun LayoutItem(
             }
         }
     }
+}
+
+/**
+ * The display name of the built-in layout a modified copy reverts to, or null when [layout] is
+ * not a modified copy (see [LayoutsPreference.CustomLayout.origin]).
+ */
+internal fun modifiedCopyOriginName(
+    context: android.content.Context,
+    layout: LayoutsPreference.Layout,
+    layoutNames: List<String>,
+    layoutDisplayNames: Array<String>,
+): String? {
+    val origin = (layout as? LayoutsPreference.CustomLayout)?.origin ?: return null
+    if (origin == LayoutsPreference.CustomLayout.ORIGIN_SYSTEM) {
+        return context.getString(R.string.layout_manager_system_layout_name)
+    }
+    val i = layoutNames.indexOf(origin)
+    return if (i in layoutDisplayNames.indices) layoutDisplayNames[i] else origin
 }
 
 /**

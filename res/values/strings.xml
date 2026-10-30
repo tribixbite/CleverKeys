@@ -399,7 +399,6 @@
     <string name="short_swipe_tap_hint">Tap any key below to customize its short swipe gestures</string>
     <string name="short_swipe_instruction_title">Type any key to customize it</string>
     <string name="short_swipe_instruction_body">The keyboard below is your actual CleverKeys keyboard.\nTap a key to add short swipe actions to it.</string>
-    <string name="short_swipe_custom_mappings">Custom Mappings</string>
 
     <!-- ThemeSettingsActivity -->
     <string name="theme_settings_title">Keyboard Themes</string>
@@ -1196,6 +1195,30 @@
     <string name="subkey_edit_remove">Remove</string>
     <string name="subkey_toast_removed">Removed the %1$s subkey from %2$s</string>
     <string name="subkey_toast_restored">Restored the default %1$s subkey on %2$s</string>
+    <string name="subkey_source_layout">Layout</string>
+    <string name="subkey_source_shared">Built-in</string>
+    <string name="subkey_source_extra_key">Extra key</string>
+    <string name="subkey_source_hidden">Hidden</string>
+    <string name="subkey_source_custom">Custom</string>
+    <string name="subkey_source_removed">Removed</string>
+    <string name="subkey_slot_empty">Empty</string>
+    <string name="subkey_slot_nothing">Nothing</string>
+    <string name="subkey_slot_replaces">Replaces %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Subkeys</string>
+    <string name="subkey_dialog_layout_hint">Subkeys of %1$s and custom short swipes. Tap a direction to change it.</string>
+    <string name="subkey_layout_copy_title">Change a subkey of the layout?</string>
+    <string name="subkey_layout_copy_body">%1$s defines this subkey. The built-in layout stays unchanged: the change is saved in a copy, %2$s, which takes its place in the layout list. Layout Manager can switch back to the original.</string>
+    <string name="subkey_layout_copy_confirm">Create copy</string>
+    <string name="subkey_layout_copy_global">Change in all layouts</string>
+    <string name="subkey_layout_copy_name">%1$s (modified)</string>
+    <string name="subkey_layout_toast_copied">Created %1$s</string>
+    <string name="subkey_layout_toast_saved">Saved in %1$s</string>
+    <string name="subkey_layout_toast_failed">The layout was not changed: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">This action cannot be part of a layout, so it was saved as a custom short swipe.</string>
+    <string name="layout_manager_badge_modified_copy">Modified copy of %1$s</string>
+    <string name="layout_manager_revert">Revert to original</string>
+    <string name="layout_manager_revert_title">Revert to the original layout?</string>
+    <string name="layout_manager_revert_body">%1$s takes the place of this modified copy. The changed subkeys are discarded; the language, theme and key spacing choices are kept.</string>
     <string name="gesture_selection_delete_header">Selection-Delete Mode</string>
     <string name="gesture_selection_delete_desc">Short swipe + hold on backspace to select text, then release to delete.</string>
     <string name="gesture_tap_typing_header">Tap and Typing</string>
@@ -1991,7 +2014,6 @@
     <string name="extra_keys_group_functions">Functions</string>
     <string name="short_swipe_toast_all_reset">All customizations reset</string>
     <string name="short_swipe_toast_mapped">Mapped %1$s → \"%2$s\" (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Shows existing layout mappings + custom mappings</string>
     <string name="short_swipe_dialog_hint_no_layout">Tap a direction to add or edit a short swipe gesture</string>
     <string name="short_swipe_action_desc_command">Command: %1$s</string>
     <string name="short_swipe_action_desc_text">Text: \"%1$s\"</string>

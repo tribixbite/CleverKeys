@@ -238,7 +238,13 @@ data class ShortSwipeMapping(
      * Create a unique key for HashMap storage.
      * Format: "keyCode:direction" e.g., "a:NE"
      */
-    fun toStorageKey(): String = "${keyCode.lowercase()}:${direction.name}"
+    fun toStorageKey(): String = "${ShortSwipeKeyCodes.canonical(keyCode)}:${direction.name}"
+
+    /** This mapping stored under the runtime key code ([ShortSwipeKeyCodes.canonical]). */
+    fun withCanonicalKeyCode(): ShortSwipeMapping {
+        val code = ShortSwipeKeyCodes.canonical(keyCode)
+        return if (code == keyCode) this else copy(keyCode = code)
+    }
 }
 
 /**
@@ -266,7 +272,8 @@ data class ShortSwipeCustomizations(
                         )
                     } else null
                     ShortSwipeMapping(
-                        keyCode = keyCode,
+                        // A saved "\n" / " " / "A" loads under the runtime code (ShortSwipeKeyCodes).
+                        keyCode = ShortSwipeKeyCodes.canonical(keyCode),
                         direction = it,
                         displayText = upgraded?.displayText ?: mapping.displayText,
                         actionType = actionType,
@@ -285,7 +292,7 @@ data class ShortSwipeCustomizations(
          * Convert from flat list to storage format.
          */
         fun fromMappingList(mappings: List<ShortSwipeMapping>): ShortSwipeCustomizations {
-            val grouped = mappings.groupBy { it.keyCode.lowercase() }
+            val grouped = mappings.groupBy { ShortSwipeKeyCodes.canonical(it.keyCode) }
                 .mapValues { (_, keyMappings) ->
                     keyMappings.associate { mapping ->
                         mapping.direction.name to DirectionMapping(

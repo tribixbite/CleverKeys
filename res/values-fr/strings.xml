@@ -271,7 +271,6 @@
     <string name="short_swipe_tap_hint">Appuyez sur une touche ci-dessous pour personnaliser ses glissés courts</string>
     <string name="short_swipe_instruction_title">Appuyez sur une touche pour la personnaliser</string>
     <string name="short_swipe_instruction_body">Le clavier ci-dessous est votre vrai clavier CleverKeys.\nAppuyez sur une touche pour lui ajouter des actions de glissé court.</string>
-    <string name="short_swipe_custom_mappings">Mappages personnalisés</string>
 
     <!-- Paramètres de thème -->
     <string name="theme_settings_title">Thèmes du clavier</string>
@@ -880,6 +879,30 @@
     <string name="subkey_edit_remove">Retirer</string>
     <string name="subkey_toast_removed">Sous-touche %1$s retirée de la touche %2$s</string>
     <string name="subkey_toast_restored">Sous-touche %1$s par défaut rétablie sur la touche %2$s</string>
+    <string name="subkey_source_layout">Disposition</string>
+    <string name="subkey_source_shared">Intégrée</string>
+    <string name="subkey_source_extra_key">Touche supplémentaire</string>
+    <string name="subkey_source_hidden">Masquée</string>
+    <string name="subkey_source_custom">Personnalisée</string>
+    <string name="subkey_source_removed">Retirée</string>
+    <string name="subkey_slot_empty">Vide</string>
+    <string name="subkey_slot_nothing">Rien</string>
+    <string name="subkey_slot_replaces">Remplace %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Sous-touches</string>
+    <string name="subkey_dialog_layout_hint">Sous-touches de %1$s et glissements courts personnalisés. Un appui sur une direction permet de la modifier.</string>
+    <string name="subkey_layout_copy_title">Modifier une sous-touche de la disposition ?</string>
+    <string name="subkey_layout_copy_body">%1$s définit cette sous-touche. La disposition intégrée reste inchangée : la modification est enregistrée dans une copie, %2$s, qui la remplace dans la liste des dispositions. Le gestionnaire de dispositions permet de revenir à l’original.</string>
+    <string name="subkey_layout_copy_confirm">Créer une copie</string>
+    <string name="subkey_layout_copy_global">Modifier dans toutes</string>
+    <string name="subkey_layout_copy_name">%1$s (modifiée)</string>
+    <string name="subkey_layout_toast_copied">%1$s créée</string>
+    <string name="subkey_layout_toast_saved">Enregistré dans %1$s</string>
+    <string name="subkey_layout_toast_failed">La disposition n’a pas été modifiée : %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Cette action ne peut pas faire partie d’une disposition ; elle a été enregistrée comme glissement court personnalisé.</string>
+    <string name="layout_manager_badge_modified_copy">Copie modifiée de %1$s</string>
+    <string name="layout_manager_revert">Revenir à l’original</string>
+    <string name="layout_manager_revert_title">Revenir à la disposition d’origine ?</string>
+    <string name="layout_manager_revert_body">%1$s remplace cette copie modifiée. Les sous-touches modifiées sont abandonnées ; les choix de langue, de thème et d’espacement des touches sont conservés.</string>
     <string name="gesture_selection_delete_header">Mode sélection-suppression</string>
     <string name="gesture_selection_delete_desc">Glissé court + maintien sur Retour arrière pour sélectionner du texte, puis relâchez pour supprimer.</string>
     <string name="gesture_tap_typing_header">Appui et frappe</string>
@@ -1627,7 +1650,6 @@
     <string name="extra_keys_group_functions">Fonctions</string>
     <string name="short_swipe_toast_all_reset">Toutes les personnalisations réinitialisées</string>
     <string name="short_swipe_toast_mapped">Associé : %1$s → « %2$s » (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Affiche les associations de la disposition + les associations personnalisées</string>
     <string name="short_swipe_dialog_hint_no_layout">Appuyez sur une direction pour ajouter ou modifier un glissé court</string>
     <string name="short_swipe_action_desc_command">Commande : %1$s</string>
     <string name="short_swipe_action_desc_text">Texte : « %1$s »</string>

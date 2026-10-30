@@ -268,7 +268,6 @@
     <string name="short_swipe_tap_hint">Нажмите на любую клавишу ниже, чтобы настроить жесты коротких свайпов</string>
     <string name="short_swipe_instruction_title">Нажмите любую клавишу для настройки</string>
     <string name="short_swipe_instruction_body">Клавиатура ниже — это ваша настоящая клавиатура CleverKeys.\nНажмите клавишу, чтобы добавить действия коротких свайпов.</string>
-    <string name="short_swipe_custom_mappings">Пользовательские назначения</string>
 
     <!-- Theme Settings (wp8 batch) -->
     <string name="theme_settings_title">Темы клавиатуры</string>
@@ -876,6 +875,30 @@
     <string name="subkey_edit_remove">Удалить</string>
     <string name="subkey_toast_removed">Клавиша %2$s: подклавиша «%1$s» удалена</string>
     <string name="subkey_toast_restored">Клавиша %2$s: подклавиша «%1$s» по умолчанию восстановлена</string>
+    <string name="subkey_source_layout">Раскладка</string>
+    <string name="subkey_source_shared">Встроенная</string>
+    <string name="subkey_source_extra_key">Доп. клавиша</string>
+    <string name="subkey_source_hidden">Скрыта</string>
+    <string name="subkey_source_custom">Своя</string>
+    <string name="subkey_source_removed">Удалена</string>
+    <string name="subkey_slot_empty">Пусто</string>
+    <string name="subkey_slot_nothing">Ничего</string>
+    <string name="subkey_slot_replaces">Вместо %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Подклавиши</string>
+    <string name="subkey_dialog_layout_hint">Подклавиши раскладки %1$s и пользовательские короткие свайпы. Нажатие на направление открывает его изменение.</string>
+    <string name="subkey_layout_copy_title">Изменить подклавишу раскладки?</string>
+    <string name="subkey_layout_copy_body">Эту подклавишу задаёт раскладка %1$s. Встроенная раскладка не меняется: изменение сохраняется в копии %2$s, которая заменяет её в списке раскладок. В менеджере раскладок можно вернуться к исходной.</string>
+    <string name="subkey_layout_copy_confirm">Создать копию</string>
+    <string name="subkey_layout_copy_global">Изменить во всех раскладках</string>
+    <string name="subkey_layout_copy_name">%1$s (изменённая)</string>
+    <string name="subkey_layout_toast_copied">Создана раскладка %1$s</string>
+    <string name="subkey_layout_toast_saved">Сохранено в %1$s</string>
+    <string name="subkey_layout_toast_failed">Раскладка не изменена: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Это действие не может быть частью раскладки, поэтому оно сохранено как пользовательский короткий свайп.</string>
+    <string name="layout_manager_badge_modified_copy">Изменённая копия %1$s</string>
+    <string name="layout_manager_revert">Вернуть исходную</string>
+    <string name="layout_manager_revert_title">Вернуться к исходной раскладке?</string>
+    <string name="layout_manager_revert_body">Раскладка %1$s заменит эту изменённую копию. Изменённые подклавиши будут отброшены; выбор языка, темы и отступов клавиш сохранится.</string>
     <string name="gesture_selection_delete_header">Режим «выделить и удалить»</string>
     <string name="gesture_selection_delete_desc">Короткий свайп + удержание на Backspace выделяет текст; отпустите, чтобы удалить.</string>
     <string name="gesture_tap_typing_header">Нажатия и набор</string>
@@ -1658,7 +1681,6 @@
     <string name="extra_keys_group_functions">Функции</string>
     <string name="short_swipe_toast_all_reset">Все настройки сброшены</string>
     <string name="short_swipe_toast_mapped">Назначено: %1$s → «%2$s» (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Показаны назначения раскладки + пользовательские назначения</string>
     <string name="short_swipe_dialog_hint_no_layout">Коснитесь направления, чтобы добавить или изменить короткий свайп</string>
     <string name="short_swipe_action_desc_command">Команда: %1$s</string>
     <string name="short_swipe_action_desc_text">Текст: «%1$s»</string>

@@ -120,6 +120,15 @@ root attributes round-trip unchanged; the Layout Manager editor exposes them as 
 and refuses to save an invalid value (`LayoutManagerActivity.kt:870-873`). Details:
 `layout-system.md` "Language binding" / "Per-layout theme binding".
 
+### Export fixes (2026-10-30)
+
+`XmlLayoutExporter.injectMappings` now (1) removes a direction's numbered synonym before writing
+its short name — a key with `key1="…"` that received `nw="…"` carried both, which the parser
+rejects ("'key1' and 'nw' are synonyms") — and (2) matches mappings by RUNTIME key code
+(`ShortSwipeKeyCodes`), so a mapping on Enter (stored under Enter's glyph) is injected into
+`key0="enter"`. Modified copies of built-in layouts (subkey-customization-current.md) are custom
+layouts and export like any other.
+
 ### Compatibility
 
 | Scenario | Result |

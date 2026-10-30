@@ -184,7 +184,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * @return The custom mapping, or null if none exists
      */
     fun getMapping(keyCode: String, direction: SwipeDirection): ShortSwipeMapping? {
-        val key = "${keyCode.lowercase()}:${direction.name}"
+        val key = "${ShortSwipeKeyCodes.canonical(keyCode)}:${direction.name}"
         return mappingCache[key]
     }
 
@@ -200,7 +200,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * @return Map of direction to mapping (immutable; empty when none)
      */
     fun getMappingsForKey(keyCode: String): Map<SwipeDirection, ShortSwipeMapping> {
-        return byKeyIndex[keyCode.lowercase()] ?: emptyMap()
+        return byKeyIndex[ShortSwipeKeyCodes.canonical(keyCode)] ?: emptyMap()
     }
 
     /**
@@ -216,8 +216,11 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      * @param mapping The mapping to save
      */
     suspend fun setMapping(mapping: ShortSwipeMapping) {
+        // Stored under the RUNTIME key code (ShortSwipeKeyCodes): "\n" from the customization
+        // screen's text capture is Enter's glyph, "A" is "a" — else the keyboard never drew it.
+        val stored = mapping.withCanonicalKeyCode()
         fileMutex.withLock {
-            mappingCache[mapping.toStorageKey()] = mapping
+            mappingCache[stored.toStorageKey()] = stored
             saveMappingsLocked()
         }
     }
@@ -231,7 +234,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      */
     suspend fun removeMapping(keyCode: String, direction: SwipeDirection): Boolean {
         fileMutex.withLock {
-            val key = "${keyCode.lowercase()}:${direction.name}"
+            val key = "${ShortSwipeKeyCodes.canonical(keyCode)}:${direction.name}"
             val removed = mappingCache.remove(key) != null
             if (removed) {
                 saveMappingsLocked()
@@ -248,7 +251,7 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
      */
     suspend fun removeMappingsForKey(keyCode: String): Int {
         fileMutex.withLock {
-            val normalizedKey = keyCode.lowercase()
+            val normalizedKey = ShortSwipeKeyCodes.canonical(keyCode)
             val toRemove = mappingCache.keys.filter { it.startsWith("$normalizedKey:") }
             toRemove.forEach { mappingCache.remove(it) }
 
@@ -343,7 +346,8 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
                     mappingCache.clear()
                 }
                 mappings.forEach { mapping ->
-                    mappingCache[mapping.toStorageKey()] = mapping
+                    val stored = mapping.withCanonicalKeyCode()
+                    mappingCache[stored.toStorageKey()] = stored
                 }
                 saveMappingsLocked()
             }

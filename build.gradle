@@ -629,6 +629,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
+    // 2026-10-30 (maintainer screenshots 9/10): runtime key codes and key names (Enter captured
+    // as "\n"), the per-key dialog's subkey sources, position-addressed layout XML edits.
+    'tribixbite.cleverkeys.customization.ShortSwipeKeyCodesTest',
+    'tribixbite.cleverkeys.customization.KeySubkeySourcesTest',
+    'tribixbite.cleverkeys.customization.LayoutSubkeyXmlTest',
     // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
     'tribixbite.cleverkeys.popover.SubkeyPopoverGeometryTest',
@@ -1468,6 +1473,13 @@ tasks.register('runMockTests', JavaExec) {
     // normalization end-to-end + the 0-mapping-REPLACE-must-not-clear guard.
     'tribixbite.cleverkeys.customization.ShortSwipeImportSemanticsTest',
     'tribixbite.cleverkeys.customization.ShortSwipeChangeListenerTest',
+    // 2026-10-30: mappings stored/looked up under the runtime key code (Enter's "\n" capture),
+    // system-font labels name commands, layout-subkey edits copy a built-in layout.
+    'tribixbite.cleverkeys.customization.ShortSwipeRuntimeKeyCodeTest',
+    'tribixbite.cleverkeys.ShortSwipeLabelTextTest',
+    'tribixbite.cleverkeys.customization.LayoutSubkeyBuiltInLayoutsTest',
+    'tribixbite.cleverkeys.customization.LayoutSubkeyEditorTest',
+    'tribixbite.cleverkeys.customization.XmlLayoutExporterSlotTest',
     'tribixbite.cleverkeys.TestKeyboardSectionTest',
     // B-2 (2026-09-06 audit): SwipePrunerTest deleted with the ADR-011-orphan SwipePruner.
     'tribixbite.cleverkeys.PrivacyManagerTest',

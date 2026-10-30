@@ -486,6 +486,19 @@ if (customMapping != null) {
 // otherwise: built-in subkey via getNearestKeyAtDirection (±1 of 16 directions)
 ```
 
+`keyCode` is the key's RUNTIME code; the manager canonicalizes every stored and queried code
+(`ShortSwipeKeyCodes.canonical`: typed `"\n"`/`" "`/`"\t"` → Enter/Space/Tab's key-font glyph,
+lowercase), so a mapping made by capturing the text Enter types fires on Enter (2026-10-30,
+[subkey-customization-current.md](subkey-customization-current.md#runtime-key-codes-2026-10-30)).
+
+### Per-key dialog: sources and layout copies (2026-10-30)
+
+The per-key dialog lists all eight directions with a source badge (Layout / Hidden / Built-in /
+Extra key / Custom / Removed). Changing a subkey the current BUILT-IN layout defines creates a
+modified copy of that layout ("<name> (modified)", Layout Manager can revert it) instead of a
+global custom mapping, unless the user picks "Change in all layouts". Full rules:
+[subkey-customization-current.md](subkey-customization-current.md#sources-in-the-per-key-dialog-2026-10-30).
+
 The forgiving ±1 scan that resolves built-in subkeys (`resolveShortSwipe`, `Pointers.kt:920-930`)
 also checks a custom mapping at each scanned direction, in the same 0, −1, +1 order.
 

@@ -237,13 +237,21 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
             copy(keyGeometry = LayoutKeyGeometry.normalized(keyGeometry))
     }
 
-    /** The XML description of a custom layout. */
+    /**
+     * The XML description of a custom layout.
+     *
+     * [origin] marks a MODIFIED COPY of a built-in layout, made when the user changed one of its
+     * own subkeys in Short Swipe Customization (built-in layouts are never changed): the built-in
+     * layout's name, or [ORIGIN_SYSTEM] for the System (locale) entry. Null for every other
+     * custom layout. Layout Manager offers "Revert" for a copy ([revertedFrom]).
+     */
     data class CustomLayout(
         val xml: String,
         val parsed: KeyboardData?,
         override val language: String? = null,
         override val theme: String? = null,
-        override val keyGeometry: KeyGeometryEntry? = null
+        override val keyGeometry: KeyGeometryEntry? = null,
+        val origin: String? = null
     ) : Layout {
         override fun withLanguage(language: String?): Layout =
             copy(language = LayoutLanguageBinding.normalizeEntry(language))
@@ -262,6 +270,7 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 language: String? = null,
                 theme: String? = null,
                 keyGeometry: KeyGeometryEntry? = null,
+                origin: String? = null,
             ): CustomLayout {
                 val parsed = try {
                     KeyboardData.load_string_exn(xml)
@@ -273,9 +282,31 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                     parsed,
                     LayoutLanguageBinding.normalizeEntry(language),
                     LayoutThemeBinding.normalizeEntry(theme),
-                    LayoutKeyGeometry.normalized(keyGeometry)
+                    LayoutKeyGeometry.normalized(keyGeometry),
+                    normalizeOrigin(origin)
                 )
             }
+
+            /** A stored origin, or null when absent or not a plausible layout name (hostile backup). */
+            @JvmStatic
+            fun normalizeOrigin(origin: String?): String? =
+                origin?.trim()?.takeIf { it == ORIGIN_SYSTEM || ORIGIN_NAME.matches(it) }
+
+            /** The value of [origin] for a copy of the System (locale) entry. */
+            const val ORIGIN_SYSTEM = "system"
+
+            /** Built-in layout names are raw-resource names. */
+            private val ORIGIN_NAME = Regex("[a-z][a-z0-9_]{0,63}")
+        }
+
+        /**
+         * The built-in entry this modified copy reverts to, carrying the copy's language, theme
+         * and key-geometry choices; null when this is not a copy.
+         */
+        fun revertedFrom(): Layout? = when (val o = origin) {
+            null -> null
+            ORIGIN_SYSTEM -> SystemLayout(language, theme, keyGeometry)
+            else -> NamedLayout(o, language, theme, keyGeometry)
         }
     }
 
@@ -308,7 +339,10 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                 val theme = LayoutThemeBinding.normalizeEntry(optionalString(jsonObj, THEME_FIELD))
                 val geometry = LayoutKeyGeometry.normalizeEntry(optionalObject(jsonObj, LayoutKeyGeometry.JSON_FIELD))
                 when (jsonObj.getString("kind")) {
-                    "custom" -> CustomLayout.parse(jsonObj.getString("xml"), language, theme, geometry)
+                    "custom" -> CustomLayout.parse(
+                        jsonObj.getString("xml"), language, theme, geometry,
+                        optionalString(jsonObj, ORIGIN_FIELD)
+                    )
                     "named" -> NamedLayout(jsonObj.getString("name"), language, theme, geometry)
                     "system" -> SystemLayout(language, theme, geometry)
                     else -> SystemLayout()
@@ -351,6 +385,7 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
                     .put("kind", "custom")
                     .put("xml", v.xml)
                     .bindings()
+                    .apply { CustomLayout.normalizeOrigin(v.origin)?.let { put(ORIGIN_FIELD, it) } }
                 else -> JSONObject().put("kind", "system").bindings()
             }
         }
@@ -379,6 +414,8 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         private const val LANGUAGE_FIELD = "language"
         /** JSON field of an entry's theme binding (see [LayoutThemeBinding]). */
         private const val THEME_FIELD = "theme"
+        /** JSON field of a modified copy's built-in origin ([CustomLayout.origin]). */
+        private const val ORIGIN_FIELD = "origin"
         val DEFAULT: List<Layout> = listOf(SystemLayout())
         val SERIALIZER: ListGroupPreference.Serializer<Layout> = Serializer()
 
@@ -466,6 +503,11 @@ class LayoutsPreference(ctx: Context, attrs: AttributeSet?) : ListGroupPreferenc
         fun saveToPreferences(prefs: SharedPreferences.Editor, items: List<Layout>) {
             saveToPreferences(KEY, prefs, items, SERIALIZER)
         }
+
+        /** The layout name whose resource id is [id] (inverse of [layoutIdOfName]), or null. */
+        @JvmStatic
+        fun nameOfLayoutId(res: Resources, id: Int): String? =
+            getLayoutNames(res).firstOrNull { it != "system" && it != "custom" && layoutIdOfName(res, it) == id }
 
         @JvmStatic
         fun layoutOfString(res: Resources, name: String): KeyboardData? {

@@ -273,7 +273,6 @@
     <string name="short_swipe_tap_hint">Kısa kaydırma hareketini özelleştirmek için aşağıdaki herhangi bir tuşa dokunun</string>
     <string name="short_swipe_instruction_title">Özelleştirmek için herhangi bir tuşa yazın</string>
     <string name="short_swipe_instruction_body">Aşağıdaki klavye gerçek CleverKeys klavyenizdir.\nBir tuşa kısa kaydırma eylemleri eklemek için ona dokunun.</string>
-    <string name="short_swipe_custom_mappings">Özel Eşlemeler</string>
 
     <!-- Tema ayarları / Theme Settings -->
     <string name="theme_settings_title">Klavye Temaları</string>
@@ -880,6 +879,30 @@
     <string name="subkey_edit_remove">Kaldır</string>
     <string name="subkey_toast_removed">%2$s tuşundan %1$s alt tuşu kaldırıldı</string>
     <string name="subkey_toast_restored">%2$s tuşunda varsayılan %1$s alt tuşu geri yüklendi</string>
+    <string name="subkey_source_layout">Düzen</string>
+    <string name="subkey_source_shared">Yerleşik</string>
+    <string name="subkey_source_extra_key">Ek tuş</string>
+    <string name="subkey_source_hidden">Gizli</string>
+    <string name="subkey_source_custom">Özel</string>
+    <string name="subkey_source_removed">Kaldırıldı</string>
+    <string name="subkey_slot_empty">Boş</string>
+    <string name="subkey_slot_nothing">Hiçbir şey</string>
+    <string name="subkey_slot_replaces">%1$s yerine</string>
+    <string name="subkey_dialog_subkeys_header">Alt tuşlar</string>
+    <string name="subkey_dialog_layout_hint">%1$s alt tuşları ve özel kısa kaydırmalar. Bir yöne dokunarak değiştirilebilir.</string>
+    <string name="subkey_layout_copy_title">Düzenin bir alt tuşu değiştirilsin mi?</string>
+    <string name="subkey_layout_copy_body">Bu alt tuşu %1$s tanımlar. Yerleşik düzen değişmez: değişiklik, düzen listesinde onun yerini alan %2$s adlı bir kopyaya kaydedilir. Düzen Yöneticisi ile özgün düzene dönülebilir.</string>
+    <string name="subkey_layout_copy_confirm">Kopya oluştur</string>
+    <string name="subkey_layout_copy_global">Tüm düzenlerde değiştir</string>
+    <string name="subkey_layout_copy_name">%1$s (değiştirilmiş)</string>
+    <string name="subkey_layout_toast_copied">%1$s oluşturuldu</string>
+    <string name="subkey_layout_toast_saved">%1$s içine kaydedildi</string>
+    <string name="subkey_layout_toast_failed">Düzen değiştirilmedi: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Bu işlem bir düzenin parçası olamaz, bu nedenle özel kısa kaydırma olarak kaydedildi.</string>
+    <string name="layout_manager_badge_modified_copy">%1$s düzeninin değiştirilmiş kopyası</string>
+    <string name="layout_manager_revert">Özgün düzene dön</string>
+    <string name="layout_manager_revert_title">Özgün düzene dönülsün mü?</string>
+    <string name="layout_manager_revert_body">Bu değiştirilmiş kopyanın yerini %1$s alır. Değiştirilen alt tuşlar atılır; dil, tema ve tuş aralığı seçimleri korunur.</string>
     <string name="gesture_selection_delete_header">Seçerek Silme Modu</string>
     <string name="gesture_selection_delete_desc">Metin seçmek için geri silme tuşunda kısa kaydırma + basılı tutma, silmek için bırakın.</string>
     <string name="gesture_tap_typing_header">Dokunma ve Yazma</string>
@@ -1592,7 +1615,6 @@
     <string name="extra_keys_group_functions">İşlevler</string>
     <string name="short_swipe_toast_all_reset">Tüm özelleştirmeler sıfırlandı</string>
     <string name="short_swipe_toast_mapped">%1$s → \"%2$s\" atandı (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Mevcut düzen atamalarını + özel atamaları gösterir</string>
     <string name="short_swipe_dialog_hint_no_layout">Kısa kaydırma hareketi eklemek veya düzenlemek için bir yöne dokunun</string>
     <string name="short_swipe_action_desc_command">Komut: %1$s</string>
     <string name="short_swipe_action_desc_text">Metin: \"%1$s\"</string>

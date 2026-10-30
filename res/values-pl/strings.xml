@@ -279,7 +279,6 @@
     <string name="short_swipe_tap_hint">Dotknij dowolnego klawisza poniżej, aby dostosować gesty krótkiego przesunięcia</string>
     <string name="short_swipe_instruction_title">Dotknij dowolnego klawisza, aby go dostosować</string>
     <string name="short_swipe_instruction_body">Klawiatura poniżej to Twoja prawdziwa klawiatura CleverKeys.\nDotknij klawisza, aby dodać akcje krótkiego gestu.</string>
-    <string name="short_swipe_custom_mappings">Własne przypisania</string>
 
     <!-- Theme Settings (wp8 batch) -->
     <string name="theme_settings_title">Motywy klawiatury</string>
@@ -886,6 +885,30 @@
     <string name="subkey_edit_remove">Usuń</string>
     <string name="subkey_toast_removed">Klawisz %2$s: usunięto podklawisz %1$s</string>
     <string name="subkey_toast_restored">Klawisz %2$s: przywrócono domyślny podklawisz %1$s</string>
+    <string name="subkey_source_layout">Układ</string>
+    <string name="subkey_source_shared">Wbudowany</string>
+    <string name="subkey_source_extra_key">Dodatkowy klawisz</string>
+    <string name="subkey_source_hidden">Ukryty</string>
+    <string name="subkey_source_custom">Własny</string>
+    <string name="subkey_source_removed">Usunięty</string>
+    <string name="subkey_slot_empty">Pusty</string>
+    <string name="subkey_slot_nothing">Nic</string>
+    <string name="subkey_slot_replaces">Zastępuje %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Podklawisze</string>
+    <string name="subkey_dialog_layout_hint">Podklawisze układu %1$s i własne krótkie gesty. Dotknij kierunku, aby go zmienić.</string>
+    <string name="subkey_layout_copy_title">Zmienić podklawisz układu?</string>
+    <string name="subkey_layout_copy_body">Ten podklawisz definiuje %1$s. Wbudowany układ pozostaje bez zmian: zmiana zostaje zapisana w kopii %2$s, która zastępuje go na liście układów. W Menedżerze układów można wrócić do oryginału.</string>
+    <string name="subkey_layout_copy_confirm">Utwórz kopię</string>
+    <string name="subkey_layout_copy_global">Zmień we wszystkich układach</string>
+    <string name="subkey_layout_copy_name">%1$s (zmieniony)</string>
+    <string name="subkey_layout_toast_copied">Utworzono %1$s</string>
+    <string name="subkey_layout_toast_saved">Zapisano w %1$s</string>
+    <string name="subkey_layout_toast_failed">Układ nie został zmieniony: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Ta akcja nie może być częścią układu, więc zapisano ją jako własny krótki gest.</string>
+    <string name="layout_manager_badge_modified_copy">Zmieniona kopia %1$s</string>
+    <string name="layout_manager_revert">Przywróć oryginał</string>
+    <string name="layout_manager_revert_title">Wrócić do oryginalnego układu?</string>
+    <string name="layout_manager_revert_body">%1$s zastępuje tę zmienioną kopię. Zmienione podklawisze zostaną odrzucone; wybór języka, motywu i odstępów klawiszy pozostanie.</string>
     <string name="gesture_selection_delete_header">Tryb zaznacz i usuń</string>
     <string name="gesture_selection_delete_desc">Krótki gest + przytrzymanie na Backspace zaznacza tekst; puszczenie usuwa.</string>
     <string name="gesture_tap_typing_header">Dotknięcia i pisanie</string>
@@ -1663,7 +1686,6 @@
     <string name="extra_keys_group_functions">Funkcje</string>
     <string name="short_swipe_toast_all_reset">Zresetowano wszystkie dostosowania</string>
     <string name="short_swipe_toast_mapped">Przypisano %1$s → „%2$s” (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Pokazuje przypisania z układu + własne przypisania</string>
     <string name="short_swipe_dialog_hint_no_layout">Dotknij kierunku, aby dodać lub edytować krótki gest</string>
     <string name="short_swipe_action_desc_command">Polecenie: %1$s</string>
     <string name="short_swipe_action_desc_text">Tekst: „%1$s”</string>

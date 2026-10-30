@@ -34,8 +34,9 @@ object XmlLayoutExporter {
             val builder = factory.newDocumentBuilder()
             val document = builder.parse(InputSource(StringReader(xmlContent)))
 
-            // Group mappings by key code for faster lookup
-            val mappingsByKey = mappings.groupBy { it.keyCode.lowercase() }
+            // Group mappings by their runtime key code (ShortSwipeKeyCodes): Enter's mapping is
+            // stored under its glyph, which is what the key0="enter" element below resolves to.
+            val mappingsByKey = mappings.groupBy { ShortSwipeKeyCodes.canonical(it.keyCode) }
 
             // Iterate through all <key> tags
             val keyNodes = document.getElementsByTagName("key")
@@ -46,14 +47,16 @@ object XmlLayoutExporter {
                 val keyId = getKeyIdentifier(keyElement) ?: continue
                 
                 // Check if we have mappings for this key
-                val keyMappings = mappingsByKey[keyId.lowercase()] ?: continue
+                val keyMappings = mappingsByKey[runtimeCode(keyId)] ?: mappingsByKey[keyId.lowercase()] ?: continue
 
                 // Apply mappings
                 for (mapping in keyMappings) {
                     val attrName = dirToAttribute(mapping.direction)
                     val attrValue = XmlAttributeMapper.toXmlValue(mapping)
-                    
-                    // Set the attribute (overwriting existing if present)
+
+                    // Replace the slot: the parser rejects a key carrying both synonyms (nw and
+                    // key1), so the numbered one goes too.
+                    keyElement.removeAttribute(LayoutSubkeyXml.numberedAttribute(mapping.direction))
                     keyElement.setAttribute(attrName, attrValue)
                     
                     // Also set the "indication" if provided? 
@@ -73,6 +76,13 @@ object XmlLayoutExporter {
             // Fallback: return original content if injection fails
             return xmlContent
         }
+    }
+
+    /** The runtime short-swipe code of an XML key description (`enter` → Enter's glyph), or null. */
+    private fun runtimeCode(description: String): String? = try {
+        ShortSwipeKeyCodes.ofKey(tribixbite.cleverkeys.KeyValue.getKeyByName(description.removePrefix("loc ").trim()))
+    } catch (e: Exception) {
+        null
     }
 
     private fun getKeyIdentifier(element: Element): String? {

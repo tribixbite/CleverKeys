@@ -277,7 +277,6 @@
     <string name="short_swipe_tap_hint">Pieskarieties jebkuram taustiņam zemāk, lai pielāgotu īso vilkumu žestus</string>
     <string name="short_swipe_instruction_title">Pieskarieties jebkuram taustiņam, lai to pielāgotu</string>
     <string name="short_swipe_instruction_body">Zemāk redzamā tastatūra ir jūsu īstā CleverKeys tastatūra.\nPieskarieties taustiņam, lai pievienotu īso vilkumu darbības.</string>
-    <string name="short_swipe_custom_mappings">Pielāgotie piešķīrumi</string>
 
     <!-- Theme Settings (wp8 batch) -->
     <string name="theme_settings_title">Tastatūras tēmas</string>
@@ -885,6 +884,30 @@
     <string name="subkey_edit_remove">Noņemt</string>
     <string name="subkey_toast_removed">Taustiņš %2$s: apakštaustiņš %1$s noņemts</string>
     <string name="subkey_toast_restored">Taustiņš %2$s: atjaunots noklusējuma apakštaustiņš %1$s</string>
+    <string name="subkey_source_layout">Izkārtojums</string>
+    <string name="subkey_source_shared">Iebūvēts</string>
+    <string name="subkey_source_extra_key">Papildu taustiņš</string>
+    <string name="subkey_source_hidden">Paslēpts</string>
+    <string name="subkey_source_custom">Pielāgots</string>
+    <string name="subkey_source_removed">Noņemts</string>
+    <string name="subkey_slot_empty">Tukšs</string>
+    <string name="subkey_slot_nothing">Nekas</string>
+    <string name="subkey_slot_replaces">Aizstāj %1$s</string>
+    <string name="subkey_dialog_subkeys_header">Apakštaustiņi</string>
+    <string name="subkey_dialog_layout_hint">Izkārtojuma %1$s apakštaustiņi un pielāgotie īsie vilcieni. Pieskarieties virzienam, lai to mainītu.</string>
+    <string name="subkey_layout_copy_title">Mainīt izkārtojuma apakštaustiņu?</string>
+    <string name="subkey_layout_copy_body">Šo apakštaustiņu nosaka %1$s. Iebūvētais izkārtojums nemainās: izmaiņas tiek saglabātas kopijā %2$s, kas to aizstāj izkārtojumu sarakstā. Izkārtojumu pārvaldniekā var atgriezties pie oriģināla.</string>
+    <string name="subkey_layout_copy_confirm">Izveidot kopiju</string>
+    <string name="subkey_layout_copy_global">Mainīt visos izkārtojumos</string>
+    <string name="subkey_layout_copy_name">%1$s (mainīts)</string>
+    <string name="subkey_layout_toast_copied">Izveidots: %1$s</string>
+    <string name="subkey_layout_toast_saved">Saglabāts: %1$s</string>
+    <string name="subkey_layout_toast_failed">Izkārtojums netika mainīts: %1$s</string>
+    <string name="subkey_layout_toast_not_layout">Šī darbība nevar būt izkārtojuma daļa, tāpēc tā saglabāta kā pielāgots īsais vilciens.</string>
+    <string name="layout_manager_badge_modified_copy">Mainīta %1$s kopija</string>
+    <string name="layout_manager_revert">Atgriezt oriģinālu</string>
+    <string name="layout_manager_revert_title">Atgriezties pie sākotnējā izkārtojuma?</string>
+    <string name="layout_manager_revert_body">Šīs mainītās kopijas vietā būs %1$s. Mainītie apakštaustiņi tiek atmesti; valodas, motīva un taustiņu atstarpju izvēles paliek.</string>
     <string name="gesture_selection_delete_header">Atlases dzēšanas režīms</string>
     <string name="gesture_selection_delete_desc">Īss vilkums + turēšana uz Backspace atlasa tekstu; atlaižot tas tiek dzēsts.</string>
     <string name="gesture_tap_typing_header">Pieskārieni un rakstīšana</string>
@@ -1628,7 +1651,6 @@
     <string name="extra_keys_group_functions">Funkcijas</string>
     <string name="short_swipe_toast_all_reset">Visi pielāgojumi atiestatīti</string>
     <string name="short_swipe_toast_mapped">Piešķirts: %1$s → “%2$s” (%3$s)</string>
-    <string name="short_swipe_dialog_hint_with_layout">Rāda esošos izkārtojuma piešķīrumus + pielāgotos piešķīrumus</string>
     <string name="short_swipe_dialog_hint_no_layout">Pieskarieties virzienam, lai pievienotu vai rediģētu īsā vilkuma žestu</string>
     <string name="short_swipe_action_desc_command">Komanda: %1$s</string>
     <string name="short_swipe_action_desc_text">Teksts: “%1$s”</string>
