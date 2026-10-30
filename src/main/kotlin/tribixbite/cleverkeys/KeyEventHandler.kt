@@ -23,6 +23,13 @@ class KeyEventHandler(
     private val recv: IReceiver
 ) : Config.IKeyEventHandler, ClipboardHistoryService.ClipboardPasteCallback {
 
+    /**
+     * Starts a layout key's intent (`label:intent:'json'`, see [IntentDefinition.layoutIntentJson])
+     * with the custom short swipe's implementation; tests replace it.
+     */
+    internal var layoutIntentRunner: (Context, String) -> Boolean =
+        { context, json -> tribixbite.cleverkeys.customization.CustomShortSwipeExecutor(context).executeIntent(json) }
+
     private val autocap: Autocapitalisation = Autocapitalisation(
         recv.getHandler(),
         AutocapitalisationCallback()
@@ -106,7 +113,16 @@ class KeyEventHandler(
 
         when (key.getKind()) {
             KeyValue.Kind.Char -> sendText(key.getChar().toString(), isKeyRepeat)
-            KeyValue.Kind.String -> sendText(key.getString(), isKeyRepeat)
+            KeyValue.Kind.String -> {
+                // An exported INTENT short swipe is a string key carrying the intent's JSON: start
+                // it, never type it (it typed `__intent__:{…}` before 2026-10-30).
+                val intentJson = tribixbite.cleverkeys.customization.IntentDefinition.layoutIntentJson(key.getString())
+                if (intentJson != null) {
+                    recv.getContext()?.let { layoutIntentRunner(it, intentJson) }
+                } else {
+                    sendText(key.getString(), isKeyRepeat)
+                }
+            }
             KeyValue.Kind.Event -> {
                 // W5: the IME action (send/go/search/done) ends the typed word without ever
                 // passing through handle_text_typed — let the learn funnel see it first.

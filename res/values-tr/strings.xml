@@ -1603,6 +1603,7 @@
     <string name="layout_manager_xml_empty_error">Düzen XML\'i boş olamaz</string>
     <string name="layout_manager_import_failed">Düzen dosyası içe aktarılamadı:\n%1$s</string>
     <string name="layout_manager_export_failed">Düzen dosyası dışa aktarılamadı:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Bazı kısa kaydırmalar dosyada yok: bir düzen bunların eylemini tutamaz (sabitlenmiş bir klibi yapıştırmak gibi). Bu cihazda çalışmaya devam ederler.</string>
     <string name="extra_keys_group_layout_switching">Düzen Değiştirme</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Gezinme</string>

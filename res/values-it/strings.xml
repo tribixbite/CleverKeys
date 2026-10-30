@@ -1668,6 +1668,7 @@
     <string name="layout_manager_xml_empty_error">L\'XML del layout non può essere vuoto</string>
     <string name="layout_manager_import_failed">Impossibile importare il file del layout:\n%1$s</string>
     <string name="layout_manager_export_failed">Impossibile esportare il file del layout:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Alcuni scorrimenti brevi non sono nel file: un layout non può contenere la loro azione (ad esempio incollare un elemento fissato). Su questo dispositivo continuano a funzionare.</string>
     <string name="extra_keys_group_layout_switching">Cambio layout</string>
     <string name="extra_keys_group_system">Sistema</string>
     <string name="extra_keys_group_navigation">Navigazione</string>

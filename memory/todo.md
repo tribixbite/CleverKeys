@@ -941,10 +941,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    NOT verified on a phone (no device assigned): capture of Enter in the real IME, the copy
    replacing the live layout, Revert from Layout Manager, TalkBack reading of the rows.
    OPEN: (a) the subkey popover's assign screen still edits layout defaults through custom
-   mappings (# TODO in the spec); (b) Export XML still writes TEXT/INTENT/TEMPLATE/TIMESTAMP in
-   the bare `'…'` form, which imports as literal quoted text (toXmlValue, pinned by
-   ShortSwipeIntentTest/ShortSwipeMappingTest — needs a decision before changing); (c) native
-   review of the 24 new strings (item 10).
+   mappings (# TODO in the spec); (b) DONE 2026-10-30 (maintainer "yes fix both"): Export XML
+   and layout copies share `XmlAttributeMapper.layoutValue`; every action type reads back as
+   itself (`label:'text'`, backslash escape, text-level edit keeps non-BMP characters, layout
+   intent keys are started), old files import as before (spec profile_system_restoration.md
+   "Export XML values"); XmlActionRoundTripTest / XmlLayoutExporterRoundTripTest /
+   KeyEventHandlerLayoutIntentTest fail-first 8/10, 5/6, 2/2; (c) native review of the 24 new
+   strings and `layout_manager_export_not_written` (item 10).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

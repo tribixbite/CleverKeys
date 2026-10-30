@@ -12,7 +12,7 @@ import tribixbite.cleverkeys.customization.*
  * - IntentDefinition.PRESETS validation
  * - ActionType enum and serialization (if applicable)
  * - ShortSwipeMapping constants and helpers
- * - XmlAttributeMapper.toXmlValue for profile export
+ * - XmlAttributeMapper.layoutValue for Export XML and layout copies
  *
  * Note: CustomShortSwipeExecutor and KeyValueParser are NOT tested here
  * because they require Android Context (Intent, InputConnection, etc.)
@@ -503,9 +503,16 @@ class ShortSwipeIntentTest {
     // =========================================================================
     // E. XmlAttributeMapper Tests
     // =========================================================================
+    // 2026-10-30: these pinned the old Export XML output — a bare `'Hello'`, `keyevent:66`,
+    // `intent:'…'` and `COPY`. That output was wrong: the layout parser reads an action only
+    // after a `label:` prefix, so each of those imported as a key TYPING its source (`'Hello'`
+    // with its quotes, "66" under the label "keyevent", the intent JSON) and `COPY` is not a
+    // layout key name at all (getKeyByName's unknown-name fallback types "COPY"). The expected
+    // values below are what `layoutValue` — the one serializer for Export XML and layout copies —
+    // writes; XmlActionRoundTripTest pins that each reads back as the same action.
 
     @Test
-    fun `toXmlValue for TEXT wraps in single quotes`() {
+    fun `layoutValue for TEXT is a labelled quoted string`() {
         val mapping = ShortSwipeMapping.textInput(
             keyCode = "a",
             direction = SwipeDirection.N,
@@ -513,28 +520,23 @@ class ShortSwipeIntentTest {
             text = "Hello"
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
-
-        assertThat(xmlValue).isEqualTo("'Hello'")
+        assertThat(XmlAttributeMapper.layoutValue(mapping)).isEqualTo("HI:'Hello'")
     }
 
     @Test
-    fun `toXmlValue for TEXT escapes single quotes`() {
+    fun `layoutValue for TEXT escapes single quotes and backslashes`() {
         val mapping = ShortSwipeMapping.textInput(
             keyCode = "a",
             direction = SwipeDirection.N,
             displayText = "Q",
-            text = "It's great"
+            text = "It's C:\\x"
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
-
-        assertThat(xmlValue).isEqualTo("'It\\'s great'")
-        assertThat(xmlValue).contains("\\'")
+        assertThat(XmlAttributeMapper.layoutValue(mapping)).isEqualTo("Q:'It\\'s C:\\\\x'")
     }
 
     @Test
-    fun `toXmlValue for COMMAND returns command name`() {
+    fun `layoutValue for a legacy COMMAND is its layout key name`() {
         val mapping = ShortSwipeMapping.command(
             keyCode = "c",
             direction = SwipeDirection.W,
@@ -542,14 +544,12 @@ class ShortSwipeIntentTest {
             command = AvailableCommand.COPY
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
-
-        // KeyValue.getKeyByName("COPY") finds it, so the raw command name is used
-        assertThat(xmlValue).isEqualTo("COPY")
+        // "COPY" is not a layout key name; the custom swipe runs the `copy` editing key.
+        assertThat(XmlAttributeMapper.layoutValue(mapping)).isEqualTo("copy")
     }
 
     @Test
-    fun `toXmlValue for KEY_EVENT uses keyevent prefix`() {
+    fun `layoutValue for KEY_EVENT is a labelled keyevent`() {
         val mapping = ShortSwipeMapping.keyEvent(
             keyCode = "enter",
             direction = SwipeDirection.S,
@@ -557,13 +557,11 @@ class ShortSwipeIntentTest {
             keyEventCode = 66
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
-
-        assertThat(xmlValue).isEqualTo("keyevent:66")
+        assertThat(XmlAttributeMapper.layoutValue(mapping)).isEqualTo("ENT:keyevent:66")
     }
 
     @Test
-    fun `toXmlValue for INTENT wraps JSON in quoted syntax`() {
+    fun `layoutValue for INTENT wraps JSON in labelled quoted syntax`() {
         val json = """{"name":"Test","action":"test.action"}"""
         val mapping = ShortSwipeMapping.intent(
             keyCode = "a",
@@ -572,15 +570,15 @@ class ShortSwipeIntentTest {
             intentJson = json
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
+        val xmlValue = XmlAttributeMapper.layoutValue(mapping)!!
 
-        assertThat(xmlValue).startsWith("intent:'")
+        assertThat(xmlValue).startsWith("INT:intent:'")
         assertThat(xmlValue).endsWith("'")
         assertThat(xmlValue).contains("\"name\":\"Test\"")
     }
 
     @Test
-    fun `toXmlValue for INTENT escapes single quotes in JSON`() {
+    fun `layoutValue for INTENT escapes single quotes in JSON`() {
         val json = """{"name":"It's a test"}"""
         val mapping = ShortSwipeMapping.intent(
             keyCode = "a",
@@ -589,9 +587,8 @@ class ShortSwipeIntentTest {
             intentJson = json
         )
 
-        val xmlValue = XmlAttributeMapper.toXmlValue(mapping)
+        val xmlValue = XmlAttributeMapper.layoutValue(mapping)!!
 
-        assertThat(xmlValue).contains("\\'")
         // Should escape the single quote in "It's"
         assertThat(xmlValue).matches(".*It\\\\'s.*")
     }

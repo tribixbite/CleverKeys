@@ -634,6 +634,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.ShortSwipeKeyCodesTest',
     'tribixbite.cleverkeys.customization.KeySubkeySourcesTest',
     'tribixbite.cleverkeys.customization.LayoutSubkeyXmlTest',
+    // 2026-10-30: one serializer for Export XML and layout copies; every action type reads back.
+    'tribixbite.cleverkeys.customization.XmlActionRoundTripTest',
     // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
     'tribixbite.cleverkeys.popover.SubkeyPopoverGeometryTest',
@@ -1480,6 +1482,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.customization.LayoutSubkeyBuiltInLayoutsTest',
     'tribixbite.cleverkeys.customization.LayoutSubkeyEditorTest',
     'tribixbite.cleverkeys.customization.XmlLayoutExporterSlotTest',
+    // 2026-10-30: Export XML file → import keeps every action; layout intent keys run.
+    'tribixbite.cleverkeys.customization.XmlLayoutExporterRoundTripTest',
+    'tribixbite.cleverkeys.KeyEventHandlerLayoutIntentTest',
     'tribixbite.cleverkeys.TestKeyboardSectionTest',
     // B-2 (2026-09-06 audit): SwipePrunerTest deleted with the ADR-011-orphan SwipePruner.
     'tribixbite.cleverkeys.PrivacyManagerTest',

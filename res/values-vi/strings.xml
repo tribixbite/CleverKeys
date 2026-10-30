@@ -1584,6 +1584,7 @@
     <string name="layout_manager_xml_empty_error">XML bố cục không được để trống</string>
     <string name="layout_manager_import_failed">Không nhập được tệp bố cục:\n%1$s</string>
     <string name="layout_manager_export_failed">Không xuất được tệp bố cục:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Một số thao tác vuốt ngắn không có trong tệp: bố cục không thể chứa hành động của chúng (chẳng hạn dán một đoạn đã ghim). Chúng vẫn hoạt động trên thiết bị này.</string>
     <string name="extra_keys_group_layout_switching">Chuyển bố cục</string>
     <string name="extra_keys_group_system">Hệ thống</string>
     <string name="extra_keys_group_navigation">Điều hướng</string>

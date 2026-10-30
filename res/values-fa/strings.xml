@@ -1630,6 +1630,7 @@
     <string name="layout_manager_xml_empty_error">XML چیدمان نمی‌تواند خالی باشد</string>
     <string name="layout_manager_import_failed">وارد کردن فایل چیدمان ناموفق بود:\n%1$s</string>
     <string name="layout_manager_export_failed">صادر کردن فایل چیدمان ناموفق بود:\n%1$s</string>
+    <string name="layout_manager_export_not_written">برخی کشیدن‌های کوتاه در فایل نیستند: چیدمان نمی‌تواند عمل آن‌ها را نگه دارد (مانند چسباندن یک برش سنجاق‌شده). روی این دستگاه همچنان کار می‌کنند.</string>
     <string name="extra_keys_group_layout_switching">تغییر چیدمان</string>
     <string name="extra_keys_group_system">سامانه</string>
     <string name="extra_keys_group_navigation">ناوبری</string>

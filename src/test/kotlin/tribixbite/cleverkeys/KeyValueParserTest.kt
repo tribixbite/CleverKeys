@@ -56,11 +56,12 @@ class KeyValueParserTest {
     }
     @Test fun templateXmlRoundTripEscapesQuotesAndBackslashes() {
         val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a", tribixbite.cleverkeys.customization.SwipeDirection.N, "{}", tribixbite.cleverkeys.customization.ActionType.TEMPLATE, "C:\\work\\'[{selection}]\\")
-        val exported = tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping)
-        val key = KeyValueParser.parse("{}:" + exported)
+        // The exported value carries its own label (`{}:template:'…'`, 2026-10-30).
+        val exported = tribixbite.cleverkeys.customization.XmlAttributeMapper.layoutValue(mapping)!!
+        val key = KeyValueParser.parse(exported)
         assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Template)
         assertThat(key.getTemplateFormat().template).isEqualTo(mapping.actionValue)
-        val old = KeyValueParser.parse(":template symbol='{}':" + exported.substringAfter(':'))
+        val old = KeyValueParser.parse(":template symbol='{}':" + exported.substringAfter(":template:"))
         assertThat(old.getTemplateFormat().template).isEqualTo(mapping.actionValue)
         assertThat(key.withSymbol("new").getTemplateFormat().template).isEqualTo(mapping.actionValue)
     }
@@ -93,7 +94,7 @@ class KeyValueParserTest {
         val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a",
             tribixbite.cleverkeys.customization.SwipeDirection.N, "date",
             tribixbite.cleverkeys.customization.ActionType.TIMESTAMP, "yyyy-MM-dd 'stamp'")
-        val key = KeyValueParser.parse("date:" + tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping))
+        val key = KeyValueParser.parse(tribixbite.cleverkeys.customization.XmlAttributeMapper.layoutValue(mapping)!!)
         assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Timestamp)
         assertThat(key.getTimestampFormat().pattern).isEqualTo(mapping.actionValue)
     }
@@ -102,7 +103,7 @@ class KeyValueParserTest {
         val mapping = tribixbite.cleverkeys.customization.ShortSwipeMapping("a",
             tribixbite.cleverkeys.customization.SwipeDirection.N, "open",
             tribixbite.cleverkeys.customization.ActionType.INTENT, json)
-        val key = KeyValueParser.parse("open:" + tribixbite.cleverkeys.customization.XmlAttributeMapper.toXmlValue(mapping))
+        val key = KeyValueParser.parse(tribixbite.cleverkeys.customization.XmlAttributeMapper.layoutValue(mapping)!!)
         assertThat(key.getKind()).isEqualTo(KeyValue.Kind.Macro)
         assertThat(key.getMacro()[0].getString()).isEqualTo(tribixbite.cleverkeys.customization.IntentDefinition.INTENT_PREFIX + json)
     }
@@ -254,10 +255,10 @@ class KeyValueParserTest {
     // =========================================================================
     // E. Intent Definitions
     // =========================================================================
-    // Note: The symbol:intent:'json' syntax has a parser limitation where
-    // QUOTED_PAT doesn't consume the opening quote after the intent: token.
-    // Production intent keys are created via ShortSwipeMapping + IntentDefinition,
-    // not through KeyValueParser. We test the INTENT_PREFIX constant instead.
+    // `label:intent:'json'` parses to a string key carrying INTENT_PREFIX + json
+    // (exportedIntentPreservesJsonQuotesAndBackslashes below); KeyEventHandler starts it
+    // (KeyEventHandlerLayoutIntentTest). The old note here about QUOTED_PAT not consuming the
+    // opening quote predates parseQuotedPayload.
 
     @Test
     fun `INTENT_PREFIX constant is defined`() {

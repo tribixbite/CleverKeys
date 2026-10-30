@@ -14,8 +14,11 @@ Parse a key definition. The syntax for a key definition is:
 - ['Arbitrary string']
 - [(key_action),(key_action),...]
 - [keyevent:(code)]
+- [template:'text with {cursor}'] / [timestamp:'pattern']
 - [intent:'json']
 - [(key_name)]
+
+Inside quotes a backslash escapes the next character (`\'`, `\\`).
 
 For the different kinds and attributes, see doc/Possible-key-values.md.
 
@@ -68,7 +71,11 @@ object KeyValueParser {
         if (::KEYDEF_TOKEN.isInitialized) return
 
         KEYDEF_TOKEN = Pattern.compile("'|,|keyevent:|timestamp:|template:|intent:|(?:[^\\\\',]+|\\\\.)+")
-        QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\')*)'")
+        // A quoted string may escape any character (`\'`, `\\`), as prefixed payloads can. Before
+        // 2026-10-30 only `\'` was accepted, so text with a backslash had no spelling at all;
+        // every input this changes was a syntax error before (which getKeyByName turns into a key
+        // typing the whole definition), so no definition that parsed reads differently.
+        QUOTED_PAT = Pattern.compile("((?:[^'\\\\]+|\\\\.)*)'")
         WORD_PAT = Pattern.compile("[a-zA-Z0-9_]+|.")
     }
 
@@ -99,7 +106,7 @@ object KeyValueParser {
         if (!match(m, QUOTED_PAT)) {
             parseError("Unterminated quoted string", m)
         }
-        return KeyValue.makeStringKey(removeEscaping(m.group(1)))
+        return KeyValue.makeStringKey(unescapePayload(m.group(1)))
     }
 
     private fun parseKeyeventKeydef(m: Matcher): KeyValue {

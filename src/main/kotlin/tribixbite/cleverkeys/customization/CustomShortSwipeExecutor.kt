@@ -120,9 +120,10 @@ class CustomShortSwipeExecutor(private val context: Context) {
     }
 
     /**
-     * Execute an intent action.
+     * Execute an intent action: a custom short swipe's, or a layout key's (`label:intent:'json'`,
+     * run by `KeyEventHandler`). Failures are toasted and return false.
      */
-    private fun executeIntent(intentJson: String): Boolean {
+    fun executeIntent(intentJson: String): Boolean {
         return try {
             val intentDef = IntentDefinition.parseFromGson(intentJson)
             if (intentDef == null) {

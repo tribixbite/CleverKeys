@@ -275,19 +275,22 @@ class ShortSwipeMappingTest {
     // =========================================================================
 
     @Test
-    fun `XmlAttributeMapper toXmlValue emits timestamp prefix for TIMESTAMP`() {
+    fun `XmlAttributeMapper layoutValue emits labelled timestamp prefix for TIMESTAMP`() {
         val mapping = ShortSwipeMapping.timestamp(
             keyCode = "t",
             direction = SwipeDirection.N,
             displayText = "TS",
             pattern = "yyyy-MM-dd"
         )
-        val xml = XmlAttributeMapper.toXmlValue(mapping)
-        assertThat(xml).isEqualTo("timestamp:'yyyy-MM-dd'")
+        // 2026-10-30: the label prefix is part of the value. The old expectation (a bare
+        // `timestamp:'yyyy-MM-dd'`) pinned a form the layout parser reads as a key LABELLED
+        // "timestamp" that types the pattern text, not as a timestamp key.
+        val xml = XmlAttributeMapper.layoutValue(mapping)
+        assertThat(xml).isEqualTo("TS:timestamp:'yyyy-MM-dd'")
     }
 
     @Test
-    fun `XmlAttributeMapper toXmlValue escapes single quotes in TIMESTAMP pattern`() {
+    fun `XmlAttributeMapper layoutValue escapes single quotes in TIMESTAMP pattern`() {
         // While rare, single quotes in a pattern are legal (e.g. "yyyy''" for literal apostrophe).
         // The XML attribute syntax uses single-quoted strings, so we must escape them.
         val mapping = ShortSwipeMapping.timestamp(
@@ -296,8 +299,8 @@ class ShortSwipeMappingTest {
             displayText = "TS",
             pattern = "yyyy''"
         )
-        val xml = XmlAttributeMapper.toXmlValue(mapping)
-        assertThat(xml).startsWith("timestamp:'")
+        val xml = XmlAttributeMapper.layoutValue(mapping)!!
+        assertThat(xml).startsWith("TS:timestamp:'")
         assertThat(xml).endsWith("'")
         // The two literal apostrophes in the SDF pattern are escaped to backslash-apostrophe
         // for the KeyValueParser quoted-string grammar.

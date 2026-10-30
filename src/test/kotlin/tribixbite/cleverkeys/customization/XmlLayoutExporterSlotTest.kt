@@ -42,7 +42,7 @@ class XmlLayoutExporterSlotTest {
     fun aMappedSlotWrittenAsKeyNIsReplacedNotDuplicated() {
         val out = XmlLayoutExporter.injectMappings(
             xml, listOf(ShortSwipeMapping("q", SwipeDirection.NW, "c", ActionType.COMMAND, "copy"))
-        )
+        ).xml
         val parsed = KeyboardData.load_string_exn(out)
         assertThat(parsed.rows[0].keys[0].keys[SwipeDirection.NW.subLabelIndex]).isEqualTo(KeyValue.getKeyByName("copy"))
     }
@@ -52,7 +52,7 @@ class XmlLayoutExporterSlotTest {
         val enterCode = KeyValue.getKeyByName("enter").getString()
         val out = XmlLayoutExporter.injectMappings(
             xml, listOf(ShortSwipeMapping(enterCode, SwipeDirection.NE, "", ActionType.COMMAND, "voice_input", true))
-        )
+        ).xml
         val parsed = KeyboardData.load_string_exn(out)
         assertThat(parsed.rows[0].keys[1].keys[SwipeDirection.NE.subLabelIndex]).isEqualTo(KeyValue.getKeyByName("voice_input"))
     }

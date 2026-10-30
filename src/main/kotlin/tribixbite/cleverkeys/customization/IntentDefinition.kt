@@ -20,11 +20,15 @@ data class IntentDefinition(
     companion object {
         /**
          * Prefix used by KeyValueParser to mark intent JSON in KeyValue strings.
-         * When a layout XML contains `intent:'json'`, parsing produces a string key
-         * with this prefix prepended. A future profile importer should strip this
-         * prefix to recover the original JSON for round-trip compatibility.
+         * When a layout XML contains `label:intent:'json'` (Export XML of an INTENT short swipe),
+         * parsing produces a string key with this prefix prepended; `KeyEventHandler` starts the
+         * intent when that key is pressed instead of typing it ([layoutIntentJson]).
          */
         const val INTENT_PREFIX = "__intent__:"
+
+        /** The intent JSON a layout key's string [value] carries, or null when it is ordinary text. */
+        fun layoutIntentJson(value: String): String? =
+            if (value.startsWith(INTENT_PREFIX)) value.substring(INTENT_PREFIX.length) else null
 
         /**
          * Parse an IntentDefinition from JSON with null-safety.

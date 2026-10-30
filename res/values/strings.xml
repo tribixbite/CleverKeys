@@ -2002,6 +2002,7 @@
     <string name="layout_manager_xml_empty_error">Layout XML cannot be empty</string>
     <string name="layout_manager_import_failed">Could not import the layout file:\n%1$s</string>
     <string name="layout_manager_export_failed">Could not export the layout file:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Some short swipes are not in the file: a layout cannot hold their action (such as pasting a pinned clip). They still work on this device.</string>
     <string name="extra_keys_group_layout_switching">Layout Switching</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Navigation</string>

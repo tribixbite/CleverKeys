@@ -1604,6 +1604,7 @@
     <string name="layout_manager_xml_empty_error">Hindi puwedeng walang laman ang layout XML</string>
     <string name="layout_manager_import_failed">Nabigong i-import ang layout file:\n%1$s</string>
     <string name="layout_manager_export_failed">Nabigong i-export ang layout file:\n%1$s</string>
+    <string name="layout_manager_export_not_written">May ilang maikling swipe na wala sa file: hindi kayang hawakan ng layout ang kanilang aksyon (gaya ng pag-paste ng naka-pin na clip). Gumagana pa rin ang mga ito sa device na ito.</string>
     <string name="extra_keys_group_layout_switching">Pagpapalit ng Layout</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Nabigasyon</string>

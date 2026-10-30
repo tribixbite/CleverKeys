@@ -1038,6 +1038,8 @@ fun CustomLayoutEditorDialog(
 
     // Export Launcher
     var pendingExportContent by remember { mutableStateOf<String?>(null) }
+    // Short swipes the exported file could not hold (XmlLayoutExporter.Injection.notWritten).
+    var pendingExportSkipped by remember { mutableStateOf(false) }
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/xml")
     ) { uri ->
@@ -1045,6 +1047,11 @@ fun CustomLayoutEditorDialog(
             try {
                 pendingExportContent?.let { content ->
                     LayoutXmlTransfer.write({ context.contentResolver.openOutputStream(it) }, content)
+                    if (pendingExportSkipped) {
+                        android.widget.Toast.makeText(
+                            context, R.string.layout_manager_export_not_written, android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }
             } catch (e: Exception) {
                 // Audit M6: a failed export (SAF denial, disk full) used to look like success.
@@ -1158,7 +1165,9 @@ fun CustomLayoutEditorDialog(
                             val withTheme = if (includeTheme && boundCustomTheme != null) {
                                 tribixbite.cleverkeys.theme.LayoutThemeTransfer.layoutXmlWithCustomTheme(themeProvider, themed, boundCustomTheme)
                             } else themed
-                            pendingExportContent = XmlLayoutExporter.injectMappings(withTheme, mappings)
+                            val exported = XmlLayoutExporter.injectMappings(withTheme, mappings)
+                            pendingExportContent = exported.xml
+                            pendingExportSkipped = exported.notWritten.isNotEmpty()
                             exportLauncher.launch("custom_layout.xml")
                         },
                         modifier = Modifier.weight(1f)

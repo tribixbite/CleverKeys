@@ -49,6 +49,43 @@ object LayoutSubkeyXml {
         return xml.substring(0, root.start) + text + xml.substring(root.end)
     }
 
+    /**
+     * The main value (`key0`, or its synonym `c`) of every `<key>` of each `<row>` of [xml], in
+     * the parser's order, with XML references decoded (`&amp;` → `&`); null for a key without one.
+     *
+     * @throws IllegalArgumentException when the markup is unterminated.
+     */
+    fun mainValues(xml: String): List<List<String?>> = structure(xml).keys.map { row ->
+        row.map { tag ->
+            val text = xml.substring(tag.start, tag.end)
+            attributeValue(text, "key0") ?: attributeValue(text, "c")
+        }
+    }
+
+    /** The decoded value of attribute [name] in start-tag [tag] text, or null. */
+    private fun attributeValue(tag: String, name: String): String? {
+        val m = Regex("""\s${Regex.escape(name)}\s*=\s*(?:"([^"]*)"|'([^']*)')""").find(tag) ?: return null
+        return unescape(m.groups[1]?.value ?: m.groups[2]?.value ?: "")
+    }
+
+    /** Decode the five predefined entities and numeric character references of an attribute. */
+    private fun unescape(value: String): String {
+        if ('&' !in value) return value
+        return Regex("&(#x[0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos);").replace(value) { m ->
+            when (val ref = m.groupValues[1]) {
+                "amp" -> "&"
+                "lt" -> "<"
+                "gt" -> ">"
+                "quot" -> "\""
+                "apos" -> "'"
+                else -> {
+                    val cp = if (ref.startsWith("#x")) ref.substring(2).toInt(16) else ref.substring(1).toInt()
+                    String(Character.toChars(cp))
+                }
+            }
+        }
+    }
+
     /** Number of `<key>` elements in each `<row>` of [xml], in order. */
     fun keyCounts(xml: String): List<Int> = structure(xml).keys.map { it.size }
 

@@ -1655,6 +1655,7 @@
     <string name="layout_manager_xml_empty_error">XML-ul aranjamentului nu poate fi gol</string>
     <string name="layout_manager_import_failed">Importul fișierului de aranjament a eșuat:\n%1$s</string>
     <string name="layout_manager_export_failed">Exportul fișierului de aranjament a eșuat:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Unele glisări scurte nu sunt în fișier: un aspect nu poate conține acțiunea lor (de exemplu lipirea unui element fixat). Pe acest dispozitiv funcționează în continuare.</string>
     <string name="extra_keys_group_layout_switching">Comutare aranjament</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Navigare</string>

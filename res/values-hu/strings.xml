@@ -1598,6 +1598,7 @@
     <string name="layout_manager_xml_empty_error">A kiosztás XML-je nem lehet üres</string>
     <string name="layout_manager_import_failed">Nem sikerült importálni a kiosztásfájlt:\n%1$s</string>
     <string name="layout_manager_export_failed">Nem sikerült exportálni a kiosztásfájlt:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Néhány rövid húzás nincs a fájlban: egy kiosztás nem tudja tárolni a műveletüket (például egy kitűzött vágólapelem beillesztését). Ezen az eszközön továbbra is működnek.</string>
     <string name="extra_keys_group_layout_switching">Kiosztásváltás</string>
     <string name="extra_keys_group_system">Rendszer</string>
     <string name="extra_keys_group_navigation">Navigáció</string>

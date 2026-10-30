@@ -1,126 +1,71 @@
 package tribixbite.cleverkeys.customization
 
 import android.util.Log
-import org.w3c.dom.Document
-import org.w3c.dom.Element
-import org.xml.sax.InputSource
-import java.io.StringReader
-import java.io.StringWriter
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.transform.OutputKeys
-import javax.xml.transform.TransformerFactory
-import javax.xml.transform.dom.DOMSource
-import javax.xml.transform.stream.StreamResult
+import tribixbite.cleverkeys.KeyValue
 
 /**
- * Handles exporting keyboard layouts to XML, optionally injecting custom short swipe mappings.
+ * Export XML: bakes the custom short-swipe mappings into a layout file
+ * (docs/specs/profile_system_restoration.md "Export XML values").
+ *
+ * Each mapped slot is written with [XmlAttributeMapper.layoutValue] — the same serializer the
+ * per-key dialog uses for a modified layout copy — through [LayoutSubkeyXml]'s text-level edit,
+ * so the file imports back with the same actions and everything else in it (comments, the theme
+ * element, characters outside the BMP) stays byte for byte. The DOM round trip used before wrote
+ * those characters as numeric references, which the kxml2 parser Android uses reads back
+ * truncated to 16 bits (`😀` became `함`, `XmlLayoutExporterRoundTripTest`).
  */
 object XmlLayoutExporter {
     private const val TAG = "XmlLayoutExporter"
 
     /**
-     * Inject custom short swipe mappings into an existing XML layout string.
+     * The exported file and the mappings it could not hold.
      *
-     * @param xmlContent The source XML string (e.g., from raw resource or existing custom layout).
-     * @param mappings The list of custom mappings to apply.
-     * @return The modified XML string with short swipes baked in.
+     * @property xml the layout XML with the mappings written in
+     * @property notWritten mappings on a key of this layout whose action a layout cannot hold
+     *   (`XmlAttributeMapper.layoutValue` is null, e.g. a pinned-clip paste); the slot keeps the
+     *   layout's own subkey. When the source XML cannot be read at all, every mapping.
      */
-    fun injectMappings(xmlContent: String, mappings: List<ShortSwipeMapping>): String {
-        try {
-            if (mappings.isEmpty()) return xmlContent
+    data class Injection(val xml: String, val notWritten: List<ShortSwipeMapping>)
 
-            // Parse XML to DOM
-            val factory = DocumentBuilderFactory.newInstance()
-            val builder = factory.newDocumentBuilder()
-            val document = builder.parse(InputSource(StringReader(xmlContent)))
-
-            // Group mappings by their runtime key code (ShortSwipeKeyCodes): Enter's mapping is
-            // stored under its glyph, which is what the key0="enter" element below resolves to.
-            val mappingsByKey = mappings.groupBy { ShortSwipeKeyCodes.canonical(it.keyCode) }
-
-            // Iterate through all <key> tags
-            val keyNodes = document.getElementsByTagName("key")
-            for (i in 0 until keyNodes.length) {
-                val keyElement = keyNodes.item(i) as? Element ?: continue
-                
-                // Determine the key's identity (c="a" or key0="a")
-                val keyId = getKeyIdentifier(keyElement) ?: continue
-                
-                // Check if we have mappings for this key
-                val keyMappings = mappingsByKey[runtimeCode(keyId)] ?: mappingsByKey[keyId.lowercase()] ?: continue
-
-                // Apply mappings
+    /**
+     * Write [mappings] into every `<key>` of [xmlContent] whose main value is the mapping's key
+     * (matched by runtime key code, `ShortSwipeKeyCodes`: Enter's mapping is stored under its
+     * glyph, which `key0="enter"` resolves to). A `removed` mapping removes the slot's
+     * attributes (both spellings, `nw` and `key1`).
+     */
+    fun injectMappings(xmlContent: String, mappings: List<ShortSwipeMapping>): Injection {
+        if (mappings.isEmpty()) return Injection(xmlContent, emptyList())
+        val mains = try {
+            LayoutSubkeyXml.mainValues(xmlContent)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Layout XML could not be read; exported without short swipes", e)
+            return Injection(xmlContent, mappings)
+        }
+        val mappingsByKey = mappings.groupBy { ShortSwipeKeyCodes.canonical(it.keyCode) }
+        var xml = xmlContent
+        val notWritten = LinkedHashSet<ShortSwipeMapping>()
+        mains.forEachIndexed { r, row ->
+            row.forEachIndexed { c, main ->
+                if (main == null) return@forEachIndexed
+                val keyMappings = runtimeCode(main)?.let { mappingsByKey[it] }
+                    ?: mappingsByKey[main.lowercase()] ?: return@forEachIndexed
                 for (mapping in keyMappings) {
-                    val attrName = dirToAttribute(mapping.direction)
-                    val attrValue = XmlAttributeMapper.toXmlValue(mapping)
-
-                    // Replace the slot: the parser rejects a key carrying both synonyms (nw and
-                    // key1), so the numbered one goes too.
-                    keyElement.removeAttribute(LayoutSubkeyXml.numberedAttribute(mapping.direction))
-                    keyElement.setAttribute(attrName, attrValue)
-                    
-                    // Also set the "indication" if provided? 
-                    // UK XML uses 'indication' for bottom label. 
-                    // Short swipes usually have their own corner labels automatically derived from the action symbol,
-                    // but if we want to force a label, UK format is tricky.
-                    // The standard UK parser derives the label from the action value.
-                    // We'll trust the parser's default behavior for now to avoid clutter.
+                    val value = if (mapping.isRemoval) null else XmlAttributeMapper.layoutValue(mapping)
+                    if (value == null && !mapping.isRemoval) {
+                        notWritten += mapping
+                        continue
+                    }
+                    xml = LayoutSubkeyXml.setSubkey(xml, r, c, mapping.direction, value)
                 }
             }
-
-            // Serialize back to String
-            return serializeDocument(document)
-
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to inject mappings into XML", e)
-            // Fallback: return original content if injection fails
-            return xmlContent
         }
+        return Injection(xml, notWritten.toList())
     }
 
     /** The runtime short-swipe code of an XML key description (`enter` → Enter's glyph), or null. */
     private fun runtimeCode(description: String): String? = try {
-        ShortSwipeKeyCodes.ofKey(tribixbite.cleverkeys.KeyValue.getKeyByName(description.removePrefix("loc ").trim()))
+        ShortSwipeKeyCodes.ofKey(KeyValue.getKeyByName(description.removePrefix("loc ").trim()))
     } catch (e: Exception) {
         null
-    }
-
-    private fun getKeyIdentifier(element: Element): String? {
-        // Check 'c' attribute first (most common)
-        if (element.hasAttribute("c")) {
-            return element.getAttribute("c")
-        }
-        // Check 'key0' attribute
-        if (element.hasAttribute("key0")) {
-            return element.getAttribute("key0")
-        }
-        return null
-    }
-
-    private fun dirToAttribute(dir: SwipeDirection): String {
-        return when (dir) {
-            SwipeDirection.NW -> "nw"
-            SwipeDirection.N -> "n"
-            SwipeDirection.NE -> "ne"
-            SwipeDirection.W -> "w"
-            SwipeDirection.E -> "e"
-            SwipeDirection.SW -> "sw"
-            SwipeDirection.S -> "s"
-            SwipeDirection.SE -> "se"
-        }
-    }
-
-    private fun serializeDocument(doc: Document): String {
-        val transformerFactory = TransformerFactory.newInstance()
-        val transformer = transformerFactory.newTransformer()
-        
-        // Pretty print configuration
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
-        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no")
-
-        val writer = StringWriter()
-        transformer.transform(DOMSource(doc), StreamResult(writer))
-        return writer.toString()
     }
 }

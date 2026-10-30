@@ -508,6 +508,13 @@ editor that used to be listed here already ship in 2.0.)
   microphone appeared as a Chinese character).
 - Export XML: a mapping on a direction the layout writes as `key1`…`key8` no longer produces a
   file the keyboard refuses to import ("synonyms"), and mappings on Enter are exported onto it.
+- Export XML: text, key-event, template, timestamp and intent short swipes now import back as the
+  same action. Before, each came back as a key typing its own definition (`'hello'` with its
+  quotes, "66" for a key event), emoji and other characters outside the basic plane came back
+  garbled, and text with a backslash could not be written at all. A layout key made from an
+  intent now starts the intent instead of typing it. Files exported earlier import exactly as
+  before — export the layout again to get the actions back. A short swipe a layout cannot hold
+  (such as pasting a pinned clip) is left out of the file, with a message saying so.
 - In the clipboard entry editor and the keyboard's other own fields (tag, clipboard search,
   emoji and GIF search), deleting a word works: the swipe up-left on Backspace, the
   `delete_word` / `forward_delete_word` commands and Ctrl+Backspace / Ctrl+Delete delete a word

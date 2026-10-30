@@ -73,9 +73,13 @@ object CommandRouting {
     /** The Editing-kind key the command named [commandName] denotes, or null. */
     fun editingValue(commandName: String): KeyValue? {
         // Legacy names match case-insensitively, exactly as the executor's AvailableCommand.fromString.
-        val name = AvailableCommand.fromString(commandName)?.let { LEGACY_EDITING_NAMES[it] } ?: commandName
+        val name = legacyEditingName(commandName) ?: commandName
         return KeyValue.getKeyByName(name).takeIf { it.getKind() == KeyValue.Kind.Editing }
     }
+
+    /** The editing key's catalogue name for a legacy AvailableCommand spelling (`SELECT_ALL` → `selectAll`), or null. */
+    internal fun legacyEditingName(commandName: String): String? =
+        AvailableCommand.fromString(commandName)?.let { LEGACY_EDITING_NAMES[it] }
 
     /**
      * Legacy AvailableCommands that are editing keys, with the key's catalogue name. The other

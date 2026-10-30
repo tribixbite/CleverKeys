@@ -1674,6 +1674,7 @@
     <string name="layout_manager_xml_empty_error">XML układu nie może być pusty</string>
     <string name="layout_manager_import_failed">Nie udało się zaimportować pliku układu:\n%1$s</string>
     <string name="layout_manager_export_failed">Nie udało się wyeksportować pliku układu:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Niektóre krótkie gesty nie trafiły do pliku: układ nie może przechować ich akcji (np. wklejenia przypiętego wycinka). Na tym urządzeniu nadal działają.</string>
     <string name="extra_keys_group_layout_switching">Przełączanie układów</string>
     <string name="extra_keys_group_system">System</string>
     <string name="extra_keys_group_navigation">Nawigacja</string>

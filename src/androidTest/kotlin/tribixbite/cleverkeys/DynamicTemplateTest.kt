@@ -252,7 +252,7 @@ class DynamicTemplateTest {
         val gson = com.google.gson.Gson()
         val decoded = gson.fromJson(gson.toJson(ShortSwipeCustomizations.fromMappingList(listOf(mapping))), ShortSwipeCustomizations::class.java)
         assertEquals(listOf(mapping), decoded.toMappingList())
-        val key = KeyValueParser.parse("{}:" + XmlAttributeMapper.toXmlValue(mapping))
+        val key = KeyValueParser.parse(XmlAttributeMapper.layoutValue(mapping)!!)
         assertEquals(KeyValue.Kind.Template, key.getKind())
         assertEquals(mapping.actionValue, key.getTemplateFormat().template)
     }

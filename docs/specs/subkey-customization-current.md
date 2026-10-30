@@ -12,7 +12,7 @@ Two-layer system for customizing short-swipe subkeys (corner actions) on any key
 | `src/main/kotlin/tribixbite/cleverkeys/customization/ShortSwipeMapping.kt` | Data model | Mapping structure |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `execute()` | 137 commands |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlLayoutExporter.kt` | `injectMappings()` | XML export |
-| `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `toXmlValue()` | Mapping → XML |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `layoutValue()` | Mapping → XML (export and layout copies) |
 | `src/main/kotlin/tribixbite/cleverkeys/Pointers.kt` | Gesture detection | Runtime lookup |
 
 ## Architecture
@@ -101,23 +101,27 @@ Click "Export XML"
     ↓
 XmlLayoutExporter.injectMappings(xmlText, mappings)
     ↓
-1. Parse XML to DOM
-2. For each <key> element:
-   - Find matching mappings by keyCode
-   - Convert mapping to XML attribute
-   - Add/overwrite direction attributes
-3. Serialize back to XML
+1. Read the main value (key0 / c) of every <row> <key>, in parser order (LayoutSubkeyXml)
+2. For each key with mappings (matched by runtime key code):
+   - XmlAttributeMapper.layoutValue(mapping): the value the parser reads back as the same action
+   - LayoutSubkeyXml.setSubkey: replace that direction in the key's start tag (text-level;
+     a `removed` blank removes it; a value a layout cannot hold is reported, slot kept)
+3. Everything else in the file stays byte for byte
     ↓
-Output: <key c="a" nw="@" sw="'test'" se="copy"/>
+Output: <key c="a" nw="@:'@'" sw="test:'test'" se="copy"/>
 ```
 
 ### XML Attribute Mapping
 
 | ActionType | JSON Value | XML Output |
 |------------|------------|------------|
-| TEXT | `"hello"` | `'hello'` (single-quoted) |
+| TEXT | `"hello"` | `hell:'hello'` (label, then the quoted text) |
 | COMMAND | `"copy"` | `copy` (keyword) |
-| KEY_EVENT | `"66"` | `keyevent:66` |
+| KEY_EVENT | `"66"` | `⌨:keyevent:66` |
+| TEMPLATE / TIMESTAMP / INTENT | | `{}:template:'…'`, `📅:timestamp:'…'`, `name:intent:'{json}'` |
+
+Full rules (labels, escaping, what cannot be written, how files exported before 2026-10-30
+import): profile_system_restoration.md "Export XML values".
 
 ## Backup/Restore Integration
 
@@ -205,9 +209,11 @@ no custom mapping there, defined by the entry's XML) writes the layout, never a 
    preference; the current-layout index is unchanged, so the copy is what is now shown.
 3. Later edits of that layout (and of any other custom layout) change its XML directly, without
    the question; the copy keeps its name and origin.
-4. The value written is `XmlAttributeMapper.layoutValue(mapping)`; an action a layout cannot hold
-   (a name-only command such as `paste_pinned_1`, which the parser would read as a string key
-   typing its own name) is saved as a custom mapping instead, with a toast saying so. The mapping's
+4. The value written is `XmlAttributeMapper.layoutValue(mapping)` — the same serializer as
+   Export XML; every action type reads back as itself, intents included (a layout intent key is
+   started by `KeyEventHandler`). An action a layout cannot hold (a name-only command such as
+   `paste_pinned_1`, which the parser would read as a string key typing its own name) is saved as
+   a custom mapping instead, with a toast saying so. The mapping's
    own label is not stored in the XML: a layout key's label comes from its value.
 5. If the `layouts` entry changed between opening the dialog and saving (Layout Manager, a
    restore), nothing is written (`Outcome.Failed`).

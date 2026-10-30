@@ -462,15 +462,14 @@ Dispatch by target type:
 
 ### XML Round-Trip (Layout Import/Export)
 
-Intent mappings stored in layout XML use the `__intent__:` prefix:
-
-```
-intent:'{"name":"Open Browser","action":"android.intent.action.VIEW","data":"https://google.com"}'
-```
-
-`KeyValueParser.parseIntentKeydef()` reads this format and produces a KeyValue string with the `IntentDefinition.INTENT_PREFIX` (`__intent__:`) prepended. Profile import/export strips this prefix for round-trip compatibility.
-
-`XmlAttributeMapper` handles serialization of all action types to/from XML attributes, including proper single-quote escaping for TEXT values.
+Export XML and modified layout copies write every action type with one serializer,
+`XmlAttributeMapper.layoutValue`, in the `label:action` form the layout parser reads back as the
+same action — e.g. `Open:intent:'{"name":"Open Browser",…}'`, `hell:'hello'`, `{}:template:'…'`.
+`KeyValueParser.parseIntentKeydef()` reads an intent as a string key carrying `__intent__:` + the
+JSON, and the keyboard starts that intent when the key is pressed instead of typing it. Inside the
+quotes a backslash escapes the next character (`\\`, `\'`). Files exported before 2026-10-30
+(a bare `'hello'`, `intent:'…'`) import as before: such a subkey types its quoted source until the
+layout is exported again.
 
 ### ShortSwipeMapping Factory & Accessor
 

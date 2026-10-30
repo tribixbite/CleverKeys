@@ -1555,6 +1555,7 @@
     <string name="layout_manager_xml_empty_error">レイアウト XML を空にすることはできません</string>
     <string name="layout_manager_import_failed">レイアウトファイルをインポートできませんでした:\n%1$s</string>
     <string name="layout_manager_export_failed">レイアウトファイルをエクスポートできませんでした:\n%1$s</string>
+    <string name="layout_manager_export_not_written">一部の短スワイプはファイルに含まれていません。レイアウトはその操作（固定したクリップの貼り付けなど）を保持できません。この端末では引き続き使えます。</string>
     <string name="extra_keys_group_layout_switching">レイアウト切替</string>
     <string name="extra_keys_group_system">システム</string>
     <string name="extra_keys_group_navigation">ナビゲーション</string>

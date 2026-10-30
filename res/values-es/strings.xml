@@ -1646,6 +1646,7 @@
     <string name="layout_manager_xml_empty_error">El XML de la distribución no puede estar vacío</string>
     <string name="layout_manager_import_failed">No se pudo importar el archivo de distribución:\n%1$s</string>
     <string name="layout_manager_export_failed">No se pudo exportar el archivo de distribución:\n%1$s</string>
+    <string name="layout_manager_export_not_written">Algunos deslizamientos cortos no están en el archivo: una distribución no puede contener su acción (como pegar un recorte fijado). Siguen funcionando en este dispositivo.</string>
     <string name="extra_keys_group_layout_switching">Cambio de distribución</string>
     <string name="extra_keys_group_system">Sistema</string>
     <string name="extra_keys_group_navigation">Navegación</string>

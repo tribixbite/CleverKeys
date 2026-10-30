@@ -118,9 +118,10 @@ class LayoutSubkeyBuiltInLayoutsTest {
         assertThat(XmlAttributeMapper.layoutValue(
             ShortSwipeMapping("a", SwipeDirection.N, "1", ActionType.COMMAND, "paste_pinned_1")
         )).isNull()
-        assertThat(XmlAttributeMapper.layoutValue(
-            ShortSwipeMapping("a", SwipeDirection.N, "x", ActionType.INTENT, "{}")
-        )).isNull()
+        // Since 2026-10-30 an intent can live in a layout: KeyEventHandler starts the string key
+        // `label:intent:'…'` parses to (KeyEventHandlerLayoutIntentTest).
+        val intent = readBack(ShortSwipeMapping("a", SwipeDirection.N, "x", ActionType.INTENT, "{}"))!!
+        assertThat(intent.getMacro().single().getString()).isEqualTo(IntentDefinition.INTENT_PREFIX + "{}")
     }
 
     /** [mapping]'s layout value written into a one-key layout and read back by the parser. */
@@ -133,7 +134,8 @@ class LayoutSubkeyBuiltInLayoutsTest {
 
     @Test
     fun textKeyEventTemplateAndTimestampReadBackAsActionsNotQuotedText() {
-        // A bare 'text' (Export XML's form) reads back as the literal string WITH its quotes.
+        // A bare 'text' (what Export XML wrote before 2026-10-30) reads back as the literal string WITH
+        // its quotes; the labelled form reads back as the text.
         val macro = readBack(ShortSwipeMapping("a", SwipeDirection.N, "hi", ActionType.TEXT, "it's: ok, \"x\""))!!
         assertThat(macro.getKind()).isEqualTo(KeyValue.Kind.Macro)
         assertThat(macro.getString()).isEqualTo("hi")
@@ -154,8 +156,8 @@ class LayoutSubkeyBuiltInLayoutsTest {
         val glyphLabel = readBack(ShortSwipeMapping("a", SwipeDirection.N, "\uE015", ActionType.TEXT, "hey", useKeyFont = true))!!
         assertThat(glyphLabel.getString()).isEqualTo("hey") // never a key-font glyph as a plain label
 
-        assertThat(XmlAttributeMapper.layoutValue(
-            ShortSwipeMapping("a", SwipeDirection.N, "x", ActionType.TEXT, "back\\slash")
-        )).isNull()
+        // A backslash is escaped (`\\`) since 2026-10-30; it had no spelling before.
+        val backslash = readBack(ShortSwipeMapping("a", SwipeDirection.N, "x", ActionType.TEXT, "back\\slash"))!!
+        assertThat(backslash.getMacro().single().getString()).isEqualTo("back\\slash")
     }
 }

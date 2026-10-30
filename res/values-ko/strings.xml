@@ -1556,6 +1556,7 @@
     <string name="layout_manager_xml_empty_error">레이아웃 XML은 비워 둘 수 없습니다</string>
     <string name="layout_manager_import_failed">레이아웃 파일을 가져오지 못했습니다:\n%1$s</string>
     <string name="layout_manager_export_failed">레이아웃 파일을 내보내지 못했습니다:\n%1$s</string>
+    <string name="layout_manager_export_not_written">일부 짧은 스와이프는 파일에 없습니다. 레이아웃은 해당 동작(고정된 클립 붙여넣기 등)을 담을 수 없습니다. 이 기기에서는 계속 작동합니다.</string>
     <string name="extra_keys_group_layout_switching">레이아웃 전환</string>
     <string name="extra_keys_group_system">시스템</string>
     <string name="extra_keys_group_navigation">탐색</string>
