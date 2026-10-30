@@ -2570,6 +2570,18 @@
     <string name="theme_letter_emoji">Tombol emoji digambar seperti tombol huruf</string>
     <string name="theme_function_chars">Karakter yang digambar sebagai tombol fungsi</string>
     <string name="theme_dynamic_color">Ikuti warna wallpaper (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Ukuran Teks Tombol Fungsi</string>
+    <string name="theme_shift_filled">Panah Shift terisi saat aktif</string>
+    <string name="theme_section_bar">Tata Letak Bilah Saran</string>
+    <string name="theme_bar_desc">Slot tetap alih-alih saran yang bergulir, seperti pada keyboard yang dikenal. Hanya tampilannya yang berubah: spasi tetap menyisipkan kata yang sama.</string>
+    <string name="theme_bar_slots">Slot</string>
+    <string name="theme_bar_centre">Kata terbaik di tengah</string>
+    <string name="theme_bar_quote_typed">Kata yang diketik dalam tanda kutip</string>
+    <string name="theme_bar_emphasis_commit">Koreksi tertunda ditebalkan</string>
+    <string name="theme_bar_emphasis_centre">Kata samping diredupkan</string>
+    <string name="theme_bar_separators">Pemisah antar-saran</string>
+    <string name="theme_bar_separators_show">Tampilkan</string>
+    <string name="theme_bar_separators_hide">Sembunyikan</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Input suara (di perangkat)</string>
     <string name="cmd_voice_input_desc">Dikte dengan paket suara yang Anda impor. Ucapan dikenali di ponsel dan tidak pernah keluar dari ponsel.</string>

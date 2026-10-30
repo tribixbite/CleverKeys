@@ -2609,6 +2609,18 @@
     <string name="theme_letter_emoji">Emoji billentyű betűbillentyűként rajzolva</string>
     <string name="theme_function_chars">Funkcióbillentyűként rajzolt karakterek</string>
     <string name="theme_dynamic_color">Háttérkép színeinek követése (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Funkcióbillentyűk szövegmérete</string>
+    <string name="theme_shift_filled">Kitöltött Shift nyíl nagybetűs módban</string>
+    <string name="theme_section_bar">Javaslatsáv elrendezése</string>
+    <string name="theme_bar_desc">Rögzített helyek görgethető javaslatok helyett, mint az ismert billentyűzeteken. Csak a megjelenés változik: a szóköz továbbra is ugyanazt a szót szúrja be.</string>
+    <string name="theme_bar_slots">Helyek</string>
+    <string name="theme_bar_centre">Legjobb szó középen</string>
+    <string name="theme_bar_quote_typed">Begépelt szó idézőjelben</string>
+    <string name="theme_bar_emphasis_commit">Függő javítás félkövéren</string>
+    <string name="theme_bar_emphasis_centre">Tompított oldalsó szavak</string>
+    <string name="theme_bar_separators">Elválasztók a javaslatok között</string>
+    <string name="theme_bar_separators_show">Megjelenítés</string>
+    <string name="theme_bar_separators_hide">Elrejtés</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Hangbevitel (az eszközön)</string>
     <string name="cmd_voice_input_desc">Diktáljon az importált hangcsomaggal. A beszédfelismerés a telefonon történik, és a hang soha nem hagyja el a telefont.</string>

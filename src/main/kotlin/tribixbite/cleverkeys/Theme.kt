@@ -217,6 +217,17 @@ class Theme {
     @JvmField
     val lookSpaceLanguage: Boolean
 
+    /**
+     * A look's per-key legends (SwiftKey's mic over the comma, ",!?" over the period —
+     * `theme/LookKeyMarks.kt`); empty for every non-look theme.
+     */
+    @JvmField
+    val lookKeyLegends: List<tribixbite.cleverkeys.theme.LookKeyLegend>
+
+    /** A look draws a filled Shift arrow while shifted (Gboard, `LookShiftGlyph`); false otherwise. */
+    @JvmField
+    val lookShiftFilled: Boolean
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -306,6 +317,8 @@ class Theme {
         lookBar = null
         lookAction = null
         lookSpaceLanguage = false
+        lookKeyLegends = emptyList()
+        lookShiftFilled = false
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -359,6 +372,10 @@ class Theme {
         lookAction: tribixbite.cleverkeys.theme.LookActionStyle? = null,
         /** A look prints the language name on the space bar. */
         lookSpaceLanguage: Boolean = false,
+        /** A look's per-key legends. */
+        lookKeyLegends: List<tribixbite.cleverkeys.theme.LookKeyLegend> = emptyList(),
+        /** A look draws a filled Shift arrow while shifted. */
+        lookShiftFilled: Boolean = false,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -435,6 +452,8 @@ class Theme {
         this.lookBar = lookBar?.takeIf { lookPalette != null }
         this.lookAction = lookAction?.takeIf { lookPalette != null }
         this.lookSpaceLanguage = lookSpaceLanguage && lookPalette != null
+        this.lookKeyLegends = if (lookPalette != null) lookKeyLegends else emptyList()
+        this.lookShiftFilled = lookShiftFilled && lookPalette != null
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0
@@ -528,6 +547,12 @@ class Theme {
         /** Multiplier on the main label size (a look's `labelScale`; 1 otherwise). */
         @JvmField
         val label_scale: Float
+        /**
+         * Multiplier on function-key TEXT labels such as "!#1" (a look's `functionLabelScale`;
+         * 1 otherwise; `LookLabelSizing`).
+         */
+        @JvmField
+        val function_label_scale: Float
         /** Key geometry after the effective look's precedence ([KeyboardLookGeometry.resolve]). */
         @JvmField
         val geometry: KeyboardLookGeometry.Effective
@@ -562,6 +587,7 @@ class Theme {
             vertical_margin = geometry.verticalMargin
             horizontal_margin = geometry.horizontalMargin
             label_scale = geometry.labelScale
+            function_label_scale = geometry.functionLabelScale
             // Add half of the key margin on the left and on the top as it's also
             // added on the right and on the bottom of every keys.
             margin_top = config.marginTop + vertical_margin / 2

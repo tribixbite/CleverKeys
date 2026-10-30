@@ -146,7 +146,9 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
         suggestionBar?.let { stage.removeView(it) }
         val bar = SuggestionBar(context, theme).apply {
             setOpacity(Config.globalConfig().suggestion_bar_opacity)
-            setSuggestions(words)
+            // The first word is the highlighted best word, the second the typed one, so a
+            // theme's bar arrangement (slots, centre, quotes, emphasis) shows here live.
+            setSuggestionsWithScores(words, null, null, highlightIndex = 0, typedWord = ThemePreviewScene.barTypedWord(words))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 TypedValue.applyDimension(

@@ -2557,6 +2557,18 @@
     <string name="theme_letter_emoji">絵文字キーを文字キーと同じ見た目にする</string>
     <string name="theme_function_chars">機能キーとして描画する文字</string>
     <string name="theme_dynamic_color">壁紙の色に合わせる (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">機能キーの文字サイズ</string>
+    <string name="theme_shift_filled">シフト中は塗りつぶしの Shift 矢印</string>
+    <string name="theme_section_bar">候補バーのレイアウト</string>
+    <string name="theme_bar_desc">スクロールする候補の代わりに固定の枠を表示します（おなじみのキーボードと同様）。変わるのは表示だけで、スペースで入力される単語は同じです。</string>
+    <string name="theme_bar_slots">枠の数</string>
+    <string name="theme_bar_centre">最適な単語を中央に</string>
+    <string name="theme_bar_quote_typed">入力中の単語を引用符で囲む</string>
+    <string name="theme_bar_emphasis_commit">修正候補を太字</string>
+    <string name="theme_bar_emphasis_centre">左右の単語を淡色</string>
+    <string name="theme_bar_separators">候補の区切り線</string>
+    <string name="theme_bar_separators_show">表示</string>
+    <string name="theme_bar_separators_hide">非表示</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">音声入力(端末上)</string>
     <string name="cmd_voice_input_desc">インポートした音声パックで音声入力します。音声は端末上で認識され、端末の外に送信されることはありません。</string>

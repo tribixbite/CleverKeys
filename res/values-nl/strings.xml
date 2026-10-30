@@ -2603,6 +2603,18 @@
     <string name="theme_letter_emoji">Emojitoets getekend als lettertoets</string>
     <string name="theme_function_chars">Tekens getekend als functietoetsen</string>
     <string name="theme_dynamic_color">Achtergrondkleuren volgen (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Tekstgrootte functietoetsen</string>
+    <string name="theme_shift_filled">Gevulde Shift-pijl bij hoofdletters</string>
+    <string name="theme_section_bar">Indeling suggestiebalk</string>
+    <string name="theme_bar_desc">Vaste vakken in plaats van scrollende suggesties, zoals op bekende toetsenborden. Alleen de weergave verandert: de spatiebalk voegt nog steeds hetzelfde woord in.</string>
+    <string name="theme_bar_slots">Vakken</string>
+    <string name="theme_bar_centre">Beste woord in het midden</string>
+    <string name="theme_bar_quote_typed">Getypt woord tussen aanhalingstekens</string>
+    <string name="theme_bar_emphasis_commit">Wachtende correctie vet</string>
+    <string name="theme_bar_emphasis_centre">Zijwoorden gedimd</string>
+    <string name="theme_bar_separators">Scheidingslijnen tussen suggesties</string>
+    <string name="theme_bar_separators_show">Tonen</string>
+    <string name="theme_bar_separators_hide">Verbergen</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Spraakinvoer (op het apparaat)</string>
     <string name="cmd_voice_input_desc">Dicteer met het spraakpakket dat je hebt geïmporteerd. Spraak wordt op de telefoon herkend en verlaat die nooit.</string>

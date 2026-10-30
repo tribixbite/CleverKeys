@@ -2704,6 +2704,18 @@
     <string name="theme_letter_emoji">Клавіша емодзі як літерна</string>
     <string name="theme_function_chars">Символи, що відображаються як функціональні клавіші</string>
     <string name="theme_dynamic_color">Кольори шпалер (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Розмір тексту функціональних клавіш</string>
+    <string name="theme_shift_filled">Заповнена стрілка Shift у верхньому регістрі</string>
+    <string name="theme_section_bar">Розташування панелі підказок</string>
+    <string name="theme_bar_desc">Фіксовані комірки замість прокручуваних підказок, як на звичних клавіатурах. Змінюється лише відображення: пробіл і далі вставляє те саме слово.</string>
+    <string name="theme_bar_slots">Комірки</string>
+    <string name="theme_bar_centre">Найкраще слово в центрі</string>
+    <string name="theme_bar_quote_typed">Набране слово в лапках</string>
+    <string name="theme_bar_emphasis_commit">Очікуване виправлення жирним</string>
+    <string name="theme_bar_emphasis_centre">Бічні слова приглушені</string>
+    <string name="theme_bar_separators">Роздільники між підказками</string>
+    <string name="theme_bar_separators_show">Показати</string>
+    <string name="theme_bar_separators_hide">Приховати</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Голосове введення (на пристрої)</string>
     <string name="cmd_voice_input_desc">Диктуйте за допомогою імпортованого голосового пакета. Мовлення розпізнається на телефоні й ніколи його не залишає.</string>

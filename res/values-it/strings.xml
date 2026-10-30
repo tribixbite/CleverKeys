@@ -2688,6 +2688,18 @@
     <string name="theme_letter_emoji">Tasto emoji disegnato come una lettera</string>
     <string name="theme_function_chars">Caratteri disegnati come tasti funzione</string>
     <string name="theme_dynamic_color">Segui i colori dello sfondo (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Dimensione testo tasti funzione</string>
+    <string name="theme_shift_filled">Freccia Maiusc piena quando attiva</string>
+    <string name="theme_section_bar">Disposizione della barra dei suggerimenti</string>
+    <string name="theme_bar_desc">Caselle fisse invece di suggerimenti scorrevoli, come nelle tastiere conosciute. Cambia solo il disegno: lo spazio inserisce sempre la stessa parola.</string>
+    <string name="theme_bar_slots">Caselle</string>
+    <string name="theme_bar_centre">Parola migliore al centro</string>
+    <string name="theme_bar_quote_typed">Parola digitata tra virgolette</string>
+    <string name="theme_bar_emphasis_commit">Correzione in sospeso in grassetto</string>
+    <string name="theme_bar_emphasis_centre">Parole laterali attenuate</string>
+    <string name="theme_bar_separators">Separatori tra i suggerimenti</string>
+    <string name="theme_bar_separators_show">Mostra</string>
+    <string name="theme_bar_separators_hide">Nascondi</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Input vocale (sul dispositivo)</string>
     <string name="cmd_voice_input_desc">Detta con il pacchetto vocale che hai importato. Il parlato viene riconosciuto sul telefono e non lo lascia mai.</string>

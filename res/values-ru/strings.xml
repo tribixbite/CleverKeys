@@ -2698,6 +2698,18 @@
     <string name="theme_letter_emoji">Клавиша эмодзи как буквенная</string>
     <string name="theme_function_chars">Символы, отображаемые как функциональные клавиши</string>
     <string name="theme_dynamic_color">Цвета обоев (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Размер текста функциональных клавиш</string>
+    <string name="theme_shift_filled">Залитая стрелка Shift в верхнем регистре</string>
+    <string name="theme_section_bar">Расположение панели подсказок</string>
+    <string name="theme_bar_desc">Фиксированные ячейки вместо прокручиваемых подсказок, как на привычных клавиатурах. Меняется только отображение: пробел по-прежнему вставляет то же слово.</string>
+    <string name="theme_bar_slots">Ячейки</string>
+    <string name="theme_bar_centre">Лучшее слово в центре</string>
+    <string name="theme_bar_quote_typed">Набранное слово в кавычках</string>
+    <string name="theme_bar_emphasis_commit">Ожидающее исправление жирным</string>
+    <string name="theme_bar_emphasis_centre">Боковые слова приглушены</string>
+    <string name="theme_bar_separators">Разделители между подсказками</string>
+    <string name="theme_bar_separators_show">Показать</string>
+    <string name="theme_bar_separators_hide">Скрыть</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Голосовой ввод (на устройстве)</string>
     <string name="cmd_voice_input_desc">Диктуйте с помощью импортированного голосового пакета. Речь распознаётся на телефоне и никогда его не покидает.</string>

@@ -158,6 +158,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     private var _keyWidth = 0f
     private var _mainLabelSize = 0f
+    /** A look's multiplier on function-key text labels (LookLabelSizing; 1 otherwise). */
+    private var _functionLabelScale = 1f
     private var _subLabelSize = 0f
     private var _marginRight = 0f
     private var _marginLeft = 0f
@@ -1762,6 +1764,7 @@ class Keyboard2View @JvmOverloads constructor(
         // A keyboard look scales the main label RELATIVE to the user's size (label_scale = 1
         // for every other theme), so the user's size setting keeps counting.
         _mainLabelSize = labelBaseSize * snap.labelTextSize * tc.label_scale
+        _functionLabelScale = tc.function_label_scale
         // #133: secondary (flick) labels scale independently of the primary
         // label via secondary_label_size_scale (default 1.0 = unchanged).
         _subLabelSize = labelBaseSize * snap.sublabelTextSize * snap.secondary_label_size_scale
@@ -1982,6 +1985,9 @@ class Keyboard2View @JvmOverloads constructor(
                 // and while a look hides corner labels (they are gesture hints too).
                 if (hasCustomMappings && allLegends)
                     drawCustomMappings(canvas, k, x, y, keyW, keyH, tc, snap, mainLabelW)
+                // A look's own legend on this key (SwiftKey's mic over the comma), in place of the
+                // hidden hints (LookKeyLegends).
+                if (!allLegends && _theme.lookKeyLegends.isNotEmpty()) drawLookKeyLegend(canvas, k, legends, x, y, keyW, tc_key, snap)
                 drawIndication(canvas, k, x, y, keyW, keyH, tc)
                 cursorX = cellX + _keyWidth * k.width
             }
@@ -2186,6 +2192,21 @@ class Keyboard2View @JvmOverloads constructor(
                 return box
             }
         }
+        if (_theme.lookShiftFilled && modifiedKv.getKind() == KeyValue.Kind.Modifier &&
+            modifiedKv.getModifier() == KeyValue.Modifier.SHIFT
+        ) {
+            // Gboard-style: a filled arrow while shifted, over a bar in Caps Lock (our own icon).
+            val flags = _pointers.getKeyFlags(kv)
+            val state = tribixbite.cleverkeys.theme.LookShiftGlyph.state(
+                down = flags != -1, locked = flags != -1 && (flags and Pointers.FLAG_P_LOCKED) != 0,
+            )
+            val parts = tribixbite.cleverkeys.theme.LookShiftGlyph.parts(true, state)
+            if (parts != null) {
+                val box = _mainLabelSize * tribixbite.cleverkeys.theme.LookShiftGlyph.BOX_SCALE
+                drawIconParts(canvas, parts, x - box / 2f, y + (keyH - box) / 2f, box, p.color)
+                return box
+            }
+        }
         val label = if (isAction) tribixbite.cleverkeys.theme.LookActionKeys.text(
             lookAction, modifiedKv.getString(), resources.configuration.locales[0],
         ) else modifiedKv.getString()
@@ -2219,14 +2240,18 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /** Draw [glyph]'s strokes ([tribixbite.cleverkeys.theme.LookActionKeys.parts]) in a [box]-sized square at ([left], [top]). */
-    private fun drawActionIcon(canvas: Canvas, glyph: tribixbite.cleverkeys.theme.ActionGlyph, left: Float, top: Float, box: Float, color: Int) {
+    private fun drawActionIcon(canvas: Canvas, glyph: tribixbite.cleverkeys.theme.ActionGlyph, left: Float, top: Float, box: Float, color: Int) =
+        drawIconParts(canvas, tribixbite.cleverkeys.theme.LookActionKeys.parts(glyph), left, top, box, color)
+
+    /** Draw icon [parts] (unit box, y down) into the [box]-sized square at ([left], [top]). */
+    private fun drawIconParts(canvas: Canvas, parts: List<tribixbite.cleverkeys.theme.IconPart>, left: Float, top: Float, box: Float, color: Int) {
         val paint = _actionIconPaint
         // Round caps and joins, like the products' line icons.
         paint.strokeCap = Paint.Cap.ROUND
         paint.strokeJoin = Paint.Join.ROUND
         paint.color = color
         paint.strokeWidth = box * tribixbite.cleverkeys.theme.LookActionKeys.STROKE
-        for (part in tribixbite.cleverkeys.theme.LookActionKeys.parts(glyph)) when (part) {
+        for (part in parts) when (part) {
             is tribixbite.cleverkeys.theme.IconPart.Circle -> {
                 paint.style = Paint.Style.STROKE
                 canvas.drawCircle(left + part.cx * box, top + part.cy * box, part.r * box, paint)
@@ -2306,6 +2331,38 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         canvas.drawText(label, 0, label_len, xPos, yPos, p)
+    }
+
+    /**
+     * A look's legend for [k] ([tribixbite.cleverkeys.theme.LookKeyLegends.legendFor]): text or
+     * a key-font icon at the top centre, in the hint colour at the hint size. Drawing only.
+     */
+    private fun drawLookKeyLegend(
+        canvas: Canvas, k: KeyboardData.Key, legends: tribixbite.cleverkeys.theme.LookLegends,
+        x: Float, y: Float, keyW: Float, tc: Theme.Computed.Key, snap: ConfigSnapshot,
+    ) {
+        val kv0 = k.keys[0] ?: return
+        val mainChar = if (kv0.getKind() == KeyValue.Kind.Char) kv0.getChar() else null
+        var hasSwipe = false
+        var hasVoice = false
+        for (i in 1..8) {
+            val sub = k.keys[i] ?: continue
+            hasSwipe = true
+            if (sub.getKind() == KeyValue.Kind.Event) when (sub.getEvent()) {
+                KeyValue.Event.SWITCH_VOICE_TYPING, KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER,
+                KeyValue.Event.VOICE_INPUT -> hasVoice = true
+                else -> Unit
+            }
+        }
+        val legend = tribixbite.cleverkeys.theme.LookKeyLegends.legendFor(
+            _theme.lookKeyLegends, legends, mainChar, hasVoiceSwipe = hasVoice, hasSwipe = hasSwipe,
+        ) ?: return
+        val glyph = legend.glyph
+        val text = glyph?.fontChar?.toString() ?: legend.text ?: return
+        val p = tc.sublabel_paint(glyph != null, _theme.subLabelColor, _subLabelSize, Paint.Align.CENTER)
+        val padding = snap.keyPadding
+        p.textSize = SubLabelSizing.fitToWidth(_subLabelSize, p.measureText(text), keyW - 2 * padding)
+        canvas.drawText(text, x + keyW / 2f, y + padding - p.ascent(), p)
     }
 
     /** Outputs of [subLabelPaint] (main-thread draw path; fields avoid a per-label allocation). */
@@ -2518,9 +2575,12 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     private fun scaleTextSize(k: KeyValue, main_label: Boolean): Float {
-        val smaller_font = if (k.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)) 0.75f else 1f
-        val label_size = if (main_label) _mainLabelSize else _subLabelSize
-        return label_size * smaller_font
+        val smaller = k.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)
+        if (!main_label) return _subLabelSize * (if (smaller) tribixbite.cleverkeys.theme.LookLabelSizing.SMALLER_FONT else 1f)
+        // A look may draw function-key TEXT ("!#1", "1/2", "ABC") larger (Samsung-style).
+        return tribixbite.cleverkeys.theme.LookLabelSizing.mainLabelSize(
+            _mainLabelSize, smaller, k.hasFlagsAny(KeyValue.FLAG_KEY_FONT), _functionLabelScale,
+        )
     }
 
     fun getTheme(): Theme {

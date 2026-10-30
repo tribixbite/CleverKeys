@@ -49,6 +49,15 @@ object ThemePreviewScene {
         raw.split(',').map { it.trim() }.filter { it.isNotEmpty() }.take(MAX_SAMPLE_WORDS)
 
     /**
+     * The word the preview bar shows as TYPED for [words] (the second sample: "colors" in
+     * "color, colors, colorful"), so a theme's bar arrangement is visible in the preview — the
+     * typed word left of the centre, in quotation marks when the theme quotes it — while the
+     * first sample stays the highlighted best word. Null with fewer than two samples. The plain
+     * scrolling bar ignores the typed word.
+     */
+    fun barTypedWord(words: List<String>): String? = words.getOrNull(1)
+
+    /**
      * Static sample trail through the letter keys of [word], as (x, y) points in keyboard
      * view coordinates.
      *

@@ -2615,6 +2615,18 @@
     <string name="theme_letter_emoji">Emoji key na iginuhit na parang letra</string>
     <string name="theme_function_chars">Mga character na iginuhit bilang function key</string>
     <string name="theme_dynamic_color">Sundin ang mga kulay ng wallpaper (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Laki ng Teksto ng Function Key</string>
+    <string name="theme_shift_filled">Punong Shift arrow kapag naka-shift</string>
+    <string name="theme_section_bar">Ayos ng Bar ng Suhestiyon</string>
+    <string name="theme_bar_desc">Mga nakapirming puwang sa halip na nag-i-scroll na suhestiyon, gaya ng mga kilalang keyboard. Ang pagguhit lang ang nagbabago: ang space ay naglalagay pa rin ng parehong salita.</string>
+    <string name="theme_bar_slots">Mga puwang</string>
+    <string name="theme_bar_centre">Pinakamahusay na salita sa gitna</string>
+    <string name="theme_bar_quote_typed">Tinipang salita sa panipi</string>
+    <string name="theme_bar_emphasis_commit">Naka-bold ang nakabinbing pagwawasto</string>
+    <string name="theme_bar_emphasis_centre">Malabo ang mga salita sa gilid</string>
+    <string name="theme_bar_separators">Mga separator sa pagitan ng mga suhestiyon</string>
+    <string name="theme_bar_separators_show">Ipakita</string>
+    <string name="theme_bar_separators_hide">Itago</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Voice input (sa device)</string>
     <string name="cmd_voice_input_desc">Mag-dictate gamit ang voice pack na in-import mo. Kinikilala ang pananalita sa phone at hindi ito kailanman umaalis dito.</string>

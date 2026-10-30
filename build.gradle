@@ -882,6 +882,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.LookBarArrangementTest',
     // 2026-10-28: a look's editor-action key — icon per action, action vs Enter fill.
     'tribixbite.cleverkeys.theme.LookActionKeysTest',
+    // Look per-key marks: SwiftKey legends, Gboard filled Shift, Samsung function text (2026-10-30)
+    'tribixbite.cleverkeys.theme.LookKeyMarksTest',
     // 2026-10-28: the language name a look (Samsung-style) prints on the space bar.
     'tribixbite.cleverkeys.theme.SpaceLanguageLabelTest',
     'tribixbite.cleverkeys.PredictionTaskRunnerTest',

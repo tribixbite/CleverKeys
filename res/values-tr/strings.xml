@@ -2614,6 +2614,18 @@
     <string name="theme_letter_emoji">Harf tuşu gibi çizilen emoji tuşu</string>
     <string name="theme_function_chars">İşlev tuşu olarak çizilen karakterler</string>
     <string name="theme_dynamic_color">Duvar kâğıdı renklerini izle (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">İşlev Tuşu Metin Boyutu</string>
+    <string name="theme_shift_filled">Büyük harfte dolu Shift oku</string>
+    <string name="theme_section_bar">Öneri Çubuğu Düzeni</string>
+    <string name="theme_bar_desc">Tanıdık klavyelerdeki gibi, kayan öneriler yerine sabit yuvalar. Yalnızca görünüm değişir: boşluk yine aynı kelimeyi ekler.</string>
+    <string name="theme_bar_slots">Yuvalar</string>
+    <string name="theme_bar_centre">En iyi kelime ortada</string>
+    <string name="theme_bar_quote_typed">Yazılan kelime tırnak içinde</string>
+    <string name="theme_bar_emphasis_commit">Bekleyen düzeltme kalın</string>
+    <string name="theme_bar_emphasis_centre">Yan kelimeler soluk</string>
+    <string name="theme_bar_separators">Öneriler arası ayırıcılar</string>
+    <string name="theme_bar_separators_show">Göster</string>
+    <string name="theme_bar_separators_hide">Gizle</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Sesle giriş (cihazda)</string>
     <string name="cmd_voice_input_desc">İçe aktardığınız ses paketiyle dikte edin. Konuşma telefonda tanınır ve telefondan hiç çıkmaz.</string>

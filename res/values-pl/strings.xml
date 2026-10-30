@@ -2703,6 +2703,18 @@
     <string name="theme_letter_emoji">Klawisz emoji rysowany jak litera</string>
     <string name="theme_function_chars">Znaki rysowane jako klawisze funkcyjne</string>
     <string name="theme_dynamic_color">Kolory z tapety (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Rozmiar tekstu klawiszy funkcyjnych</string>
+    <string name="theme_shift_filled">Wypełniona strzałka Shift przy wielkich literach</string>
+    <string name="theme_section_bar">Układ paska podpowiedzi</string>
+    <string name="theme_bar_desc">Stałe pola zamiast przewijanych podpowiedzi, jak na znanych klawiaturach. Zmienia się tylko wygląd: spacja nadal wstawia to samo słowo.</string>
+    <string name="theme_bar_slots">Pola</string>
+    <string name="theme_bar_centre">Najlepsze słowo pośrodku</string>
+    <string name="theme_bar_quote_typed">Wpisane słowo w cudzysłowie</string>
+    <string name="theme_bar_emphasis_commit">Oczekująca poprawka pogrubiona</string>
+    <string name="theme_bar_emphasis_centre">Przygaszone słowa po bokach</string>
+    <string name="theme_bar_separators">Separatory między podpowiedziami</string>
+    <string name="theme_bar_separators_show">Pokaż</string>
+    <string name="theme_bar_separators_hide">Ukryj</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Wprowadzanie głosowe (na urządzeniu)</string>
     <string name="cmd_voice_input_desc">Dyktuj za pomocą zaimportowanego pakietu głosowego. Mowa jest rozpoznawana w telefonie i nigdy go nie opuszcza.</string>

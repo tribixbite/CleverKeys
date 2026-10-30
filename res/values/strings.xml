@@ -3031,6 +3031,18 @@
     <string name="theme_letter_emoji">Emoji key drawn like a letter key</string>
     <string name="theme_function_chars">Characters drawn as function keys</string>
     <string name="theme_dynamic_color">Follow wallpaper colors (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Function Key Text Size</string>
+    <string name="theme_shift_filled">Filled Shift arrow while shifted</string>
+    <string name="theme_section_bar">Suggestion Bar Layout</string>
+    <string name="theme_bar_desc">Fixed slots instead of scrolling suggestions, as on familiar keyboards. Only the drawing changes: space still inserts the same word.</string>
+    <string name="theme_bar_slots">Slots</string>
+    <string name="theme_bar_centre">Best word in the middle</string>
+    <string name="theme_bar_quote_typed">Typed word in quotation marks</string>
+    <string name="theme_bar_emphasis_commit">Bold pending correction</string>
+    <string name="theme_bar_emphasis_centre">Dim side words</string>
+    <string name="theme_bar_separators">Separators between suggestions</string>
+    <string name="theme_bar_separators_show">Show</string>
+    <string name="theme_bar_separators_hide">Hide</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Voice input (on device)</string>
     <string name="cmd_voice_input_desc">Dictate with the voice pack you imported. Speech is recognized on the phone and never leaves it.</string>

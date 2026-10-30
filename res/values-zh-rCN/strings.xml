@@ -2556,6 +2556,18 @@
     <string name="theme_letter_emoji">表情键按字母键样式绘制</string>
     <string name="theme_function_chars">按功能键样式绘制的字符</string>
     <string name="theme_dynamic_color">跟随壁纸颜色（Android 12+）</string>
+    <string name="theme_shape_function_label_scale">功能键文字大小</string>
+    <string name="theme_shift_filled">大写时 Shift 箭头填充</string>
+    <string name="theme_section_bar">候选栏布局</string>
+    <string name="theme_bar_desc">使用固定的候选位，而非滚动的候选，与常见键盘一致。只改变显示：空格键插入的词不变。</string>
+    <string name="theme_bar_slots">候选位数</string>
+    <string name="theme_bar_centre">最佳词居中</string>
+    <string name="theme_bar_quote_typed">输入的词加引号</string>
+    <string name="theme_bar_emphasis_commit">待定更正加粗</string>
+    <string name="theme_bar_emphasis_centre">两侧的词变暗</string>
+    <string name="theme_bar_separators">候选之间的分隔线</string>
+    <string name="theme_bar_separators_show">显示</string>
+    <string name="theme_bar_separators_hide">隐藏</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">语音输入（本机）</string>
     <string name="cmd_voice_input_desc">使用你导入的语音包进行听写。语音在手机上识别，绝不会离开手机。</string>

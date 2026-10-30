@@ -2675,6 +2675,18 @@
     <string name="theme_letter_emoji">Tasta emoji desenată ca o literă</string>
     <string name="theme_function_chars">Caractere desenate ca taste funcționale</string>
     <string name="theme_dynamic_color">Urmează culorile imaginii de fundal (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Dimensiunea textului tastelor funcționale</string>
+    <string name="theme_shift_filled">Săgeată Shift plină când este activă</string>
+    <string name="theme_section_bar">Aranjarea barei de sugestii</string>
+    <string name="theme_bar_desc">Poziții fixe în loc de sugestii derulante, ca la tastaturile cunoscute. Se schimbă doar desenul: spațiul inserează în continuare același cuvânt.</string>
+    <string name="theme_bar_slots">Poziții</string>
+    <string name="theme_bar_centre">Cel mai bun cuvânt în mijloc</string>
+    <string name="theme_bar_quote_typed">Cuvântul tastat între ghilimele</string>
+    <string name="theme_bar_emphasis_commit">Corectura în așteptare îngroșată</string>
+    <string name="theme_bar_emphasis_centre">Cuvintele laterale estompate</string>
+    <string name="theme_bar_separators">Separatoare între sugestii</string>
+    <string name="theme_bar_separators_show">Afișare</string>
+    <string name="theme_bar_separators_hide">Ascundere</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Introducere vocală (pe dispozitiv)</string>
     <string name="cmd_voice_input_desc">Dictați cu pachetul vocal pe care l-ați importat. Vorbirea este recunoscută pe telefon și nu îl părăsește niciodată.</string>

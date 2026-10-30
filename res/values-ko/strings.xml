@@ -2558,6 +2558,18 @@
     <string name="theme_letter_emoji">이모티콘 키를 글자 키처럼 표시</string>
     <string name="theme_function_chars">기능 키로 표시할 문자</string>
     <string name="theme_dynamic_color">배경화면 색상 따르기 (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">기능 키 글자 크기</string>
+    <string name="theme_shift_filled">Shift 활성 시 채워진 화살표</string>
+    <string name="theme_section_bar">추천 표시줄 배치</string>
+    <string name="theme_bar_desc">스크롤되는 추천 대신 고정된 칸을 표시합니다(익숙한 키보드처럼). 표시만 바뀌며 스페이스는 같은 단어를 입력합니다.</string>
+    <string name="theme_bar_slots">칸 수</string>
+    <string name="theme_bar_centre">가장 좋은 단어를 가운데에</string>
+    <string name="theme_bar_quote_typed">입력한 단어를 따옴표로 표시</string>
+    <string name="theme_bar_emphasis_commit">대기 중인 수정을 굵게</string>
+    <string name="theme_bar_emphasis_centre">양쪽 단어를 흐리게</string>
+    <string name="theme_bar_separators">추천 사이 구분선</string>
+    <string name="theme_bar_separators_show">표시</string>
+    <string name="theme_bar_separators_hide">숨기기</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">음성 입력(기기 내)</string>
     <string name="cmd_voice_input_desc">가져온 음성 팩으로 받아쓰기합니다. 음성은 휴대폰에서 인식되며 기기 밖으로 나가지 않습니다.</string>

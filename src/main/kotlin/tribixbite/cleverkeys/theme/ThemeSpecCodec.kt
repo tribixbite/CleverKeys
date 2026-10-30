@@ -57,6 +57,9 @@ object ThemeSpecXml {
     const val ACTION_LOWERCASE = "action_lowercase"
     const val SPACE_LANGUAGE = "space_language"
     const val ACTION_ICON_SCALE = "action_icon_scale"
+    const val FUNCTION_LABEL_SCALE = "function_label_scale"
+    const val KEY_LEGENDS = "key_legends"
+    const val SHIFT_FILLED = "shift_filled"
 
     val GAP_RANGE = 0f..KeyboardLookGeometry.MAX_GAP
     val CORNER_RADIUS_RANGE = 0f..64f
@@ -76,6 +79,7 @@ object ThemeSpecXml {
         PREVIEW_HEIGHT, PREVIEW_LABEL_SCALE, PREVIEW_CORNER, PREVIEW_SHADOW, HINT_SIZE, HINT_WEIGHT,
         DYNAMIC_COLOR, BAR_SLOTS, BAR_CENTRE, BAR_QUOTE_TYPED, BAR_EMPHASIS,
         ACTION_ICONS, ACTION_ACCENT, ACTION_LOWERCASE, ACTION_ICON_SCALE, SPACE_LANGUAGE,
+        FUNCTION_LABEL_SCALE, KEY_LEGENDS, SHIFT_FILLED,
     )
 
     private val PILL_NAMES = mapOf("enter" to LookPillKey.ENTER, "action" to LookPillKey.ACTION, "numbers" to LookPillKey.NUMBERS)
@@ -134,6 +138,7 @@ object ThemeSpecXml {
             shadowDyDp = floatAttr(SHADOW_DY, SHADOW_RANGE),
             labelScale = floatAttr(LABEL_SCALE, LABEL_SCALE_RANGE),
             labelWeight = intAttr(LABEL_WEIGHT, WEIGHT_RANGE),
+            functionLabelScale = floatAttr(FUNCTION_LABEL_SCALE, LABEL_SCALE_RANGE),
         )
         val functionChars = theme[FUNCTION_CHARS]?.let { raw ->
             if (raw.length <= MAX_FUNCTION_CHARS) raw else { bad(TAG, FUNCTION_CHARS, raw); null }
@@ -213,6 +218,10 @@ object ThemeSpecXml {
             bar = bar,
             action = action,
             spaceLanguage = boolAttr(SPACE_LANGUAGE),
+            keyLegends = theme[KEY_LEGENDS]?.let { raw ->
+                LookKeyLegends.parse(raw) ?: run { bad(TAG, KEY_LEGENDS, raw); null }
+            },
+            shiftFilled = boolAttr(SHIFT_FILLED),
         )
     }
 
@@ -233,6 +242,7 @@ object ThemeSpecXml {
         g.shadowDyDp?.let { attrs.add(SHADOW_DY to ThemeValues.formatFloat(it)) }
         g.labelScale?.let { attrs.add(LABEL_SCALE to ThemeValues.formatFloat(it)) }
         g.labelWeight?.let { attrs.add(LABEL_WEIGHT to it.toString()) }
+        g.functionLabelScale?.let { attrs.add(FUNCTION_LABEL_SCALE to ThemeValues.formatFloat(it)) }
         spec.functionChars?.let { attrs.add(FUNCTION_CHARS to it) }
         spec.legends?.let { attrs.add(HINTS to it.name.lowercase(Locale.ROOT)) }
         spec.pillKeys?.let { set -> attrs.add(PILL_KEYS to PILL_NAMES.filterValues { it in set }.keys.joinToString(" ")) }
@@ -263,6 +273,8 @@ object ThemeSpecXml {
             attrs.add(ACTION_ICON_SCALE to ThemeValues.formatFloat(it.iconScale))
         }
         spec.spaceLanguage?.let { attrs.add(SPACE_LANGUAGE to it.toString()) }
+        spec.keyLegends?.let { attrs.add(KEY_LEGENDS to LookKeyLegends.format(it)) }
+        spec.shiftFilled?.let { attrs.add(SHIFT_FILLED to it.toString()) }
 
         val inner = "$indent  "
         val sb = StringBuilder()
@@ -350,6 +362,7 @@ object ThemeSpecJson {
             g.shadowDyDp?.let { put("shadowDyDp", num(it)) }
             g.labelScale?.let { put("labelScale", num(it)) }
             g.labelWeight?.let { put("labelWeight", it) }
+            g.functionLabelScale?.let { put("functionLabelScale", num(it)) }
         }
         if (geometry.length() > 0) put("geometry", geometry)
         spec.functionChars?.let { put("functionChars", it) }
@@ -390,6 +403,8 @@ object ThemeSpecJson {
             })
         }
         spec.spaceLanguage?.let { put("spaceLanguage", it) }
+        spec.keyLegends?.let { put("keyLegends", LookKeyLegends.format(it)) }
+        spec.shiftFilled?.let { put("shiftFilled", it) }
     }
 
     /**
@@ -444,6 +459,7 @@ object ThemeSpecJson {
                 shadowDyDp = f(g, "shadowDyDp"),
                 labelScale = f(g, "labelScale"),
                 labelWeight = i(g, "labelWeight"),
+                functionLabelScale = f(g, "functionLabelScale"),
             ),
             functionChars = if (json.has("functionChars")) json.getString("functionChars") else null,
             legends = if (json.has("hints")) LookLegends.entries.firstOrNull { it.name == json.getString("hints") } else null,
@@ -474,6 +490,9 @@ object ThemeSpecJson {
                 )
             },
             spaceLanguage = if (json.has("spaceLanguage")) json.getBoolean("spaceLanguage") else null,
+            // A malformed list (hand-edited, or a glyph from a newer build) drops the legends.
+            keyLegends = if (json.has("keyLegends")) LookKeyLegends.parse(json.getString("keyLegends")) else null,
+            shiftFilled = if (json.has("shiftFilled")) json.getBoolean("shiftFilled") else null,
         ))
     }
 
@@ -494,6 +513,7 @@ object ThemeSpecJson {
                 shadowDyDp = g.shadowDyDp.within(ThemeSpecXml.SHADOW_RANGE),
                 labelScale = g.labelScale.within(ThemeSpecXml.LABEL_SCALE_RANGE),
                 labelWeight = g.labelWeight?.takeIf { it in ThemeSpecXml.WEIGHT_RANGE },
+                functionLabelScale = g.functionLabelScale.within(ThemeSpecXml.LABEL_SCALE_RANGE),
             ),
             functionChars = spec.functionChars?.takeIf { it.length <= ThemeSpecXml.MAX_FUNCTION_CHARS },
             preview = spec.preview?.let { p ->

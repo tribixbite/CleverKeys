@@ -95,6 +95,10 @@ enum class ThemeColorRole(val xmlName: String, val jsonKey: String, val diy: Boo
  * @property bar the suggestion-bar arrangement ([LookBar]); null = not defined (scrolling chips).
  * @property action the editor-action key's style ([LookActionStyle]); null = not defined.
  * @property spaceLanguage whether the space bar shows the language name; null = not defined (no).
+ * @property keyLegends per-key legends ([LookKeyLegend]); null = not defined (none), empty =
+ *   defined as none.
+ * @property shiftFilled whether Shift draws a filled arrow while shifted ([LookShiftGlyph]); null =
+ *   not defined (no).
  */
 data class ThemeSpec(
     val name: String? = null,
@@ -112,13 +116,15 @@ data class ThemeSpec(
     val bar: LookBar? = null,
     val action: LookActionStyle? = null,
     val spaceLanguage: Boolean? = null,
+    val keyLegends: List<LookKeyLegend>? = null,
+    val shiftFilled: Boolean? = null,
 ) {
     /** True when the spec defines nothing at all (a `<theme/>` with no attributes). */
     val isEmpty: Boolean
         get() = colors.isEmpty() && light.isEmpty() && dark.isEmpty() && geometry == LookGeometry() &&
             functionChars == null && legends == null && pillKeys == null && letterKeys == null &&
             preview == null && hintStyle == null && dynamicColor == null && bar == null && action == null &&
-            spaceLanguage == null
+            spaceLanguage == null && keyLegends == null && shiftFilled == null
 
     /** The colours for one system mode: [colors] with that mode's variant on top. */
     fun colorsFor(systemLight: Boolean): Map<ThemeColorRole, Int> = colors + (if (systemLight) light else dark)
@@ -152,6 +158,10 @@ data class RenderedThemeSpec(
     val action: LookActionStyle? = null,
     /** Whether the space bar shows the language name. */
     val spaceLanguage: Boolean = false,
+    /** Per-key legends ([LookKeyLegend]). */
+    val keyLegends: List<LookKeyLegend> = emptyList(),
+    /** Whether Shift draws a filled arrow while shifted ([LookShiftGlyph]). */
+    val shiftFilled: Boolean = false,
 )
 
 /** Resolution of specs: flatten a mode, layer a spec over its base, render, convert. Pure. */
@@ -179,6 +189,7 @@ object ThemeSpecs {
                 shadowDyDp = t.geometry.shadowDyDp ?: b.geometry.shadowDyDp,
                 labelScale = t.geometry.labelScale ?: b.geometry.labelScale,
                 labelWeight = t.geometry.labelWeight ?: b.geometry.labelWeight,
+                functionLabelScale = t.geometry.functionLabelScale ?: b.geometry.functionLabelScale,
             ),
             functionChars = t.functionChars ?: b.functionChars,
             legends = t.legends ?: b.legends,
@@ -190,6 +201,8 @@ object ThemeSpecs {
             bar = t.bar ?: b.bar,
             action = t.action ?: b.action,
             spaceLanguage = t.spaceLanguage ?: b.spaceLanguage,
+            keyLegends = t.keyLegends ?: b.keyLegends,
+            shiftFilled = t.shiftFilled ?: b.shiftFilled,
         )
     }
 
@@ -276,6 +289,8 @@ object ThemeSpecs {
             bar = flat.bar,
             action = flat.action,
             spaceLanguage = flat.spaceLanguage == true,
+            keyLegends = flat.keyLegends ?: emptyList(),
+            shiftFilled = flat.shiftFilled == true,
         )
     }
 
@@ -321,6 +336,8 @@ object ThemeSpecs {
         bar = look.bar,
         action = look.action,
         spaceLanguage = look.spaceLanguage.takeIf { it },
+        keyLegends = look.keyLegends.takeIf { it.isNotEmpty() },
+        shiftFilled = look.shiftFilled.takeIf { it },
     )
 
     /**

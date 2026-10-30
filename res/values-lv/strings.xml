@@ -2659,6 +2659,18 @@
     <string name="theme_letter_emoji">Emocijzīmju taustiņš zīmēts kā burta taustiņš</string>
     <string name="theme_function_chars">Rakstzīmes, kas zīmētas kā funkciju taustiņi</string>
     <string name="theme_dynamic_color">Sekot ekrāntapetes krāsām (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Funkciju taustiņu teksta izmērs</string>
+    <string name="theme_shift_filled">Aizpildīta Shift bultiņa lielo burtu režīmā</string>
+    <string name="theme_section_bar">Ieteikumu joslas izkārtojums</string>
+    <string name="theme_bar_desc">Fiksētas vietas ritināmu ieteikumu vietā, kā pazīstamās tastatūrās. Mainās tikai attēlojums: atstarpe joprojām ievieto to pašu vārdu.</string>
+    <string name="theme_bar_slots">Vietas</string>
+    <string name="theme_bar_centre">Labākais vārds vidū</string>
+    <string name="theme_bar_quote_typed">Ierakstītais vārds pēdiņās</string>
+    <string name="theme_bar_emphasis_commit">Gaidošs labojums treknrakstā</string>
+    <string name="theme_bar_emphasis_centre">Blāvāki sānu vārdi</string>
+    <string name="theme_bar_separators">Atdalītāji starp ieteikumiem</string>
+    <string name="theme_bar_separators_show">Rādīt</string>
+    <string name="theme_bar_separators_hide">Slēpt</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Balss ievade (ierīcē)</string>
     <string name="cmd_voice_input_desc">Diktējiet ar importēto balss pakotni. Runa tiek atpazīta tālrunī un nekad to neatstāj.</string>

@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.theme
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
@@ -73,6 +74,24 @@ class ThemePreviewSceneTest {
     fun layoutWithoutTwoLetterKeysHasNoTrail() {
         assertThat(ThemePreviewScene.trailPoints("a", mapOf('a' to (1f to 1f)))).isEmpty()
         assertThat(ThemePreviewScene.trailPoints("abc", emptyMap())).isEmpty()
+    }
+
+    /**
+     * The Theme Creator preview shows a theme's bar arrangement live (2026-10-30): its bar lists
+     * the sample words with the first highlighted and the second as the typed word, so slots,
+     * centre, quotes and emphasis are all visible.
+     */
+    @Test
+    fun thePreviewBarShowsTheTypedWordSoTheArrangementIsVisible() {
+        val words = ThemePreviewScene.sampleWords("color,colors,colorful")
+        assertThat(ThemePreviewScene.barTypedWord(words)).isEqualTo("colors")
+        assertThat(ThemePreviewScene.barTypedWord(listOf("only"))).isNull()
+        val entries = words.map { tribixbite.cleverkeys.Suggestion.Word(it) }
+        val bar = LookBar(slots = 3, quoteTyped = true)
+        val slots = LookBarArrangement.arrange(entries, 0, ThemePreviewScene.barTypedWord(words), bar)!!
+        assertThat(slots.map { it.entry }).containsExactly(1, 0, 2).inOrder()
+        assertWithMessage("the typed sample is quoted when the theme quotes it").that(slots[0].quoted).isTrue()
+        assertThat(slots[1].centre).isTrue()
     }
 
     @Test

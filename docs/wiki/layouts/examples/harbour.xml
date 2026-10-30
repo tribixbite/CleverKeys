@@ -47,6 +47,7 @@
       shadow_dy="1"
       label_scale="1.15"
       label_weight="500"
+      function_label_scale="1"
       function_chars=",."
       hints="digits"
       pill_keys="enter action"
@@ -68,7 +69,9 @@
       action_accent="search send"
       action_lowercase="false"
       action_icon_scale="1"
-      space_language="false">
+      space_language="false"
+      key_legends=""
+      shift_filled="false">
     <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
     <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
   </theme>

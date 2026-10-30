@@ -188,6 +188,8 @@ object KeyboardLooks {
             ),
             accent = emptySet(),
         ),
+        // Gboard fills the Shift arrow while shifted, and adds a bar under it in Caps Lock (§13).
+        shiftFilled = true,
     )
 
     /**
@@ -243,6 +245,12 @@ object KeyboardLooks {
             ),
             accent = emptySet(),
         ),
+        // SwiftKey's small mic over the comma and ",!?" over the period (Pixel 8 Pro 2026-10-27,
+        // compare-swiftkey-*.png; research §13), in place of the hidden hints.
+        keyLegends = listOf(
+            LookKeyLegend(',', glyph = LookLegendGlyph.MIC),
+            LookKeyLegend('.', text = ",!?"),
+        ),
     )
 
     /**
@@ -286,6 +294,9 @@ object KeyboardLooks {
             // 1.jpg: 89 px keys at a 105 px pitch, 116 px keys 150 px apart, ~14 px corners.
             keyGapHorizontal = 0.15f, keyGapVertical = 0.23f, cornerRadiusDp = 6f,
             borderWidthDp = 0f, shadowDyDp = 1f, labelScale = 1.1f, labelWeight = 400,
+            // One UI draws "!#1", "1/2" and "ABC" at 0.875–1.0 of a digit (1.jpg–3.jpg, §13):
+            // 0.75 × 1.25 = 0.94 of the main size.
+            functionLabelScale = 1.25f,
         ),
         legends = LookLegends.NONE,
         // One UI's preview plate (`preview_*` colours, research §4).

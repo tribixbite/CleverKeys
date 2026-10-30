@@ -19,7 +19,9 @@ What is mimicked:
   (Appearance -> "Show gesture hints on familiar looks" shows them);
 - the second row indented by half a key; Shift and Delete 1.5 keys wide;
 - bottom row "123 | emoji | , | space | . | enter" at 1 / 1 / 1 / 4.5 / 1 / 1.5 key widths,
-  with dictation as the comma's top hint and ? ! on the period, where SwiftKey draws them.
+  with dictation as the comma's top swipe and ? ! on the period; the SwiftKey-style look draws
+  SwiftKey's own marks for them (a small mic over the comma, ",!?" over the period — the comma
+  itself stays on its own key, a layout never repeats a key).
 
 How the SwiftKey features map onto CleverKeys keys:
 - 123 is `switch_numeric` with a "123" label. It opens CleverKeys' own number pane; the

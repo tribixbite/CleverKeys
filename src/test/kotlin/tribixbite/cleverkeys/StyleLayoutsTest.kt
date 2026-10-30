@@ -446,7 +446,8 @@ class StyleLayoutsTest {
         val actual = letters.associate { it.getKeyValue(0)!!.getChar() to it.getKeyValue(7)?.getString() }
         assertThat(actual).containsExactlyEntriesIn(expected)
 
-        // Dictation is the comma's top hint; ? and ! sit on the period.
+        // Dictation is the comma's top hint; ? and ! sit on the period (SwiftKey-style draws
+        // SwiftKey's marks over them, a mic and ",!?": theme/LookKeyMarks.kt, 2026-10-30).
         val bottom = kw.rows.last().keys
         val comma = bottom.first { it.getKeyValue(0) == key(",") }
         assertThat(comma.getKeyValue(7)).isEqualTo(key("voice_typing"))

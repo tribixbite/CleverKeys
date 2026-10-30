@@ -130,6 +130,7 @@ The same colour attributes are allowed on `<theme>` (both modes), `<light>` and 
 | `shadow_dy` | 0–8 (dp) | How far below each key its `key_shadow` is drawn (0 = none). |
 | `label_scale` | 0.5–2 | Label size relative to **your** label size setting. |
 | `label_weight` | 100–900 | Label font weight (400 regular, 700 bold; Android 9+). |
+| `function_label_scale` | 0.5–2 | Size of the function keys' text labels (`!#1`, `ABC`, `1/2`, `123`) relative to CleverKeys' size for them (three quarters of a letter); icons keep their size. Samsung-style uses 1.25, about as large as One UI draws them. |
 
 Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<keyboard>`,
 `<row>` and `<key>` use the Appearance slider's unit and win over these.
@@ -160,6 +161,8 @@ Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<ke
 | `action_lowercase` | `true` / `false` | Show the action's word in lower case ("go", "search"), as iOS 18 does (default `false`). |
 | `action_icon_scale` | 0.5–2 | Size of the action-key icons relative to CleverKeys' default (Samsung-style uses 1.3). |
 | `space_language` | `true` / `false` | Print the current language on the space bar ("English (US)"), as Samsung Keyboard does (default `false`). Appearance → "Language name on the space bar" turns it off everywhere. |
+| `key_legends` | `key:text` or `key:@mic` entries, space-separated | A small mark at the top of a key in place of its gesture hints, as SwiftKey draws a microphone over the comma and `,!?` over the period (SwiftKey-style: `,:@mic .:,!?`). Text is 1–4 characters without spaces; `@mic` is CleverKeys' voice icon and is drawn only when the key has a voice-input swipe, a text mark only when the key has any swipe. Hidden while every gesture hint is drawn (`hints="all"`, or **Show gesture hints on familiar looks**). `""` = none. |
+| `shift_filled` | `true` / `false` | Draw Shift as a filled arrow while shifted, and a filled arrow over a bar in Caps Lock, as Gboard does (CleverKeys' own icon; default `false`, the outline glyph). |
 | `name` | text | Name for the theme when it is saved or exported. |
 
 ## `<row>`
@@ -283,6 +286,7 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       shadow_dy="1"
       label_scale="1.15"
       label_weight="500"
+      function_label_scale="1"
       function_chars=",."
       hints="digits"
       pill_keys="enter action"
@@ -304,7 +308,9 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       action_accent="search send"
       action_lowercase="false"
       action_icon_scale="1"
-      space_language="false">
+      space_language="false"
+      key_legends=""
+      shift_filled="false">
     <light keyboard_background="#E8EEF4" bar_background="#E8EEF4"/>
     <dark key="#1C2B3A" key_pressed="#2E4458" key_modifier="#132130" key_special="#132130" label="#E6EEF5" sub_label="#9FB3C8" secondary_label="#9FB3C8" border_color="#2E4458" bar_text="#E6EEF5" bar_background="#0B1621" bar_highlight="#7FB8E6" keyboard_background="#0B1621" surface="#1C2B3A" label_pressed="#E6EEF5" modifier_label="#D9E2EC" popup="#2E4458" popup_label="#E6EEF5"/>
   </theme>

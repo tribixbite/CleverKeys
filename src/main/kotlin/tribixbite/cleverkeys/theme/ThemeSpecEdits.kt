@@ -41,7 +41,8 @@ object ThemeSpecEdits {
         BORDER_WIDTH(0f..4f, 0.5f),
         SHADOW(0f..4f, 0.1f),
         LABEL_SCALE(ThemeSpecXml.LABEL_SCALE_RANGE, 0.05f),
-        LABEL_WEIGHT(100f..900f, 100f);
+        LABEL_WEIGHT(100f..900f, 100f),
+        FUNCTION_LABEL_SCALE(ThemeSpecXml.LABEL_SCALE_RANGE, 0.05f);
 
         fun get(g: LookGeometry): Float? = when (this) {
             GAP_HORIZONTAL -> g.keyGapHorizontal
@@ -51,6 +52,7 @@ object ThemeSpecEdits {
             SHADOW -> g.shadowDyDp
             LABEL_SCALE -> g.labelScale
             LABEL_WEIGHT -> g.labelWeight?.toFloat()
+            FUNCTION_LABEL_SCALE -> g.functionLabelScale
         }
 
         /** [g] with this field set to [v] snapped to the step and clamped, or unset (null). */
@@ -64,6 +66,7 @@ object ThemeSpecEdits {
                 SHADOW -> g.copy(shadowDyDp = s)
                 LABEL_SCALE -> g.copy(labelScale = s)
                 LABEL_WEIGHT -> g.copy(labelWeight = s?.toInt())
+                FUNCTION_LABEL_SCALE -> g.copy(functionLabelScale = s)
             }
         }
 
@@ -77,11 +80,66 @@ object ThemeSpecEdits {
         /** The value a slider shows while the field is unset: what the keyboard uses without it. */
         val neutral: Float
             get() = when (this) {
-                LABEL_SCALE -> 1f
+                LABEL_SCALE, FUNCTION_LABEL_SCALE -> 1f
                 LABEL_WEIGHT -> 400f
                 else -> range.start
             }
     }
+
+    // ── Suggestion-bar arrangement ([LookBar], research §10) ──
+
+    /** The bar-slot slider: whole slots, [LookBar.MIN_SLOTS]..[LookBar.MAX_SLOTS]. */
+    val BAR_SLOTS_RANGE: ClosedFloatingPointRange<Float> = LookBar.MIN_SLOTS.toFloat()..LookBar.MAX_SLOTS.toFloat()
+
+    /** The bar slider's step (one slot). */
+    const val BAR_SLOTS_STEP = 1f
+
+    /**
+     * [ext] with the bar arrangement defined ([define], keeping an existing one or starting from
+     * the familiar three-slot bar) or not (null = the keyboard's scrolling suggestion chips).
+     */
+    fun withBarDefined(ext: ThemeSpec, define: Boolean): ThemeSpec =
+        ext.copy(bar = if (define) ext.bar ?: LookBar() else null)
+
+    /** [ext]'s bar (defined first, as [withBarDefined]) changed by [edit]. */
+    fun withBar(ext: ThemeSpec, edit: (LookBar) -> LookBar): ThemeSpec = ext.copy(bar = edit(ext.bar ?: LookBar()))
+
+    /** [ext] with [slider] slots (rounded to a whole slot and clamped to [BAR_SLOTS_RANGE]). */
+    fun withBarSlots(ext: ThemeSpec, slider: Float): ThemeSpec {
+        val slots = Math.round(slider.coerceIn(BAR_SLOTS_RANGE)).coerceIn(LookBar.MIN_SLOTS, LookBar.MAX_SLOTS)
+        return withBar(ext) { it.copy(slots = slots) }
+    }
+
+    /** The separator choice: follow what is below, draw them, or draw none. */
+    enum class Separators { FOLLOW, SHOW, HIDE }
+
+    /**
+     * Whether [ext] defines the bar separators (its COMMON look colour [ThemeColorRole.BAR_SEPARATOR]):
+     * absent = [Separators.FOLLOW], fully transparent = [Separators.HIDE], else [Separators.SHOW].
+     */
+    fun separators(ext: ThemeSpec): Separators {
+        val c = ext.colors[ThemeColorRole.BAR_SEPARATOR] ?: return Separators.FOLLOW
+        return if ((c ushr 24) == 0) Separators.HIDE else Separators.SHOW
+    }
+
+    /**
+     * [ext] with the separator [choice]: HIDE stores a transparent separator (what SwiftKey- and
+     * Samsung-style draw), FOLLOW removes the colour, SHOW keeps a visible colour already set or
+     * stores the default one ([ThemeSpecs.defaultSeparator] of [subLabel], the theme's sub-label
+     * colour) — the colour row above edits it further.
+     */
+    fun withSeparators(ext: ThemeSpec, choice: Separators, subLabel: Int): ThemeSpec {
+        val role = ThemeColorRole.BAR_SEPARATOR
+        val color = when (choice) {
+            Separators.FOLLOW -> null
+            Separators.HIDE -> TRANSPARENT
+            Separators.SHOW -> ext.colors[role]?.takeIf { (it ushr 24) != 0 } ?: ThemeSpecs.defaultSeparator(subLabel)
+        }
+        return withColor(ext, Mode.BOTH, role, color)
+    }
+
+    /** A colour with alpha 0: "no separator". */
+    const val TRANSPARENT = 0x00000000
 
     /** [ext], or null when it defines nothing (the theme stays a version-1 theme). */
     fun stored(ext: ThemeSpec): ThemeSpec? = ext.copy(name = null).takeIf { !it.isEmpty }

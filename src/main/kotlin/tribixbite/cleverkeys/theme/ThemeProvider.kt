@@ -335,6 +335,8 @@ class ThemeProvider(
             lookBar = r.bar,
             lookAction = r.action,
             lookSpaceLanguage = r.spaceLanguage,
+            lookKeyLegends = r.keyLegends,
+            lookShiftFilled = r.shiftFilled,
         )
     }
 
@@ -433,6 +435,8 @@ class ThemeProvider(
             lookBar = look.bar,
             lookAction = look.action,
             lookSpaceLanguage = look.spaceLanguage,
+            lookKeyLegends = look.keyLegends,
+            lookShiftFilled = look.shiftFilled,
         )
     }
 

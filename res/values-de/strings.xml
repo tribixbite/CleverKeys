@@ -2623,6 +2623,18 @@
     <string name="theme_letter_emoji">Emoji-Taste wie eine Buchstabentaste</string>
     <string name="theme_function_chars">Zeichen, die als Funktionstasten erscheinen</string>
     <string name="theme_dynamic_color">Hintergrundbildfarben folgen (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Textgröße Funktionstasten</string>
+    <string name="theme_shift_filled">Gefüllter Shift-Pfeil bei Großschreibung</string>
+    <string name="theme_section_bar">Layout der Vorschlagsleiste</string>
+    <string name="theme_bar_desc">Feste Felder statt scrollender Vorschläge, wie bei bekannten Tastaturen. Nur die Darstellung ändert sich: Die Leertaste fügt weiterhin dasselbe Wort ein.</string>
+    <string name="theme_bar_slots">Felder</string>
+    <string name="theme_bar_centre">Bestes Wort in der Mitte</string>
+    <string name="theme_bar_quote_typed">Getipptes Wort in Anführungszeichen</string>
+    <string name="theme_bar_emphasis_commit">Anstehende Korrektur fett</string>
+    <string name="theme_bar_emphasis_centre">Seitliche Wörter abgeblendet</string>
+    <string name="theme_bar_separators">Trenner zwischen Vorschlägen</string>
+    <string name="theme_bar_separators_show">Anzeigen</string>
+    <string name="theme_bar_separators_hide">Ausblenden</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Spracheingabe (auf dem Gerät)</string>
     <string name="cmd_voice_input_desc">Mit dem importierten Spracheingabe-Paket diktieren. Die Sprache wird auf dem Telefon erkannt und verlässt es nie.</string>

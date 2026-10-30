@@ -2658,6 +2658,18 @@
     <string name="theme_letter_emoji">Touche emoji dessinée comme une lettre</string>
     <string name="theme_function_chars">Caractères dessinés comme des touches de fonction</string>
     <string name="theme_dynamic_color">Suivre les couleurs du fond d\'écran (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Taille du texte des touches de fonction</string>
+    <string name="theme_shift_filled">Flèche Maj pleine en majuscules</string>
+    <string name="theme_section_bar">Disposition de la barre de suggestions</string>
+    <string name="theme_bar_desc">Des cases fixes au lieu de suggestions défilantes, comme sur les claviers connus. Seul le dessin change : la barre d\'espace insère toujours le même mot.</string>
+    <string name="theme_bar_slots">Cases</string>
+    <string name="theme_bar_centre">Meilleur mot au centre</string>
+    <string name="theme_bar_quote_typed">Mot tapé entre guillemets</string>
+    <string name="theme_bar_emphasis_commit">Correction en attente en gras</string>
+    <string name="theme_bar_emphasis_centre">Mots latéraux atténués</string>
+    <string name="theme_bar_separators">Séparateurs entre les suggestions</string>
+    <string name="theme_bar_separators_show">Afficher</string>
+    <string name="theme_bar_separators_hide">Masquer</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Saisie vocale (sur l\'appareil)</string>
     <string name="cmd_voice_input_desc">Dictez avec le pack vocal que vous avez importé. La parole est reconnue sur le téléphone et ne le quitte jamais.</string>

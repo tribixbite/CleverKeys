@@ -2641,6 +2641,18 @@
     <string name="theme_letter_emoji">کلید ایموجی مانند کلید حرف</string>
     <string name="theme_function_chars">نویسه‌هایی که به شکل کلید عملکرد کشیده می‌شوند</string>
     <string name="theme_dynamic_color">پیروی از رنگ‌های کاغذدیواری (Android 12 و بالاتر)</string>
+    <string name="theme_shape_function_label_scale">اندازه متن کلیدهای عملکرد</string>
+    <string name="theme_shift_filled">پیکان پرشده Shift هنگام فعال بودن</string>
+    <string name="theme_section_bar">چیدمان نوار پیشنهاد</string>
+    <string name="theme_bar_desc">خانه‌های ثابت به‌جای پیشنهادهای پیمایشی، مانند صفحه‌کلیدهای آشنا. فقط نمایش تغییر می‌کند: فاصله همچنان همان واژه را درج می‌کند.</string>
+    <string name="theme_bar_slots">خانه‌ها</string>
+    <string name="theme_bar_centre">بهترین واژه در وسط</string>
+    <string name="theme_bar_quote_typed">واژه تایپ‌شده در گیومه</string>
+    <string name="theme_bar_emphasis_commit">اصلاح در انتظار به‌صورت پررنگ</string>
+    <string name="theme_bar_emphasis_centre">کم‌رنگ کردن واژه‌های کناری</string>
+    <string name="theme_bar_separators">جداکننده بین پیشنهادها</string>
+    <string name="theme_bar_separators_show">نمایش</string>
+    <string name="theme_bar_separators_hide">پنهان</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">ورودی صوتی (روی دستگاه)</string>
     <string name="cmd_voice_input_desc">با بستهٔ صوتی‌ای که وارد کرده‌اید دیکته کنید. گفتار روی گوشی تشخیص داده می‌شود و هرگز از آن خارج نمی‌شود.</string>

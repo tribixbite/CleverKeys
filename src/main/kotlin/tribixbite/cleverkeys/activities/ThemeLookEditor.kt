@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import tribixbite.cleverkeys.theme.BarEmphasis
 import tribixbite.cleverkeys.theme.HexColorText
 import tribixbite.cleverkeys.theme.LookHintStyle
 import tribixbite.cleverkeys.theme.LookLegends
@@ -55,7 +58,7 @@ import tribixbite.cleverkeys.theme.ThemeSpecXml
 /**
  * The Theme Creator's "Keyboard look" section (2026-10-28): everything a layout `<theme>` can
  * define beyond the 17 colours above it — look colours, light/dark-mode colours, key shape,
- * gesture hints, the key-press preview and key roles. Every field starts unset ("Use keyboard
+ * gesture hints, the key-press preview, the suggestion bar's arrangement and key roles. Every field starts unset ("Use keyboard
  * setting" / "Not set") and the theme stays a version-1 theme until one is set
  * (ThemeSpecEdits.stored). Rules: [ThemeSpecEdits]; storage: `CustomTheme.extension`.
  *
@@ -184,6 +187,8 @@ internal fun ThemeLookEditor(
                 }
             }
 
+            BarArrangementEditor(extension, baseColors, onChange)
+
             SectionTitle(R.string.theme_section_key_roles)
             UseSettingRow(extension.pillKeys == null) { follow ->
                 onChange(extension.copy(pillKeys = if (follow) null else emptySet()))
@@ -198,6 +203,9 @@ internal fun ThemeLookEditor(
                     val set = pills.orEmpty()
                     onChange(extension.copy(pillKeys = if (on) set + key else set - key))
                 }
+            }
+            SwitchRow(stringResource(R.string.theme_shift_filled), extension.shiftFilled == true) { on ->
+                onChange(extension.copy(shiftFilled = if (on) true else null))
             }
             SwitchRow(
                 stringResource(R.string.theme_letter_emoji),
@@ -230,6 +238,70 @@ internal fun ThemeLookEditor(
                 editing = null
             },
         )
+    }
+}
+
+/**
+ * The suggestion bar's arrangement ([tribixbite.cleverkeys.theme.LookBar], 2026-10-30): "Use
+ * keyboard setting" = CleverKeys' scrolling chips; otherwise the slot count, best word in the
+ * centre, the typed word in quotation marks, how the slots are inked, and the separators. The
+ * preview above redraws its bar with every change (ThemeKeyboardPreviewView). Rules:
+ * [ThemeSpecEdits] (pure, `ThemeSpecEditsTest`).
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BarArrangementEditor(
+    extension: ThemeSpec,
+    baseColors: Map<ThemeColorRole, Int>,
+    onChange: (ThemeSpec) -> Unit,
+) {
+    SectionTitle(R.string.theme_section_bar)
+    Text(
+        stringResource(R.string.theme_bar_desc),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    UseSettingRow(extension.bar == null) { follow -> onChange(ThemeSpecEdits.withBarDefined(extension, !follow)) }
+    extension.bar?.let { bar ->
+        PlainSlider(
+            stringResource(R.string.theme_bar_slots), bar.slots.toFloat(),
+            ThemeSpecEdits.BAR_SLOTS_RANGE, ThemeSpecEdits.BAR_SLOTS_STEP,
+        ) { onChange(ThemeSpecEdits.withBarSlots(extension, it)) }
+        SwitchRow(stringResource(R.string.theme_bar_centre), bar.centreBest) { on ->
+            onChange(ThemeSpecEdits.withBar(extension) { it.copy(centreBest = on) })
+        }
+        SwitchRow(stringResource(R.string.theme_bar_quote_typed), bar.quoteTyped) { on ->
+            onChange(ThemeSpecEdits.withBar(extension) { it.copy(quoteTyped = on) })
+        }
+        // Wraps rather than scrolls: both choices stay visible in narrow and translated layouts.
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            for ((emphasis, res) in listOf(
+                BarEmphasis.COMMIT to R.string.theme_bar_emphasis_commit,
+                BarEmphasis.CENTRE to R.string.theme_bar_emphasis_centre,
+            )) {
+                FilterChip(
+                    selected = bar.emphasis == emphasis,
+                    onClick = { onChange(ThemeSpecEdits.withBar(extension) { it.copy(emphasis = emphasis) }) },
+                    label = { Text(stringResource(res)) },
+                )
+            }
+        }
+    }
+    Text(stringResource(R.string.theme_bar_separators), style = MaterialTheme.typography.bodyMedium)
+    val separators = ThemeSpecEdits.separators(extension)
+    val subLabel = baseColors[ThemeColorRole.SUB_LABEL] ?: 0xFF808080.toInt()
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        for ((choice, res) in listOf(
+            ThemeSpecEdits.Separators.FOLLOW to R.string.theme_use_keyboard_setting,
+            ThemeSpecEdits.Separators.SHOW to R.string.theme_bar_separators_show,
+            ThemeSpecEdits.Separators.HIDE to R.string.theme_bar_separators_hide,
+        )) {
+            FilterChip(
+                selected = separators == choice,
+                onClick = { onChange(ThemeSpecEdits.withSeparators(extension, choice, subLabel)) },
+                label = { Text(stringResource(res)) },
+            )
+        }
     }
 }
 
@@ -405,6 +477,7 @@ private fun geometryLabel(field: GeometryField): Int = when (field) {
     GeometryField.SHADOW -> R.string.theme_shape_shadow
     GeometryField.LABEL_SCALE -> R.string.theme_shape_label_scale
     GeometryField.LABEL_WEIGHT -> R.string.theme_shape_label_weight
+    GeometryField.FUNCTION_LABEL_SCALE -> R.string.theme_shape_function_label_scale
 }
 
 private fun hintsLabel(l: LookLegends): Int = when (l) {

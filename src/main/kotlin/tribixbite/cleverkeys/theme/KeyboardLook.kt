@@ -67,6 +67,17 @@ data class KeyboardLook(
      * bar" (`look_space_language`) turns it off.
      */
     val spaceLanguage: Boolean = false,
+    /**
+     * Marks the product draws on particular keys in place of their gesture hints
+     * ([LookKeyLegend]: SwiftKey's mic over the comma, ",!?" over the period). Drawn only while
+     * the look hides corner labels ([LookKeyLegends.legendFor]); empty for most looks.
+     */
+    val keyLegends: List<LookKeyLegend> = emptyList(),
+    /**
+     * Whether Shift draws a FILLED arrow while shifted, and a filled arrow over a bar in Caps
+     * Lock (Gboard, [LookShiftGlyph]); the outline glyph at rest either way.
+     */
+    val shiftFilled: Boolean = false,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark
@@ -162,6 +173,12 @@ data class LookGeometry(
     val labelScale: Float? = null,
     /** Main label font weight, 100..900 (400 = regular); applied on Android 9+. */
     val labelWeight: Int? = null,
+    /**
+     * Multiplier on the FUNCTION-key text labels ("!#1", "1/2", "ABC", "123"), which CleverKeys
+     * draws at [LookLabelSizing.SMALLER_FONT] of the main size; One UI draws them about as large
+     * as its letters ([LookLabelSizing.mainLabelSize], research §12 and §13). Icons are not affected.
+     */
+    val functionLabelScale: Float? = null,
 )
 
 /** Which corner labels a look draws. */
@@ -266,6 +283,8 @@ object KeyboardLookGeometry {
         val labelScale: Float,
         /** Main label weight, or null for the default face. */
         val labelWeight: Int?,
+        /** Multiplier on function-key text labels ([LookLabelSizing]; 1 = CleverKeys' size). */
+        val functionLabelScale: Float = 1f,
     )
 
     /**
@@ -290,6 +309,7 @@ object KeyboardLookGeometry {
             shadowDy = (look.shadowDyDp ?: 0f).coerceAtLeast(0f) * density,
             labelScale = (look.labelScale ?: 1f).coerceIn(MIN_LABEL_SCALE, MAX_LABEL_SCALE),
             labelWeight = look.labelWeight?.coerceIn(100, 900),
+            functionLabelScale = (look.functionLabelScale ?: 1f).coerceIn(MIN_LABEL_SCALE, MAX_LABEL_SCALE),
         )
     }
 
@@ -297,4 +317,26 @@ object KeyboardLookGeometry {
     const val MAX_GAP = 0.5f
     const val MIN_LABEL_SCALE = 0.5f
     const val MAX_LABEL_SCALE = 2f
+}
+
+/**
+ * The size a key's MAIN label is drawn at. CleverKeys draws multi-character and function-key
+ * labels (`FLAG_SMALLER_FONT`: "!#1", "ABC", "1/2", the action key's text, key-font icons such
+ * as emoji) at [SMALLER_FONT] of the main size. A look's [LookGeometry.functionLabelScale]
+ * enlarges the TEXT ones only — never a key-font icon — so Samsung-style draws "!#1", "1/2" and
+ * "ABC" about as large as One UI does. Pure; `KeyboardLookGeometryTest`.
+ */
+object LookLabelSizing {
+    /** CleverKeys' size for `FLAG_SMALLER_FONT` labels, relative to the main label. */
+    const val SMALLER_FONT = 0.75f
+
+    /**
+     * [main] (the main label size) for a label that is [smaller] (`FLAG_SMALLER_FONT`) and drawn
+     * in the key font ([keyFont]: icons), under a look's function-label multiplier [functionScale].
+     */
+    fun mainLabelSize(main: Float, smaller: Boolean, keyFont: Boolean, functionScale: Float): Float = when {
+        !smaller -> main
+        keyFont -> main * SMALLER_FONT
+        else -> main * SMALLER_FONT * functionScale
+    }
 }

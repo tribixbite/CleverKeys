@@ -94,6 +94,15 @@ class KeyboardLookGeometryTest {
         assertThat(e.labelScale).isEqualTo(KeyboardLookGeometry.MAX_LABEL_SCALE)
         assertThat(e.labelWeight).isEqualTo(900)
     }
+
+    @Test
+    fun aLooksFunctionKeyTextSizeIsResolvedAndClampedEveryOtherThemeKeepsOne() {
+        assertThat(resolve(null).functionLabelScale).isEqualTo(1f)
+        assertThat(resolve(LookGeometry(cornerRadiusDp = 8f)).functionLabelScale).isEqualTo(1f)
+        assertThat(resolve(LookGeometry(functionLabelScale = 1.25f)).functionLabelScale).isEqualTo(1.25f)
+        assertThat(resolve(LookGeometry(functionLabelScale = 9f)).functionLabelScale).isEqualTo(KeyboardLookGeometry.MAX_LABEL_SCALE)
+    }
+
     // ── legends (corner labels) and per-key shapes (lead review 2026-10-27) ──────────
 
     @Test

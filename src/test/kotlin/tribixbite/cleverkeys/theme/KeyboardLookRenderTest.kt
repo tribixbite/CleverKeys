@@ -354,4 +354,50 @@ class KeyboardLookRenderTest {
             .that(provider.getTheme("look_missing")).isNotNull()
         assertThat(provider.getAllThemeIds()["Looks"]).containsExactlyElementsIn(KeyboardLooks.IDS).inOrder()
     }
+
+    /**
+     * 2026-10-30: the per-key marks reach the renderer — SwiftKey-style's comma/period legends,
+     * Gboard-style's filled Shift and Samsung-style's function-key text size — from the look
+     * (ThemeProvider) and from a custom theme or layout `<theme>` that defines them; every other
+     * theme draws none of them.
+     */
+    @Test
+    fun perKeyMarksReachTheThemeFromALookAndFromASpec() {
+        val provider = ThemeProvider(context, mockk(relaxed = true))
+        val swiftkey = provider.getTheme(KeyboardLooks.SWIFTKEY)
+        assertThat(swiftkey.lookKeyLegends).isEqualTo(KeyboardLooks.swiftkeyLook.keyLegends)
+        assertThat(swiftkey.lookShiftFilled).isFalse()
+        val gboard = provider.getTheme(KeyboardLooks.GBOARD)
+        assertThat(gboard.lookShiftFilled).isTrue()
+        assertThat(gboard.lookKeyLegends).isEmpty()
+        val samsung = Theme.Computed(provider.getTheme(KeyboardLooks.SAMSUNG), config(), 100f, layout())
+        assertThat(samsung.function_label_scale).isEqualTo(KeyboardLooks.samsungLook.geometry.functionLabelScale)
+        assertWithMessage("a non-look theme keeps CleverKeys' function-key text size")
+            .that(Theme.Computed(Theme(context, darkKeyboardColorScheme(), density = 2f), config(), 100f, layout()).function_label_scale)
+            .isEqualTo(1f)
+        val plain = Theme(context, darkKeyboardColorScheme(), density = 2f, lookKeyLegends = KeyboardLooks.swiftkeyLook.keyLegends, lookShiftFilled = true)
+        assertWithMessage("marks need a look palette (a spec renders one)").that(plain.lookKeyLegends).isEmpty()
+        assertThat(plain.lookShiftFilled).isFalse()
+
+        val spec = ThemeSpec(
+            keyLegends = listOf(LookKeyLegend('.', text = "!?")), shiftFilled = true,
+            geometry = LookGeometry(functionLabelScale = 1.4f),
+        )
+        val custom = provider.themeForCustom(CustomTheme(id = "custom_marks", name = "Marks", colors = darkKeyboardColorScheme(), extension = spec))
+        assertThat(custom.lookKeyLegends).isEqualTo(spec.keyLegends)
+        assertThat(custom.lookShiftFilled).isTrue()
+        assertThat(Theme.Computed(custom, config(), 100f, layout()).function_label_scale).isEqualTo(1.4f)
+    }
+
+    /** 2026-10-30: a custom theme's bar arrangement reaches the theme the keyboard and the Creator preview draw. */
+    @Test
+    fun aCustomThemesBarArrangementReachesTheTheme() {
+        val provider = ThemeProvider(context, mockk(relaxed = true))
+        val bar = LookBar(slots = 5, centreBest = false, quoteTyped = true, emphasis = BarEmphasis.CENTRE)
+        val custom = provider.themeForCustom(CustomTheme(id = "custom_bar", name = "Bar", colors = darkKeyboardColorScheme(), extension = ThemeSpec(bar = bar)))
+        assertThat(custom.lookBar).isEqualTo(bar)
+        assertWithMessage("no arrangement: scrolling chips")
+            .that(provider.themeForCustom(CustomTheme(id = "custom_plain", name = "Plain", colors = darkKeyboardColorScheme())).lookBar)
+            .isNull()
+    }
 }

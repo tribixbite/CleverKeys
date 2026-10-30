@@ -58,9 +58,11 @@ class ThemeSpecTest {
         assertThat(spec.geometry).isEqualTo(
             LookGeometry(
                 keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 10f, borderWidthDp = 0f,
-                shadowDyDp = 1f, labelScale = 1.15f, labelWeight = 500,
+                shadowDyDp = 1f, labelScale = 1.15f, labelWeight = 500, functionLabelScale = 1f,
             )
         )
+        assertWithMessage("key_legends=\"\" is defined as none").that(spec.keyLegends).isEmpty()
+        assertThat(spec.shiftFilled).isFalse()
         assertThat(spec.functionChars).isEqualTo(",.")
         assertThat(spec.legends).isEqualTo(LookLegends.DIGITS)
         assertThat(spec.pillKeys).containsExactly(LookPillKey.ENTER, LookPillKey.ACTION)
@@ -90,6 +92,38 @@ class ThemeSpecTest {
         val awkward = ThemeSpec(name = "Tom & \"Jerry\" <1>", functionChars = "&<\"", pillKeys = emptySet())
         assertWithMessage("free text is escaped; an empty pill set stays defined-as-empty")
             .that(roundTrip(awkward)).isEqualTo(awkward)
+    }
+
+    /**
+     * 2026-10-30: the function-key text size, per-key legends and the filled Shift a look carries
+     * survive XML and JSON (Theme Manager's "Export as layout XML" of SwiftKey-, Gboard- and
+     * Samsung-style, a custom theme's backup), and a malformed legend list is reported, not kept.
+     */
+    @Test
+    fun functionLabelSizeKeyLegendsAndTheFilledShiftRoundTripThroughXmlAndJson() {
+        val spec = ThemeSpec(
+            geometry = LookGeometry(functionLabelScale = 1.25f),
+            keyLegends = listOf(LookKeyLegend(',', glyph = LookLegendGlyph.MIC), LookKeyLegend('.', text = ",!?")),
+            shiftFilled = true,
+        )
+        assertThat(ThemeSpecXml.write(spec)).contains("key_legends=\",:@mic .:,!?\"")
+        assertThat(roundTrip(spec)).isEqualTo(spec)
+        assertThat(ThemeSpecJson.fromJson(JSONObject(ThemeSpecJson.toJson(spec).toString()))).isEqualTo(spec)
+        assertWithMessage("a look's marks reach its exported spec")
+            .that(ThemeSpecs.ofLook(KeyboardLooks.swiftkeyLook).keyLegends).isEqualTo(KeyboardLooks.swiftkeyLook.keyLegends)
+        assertThat(ThemeSpecs.ofLook(KeyboardLooks.gboardLook).shiftFilled).isTrue()
+        assertThat(ThemeSpecs.ofLook(KeyboardLooks.samsungLook).geometry.functionLabelScale)
+            .isEqualTo(KeyboardLooks.samsungLook.geometry.functionLabelScale)
+
+        val problems = ArrayList<String>()
+        val bad = parseTheme(
+            "<keyboard><theme key_legends=\",:@trumpet\" shift_filled=\"yes\" function_label_scale=\"9\"/></keyboard>", problems,
+        )
+        assertThat(bad).isEqualTo(ThemeSpec())
+        assertThat(problems).hasSize(3)
+        assertWithMessage("an out-of-range size from a hand-edited backup is dropped")
+            .that(ThemeSpecJson.sanitize(ThemeSpec(geometry = LookGeometry(functionLabelScale = 9f))).geometry)
+            .isEqualTo(LookGeometry())
     }
 
     @Test

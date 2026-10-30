@@ -2586,6 +2586,18 @@
     <string name="theme_letter_emoji">Phím biểu tượng cảm xúc vẽ như phím chữ</string>
     <string name="theme_function_chars">Ký tự vẽ như phím chức năng</string>
     <string name="theme_dynamic_color">Theo màu hình nền (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Cỡ chữ phím chức năng</string>
+    <string name="theme_shift_filled">Mũi tên Shift tô đầy khi bật</string>
+    <string name="theme_section_bar">Bố cục thanh gợi ý</string>
+    <string name="theme_bar_desc">Các ô cố định thay cho gợi ý cuộn, như trên các bàn phím quen thuộc. Chỉ cách hiển thị thay đổi: phím cách vẫn chèn cùng một từ.</string>
+    <string name="theme_bar_slots">Số ô</string>
+    <string name="theme_bar_centre">Từ tốt nhất ở giữa</string>
+    <string name="theme_bar_quote_typed">Từ đã gõ trong dấu ngoặc kép</string>
+    <string name="theme_bar_emphasis_commit">In đậm sửa lỗi đang chờ</string>
+    <string name="theme_bar_emphasis_centre">Làm mờ từ hai bên</string>
+    <string name="theme_bar_separators">Vạch ngăn giữa các gợi ý</string>
+    <string name="theme_bar_separators_show">Hiện</string>
+    <string name="theme_bar_separators_hide">Ẩn</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Nhập bằng giọng nói (trên thiết bị)</string>
     <string name="cmd_voice_input_desc">Đọc chính tả bằng gói giọng nói bạn đã nhập. Giọng nói được nhận dạng trên điện thoại và không bao giờ rời khỏi máy.</string>

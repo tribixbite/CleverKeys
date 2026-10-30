@@ -2693,6 +2693,18 @@
     <string name="theme_letter_emoji">Klávesa emoji vykreslená jako písmeno</string>
     <string name="theme_function_chars">Znaky vykreslené jako funkční klávesy</string>
     <string name="theme_dynamic_color">Barvy podle tapety (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Velikost textu funkčních kláves</string>
+    <string name="theme_shift_filled">Plná šipka Shift při velkých písmenech</string>
+    <string name="theme_section_bar">Rozvržení panelu návrhů</string>
+    <string name="theme_bar_desc">Pevná pole místo posuvných návrhů, jako na známých klávesnicích. Mění se jen vzhled: mezerník stále vloží stejné slovo.</string>
+    <string name="theme_bar_slots">Pole</string>
+    <string name="theme_bar_centre">Nejlepší slovo uprostřed</string>
+    <string name="theme_bar_quote_typed">Napsané slovo v uvozovkách</string>
+    <string name="theme_bar_emphasis_commit">Tučně čekající oprava</string>
+    <string name="theme_bar_emphasis_centre">Ztlumená slova po stranách</string>
+    <string name="theme_bar_separators">Oddělovače mezi návrhy</string>
+    <string name="theme_bar_separators_show">Zobrazit</string>
+    <string name="theme_bar_separators_hide">Skrýt</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Hlasové zadávání (v zařízení)</string>
     <string name="cmd_voice_input_desc">Diktujte pomocí importovaného hlasového balíčku. Řeč se rozpoznává v telefonu a nikdy ho neopustí.</string>

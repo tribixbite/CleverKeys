@@ -2648,6 +2648,18 @@
     <string name="theme_letter_emoji">Tecla de emoji desenhada como uma letra</string>
     <string name="theme_function_chars">Carateres desenhados como teclas de função</string>
     <string name="theme_dynamic_color">Seguir as cores do fundo (Android 12+)</string>
+    <string name="theme_shape_function_label_scale">Tamanho do texto das teclas de função</string>
+    <string name="theme_shift_filled">Seta Shift preenchida quando ativa</string>
+    <string name="theme_section_bar">Layout da barra de sugestões</string>
+    <string name="theme_bar_desc">Espaços fixos em vez de sugestões que rolam, como nos teclados conhecidos. Só o desenho muda: o espaço continua inserindo a mesma palavra.</string>
+    <string name="theme_bar_slots">Espaços</string>
+    <string name="theme_bar_centre">Melhor palavra no centro</string>
+    <string name="theme_bar_quote_typed">Palavra digitada entre aspas</string>
+    <string name="theme_bar_emphasis_commit">Correção pendente em negrito</string>
+    <string name="theme_bar_emphasis_centre">Palavras laterais esmaecidas</string>
+    <string name="theme_bar_separators">Separadores entre sugestões</string>
+    <string name="theme_bar_separators_show">Mostrar</string>
+    <string name="theme_bar_separators_hide">Ocultar</string>
     <!-- Voice input: on-device dictation with an imported voice pack (docs/specs/voice-input.md, 2026-10-29) -->
     <string name="cmd_voice_input">Entrada de voz (no dispositivo)</string>
     <string name="cmd_voice_input_desc">Dite com o pacote de voz que você importou. A fala é reconhecida no telefone e nunca sai dele.</string>
