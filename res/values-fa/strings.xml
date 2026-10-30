@@ -2623,6 +2623,9 @@
     <string name="key_descr_voice_input">ورودی صوتی</string>
     <string name="voice_status_loading">در حال بارگذاری مدل صوتی…</string>
     <string name="voice_status_listening">در حال گوش دادن…</string>
+    <string name="voice_chooser_builtin">گفتار CleverKeys (آفلاین)</string>
+    <string name="bar_quote_open">«</string>
+    <string name="bar_quote_close">»</string>
     <string name="voice_stop_descr">توقف ورودی صوتی و حفظ متن</string>
     <string name="voice_cancel_descr">لغو ورودی صوتی</string>
     <string name="voice_announce_listening">ورودی صوتی در حال گوش دادن است</string>

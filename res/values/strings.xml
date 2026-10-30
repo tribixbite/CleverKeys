@@ -3013,6 +3013,12 @@
     <string name="key_descr_voice_input">Voice input</string>
     <string name="voice_status_loading">Loading voice model…</string>
     <string name="voice_status_listening">Listening…</string>
+    <!-- Voice keys (2026-10-30): the built-in engine in the voice_typing_chooser list. -->
+    <string name="voice_chooser_builtin">CleverKeys voice (offline)</string>
+    <!-- The typed word in quotation marks on a look bar that quotes it (iOS look): this
+         language's primary marks (CLDR), opening and closing. -->
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Stop voice input and keep the text</string>
     <string name="voice_cancel_descr">Cancel voice input</string>
     <string name="voice_announce_listening">Voice input listening</string>

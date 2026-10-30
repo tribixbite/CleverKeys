@@ -1486,9 +1486,18 @@ class Keyboard2View @JvmOverloads constructor(
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 // The release position feeds the CTC trace's single lift sample.
                 val p = event.actionIndex
-                _pointers.onTouchUp(event.getPointerId(p), event.getX(p), event.getY(p))
+                try {
+                    _pointers.onTouchUp(event.getPointerId(p), event.getX(p), event.getY(p))
+                } finally {
+                    // A look's key-press preview is drawn while the key is down: redraw on every
+                    // release, whichever path the release took and even if a key action threw,
+                    // so the preview can never outlive the press (maintainer 2026-10-30).
+                    if (_theme.lookPreview != null) invalidate()
+                }
             }
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                // A first finger: any press still recorded lost its release (dropStalePointers).
+                if (action == MotionEvent.ACTION_DOWN && _pointers.dropStalePointers()) invalidate()
                 val p = event.actionIndex
                 val tx = event.getX(p)
                 val ty = event.getY(p)
@@ -1507,6 +1516,7 @@ class Keyboard2View @JvmOverloads constructor(
             }
             MotionEvent.ACTION_CANCEL -> {
                 _pointers.onTouchCancel()
+                invalidate()
             }
             else -> return false
         }

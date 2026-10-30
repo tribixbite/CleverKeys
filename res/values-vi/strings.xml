@@ -2568,6 +2568,9 @@
     <string name="key_descr_voice_input">Nhập bằng giọng nói</string>
     <string name="voice_status_loading">Đang tải mô hình giọng nói…</string>
     <string name="voice_status_listening">Đang nghe…</string>
+    <string name="voice_chooser_builtin">Giọng nói CleverKeys (ngoại tuyến)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Dừng nhập bằng giọng nói và giữ văn bản</string>
     <string name="voice_cancel_descr">Hủy nhập bằng giọng nói</string>
     <string name="voice_announce_listening">Nhập bằng giọng nói đang nghe</string>

@@ -2605,6 +2605,9 @@
     <string name="key_descr_voice_input">Spracheingabe</string>
     <string name="voice_status_loading">Sprachmodell wird geladen…</string>
     <string name="voice_status_listening">Hört zu…</string>
+    <string name="voice_chooser_builtin">CleverKeys-Spracheingabe (offline)</string>
+    <string name="bar_quote_open">„</string>
+    <string name="bar_quote_close">“</string>
     <string name="voice_stop_descr">Spracheingabe beenden und Text behalten</string>
     <string name="voice_cancel_descr">Spracheingabe abbrechen</string>
     <string name="voice_announce_listening">Spracheingabe hört zu</string>

@@ -2539,6 +2539,9 @@
     <string name="key_descr_voice_input">音声入力</string>
     <string name="voice_status_loading">音声モデルを読み込んでいます…</string>
     <string name="voice_status_listening">聞き取っています…</string>
+    <string name="voice_chooser_builtin">CleverKeys 音声入力（オフライン）</string>
+    <string name="bar_quote_open">「</string>
+    <string name="bar_quote_close">」</string>
     <string name="voice_stop_descr">音声入力を停止してテキストを保持</string>
     <string name="voice_cancel_descr">音声入力をキャンセル</string>
     <string name="voice_announce_listening">音声入力で聞き取り中</string>

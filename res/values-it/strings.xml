@@ -2670,6 +2670,9 @@
     <string name="key_descr_voice_input">Input vocale</string>
     <string name="voice_status_loading">Caricamento del modello vocale…</string>
     <string name="voice_status_listening">In ascolto…</string>
+    <string name="voice_chooser_builtin">Voce di CleverKeys (offline)</string>
+    <string name="bar_quote_open">«</string>
+    <string name="bar_quote_close">»</string>
     <string name="voice_stop_descr">Interrompi l\'input vocale e mantieni il testo</string>
     <string name="voice_cancel_descr">Annulla l\'input vocale</string>
     <string name="voice_announce_listening">Input vocale in ascolto</string>

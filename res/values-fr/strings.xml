@@ -2640,6 +2640,9 @@
     <string name="key_descr_voice_input">Saisie vocale</string>
     <string name="voice_status_loading">Chargement du modèle vocal…</string>
     <string name="voice_status_listening">Écoute…</string>
+    <string name="voice_chooser_builtin">Saisie vocale CleverKeys (hors ligne)</string>
+    <string name="bar_quote_open">«\u00A0</string>
+    <string name="bar_quote_close">\u00A0»</string>
     <string name="voice_stop_descr">Arrêter la saisie vocale et garder le texte</string>
     <string name="voice_cancel_descr">Annuler la saisie vocale</string>
     <string name="voice_announce_listening">Saisie vocale à l\'écoute</string>

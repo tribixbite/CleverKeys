@@ -147,6 +147,35 @@ class Pointers(
         if (hadPopover) _handler.onSubkeyPopoverDismiss()
     }
 
+    /**
+     * Called for a FIRST finger down (ACTION_DOWN): no finger can be on the keyboard, so a
+     * pointer still bound to a finger (pointerId ≥ 0) is a press whose release never arrived.
+     * Left in place it keeps its key drawn pressed (a look's key-press preview stays on screen)
+     * and turns every later touch into a "second finger" (no word swipe, immediate key-down).
+     * Latched and locked modifiers carry pointerId −1 / FLAG_P_LOCKED and are kept.
+     * Returns whether anything was dropped (maintainer report 2026-10-30, stuck preview).
+     */
+    fun dropStalePointers(): Boolean {
+        var dropped = false
+        for (i in _ptrs.size - 1 downTo 0) {
+            val p = _ptrs[i]
+            if (p.pointerId < 0 || p.hasFlagsAny(FLAG_P_LATCHED or FLAG_P_LOCKED)) continue
+            stopLongPress(p)
+            if (p.hasFlagsAny(FLAG_P_TRACKPOINT_MODE)) stopTrackPointRepeat(p)
+            if (p.hasFlagsAny(FLAG_P_SELECTION_DELETE_MODE)) stopSelectionDeleteRepeat(p)
+            if (p.popover != null) closeSubkeyPopover(p)
+            _ptrs.removeAt(i)
+            dropped = true
+        }
+        if (dropped) {
+            Log.w("Pointers", "dropStalePointers: a press never got its release; dropped it")
+            _handler.onSwipeCancel()
+            _swipeRecognizer.reset()
+            _handler.onPointerFlagsChanged(null)
+        }
+        return dropped
+    }
+
     fun isKeyDown(k: KeyboardData.Key): Boolean {
         for (p in _ptrs) {
             if (p.key == k) {
@@ -698,6 +727,8 @@ class Pointers(
     fun onTouchCancel() {
         _handler.onSwipeCancel()
         clear()
+        // The cancelled gesture's path must not stay drawn as a trail (2026-10-30).
+        _swipeRecognizer.reset()
         _handler.onPointerFlagsChanged(null)  // No haptic on cancel
     }
 
@@ -727,6 +758,15 @@ class Pointers(
      * - Any other start never may: Backspace (the original "mb" bug), Shift and the other
      *   modifiers, Enter, Tab — they keep their own short swipes and taps.
      */
+    /**
+     * Whether a gesture may still turn into a word swipe while it moves: swipe typing is on,
+     * "short swipes only" is off, and it started on a letter. Such a gesture never fires an
+     * Event subkey mid-move (see onTouchMove); a non-letter start (space, punctuation) keeps the
+     * immediate Event subkey, as only a letter start is a word swipe from its first move.
+     */
+    private fun mayBecomeWordSwipe(ptr: Pointer, snap: ConfigSnapshot): Boolean =
+        snap.swipe_typing_enabled && !snap.short_swipes_only && ptr.startsOnLetter
+
     private fun mayBeWordSwipe(ptr: Pointer): Boolean {
         if (ptr.startsOnLetter) return true
         if (ptr.key.keys[0]?.getKind() != KeyValue.Kind.Char) return false
@@ -1127,13 +1167,20 @@ class Pointers(
                         _handler.onPointerDown(subkeyValue, true)
                         return
                     }
-                    KeyValue.Kind.Event -> {
+                    // A gesture that may still be a WORD swipe (letter start, swipe typing on)
+                    // leaves an Event subkey to the release, which applies the same short/long
+                    // boundary as every character subkey. Firing it here hijacked words: the
+                    // voice key in `a`'s corner turned every "acid"-shaped swipe into a voice
+                    // press and, held, into the voice chooser dialog (maintainer 2026-10-30).
+                    KeyValue.Kind.Event -> if (!mayBecomeWordSwipe(ptr, snap)) {
                         // Event key detected (e.g., switch_forward, switch_backward)
                         // Trigger immediately and prevent swipe typing from intercepting
                         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Event key detected at direction $direction: ${subkeyValue.getEvent()}")
                         ptr.gesture = Gesture(direction, snap)
                         ptr.value = subkeyValue
                         ptr.flags = pointer_flags_of_kv(subkeyValue, snap)
+                        // The gesture is decided: drop the path so no swipe trail outlives it.
+                        _swipeRecognizer.reset()
                         _handler.onPointerDown(subkeyValue, true)
                         return
                     }
@@ -1158,7 +1205,9 @@ class Pointers(
         val isSwipeTypingKey = snap.swipe_typing_enabled && activePointers == 1 &&
             ptrValue != null && ptrValue.getKind() == KeyValue.Kind.Char
         val isShortGestureKey = snap.short_gestures_enabled && activePointers == 1 && ptrValue != null
-        val shouldCollectPath = isSwipeTypingKey || isShortGestureKey
+        // A gesture already decided as an Event subkey (ptr.gesture set above) collects nothing:
+        // its path would only redraw a trail for a word that can no longer happen.
+        val shouldCollectPath = (isSwipeTypingKey || isShortGestureKey) && ptr.gesture == null
 
         vlog {
             "Path collection check: " +

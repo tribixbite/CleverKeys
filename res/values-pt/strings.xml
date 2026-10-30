@@ -2630,6 +2630,9 @@
     <string name="key_descr_voice_input">Entrada de voz</string>
     <string name="voice_status_loading">Carregando modelo de voz…</string>
     <string name="voice_status_listening">Ouvindo…</string>
+    <string name="voice_chooser_builtin">Voz do CleverKeys (offline)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Parar a entrada de voz e manter o texto</string>
     <string name="voice_cancel_descr">Cancelar a entrada de voz</string>
     <string name="voice_announce_listening">Entrada de voz ouvindo</string>

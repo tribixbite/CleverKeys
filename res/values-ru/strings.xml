@@ -2680,6 +2680,9 @@
     <string name="key_descr_voice_input">Голосовой ввод</string>
     <string name="voice_status_loading">Загрузка голосовой модели…</string>
     <string name="voice_status_listening">Слушаю…</string>
+    <string name="voice_chooser_builtin">Голосовой ввод CleverKeys (офлайн)</string>
+    <string name="bar_quote_open">«</string>
+    <string name="bar_quote_close">»</string>
     <string name="voice_stop_descr">Остановить голосовой ввод и сохранить текст</string>
     <string name="voice_cancel_descr">Отменить голосовой ввод</string>
     <string name="voice_announce_listening">Голосовой ввод слушает</string>

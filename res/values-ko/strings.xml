@@ -2540,6 +2540,9 @@
     <string name="key_descr_voice_input">음성 입력</string>
     <string name="voice_status_loading">음성 모델 불러오는 중…</string>
     <string name="voice_status_listening">듣는 중…</string>
+    <string name="voice_chooser_builtin">CleverKeys 음성 입력(오프라인)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">음성 입력을 중지하고 텍스트 유지</string>
     <string name="voice_cancel_descr">음성 입력 취소</string>
     <string name="voice_announce_listening">음성 입력 듣는 중</string>

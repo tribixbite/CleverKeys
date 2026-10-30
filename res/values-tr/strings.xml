@@ -2596,6 +2596,9 @@
     <string name="key_descr_voice_input">Sesle giriş</string>
     <string name="voice_status_loading">Ses modeli yükleniyor…</string>
     <string name="voice_status_listening">Dinleniyor…</string>
+    <string name="voice_chooser_builtin">CleverKeys sesli giriş (çevrimdışı)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Sesle girişi durdur ve metni koru</string>
     <string name="voice_cancel_descr">Sesle girişi iptal et</string>
     <string name="voice_announce_listening">Sesle giriş dinliyor</string>

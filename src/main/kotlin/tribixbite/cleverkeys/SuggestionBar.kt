@@ -392,24 +392,13 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * The locale's quotation marks for [LookBar.quoteTyped] (“ ” in English, « » in French…).
-     * ICU's LocaleData exists only from API 28; below it the call would throw NoSuchMethodError,
-     * an Error the catch below does not cover, so older releases use English marks.
+     * The UI language's quotation marks for [LookBar.quoteTyped] (“ ” in English, „ “ in German,
+     * «\u00A0 \u00A0» in French, 「 」 in Japanese…), from the translated `bar_quote_open` /
+     * `bar_quote_close` resources, so every API level gets them (2026-10-30; ICU's LocaleData
+     * needed API 28 and left 24–27 with English marks).
      */
     private fun quoteMarks(): Pair<String, String> =
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) "“" to "”"
-        else localeQuoteMarks()
-
-    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.P)
-    private fun localeQuoteMarks(): Pair<String, String> = try {
-        val data = android.icu.util.LocaleData.getInstance(
-            android.icu.util.ULocale.forLocale(resources.configuration.locales[0])
-        )
-        data.getDelimiter(android.icu.util.LocaleData.QUOTATION_START) to
-            data.getDelimiter(android.icu.util.LocaleData.QUOTATION_END)
-    } catch (e: RuntimeException) {
-        "\u201C" to "\u201D"
-    }
+        context.getString(R.string.bar_quote_open) to context.getString(R.string.bar_quote_close)
 
     /**
      * Rebind text, layout, typeface and color for a recycled suggestion view.

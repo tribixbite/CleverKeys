@@ -2591,6 +2591,9 @@
     <string name="key_descr_voice_input">Hangbevitel</string>
     <string name="voice_status_loading">Hangmodell betöltése…</string>
     <string name="voice_status_listening">Figyelés…</string>
+    <string name="voice_chooser_builtin">CleverKeys hangbevitel (offline)</string>
+    <string name="bar_quote_open">„</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Hangbevitel leállítása és a szöveg megtartása</string>
     <string name="voice_cancel_descr">Hangbevitel megszakítása</string>
     <string name="voice_announce_listening">A hangbevitel figyel</string>

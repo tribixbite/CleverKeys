@@ -614,30 +614,36 @@ class KeyboardReceiver(
                 set_shift_state(true, true)
             }
 
-            KeyValue.Event.SWITCH_VOICE_TYPING -> {
-                if (!VoiceImeSwitcher.switch_to_voice_ime(
-                        keyboard2,
-                        subtypeManager.inputMethodManager,
-                        Config.globalPrefs()
-                    )
-                ) {
-                    keyboard2.getConfig()?.shouldOfferVoiceTyping = false
-                }
-            }
+            // The mic key and its long press: the built-in voice input when it is ready, else a
+            // system voice IME, else the built-in path's Settings message (VoiceKeyRouting).
+            KeyValue.Event.SWITCH_VOICE_TYPING -> VoiceImeSwitcher.onVoiceTypingKey(
+                keyboard2, subtypeManager.inputMethodManager, Config.globalPrefs(), builtInVoice()
+            )
 
             // On-device voice input (docs/specs/voice-input.md): start/stop listening.
             KeyValue.Event.VOICE_INPUT -> keyboard2.onVoiceInputKey()
 
-            KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER -> {
-                VoiceImeSwitcher.choose_voice_ime(
-                    keyboard2,
-                    subtypeManager.inputMethodManager,
-                    Config.globalPrefs()
-                )
-            }
+            KeyValue.Event.SWITCH_VOICE_TYPING_CHOOSER -> VoiceImeSwitcher.onVoiceChooserKey(
+                keyboard2, subtypeManager.inputMethodManager, Config.globalPrefs(), builtInVoice()
+            )
 
             else -> {} // Unhandled events
         }
+    }
+
+    /**
+     * CleverKeys' own voice input for the voice keys: ready when switched on in Settings with a
+     * usable pack installed (read at the press; a directory scan of the installed packs).
+     */
+    private fun builtInVoice(): VoiceImeSwitcher.BuiltInVoice {
+        val prefs = Config.globalPrefs()
+        val ready = tribixbite.cleverkeys.stt.VoicePacks.isEnabled(prefs) &&
+            tribixbite.cleverkeys.stt.VoicePacks.manager(context).installedPacks().isNotEmpty()
+        return VoiceImeSwitcher.BuiltInVoice(
+            ready = ready,
+            label = context.getString(R.string.voice_chooser_builtin),
+            start = keyboard2::onVoiceInputKey,
+        )
     }
 
     /**

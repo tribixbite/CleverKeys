@@ -2641,6 +2641,9 @@
     <string name="key_descr_voice_input">Balss ievade</string>
     <string name="voice_status_loading">Notiek balss modeļa ielāde…</string>
     <string name="voice_status_listening">Klausās…</string>
+    <string name="voice_chooser_builtin">CleverKeys balss ievade (bezsaistē)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Apturēt diktēšanu un saglabāt tekstu</string>
     <string name="voice_cancel_descr">Atcelt diktēšanu</string>
     <string name="voice_announce_listening">Balss ievade klausās</string>

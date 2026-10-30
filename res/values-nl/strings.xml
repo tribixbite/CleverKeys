@@ -2585,6 +2585,9 @@
     <string name="key_descr_voice_input">Spraakinvoer</string>
     <string name="voice_status_loading">Spraakmodel laden…</string>
     <string name="voice_status_listening">Luisteren…</string>
+    <string name="voice_chooser_builtin">CleverKeys-spraakinvoer (offline)</string>
+    <string name="bar_quote_open">‘</string>
+    <string name="bar_quote_close">’</string>
     <string name="voice_stop_descr">Spraakinvoer stoppen en tekst behouden</string>
     <string name="voice_cancel_descr">Spraakinvoer annuleren</string>
     <string name="voice_announce_listening">Spraakinvoer luistert</string>

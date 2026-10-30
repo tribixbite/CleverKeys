@@ -2657,6 +2657,9 @@
     <string name="key_descr_voice_input">Introducere vocală</string>
     <string name="voice_status_loading">Se încarcă modelul vocal…</string>
     <string name="voice_status_listening">Se ascultă…</string>
+    <string name="voice_chooser_builtin">Voce CleverKeys (offline)</string>
+    <string name="bar_quote_open">„</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Oprește introducerea vocală și păstrează textul</string>
     <string name="voice_cancel_descr">Anulează introducerea vocală</string>
     <string name="voice_announce_listening">Introducerea vocală ascultă</string>

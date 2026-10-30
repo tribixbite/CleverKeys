@@ -2538,6 +2538,9 @@
     <string name="key_descr_voice_input">语音输入</string>
     <string name="voice_status_loading">正在加载语音模型…</string>
     <string name="voice_status_listening">正在聆听…</string>
+    <string name="voice_chooser_builtin">CleverKeys 语音输入（离线）</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">停止语音输入并保留文字</string>
     <string name="voice_cancel_descr">取消语音输入</string>
     <string name="voice_announce_listening">语音输入正在聆听</string>

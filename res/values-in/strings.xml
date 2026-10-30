@@ -2552,6 +2552,9 @@
     <string name="key_descr_voice_input">Input suara</string>
     <string name="voice_status_loading">Memuat model suara…</string>
     <string name="voice_status_listening">Mendengarkan…</string>
+    <string name="voice_chooser_builtin">Suara CleverKeys (offline)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Hentikan input suara dan simpan teks</string>
     <string name="voice_cancel_descr">Batalkan input suara</string>
     <string name="voice_announce_listening">Input suara sedang mendengarkan</string>

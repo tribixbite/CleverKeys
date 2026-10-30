@@ -2597,6 +2597,9 @@
     <string name="key_descr_voice_input">Voice input</string>
     <string name="voice_status_loading">Nilo-load ang voice model…</string>
     <string name="voice_status_listening">Nakikinig…</string>
+    <string name="voice_chooser_builtin">Boses ng CleverKeys (offline)</string>
+    <string name="bar_quote_open">“</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Ihinto ang voice input at panatilihin ang text</string>
     <string name="voice_cancel_descr">Kanselahin ang voice input</string>
     <string name="voice_announce_listening">Nakikinig ang voice input</string>

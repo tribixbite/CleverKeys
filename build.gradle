@@ -601,6 +601,9 @@ tasks.register('runPureTests', JavaExec) {
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
   def pureTestClasses = [
+    // 2026-10-30: voice keys route to the built-in voice input; bar quote marks from resources.
+    'tribixbite.cleverkeys.VoiceKeyRoutingTest',
+    'tribixbite.cleverkeys.BarQuoteMarksResourceTest',
     'tribixbite.cleverkeys.DictionaryLoadRequestsTest',
     // 2026-10-28 (todo 13c): Dictionary Manager tabs for layout-bound languages.
     'tribixbite.cleverkeys.DictionaryTabPlanTest',
@@ -1334,6 +1337,9 @@ tasks.register('runMockTests', JavaExec) {
     // its direction's subkey, never a word swipe or a tap of the start key; OFF unchanged.
     'tribixbite.cleverkeys.PointersShortSwipesOnlyTest',
     'tribixbite.cleverkeys.PointersSwipeStartKeyTest',
+    // 2026-10-30: an Event subkey on a letter (the voice key on `a`) never hijacks a word
+    // swipe; the eager space-bar path leaves no trail; a stale press is dropped at first down.
+    'tribixbite.cleverkeys.PointersEventSubkeyWordSwipeTest',
     'tribixbite.cleverkeys.ReleaseClaimKeyModifierTest',
     // gh #187: macron-below / ring-below dead keys through the real compose data.
     'tribixbite.cleverkeys.DeadKeyMarksBelowTest',

@@ -15,61 +15,86 @@ internal object VoiceImeSwitcher {
     const val PREF_KNOWN_IMES = "voice_ime_known"
 
     /**
-     * Switch to the voice ime. This might open a chooser popup. Preferences are
-     * used to store the last selected voice ime and to detect whether the
-     * chooser popup must be shown. Returns [false] if the detection failed and
-     * is unlikely to succeed.
+     * CleverKeys' own voice input as the voice keys see it: [ready] = switched on with a usable
+     * pack installed, [label] = its chooser entry, [start] = the `voice_input` key action.
      */
+    class BuiltInVoice(val ready: Boolean, val label: String, val start: () -> Unit)
+
+    /** The `voice_typing` key ([VoiceKeyRouting.forVoiceTyping]). */
     @JvmStatic
-    fun switch_to_voice_ime(
+    fun onVoiceTypingKey(
         ims: InputMethodService,
         imm: InputMethodManager,
-        prefs: SharedPreferences
-    ): Boolean {
+        prefs: SharedPreferences,
+        builtIn: BuiltInVoice,
+    ) {
         val imes = getVoiceImeList(imm)
-        val lastUsed = prefs.getString(PREF_LAST_USED, null)
-        val lastKnownImes = prefs.getString(PREF_KNOWN_IMES, null)
-        val lastUsedIme = getImeById(imes, lastUsed)
-
-        if (imes.isEmpty()) {
-            return false
+        when (VoiceKeyRouting.forVoiceTyping(VoiceKeyRouting.Facts(builtIn.ready, imes.size))) {
+            VoiceKeyRouting.Route.BUILT_IN -> builtIn.start()
+            VoiceKeyRouting.Route.SYSTEM_IME -> switchToVoiceIme(ims, prefs, imes, builtIn)
+            VoiceKeyRouting.Route.CHOOSER -> chooseVoiceImeAndUpdatePrefs(ims, prefs, imes, builtIn)
         }
-
-        if (lastUsed == null || lastKnownImes == null || lastUsedIme == null ||
-            lastKnownImes != serializeImeIds(imes)) {
-            chooseVoiceImeAndUpdatePrefs(ims, prefs, imes)
-        } else {
-            switchInputMethod(ims, lastUsedIme)
-        }
-        return true
     }
 
+    /** The `voice_typing_chooser` key (the mic key's long press; [VoiceKeyRouting.forChooser]). */
     @JvmStatic
-    fun choose_voice_ime(
+    fun onVoiceChooserKey(
         ims: InputMethodService,
         imm: InputMethodManager,
-        prefs: SharedPreferences
-    ): Boolean {
+        prefs: SharedPreferences,
+        builtIn: BuiltInVoice,
+    ) {
         val imes = getVoiceImeList(imm)
-        chooseVoiceImeAndUpdatePrefs(ims, prefs, imes)
-        return true
+        when (VoiceKeyRouting.forChooser(VoiceKeyRouting.Facts(builtIn.ready, imes.size))) {
+            VoiceKeyRouting.Route.BUILT_IN -> builtIn.start()
+            VoiceKeyRouting.Route.SYSTEM_IME -> switchToVoiceIme(ims, prefs, imes, builtIn)
+            VoiceKeyRouting.Route.CHOOSER -> chooseVoiceImeAndUpdatePrefs(ims, prefs, imes, builtIn)
+        }
     }
 
     /**
-     * Show the voice IME chooser popup and switch to the selected IME.
-     * Preferences are updated so that future calls to [switch_to_voice_ime]
-     * switch to the newly selected IME.
+     * Switch to the remembered system voice IME. The chooser opens instead when nothing is
+     * remembered yet or the set of voice IMEs changed since the last choice.
+     */
+    private fun switchToVoiceIme(
+        ims: InputMethodService,
+        prefs: SharedPreferences,
+        imes: List<IME>,
+        builtIn: BuiltInVoice,
+    ) {
+        val lastUsed = prefs.getString(PREF_LAST_USED, null)
+        val lastKnownImes = prefs.getString(PREF_KNOWN_IMES, null)
+        val lastUsedIme = getImeById(imes, lastUsed)
+        if (lastUsed == null || lastKnownImes == null || lastUsedIme == null ||
+            lastKnownImes != serializeImeIds(imes)) {
+            chooseVoiceImeAndUpdatePrefs(ims, prefs, imes, builtIn)
+        } else {
+            switchInputMethod(ims, lastUsedIme)
+        }
+    }
+
+    /**
+     * Show the voice chooser — the built-in engine first when it is ready
+     * ([VoiceKeyRouting.chooserListsBuiltIn]), then every system voice IME — and act on the
+     * pick. Picking a system IME is remembered for [switchToVoiceIme].
      */
     private fun chooseVoiceImeAndUpdatePrefs(
         ims: InputMethodService,
         prefs: SharedPreferences,
-        imes: List<IME>
+        imes: List<IME>,
+        builtIn: BuiltInVoice,
     ) {
-        val imeDisplayNames = getImeDisplayNames(ims, imes)
-        val layouts = ArrayAdapter(ims, android.R.layout.simple_list_item_1, imeDisplayNames)
+        val listsBuiltIn = VoiceKeyRouting.chooserListsBuiltIn(VoiceKeyRouting.Facts(builtIn.ready, imes.size))
+        val names = (if (listsBuiltIn) listOf(builtIn.label) else emptyList()) + getImeDisplayNames(ims, imes)
+        val layouts = ArrayAdapter(ims, android.R.layout.simple_list_item_1, names)
         val dialog = AlertDialog.Builder(ims)
             .setAdapter(layouts) { _, which ->
-                val selected = imes[which]
+                val index = if (listsBuiltIn) which - 1 else which
+                if (index < 0) {
+                    builtIn.start()
+                    return@setAdapter
+                }
+                val selected = imes[index]
                 prefs.edit()
                     .putString(PREF_LAST_USED, selected.getId())
                     .putString(PREF_KNOWN_IMES, serializeImeIds(imes))
@@ -78,7 +103,9 @@ internal object VoiceImeSwitcher {
             }
             .create()
 
-        if (imeDisplayNames.isEmpty()) {
+        // Defensive: the routing never opens an empty chooser (no entry goes to the built-in
+        // path, whose message points to Settings → Voice input).
+        if (names.isEmpty()) {
             dialog.setMessage(ims.resources.getString(R.string.toast_no_voice_input))
         }
         ims.window?.window?.decorView?.windowToken?.let {

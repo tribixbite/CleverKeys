@@ -2685,6 +2685,9 @@
     <string name="key_descr_voice_input">Wprowadzanie głosowe</string>
     <string name="voice_status_loading">Wczytywanie modelu głosowego…</string>
     <string name="voice_status_listening">Słucham…</string>
+    <string name="voice_chooser_builtin">Głos CleverKeys (offline)</string>
+    <string name="bar_quote_open">„</string>
+    <string name="bar_quote_close">”</string>
     <string name="voice_stop_descr">Zatrzymaj wprowadzanie głosowe i zachowaj tekst</string>
     <string name="voice_cancel_descr">Anuluj wprowadzanie głosowe</string>
     <string name="voice_announce_listening">Wprowadzanie głosowe słucha</string>
