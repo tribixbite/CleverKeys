@@ -37,15 +37,49 @@ private enum class PendingMicPurpose { ENABLE, AFTER_IMPORT }
 
 private var pendingMicPurpose: PendingMicPurpose? = null
 
+/**
+ * The user was turning voice input on when the blocked explanation sent them to App info: back in
+ * Settings, a granted permission finishes the job (MicPermissionGate.turnOnAfterAppSettings).
+ */
+private var waitingToEnableAfterAppSettings = false
+
+/** App info for CleverKeys (Permissions → Microphone), the only place left once Android stops asking. */
+internal fun openMicAppSettings(activity: SettingsActivity, toEnable: Boolean) {
+    with(activity) {
+        waitingToEnableAfterAppSettings = toEnable
+        voiceBlockedDialogShown = false
+        try {
+            startActivity(
+                android.content.Intent(
+                    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.fromParts("package", packageName, null),
+                )
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "No App info screen", e)
+            waitingToEnableAfterAppSettings = false
+        }
+    }
+}
+
 /** Re-read the voice state (packs, switch, permission) — on resume and after every change. */
 internal fun refreshVoiceInputState(activity: SettingsActivity) {
     with(activity) {
         val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this)
-        val enabled = VoicePacks.isEnabled(prefs)
+        val granted = VoicePacks.hasMicPermission(this)
+        // A granted permission always wins over a remembered "don't ask again" (it goes stale when
+        // the user changes the permission in system settings).
+        if (granted && VoicePacks.isPermissionBlocked(prefs)) {
+            prefs.edit().putBoolean(VoicePacks.PREF_PERMISSION_BLOCKED, false).apply()
+        }
+        if (MicPermissionGate.turnOnAfterAppSettings(waitingToEnableAfterAppSettings, granted)) {
+            setVoiceEnabled(this, true)
+        }
+        waitingToEnableAfterAppSettings = false
         // An enabled switch whose permission was revoked in system settings stays on: the keyboard
         // asks again on the next key press (MicPermissionGate KEY_PRESS), which is an opt-in moment.
-        voiceInputEnabled = enabled
-        voicePermissionBlocked = !VoicePacks.hasMicPermission(this) && VoicePacks.isPermissionBlocked(prefs)
+        voiceInputEnabled = VoicePacks.isEnabled(prefs)
+        voicePermissionBlocked = !granted && VoicePacks.isPermissionBlocked(prefs)
         lifecycleScope.launch {
             val (ok, unsupported) = withContext(Dispatchers.IO) {
                 val m = VoicePacks.manager(this@with)
@@ -67,11 +101,9 @@ internal fun onVoiceSwitchChanged(activity: SettingsActivity, on: Boolean) {
         val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this)
         when (MicPermissionGate.decide(MicPermissionGate.Trigger.SETTINGS_TOGGLE_ON, VoicePacks.facts(this, prefs))) {
             MicPermissionGate.Decision.PROCEED -> setVoiceEnabled(this, true)
-            MicPermissionGate.Decision.EXPLAIN_BLOCKED -> {
-                voicePermissionBlocked = true
-                setVoiceEnabled(this, false)
-            }
             else -> {
+                // Always REQUEST_PERMISSION here: the switch asks Android even when the app
+                // remembers a block; a real block is answered at once and explained by the result.
                 pendingMicPurpose = PendingMicPurpose.ENABLE
                 micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
             }
@@ -85,15 +117,22 @@ internal fun onMicPermissionResult(activity: SettingsActivity, granted: Boolean)
         val purpose = pendingMicPurpose
         pendingMicPurpose = null
         val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this)
-        val blocked = !granted && !shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)
-        prefs.edit().putBoolean(VoicePacks.PREF_PERMISSION_BLOCKED, blocked).apply()
-        voicePermissionBlocked = blocked
-        if (granted) {
+        val outcome = MicPermissionGate.afterRequest(granted, shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO))
+        prefs.edit().putBoolean(VoicePacks.PREF_PERMISSION_BLOCKED, outcome.blocked).apply()
+        voicePermissionBlocked = outcome.blocked
+        when {
             // Both opt-in moments end with voice input on.
-            if (purpose != null) setVoiceEnabled(this, true)
-        } else {
-            setVoiceEnabled(this, false)
-            Toast.makeText(this, R.string.voice_permission_denied, Toast.LENGTH_LONG).show()
+            outcome.turnsVoiceOn -> if (purpose != null) setVoiceEnabled(this, true)
+            outcome.offersAppSettings -> {
+                // Android answered without showing anything: say why and offer App info. The
+                // switch stays off until the permission is granted.
+                setVoiceEnabled(this, false)
+                voiceBlockedDialogShown = true
+            }
+            else -> {
+                setVoiceEnabled(this, false)
+                Toast.makeText(this, R.string.voice_permission_denied, Toast.LENGTH_LONG).show()
+            }
         }
     }
 }
@@ -132,7 +171,6 @@ internal fun performVoicePackImport(activity: SettingsActivity, uri: Uri) {
                     val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this@with)
                     when (MicPermissionGate.decide(MicPermissionGate.Trigger.PACK_IMPORTED, VoicePacks.facts(this@with, prefs))) {
                         MicPermissionGate.Decision.PROCEED -> setVoiceEnabled(this@with, true)
-                        MicPermissionGate.Decision.EXPLAIN_BLOCKED -> voicePermissionBlocked = true
                         else -> {
                             pendingMicPurpose = PendingMicPurpose.AFTER_IMPORT
                             micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)

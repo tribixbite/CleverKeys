@@ -270,6 +270,11 @@
     <string name="short_swipe_title">Pag-customize ng Maikling Swipe</string>
     <string name="short_swipe_show_keyboard">Ipakita ang keyboard</string>
     <string name="short_swipe_reset_all">I-reset Lahat</string>
+    <string name="short_swipe_reset_all_title">I-reset ang lahat ng maikling swipe?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Aalisin nito ang %1$d custom na mapping sa lahat ng key. Hindi magbabago ang mga subkey na naka-save sa layout at ang mga binagong kopya ng layout.</item><item quantity="other">Aalisin nito ang %1$d custom na mapping sa lahat ng key. Hindi magbabago ang mga subkey na naka-save sa layout at ang mga binagong kopya ng layout.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">I-reset Lahat</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">Inalis ang %1$d mapping</item><item quantity="other">Inalis ang %1$d mapping</item></plurals>
+    <string name="short_swipe_reset_all_undo">I-undo</string>
     <string name="short_swipe_tap_hint">I-tap ang anumang key sa ibaba para i-customize ang mga maikling swipe gesture nito</string>
     <string name="short_swipe_instruction_title">I-type ang anumang key para i-customize ito</string>
     <string name="short_swipe_instruction_body">Ang keyboard sa ibaba ay ang iyong tunay na CleverKeys keyboard.\nI-tap ang isang key para magdagdag ng mga maikling swipe action dito.</string>
@@ -1616,7 +1621,6 @@
     <string name="extra_keys_group_special_characters">Mga Espesyal na Character</string>
     <string name="extra_keys_group_combining_characters">Mga Combining Character</string>
     <string name="extra_keys_group_functions">Mga Function</string>
-    <string name="short_swipe_toast_all_reset">Na-reset ang lahat ng customization</string>
     <string name="short_swipe_toast_mapped">Na-map ang %1$s → \"%2$s\" (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">I-tap ang isang direksyon para magdagdag o mag-edit ng maikling swipe gesture</string>
     <string name="short_swipe_action_desc_command">Command: %1$s</string>
@@ -2670,6 +2674,8 @@
     <string name="voice_pack_unsupported">Kailangan ng %1$s ng mas bagong bersyon ng CleverKeys at hindi ito magagamit.</string>
     <string name="voice_permission_blocked_desc">Naka-block ang access sa mikropono para sa CleverKeys. Payagan ito sa mga setting ng system para magamit ang voice input.</string>
     <string name="voice_open_app_settings">Buksan ang mga setting ng app</string>
+    <string name="voice_permission_blocked_title">Naka-block ang access sa mikropono</string>
+    <string name="voice_permission_blocked_steps">Hindi na ipinapakita ng Android ang hiling para sa mikropono ng CleverKeys. Sa App info, buksan ang Mga Pahintulot → Mikropono at piliin ang Payagan. Mag-o-on ang voice input pagbalik mo.</string>
     <string name="voice_pack_error_not_voice_pack">Hindi voice pack ang file na ito.</string>
     <string name="voice_pack_error_invalid_manifest">Sira o hindi valid ang manifest ng voice pack.</string>
     <string name="voice_pack_error_invalid_id">Nagdedeklara ang voice pack ng hindi valid na id: %1$s</string>

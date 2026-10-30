@@ -274,6 +274,11 @@
     <string name="short_swipe_title">Īso vilkumu pielāgošana</string>
     <string name="short_swipe_show_keyboard">Rādīt tastatūru</string>
     <string name="short_swipe_reset_all">Atiestatīt visu</string>
+    <string name="short_swipe_reset_all_title">Atiestatīt visus īsos vilkumus?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="zero">Tiks noņemti %1$d pielāgotu piešķīrumu no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="one">Tiks noņemts %1$d pielāgots piešķīrums no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="other">Tiks noņemti %1$d pielāgoti piešķīrumi no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Atiestatīt visu</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="zero">Noņemti %1$d piešķīrumu</item><item quantity="one">Noņemts %1$d piešķīrums</item><item quantity="other">Noņemti %1$d piešķīrumi</item></plurals>
+    <string name="short_swipe_reset_all_undo">Atsaukt</string>
     <string name="short_swipe_tap_hint">Pieskarieties jebkuram taustiņam zemāk, lai pielāgotu īso vilkumu žestus</string>
     <string name="short_swipe_instruction_title">Pieskarieties jebkuram taustiņam, lai to pielāgotu</string>
     <string name="short_swipe_instruction_body">Zemāk redzamā tastatūra ir jūsu īstā CleverKeys tastatūra.\nPieskarieties taustiņam, lai pievienotu īso vilkumu darbības.</string>
@@ -1651,7 +1656,6 @@
     <string name="extra_keys_group_special_characters">Īpašās rakstzīmes</string>
     <string name="extra_keys_group_combining_characters">Kombinējamās rakstzīmes</string>
     <string name="extra_keys_group_functions">Funkcijas</string>
-    <string name="short_swipe_toast_all_reset">Visi pielāgojumi atiestatīti</string>
     <string name="short_swipe_toast_mapped">Piešķirts: %1$s → “%2$s” (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Pieskarieties virzienam, lai pievienotu vai rediģētu īsā vilkuma žestu</string>
     <string name="short_swipe_action_desc_command">Komanda: %1$s</string>
@@ -2714,6 +2718,8 @@
     <string name="voice_pack_unsupported">Pakotnei %1$s nepieciešama jaunāka CleverKeys versija, un to nevar izmantot.</string>
     <string name="voice_permission_blocked_desc">Piekļuve mikrofonam ir bloķēta lietotnei CleverKeys. Atļaujiet to sistēmas iestatījumos, lai izmantotu balss ievades funkciju.</string>
     <string name="voice_open_app_settings">Atvērt lietotnes iestatījumus</string>
+    <string name="voice_permission_blocked_title">Piekļuve mikrofonam ir bloķēta</string>
+    <string name="voice_permission_blocked_steps">Android vairs nerāda mikrofona pieprasījumu lietotnei CleverKeys. Lietotnes informācijā atveriet Atļaujas → Mikrofons un izvēlieties Atļaut. Balss ievade ieslēgsies, kad atgriezīsieties.</string>
     <string name="voice_pack_error_not_voice_pack">Šis fails nav balss pakotne.</string>
     <string name="voice_pack_error_invalid_manifest">Balss pakotnes manifests ir bojāts vai nederīgs.</string>
     <string name="voice_pack_error_invalid_id">Balss pakotne norāda nederīgu ID: %1$s</string>

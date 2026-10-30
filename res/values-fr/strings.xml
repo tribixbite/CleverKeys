@@ -268,6 +268,11 @@
     <string name="short_swipe_title">Personnalisation des glissés courts</string>
     <string name="short_swipe_show_keyboard">Afficher le clavier</string>
     <string name="short_swipe_reset_all">Tout réinitialiser</string>
+    <string name="short_swipe_reset_all_title">Réinitialiser tous les glissés courts ?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Cela supprime %1$d correspondance personnalisée de toutes les touches. Les sous-touches enregistrées dans une disposition et les copies modifiées de dispositions restent inchangées.</item><item quantity="many">Cela supprime %1$d correspondances personnalisées de toutes les touches. Les sous-touches enregistrées dans une disposition et les copies modifiées de dispositions restent inchangées.</item><item quantity="other">Cela supprime %1$d correspondances personnalisées de toutes les touches. Les sous-touches enregistrées dans une disposition et les copies modifiées de dispositions restent inchangées.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Tout réinitialiser</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d correspondance supprimée</item><item quantity="many">%1$d correspondances supprimées</item><item quantity="other">%1$d correspondances supprimées</item></plurals>
+    <string name="short_swipe_reset_all_undo">Annuler</string>
     <string name="short_swipe_tap_hint">Appuyez sur une touche ci-dessous pour personnaliser ses glissés courts</string>
     <string name="short_swipe_instruction_title">Appuyez sur une touche pour la personnaliser</string>
     <string name="short_swipe_instruction_body">Le clavier ci-dessous est votre vrai clavier CleverKeys.\nAppuyez sur une touche pour lui ajouter des actions de glissé court.</string>
@@ -1650,7 +1655,6 @@
     <string name="extra_keys_group_special_characters">Caractères spéciaux</string>
     <string name="extra_keys_group_combining_characters">Caractères combinants</string>
     <string name="extra_keys_group_functions">Fonctions</string>
-    <string name="short_swipe_toast_all_reset">Toutes les personnalisations réinitialisées</string>
     <string name="short_swipe_toast_mapped">Associé : %1$s → « %2$s » (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Appuyez sur une direction pour ajouter ou modifier un glissé court</string>
     <string name="short_swipe_action_desc_command">Commande : %1$s</string>
@@ -2713,6 +2717,8 @@
     <string name="voice_pack_unsupported">%1$s nécessite une version plus récente de CleverKeys et ne peut pas être utilisé.</string>
     <string name="voice_permission_blocked_desc">L\'accès au micro est bloqué pour CleverKeys. Autorisez-le dans les paramètres système pour utiliser la saisie vocale.</string>
     <string name="voice_open_app_settings">Ouvrir les paramètres de l\'application</string>
+    <string name="voice_permission_blocked_title">L\'accès au micro est bloqué</string>
+    <string name="voice_permission_blocked_steps">Android n\'affiche plus la demande d\'accès au micro pour CleverKeys. Dans Infos sur l\'appli, ouvrez Autorisations → Micro et choisissez Autoriser. La saisie vocale s\'activera à votre retour.</string>
     <string name="voice_pack_error_not_voice_pack">Ce fichier n\'est pas un pack vocal.</string>
     <string name="voice_pack_error_invalid_manifest">Le manifeste du pack vocal est endommagé ou non valide.</string>
     <string name="voice_pack_error_invalid_id">Le pack vocal déclare un identifiant non valide : %1$s</string>

@@ -270,6 +270,11 @@
     <string name="short_swipe_title">Korte veegaanpassing</string>
     <string name="short_swipe_show_keyboard">Toetsenbord tonen</string>
     <string name="short_swipe_reset_all">Alles resetten</string>
+    <string name="short_swipe_reset_all_title">Alle korte veegbewegingen resetten?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Hiermee wordt %1$d aangepaste toewijzing van alle toetsen verwijderd. Subtoetsen die in een indeling zijn opgeslagen en aangepaste kopieën van indelingen blijven ongewijzigd.</item><item quantity="other">Hiermee worden %1$d aangepaste toewijzingen van alle toetsen verwijderd. Subtoetsen die in een indeling zijn opgeslagen en aangepaste kopieën van indelingen blijven ongewijzigd.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Alles resetten</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d toewijzing verwijderd</item><item quantity="other">%1$d toewijzingen verwijderd</item></plurals>
+    <string name="short_swipe_reset_all_undo">Ongedaan maken</string>
     <string name="short_swipe_tap_hint">Tik op een toets hieronder om de korte veeggebaren aan te passen</string>
     <string name="short_swipe_instruction_title">Tik op een toets om deze aan te passen</string>
     <string name="short_swipe_instruction_body">Het toetsenbord hieronder is je echte CleverKeys-toetsenbord.\nTik op een toets om korte veegacties toe te voegen.</string>
@@ -1604,7 +1609,6 @@
     <string name="extra_keys_group_special_characters">Speciale tekens</string>
     <string name="extra_keys_group_combining_characters">Combinerende tekens</string>
     <string name="extra_keys_group_functions">Functies</string>
-    <string name="short_swipe_toast_all_reset">Alle aanpassingen gereset</string>
     <string name="short_swipe_toast_mapped">%1$s → \'%2$s\' gekoppeld (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Tik op een richting om een korte veeg toe te voegen of te bewerken</string>
     <string name="short_swipe_action_desc_command">Opdracht: %1$s</string>
@@ -2658,6 +2662,8 @@
     <string name="voice_pack_unsupported">%1$s vereist een nieuwere versie van CleverKeys en kan niet worden gebruikt.</string>
     <string name="voice_permission_blocked_desc">Microfoontoegang is geblokkeerd voor CleverKeys. Sta die toe in de systeeminstellingen om spraakinvoer te gebruiken.</string>
     <string name="voice_open_app_settings">App-instellingen openen</string>
+    <string name="voice_permission_blocked_title">Microfoontoegang geblokkeerd</string>
+    <string name="voice_permission_blocked_steps">Android toont het microfoonverzoek voor CleverKeys niet meer. Open in App-info Rechten → Microfoon en kies Toestaan. Spraakinvoer gaat aan als je terugkomt.</string>
     <string name="voice_pack_error_not_voice_pack">Dit bestand is geen spraakpakket.</string>
     <string name="voice_pack_error_invalid_manifest">Het manifest van het spraakpakket is beschadigd of ongeldig.</string>
     <string name="voice_pack_error_invalid_id">Het spraakpakket geeft een ongeldige id op: %1$s</string>

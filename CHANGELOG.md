@@ -498,6 +498,19 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Voice input after "Don't allow" twice: turning voice input on in Settings showed no prompt and no
+  response, because the app trusted its own memory of the refusal even after the permission was
+  changed in system settings. The switch now always asks Android; when Android will not show the
+  prompt any more, a dialog says so and opens App info → Permissions, the switch stays off until
+  the microphone is allowed, and voice input turns on when you come back with it allowed. The
+  voice key's permission screen shows the same dialog.
+- Short Swipe Customization's **Reset All** asks first, naming how many mappings it removes, and
+  offers **Undo** afterwards; it is greyed out when there is nothing to reset. Before, one tap
+  deleted every mapping with no way back.
+- Layout Manager left open in the background now shows a "(modified)" layout copy made from the
+  keyboard's subkey popover without being reopened.
+- The per-key Customize dialog no longer cuts subkey labels to four characters (Enter's
+  north-east row read "Acti" for the Action key) or clips long command names at two lines.
 - A word swiped from a letter whose corner holds a command key (the mic placed on `a` by the
   default extra keys, the clipboard key on `d`) stays a word: the command key now fires only for
   a short flick into its corner, on release. Before, "acid"-shaped swipes from `a` pressed the

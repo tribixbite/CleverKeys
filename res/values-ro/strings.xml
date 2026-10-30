@@ -294,6 +294,11 @@
     <string name="short_swipe_title">Personalizare glisare scurtă</string>
     <string name="short_swipe_show_keyboard">Afișează tastatura</string>
     <string name="short_swipe_reset_all">Resetează tot</string>
+    <string name="short_swipe_reset_all_title">Resetați toate glisările scurte?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Se elimină %1$d mapare personalizată de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item><item quantity="few">Se elimină %1$d mapări personalizate de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item><item quantity="other">Se elimină %1$d de mapări personalizate de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Resetează tot</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d mapare eliminată</item><item quantity="few">%1$d mapări eliminate</item><item quantity="other">%1$d de mapări eliminate</item></plurals>
+    <string name="short_swipe_reset_all_undo">Anulează</string>
     <string name="short_swipe_tap_hint">Atingeți orice tastă de mai jos pentru a-i personaliza gesturile de glisare scurtă</string>
     <string name="short_swipe_instruction_title">Atingeți orice tastă pentru a o personaliza</string>
     <string name="short_swipe_instruction_body">Tastatura de mai jos este tastatura dvs. CleverKeys.\nAtingeți o tastă pentru a adăuga acțiuni de glisare scurtă.</string>
@@ -1667,7 +1672,6 @@
     <string name="extra_keys_group_special_characters">Caractere speciale</string>
     <string name="extra_keys_group_combining_characters">Caractere combinate</string>
     <string name="extra_keys_group_functions">Funcții</string>
-    <string name="short_swipe_toast_all_reset">Toate personalizările au fost resetate</string>
     <string name="short_swipe_toast_mapped">Asociat %1$s → „%2$s” (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Atingeți o direcție pentru a adăuga sau edita un gest de glisare scurtă</string>
     <string name="short_swipe_action_desc_command">Comandă: %1$s</string>
@@ -2730,6 +2734,8 @@
     <string name="voice_pack_unsupported">%1$s necesită o versiune mai nouă de CleverKeys și nu poate fi folosit.</string>
     <string name="voice_permission_blocked_desc">Accesul la microfon este blocat pentru CleverKeys. Permiteți-l în setările sistemului pentru a folosi introducerea vocală.</string>
     <string name="voice_open_app_settings">Deschide setările aplicației</string>
+    <string name="voice_permission_blocked_title">Accesul la microfon este blocat</string>
+    <string name="voice_permission_blocked_steps">Android nu mai afișează solicitarea de microfon pentru CleverKeys. În Informații despre aplicație, deschideți Permisiuni → Microfon și alegeți Permiteți. Introducerea vocală pornește când reveniți.</string>
     <string name="voice_pack_error_not_voice_pack">Acest fișier nu este un pachet vocal.</string>
     <string name="voice_pack_error_invalid_manifest">Manifestul pachetului vocal este deteriorat sau nevalid.</string>
     <string name="voice_pack_error_invalid_id">Pachetul vocal declară un id nevalid: %1$s</string>

@@ -638,6 +638,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.XmlActionRoundTripTest',
     // 2026-10-30: one edit policy for the per-key dialog and the popover's assign screen.
     'tribixbite.cleverkeys.customization.SubkeyEditPolicyTest',
+    // 2026-10-30 Saga: Reset All asks first and can be undone; the per-key dialog never cuts a label.
+    'tribixbite.cleverkeys.customization.ShortSwipeResetUndoTest',
+    'tribixbite.cleverkeys.customization.SubkeySlotLabelTest',
+    // 2026-10-30 Saga: Layout Manager follows layout-list changes made elsewhere.
+    'tribixbite.cleverkeys.LayoutListRefreshTest',
     'tribixbite.cleverkeys.popover.SubkeyAssignSlotTest',
     // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.

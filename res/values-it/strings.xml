@@ -302,6 +302,11 @@
     <string name="short_swipe_title">Personalizzazione scorrimenti brevi</string>
     <string name="short_swipe_show_keyboard">Mostra tastiera</string>
     <string name="short_swipe_reset_all">Reimposta tutto</string>
+    <string name="short_swipe_reset_all_title">Reimpostare tutti gli scorrimenti brevi?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Verrà rimossa %1$d mappatura personalizzata da tutti i tasti. I sottotasti salvati in un layout e le copie modificate dei layout restano invariati.</item><item quantity="many">Verranno rimosse %1$d mappature personalizzate da tutti i tasti. I sottotasti salvati in un layout e le copie modificate dei layout restano invariati.</item><item quantity="other">Verranno rimosse %1$d mappature personalizzate da tutti i tasti. I sottotasti salvati in un layout e le copie modificate dei layout restano invariati.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Reimposta tutto</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d mappatura rimossa</item><item quantity="many">%1$d mappature rimosse</item><item quantity="other">%1$d mappature rimosse</item></plurals>
+    <string name="short_swipe_reset_all_undo">Annulla</string>
     <string name="short_swipe_tap_hint">Tocca un tasto qui sotto per personalizzare i suoi scorrimenti brevi</string>
     <string name="short_swipe_instruction_title">Tocca un tasto per personalizzarlo</string>
     <string name="short_swipe_instruction_body">La tastiera qui sotto è la tua vera tastiera CleverKeys.\nTocca un tasto per aggiungere azioni di scorrimento breve.</string>
@@ -1680,7 +1685,6 @@
     <string name="extra_keys_group_special_characters">Caratteri speciali</string>
     <string name="extra_keys_group_combining_characters">Caratteri combinanti</string>
     <string name="extra_keys_group_functions">Funzioni</string>
-    <string name="short_swipe_toast_all_reset">Tutte le personalizzazioni reimpostate</string>
     <string name="short_swipe_toast_mapped">Assegnato: %1$s → \"%2$s\" (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Tocca una direzione per aggiungere o modificare uno scorrimento breve</string>
     <string name="short_swipe_action_desc_command">Comando: %1$s</string>
@@ -2743,6 +2747,8 @@
     <string name="voice_pack_unsupported">%1$s richiede una versione più recente di CleverKeys e non può essere usato.</string>
     <string name="voice_permission_blocked_desc">L\'accesso al microfono è bloccato per CleverKeys. Consentilo nelle impostazioni di sistema per usare l\'input vocale.</string>
     <string name="voice_open_app_settings">Apri impostazioni app</string>
+    <string name="voice_permission_blocked_title">Accesso al microfono bloccato</string>
+    <string name="voice_permission_blocked_steps">Android non mostra più la richiesta del microfono per CleverKeys. In Info app, apri Autorizzazioni → Microfono e scegli Consenti. L\'input vocale si attiva al tuo ritorno.</string>
     <string name="voice_pack_error_not_voice_pack">Questo file non è un pacchetto vocale.</string>
     <string name="voice_pack_error_invalid_manifest">Il manifest del pacchetto vocale è danneggiato o non valido.</string>
     <string name="voice_pack_error_invalid_id">Il pacchetto vocale dichiara un id non valido: %1$s</string>

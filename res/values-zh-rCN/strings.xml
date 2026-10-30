@@ -266,6 +266,11 @@
     <string name="short_swipe_title">短滑动自定义</string>
     <string name="short_swipe_show_keyboard">显示键盘</string>
     <string name="short_swipe_reset_all">全部重置</string>
+    <string name="short_swipe_reset_all_title">要重置所有短滑动吗？</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="other">这会从所有按键中移除 %1$d 个自定义映射。保存在布局中的子键和修改过的布局副本保持不变。</item></plurals>
+    <string name="short_swipe_reset_all_confirm">全部重置</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="other">已移除 %1$d 个映射</item></plurals>
+    <string name="short_swipe_reset_all_undo">撤销</string>
     <string name="short_swipe_tap_hint">点击下方任意按键以自定义其短滑动手势</string>
     <string name="short_swipe_instruction_title">点击任意按键进行自定义</string>
     <string name="short_swipe_instruction_body">下方键盘是你实际使用的 CleverKeys 键盘。\n点击某个按键以为其添加短滑动操作。</string>
@@ -1566,7 +1571,6 @@
     <string name="extra_keys_group_special_characters">特殊字符</string>
     <string name="extra_keys_group_combining_characters">组合字符</string>
     <string name="extra_keys_group_functions">功能键</string>
-    <string name="short_swipe_toast_all_reset">已重置所有自定义</string>
     <string name="short_swipe_toast_mapped">已映射：%1$s → “%2$s”（%3$s）</string>
     <string name="short_swipe_dialog_hint_no_layout">点按一个方向以添加或编辑短滑动手势</string>
     <string name="short_swipe_action_desc_command">命令：%1$s</string>
@@ -2611,6 +2615,8 @@
     <string name="voice_pack_unsupported">%1$s 需要更新版本的 CleverKeys，无法使用。</string>
     <string name="voice_permission_blocked_desc">CleverKeys 的麦克风权限已被阻止。请在系统设置中允许该权限以使用语音输入。</string>
     <string name="voice_open_app_settings">打开应用设置</string>
+    <string name="voice_permission_blocked_title">麦克风权限已被阻止</string>
+    <string name="voice_permission_blocked_steps">Android 不再为 CleverKeys 显示麦克风权限请求。请在应用信息中打开“权限”→“麦克风”，然后选择“允许”。返回后语音输入会开启。</string>
     <string name="voice_pack_error_not_voice_pack">此文件不是语音包。</string>
     <string name="voice_pack_error_invalid_manifest">语音包的清单已损坏或无效。</string>
     <string name="voice_pack_error_invalid_id">语音包声明了无效的 ID：%1$s</string>

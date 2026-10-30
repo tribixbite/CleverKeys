@@ -296,6 +296,11 @@
     <string name="short_swipe_title">Tùy chỉnh vuốt ngắn</string>
     <string name="short_swipe_show_keyboard">Hiển thị bàn phím</string>
     <string name="short_swipe_reset_all">Đặt lại tất cả</string>
+    <string name="short_swipe_reset_all_title">Đặt lại tất cả vuốt ngắn?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="other">Thao tác này xóa %1$d ánh xạ tùy chỉnh khỏi mọi phím. Các phím phụ lưu trong bố cục và các bản sao bố cục đã sửa đổi vẫn giữ nguyên.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Đặt lại tất cả</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="other">Đã xóa %1$d ánh xạ</item></plurals>
+    <string name="short_swipe_reset_all_undo">Hoàn tác</string>
     <string name="short_swipe_tap_hint">Nhấn vào bất kỳ phím nào bên dưới để tùy chỉnh cử chỉ vuốt ngắn</string>
     <string name="short_swipe_instruction_title">Nhấn vào bất kỳ phím nào để tùy chỉnh</string>
     <string name="short_swipe_instruction_body">Bàn phím bên dưới là bàn phím CleverKeys thực tế của bạn.\nChạm vào một phím để thêm thao tác vuốt ngắn cho phím đó.</string>
@@ -1596,7 +1601,6 @@
     <string name="extra_keys_group_special_characters">Ký tự đặc biệt</string>
     <string name="extra_keys_group_combining_characters">Ký tự kết hợp</string>
     <string name="extra_keys_group_functions">Phím chức năng</string>
-    <string name="short_swipe_toast_all_reset">Đã đặt lại mọi tùy chỉnh</string>
     <string name="short_swipe_toast_mapped">Đã gán %1$s → \"%2$s\" (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Chạm vào một hướng để thêm hoặc sửa cử chỉ vuốt ngắn</string>
     <string name="short_swipe_action_desc_command">Lệnh: %1$s</string>
@@ -2641,6 +2645,8 @@
     <string name="voice_pack_unsupported">%1$s cần phiên bản CleverKeys mới hơn và không thể sử dụng.</string>
     <string name="voice_permission_blocked_desc">Quyền truy cập micrô của CleverKeys đang bị chặn. Hãy cho phép trong cài đặt hệ thống để dùng nhập bằng giọng nói.</string>
     <string name="voice_open_app_settings">Mở cài đặt ứng dụng</string>
+    <string name="voice_permission_blocked_title">Quyền truy cập micrô bị chặn</string>
+    <string name="voice_permission_blocked_steps">Android không còn hiển thị yêu cầu micrô cho CleverKeys. Trong Thông tin ứng dụng, mở Quyền → Micrô và chọn Cho phép. Nhập bằng giọng nói sẽ bật khi bạn quay lại.</string>
     <string name="voice_pack_error_not_voice_pack">Tệp này không phải là gói giọng nói.</string>
     <string name="voice_pack_error_invalid_manifest">Tệp kê khai (manifest) của gói giọng nói bị hỏng hoặc không hợp lệ.</string>
     <string name="voice_pack_error_invalid_id">Gói giọng nói khai báo id không hợp lệ: %1$s</string>

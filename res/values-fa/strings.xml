@@ -296,6 +296,11 @@
     <string name="short_swipe_title">سفارشی‌سازی کشیدن کوتاه</string>
     <string name="short_swipe_show_keyboard">نمایش صفحه‌کلید</string>
     <string name="short_swipe_reset_all">بازنشانی همه</string>
+    <string name="short_swipe_reset_all_title">همهٔ کشیدن‌های کوتاه بازنشانی شوند؟</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">%1$d نگاشت سفارشی از همهٔ کلیدها حذف می‌شود. زیرکلیدهای ذخیره‌شده در چیدمان و رونوشت‌های تغییریافتهٔ چیدمان بدون تغییر می‌مانند.</item><item quantity="other">%1$d نگاشت سفارشی از همهٔ کلیدها حذف می‌شود. زیرکلیدهای ذخیره‌شده در چیدمان و رونوشت‌های تغییریافتهٔ چیدمان بدون تغییر می‌مانند.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">بازنشانی همه</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d نگاشت حذف شد</item><item quantity="other">%1$d نگاشت حذف شد</item></plurals>
+    <string name="short_swipe_reset_all_undo">واگرد</string>
     <string name="short_swipe_tap_hint">برای سفارشی‌سازی اشاره کشیدن کوتاه، روی هر کلید زیر ضربه بزنید</string>
     <string name="short_swipe_instruction_title">برای سفارشی‌سازی یک کلید، آن را تایپ کنید</string>
     <string name="short_swipe_instruction_body">صفحه‌کلید زیر همان صفحه‌کلید واقعی CleverKeys شماست.\nبرای افزودن اشاره کشیدن کوتاه، روی یک کلید ضربه بزنید.</string>
@@ -1642,7 +1647,6 @@
     <string name="extra_keys_group_special_characters">نویسه‌های ویژه</string>
     <string name="extra_keys_group_combining_characters">نویسه‌های ترکیبی</string>
     <string name="extra_keys_group_functions">کلیدهای تابعی</string>
-    <string name="short_swipe_toast_all_reset">همهٔ سفارشی‌سازی‌ها بازنشانی شد</string>
     <string name="short_swipe_toast_mapped">%1$s ← «%2$s» اختصاص یافت (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">برای افزودن یا ویرایش اشارهٔ کشیدن کوتاه، روی یک جهت ضربه بزنید</string>
     <string name="short_swipe_action_desc_command">فرمان: %1$s</string>
@@ -2696,6 +2700,8 @@
     <string name="voice_pack_unsupported">%1$s به نسخهٔ جدیدتری از CleverKeys نیاز دارد و قابل استفاده نیست.</string>
     <string name="voice_permission_blocked_desc">دسترسی به میکروفون برای CleverKeys مسدود است. برای استفاده از ورودی صوتی، آن را در تنظیمات سیستم مجاز کنید.</string>
     <string name="voice_open_app_settings">باز کردن تنظیمات برنامه</string>
+    <string name="voice_permission_blocked_title">دسترسی به میکروفون مسدود است</string>
+    <string name="voice_permission_blocked_steps">Android دیگر درخواست میکروفون را برای CleverKeys نشان نمی‌دهد. در «اطلاعات برنامه»، «مجوزها ← میکروفون» را باز کنید و «اجازه دادن» را انتخاب کنید. ورودی صوتی پس از بازگشت شما روشن می‌شود.</string>
     <string name="voice_pack_error_not_voice_pack">این فایل بستهٔ صوتی نیست.</string>
     <string name="voice_pack_error_invalid_manifest">مانیفست بستهٔ صوتی آسیب دیده یا نامعتبر است.</string>
     <string name="voice_pack_error_invalid_id">بستهٔ صوتی شناسهٔ نامعتبری اعلام می‌کند: %1$s</string>

@@ -263,14 +263,33 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     }
 
     /**
-     * Reset all custom mappings.
+     * Reset all custom mappings. Returns what was removed, so the screen can offer Undo
+     * ([restoreAfterReset]). Layout subkeys and modified layout copies are not touched.
      */
-    suspend fun resetAll() {
-        fileMutex.withLock {
+    suspend fun resetAll(): List<ShortSwipeMapping> {
+        val removed = fileMutex.withLock {
+            val snapshot = mappingCache.values.toList()
             mappingCache.clear()
             saveMappingsLocked()
+            snapshot
         }
-        Log.i(TAG, "Reset all custom short swipe mappings")
+        Log.i(TAG, "Reset all custom short swipe mappings (${removed.size})")
+        return removed
+    }
+
+    /**
+     * Undo of [resetAll]: puts [removed] back, except where a mapping made since the reset holds
+     * the same key and direction ([restorableAfterReset]). Returns how many came back.
+     */
+    suspend fun restoreAfterReset(removed: List<ShortSwipeMapping>): Int {
+        val restored = fileMutex.withLock {
+            val back = restorableAfterReset(mappingCache.keys.toSet(), removed)
+            back.forEach { mappingCache[it.toStorageKey()] = it }
+            if (back.isNotEmpty()) saveMappingsLocked()
+            back.size
+        }
+        Log.i(TAG, "Restored $restored short swipe mappings after Reset All")
+        return restored
     }
 
     // ========== Export/Import ==========
@@ -389,6 +408,18 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
          * overlay in `Keyboard2View` and the subkey popover, so a slot the popover lets the user
          * assign is always one the keyboard will draw.
          */
+        /**
+         * The mappings Undo puts back after "Reset All" removed [removed]: each one stored under
+         * its runtime key code ([ShortSwipeMapping.withCanonicalKeyCode]), except where a mapping
+         * made since the reset already holds that key and direction ([currentKeys] are storage
+         * keys) — Undo never overwrites a newer choice. Pure (`ShortSwipeResetUndoTest`).
+         */
+        @JvmStatic
+        fun restorableAfterReset(currentKeys: Set<String>, removed: Collection<ShortSwipeMapping>): List<ShortSwipeMapping> {
+            val taken = HashSet(currentKeys)
+            return removed.map { it.withCanonicalKeyCode() }.filter { taken.add(it.toStorageKey()) }
+        }
+
         @JvmStatic
         fun isMappableKeyCode(keyCode: String): Boolean = keyCode.isNotEmpty() && keyCode.length <= 4
 

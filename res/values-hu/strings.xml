@@ -267,6 +267,11 @@
     <string name="short_swipe_title">Rövid csúsztatás testreszabása</string>
     <string name="short_swipe_show_keyboard">Billentyűzet megjelenítése</string>
     <string name="short_swipe_reset_all">Összes visszaállítása</string>
+    <string name="short_swipe_reset_all_title">Visszaállítja az összes rövid csúsztatást?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Ez %1$d egyéni leképezést eltávolít minden billentyűről. Az elrendezésben tárolt albillentyűk és a módosított elrendezésmásolatok nem változnak.</item><item quantity="other">Ez %1$d egyéni leképezést eltávolít minden billentyűről. Az elrendezésben tárolt albillentyűk és a módosított elrendezésmásolatok nem változnak.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Összes visszaállítása</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d leképezés eltávolítva</item><item quantity="other">%1$d leképezés eltávolítva</item></plurals>
+    <string name="short_swipe_reset_all_undo">Visszavonás</string>
     <string name="short_swipe_tap_hint">Koppintson az alábbi billentyűk bármelyikére a rövid csúsztatási geszt testreszabásához</string>
     <string name="short_swipe_instruction_title">Koppintson bármelyik billentyűre a testreszabáshoz</string>
     <string name="short_swipe_instruction_body">Az alábbi billentyűzet a valódi CleverKeys billentyűzete.\nKoppintson egy billentyűre rövid csúsztatási műveletek hozzáadásához.</string>
@@ -1610,7 +1615,6 @@
     <string name="extra_keys_group_special_characters">Speciális karakterek</string>
     <string name="extra_keys_group_combining_characters">Kombináló karakterek</string>
     <string name="extra_keys_group_functions">Funkciók</string>
-    <string name="short_swipe_toast_all_reset">Minden testreszabás visszaállítva</string>
     <string name="short_swipe_toast_mapped">%1$s hozzárendelve → „%2$s” (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Koppintson egy irányra rövid csúsztatási gesztus hozzáadásához vagy szerkesztéséhez</string>
     <string name="short_swipe_action_desc_command">Parancs: %1$s</string>
@@ -2664,6 +2668,8 @@
     <string name="voice_pack_unsupported">A(z) %1$s a CleverKeys újabb verzióját igényli, és nem használható.</string>
     <string name="voice_permission_blocked_desc">A mikrofon-hozzáférés le van tiltva a CleverKeys számára. A hangbevitel használatához engedélyezze a rendszerbeállításokban.</string>
     <string name="voice_open_app_settings">Alkalmazásbeállítások megnyitása</string>
+    <string name="voice_permission_blocked_title">A mikrofon-hozzáférés le van tiltva</string>
+    <string name="voice_permission_blocked_steps">Az Android már nem jeleníti meg a mikrofonkérést a CleverKeys számára. Az Alkalmazásinformációkban nyissa meg az Engedélyek → Mikrofon menüt, és válassza az Engedélyezés lehetőséget. A hangbevitel a visszatéréskor bekapcsol.</string>
     <string name="voice_pack_error_not_voice_pack">Ez a fájl nem hangcsomag.</string>
     <string name="voice_pack_error_invalid_manifest">A hangcsomag manifestje sérült vagy érvénytelen.</string>
     <string name="voice_pack_error_invalid_id">A hangcsomag érvénytelen azonosítót ad meg: %1$s</string>

@@ -267,6 +267,11 @@
     <string name="short_swipe_title">ショートスワイプのカスタマイズ</string>
     <string name="short_swipe_show_keyboard">キーボードを表示</string>
     <string name="short_swipe_reset_all">すべてリセット</string>
+    <string name="short_swipe_reset_all_title">すべてのショートスワイプをリセットしますか？</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="other">すべてのキーから %1$d 個のカスタムマッピングを削除します。レイアウトに保存されたサブキーと、変更したレイアウトのコピーはそのままです。</item></plurals>
+    <string name="short_swipe_reset_all_confirm">すべてリセット</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="other">%1$d 個のマッピングを削除しました</item></plurals>
+    <string name="short_swipe_reset_all_undo">元に戻す</string>
     <string name="short_swipe_tap_hint">下のキーをタップしてショートスワイプジェスチャーをカスタマイズしてください</string>
     <string name="short_swipe_instruction_title">カスタマイズするキーをタップしてください</string>
     <string name="short_swipe_instruction_body">以下のキーボードはあなたの実際の CleverKeys キーボードです。\nキーをタップして、ショートスワイプのアクションを追加してください。</string>
@@ -1567,7 +1572,6 @@
     <string name="extra_keys_group_special_characters">特殊文字</string>
     <string name="extra_keys_group_combining_characters">結合文字</string>
     <string name="extra_keys_group_functions">ファンクション</string>
-    <string name="short_swipe_toast_all_reset">すべてのカスタマイズをリセットしました</string>
     <string name="short_swipe_toast_mapped">%1$s → 「%2$s」を割り当てました(%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">方向をタップしてショートスワイプジェスチャーを追加・編集</string>
     <string name="short_swipe_action_desc_command">コマンド: %1$s</string>
@@ -2612,6 +2616,8 @@
     <string name="voice_pack_unsupported">%1$s には新しいバージョンの CleverKeys が必要なため、使用できません。</string>
     <string name="voice_permission_blocked_desc">CleverKeys のマイクへのアクセスがブロックされています。音声入力を使うには、システム設定で許可してください。</string>
     <string name="voice_open_app_settings">アプリの設定を開く</string>
+    <string name="voice_permission_blocked_title">マイクへのアクセスがブロックされています</string>
+    <string name="voice_permission_blocked_steps">Android は CleverKeys のマイク許可のリクエストを表示しなくなりました。アプリ情報で [権限] → [マイク] を開き、[許可] を選んでください。戻ると音声入力がオンになります。</string>
     <string name="voice_pack_error_not_voice_pack">このファイルは音声パックではありません。</string>
     <string name="voice_pack_error_invalid_manifest">音声パックのマニフェストが破損しているか無効です。</string>
     <string name="voice_pack_error_invalid_id">音声パックに無効な ID が指定されています: %1$s</string>

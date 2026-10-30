@@ -396,6 +396,18 @@
     <string name="short_swipe_title">Short Swipe Customization</string>
     <string name="short_swipe_show_keyboard">Show keyboard</string>
     <string name="short_swipe_reset_all">Reset All</string>
+    <!-- Reset All confirmation (Saga 2026-10-30): %1$d = custom mappings removed -->
+    <string name="short_swipe_reset_all_title">Reset all short swipes?</string>
+    <plurals name="short_swipe_reset_all_message">
+        <item quantity="one">This removes %1$d custom mapping from every key. Subkeys stored in a layout and modified layout copies stay as they are.</item>
+        <item quantity="other">This removes %1$d custom mappings from every key. Subkeys stored in a layout and modified layout copies stay as they are.</item>
+    </plurals>
+    <string name="short_swipe_reset_all_confirm">Reset all</string>
+    <plurals name="short_swipe_reset_all_done">
+        <item quantity="one">%1$d mapping removed</item>
+        <item quantity="other">%1$d mappings removed</item>
+    </plurals>
+    <string name="short_swipe_reset_all_undo">Undo</string>
     <string name="short_swipe_tap_hint">Tap any key below to customize its short swipe gestures</string>
     <string name="short_swipe_instruction_title">Type any key to customize it</string>
     <string name="short_swipe_instruction_body">The keyboard below is your actual CleverKeys keyboard.\nTap a key to add short swipe actions to it.</string>
@@ -2014,7 +2026,6 @@
     <string name="extra_keys_group_special_characters">Special Characters</string>
     <string name="extra_keys_group_combining_characters">Combining Characters</string>
     <string name="extra_keys_group_functions">Functions</string>
-    <string name="short_swipe_toast_all_reset">All customizations reset</string>
     <string name="short_swipe_toast_mapped">Mapped %1$s → \"%2$s\" (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Tap a direction to add or edit a short swipe gesture</string>
     <string name="short_swipe_action_desc_command">Command: %1$s</string>
@@ -3089,6 +3100,9 @@
     <string name="voice_pack_unsupported">%1$s needs a newer version of CleverKeys and cannot be used.</string>
     <string name="voice_permission_blocked_desc">Microphone access is blocked for CleverKeys. Allow it in the system settings to use voice input.</string>
     <string name="voice_open_app_settings">Open app settings</string>
+    <!-- A request Android refused without a prompt ("don't ask again"); docs/specs/voice-input.md FR-7 -->
+    <string name="voice_permission_blocked_title">Microphone access is blocked</string>
+    <string name="voice_permission_blocked_steps">Android no longer shows the microphone request for CleverKeys. In App info, open Permissions → Microphone and choose Allow. Voice input turns on when you come back.</string>
     <string name="voice_pack_error_not_voice_pack">This file is not a voice pack.</string>
     <string name="voice_pack_error_invalid_manifest">The voice pack\'s manifest is damaged or invalid.</string>
     <string name="voice_pack_error_invalid_id">The voice pack declares an invalid id: %1$s</string>

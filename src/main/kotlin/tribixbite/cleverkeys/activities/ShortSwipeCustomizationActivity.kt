@@ -3,7 +3,6 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -35,6 +34,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -184,7 +184,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     // Hoisted out of the semantics {} lambda (not a composable scope).
     val showKeyboardDesc = stringResource(R.string.short_swipe_show_keyboard)
 
+    // Reset All (Saga 2026-10-30: it removed every mapping at once, with no question and no way
+    // back): a confirmation naming the count, then Undo in a snackbar.
+    var showResetConfirm by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val res = context.resources
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.short_swipe_title)) },
@@ -208,14 +215,10 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     ) {
                         Text("⌨", fontSize = 22.sp)
                     }
-                    // Reset all button
+                    // Reset all button: asks first; nothing to reset → disabled
                     IconButton(
-                        onClick = {
-                            scope.launch {
-                                manager.resetAll()
-                                Toast.makeText(context, R.string.short_swipe_toast_all_reset, Toast.LENGTH_SHORT).show()
-                            }
-                        }
+                        onClick = { showResetConfirm = true },
+                        enabled = mappings.isNotEmpty(),
                     ) {
                         Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.short_swipe_reset_all))
                     }
@@ -320,6 +323,35 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                     }
                 }
             }
+        }
+
+        if (showResetConfirm) {
+            val count = mappings.size
+            AlertDialog(
+                onDismissRequest = { showResetConfirm = false },
+                title = { Text(stringResource(R.string.short_swipe_reset_all_title)) },
+                text = { Text(pluralStringResource(R.plurals.short_swipe_reset_all_message, count, count)) },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showResetConfirm = false
+                        scope.launch {
+                            val removed = manager.resetAll()
+                            val result = snackbarHostState.showSnackbar(
+                                message = res.getQuantityString(R.plurals.short_swipe_reset_all_done, removed.size, removed.size),
+                                actionLabel = res.getString(R.string.short_swipe_reset_all_undo),
+                                withDismissAction = true,
+                                duration = SnackbarDuration.Long,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) manager.restoreAfterReset(removed)
+                        }
+                    }) {
+                        Text(stringResource(R.string.short_swipe_reset_all_confirm), color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.common_cancel)) }
+                },
+            )
         }
 
         // Key customization modal
@@ -652,15 +684,16 @@ private fun SubkeySlotItem(
             SlotLabel(slot)
 
             Column(modifier = Modifier.weight(1f).padding(start = 6.dp)) {
-                Text(text = what, fontWeight = FontWeight.Medium, fontSize = 13.sp, maxLines = 2)
+                // No maxLines here or below: a long command name wraps instead of being clipped.
+                Text(text = what, fontWeight = FontWeight.Medium, fontSize = 13.sp)
                 if (custom != null && !custom.isRemoval) {
                     val actionDesc = remember(custom.actionType, custom.actionValue, context) {
                         shortSwipeActionDescription(context, custom.actionType, custom.actionValue)
                     }
-                    Text(text = actionDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                    Text(text = actionDesc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (replacedText != null) {
-                    Text(text = replacedText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                    Text(text = replacedText, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -696,21 +729,29 @@ private fun SubkeySlotItem(
     }
 }
 
-/** The slot's on-key label, drawn in the key font when it is an icon; nothing for an empty slot. */
+/**
+ * The slot's on-key label, drawn in the key font when it is an icon; nothing for an empty slot.
+ * Never cut ([SubkeySlotLabel]): a word label longer than a glyph ("Action") wraps in a bounded
+ * width instead of reading "Acti" (Saga 2026-10-30).
+ */
 @Composable
 private fun SlotLabel(slot: SubkeySlot) {
     val custom = slot.custom
-    val (label, keyFont) = when {
+    val shown = when {
         custom != null && custom.isRemoval -> return
-        custom != null -> custom.displayText to custom.useKeyFont
+        custom != null -> SubkeySlotLabel.of(custom.displayText, custom.useKeyFont)
         else -> {
             val kv = slot.shownValue ?: slot.definedValue ?: return
-            kv.getString().take(4) to kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT)
+            SubkeySlotLabel.of(kv.getString(), kv.hasFlagsAny(KeyValue.FLAG_KEY_FONT))
         }
-    }
-    if (label.isBlank()) return
+    } ?: return
+    val label = shown.text
+    val keyFont = shown.keyFont
     val color = MaterialTheme.colorScheme.onSurface.toArgb()
-    Box(modifier = Modifier.widthIn(min = 28.dp), contentAlignment = Alignment.Center) {
+    Box(
+        modifier = Modifier.widthIn(min = 28.dp, max = if (shown.wraps) SLOT_LABEL_MAX_WIDTH else Dp.Unspecified),
+        contentAlignment = Alignment.Center,
+    ) {
         if (keyFont) {
             AndroidView(
                 factory = { ctx -> android.widget.TextView(ctx) },
@@ -724,7 +765,16 @@ private fun SlotLabel(slot: SubkeySlot) {
                 }
             )
         } else {
-            Text(text = label, fontSize = SubLabelSizing.previewSp(15f, false, label).sp, maxLines = 1)
+            Text(
+                text = label,
+                // A word label is set smaller so the description column keeps room for whole
+                // words (at 15 sp "Action" pushed Enter's "Enter" into "Ente/r" on the Saga).
+                fontSize = if (shown.wraps) SLOT_WORD_LABEL_SP.sp else SubLabelSizing.previewSp(15f, false, label).sp,
+                // A glyph stays on one line; a longer word label wraps rather than being clipped.
+                maxLines = if (shown.wraps) Int.MAX_VALUE else 1,
+                softWrap = shown.wraps,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -812,6 +862,12 @@ private fun DirectionZone(
         )
     }
 }
+
+/** Widest a word label ([SubkeySlotLabel.Text.wraps]) may grow in a direction row before wrapping. */
+private val SLOT_LABEL_MAX_WIDTH = 64.dp
+
+/** Text size of a word label in a direction row (a glyph keeps the key-preview size). */
+private const val SLOT_WORD_LABEL_SP = 12f
 
 /** Longest text-action value quoted in a mapping summary before it is truncated with "…". */
 private const val ACTION_TEXT_PREVIEW_CHARS = 20

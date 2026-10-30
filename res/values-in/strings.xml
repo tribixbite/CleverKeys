@@ -270,6 +270,11 @@
     <string name="short_swipe_title">Kustomisasi Geser Pendek</string>
     <string name="short_swipe_show_keyboard">Tampilkan keyboard</string>
     <string name="short_swipe_reset_all">Setel Ulang Semua</string>
+    <string name="short_swipe_reset_all_title">Setel ulang semua geser pendek?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="other">Tindakan ini menghapus %1$d pemetaan kustom dari semua tombol. Subtombol yang disimpan di tata letak dan salinan tata letak yang diubah tetap seperti semula.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Setel Ulang Semua</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="other">%1$d pemetaan dihapus</item></plurals>
+    <string name="short_swipe_reset_all_undo">Urungkan</string>
     <string name="short_swipe_tap_hint">Ketuk tombol mana saja di bawah untuk menyesuaikan gestur geser pendeknya</string>
     <string name="short_swipe_instruction_title">Ketuk tombol apa saja untuk menyesuaikannya</string>
     <string name="short_swipe_instruction_body">Keyboard di bawah ini adalah keyboard CleverKeys Anda yang sebenarnya.\nKetuk tombol untuk menambahkan aksi geser pendek padanya.</string>
@@ -1580,7 +1585,6 @@
     <string name="extra_keys_group_special_characters">Karakter Khusus</string>
     <string name="extra_keys_group_combining_characters">Karakter Gabungan</string>
     <string name="extra_keys_group_functions">Fungsi</string>
-    <string name="short_swipe_toast_all_reset">Semua kustomisasi disetel ulang</string>
     <string name="short_swipe_toast_mapped">%1$s dipetakan → \"%2$s\" (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Ketuk arah untuk menambah atau mengedit gestur geser pendek</string>
     <string name="short_swipe_action_desc_command">Perintah: %1$s</string>
@@ -2625,6 +2629,8 @@
     <string name="voice_pack_unsupported">%1$s memerlukan versi CleverKeys yang lebih baru dan tidak dapat digunakan.</string>
     <string name="voice_permission_blocked_desc">Akses mikrofon diblokir untuk CleverKeys. Izinkan di setelan sistem untuk menggunakan input suara.</string>
     <string name="voice_open_app_settings">Buka pengaturan aplikasi</string>
+    <string name="voice_permission_blocked_title">Akses mikrofon diblokir</string>
+    <string name="voice_permission_blocked_steps">Android tidak lagi menampilkan permintaan mikrofon untuk CleverKeys. Di Info aplikasi, buka Izin → Mikrofon dan pilih Izinkan. Input suara akan aktif saat Anda kembali.</string>
     <string name="voice_pack_error_not_voice_pack">File ini bukan paket suara.</string>
     <string name="voice_pack_error_invalid_manifest">Manifes paket suara rusak atau tidak valid.</string>
     <string name="voice_pack_error_invalid_id">Paket suara menyatakan id yang tidak valid: %1$s</string>

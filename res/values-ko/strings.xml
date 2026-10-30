@@ -268,6 +268,11 @@
     <string name="short_swipe_title">짧은 스와이프 사용자 지정</string>
     <string name="short_swipe_show_keyboard">키보드 표시</string>
     <string name="short_swipe_reset_all">모두 초기화</string>
+    <string name="short_swipe_reset_all_title">모든 짧은 스와이프를 초기화할까요?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="other">모든 키에서 사용자 정의 매핑 %1$d개를 삭제합니다. 레이아웃에 저장된 하위 키와 수정된 레이아웃 사본은 그대로 유지됩니다.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">모두 초기화</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="other">매핑 %1$d개를 삭제했습니다</item></plurals>
+    <string name="short_swipe_reset_all_undo">실행 취소</string>
     <string name="short_swipe_tap_hint">아래 키를 탭하여 짧은 스와이프 제스처를 사용자 지정하세요</string>
     <string name="short_swipe_instruction_title">사용자 지정할 키를 탭하세요</string>
     <string name="short_swipe_instruction_body">아래 키보드는 실제 CleverKeys 키보드입니다.\n키를 탭하여 짧은 스와이프 동작을 추가하세요.</string>
@@ -1568,7 +1573,6 @@
     <string name="extra_keys_group_special_characters">특수 문자</string>
     <string name="extra_keys_group_combining_characters">결합 문자</string>
     <string name="extra_keys_group_functions">기능 키</string>
-    <string name="short_swipe_toast_all_reset">모든 사용자 지정을 초기화했습니다</string>
     <string name="short_swipe_toast_mapped">%1$s → “%2$s” 할당됨(%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">방향을 탭하여 짧은 스와이프 제스처 추가 또는 편집</string>
     <string name="short_swipe_action_desc_command">명령: %1$s</string>
@@ -2613,6 +2617,8 @@
     <string name="voice_pack_unsupported">%1$s은(는) 최신 버전의 CleverKeys가 필요하여 사용할 수 없습니다.</string>
     <string name="voice_permission_blocked_desc">CleverKeys의 마이크 액세스가 차단되어 있습니다. 음성 입력을 사용하려면 시스템 설정에서 허용하세요.</string>
     <string name="voice_open_app_settings">앱 설정 열기</string>
+    <string name="voice_permission_blocked_title">마이크 액세스가 차단되었습니다</string>
+    <string name="voice_permission_blocked_steps">Android에서 더 이상 CleverKeys의 마이크 요청을 표시하지 않습니다. 앱 정보에서 권한 → 마이크를 열고 허용을 선택하세요. 돌아오면 음성 입력이 켜집니다.</string>
     <string name="voice_pack_error_not_voice_pack">이 파일은 음성 팩이 아닙니다.</string>
     <string name="voice_pack_error_invalid_manifest">음성 팩의 매니페스트가 손상되었거나 잘못되었습니다.</string>
     <string name="voice_pack_error_invalid_id">음성 팩에 잘못된 ID가 선언되어 있습니다: %1$s</string>

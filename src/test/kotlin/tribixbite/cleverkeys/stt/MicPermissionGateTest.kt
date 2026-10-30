@@ -30,7 +30,54 @@ class MicPermissionGateTest {
     fun turningVoiceInputOnAsksOnceThenProceeds() {
         assertThat(MicPermissionGate.decide(Trigger.SETTINGS_TOGGLE_ON, facts(enabled = false))).isEqualTo(Decision.REQUEST_PERMISSION)
         assertThat(MicPermissionGate.decide(Trigger.SETTINGS_TOGGLE_ON, facts(granted = true))).isEqualTo(Decision.PROCEED)
-        assertThat(MicPermissionGate.decide(Trigger.SETTINGS_TOGGLE_ON, facts(blocked = true))).isEqualTo(Decision.EXPLAIN_BLOCKED)
+    }
+
+    /**
+     * Saga 2026-10-30: the app remembered "don't ask again" after the system state had changed, so
+     * the switch neither prompted nor responded and the user was stuck. An explicit Settings action
+     * asks Android every time: when the prompt is really blocked Android answers "denied" at once
+     * without showing anything, and [MicPermissionGate.afterRequest] then explains.
+     */
+    @Test
+    fun anExplicitSettingsActionAsksEvenWhenTheRememberedStateSaysBlocked() {
+        assertThat(MicPermissionGate.decide(Trigger.SETTINGS_TOGGLE_ON, facts(enabled = false, blocked = true))).isEqualTo(Decision.REQUEST_PERMISSION)
+        assertThat(MicPermissionGate.decide(Trigger.PACK_IMPORTED, facts(enabled = false, blocked = true))).isEqualTo(Decision.REQUEST_PERMISSION)
+        // Granted wins over a stale remembered block.
+        assertThat(MicPermissionGate.decide(Trigger.SETTINGS_TOGGLE_ON, facts(granted = true, blocked = true))).isEqualTo(Decision.PROCEED)
+        assertThat(MicPermissionGate.decide(Trigger.KEY_PRESS, facts(granted = true, blocked = true))).isEqualTo(Decision.PROCEED)
+    }
+
+    /** One reading of the system prompt's answer, for Settings and the keyboard's activity alike. */
+    @Test
+    fun theAnswerOfARequestIsReadOneWay() {
+        // Granted: voice input turns on, the remembered block is cleared, nothing to explain.
+        val granted = MicPermissionGate.afterRequest(granted = true, showRationale = false)
+        assertThat(granted).isEqualTo(MicPermissionGate.RequestOutcome.GRANTED)
+        assertThat(granted.turnsVoiceOn).isTrue()
+        assertThat(granted.blocked).isFalse()
+        assertThat(granted.offersAppSettings).isFalse()
+        // Denied, Android would ask again: voice stays off, no app-settings detour.
+        val denied = MicPermissionGate.afterRequest(granted = false, showRationale = true)
+        assertThat(denied).isEqualTo(MicPermissionGate.RequestOutcome.DENIED)
+        assertThat(denied.turnsVoiceOn).isFalse()
+        assertThat(denied.blocked).isFalse()
+        assertThat(denied.offersAppSettings).isFalse()
+        // Denied and no rationale: Android will not show the prompt again — explain and offer
+        // App info → Permissions.
+        val blocked = MicPermissionGate.afterRequest(granted = false, showRationale = false)
+        assertThat(blocked).isEqualTo(MicPermissionGate.RequestOutcome.BLOCKED)
+        assertThat(blocked.turnsVoiceOn).isFalse()
+        assertThat(blocked.blocked).isTrue()
+        assertThat(blocked.offersAppSettings).isTrue()
+    }
+
+    /** "Open app settings" from a blocked switch: back in Settings, the switch follows the real state. */
+    @Test
+    fun comingBackFromAppSettingsTurnsVoiceOnOnlyWhenGranted() {
+        assertThat(MicPermissionGate.turnOnAfterAppSettings(waitingToEnable = true, granted = true)).isTrue()
+        assertThat(MicPermissionGate.turnOnAfterAppSettings(waitingToEnable = true, granted = false)).isFalse()
+        // Nobody asked to turn it on (the user only looked): granting there does not flip the switch.
+        assertThat(MicPermissionGate.turnOnAfterAppSettings(waitingToEnable = false, granted = true)).isFalse()
     }
 
     @Test

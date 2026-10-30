@@ -200,7 +200,9 @@ fun getAllMappings(): List<ShortSwipeMapping>
 suspend fun setMapping(mapping: ShortSwipeMapping)
 suspend fun removeMapping(keyCode: String, direction: SwipeDirection): Boolean
 suspend fun removeMappingsForKey(keyCode: String): Int
-suspend fun resetAll()
+suspend fun resetAll(): List<ShortSwipeMapping>        // what it removed (for Undo)
+suspend fun restoreAfterReset(removed: List<ShortSwipeMapping>): Int
+ShortSwipeCustomizationManager.restorableAfterReset(currentKeys, removed)  // pure
 fun exportToJson(): String
 suspend fun importFromJson(json: String, merge: Boolean = false): Int
 suspend fun importFromMappings(mappings: List<ShortSwipeMapping>, merge: Boolean = false): Int
@@ -504,6 +506,25 @@ Extra key / Custom / Removed). Changing a subkey the current BUILT-IN layout def
 modified copy of that layout ("<name> (modified)", Layout Manager can revert it) instead of a
 global custom mapping, unless the user picks "Change in all layouts". Full rules:
 [subkey-customization-current.md](subkey-customization-current.md#sources-in-the-per-key-dialog-2026-10-30).
+
+The direction rows never cut a label (`SubkeySlotLabel`, `SubkeySlotLabelTest`): a key glyph or
+a label of up to 4 characters sits on one line; a longer word label (the `action` key's
+"Action", which read "Acti" on the Saga 2026-10-30) is shown whole at 12 sp and wraps within
+64 dp, leaving the description column room for whole words; an
+emoji sequence is never split. The description column (command name, action summary, "Replaces
+…") wraps instead of being clipped at two lines.
+
+### Reset All (2026-10-30)
+
+The top-bar **Reset All** button is disabled while there are no custom mappings. It opens a
+confirmation naming the count ("This removes N custom mappings from every key. Subkeys stored in
+a layout and modified layout copies stay as they are."); confirming calls `resetAll()`, which
+returns the removed mappings, and a snackbar "N mappings removed" offers **Undo** (long
+duration). Undo calls `restoreAfterReset`, which puts each removed mapping back under its
+runtime key code except where a mapping made since the reset holds the same key and direction
+(newer choice wins). Before 2026-10-30 the button removed everything at once with no question
+and no undo (Saga finding, todo item 31). Tests: `ShortSwipeResetUndoTest` (pure),
+`ShortSwipeChangeListenerTest.resetAllCanBeUndone` (mock: persisted, listeners notified).
 
 The forgiving ±1 scan that resolves built-in subkeys (`resolveShortSwipe`, `Pointers.kt:920-930`)
 also checks a custom mapping at each scanned direction, in the same 0, −1, +1 order.

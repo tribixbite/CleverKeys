@@ -280,6 +280,11 @@
     <string name="short_swipe_title">Personalización de deslizamientos cortos</string>
     <string name="short_swipe_show_keyboard">Mostrar teclado</string>
     <string name="short_swipe_reset_all">Restablecer todo</string>
+    <string name="short_swipe_reset_all_title">¿Restablecer todos los deslizamientos cortos?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Se eliminará %1$d asignación personalizada de todas las teclas. Las subteclas guardadas en una distribución y las copias modificadas de distribuciones no cambian.</item><item quantity="many">Se eliminarán %1$d asignaciones personalizadas de todas las teclas. Las subteclas guardadas en una distribución y las copias modificadas de distribuciones no cambian.</item><item quantity="other">Se eliminarán %1$d asignaciones personalizadas de todas las teclas. Las subteclas guardadas en una distribución y las copias modificadas de distribuciones no cambian.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Restablecer todo</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d asignación eliminada</item><item quantity="many">%1$d asignaciones eliminadas</item><item quantity="other">%1$d asignaciones eliminadas</item></plurals>
+    <string name="short_swipe_reset_all_undo">Deshacer</string>
     <string name="short_swipe_tap_hint">Toca cualquier tecla de abajo para personalizar sus deslizamientos cortos</string>
     <string name="short_swipe_instruction_title">Toca una tecla para personalizarla</string>
     <string name="short_swipe_instruction_body">El teclado de abajo es tu teclado CleverKeys real.\nToca una tecla para añadirle acciones de deslizamiento corto.</string>
@@ -1658,7 +1663,6 @@
     <string name="extra_keys_group_special_characters">Caracteres especiales</string>
     <string name="extra_keys_group_combining_characters">Caracteres combinables</string>
     <string name="extra_keys_group_functions">Funciones</string>
-    <string name="short_swipe_toast_all_reset">Se restablecieron todas las personalizaciones</string>
     <string name="short_swipe_toast_mapped">Asignado: %1$s → «%2$s» (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Toca una dirección para añadir o editar un deslizamiento corto</string>
     <string name="short_swipe_action_desc_command">Comando: %1$s</string>
@@ -2721,6 +2725,8 @@
     <string name="voice_pack_unsupported">%1$s necesita una versión más reciente de CleverKeys y no se puede usar.</string>
     <string name="voice_permission_blocked_desc">El acceso al micrófono está bloqueado para CleverKeys. Permítelo en los ajustes del sistema para usar la entrada de voz.</string>
     <string name="voice_open_app_settings">Abrir ajustes de la app</string>
+    <string name="voice_permission_blocked_title">El acceso al micrófono está bloqueado</string>
+    <string name="voice_permission_blocked_steps">Android ya no muestra la solicitud de micrófono para CleverKeys. En Información de la app, abre Permisos → Micrófono y elige Permitir. La entrada de voz se activará cuando vuelvas.</string>
     <string name="voice_pack_error_not_voice_pack">Este archivo no es un paquete de voz.</string>
     <string name="voice_pack_error_invalid_manifest">El manifiesto del paquete de voz está dañado o no es válido.</string>
     <string name="voice_pack_error_invalid_id">El paquete de voz declara un id no válido: %1$s</string>

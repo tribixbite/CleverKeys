@@ -76,6 +76,37 @@ class ShortSwipeChangeListenerTest {
         assertWithMessage("resetAll — the Saga case").that(calls).isEqualTo(6)
     }
 
+    /**
+     * Saga 2026-10-30: Reset All removed everything with no way back. It now returns what it
+     * removed and Undo (`restoreAfterReset`) puts those mappings back — persisted and notified,
+     * so the screen's keyboard draws them again — without overwriting one made since.
+     */
+    @Test
+    fun resetAllCanBeUndone() = runBlocking {
+        manager.setMapping(mapping("a", SwipeDirection.NE))
+        manager.setMapping(mapping("s", SwipeDirection.SW))
+        val removed = manager.resetAll()
+        assertWithMessage("Reset All reports what it removed").that(removed.map { it.keyCode to it.direction })
+            .containsExactly("a" to SwipeDirection.NE, "s" to SwipeDirection.SW)
+        assertWithMessage("nothing left after the reset").that(manager.mappingCount).isEqualTo(0)
+
+        // A mapping made before Undo is kept.
+        val newer = ShortSwipeMapping.textInput("a", SwipeDirection.NE, "new", "new")
+        manager.setMapping(newer)
+        val before = calls
+        assertWithMessage("restored count").that(manager.restoreAfterReset(removed)).isEqualTo(1)
+        assertWithMessage("Undo persists and notifies").that(calls).isEqualTo(before + 1)
+        assertWithMessage("the newer a NE survives Undo").that(manager.getMapping("a", SwipeDirection.NE)).isEqualTo(newer)
+        assertWithMessage("s SW is back").that(manager.getMapping("s", SwipeDirection.SW)).isNotNull()
+        // Persisted: a fresh manager over the same file sees both.
+        val reread = ShortSwipeCustomizationManager::class.java
+            .getDeclaredConstructor(Context::class.java)
+            .apply { isAccessible = true }
+            .newInstance(context)
+        reread.loadMappings()
+        assertWithMessage("persisted after Undo").that(reread.mappingCount).isEqualTo(2)
+    }
+
     @Test
     fun aNoOpRemoveDoesNotNotify() = runBlocking {
         manager.removeMapping("z", SwipeDirection.E)

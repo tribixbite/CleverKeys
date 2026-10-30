@@ -270,6 +270,11 @@
     <string name="short_swipe_title">Kısa Kaydırma Özelleştirmesi</string>
     <string name="short_swipe_show_keyboard">Klavyeyi göster</string>
     <string name="short_swipe_reset_all">Tümünü Sıfırla</string>
+    <string name="short_swipe_reset_all_title">Tüm kısa kaydırmalar sıfırlansın mı?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Bu işlem tüm tuşlardan %1$d özel eşlemeyi kaldırır. Bir düzende kayıtlı alt tuşlar ve değiştirilmiş düzen kopyaları olduğu gibi kalır.</item><item quantity="other">Bu işlem tüm tuşlardan %1$d özel eşlemeyi kaldırır. Bir düzende kayıtlı alt tuşlar ve değiştirilmiş düzen kopyaları olduğu gibi kalır.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Tümünü Sıfırla</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d eşleme kaldırıldı</item><item quantity="other">%1$d eşleme kaldırıldı</item></plurals>
+    <string name="short_swipe_reset_all_undo">Geri al</string>
     <string name="short_swipe_tap_hint">Kısa kaydırma hareketini özelleştirmek için aşağıdaki herhangi bir tuşa dokunun</string>
     <string name="short_swipe_instruction_title">Özelleştirmek için herhangi bir tuşa yazın</string>
     <string name="short_swipe_instruction_body">Aşağıdaki klavye gerçek CleverKeys klavyenizdir.\nBir tuşa kısa kaydırma eylemleri eklemek için ona dokunun.</string>
@@ -1615,7 +1620,6 @@
     <string name="extra_keys_group_special_characters">Özel Karakterler</string>
     <string name="extra_keys_group_combining_characters">Birleştirici Karakterler</string>
     <string name="extra_keys_group_functions">İşlevler</string>
-    <string name="short_swipe_toast_all_reset">Tüm özelleştirmeler sıfırlandı</string>
     <string name="short_swipe_toast_mapped">%1$s → \"%2$s\" atandı (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Kısa kaydırma hareketi eklemek veya düzenlemek için bir yöne dokunun</string>
     <string name="short_swipe_action_desc_command">Komut: %1$s</string>
@@ -2669,6 +2673,8 @@
     <string name="voice_pack_unsupported">%1$s, CleverKeys\'in daha yeni bir sürümünü gerektiriyor ve kullanılamaz.</string>
     <string name="voice_permission_blocked_desc">CleverKeys için mikrofon erişimi engellendi. Sesle girişi kullanmak için sistem ayarlarından izin verin.</string>
     <string name="voice_open_app_settings">Uygulama ayarlarını aç</string>
+    <string name="voice_permission_blocked_title">Mikrofon erişimi engellendi</string>
+    <string name="voice_permission_blocked_steps">Android artık CleverKeys için mikrofon isteğini göstermiyor. Uygulama bilgilerinde İzinler → Mikrofon bölümünü açın ve İzin ver seçeneğini seçin. Geri döndüğünüzde sesle giriş açılır.</string>
     <string name="voice_pack_error_not_voice_pack">Bu dosya bir ses paketi değil.</string>
     <string name="voice_pack_error_invalid_manifest">Ses paketinin manifest dosyası bozuk veya geçersiz.</string>
     <string name="voice_pack_error_invalid_id">Ses paketi geçersiz bir kimlik bildiriyor: %1$s</string>

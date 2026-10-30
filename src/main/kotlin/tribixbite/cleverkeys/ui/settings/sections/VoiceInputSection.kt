@@ -2,7 +2,6 @@ package tribixbite.cleverkeys.ui.settings.sections
 
 import android.content.Intent
 import android.net.Uri
-import android.provider.Settings
 import android.text.format.Formatter
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +43,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.io.VoiceImportStatus
 import tribixbite.cleverkeys.ui.settings.io.onVoiceSwitchChanged
+import tribixbite.cleverkeys.ui.settings.io.openMicAppSettings
 import tribixbite.cleverkeys.ui.settings.io.performVoicePackImport
 import tribixbite.cleverkeys.ui.settings.io.readVoicePackNotice
 import tribixbite.cleverkeys.ui.settings.io.refreshVoiceInputState
@@ -89,11 +89,8 @@ internal fun SettingsActivity.VoiceInputSection() {
                 modifier = Modifier.padding(vertical = 4.dp),
             )
             OutlinedButton(
-                onClick = {
-                    startActivity(
-                        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))
-                    )
-                },
+                // Granting there while the switch is off turns voice input on when the user returns.
+                onClick = { openMicAppSettings(this@VoiceInputSection, toEnable = !voiceInputEnabled) },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(stringResource(R.string.voice_open_app_settings)) }
         }
@@ -170,6 +167,23 @@ internal fun SettingsActivity.VoiceInputSection() {
         unsupportedVoicePacks.forEach { pack ->
             VoicePackRow(pack, supported = false, onNotice = { noticePackId = pack.manifest.id })
         }
+    }
+
+    // The switch (or an import) asked and Android refused without showing a prompt.
+    if (voiceBlockedDialogShown) {
+        AlertDialog(
+            onDismissRequest = { voiceBlockedDialogShown = false },
+            title = { Text(stringResource(R.string.voice_permission_blocked_title)) },
+            text = { Text(stringResource(R.string.voice_permission_blocked_steps)) },
+            confirmButton = {
+                TextButton(onClick = { openMicAppSettings(this@VoiceInputSection, toEnable = true) }) {
+                    Text(stringResource(R.string.voice_open_app_settings))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { voiceBlockedDialogShown = false }) { Text(stringResource(R.string.common_cancel)) }
+            },
+        )
     }
 
     noticePackId?.let { id ->

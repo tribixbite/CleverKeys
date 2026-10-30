@@ -223,6 +223,13 @@ chip; confirming replaces the copy with the built-in entry (`CustomLayout.revert
 its bindings and discarding the changed subkeys. Editing a copy's XML in Layout Manager keeps its
 origin.
 
+**Layout Manager follows the list.** Layout Manager re-reads the `layouts` entry when it changes
+(a `SharedPreferences` listener) and on every resume, so a copy made by the subkey popover or
+the per-key dialog while Layout Manager sits in the back stack appears without reopening it
+(Saga 2026-10-30 finding). `LayoutListRefresh.reconcile` keeps unchanged rows' ids (a custom
+layout is compared without its parsed `KeyboardData`), so a reload does not disturb rows that did
+not change (`LayoutListRefreshTest`).
+
 **Backup / export.** `origin` is an optional field of the custom entry in the `layouts` JSON
 (`LayoutsPreference.Serializer`; a value that is not `system` or a raw-resource name is dropped on
 load), so Backup & Restore carries copies like any custom layout, and **Export XML** exports a

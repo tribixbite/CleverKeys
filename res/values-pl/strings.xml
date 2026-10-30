@@ -276,6 +276,11 @@
     <string name="short_swipe_title">Dostosowanie krótkich gestów</string>
     <string name="short_swipe_show_keyboard">Pokaż klawiaturę</string>
     <string name="short_swipe_reset_all">Zresetuj wszystko</string>
+    <string name="short_swipe_reset_all_title">Zresetować wszystkie krótkie gesty?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Spowoduje to usunięcie %1$d własnego mapowania ze wszystkich klawiszy. Podklawisze zapisane w układzie i zmienione kopie układów pozostaną bez zmian.</item><item quantity="few">Spowoduje to usunięcie %1$d własnych mapowań ze wszystkich klawiszy. Podklawisze zapisane w układzie i zmienione kopie układów pozostaną bez zmian.</item><item quantity="many">Spowoduje to usunięcie %1$d własnych mapowań ze wszystkich klawiszy. Podklawisze zapisane w układzie i zmienione kopie układów pozostaną bez zmian.</item><item quantity="other">Spowoduje to usunięcie %1$d własnych mapowań ze wszystkich klawiszy. Podklawisze zapisane w układzie i zmienione kopie układów pozostaną bez zmian.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Zresetuj wszystko</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">Usunięto %1$d mapowanie</item><item quantity="few">Usunięto %1$d mapowania</item><item quantity="many">Usunięto %1$d mapowań</item><item quantity="other">Usunięto %1$d mapowań</item></plurals>
+    <string name="short_swipe_reset_all_undo">Cofnij</string>
     <string name="short_swipe_tap_hint">Dotknij dowolnego klawisza poniżej, aby dostosować gesty krótkiego przesunięcia</string>
     <string name="short_swipe_instruction_title">Dotknij dowolnego klawisza, aby go dostosować</string>
     <string name="short_swipe_instruction_body">Klawiatura poniżej to Twoja prawdziwa klawiatura CleverKeys.\nDotknij klawisza, aby dodać akcje krótkiego gestu.</string>
@@ -1686,7 +1691,6 @@
     <string name="extra_keys_group_special_characters">Znaki specjalne</string>
     <string name="extra_keys_group_combining_characters">Znaki łączące</string>
     <string name="extra_keys_group_functions">Funkcje</string>
-    <string name="short_swipe_toast_all_reset">Zresetowano wszystkie dostosowania</string>
     <string name="short_swipe_toast_mapped">Przypisano %1$s → „%2$s” (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Dotknij kierunku, aby dodać lub edytować krótki gest</string>
     <string name="short_swipe_action_desc_command">Polecenie: %1$s</string>
@@ -2758,6 +2762,8 @@
     <string name="voice_pack_unsupported">%1$s wymaga nowszej wersji CleverKeys i nie może zostać użyty.</string>
     <string name="voice_permission_blocked_desc">Dostęp do mikrofonu jest zablokowany dla CleverKeys. Zezwól na niego w ustawieniach systemu, aby korzystać z wprowadzania głosowego.</string>
     <string name="voice_open_app_settings">Otwórz ustawienia aplikacji</string>
+    <string name="voice_permission_blocked_title">Dostęp do mikrofonu jest zablokowany</string>
+    <string name="voice_permission_blocked_steps">Android nie wyświetla już prośby o mikrofon dla CleverKeys. W Informacjach o aplikacji otwórz Uprawnienia → Mikrofon i wybierz Zezwól. Wprowadzanie głosowe włączy się po powrocie.</string>
     <string name="voice_pack_error_not_voice_pack">Ten plik nie jest pakietem głosowym.</string>
     <string name="voice_pack_error_invalid_manifest">Manifest pakietu głosowego jest uszkodzony lub nieprawidłowy.</string>
     <string name="voice_pack_error_invalid_id">Pakiet głosowy deklaruje nieprawidłowy identyfikator: %1$s</string>

@@ -280,6 +280,11 @@
     <string name="short_swipe_title">Kurze Wischgesten anpassen</string>
     <string name="short_swipe_show_keyboard">Tastatur anzeigen</string>
     <string name="short_swipe_reset_all">Alles zurücksetzen</string>
+    <string name="short_swipe_reset_all_title">Alle kurzen Wischgesten zurücksetzen?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Damit wird %1$d benutzerdefinierte Zuordnung von allen Tasten entfernt. In einem Layout gespeicherte Untertasten und geänderte Layout-Kopien bleiben unverändert.</item><item quantity="other">Damit werden %1$d benutzerdefinierte Zuordnungen von allen Tasten entfernt. In einem Layout gespeicherte Untertasten und geänderte Layout-Kopien bleiben unverändert.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Alles zurücksetzen</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d Zuordnung entfernt</item><item quantity="other">%1$d Zuordnungen entfernt</item></plurals>
+    <string name="short_swipe_reset_all_undo">Rückgängig</string>
     <string name="short_swipe_tap_hint">Tippen Sie unten auf eine Taste, um ihre kurzen Wischgesten anzupassen</string>
     <string name="short_swipe_instruction_title">Tippen Sie auf eine Taste, um sie anzupassen</string>
     <string name="short_swipe_instruction_body">Die folgende Tastatur ist Ihre eigentliche CleverKeys-Tastatur.\nTippen Sie auf eine Taste, um ihr kurze Wischaktionen hinzuzufügen.</string>
@@ -1624,7 +1629,6 @@
     <string name="extra_keys_group_special_characters">Sonderzeichen</string>
     <string name="extra_keys_group_combining_characters">Kombinierende Zeichen</string>
     <string name="extra_keys_group_functions">Funktionen</string>
-    <string name="short_swipe_toast_all_reset">Alle Anpassungen zurückgesetzt</string>
     <string name="short_swipe_toast_mapped">%1$s → „%2$s“ zugewiesen (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Auf eine Richtung tippen, um eine kurze Wischgeste hinzuzufügen oder zu bearbeiten</string>
     <string name="short_swipe_action_desc_command">Befehl: %1$s</string>
@@ -2678,6 +2682,8 @@
     <string name="voice_pack_unsupported">%1$s erfordert eine neuere Version von CleverKeys und kann nicht verwendet werden.</string>
     <string name="voice_permission_blocked_desc">Der Mikrofonzugriff ist für CleverKeys blockiert. Erlauben Sie ihn in den Systemeinstellungen, um die Spracheingabe zu nutzen.</string>
     <string name="voice_open_app_settings">App-Einstellungen öffnen</string>
+    <string name="voice_permission_blocked_title">Mikrofonzugriff blockiert</string>
+    <string name="voice_permission_blocked_steps">Android zeigt die Mikrofonanfrage für CleverKeys nicht mehr an. Öffnen Sie in den App-Infos Berechtigungen → Mikrofon und wählen Sie Zulassen. Die Spracheingabe wird eingeschaltet, wenn Sie zurückkehren.</string>
     <string name="voice_pack_error_not_voice_pack">Diese Datei ist kein Spracheingabe-Paket.</string>
     <string name="voice_pack_error_invalid_manifest">Das Manifest des Spracheingabe-Pakets ist beschädigt oder ungültig.</string>
     <string name="voice_pack_error_invalid_id">Das Spracheingabe-Paket gibt eine ungültige ID an: %1$s</string>

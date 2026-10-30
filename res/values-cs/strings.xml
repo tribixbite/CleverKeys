@@ -274,6 +274,11 @@
     <string name="short_swipe_title">Přizpůsobení krátkého tahu</string>
     <string name="short_swipe_show_keyboard">Zobrazit klávesnici</string>
     <string name="short_swipe_reset_all">Obnovit vše</string>
+    <string name="short_swipe_reset_all_title">Obnovit všechny krátké tahy?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Odebere %1$d vlastní mapování ze všech kláves. Podklávesy uložené v rozložení a upravené kopie rozložení zůstanou beze změny.</item><item quantity="few">Odebere %1$d vlastní mapování ze všech kláves. Podklávesy uložené v rozložení a upravené kopie rozložení zůstanou beze změny.</item><item quantity="many">Odebere %1$d vlastních mapování ze všech kláves. Podklávesy uložené v rozložení a upravené kopie rozložení zůstanou beze změny.</item><item quantity="other">Odebere %1$d vlastních mapování ze všech kláves. Podklávesy uložené v rozložení a upravené kopie rozložení zůstanou beze změny.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Obnovit vše</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">Odebráno %1$d mapování</item><item quantity="few">Odebrána %1$d mapování</item><item quantity="many">Odebráno %1$d mapování</item><item quantity="other">Odebráno %1$d mapování</item></plurals>
+    <string name="short_swipe_reset_all_undo">Zpět</string>
     <string name="short_swipe_tap_hint">Klepnutím na libovolnou klávesu níže přizpůsobíte její gesta krátkého tahu</string>
     <string name="short_swipe_instruction_title">Klepnutím na libovolnou klávesu ji přizpůsobíte</string>
     <string name="short_swipe_instruction_body">Klávesnice níže je vaše skutečná klávesnice CleverKeys.\nKlepnutím na klávesu přidáte akce krátkého tahu.</string>
@@ -1676,7 +1681,6 @@
     <string name="extra_keys_group_special_characters">Speciální znaky</string>
     <string name="extra_keys_group_combining_characters">Kombinující znaky</string>
     <string name="extra_keys_group_functions">Funkce</string>
-    <string name="short_swipe_toast_all_reset">Všechna přizpůsobení obnovena</string>
     <string name="short_swipe_toast_mapped">Přiřazeno %1$s → „%2$s“ (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Klepnutím na směr přidáte nebo upravíte gesto krátkého tahu</string>
     <string name="short_swipe_action_desc_command">Příkaz: %1$s</string>
@@ -2748,6 +2752,8 @@
     <string name="voice_pack_unsupported">%1$s vyžaduje novější verzi CleverKeys a nelze ho použít.</string>
     <string name="voice_permission_blocked_desc">Přístup k mikrofonu je pro CleverKeys zablokován. Chcete-li používat hlasové zadávání, povolte ho v nastavení systému.</string>
     <string name="voice_open_app_settings">Otevřít nastavení aplikace</string>
+    <string name="voice_permission_blocked_title">Přístup k mikrofonu je zablokován</string>
+    <string name="voice_permission_blocked_steps">Android už pro CleverKeys nezobrazuje žádost o mikrofon. V Informacích o aplikaci otevřete Oprávnění → Mikrofon a zvolte Povolit. Hlasové zadávání se zapne, až se vrátíte.</string>
     <string name="voice_pack_error_not_voice_pack">Tento soubor není hlasový balíček.</string>
     <string name="voice_pack_error_invalid_manifest">Manifest hlasového balíčku je poškozený nebo neplatný.</string>
     <string name="voice_pack_error_invalid_id">Hlasový balíček uvádí neplatné ID: %1$s</string>

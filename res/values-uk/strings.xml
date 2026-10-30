@@ -276,6 +276,11 @@
     <string name="short_swipe_title">Налаштування коротких свайпів</string>
     <string name="short_swipe_show_keyboard">Показати клавіатуру</string>
     <string name="short_swipe_reset_all">Скинути все</string>
+    <string name="short_swipe_reset_all_title">Скинути всі короткі свайпи?</string>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Буде видалено %1$d призначення з усіх клавіш. Підклавіші, збережені в розкладці, і змінені копії розкладок залишаться без змін.</item><item quantity="few">Буде видалено %1$d призначення з усіх клавіш. Підклавіші, збережені в розкладці, і змінені копії розкладок залишаться без змін.</item><item quantity="many">Буде видалено %1$d призначень з усіх клавіш. Підклавіші, збережені в розкладці, і змінені копії розкладок залишаться без змін.</item><item quantity="other">Буде видалено %1$d призначень з усіх клавіш. Підклавіші, збережені в розкладці, і змінені копії розкладок залишаться без змін.</item></plurals>
+    <string name="short_swipe_reset_all_confirm">Скинути все</string>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">Видалено %1$d призначення</item><item quantity="few">Видалено %1$d призначення</item><item quantity="many">Видалено %1$d призначень</item><item quantity="other">Видалено %1$d призначень</item></plurals>
+    <string name="short_swipe_reset_all_undo">Скасувати</string>
     <string name="short_swipe_tap_hint">Торкніться будь-якої клавіші нижче, щоб налаштувати жести коротких свайпів</string>
     <string name="short_swipe_instruction_title">Торкніться будь-якої клавіші для налаштування</string>
     <string name="short_swipe_instruction_body">Клавіатура нижче — це ваша справжня клавіатура CleverKeys.\nТоркніться клавіші, щоб додати дії коротких свайпів.</string>
@@ -1687,7 +1692,6 @@
     <string name="extra_keys_group_special_characters">Спеціальні символи</string>
     <string name="extra_keys_group_combining_characters">Комбіновані символи</string>
     <string name="extra_keys_group_functions">Функції</string>
-    <string name="short_swipe_toast_all_reset">Усі налаштування скинуто</string>
     <string name="short_swipe_toast_mapped">Призначено: %1$s → «%2$s» (%3$s)</string>
     <string name="short_swipe_dialog_hint_no_layout">Торкніться напрямку, щоб додати або змінити короткий свайп</string>
     <string name="short_swipe_action_desc_command">Команда: %1$s</string>
@@ -2759,6 +2763,8 @@
     <string name="voice_pack_unsupported">Для %1$s потрібна новіша версія CleverKeys, тому його не можна використати.</string>
     <string name="voice_permission_blocked_desc">Доступ до мікрофона для CleverKeys заблоковано. Дозвольте його в системних налаштуваннях, щоб користуватися голосовим введенням.</string>
     <string name="voice_open_app_settings">Відкрити налаштування застосунку</string>
+    <string name="voice_permission_blocked_title">Доступ до мікрофона заблоковано</string>
+    <string name="voice_permission_blocked_steps">Android більше не показує запит доступу до мікрофона для CleverKeys. У відомостях про застосунок відкрийте Дозволи → Мікрофон і виберіть «Дозволити». Голосове введення ввімкнеться, коли ви повернетеся.</string>
     <string name="voice_pack_error_not_voice_pack">Цей файл не є голосовим пакетом.</string>
     <string name="voice_pack_error_invalid_manifest">Маніфест голосового пакета пошкоджений або недійсний.</string>
     <string name="voice_pack_error_invalid_id">Голосовий пакет вказує недійсний ідентифікатор: %1$s</string>

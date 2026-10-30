@@ -45,6 +45,41 @@ data class LayoutWithId(
     val layout: LayoutsPreference.Layout
 )
 
+/**
+ * Layout Manager follows the stored layout list while it is open (Saga 2026-10-30: left open
+ * behind the keyboard, it showed the old list after the subkey popover created a "(modified)"
+ * copy). Pure (`LayoutListRefreshTest`).
+ */
+internal object LayoutListRefresh {
+
+    /**
+     * The rows for [stored]: each stored layout takes the id (and object) of the first unused shown
+     * row with the same content, so unchanged rows keep their identity (drag state, no
+     * recomposition); new layouts get new ids. Returns [shown] itself when nothing changed.
+     */
+    fun reconcile(shown: List<LayoutWithId>, stored: List<LayoutsPreference.Layout>): List<LayoutWithId> {
+        val unused = shown.toMutableList()
+        val result = stored.map { layout ->
+            val key = contentKey(layout)
+            val match = unused.firstOrNull { contentKey(it.layout) == key }
+            if (match != null) {
+                unused.remove(match)
+                match
+            } else {
+                LayoutWithId(layout = layout)
+            }
+        }
+        return if (result == shown) shown else result
+    }
+
+    /**
+     * A layout's stored content. A custom layout's parsed [KeyboardData] is derived from its XML
+     * and is a new object on every read, so it does not take part.
+     */
+    private fun contentKey(layout: LayoutsPreference.Layout): Any =
+        if (layout is LayoutsPreference.CustomLayout) layout.copy(parsed = null) else layout
+}
+
 class LayoutManagerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -102,6 +137,35 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
 
     // Helper function to extract raw layouts for saving
     fun getLayoutsForSaving(): List<LayoutsPreference.Layout> = layoutsWithIds.map { it.layout }
+
+    // Follow changes made elsewhere — the keyboard's subkey popover or Short Swipe Customization
+    // creating a "(modified)" copy while this screen sits in the back stack — and re-read on every
+    // resume in case a write happened while no listener was attached.
+    fun reloadLayouts() {
+        val stored = ListGroupPreference.loadFromPreferences(
+            LayoutsPreference.KEY,
+            prefs,
+            LayoutsPreference.DEFAULT,
+            LayoutsPreference.SERIALIZER
+        ) ?: LayoutsPreference.DEFAULT
+        layoutsWithIds = LayoutListRefresh.reconcile(layoutsWithIds, stored)
+    }
+    // The hosting activity is the lifecycle owner (no lifecycle-compose dependency needed).
+    val lifecycle = (context as? androidx.lifecycle.LifecycleOwner)?.lifecycle
+    DisposableEffect(prefs, lifecycle) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == LayoutsPreference.KEY) reloadLayouts()
+        }
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) reloadLayouts()
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        lifecycle?.addObserver(observer)
+        onDispose {
+            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+            lifecycle?.removeObserver(observer)
+        }
+    }
 
     // Get layout display names
     val layoutNames = remember { LayoutsPreference.getLayoutNames(context.resources) }

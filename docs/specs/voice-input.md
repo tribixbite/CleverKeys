@@ -81,7 +81,20 @@ graphs, ~112 MB steady RSS with the ORT arena off).
    name, size, engine, languages and licence/NOTICE. Turning it on or importing a pack is the
    ONLY moment the microphone permission is requested, via a transparent activity.
 7. **FR-7** Denied permission → voice stays off and the section/bar explains why; "don't ask
-   again" → a button opens the app's system settings page.
+   again" → a button opens the app's system settings page. One policy for Settings and the
+   keyboard (`MicPermissionGate`, 2026-10-30): `afterRequest(granted, showRationale)` reads every
+   answer the same way (GRANTED turns voice on; DENIED toasts; BLOCKED = denied with no rationale
+   → remember it and explain with "Open app settings"). The Settings switch and a pack import
+   ALWAYS ask Android, even when the app remembers a block — the remembered state goes stale when
+   the user changes the permission in system settings (Saga 2026-10-30: the switch then neither
+   prompted nor responded), and a real block is answered at once without a prompt, which opens
+   the "Microphone access is blocked" dialog (App info → Permissions → Microphone → Allow). The
+   switch stays off until the permission is granted; coming back from App info with it granted
+   turns voice input on (`turnOnAfterAppSettings`), and a granted permission clears the
+   remembered block. The keyboard's voice key keeps trusting the remembered block (asking would
+   flash an activity over the app being typed in): it explains in the bar and a second press
+   opens App info; when its own request is refused without a prompt, `MicPermissionActivity`
+   shows the same dialog as Settings.
 8. **FR-8** Capture only while listening; stop on keyboard hide, field change, editor switch,
    `onDestroy`, cancel; cancel (✕, keyboard hide) discards uncommitted (composing) text. A field
    change ends the period WITHOUT any text operation (`VoiceEvent.FieldChanged` →
@@ -316,7 +329,9 @@ test-clean clips (4.5–5.9 s, 125 words) at **5/125 = 4.0 % WER** with 4–5 pa
 ## Error Handling
 - No pack → bar message "Import a voice pack in Settings → Voice input" and the settings
   screen opens on a second tap.
-- Permission missing → the transparent activity asks once per tap; denied → bar message.
+- Permission missing → the transparent activity asks once per tap; denied → toast; refused
+  without a prompt ("don't ask again") → the "Microphone access is blocked" dialog with "Open app
+  settings" (FR-7).
 - Pack refused at import → localized `VoicePackImportFailure`.
 - Engine load/inference error → session ends, bar message, the composing tail is cleared.
 - `AudioRecord` init failure (mic busy) → bar message, nothing recorded.

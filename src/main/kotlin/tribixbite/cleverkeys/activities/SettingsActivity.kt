@@ -272,6 +272,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var voiceSectionExpanded by mutableStateOf(false)
     internal var voiceInputEnabled by mutableStateOf(tribixbite.cleverkeys.stt.VoicePacks.DEFAULT_ENABLED)
     internal var voicePermissionBlocked by mutableStateOf(false)
+    /** The "Android will not ask again" explanation after a request was refused without a prompt. */
+    internal var voiceBlockedDialogShown by mutableStateOf(false)
     internal var voiceImportInProgress by mutableStateOf(false)
     internal var voiceImportStatus by mutableStateOf<tribixbite.cleverkeys.ui.settings.io.VoiceImportStatus?>(null)
     internal var installedVoicePacks by mutableStateOf(listOf<tribixbite.cleverkeys.stt.VoicePackManager.InstalledPack>())
