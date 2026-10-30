@@ -929,6 +929,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the chooser's "CleverKeys voice (offline)" entry (the Saga has voice off, no pack, mic
     blocked), and the mic-on-a-letter swipe itself (the Saga's layout keeps the mic on Enter;
     covered by PointersEventSubkeyWordSwipeTest).
+31. [ ] device + maintainer: per-key subkey sources and modified layout copies (agent 2026-10-30,
+   maintainer screenshots 9/10 + request; spec `docs/specs/subkey-customization-current.md`
+   "Runtime key codes", "Sources in the per-key dialog", "Layout subkeys and modified copies").
+   BUILT + JVM/emulator verified: Enter/Space/Tab mappings are stored under the key's runtime
+   code (old `"\n"` mappings move to Enter on load), titles/toasts name keys and commands, the
+   dialog badges all 8 directions (Layout / Hidden / Built-in / Extra key / Custom / Removed),
+   a built-in layout's own subkey edit creates "<name> (modified)" in place (origin kept for
+   Layout Manager's Revert), Export XML no longer writes `key1`+`nw`. Fail-first 8 of 9 bug
+   tests; runPureTests 3590 / runMockTests 1657 OK; emulator.wtf Pixel7 API 34 18/18.
+   NOT verified on a phone (no device assigned): capture of Enter in the real IME, the copy
+   replacing the live layout, Revert from Layout Manager, TalkBack reading of the rows.
+   OPEN: (a) the subkey popover's assign screen still edits layout defaults through custom
+   mappings (# TODO in the spec); (b) Export XML still writes TEXT/INTENT/TEMPLATE/TIMESTAMP in
+   the bare `'…'` form, which imports as literal quoted text (toXmlValue, pinned by
+   ShortSwipeIntentTest/ShortSwipeMappingTest — needs a decision before changing); (c) native
+   review of the 24 new strings (item 10).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
