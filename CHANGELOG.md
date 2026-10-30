@@ -47,8 +47,11 @@ editor that used to be listed here already ship in 2.0.)
   longer stretches); audio is buffered on its own thread so a slow recognition pass loses none.
   The voice pack is a separate opt-in download — nothing of the speech model ships in the APK, and
   the runtime is the keyboard's existing ONNX Runtime (no new library). The speech engine is a
-  replaceable module (`stt/`), so a later model is a new pack, not a rewrite. Spec:
-  `docs/specs/voice-input.md`.
+  replaceable module (`stt/`), so a later model is a new pack, not a rewrite. The existing mic
+  key (`voice_typing`) uses it too once it is on with a pack installed; its long press
+  (`voice_typing_chooser`) lists "CleverKeys voice (offline)" beside the system voice keyboards;
+  with no voice keyboard at all the mic key now explains what to turn on in Settings → Voice
+  input instead of "No voice typing app installed". Spec: `docs/specs/voice-input.md`.
 - **Layouts can bring their own look.** A layout file can now define its whole appearance: a
   `<theme>` with every colour of the Theme Creator plus Enter/action/modifier colours, key gaps,
   corners, shadows, hints, a key-press preview, and separate light- and dark-mode colours — anything
@@ -475,6 +478,15 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A word swiped from a letter whose corner holds a command key (the mic placed on `a` by the
+  default extra keys, the clipboard key on `d`) stays a word: the command key now fires only for
+  a short flick into its corner, on release. Before, "acid"-shaped swipes from `a` pressed the
+  mic key and, held a little longer, opened a voice-app dialog over a swipe trail that stayed on
+  screen. A key press whose release was lost no longer leaves the key, or a look's key-press
+  preview, drawn pressed.
+- On iOS-style, the typed word in the suggestion bar is quoted with the interface language's own
+  quotation marks („…“ German, « … » French, 「…」 Japanese…) on every Android version; Android
+  7–8.1 always showed English marks.
 - In the clipboard entry editor and the keyboard's other own fields (tag, clipboard search,
   emoji and GIF search), deleting a word works: the swipe up-left on Backspace, the
   `delete_word` / `forward_delete_word` commands and Ctrl+Backspace / Ctrl+Delete delete a word

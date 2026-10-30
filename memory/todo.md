@@ -916,6 +916,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     whether to add voice lines to `docs/plans/v2.0.0-manual-test-checklist.md` (maintainer-owned,
     not edited by agents). Later: VAD/endpointing instead of stopping at the engine's 30 s bound
     (# TODO in `SpeechEngine`).
+    2026-10-30 (maintainer report, voice build on their phone): the mic key (`voice_typing`) and
+    its long press (`voice_typing_chooser`) now route to the built-in engine (`VoiceKeyRouting`,
+    spec FR-4a); word swipes from a letter with the mic in its corner no longer fire it
+    (`Pointers` Event-subkey eager path, FR-4b — the "freeze": frozen trail + voice dialog);
+    a press that lost its release is dropped at the next first touch (stuck key-press preview);
+    look-bar quote marks come from `bar_quote_open`/`bar_quote_close` in all 21 locales.
+    Device (agent, second Saga 192.168.0.144, release of the fix, evidence build/oct30-voice/):
+    Google voice IME disabled → mic key and its hold show "Voice input is off… Settings → Voice
+    input" in the bar, no dialog; re-enabled → the system voice chooser as before; "acid" swiped
+    from `a` commits with no trail left. NOT verified on a device: the built-in-ready route and
+    the chooser's "CleverKeys voice (offline)" entry (the Saga has voice off, no pack, mic
+    blocked), and the mic-on-a-letter swipe itself (the Saga's layout keeps the mic on Enter;
+    covered by PointersEventSubkeyWordSwipeTest).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

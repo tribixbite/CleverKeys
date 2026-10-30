@@ -47,6 +47,31 @@ graphs, ~112 MB steady RSS with the ORT arena off).
 4. **FR-4** `voice_input` key and command (command palette, Short Swipes, extra keys). Tapping it
    starts listening; tapping again (or the bar's ✕) stops. A partial hypothesis is shown as
    composing text, stable words are committed.
+4a. **FR-4a** Voice keys (2026-10-30, maintainer report: with a pack installed the mic key
+   still offered only Google's voice IME, and with that disabled said "No voice typing app
+   installed"). One rule, `VoiceKeyRouting`, applied by `VoiceImeSwitcher.onVoiceTypingKey` /
+   `onVoiceChooserKey` for both `voice_typing` (the mic key and default extra key) and
+   `voice_typing_chooser` (its long press):
+   - built-in **ready** = voice input switched on AND a usable pack installed (the microphone
+     permission is not part of it; the built-in path asks for it);
+   - `voice_typing`: built-in when ready; otherwise the remembered system voice IME (chooser on
+     first use or when the IME set changed, as before); with neither, the built-in path, whose
+     bar message says what is missing ("Voice input is off…" / "No voice pack installed…") and
+     opens Settings → Voice input on a second tap — the old dead-end dialog is gone, and the mic
+     key is no longer hidden after a failed press;
+   - `voice_typing_chooser`: a chooser only when there are two or more entries — "CleverKeys
+     voice (offline)" first when ready, then every system voice IME; a single entry is taken
+     directly; none goes to the built-in path. Picking a system IME is remembered for
+     `voice_typing` while the built-in engine is not ready.
+   Tests: `VoiceKeyRoutingTest` (pure, every combination).
+4b. **FR-4b** A voice key in a letter's corner must not hijack word swipes (2026-10-30: the
+   default extra-key placement put the mic on `a`; `Pointers.onTouchMove` fired Event subkeys
+   as soon as the finger moved `swipe_dist_px` toward them, so "acid"-shaped swipes became voice
+   presses and, held, the chooser dialog, over a trail that was never cleared). A gesture that
+   may still be a word swipe (letter start, swipe typing on, not "short swipes only") leaves
+   Event subkeys to the release; the eager path that remains (space-bar switches) resets the
+   recognizer; a first finger down drops any press whose release never arrived. Tests:
+   `PointersEventSubkeyWordSwipeTest` (mock).
 5. **FR-5** Field policy: ordinary editors get composing partials + committed finals with
    auto-space and sentence capitalisation; blind REMOTE and TERMINAL editors receive **append-only
    final text** (no composing span, no rewrite); the keyboard's own inline fields (clipboard
@@ -202,6 +227,10 @@ contain the current language, else the first installed one.
 - [x] `voice_input` key/command/extra key, receiver routing, controller, AudioRecord capture
 - [x] Transparent permission activity, Settings → Voice input, bar voice mode, TalkBack
 - [x] Strings in 21 locales, wiki page, CHANGELOG (2.0.0; first drafted under Unreleased 2.1), NOTICE
+
+### Phase 2b — voice keys (done 2026-10-30)
+- [x] `voice_typing` / `voice_typing_chooser` route to the built-in engine (FR-4a)
+- [x] Word swipes from a letter with the voice key in its corner stay words (FR-4b)
 
 ### Phase 3 — outstanding
 - [ ] Device test (Saga/Pixel): permission flow, latency, RSS, composing behaviour in Chrome,
