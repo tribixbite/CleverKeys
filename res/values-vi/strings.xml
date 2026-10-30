@@ -877,6 +877,7 @@
     <string name="subkey_slot_replaces">Thay cho %1$s</string>
     <string name="subkey_dialog_subkeys_header">Phím phụ</string>
     <string name="subkey_dialog_layout_hint">Phím phụ của %1$s và các thao tác vuốt ngắn tùy chỉnh. Chạm vào một hướng để thay đổi.</string>
+    <string name="subkey_edit_layout_source">Phím phụ của %1$s.</string>
     <string name="subkey_layout_copy_title">Thay đổi phím phụ của bố cục?</string>
     <string name="subkey_layout_copy_body">%1$s xác định phím phụ này. Bố cục có sẵn không thay đổi: thay đổi được lưu vào một bản sao, %2$s, thay thế bố cục đó trong danh sách bố cục. Trình quản lý bố cục có thể quay lại bản gốc.</string>
     <string name="subkey_layout_copy_confirm">Tạo bản sao</string>

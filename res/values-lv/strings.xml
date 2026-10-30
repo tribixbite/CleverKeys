@@ -895,6 +895,7 @@
     <string name="subkey_slot_replaces">Aizstāj %1$s</string>
     <string name="subkey_dialog_subkeys_header">Apakštaustiņi</string>
     <string name="subkey_dialog_layout_hint">Izkārtojuma %1$s apakštaustiņi un pielāgotie īsie vilcieni. Pieskarieties virzienam, lai to mainītu.</string>
+    <string name="subkey_edit_layout_source">Izkārtojuma %1$s apakštaustiņš.</string>
     <string name="subkey_layout_copy_title">Mainīt izkārtojuma apakštaustiņu?</string>
     <string name="subkey_layout_copy_body">Šo apakštaustiņu nosaka %1$s. Iebūvētais izkārtojums nemainās: izmaiņas tiek saglabātas kopijā %2$s, kas to aizstāj izkārtojumu sarakstā. Izkārtojumu pārvaldniekā var atgriezties pie oriģināla.</string>
     <string name="subkey_layout_copy_confirm">Izveidot kopiju</string>

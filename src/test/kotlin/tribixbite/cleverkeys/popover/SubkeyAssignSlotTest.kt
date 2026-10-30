@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.popover
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.File
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.customization.ActionType
@@ -56,5 +57,19 @@ class SubkeyAssignSlotTest {
         assertThat(empty.source).isEqualTo(SubkeySource.CUSTOM)
         assertThat(SubkeyEditPolicy.restore(empty)).isEqualTo(SubkeyEditPolicy.Restore.DELETE)
         assertThat(subkeyAssignSlot(request(false), context(null), null).source).isEqualTo(SubkeySource.NONE)
+    }
+
+    /**
+     * Saga 2026-10-30: the edit screen (one slot, no direction grid) showed the per-key dialog's
+     * hint "Subkeys of QWERTY (US) and custom short swipes. Tap a direction to change it." — an
+     * instruction for a grid this screen does not have. It names the layout with its own string.
+     */
+    @Test
+    fun theEditScreenNamesTheLayoutWithoutTheDialogsDirectionHint() {
+        val screen = File("src/main/kotlin/tribixbite/cleverkeys/popover/SubkeyAssignActivity.kt").readText()
+        assertThat(screen).doesNotContain("R.string.subkey_dialog_layout_hint")
+        assertThat(screen).contains("R.string.subkey_edit_layout_source")
+        val english = File("res/values/strings.xml").readText()
+        assertThat(english).contains("<string name=\"subkey_edit_layout_source\">A subkey of %1\$s.</string>")
     }
 }

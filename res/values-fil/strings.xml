@@ -891,6 +891,7 @@
     <string name="subkey_slot_replaces">Pumapalit sa %1$s</string>
     <string name="subkey_dialog_subkeys_header">Mga subkey</string>
     <string name="subkey_dialog_layout_hint">Mga subkey ng %1$s at mga custom na maikling swipe. I-tap ang isang direksyon para baguhin ito.</string>
+    <string name="subkey_edit_layout_source">Isang subkey ng %1$s.</string>
     <string name="subkey_layout_copy_title">Baguhin ang subkey ng layout?</string>
     <string name="subkey_layout_copy_body">Ang %1$s ang nagtatakda ng subkey na ito. Hindi nagbabago ang built-in na layout: ang pagbabago ay naka-save sa isang kopya, %2$s, na papalit dito sa listahan ng layout. Sa Layout Manager, puwedeng bumalik sa orihinal.</string>
     <string name="subkey_layout_copy_confirm">Gumawa ng kopya</string>

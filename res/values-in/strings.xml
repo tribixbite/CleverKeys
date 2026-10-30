@@ -892,6 +892,7 @@
     <string name="subkey_slot_replaces">Menggantikan %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subtombol</string>
     <string name="subkey_dialog_layout_hint">Subtombol %1$s dan geser pendek kustom. Ketuk arah untuk mengubahnya.</string>
+    <string name="subkey_edit_layout_source">Subtombol dari %1$s.</string>
     <string name="subkey_layout_copy_title">Ubah subtombol tata letak?</string>
     <string name="subkey_layout_copy_body">%1$s menetapkan subtombol ini. Tata letak bawaan tidak berubah: perubahan disimpan di salinan, %2$s, yang menggantikannya di daftar tata letak. Pengelola Tata Letak dapat kembali ke yang asli.</string>
     <string name="subkey_layout_copy_confirm">Buat salinan</string>

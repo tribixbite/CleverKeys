@@ -1206,6 +1206,7 @@
     <string name="subkey_slot_replaces">Replaces %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subkeys</string>
     <string name="subkey_dialog_layout_hint">Subkeys of %1$s and custom short swipes. Tap a direction to change it.</string>
+    <string name="subkey_edit_layout_source">A subkey of %1$s.</string>
     <string name="subkey_layout_copy_title">Change a subkey of the layout?</string>
     <string name="subkey_layout_copy_body">%1$s defines this subkey. The built-in layout stays unchanged: the change is saved in a copy, %2$s, which takes its place in the layout list. Layout Manager can switch back to the original.</string>
     <string name="subkey_layout_copy_confirm">Create copy</string>

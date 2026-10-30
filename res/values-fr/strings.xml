@@ -890,6 +890,7 @@
     <string name="subkey_slot_replaces">Remplace %1$s</string>
     <string name="subkey_dialog_subkeys_header">Sous-touches</string>
     <string name="subkey_dialog_layout_hint">Sous-touches de %1$s et glissements courts personnalisés. Un appui sur une direction permet de la modifier.</string>
+    <string name="subkey_edit_layout_source">Une sous-touche de %1$s.</string>
     <string name="subkey_layout_copy_title">Modifier une sous-touche de la disposition ?</string>
     <string name="subkey_layout_copy_body">%1$s définit cette sous-touche. La disposition intégrée reste inchangée : la modification est enregistrée dans une copie, %2$s, qui la remplace dans la liste des dispositions. Le gestionnaire de dispositions permet de revenir à l’original.</string>
     <string name="subkey_layout_copy_confirm">Créer une copie</string>

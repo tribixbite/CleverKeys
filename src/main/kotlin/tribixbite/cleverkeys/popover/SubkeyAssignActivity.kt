@@ -341,7 +341,7 @@ private fun SlotDetails(request: SubkeyAssignRequest, slot: SubkeySlot, custom: 
     val detail = MaterialTheme.typography.bodyMedium
     if (slot.source == SubkeySource.LAYOUT || slot.source == SubkeySource.HIDDEN) {
         if (layoutName != null) {
-            Text(stringResource(R.string.subkey_dialog_layout_hint, layoutName), style = detail,
+            Text(stringResource(R.string.subkey_edit_layout_source, layoutName), style = detail,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

@@ -880,6 +880,7 @@
     <string name="subkey_slot_replaces">%1$s 대체</string>
     <string name="subkey_dialog_subkeys_header">하위 키</string>
     <string name="subkey_dialog_layout_hint">%1$s의 하위 키와 사용자 지정 짧은 스와이프입니다. 방향을 탭하면 변경할 수 있습니다.</string>
+    <string name="subkey_edit_layout_source">%1$s의 하위 키입니다.</string>
     <string name="subkey_layout_copy_title">레이아웃의 하위 키를 변경할까요?</string>
     <string name="subkey_layout_copy_body">이 하위 키는 %1$s에서 정의합니다. 내장 레이아웃은 바뀌지 않습니다. 변경 사항은 복사본 %2$s에 저장되며, 레이아웃 목록에서 원래 레이아웃을 대신합니다. 레이아웃 관리자에서 원래대로 되돌릴 수 있습니다.</string>
     <string name="subkey_layout_copy_confirm">복사본 만들기</string>

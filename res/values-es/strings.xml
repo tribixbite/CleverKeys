@@ -902,6 +902,7 @@
     <string name="subkey_slot_replaces">Sustituye a %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subteclas</string>
     <string name="subkey_dialog_layout_hint">Subteclas de %1$s y deslizamientos cortos personalizados. Toca una dirección para cambiarla.</string>
+    <string name="subkey_edit_layout_source">Una subtecla de %1$s.</string>
     <string name="subkey_layout_copy_title">¿Cambiar una subtecla de la distribución?</string>
     <string name="subkey_layout_copy_body">%1$s define esta subtecla. La distribución integrada no cambia: el cambio se guarda en una copia, %2$s, que ocupa su lugar en la lista de distribuciones. El gestor de distribuciones permite volver a la original.</string>
     <string name="subkey_layout_copy_confirm">Crear copia</string>

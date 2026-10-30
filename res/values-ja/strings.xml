@@ -879,6 +879,7 @@
     <string name="subkey_slot_replaces">%1$s を置き換え</string>
     <string name="subkey_dialog_subkeys_header">サブキー</string>
     <string name="subkey_dialog_layout_hint">%1$s のサブキーとカスタム短スワイプです。方向をタップすると変更できます。</string>
+    <string name="subkey_edit_layout_source">%1$s のサブキーです。</string>
     <string name="subkey_layout_copy_title">レイアウトのサブキーを変更しますか？</string>
     <string name="subkey_layout_copy_body">このサブキーは %1$s で定義されています。組み込みレイアウトは変更されません。変更はコピー「%2$s」に保存され、レイアウト一覧で元のレイアウトと置き換わります。レイアウト管理で元に戻せます。</string>
     <string name="subkey_layout_copy_confirm">コピーを作成</string>

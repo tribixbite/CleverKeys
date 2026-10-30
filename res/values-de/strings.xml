@@ -902,6 +902,7 @@
     <string name="subkey_slot_replaces">Ersetzt %1$s</string>
     <string name="subkey_dialog_subkeys_header">Untertasten</string>
     <string name="subkey_dialog_layout_hint">Untertasten von %1$s und eigene kurze Wischgesten. Eine Richtung antippen, um sie zu ändern.</string>
+    <string name="subkey_edit_layout_source">Eine Untertaste von %1$s.</string>
     <string name="subkey_layout_copy_title">Eine Untertaste des Layouts ändern?</string>
     <string name="subkey_layout_copy_body">%1$s legt diese Untertaste fest. Das eingebaute Layout bleibt unverändert: Die Änderung wird in einer Kopie, %2$s, gespeichert, die es in der Layoutliste ersetzt. In der Layoutverwaltung lässt sich zum Original zurückkehren.</string>
     <string name="subkey_layout_copy_confirm">Kopie erstellen</string>

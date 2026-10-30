@@ -886,6 +886,7 @@
     <string name="subkey_slot_replaces">Nahrazuje %1$s</string>
     <string name="subkey_dialog_subkeys_header">Podklávesy</string>
     <string name="subkey_dialog_layout_hint">Podklávesy rozložení %1$s a vlastní krátká tažení. Klepnutím na směr jej lze změnit.</string>
+    <string name="subkey_edit_layout_source">Podklávesa rozložení %1$s.</string>
     <string name="subkey_layout_copy_title">Změnit podklávesu rozložení?</string>
     <string name="subkey_layout_copy_body">Tuto podklávesu definuje rozložení %1$s. Vestavěné rozložení zůstane beze změny: změna se uloží do kopie %2$s, která ho nahradí v seznamu rozložení. Ve Správci rozložení lze přepnout zpět na původní.</string>
     <string name="subkey_layout_copy_confirm">Vytvořit kopii</string>

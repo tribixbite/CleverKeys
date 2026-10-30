@@ -847,6 +847,7 @@
     <string name="subkey_slot_replaces">替代 %1$s</string>
     <string name="subkey_dialog_subkeys_header">子键</string>
     <string name="subkey_dialog_layout_hint">%1$s 的子键和自定义短滑动。点按一个方向即可更改。</string>
+    <string name="subkey_edit_layout_source">%1$s 的子键。</string>
     <string name="subkey_layout_copy_title">要更改布局的子键吗？</string>
     <string name="subkey_layout_copy_body">此子键由 %1$s 定义。内置布局保持不变：更改保存在副本“%2$s”中，并在布局列表中取代原布局。可在布局管理器中改回原布局。</string>
     <string name="subkey_layout_copy_confirm">创建副本</string>

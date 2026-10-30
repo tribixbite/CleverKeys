@@ -886,6 +886,7 @@
     <string name="subkey_slot_replaces">Вместо %1$s</string>
     <string name="subkey_dialog_subkeys_header">Подклавиши</string>
     <string name="subkey_dialog_layout_hint">Подклавиши раскладки %1$s и пользовательские короткие свайпы. Нажатие на направление открывает его изменение.</string>
+    <string name="subkey_edit_layout_source">Подклавиша раскладки %1$s.</string>
     <string name="subkey_layout_copy_title">Изменить подклавишу раскладки?</string>
     <string name="subkey_layout_copy_body">Эту подклавишу задаёт раскладка %1$s. Встроенная раскладка не меняется: изменение сохраняется в копии %2$s, которая заменяет её в списке раскладок. В менеджере раскладок можно вернуться к исходной.</string>
     <string name="subkey_layout_copy_confirm">Создать копию</string>

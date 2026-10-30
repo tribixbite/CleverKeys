@@ -888,6 +888,7 @@
     <string name="subkey_slot_replaces">Helyettesíti: %1$s</string>
     <string name="subkey_dialog_subkeys_header">Albillentyűk</string>
     <string name="subkey_dialog_layout_hint">A(z) %1$s albillentyűi és az egyéni rövid csúsztatások. Egy irányra koppintva módosítható.</string>
+    <string name="subkey_edit_layout_source">A(z) %1$s egyik albillentyűje.</string>
     <string name="subkey_layout_copy_title">Módosítja a kiosztás albillentyűjét?</string>
     <string name="subkey_layout_copy_body">Ezt az albillentyűt a(z) %1$s határozza meg. A beépített kiosztás nem változik: a módosítás egy másolatba kerül (%2$s), amely átveszi a helyét a kiosztások listájában. Az Elrendezéskezelőben vissza lehet váltani az eredetire.</string>
     <string name="subkey_layout_copy_confirm">Másolat készítése</string>

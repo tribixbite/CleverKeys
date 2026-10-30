@@ -882,6 +882,7 @@
     <string name="subkey_slot_replaces">Vervangt %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subtoetsen</string>
     <string name="subkey_dialog_layout_hint">Subtoetsen van %1$s en aangepaste korte veeggebaren. Tik op een richting om die te wijzigen.</string>
+    <string name="subkey_edit_layout_source">Een subtoets van %1$s.</string>
     <string name="subkey_layout_copy_title">Een subtoets van de indeling wijzigen?</string>
     <string name="subkey_layout_copy_body">%1$s bepaalt deze subtoets. De ingebouwde indeling blijft ongewijzigd: de wijziging wordt opgeslagen in een kopie, %2$s, die de plaats ervan inneemt in de lijst met indelingen. In Indelingsbeheer kun je terug naar het origineel.</string>
     <string name="subkey_layout_copy_confirm">Kopie maken</string>

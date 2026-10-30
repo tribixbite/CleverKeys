@@ -907,6 +907,7 @@
     <string name="subkey_slot_replaces">Înlocuiește %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subtaste</string>
     <string name="subkey_dialog_layout_hint">Subtastele aranjamentului %1$s și glisările scurte personalizate. Atingerea unei direcții o modifică.</string>
+    <string name="subkey_edit_layout_source">O subtastă a aranjamentului %1$s.</string>
     <string name="subkey_layout_copy_title">Modificați o subtastă a aranjamentului?</string>
     <string name="subkey_layout_copy_body">%1$s definește această subtastă. Aranjamentul încorporat rămâne neschimbat: modificarea se salvează într-o copie, %2$s, care îi ia locul în lista de aranjamente. Managerul de aranjamente permite revenirea la original.</string>
     <string name="subkey_layout_copy_confirm">Creare copie</string>

@@ -890,6 +890,7 @@
     <string name="subkey_slot_replaces">%1$s yerine</string>
     <string name="subkey_dialog_subkeys_header">Alt tuşlar</string>
     <string name="subkey_dialog_layout_hint">%1$s alt tuşları ve özel kısa kaydırmalar. Bir yöne dokunarak değiştirilebilir.</string>
+    <string name="subkey_edit_layout_source">%1$s alt tuşu.</string>
     <string name="subkey_layout_copy_title">Düzenin bir alt tuşu değiştirilsin mi?</string>
     <string name="subkey_layout_copy_body">Bu alt tuşu %1$s tanımlar. Yerleşik düzen değişmez: değişiklik, düzen listesinde onun yerini alan %2$s adlı bir kopyaya kaydedilir. Düzen Yöneticisi ile özgün düzene dönülebilir.</string>
     <string name="subkey_layout_copy_confirm">Kopya oluştur</string>

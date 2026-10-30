@@ -884,6 +884,7 @@
     <string name="subkey_slot_replaces">Substitui %1$s</string>
     <string name="subkey_dialog_subkeys_header">Subteclas</string>
     <string name="subkey_dialog_layout_hint">Subteclas de %1$s e deslizes curtos personalizados. Toque numa direção para alterá-la.</string>
+    <string name="subkey_edit_layout_source">Uma subtecla de %1$s.</string>
     <string name="subkey_layout_copy_title">Alterar uma subtecla do layout?</string>
     <string name="subkey_layout_copy_body">%1$s define esta subtecla. O layout integrado não muda: a alteração é guardada numa cópia, %2$s, que o substitui na lista de layouts. O Gestor de layouts permite voltar ao original.</string>
     <string name="subkey_layout_copy_confirm">Criar cópia</string>

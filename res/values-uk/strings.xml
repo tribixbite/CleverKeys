@@ -866,6 +866,7 @@
     <string name="subkey_slot_replaces">Замість %1$s</string>
     <string name="subkey_dialog_subkeys_header">Підклавіші</string>
     <string name="subkey_dialog_layout_hint">Підклавіші розкладки %1$s і власні короткі свайпи. Натискання на напрямок відкриває його зміну.</string>
+    <string name="subkey_edit_layout_source">Підклавіша розкладки %1$s.</string>
     <string name="subkey_layout_copy_title">Змінити підклавішу розкладки?</string>
     <string name="subkey_layout_copy_body">Цю підклавішу задає розкладка %1$s. Вбудована розкладка не змінюється: зміну збережено в копії %2$s, яка замінює її у списку розкладок. У менеджері розкладок можна повернутися до початкової.</string>
     <string name="subkey_layout_copy_confirm">Створити копію</string>

@@ -917,6 +917,7 @@
     <string name="subkey_slot_replaces">به‌جای %1$s</string>
     <string name="subkey_dialog_subkeys_header">زیرکلیدها</string>
     <string name="subkey_dialog_layout_hint">زیرکلیدهای %1$s و کشیدن‌های کوتاه سفارشی. برای تغییر، روی یک جهت ضربه بزنید.</string>
+    <string name="subkey_edit_layout_source">یکی از زیرکلیدهای %1$s.</string>
     <string name="subkey_layout_copy_title">زیرکلید چیدمان تغییر کند؟</string>
     <string name="subkey_layout_copy_body">این زیرکلید را %1$s تعریف کرده است. چیدمان داخلی بدون تغییر می‌ماند: تغییر در یک رونوشت به نام %2$s ذخیره می‌شود که در فهرست چیدمان‌ها جای آن را می‌گیرد. در مدیریت چیدمان‌ها می‌توان به نسخه اصلی برگشت.</string>
     <string name="subkey_layout_copy_confirm">ساخت رونوشت</string>

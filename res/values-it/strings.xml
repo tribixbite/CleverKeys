@@ -924,6 +924,7 @@
     <string name="subkey_slot_replaces">Sostituisce %1$s</string>
     <string name="subkey_dialog_subkeys_header">Sottotasti</string>
     <string name="subkey_dialog_layout_hint">Sottotasti di %1$s e scorrimenti brevi personalizzati. Tocca una direzione per cambiarla.</string>
+    <string name="subkey_edit_layout_source">Un sottotasto di %1$s.</string>
     <string name="subkey_layout_copy_title">Cambiare un sottotasto del layout?</string>
     <string name="subkey_layout_copy_body">%1$s definisce questo sottotasto. Il layout integrato resta invariato: la modifica viene salvata in una copia, %2$s, che lo sostituisce nell’elenco dei layout. Il Gestore layout permette di tornare all’originale.</string>
     <string name="subkey_layout_copy_confirm">Crea copia</string>

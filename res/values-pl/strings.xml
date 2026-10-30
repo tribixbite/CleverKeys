@@ -896,6 +896,7 @@
     <string name="subkey_slot_replaces">Zastępuje %1$s</string>
     <string name="subkey_dialog_subkeys_header">Podklawisze</string>
     <string name="subkey_dialog_layout_hint">Podklawisze układu %1$s i własne krótkie gesty. Dotknij kierunku, aby go zmienić.</string>
+    <string name="subkey_edit_layout_source">Podklawisz układu %1$s.</string>
     <string name="subkey_layout_copy_title">Zmienić podklawisz układu?</string>
     <string name="subkey_layout_copy_body">Ten podklawisz definiuje %1$s. Wbudowany układ pozostaje bez zmian: zmiana zostaje zapisana w kopii %2$s, która zastępuje go na liście układów. W Menedżerze układów można wrócić do oryginału.</string>
     <string name="subkey_layout_copy_confirm">Utwórz kopię</string>
