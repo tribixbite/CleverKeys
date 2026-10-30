@@ -982,6 +982,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Mic granted through App info for the test. Restored: pack removed, voice off, RECORD_AUDIO
     revoked + user-set/user-fixed cleared (pref still "blocked", as before), entry deleted
     (History / Pinned / To-dos 0 / 0 / 0 as found), Download files removed.
+    FIXED 2026-10-30 (agent, the remembered-block finding): one policy for Settings and the voice
+    key (`MicPermissionGate.afterRequest` / `turnOnAfterAppSettings`, spec FR-7). The Settings
+    switch and a pack import always ask Android; a refusal without a prompt opens "Microphone
+    access is blocked" (Open app settings / Cancel), the switch stays off until granted, coming
+    back from App info with the mic allowed turns voice on, a grant clears the remembered block;
+    `MicPermissionActivity` (key path) shows the same dialog. MicPermissionGateTest red 2/7 →
+    green. DEVICE (second Saga 192.168.0.144, release of the fix, build/oct30-findings144/):
+    remembered block + cleared system flags → the switch showed the system prompt (was: nothing);
+    Don't allow → toast, block text gone; second Don't allow (USER_FIXED) → the dialog; switch
+    again → the dialog at once; Open app settings → App info; mic granted there → back, switch
+    ON PASS. NOT device-verified: the key path's dialog (needs a voice pack on the phone).
+    Restored: original APK (c1e4dc73…), voice off, RECORD_AUDIO denied with flags cleared and
+    the app's remembered block re-created by two denials, as found.
 31. [ ] device + maintainer: per-key subkey sources and modified layout copies (agent 2026-10-30,
    maintainer screenshots 9/10 + request; spec `docs/specs/subkey-customization-current.md`
    "Runtime key codes", "Sources in the per-key dialog", "Layout subkeys and modified copies").
@@ -1023,6 +1036,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    undo; Layout Manager left open in the back stack shows a stale list after a popover copy
    (reopening is correct); the Enter NE row reads "Acti" (4-character label slot). Restored:
    copies reverted / layouts removed, 0 custom mappings, Download files removed.
+   FIXED 2026-10-30 (agent, the three findings above; second Saga 192.168.0.144, release of the
+   fix, build/oct30-findings144/): Reset All asks first ("Reset all short swipes?", count named,
+   layout subkeys and copies untouched), is greyed at 0, and offers Undo in a snackbar
+   (`resetAll` returns the removed mappings, `restoreAfterReset` never overwrites a newer one;
+   ShortSwipeResetUndoTest, ShortSwipeChangeListenerTest.resetAllCanBeUndone) — device: 2
+   mappings → Cancel kept 2 → Reset → "2 mappings removed · Undo" → Undo → 2 → Reset → 0 PASS.
+   Layout Manager follows the `layouts` pref (listener + resume, `LayoutListRefresh.reconcile`,
+   LayoutListRefreshTest red 3/4 → green) — device: Layout Manager open, e NE removed from the
+   popover → Create copy → back to the task: "QWERTY (US) (modified)" listed without reopening,
+   Revert → System PASS. Direction rows never cut a label (`SubkeySlotLabel`, SubkeySlotLabelTest
+   red 2/4 → green; word labels 12 sp within 64 dp, descriptions wrap) — device: Enter NE reads
+   "Action  Enter" (was "Acti"; a first 88 dp/15 sp try split "Ente/r", fixed before commit) PASS.
+   Restored as found (0 mappings, one System layout).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
