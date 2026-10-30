@@ -565,3 +565,44 @@ emoji, translate, clipboard, settings, more — CleverKeys' suggestion bar sits 
 the card-grid clipboard (5.jpg, three columns of cards); Samsung's number row stays the layout's
 choice (off by default, as One UI). The light palette keeps §4's values with a blue action icon
 (`#2E65D4`, the light Shift-engaged blue); it has no screenshot reference.
+
+## 13. Follow-up 2026-10-30: function-key text, per-key legends, filled Shift, bar editor
+
+No phone was used; the references are the captures already listed (§10a, §12) and the
+comparison images built from them (`build/oct27-night-pixel/showcase/compare-*.png`,
+`build/oct28-samsung-ref/compare-*.png`, not in git).
+
+**Samsung function-key text (§12).** Ink heights in the One UI screenshots, 1080 px wide:
+"!#1" 38 px (1.jpg), "1/2" 40 px and "ABC" 35 px (2.jpg), against 40 px for the number-row
+digits — the function labels are 0.875–1.0 of a digit. CleverKeys drew every multi-character
+label at 0.75 of the main size (`FLAG_SMALLER_FONT`): 27–29 px against 37 px digits in its own
+capture (`ck4-sym1.png`, `ck4-letters.png`). Samsung-style now sets
+`LookGeometry.functionLabelScale = 1.25` (0.75 × 1.25 = 0.94 of the main size), applied to
+TEXT labels only; key-font icons (Shift, Delete, emoji) keep their size
+(`LookLabelSizing.mainLabelSize`). Layout `<theme function_label_scale>`.
+
+**SwiftKey comma and period (§3a).** The real SwiftKey (Pixel 8 Pro, both modes) draws a small
+grey microphone above the comma and ",!?" above the period, top centre, in the hint colour, with
+the main character pushed low; both are the long-press contents (voice input; punctuation).
+SwiftKey-style draws them as `KeyboardLook.keyLegends` (`LookKeyLegend`: CleverKeys' own
+voice-key icon, U+E015 of its key font, and the text ",!?"), top centre at the look's hint
+size. They replace the hidden gesture hints: with "Show gesture hints on familiar looks" on,
+the keys' real corner labels are drawn instead. A legend only promises what the key does: the
+mic only when the comma carries a voice key (`loc voice_typing`, placed by default), the text
+only when the key has a swipe. The period's swipes are ? and ! — the comma has its own key, and a
+layout never repeats a key (`StyleLayoutsTest.noKeyValueAppearsTwiceOnALayout`), so the mark's
+comma is the product's, not a swipe. The main character stays centred (not pushed low). Layout
+`<theme key_legends=",:@mic .:,!?">`.
+
+**Gboard Shift.** Gboard draws Shift as an outlined arrow at rest, a filled arrow while
+shifted, and a filled arrow over a bar in Caps Lock. Gboard-style (`KeyboardLook.shiftFilled`)
+draws CleverKeys' own filled path (`LookShiftGlyph`) in those two states and keeps the key
+font's outline glyph at rest; the latched colours of §9 are unchanged. Layout
+`<theme shift_filled="true">`.
+
+**Theme Creator.** The bar arrangement of §10 (slots, best word in the centre, typed word in
+quotation marks, emphasis) and the separators (follow / show / hide = a transparent
+`bar_separator`) are now controls in the Creator's "Keyboard Look" section, as are the
+function-key text size and the filled Shift; the preview bar lists its sample words with the
+first highlighted and the second as the typed word, so the arrangement shows live. Before, only
+layout XML / JSON could set the bar.

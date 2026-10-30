@@ -74,7 +74,10 @@ editor that used to be listed here already ship in 2.0.)
   the layout on a space-bar swipe; the layout's **Theme** chip can still pick another theme or
   **Follow global theme**. Where you touch and how swipe typing reads the keys never change.
   **Save theme as custom theme** in Layout Manager puts a layout's theme into Theme Manager, where
-  the Theme Creator's new **Keyboard Look** section edits all of it; **Export as layout XML** in
+  the Theme Creator's new **Keyboard Look** section edits all of it — including how the
+  suggestion bar is arranged (number of slots, best word in the middle, the typed word in
+  quotation marks, bold or dimmed side words, separators), the function keys' text size and a
+  filled Shift arrow, with the preview updating as you go; **Export as layout XML** in
   Theme Manager turns a custom theme or familiar look back into a `<theme>`, and Export XML can
   include a layout's custom theme in the file. New wiki page: Layout XML Reference, with a complete
   example. Custom themes saved this way load in older versions with their colours only.
@@ -170,7 +173,10 @@ editor that used to be listed here already ship in 2.0.)
   blue icon on the action key, the language name on the space bar (Appearance → **Language name
   on the space bar** turns it off), Samsung's alternative characters on the letters when
   gesture hints are shown, and !#1 opens Samsung's two symbol pages (1/2 and 2/2) — CleverKeys'
-  own number pane is a swipe right on !#1. Drawn with
+  own number pane is a swipe right on !#1. Samsung-style also draws !#1, 1/2 and ABC about as
+  large as One UI does; SwiftKey-style shows SwiftKey's small microphone over the comma and ,!?
+  over the period (the comma's voice-input swipe and the period's ? and ! swipes); Gboard-style fills the Shift arrow while shifted and adds a bar under it in
+  Caps Lock. Drawn with
   CleverKeys' own keys and the system font; not affiliated with Apple, Google, Microsoft or
   Samsung.
 - **Swipe typing inside the keyboard's own fields**: swiped words now go into the clipboard

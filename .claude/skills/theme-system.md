@@ -164,6 +164,13 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    tap-to-add entry) and is inked by `paint(bar, centre, commit)` per `LookBar.emphasis`
    (COMMIT: bold highlight only on the space commit, none for next-word; CENTRE = SwiftKey: centre
    text colour, sides `sideColor`). Never infer "commit" from the centre position.
+   The Theme Creator's "Keyboard Look" section edits it (2026-10-30, `BarArrangementEditor` in
+   `activities/ThemeLookEditor.kt`; rules `ThemeSpecEdits.withBarDefined` / `withBar` /
+   `withBarSlots` / `withSeparators`): "Use keyboard setting" = no `bar` (scrolling chips), slots
+   1–5 (`PlainSlider`, `sliderSteps`), centre, quote, emphasis chips, separators FOLLOW / SHOW /
+   HIDE = the COMMON `bar_separator` colour absent / visible / alpha 0. The Creator preview bar
+   passes the second sample word as the typed word (`ThemePreviewScene.barTypedWord`) so quotes
+   and the left slot show live.
 17. **Sublabel bands never overlap** (Pixel 2026-10-27, "ABC" over "GIF"). A key's top (NW, N,
    NE) and bottom (SW, S, SE) labels share one shrink factor, `SubLabelSizing.bandScale`, measured
    at their individually fitted sizes (`Keyboard2View.bandScale` / `subLabelPaint`); bands with
@@ -205,6 +212,25 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    style keeps them (2026-10-27, `ThemeSpecRenderTest`).
    Pure model tests can not touch `KeyboardColorScheme` (Compose colours are not on the pure
    classpath): rendering tests are mock tier (`ThemeSpecRenderTest`).
+
+20. **Per-key marks and function-key text** (2026-10-30, `theme/LookKeyMarks.kt`, research §13).
+   `KeyboardLook.keyLegends` / `ThemeSpec.keyLegends` → `Theme.lookKeyLegends`: a product's mark at
+   the top centre of the key whose MAIN character matches (`LookKeyLegend`: text ≤ 4 chars or
+   `LookLegendGlyph.MIC` = key-font U+E015), hint colour and `_subLabelSize`, drawn by
+   `Keyboard2View.drawLookKeyLegend` only while the look hides corner labels (effective legends
+   ≠ ALL) and only when the key backs it (`LookKeyLegends.legendFor`: mic needs a voice swipe,
+   text any swipe). SwiftKey-style: `,:@mic .:,!?` (the period's swipes are ? and !; a layout
+   never repeats a key, so the mark's comma is the product's).
+   `shiftFilled` → `Theme.lookShiftFilled`: Shift drawn as `LookShiftGlyph.parts` (filled arrow
+   while shifted, arrow + bar in Caps Lock, the font glyph at rest) through `drawIconParts` —
+   Gboard-style only. `LookGeometry.functionLabelScale` → `Theme.Computed.function_label_scale`
+   multiplies FLAG_SMALLER_FONT TEXT labels only, never key-font icons
+   (`LookLabelSizing.mainLabelSize`, used by `scaleTextSize`): Samsung-style 1.25 (One UI "!#1" /
+   "1/2" / "ABC" = 0.875–1.0 of a digit). XML `key_legends`, `shift_filled`,
+   `function_label_scale`; JSON `keyLegends`, `shiftFilled`, geometry `functionLabelScale`; the
+   Creator edits the last two (key legends: XML / JSON only). Tests: `theme/LookKeyMarksTest`
+   (pure), `KeyboardLookRenderTest.perKeyMarksReachTheThemeFromALookAndFromASpec` (mock),
+   `LookKeyMarksShowcaseTest` (instrumented, writes `oct30-looks/` PNGs).
 
 ## Traps
 
@@ -248,6 +274,7 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
 | `activities/LayoutThemePicker.kt`, `LayoutThemeBinding.kt`, `backup/LayoutThemeBindingDiff.kt`, `prefs/LayoutsPreference.kt` | per-layout binding UI, rules, backup preview, storage |
 | `LayoutKeyGeometry.kt`, `activities/LayoutKeyGeometryDialog.kt` | per-layout key gaps / border: rules + precedence, Layout Manager editor |
 | `theme/ThemeSpec.kt`, `theme/ThemeSpecCodec.kt`, `theme/EmbeddedThemes.kt`, `theme/LayoutThemeTransfer.kt`, `theme/ThemeSpecEdits.kt`, `KeyStyle.kt`, `activities/ThemeLookEditor.kt` | layout `<theme>` model/XML/JSON, embedded ids, save/export, Theme Creator "Keyboard Look", per-key styling |
+| `theme/LookKeyMarks.kt` | look per-key legends (SwiftKey mic, ",!?"), Gboard's filled Shift |
 | `customization/KeyMagnifierView.kt` | magnifier colours (`activeTheme`, `overlayLabelColor`) |
 | `res/values/themes.xml` | the XML styles (`BaseTheme`, `CleverKeysDark/Light`, `Monet*`, `Jewel`, …) |
 
@@ -260,11 +287,12 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
   `SuggestionBarPaletteTest`, `ThemeBorderPaintOpacityTest`,
   `theme/KeyboardViewThemeTrackerTest` (hidden/shown edits, switch, binding, delete, XML flip),
   `theme/KeyboardLookGeometryTest`, `theme/KeyboardLooksTest`, `theme/LookDynamicColorsTest`,
-  `theme/LookPopupsTest`, `theme/LookBarArrangementTest`, `theme/ThemeManagerCustomCardColoursTest`
+  `theme/LookPopupsTest`, `theme/LookBarArrangementTest`, `theme/LookKeyMarksTest`, `theme/ThemeManagerCustomCardColoursTest`
   (pure), `theme/KeyboardLookRenderTest`, `theme/ThemePreviewLayoutTest` (mock), `theme/ThemeSpecTest`,
   `theme/ThemeSpecEditsTest`, `theme/EmbeddedThemesTest`, `KeyStyleTest` (pure),
   `theme/ThemeSpecRenderTest`, `LayoutXmlStylingTest`, `LayoutEmbeddedThemeTest` (mock).
 - Instrumented: `LookSuggestionBarInstrumentedTest` (also writes the looks showcase PNGs),
+  `LookKeyMarksShowcaseTest` (filled Shift, SwiftKey legends, Samsung function text, Creator bar),
   `LookHintOverlapRenderTest`, `LayoutXmlThemeKeyboardInstrumentedTest`, `LayoutThemeSaveAsCustomComposeTest`,
   `ThemeSettingsActivityComposeTest`, `Issue93ThemeHexInputComposeTest`,
   `LayoutThemeSuggestionBarInstrumentedTest`, `ClipboardThemeColorTest`, `ClipboardPaneTintTest`.

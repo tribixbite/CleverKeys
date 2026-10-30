@@ -811,6 +811,24 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     mode and the light ones after `cmd uimode night no` (restored yes); Theme Creator preview
     draws QWERTY in the edited colours with Harbour as layout 2 AND as layout 1 (System removed
     temporarily). Restored: theme and layout removed, layouts [System], theme CleverKeys Dark.
+    ROUND 9 (2026-10-30, agent; NO PHONES — emulator.wtf API 34 + JVM; evidence
+    `build/oct30-looks/`, not in git) `6ceb58d6`: four open polish items CLOSED. (1) Theme Creator
+    "Keyboard Look" → Suggestion Bar Layout: "Use keyboard setting" (chips) or slots 1–5, best in
+    the middle, quoted typed word, bold pending correction / dim side words, separators follow /
+    show / hide; live in the Creator preview (`creator-bar-arrangements.png`, `creator-ui-bar.png`;
+    `ThemeCreatorBarArrangementComposeTest` red — emphasis chip scrolled off — then FlowRow,
+    green). (2) Samsung-style !#1 / 1/2 / ABC at 0.94 of the main size (`functionLabelScale`
+    1.25): ink 35 / 38 / 36 px vs digits 38 (One UI 38 / 40 / 35 vs 40), was 27–29 vs 37
+    (`compare-samsung-function-text-dark.png`). (3) SwiftKey-style mic over the comma (only with
+    voice typing available) and ",!?" over the period, hint colour, hidden when gesture hints are
+    shown (`compare-swiftkey-legends-{light,dark}.png`); the period keeps ? ! (a layout never
+    repeats a key, so the mark's comma is the product's). (4) Gboard-style filled Shift arrow
+    while shifted, arrow + bar in Caps Lock, our own path (`gboard-shift-{light,dark}.png`; the
+    real Gboard's shifted state was never captured — filled shape taken from the task, outline
+    at rest matches). All via ThemeSpec XML/JSON (`function_label_scale`, `key_legends`,
+    `shift_filled`); 12 strings × 22 locale files machine-drafted, native review owed. Pure 3629,
+    mock 1672 OK. Open: device pass of all four (no phone this round); key legends have no
+    Creator control (XML / JSON only); SwiftKey's low-set comma/period glyph not copied.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
