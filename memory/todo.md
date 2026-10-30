@@ -555,6 +555,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     35–37 and ClipboardDatabaseTest (110, paged editor). Looks/StyleLayouts and the thumbnail
     repair have no dedicated instrumented test (covered by pure tests and the upgrade test);
     the looks code ran only inside the keyboard-view tests. Evidence `~/ew-output/full-0c3a2f56/`.
+    FULL INSTRUMENTED 2026-10-30 at `c6b40cec` (agent, detached worktree, the 4 `ctc_bench` encoders
+    sha256-equal to the testing-strategy table; app `ec4eeffa…`, test `233ff801…`): unfiltered, 3 shards,
+    orchestrator, Pixel7 — 1,646 run = 1,646 source `@Test`; 1,644 passed / 0 failed / 2 skipped / 0 flaky
+    on API 34 (`dea153a4`), 35 (`151f9342`), 36 (`ab758d79`) and 37 (`6d663b96`). Both skips are
+    environmental assumptions: `Issue181NoFontProviderTest` (image has a font provider) and
+    `VoiceInputInstrumentedTest#theImportedPackTranscribesASampleOnDevice` (ignored voicepack asset not
+    supplied). Rerun with the pack from `../ck-voice` (zip `33ec8c87…`): VoiceInputInstrumentedTest 3/3,
+    0 skipped, on 34–37. No failures, so no fixes. Evidence `~/ew-output/full-c6b40cec/`.
 22. [ ] Saga 202 backup round trip + real 1.x upgrade, 2026-10-25 (agent; evidence
     `build/oct25-saga/`, original backup in `backup-original/`, not in git). Plaintext full ZIP,
     the same ZIP twice, encrypted `.ckenc`, clipboard JSON and ZIP, config Merge/Replace: every
