@@ -801,6 +801,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     are from all agents' runs, baseline unknown — left. Restored: layouts System/Dvorak/QWERTY US,
     night yes, Cyberpunk, Next-Word OFF, look hints OFF, Learn From My Typing ON (turned off
     during captures, "Keep it" chosen, data kept), 7 tabs, launcher.
+    DEVICE 2026-10-30 (agent, second Saga 192.168.0.144, portrait, release a50a89ee sha256
+    fe12c29f…, evidence build/oct30-saga144/, not in git): "Unfinished Words" (7dd7fb5a) PASS —
+    Ranking & Tuning shows Keep what I typed / Off with their explanations, the Unfinished Word
+    Cost slider greys out under Off; `tomorr`+space in a Chrome textarea → `Tomorr ` under Keep
+    (bar `Tomorrow | Tomorrows | Tomorrowland`, none highlighted) and `Timor ` under Off (bar
+    highlights Timor). Restored to Keep, cost 1.50. Theme Manager (58e86ea0) PASS — Harbour
+    imported as a layout, "Save theme as custom theme": its card draws the <dark> colours in dark
+    mode and the light ones after `cmd uimode night no` (restored yes); Theme Creator preview
+    draws QWERTY in the edited colours with Harbour as layout 2 AND as layout 1 (System removed
+    temporarily). Restored: theme and layout removed, layouts [System], theme CleverKeys Dark.
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
@@ -937,6 +947,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     the chooser's "CleverKeys voice (offline)" entry (the Saga has voice off, no pack, mic
     blocked), and the mic-on-a-letter swipe itself (the Saga's layout keeps the mic on Enter;
     covered by PointersEventSubkeyWordSwipeTest).
+    DEVICE 2026-10-30 (agent, second Saga 192.168.0.144, release a50a89ee, build/oct30-saga144/):
+    built-in-ready route PASS — pack zip imported (~3 s), voice on, the mic key (Enter NW
+    `voice_typing`) opened "Listening…" at once; its hold offered "CleverKeys voice (offline)"
+    first, then Google Voice Typing; picking ours listened, ✕ cancelled (mic off). LibriSpeech
+    through the speaker into Chrome: "Congratulations report in upon the protest everywhere doing
+    her journey." (4 errors / 11 words); into the clipboard pane's inline entry editor (entry made
+    by Backup & Restore → Import Clip): "Voice note this has indeed been a harassing day,
+    continued the young man, his eyes fixed upon his friend." (0 / 16), Chrome's field untouched
+    PASS. FINDING, not fixed (maintainer rule area): the app's own `voice_mic_permission_blocked`
+    pref outlives the system state — after "don't ask again" was cleared (pm clear-permission-flags
+    here; a user picking "Ask every time" in system settings is the same) the switch and pack
+    import never prompt again and show "Microphone access is blocked" until the user allows the
+    mic in system settings (`MicPermissionGate.permissionStep` trusts the cached flag; asking on
+    the explicit Settings switch would cost nothing when truly blocked — Android denies at once).
+    Mic granted through App info for the test. Restored: pack removed, voice off, RECORD_AUDIO
+    revoked + user-set/user-fixed cleared (pref still "blocked", as before), entry deleted
+    (History / Pinned / To-dos 0 / 0 / 0 as found), Download files removed.
 31. [ ] device + maintainer: per-key subkey sources and modified layout copies (agent 2026-10-30,
    maintainer screenshots 9/10 + request; spec `docs/specs/subkey-customization-current.md`
    "Runtime key codes", "Sources in the per-key dialog", "Layout subkeys and modified copies").
@@ -959,6 +986,25 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    "Export XML values"); XmlActionRoundTripTest / XmlLayoutExporterRoundTripTest /
    KeyEventHandlerLayoutIntentTest fail-first 8/10, 5/6, 2/2; (c) native review of the 24 new
    strings and `layout_manager_export_not_written` (item 10).
+   DEVICE 2026-10-30 (agent, second Saga 192.168.0.144, portrait, release a50a89ee sha256
+   fe12c29f…, build/oct30-saga144/): per-key dialog badges all 8 rows (Layout / Hidden / Built-in /
+   Custom; empty rows unbadged as specified); Enter's title "Customize "Enter" Key"; Enter S →
+   Select All toast "Mapped South → "Sele" (Command: Select All)"; swipe works and an Enter tap
+   still types "\n" PASS. q NE (Layout "1") → copy question → Create copy → toast "Created QWERTY
+   (US) (modified)", the keyboard shows it at once, q NE types `zap`; Layout Manager "Modified copy
+   of System Settings" → Revert to original → System PASS. Popover: hold e, dwell on "3" → edit
+   screen (Layout badge) → Reassign → copy question → Create copy → `pop` typed by e NE PASS, but
+   the edit screen showed the dialog's "…Tap a direction to change it." → FIXED `007bbd60` (own
+   string "A subkey of %1$s.", SubkeyAssignSlotTest red 1/3 → 3/3, Translation* green). Export XML
+   round trip (8636480b) PASS: on the copy, w NE template `<{cursor}>` (written into the copy's
+   XML, no question) plus imported global mappings a NE TEXT `hi "there" \ 😀` and s NE KEY_EVENT
+   122; exported `ne="hi:'hi &quot;there&quot; \\ 😀'"`, `ne="Hm:keyevent:122"`,
+   `ne="&lt;{cu:template:'&lt;{cursor}>'"`; with ALL global mappings reset the re-imported layout
+   typed the exact text, moved the cursor home and left the cursor between `<>` PASS. Findings,
+   not fixed: Reset All in Short Swipe Customization wipes every mapping with no confirmation or
+   undo; Layout Manager left open in the back stack shows a stale list after a popover copy
+   (reopening is correct); the Enter NE row reads "Acti" (4-character label slot). Restored:
+   copies reverted / layouts removed, 0 custom mappings, Download files removed.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
