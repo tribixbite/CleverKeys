@@ -65,18 +65,20 @@ subkey popover found in mainstream keyboards".
 - `SubkeyAssignActivity` is a translucent dialog activity started from the IME with a new task and excluded from recents. Finishing it returns to the app that was being typed in.
 - It **reuses** the per-key customisation pieces:
   - `CommandPaletteDialog` picks the action;
-  - the shared `ShortSwipeAssignment.apply(...)` saves it and shows the confirmation toast; `ShortSwipeCustomizationActivity` now calls the same helper;
-  - `ShortSwipeCustomizationManager` stores the mapping.
+  - `SubkeyKeyContext.resolveCode` finds the key on the keyboard's current layout entry, and `KeySubkeySources` resolves the slot, exactly as the per-key dialog's rows (`subkeyAssignSlot`);
+  - `SubkeyEditPolicy` (pure) decides where an edit, removal or restore goes and `SubkeySlotActions` carries it out — the same two objects behind Settings → Short Swipe Customization's per-key dialog (subkey-customization-current.md "One policy for both screens");
+  - `ShortSwipeAssignment` saves custom mappings with the confirmation toast; `ShortSwipeCustomizationManager` stores them.
+- **Layout subkeys (2026-10-30).** Changing or removing a subkey the current BUILT-IN layout defines asks *"Change a subkey of the layout?"* (`LayoutCopyQuestionDialog`, shared with the per-key dialog): **Create copy** writes "<layout> (modified)" in the layout's place (`LayoutSubkeyEditor`), **Change in all layouts** makes the global custom mapping or `removed` blank this screen always made before. On a custom layout (a copy, an imported layout) the edit goes into its XML without the question. A slot that is not the layout's own (bottom row, Extra key, a custom mapping) is a custom mapping as before. Without a running keyboard the slot falls back to what the popover reported, and every edit is a custom mapping.
 - **Assign:** opens the palette directly.
 - **Edit:** shows what the slot does, not just its label:
-  - the label as the popover draws it (key-font icons through the key font) and the action type;
+  - the label as the popover draws it (key-font icons through the key font), the action type and the slot's source badge (Layout / Built-in / Extra key / Hidden / Custom / Removed, `SubkeySourceBadge`), the layout's name for a layout subkey, and "Replaces …" when a custom mapping hides a subkey;
   - the action itself: a command's name and description; the full custom text; an intent's name, target type, action, data, MIME type, package/class and extras; a timestamp pattern with a live preview; or "built-in subkey from the keyboard layout" for a layout default.
 
   It offers:
   - *Edit* (custom mappings, except raw key events): the palette opens straight into that action's own editor, filled in — the text editor, the intent editor, the pattern dialog, or the label step for a command — with the existing label kept. Backing out of the editor lands on the full list, so the same screen also reassigns. Settings → Customize Per-Key Actions opens existing mappings the same way (`CommandPaletteDialog(initialMapping = …)`);
   - *Reassign* (the palette, empty);
-  - *Remove*: a custom mapping over an empty slot is deleted; a default subkey, or a custom mapping over one, is replaced by the `removed` placeholder;
-  - *Restore default*: only when a custom mapping hides a default subkey.
+  - *Remove*: a layout's own subkey is removed from the layout (after the copy question on a built-in layout); otherwise a custom mapping over an empty slot is deleted, and a shown subkey, or a custom mapping over one, is replaced by the `removed` placeholder (`SubkeyEditPolicy.globalRemoval`);
+  - *Restore default*: only when a custom mapping hides a subkey (`SubkeyEditPolicy.restore`).
 - *Remove* is drawn in the error colour.
 - Removing uses the existing `removed` command, so no storage change.
 - **Palette layout** (2026-10-01): a compact title row with the key and direction as subtitle; the search field stays fixed; Template / Custom text / Send intent / Timestamp are one row of four compact tiles that is the list's first item, so it scrolls away (while searching, only matching tiles stay); category headers stick while their commands scroll; the dialog fills 96 % × 94 % of the window.
@@ -126,4 +128,5 @@ read through `ConfigSnapshot`, captured at touch-down (ARC-072).
 - `PointersShortSwipeCustomOverrideTest`: the same routing for plain short swipes (typed single characters and Char-kind commands, literal multi-character macros, a dead-key mapping latches).
 - `CommandRoutingTest` (pure): pipeline vs executor routing; every Char/String-kind catalogue command is typed through the pipeline; every catalogue command has a path.
 - `SubkeyAssignExtrasTest` (pure): the assign request round-trips through the intent extras.
+- `SubkeyEditPolicyTest`, `SubkeyAssignSlotTest` (pure): the shared edit rule, and the screen resolving its slot like the per-key dialog. `SubkeyAssignScreenSourcesComposeTest` (instrumented): the source badge and "Replaces …", Remove on a built-in layout's subkey asks, Create copy writes the modified copy, Change in all layouts keeps the global `removed` mapping.
 - Drift guards: `SettingsDefaultsDriftTest`, `SettingsResetPolicyTest`, `ConfigSnapshotFixture`.

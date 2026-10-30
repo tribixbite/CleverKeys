@@ -233,9 +233,34 @@ Tests: `KeySubkeySourcesTest`, `LayoutSubkeyXmlTest` (pure); `LayoutSubkeyBuiltI
 commands round-trip), `LayoutSubkeyEditorTest` (mock); `KeyCustomizationDialogSourcesComposeTest`,
 `LayoutSubkeyCopyInstrumentedTest` (instrumented).
 
-Not covered: the subkey popover's assign/edit screen (`SubkeyAssignActivity`) still edits a
-layout default through a global custom mapping or `removed` blank, as before. # TODO: route its
-layout-default edits through `LayoutSubkeyEditor` too.
+## One policy for both screens (2026-10-30)
+
+Two screens edit a subkey: the per-key dialog above and the subkey popover's assign/edit screen
+(`SubkeyAssignActivity`, subkey-popover.md "Assign / edit screens"). Until 2026-10-30 the popover's
+screen sent every edit — including one of the layout's own subkey — to a global custom mapping
+or `removed` blank. Both now share:
+
+| Piece | Kind | Job |
+|-------|------|-----|
+| `SubkeyKeyContext` (`resolve` / `resolveCode`) | resolver | the key's layout entry, its XML position, its defined and live key; the popover finds its key by runtime code |
+| `KeySubkeySources` | pure | the slot (source, defined / shown value, custom mapping) |
+| `SubkeyEditPolicy` | pure | `route` (ASK_COPY / LAYOUT / GLOBAL), `targetAfterCopyQuestion`, `save` (LAYOUT / GLOBAL / GLOBAL_INSTEAD_OF_LAYOUT), `globalRemoval` (BLANK / DELETE), `restore` |
+| `SubkeySlotActions` | Android | carries the decision out: `LayoutSubkeyEditor` for layout writes, `ShortSwipeAssignment` for custom mappings, the toasts |
+| `SubkeySourceBadge`, `LayoutCopyQuestionDialog` | Compose | the badge and the copy question, drawn the same in both |
+
+Rule: a slot that `editsLayout` (the layout's own subkey, shown or hidden, no custom mapping) is
+edited in the layout — after the copy question on a BUILT-IN layout entry, directly on a custom
+one; **Change in all layouts** and every other slot use a custom mapping. A chosen action a layout
+cannot hold becomes a custom mapping with the `subkey_layout_toast_not_layout` toast. A global
+removal blanks what is shown and otherwise deletes the mapping; restore drops the mapping.
+
+Tests: `SubkeyEditPolicyTest` (pure, fail-first against the popover's old all-global rule: 4/7
+failed), `SubkeyAssignSlotTest` (pure), `SubkeyAssignScreenSourcesComposeTest` (instrumented,
+fail-first on the old screen 3/3), `KeyCustomizationDialogSourcesComposeTest` (unchanged, passes
+on the shared rule), `XmlExportRoundTripInstrumentedTest` (Export XML read back by the device's
+parser). `ShortSwipeAssignment` posts its toasts to the main thread: its suspend calls can resume
+off it (a Compose test interceptor resumed one on an I/O worker, "Can't toast on a thread that has
+not called Looper.prepare()").
 
 ## Current Limitation
 

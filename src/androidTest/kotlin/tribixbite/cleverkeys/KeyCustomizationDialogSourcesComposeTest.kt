@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.KeySubkeySources
 import tribixbite.cleverkeys.customization.ShortSwipeKeyCodes
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SlotEditTarget
 import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.theme.CleverKeysTheme
 

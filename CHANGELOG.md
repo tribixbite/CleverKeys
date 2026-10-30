@@ -61,7 +61,11 @@ editor that used to be listed here already ship in 2.0.)
   layout's place with its language, theme and key-spacing choices; the built-in layout itself
   never changes. Later edits change the copy. **Change in all layouts** keeps the old behaviour
   (a custom short swipe in every layout). Layout Manager marks the copy and offers **Revert to
-  original**; Backup & Restore and Export XML carry it like any custom layout.
+  original**; Backup & Restore and Export XML carry it like any custom layout. The screen that
+  opens from the subkey popover (hold a key, then assign or edit a slot) follows the same rules:
+  it shows where the subkey comes from and what a custom short swipe replaces, and changing or
+  removing a subkey of the built-in layout asks the same question instead of always making a
+  custom short swipe.
 - **Layouts can bring their own look.** A layout file can now define its whole appearance: a
   `<theme>` with every colour of the Theme Creator plus Enter/action/modifier colours, key gaps,
   corners, shadows, hints, a key-press preview, and separate light- and dark-mode colours — anything

@@ -948,8 +948,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    tests; runPureTests 3590 / runMockTests 1657 OK; emulator.wtf Pixel7 API 34 18/18.
    NOT verified on a phone (no device assigned): capture of Enter in the real IME, the copy
    replacing the live layout, Revert from Layout Manager, TalkBack reading of the rows.
-   OPEN: (a) the subkey popover's assign screen still edits layout defaults through custom
-   mappings (# TODO in the spec); (b) DONE 2026-10-30 (maintainer "yes fix both"): Export XML
+   OPEN: (a) DONE 2026-10-30 (maintainer "yes fix both"): the popover's assign screen shares
+   the per-key dialog's rule — `SubkeyEditPolicy` (pure) + `SubkeySlotActions`, source badges,
+   the copy question (spec "One policy for both screens"); SubkeyEditPolicyTest red 4/7,
+   SubkeyAssignScreenSourcesComposeTest red 3/3 on the old screen, both green; NOT verified on a
+   phone (popover hold → edit → copy on a real keyboard); (b) DONE 2026-10-30 (maintainer "yes fix both"): Export XML
    and layout copies share `XmlAttributeMapper.layoutValue`; every action type reads back as
    itself (`label:'text'`, backslash escape, text-level edit keeps non-BMP characters, layout
    intent keys are started), old files import as before (spec profile_system_restoration.md

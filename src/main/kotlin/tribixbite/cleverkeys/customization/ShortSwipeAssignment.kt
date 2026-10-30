@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys.customization
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
@@ -31,7 +33,7 @@ object ShortSwipeAssignment {
             useKeyFont = selection.useKeyFont      // Use icon font if applicable
         )
         manager.setMapping(mapping)
-        Toast.makeText(context, mappedMessage(context, mapping), Toast.LENGTH_SHORT).show()
+        toast(context, mappedMessage(context, mapping))
         return mapping
     }
 
@@ -76,11 +78,7 @@ object ShortSwipeAssignment {
     ) {
         if (hasDefault) manager.setMapping(ShortSwipeMapping.removal(keyCode, direction))
         else manager.removeMapping(keyCode, direction)
-        Toast.makeText(
-            context,
-            context.getString(R.string.subkey_toast_removed, context.getString(direction.displayNameRes), keyName(context, keyCode)),
-            Toast.LENGTH_SHORT
-        ).show()
+        toast(context, context.getString(R.string.subkey_toast_removed, context.getString(direction.displayNameRes), keyName(context, keyCode)))
     }
 
     /** Drop the custom mapping so the layout's own subkey shows again. */
@@ -91,10 +89,17 @@ object ShortSwipeAssignment {
         direction: SwipeDirection,
     ) {
         manager.removeMapping(keyCode, direction)
-        Toast.makeText(
-            context,
-            context.getString(R.string.subkey_toast_restored, context.getString(direction.displayNameRes), keyName(context, keyCode)),
-            Toast.LENGTH_SHORT
-        ).show()
+        toast(context, context.getString(R.string.subkey_toast_restored, context.getString(direction.displayNameRes), keyName(context, keyCode)))
+    }
+
+    /**
+     * Show [text] on the main thread. These functions suspend on the manager's file I/O, and the
+     * caller's dispatcher decides where they resume: a Compose UI test's interceptor resumed one
+     * on an I/O worker, where `Toast` throws "Can't toast on a thread that has not called
+     * Looper.prepare()" (SubkeyAssignScreenSourcesComposeTest, emulator.wtf 2026-10-30).
+     */
+    private fun toast(context: Context, text: String) {
+        val show = { Toast.makeText(context, text, Toast.LENGTH_SHORT).show() }
+        if (Looper.myLooper() == Looper.getMainLooper()) show() else Handler(Looper.getMainLooper()).post(show)
     }
 }

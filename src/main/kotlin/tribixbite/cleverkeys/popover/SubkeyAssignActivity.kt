@@ -51,10 +51,19 @@ import tribixbite.cleverkeys.Theme
 import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.CommandPaletteDialog
 import tribixbite.cleverkeys.customization.CommandRegistry
-import tribixbite.cleverkeys.customization.ShortSwipeAssignment
+import tribixbite.cleverkeys.customization.KeySubkeySources
+import tribixbite.cleverkeys.customization.LayoutCopyQuestionDialog
+import tribixbite.cleverkeys.customization.LayoutSubkeyEditor
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeKeyCodes
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SlotEditTarget
+import tribixbite.cleverkeys.customization.SubkeyEditPolicy
+import tribixbite.cleverkeys.customization.SubkeyKeyContext
+import tribixbite.cleverkeys.customization.SubkeySlot
+import tribixbite.cleverkeys.customization.SubkeySlotActions
+import tribixbite.cleverkeys.customization.SubkeySource
+import tribixbite.cleverkeys.customization.SubkeySourceBadge
 import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.theme.CleverKeysTheme
 
@@ -112,30 +121,68 @@ class SubkeyAssignActivity : ComponentActivity() {
 /** Which way the palette is open: picking a new action, or editing the stored one in place. */
 private enum class PaletteMode { NEW, EDIT }
 
-/** The slot's stored mapping, once loaded (null inside: the slot has no custom mapping). */
-private class LoadedMapping(val mapping: ShortSwipeMapping?)
+/** The key's sources and the slot's stored mapping, once loaded. */
+private class Loaded(val key: SubkeyKeyContext, val slot: SubkeySlot)
+
+/**
+ * The slot [request] names, resolved like the per-key dialog's rows ([KeySubkeySources]): from
+ * the key's layout entry when [key] has a live key, else from what the popover reported (a
+ * non-null placeholder stands for "a subkey is shown here", which is all the edit rule reads).
+ */
+internal fun subkeyAssignSlot(request: SubkeyAssignRequest, key: SubkeyKeyContext?, mapping: ShortSwipeMapping?): SubkeySlot {
+    val customs = mapping?.let { mapOf(request.direction to it) }.orEmpty()
+    if (key?.liveKey != null) {
+        return KeySubkeySources.resolve(key.definedKey, key.layoutOwned, key.liveKey, customs)
+            .first { it.direction == request.direction }
+    }
+    val placeholder = if (request.hasDefault) tribixbite.cleverkeys.KeyValue.makeStringKey(request.currentLabel.orEmpty()) else null
+    return SubkeySlot(request.direction, placeholder, placeholder?.takeUnless { mapping?.isRemoval == true }, mapping, layoutOwned = false)
+}
 
 /**
  * ASSIGN on a plain empty slot goes straight to the palette. ASSIGN on a slot whose layout
- * subkey was removed, and EDIT, first show the slot's details and a choice of actions.
+ * subkey was removed, and EDIT, first show the slot's details, its source badge and a choice of
+ * actions. Where an edit goes is the per-key dialog's rule ([SubkeyEditPolicy], carried out by
+ * [SubkeySlotActions]): a subkey the current BUILT-IN layout defines asks to create (or, on a
+ * copy, changes) "<layout> (modified)"; "Change in all layouts" and every other slot use a
+ * global custom mapping.
+ *
+ * @param resolveKey where the key's subkeys come from; by default the running keyboard's current
+ *   layout ([SubkeyKeyContext.resolveCode]). Tests pass a fixed context.
  */
 @Composable
-private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit) {
+internal fun SubkeyAssignScreen(
+    request: SubkeyAssignRequest,
+    onDone: () -> Unit,
+    resolveKey: ((LayoutSubkeyEditor) -> SubkeyKeyContext)? = null,
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val manager = remember { ShortSwipeCustomizationManager.getInstance(context) }
-    // The stored mapping: the edit screen shows what it does and edits it, not just its label.
-    // A LaunchedEffect rather than produceState: lint's ProduceStateDoesNotAssignValue rejected
-    // the produceState form of this load and failed CI (run on a9d8cb1d).
-    var loaded by remember { mutableStateOf<LoadedMapping?>(null) }
+    val layoutEditor = remember {
+        LayoutSubkeyEditor(
+            tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(context),
+            context.resources,
+            resolveSystemName = { tribixbite.cleverkeys.CleverKeysService.layoutSourceSnapshot()?.builtInName },
+        )
+    }
+    val actions = remember { SubkeySlotActions(context, manager, layoutEditor) }
+    // The stored mapping and the key's sources: the screen shows what the slot does, where that
+    // comes from, and edits it. A LaunchedEffect rather than produceState: lint's
+    // ProduceStateDoesNotAssignValue rejected the produceState form and failed CI (run on a9d8cb1d).
+    var loaded by remember { mutableStateOf<Loaded?>(null) }
     LaunchedEffect(request.keyCode, request.direction) {
         manager.loadMappings()
-        loaded = LoadedMapping(manager.getMapping(request.keyCode, request.direction))
+        val key = resolveKey?.invoke(layoutEditor) ?: SubkeyKeyContext.resolveCode(context, layoutEditor, request.keyCode)
+        loaded = Loaded(key, subkeyAssignSlot(request, key, manager.getMapping(request.keyCode, request.direction)))
     }
 
     val startWithPalette = request.mode == SubkeyAssignRequest.Mode.ASSIGN && !request.hasDefault
     // Saveable: rotating with the palette open keeps it open, with its own draft (audit 2026-10-08).
     var palette by rememberSaveable { mutableStateOf(if (startWithPalette) PaletteMode.NEW else null) }
+    var paletteTarget by rememberSaveable { mutableStateOf(SlotEditTarget.GLOBAL) }
+    // The copy question is open for an edit (false) or a removal (true).
+    var pendingCopy by rememberSaveable { mutableStateOf<Boolean?>(null) }
     val title = stringResource(
         R.string.subkey_assign_title,
         // The key's name ("Space", "A"), never its raw code: a key-font glyph prints as an
@@ -145,7 +192,30 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
     )
 
     val current = loaded ?: return  // a local file read: shows within a frame or two
-    val custom = current.mapping?.takeUnless { it.isRemoval }
+    val slot = current.slot
+    val custom = slot.custom?.takeUnless { it.isRemoval }
+
+    /** Carry out an edit (open the palette for [target]) or a removal. */
+    fun go(remove: Boolean, target: SlotEditTarget) {
+        if (remove) {
+            scope.launch {
+                actions.remove(current.key, request.keyCode, slot, target)
+                onDone()
+            }
+        } else {
+            paletteTarget = target
+            palette = PaletteMode.NEW
+        }
+    }
+
+    /** The shared rule: a built-in layout's own subkey asks first ([SubkeyEditPolicy.route]). */
+    fun route(remove: Boolean) {
+        when (SubkeyEditPolicy.route(slot, copyNeeded = current.key.copyName != null)) {
+            SubkeyEditPolicy.Route.ASK_COPY -> pendingCopy = remove
+            SubkeyEditPolicy.Route.LAYOUT -> go(remove, SlotEditTarget.LAYOUT)
+            SubkeyEditPolicy.Route.GLOBAL -> go(remove, SlotEditTarget.GLOBAL)
+        }
+    }
 
     palette?.let { mode ->
         CommandPaletteDialog(
@@ -154,11 +224,12 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
             onDismiss = { if (startWithPalette) onDone() else palette = null },
             onMappingSelected = { selection ->
                 scope.launch {
-                    ShortSwipeAssignment.apply(context, manager, request.keyCode, request.direction, selection)
+                    actions.save(current.key, request.keyCode, request.direction, paletteTarget, selection)
                     onDone()
                 }
             },
             subtitle = title,
+            // A layout subkey starts from the list; a custom mapping opens in its own editor.
             initialMapping = if (mode == PaletteMode.EDIT) custom else null,
         )
         return
@@ -172,12 +243,15 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SlotDetails(request, custom)
+                SlotDetails(request, slot, custom, current.key.layoutName)
                 // Edit: change the stored action itself (its text, intent, pattern or label).
                 // A raw key event has no editor, so it is only reassigned.
                 val canEdit = custom != null && custom.actionType != ActionType.KEY_EVENT
                 if (canEdit) {
-                    FilledTonalButton(onClick = { palette = PaletteMode.EDIT }, modifier = Modifier.fillMaxWidth()) {
+                    FilledTonalButton(onClick = {
+                        paletteTarget = SlotEditTarget.GLOBAL
+                        palette = PaletteMode.EDIT
+                    }, modifier = Modifier.fillMaxWidth()) {
                         Text(stringResource(R.string.common_edit))
                     }
                 }
@@ -186,36 +260,29 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
                     else R.string.subkey_assign_choose
                 )
                 if (canEdit) {
-                    OutlinedButton(onClick = { palette = PaletteMode.NEW }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { route(remove = false) }, modifier = Modifier.fillMaxWidth()) {
                         Text(reassignLabel)
                     }
                 } else {
-                    FilledTonalButton(onClick = { palette = PaletteMode.NEW }, modifier = Modifier.fillMaxWidth()) {
+                    FilledTonalButton(onClick = { route(remove = false) }, modifier = Modifier.fillMaxWidth()) {
                         Text(reassignLabel)
                     }
                 }
-                // Restore: a custom mapping (or a `removed` blank) hides the layout's subkey.
-                if (request.hasDefault && (request.isCustom || request.mode == SubkeyAssignRequest.Mode.ASSIGN)) {
+                // Restore: a custom mapping (or a `removed` blank) hides a subkey.
+                if (SubkeyEditPolicy.restore(slot) == SubkeyEditPolicy.Restore.RESTORE) {
                     OutlinedButton(
                         onClick = {
                             scope.launch {
-                                ShortSwipeAssignment.restoreDefault(context, manager, request.keyCode, request.direction)
+                                actions.restore(request.keyCode, slot)
                                 onDone()
                             }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) { Text(stringResource(R.string.subkey_edit_restore)) }
                 }
-                if (request.mode == SubkeyAssignRequest.Mode.EDIT) {
+                if (request.mode == SubkeyAssignRequest.Mode.EDIT && slot.source != SubkeySource.NONE) {
                     OutlinedButton(
-                        onClick = {
-                            scope.launch {
-                                ShortSwipeAssignment.remove(
-                                    context, manager, request.keyCode, request.direction, request.hasDefault
-                                )
-                                onDone()
-                            }
-                        },
+                        onClick = { route(remove = true) },
                         modifier = Modifier.fillMaxWidth(),
                         // Destructive: drawn in the error colour so it does not read like Edit.
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
@@ -228,31 +295,63 @@ private fun SubkeyAssignScreen(request: SubkeyAssignRequest, onDone: () -> Unit)
             TextButton(onClick = onDone) { Text(stringResource(R.string.common_cancel)) }
         }
     )
+
+    // Composed after the details dialog so it stacks above it (CLAUDE.md "Compose dialog stacking").
+    pendingCopy?.let { remove ->
+        LayoutCopyQuestionDialog(
+            layoutName = current.key.layoutName.orEmpty(),
+            copyName = current.key.copyName.orEmpty(),
+            onAnswer = { target ->
+                pendingCopy = null
+                go(remove, target)
+            },
+            onCancel = { pendingCopy = null },
+        )
+    }
 }
 
 /**
- * What the slot does now: its label as drawn on the popover, the kind of action, and the action
- * itself — the command's name and description, the full custom text, the intent's target, or the
- * timestamp pattern with a live preview. A layout subkey says it comes from the layout.
+ * What the slot does now: its label as drawn on the popover, the kind of action, a badge for
+ * where it comes from (Layout / Built-in / Extra key / Hidden / Custom / Removed, as the per-key
+ * dialog), what a custom mapping replaces, and the action itself — the command's name and
+ * description, the full custom text, the intent's target, or the timestamp pattern with a live
+ * preview.
  */
 @Composable
-private fun SlotDetails(request: SubkeyAssignRequest, custom: ShortSwipeMapping?) {
+private fun SlotDetails(request: SubkeyAssignRequest, slot: SubkeySlot, custom: ShortSwipeMapping?, layoutName: String?) {
+    val context = LocalContext.current
     val labelText = custom?.displayText?.ifEmpty { null } ?: request.currentLabel
     val labelKeyFont = custom?.useKeyFont ?: request.labelUsesKeyFont
+    val shown = slot.shownValue ?: slot.definedValue
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         if (labelText != null) LabelBadge(labelText, labelKeyFont)
         Text(
             text = when {
                 custom != null -> stringResource(custom.actionType.displayNameRes)
-                request.currentLabel != null -> stringResource(R.string.subkey_edit_layout_default)
-                else -> stringResource(R.string.subkey_assign_default_removed)
+                slot.custom?.isRemoval == true || shown == null -> stringResource(R.string.subkey_assign_default_removed)
+                slot.source == SubkeySource.EXTRA_KEY -> tribixbite.cleverkeys.a11y.KeyLabels.describe(shown, context::getString)
+                else -> stringResource(R.string.subkey_edit_layout_default)
             },
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.weight(1f, fill = false)
+        )
+        SubkeySourceBadge(slot.source)
+    }
+    val detail = MaterialTheme.typography.bodyMedium
+    if (slot.source == SubkeySource.LAYOUT || slot.source == SubkeySource.HIDDEN) {
+        if (layoutName != null) {
+            Text(stringResource(R.string.subkey_dialog_layout_hint, layoutName), style = detail,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    slot.shadowedValue?.let { hidden ->
+        Text(
+            stringResource(R.string.subkey_slot_replaces, tribixbite.cleverkeys.a11y.KeyLabels.describe(hidden, context::getString)),
+            style = detail, color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
     if (custom == null) return
-    val detail = MaterialTheme.typography.bodyMedium
     val mono = detail.copy(fontFamily = FontFamily.Monospace, fontSize = 13.sp)
     when (custom.actionType) {
         ActionType.COMMAND -> {

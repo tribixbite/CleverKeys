@@ -636,6 +636,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.LayoutSubkeyXmlTest',
     // 2026-10-30: one serializer for Export XML and layout copies; every action type reads back.
     'tribixbite.cleverkeys.customization.XmlActionRoundTripTest',
+    // 2026-10-30: one edit policy for the per-key dialog and the popover's assign screen.
+    'tribixbite.cleverkeys.customization.SubkeyEditPolicyTest',
+    'tribixbite.cleverkeys.popover.SubkeyAssignSlotTest',
     // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
     'tribixbite.cleverkeys.popover.SubkeyPopoverGeometryTest',
