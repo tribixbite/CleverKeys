@@ -829,6 +829,25 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `shift_filled`); 12 strings × 22 locale files machine-drafted, native review owed. Pure 3629,
     mock 1672 OK. Open: device pass of all four (no phone this round); key legends have no
     Creator control (XML / JSON only); SwiftKey's low-set comma/period glyph not copied.
+    DEVICE 2026-10-31 (agent, second Saga 192.168.0.144, portrait, dark, release ae8ff92e sha256
+    68bb3e07…; evidence `build/oct31-saga144/`, not in git): all four PASS. (2) Samsung-style
+    !#1 / 1/2 / ABC ink 36 / 37 / 37 px vs digit 39 (0.94; `23-samsung-bottom-crop.png`,
+    `24-25-samsung-sym-crop.png`), matches `compare-samsung-function-text-dark.png`. (3)
+    SwiftKey-style mic over the comma and ",!?" over the period (`26-swiftkey-bottom.png`); with
+    "Show gesture hints on familiar looks" on, the marks give way to the full corner hints
+    (`33-swiftkey-hints-on-crop.png`). Disabling Google voice typing did NOT remove the mic mark —
+    correct by the code: LayoutModifier always keeps voice keys (`shouldOfferVoiceTyping` is set
+    true in SubtypeManager.refreshSubtype) and the mic key itself routes to "Voice input is off";
+    the mark follows the key, so "only when voice typing is available" means "only when the key
+    carries a voice swipe" (LookKeyMarksTest). (4) Gboard-style Shift outline → filled →
+    filled + bar on the accent fill in Caps Lock (`28-30-gboard-shift-states.png`). (1) Theme
+    Creator: temporary custom theme, Suggestion Bar Layout unticked → slots 5, centre on, quotes
+    on, Dim side words, separators Show; the Creator preview bar changed live
+    (`35-41-preview-bar-before-after.png`); saved, applied → the keyboard bar on the System layout
+    followed: 5 slots, best centred, sides dimmed, separators, "Coloz" quoted left of centre
+    (`47-…`, `49-bar.png`). Theme deleted, CleverKeys Dark re-selected. Restored: layouts (System
+    only), look hints OFF, Google voice IME re-enabled (enabled_input_methods string identical),
+    original APK c1e4dc73…, test tabs closed (Chrome 1 tab as found).
 26. [ ] agent, 2026-10-27 (maintainer: "make it so layouts can override/set layout-specific key
     gap and border, so user setting acts as global default"). BUILT: per-layout key geometry
     (`LayoutKeyGeometry`, `KeyGeometryField`; spec `docs/specs/layout-system.md` "Per-layout key
@@ -995,6 +1014,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     ON PASS. NOT device-verified: the key path's dialog (needs a voice pack on the phone).
     Restored: original APK (c1e4dc73…), voice off, RECORD_AUDIO denied with flags cleared and
     the app's remembered block re-created by two denials, as found.
+    DEVICE 2026-10-31 (agent, second Saga 192.168.0.144, release ae8ff92e sha256 68bb3e07…,
+    `build/oct31-saga144/`): key path PASS — pack imported from Download (~3 s, voice turned on with
+    the mic granted), then RECORD_AUDIO revoked + USER_SET|USER_FIXED; the Enter-NW mic swipe in
+    Chrome opened MicPermissionActivity's "Microphone access is blocked" (`56-mic-blocked-dialog`);
+    Open app settings → App info → Permissions → Microphone → Allow; back in Chrome the same swipe
+    showed "Listening…" at once (`60-mic-after-grant`), ✕ cancelled with no recording session left
+    (dumpsys audio). FIXED `249090bc` (found in ca398fa5's notes): TalkBack read the action key as
+    "Enter" on Go / Search / Send fields — `KeyLabels.describeAction` now speaks the key's own
+    label (localized key_action_* or the app's actionLabel; no new strings). KeyLabelsTest red →
+    green; device content-desc "Go" / "Search" / "Send" (was "Enter"), textarea "Enter".
+    Restored as found: pack removed, voice off, mic denied by two real denials (app's block text
+    shown) then flags cleared, Download zip removed, original APK c1e4dc73….
 31. [ ] device + maintainer: per-key subkey sources and modified layout copies (agent 2026-10-30,
    maintainer screenshots 9/10 + request; spec `docs/specs/subkey-customization-current.md`
    "Runtime key codes", "Sources in the per-key dialog", "Layout subkeys and modified copies").
