@@ -77,8 +77,8 @@ below it there is dated history with the evidence pointers for the October work.
 `memory/HANDOFF.md` holds reference state, dated pointers and rules,
 `docs/audit/gh-issue-resolution.md` the per-issue status, the plan doc's "Current execution
 status" table the roadmap state, and CHANGELOG.md's 2.0.0 section the user-visible summary.
-`docs/plans/v2.0.0-manual-test-checklist.md` carries uncommitted maintainer edits — never edit
-or stage it. Read those before editing or launching Gradle.
+`docs/plans/v2.0.0-manual-test-checklist.md`: agents MAY edit it and run its items (maintainer,
+2026-10-25: "created and edited by agents… attempt to do every item"). Read those before editing or launching Gradle.
 
 ## Shared git INDEX between sessions (2026-10-23)
 
