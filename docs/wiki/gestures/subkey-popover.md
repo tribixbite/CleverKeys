@@ -61,6 +61,13 @@ edit screen shows what the slot does now and offers:
 | **Restore default** | Removes your custom action so the layout's own subkey shows again. Only shown when your action covers a layout subkey. |
 | **Remove** | Clears the slot. A layout subkey is hidden rather than deleted; letting go on that empty cell later offers **Restore default**. |
 
+The edit screen also names where the subkey comes from (a subkey of the layout, a custom
+short swipe and the subkey it replaces, …), using the same rule as the per-key dialog.
+Reassigning or removing a subkey that the current **built-in** layout defines asks first:
+**Create copy** saves the change in "<layout> (modified)", a copy of the layout that takes
+its place, while **Change in all layouts** makes a custom short swipe for that key in every
+layout. Details: [Per-Key Actions → Changing a layout's own subkey](../customization/per-key-actions.md#changing-a-layouts-own-subkey).
+
 Changes made here are the same mappings you see in Settings > Activities > Short Swipe
 Calibration > **Customize Per-Key Actions**, and the same ones short swipes use.
 

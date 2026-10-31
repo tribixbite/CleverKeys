@@ -50,6 +50,26 @@ You can assign clipboard access to any key's short swipe:
 2. **Tap** any item
 3. Item is pasted at cursor position
 
+### Edit an Entry
+
+Tap the **✏️ edit button** on a text entry to edit it in place, in the panel. Type with the
+keyboard as usual (swiped words, Delete word and the undo key work inside the editor), then
+save or cancel with the editor's buttons. An edit that would duplicate another entry, or empty
+it, is refused with a message.
+
+**Very long entries are edited a page at a time.** An entry longer than 20,000 characters or
+1,000 lines opens one page at a time, with **Page N of M** and previous / next buttons above
+the editor (hold a button to jump to the first or last page). Pages end at a line break or a
+word boundary where possible.
+
+- Edits are kept while you move between pages; **Save** writes the whole entry once, and
+  **Cancel** drops every page's edits.
+- Works on History, Pinned and Todos. Paste, copy and search still use the whole entry.
+- If the entry was changed or removed after you started editing, Save says so and writes
+  nothing.
+- Rows of very long entries show a shortened preview, so a huge clipping no longer freezes the
+  panel. Pasting it sends the full text, in chunks Android can carry.
+
 ### Delete Item
 
 - **Text entries**: tap the **✏️ edit button** on the item — the delete row appears with the edit controls. Tap **🗑 delete** there.

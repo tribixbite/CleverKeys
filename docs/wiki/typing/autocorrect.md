@@ -190,6 +190,8 @@ you can test the result on your own typos.
 | **Short-Word Deletion Cost** and its scope | 0.5, Hebrew-script words only | (Edit-cost method) extra cost of deleting onto a word of two letters or fewer |
 | **Maximum Correction Distance** | 3.0 | (Edit-cost method) no correction above this edit cost (10 = off); protects valid words the dictionary lacks |
 | **Word-Form Keep Cost** | 1.0 | (Edit-cost method) cost that keeps a known word plus an ending from being corrected (10 = always keep) |
+| **Unfinished Words** | Keep what I typed | (Edit-cost method) what space does after a word you have not finished typing: *Keep what I typed* leaves `tomorr` as typed instead of turning it into a different word (`timor`); *Off* treats it like any typo. See [Unfinished words](#unfinished-words) |
+| **Unfinished Word Cost** | 1.5 | (Edit-cost method, Keep what I typed) how likely an unfinished word must look before space keeps it; 10 = Off |
 
 Defaults are the `AUTOCORRECT_*` values in `Config.kt` at v2.0.0 and reproduce the behaviour
 that shipped before these were settings; the control's own text in Settings is the authority
@@ -197,6 +199,24 @@ if they differ. Engineering detail: `docs/eval/2026-10-18-channel-autocorrect-ra
 
 > [!NOTE]
 > Autocorrect's tap-typing path uses the absolute dictionary frequency directly via `autocorrect_confidence_min_frequency`. The swipe engines score candidates with their own per-language constants, which are calibrated offline and not user-tunable.
+
+### Unfinished words
+
+Space used to turn a word you had not finished into a different, complete word: `tomorr`
+became `timor`, `becau` became `beau`. With **Unfinished Words → Keep what I typed** (the
+default), a typed word that a common word starts with stays as you typed it when that is about
+as likely as the correction; the suggestion bar still offers the full word (`tomorrow`), so a
+tap finishes it. Close corrections still happen (`caf` → `car`, `resta` → `rest`).
+
+- **Keep what I typed** — the behaviour above. **Unfinished Word Cost** sets how readily a word
+  counts as unfinished.
+- **Off** — space treats an unfinished word like any typo, as before 2.0.
+
+Space never *completes* a word on its own (`tomorr` → `tomorrow`): that choice was measured and
+left out, because no setting finished enough unfinished words correctly while keeping wrong
+completions rare (`docs/eval/2026-10-18-channel-autocorrect-ranking.md`). The setting applies to
+the edit-cost ranking only. Both settings are in **Settings → Auto-Correction → Ranking &
+Tuning**; **Reset Ranking & Tuning** restores their defaults.
 
 ## The Highlighted Suggestion Is What Space Commits
 

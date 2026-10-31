@@ -41,16 +41,61 @@ slots around your finger.
 1. Open CleverKeys Settings (gear icon)
 2. In the **Activities** section, tap **Customize Per-Key Actions**
 3. The screen shows your actual keyboard. **Tap the key** you want to customize; a
-   magnified key opens with its 8 directions and any existing mappings
+   magnified key opens with its 8 directions, and below it a **Subkeys** list of all eight
+   directions clockwise from north: what each one does and where it comes from (see
+   [Where each subkey comes from](#where-each-subkey-comes-from))
 4. **Tap a direction**. The [Command Palette](command-palette.md) opens:
    - for an empty direction, pick a command, or one of the quick actions (Dynamic
      template, Custom Text, Send Intent, Timestamp);
    - for a direction you already customized, the palette opens in that action's editor,
-     filled in. Back out of the editor to choose a different action
+     filled in. Back out of the editor to choose a different action;
+   - for a subkey the current **built-in** layout defines, you are asked first whether to
+     change the layout (in a copy) or all layouts — see
+     [Changing a layout's own subkey](#changing-a-layouts-own-subkey)
 5. Confirm the label shown on the key. The mapping is saved immediately
 
-The list of your custom mappings on the key screen lets you delete one; the reset button
-in the top bar clears all of them at once, without asking for confirmation.
+The list of your custom mappings on the key screen lets you delete one. **Reset All** in the
+top bar asks first, naming how many custom mappings it removes, and then offers **Undo**;
+it is greyed out when there is nothing to reset. It removes custom short
+swipes only: subkeys stored in a layout and modified layout copies stay as they are.
+
+Enter, Space and Tab can be customized like any other key; the dialog names them ("Enter")
+and the mapping is drawn and performed on that key. After saving, the "Mapped …" message
+names the command (for example "Voice input (on device)").
+
+### Where each subkey comes from
+
+Each row of the **Subkeys** list carries a badge:
+
+| Badge | Meaning |
+|-------|---------|
+| **Layout** | The current layout's own subkey (from its XML) |
+| **Built-in** | A subkey of the shared bottom row or another part every layout shares. Changing it always makes a custom short swipe; it never edits a layout |
+| **Extra key** | An extra key placed in that corner (Settings → Extra Keys) |
+| **Hidden** | A layout subkey that Extra Keys has turned off |
+| **Custom** | Your custom short swipe. When it covers another subkey the row says which one it replaces ("Replaces …") |
+| **Removed** | A subkey you removed with a custom mapping |
+
+### Changing a layout's own subkey
+
+Changing or removing a subkey that the current **built-in** layout defines asks **Change a
+subkey of the layout?** first:
+
+- **Create copy** saves the change in a copy of the layout named "<layout> (modified)". The
+  copy takes the layout's place in your layout list and keeps its language, theme and key
+  spacing choices. The built-in layout itself never changes. Later edits of that layout's
+  subkeys change the copy directly, without asking again.
+- **Change in all layouts** makes a custom short swipe instead, as before 2.0: it applies to
+  that key in every layout.
+
+A layout you made or imported yourself (including a modified copy) is edited in place. An
+action that a layout file cannot hold (for example pasting a pinned clip) is saved as a custom
+short swipe, and a message says so.
+
+In **Layout Manager** a copy is marked "Modified copy of <layout>" and offers **Revert to
+original**: the built-in layout takes its place again, the changed subkeys are discarded, and
+its language, theme and key spacing choices are kept. Backup & Restore and **Export XML**
+carry a copy like any custom layout.
 
 ### From the Keyboard (Subkey Popover)
 
@@ -59,11 +104,12 @@ With **Subkey popover on hold** turned on (Settings > Gesture Tuning):
 1. **Hold** the key until the popover opens
 2. To add an action, slide to an empty slot (shown as **+**) and let go. The command
    palette opens for that key and direction
-3. To change an action, rest your finger on its slot for 3 seconds. The edit screen offers
-   **Edit**, **Reassign**, **Restore default** (when your action covers a layout subkey)
-   and **Remove**
+3. To change an action, rest your finger on its slot for 3 seconds. The edit screen says
+   where the subkey comes from and offers **Edit**, **Reassign**, **Restore default** (when
+   your action covers a layout subkey) and **Remove**
 
-Both routes edit the same mappings. See [Subkey Popover](../gestures/subkey-popover.md).
+Both routes follow the same rules, including the copy question for a built-in layout's own
+subkey. See [Subkey Popover](../gestures/subkey-popover.md).
 
 ## Available Actions
 

@@ -39,6 +39,19 @@ The screen currently lists 110 predefined keys. The enabled count describes save
 
 **Autofill** appears under System. **Clear system clipboard** appears under Editing and is disabled by default; it clears Android's current clip rather than deleting CleverKeys' saved history.
 
+### The voice keys
+
+Two keys start dictation; both are in the System group and both can be bound to short swipes:
+
+| Key / command | What a press does |
+|---------------|-------------------|
+| **Voice input (on device)** (`voice_input`) | Always CleverKeys' own offline [voice input](../typing/voice-input.md) |
+| **Voice typing** (`voice_typing`, the mic) | CleverKeys' voice input when it is ready (switched on in Settings → Voice input with a voice pack installed); otherwise it switches to your system voice keyboard, as before. With neither, it says what to turn on in Settings → Voice input instead of "No voice typing app installed" |
+| **Voice Typing Picker** (`voice_typing_chooser`, a long press of the mic) | Lists "CleverKeys voice (offline)" (when ready) beside your system voice keyboards; with only one choice it takes it directly |
+
+A word swiped from a letter whose corner holds the mic (or another command key, such as the
+clipboard key) stays a word: the corner key fires only for a short flick into that corner.
+
 ## Placement and Customization
 
 The screen enables predefined keys; it has no left/right position selector. Keys already present on a layout are not added again. Missing keys use preferred neighboring or row/column/direction positions, then try an available slot elsewhere.
