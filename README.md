@@ -134,7 +134,7 @@ CleverKeys is the **only open-source keyboard with reliable swipe typing in Term
 
 CleverKeys features one of the most powerful keyboard theme engines available:
 
-### Built-in Themes (18+)
+### Built-in Themes (36: 18 classic + 18 decorative)
 - **CleverKeys Dark** — Deep purple with silver accents (default)
 - **CleverKeys Light** — Silver keys with purple accents
 - **Neon Electric Blue / Hot Pink / Cyberpunk** — Vibrant neon aesthetic
@@ -439,7 +439,7 @@ Download from the [langpacks release](https://github.com/tribixbite/CleverKeys/r
 
 </div>
 
-- **[User Guide Wiki](https://tribixbite.github.io/CleverKeys/wiki/)** — 38-page comprehensive documentation
+- **[User Guide Wiki](https://tribixbite.github.io/CleverKeys/wiki/)** — 46-page comprehensive documentation
 - **[Feature Specifications](./docs/specs/)** — Technical documentation for developers
 - **[Changelog](./CHANGELOG.md)** — Version history and release notes
 - **[Roadmap](./ROADMAP.md)** — Planned features and development path
@@ -541,7 +541,7 @@ Our projects have since diverged significantly (~900 commits apart):
 - Offline GIF panel with FTS4 search
 - Multi-language simultaneous prediction with per-language dictionary management
 - Autocorrect with contraction support
-- 1000+ automated tests (JVM + instrumented)
+- About 7,000 automated tests: 3,687 pure JVM and 1,675 MockK tests, plus 1,646 instrumented tests run on Android 14–17 (API 34–37) emulators (counts of 2026-10-31)
 
 If you want a lightweight keyboard without gesture typing, we recommend the original Unexpected Keyboard.
 
@@ -583,6 +583,9 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 ```
+
+Third-party notices: [`NOTICE`](./NOTICE); the licence texts it cites: [`LICENSES/`](./LICENSES/).
+Both are also in the app, under Settings → Help & FAQ → Open-source licenses.
 
 </br>
 </br>

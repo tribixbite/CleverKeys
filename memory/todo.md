@@ -1,9 +1,11 @@
 # Current work queue
 
-Updated: 2026-10-18. HEAD `05a36547` plus this docs commit is pushed and equals origin/main.
-Pushes to origin/main are authorized (2026-10-07) and in use; tag, version bump, release,
-publish and GitHub posts still need explicit authorization. Reference state and rules:
-[HANDOFF.md](HANDOFF.md).
+Updated: 2026-10-31. origin/main is `e3487b41`; the open-source licenses commits after it are
+local, not pushed. Pushes to origin/main are authorized (2026-10-07) and in use; tag, version
+bump, release, publish and GitHub posts still need explicit authorization. Reference state and
+rules: [HANDOFF.md](HANDOFF.md). Release readiness, item by item:
+[`docs/audit/2026-10-31-v2.0-release-readiness.md`](../docs/audit/2026-10-31-v2.0-release-readiness.md)
+(§5 "Before tagging" and its "Resolved" section).
 Campaign plan: [`docs/plans/2026-08-30-full-backlog-campaign.md`](../docs/plans/2026-08-30-full-backlog-campaign.md).
 Issue tracker: [`docs/audit/gh-issue-resolution.md`](../docs/audit/gh-issue-resolution.md).
 
@@ -15,6 +17,20 @@ A history item that is still open says "→ Open now N" instead of carrying its 
 duplicates are counted once.
 
 ## Open now (2026-10-18)
+
+**Status 2026-10-31.** v2.0.0 is code-complete and NOT tagged (versionCode 20000). In 2.0 now:
+CTC default + geometric fallback, channel autocorrect ranking, familiar looks, layout themes and
+per-layout key geometry, clipboard reorder and paged editor, Unfinished Words, subkey sources and
+modified layout copies, Persian pack + half-space key, on-device voice input with pause-based
+endpointing (item 30), and the in-app Open-source licenses screen. The agent-side release
+documents are done (audit "Resolved": release record, GitHub body, wiki, NOTICE, CHANGELOG
+header, README counts, local F-Droid recipe synced from upstream). The tag waits on the
+MAINTAINER only: the soak sign-off (items 8, 9 and 30's real-voice/TalkBack/RustDesk checks;
+audit M1), the string-review decision (item 10, now including the licenses-screen strings; M2),
+then the tag sequence (M4) with the full suites and an instrumented run at the tag commit (A2).
+2.1 (not started): toolbar row above the keys and card-grid clipboard
+(`docs/plans/2026-10-05-recommended-features-and-gaps.md` §4.4, §4.5), item 20's unowned roadmap,
+the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.

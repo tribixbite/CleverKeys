@@ -1,4 +1,18 @@
-# HANDOFF — updated 2026-10-23 (body last reconciled 2026-09-01; pruned 2026-10-23)
+# HANDOFF — updated 2026-10-31 (body last reconciled 2026-09-01; pruned 2026-10-23)
+
+**2026-10-31 pointer.** origin/main is `e3487b41` (everything through it pushed; the Persian
+work the 10-23 pointer below calls unpushed went out long ago). v2.0.0 is code-complete, not
+tagged; 2.0 now also carries on-device voice input with pause-based endpointing (`b243ce3d`,
+spec `docs/specs/voice-input.md`) and an in-app Open-source licenses screen (Settings → Help &
+FAQ; `legal/OpenSourceLicenses.kt`, assets generated from `NOTICE`/`LICENSE`/`LICENSES/` by
+`generateLicenseAssets`, pinned by `OpenSourceLicensesAssetDriftTest`). The release gate list is
+`docs/audit/2026-10-31-v2.0-release-readiness.md` (§5 + "Resolved"): every agent document item
+is done; what remains is the maintainer's soak sign-off (M1), the string-review decision (M2,
+todo 10) and the tag sequence (M4, with full pure/mock suites and an instrumented run at the tag
+commit). `metadata/fdroid/tribixbite.cleverkeys.yml` is now a verbatim copy of upstream
+fdroiddata (1.5.0, fetched 2026-10-31); checkupdates writes the 2.0.0 blocks and
+`CurrentVersion` itself — do not add them by hand. 2.1 roadmap: `memory/todo.md` "Open now"
+status block.
 
 **2026-10-23 pointer.** Persian, all local and NOT yet pushed (origin/main is `8039c6be`):
 half-space key right of the space bar on Persian PC (`9aac669d`, `PersianHalfSpaceKeyTest`);

@@ -64,16 +64,18 @@ committed coordination over working-tree edits.
 
 ---
 
-## Active handoff (2026-10-23)
+## Active handoff (2026-10-31)
 
-origin/main is `8039c6be`; everything through it is pushed. Local HEAD is ahead by the Persian
-work (`9aac669d` half-space key, `479a7277` fa pack, `e8f1d3ae`/`4aa4f756`/`c87e2bfb`
-WordChars + ArabicScriptFold, `ffed91ad` docs) plus the 2026-10-23 doc-freshness commits — all
-local and NOT yet pushed. Pushes to origin/main are authorized (maintainer, 2026-10-07/10-21);
-tag, version bump, release and GitHub posts still are not. The only authoritative task list is
-the "Open now" section at the top of `memory/todo.md` (20 items on 2026-10-23, two closed;
-owners: device / maintainer / agent / RTX, with the test phones' current addresses); everything
-below it there is dated history with the evidence pointers for the October work.
+origin/main is `e3487b41`; everything through it is pushed. Pushes to origin/main are authorized
+(maintainer, 2026-10-07/10-21); tag, version bump, release and GitHub posts still are not.
+v2.0.0 is code-complete and NOT tagged; it now includes on-device voice input (pause-based
+endpointing) and the in-app Open-source licenses screen. Release gates, item by item:
+`docs/audit/2026-10-31-v2.0-release-readiness.md` §5 and its "Resolved" section — the agent
+document items are done; the soak sign-off, the string-review decision and the tag itself are
+the maintainer's. The only authoritative task list is the "Open now" section at the top of
+`memory/todo.md` (its 2026-10-31 status block lists what is in 2.0, what blocks the tag and the
+2.1 roadmap; owners: device / maintainer / agent / RTX, with the test phones' addresses);
+everything below it there is dated history with the evidence pointers for the October work.
 `memory/HANDOFF.md` holds reference state, dated pointers and rules,
 `docs/audit/gh-issue-resolution.md` the per-issue status, the plan doc's "Current execution
 status" table the roadmap state, and CHANGELOG.md's 2.0.0 section the user-visible summary.
