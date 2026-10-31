@@ -919,6 +919,11 @@
     <string name="gif_total_storage">Tổng: %1$s</string>
     <string name="help_open_wiki">Mở wiki đầy đủ</string>
     <string name="help_third_party_data">Dữ liệu bên thứ ba: danh sách từ lấy từ wordfreq (CC BY-SA 4.0), OpenSubtitles qua FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) và Swwiki (CC BY-SA 3.0); ngữ cảnh từ tiếng Anh, tiếng Đức, tiếng Pháp, tiếng Ý, tiếng Bồ Đào Nha và tiếng Thụy Điển lấy từ Leipzig Corpora Collection (CC BY 4.0) và Tatoeba (CC BY 2.0 FR). Ghi công đầy đủ nằm trong tệp NOTICE của mã nguồn.</string>
+    <string name="licenses_title">Giấy phép nguồn mở</string>
+    <string name="licenses_intro">CleverKeys là phần mềm tự do theo GNU General Public License v3.0. Ứng dụng có các thành phần và dữ liệu của bên thứ ba liệt kê dưới đây; sau các thông báo là toàn văn của mọi giấy phép mà chúng sử dụng.</string>
+    <string name="licenses_notices_header">Thông báo</string>
+    <string name="licenses_texts_header">Văn bản giấy phép</string>
+    <string name="licenses_text_missing">Văn bản này không có trong gói ứng dụng.</string>
     <string name="import_preview_added">Đã thêm (%1$d)</string>
     <string name="import_preview_apply">Áp dụng (%1$d)</string>
     <string name="import_preview_cancel_desc">Hủy xem trước</string>

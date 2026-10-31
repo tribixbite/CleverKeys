@@ -860,6 +860,11 @@
     <string name="swipe_full_ctc_settings">Teljes CTC-beállítások</string>
     <string name="help_open_wiki">Teljes wiki megnyitása</string>
     <string name="help_third_party_data">Harmadik féltől származó adatok: a szólisták forrása a wordfreq (CC BY-SA 4.0), az OpenSubtitles a FrequencyWords révén (CC BY-SA 4.0), az AOSP LatinIME (Apache-2.0) és a Swwiki (CC BY-SA 3.0); az angol, német, francia, olasz, portugál és svéd szókörnyezet a Leipzig Corpora Collectionből (CC BY 4.0) és a Tatoebából (CC BY 2.0 FR) származik. A teljes forrásmegjelölés a forráskód NOTICE fájljában található.</string>
+    <string name="licenses_title">Nyílt forráskódú licencek</string>
+    <string name="licenses_intro">A CleverKeys szabad szoftver a GNU General Public License v3.0 alatt. Tartalmazza az alább felsorolt külső összetevőket és adatokat; a közlemények után az általuk használt összes licenc teljes szövege következik.</string>
+    <string name="licenses_notices_header">Közlemények</string>
+    <string name="licenses_texts_header">Licencszövegek</string>
+    <string name="licenses_text_missing">Ez a szöveg hiányzik az alkalmazáscsomagból.</string>
     <string name="gesture_section_intro">Az érintés, a csúsztatás és a csúszka viselkedésének finomhangolása az Ön gépelési stílusához.</string>
     <string name="gesture_short_gestures_header">Rövid gesztusok</string>
     <string name="gesture_open_calibration">📐 Kalibrálóeszköz megnyitása</string>

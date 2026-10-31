@@ -854,6 +854,11 @@
     <string name="swipe_full_ctc_settings">Volledige CTC-instellingen</string>
     <string name="help_open_wiki">Volledige wiki openen</string>
     <string name="help_third_party_data">Gegevens van derden: woordenlijsten komen uit wordfreq (CC BY-SA 4.0), OpenSubtitles via FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) en Swwiki (CC BY-SA 3.0); woordcontext voor Engels, Duits, Frans, Italiaans, Portugees en Zweeds komt uit de Leipzig Corpora Collection (CC BY 4.0) en Tatoeba (CC BY 2.0 FR). De volledige naamsvermelding staat in het NOTICE-bestand van de broncode.</string>
+    <string name="licenses_title">Opensourcelicenties</string>
+    <string name="licenses_intro">CleverKeys is vrije software onder de GNU General Public License v3.0. De app bevat de hieronder vermelde componenten en gegevens van derden; na de vermeldingen volgt de volledige tekst van elke licentie die ze gebruiken.</string>
+    <string name="licenses_notices_header">Vermeldingen</string>
+    <string name="licenses_texts_header">Licentieteksten</string>
+    <string name="licenses_text_missing">Deze tekst ontbreekt in het app-pakket.</string>
     <string name="gesture_section_intro">Stem tik-, veeg- en schuifgedrag af op je typstijl.</string>
     <string name="gesture_short_gestures_header">Korte gebaren</string>
     <string name="gesture_open_calibration">📐 Kalibratietool openen</string>

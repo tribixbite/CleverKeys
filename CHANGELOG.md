@@ -21,9 +21,10 @@ editor that used to be listed here already ship in 2.0.)
 
 ## [2.0.0] - unreleased
 
-> Not tagged yet. The section was first drafted 2026-09-09; items merged up to
-> 2026-10-22 are folded in, plus on-device voice input (2026-10-29: moved here from the
-> proposed 2.1.0 by maintainer decision).
+> Not tagged yet. The section was first drafted 2026-09-09; everything merged up to
+> 2026-10-31 (`e3487b41` plus the open-source licenses screen) is folded in, including
+> on-device voice input (moved here from the proposed 2.1.0 by maintainer decision on
+> 2026-10-29) and its pause-based endpointing (2026-10-31).
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
@@ -55,6 +56,12 @@ editor that used to be listed here already ship in 2.0.)
   (`voice_typing_chooser`) lists "CleverKeys voice (offline)" beside the system voice keyboards;
   with no voice keyboard at all the mic key now explains what to turn on in Settings → Voice
   input instead of "No voice typing app installed". Spec: `docs/specs/voice-input.md`.
+- **Open-source licenses in the app.** Settings → Help & FAQ → Open-source licenses shows the
+  project's NOTICE section by section and the full text of every licence it cites — GPL-3.0,
+  LGPL-3.0 (ClearURLs rules), MIT (ONNX Runtime, Moonshine, emojibase), Apache-2.0, the Unicode
+  licence (CLDR) and the Creative Commons licences of the word and context data. The texts are
+  copied into the APK at build time from the repository's `NOTICE`, `LICENSE` and `LICENSES/`
+  (156 KB of plain text, about 45 KB compressed), so the in-app copy cannot drift from the source.
 - **Per-key dialog shows every subkey and where it comes from; layout subkeys edit a copy of the
   layout.** Settings → Short Swipe Customization now lists all eight directions of a key with
   what each does and a badge — Layout, Built-in (the shared bottom row), Extra key, Hidden (a

@@ -864,6 +864,11 @@
     <string name="swipe_full_ctc_settings">Pengaturan CTC Lengkap</string>
     <string name="help_open_wiki">Buka Wiki Lengkap</string>
     <string name="help_third_party_data">Data pihak ketiga: daftar kata berasal dari wordfreq (CC BY-SA 4.0), OpenSubtitles melalui FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0), dan Swwiki (CC BY-SA 3.0); konteks kata bahasa Inggris, Jerman, Prancis, Italia, Portugis, dan Swedia berasal dari Leipzig Corpora Collection (CC BY 4.0) dan Tatoeba (CC BY 2.0 FR). Atribusi lengkap ada di file NOTICE pada kode sumber.</string>
+    <string name="licenses_title">Lisensi sumber terbuka</string>
+    <string name="licenses_intro">CleverKeys adalah perangkat lunak bebas di bawah GNU General Public License v3.0. Aplikasi ini menyertakan komponen dan data pihak ketiga yang tercantum di bawah; teks lengkap setiap lisensi yang digunakan menyusul setelah pemberitahuan.</string>
+    <string name="licenses_notices_header">Pemberitahuan</string>
+    <string name="licenses_texts_header">Teks lisensi</string>
+    <string name="licenses_text_missing">Teks ini tidak ada dalam paket aplikasi.</string>
     <string name="gesture_section_intro">Sesuaikan perilaku ketuk, geser, dan slider untuk gaya mengetik Anda.</string>
     <string name="gesture_short_gestures_header">Gestur Pendek</string>
     <string name="gesture_open_calibration">📐 Buka Alat Kalibrasi</string>

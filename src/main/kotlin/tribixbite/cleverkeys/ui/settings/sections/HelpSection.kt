@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.FAQSection
+import tribixbite.cleverkeys.ui.settings.openOpenSourceLicenses
 import tribixbite.cleverkeys.ui.settings.openWikiInBrowser
 
 @Composable
@@ -51,5 +53,17 @@ internal fun SettingsActivity.HelpSection() {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // NOTICE and the full text of every licence it cites, read from APK assets: the
+                // MIT, Unicode and LGPL notices of shipped components must travel with the app
+                // (OpenSourceLicensesActivity).
+                OutlinedButton(
+                    onClick = { openOpenSourceLicenses() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.licenses_title))
+                }
             }
 }

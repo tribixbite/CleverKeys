@@ -908,6 +908,11 @@
     <string name="gif_total_storage">Разом: %1$s</string>
     <string name="help_open_wiki">Відкрити повну вікі</string>
     <string name="help_third_party_data">Сторонні дані: списки слів отримано з wordfreq (CC BY-SA 4.0), OpenSubtitles через FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) і Swwiki (CC BY-SA 3.0); контекст слів для англійської, німецької, французької, італійської, португальської та шведської мов отримано з Leipzig Corpora Collection (CC BY 4.0) і Tatoeba (CC BY 2.0 FR). Повна атрибуція — у файлі NOTICE вихідного коду.</string>
+    <string name="licenses_title">Ліцензії відкритого ПЗ</string>
+    <string name="licenses_intro">CleverKeys — вільне програмне забезпечення за ліцензією GNU General Public License v3.0. Воно містить перелічені нижче сторонні компоненти й дані; після повідомлень наведено повний текст кожної ліцензії, яку вони використовують.</string>
+    <string name="licenses_notices_header">Повідомлення</string>
+    <string name="licenses_texts_header">Тексти ліцензій</string>
+    <string name="licenses_text_missing">Цього тексту немає в пакеті застосунку.</string>
     <string name="import_preview_added">Додано (%1$d)</string>
     <string name="import_preview_apply">Застосувати (%1$d)</string>
     <string name="import_preview_cancel_desc">Скасувати перегляд</string>

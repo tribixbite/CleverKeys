@@ -867,6 +867,11 @@
     <string name="swipe_full_ctc_settings">Visi CTC iestatījumi</string>
     <string name="help_open_wiki">Atvērt pilno wiki</string>
     <string name="help_third_party_data">Trešo pušu dati: vārdu saraksti iegūti no wordfreq (CC BY-SA 4.0), OpenSubtitles ar FrequencyWords starpniecību (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) un Swwiki (CC BY-SA 3.0); angļu, vācu, franču, itāļu, portugāļu un zviedru vārdu konteksts iegūts no Leipzig Corpora Collection (CC BY 4.0) un Tatoeba (CC BY 2.0 FR). Pilna atsauce ir pirmkoda failā NOTICE.</string>
+    <string name="licenses_title">Atvērtā pirmkoda licences</string>
+    <string name="licenses_intro">CleverKeys ir brīva programmatūra saskaņā ar GNU General Public License v3.0. Tā ietver tālāk uzskaitītos trešo pušu komponentus un datus; pēc paziņojumiem seko katras to izmantotās licences pilns teksts.</string>
+    <string name="licenses_notices_header">Paziņojumi</string>
+    <string name="licenses_texts_header">Licenču teksti</string>
+    <string name="licenses_text_missing">Šī teksta lietotnes pakotnē nav.</string>
     <string name="gesture_section_intro">Precīzi pielāgojiet pieskārienu, vilkumu un slīdņu uzvedību savam rakstīšanas stilam.</string>
     <string name="gesture_short_gestures_header">Īsie žesti</string>
     <string name="gesture_open_calibration">📐 Atvērt kalibrēšanas rīku</string>

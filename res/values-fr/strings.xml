@@ -862,6 +862,11 @@
     <string name="swipe_full_ctc_settings">Tous les paramètres CTC</string>
     <string name="help_open_wiki">Ouvrir le wiki complet</string>
     <string name="help_third_party_data">Données tierces : les listes de mots proviennent de wordfreq (CC BY-SA 4.0), d\'OpenSubtitles via FrequencyWords (CC BY-SA 4.0), d\'AOSP LatinIME (Apache-2.0) et de Swwiki (CC BY-SA 3.0) ; le contexte des mots en anglais, allemand, français, italien, portugais et suédois provient de Leipzig Corpora Collection (CC BY 4.0) et de Tatoeba (CC BY 2.0 FR). L\'attribution complète figure dans le fichier NOTICE du code source.</string>
+    <string name="licenses_title">Licences open source</string>
+    <string name="licenses_intro">CleverKeys est un logiciel libre sous GNU General Public License v3.0. Il inclut les composants et données tiers listés ci-dessous ; le texte intégral de chaque licence qu\'ils utilisent suit les mentions.</string>
+    <string name="licenses_notices_header">Mentions</string>
+    <string name="licenses_texts_header">Textes des licences</string>
+    <string name="licenses_text_missing">Ce texte est absent du paquet de l\'application.</string>
     <string name="gesture_section_intro">Ajustez finement le comportement des appuis, glissés et curseurs selon votre style de frappe.</string>
     <string name="gesture_short_gestures_header">Gestes courts</string>
     <string name="gesture_open_calibration">📐 Ouvrir l\'outil de calibrage</string>

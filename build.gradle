@@ -383,7 +383,9 @@ android {
       kotlin.srcDirs = ['src/main/kotlin', 'build/generated/search/kotlin']
       java.srcDirs = ['src/main/java']
       res.srcDirs = ['res', 'build/generated/layouts/res', 'build/generated/version/res']
-      assets.srcDirs = ['assets', 'src/main/assets']
+      // build/generated/licenseAssets: NOTICE + licence texts for the in-app Open-source
+      // licenses screen, copied from the repository by generateLicenseAssets (never committed).
+      assets.srcDirs = ['assets', 'src/main/assets', 'build/generated/licenseAssets']
     }
     test {
       kotlin.srcDirs = ['src/test/kotlin']
@@ -576,6 +578,31 @@ tasks.matching {
   dependsOn 'copyScriptLatencyPacks'
 }
 
+// In-app "Open-source licenses" screen (Settings → Help & FAQ, OpenSourceLicensesActivity):
+// NOTICE, LICENSE (as GPL-3.0-only.txt) and every LICENSES/*.txt, packaged as plain-text assets
+// under assets/licenses/. Copied at build time so the repository files stay the single source
+// of truth; OpenSourceLicensesAssetDriftTest compares the copies byte for byte. A Sync (a file
+// removed from LICENSES/ leaves the APK too) of committed text files: byte-identical output on
+// every builder (F-Droid reproducibility).
+tasks.register('generateLicenseAssets', Sync) {
+  group = 'build'
+  description = 'Package NOTICE and the licence texts it cites as assets/licenses/*.txt'
+  from('NOTICE') { rename { 'NOTICE.txt' } }
+  from('LICENSE') { rename { 'GPL-3.0-only.txt' } }
+  from('LICENSES') { include '*.txt' }
+  into 'build/generated/licenseAssets/licenses'
+}
+tasks.named("preBuild") { dependsOn 'generateLicenseAssets' }
+// Asset merging and lint read the main assets directories too; declare the producer for
+// tasks that do not run behind preBuild (the copyScriptLatencyPacks lesson, 2026-10-06).
+tasks.matching {
+  it.name ==~ /merge\w*Assets/ ||
+    it.name ==~ /generate\w*LintModel/ ||
+    it.name ==~ /lint(Vital)?Analyze\w*/
+}.configureEach {
+  dependsOn 'generateLicenseAssets'
+}
+
 // Pure JVM test runner — works on ARM64 where standard Test tasks are disabled.
 // Extract the BIONIC arm64 ONNX natives from the onnxruntime-android AAR so pure-JVM tests
 // can run the real encoder. See the systemProperty note in runPureTests for why the JAR's own
@@ -596,11 +623,15 @@ tasks.register('extractOrtNative', Copy) {
 // Runs JUnitCore directly via JavaExec, no proot or shell script needed.
 // Usage: ./gradlew runPureTests [-PtestClass=SwipeEngineRouterTest]
 tasks.register('runPureTests', JavaExec) {
-  dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes', 'extractOrtNative'
+  dependsOn 'compileDebugUnitTestKotlin', 'processDebugUnitTestJavaRes', 'extractOrtNative', 'generateLicenseAssets'
   group = 'verification'
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
   def pureTestClasses = [
+    // 2026-10-31: in-app Open-source licenses — every licence NOTICE cites has a packaged text,
+    // the packaged copies equal NOTICE / LICENSE / LICENSES, and the screen lists every section.
+    'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetDriftTest',
+    'tribixbite.cleverkeys.legal.OpenSourceLicensesScreenTest',
     // 2026-10-30: voice keys route to the built-in voice input; bar quote marks from resources.
     'tribixbite.cleverkeys.VoiceKeyRoutingTest',
     'tribixbite.cleverkeys.BarQuoteMarksResourceTest',
@@ -1322,12 +1353,15 @@ tasks.register('runPureTests', JavaExec) {
 // intercepts all calls before the stubs' "Stub!" exceptions are hit.
 // Usage: ./gradlew runMockTests [-PtestClass=AutocapitalisationTest]
 tasks.register('runMockTests', JavaExec) {
-  dependsOn 'compileDebugUnitTestKotlin'
+  dependsOn 'compileDebugUnitTestKotlin', 'generateLicenseAssets'
   group = 'verification'
   description = 'Run MockK-based tests with android.jar stubs (works on ARM64)'
   jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
+    // 2026-10-31: the licenses screen reads its texts through AssetManager (mocked over the
+    // generated assets); a missing asset is reported, not thrown.
+    'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetReadTest',
     // 2026-10-26: the DISPLAY_NAME query behind the import/export result dialogs' file name.
     'tribixbite.cleverkeys.ui.settings.io.DocumentDisplayNameResolveTest',
     // B-1 (2026-09-06 audit, P1): the recognizer/detector letter gate was hard-coded a-z,

@@ -8,6 +8,7 @@ import tribixbite.cleverkeys.CtcSettingsActivity
 import tribixbite.cleverkeys.DictionaryManagerActivity
 import tribixbite.cleverkeys.ExtraKeysConfigActivity
 import tribixbite.cleverkeys.LayoutManagerActivity
+import tribixbite.cleverkeys.OpenSourceLicensesActivity
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.GeometricSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
@@ -20,6 +21,11 @@ internal fun SettingsActivity.openWikiInBrowser() {
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Failed to open wiki", e)
         }
+}
+
+/** Help & FAQ → Open-source licenses (NOTICE and the full licence texts, from APK assets). */
+internal fun SettingsActivity.openOpenSourceLicenses() {
+        startActivity(Intent(this, OpenSourceLicensesActivity::class.java))
 }
 
 internal fun SettingsActivity.openGeometricSettings() {

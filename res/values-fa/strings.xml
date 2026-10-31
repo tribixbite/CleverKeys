@@ -889,6 +889,11 @@
     <string name="swipe_full_ctc_settings">همهٔ تنظیمات CTC</string>
     <string name="help_open_wiki">باز کردن ویکی کامل</string>
     <string name="help_third_party_data">داده‌های شخص ثالث: فهرست‌های واژه از wordfreq (CC BY-SA 4.0)، OpenSubtitles از طریق FrequencyWords (CC BY-SA 4.0)، AOSP LatinIME (Apache-2.0) و Swwiki (CC BY-SA 3.0) گرفته شده‌اند؛ بافت واژه‌های انگلیسی، آلمانی، فرانسوی، ایتالیایی، پرتغالی و سوئدی از Leipzig Corpora Collection (CC BY 4.0) و Tatoeba (CC BY 2.0 FR) گرفته شده است. انتساب کامل در فایل NOTICE کد منبع آمده است.</string>
+    <string name="licenses_title">مجوزهای متن‌باز</string>
+    <string name="licenses_intro">CleverKeys نرم‌افزار آزاد تحت مجوز GNU General Public License v3.0 است. این برنامه اجزا و داده‌های شخص ثالث فهرست‌شده در زیر را در بر دارد؛ متن کامل هر مجوزی که به کار می‌برند پس از اعلامیه‌ها آمده است.</string>
+    <string name="licenses_notices_header">اعلامیه‌ها</string>
+    <string name="licenses_texts_header">متن مجوزها</string>
+    <string name="licenses_text_missing">این متن در بستهٔ برنامه وجود ندارد.</string>
     <string name="gesture_section_intro">رفتار ضربه، کشیدن و اسلایدر را برای سبک تایپ خود به‌دقت تنظیم کنید.</string>
     <string name="gesture_short_gestures_header">اشاره‌های کوتاه</string>
     <string name="gesture_open_calibration">📐 باز کردن ابزار واسنجی</string>

@@ -879,6 +879,11 @@
     <string name="swipe_full_ctc_settings">Toate setările CTC</string>
     <string name="help_open_wiki">Deschide wiki-ul complet</string>
     <string name="help_third_party_data">Date de la terți: listele de cuvinte provin din wordfreq (CC BY-SA 4.0), OpenSubtitles prin FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) și Swwiki (CC BY-SA 3.0); contextul cuvintelor în engleză, germană, franceză, italiană, portugheză și suedeză provine din Leipzig Corpora Collection (CC BY 4.0) și Tatoeba (CC BY 2.0 FR). Atribuirea completă se află în fișierul NOTICE din codul sursă.</string>
+    <string name="licenses_title">Licențe open source</string>
+    <string name="licenses_intro">CleverKeys este software liber sub GNU General Public License v3.0. Include componentele și datele terțe enumerate mai jos; după notificări urmează textul complet al fiecărei licențe pe care o folosesc.</string>
+    <string name="licenses_notices_header">Notificări</string>
+    <string name="licenses_texts_header">Textele licențelor</string>
+    <string name="licenses_text_missing">Acest text lipsește din pachetul aplicației.</string>
     <string name="gesture_section_intro">Reglați fin comportamentul atingerilor, glisărilor și cursoarelor pentru stilul dvs. de tastare.</string>
     <string name="gesture_short_gestures_header">Gesturi scurte</string>
     <string name="gesture_open_calibration">📐 Deschide instrumentul de calibrare</string>

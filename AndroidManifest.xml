@@ -99,6 +99,9 @@
 
     <activity android:name="tribixbite.cleverkeys.GeometricSettingsActivity" android:label="@string/geo_settings_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
     <activity android:name="tribixbite.cleverkeys.CtcSettingsActivity" android:label="@string/ctc_settings_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
+    <!-- Settings → Help & FAQ → Open-source licenses: NOTICE + the licence texts it cites,
+         packaged as assets by generateLicenseAssets (OpenSourceLicenses). -->
+    <activity android:name="tribixbite.cleverkeys.OpenSourceLicensesActivity" android:label="@string/licenses_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 
     <activity android:name="tribixbite.cleverkeys.DictionaryManagerActivity" android:label="@string/activities_dictionary_title" android:theme="@style/settingsTheme" android:exported="false" android:directBootAware="true" tools:targetApi="24"/>
 

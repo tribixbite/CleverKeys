@@ -889,6 +889,11 @@
     <string name="gif_total_storage">总计：%1$s</string>
     <string name="help_open_wiki">打开完整 Wiki</string>
     <string name="help_third_party_data">第三方数据：词表来自 wordfreq (CC BY-SA 4.0)、经由 FrequencyWords 的 OpenSubtitles (CC BY-SA 4.0)、AOSP LatinIME (Apache-2.0) 和 Swwiki (CC BY-SA 3.0)；英语、德语、法语、意大利语、葡萄牙语和瑞典语的词语上下文来自 Leipzig Corpora Collection (CC BY 4.0) 和 Tatoeba (CC BY 2.0 FR)。完整署名见源代码中的 NOTICE 文件。</string>
+    <string name="licenses_title">开源许可</string>
+    <string name="licenses_intro">CleverKeys 是依据 GNU General Public License v3.0 发布的自由软件。它包含下列第三方组件和数据；各项声明之后附有它们所用每种许可的全文。</string>
+    <string name="licenses_notices_header">声明</string>
+    <string name="licenses_texts_header">许可全文</string>
+    <string name="licenses_text_missing">应用包中缺少此文本。</string>
     <string name="import_preview_added">新增（%1$d）</string>
     <string name="import_preview_apply">应用（%1$d）</string>
     <string name="import_preview_cancel_desc">取消预览</string>

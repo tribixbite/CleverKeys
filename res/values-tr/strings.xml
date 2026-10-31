@@ -862,6 +862,11 @@
     <string name="swipe_full_ctc_settings">Tüm CTC Ayarları</string>
     <string name="help_open_wiki">Tam Wiki\'yi Aç</string>
     <string name="help_third_party_data">Üçüncü taraf verileri: Kelime listeleri wordfreq (CC BY-SA 4.0), FrequencyWords aracılığıyla OpenSubtitles (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) ve Swwiki (CC BY-SA 3.0) kaynaklıdır; İngilizce, Almanca, Fransızca, İtalyanca, Portekizce ve İsveççe kelime bağlamı Leipzig Corpora Collection (CC BY 4.0) ve Tatoeba (CC BY 2.0 FR) kaynaklıdır. Tam atıf, kaynak kodundaki NOTICE dosyasındadır.</string>
+    <string name="licenses_title">Açık kaynak lisansları</string>
+    <string name="licenses_intro">CleverKeys, GNU General Public License v3.0 kapsamında özgür bir yazılımdır. Aşağıda listelenen üçüncü taraf bileşenleri ve verileri içerir; bildirimlerin ardından bunların kullandığı her lisansın tam metni yer alır.</string>
+    <string name="licenses_notices_header">Bildirimler</string>
+    <string name="licenses_texts_header">Lisans metinleri</string>
+    <string name="licenses_text_missing">Bu metin uygulama paketinde yok.</string>
     <string name="gesture_section_intro">Dokunma, kaydırma ve kaydırıcı davranışını yazma tarzınıza göre ince ayarlayın.</string>
     <string name="gesture_short_gestures_header">Kısa Hareketler</string>
     <string name="gesture_open_calibration">📐 Kalibrasyon Aracını Aç</string>
