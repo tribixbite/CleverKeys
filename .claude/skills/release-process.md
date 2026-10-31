@@ -398,6 +398,17 @@ done
 ### Don't conflate the build recipe with the changelog
 - `metadata/fdroid/tribixbite.cleverkeys.yml` is the F-Droid build recipe — versionCode, commit, ABI splits, prebuild hooks. Don't put release notes here. Its `CurrentVersion:` field is auto-updated by F-Droid's bot post-publish, not manually.
 - Release notes for F-Droid go in `fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt` — **THREE separate files per release**, one per ABI.
+- The local `metadata/fdroid/tribixbite.cleverkeys.yml` is a **verbatim mirror of upstream
+  fdroiddata** (last synced 2026-10-31, through 1.5.0): `curl -sL
+  https://gitlab.com/fdroid/fdroiddata/-/raw/master/metadata/tribixbite.cleverkeys.yml -o
+  metadata/fdroid/tribixbite.cleverkeys.yml` after F-Droid publishes a release. Never hand-add
+  the next version's `Builds:` entries or bump `CurrentVersion` — `AutoUpdateMode`/checkupdates
+  writes both by copying the previous block. Upstream's `commit:` hashes predate the history
+  rewrite and are not in the local clone (GitHub still serves them; their trees equal the local
+  tags'). `ReleasePackagingDriftTest` parses this copy (ABI slots, `PREFIX_BOOST_ERA_VERSIONS`);
+  when 2.0.0 lands upstream, its blocks must NOT carry the `prefix_boosts` scanignore (the
+  directory was deleted after 1.5.0) — if checkupdates copies it, the sync turns that test red,
+  which is the cue to get it removed in fdroiddata.
 
 ### Don't undercount work
 - 100+ commits with mostly `fix:` titles can still be a MINOR release if those fixes ship a new tab, new schema, or new modal. Read commit *bodies* and *file diffs*, not just titles. If in doubt, spawn an audit subagent — it's faster and avoids context bloat.

@@ -440,6 +440,162 @@ Builds:
     scandelete:
       - docs
 
+  - versionName: 1.3.0
+    versionCode: 103001
+    commit: 2d375d10ca399ae3a2ed524659171508012de2a7
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.3.0
+    versionCode: 103002
+    commit: 2d375d10ca399ae3a2ed524659171508012de2a7
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.3.0
+    versionCode: 103003
+    commit: 2d375d10ca399ae3a2ed524659171508012de2a7
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.4.0
+    versionCode: 104001
+    commit: 98b66dc46e68724802fc3dc6eaa5303d16526021
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.4.0
+    versionCode: 104002
+    commit: 98b66dc46e68724802fc3dc6eaa5303d16526021
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.4.0
+    versionCode: 104003
+    commit: 98b66dc46e68724802fc3dc6eaa5303d16526021
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.5.0
+    versionCode: 105001
+    commit: 6c2ad7706f3ac8c6db9b0fb14720a75969de0646
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-armeabi-v7a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'armeabi-v7a'/" build.gradle
+    scanignore:
+      - scripts/data/aosp_en_wordlist.txt.gz
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.5.0
+    versionCode: 105002
+    commit: 6c2ad7706f3ac8c6db9b0fb14720a75969de0646
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-arm64-v8a.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'arm64-v8a'/" build.gradle
+    scanignore:
+      - scripts/data/aosp_en_wordlist.txt.gz
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
+  - versionName: 1.5.0
+    versionCode: 105003
+    commit: 6c2ad7706f3ac8c6db9b0fb14720a75969de0646
+    gradle:
+      - yes
+    binary: 
+      https://github.com/tribixbite/CleverKeys/releases/download/v%v/CleverKeys-v%v-x86_64.apk
+    prebuild: sed -i -e "s/include 'armeabi-v7a'.*/include 'x86_64'/" build.gradle
+    scanignore:
+      - scripts/data/aosp_en_wordlist.txt.gz
+      - scripts/langpack-sv.zip
+      - scripts/dictionaries/langpack-*.zip
+      - scripts/dictionaries/en/en_enhanced.bin
+      - src/main/assets/dictionaries/*.bin
+      - src/main/assets/prefix_boosts/*.bin
+    scandelete:
+      - docs
+
 AllowedAPKSigningKeys: 3c70de8852fca5bb279c9998d558ea7606131f1f937af35cc943eee1aedfb97e
 
 AutoUpdateMode: Version v%v
@@ -450,5 +606,5 @@ VercodeOperation:
   - 10 * %c + 3
 UpdateCheckData: https://github.com/tribixbite/CleverKeys/releases/latest|VersionCode:\
   (\d+)|.|Version:\ ([\d.]+)
-CurrentVersion: 1.2.8
-CurrentVersionCode: 102083
+CurrentVersion: 1.5.0
+CurrentVersionCode: 105003

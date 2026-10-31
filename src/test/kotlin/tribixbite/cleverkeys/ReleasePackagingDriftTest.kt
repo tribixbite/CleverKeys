@@ -157,16 +157,21 @@ class ReleasePackagingDriftTest {
      *   v1.2.2  (2026-01-11) 10 files                → entry HAS it             ✓
      *   v1.2.5  (2026-01-14) 10 files                → entry HAS it             ✓
      *   v1.2.8  (2026-01-22) 11 files                → entry HAS it             ✓
+     *   v1.3.0 / v1.4.0 / v1.5.0  11 files each      → entries HAVE it          ✓
      *
-     * The directory was created 2026-01-10 (between v1.2.1 and v1.2.2) and deleted at 1.5.0
-     * by the neural-engine removal (64f401d2). So the nine lines are accurate historical
-     * build metadata, not drift: stripping them would break an F-Droid rebuild or a
-     * reproducible-build re-verification of those three published versions, which is
-     * precisely what a scanignore exists to prevent.
+     * The directory was created 2026-01-10 (between v1.2.1 and v1.2.2) and deleted AFTER 1.5.0
+     * by the neural-engine removal (64f401d2, 2026-08-18). (Until 2026-10-31 this comment said
+     * "deleted at 1.5.0": the local recipe copy then stopped at 1.2.8, so the claim was never
+     * checked against a 1.5.0 entry. Re-measured when the copy was synced from upstream
+     * fdroiddata: the trees of the commits upstream builds — 2d375d10, 98b66dc4, 6c2ad770 on
+     * GitHub, byte-identical trees to the local tags v1.3.0/v1.4.0/v1.5.0 — each hold the 11
+     * files.) So these lines are accurate historical build metadata, not drift: stripping them
+     * would break an F-Droid rebuild or a reproducible-build re-verification of those published
+     * versions, which is precisely what a scanignore exists to prevent.
      *
-     * What IS a live hazard is the copy-paste: 1.2.8 is the newest entry in the file, and
-     * these recipes are written by duplicating the previous block. The next entry (2.0.0)
-     * must not inherit a scanignore for a path that no longer exists. That is the direction
+     * What IS a live hazard is the copy-paste: 1.5.0 is the newest entry in the file, and F-Droid's
+     * checkupdates writes the next entry (2.0.0) by duplicating the previous block. The 2.0.0
+     * entry must not inherit a scanignore for a path that no longer exists. That is the direction
      * this test guards — history stays frozen, the future stays clean.
      */
     @Test
@@ -181,15 +186,15 @@ class ReleasePackagingDriftTest {
 
         assertWithMessage(
             "src/main/assets/prefix_boosts/ existed only between 2026-01-10 and its deletion " +
-                "at 1.5.0 (neural-engine removal). Entries for versions in that window must " +
+                "after 1.5.0 (neural-engine removal). Entries for versions in that window must " +
                 "KEEP the scanignore — removing it breaks a rebuild/reproducibility check of a " +
-                "published version. Entries for any other version must not have it: a 1.5.0+ " +
-                "recipe carrying this line is a copy-paste of the 1.2.8 block, ignoring a path " +
+                "published version. Entries for any other version must not have it: a 2.0.0+ " +
+                "recipe carrying this line is a copy-paste of the 1.5.0 block, ignoring a path " +
                 "that no longer exists."
         ).that(carrying).isEqualTo(PREFIX_BOOST_ERA_VERSIONS)
 
         // The asset root really is gone at HEAD — the other half of the same claim.
-        assertWithMessage("src/main/assets/prefix_boosts was deleted at 1.5.0; it must stay gone")
+        assertWithMessage("src/main/assets/prefix_boosts was deleted after 1.5.0; it must stay gone")
             .that(File("src/main/assets/prefix_boosts").exists()).isFalse()
     }
 
@@ -621,9 +626,11 @@ class ReleasePackagingDriftTest {
 
         /**
          * The published versions whose source tree contained `src/main/assets/prefix_boosts/`
-         * (verified against the v-tags on 2026-09-10: 10, 10 and 11 `.bin` files respectively).
+         * (verified against the v-tags on 2026-09-10: 10, 10 and 11 `.bin` files respectively;
+         * 1.3.0, 1.4.0 and 1.5.0 added 2026-10-31 with 11 each, when the local recipe copy was
+         * synced from upstream fdroiddata).
          */
-        val PREFIX_BOOST_ERA_VERSIONS = listOf("1.2.2", "1.2.5", "1.2.8")
+        val PREFIX_BOOST_ERA_VERSIONS = listOf("1.2.2", "1.2.5", "1.2.8", "1.3.0", "1.4.0", "1.5.0")
 
         val FORBIDDEN_PERMISSIONS = listOf(
             "android.permission.INTERNET",
