@@ -372,6 +372,12 @@ ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` o
   stop): **169 errors for 153 words**, a loop ("it is you who are mistaken" ×14) and 260 s of
   compute.
 - 23.6 s in one session (the bound test, now against `maxSegmentSeconds` = 20): 0/57.
+- Saga (2026-10-31, release of `b243ce3d`, real microphone, the same 10 clips + 1 s gaps + 13 s
+  of silence played through the phone's speaker into a Chrome textarea): 11 segments committed
+  in order (one extra split at a pause inside the first clip), each 0.2–1.5 s after its clip
+  ended; no loop; WER 45/228 = 19.7 % (acoustic path; the JVM path is 3.5 %); keyboard RSS
+  345 MB idle, 346–461 MB while listening, back to 345 MB, flat over 104 s; the microphone
+  closed by itself ~10 s after the last speech.
 - Fail-first: `SegmentedRecognizerTest#theEngineBoundForcesANewSessionWithoutAPause` caught a
   segment 256 samples over a 10 s bound (not a whole number of 32 ms hops); the cut now happens
   before the next hop would cross the bound.

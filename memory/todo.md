@@ -982,8 +982,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     pass per segment ~0.5 s early vs ~0.6 s late (flat); 53 s with no pause → 2 forced cuts, WER
     3/153 vs control one session 169/153 (loop). Fail-first: a forced segment 256 samples over a
     10 s bound. runPureTests 3,675 + runMockTests 1,673 green; emulator.wtf
-    `VoiceInputInstrumentedTest` 4/4 (API 34, two PAUSE segments on device ORT). NOT VERIFIED:
-    real microphone noise floor and a person's pause timing (Saga check pending).
+    `VoiceInputInstrumentedTest` 4/4 (API 34, two PAUSE segments on device ORT). DEVICE (Saga 144,
+    release of `b243ce3d`, the same 10 clips + 1 s gaps + 13 s silence played through the Saga's
+    speaker into a Chrome textarea, real microphone): 11 segments committed in order (one extra
+    split at a pause inside clip 1), each 0.2–1.5 s after its clip ended; no loop; WER 45/228
+    (19.7 %, acoustic path — 12 % on short clips through the speaker on 10-29, 3.5 % on the JVM);
+    RSS 345 MB → 346–461 MB while listening → 345 MB, no growth over 104 s (a 24 s period reached
+    484–524 MB before); idle auto-stop closed the microphone ~10 s after the last speech. Saga
+    restored (APK c1e4dc73, voice off, pack removed, mic denied as found). NOT VERIFIED: a
+    person's own pauses and voice; noisy rooms.
     2026-10-30 (maintainer report, voice build on their phone): the mic key (`voice_typing`) and
     its long press (`voice_typing_chooser`) now route to the built-in engine (`VoiceKeyRouting`,
     spec FR-4a); word swipes from a letter with the mic in its corner no longer fire it
