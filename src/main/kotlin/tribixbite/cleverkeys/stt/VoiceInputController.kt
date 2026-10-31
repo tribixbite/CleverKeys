@@ -65,8 +65,12 @@ interface VoiceHost {
  * [MicPermissionGate] and [VoiceTextPlanner] (docs/specs/voice-input.md).
  *
  * Engine-neutral: the pack is resolved through [SpeechEngineRegistry]; nothing here names an
- * engine. Threads: the state machine, UI and editor writes run on the main thread; the model
- * loads on [worker]; each listening period has its own capture thread that reads the
+ * engine. A listening period is split into speech segments at pauses by [SegmentedRecognizer]
+ * (one engine session per segment, each segment's final committed as it ends), so it may run
+ * up to [VoicePeriodLimits.MAX_SESSION_SECONDS] and stops by itself after
+ * [VoicePeriodLimits.IDLE_STOP_SECONDS] without speech
+ * (spec FR-10). Threads: the state machine, UI and editor writes run on the main thread; the
+ * model loads on [worker]; each listening period has its own capture thread that reads the
  * microphone and runs recognition passes. Late results from an abandoned period are dropped by
  * a generation counter, and the machine ignores events that no longer fit its state.
  *
@@ -78,7 +82,9 @@ class VoiceInputController(
     private val registry: SpeechEngineRegistry = SpeechEngineRegistry.DEFAULT,
     private val packs: () -> VoicePackManager = { VoicePacks.manager(host.context) },
     // The recorder is drained on its own thread so a slow recognition pass never overruns it.
-    private val capture: (sampleRate: Int) -> PcmSource = { BufferedPcmSource(MicrophoneCapture(it), maxSamples = it * MAX_BUFFER_SECONDS) },
+    private val capture: (sampleRate: Int) -> PcmSource = {
+        BufferedPcmSource(MicrophoneCapture(it), maxSamples = it * (VoicePeriodLimits.MAX_SESSION_SECONDS + CAPTURE_SLACK_SECONDS), maxQueuedSamples = it * MAX_BACKLOG_SECONDS)
+    },
 ) {
     private val main = Handler(Looper.getMainLooper())
     private val workerThread = HandlerThread("voice-input").apply { start() }
@@ -97,7 +103,7 @@ class VoiceInputController(
     private var enginePack: File? = null
 
     @Volatile
-    private var session: SpeechSession? = null
+    private var recognizer: SegmentedRecognizer? = null
 
     @Volatile
     private var stopRequested = false
@@ -190,6 +196,7 @@ class VoiceInputController(
             // keeps showing the last partial until the final result replaces it.
             VoiceAction.Finish -> stopRequested = true
             is VoiceAction.Apply -> applyHypothesis(action.hypothesis)
+            is VoiceAction.ApplySegment -> applySegment(action.hypothesis)
             VoiceAction.Abort -> {
                 abortCapture()
                 planner?.let { host.apply(kind, it.onCancel()) }
@@ -268,14 +275,16 @@ class VoiceInputController(
         }
         host.showListening(loading = false, pendingText = "", onStop = ::onKeyPressed, onCancel = ::cancel)
         host.announce(text(R.string.voice_announce_listening))
-        val s = eng.newSession().also { session = it }
+        val r = SegmentedRecognizer(eng).also { recognizer = it }
         val source = capture(eng.sampleRate)
-        val limitNanos = minOf(MAX_LISTEN_SECONDS, eng.maxUtteranceSeconds.coerceAtLeast(1).toLong()) * 1_000_000_000L
-        Thread({ captureLoop(gen, s, source, eng.sampleRate, limitNanos) }, "voice-capture").start()
+        Thread({ captureLoop(gen, r, source, eng.sampleRate) }, "voice-capture").start()
     }
 
-    /** Capture thread: microphone → session; results posted to the main thread. */
-    private fun captureLoop(gen: Int, s: SpeechSession, source: PcmSource, sampleRate: Int, limitNanos: Long) {
+    /**
+     * Capture thread: microphone → segmenter → one engine session per segment; results posted
+     * to the main thread in order (a segment's final before anything of the next segment).
+     */
+    private fun captureLoop(gen: Int, r: SegmentedRecognizer, source: PcmSource, sampleRate: Int) {
         // Large enough to take a whole backlog in one read: one accept = one decode, so a
         // recogniser that fell behind catches up (BufferedPcmSource returns what is queued).
         val buffer = FloatArray(sampleRate * READ_MAX_SECONDS)
@@ -292,38 +301,51 @@ class VoiceInputController(
                 return
             }
             var autoStopped = false
-            while (!stopRequested && !s.isCancelled) {
+            while (!stopRequested && !r.isCancelled) {
                 val n = source.read(buffer)
                 if (n < 0) {
                     post(gen) { dispatch(VoiceEvent.Failed(VoiceFailure.MIC_UNAVAILABLE)) }
                     return
                 }
                 if (n == 0) break
-                val h = s.accept(if (n == buffer.size) buffer.copyOf() else buffer.copyOf(n))
-                if (h != null) post(gen) { dispatch(VoiceEvent.Partial(h)) }
-                if (!autoStopped && System.nanoTime() - started > limitNanos) {
+                postUpdates(gen, r.accept(buffer.copyOf(n)))
+                val stop = if (autoStopped) null else VoicePeriodLimits.autoStop((System.nanoTime() - started) / 1e9, r.inSegment, r.secondsSinceSpeech)
+                if (stop != null) {
                     autoStopped = true
+                    Log.i(TAG, "Voice period stops by itself: $stop")
                     post(gen) { if (machine.state == VoiceState.LISTENING) dispatch(VoiceEvent.Toggle) }
                 }
             }
             source.close()
-            if (s.isCancelled) return
+            if (r.isCancelled) return
             // Stop pressed: the recorder is closed. Audio spoken before stop that the recogniser
-            // had not reached yet is still queued — decode it, then the final pass.
-            while (!s.isCancelled) {
+            // had not reached yet is still queued — decode it (segments may still end in it),
+            // then the final pass of the open segment.
+            while (!r.isCancelled) {
                 val n = source.read(buffer)
                 if (n <= 0) break
-                s.accept(buffer.copyOf(n))
+                postUpdates(gen, r.accept(buffer.copyOf(n)))
             }
-            if (s.isCancelled) return
-            val final = s.finish()
+            if (r.isCancelled) return
+            val final = r.finish()
+            Log.i(TAG, "Voice period: ${r.segmentsFinished + 1} segment(s), ${(System.nanoTime() - started) / 1_000_000} ms")
             post(gen) { dispatch(VoiceEvent.Final(final)) }
         } catch (e: Exception) {
             Log.e(TAG, "Voice recognition failed", e)
             post(gen) { dispatch(VoiceEvent.Failed(VoiceFailure.ENGINE_ERROR)) }
         } finally {
             runCatching { source.close() }
-            s.close()
+            r.close()
+        }
+    }
+
+    private fun postUpdates(gen: Int, updates: List<SegmentedRecognizer.Update>) {
+        for (u in updates) {
+            val event = when (u) {
+                is SegmentedRecognizer.Update.Partial -> VoiceEvent.Partial(u.hypothesis)
+                is SegmentedRecognizer.Update.SegmentFinal -> VoiceEvent.SegmentFinal(u.hypothesis)
+            }
+            post(gen) { dispatch(event) }
         }
     }
 
@@ -347,14 +369,33 @@ class VoiceInputController(
         }
     }
 
+    /**
+     * A committed segment: commit its text and continue listening; the bar's pending tail is
+     * empty until the next segment speaks.
+     */
+    private fun applySegment(h: SpeechHypothesis) {
+        val p = planner ?: return
+        val ops = p.onSegmentEnd(h)
+        if (ops.isNotEmpty()) {
+            if (!host.apply(kind, ops)) {
+                dispatch(VoiceEvent.Cancel)
+                return
+            }
+            host.onFieldEditedExternally()
+        }
+        if (machine.state == VoiceState.LISTENING) {
+            host.showListening(loading = false, pendingText = "", onStop = ::onKeyPressed, onCancel = ::cancel)
+        }
+    }
+
     private fun abortCapture() {
-        session?.cancel()
+        recognizer?.cancel()
         stopRequested = true
     }
 
     private fun endPeriod() {
         generation++
-        session = null
+        recognizer = null
         planner = null
         host.hideListening()
         main.removeCallbacks(releaseIdleEngine)
@@ -380,15 +421,15 @@ class VoiceInputController(
         /** Largest single read from the buffered microphone (a backlog decoded in one pass). */
         private const val READ_MAX_SECONDS = 8
 
-        /** Audio the buffered microphone may hold: the 60 s period plus slack, ~4.5 MB. */
-        private const val MAX_BUFFER_SECONDS = 70
-
         /**
-         * One listening period stops by itself after a minute: every pass re-decodes the whole
-         * utterance, so cost grows with its length (research §5.2), and a forgotten open
-         * microphone must not run on.
+         * Audio the buffered microphone may hold not yet recognised (~4.5 MB): a recogniser
+         * this far behind is not catching up, and the period ends as if the recorder had.
          */
-        private const val MAX_LISTEN_SECONDS = 60L
+        private const val MAX_BACKLOG_SECONDS = 70
+
+        /** Recorder audio allowed beyond the session limit (the stop is posted, then acted on). */
+        private const val CAPTURE_SLACK_SECONDS = 10
+
 
         /** A second key press within this window opens the screen an explanation names. */
         private const val EXPLAIN_REPEAT_MILLIS = 4_000L

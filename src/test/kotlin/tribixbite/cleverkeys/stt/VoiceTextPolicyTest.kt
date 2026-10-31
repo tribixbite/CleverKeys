@@ -154,6 +154,95 @@ class VoiceTextPolicyTest {
         assertThat(ed.text).isEmpty()
     }
 
+    // ---- segments (endpointing, FR-10) ----------------------------------------------------
+
+    /** Feed whole segments: partials then a segment final, the period's final last. */
+    private fun dictate(p: VoiceTextPlanner, ed: FakeEditor?, vararg segments: String): List<VoiceTextOp> {
+        val all = ArrayList<VoiceTextOp>()
+        segments.forEachIndexed { i, seg ->
+            val words = SpeechHypothesis.splitWords(seg)
+            all += p.onHypothesis(partial(seg, maxOf(0, words.size - 1))).also { ed?.apply(it) }
+            val last = i == segments.lastIndex
+            all += (if (last) p.onHypothesis(final(seg)) else p.onSegmentEnd(final(seg))).also { ed?.apply(it) }
+        }
+        return all
+    }
+
+    @Test
+    fun segmentsJoinWithOneSpaceAndCapitaliseAfterASentenceEnd() {
+        val ed = FakeEditor("")
+        dictate(VoiceTextPlanner(VoiceFieldKind.TEXT, ""), ed, "Hello there.", "How are you?", "Fine")
+        assertThat(ed.text).isEqualTo("Hello there. How are you? Fine")
+        assertThat(ed.composing).isEmpty()
+    }
+
+    @Test
+    fun aSegmentThatContinuesASentenceIsNotCapitalised() {
+        // The engine capitalises every segment's first word; a cut at a pause mid-sentence
+        // must not leave "the dog ran And then".
+        val ed = FakeEditor("")
+        dictate(VoiceTextPlanner(VoiceFieldKind.TEXT, ""), ed, "The dog ran", "And then it stopped.", "I think")
+        assertThat(ed.text).isEqualTo("The dog ran and then it stopped. I think")
+    }
+
+    @Test
+    fun autoSpaceBetweenSegmentsNeverDoubles() {
+        val ed = FakeEditor("Notes. ")
+        dictate(VoiceTextPlanner(VoiceFieldKind.TEXT, "Notes. ", trailingSpace = true), ed, "One.", "Two", "three.")
+        assertThat(ed.text).isEqualTo("Notes. One. Two three. ")
+        assertThat(ed.text).doesNotContain("  ")
+    }
+
+    @Test
+    fun aSegmentFinalCommitsItsComposingTailAndTheNextStartsFresh() {
+        val ed = FakeEditor("")
+        val p = VoiceTextPlanner(VoiceFieldKind.TEXT, "")
+        ed.apply(p.onHypothesis(partial("first part", 1)))
+        assertThat(ed.composing).isEqualTo(" part")
+        val end = p.onSegmentEnd(final("first part."))
+        assertThat(end).containsExactly(Commit(" part."))
+        ed.apply(end)
+        assertThat(ed.composing).isEmpty()
+        assertThat(p.finished).isFalse()
+        // The next segment's hypotheses count words from zero again.
+        ed.apply(p.onHypothesis(partial("Second", 0)))
+        assertThat(ed.composing).isEqualTo(" Second")
+        ed.apply(p.onHypothesis(final("Second part.")))
+        assertThat(ed.text).isEqualTo("First part. Second part.")
+        assertThat(p.finished).isTrue()
+    }
+
+    @Test
+    fun anEmptySegmentChangesNothing() {
+        val ed = FakeEditor("")
+        val p = VoiceTextPlanner(VoiceFieldKind.TEXT, "", trailingSpace = true)
+        ed.apply(p.onHypothesis(partial("uh", 0)))
+        ed.apply(p.onSegmentEnd(final("")))
+        assertThat(ed.text).isEmpty()
+        ed.apply(p.onHypothesis(final("Okay.")))
+        assertThat(ed.text).isEqualTo("Okay. ")
+    }
+
+    @Test
+    fun blindFieldsSeparateSegmentsWithASpaceAndStayAppendOnly() {
+        // The keyboard never reads a blind field, but it knows what it wrote itself.
+        val ops = dictate(VoiceTextPlanner(VoiceFieldKind.BLIND, textBefore = null), null, "Hello.", "Ls minus la", "and grep")
+        assertThat(ops.all { it is Commit }).isTrue()
+        assertThat(ops.joinToString("") { (it as Commit).text }).isEqualTo("Hello. Ls minus la and grep")
+    }
+
+    @Test
+    fun inlineFieldsTakeSegmentsLikeText() {
+        val p = VoiceTextPlanner(VoiceFieldKind.INLINE, textBefore = "cat")
+        val ops = dictate(p, null, "Videos.", "Of dogs")
+        assertThat(ops.joinToString("") { (it as Commit).text }).isEqualTo(" videos. Of dogs")
+    }
+
+    @Test
+    fun passwordFieldsIgnoreSegmentsToo() {
+        assertThat(VoiceTextPlanner(VoiceFieldKind.PASSWORD, "").onSegmentEnd(final("secret"))).isEmpty()
+    }
+
     @Test
     fun firstPersonIRecognition() {
         assertThat(VoiceTextPlanner.isFirstPersonI("I")).isTrue()

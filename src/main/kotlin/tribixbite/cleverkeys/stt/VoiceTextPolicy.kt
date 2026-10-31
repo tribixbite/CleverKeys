@@ -38,17 +38,27 @@ sealed interface VoiceTextOp {
 }
 
 /**
- * Turns a session's hypotheses into editor operations for one field (pure; `VoiceTextPolicyTest`).
+ * Turns a listening period's hypotheses into editor operations for one field (pure;
+ * `VoiceTextPolicyTest`).
+ *
+ * A period is one or more speech segments (FR-10): each segment's hypotheses come from a fresh
+ * engine session and count words from zero; [onSegmentEnd] commits a finished segment and the
+ * next starts at the end of what was written. The period's last segment ends with the final
+ * hypothesis through [onHypothesis].
  *
  * Conventions applied, all read from the text before the cursor captured when listening
- * started ([textBefore]; null for BLIND fields, which are never read):
+ * started ([textBefore]; null for BLIND fields, which are never read) followed by everything
+ * this planner committed since (the keyboard knows its own text, even in a blind field):
  *  - **Spacing**: a leading space when the dictation would otherwise fuse with the preceding
- *    character; words of one session are joined by single spaces; [trailingSpace] (the user's
- *    "auto space after a suggestion") adds one after the final text in TEXT fields.
- *  - **Capitalisation**: engines capitalise each utterance's first word. Mid-sentence (the text
- *    before does not end a sentence) that capital is undone when [matchSentenceCase] is on —
- *    except for "I"-forms and words that are not plain capitalised (acronyms, "iPhone").
- *    At a sentence start the first letter is capitalised.
+ *    character; words of one segment are joined by single spaces; [trailingSpace] (the user's
+ *    "auto space after a suggestion") adds one after each segment's final text in TEXT fields,
+ *    so the next segment needs no leading space and none is ever doubled.
+ *  - **Capitalisation**: engines capitalise each utterance's (so each segment's) first word.
+ *    Mid-sentence (the text before does not end a sentence) that capital is undone when
+ *    [matchSentenceCase] is on — except for "I"-forms and words that are not plain capitalised
+ *    (acronyms, "iPhone"). At a sentence start (after the engine's own `.`, `?`, `!` too) the
+ *    first letter is capitalised. A blind field's first segment keeps the engine's casing (no
+ *    context); later segments follow the planner's own text.
  *  - **Stability**: stable words are committed as they arrive; in TEXT fields the pending tail
  *    is composing text. BLIND and INLINE fields receive stable words only (append-only).
  *  - **Cancel** drops the composing tail; committed words stay (they were the user's to keep).
@@ -59,47 +69,36 @@ class VoiceTextPlanner(
     private val matchSentenceCase: Boolean = true,
     private val trailingSpace: Boolean = false,
 ) {
-    /** Words of the current hypothesis already committed to the field. */
+    /** Words of the current segment's hypothesis already committed to the field. */
     private var committedWords = 0
 
-    /** True once anything (committed or composing) was sent this session. */
-    private var sentAnything = false
+    /** True once anything was committed in the current segment. */
+    private var segmentSent = false
 
     /** True while a composing span holds text. */
     private var composing = false
+
+    /** Everything committed this period (the keyboard's own text after [textBefore]). */
+    private val written = StringBuilder()
+
+    /** The text before the current segment: null only for a blind field before any commit. */
+    private var segmentContext: String? = textBefore
 
     /** True once the final hypothesis was applied; later calls are no-ops. */
     var finished = false
         private set
 
-    /** The operations for [hypothesis] (a partial or the final result). */
+    /** The operations for [hypothesis] (a partial or the period's final result). */
     fun onHypothesis(hypothesis: SpeechHypothesis): List<VoiceTextOp> {
         if (finished || kind == VoiceFieldKind.PASSWORD) return emptyList()
-        val words = hypothesis.words.toMutableList()
-        if (words.isNotEmpty()) words[0] = caseFirstWord(words[0])
-        val stable = if (hypothesis.isFinal) words.size else hypothesis.stableWordCount.coerceIn(0, words.size)
-        val ops = ArrayList<VoiceTextOp>(3)
-
-        if (stable > committedWords) {
-            val text = joinFrom(words, committedWords, stable)
-            ops += VoiceTextOp.Commit(text)
-            committedWords = stable
-            sentAnything = true
-            composing = false
-        }
-
+        val words = casedWords(hypothesis)
         if (hypothesis.isFinal) {
             finished = true
-            if (composing) {
-                ops += VoiceTextOp.ClearComposing
-                composing = false
-            }
-            if (trailingSpace && kind == VoiceFieldKind.TEXT && committedWords > 0) {
-                ops += VoiceTextOp.Commit(" ")
-            }
-            return ops
+            return finalOps(words)
         }
-
+        val stable = hypothesis.stableWordCount.coerceIn(0, words.size)
+        val ops = ArrayList<VoiceTextOp>(3)
+        commitThrough(words, stable, ops)
         if (kind == VoiceFieldKind.TEXT) {
             val pending = words.size - committedWords
             if (pending > 0) {
@@ -113,6 +112,19 @@ class VoiceTextPlanner(
         return ops
     }
 
+    /**
+     * A segment ended with [hypothesis] (every word final) and the period goes on: commit it,
+     * then start the next segment after it.
+     */
+    fun onSegmentEnd(hypothesis: SpeechHypothesis): List<VoiceTextOp> {
+        if (finished || kind == VoiceFieldKind.PASSWORD) return emptyList()
+        val ops = finalOps(casedWords(hypothesis))
+        committedWords = 0
+        segmentSent = false
+        segmentContext = if (textBefore == null && written.isEmpty()) null else (textBefore ?: "") + written
+        return ops
+    }
+
     /** The operations that abandon the session: the composing tail goes, commits stay. */
     fun onCancel(): List<VoiceTextOp> {
         finished = true
@@ -121,30 +133,62 @@ class VoiceTextPlanner(
         return listOf(VoiceTextOp.ClearComposing)
     }
 
+    private fun casedWords(hypothesis: SpeechHypothesis): MutableList<String> {
+        val words = hypothesis.words.toMutableList()
+        if (words.isNotEmpty()) words[0] = caseFirstWord(words[0])
+        return words
+    }
+
+    /** Commit every word of a segment's final, drop a leftover composing span, auto-space. */
+    private fun finalOps(words: List<String>): List<VoiceTextOp> {
+        val ops = ArrayList<VoiceTextOp>(3)
+        commitThrough(words, words.size, ops)
+        if (composing) {
+            ops += VoiceTextOp.ClearComposing
+            composing = false
+        }
+        if (trailingSpace && kind == VoiceFieldKind.TEXT && segmentSent) commit(" ", ops)
+        return ops
+    }
+
+    /** Commit words up to [stable] that are not committed yet. */
+    private fun commitThrough(words: List<String>, stable: Int, ops: MutableList<VoiceTextOp>) {
+        if (stable <= committedWords) return
+        commit(joinFrom(words, committedWords, stable), ops)
+        committedWords = stable
+        segmentSent = true
+        composing = false
+    }
+
+    private fun commit(text: String, ops: MutableList<VoiceTextOp>) {
+        ops += VoiceTextOp.Commit(text)
+        written.append(text)
+    }
+
     /**
      * Words [from, to) joined with spaces, with the separator the field needs before them:
-     * a space between this session's pieces, or before the first piece when the text before
-     * the cursor ends in a non-space character.
+     * a space between this segment's pieces, or before its first piece when the text before
+     * it ends in a non-space character.
      */
     private fun joinFrom(words: List<String>, from: Int, to: Int): String {
         val body = words.subList(from, to).joinToString(" ")
         val lead = when {
             from > 0 -> " "
-            !sentAnything && needsLeadingSpace(body) -> " "
+            !segmentSent && needsLeadingSpace(body) -> " "
             else -> ""
         }
         return lead + body
     }
 
     private fun needsLeadingSpace(body: String): Boolean {
-        val before = textBefore ?: return false // BLIND: never read, never guessed
+        val before = segmentContext ?: return false // BLIND, nothing written yet: never guessed
         if (before.isEmpty() || before.last().isWhitespace()) return false
         // Punctuation that attaches to the previous word ("." "," "?" …) takes no space.
         return body.firstOrNull()?.let { it.isLetterOrDigit() || it in OPENING } ?: false
     }
 
     private fun caseFirstWord(word: String): String {
-        val before = textBefore ?: return word // BLIND: no context, keep the engine's casing
+        val before = segmentContext ?: return word // BLIND, nothing written yet: keep the engine's casing
         val sentenceStart = SENTENCE_START.containsMatchIn(before) || before.isBlank()
         return when {
             sentenceStart -> word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }

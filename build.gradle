@@ -674,6 +674,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.stt.VoiceTextPolicyTest',
     'tribixbite.cleverkeys.stt.MicPermissionGateTest',
     'tribixbite.cleverkeys.stt.BufferedPcmSourceTest',
+    // 2026-10-31: endpointing — energy VAD segmenter and one engine session per segment.
+    'tribixbite.cleverkeys.stt.SpeechSegmenterTest',
+    'tribixbite.cleverkeys.stt.SegmentedRecognizerTest',
     'tribixbite.cleverkeys.stt.VoicePackManagerTest',
     'tribixbite.cleverkeys.stt.SttArchitectureDriftTest',
     'tribixbite.cleverkeys.stt.moonshine.MoonshineTokenizerTest',
@@ -1289,7 +1292,7 @@ tasks.register('runPureTests', JavaExec) {
   // when supplied, so the defaults stay in the Kotlin where they are documented. Lets a
   // measurement run be scaled (`-PreplayPairs=800 -PreplayDecoys=6`) without editing the test,
   // and the replay prints whichever values it ran with.
-  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus', 'replayStaticCtx', 'voicePack', 'voiceSamples'].each { knob ->
+  ['replayPairs', 'replayDecoys', 'replayTraces', 'replayMaxCtx', 'replayCorpus', 'replayStaticCtx', 'voicePack', 'voiceSamples', 'voiceLongSamples'].each { knob ->
     if (project.hasProperty(knob)) systemProperty knob, project.property(knob)
   }
   // ONNX in PURE JVM tests on Termux.

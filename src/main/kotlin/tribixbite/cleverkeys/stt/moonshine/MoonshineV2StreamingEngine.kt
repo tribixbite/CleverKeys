@@ -62,10 +62,12 @@ class MoonshineV2StreamingEngine private constructor(
 
     /**
      * Measured on LibriSpeech test-clean concatenations, streamed (2026-10-29, JVM, ORT 1.21.1):
-     * 23.6 s → 0/57 errors, 34.7 s → 2/89, 46.2 s → a repetition loop (151/125). The engine
-     * test pins this bound (`anUtteranceAsLongAsTheEngineAllowsStaysCoherent`).
+     * 23.6 s → 0/57 errors, 34.7 s → 2/89, 46.2 s → a repetition loop (151/125). 20 s keeps a
+     * forced segment well inside the coherent range and every pass short (each pass re-decodes
+     * the segment); the official runtime's own default is 15 s. The engine test pins it
+     * (`anUtteranceAsLongAsTheEngineAllowsStaysCoherent`, `longDictationIsSegmented…`).
      */
-    override val maxUtteranceSeconds: Int = MAX_UTTERANCE_SECONDS
+    override val maxSegmentSeconds: Int = MAX_SEGMENT_SECONDS
 
     override fun newSession(): SpeechSession = Session()
 
@@ -536,8 +538,8 @@ class MoonshineV2StreamingEngine private constructor(
         /** Seconds of audio per recognition pass (two-pass agreement floor, research §5.2). */
         const val CHUNK_SECONDS = 1.0
 
-        /** See [maxUtteranceSeconds]. */
-        const val MAX_UTTERANCE_SECONDS = 30
+        /** See [maxSegmentSeconds]. */
+        const val MAX_SEGMENT_SECONDS = 20
         val CHUNK_SAMPLES = (SAMPLE_RATE * CHUNK_SECONDS).toInt()
 
         /** Encoder frame period (50 Hz) and the runtime's decode budget per second of audio. */

@@ -43,8 +43,11 @@ editor that used to be listed here already ship in 2.0.)
   input on or import a pack; audio is never stored and never leaves the device (still no
   internet permission). Packs are checked file by file (size and SHA-256) and installed
   atomically; a pack for a newer engine is refused with "needs a newer version of CleverKeys".
-  Listening stops by itself after about 30 seconds with this pack (the model loses track of
-  longer stretches); audio is buffered on its own thread so a slow recognition pass loses none.
+  Dictation is split at your pauses: each stretch of speech is recognised on its own and typed
+  when you pause, so you can keep talking for up to five minutes without the model losing track
+  (a stretch with no pause is cut after 20 seconds at its quietest moment). Listening stops by
+  itself after 10 seconds without speech; audio is buffered on its own thread so a slow
+  recognition pass loses none.
   The voice pack is a separate opt-in download — nothing of the speech model ships in the APK, and
   the runtime is the keyboard's existing ONNX Runtime (no new library). The speech engine is a
   replaceable module (`stt/`), so a later model is a new pack, not a rewrite. The existing mic

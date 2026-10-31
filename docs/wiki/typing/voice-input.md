@@ -46,9 +46,11 @@ pack's LICENSE and NOTICE text, and **Remove** deletes it.
   words the model has confirmed are typed for good.
 - **Tap the bar or the key again** to stop: the rest is typed. **✕** cancels: the underlined words
   are dropped, the confirmed ones stay.
-- Listening stops by itself after about 30 seconds with the English Moonshine pack (the model
-  loses track of longer stretches; tap the key again to go on), and whenever the keyboard closes
-  or you move to another field. If you change fields while words are still underlined, the app
+- Pause between sentences as you normally would: each stretch of speech is typed for good when
+  you pause (about half a second), and listening goes on. A stretch with no pause at all is cut
+  after 20 seconds with the English Moonshine pack, at its quietest moment.
+- Listening stops by itself after 10 seconds without speech, after five minutes in any case,
+  and whenever the keyboard closes or you move to another field. If you change fields while words are still underlined, the app
   you were typing in may keep them as typed text.
 - Spacing and capitals follow what is already in the field: a space is added after a word, and
   the first word is capitalised only at the start of a sentence.

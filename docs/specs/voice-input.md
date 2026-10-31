@@ -4,7 +4,8 @@
 **Feature Name**: Voice input — offline dictation inside the keyboard
 **Priority**: P1
 **Status**: In Progress (engine, pack format, import, IME wiring and settings implemented
-2026-10-29; device test and the `langpacks` upload outstanding)
+2026-10-29; the pack is on the `langpacks` release since 2026-10-29; endpointing 2026-10-31;
+device checks outstanding)
 **Target Version**: 2.0.0 (maintainer decision 2026-10-29; first proposed for 2.1.0)
 
 ### Summary
@@ -103,6 +104,40 @@ graphs, ~112 MB steady RSS with the ORT arena off).
    the connection now belongs to the new field, where a clear would replace its selection.
 9. **FR-9** TalkBack: the key's content description carries the state; start/stop/cancel and
    errors are announced; partials are not announced.
+10. **FR-10** Endpointing (2026-10-31): a listening period is split into **speech segments** at
+   pauses, each recognised by a fresh engine session and committed when it ends, so dictation is
+   no longer cut at the engine's coherent length (Moonshine v2 tiny loops past ~40 s; the keyboard
+   used to stop at 30 s) and the cost of a recognition pass no longer grows with the period.
+   - Engine-neutral, in `stt/`: `SpeechSegmenter` (energy VAD) → `SegmentedRecognizer` (one
+     `SpeechSession` per segment) → `VoiceEvent.SegmentFinal` → `VoiceTextPlanner.onSegmentEnd`.
+     An engine only declares `SpeechEngine.maxSegmentSeconds` (default 30; Moonshine 20).
+   - Approach of the official Moonshine runtime (`core/voice-activity-detector.cpp`, MIT):
+     512-sample (32 ms) hops, a 0.512 s look-behind in front of each segment, a maximum segment
+     length. That runtime scores hops with the Silero VAD model, which the pack format does not
+     carry; here a hop is **voiced** when its RMS level is ≥ 12 dB above the noise floor and above
+     −50 dBFS; the floor is the quietest hop of the last 3 s (minimum statistics; speech has quiet
+     hops every few hundred ms, so the floor follows the room), primed at −60 dBFS so a user who
+     talks at once is heard at once.
+   - A segment **opens** when 4 of the last 8 hops are voiced (a click does not open one) and
+     starts with the look-behind; it **ends** after 0.6 s (19 hops) without a voiced hop — the
+     silent hops are included so the engine can finish the last word. Silence between segments
+     reaches no engine (no cost, nothing to hallucinate on).
+   - **Bound**: in the last 2 s before `maxSegmentSeconds`, hops are held back; a pause there
+     ends the segment as usual; reaching the bound cuts it after the quietest held hop (level
+     averaged over three hops) and the remaining held hops start the next segment at once.
+     Nothing is lost or sent twice at a boundary (`SpeechSegmenterTest`). Partials pause for at
+     most those 2 s, only in continuous speech approaching the bound.
+   - **Text**: each segment's final is committed (TEXT fields: its composing tail becomes
+     committed text); the next segment's spacing and capitalisation are decided from the text
+     before the period plus everything the period committed — one space between segments, none
+     doubled with "auto space after a suggestion" (that space follows each segment), a capital
+     only after `.`/`?`/`!` (the engine punctuates), the engine's capital undone mid-sentence.
+     Blind/remote fields still receive finals only, appended; the planner knows its own text there
+     without reading the field, so segments are separated by one space.
+   - **Limits** (`VoicePeriodLimits`): a period stops by itself after **5 minutes** or after
+     **10 s without speech** (before the first word or since the last segment ended); the user's
+     tap, cancel, keyboard hide and field change stop it as before. The buffered microphone ends
+     the period if 70 s of audio are queued unread (a recogniser that is not catching up).
 
 ### Non-Functional Requirements
 1. **NFR-1** Performance: ≤ 1 s chunks (1.0 s chunks proved the floor for two-pass agreement),
@@ -215,14 +250,18 @@ enum class VoiceFieldKind { TEXT, BLIND, INLINE, PASSWORD }
 interface SpeechEngineFactory { val engineId: String; val versions: IntRange
     fun load(packDir: File, options: SpeechEngineOptions): SpeechEngine }
 interface SpeechEngine : Closeable { val sampleRate: Int; fun newSession(): SpeechSession
-    fun memoryReport(): SpeechMemoryReport }
+    fun memoryReport(): SpeechMemoryReport; val maxSegmentSeconds: Int /* default 30 */ }
+class SegmentedRecognizer(engine: SpeechEngine) { fun accept(pcm: FloatArray): List<Update>
+    fun finish(): SpeechHypothesis; fun cancel() }   // Update = Partial | SegmentFinal
 interface SpeechSession : Closeable { fun accept(pcm: FloatArray): SpeechHypothesis?
     fun finish(): SpeechHypothesis; fun cancel() }
 ```
 
 ### State Management
-`VoiceSessionMachine`: IDLE → PREPARING (pack load, off main thread) → LISTENING → (partials) →
-FINISHING (stop: last audio flushed, final pass) → IDLE. Cancel from any state → IDLE with the
+`VoiceSessionMachine`: IDLE → PREPARING (pack load, off main thread) → LISTENING → (partials,
+segment finals) → FINISHING (stop: last audio flushed, final pass) → IDLE. A `SegmentFinal`
+applies in LISTENING and FINISHING (one decoded just before stop arrives after it, ahead of the
+period's `Final`). Cancel from any state → IDLE with the
 composing text cleared; FieldChanged from any state → IDLE with no text operation (FR-8). Any
 engine/capture error → ERROR → IDLE after the bar message. Only the
 `voice_input_enabled` preference persists; the active pack is the installed pack whose languages
@@ -250,9 +289,13 @@ contain the current language, else the first installed one.
       Termux (append-only), RustDesk, inline fields, TalkBack
   Done 2026-10-29 on the second Saga (Android 13, release of this branch; the other Saga was off
   the network, the Pixel and RustDesk were not tested; TalkBack not driven): see below.
-- [ ] Upload `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` to the `langpacks` release
-- [ ] Voice activity detection / endpointing: end a segment at a pause and keep listening, so a
-      period is not capped at the engine's `maxUtteranceSeconds` (30 s for Moonshine tiny)
+- [x] `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` (sha256 `33ec8c87…`) are on the `langpacks`
+      GitHub release since 2026-10-29, marked experimental; the release notes say "Requires
+      CleverKeys 2.0 or later"
+- [x] Voice activity detection / endpointing (FR-10, 2026-10-31): segments at pauses, a forced
+      boundary at the engine's `maxSegmentSeconds`, 5-minute / 10-second-idle period limits.
+      Device check outstanding (a real microphone's noise floor; speech-to-pause timing of a
+      person rather than LibriSpeech)
 
 ### Device test 2026-10-29 (Saga, real microphone)
 LibriSpeech test-clean clips played through the phone's own speaker from a Chrome tab while the
@@ -275,7 +318,8 @@ keyboard listened in another field (no audio file on the phone; acoustic path sp
   recorder's 4 s ring after ~35 s ("RecordThread: buffer overflow" ×5, sentences lost) →
   `BufferedPcmSource` + the engine decodes a backlog once; (2) beyond ~40 s Moonshine tiny loops
   ("some use of some use of…") → `SpeechEngine.maxUtteranceSeconds`, 30 s for Moonshine (34.7 s:
-  2/89 errors; 46 s: 151/125); (3) a long partial pushed the bar's ✕ off screen and long bar
+  2/89 errors; 46 s: 151/125) — replaced on 2026-10-31 by endpointing (FR-10,
+  `maxSegmentSeconds`); (3) a long partial pushed the bar's ✕ off screen and long bar
   messages were cut off ("tap again" unreadable) → measured at the viewport, two lines;
   (4) the password refusal was silent (bar messages are ignored in password mode; a toast is
   dropped when notifications are off) → a notice in the password bar; (5) a pass that inserted
@@ -298,6 +342,11 @@ keyboard listened in another field (no audio file on the phone; acoustic path sp
   removal.
 - `HypothesisStabilizerTest`, `VoiceSessionMachineTest`, `VoiceTextPolicyTest`,
   `MicPermissionGateTest`.
+- `SpeechSegmenterTest` (synthetic audio: silence, quiet and loud noise, clicks, syllable-modulated
+  tones; pre-roll and hangover lengths, split/no-split pauses, the learned noise floor, forced
+  boundaries at the bound and at the quietest point, flush, chunking invariance),
+  `SegmentedRecognizerTest` (a fresh session per segment, finals in order, silence never decoded,
+  one accept per backlog, cancel), `BufferedPcmSourceTest#theBacklogIsBoundedSeparatelyFromTheSessionLength`.
 - `SttArchitectureDriftTest`, `VoicePackAssetDriftTest` (no model in APK assets).
 - `MoonshineV2StreamingEngineTest`: real model on a LibriSpeech WAV when
   `~/.cache/cleverkeys-test/voicepack/` (or `-PvoicePackDir`) holds the pack; skipped otherwise.
@@ -307,6 +356,25 @@ Kotlin engine, fed through an imported pack in 320 ms pieces, transcribed 8 Libr
 test-clean clips (4.5–5.9 s, 125 words) at **5/125 = 4.0 % WER** with 4–5 partial passes each,
 1.0–2.5 s compute per clip, engine load 225 ms. Pack: 45,126,272 B, sha256
 `33ec8c87105f7adf40e6f284e21f3943b6497ba258dfeb6fc171855f49f61e19` (reproducible build).
+
+Endpointing, measured 2026-10-31 (same setup, box load ≈ 14; `MoonshineV2StreamingEngineTest`,
+ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` or
+`-PvoiceLongSamples`, streamed in 320 ms pieces through `SegmentedRecognizer` and committed by
+`VoiceTextPlanner` into a model editor):
+- **Pauses** — 10 clips (79 s of speech) joined by 0.9/1.2 s of −65 dBFS noise, 88.3 s: 10
+  segments, one per clip, all ended by the pause; WER **8/228 = 3.5 %** vs **9/228 = 3.9 %** for
+  the same clips transcribed one by one; no repeated 4-gram; slowest pass per segment 403–1,118 ms
+  (first three segments 501 ms on average, last three 600 ms) with no growth over the period;
+  segment final 100–492 ms; 31 s of compute for 88 s of audio.
+- **No pause** — 6 clips joined by 0.2 s gaps (below the hangover), 53.3 s: two boundaries
+  forced at the 20 s bound (19.7 s and 19.3 s segments), WER **3/153 = 2.0 %** vs 7/153 per clip,
+  no loop. Control, the same audio in ONE session (the pre-endpointing path without its 30 s
+  stop): **169 errors for 153 words**, a loop ("it is you who are mistaken" ×14) and 260 s of
+  compute.
+- 23.6 s in one session (the bound test, now against `maxSegmentSeconds` = 20): 0/57.
+- Fail-first: `SegmentedRecognizerTest#theEngineBoundForcesANewSessionWithoutAPause` caught a
+  segment 256 samples over a 10 s bound (not a whole number of 32 ms hops); the cut now happens
+  before the next hop would cross the bound.
 
 ### Integration / UI
 - `TranslationFormatParityTest`, `TranslationGlossaryTest`, `SettingsSearchCoverageTest`,
@@ -348,11 +416,12 @@ test-clean clips (4.5–5.9 s, 125 words) at **5/125 = 4.0 % WER** with 4–5 pa
 3. Languages: de/es/ja/zh/ar/vi/tl streaming tiny models exist upstream; one pack each.
 
 ## Future Enhancements
-- VAD/endpointing; keyword biasing from the user dictionary; punctuation-free mode;
+- A model VAD (Silero, as the official runtime) carried by the pack, if the energy VAD proves
+  weak in noisy rooms on devices; keyword biasing from the user dictionary; punctuation-free mode;
   a level meter.
 
 ---
 
 **Created**: 2026-10-29
-**Last Updated**: 2026-10-29
+**Last Updated**: 2026-10-31
 **Owner**: CleverKeys maintainers

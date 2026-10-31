@@ -29,6 +29,13 @@ sealed interface VoiceEvent {
     /** The final hypothesis arrived after a stop. */
     data class Final(val hypothesis: SpeechHypothesis) : VoiceEvent
 
+    /**
+     * A speech segment ended at a pause or the engine's bound (FR-10): its final hypothesis,
+     * while the period goes on. Valid in LISTENING and FINISHING — a segment decoded just
+     * before stop was pressed arrives after it, ahead of the period's [Final].
+     */
+    data class SegmentFinal(val hypothesis: SpeechHypothesis) : VoiceEvent
+
     /** The bar's ✕, keyboard hidden, service destroyed: drop the composing tail. */
     data object Cancel : VoiceEvent
 
@@ -60,6 +67,9 @@ sealed interface VoiceAction {
     /** Apply [hypothesis] to the field. */
     data class Apply(val hypothesis: SpeechHypothesis) : VoiceAction
 
+    /** Commit a finished segment's [hypothesis] and start the next segment's text. */
+    data class ApplySegment(val hypothesis: SpeechHypothesis) : VoiceAction
+
     /** Stop everything and drop the composing tail (cancel). */
     data object Abort : VoiceAction
 
@@ -81,6 +91,7 @@ sealed interface VoiceAction {
  *
  * ```
  * IDLE ─Toggle→ PREPARING ─Ready→ LISTENING ─Toggle→ FINISHING ─Final→ IDLE (Apply, Done)
+ *   LISTENING / FINISHING ─SegmentFinal→ same state (ApplySegment)
  *   any state ─Cancel→ IDLE (Abort)          any active state ─Failed→ IDLE (Report)
  *   any state ─FieldChanged→ IDLE (Release: no text operation)
  * PREPARING ─Toggle→ IDLE (Abort): a second tap while loading is "never mind".
@@ -111,6 +122,12 @@ class VoiceSessionMachine {
             } else {
                 emptyList()
             }
+        is VoiceEvent.SegmentFinal ->
+            if (state == VoiceState.LISTENING || state == VoiceState.FINISHING) {
+                listOf(VoiceAction.ApplySegment(event.hypothesis))
+            } else {
+                emptyList()
+            }
         VoiceEvent.Cancel ->
             if (state == VoiceState.IDLE) emptyList() else move(VoiceState.IDLE, VoiceAction.Abort)
         VoiceEvent.FieldChanged ->
@@ -125,5 +142,35 @@ class VoiceSessionMachine {
     private fun move(to: VoiceState, vararg actions: VoiceAction): List<VoiceAction> {
         state = to
         return actions.toList()
+    }
+}
+
+/**
+ * When a listening period stops by itself (spec FR-10; pure, `VoiceSessionMachineTest`).
+ * Segmentation keeps the cost of every recognition pass flat, so the limits are about the
+ * microphone, not the engine.
+ */
+object VoicePeriodLimits {
+    /**
+     * A period stops after five minutes even while speech goes on: a forgotten open microphone
+     * must not run on, and a dictation that long is better split by the user.
+     */
+    const val MAX_SESSION_SECONDS = 300
+
+    /**
+     * ...and after this long without speech, before the first word or since the last segment
+     * ended. Long enough to think mid-dictation, short enough that walking away closes the
+     * microphone.
+     */
+    const val IDLE_STOP_SECONDS = 10.0
+
+    /** Why a period stops by itself. */
+    enum class Reason { SESSION_LIMIT, IDLE }
+
+    /** The reason a period [elapsedSeconds] long should stop now, or null to keep listening. */
+    fun autoStop(elapsedSeconds: Double, inSegment: Boolean, secondsSinceSpeech: Double): Reason? = when {
+        elapsedSeconds >= MAX_SESSION_SECONDS -> Reason.SESSION_LIMIT
+        !inSegment && secondsSinceSpeech >= IDLE_STOP_SECONDS -> Reason.IDLE
+        else -> null
     }
 }

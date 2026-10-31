@@ -192,6 +192,49 @@ class BufferedPcmSourceTest {
         assertThat(total).isAtLeast(50_000 - 4_000)
     }
 
+    /**
+     * Endpointing lets a period run for minutes, so the total cap is the session length; what
+     * bounds memory is the backlog. A recogniser that stops consuming must not let the queue
+     * grow to minutes of audio: past maxQueuedSamples unread, the source ends, while a consumer
+     * that keeps up reads far beyond that amount.
+     */
+    @Test(timeout = 20_000)
+    fun theBacklogIsBoundedSeparatelyFromTheSessionLength() {
+        val endless = object : PcmSource {
+            override fun start() = Unit
+            override fun read(buffer: FloatArray): Int {
+                Thread.sleep(1)
+                buffer.fill(0.1f)
+                return buffer.size
+            }
+            override fun close() = Unit
+        }
+        // A stalled consumer: nothing read until the reader has given up.
+        val stalled = BufferedPcmSource(endless, maxSamples = 10_000_000, maxQueuedSamples = 20_000, blockSamples = 1_000)
+        stalled.start()
+        Thread.sleep(500)
+        val buf = FloatArray(100_000)
+        var total = 0
+        while (true) {
+            val n = stalled.read(buf)
+            if (n <= 0) break
+            total += n
+        }
+        stalled.close()
+        assertThat(total).isAtMost(20_000)
+        // A consumer that keeps up reads past the backlog bound.
+        val live = BufferedPcmSource(endless, maxSamples = 60_000, maxQueuedSamples = 20_000, blockSamples = 1_000)
+        live.start()
+        var got = 0
+        while (true) {
+            val n = live.read(buf)
+            if (n <= 0) break
+            got += n
+        }
+        live.close()
+        assertThat(got).isEqualTo(60_000)
+    }
+
     @Test(timeout = 20_000)
     fun closeStopsTheReaderThread() {
         val mic = RingMic(chunks = 1_000)

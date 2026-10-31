@@ -100,6 +100,56 @@ class VoiceInputInstrumentedTest {
         }
     }
 
+    /**
+     * Endpointing on the device's ORT (spec FR-10): the sample twice with 1.5 s of silence
+     * between, through [SegmentedRecognizer] as the keyboard runs it. The pause must end the
+     * first segment (its own session, finalised while audio continues) and both halves must be
+     * transcribed; silence is never decoded.
+     */
+    @Test
+    fun aPauseSplitsDictationIntoTwoSegmentsOnDevice() {
+        val assets = testContext.assets
+        val names = runCatching { assets.list("voicepack")?.toList() }.getOrNull().orEmpty()
+        assumeTrue("voice pack asset absent", PACK in names && "sample.wav" in names && "sample.txt" in names)
+
+        val root = File(appContext.cacheDir, "voice-it-seg/voicepacks")
+        val scratch = File(appContext.cacheDir, "voice-it-seg/scratch").apply { mkdirs() }
+        try {
+            val manager = VoicePackManager(root, scratch, Int.MAX_VALUE)
+            val result = assets.open("voicepack/$PACK").use { manager.import(it) }
+            assertTrue("import: $result", result is VoicePackManager.ImportResult.Success)
+            val pack = manager.activePack("en")!!
+            val factory = (SpeechEngineRegistry.DEFAULT.resolve(pack.manifest) as SpeechEngineRegistry.Resolution.Supported).factory
+            val clip = assets.open("voicepack/sample.wav").use { readWav(it.readBytes()) }
+            val reference = assets.open("voicepack/sample.txt").use { it.readBytes().toString(Charsets.UTF_8).trim() }
+            val pcm = clip + FloatArray(24_000) + clip + FloatArray(16_000)
+            factory.load(pack.dir, SpeechEngineOptions()).use { engine ->
+                val r = SegmentedRecognizer(engine)
+                val finals = ArrayList<SegmentedRecognizer.Update.SegmentFinal>()
+                var off = 0
+                while (off < pcm.size) {
+                    val n = minOf(5_120, pcm.size - off)
+                    r.accept(pcm.copyOfRange(off, off + n)).filterIsInstance<SegmentedRecognizer.Update.SegmentFinal>().forEach { finals += it }
+                    off += n
+                }
+                val last = r.finish()
+                r.close()
+                Log.i(TAG, "VOICE_IT_SEG segments=${finals.size} ${finals.map { "${it.reason}/${it.samples}" }} last='${last.text}' | ${finals.joinToString(" | ") { it.hypothesis.text }}")
+                assertEquals("both halves end at a pause", 2, finals.size)
+                assertTrue(finals.all { it.reason == SegmentEndReason.PAUSE })
+                // Each segment is the clip plus look-behind and hangover, never the silence too.
+                for (f in finals) assertTrue("segment ${f.samples} samples", f.samples < clip.size + 16_000)
+                for (f in finals) {
+                    val errors = wordErrors(reference, f.hypothesis.text)
+                    assertTrue("WER of a segment: ${f.hypothesis.text}", errors.toDouble() / norm(reference).size < 0.2)
+                }
+                assertEquals("", last.text)
+            }
+        } finally {
+            File(appContext.cacheDir, "voice-it-seg").deleteRecursively()
+        }
+    }
+
     private companion object {
         const val TAG = "VoiceInputIT"
         const val PACK = "voicepack-moonshine-v2-tiny-en.zip"

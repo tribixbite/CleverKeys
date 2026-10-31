@@ -964,13 +964,26 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     on the JVM. NOT VERIFIED — needs the maintainer: TalkBack (start/stop/cancel announcements;
     agents cannot drive TalkBack over adb, item 3); RustDesk / a blind remote field (item 6's
     setup); dictating into the clipboard pane's inline entry editor; real-voice accuracy with a
-    person speaking (only speaker-played LibriSpeech was measured); the Pixel. OPEN (maintainer
-    authorization needed): upload `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` (built by
-    `scripts/build_voice_pack.py` under `build/`) to the `langpacks` release — every doc already
-    points users there; native review of the 45 new voice strings in 21 locales (fold into item 10);
-    whether to add voice lines to `docs/plans/v2.0.0-manual-test-checklist.md` (maintainer-owned,
-    not edited by agents). Later: VAD/endpointing instead of stopping at the engine's 30 s bound
-    (# TODO in `SpeechEngine`).
+    person speaking (only speaker-played LibriSpeech was measured); the Pixel. DONE: the pack
+    `voicepack-moonshine-v2-tiny-en.zip` + `.sha256` (sha256 `33ec8c87…`) is on the `langpacks`
+    release since 2026-10-29, marked experimental ("Requires CleverKeys 2.0 or later"). OPEN:
+    native review of the 45 new voice strings in 21 locales (fold into item 10); voice lines in
+    `docs/plans/v2.0.0-manual-test-checklist.md`.
+    2026-10-31 ENDPOINTING (spec FR-10): the 30 s auto-stop is replaced. Engine-neutral
+    `stt/SpeechSegmenter` (energy VAD on 32 ms hops after the official Moonshine runtime's
+    segmenter: noise floor = quietest hop of 3 s, voiced ≥ 12 dB above it and > −50 dBFS, onset
+    4 of 8 hops, 0.6 s hangover, 0.512 s look-behind, a boundary forced at the engine's
+    `maxSegmentSeconds` — Moonshine 20 s — at the quietest hop of the last 2 s) +
+    `SegmentedRecognizer` (a fresh session per segment) + `VoiceEvent.SegmentFinal` /
+    `VoiceTextPlanner.onSegmentEnd` (one space between segments, never doubled; capital only
+    after `.?!`; blind fields still finals-only). Period stops after 5 min or 10 s without
+    speech (`VoicePeriodLimits`); microphone backlog bounded at 70 s. JVM, real model: 88 s of
+    10 clips with pauses → 10 segments, WER 8/228 (3.5 %) vs 9/228 clip by clip, no loop, slowest
+    pass per segment ~0.5 s early vs ~0.6 s late (flat); 53 s with no pause → 2 forced cuts, WER
+    3/153 vs control one session 169/153 (loop). Fail-first: a forced segment 256 samples over a
+    10 s bound. runPureTests 3,675 + runMockTests 1,673 green; emulator.wtf
+    `VoiceInputInstrumentedTest` 4/4 (API 34, two PAUSE segments on device ORT). NOT VERIFIED:
+    real microphone noise floor and a person's pause timing (Saga check pending).
     2026-10-30 (maintainer report, voice build on their phone): the mic key (`voice_typing`) and
     its long press (`voice_typing_chooser`) now route to the built-in engine (`VoiceKeyRouting`,
     spec FR-4a); word swipes from a letter with the mic in its corner no longer fire it

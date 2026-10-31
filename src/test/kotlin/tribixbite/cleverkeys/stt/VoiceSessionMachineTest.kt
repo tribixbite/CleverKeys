@@ -94,6 +94,41 @@ class VoiceSessionMachineTest {
         assertThat(f.on(VoiceEvent.Toggle)).isEmpty()
     }
 
+    /**
+     * Endpointing (FR-10): a segment's final is committed while listening goes on, and one that
+     * was decoded just before stop was pressed still lands (it arrives in FINISHING, before the
+     * period's own final).
+     */
+    @Test
+    fun segmentFinalsApplyWhileListeningAndWhileFinishing() {
+        val seg = SpeechHypothesis("first part.", 2, isFinal = true)
+        val m = VoiceSessionMachine()
+        m.on(VoiceEvent.Toggle); m.on(VoiceEvent.Ready)
+        assertThat(m.on(VoiceEvent.SegmentFinal(seg))).containsExactly(VoiceAction.ApplySegment(seg))
+        assertThat(m.state).isEqualTo(VoiceState.LISTENING)
+        m.on(VoiceEvent.Toggle)
+        assertThat(m.on(VoiceEvent.SegmentFinal(seg))).containsExactly(VoiceAction.ApplySegment(seg))
+        assertThat(m.state).isEqualTo(VoiceState.FINISHING)
+        assertThat(m.on(VoiceEvent.Final(final))).containsExactly(VoiceAction.Apply(final), VoiceAction.Done).inOrder()
+        // Stale: before listening, or after the period ended.
+        assertThat(m.on(VoiceEvent.SegmentFinal(seg))).isEmpty()
+        val p = VoiceSessionMachine().apply { on(VoiceEvent.Toggle) }
+        assertThat(p.on(VoiceEvent.SegmentFinal(seg))).isEmpty()
+    }
+
+    @Test
+    fun aPeriodStopsByItselfAfterFiveMinutesOrTenSecondsWithoutSpeech() {
+        val l = VoicePeriodLimits
+        assertThat(l.autoStop(60.0, inSegment = true, secondsSinceSpeech = 0.0)).isNull()
+        // Long dictation is no longer cut at the engine's 30 s bound.
+        assertThat(l.autoStop(299.0, inSegment = true, secondsSinceSpeech = 0.0)).isNull()
+        assertThat(l.autoStop(300.0, inSegment = true, secondsSinceSpeech = 0.0)).isEqualTo(VoicePeriodLimits.Reason.SESSION_LIMIT)
+        assertThat(l.autoStop(40.0, inSegment = false, secondsSinceSpeech = 9.9)).isNull()
+        assertThat(l.autoStop(40.0, inSegment = false, secondsSinceSpeech = 10.0)).isEqualTo(VoicePeriodLimits.Reason.IDLE)
+        // Nothing said since the start counts as idle too.
+        assertThat(l.autoStop(10.0, inSegment = false, secondsSinceSpeech = 10.0)).isEqualTo(VoicePeriodLimits.Reason.IDLE)
+    }
+
     @Test
     fun aFailureReportsAndReturnsToIdle() {
         val m = VoiceSessionMachine()

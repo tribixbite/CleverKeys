@@ -102,8 +102,11 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
  * its own pace, and [read] hands it EVERYTHING queued (up to its buffer) so a recogniser that
  * fell behind can decode the backlog in one pass and catch up.
  *
- * Memory is bounded: after [maxSamples] the reader stops and the source ends, as if the
- * recorder had (the listening period's own limit is shorter). Audio stays in memory only.
+ * Bounds: after [maxSamples] in total the reader stops and the source ends, as if the recorder
+ * had (the listening period's own limit is shorter). Memory is bounded by [maxQueuedSamples]:
+ * a recogniser that has that much audio unread is not catching up, and the source ends the same
+ * way (2026-10-31: endpointing lets a period run for minutes, so the total is no longer a memory
+ * bound). Audio stays in memory only.
  *
  * [read] keeps returning queued audio after [close], then 0 — the caller drains what was
  * spoken before stop was pressed. A device error ends the stream with -1 after the audio
@@ -112,10 +115,14 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
 class BufferedPcmSource(
     private val inner: PcmSource,
     private val maxSamples: Int,
+    private val maxQueuedSamples: Int = maxSamples,
     private val blockSamples: Int = DEFAULT_BLOCK_SAMPLES,
 ) : PcmSource {
 
     private val queue = java.util.concurrent.LinkedBlockingQueue<FloatArray>()
+
+    /** Samples put in [queue] and not yet read. */
+    private val queued = java.util.concurrent.atomic.AtomicLong()
 
     @Volatile
     private var running = false
@@ -147,6 +154,8 @@ class BufferedPcmSource(
                 }
                 if (n == 0) break
                 val take = minOf(n.toLong(), maxSamples - total).toInt()
+                if (queued.get() + take > maxQueuedSamples) break // the consumer stalled
+                queued.addAndGet(take.toLong())
                 queue.put(block.copyOf(take))
                 total += take
             }
@@ -170,6 +179,7 @@ class BufferedPcmSource(
             }
             val k = minOf(buffer.size - n, piece.size - carryOffset)
             System.arraycopy(piece, carryOffset, buffer, n, k)
+            queued.addAndGet(-k.toLong())
             n += k
             carryOffset += k
             if (carryOffset == piece.size) {
