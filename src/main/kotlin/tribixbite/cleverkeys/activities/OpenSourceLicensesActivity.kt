@@ -23,7 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -69,8 +69,11 @@ class OpenSourceLicensesActivity : ComponentActivity() {
     @Composable
     private fun LicensesScreen() {
         // null while loading; the read is local and fast, so no spinner (it would only flash).
-        val screen by produceState<OpenSourceLicenses.Screen?>(initialValue = null) {
-            value = withContext(Dispatchers.IO) {
+        // LaunchedEffect + state rather than produceState: lint's ProduceStateDoesNotAssignValue
+        // misreads an assignment whose value comes from withContext (CI lintDebug, 2026-10-31).
+        var screen by remember { mutableStateOf<OpenSourceLicenses.Screen?>(null) }
+        LaunchedEffect(Unit) {
+            screen = withContext(Dispatchers.IO) {
                 OpenSourceLicenses.buildScreen { path -> readAssetText(assets, path) }
             }
         }
