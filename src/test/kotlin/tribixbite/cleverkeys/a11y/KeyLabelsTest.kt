@@ -148,4 +148,26 @@ class KeyLabelsTest {
             assertThat(hasPua(label)).isFalse()
         }
     }
+
+    // ── the editor-action key speaks its action, not "Enter" ──────────────────
+
+    @Test
+    fun actionKeyAnnouncesTheEditorAction() {
+        // LayoutModifier replaces the layout's `action` placeholder with
+        // makeActionKey(<localized action label>) — "Go", "Search", "Send", or
+        // the app's own EditorInfo.actionLabel. TalkBack must say that action:
+        // announcing "Enter" on a Search key hides what the key will do.
+        for (label in listOf("Go", "Search", "Send", "Next", "Sign in")) {
+            assertThat(describe(KeyValue.makeActionKey(label))).isEqualTo(label)
+        }
+    }
+
+    @Test
+    fun unreplacedActionPlaceholderKeepsTheGenericDescription() {
+        // The raw layout placeholder (symbol "Action", never shown to a user) and
+        // an action key with no label fall back to key_descr_action.
+        val generic = res(tribixbite.cleverkeys.R.string.key_descr_action)
+        assertThat(describe(KeyValue.getKeyByName("action"))).isEqualTo(generic)
+        assertThat(describe(KeyValue.makeActionKey(""))).isEqualTo(generic)
+    }
 }

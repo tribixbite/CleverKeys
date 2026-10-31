@@ -125,8 +125,25 @@ object KeyLabels {
             KeyValue.Event.MINIMIZE_BAR -> getString(R.string.cmd_minimize_bar)
             KeyValue.Event.MINIMIZE_FAB -> getString(R.string.cmd_minimize_fab)
             KeyValue.Event.HIDE_KEYBOARD -> getString(R.string.cmd_hide_keyboard)
-            KeyValue.Event.ACTION -> getString(R.string.key_descr_action)
+            KeyValue.Event.ACTION -> describeAction(kv, getString)
         }
+
+    /**
+     * The editor-action key (the Enter replacement in Go / Search / Send / … fields) speaks the
+     * action it performs. LayoutModifier builds it with [KeyValue.makeActionKey] from
+     * `Config.actionLabel` — the localized `key_action_*` string or the app's own
+     * `EditorInfo.actionLabel` — so its symbol IS the spoken name, the same text the key shows.
+     * The unreplaced layout placeholder (`action`, symbol "Action") and an empty label keep the
+     * generic `key_descr_action`.
+     */
+    private fun describeAction(kv: KeyValue, getString: (Int) -> String): String {
+        val label = kv.getString()
+        val usable = label.isNotBlank() && !isPrivateUse(label) && kv != ACTION_PLACEHOLDER
+        return if (usable) label else getString(R.string.key_descr_action)
+    }
+
+    /** The layout's raw `action` key, before LayoutModifier gives it the editor's label. */
+    private val ACTION_PLACEHOLDER: KeyValue by lazy { KeyValue.getKeyByName("action") }
 
     private fun describeModifier(kv: KeyValue, getString: (Int) -> String): String? =
         when (kv.getModifier()) {
