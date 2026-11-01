@@ -305,6 +305,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     names pins/todos with words that do not match the tabs, es/hu `clipboard_selection_clear`
     reads as "delete the selection", fa example arrows reversed in RTL (device check), ru
     plural adjective case, tr/pl Backspace rendered as "undo".)
+    **Sheets ready (2026-11-01):** `docs/i18n/review/2026-11/<locale>.csv` covers all 21
+    locales, 34,121 rows in total. They hold every resource whose English changed since
+    2026-09-29 (1,523, plurals per locale quantity) plus the older strings retranslated
+    since then. Rows are grouped by feature, with the code context, placeholder and length
+    notes, and an empty `reviewer_correction` column. The header lists the machine-flagged
+    rows: 1,503 in total (identical to English or a glossary lead; 0 format defects). How to
+    fill in and return a sheet: the README in that folder. Re-import:
+    `python3 scripts/export_translation_review.py --import <sheet> [--dry-run]`, tested by
+    `scripts/test_export_translation_review.py`. Owner of the review itself: maintainer.
 11. [ ] DECIDED 2026-10-25 (maintainer questionnaire): es LM → agent researches a new method
     and corpus, tries one or both if promising [DONE 2026-10-25: pre-registered R1 = unused 3.6×
     gate population UD AnCora test + R2 = es context-only `y a o e u` rows; R2 lost on both dev
