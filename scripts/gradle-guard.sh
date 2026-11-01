@@ -13,7 +13,8 @@
 #      A queued build WAITS on the lock (up to GRADLE_GUARD_LOCK_WAIT s);
 #      it never runs concurrently with another build, not even a "just check".
 #   2. No daemon accumulation — --no-daemon, Kotlin compiled in-process, and
-#      an EXIT trap that kills leaked build JVMs on success AND failure.
+#      an EXIT trap that kills leaked build JVMs on success AND failure —
+#      only JVMs carrying GUARD_MARKER, never another project's daemons.
 #   3. Bounded memory — -Xmx1024m / -XX:MaxMetaspaceSize=256m / SerialGC,
 #      single worker, and a hard abort (exit 76) when MemAvailable is below
 #      the 1.5GB floor. A retry under memory pressure only deepens the thrash,
@@ -50,13 +51,26 @@ LAST_LOG="$HOME/.cache/cleverkeys-build-last.log"
 
 mem_available_kb() { awk '/^MemAvailable:/ {print $2}' /proc/meminfo; }
 
-# Kill leaked build JVMs. Only ever called while we hold the exclusive lock,
-# so anything matching is by definition a leak from a previous build.
-# The pattern lives in this FILE, not a command line, so pkill cannot
-# self-match. (Running this same pkill via `bash -c '...'` WOULD self-match
-# and kill the invoking shell — do not inline it elsewhere.)
+# Every JVM this wrapper starts carries this marker: the wrapper JVM through
+# GRADLE_OPTS, the build daemon through org.gradle.jvmargs (both appear in
+# /proc/<pid>/cmdline). The sweep kills ONLY marked JVMs, so another
+# project's Gradle daemons (e.g. ~/git/Embeddy) are never touched: all
+# daemons run from ~/.gradle/daemon/<ver>, so cwd cannot tell them apart
+# (2026-11-01; before this the sweep killed every Gradle JVM on the device).
+GUARD_MARKER="-Dcleverkeys.gradleGuard=1"
+
+# Kill leaked CleverKeys build JVMs. Only ever called while we hold the
+# exclusive lock, so any marked JVM alive is a leak from a previous build.
+# Match on the marker in /proc rather than `pkill -f`, which could also
+# self-match an invoking shell whose command line contains the pattern.
 sweep_leaked_jvms() {
-    pkill -9 -f 'GradleDaemon|KotlinCompileDaemon|K2JVMCompiler|GradleWrapperMain' 2>/dev/null
+    local pid
+    for pid in $(pgrep -f 'GradleDaemon|KotlinCompileDaemon|K2JVMCompiler|GradleWrapperMain' 2>/dev/null); do
+        [ "$pid" = "$$" ] && continue
+        if tr '\0' '\n' < "/proc/$pid/cmdline" 2>/dev/null | awk -v m="$GUARD_MARKER" '$0 == m {f=1} END {exit !f}'; then
+            kill -9 "$pid" 2>/dev/null
+        fi
+    done
     return 0
 }
 
@@ -97,11 +111,11 @@ while :; do
     # /bin/sh shebang rewrite — see CLAUDE.md termux notes.
     # -Dorg.gradle.jvmargs on the CLI REPLACES gradle.properties' value, so the
     # reproducibility flags (encoding/timezone/locale) are re-included here.
-    sh "$REPO_DIR/gradlew" "$@" \
+    GRADLE_OPTS="${GRADLE_OPTS:-} $GUARD_MARKER" sh "$REPO_DIR/gradlew" "$@" \
         --no-daemon \
         --max-workers=1 \
         -Pkotlin.compiler.execution.strategy=in-process \
-        -Dorg.gradle.jvmargs="-Xmx$XMX -XX:MaxMetaspaceSize=$METASPACE -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Duser.timezone=UTC -Duser.language=en -Duser.country=US" \
+        -Dorg.gradle.jvmargs="-Xmx$XMX -XX:MaxMetaspaceSize=$METASPACE -XX:+UseSerialGC -Dfile.encoding=UTF-8 -Duser.timezone=UTC -Duser.language=en -Duser.country=US $GUARD_MARKER" \
         2>&1 | tee "$LAST_LOG"
     rc=${PIPESTATUS[0]}
     [ "$rc" -eq 0 ] && exit 0
