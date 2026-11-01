@@ -453,6 +453,38 @@ F-Droid requires byte-identical builds. If verification fails:
 2. Verify Java 17, SDK 34, build-tools 34.0.0
 3. See `.github/workflows/release.yml` for exact build steps
 
+### Local reproducibility check (run before tagging; last run 2026-11-01)
+F-Droid's recipe is `binary:` + `AllowedAPKSigningKeys`: it builds each ABI UNSIGNED from a fresh
+clone in its own directory (prebuild `sed … include '<abi>'`), then `apksigcopier` copies the
+signature of the GitHub binary onto its build and verifies it. Reproduce that locally:
+
+1. Two fresh `git clone`s of the same commit at DIFFERENT, different-length paths.
+2. In each: the prebuild sed (`include 'arm64-v8a'`), `LOCAL_BUILD`/`RELEASE_KEYSTORE*` UNSET
+   (unset `RELEASE_KEYSTORE` = no signingConfig = unsigned; `LOCAL_BUILD` flips
+   `ENABLE_VERBOSE_LOGGING` and so changes the dex), then
+   `scripts/gradle-guard.sh clean assembleRelease --no-build-cache` with
+   `GRADLE_GUARD_XMX=2048m GRADLE_GUARD_METASPACE=1024m` (do NOT use `build-on-termux.sh`: it
+   exports `LOCAL_BUILD=true` and signs with a throwaway key).
+3. JDK 17 on Termux: the `openjdk-17` package's libs carry a RUNPATH into java-21's lib dir and
+   die with `JNU_GetStringPlatformCharsStrict`; export `JAVA_HOME=$PREFIX/lib/jvm/java-17-openjdk`
+   AND `LD_LIBRARY_PATH=$JAVA_HOME/lib`.
+4. Compare: `sha256sum` of the two unsigned APKs; then sign a copy of one with a throwaway key
+   (`apksigner sign`, exactly what `release.yml` does to the gradle output) and run
+   `apksigcopier compare signed.apk --unsigned other.apk` — the F-Droid verification path
+   (`apksigcopier compare` needs a SIGNED first argument; two unsigned APKs cannot be compared
+   with it).
+
+Result 2026-11-01 (R8 + resource shrinking on, AGP 8.8.2, JDK 17.0.15; clone 1 at `0b5eb513`, clone 2
+at `b4b5fe39`, which differs only in `docs/`, `memory/` and an unpackaged script): the two
+unsigned arm64 APKs were byte-identical (25,870,625 B, sha256 `45deee47…0d076c`, 1,001 entries,
+same order/timestamps/methods), and `apksigcopier compare` (1.1.1) exited 0. `normalizeApkPaths`
+found nothing to rename and copied the APK unchanged (it does not sign it). Not covered: a
+cross-builder comparison — the local build uses Termux's native aapt2 and Termux JDK 17, and no
+CI release artifact exists for an untagged commit (`release.yml` runs on `v*` tags only;
+`ci.yml`, `build-apk.yml` and `nightly.yml` upload debug APKs), so the first cross-builder check
+is F-Droid's own verification of the tagged release. `release.yml` signs the gradle output
+directly with `apksigner`; there is no `inplace-fix.py` step (an older note said so).
+
 ## API Reference
 
 | Endpoint | Purpose |
