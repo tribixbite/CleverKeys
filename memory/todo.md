@@ -588,6 +588,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `VoiceInputInstrumentedTest#theImportedPackTranscribesASampleOnDevice` (ignored voicepack asset not
     supplied). Rerun with the pack from `../ck-voice` (zip `33ec8c87…`): VoiceInputInstrumentedTest 3/3,
     0 skipped, on 34–37. No failures, so no fixes. Evidence `~/ew-output/full-c6b40cec/`.
+    FULL INSTRUMENTED 2026-11-01 at `0b5eb513` (agent, detached worktree, the 4 `ctc_bench` encoders
+    sha256-equal to the testing-strategy table AND the voicepack zip `33ec8c87…` + sample.wav/txt in the
+    test APK; app `b526e106…`, test `36a6317d…`): unfiltered, 3 shards, orchestrator, Pixel7 — 1,656 run =
+    1,656 source `@Test`; 1,655 passed / 0 failed / 1 skipped / 0 flaky on API 34 (`e1e1e04d`), 35
+    (`0f1d2b77`), 36 (`74f77cd8`) and 37 (`99f4853f`). VoiceInputInstrumentedTest 4/4 in the full run.
+    The one skip is environmental (`Issue181NoFontProviderTest`: image has a font provider; the only
+    AssumptionViolated line). No failures, so no fixes. Evidence `~/ew-output/full-0b5eb513/`
+    (`full-0c3a2f56` deleted).
 22. [ ] Saga 202 backup round trip + real 1.x upgrade, 2026-10-25 (agent; evidence
     `build/oct25-saga/`, original backup in `backup-original/`, not in git). Plaintext full ZIP,
     the same ZIP twice, encrypted `.ckenc`, clipboard JSON and ZIP, config Merge/Replace: every
