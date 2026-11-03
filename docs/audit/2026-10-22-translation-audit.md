@@ -412,3 +412,94 @@ dependencies beyond the standard library): `python3 lt_check.py [locale…]` for
 digest, `--words RULE` lists a speller rule's distinct tokens, `--skip RULE,…` prints everything
 else with context; `report.py` prints the table above from `summary.json`. Keep MAX_BYTES at
 12 KB and MIN_INTERVAL at 17 s, or point LT_URL at a local server and drop both.
+
+## 8. LanguageTool pass on strings changed since §7 (2026-11-03)
+
+Same public API, approval and rate limits as §7 (one request at least every 17 s, at most 12 KB
+per request); 17 requests in about 5 minutes, then 4 recheck requests.
+
+**Scope.** Every `<string>` and `<plurals>` item whose text in `res/values-<locale>/strings.xml`
+was added or differs between `69e318a4` (the commit that recorded §7; the strings had not
+changed since the last §7 fix `4c0a812f`) and `8335bd02`, for the 14 supported locales. That is
+212 resources in each locale (213 in ru/uk, which also changed `dict_word_too_long_for_swipe_msg`),
+3,091 texts in total: mostly voice input, the licences screen, Unfinished Words, familiar looks
+and Theme Creator, and the learned-words browser.
+
+**Method.** The §7 script (`lt_check.py`, session scratchpad, still not committed) gained a
+`--since <ref> [locales…]` mode: it parses each locale file at `<ref>` through `git show` and in
+the working tree, keeps the entries whose text is new or different, and writes
+`matches-since/<locale>.jsonl` and `summary-since.json` beside the full pass's output. Batching,
+UTF-16 offset mapping and placeholder filtering are unchanged. One script bug was fixed:
+`unescape()` did not resolve `\uXXXX`, so fr `bar_quote_open`/`bar_quote_close` (`«\u00A0`,
+`\u00A0»`) produced three artefact matches on the literal `u00A0`; after the fix both strings
+recheck clean.
+
+**Not supported by LanguageTool, not checked:** cs, hu, in, ko, lv, tr, vi. Their changed strings
+rely on the native-speaker review alone (`docs/i18n/review/2026-11/`).
+
+| locale | LT code | texts | distinct keys | matches | keys with a match | speller | other rules | fixed | needs native judgement | false positive / style |
+|---|---|---|---|---|---|---|---|---|---|---|
+| de | de-DE | 217 | 212 | 41 | 30 | 31 | 10 | 0 | 1 | 40 |
+| es | es | 222 | 212 | 41 | 31 | 39 | 2 | 1 | 0 | 40 |
+| fa | fa | 217 | 212 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| fil | tl-PH | 217 | 212 | 518 | 164 | 516 | 2 | 0 | 0 | 518 |
+| fr | fr | 222 | 212 | 30 | 22 | 27 | 3 | 0 | 0 | 30 |
+| it | it | 222 | 212 | 75 | 57 | 56 | 19 | 0 | 19 | 56 |
+| ja | ja-JP | 212 | 212 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| nl | nl | 217 | 212 | 52 | 43 | 52 | 0 | 0 | 1 | 51 |
+| pl | pl-PL | 227 | 212 | 40 | 28 | 24 | 16 | 1 | 0 | 39 |
+| pt | pt-BR | 222 | 212 | 50 | 38 | 42 | 8 | 5 | 3 | 42 |
+| ro | ro-RO | 222 | 212 | 32 | 24 | 25 | 7 | 0 | 0 | 32 |
+| ru | ru-RU | 231 | 213 | 22 | 15 | 19 | 3 | 0 | 0 | 22 |
+| uk | uk-UA | 231 | 213 | 22 | 15 | 22 | 0 | 0 | 0 | 22 |
+| zh-rCN | zh-CN | 212 | 212 | 1 | 1 | 0 | 1 | 0 | 0 | 1 |
+| **total** | 14 | **3,091** | | **924** | **468** | **853** | **71** | **7** | **24** | **893** |
+
+"fixed", "needs native judgement" and "false positive / style" count matches; the fixes are 7
+corrections in 7 strings in 3 locales. The fil count is again dominated by the English words of
+the deliberately Taglish copy (516 speller hits on 177 distinct tokens: *voice*, *key*, *input*,
+hyphen-split verb prefixes such as *Nilo-*/*Nagre-*).
+
+**Fixed** (all rechecked with `--recheck`: 0 matches after placeholder filtering):
+
+- es `voice_pack_error_invalid_id`: *un id no válido* → *un ID no válido* (the file's other use
+  is *ID*).
+- pl `appearance_look_space_language_desc` *na spacji, tak jak klawiatura Samsung*: no comma
+  before a comparison without a verb. The same rule's hit on `theme_bar_desc` (*Stałe pola
+  zamiast przewijanych podpowiedzi, jak na znanych klawiaturach*) was kept: the English
+  comparison qualifies the fixed slots, and without the comma it would attach to the scrolling
+  suggestions and reverse the meaning.
+- pt (pt-BR file, 34 × *arquivo*) European-Portuguese spellings: `layout_manager_export_include_theme`
+  and `theme_export_xml_failed` *ficheiro* → *arquivo*; `theme_section_look` and
+  `theme_section_look_colors` *aspeto* → *aspecto*; `theme_function_chars` *Carateres* →
+  *Caracteres*. A scan of the pt file for other pt-PT forms (*ecrã*, *utilizador*, *telemóvel*,
+  *registo*, *controlo*) found none.
+
+**Needs native judgement** (recorded in `docs/i18n/review/2026-11/README.md`):
+
+- de `theme_section_hints` *Gestenhinweise* vs `appearance_look_show_hints_title`
+  *Gesten-Hinweise* (DE_COMPOUND_COHERENCY).
+- nl `theme_bar_emphasis_centre` *Zijwoorden gedimd*: a coinage for the side suggestions.
+- it *input vocale* in 19 voice-input strings (anglicism rule ST_01_005); the file already uses
+  *input* (*Comportamento di input*), so this is a terminology decision, not a defect.
+- pt *depois de* → *após* (2, concision rule) and *app* → *aplicativo* (1; the Android pt-BR
+  system UI itself says *Informações do app*).
+
+**False positives and style, by category:**
+
+- Speller hits on brands and names (CleverKeys, Gboard, SwiftKey, iOS, Samsung), the English
+  examples *tomorr/timor/tomorrow* in the Unfinished Words strings (every locale), the
+  `voice_input` command id, project terms (subtecla, sottotasto, podklawisz, subtoets,
+  подклавиша/підклавіша, свайп), valid compounds the dictionaries lack (de *Mikrofonzugriff*,
+  *Vorschlagstrenner*; nl *Toetsschaduw*, *Labeldikte*; uk *незадане*) and key abbreviations
+  (fr *Verr. Maj*, es *Bloq*, it *Maiusc*, ru *Доп.*, uk *Вимк*).
+- pl brand casing (NIETYPOWA_KOMBINACJA_DUZYCH_I_MALYCH_LITER, 14).
+- Lone quotation-mark characters read as unpaired (de `bar_quote_close` “, es `bar_quote_open` «)
+  and the three fr `\u00A0` artefacts described above.
+- Setting-value names after a semicolon or colon (de *Aus behält keine*, pt *; Desativado nunca
+  as mantém*), a title without a full stop (fr `voice_permission_blocked_title`), the ru
+  case-neutral count label *сочетаний: %1$d* (same construction as *слов: %1$d*) and the
+  comma list of action-key labels in ru `theme_color_action_key`.
+- Style: de ellipsis spacing (5) and sentence-start repetition (2), fr PLACE_ADJ (1), pt/ro
+  sentence-start repetition (2/2), ro cacophony *Eticheta tastei* (5), zh quantifier scope in
+  `licenses_intro` (1), fil ligature rules on *maging bahagi* and *isa sa* (2, both correct).

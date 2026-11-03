@@ -2602,12 +2602,12 @@
     <string name="layout_theme_saved_custom">Guardado como tema personalizado «%1$s»</string>
     <string name="layout_theme_save_full">Não foi possível guardar: atingido o limite de %1$d temas personalizados</string>
     <string name="layout_style_xml_invalid">Valores de tema ou de estilo de tecla inválidos: %1$s</string>
-    <string name="layout_manager_export_include_theme">Incluir no ficheiro o tema personalizado do layout</string>
+    <string name="layout_manager_export_include_theme">Incluir no arquivo o tema personalizado do layout</string>
     <string name="theme_export_xml">Exportar como XML de layout</string>
-    <string name="theme_export_xml_failed">Não foi possível exportar o ficheiro do tema:\n%1$s</string>
-    <string name="theme_section_look">Aspeto do teclado</string>
+    <string name="theme_export_xml_failed">Não foi possível exportar o arquivo do tema:\n%1$s</string>
+    <string name="theme_section_look">Aspecto do teclado</string>
     <string name="theme_section_look_desc">Opcional: formas das teclas, dicas e cores adicionais. O que não for definido segue as definições do teclado.</string>
-    <string name="theme_section_look_colors">Cores do aspeto</string>
+    <string name="theme_section_look_colors">Cores do aspecto</string>
     <string name="theme_section_variants">Modo claro e escuro</string>
     <string name="theme_variants_desc">Cores que substituem as de cima enquanto o sistema estiver nesse modo.</string>
     <string name="theme_mode_light">Modo claro</string>
@@ -2655,7 +2655,7 @@
     <string name="theme_pill_action">Tecla de ação em forma de pílula</string>
     <string name="theme_pill_numbers">Tecla 123 em forma de pílula</string>
     <string name="theme_letter_emoji">Tecla de emoji desenhada como uma letra</string>
-    <string name="theme_function_chars">Carateres desenhados como teclas de função</string>
+    <string name="theme_function_chars">Caracteres desenhados como teclas de função</string>
     <string name="theme_dynamic_color">Seguir as cores do fundo (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Tamanho do texto das teclas de função</string>
     <string name="theme_shift_filled">Seta Shift preenchida quando ativa</string>

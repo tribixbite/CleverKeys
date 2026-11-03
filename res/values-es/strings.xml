@@ -2734,7 +2734,7 @@
     <string name="voice_permission_blocked_steps">Android ya no muestra la solicitud de micrófono para CleverKeys. En Información de la app, abre Permisos → Micrófono y elige Permitir. La entrada de voz se activará cuando vuelvas.</string>
     <string name="voice_pack_error_not_voice_pack">Este archivo no es un paquete de voz.</string>
     <string name="voice_pack_error_invalid_manifest">El manifiesto del paquete de voz está dañado o no es válido.</string>
-    <string name="voice_pack_error_invalid_id">El paquete de voz declara un id no válido: %1$s</string>
+    <string name="voice_pack_error_invalid_id">El paquete de voz declara un ID no válido: %1$s</string>
     <string name="voice_pack_error_sample_rate">El paquete de voz graba a %1$d Hz; solo se admite 16000 Hz.</string>
     <string name="voice_pack_error_needs_newer_app">Este paquete de voz necesita una versión más reciente de CleverKeys.</string>
     <string name="voice_pack_error_too_many_entries">El paquete de voz contiene más de %1$d archivos.</string>

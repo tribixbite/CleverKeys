@@ -48,10 +48,42 @@ The script runs four checks and lists every flagged row in the header:
   defects. "Swipe" can mean the swipe-to-delete gesture, which takes a different verb in some
   languages.
 
-Flagged rows per locale (2026-11-01): cs 59, de 76, es 69, fa 35, fil 186, fr 90, hu 77, in 96,
-it 75, ja 31, ko 21, lv 70, nl 92, pl 71, pt 88, ro 102, ru 44, tr 65, uk 45, vi 82, zh-rCN 29.
-That is 1,503 flagged out of 34,121 rows. fil is high because it deliberately uses Taglish
+Flagged rows per locale (regenerated 2026-11-03): cs 59, de 76, es 69, fa 35, fil 186, fr 90,
+hu 77, in 96, it 75, ja 31, ko 21, lv 70, nl 92, pl 71, pt 88, ro 102, ru 40, tr 65, uk 41, vi 82,
+zh-rCN 29. That is 1,495 flagged out of 34,121 rows (ru/uk dropped by 4 each after `8335bd02`
+put the glossary's swipe term into `dict_word_too_long_for_swipe_msg`). fil is high because it deliberately uses Taglish
 (`docs/i18n/2026-10-08-coverage-audit.md`).
+
+## LanguageTool findings (2026-11-03)
+
+The exporter has no input for external findings, so they are listed here instead of in the sheet
+headers. Scope: every string and plural item whose translation was added or changed after the
+2026-10-25 LanguageTool pass (`69e318a4`) up to `8335bd02`, in the 14 locales LanguageTool
+supports. Full counts and method: `docs/audit/2026-10-22-translation-audit.md` §8.
+
+- **Fixed (already in the sheets' `translation` column):** es `voice_pack_error_invalid_id`
+  (*un id* → *un ID*); pl `appearance_look_space_language_desc` (no comma before a verbless
+  *tak jak* comparison); pt `layout_manager_export_include_theme`,
+  `theme_export_xml_failed` (*ficheiro* → *arquivo*), `theme_section_look`,
+  `theme_section_look_colors` (*aspeto* → *aspecto*), `theme_function_chars` (*Carateres* →
+  *Caracteres*): European-Portuguese spellings in the pt-BR file.
+- **Needs your judgement** (LanguageTool raised it; the agent did not change it):
+  - de `theme_section_hints` *Gestenhinweise* while `appearance_look_show_hints_title` writes
+    *Gesten-Hinweise*; pick one spelling.
+  - nl `theme_bar_emphasis_centre` *Zijwoorden gedimd*: *zijwoorden* is a coinage for "side
+    words" (the suggestions left and right of the centre one).
+  - it: *input vocale* in 19 voice-input strings; LanguageTool suggests *ingresso/immissione
+    vocale*. The file uses *input* elsewhere too, so this is a terminology decision.
+  - pt: *depois de* → *após* (2) and *app* → *aplicativo* (1) are style suggestions; the
+    Android pt-BR system UI itself says *Informações do app*.
+- **False positives, nothing to do:** brand and product names (CleverKeys, Gboard, SwiftKey,
+  iOS), the English examples *tomorr/timor/tomorrow* in the Unfinished Words strings, the
+  `voice_input` command id, project terms (subtecla, sottotasto, podklawisz, подклавиша, свайп),
+  key abbreviations (Verr. Maj, Bloq, Maiusc, Доп., Вимк.), lone quotation-mark characters in
+  `bar_quote_open`/`bar_quote_close`, case-neutral count labels (ru *сочетаний: %1$d*), and in
+  fil the English words of the Taglish copy.
+- **Not checked by LanguageTool** (unsupported): cs, hu, in, ko, lv, tr, vi. These need the
+  native review alone.
 
 ## How to review
 
