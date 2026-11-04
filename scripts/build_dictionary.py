@@ -25,6 +25,7 @@ License: Apache-2.0 (code), CC BY-SA 4.0 (dictionary data if using wordfreq)
 """
 
 import argparse
+import re
 import struct
 import unicodedata
 import sys
@@ -43,9 +44,19 @@ except ImportError:
     print("Install with: pip install wordfreq", file=sys.stderr)
 
 
-def normalize_accents(word: str) -> str:
+#: The runtime lookup key's mark set (`AccentNormalizer.DIACRITICS_REGEX`, U+0300..U+036F).
+RUNTIME_DIACRITICS = re.compile('[\u0300-\u036f]')
+
+
+def normalize_accents(word: str, keep_script_marks: bool = False) -> str:
     """
     Remove diacritical marks from a word.
+
+    With keep_script_marks (``--keep-script-marks``; Bangla, kit 19 of ml/rtx-kits) only
+    U+0300..U+036F is stripped after NFD — exactly what the runtime ``AccentNormalizer``
+    strips — so a script whose marks are spelling (Bengali virama, u/uu/vocalic-r signs,
+    nukta, candrabindu) keeps them in the lookup key. The default strips every category-Mn
+    code point, unchanged, so every existing pack builds byte-identically.
 
     Uses Unicode NFD normalization to decompose characters,
     then removes combining diacritical marks (U+0300-U+036F).
@@ -71,6 +82,8 @@ def normalize_accents(word: str) -> str:
 
     # NFD decomposition + remove combining marks
     normalized = unicodedata.normalize('NFD', result)
+    if keep_script_marks:
+        return RUNTIME_DIACRITICS.sub('', normalized)
     return ''.join(c for c in normalized if unicodedata.category(c) != 'Mn')
 
 
@@ -221,7 +234,8 @@ def frequency_to_rank(frequency: float, max_freq: float) -> int:
     return max(0, min(255, rank))
 
 
-def build_accent_map(words_with_freq: List[Tuple[str, float]]) -> Dict[str, List[Tuple[str, float]]]:
+def build_accent_map(words_with_freq: List[Tuple[str, float]],
+                     keep_script_marks: bool = False) -> Dict[str, List[Tuple[str, float]]]:
     """
     Build mapping from normalized forms to canonical forms.
 
@@ -234,7 +248,7 @@ def build_accent_map(words_with_freq: List[Tuple[str, float]]) -> Dict[str, List
     accent_map: Dict[str, List[Tuple[str, float]]] = defaultdict(list)
 
     for canonical, freq in words_with_freq:
-        normalized = normalize_accents(canonical)
+        normalized = normalize_accents(canonical, keep_script_marks)
         accent_map[normalized].append((canonical, freq))
 
     # Sort each list by frequency (highest first)
@@ -328,6 +342,9 @@ def main():
                         help='Use wordfreq for frequency enrichment')
     parser.add_argument('--min-length', type=int, default=1,
                         help='Minimum word length (default: 1)')
+    parser.add_argument('--keep-script-marks', action='store_true',
+                        help='Strip only U+0300..U+036F from lookup keys, as the runtime '
+                             'AccentNormalizer does (scripts whose marks are spelling, e.g. bn)')
     parser.add_argument('--max-length', type=int, default=30,
                         help='Maximum word length (default: 30)')
 
@@ -385,7 +402,7 @@ def main():
 
     # Build accent map
     print("Building accent map...")
-    accent_map_raw = build_accent_map(words_with_freq)
+    accent_map_raw = build_accent_map(words_with_freq, args.keep_script_marks)
     print(f"Found {len(accent_map_raw)} unique normalized forms")
 
     # Convert to indexed format
@@ -419,7 +436,7 @@ def main():
     print("Done!")
 
     # Print statistics
-    accented_count = sum(1 for w, _ in canonical_words if w != normalize_accents(w))
+    accented_count = sum(1 for w, _ in canonical_words if w != normalize_accents(w, args.keep_script_marks))
     print(f"\nStatistics:")
     print(f"  Total canonical words: {len(canonical_words)}")
     print(f"  Words with accents: {accented_count} ({100*accented_count/len(canonical_words):.1f}%)")

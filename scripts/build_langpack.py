@@ -176,6 +176,43 @@ FrequencyWords (2018 release) -- Hermit Dave
   International Conference on Language Resources and Evaluation (LREC 2016).
 """,
     ),
+    # Kit 19 (ml/rtx-kits/19-bangla-pack): WM Keyboard's hand-written Bangla seed words. Only its
+    # own MIT-licensed seed/hand blocks are taken; its OpenSubtitles block is credited through
+    # "frequencywords" (CC BY-SA 4.0 content), never through this entry.
+    "wmkeyboard": DataSource(
+        key="wmkeyboard",
+        credit=("Bangla seed words and word selection: WM Keyboard by Wasi Master (seed words "
+                "MIT; its selection from FrequencyWords is an adaptation under CC BY-SA 4.0)"),
+        url="https://github.com/wasi-master/wmkeyboard",
+        notice="""\
+WM Keyboard -- Wasi Master
+  https://github.com/wasi-master/wmkeyboard
+  From app/dictionaries-src/bn.txt (commit a19072cf7d871986d2c7aa123f79367a756a817d):
+  the hand-written Bangla seed and hand-addition word lists (MIT, below), and the
+  choice of which FrequencyWords 2018 bn entries to keep. That choice is part of
+  an adaptation of FrequencyWords and is used under CC BY-SA 4.0 with it; the
+  frequencies in this pack are FrequencyWords' own counts, not WM Keyboard's.
+  Licence of the seed words: MIT License, Copyright (c) 2026 Wasi Master
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+""",
+    ),
     "swwiki": DataSource(
         key="swwiki",
         credit=("Word frequencies: Swwiki Swahili Wikipedia word list by Kevin Donnelly, from "
