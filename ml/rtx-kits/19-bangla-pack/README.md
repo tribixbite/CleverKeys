@@ -103,12 +103,27 @@ Also add the WM Keyboard MIT block, and complete the guide §6 checklist.
 
 ## 3. Stage-1 blockers that remain in the APP (not done here)
 
-* **Word boundaries split Bangla words at every vowel sign and hasanta.**
-  `WordChars.isWordCharAt` is `isLetterOrDigit()` (+ Persian ZWNJ). Bengali dependent vowels
-  (Mc) and virama/nukta/u-signs (Mn) are not letters, so the composing word `আমি` is tracked as
-  `আম` + `ি`. Tap prediction from a bn pack cannot work until WordChars treats
-  Bengali-block marks as word characters. Put that in one shared rule, as `WordChars` already
-  does for ZWNJ, with tests (TODO).
+* **Word boundaries: FIXED 2026-11-04 (maintainer approved).** `WordChars` now treats a Bengali
+  combining mark (vowel sign, hasanta, nukta, candrabindu, anusvara, visarga) on a Bengali letter
+  as a word character (`isAttachedSpellingMarkAt`, `isSpellingMarkWordCharAfterCursor`), following
+  WM Keyboard's rule (letters, digits and combining marks are one word). Wired into the typing
+  path (`SuggestionHandler.handleRegularTyping`: `আম` + `ি` composes `আমি`), the editor partial
+  scan, `editorEndsWithWholeToken`, `TextActionPolicy.wordAtCursor`, the next-word tokenizer,
+  `isWordCharAt` (emoji search, swipe-correction joining, double-space period) and
+  `UserJoinerPreference.joinerFree`. Cursor sync, `EditorTextNavigation` and
+  `VerifiedSuffixEdit` were already mark-aware. Tests: `BanglaSpellingMarkBoundaryTest` (pure),
+  `BanglaSpellingMarkTypingTest` (mock, real handler + predictor over `bn` keys).
+  Remaining, not done:
+  * the danda `।` is not a sentence boundary for next-word context or learning (WM Keyboard
+    treats it as one); both paths must change together (TODO);
+  * typo-tolerant prefix search and the doubled-letter autocorrect step skip any typed word with
+    a mark (`all { isLetter() }` gates in `WordPredictor`), so Bangla gets exact-prefix
+    completion only (TODO);
+  * the double-space period reads 2 characters, so it does not fire after a word that ends in
+    a mark (Bangla ends sentences with `।` anyway);
+  * ZWJ inside a word (`র‍্য`) still splits it; the bn word list has none;
+  * other Indic layouts (Devanagari, Gujarati, Kannada, Tamil, Sinhala) have the same split;
+    each needs its script added to `WordChars.SPELLING_MARK_SCRIPTS` with tests (TODO).
 * `build_wordlist.py`'s evidence classifier rejects marked words (`isalpha()`) and has no `bn`
   row. This kit bypasses the classifier, which is a deliberate difference from the standard
   pipeline, stated here. A `bn` classifier row needs a Bengali-script validator.
@@ -162,5 +177,5 @@ written meaningfully before the layout decision (TODO, maintainer).
 ## 6. What to send back / decide
 
 * A decision on §5 items 1–2.
-* Approval for the §3 WordChars change.
+* ~~Approval for the §3 WordChars change.~~ Approved and done 2026-11-04.
 * Approval to publish `langpack-bn.zip` once the §3 blockers are closed.

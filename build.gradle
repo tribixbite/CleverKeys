@@ -648,6 +648,8 @@ tasks.register('runPureTests', JavaExec) {
     // word-boundary call site, the fa/ckb lookup fold and the half-space spelling index.
     'tribixbite.cleverkeys.PersianHalfSpaceBoundaryTest',
     'tribixbite.cleverkeys.WordCharsTest',
+    // Bangla spelling marks are word characters at every scanner (2026-11-04).
+    'tribixbite.cleverkeys.BanglaSpellingMarkBoundaryTest',
     'tribixbite.cleverkeys.ArabicScriptFoldTest',
     'tribixbite.cleverkeys.CaseCycleTest',
     'tribixbite.cleverkeys.ProcessTextReturnTest',
@@ -1573,6 +1575,8 @@ tasks.register('runMockTests', JavaExec) {
     // the bar, the fa/ckb letter fold (real WordPredictor), and typing/cursor-sync end to end.
     'tribixbite.cleverkeys.WordPredictorHalfSpaceTest',
     'tribixbite.cleverkeys.PersianHalfSpaceTypingTest',
+    // Typing Bangla: vowel signs and hasanta continue the composing word (2026-11-04).
+    'tribixbite.cleverkeys.BanglaSpellingMarkTypingTest',
     // Audit remediation (2026-07-17) — new MockK tests
     'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',

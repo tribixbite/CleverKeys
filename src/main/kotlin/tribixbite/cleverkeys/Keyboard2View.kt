@@ -2738,7 +2738,8 @@ internal object TextActionPolicy {
      * A word character is a letter, a digit, or an apostrophe — the apostrophe is included so
      * `don't` and `qu'est` select whole rather than splitting at the elision mark — or a Persian
      * half-space between Arabic-script letters ([WordChars]; `می‌شود` selects whole, and a
-     * half-space just typed before the cursor stays with its word).
+     * half-space just typed before the cursor stays with its word), or a Bangla vowel sign or
+     * hasanta on its letter (`আমি` selects whole).
      */
     fun wordAtCursor(textBefore: String, textAfter: String): WordSpan {
         var startOffset = textBefore.length
@@ -2747,7 +2748,7 @@ internal object TextActionPolicy {
             val inWord = if (c == WordChars.ZWNJ) {
                 WordChars.isZwnjWordCharBeforeCursor(textBefore, i, textAfter)
             } else {
-                isWordChar(c)
+                isWordChar(c) || WordChars.isAttachedSpellingMarkAt(textBefore, i)
             }
             if (!inWord) break
             startOffset = i
@@ -2759,7 +2760,7 @@ internal object TextActionPolicy {
             val inWord = if (c == WordChars.ZWNJ) {
                 WordChars.isZwnjWordCharAfterCursor(textAfter, i, textBefore)
             } else {
-                isWordChar(c)
+                isWordChar(c) || WordChars.isSpellingMarkWordCharAfterCursor(textAfter, i, textBefore)
             }
             if (!inWord) break
             endOffset = i + 1

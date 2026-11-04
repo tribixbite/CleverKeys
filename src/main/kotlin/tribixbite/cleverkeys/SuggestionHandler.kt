@@ -1876,12 +1876,14 @@ class SuggestionHandler(
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
                             if (before.isNotEmpty()) {
                                 // A Persian half-space is part of the partial between Arabic
-                                // letters and at the cursor edge (WordChars).
+                                // letters and at the cursor edge, and a Bangla vowel sign or
+                                // hasanta on its letter is part of it too (WordChars).
                                 var wordStart = before.length
                                 while (wordStart > 0) {
                                     val c = before[wordStart - 1]
                                     val inWord = c.isLetterOrDigit() || c == '\'' || c == '-' ||
-                                        WordChars.isZwnjWordCharBeforeCursor(before, wordStart - 1, null)
+                                        WordChars.isZwnjWordCharBeforeCursor(before, wordStart - 1, null) ||
+                                        WordChars.isAttachedSpellingMarkAt(before, wordStart - 1)
                                     if (!inWord) break
                                     wordStart--
                                 }
@@ -3135,9 +3137,10 @@ class SuggestionHandler(
         if (!before.endsWith(expected)) return false
         val charIndex = before.length - expected.length - 1
         val charBefore = before.getOrNull(charIndex) ?: return true
-        // A half-space joining an Arabic letter to the token means the token is a word's tail.
+        // A half-space joining an Arabic letter, or a Bangla mark on its letter, before the token
+        // means the token is a word's tail.
         return !charBefore.isLetterOrDigit() && !isIntraWordJoiner(charBefore) &&
-            !WordChars.isJoiningZwnjAt(before, charIndex)
+            !WordChars.isJoiningZwnjAt(before, charIndex) && !WordChars.isAttachedSpellingMarkAt(before, charIndex)
     }
 
     /**
@@ -3303,6 +3306,19 @@ class SuggestionHandler(
                     WordChars.baseCharBefore(contextTracker.getCurrentWord(), contextTracker.getCurrentWordLength()),
                     null
                 ) -> {
+                nextWordSuggestionsActive = false
+                contextTracker.appendToCurrentWord(text)
+                pendingTypedWord = contextTracker.getCurrentWord()
+                updatePredictionsForCurrentWord(ic, editorInfo)
+            }
+            // Bangla spelling mark (2026-11-04, WordChars): a vowel sign, hasanta, nukta,
+            // candrabindu, anusvara or visarga typed on a letter of its script CONTINUES the word,
+            // so `আম` + `ি` composes `আমি` instead of ending `আম` at a non-letter. A mark with no
+            // composing base (the word was just committed, or the cursor moved) falls through to
+            // the non-letter branch, as before.
+            text.length == 1 && WordChars.isSpellingMark(text[0]) &&
+                contextTracker.getCurrentWordLength() > 0 &&
+                WordChars.isAttachedSpellingMarkAt(contextTracker.getCurrentWord() + text, contextTracker.getCurrentWordLength()) -> {
                 nextWordSuggestionsActive = false
                 contextTracker.appendToCurrentWord(text)
                 pendingTypedWord = contextTracker.getCurrentWord()

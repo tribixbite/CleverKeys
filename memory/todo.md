@@ -549,8 +549,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
     KIT (2026-11-04): `ml/rtx-kits/19-bangla-pack/`. A 20,627-word subset of WM Keyboard bn.txt
     (MIT seed + FrequencyWords CC BY-SA 4.0) verified spelling-preserving with
-    `build_dictionary.py --keep-script-marks`. Still blocked: WordChars splits Bangla words at
-    marks; the model needs a layout decision (centre keys cover 17–31 % of words).
+    `build_dictionary.py --keep-script-marks`. WordChars mark fix DONE 2026-11-04 (maintainer
+    approved; kit §3 lists what remains: danda boundary, fuzzy search on marked words, ZWJ,
+    other Indic scripts). Still blocked: the model needs a layout decision (centre keys cover
+    17–31 % of words); maintainer rule: Bangla questions follow WM Keyboard (native speaker).
 20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar,
     4.3 opt-in floating quick-action button (future release; overlay permission requested only

@@ -418,8 +418,11 @@ object NextWordPredictor {
         for (i in segmentStart until textBeforeCursor.length) {
             val c = textBeforeCursor[i]
             // A Persian half-space between Arabic-script letters stays inside the token
-            // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before.
-            if (c.isLetter() || c == '\'' || c == '-' || WordChars.isJoiningZwnjAt(textBeforeCursor, i)) {
+            // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before. A Bangla
+            // vowel sign or hasanta on its letter stays inside it too (`আমি`, `ক্ষমা`).
+            if (c.isLetter() || c == '\'' || c == '-' || WordChars.isJoiningZwnjAt(textBeforeCursor, i) ||
+                WordChars.isAttachedSpellingMarkAt(textBeforeCursor, i)
+            ) {
                 current.append(c)
             } else {
                 flushToken()

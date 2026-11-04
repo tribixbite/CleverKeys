@@ -93,7 +93,8 @@ object UserJoinerPreference {
         for (i in lower.indices) {
             val ch = lower[i]
             if (ch in JOINERS || WordChars.isJoiningZwnjAt(lower, i)) continue
-            if (!ch.isLetter()) return null
+            // A Bangla vowel sign or hasanta on its letter is spelling, not a joiner (WordChars).
+            if (!ch.isLetter() && !WordChars.isAttachedSpellingMarkAt(lower, i)) return null
             sb.append(ch)
         }
         return if (sb.isEmpty()) null else sb.toString()

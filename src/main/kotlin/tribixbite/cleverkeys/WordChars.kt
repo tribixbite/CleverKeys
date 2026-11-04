@@ -31,8 +31,54 @@ package tribixbite.cleverkeys
  * or a digit right after the cursor ends the word as usual.
  *
  * Callers keep their own base rule (letters/digits, apostrophes, marks) and OR one of these in.
+ *
+ * ## Spelling marks (Bangla, maintainer approval 2026-11-04)
+ *
+ * In Bengali script the dependent vowel signs (`া ি ী ু ূ ৃ ে ৈ ো ৌ`), the hasanta (virama
+ * U+09CD, which spells every conjunct), nukta, candrabindu, anusvara and visarga are combining
+ * marks (Mn/Mc), not letters, so an `isLetterOrDigit` scanner cut `আমি` into `আম` + `ি`. A
+ * [isSpellingMark] is a word character when its nearest base ([baseCharBefore], other marks
+ * skipped) is a letter of the SAME script: [isAttachedSpellingMarkAt] for one text,
+ * [isSpellingMarkWordCharAfterCursor] for text after the cursor, whose base may sit before it.
+ * This matches WM Keyboard (maintained by a native Bangla speaker): its word scanners count
+ * letters, digits and combining marks as one word.
+ *
+ * Only [SPELLING_MARK_SCRIPTS] get the rule. Persian harakat, Hebrew niqqud and Latin combining
+ * accents keep each caller's existing behaviour, since those are optional vowel/accent marks
+ * that the lookup folds strip. ZWJ inside Bangla (`র‍্য`) is not covered (the bn word list has
+ * none). TODO: Devanagari, Gujarati, Kannada, Tamil and Sinhala layouts ship and have the same
+ * split; add each script to [SPELLING_MARK_SCRIPTS] with its own tests once it has a pack.
  */
 object WordChars {
+
+    /** Scripts whose combining marks are spelling (see the class KDoc). */
+    private val SPELLING_MARK_SCRIPTS: Set<Character.UnicodeScript> = setOf(Character.UnicodeScript.BENGALI)
+
+    /** True for a combining mark (Mn, Mc or Me) of a [SPELLING_MARK_SCRIPTS] script. */
+    fun isSpellingMark(c: Char?): Boolean =
+        c != null && isCombiningMark(c) && Character.UnicodeScript.of(c.code) in SPELLING_MARK_SCRIPTS
+
+    /** True when [base] is a letter of the same script as the spelling mark [mark]. */
+    private fun carriesSpellingMark(base: Char?, mark: Char): Boolean =
+        base != null && Character.isLetter(base) &&
+            Character.UnicodeScript.of(base.code) == Character.UnicodeScript.of(mark.code)
+
+    /**
+     * True when [text]`[i]` is a spelling mark on a letter of its script within [text]
+     * (`আমি`: `ি` at index 2). A mark with no base, or on a digit or a Latin letter, is not.
+     */
+    fun isAttachedSpellingMarkAt(text: CharSequence, i: Int): Boolean =
+        i in text.indices && isSpellingMark(text[i]) && carriesSpellingMark(baseCharBefore(text, i), text[i])
+
+    /**
+     * [isAttachedSpellingMarkAt] for text AFTER the cursor: when only marks precede index [i]
+     * in [after], the base is the last base character of [before] (`আম|ি`).
+     */
+    fun isSpellingMarkWordCharAfterCursor(after: CharSequence, i: Int, before: CharSequence): Boolean {
+        if (i !in after.indices || !isSpellingMark(after[i])) return false
+        val base = baseCharBefore(after, i) ?: baseCharBefore(before, before.length)
+        return carriesSpellingMark(base, after[i])
+    }
 
     /** U+200C ZERO WIDTH NON-JOINER — the Persian half-space. */
     const val ZWNJ: Char = '‌'
@@ -96,12 +142,14 @@ object WordChars {
     }
 
     /**
-     * The letters/digits scanners' rule with the half-space clause: a letter or digit, or a
-     * joining half-space ([isJoiningZwnjAt]). Exactly `isLetterOrDigit` for any text without an
-     * Arabic-script half-space.
+     * The letters/digits scanners' rule with the half-space and spelling-mark clauses: a letter
+     * or digit, a joining half-space ([isJoiningZwnjAt]) or an attached spelling mark
+     * ([isAttachedSpellingMarkAt]). Exactly `isLetterOrDigit` for any text without an
+     * Arabic-script half-space or a Bengali mark.
      */
     fun isWordCharAt(text: CharSequence, i: Int): Boolean =
-        i in text.indices && (text[i].isLetterOrDigit() || isJoiningZwnjAt(text, i))
+        i in text.indices &&
+            (text[i].isLetterOrDigit() || isJoiningZwnjAt(text, i) || isAttachedSpellingMarkAt(text, i))
 
     /** Number of U+200C in [word] (any position). */
     fun zwnjCount(word: CharSequence): Int {
