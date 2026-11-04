@@ -17,7 +17,9 @@ import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.BarHighlightPlanner
 import tribixbite.cleverkeys.autocorrect.SpaceCommit
 import tribixbite.cleverkeys.autocorrect.SpaceCommitResolver
+import tribixbite.cleverkeys.swipe.ContractionContextChooser
 import tribixbite.cleverkeys.swipe.SwipeContextRescorer
+import tribixbite.cleverkeys.swipe.SwipeContractionPolicy
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 
 /**
@@ -189,6 +191,12 @@ class SuggestionHandler(
             return CtcLanguageSupport.normalize(languages.getOrNull(index)) == "en"
         }
 
+        /**
+         * Editor characters read for the `its` / `it's` chooser's previous word: enough to reach
+         * back past one long word and its punctuation to the sentence-segment boundary.
+         */
+        private const val CONTRACTION_CONTEXT_CHARS = 64
+
         /** How many leading bar words the D1 possessive augment considers (clutter bound). */
         internal const val POSSESSIVE_AUGMENT_WINDOW = 3
 
@@ -306,6 +314,45 @@ class SuggestionHandler(
             languages?.takeIf { it.size == words.size }?.let { labels -> order.map { labels[it] } },
             order.first().takeIf { it != 0 },
         )
+    }
+
+    /**
+     * [slate] with slots 0 and 1 swapped when they are `its` / `it's` and the previous word's
+     * stored continuations prefer slot 1's form ([ContractionContextChooser] with
+     * [ContractionContextChooser.SHIPPED]; eval doc `docs/eval/2026-10-07-apostrophe-context.md` §8).
+     * Otherwise [slate] itself is returned, so a no-op leaves every reference untouched.
+     *
+     * The previous word is read from the EDITOR, sentence-segment aware
+     * ([ContractionContextChooser.previousWord]): the context tracker does not reset at a sentence
+     * boundary. The language is slot 0's own label on a dual-language slate (CK-150-024), and
+     * both slots must carry the same label; otherwise it is the active dictionary language. The
+     * chooser itself acts on English only and never overrides a user word in slot 0.
+     */
+    private fun chooseContractionForm(slate: RescoredSlate, ic: InputConnection?, activeLanguage: String?): RescoredSlate {
+        if (slate.words.size < 2 || slate.scores.size != slate.words.size) return slate
+        val labels = slate.languages
+        if (labels != null && labels[0] != labels[1]) return slate
+        val language = labels?.get(0) ?: activeLanguage
+        if (SwipeContractionPolicy.baseSubtag(language) != SwipeContractionPolicy.ENGLISH) return slate
+        // Cheap surface test first, so the editor read below happens only for an `its` pair.
+        if (!ContractionContextChooser.sameSurface(slate.words[0], slate.words[1])) return slate
+        val model = BigramModel.getInstance(context).staticLmFor(SwipeContractionPolicy.ENGLISH)
+            ?.let(ContractionContextChooser::forStaticLm) ?: return slate
+        val dictionaries = predictionCoordinator.getDictionaryManager()
+        val (words, scores) = ContractionContextChooser.choose(
+            slate.words,
+            slate.scores,
+            language,
+            ContractionContextChooser.previousWord(editorTextBeforeCursor(ic, CONTRACTION_CONTEXT_CHARS)),
+            model,
+            { dictionaries?.isUserWordIgnoringCase(it) == true },
+            ContractionContextChooser.SHIPPED,
+        )
+        if (words === slate.words) return slate
+        vlog { "SWIPE contraction form chosen from context: ${slate.words[0]} -> ${words[0]}" }
+        // Only slots 0 and 1 moved, so the labels (equal, checked above) need no swap; a
+        // context-promoted rank 1 is no longer at rank 1, so its provenance note is dropped.
+        return RescoredSlate(words, scores, labels, null)
     }
 
     /**
@@ -1042,9 +1089,14 @@ class SuggestionHandler(
         } else {
             rescoreWithContext(transformedPredictions, scores, engineLanguages)
         }
-        val rescoredPredictions = rescored.words
-        val rescoredScores = rescored.scores
-        val promotedIndex = rescored.promotedIndex
+        val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
+        // `its` / `it's` from the previous word (round 3, eval doc §8): after the rescorer, so it
+        // judges the slate's final top two; before the augment, so an appended possessive is
+        // never a slot. Skipped for password fields, like the rescorer above.
+        val chosen = if (passwordField) rescored else chooseContractionForm(rescored, ic, activeLanguage)
+        val rescoredPredictions = chosen.words
+        val rescoredScores = chosen.scores
+        val promotedIndex = chosen.promotedIndex
 
         // D1: augment the bar list with possessive forms (transient-style augment reused from the tap
         // path). Kept aligned with scores; possessives appended at the end so the top prediction is
@@ -1058,9 +1110,8 @@ class SuggestionHandler(
         // candidate in slot 2.
         val barWords = rescoredPredictions.toMutableList()
         val barScores = rescoredScores.toMutableList()
-        val activeLanguage = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
         val engineWordCount = barWords.size
-        val barLanguages = rescored.languages
+        val barLanguages = chosen.languages
         if (barLanguages != null) {
             augmentPredictionsWithPossessives(barWords, barScores, barLanguages)
         } else if (shouldAugmentPossessives(activeLanguage)) {

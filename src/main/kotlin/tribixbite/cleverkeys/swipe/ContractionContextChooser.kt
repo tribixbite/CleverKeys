@@ -45,7 +45,16 @@ import kotlin.math.ln
  * between spellings of the same decoded letters with a static, shipped model; no learned data
  * is read and nothing is learned.
  *
- * ## Status: EVALUATED, NOT SHIPPED (2026-10-07) — which is why this lives in TEST sources
+ * ## Status: SHIPPED for `its` / `it's` only, LISTED evidence ([SHIPPED], 2026-11-04)
+ *
+ * Round 3 (eval doc §8, kit `ml/rtx-kits/18-apostrophe-context`) passed every pre-registered bar
+ * on two fresh populations: UD English-GUM `its` +30.44 pt (166 wins / 15 losses) and Ubuntu
+ * Dialogue members 125,001–150,000 `its` +6.15 pt (1,139 / 897), 0 structural violations over
+ * 345,985 checked tokens. [SuggestionHandler] calls [choose] with [SHIPPED] on the swipe slate,
+ * after context rescoring and before the possessive augment. Every other surface stays
+ * context-free: the history below is why.
+ *
+ * ## History: evaluated, not shipped (2026-10-07)
  *
  * `docs/eval/2026-10-07-apostrophe-context.md`: stage 1 (LM held-out + UD EWT, pre-registered)
  * did not meet its bar (the possessive-promoting arm missed OOD and `years`); the frozen
@@ -59,7 +68,8 @@ import kotlin.math.ln
  * Round 2 (same doc, §6): the `its`-only scope ([Params.surfaces]) with the frozen arm-C
  * parameters FAILED its pre-registered bar on fresh UD EWT train text (−1.78 pt, 84 wins / 88
  * losses) while gaining on a fresh Ubuntu chat sample; the LISTED-evidence variant gained on
- * both (+8.89 / +7.19 pt on `its`) but was registered as report-only. Still not shipped.
+ * both (+8.89 / +7.19 pt on `its`) but was registered as report-only. Round 3 then scored that
+ * LISTED variant, restricted to `its`, on fresh text: it is [SHIPPED].
  *
  * Pure JVM (no Android imports) so the rule and its evaluation run in `runPureTests`.
  */
@@ -88,6 +98,19 @@ object ContractionContextChooser {
         val evidence: Evidence,
         val promotePossessives: Boolean,
         val surfaces: Set<String>? = null,
+    )
+
+    /**
+     * The one parameter set the app uses: round 3's frozen `ROUND3_ITS_LISTED` (τ 0, LISTED
+     * evidence, possessives never promoted, the `its` surface only). Changing any field is a new
+     * hypothesis that needs its own pre-registered evaluation (eval doc §8);
+     * `ContractionContextChooserTest` pins it to the evaluated value.
+     */
+    val SHIPPED = Params(
+        minLogOdds = 0.0,
+        evidence = Evidence.LISTED,
+        promotePossessives = false,
+        surfaces = setOf("its"),
     )
 
     /** The probabilities the decision needs — [forStaticLm] adapts the shipped model. */

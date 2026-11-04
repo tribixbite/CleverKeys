@@ -111,3 +111,8 @@ run, because that would be the scored read.
 
 `build/apostrophe-round3.log` (the `[stage4]` lines), the two population sha256 lines, and the R4
 result. The eval doc then gets a "§8 Round 3 result" with the verdict against the bar above.
+
+## 6. Result (2026-11-04)
+
+Run once on the phone; every bar passed (R1 GUM `its` +30.44 pt, R2 Ubuntu `its` +6.15 pt,
+R3 0 violations, R4 59 tests green). The numbers, and what shipped, are in the eval doc §8.

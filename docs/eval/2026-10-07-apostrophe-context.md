@@ -403,10 +403,60 @@ Shipped: §6.1 (no letter-plural or closed-class possessives on the swipe bar) a
 PAIRED). Not shipped: any context chooser. The chooser and its round-2 scope parameter
 (`Params.surfaces`) stay in test sources with their decision tests.
 
-## 8. Round 3 — pre-registered (2026-11-04), not yet run
+## 8. Round 3 — pre-registered (2026-11-04), PASSED; the `its`-only LISTED chooser ships
 
 The hypothesis is §6.3 point 2: (b) restricted to `its`, written `ROUND3_ITS_LISTED` in the
 harness. It is scored once on two fresh populations: UD English-GUM, and Ubuntu Dialogue members
 125,001–150,000. The bar repeats round 2's N1–N4 against those populations. The full
 pre-registration, population hashes and commands are in `ml/rtx-kits/18-apostrophe-context/README.md`.
 The harness runs it as `APOSTROPHE_EVAL_STAGE=4`. Round 2's (b) numbers do not count toward it.
+
+### 8.1 Result (scored once, 2026-11-04; no re-run)
+
+Command: `APOSTROPHE_EVAL_STAGE=4 GRADLE_GUARD_XMX=1536m GRADLE_GUARD_METASPACE=384m
+scripts/gradle-guard.sh runPureTests -PtestClass=swipe.ApostropheContextEvalTest -PgeoFull=true`
+on the Termux phone. BUILD SUCCESSFUL in 1 m 27 s. Both population files matched their
+pre-registered sha256 before the run (`gum_en.txt` `f007922b…af81e8`, `ubuntu_fresh_en.txt`
+`df6b2c62…bf4bf`).
+
+| population | segments | `its`/`it's` occurrences | sentence-start (excluded) |
+|---|---|---|---|
+| Q1 GUM | 11,959 | 4,544 | 501 |
+| Q2 Ubuntu 125,001–150,000 | 125,407 | 20,499 | 4,780 |
+
+`its` surface, positions with a previous word (occurrences / distinct sentences):
+
+| id | population | n | sentences | current | chooser | Δ | wins | losses | bar | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|
+| R1 | Q1 GUM | 496 | 453 | 39.31 % | 69.76 % | **+30.44** | 166 | 15 | Δ ≥ +5.0 and 151 ≥ 2·√181 = 26.9 | **PASS** |
+| R2 | Q2 Ubuntu | 3,938 | 3,825 | 46.55 % | 52.69 % | **+6.15** | 1,139 | 897 | Δ ≥ 0 | **PASS** |
+| R3 | Q1 + Q2 | 345,985 checked tokens | | | | | | | 0 changed slates outside `its`/`it's` | **PASS** (violations=0) |
+| R4 | tests | 59 tests | | | | | | | contraction/chooser tests green | **PASS** (`ContractionContextChooserTest`, `ContractionOverlayTest`: OK (59 tests)) |
+
+Pooled over every surface the overlay produces (for reading only; the chooser acts on `its`
+alone, so every other surface is Δ 0 by construction, which R3 confirms): Q1 +3.73 pt (n 4,043),
+Q2 +1.54 pt (n 15,719).
+
+Concentration: Q1's 166 wins are in 453 distinct sentences out of 496 occurrences, so the gain
+is not one sentence repeated. Q2's loss count (897) is the written-form caveat stated in the
+pre-registration: chat writers type `its` for `it's`, and gold is what they wrote.
+
+### 8.2 What shipped
+
+As the pre-registration's pass branch (§6.0) says:
+
+* `ContractionContextChooser` moved from test sources to
+  `src/main/kotlin/tribixbite/cleverkeys/swipe/`, with `SHIPPED` = this round's frozen
+  `ROUND3_ITS_LISTED` (τ 0, LISTED evidence, possessives never promoted, `its` only).
+  `ContractionContextChooserTest` pins `SHIPPED` to that value.
+* `SuggestionHandler.handleSwipePredictionResults` calls it after `rescoreWithContext` and before
+  the D1 possessive augment (`chooseContractionForm`). The previous word is read from the editor
+  (64 chars, sentence-segment aware). The call is skipped for password fields, for any language
+  other than English, when the two top slots carry different per-word languages, and when slot 0
+  is a user word. The model is the installed `en` static LM, so nothing happens before it loads.
+* Real-path test: `SwipeContractionChoiceTest` (mock tier). It checks the bar order and the
+  auto-inserted word after "of", and each no-action rule above.
+
+Every other surface (`were`/`we're`, `well`/`we'll`, possessives) stays context-free; extending
+the chooser to any of them is a new hypothesis that needs its own round.
+

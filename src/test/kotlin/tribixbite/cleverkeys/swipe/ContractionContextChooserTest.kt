@@ -243,4 +243,27 @@ class ContractionContextChooserTest {
         assertThat(ContractionContextChooser.sameSurface("its", "its")).isFalse() // same form, not two forms
         assertThat(ContractionContextChooser.sameSurface("would", "world")).isFalse()
     }
+
+    @Test
+    fun `the shipped parameters are round 3's evaluated ROUND3_ITS_LISTED`() {
+        // Eval doc §8: only this exact set passed. Changing a field is a new hypothesis, which
+        // needs its own pre-registered round, not an edit here.
+        assertThat(ContractionContextChooser.SHIPPED).isEqualTo(
+            Params(0.0, Evidence.LISTED, promotePossessives = false, surfaces = setOf("its"))
+        )
+    }
+
+    @Test
+    fun `the shipped parameters swap its after a listed previous word and nothing else`() {
+        val shipped = ContractionContextChooser.SHIPPED
+        // "of its" is listed: slot 1's its takes slot 0.
+        assertThat(choose(listOf("it's", "its", "is"), "of", shipped).first)
+            .containsExactly("its", "it's", "is").inOrder()
+        // "think it's" is listed, but it's is already slot 0 and its is not listed after "think".
+        assertThat(choose(listOf("it's", "its"), "think", shipped).first)
+            .containsExactly("it's", "its").inOrder()
+        // Another surface (were / we're) is never acted on, even with strong evidence.
+        assertThat(choose(listOf("we're", "were"), "they", shipped).first)
+            .containsExactly("we're", "were").inOrder()
+    }
 }

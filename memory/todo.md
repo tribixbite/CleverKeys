@@ -538,10 +538,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).
     KIT READY (2026-11-04): `ml/rtx-kits/17-short-word-ctc/`. Gate = FUTO swipe-1 VALIDATION,
     session-disjoint from all training (567 ad/wet-class traces, 377 words, 271 sessions).
-18. [ ] RTX: apostrophe context chooser — listed-evidence its/it's variant in its own
-    pre-registered round on fresh data (`docs/eval/2026-10-07-apostrophe-context.md`).
-    KIT READY (2026-11-04): `ml/rtx-kits/18-apostrophe-context/`. CPU-only (~2 s eval on the
-    phone), round 3 pre-registered (GUM + Ubuntu 125,001–150,000); one run of stage 4 remains.
+18. [x] agent: apostrophe context chooser — round 3 (listed-evidence, `its` only) scored once
+    on the phone 2026-11-04 (maintainer: "run item 18 here") and PASSED every bar: GUM `its`
+    +30.44 pt (166/15), Ubuntu 125,001–150,000 `its` +6.15 pt (1,139/897), 0 structural
+    violations, 59 contraction tests green (`docs/eval/2026-10-07-apostrophe-context.md` §8).
+    Shipped per the pass branch: chooser in `src/main/.../swipe/`, wired in
+    `SuggestionHandler.chooseContractionForm`, real-path `SwipeContractionChoiceTest`.
+    Device check of the swipe bar after "of" still to do with the next APK.
 19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
     KIT (2026-11-04): `ml/rtx-kits/19-bangla-pack/`. A 20,627-word subset of WM Keyboard bn.txt
