@@ -58,16 +58,31 @@ def write_res(root: Path) -> Path:
     return res
 
 
-def write_sheet(path: Path, rows: list[dict[str, str]], locale: str = "de") -> None:
+def write_sheet(path: Path, rows: list[dict[str, str]]) -> None:
+    """A sheet in the current format: plain CSV, the correction in `your_fix`."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8-sig", newline="") as fh:
+        dw = csv.DictWriter(fh, fieldnames=etr.CHECK_COLUMNS)
+        dw.writeheader()
+        for r in rows:
+            dw.writerow({c: r.get(c, "") for c in etr.CHECK_COLUMNS})
+
+
+# The first (2026-11-03) format: `#` header lines, then `reviewer_correction`. Still importable.
+OLD_COLUMNS = ["key", "feature", "english", "translation", "context", "notes",
+               "machine_flags", "reviewer_correction", "reviewer_comment"]
+
+
+def write_old_sheet(path: Path, rows: list[dict[str, str]], locale: str = "de") -> None:
     with path.open("w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         # A spreadsheet re-save pads header lines with empty cells; the reader must cope.
         w.writerow([f"# locale: {locale}", "", ""])
         w.writerow(["# flagged: untouched — identical to English", ""])
-        dw = csv.DictWriter(fh, fieldnames=etr.SHEET_COLUMNS)
+        dw = csv.DictWriter(fh, fieldnames=OLD_COLUMNS)
         dw.writeheader()
         for r in rows:
-            dw.writerow({c: r.get(c, "") for c in etr.SHEET_COLUMNS})
+            dw.writerow({c: r.get(c, "") for c in OLD_COLUMNS})
 
 
 class EscapeRoundTrip(unittest.TestCase):
@@ -167,7 +182,7 @@ class Import(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.res = write_res(self.root)
-        self.sheet = self.root / "de.csv"
+        self.sheet = self.root / "review" / "de" / etr.CHECK_FILE
 
     def tearDown(self) -> None:
         self.tmp.cleanup()
@@ -177,12 +192,12 @@ class Import(unittest.TestCase):
 
     def test_applies_valid_corrections_and_keeps_the_rest_byte_for_byte(self) -> None:
         write_sheet(self.sheet, [
-            {"key": "greeting", "reviewer_correction": "Guten Tag, %1$s"},
-            {"key": "apostrophe", "reviewer_correction": "Nicht \"wischen\", bitte's"},
-            {"key": "items#few", "reviewer_correction": "%1$d Einträge"},
-            {"key": "wrapped", "reviewer_correction": "  neu  "},
-            {"key": "untouched", "reviewer_correction": "Zwischenablage &\nmehr"},
-            {"key": "percent", "reviewer_correction": ""},          # empty: ignored
+            {"key": "greeting", "your_fix": "Guten Tag, %1$s"},
+            {"key": "apostrophe", "your_fix": "Nicht \"wischen\", bitte's"},
+            {"key": "items#few", "your_fix": "%1$d Einträge"},
+            {"key": "wrapped", "your_fix": "  neu  "},
+            {"key": "untouched", "your_fix": "Zwischenablage &\nmehr"},
+            {"key": "percent", "your_fix": ""},          # empty: ignored
         ])
         result = etr.import_sheet(self.sheet, res=self.res)
         self.assertEqual(result.refused, [])
@@ -203,12 +218,12 @@ class Import(unittest.TestCase):
 
     def test_refuses_unsafe_rows_and_leaves_them_untouched(self) -> None:
         write_sheet(self.sheet, [
-            {"key": "greeting", "reviewer_correction": "Hallo"},                 # drops %1$s
-            {"key": "items#other", "reviewer_correction": "%1$s Einträge"},      # wrong type
-            {"key": "untouched", "reviewer_correction": "50 % mehr Zwischenablage"},  # literal %
-            {"key": "nope", "reviewer_correction": "x"},                         # unknown key
-            {"key": "apostrophe", "reviewer_correction": "Nicht wischen"},       # same as current
-            {"key": "percent", "reviewer_correction": "Höhe als % des Bildschirms"},  # allowed: formatted=false
+            {"key": "greeting", "your_fix": "Hallo"},                 # drops %1$s
+            {"key": "items#other", "your_fix": "%1$s Einträge"},      # wrong type
+            {"key": "untouched", "your_fix": "50 % mehr Zwischenablage"},  # literal %
+            {"key": "nope", "your_fix": "x"},                         # unknown key
+            {"key": "apostrophe", "your_fix": "Nicht wischen"},       # same as current
+            {"key": "percent", "your_fix": "Höhe als % des Bildschirms"},  # allowed: formatted=false
         ])
         result = etr.import_sheet(self.sheet, res=self.res)
         self.assertEqual(len(result.refused), 4, result.refused)
@@ -219,45 +234,85 @@ class Import(unittest.TestCase):
         self.assertIn('<string name="percent" formatted="false">Höhe als % des Bildschirms</string>', after)
 
     def test_dry_run_writes_nothing(self) -> None:
-        write_sheet(self.sheet, [{"key": "greeting", "reviewer_correction": "Servus %1$s"}])
+        write_sheet(self.sheet, [{"key": "greeting", "your_fix": "Servus %1$s"}])
         result = etr.import_sheet(self.sheet, res=self.res, dry_run=True)
         self.assertEqual(result.applied, ["greeting"])
         self.assertEqual(self.target(), LOCALE_XML)
 
-    def test_locale_comes_from_the_header(self) -> None:
+    def test_locale_comes_from_the_folder(self) -> None:
+        sheet = self.root / "elsewhere" / "de" / "renamed.csv"
+        write_sheet(sheet, [{"key": "greeting", "your_fix": "Moin %1$s"}])
+        self.assertEqual(etr.import_sheet(sheet, res=self.res).applied, ["greeting"])
+
+    def test_translate_sheet_column_is_read(self) -> None:
+        sheet = self.root / "review" / "de" / etr.TRANSLATE_FILE
+        sheet.parent.mkdir(parents=True, exist_ok=True)
+        with sheet.open("w", encoding="utf-8-sig", newline="") as fh:
+            dw = csv.DictWriter(fh, fieldnames=etr.TRANSLATE_COLUMNS)
+            dw.writeheader()
+            dw.writerow({"english": "Clipboard", "your_translation": "Zwischenablage", "key": "untouched"})
+            dw.writerow({"english": "Hello %1$s", "your_translation": "", "key": "greeting"})  # empty: keep
+        result = etr.import_sheet(sheet, res=self.res)
+        self.assertEqual((result.applied, result.refused), (["untouched"], []))
+        self.assertIn('<string name="untouched">Zwischenablage</string>', self.target())
+
+    def test_first_format_sheet_still_imports(self) -> None:
         sheet = self.root / "renamed.csv"
-        write_sheet(sheet, [{"key": "greeting", "reviewer_correction": "Moin %1$s"}], locale="de")
+        write_old_sheet(sheet, [{"key": "greeting", "reviewer_correction": "Moin %1$s"}], locale="de")
         self.assertEqual(etr.import_sheet(sheet, res=self.res).applied, ["greeting"])
 
 
 class ExportImportRoundTrip(unittest.TestCase):
-    def test_exported_sheet_reimports_as_a_no_op(self) -> None:
+    def read(self, path: Path) -> list[dict[str, str]]:
+        with path.open(encoding="utf-8-sig", newline="") as fh:
+            return list(csv.DictReader(fh))
+
+    def test_rows_split_into_three_sheets_and_reimport_as_a_no_op(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             res = write_res(root)
+            out = root / "review"
             english = etr.parse_resources(ENGLISH_XML)
+            flags = {"de": {"greeting": "Is 'Hallo' too casual here?"}}
             with mock.patch.object(etr, "read_at", return_value=None):
-                total, flagged = etr.export_scoped("de", ["greeting", "apostrophe", "untouched", "items"], english,
-                                                   "0" * 40, "2026-09-29", {}, {}, {}, {"locales": {}}, root, res)
+                counts = etr.export_scoped("de", ["greeting", "apostrophe", "untouched", "items"], english,
+                                           "0" * 40, "2026-09-29", {}, {}, flags, {"locales": {}}, out, res,
+                                           keep_english=set())
             # 3 strings + 3 de plural items, plus `percent` and `wrapped`: outside the English scope,
             # but read_at() finds no base version of the locale file, so their translation is "new".
-            self.assertEqual(total, 8)
-            self.assertEqual(flagged, 1)          # `untouched` is identical to English
-            sheet = root / "de.csv"
-            locale, rows = etr.read_sheet(sheet)
-            self.assertEqual(locale, "de")
-            self.assertEqual([r["key"] for r in rows if r["key"].startswith("items")],
-                             ["items#one", "items#few", "items#other"])
-            self.assertIn("# flagged: untouched", sheet.read_text(encoding="utf-8-sig"))
-            percent = next(r for r in rows if r["key"] == "percent")
-            self.assertIn("translation changed since the base", percent["notes"])
+            self.assertEqual((counts.translate, counts.check, counts.read), (1, 1, 6))
+            folder = out / "de"
+            translate = self.read(folder / etr.TRANSLATE_FILE)
+            check = self.read(folder / etr.CHECK_FILE)
+            read = self.read(folder / etr.READ_FILE)
+            # No comment lines: the first line is the header, and the English text comes first.
+            for name, columns in ((etr.TRANSLATE_FILE, etr.TRANSLATE_COLUMNS), (etr.CHECK_FILE, etr.CHECK_COLUMNS),
+                                  (etr.READ_FILE, etr.READ_COLUMNS)):
+                first = (folder / name).read_text(encoding="utf-8-sig").splitlines()[0]
+                self.assertEqual(first, ",".join(columns))
+                self.assertEqual(columns[0], "english")
+            self.assertEqual([r["key"] for r in translate], ["untouched"])      # still English
+            self.assertEqual([r["key"] for r in check], ["greeting"])           # has an open question
+            self.assertIn("too casual", check[0]["why_check"])
+            keys = [r["key"] for r in read]
+            self.assertEqual([k for k in keys if k.startswith("items")], ["items#one", "items#few", "items#other"])
+            self.assertEqual(len(keys + ["untouched", "greeting"]), len(set(keys + ["untouched", "greeting"])))
+            percent = next(r for r in read if r["key"] == "percent")
+            self.assertIn("translation was edited after", percent["notes"])
             self.assertIn("literal percent", percent["notes"])
-            # Copying every translation into the correction column changes nothing.
-            for r in rows:
-                r["reviewer_correction"] = r["translation"]
-            write_sheet(sheet, rows)
-            result = etr.import_sheet(sheet, res=res)
-            self.assertEqual((result.applied, result.refused), ([], []))
+            # A keepEnglish key that is identical to English is not "to translate".
+            with mock.patch.object(etr, "read_at", return_value=None):
+                kept = etr.export_scoped("de", ["untouched"], english, "0" * 40, "2026-09-29", {}, {}, {},
+                                         {"locales": {}}, root / "kept", res, keep_english={"untouched"})
+            self.assertEqual(kept.translate, 0)
+            self.assertFalse((root / "kept" / "de" / etr.TRANSLATE_FILE).exists())
+            # Copying every current text into the reviewer's cell changes nothing.
+            for sheet, rows, column in ((etr.CHECK_FILE, check, "your_fix"), (etr.READ_FILE, read, "your_fix")):
+                for r in rows:
+                    r[column] = r["translation"]
+                write_sheet(folder / sheet, rows)
+                result = etr.import_sheet(folder / sheet, res=res)
+                self.assertEqual((result.applied, result.refused), ([], []))
             self.assertEqual((res / "values-de" / "strings.xml").read_text(encoding="utf-8"), LOCALE_XML)
 
 

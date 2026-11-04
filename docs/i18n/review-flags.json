@@ -3,7 +3,9 @@
   "Open questions for native-speaker translation review, read by scripts/export_translation_review.py.",
   "locales.<locale>.<key>: the question shown in the review sheet's flag column; locales['*'] applies to every locale.",
   "Keys are resource names (a <plurals> name flags all its items). Sources: docs/i18n/2026-09-29-hardcoded-ui-sweep.md translator notes and memory/HANDOFF.md section -2.",
-  "Remove an entry once a native reviewer has answered it."
+  "Remove an entry once a native reviewer has answered it.",
+  "keepEnglish: keys whose text is a code, abbreviation or brand that stays in English in every language; the review sheets do not list them as untranslated.",
+  "Entries marked 'LanguageTool 2026-11-03' are the native-judgement items of docs/audit/2026-10-22-translation-audit.md section 8."
  ],
  "locales": {
   "*": {
@@ -81,6 +83,54 @@
    "cmd_accent_caron": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
    "cmd_combining_circonflexe": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark.",
    "cmd_combining_caron": "Caron 抑扬符 vs circumflex 扬抑符 are easy to confuse; confirm this names the right mark."
+  },
+  "it": {
+   "cmd_voice_input": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "key_descr_voice_input": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_stop_descr": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_cancel_descr": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_announce_listening": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_announce_stopped": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_announce_cancelled": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_msg_disabled": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_msg_need_pack": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_msg_permission": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_msg_password": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_msg_engine_error": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_permission_denied": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "settings_section_voice_input": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_enable_title": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_enable_desc": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_permission_blocked_desc": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings.",
+   "voice_permission_blocked_steps": "LanguageTool 2026-11-03: 'input vocale' is an anglicism (suggests 'ingresso' or 'immissione vocale'). The file also says 'input' elsewhere (e.g. 'Comportamento di input'). Pick one term for all voice strings."
+  },
+  "de": {
+   "theme_section_hints": "LanguageTool 2026-11-03: 'Gestenhinweise' here, but appearance_look_show_hints_title writes 'Gesten-Hinweise'. Pick one spelling."
+  },
+  "nl": {
+   "theme_bar_emphasis_centre": "LanguageTool 2026-11-03: 'Zijwoorden' is a coinage for 'side words' (the suggestions left and right of the centre one). Natural, or is there a better word?"
+  },
+  "pt": {
+   "autocorrect_unfinished_word_mode_desc": "LanguageTool 2026-11-03 (style): 'depois de' → 'após'?",
+   "clipboard_edit_changed": "LanguageTool 2026-11-03 (style): 'depois de' → 'após'?",
+   "voice_permission_blocked_steps": "LanguageTool 2026-11-03 (style): 'app' → 'aplicativo'? Android's own pt-BR system UI says 'Informações do app'."
   }
- }
+ },
+ "keepEnglish": [
+  "cmd_zwnj",
+  "cmd_zwj",
+  "cmd_lrm",
+  "cmd_rlm",
+  "cmd_timestamp_iso",
+  "cmd_alt",
+  "cmd_ctrl",
+  "cmd_meta",
+  "cmd_tab",
+  "theme_builtin_rosepine_name",
+  "theme_builtin_epaper_name",
+  "import_preview_type_bool",
+  "import_preview_type_int",
+  "import_preview_type_float",
+  "import_preview_type_str"
+ ]
 }
