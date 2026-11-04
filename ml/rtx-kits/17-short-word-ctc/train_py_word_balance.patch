@@ -1,0 +1,39 @@
+diff --git a/ctc/train.py b/ctc/train.py
+index 02efab9..d3a6a84 100644
+--- a/ctc/train.py
++++ b/ctc/train.py
+@@ -993,6 +993,17 @@ def main() -> int:
+     ap.add_argument("--kd-temp", type=float, default=2.0, dest="kd_temp",
+                     help="softmax temperature for the KD term (loss is scaled by "
+                          "T^2 so its gradient magnitude is temperature-invariant)")
++    # RTX kit 17 (CleverKeys ml/rtx-kits/17-short-word-ctc): word-balanced sampling,
++    # end-of-trace emphasis and a capped synthetic mass. All default OFF, so an
++    # unchanged launch command trains exactly as before.
++    ap.add_argument("--word-balance-tau", type=float, default=0.0, dest="word_balance_tau",
++                    help="per-word exposure ∝ count^tau (0 = plain shuffle; kit uses 0.5/0.7)")
++    ap.add_argument("--short-final-boost", type=float, default=1.0, dest="short_final_boost",
++                    help="weight multiplier for rows whose last stroke is <= 1.1 key")
++    ap.add_argument("--synth-pools", default="", dest="synth_pools",
++                    help="comma list of --train-npz names that are SYNTHETIC rows")
++    ap.add_argument("--synth-frac", type=float, default=0.0, dest="synth_frac",
++                    help="total sampling mass of --synth-pools rows (kit: <= 0.10)")
+     ap.add_argument("--patience", type=int, default=40)
+     ap.add_argument("--seed", type=int, default=1234)
+     ap.add_argument("--workers", type=int, default=8)
+@@ -1094,7 +1105,15 @@ def main() -> int:
+                             mask_frac=args.cr_mask_frac,
+                             mask_spans=args.cr_mask_spans)
+     val_ds = SwipeDataset(cache_dir / "val.npz", centers, augment=False)
+-    train_dl = DataLoader(train_ds, args.batch, shuffle=True, collate_fn=collate,
++    sampler = None
++    if args.word_balance_tau > 0.0 or args.synth_pools or args.short_final_boost != 1.0:
++        from word_balance import build_sampler  # kit 17 module, copied next to train.py
++        sampler, wb_summary = build_sampler(
++            train_ds, train_npz, args.word_balance_tau or 1.0, args.short_final_boost,
++            args.synth_pools.split(","), args.synth_frac, args.seed)
++        print(f"word-balance sampler: {json.dumps(wb_summary)}", flush=True)
++    train_dl = DataLoader(train_ds, args.batch, shuffle=sampler is None, sampler=sampler,
++                          collate_fn=collate,
+                           num_workers=args.workers, pin_memory=True, drop_last=True,
+                           persistent_workers=args.workers > 0)
+     val_workers = min(2, args.workers)

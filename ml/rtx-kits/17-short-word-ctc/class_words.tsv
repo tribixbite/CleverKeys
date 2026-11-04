@@ -1,0 +1,380 @@
+word	train_count	mechanisms	m2_competitor	gate_rows
+aaron	8	M1		1
+acta	0	M2	acts	1
+ad	15	M2	as	0
+addis	1	M1		1
+adi	0	M1		1
+adore	0	M1		1
+adorn	3	M1		1
+agile	3	M1		1
+aids	9	M1		1
+aires	5	M1		1
+al	24	M2	as	1
+alger	1	M1		1
+alkyl	1	M1		1
+alpha	44	M1		1
+alter	6	M1		1
+am	50	M2	as	3
+amiga	4	M1		2
+angel	27	M1		2
+apart	26	M1		2
+appia	0	M1		1
+arias	1	M1		1
+ariel	4	M1		1
+arose	15	M1		2
+asda	0	M1		1
+ash	15	M1		1
+asian	45	M1		3
+ask	22	M1		1
+aston	6	M1		1
+astor	4	M1		1
+astra	0	M1		1
+atop	13	M1		1
+audio	35	M1		3
+avert	0	M1		1
+avoid	45	M1		3
+azure	7	M1		1
+badge	10	M1		1
+bag	6	M2	bad	1
+bala	0	M2	bald	1
+baron	12	M1		1
+barry	16	M1		2
+bat	9	M2	bar	1
+bayou	7	M1		1
+bends	5	M1		1
+bits	8	M1		1
+blast	7	M1		1
+blogs	2	M1		2
+boom	11	M2	book	1
+bore	19	M1		2
+bores	1	M1		1
+bow	10	M2	boy	2
+bowel	2	M1		1
+bowen	3	M1		1
+brady	6	M1		3
+cash	26	M1		2
+caste	2	M1		1
+cato	3	M1		1
+chai	3	M2	chad	1
+chart	18	M1		1
+chen	6	M2	chef	1
+chick	3	M1		1
+cholo	0	M1		1
+chord	2	M1		1
+chuck	9	M1		2
+chun	2	M1		1
+cigar	3	M1		1
+cited	39	M1		1
+cloud	12	M1		1
+cope	5	M1+M2	copy	1
+copy	28	M1		1
+costa	10	M2	costs	1
+cram	1	M2	crab	1
+crash	33	M1		2
+cro	0	M2	cry	1
+crop	12	M1		1
+daddy	2	M1		1
+dam	34	M2	dad	2
+daryl	3	M1		1
+davis	34	M2	david	3
+depot	19	M1		2
+derry	2	M1		1
+deva	6	M2	devs	1
+dine	1	M2	ding	1
+dip	3	M1		2
+disk	14	M2	dish	2
+dogs	31	M1		4
+doha	1	M1		1
+drew	37	M1		3
+drop	29	M1		2
+dryly	0	M1		1
+duos	1	M1		1
+dying	5	M1		2
+eagle	31	M1		1
+easy	44	M1		5
+eaton	3	M1		1
+echo	7	M1		1
+elite	11	M1		1
+els	0	M2	elf	1
+eric	25	M1		2
+erie	9	M1		1
+ethel	2	M2	ether	1
+ewart	0	M1		1
+extra	45	M1		3
+eyre	2	M1		1
+fast	39	M1		2
+fat	18	M2	far	4
+ferry	40	M1		1
+fiona	4	M1		1
+fired	44	M1		3
+fires	20	M1		2
+flash	10	M1		1
+flew	19	M1		1
+flour	6	M1		2
+foote	2	M1		1
+fork	19	M2	fort	1
+forty	15	M1		3
+fram	1	M2	fran	1
+fruit	36	M1		1
+funds	34	M1		2
+gag	3	M2	gas	1
+gap	18	M2	gas	2
+gary	31	M1		1
+gay	27	M2	gas	2
+gerry	5	M1		1
+ghosh	1	M1		1
+ghost	22	M1		5
+gigas	0	M1		3
+gods	21	M1		2
+goods	28	M1		4
+grids	1	M1		1
+grip	9	M1		1
+guys	12	M1		1
+gyres	0	M1		1
+hadnt	2	M1		1
+hal	6	M2	has	1
+ham	11	M2	has	1
+hands	49	M1		5
+hans	10	M2	hand	1
+harp	3	M1+M2	hart	1
+harry	45	M1		4
+hart	15	M1		3
+hay	13	M2	has	1
+hel	0	M2	her	1
+henri	4	M2	henry	1
+hero	24	M1		4
+hiram	4	M1		1
+hired	41	M1		1
+hits	15	M1		2
+hoffa	1	M1		1
+hoops	0	M1		1
+hope	47	M1		1
+hoped	11	M1		1
+hopes	8	M1		1
+hour	20	M1		1
+hub	37	M2	huh	2
+idaho	7	M1		1
+idiot	2	M1		1
+input	16	M1		2
+iran	7	M1		1
+items	33	M1		1
+jam	6	M2	jan	4
+jerry	29	M1		3
+jews	21	M1		4
+judd	3	M2	judy	1
+khan	13	M1		1
+kinds	12	M1		2
+kits	9	M1		2
+knew	48	M1		2
+korea	18	M1		2
+krupp	1	M1		1
+lac	0	M2	las	1
+ladon	0	M1		2
+lady	50	M1		3
+lam	3	M2	lab	1
+lands	25	M1		1
+lasts	10	M1		1
+lauda	4	M1		1
+laura	9	M1		3
+leary	1	M1		1
+lem	1	M2	leg	1
+lena	1	M2	lens	1
+lends	5	M1		2
+lima	4	M2	limb	1
+limbs	7	M1		1
+litre	0	M1		1
+lloyd	14	M1		3
+logan	11	M1		1
+lone	6	M2	long	1
+lots	19	M1		2
+luton	3	M1		2
+lyric	4	M1		1
+madge	0	M1		1
+magic	36	M1		2
+magog	0	M1		1
+marco	4	M2	march	1
+mari	2	M1+M2	mary	1
+maria	28	M1		2
+marty	1	M1		1
+marys	27	M1		1
+mask	11	M1		1
+masks	7	M1		2
+mason	18	M1		3
+mateo	2	M2	mater	1
+merit	8	M1		1
+molds	1	M1		1
+moods	1	M1		1
+moore	28	M1		2
+moral	11	M1		1
+mouth	25	M1		1
+moyes	0	M1		1
+newer	22	M1		2
+noise	24	M1		2
+noisy	2	M1		1
+nor	49	M2	not	5
+nora	4	M1		1
+notes	45	M1		3
+opium	1	M1		2
+oprah	1	M1		1
+oral	16	M1		1
+ore	15	M1		1
+owen	13	M1		2
+owens	6	M1		1
+pam	2	M2	pan	1
+patti	2	M1+M2	patty	1
+peel	4	M2	peer	1
+perry	17	M1		1
+perth	13	M1		1
+pet	10	M2	per	1
+phase	23	M1		1
+phd	9	M1		3
+piano	48	M1		4
+piece	39	M1		1
+pier	6	M1		1
+pig	8	M1		1
+pigs	2	M1		1
+pious	5	M1		1
+pit	11	M1		3
+pitch	23	M1		2
+pitt	5	M1+M2	pity	1
+plots	7	M1		1
+poe	2	M1+M2	pot	1
+poem	35	M1		5
+poems	34	M1		3
+poet	25	M1		2
+posh	0	M1		1
+pratt	4	M1		1
+pray	6	M1		1
+pre	2	M1		1
+prop	4	M1		1
+pros	0	M2	prof	1
+proud	12	M1		1
+push	10	M1		1
+puts	7	M1		1
+quick	15	M1		1
+quiet	17	M1		2
+quit	16	M1		2
+radha	2	M1		1
+raids	8	M1		1
+ram	3	M2	ran	1
+rama	1	M2	rams	2
+rao	3	M2	rad	1
+rapid	35	M1		2
+ratio	14	M1		1
+ready	23	M1		1
+renew	5	M1		1
+rex	9	M2	red	1
+rhoda	2	M1		1
+rico	8	M2	rich	2
+rio	14	M1		2
+rites	8	M1		1
+rods	11	M1		1
+roofs	8	M1		1
+roos	0	M2	roof	1
+roots	22	M1		2
+rouse	2	M1		1
+rower	0	M1		1
+ru	0	M2	rt	1
+ruins	19	M1		1
+ruled	40	M1		2
+runge	0	M1		1
+rusty	5	M1		1
+salsa	1	M1		1
+sam	34	M2	san	3
+sands	2	M1		1
+scope	17	M1		1
+scots	8	M1		1
+scout	20	M1		2
+seem	36	M2	seen	1
+sends	18	M1		1
+sharp	25	M1		2
+sheep	26	M2	sheet	4
+shock	11	M1		1
+shops	28	M1		2
+shore	39	M1		2
+shots	10	M1		1
+sioux	5	M1		1
+sited	6	M1		1
+sits	43	M1		2
+slots	1	M1		1
+smart	10	M1		1
+snore	0	M1		1
+sore	1	M1		1
+spot	27	M1		1
+spots	14	M1		1
+stick	6	M1		1
+stiff	0	M1		1
+stilt	0	M1		1
+stint	8	M1		1
+stock	43	M1		2
+stood	43	M1		1
+stops	23	M1		3
+store	48	M1		3
+storm	43	M1		2
+strip	24	M1		3
+stuff	5	M1		1
+suit	20	M1		1
+super	39	M1		3
+susan	20	M1		2
+swept	10	M1		1
+syrup	8	M1		1
+tai	3	M2	tad	1
+tale	16	M2	talk	1
+talks	17	M1		2
+tall	19	M2	talk	3
+task	24	M1		3
+taste	13	M1		2
+terry	18	M1		1
+theo	2	M2	they	1
+threw	18	M1		2
+tidal	13	M1		2
+tip	20	M1		1
+toa	1	M2	tod	1
+topic	17	M1		1
+tor	1	M2	toy	1
+tore	2	M1		1
+tours	27	M1		1
+trace	17	M1		1
+tracy	8	M1		1
+tram	9	M1		1
+traps	1	M1		1
+trash	6	M1		1
+trees	47	M1		2
+trend	19	M1		3
+trey	3	M1		1
+troop	6	M1		2
+trout	15	M1		1
+tulsi	0	M1		1
+tweet	0	M1		1
+twigs	2	M1		1
+tyre	4	M1		1
+usage	26	M1		1
+vanda	0	M1		1
+vast	31	M1		3
+vital	16	M1		1
+vote	41	M1		2
+voted	40	M1		1
+votes	13	M1		1
+vowel	11	M1		1
+wah	3	M2	was	2
+wal	0	M2	was	1
+walt	4	M2	walk	1
+wan	2	M2	was	1
+wasnt	34	M1		1
+waste	25	M1		1
+week	48	M1		5
+weir	2	M1		2
+wells	28	M1		2
+welsh	19	M1		2
+wet	25	M1		0
+whigs	0	M1		1
+winds	18	M1		1
+wire	8	M1		1
+woods	21	M1		1
+wore	23	M1		2
+write	50	M1		5
+wrong	7	M1		1
+yama	0	M2	yams	1
+yeast	1	M1		1
+yoga	7	M1		1
+youre	26	M1		2

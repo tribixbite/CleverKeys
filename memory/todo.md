@@ -536,10 +536,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 17. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so
     dwell-less `ad`/`wet` decode, gated on fresh writer/session-separated human traces
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).
+    KIT READY (2026-11-04): `ml/rtx-kits/17-short-word-ctc/`. Gate = FUTO swipe-1 VALIDATION,
+    session-disjoint from all training (567 ad/wet-class traces, 377 words, 271 sessions).
 18. [ ] RTX: apostrophe context chooser — listed-evidence its/it's variant in its own
     pre-registered round on fresh data (`docs/eval/2026-10-07-apostrophe-context.md`).
+    KIT READY (2026-11-04): `ml/rtx-kits/18-apostrophe-context/`. CPU-only (~2 s eval on the
+    phone), round 3 pre-registered (GUM + Ubuntu 125,001–150,000); one run of stage 4 remains.
 19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
+    KIT (2026-11-04): `ml/rtx-kits/19-bangla-pack/`. A 20,627-word subset of WM Keyboard bn.txt
+    (MIT seed + FrequencyWords CC BY-SA 4.0) verified spelling-preserving with
+    `build_dictionary.py --keep-script-marks`. Still blocked: WordChars splits Bangla words at
+    marks; the model needs a layout decision (centre keys cover 17–31 % of words).
 20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar,
     4.3 opt-in floating quick-action button (future release; overlay permission requested only
