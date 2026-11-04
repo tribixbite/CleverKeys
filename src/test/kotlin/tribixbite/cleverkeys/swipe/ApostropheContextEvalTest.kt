@@ -31,7 +31,10 @@ import kotlin.math.sqrt
  *
  * Stage 2 (the independent confirmation of the frozen arm C on Common Voice
  * `~/.cache/cleverkeys-corpora/commonvoice/sentence-collector.en.txt`): prefix the same command
- * with `APOSTROPHE_EVAL_STAGE=2`.
+ * with `APOSTROPHE_EVAL_STAGE=2`. Stage 3 is round 2 (eval doc §6). Stage 4 is round 3, the
+ * frozen `ROUND3_ITS_LISTED` on the populations `ml/rtx-kits/18-apostrophe-context/
+ * build_round3_populations.py` writes to `static-lm-eval/round3/` (pre-registered in that kit's
+ * README); `APOSTROPHE_STAGE4_DIR` points it elsewhere (the kit's smoke fixture).
  *
  * Inputs (written by `scripts/build_static_lm.py` to `~/.cache/cleverkeys-corpora/static-lm-eval/`,
  * never committed): `heldout_en.txt` (the LM's 10 % held-out split — never in training),
@@ -257,13 +260,29 @@ class ApostropheContextEvalTest {
 
         // Stage 3 (round 2, pre-registered in the eval doc §6.0): the NARROW variants on two fresh
         // populations, scored once. (a) its-only may ship; (b) listed-evidence is reported only.
-        if (System.getenv("APOSTROPHE_EVAL_STAGE") == "3") {
-            val p1 = File(corpora, "ewt_train_en.txt")
-            val p2 = File(corpora, "ubuntu_eval_en.txt")
-            Assume.assumeTrue("round-2 populations missing (eval doc §6.0)", p1.isFile && p2.isFile)
+        // Stage 4 (round 3, pre-registered in ml/rtx-kits/18-apostrophe-context/README.md before any
+        // number): the frozen (b)-restricted-to-`its` variant on two populations no earlier round
+        // read (UD English-GUM; Ubuntu Dialogue members 125,001–150,000). Same occurrence rules,
+        // same tables; the structural check uses the variant under test. APOSTROPHE_STAGE4_DIR
+        // overrides the input directory (the kit's smoke run points it at a synthetic fixture).
+        val stage = System.getenv("APOSTROPHE_EVAL_STAGE")
+        if (stage == "3" || stage == "4") {
+            val stage4Dir = System.getenv("APOSTROPHE_STAGE4_DIR")?.let(::File) ?: File(corpora, "round3")
+            val inputs = if (stage == "3") {
+                listOf("P1 EWT train" to File(corpora, "ewt_train_en.txt"), "P2 Ubuntu" to File(corpora, "ubuntu_eval_en.txt"))
+            } else {
+                listOf("Q1 GUM" to File(stage4Dir, "gum_en.txt"), "Q2 Ubuntu-2" to File(stage4Dir, "ubuntu_fresh_en.txt"))
+            }
+            Assume.assumeTrue("stage-$stage populations missing", inputs.all { it.second.isFile })
+            val structuralParams = if (stage == "3") ROUND2_ITS_ONLY else ROUND3_ITS_LISTED
+            val variants = if (stage == "3") {
+                listOf("a its-only" to ROUND2_ITS_ONLY, "b listed" to ROUND2_LISTED)
+            } else {
+                listOf("c its-listed" to ROUND3_ITS_LISTED)
+            }
             var n3Violations = 0L
             var n3Checked = 0L
-            val populations = listOf("P1 EWT train" to p1, "P2 Ubuntu" to p2).map { (name, file) ->
+            val populations = inputs.map { (name, file) ->
                 val occ = ArrayList<Occurrence>()
                 val firstId = sentenceId
                 file.forEachLine { raw ->
@@ -280,7 +299,7 @@ class ApostropheContextEvalTest {
                         // N3: (a) changes nothing unless slots 0–1 are its/it's — every token checked.
                         n3Checked++
                         val outA = ContractionContextChooser.choose(slate, List(slate.size) { 900 }, "en", prev,
-                            model, { false }, ROUND2_ITS_ONLY).first
+                            model, { false }, structuralParams).first
                         if (outA !== slate && slate.take(2).map { it.replace("'", "") }.toSet() != setOf("its")) {
                             n3Violations++
                         }
@@ -288,13 +307,13 @@ class ApostropheContextEvalTest {
                         occ.add(Occurrence(id, prev, t.form, surface, slate, heldout = false))
                     }
                 }
-                println("[stage3] $name sentences=${sentenceId - firstId} occurrences=${occ.size} " +
+                println("[stage$stage] $name sentences=${sentenceId - firstId} occurrences=${occ.size} " +
                     "sentence-start=${occ.count { it.prev == null }}")
                 name to occ
             }
-            println("[stage3] N3 checked=$n3Checked violations=$n3Violations")
-            for ((variant, params) in listOf("a its-only" to ROUND2_ITS_ONLY, "b listed" to ROUND2_LISTED)) {
-                for ((name, occ) in populations) round2Report(variant, name, params, occ) { o, p -> top(o, p) }
+            println("[stage$stage] N3 checked=$n3Checked violations=$n3Violations")
+            for ((variant, params) in variants) {
+                for ((name, occ) in populations) round2Report(variant, name, params, occ, "stage$stage") { o, p -> top(o, p) }
             }
             assertThat(n3Violations).isEqualTo(0L)
             return
@@ -463,6 +482,7 @@ class ApostropheContextEvalTest {
         population: String,
         params: Params,
         all: List<Occurrence>,
+        tag: String,
         top: (Occurrence, Params?) -> String,
     ) {
         class Cell { var n = 0; var cur = 0; var new = 0; var win = 0; var loss = 0
@@ -481,7 +501,7 @@ class ApostropheContextEvalTest {
             return c
         }
         fun line(label: String, c: Cell) = println(
-            "[stage3] %-11s %-13s %-22s n=%6d sent=%6d cur=%6.2f%% new=%6.2f%% Δ=%+6.2f win=%5d loss=%5d"
+            "[$tag] %-12s %-13s %-22s n=%6d sent=%6d cur=%6.2f%% new=%6.2f%% Δ=%+6.2f win=%5d loss=%5d"
                 .format(variant, population, label, c.n, c.sentences.size, pct(c.cur, c.n), pct(c.new, c.n),
                     c.delta(), c.win, c.loss))
         val ctx = all.filter { it.prev != null }
@@ -494,10 +514,10 @@ class ApostropheContextEvalTest {
             if (c.n >= 30 && s != "its") line("surface $s", c)
         }
         val small = bySurface.entries.filter { it.value.n < 30 && it.value.win + it.value.loss > 0 }
-        println("[stage3] %-11s %-13s surfaces <30 with any change: %s".format(variant, population,
+        println("[$tag] %-12s %-13s surfaces <30 with any change: %s".format(variant, population,
             small.joinToString { "${it.key}(n=${it.value.n},+${it.value.win}/-${it.value.loss})" }))
         val surfaceFloor = bySurface.filter { it.value.n >= 30 && it.value.delta() < -1.0 }.keys
-        println("[stage3-verdict] $variant $population its: Δ=%+.2f sign=%s | pooled: Δ=%+.2f sign=%s | surfaces ≥30 below −1.0: %s"
+        println("[$tag-verdict] $variant $population its: Δ=%+.2f sign=%s | pooled: Δ=%+.2f sign=%s | surfaces ≥30 below −1.0: %s"
             .format(its.delta(), pass(its.signTest()), pooled.delta(), pass(pooled.signTest()), surfaceFloor))
     }
 
@@ -517,5 +537,11 @@ class ApostropheContextEvalTest {
 
         /** Round 2 (eval doc §6.0), variant (b): arm C with LISTED evidence — reported only. */
         val ROUND2_LISTED = Params(0.0, Evidence.LISTED, promotePossessives = false)
+
+        /**
+         * Round 3 (kit `ml/rtx-kits/18-apostrophe-context`, eval doc §6.3 point 2): variant (b)
+         * restricted to the `its` surface — τ 0, LISTED evidence, possessives never promoted. Frozen.
+         */
+        val ROUND3_ITS_LISTED = Params(0.0, Evidence.LISTED, promotePossessives = false, surfaces = setOf("its"))
     }
 }

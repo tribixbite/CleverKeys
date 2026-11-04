@@ -402,3 +402,11 @@ What this shows, without re-reading the bar:
 Shipped: §6.1 (no letter-plural or closed-class possessives on the swipe bar) and §6.2 (`lets`
 PAIRED). Not shipped: any context chooser. The chooser and its round-2 scope parameter
 (`Params.surfaces`) stay in test sources with their decision tests.
+
+## 8. Round 3 — pre-registered (2026-11-04), not yet run
+
+The hypothesis is §6.3 point 2: (b) restricted to `its`, written `ROUND3_ITS_LISTED` in the
+harness. It is scored once on two fresh populations: UD English-GUM, and Ubuntu Dialogue members
+125,001–150,000. The bar repeats round 2's N1–N4 against those populations. The full
+pre-registration, population hashes and commands are in `ml/rtx-kits/18-apostrophe-context/README.md`.
+The harness runs it as `APOSTROPHE_EVAL_STAGE=4`. Round 2's (b) numbers do not count toward it.
