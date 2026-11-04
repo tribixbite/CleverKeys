@@ -88,6 +88,9 @@ Never `git add` to the shared `.git/index`: another session's `git commit` takes
 staged (a Persian pack commit swept in a whole uncommitted feature). Commit from a private index
 (`GIT_INDEX_FILE=<scratch> git read-tree HEAD`, add, commit) and re-read HEAD right before
 committing — an index read before a foreign commit records that commit's files as deleted.
+After such a commit the SHARED index still holds the old blobs (`git status` shows `MM`/`AD`/`D `
+on your paths), so the next session's plain `git commit` would revert you: run
+`git restore --staged <your paths>` right after committing (2026-11-04).
 
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 

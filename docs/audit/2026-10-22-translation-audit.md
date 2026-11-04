@@ -406,11 +406,12 @@ findings on the final tree.
 - fil: the Tagalog ligature (*-ng/na*) and *d/r* alternation rules fire throughout the Taglish
   copy; a Filipino reader should decide whether the Taglish policy wants them.
 
-**Repeat recipe.** `lt_check.py` (session scratchpad; about 250 lines of typed Python, no
-dependencies beyond the standard library): `python3 lt_check.py [locale…]` for a full pass,
-`python3 lt_check.py --recheck <locale> key1,key2` after edits; `triage.py <locale>` writes a
-digest, `--words RULE` lists a speller rule's distinct tokens, `--skip RULE,…` prints everything
-else with context; `report.py` prints the table above from `summary.json`. Keep MAX_BYTES at
+**Repeat recipe.** `scripts/lt_check.py` (since 2026-11-04; typed Python, standard library
+only; output and response cache in `~/.cache/cleverkeys-lt` or `--out`): `python3
+scripts/lt_check.py [locale…]` for a full pass, `--since <ref> [locale…]` for the strings changed
+since a commit, `--recheck <locale> key1,key2` after edits. The §7 helpers `triage.py` (digest,
+`--words RULE`, `--skip RULE,…`) and `report.py` (the table above from `summary.json`) were
+throwaway scratch scripts and were not kept. Keep MAX_BYTES at
 12 KB and MIN_INTERVAL at 17 s, or point LT_URL at a local server and drop both.
 
 ## 8. LanguageTool pass on strings changed since §7 (2026-11-03)
@@ -425,7 +426,7 @@ changed since the last §7 fix `4c0a812f`) and `8335bd02`, for the 14 supported 
 3,091 texts in total: mostly voice input, the licences screen, Unfinished Words, familiar looks
 and Theme Creator, and the learned-words browser.
 
-**Method.** The §7 script (`lt_check.py`, session scratchpad, still not committed) gained a
+**Method.** The §7 script (committed 2026-11-04 as `scripts/lt_check.py`; output and response cache under `~/.cache/cleverkeys-lt`, `--out` to change) gained a
 `--since <ref> [locales…]` mode: it parses each locale file at `<ref>` through `git show` and in
 the working tree, keeps the entries whose text is new or different, and writes
 `matches-since/<locale>.jsonl` and `summary-since.json` beside the full pass's output. Batching,
@@ -475,7 +476,7 @@ hyphen-split verb prefixes such as *Nilo-*/*Nagre-*).
   *Caracteres*. A scan of the pt file for other pt-PT forms (*ecrã*, *utilizador*, *telemóvel*,
   *registo*, *controlo*) found none.
 
-**Needs native judgement** (recorded in `docs/i18n/review/2026-11/README.md`):
+**Needs native judgement** (since 2026-11-04 these are questions in `docs/i18n/review-flags.json`, so they appear in each locale's `docs/i18n/review/2026-11/<locale>/2-check.csv`):
 
 - de `theme_section_hints` *Gestenhinweise* vs `appearance_look_show_hints_title`
   *Gesten-Hinweise* (DE_COMPOUND_COHERENCY).
