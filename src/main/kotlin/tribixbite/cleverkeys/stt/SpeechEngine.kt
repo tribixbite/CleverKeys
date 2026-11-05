@@ -66,6 +66,11 @@ data class SpeechMemoryReport(
 data class SpeechEngineOptions(
     /** Intra-op threads for inference. 2 balances latency against the foreground app. */
     val threads: Int = DEFAULT_THREADS,
+    /**
+     * Engine-specific tuning for measurements (keys documented by each engine; unknown keys are
+     * ignored). The keyboard passes none, so every engine runs its own defaults.
+     */
+    val engineHints: Map<String, String> = emptyMap(),
 ) {
     companion object {
         const val DEFAULT_THREADS = 2

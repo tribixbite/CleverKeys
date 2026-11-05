@@ -492,8 +492,12 @@ class MoonshineV2StreamingEngine private constructor(
                     so.setInterOpNumThreads(1)
                     // ORT's BFC arena never shrinks, and every streaming pass has a new input
                     // shape: with it on, a 23 s utterance held 508 MB; off, 112 MB (research §5.3).
-                    so.setCPUArenaAllocator(false)
+                    // HINT_ARENA / HINT_EP exist only so device benchmarks can compare settings.
+                    val arena = options.engineHints[HINT_ARENA] == "on"
+                    val xnnpack = options.engineHints[HINT_EP] == EP_XNNPACK
+                    so.setCPUArenaAllocator(arena)
                     so.setMemoryPatternOptimization(false)
+                    if (xnnpack) so.addXnnpack(mapOf("intra_op_num_threads" to options.threads.coerceIn(1, 8).toString()))
                     fun open(name: String) = env.createSession(File(packDir, name).path, so).also { opened += it }
                     val frontend = open(FRONTEND_MODEL)
                     val weights = open(FRONTEND_WEIGHTS)
@@ -523,7 +527,7 @@ class MoonshineV2StreamingEngine private constructor(
                         loadMillis = (System.nanoTime() - started) / 1_000_000,
                         // Any streaming size loads here (tiny, small); name it by its shape.
                         detail = "moonshine-v2-streaming depth ${config.depth} dim ${config.encoderDim}/${config.decoderDim}, " +
-                            "CPU EP, ${options.threads} threads, arena off",
+                            "${if (xnnpack) "XNNPACK" else "CPU"} EP, ${options.threads} threads, arena ${if (arena) "on" else "off"}",
                     )
                     return MoonshineV2StreamingEngine(
                         env, config, frontend, weightTensors, encoder, adapter, crossKv, decoder, tokenizer, report,
@@ -539,6 +543,13 @@ class MoonshineV2StreamingEngine private constructor(
 
     companion object {
         const val ENGINE_ID = "moonshine-v2-streaming"
+
+        /** [SpeechEngineOptions.engineHints] key: "on" enables ORT's CPU memory arena (default off). */
+        const val HINT_ARENA = "arena"
+
+        /** [SpeechEngineOptions.engineHints] key: [EP_XNNPACK] adds the XNNPACK execution provider. */
+        const val HINT_EP = "ep"
+        const val EP_XNNPACK = "xnnpack"
         const val SAMPLE_RATE = 16_000
 
         /** Seconds of audio per recognition pass (two-pass agreement floor, research §5.2). */
