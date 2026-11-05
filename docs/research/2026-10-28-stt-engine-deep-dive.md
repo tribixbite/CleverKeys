@@ -29,6 +29,9 @@ section lists what this dive changed there). Three questions from the maintainer
    pseudo-stream that falls behind real time past ~5–8 s of audio unless windowed. The official
    Cactus engine is 2–3× faster and 4× smaller in RAM than either (RTF 0.037, 39 MB), but it is a
    binary and cannot go into the F-Droid build.
+4. **Whisper** (added 2026-11-05, §6.4): measured on the same clips with a source-built whisper.cpp.
+   Its 30 s fixed encoder window makes the best config (tiny.en q8_0, 44 MB) cost ~3.4× Moonshine
+   per 1 s pass on short dictation; shrinking the window makes it loop. Moonshine stays the pick.
 
 Marking: **[U]** = not verified from a primary source. Everything else was read or measured on
 2026-10-28; every measurement line carries the box's load average because other sessions were
@@ -404,6 +407,90 @@ WER. Its streaming grows per pass like the ONNX pseudo-stream (70 → 574 ms ove
 88 passes exceeded their 1 s chunk on the 15 s set under this load. It is the yardstick for what a
 FLOSS Whistle runtime would have to match: about 3× the ORT fp32 speed at a quarter of the RAM.
 
+### 6.4 Whisper via whisper.cpp (added 2026-11-05)
+
+The earlier note screened Whisper on paper (§5 there) and this dive did not measure it; an
+outside review called that a gap, fairly. Filled here on the **same 28 clips, normaliser and
+commit rule**: `whisper.cpp` 4da27c4 (2026-11-03) built from source on this box
+(`cmake -DGGML_OPENMP=OFF`, NEON/DOTPROD/MATMUL_INT8 on), the official ggml checkpoints from
+`huggingface.co/ggerganov/whisper.cpp`, greedy decoding (`-bs 1 -bo 1`, temperature fallback left
+on), 4 threads, `-l en`. Harness `scripts/research/stt/whisper_cpp_bench.py`; one `whisper-cli`
+process per clip or pass, timed by whisper.cpp's own `whisper_print_timings` as total − load (mel +
+encode + decode, no process start or model load — what a resident JNI context would pay); RSS =
+the child's `ru_maxrss` (whole native process, no Python baseline to subtract). Load average
+**10–18** during these runs, i.e. a little quieter than the Oct 28 runs, which favours Whisper.
+
+**Batch** (median over clips of the min of 2 repeats):
+
+| model | file MB | 5 s WER | 15 s WER | 5 s median compute ms (enc) | 5 s RTF med / max | 15 s RTF med | peak RSS MB |
+|---|---|---|---|---|---|---|---|
+| tiny.en q5_1 | 32.2 | 20/280 = 7.14 % | 9/308 = 2.92 % | 1296 (1185) | 0.266 / 0.315 | 0.100 | 101 |
+| **tiny.en q8_0** | 43.6 | 21/280 = 7.50 % | 9/308 = 2.92 % | **683** (579) | 0.142 / 0.178 | 0.055 | 112 |
+| tiny.en f16 | 77.7 | 21/280 = 7.50 % | 9/308 = 2.92 % | 1516 (1369) | 0.317 / 0.463 | 0.117 | 147 |
+| base.en q5_1 | 59.7 | 16/280 = 5.71 % | 7/308 = 2.27 % | 2916 (2741) | 0.618 / 0.708 | 0.220 | 150 |
+| **base.en q8_0** | 81.8 | 13/280 = 4.64 % | 7/308 = 2.27 % | 1319 (1153) | 0.275 / 0.489 | 0.106 | 171 |
+| base.en f16 | 148.0 | 13/280 = 4.64 % | 7/308 = 2.27 % | 3509 (3294) | 0.725 / 0.879 | 0.258 | 237 |
+| tiny q5_1 (multilingual) | 32.2 | 27/280 = 9.64 % | 12/308 = 3.90 % | 1304 (1184) | 0.268 / 0.320 | 0.100 | 102 |
+| base q5_1 (multilingual) | 59.7 | 17/280 = 6.07 % | 4/308 = 1.30 % | 2917 (2730) | 0.608 / 0.723 | 0.218 | 150 |
+| tiny.en q5_1, 1 thread | 32.2 | 7.14 % | 2.92 % | 4540 (4316) | 0.949 / 1.121 | 0.338 | 100 |
+| tiny.en q5_1, `-ac` scaled | 32.2 | **379/280 = 135 %** | 30/308 = 9.74 % | 261 (157) | 0.053 / 1.230 | 0.051 | 76 |
+| *Moonshine tiny-streaming (§5.1)* | *51.2* | *14/280 = 5.00 %* | *11/308 = 3.57 %* | *364 (51)* | *0.076 / 0.093* | *0.101* | *112 steady, arena off* |
+
+- **The encoder cost is fixed, not proportional.** Whisper pads every input to its 30 s window
+  (1,500 encoder frames), so a 5 s clip costs the same encoder time as a 23 s one (tiny.en q8_0
+  ≈ 580 ms on both sets; base.en q5_1 ≈ 2.7 s). That is why the 5 s RTFs are 2.5–3× the 15 s ones,
+  and why dictation (short utterances) is Whisper's worst case. Moonshine's encoder spends 51 ms
+  on the same clips.
+- **q8_0 is the fast format on this CPU**, about 2× q5_1 and f16 at identical WER (int8 dot-product
+  kernels vs the 5-bit unpack); q5_1 only saves bytes.
+- **The audio-context workaround is not usable.** `-ac ceil(s·50)+16` (the knob whisper.cpp's
+  `stream` example and several mobile ports use) cut the median encoder time 7.5× on the 5 s set and 2.4× on the 15 s set, but on 5 of 21 short clips
+  the decoder looped ("This thought, however, did not enter the heads of the enthusiastic pair. This
+  thought, however, …" ×N), WER 135 %. Whisper was trained only on 30 s windows; fine-tuned
+  short-context checkpoints exist upstream as research but are not the official weights **[U]**.
+- **Accuracy at this sample size**: tiny.en is 6–7 words worse than Moonshine on the 5 s set and
+  2 better on the 15 s set; base.en q8_0 is 1 word better than Moonshine on 5 s and 4 better on
+  15 s, at 3.6× Moonshine's compute and 1.6× its bytes. All within a few words on 588 reference
+  words — no claim of a quality difference either way is supported by these clips.
+- Threads: unlike Whistle on ORT (§5.3), whisper.cpp scaled with threads under this load (1 thread
+  3.5× slower than 4).
+
+**Pseudo-stream** (1 s chunks, same two-pass commit rule as §5.2; full 30 s context unless noted):
+
+| run | passes | median pass ms | max pass ms | passes > 1 s | first commit | retractions | WER stream / batch |
+|---|---|---|---|---|---|---|---|
+| tiny.en q8_0, 5 s | 112 | 675 | 2011 | 7 | 2.0 s + 654 ms | 43 (15 %) | 22/280 = 7.86 % / 7.50 % |
+| tiny.en q8_0, 15 s | 118 | 776 | 2264 | 10 | 2.0 s + 660 ms | 44 (14 %) | 15/308 = 4.87 % / 2.92 % |
+| tiny.en q5_1, 5 s | 112 | 1287 | 2477 | **112 (all)** | 2.0 s + 1.26 s | 70 (25 %) | 19/280 = 6.79 % / 7.14 % |
+| tiny.en q5_1, 15 s | 118 | 1382 | 2725 | **118 (all)** | 2.0 s + 1.24 s | 29 (9 %) | 15/308 = 4.87 % / 2.92 % |
+| base.en q5_1, 5 s | 112 | 3264 | **15,954** | **112 (all)** | 2.0 s + 3.7 s | 24 (9 %) | 19/280 = 6.79 % / 5.71 % |
+| base.en q5_1, 15 s | 118 | 3092 | 4583 | **118 (all)** | 2.0 s + 2.8 s | 66 (21 %) | 7/308 = 2.27 % / 2.27 % |
+| tiny.en q5_1 `-ac` scaled, 5 s / 15 s | 112 / 118 | 228 / 617 | 6193 / 6230 | 25 / 25 | 2.0 s + 0.13–0.20 s | 186 % / 78 % | 116 % / 4.22 % |
+| *Moonshine tiny-streaming (§5.2)* | *112 / 118* | *200 / 307* | *386 / 1328* | *0 / 5* | *2.0 s + 194 ms (partial @ 1.0 s)* | *24 % / 20 %* | *5.00 % / 3.25 %* |
+
+Per pass on the 14.05 s reference clip `1320-122617-0001`: tiny.en q8_0 623, 661, 870, 716, 688, 687,
+700, 732, 820, 806, 765, 798, 777, 893, 880 ms — **flat from the first second**, the opposite shape
+to Whistle (§5.2: grows with the buffer), because the 30 s encoder pass dominates and does not
+depend on how much audio is in it. That makes Whisper's first-second cost its *worst* relative to
+the others (660 ms vs Moonshine's 116 ms), while the 30 s cap bounds the end. base.en's 8–16 s
+outliers are passes where decode time was 2–4× encode time on 3–5 s buffers, consistent with
+whisper.cpp's temperature fallback re-decoding a failed segment **[U]** (fallback counts were not
+logged per pass). The tiny.en q8_0 15 s stream lost 6 words vs batch (4.87 % vs 2.92 %) where
+Moonshine gained one; one config, small sample.
+
+**Verdict.** Measured, Whisper does not displace Moonshine for in-keyboard dictation: the best
+Whisper configuration (tiny.en q8_0, 44 MB) needs ~3.4× Moonshine's per-pass compute (675 vs
+200 ms median on the 5 s set), its first commit is 0.45 s later, and its only fix for the fixed
+30 s encoder (`-ac`) breaks decoding. base.en buys back at most a few words of accuracy at 10–16× the
+per-pass cost of Moonshine and cannot keep a 1 s cadence on this box. It would also be a **second
+native runtime** (ggml, one `.so` set per ABI, NDK build in the F-Droid recipe) next to the ORT the
+app already ships. Where Whisper is the stronger option: **offline transcription of long
+recordings** (the 30 s window is then amortised: RTF 0.055 for tiny.en q8_0 on the 15 s set) and
+**language coverage** (99 languages in one multilingual checkpoint vs Moonshine's per-language
+models); the multilingual tiny was the least accurate English model measured. Not measured:
+Whisper exported to ONNX and run on the app's ORT (sherpa-onnx ships such exports; same 30 s
+encoder, so the same shape is expected **[U]**), beam search, battery, any non-English clip.
+
 ---
 
 ## 7. Conclusions
@@ -455,6 +542,11 @@ disappears (55 MB int8 / 145 MB fp32 on disk, 130–360 MB RSS, 3–14 s load) a
 pseudo-stream is the slowest of the three. It becomes attractive again if (a) someone publishes a
 FLOSS `.cact` runtime with speech (needle-rs has the container and the text model, not Whistle), or
 (b) Cactus opens the engine. Revisit then.
+
+**Whisper (whisper.cpp)**, measured after the fact (§6.4, 2026-11-05): not a better fit — its
+fixed 30 s encoder makes the best config ~3.4× Moonshine's per-pass cost on short dictation, the
+reduced-context workaround makes it loop, and it adds a second native runtime. Its strengths
+(long-form batch, 99 languages) are not the keyboard's use case.
 
 **sherpa Zipformer** is the fallback if the Moonshine port stalls or if retractions prove
 unacceptable in practice: true streaming, 35 MB int8, Apache-2.0, but English-only at this size,
@@ -508,6 +600,13 @@ python3 scripts/research/stt/summarise_results.py $STT/results
 JAR=$(ls ~/.gradle/caches/modules-2/files-2.1/com.microsoft.onnxruntime/onnxruntime/1.21.1/*/onnxruntime-1.21.1.jar)
 javac -cp "$JAR" -d $STT/ortcheck scripts/research/stt/OrtCompatCheck.java
 java -Donnxruntime.native.path=build/ort-native/arm64-v8a -cp "$JAR:$STT/ortcheck" OrtCompatCheck $STT/models
+# §6.4 Whisper baseline (2026-11-05)
+git clone --depth 1 https://github.com/ggml-org/whisper.cpp && cmake -S whisper.cpp -B wcb -DCMAKE_BUILD_TYPE=Release -DGGML_OPENMP=OFF
+cmake --build wcb -j3 --target whisper-cli
+# models: https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{tiny.en,base.en}{,-q8_0,-q5_1}.bin, ggml-{tiny,base}-q5_1.bin
+python3 scripts/research/stt/whisper_cpp_bench.py --cli wcb/bin/whisper-cli --model ggml-tiny.en-q8_0.bin bench $STT/audio/manifest.json --ids "$(cat $STT/ids5.txt)"
+python3 scripts/research/stt/whisper_cpp_bench.py --cli wcb/bin/whisper-cli --model ggml-tiny.en-q8_0.bin stream $STT/audio/manifest.json --ids "$(cat $STT/ids15.txt)" --verbose
+#   add --audio-ctx auto for the reduced-context rows
 ```
 
 ## Sources
