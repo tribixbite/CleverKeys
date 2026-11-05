@@ -370,13 +370,15 @@ Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.
   459–698 MB (small); model load 117 / 286 ms.
 - Engine benchmark (`VoiceEngineDeviceBenchmark`, debug + test APK): per-pass median tiny 168 ms,
   small 387 ms as shipped (CPU EP, arena off); arena on or XNNPACK 1.7–1.8× faster for both.
-- Android 14 Saga (`192.168.1.130`): with the phone's own speaker playing, the capture heard
-  almost nothing (platform echo cancellation on `VOICE_RECOGNITION`, inferred) and the period
-  ended idle; not a product finding, but speaker self-playback is not a test path there.
-  Play Protect blocks the debug APK on that Saga and on the Pixel; the Pixel's dictation run was
-  not done (another app's Chrome prompt was open). Every phone was restored (packs removed, voice
-  off, microphone revoked, volume, tabs, debug APKs uninstalled); the release app was updated to
-  `ee203b73` on the two Sagas and the Pixel.
+- Android 14 Saga (`192.168.1.130`), same flow at 25/25 speaker volume: tiny 45 and 41 errors,
+  small 23 and 22; lag median ~1.0–1.2 s; benchmark tiny 203 ms, small 369 ms per pass as shipped,
+  ~2× faster with XNNPACK or the arena on. Its first runs gave no text only because
+  `cmd media_session volume --set` does not change the volume on that phone (Volume Up keys while
+  media plays do); not a product finding. Play Protect blocks the debug APK there unless
+  ADB-install verification is off (turned off for the run, restored). The Pixel was not used
+  (busy). Every phone was restored (packs removed, voice off, microphone revoked, volume, tabs,
+  debug APKs uninstalled, verifier setting deleted); the release app was updated to `ee203b73` on
+  the two Sagas and the Pixel.
 - Found: Settings → Remove deletes a voice pack without a confirmation.
 
 ## Testing Strategy

@@ -39,7 +39,8 @@ Owners: **device** = needs a test phone · **maintainer** = the maintainer's han
 Test phones (seen from this box 2026-11-05: Pixel 8 Pro `192.168.0.216` wireless port 43213, Android
 17; Sagas `192.168.1.130` Android 14 no Termux, `192.168.0.144` and `192.168.0.83` Android 13 with
 Termux — `.83` was running a game, leave it alone; Play Protect blocks the DEBUG APK on the Pixel
-and on `.1.130`. Older leases as reported on 2026-10-18 — rediscover with `nmap -sn` and
+and on `.1.130` unless `settings put global verifier_verify_adb_installs 0` (delete it afterwards);
+on `.1.130` `cmd media_session volume --set` does nothing — use Volume keys while media plays. Older leases as reported on 2026-10-18 — rediscover with `nmap -sn` and
 `getprop ro.product.model`): Pixel 8 Pro `192.168.0.216`
 (wireless-debugging port rotates), Saga `192.168.0.202` (CleverKeys installed, enabled, not
 default), second Saga `192.168.0.144` (Termux installed; CleverKeys installed, IME disabled,
@@ -1170,9 +1171,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    168) as shipped; real microphone 9–10 vs 18–19 errors in 228 words, lag 0.84 vs 0.75 s, keyboard
    RSS 459–698 vs 324–522 MB. ACFT small.en quantisations: none worth pursuing (§6.5.6).
    Still open: (a) MAINTAINER: switch the Moonshine session to XNNPACK (or the arena on) — 1.7–1.8×
-   faster per pass on the Saga for both packs — after a long-period RSS check on a phone; the Pixel
-   could not run the debug benchmark (Play Protect blocks the debug APK there and on the Android 14
-   Saga). (b) DEVICE: a person's voice and a noisy room for small; the Pixel dictation run.
+   faster per pass on both Sagas for both packs (XNNPACK is CPU code in the shipped ORT for every
+   ABI, so every phone has it) — after a long-period RSS check on a phone. Android 14 Saga
+   `.1.130` confirmed the same (small 23/22 vs tiny 45/41 errors through its speaker at 25/25).
+   (b) DEVICE: a person's voice and a noisy room for small; the Pixel (busy on 11-05).
    (c) Pack choice → item 33.
 33. [ ] agent (2.1): pack library — several dictionary and voice packs per language, a per-language
    choice in Settings, Remove with a confirmation (`docs/plans/2026-10-05-recommended-features-and-gaps.md`

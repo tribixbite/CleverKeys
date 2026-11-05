@@ -735,8 +735,8 @@ runtime the app ships. Pass time is the median per 1 s pseudo-stream pass, 5 s s
 | Moonshine tiny, CPU, arena off, capped (= the app) | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 398 / 478 | B |
 | Moonshine tiny, XNNPACK, arena off, capped | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 212 / 272 | B |
 | **Moonshine small-streaming**, CPU, arena off, capped | ORT · MIT weights | 142 MB | **yes** | 3.57 % | 1.95 % | 3.41 % | 676 / 866 | B |
-| Moonshine tiny, **Saga**, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 45 MB | yes | §6.7 | §6.7 | §6.7 | 168 / 94 / 98 (all clips) | S |
-| Moonshine small, **Saga**, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 142 MB | yes | §6.7 | §6.7 | §6.7 | 387 / 226 / 226 (all clips) | S |
+| Moonshine tiny, **Saga** `.144` / `.1.130`, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 45 MB | yes | §6.7 | §6.7 | §6.7 | 168 / 94 / 98 · 203 / 101 / 99 (all clips) | S |
+| Moonshine small, **Saga** `.144` / `.1.130`, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 142 MB | yes | §6.7 | §6.7 | §6.7 | 387 / 226 / 226 · 369 / 204 / 202 (all clips) | S |
 | Moonshine medium-streaming | ORT · MIT weights | 269 MB | no (decoder 140 MiB) | 2.86 % | 1.62 % | 30.6 % b | — | B |
 | Moonshine tiny, Masterx ONNX fp32 / int8 | ORT · MIT weights | 135 / 76 MB | yes | 4.64 / 4.29 % | 3.25 / 3.57 % | — | — | B |
 | sherpa Zipformer 20M int8 | ORT · Apache-2.0 weights | 35 MB | yes | 5.71 % | 0.97 % | 4.29 % | 41–49 per 0.32 s step | O, B |
@@ -768,18 +768,17 @@ Four test phones: the Pixel 8 Pro (Android 17) and three Sagas (Snapdragon 8+ Ge
 13, 13). What ran where, and why:
 
 - **Engine benchmark** (`VoiceEngineDeviceBenchmark`, debug APK + test APK, the app's Kotlin engine
-  on the phone's ORT 1.21.1, no microphone): the Saga `192.168.0.144` (Android 13, idle). Play
-  Protect refused the debug APK on the Pixel and on the Android 14 Saga ("Harmful app blocked", no
-  way to install anyway without turning scanning off, which was not done). The third Saga had a
-  game running in the foreground at 93 % CPU and was left alone.
+  on the phone's ORT 1.21.1, no microphone): the Sagas `192.168.0.144` (Android 13) and
+  `192.168.1.130` (Android 14). Play Protect blocked the debug APK on `.1.130` until ADB-install
+  verification was turned off for the run (`settings put global verifier_verify_adb_installs 0`,
+  deleted again afterwards); the Pixel was busy and not used. The third Saga had a game running in
+  the foreground at 93 % CPU and was left alone.
 - **Real microphone through the release app** (Settings import, Chrome textarea, the 10 long-set
-  clips, 228 words, played through the phone's own speaker with 1.5 s gaps, 107 s): the Saga
-  `.144`. On the Android 14 Saga the same run produced **no text at all**: the capture
-  (`VOICE_RECOGNITION` source) heard almost nothing while the phone itself played the speech, and
-  the period ended by its 10 s idle rule. That fits the platform cancelling the phone's own
-  playback (echo cancellation) and says nothing about a person speaking. Speaker playback on the
-  same phone is therefore not a usable test path on that Saga; the Pixel run was not completed
-  (another app's prompt was open in Chrome and was left untouched).
+  clips, 228 words, played through the phone's own speaker with 1.5 s gaps, 107 s): both Sagas.
+  The first `.1.130` runs produced no text because the speaker stayed at 9/25: on that phone
+  `cmd media_session volume --set` reports success and changes nothing (read back with `--get`);
+  Volume Up key events while the page's audio plays do raise it. At 25/25 it transcribes. (An
+  earlier draft blamed echo cancellation; that was wrong.) The Pixel was not used.
 
 **Engine benchmark, Saga `.144`.** 18 LibriSpeech clips (the 10 long-set clips + the eight 5 s
 clips; 119.5 s, 353 words), each fed in 1 s chunks = 112 passes per run, one pack and one setting per
@@ -802,6 +801,13 @@ process. Peak RSS is the test process's `VmHWM` and includes ~190 MB before the 
 - **Small on a Saga keeps the 1 s cadence** as shipped (arena off): 387 ms median, 3 of 112 passes
   over 1 s (all early passes of a session); with XNNPACK none are.
 - WER on this path (16 kHz WAV straight into the engine): small 9/353 = 2.5 %, tiny 14/353 = 4.0 %.
+- **Saga `.1.130`** (Android 14, same chip), same benchmark: tiny 203 / 101 / 99 ms median (arena off
+  / on / XNNPACK), 0 passes over 1 s; small 369 / 204 / 202 ms, 4 / 0 / 0 over 1 s; errors 14 and 9
+  of 353 as on `.144`; peak RSS tiny 483 / 535 / 530 MB, small 712 / 811 / 789 MB. Arena off costs
+  1.8–2.0× there.
+- **XNNPACK is not a hardware feature**: it is ORT's set of ARM/x86 CPU kernels, compiled into the
+  `libonnxruntime.so` the APK already ships for arm64-v8a, armeabi-v7a and x86_64 (its symbols are
+  in all three). Every phone that runs the app can use it; no GPU/NPU/NNAPI is involved.
 
 **Real microphone, Saga `.144`, release build of `ee203b73`** (keyboard process RSS from
 `dumpsys meminfo`; lag = time from a clip's end until the field shows the final text through it).
@@ -813,8 +819,14 @@ Remove (the controller reloaded the engine on its own).
 | tiny, run 1 / 2 | 19 (8.3 %) / 18 (7.9 %) | 0.75 / 1.21 s; 0.76 / 1.58 s | 324–469 / 374–522 MB | 362 MB |
 | small, run 1 / 2 | **10 (4.4 %) / 9 (3.9 %)** | 0.84 / 1.15 s; 0.84 / 1.19 s | 483–678 / 459–698 MB | 529 MB |
 
-Small halves the errors through a real speaker → microphone path too, at ~0.1 s more lag and
-~150–200 MB more keyboard memory while dictating. Model load in the keyboard: tiny 117 ms, small
+**Real microphone, Saga `.1.130`** (release of `ee203b73`, speaker at 25/25, same clips; order tiny,
+small, small, tiny): tiny 45 and 41 errors (19.7 / 18.0 %), small 23 and 22 (10.1 / 9.6 %); lag
+median tiny 0.95 / 1.13 s, small 1.22 / 1.05 s (max 3.3 s); keyboard RSS while listening tiny
+321–580 MB, small 454–661 MB. This Saga's speaker → microphone path is worse than `.144`'s for both
+packs (louder playback, a different unit); the ratio holds.
+
+Small halves the errors through a real speaker → microphone path on both Sagas, at ~0.1–0.2 s more
+lag and ~150–200 MB more keyboard memory while dictating. Model load in the keyboard: tiny 117 ms, small
 286 ms. Tiny's 8 % here is better than the 19.7 % of Oct 30 on the same clips and the same Saga
 (that run: the release of `b243ce3d`, 1 s gaps instead of 1.5 s, an unrecorded volume), so compare
 packs only within one session.
@@ -927,7 +939,7 @@ keyword biasing in the pseudo-stream; a Kotlin port of any pipeline.
 
 Open after the 2026-11-05 follow-up (§6.5, §6.7): the arena/XNNPACK timing is measured on a Saga
 (§6.7: arena off costs 1.7×; XNNPACK matches arena on) but not on the Pixel (Play Protect refused
-the debug APK), and not over a long listening period (RSS growth with the arena on or XNNPACK);
+the debug APK there; the Pixel was busy on the second attempt), and not over a long listening period (RSS growth with the arena on or XNNPACK);
 why the official graphs slow down with the arena off is not established; a person's voice and a
 noisy room for small; non-English clips; Phonon-2.5, if its runtime turns out to be FLOSS.
 
