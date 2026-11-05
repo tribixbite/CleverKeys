@@ -92,6 +92,14 @@ After such a commit the SHARED index still holds the old blobs (`git status` sho
 on your paths), so the next session's plain `git commit` would revert you: run
 `git restore --staged <your paths>` right after committing (2026-11-04).
 
+## STT research harness vs the app (2026-11-05)
+
+`scripts/research/stt/moonshine_stream_ort.py` must mirror the app's guards, or it measures failures the
+app never has. Use `--tokens-per-s 6.5` (the app's per-pass decode cap; without it one loop cost
+20 s) and `--max-segment 20` for long clips. Moonshine's frontend rejects chunks < 80 samples;
+both sides pad them. ORT's CPU EP with the arena off ran the official decoder 2–2.5× slower;
+compare latencies only within one series, with the EP and arena recorded.
+
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 
 `TerminalUtils.editorKind` treats RustDesk and ANY `inputType == TYPE_NULL` editor as a blind
