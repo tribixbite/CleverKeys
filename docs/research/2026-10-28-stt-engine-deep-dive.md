@@ -32,6 +32,16 @@ section lists what this dive changed there). Three questions from the maintainer
 4. **Whisper** (added 2026-11-05, §6.4): measured on the same clips with a source-built whisper.cpp.
    Its 30 s fixed encoder window makes the best config (tiny.en q8_0, 44 MB) cost ~3.4× Moonshine
    per 1 s pass on short dictation; shrinking the window makes it loop. Moonshine stays the pick.
+5. **Follow-up** (2026-11-05, §6.5, every engine in §6.6): FUTO's ACFT checkpoints fix Whisper's
+   shortened window, so ACFT tiny.en costs no more per pass than Moonshine tiny, but it retracts
+   more. ACFT small.en is the most accurate model measured (tied with Moonshine small), but it is a
+   252 MiB single file, about twice the 128 MiB per-file voice-pack cap. **Moonshine small-streaming**
+   is the accuracy upgrade that fits the caps and the app's ORT: 10 vs 14 errors (5 s set), 6 vs 11
+   (15 s) and 43 vs 83 on 30–72 s dictation, at 3.2× the bytes and about 2× the per-pass time. The app's 20 s
+   cut is essential: without it Moonshine falls to 29–63 % WER on long clips. Two app findings: a
+   stop that left under 80 samples failed the final pass (fixed, with a test), and the
+   CPU EP with the arena off (the app's setting) runs the decoder 2–2.5× slower than arena on or
+   XNNPACK; that is to be measured on a device. No qualifying model was released in the past week.
 
 Marking: **[U]** = not verified from a primary source. Everything else was read or measured on
 2026-10-28; every measurement line carries the box's load average because other sessions were
@@ -491,6 +501,217 @@ models); the multilingual tiny was the least accurate English model measured. No
 Whisper exported to ONNX and run on the app's ORT (sherpa-onnx ships such exports; same 30 s
 encoder, so the same shape is expected **[U]**), beam search, battery, any non-English clip.
 
+### 6.5 Follow-up 2026-11-05: Whisper's audio-context fix, larger Moonshine, long dictation
+
+Requested after §6.4: longer clips, a better Moonshine model, quantisation or fine-tune, a fix
+for Whisper's `-ac` looping, ACFT small.en, and a check for releases in the past week. Same box,
+clips, normaliser, commit rule and harnesses as §6.4; load average **11–18** throughout. Every
+number in this section comes from one series of runs (2026-11-04 22:00 → 2026-11-05 00:50 EST),
+so rows within it compare with each other. The Oct 28 rows in §5 were measured under a different
+load **and, for Moonshine on the CPU EP, a different arena setting** (see the arena finding
+below); do not mix absolute times across the two series.
+
+**Long clips.** LibriSpeech test-clean has no utterance over 23.3 s. `make_long_clips.py` joins
+consecutive utterances of one chapter (same reader, continuous text) with 0.3 s of silence,
+which is below the app's 0.6 s endpointing hangover, so the app would see one segment up to its
+engine bound. That is the worst case for an engine. Ten clips: six of 30.6–47.0 s and four of
+61.6–71.8 s, 470 s and 1,260 reference words in total. `segmenting.py` copies the app's
+forced-cut rule (`SpeechSegmenter`: at the bound, cut after the quietest 32 ms hop of the last
+2 s) for the `--max-segment` streaming runs.
+
+#### 6.5.1 Whisper: ACFT fixes `-ac`, plain weights need a floor
+
+FUTO's **audio-context fine-tune (ACFT)** checkpoints (`futo-org/acft-whisper-*` on Hugging Face,
+Apache-2.0; ggml q8_0 at `voiceinput.futo.org/VoiceInput/{tiny_en,base_en,small_en,tiny}_acft_q8_0.bin`)
+are trained to decode from a shortened encoder window, `n_ctx = round(50·s) + 8`. With them
+`-ac` works. On the stock weights only a floor on the window avoided the looping. In the sweep
+(tiny.en q8_0, 5 s set, 1 repeat) a token cap did not fix it: auto 204 % WER, auto+128 23.6 %,
+auto+256 12.1 %, floor 512 12.5 %, **floor 750 7.86 %**, auto with `-mt` = ceil(s·6)+8 52.5 %.
+The `-mt` flag needs a 3-line patch to `examples/cli/cli.cpp` (`wparams.max_tokens`), which is
+recorded in §8.
+
+| model (q8_0) | file MB | context | 5 s WER | 15 s WER | 5 s median compute ms (enc) | 15 s median compute ms | 5 s RTF med / max | peak RSS MB |
+|---|---|---|---|---|---|---|---|---|
+| tiny.en | 43.6 | full 1500 | 21/280 = 7.50 % | 9/308 = 2.92 % | 683 (579) | — | 0.142 / 0.178 | 112 |
+| tiny.en | 43.6 | floor 750 | 22/280 = 7.86 % | 11/308 = 3.57 % | 306 (210) | 502 | 0.063 / 0.077 | 96 |
+| **ACFT tiny.en** | 43.6 | auto+8 | 23/280 = 8.21 % | 9/308 = 2.92 % | **131 (48)** | 417 | 0.028 / 0.033 | 87 |
+| ACFT tiny.en | 43.6 | full 1500 | 22/280 = 7.86 % | 10/308 = 3.25 % | 691 (586) | 844 | 0.142 / 0.192 | 111 |
+| ACFT tiny (multilingual) | 43.5 | auto+8 | 26/280 = 9.29 % | 12/308 = 3.90 % | 135 (50) | 431 | 0.029 / 0.033 | 87 |
+| ACFT base.en | 81.8 | auto+8 | 20/280 = 7.14 % | 7/308 = 2.27 % | 204 (94) | 751 | 0.045 / 0.050 | 138 |
+| **ACFT small.en** | **264.5** | auto+8 | **10/280 = 3.57 %** | **6/308 = 1.95 %** | 591 (402) | 1924 | 0.130 / 0.815 | 366 |
+| small.en | 264.5 | full 1500 | 10/280 = 3.57 % | 6/308 = 1.95 % | 4159 (3781) | 4550 | 0.862 / 1.087 | 413 |
+
+Pseudo-stream (1 s chunks, two-pass commit; same series):
+
+| run | passes | median pass ms | max pass ms | passes > 1 s | first commit | retractions | WER stream / batch |
+|---|---|---|---|---|---|---|---|
+| tiny.en floor 750, 5 s / 15 s | 112 / 118 | 295 / 376 | 1708 / 2145 | 4 / 6 | 2.0 s + 0.27 s | 11 % / 12 % | 7.14 % / 7.86 % · 4.87 % / 3.57 % |
+| ACFT tiny.en, 5 s / 15 s | 112 / 118 | **117 / 253** | 5441 / 2683 | 5 / 4 | 2.0 s + 0.08 s | **48 %** / 19 % | 9.29 % / 8.21 % · 4.87 % / 2.92 % |
+| ACFT base.en, 5 s / 15 s | 112 / 118 | 162 / 429 | 1338 / 5149 | 2 / 17 | 2.0 s + 0.11 s | 14 % / 11 % | 9.64 % / 7.14 % · 2.92 % / 2.27 % |
+| ACFT small.en, 5 s / 15 s | 112 / 118 | 436 / **1174** | 2057 / 3900 | 6 / **67** | 2.0 s + 0.27 s | 15 % / 5 % | 5.00 % / 3.57 % · 2.27 % / 1.95 % |
+
+- ACFT makes Whisper's encoder cost proportional to the audio. ACFT tiny.en spends 48 ms of
+  encoder time on a 5 s clip, against 579 ms at the full window. That removes the structural
+  objection in §6.4: per pass it is now as cheap as Moonshine tiny.
+- The cost moves to stability. With a window that grows each second, ACFT tiny.en's hypothesis
+  changes more between passes: 48 % of words retracted on the 5 s set, against 15 % at the full
+  window. Its stream WER is also 1–6 words worse than its batch WER. base.en and small.en
+  retract less.
+- **ACFT small.en is the most accurate English model measured in this series**: 10/280 and 6/308,
+  equal to Moonshine small (below) and to plain small.en. ACFT gives it the same WER as plain
+  small.en at 1/7 of the batch compute. It cannot keep a 1 s cadence once the buffer passes about
+  5 s on this box (67 of 118 passes over budget on the 15 s set).
+- **ACFT small.en does not fit a voice pack.** ggml is a single 264,477,561 B (252.2 MiB) file. That
+  is under the 256 MiB total and 300 MiB extracted caps (`VoicePackManifest.MAX_TOTAL_BYTES`,
+  `MAX_EXTRACTED_BYTES`), but **almost twice `MAX_FILE_BYTES` = 128 MiB**. Shipping it would
+  need a per-file cap raised for one engine, or a split-tensor container plus a loader that
+  joins it. In both cases it would add a second native runtime. Not recommended at this size.
+
+#### 6.5.2 Moonshine: small and medium, other quantisations, the ORT arena
+
+Official quantised graphs from `moonshine-ai/moonshine-voice-assets`
+(`model/{tiny,small,medium}-streaming-en/quantized_26_08_21/`). That layout splits the frontend into
+`frontend.model.ort` plus a weights graph with no inputs, whose outputs feed the model graph, and
+the harness now loads it. Published streaming WER (model cards, LibriSpeech clean / other / Open
+ASR average): tiny 34 M params 4.49 / 12.09 / 12.01, small 123 M 2.49 / 6.78 / 7.84, medium
+245 M 2.08 / 5.00 / 6.65. All three use the same tokenizer (sha256 `6884b35f…`).
+
+| model | bytes on disk | largest file | fits voice-pack caps | 5 s WER | 15 s WER | 5 s batch ms (CPU EP, arena off) | RSS MB (arena off) |
+|---|---|---|---|---|---|---|---|
+| tiny-streaming (shipped) | 45.0 MB | 31.1 MiB (decoder) | yes | 14/280 = 5.00 % | 11/308 = 3.57 % | 938 | 116 |
+| **small-streaming** | 142.3 MB (135.5 MiB) | 78.1 MiB (decoder) | **yes** | 10/280 = 3.57 % | 6/308 = 1.95 % | 1670 | 230 |
+| medium-streaming | 269.1 MB | **140.2 MiB** (decoder) | no (per-file 128 MiB, total 256 MiB) | 8/280 = 2.86 % | 5/308 = 1.62 % | 2374 | 362 |
+| tiny, Masterx ONNX fp32 | 135.2 MB | — | yes | 13/280 = 4.64 % | 10/308 = 3.25 % | 360 | 237 |
+| tiny, Masterx ONNX int8 | 76.4 MB | — | yes | 12/280 = 4.29 % | 11/308 = 3.57 % | 329 | 184 |
+
+- **Small is the accuracy upgrade that fits.** Against tiny it makes 4 fewer errors on the 5 s
+  set, 5 fewer on 15 s and 40 fewer on the long clips (below), at 3.2× the bytes and about 2× the
+  RSS and per-pass time. Medium gains only 1–2 more words on the short sets and does not fit.
+- **No better quantisation of tiny was found.** The community Masterx export of the same weights
+  has a 53.6 MB int8 decoder (MatMulInteger), against the official 32.5 MB, and is 1.7× the
+  official pack's total size. Its WER is within two words of the official graphs. I found no
+  Moonshine streaming fine-tune with a usable licence.
+- **With the ORT memory arena off, the CPU EP runs the official `.ort` decoder 2–2.5× slower.**
+  Measured back to back on tiny, 5 s set: arena on 420 / 465 ms (decoder 286 / 336), arena off
+  890–1048 ms (decoder 774–865), both at 14/280. The Masterx plain-ONNX graphs do not show it
+  (360 / 329 ms with the arena off, table above), so this is specific to the official graphs as
+  loaded by ORT 1.26. Why is not established **[U]**. §5.3 recommended the arena off for its RSS (112 vs 707 MB on long
+  streams), and the app's engine does that (`MoonshineV2StreamingEngine`: "CPU EP, arena off").
+  The Oct 28 latency rows (364 ms batch, 200 ms per pass) were measured **with the arena on**, so
+  the app's real per-pass cost is about twice what §5 shows. The XNNPACK EP with the arena off gets
+  arena-on speed back (batch 372–410 ms) at more RSS:
+
+| Moonshine tiny, capped stream (6.5 tok/s) | median pass ms 5 s / 15 s | max pass ms | passes > 1 s | first commit | RSS end / peak MB (15 s) |
+|---|---|---|---|---|---|
+| CPU EP, arena off (the app today) | 398 / 478 | 1000 / 2404 | 1 / 11 | 2.0 s + 0.44 s | 114 / 243 |
+| XNNPACK EP, arena off | **212 / 272** | 393 / 1161 | 0 / 1 | 2.0 s + 0.21 s | 281 / 296 |
+
+  On the long clips (segmented at 20 s) XNNPACK cut tiny's median pass from 449 to 289 ms and its
+  over-budget passes from 62 to 26 of 484, and small's from 911 to 537 ms and 200 to 58. The
+  harness's end-of-run RSS after those runs was 1.25 GB (tiny) and 1.78 GB (small) on XNNPACK,
+  against 81 / 194 MB on the CPU EP. Each long run also does a whole-clip batch pass of up to 72 s
+  in the same process, so how much of that growth XNNPACK's own buffers account for is
+  **unattributed [U]**. Which setting to ship needs an on-device measurement. It is listed in
+  §7.5 and not decided here.
+- **The harness now applies the app's per-pass decode cap**
+  (`--tokens-per-s 6.5`, = `MoonshineV2StreamingEngine.decode`). Without it, one 5 s clip
+  hallucinated "a-l-l-l-…" for 447 tokens on its second pass (20.3 s). The app stops that pass
+  after 11 tokens. The capped rows are the ones to compare with the app. Batch rows are uncapped,
+  as before.
+
+#### 6.5.3 Long dictation (30–72 s, 1,260 words)
+
+| engine | how | WER | median pass ms | passes > 1 s (of 484) | retractions |
+|---|---|---|---|---|---|
+| Moonshine tiny, whole clip in one pass | batch | 795/1260 = 63.1 % | — | — | — |
+| Moonshine small, one pass | batch | 327/1260 = 26.0 % | — | — | — |
+| Moonshine medium, one pass | batch | 385/1260 = 30.6 % | — | — | — |
+| Moonshine tiny, streamed without a cut | stream | 366/1260 = 29.1 % | 734 | 193 | 357 % |
+| **Moonshine tiny, cut at 20 s (the app)** | stream, capped | 83/1260 = **6.59 %** | 449 (XNNPACK 289) | 62 (26) | 35 % |
+| **Moonshine small, cut at 20 s** | stream, capped | 43/1260 = **3.41 %** | 911 (XNNPACK 537) | 200 (58) | 13 % |
+| Whisper tiny.en q8_0, full window | batch (whisper.cpp's own 30 s seek) | 69/1260 = 5.48 % | — | — | — |
+| Whisper base.en q8_0, full window | batch | 121/1260 = 9.60 % | — | — | — |
+| Whisper tiny.en q8_0, cut at 30 s | stream | 73/1260 = 5.79 % | 889 | 151 | 16 % |
+| ACFT tiny.en, cut at 20 s | stream | 86/1260 = 6.83 % | 264 | 11 | 22 % |
+| ACFT small.en, cut at 20 s | stream | 39/1260 = **3.10 %** | 1151 | **276** | 11 % |
+| ACFT tiny.en / base.en / small.en, one pass | batch | 21.9 % / 26.8 % / 29.1 % | — | — | — |
+| sherpa Zipformer 20M int8 | true streaming | 54/1260 = 4.29 % | 0.32 s steps | 0 | 0 |
+| Whistle ORT int8, one pass | batch | 201/1260 = 16.0 % | — | — | — |
+| needle CLI (official engine) | batch | 38/1260 = 3.02 % | — | — | — |
+
+- **The app's 20 s forced cut is what makes Moonshine usable on long dictation.** Without it
+  tiny's WER is 29–63 %; with it, 6.59 %. The per-clip errors with the cut (0–20 per clip)
+  show no clip collapsing. Every Moonshine size breaks down past its trained length in one pass.
+- ACFT checkpoints decoding a whole long clip through whisper.cpp's 30 s seek loop are poor
+  (22–29 %). They were tuned for short windows. Cut into app-sized segments they are fine.
+- On long dictation the accuracy order is ACFT small.en ≈ needle ≈ Moonshine small (39–43
+  errors), then Zipformer (54), then Whisper tiny.en, Moonshine tiny and ACFT tiny.en (69–86).
+  Of those, Moonshine small and Zipformer fit the voice-pack caps and the app's ORT.
+
+#### 6.5.4 Releases in the past week (2026-10-29 → 11-05)
+
+Searched Hugging Face (new ASR / speech-recognition models, sorted by creation date), GitHub and
+the usual announcement channels for on-device English STT. **Nothing qualified**: a release had
+to be open-licensed for F-Droid redistribution, small enough for a voice pack, and a complete
+recogniser runnable on ORT or a FLOSS runtime. Excluded on licence: FUTO `asr4all` (FUTO
+ethical-use licence, not OSI) and WhissleAI `arc` (CC-BY-NC). Older and outside the window, but
+noted: **Phonon-2.5** (2026-10-22, CC-BY-4.0, 156 MB, its own runtime). It is not measured here and
+is a candidate for a later spike only if its runtime is FLOSS **[U]**. The FUTO ACFT checkpoints
+measured above are from 2024-06 (Apache-2.0 weights, MIT code).
+
+#### 6.5.5 An engine bug the long-clip runs exposed
+
+The frontend graph's first Conv rejects an `audio_chunk` shorter than one 5 ms hop (80 samples):
+`INVALID_ARGUMENT … Invalid input shape: {4}`. A forced cut in the harness left a 4-sample tail.
+In the app, segments arrive in whole 512-sample hops and the engine feeds 16,000-sample chunks,
+so a final chunk under 80 samples needs a manual stop. The segmenter then flushes a partial hop,
+and the hop count before it must be a multiple of 125. That is about 1 stop in 800. The failure
+was a `SpeechEngineException` from `finish()`. `VoiceInputController` then fails the period with
+the engine-error message, and that last segment's final text is never committed. Fixed: `runFrontend` pads a
+sub-hop chunk with silence. The new test
+`MoonshineV2StreamingEngineTest.aStopThatLeavesLessThanOneFrontendHopStillFinishes` covers tails
+of 1, 4 and 79 samples and a session that holds only 4 samples. The harness pads the same way.
+
+### 6.6 Every engine and configuration in one table
+
+Sources: **[O]** = the Oct 28 series (§5, CPU EP with the arena **on** for Moonshine), **[A]** = the
+§6.4 Whisper run (2026-11-05, first series), **[B]** = the §6.5 series. Long-clip WER is the app-like
+configuration where one exists (segmented stream for streaming engines), otherwise a whole-clip
+batch, marked "b". "Fits caps" means the voice-pack limits as coded: each file ≤ 128 MiB, total
+≤ 256 MiB. Fitting the caps is not the same as fitting the app: only ORT engines run on the
+runtime the app ships. Pass time is the median per 1 s pseudo-stream pass, 5 s set / 15 s set.
+
+| engine · config | runtime · licence | on disk | fits caps | 5 s WER | 15 s WER | long WER | pass ms 5 s / 15 s | src |
+|---|---|---|---|---|---|---|---|---|
+| needle CLI, official Whistle engine | closed engine binary · Apache-2.0 assets | 17 MB `.cact` | n/a (not F-Droid) | 5.00 % | 0.97 % | 3.02 % b | 233 / 460 (engine) | O, B |
+| Whistle ORT fp32 | ORT · Apache-2.0 export | 145 MB | yes | 5.00 % | 2.27 % | — | 509 / 1106 | O |
+| Whistle ORT int8 | ORT · Apache-2.0 export | 55 MB | yes | 5.36 % | 1.95 % | 15.95 % b | 272 / 577 | O, B |
+| **Moonshine tiny-streaming (shipped)**, CPU, arena on | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | — | 200 / 307 | O |
+| Moonshine tiny, CPU, arena off, capped (= the app) | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 398 / 478 | B |
+| Moonshine tiny, XNNPACK, arena off, capped | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 212 / 272 | B |
+| **Moonshine small-streaming**, CPU, arena off, capped | ORT · MIT weights | 142 MB | **yes** | 3.57 % | 1.95 % | 3.41 % | 676 / 866 | B |
+| Moonshine medium-streaming | ORT · MIT weights | 269 MB | no (decoder 140 MiB) | 2.86 % | 1.62 % | 30.6 % b | — | B |
+| Moonshine tiny, Masterx ONNX fp32 / int8 | ORT · MIT weights | 135 / 76 MB | yes | 4.64 / 4.29 % | 3.25 / 3.57 % | — | — | B |
+| sherpa Zipformer 20M int8 | ORT · Apache-2.0 weights | 35 MB | yes | 5.71 % | 0.97 % | 4.29 % | 41–49 per 0.32 s step | O, B |
+| Whisper tiny.en q5_1 | whisper.cpp · MIT weights | 32 MB | yes | 7.14 % | 2.92 % | — | 1287 / 1382 | A |
+| Whisper tiny.en q8_0 | whisper.cpp · MIT weights | 44 MB | yes | 7.50 % | 2.92 % | 5.79 % (30 s cut) | 675 / 776 | A, B |
+| Whisper tiny.en f16 | whisper.cpp · MIT weights | 78 MB | yes | 7.50 % | 2.92 % | — | — | A |
+| Whisper tiny.en q8_0, `-ac` floor 750 | whisper.cpp · MIT weights | 44 MB | yes | 7.86 % | 3.57 % | — | 295 / 376 | B |
+| Whisper tiny.en q5_1, `-ac` scaled (loops) | whisper.cpp · MIT weights | 32 MB | yes | 135 % | 9.74 % | — | 228 / 617 | A |
+| Whisper tiny q5_1 (multilingual) | whisper.cpp · MIT weights | 32 MB | yes | 9.64 % | 3.90 % | — | — | A |
+| Whisper base.en q5_1 | whisper.cpp · MIT weights | 60 MB | yes | 5.71 % | 2.27 % | — | 3264 / 3092 | A |
+| Whisper base.en q8_0 | whisper.cpp · MIT weights | 82 MB | yes | 4.64 % | 2.27 % | 9.60 % b | — | A, B |
+| Whisper base.en f16 | whisper.cpp · MIT weights | 148 MB | no (141 MiB file) | 4.64 % | 2.27 % | — | — | A |
+| Whisper base q5_1 (multilingual) | whisper.cpp · MIT weights | 60 MB | yes | 6.07 % | 1.30 % | — | — | A |
+| **ACFT tiny.en q8_0**, auto+8 | whisper.cpp (MIT) · Apache-2.0 weights | 44 MB | yes | 8.21 % | 2.92 % | 6.83 % | 117 / 253 | B |
+| ACFT tiny q8_0 (multilingual), auto+8 | whisper.cpp (MIT) · Apache-2.0 weights | 44 MB | yes | 9.29 % | 3.90 % | — | — | B |
+| ACFT base.en q8_0, auto+8 | whisper.cpp (MIT) · Apache-2.0 weights | 82 MB | yes | 7.14 % | 2.27 % | 26.8 % b | 162 / 429 | B |
+| **ACFT small.en q8_0**, auto+8 | whisper.cpp (MIT) · Apache-2.0 weights | 264 MB | **no (252 MiB file)** | 3.57 % | 1.95 % | 3.10 % | 436 / 1174 | B |
+| Whisper small.en q8_0, full window | whisper.cpp · MIT weights | 264 MB | no | 3.57 % | 1.95 % | — | — (4.2 s batch) | B |
+
+WER denominators: 280 words (5 s), 308 (15 s), 1,260 (long). One word is 0.36 / 0.32 / 0.08
+points, so differences of one or two words on the short sets are noise.
+
 ---
 
 ## 7. Conclusions
@@ -546,7 +767,18 @@ FLOSS `.cact` runtime with speech (needle-rs has the container and the text mode
 **Whisper (whisper.cpp)**, measured after the fact (§6.4, 2026-11-05): not a better fit — its
 fixed 30 s encoder makes the best config ~3.4× Moonshine's per-pass cost on short dictation, the
 reduced-context workaround makes it loop, and it adds a second native runtime. Its strengths
-(long-form batch, 99 languages) are not the keyboard's use case.
+(long-form batch, 99 languages) are not the keyboard's use case. The follow-up (§6.5.1) removes
+the encoder objection for the **ACFT** checkpoints: ACFT tiny.en costs 117 ms per pass. It does
+not change the verdict: ACFT tiny.en is no more accurate than Moonshine tiny and retracts more, and
+the accurate one (ACFT small.en) breaks the per-file cap and the 1 s cadence. It would also still
+be a second native runtime.
+
+**Upgrade path inside the same engine: Moonshine small-streaming** (§6.5.2–6.5.3). It is the same
+runtime, tokenizer and pack format, 135.5 MiB within every cap, and makes fewer errors than tiny on
+every set measured here (10 vs 14, 6 vs 11, 43 vs 83). Its cost is about 2× tiny's RSS and per-pass time, so it should be offered
+as a second, optional English pack ("accurate", for fast phones) and not as the default. The
+decision belongs to the maintainer once the arena/XNNPACK question (§7.5) is measured on a phone,
+because that setting alone moves per-pass time by about 2×.
 
 **sherpa Zipformer** is the fallback if the Moonshine port stalls or if retractions prove
 unacceptable in practice: true streaming, 35 MB int8, Apache-2.0, but English-only at this size,
@@ -581,6 +813,13 @@ Pixel); Whisper-normalised WER; more than 28 clips or any non-English clip; batt
 build (the JVM probe used the APK's ORT natives, not an Android process); NNAPI on a real HAL;
 keyword biasing in the pseudo-stream; a Kotlin port of any pipeline.
 
+Open after the 2026-11-05 follow-up (§6.5): **on-device timing of the app's Moonshine session with
+the arena off vs on vs XNNPACK**, the 2–2.5× decoder gap in §6.5.2, measured on the Pixel 8 Pro and
+a Saga with the APK's ORT 1.21.1 (this box ran Python ORT 1.26; the gap's cause is not
+established); the XNNPACK RSS growth on long sessions with the batch pass excluded; Moonshine
+small in the app (pack build and the `MoonshineV2StreamingEngineTest` suite against it); non-English
+clips; Phonon-2.5, if its runtime turns out to be FLOSS.
+
 ---
 
 ## 8. Reproduce
@@ -607,6 +846,16 @@ cmake --build wcb -j3 --target whisper-cli
 python3 scripts/research/stt/whisper_cpp_bench.py --cli wcb/bin/whisper-cli --model ggml-tiny.en-q8_0.bin bench $STT/audio/manifest.json --ids "$(cat $STT/ids5.txt)"
 python3 scripts/research/stt/whisper_cpp_bench.py --cli wcb/bin/whisper-cli --model ggml-tiny.en-q8_0.bin stream $STT/audio/manifest.json --ids "$(cat $STT/ids15.txt)" --verbose
 #   add --audio-ctx auto for the reduced-context rows
+# §6.5 follow-up (2026-11-05)
+python3 scripts/research/stt/make_long_clips.py --manifest $STT/audio/manifest.json --out $STT/audio --target 30:6 --target 60:4
+# ACFT: https://voiceinput.futo.org/VoiceInput/{tiny_en,base_en,small_en,tiny}_acft_q8_0.bin ; plain small.en: ggml-small.en-q8_0.bin
+python3 scripts/research/stt/whisper_cpp_bench.py --cli wcb/bin/whisper-cli --model ggml-acft-tiny_en-q8_0.bin --audio-ctx auto+8 stream $STT/audio/manifest_long.json --max-segment 20
+#   --audio-ctx auto:750 = window floor for the stock weights; --tokens-per-s X needs whisper-cli -mt:
+#   examples/cli/cli.cpp: add `int32_t max_tokens = 0;` to whisper_params, parse `-mt/--max-tokens`,
+#   set `wparams.max_tokens = params.max_tokens;`
+# Moonshine: moonshine-ai/moonshine-voice-assets model/{tiny,small,medium}-streaming-en/quantized_26_08_21/*
+python3 scripts/research/stt/moonshine_stream_ort.py --model-dir $STT/models/small-streaming-en --tokenizer tokenizer.json \
+    --no-arena --tokens-per-s 6.5 [--ep xnnpack] stream $STT/audio/manifest_long.json --max-segment 20
 ```
 
 ## Sources

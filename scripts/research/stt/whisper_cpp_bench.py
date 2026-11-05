@@ -11,12 +11,19 @@ process, so per-pass model load is excluded rather than amortised — the same t
 JNI context would see. Peak RSS is the child's `ru_maxrss` from `os.wait4`.
 
     whisper_cpp_bench.py --cli <whisper-cli> --model <ggml.bin> [--threads 4] [--beam 1]
-                         [--audio-ctx {0,auto}] bench  <manifest.json> --ids <a,b,…> [--repeat 2] [--out x.json]
+                         [--audio-ctx {0,N,auto[+PAD][:FLOOR]}] [--tokens-per-s X] [--extra "-et 2.8"]
+                         bench  <manifest.json> --ids <a,b,…> [--repeat 2] [--out x.json]
     whisper_cpp_bench.py … stream <manifest.json> --ids <…> [--chunk 1.0] [--verbose] [--out x.json]
 
 `--audio-ctx auto` passes `-ac ceil(seconds·50)+16` (encoder frames are 20 ms; 1500 = the full
-30 s window). Whisper was trained only on 30 s windows, so this trades accuracy for encoder time;
-it is measured here, not assumed.
+30 s window); `auto+PAD:FLOOR` uses PAD frames of margin and never fewer than FLOOR frames.
+Whisper was trained only on 30 s windows, so this trades accuracy for encoder time; it is
+measured here, not assumed.
+
+`--tokens-per-s X` caps each decode at `ceil(seconds·X)+8` tokens through `-mt`, a three-line
+research patch to whisper-cli that forwards `whisper_full_params.max_tokens` (the library field
+exists; stock whisper-cli does not expose it). It bounds the repetition loops a short audio
+context provokes. `--extra` passes further whisper-cli flags verbatim (e.g. `-et 2.8`).
 """
 from __future__ import annotations
 
@@ -25,6 +32,7 @@ import json
 import math
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -34,7 +42,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import numpy as np  # noqa: E402
+
 from asr_metrics import NORMALISER_NAME, EditCounts, normalise, wer_of  # noqa: E402
+from segmenting import forced_segments, merge_streams  # noqa: E402
 
 RATE = 16000
 FULL_CTX = 1500  # encoder frames in Whisper's fixed 30 s window
@@ -59,23 +70,34 @@ class Pass:
 
 
 class WhisperCli:
-    def __init__(self, cli: str, model: str, threads: int, beam: int, audio_ctx: str, language: str) -> None:
+    def __init__(self, cli: str, model: str, threads: int, beam: int, audio_ctx: str, language: str,
+                 tokens_per_s: float = 0.0, extra: str = "") -> None:
         self.cli, self.model, self.threads, self.beam = cli, model, threads, beam
         self.audio_ctx, self.language = audio_ctx, language
+        self.tokens_per_s, self.extra = tokens_per_s, shlex.split(extra)
         self.model_bytes = os.path.getsize(model)
+        m = re.fullmatch(r"auto(?:\+(\d+))?(?::(\d+))?", audio_ctx)
+        self._auto = (int(m.group(1) or 16), int(m.group(2) or 0)) if m else None
 
     def _ctx_for(self, seconds: float) -> int:
-        if self.audio_ctx == "auto":
-            return min(FULL_CTX, math.ceil(seconds * 50) + 16)
+        if self._auto is not None:
+            pad, floor = self._auto
+            return min(FULL_CTX, max(floor, math.ceil(seconds * 50) + pad))
         return int(self.audio_ctx)
 
-    def run(self, wav_path: str, seconds: float) -> Pass:
-        """One whisper-cli process; peak RSS comes from wait4's rusage for exactly this child."""
-        ctx = self._ctx_for(seconds)
+    def _cmd(self, wav_path: str, seconds: float, ctx: int) -> list[str]:
         cmd = [self.cli, "-m", self.model, "-f", wav_path, "-t", str(self.threads), "-nt", "-l", self.language,
                "-bs", str(self.beam), "-bo", str(max(1, self.beam))]
         if ctx:
             cmd += ["-ac", str(ctx)]
+        if self.tokens_per_s > 0:
+            cmd += ["-mt", str(math.ceil(seconds * self.tokens_per_s) + 8)]
+        return cmd + self.extra
+
+    def run(self, wav_path: str, seconds: float) -> Pass:
+        """One whisper-cli process; peak RSS comes from wait4's rusage for exactly this child."""
+        ctx = self._ctx_for(seconds)
+        cmd = self._cmd(wav_path, seconds, ctx)
         with tempfile.TemporaryFile("w+", errors="replace") as fo, tempfile.TemporaryFile("w+", errors="replace") as fe:
             # errors="replace": a short audio context can make whisper.cpp emit a truncated UTF-8 token
             proc = subprocess.Popen(cmd, stdout=fo, stderr=fe)
@@ -208,7 +230,14 @@ def cmd_stream(w: WhisperCli, args: argparse.Namespace) -> dict:
     with tempfile.TemporaryDirectory(dir=args.tmp) as td:
         for m in load_manifest(args.manifest, args.ids):
             batch = w.run(m["wav"], m["seconds"])
-            st = pseudo_stream(w, read_pcm16(m["wav"]), args.chunk, td)
+            frames = read_pcm16(m["wav"])
+            if args.max_segment > 0:
+                segs = forced_segments(np.frombuffer(frames, np.int16), args.max_segment)
+                st = merge_streams([pseudo_stream(w, frames[2 * a : 2 * b], args.chunk, td) for a, b in segs],
+                                   [a / RATE for a, _ in segs])
+                st["passes_over_chunk"] = sum(1 for p in st["passes"] if p["pass_ms"] > args.chunk * 1000)
+            else:
+                st = pseudo_stream(w, frames, args.chunk, td)
             ec_s, ec_b = wer_of(m["text"], st["text"]), wer_of(m["text"], batch.text)
             tot_s, tot_b = tot_s + ec_s, tot_b + ec_b
             rows.append({"id": m["id"], "seconds": m["seconds"], "ref": m["text"], "batch": batch.text,
@@ -223,7 +252,7 @@ def cmd_stream(w: WhisperCli, args: argparse.Namespace) -> dict:
                     print(f"   @{p['received_s']:5.1f}s {p['pass_ms']:6.0f} ms (enc {p['encode_ms']:6.0f}, ctx "
                           f"{p['audio_ctx']})  +[{p['committed']}]  ...{p['pending']}")
     all_ms = [p["pass_ms"] for r in rows for p in r["stream"]["passes"]]
-    return {"mode": "pseudo-stream", "chunk_s": args.chunk, "wer_stream": round(tot_s.wer, 4),
+    return {"mode": "pseudo-stream", "chunk_s": args.chunk, "max_segment_s": args.max_segment, "wer_stream": round(tot_s.wer, 4),
             "wer_batch": round(tot_b.wer, 4), "errors_stream": tot_s.errors, "errors_batch": tot_b.errors,
             "ref_words": tot_s.reference_words, "passes": len(all_ms), "median_pass_ms": median(all_ms),
             "max_pass_ms": max(all_ms), "passes_over_chunk": sum(1 for x in all_ms if x > args.chunk * 1000),
@@ -238,6 +267,8 @@ def main() -> None:
     ap.add_argument("--beam", type=int, default=1, help="1 = greedy (default here; whisper-cli's own default is 5)")
     ap.add_argument("--audio-ctx", default="0", help="0 = full 30 s window, N = fixed, auto = scale with the clip")
     ap.add_argument("--language", default="en")
+    ap.add_argument("--tokens-per-s", type=float, default=0.0, help="decode cap per audio second (needs the -mt patch)")
+    ap.add_argument("--extra", default="", help="extra whisper-cli flags, verbatim")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("bench", "stream"):
         sp = sub.add_parser(name)
@@ -249,13 +280,17 @@ def main() -> None:
         else:
             sp.add_argument("--chunk", type=float, default=1.0)
             sp.add_argument("--verbose", action="store_true")
+            sp.add_argument("--max-segment", type=float, default=0.0,
+                            help="cut like the app's SpeechSegmenter at this bound (default engine bound: 30 s)")
             sp.add_argument("--tmp", default=os.environ.get("TMPDIR"))
     args = ap.parse_args()
-    w = WhisperCli(args.cli, args.model, args.threads, args.beam, args.audio_ctx, args.language)
+    w = WhisperCli(args.cli, args.model, args.threads, args.beam, args.audio_ctx, args.language,
+                   args.tokens_per_s, args.extra)
     t0 = time.time()
     res = cmd_bench(w, args) if args.cmd == "bench" else cmd_stream(w, args)
     out = {"engine": "whisper.cpp", "model": os.path.basename(args.model), "model_bytes": w.model_bytes,
-           "threads": args.threads, "beam": args.beam, "audio_ctx": args.audio_ctx, "normaliser": NORMALISER_NAME,
+           "threads": args.threads, "beam": args.beam, "audio_ctx": args.audio_ctx, "tokens_per_s": args.tokens_per_s,
+           "extra": args.extra, "normaliser": NORMALISER_NAME,
            "loadavg_end": loadavg(), "wall_s": round(time.time() - t0, 1), **res}
     if args.out:
         json.dump(out, open(args.out, "w"), indent=1, ensure_ascii=False)

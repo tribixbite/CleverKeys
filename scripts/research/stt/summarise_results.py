@@ -16,26 +16,32 @@ import statistics
 import sys
 
 
+def load_of(d: dict) -> str | None:
+    """Load average recorded by the harness: `env.loadavg` (ORT harnesses) or `loadavg_end` (whisper.cpp)."""
+    return (d.get("env") or {}).get("loadavg") or d.get("loadavg_end")
+
+
 def med(xs):
     return statistics.median(xs) if xs else float("nan")
 
 
 def batch_row(name: str, d: dict) -> str:
     clips = d["clips"]
-    rtf = [c.get("rtf_min") or c.get("rtf_net") for c in clips]
+    rtf = [c.get("rtf_min") or c.get("rtf_net") or c.get("rtf") for c in clips]
     secs = [c["seconds"] for c in clips]
-    total = [c.get("min_total_ms") or c.get("net_ms") or c.get("total_ms") for c in clips]
+    total = [c.get("min_total_ms") or c.get("net_ms") or c.get("total_ms") or c.get("compute_ms") for c in clips]
     ttft = [c["ttft_ms"] for c in clips if c.get("ttft_ms") is not None]
     enc = [c["encode_ms"] for c in clips if c.get("encode_ms") is not None] or [c["encoder_ms"] for c in clips if c.get("encoder_ms") is not None]
     dec = [c["decode_ms"] for c in clips if c.get("decode_ms") is not None] or [c["decoder_ms"] for c in clips if c.get("decoder_ms") is not None] or [c["decoder_joiner_ms"] for c in clips if c.get("decoder_joiner_ms") is not None]
     steps = [c.get("steps") for c in clips if c.get("steps")]
-    rss = d.get("rss_mb") or d.get("child_peak_rss_mb")
-    hwm = d.get("hwm_mb") or d.get("child_peak_rss_mb")
-    load = (d.get("env") or {}).get("loadavg")
+    if not enc and d.get("median_encode_ms") is not None:  # whisper_cpp_bench: per-run median only
+        enc = [d["median_encode_ms"]]
+    rss = d.get("rss_mb") or d.get("child_peak_rss_mb") or d.get("peak_rss_mb")
+    hwm = d.get("hwm_mb") or d.get("child_peak_rss_mb") or d.get("peak_rss_mb")
     return (f"| {name} | {len(clips)} | {med(secs):.1f} | {med(total):.0f} | {med(enc) if enc else float('nan'):.0f} | "
             f"{med(dec) if dec else float('nan'):.0f} | {med(steps) if steps else float('nan'):.0f} | "
             f"{med(rtf):.3f} | {max(rtf):.3f} | {med(ttft) if ttft else float('nan'):.0f} | "
-            f"{d.get('errors')}/{d.get('ref_words')} = {100*d.get('wer', 0):.2f} % | {rss} / {hwm} | {load} |")
+            f"{d.get('errors')}/{d.get('ref_words')} = {100*d.get('wer', 0):.2f} % | {rss} / {hwm} | {load_of(d)} |")
 
 
 def stream_row(name: str, d: dict) -> str:
@@ -49,7 +55,7 @@ def stream_row(name: str, d: dict) -> str:
     es = sum(c["stream_errors"] for c in clips)
     eb = sum(c["batch_errors"] for c in clips)
     over = sum(1 for p in pass_ms if p > d.get("chunk_s", 1.0) * 1000)
-    load = (d.get("env") or {}).get("loadavg")
+    load = load_of(d)
     return (f"| {name} | {len(clips)} | {d.get('chunk_s')} | {len(passes)} | {med(pass_ms):.0f} | {max(pass_ms):.0f} | {over} | "
             f"{med(firsts) if firsts else float('nan'):.1f} s + {med(first_lat) if first_lat else float('nan'):.0f} ms | "
             f"{retr} ({retr/words*100:.0f} % of words) | {es}/{words} = {100*es/words:.2f} % | {eb}/{words} = {100*eb/words:.2f} % | {load} |")
@@ -65,7 +71,7 @@ def needle_stream_row(name: str, d: dict) -> str:
         if ev:
             firsts.append((ev[0]["received"], ev[0]["pass_ms"]))
     over = sum(1 for p in pass_ms if p > d.get("chunk_s", 1.0) * 1000)
-    load = (d.get("env") or {}).get("loadavg")
+    load = load_of(d)
     return (f"| {name} | {len(clips)} | {d.get('chunk_s')} | {len(pass_ms)} | {med(pass_ms):.0f} | {max(pass_ms) if pass_ms else 0:.0f} | {over} | "
             f"{med([f[0] for f in firsts]):.1f} s + {med([f[1] for f in firsts]):.0f} ms | n/a (engine commits) | "
             f"{d['errors']}/{d['ref_words']} = {100*d['wer']:.2f} % | — | {load} |")

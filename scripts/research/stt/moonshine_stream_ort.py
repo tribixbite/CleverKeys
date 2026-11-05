@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 import time
@@ -37,7 +38,11 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from asr_metrics import NORMALISER_NAME, EditCounts, normalise, wer_of  # noqa: E402
+from segmenting import forced_segments, merge_streams  # noqa: E402
 from whistle_ort import RATE, env_info, load_manifest, read_wav, rss_mb  # noqa: E402
+
+MIN_FRONTEND_SAMPLES = 80  # one 5 ms frontend hop: the shortest audio_chunk the graph accepts
+FRAME_SECONDS = 0.020  # encoder memory frame period (50 Hz)
 
 
 class SpmTokenizer:
@@ -95,7 +100,7 @@ class State:
 
 class MoonshineStream:
     def __init__(self, model_dir: str, tokenizer: str, *, prefix: str = "", int8: bool = False,
-                 threads: int = 4, ep: str = "cpu", arena: bool = True) -> None:
+                 threads: int = 4, ep: str = "cpu", arena: bool = True, tokens_per_s: float = 0.0) -> None:
         import onnxruntime as ort
 
         self.cfg = json.load(open(os.path.join(model_dir, "streaming_config.json")))
@@ -117,6 +122,21 @@ class MoonshineStream:
         self.sessions = {}
         self.load_ms = {}
         self.model_bytes = 0
+        # The official 26_08_21 layout splits the frontend into a graph (frontend.model.ort) and a
+        # no-input graph whose outputs are its float weights (frontend.weights.ort); the app's
+        # MoonshineV2StreamingEngine runs the weights graph once and feeds its outputs on every call.
+        # Prefer that layout when present so the research numbers match the shipped pack.
+        self.frontend_weights: dict[str, np.ndarray] = {}
+        split_model = os.path.join(model_dir, "frontend.model.ort")
+        split_weights = os.path.join(model_dir, "frontend.weights.ort")
+        if not prefix and os.path.exists(split_model) and os.path.exists(split_weights):
+            names["frontend"] = "frontend.model.ort"
+            t0 = time.perf_counter()
+            ws = ort.InferenceSession(split_weights, so, providers=["CPUExecutionProvider"])
+            self.frontend_weights = dict(zip([o.name for o in ws.get_outputs()], ws.run(None, {})))
+            del ws
+            self.load_ms["frontend_weights"] = round((time.perf_counter() - t0) * 1000, 1)
+            self.model_bytes += os.path.getsize(split_weights)
         for key, fn in names.items():
             path = os.path.join(model_dir, fn)
             if key == "frontend" and not os.path.exists(path):
@@ -137,6 +157,7 @@ class MoonshineStream:
         self.bos, self.eos = self.cfg["bos_id"], self.cfg["eos_id"]
         self.vocab = self.cfg["vocab_size"]
         self.max_tokens = self.cfg.get("max_seq_len", 448)
+        self.tokens_per_s = tokens_per_s
 
     def new_state(self) -> State:
         shp = self.cfg["frontend_state_shapes"]
@@ -149,10 +170,14 @@ class MoonshineStream:
         """Frontend + incremental encoder + adapter for one audio chunk. Returns new memory frames."""
         t0 = time.perf_counter()
         if len(pcm):
+            if len(pcm) < MIN_FRONTEND_SAMPLES:
+                # The frontend's first Conv rejects a chunk under one 5 ms hop; pad with silence,
+                # as the app's MoonshineV2StreamingEngine.runFrontend does.
+                pcm = np.pad(pcm, (0, MIN_FRONTEND_SAMPLES - len(pcm)))
             outs = self.sessions["frontend"].run(None, {
                 "audio_chunk": pcm.astype(np.float32)[None, :], "sample_buffer": st.sample_buffer,
                 "sample_len": st.sample_len, "conv1_buffer": st.conv1_buffer, "conv2_buffer": st.conv2_buffer,
-                "frame_count": st.frame_count})
+                "frame_count": st.frame_count, **self.frontend_weights})
             feats, st.sample_buffer, st.sample_len, st.conv1_buffer, st.conv2_buffer, st.frame_count = outs
             if feats.shape[1]:
                 st.features.append(feats)
@@ -216,7 +241,7 @@ class MoonshineStream:
         if len(accepted) == len(st.tokens):
             nxt = int(logits[-1].argmax())
         out = list(accepted)
-        while nxt != self.eos and len(out) < self.max_tokens:
+        while nxt != self.eos and len(out) < self.budget(st):
             out.append(nxt)
             logits, k_self, v_self = run([nxt], k_self, v_self)
             steps += 1
@@ -225,6 +250,14 @@ class MoonshineStream:
         st.timing.steps += steps
         st.tokens = out
         return out
+
+    def budget(self, st: State) -> int:
+        """Decode cap for one pass. With `tokens_per_s` > 0 it is the app's rule
+        (`MoonshineV2StreamingEngine.decode`: ceil(memory frames x 20 ms x 6.5), at most max_seq_len),
+        which stops a looping hypothesis early; 0 keeps only max_seq_len."""
+        if self.tokens_per_s <= 0:
+            return self.max_tokens
+        return min(math.ceil(st.memory_len * FRAME_SECONDS * self.tokens_per_s), self.max_tokens)
 
     # -- whole-clip reference -----------------------------------------------------------
     def transcribe(self, pcm: np.ndarray) -> tuple[str, Timing, int]:
@@ -297,6 +330,8 @@ def main() -> None:
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--ep", choices=("cpu", "xnnpack"), default="cpu")
     ap.add_argument("--no-arena", action="store_true", help="disable ORT's CPU memory arena (steady-state RSS)")
+    ap.add_argument("--tokens-per-s", type=float, default=0.0,
+                    help="per-pass decode cap in tokens per second of audio (the app uses 6.5); 0 = max_seq_len only")
     sub = ap.add_subparsers(dest="cmd", required=True)
     for name in ("bench", "stream"):
         p = sub.add_parser(name)
@@ -310,10 +345,12 @@ def main() -> None:
         else:
             p.add_argument("--chunk", type=float, default=1.0)
             p.add_argument("--verbose", action="store_true")
+            p.add_argument("--max-segment", type=float, default=0.0,
+                           help="cut like the app's SpeechSegmenter at this bound (Moonshine engine: 20 s)")
     args = ap.parse_args()
     rss0, _ = rss_mb()
     model = MoonshineStream(args.model_dir, args.tokenizer, prefix=args.prefix, int8=args.int8, threads=args.threads, ep=args.ep,
-                            arena=not args.no_arena)
+                            arena=not args.no_arena, tokens_per_s=args.tokens_per_s)
     rss1, _ = rss_mb()
     print(f"# sessions {model.load_ms} (+{rss1-rss0:.0f} MB) providers {model.providers} bytes {model.model_bytes:,}", file=sys.stderr)
     clips = load_manifest(args.manifest, args.ids, args.min_s, args.max_s)
@@ -335,7 +372,12 @@ def main() -> None:
                   f"dec {tm.decoder_ms:6.1f}, {tm.steps} steps) RTF {tm.total_ms/1000/m['seconds']:.3f} WER {ec.errors}/{ec.reference_words} | {text}", flush=True)
         else:
             text_b, tm_b, _ = model.transcribe(pcm)
-            st = model.stream(pcm, args.chunk)
+            if args.max_segment > 0:
+                segs = forced_segments(pcm, args.max_segment)
+                st = merge_streams([model.stream(pcm[a:b], args.chunk) for a, b in segs], [a / RATE for a, _ in segs])
+                st["first_partial_audio_s"] = next((p["received_s"] for p in st["passes"] if p["partial"]), None)
+            else:
+                st = model.stream(pcm, args.chunk)
             ec, ec_b = wer_of(m["text"], st["text"]), wer_of(m["text"], text_b)
             tot, tot_b = tot + ec, tot_b + ec_b
             rows.append({"id": m["id"], "seconds": m["seconds"], "ref": m["text"], "batch": text_b, "stream": st,
@@ -348,14 +390,14 @@ def main() -> None:
                 for p in st["passes"]:
                     print(f"   @{p['received_s']:5.1f}s {p['pass_ms']:6.0f} ms (enc {p['encoder_ms']:.0f} dec {p['decoder_ms']:.0f}) +[{p['committed']}] ...{p['pending']}")
     rss, hwm = rss_mb()
-    out = {"engine": "moonshine-streaming-tiny-en", "int8": args.int8, "prefix": args.prefix, "threads": args.threads, "ep": args.ep,
+    out = {"engine": f"moonshine-{os.path.basename(os.path.normpath(args.model_dir))}", "int8": args.int8, "prefix": args.prefix, "threads": args.threads, "ep": args.ep, "tokens_per_s": args.tokens_per_s,
            "load_ms": model.load_ms, "providers": model.providers, "model_bytes": model.model_bytes, "rss_mb": round(rss, 1),
            "hwm_mb": round(hwm, 1), "env": env_info(), "clips": rows, "normaliser": NORMALISER_NAME}
     if args.cmd == "bench":
         out.update({"repeat": args.repeat, "wer": round(tot.wer, 4), "errors": tot.errors, "ref_words": tot.reference_words})
         print(f"WER {tot.errors}/{tot.reference_words} = {tot.wer:.4f}  RSS {rss:.0f} MB (peak {hwm:.0f})  load {model.load_ms}")
     else:
-        out.update({"chunk_s": args.chunk, "wer_stream": round(tot.wer, 4), "wer_batch": round(tot_b.wer, 4)})
+        out.update({"max_segment_s": args.max_segment, "chunk_s": args.chunk, "wer_stream": round(tot.wer, 4), "wer_batch": round(tot_b.wer, 4)})
         print(f"WER stream {tot.errors}/{tot.reference_words} = {tot.wer:.4f}  batch {tot_b.errors}/{tot_b.reference_words} = {tot_b.wer:.4f}  RSS {rss:.0f} MB (peak {hwm:.0f})")
     if args.out:
         json.dump(out, open(args.out, "w"), indent=1, ensure_ascii=False)

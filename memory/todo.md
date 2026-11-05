@@ -1148,6 +1148,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    red 2/4 → green; word labels 12 sp within 64 dp, descriptions wrap) — device: Enter NE reads
    "Action  Enter" (was "Acti"; a first 88 dp/15 sp try split "Ente/r", fixed before commit) PASS.
    Restored as found (0 mappings, one System layout).
+32. [ ] device + maintainer: voice engine follow-ups from the 2026-11-05 STT follow-up
+   (`docs/research/2026-10-28-stt-engine-deep-dive.md` §6.5–6.6, §7.5). (a) DEVICE: time the
+   app's Moonshine session with the ORT arena off (today) vs on vs the XNNPACK EP on the Pixel and
+   a Saga. On this box (Python ORT 1.26) the CPU EP with the arena off ran the official decoder
+   2–2.5× slower (tiny 5 s set: 890–1048 vs 420–465 ms batch; capped stream 398 vs 212 ms per
+   pass for XNNPACK). XNNPACK RSS was 221–281 vs 115 MB on short sets, and the long-session growth is
+   unattributed. Pick the setting from the device numbers. (b) MAINTAINER: whether to offer Moonshine
+   small-streaming as an optional "accurate" English pack (135.5 MiB, fits every cap; 10/280 vs
+   14, 6/308 vs 11, 43/1260 vs 83 on 30–72 s dictation; ~2× RSS and pass time). ACFT
+   small.en is equally accurate but a 252 MiB single file over the 128 MiB per-file cap, and a
+   second native runtime. Not recommended. Agent-side done 2026-11-05: sub-hop final chunk fix
+   (`runFrontend` pads < 80 samples; `aStopThatLeavesLessThanOneFrontendHopStillFinishes`).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
