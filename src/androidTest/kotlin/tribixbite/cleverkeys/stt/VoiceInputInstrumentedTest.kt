@@ -33,7 +33,9 @@ import java.nio.ByteOrder
  * src/androidTest/assets/voicepack/voicepack-moonshine-v2-tiny-en.zip   (scripts/build_voice_pack.py)
  * src/androidTest/assets/voicepack/sample.wav + sample.txt               (16 kHz mono PCM16 + reference)
  * ```
- * Without them the engine test is skipped (Assume), like the `ctc_bench` encoders.
+ * Without them the engine test is skipped (Assume), like the `ctc_bench` encoders. Another pack
+ * in the same folder (e.g. `--variant small`) is chosen with the instrumentation argument
+ * `-e voicePack voicepack-moonshine-v2-small-en.zip`.
  */
 @RunWith(AndroidJUnit4::class)
 class VoiceInputInstrumentedTest {
@@ -41,6 +43,9 @@ class VoiceInputInstrumentedTest {
     private val instrumentation = InstrumentationRegistry.getInstrumentation()
     private val appContext = instrumentation.targetContext
     private val testContext = instrumentation.context
+
+    /** The pack asset under test: tiny by default, any other with `-e voicePack <file>`. */
+    private val pack: String = InstrumentationRegistry.getArguments().getString("voicePack") ?: DEFAULT_PACK
 
     @Test
     fun microphoneIsDeclaredAndThePromptActivityIsPrivate() {
@@ -64,19 +69,19 @@ class VoiceInputInstrumentedTest {
     fun theImportedPackTranscribesASampleOnDevice() {
         val assets = testContext.assets
         val names = runCatching { assets.list("voicepack")?.toList() }.getOrNull().orEmpty()
-        assumeTrue("voice pack asset absent", PACK in names && "sample.wav" in names && "sample.txt" in names)
+        assumeTrue("voice pack asset $pack absent", pack in names && "sample.wav" in names && "sample.txt" in names)
 
         val root = File(appContext.cacheDir, "voice-it/voicepacks")
         val scratch = File(appContext.cacheDir, "voice-it/scratch").apply { mkdirs() }
         try {
             val manager = VoicePackManager(root, scratch, Int.MAX_VALUE)
-            val result = assets.open("voicepack/$PACK").use { manager.import(it) }
+            val result = assets.open("voicepack/$pack").use { manager.import(it) }
             assertTrue("import: $result", result is VoicePackManager.ImportResult.Success)
-            val pack = manager.activePack("en")!!
-            val factory = (SpeechEngineRegistry.DEFAULT.resolve(pack.manifest) as SpeechEngineRegistry.Resolution.Supported).factory
+            val installed = manager.activePack("en")!!
+            val factory = (SpeechEngineRegistry.DEFAULT.resolve(installed.manifest) as SpeechEngineRegistry.Resolution.Supported).factory
             val pcm = assets.open("voicepack/sample.wav").use { readWav(it.readBytes()) }
             val reference = assets.open("voicepack/sample.txt").use { it.readBytes().toString(Charsets.UTF_8).trim() }
-            factory.load(pack.dir, SpeechEngineOptions()).use { engine ->
+            factory.load(installed.dir, SpeechEngineOptions()).use { engine ->
                 val t0 = System.nanoTime()
                 val session = engine.newSession()
                 var off = 0
@@ -91,7 +96,7 @@ class VoiceInputInstrumentedTest {
                 val ms = (System.nanoTime() - t0) / 1_000_000
                 val errors = wordErrors(reference, final.text)
                 val words = norm(reference).size
-                Log.i(TAG, "VOICE_IT ${engine.memoryReport()} audio=${pcm.size / 16_000.0}s compute=${ms}ms passes=$partials errors=$errors/$words | ${final.text}")
+                Log.i(TAG, "VOICE_IT $pack ${engine.memoryReport()} audio=${pcm.size / 16_000.0}s compute=${ms}ms passes=$partials errors=$errors/$words | ${final.text}")
                 assertTrue("no partial results", partials >= 1)
                 assertTrue("WER on the sample: ${final.text}", errors.toDouble() / words < 0.2)
             }
@@ -110,20 +115,20 @@ class VoiceInputInstrumentedTest {
     fun aPauseSplitsDictationIntoTwoSegmentsOnDevice() {
         val assets = testContext.assets
         val names = runCatching { assets.list("voicepack")?.toList() }.getOrNull().orEmpty()
-        assumeTrue("voice pack asset absent", PACK in names && "sample.wav" in names && "sample.txt" in names)
+        assumeTrue("voice pack asset $pack absent", pack in names && "sample.wav" in names && "sample.txt" in names)
 
         val root = File(appContext.cacheDir, "voice-it-seg/voicepacks")
         val scratch = File(appContext.cacheDir, "voice-it-seg/scratch").apply { mkdirs() }
         try {
             val manager = VoicePackManager(root, scratch, Int.MAX_VALUE)
-            val result = assets.open("voicepack/$PACK").use { manager.import(it) }
+            val result = assets.open("voicepack/$pack").use { manager.import(it) }
             assertTrue("import: $result", result is VoicePackManager.ImportResult.Success)
-            val pack = manager.activePack("en")!!
-            val factory = (SpeechEngineRegistry.DEFAULT.resolve(pack.manifest) as SpeechEngineRegistry.Resolution.Supported).factory
+            val installed = manager.activePack("en")!!
+            val factory = (SpeechEngineRegistry.DEFAULT.resolve(installed.manifest) as SpeechEngineRegistry.Resolution.Supported).factory
             val clip = assets.open("voicepack/sample.wav").use { readWav(it.readBytes()) }
             val reference = assets.open("voicepack/sample.txt").use { it.readBytes().toString(Charsets.UTF_8).trim() }
             val pcm = clip + FloatArray(24_000) + clip + FloatArray(16_000)
-            factory.load(pack.dir, SpeechEngineOptions()).use { engine ->
+            factory.load(installed.dir, SpeechEngineOptions()).use { engine ->
                 val r = SegmentedRecognizer(engine)
                 val finals = ArrayList<SegmentedRecognizer.Update.SegmentFinal>()
                 var off = 0
@@ -134,7 +139,7 @@ class VoiceInputInstrumentedTest {
                 }
                 val last = r.finish()
                 r.close()
-                Log.i(TAG, "VOICE_IT_SEG segments=${finals.size} ${finals.map { "${it.reason}/${it.samples}" }} last='${last.text}' | ${finals.joinToString(" | ") { it.hypothesis.text }}")
+                Log.i(TAG, "VOICE_IT_SEG $pack segments=${finals.size} ${finals.map { "${it.reason}/${it.samples}" }} last='${last.text}' | ${finals.joinToString(" | ") { it.hypothesis.text }}")
                 assertEquals("both halves end at a pause", 2, finals.size)
                 assertTrue(finals.all { it.reason == SegmentEndReason.PAUSE })
                 // Each segment is the clip plus look-behind and hangover, never the silence too.
@@ -152,7 +157,7 @@ class VoiceInputInstrumentedTest {
 
     private companion object {
         const val TAG = "VoiceInputIT"
-        const val PACK = "voicepack-moonshine-v2-tiny-en.zip"
+        const val DEFAULT_PACK = "voicepack-moonshine-v2-tiny-en.zip"
 
         fun readWav(bytes: ByteArray): FloatArray {
             val b = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)

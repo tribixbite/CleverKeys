@@ -521,7 +521,9 @@ class MoonshineV2StreamingEngine private constructor(
                     val report = SpeechMemoryReport(
                         modelBytes = bytes,
                         loadMillis = (System.nanoTime() - started) / 1_000_000,
-                        detail = "moonshine-v2-streaming tiny, CPU EP, ${options.threads} threads, arena off",
+                        // Any streaming size loads here (tiny, small); name it by its shape.
+                        detail = "moonshine-v2-streaming depth ${config.depth} dim ${config.encoderDim}/${config.decoderDim}, " +
+                            "CPU EP, ${options.threads} threads, arena off",
                     )
                     return MoonshineV2StreamingEngine(
                         env, config, frontend, weightTensors, encoder, adapter, crossKv, decoder, tokenizer, report,

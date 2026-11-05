@@ -240,6 +240,31 @@ chunk with silence (2026-11-05).
 Stability: words two consecutive passes agree on are stable (`HypothesisStabilizer`, engine-
 neutral); the final pass (stop) makes everything final.
 
+### Moonshine v2 small-streaming pack (optional, `voicepack-moonshine-v2-small-en.zip`, 2026-11-05)
+Same revision and runtime as tiny, `model/small-streaming-en/quantized_26_08_21/`, built with
+`scripts/build_voice_pack.py --variant small`: `frontend.model.ort` (26,944 B),
+`frontend.weights.ort` (7,769,464), `encoder.ort` (44,148,576), `adapter.ort` (2,870,368),
+`cross_kv.ort` (5,356,536), `decoder_kv.ort` (81,878,600 = 78.1 MiB, the largest file),
+`tokenizer.bin` (249,974, identical to tiny's), `streaming_config.json` (512: depth 10, encoder
+620, decoder 512). 142,300,974 B of files (135.7 MiB, inside the 128 MiB per-file and 256 MiB
+total caps); the ZIP is 142,193,602 B, sha256 `f75cd82a9b23f9f1545fdf651bdbe4bfd098524bdb869259d18bdbc9e8b29d74`
+(reproducible; every file hash equals the Hub's LFS oid). `decoder_kv_with_attention.ort` is not
+packed (alignment output, unused). No app code is specific to it: the engine sizes itself
+from `streaming_config.json`. NOT published on the `langpacks` release (maintainer decision).
+- JVM, app engine on ORT 1.21.1 (`MoonshineV2StreamingEngineTest -PvoicePack=<small zip>`): 8/8;
+  WER 2/125 on the eight 5 s clips (tiny: 5/125), 7/228 on the 88 s long dictation through the
+  segmenter, 0/57 on 24 s; load 686 ms. Pass times on this run are not usable (load ≈ 17).
+- emulator.wtf Pixel 7 API 34 (x86_64 ORT), `VoiceInputInstrumentedTest
+  -e voicePack voicepack-moonshine-v2-small-en.zip`: 4/4, 1/31 errors on the 11.1 s sample
+  (tiny 1/31). Compute 11,244 ms for 11.1 s of audio fed at once (tiny 3,769 ms); load 7,973 ms
+  (tiny 1,673). An emulator is not a phone; the phone figures are still owed.
+- Device: NOT measured. The only reachable test phone (Saga, 2026-11-05) now has a PIN lock
+  screen, and Play Protect refused the debug APK the instrumented test needs ("upload for scan",
+  which it cannot ask on a locked screen). The release build of `ee203b73` was installed there.
+- With tiny and small both installed, `activePack` takes the first by NAME, i.e. small
+  ("English — Moonshine v2 small…" sorts before "…tiny"). There is no choice in Settings; the
+  user removes one to switch (Open Questions 4).
+
 ### Data Structures
 ```kotlin
 data class SpeechHypothesis(val text: String, val stableWordCount: Int, val isFinal: Boolean)
@@ -423,6 +448,8 @@ ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` o
 1. Pin pack model hashes in the APK (like `CtcPackModel`) at the cost of an app release per model?
 2. Default chunk size 1.0 s vs 0.5 s (0.5 s doubles retractions, research §5.2).
 3. Languages: de/es/ja/zh/ar/vi/tl streaming tiny models exist upstream; one pack each.
+4. Two packs for one language (tiny + the optional small): keep "first by name", or add a
+   choice in Settings → Voice input? Today the user removes one to switch (2026-11-05).
 
 ## Future Enhancements
 - A model VAD (Silero, as the official runtime) carried by the pack, if the energy VAD proves
@@ -432,5 +459,5 @@ ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` o
 ---
 
 **Created**: 2026-10-29
-**Last Updated**: 2026-10-31
+**Last Updated**: 2026-11-05
 **Owner**: CleverKeys maintainers
