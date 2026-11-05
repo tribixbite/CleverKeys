@@ -1155,11 +1155,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    2–2.5× slower (tiny 5 s set: 890–1048 vs 420–465 ms batch; capped stream 398 vs 212 ms per
    pass for XNNPACK). XNNPACK RSS was 221–281 vs 115 MB on short sets, and the long-session growth is
    unattributed. Pick the setting from the device numbers. (b) MAINTAINER: whether to offer Moonshine
-   small-streaming as an optional "accurate" English pack (135.5 MiB, fits every cap; 10/280 vs
+   small-streaming as an optional "accurate" English pack (135.7 MiB, fits every cap; 10/280 vs
    14, 6/308 vs 11, 43/1260 vs 83 on 30–72 s dictation; ~2× RSS and pass time). ACFT
    small.en is equally accurate but a 252 MiB single file over the 128 MiB per-file cap, and a
    second native runtime. Not recommended. Agent-side done 2026-11-05: sub-hop final chunk fix
    (`runFrontend` pads < 80 samples; `aStopThatLeavesLessThanOneFrontendHopStillFinishes`).
+   Later 2026-11-05 (`f63100eb` + research §6.5.6): the small pack is BUILT
+   (`build_voice_pack.py --variant small`, zip sha256 `f75cd82a…`, NOT uploaded) and passes the JVM
+   engine test 8/8 and emulator.wtf API 34 4/4. (c) DEVICE, still owed: small on a phone (per-pass
+   time, RSS, real mic). The Saga (192.168.1.130 on 11-05, the one without Termux) now has a PIN
+   lock screen and Play Protect refuses the debug APK on it ("upload for scan" needs a person), so
+   this needs the maintainer to unlock it or to run `VoiceInputInstrumentedTest
+   -e voicePack voicepack-moonshine-v2-small-en.zip` on the Pixel. The Saga was updated to the
+   release build of `ee203b73` (it ran an Oct 28 build without voice). (d) MAINTAINER: with tiny and
+   small both installed, the active pack is the first by name (small); no choice in Settings
+   (spec Open Question 4). ACFT small.en quantisations: none worth pursuing — q3_k is the only
+   usable one under the cap and it doubles long-dictation errors and runs 2.6–2.9× slower.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 
