@@ -248,8 +248,12 @@ class MoonshineV2StreamingEngine private constructor(
 
         // ---- frontend -------------------------------------------------------------------
 
-        private fun runFrontend(chunk: FloatArray) {
-            if (chunk.isEmpty()) return
+        private fun runFrontend(raw: FloatArray) {
+            if (raw.isEmpty()) return
+            // The frontend's first Conv rejects a chunk shorter than one 5 ms hop ("Invalid input
+            // shape"). Only the last pass can be that short (a stop flushes a partial segmenter
+            // hop); pad it with silence so the audio in it is still heard.
+            val chunk = if (raw.size >= MIN_FRONTEND_SAMPLES) raw else raw.copyOf(MIN_FRONTEND_SAMPLES)
             val inputs = HashMap<String, OnnxTensor>()
             try {
                 inputs["audio_chunk"] = OnnxTensor.createTensor(env, FloatBuffer.wrap(chunk), longArrayOf(1, chunk.size.toLong()))
@@ -541,6 +545,9 @@ class MoonshineV2StreamingEngine private constructor(
         /** See [maxSegmentSeconds]. */
         const val MAX_SEGMENT_SECONDS = 20
         val CHUNK_SAMPLES = (SAMPLE_RATE * CHUNK_SECONDS).toInt()
+
+        /** One frontend hop (5 ms): the shortest `audio_chunk` the frontend graph accepts. */
+        private const val MIN_FRONTEND_SAMPLES = 80
 
         /** Encoder frame period (50 Hz) and the runtime's decode budget per second of audio. */
         private const val FRAME_SECONDS = 0.020

@@ -135,6 +135,39 @@ class MoonshineV2StreamingEngineTest {
     }
 
     /**
+     * The frontend's first Conv needs one 5 ms hop (80 samples); a shorter `audio_chunk` fails
+     * with `Invalid input shape: {N}`. Stop can leave such a tail: the segmenter flushes its
+     * partial hop (1–511 samples) and the session holds `total mod 16000`. Seen 2026-11-05 in
+     * the research harness when a forced cut left 4 samples; `finish()` must still return text.
+     */
+    @Test
+    fun aStopThatLeavesLessThanOneFrontendHopStillFinishes() {
+        assumeTrue("voice pack not built ($pack)", pack.isFile)
+        val clip = clips().firstOrNull()
+        assumeTrue("no sample clips in $samples", clip != null)
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-tail").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            manager.import(pack.inputStream())
+            val installed = manager.activePack("en")!!
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions()).use { engine ->
+                val pcm = readWav(clip!!.first)
+                for (tail in intArrayOf(1, 4, 79)) {
+                    val s = engine.newSession()
+                    s.accept(pcm.copyOfRange(0, MoonshineV2StreamingEngine.CHUNK_SAMPLES * 2 + tail))
+                    assertWithMessage("tail of $tail samples").that(s.finish().text).isNotEmpty()
+                }
+                // A session whose only audio is a sub-hop tail finishes empty, not with an error.
+                val tiny = engine.newSession()
+                tiny.accept(pcm.copyOfRange(0, 4))
+                assertThat(tiny.finish().isFinal).isTrue()
+            }
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
+    /**
      * A recogniser that fell behind real time gets the backlog in ONE accept (the buffered
      * microphone drains everything queued). Decoding it once — not once per second of
      * backlog — is what lets it catch up: each decode re-reads the whole utterance, so

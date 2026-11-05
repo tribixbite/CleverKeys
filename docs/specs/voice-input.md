@@ -234,6 +234,9 @@ frontend (audio chunk + 5 carried states → 50 Hz features) → encoder over a 
 `16·depth` past frames, keeping frames older than `total_lookahead` (16) as stable →
 adapter (`pos_offset`) → memory → `cross_kv` → `decoder_kv` greedy decode with the previous
 pass's tokens re-verified in one call (speculative prefix), `max_tokens = ceil(sec · 6.5)`.
+The frontend graph rejects a chunk shorter than one 5 ms hop (80 samples). Only the final
+pass can be that short (a stop flushes a partial segmenter hop), so `runFrontend` pads such a
+chunk with silence (2026-11-05).
 Stability: words two consecutive passes agree on are stable (`HypothesisStabilizer`, engine-
 neutral); the final pass (stop) makes everything final.
 
