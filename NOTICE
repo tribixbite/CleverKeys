@@ -343,9 +343,10 @@ moonshine/) is a Kotlin port of the streaming runtime in Moonshine
   SOFTWARE.
 
 No speech model ships in the APK. The model is an optional voice pack the user
-imports (voicepack-moonshine-v2-tiny-en.zip on the "langpacks" release): the
-unmodified Moonshine v2 tiny-streaming English ONNX Runtime graphs and tokenizer
-from https://huggingface.co/moonshine-ai/moonshine-voice-assets (revision
+imports (voicepack-moonshine-v2-tiny-en.zip or voicepack-moonshine-v2-small-en.zip
+on the "langpacks" release): the unmodified Moonshine v2 tiny- or small-streaming
+English ONNX Runtime graphs and tokenizer from
+https://huggingface.co/moonshine-ai/moonshine-voice-assets (revision
 0bf2f2e5aff22e6fbba4300b00a4e00bbc4f8aae), MIT, built by
 scripts/build_voice_pack.py. The pack carries the upstream LICENSE and its own
 NOTICE.txt.

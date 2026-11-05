@@ -6,7 +6,7 @@
 
 ---
 
-## Current execution status (2026-10-08; voice input row 2026-10-29)
+## Current execution status (2026-10-08; voice input row 2026-10-29, pack library 2026-11-05)
 
 This is a proposal queue, not a release checklist. The maintainer wants feature/bug work
 and personal device testing before 2.0. Pushes to origin/main are authorized (2026-10-07) and
@@ -22,6 +22,7 @@ with owners is `memory/todo.md` "Open now"; this table is the per-roadmap-item v
 | Short-word recognition | `ad`/`wet` still fail with default CTC: encoder end-of-trace word prior + collinear pass-through (re-measured October 7). CTC now featurizes the unsmoothed path plus one lift sample (`745d1ca3`: held-out top-1 91.83 → 92.12; `ad` swiped with a final stop decodes `ad` — Saga PASS); a dwell-less `ad`/`wet` still fails. Final-letter drops (`adb`→`an`, `somethings`→`something`) measured 2026-10-07: no decoder defect (`docs/eval/2026-10-07-final-letter-drops.md`). Word-balanced fine-tune recipe written; needs the RTX box and fresh writer-separated human traces. |
 | 2.2 Continuous swipe | Opt-in 280 ms spacebar dwell, bounded segments and serialized commits implemented. October 7 review fixes (late own callbacks no longer cancel phrases, lost final word reported, no-boundary cancel keeps the word, lazy touch-down reads) are host-tested, native-rerun green (`ContinuousSwipeTest` 20, `SmartAutoSpaceTest` 75 in the 2026-10-07 full runs on `24afd33c`/`78052e86`/`991651d1`, 0 failures) and Saga split/no-split mechanics PASS (`a5e0464b`). Word swipes (and phrases) now start only on letter keys (`9c3fb179`, Saga A1–A4 PASS 2026-10-08). Human accuracy/latency validation and auto-space-OFF / interrupted-phrase checks remain. |
 | 2.3 Dwell picker | Not implemented; needs latency/conflict measurements before implementation. |
+| 3.2 Pack library (choose dictionary / voice pack per language) | Proposed 2026-11-05 for 2.1, not started: dictionary packs replace each other per language code; voice packs coexist but the first by name is used, with no choice and an unconfirmed Remove (§3.2). |
 | 3.1 Bangla | National/Provat tap layouts exist. Transliteration, spelling-preserving dictionary/mark support and a validated swipe model remain. |
 | 4.1 Theme preview | Done 2026-10-08: the DIY editor previews the real renderer (Keyboard2View + SuggestionBar) with representative states. |
 | 4.2 Swipe trail | Proposed spline/velocity behavior remains; benchmark before claiming frame-rate or overhead. |
@@ -29,7 +30,7 @@ with owners is `memory/todo.md` "Open now"; this table is the per-roadmap-item v
 | Extra Keys follow-up | Autofill visibility, landscape scrolling and rotation-preserved search implemented and device-tested. |
 | Per-layout language binding (#186/#61) | Shipped `f85c8dcd` (Layout Manager → Language chip; custom XML `language=`; `ActiveLanguageSync` is the only language-change path). Saga Latin → German-bound layout PASS 2026-10-07. Remaining: Persian custom layout bound to `fa` with the fa pack, en/de/fr three-layout cycle, uninstalled-language warning. |
 | Minimize (#175 part 1) | `minimize_bar`/`minimize_fab` + `hide_keyboard` shipped; Seeker bar/FAB minimize, expand, landscape pass-through PASS (2026-10-05); FAB on the left for RTL system (`ar-XB`) and per-app (`fa`) locales `c6fe3594`, Saga PASS 2026-10-07. Remaining: cross-app window pass-through checks; summon after a system hide is unbuilt (overlay permission). |
-| Voice input (on-device STT) | Added 2026-10-29 and moved into **2.0.0** by maintainer decision (it was proposed for 2.1). Built: engine-neutral `stt/`, Moonshine v2 tiny-streaming on the existing ORT, voice-pack import, microphone opt-in, bar voice mode; JVM WER 5/125; second-Saga device test PASS with five bugs fixed (`c6734644`, `1a26da24`). The voice pack is on the `langpacks` release since 2026-10-29 (sha256 equals the spec's pin; checked 2026-10-31). Remaining: maintainer checks (TalkBack, RustDesk, clipboard editor, real-voice accuracy) → `memory/todo.md` Open now 30. The 30 s stop was replaced by pause-based endpointing on 2026-10-31 (`b243ce3d`). Spec `docs/specs/voice-input.md`. |
+| Voice input (on-device STT) | Added 2026-10-29 and moved into **2.0.0** by maintainer decision (it was proposed for 2.1). Built: engine-neutral `stt/`, Moonshine v2 tiny-streaming on the existing ORT, voice-pack import, microphone opt-in, bar voice mode; JVM WER 5/125; second-Saga device test PASS with five bugs fixed (`c6734644`, `1a26da24`). The voice pack is on the `langpacks` release since 2026-10-29 (sha256 equals the spec's pin; checked 2026-10-31). Remaining: maintainer checks (TalkBack, RustDesk, clipboard editor, real-voice accuracy) → `memory/todo.md` Open now 30. The 30 s stop was replaced by pause-based endpointing on 2026-10-31 (`b243ce3d`). An optional, more accurate Moonshine v2 small pack is on the release since 2026-11-05 (Saga: 9–10 vs 18–19 errors in 228 words through a real microphone; research §6.7); choosing between packs is roadmap §3.2. Spec `docs/specs/voice-input.md`. |
 
 October 6 expanded validation is complete: 14 added native regressions cover the
 new terminal setting, minimize/compact geometry, emoji filtering, oversized updates,
@@ -368,6 +369,39 @@ layout-language association remain prerequisites for a supported candidate exper
      - Uses a frequency-ranked unigram dictionary for candidate selection.
   2. Runs as a composer layer in the input pipeline before committing text, completely offline and requiring no machine learning runtime.
 * **Effort**: Medium (4–6 days). Expands CleverKeys to millions of international users without bloating APK size.
+
+### 3.2 Pack library: several packs per language, the user picks one (dictionary + voice; target 2.1)
+
+Added 2026-11-05 (maintainer request). Today the two pack kinds behave differently, and neither lets
+the user choose:
+
+- **Dictionary packs** are stored by language code (`langpack-en-wordfreq.zip` declares
+  `"code": "en"`, like `langpack-en.zip` and `langpack-en-opensubtitles.zip`), so importing one
+  English dictionary REPLACES the other. Trying another means re-importing; going back means
+  re-importing the first.
+- **Voice packs** are stored by pack id, so `en-moonshine2-tiny` and `en-moonshine2-small` coexist,
+  but `VoicePackManager.activePack` silently takes the first by NAME (small). There is no
+  indication of which one is in use, and switching means Remove (which has no confirmation).
+
+**Proposal.** One model for both kinds, in `langpack/` + `stt/`:
+1. Store every pack by its own id (dictionary packs gain an `id`, defaulting to `code` so existing
+   installs and backups keep working; one migration that renames nothing on disk for them).
+2. A per-language active-pack preference (`active_dictionary_pack.<lang>`, `active_voice_pack.<lang>`),
+   included in backup/restore. Missing or stale → today's rule (the only pack, or first by name), so
+   a fresh install behaves exactly as now.
+3. Settings: under each language (Multi-Language) and under Voice input, the installed packs as a
+   radio list (name, size, licence, "in use"), Import, and Remove with a confirmation that names the
+   pack and its size. Removing the active pack falls back by the same rule.
+4. The keyboard reacts without a restart: `VoiceInputController.ensureEngine` already reloads when
+   the active pack's directory changes (seen on a Saga 2026-11-05); the dictionary side must be
+   checked for the same (TODO: verify how the predictor picks up a re-imported pack today). The
+   active-pack preference becomes their input.
+5. Guards: a pack in use by a running voice period is not deleted under it (finish or cancel first);
+   storage shown per pack; the import of a second pack for a language asks "use it now?".
+
+Tests: pure (active-pack resolution, migration, backup round trip, fallback when the chosen pack
+disappears), Settings Compose tests for the radio list and the remove confirmation, one device pass
+(switch tiny → small → tiny while the keyboard stays open). Effort: medium (3–5 days). Not started.
 
 ---
 

@@ -190,7 +190,7 @@ pending words stop when editor/session ownership changes. See the
 
 ### 🎙️ Voice Input (on device, opt-in)
 - **Offline dictation** — a Voice input key (Extra Keys) or the `voice_input` command types what you say; the newest words stay underlined until the model confirms them
-- **Opt-in voice pack** — import `voicepack-moonshine-v2-tiny-en.zip` (English, Moonshine v2 tiny streaming, MIT, ~45 MB) once from the [`langpacks` release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks); nothing of the model ships in the APK
+- **Opt-in voice pack** — import `voicepack-moonshine-v2-tiny-en.zip` (English, Moonshine v2 tiny streaming, MIT, ~45 MB) or the more accurate `voicepack-moonshine-v2-small-en.zip` (~142 MB) once from the [`langpacks` release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks); nothing of the model ships in the APK
 - **Microphone only when you turn it on** — the permission is requested only when you enable voice input or import a pack; audio is never stored and never leaves the device
 - **Safe everywhere** — terminals and remote-desktop fields get confirmed words only, appended; password fields refuse voice input
 - See the [voice input guide](docs/wiki/typing/voice-input.md)

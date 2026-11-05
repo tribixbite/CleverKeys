@@ -250,7 +250,8 @@ Same revision and runtime as tiny, `model/small-streaming-en/quantized_26_08_21/
 total caps); the ZIP is 142,193,602 B, sha256 `f75cd82a9b23f9f1545fdf651bdbe4bfd098524bdb869259d18bdbc9e8b29d74`
 (reproducible; every file hash equals the Hub's LFS oid). `decoder_kv_with_attention.ort` is not
 packed (alignment output, unused). No app code is specific to it: the engine sizes itself
-from `streaming_config.json`. NOT published on the `langpacks` release (maintainer decision).
+from `streaming_config.json`. On the `langpacks` release since 2026-11-05 (with its `.sha256`;
+the downloaded asset was re-hashed), marked experimental, tiny still the recommended default.
 - JVM, app engine on ORT 1.21.1 (`MoonshineV2StreamingEngineTest -PvoicePack=<small zip>`): 8/8;
   WER 2/125 on the eight 5 s clips (tiny: 5/125), 7/228 on the 88 s long dictation through the
   segmenter, 0/57 on 24 s; load 686 ms. Pass times on this run are not usable (load ≈ 17).
@@ -258,12 +259,11 @@ from `streaming_config.json`. NOT published on the `langpacks` release (maintain
   -e voicePack voicepack-moonshine-v2-small-en.zip`: 4/4, 1/31 errors on the 11.1 s sample
   (tiny 1/31). Compute 11,244 ms for 11.1 s of audio fed at once (tiny 3,769 ms); load 7,973 ms
   (tiny 1,673). An emulator is not a phone; the phone figures are still owed.
-- Device: NOT measured. The only reachable test phone (Saga, 2026-11-05) now has a PIN lock
-  screen, and Play Protect refused the debug APK the instrumented test needs ("upload for scan",
-  which it cannot ask on a locked screen). The release build of `ee203b73` was installed there.
+- Device (Saga, 2026-11-05, below "Device test 2026-11-05"): 387 ms median pass as shipped (tiny
+  168), 3 of 112 passes over 1 s; through a real microphone 9–10 errors in 228 words (tiny 18–19).
 - With tiny and small both installed, `activePack` takes the first by NAME, i.e. small
   ("English — Moonshine v2 small…" sorts before "…tiny"). There is no choice in Settings; the
-  user removes one to switch (Open Questions 4).
+  user removes one to switch (Open Questions 4; roadmap: plan doc §3.2).
 
 ### Data Structures
 ```kotlin
@@ -359,6 +359,26 @@ keyboard listened in another field (no audio file on the phone; acoustic path sp
   focused input's selected value ("KEEP-ME-SELECTED" → empty, Saga, `deleteContentBackward`).
   Fixed by the FieldChanged/Release path (`VoiceSessionMachineTest`); re-checked on the Saga.
 
+### Device test 2026-11-05 (Sagas + Pixel; tiny vs small; ORT settings)
+Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.0.144` (Android 13):
+- Import of both packs through Settings (small, 142 MB: ~10 s); the microphone prompt after the
+  first import; small becomes active when both are installed (first by name); Settings → Remove
+  switched back to tiny and the keyboard reloaded the engine by itself (no restart).
+- Real microphone, the 10 long-set clips through the phone's speaker into Chrome (228 words), two
+  runs each: tiny 19 and 18 errors, small 10 and 9; text shown a median 0.75 s (tiny) / 0.84 s
+  (small) after each clip, max 1.58 s; keyboard RSS while listening 324–522 MB (tiny),
+  459–698 MB (small); model load 117 / 286 ms.
+- Engine benchmark (`VoiceEngineDeviceBenchmark`, debug + test APK): per-pass median tiny 168 ms,
+  small 387 ms as shipped (CPU EP, arena off); arena on or XNNPACK 1.7–1.8× faster for both.
+- Android 14 Saga (`192.168.1.130`): with the phone's own speaker playing, the capture heard
+  almost nothing (platform echo cancellation on `VOICE_RECOGNITION`, inferred) and the period
+  ended idle; not a product finding, but speaker self-playback is not a test path there.
+  Play Protect blocks the debug APK on that Saga and on the Pixel; the Pixel's dictation run was
+  not done (another app's Chrome prompt was open). Every phone was restored (packs removed, voice
+  off, microphone revoked, volume, tabs, debug APKs uninstalled); the release app was updated to
+  `ee203b73` on the two Sagas and the Pixel.
+- Found: Settings → Remove deletes a voice pack without a confirmation.
+
 ## Testing Strategy
 
 ### Unit Tests (pure, `runPureTests`)
@@ -448,8 +468,11 @@ ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` o
 1. Pin pack model hashes in the APK (like `CtcPackModel`) at the cost of an app release per model?
 2. Default chunk size 1.0 s vs 0.5 s (0.5 s doubles retractions, research §5.2).
 3. Languages: de/es/ja/zh/ar/vi/tl streaming tiny models exist upstream; one pack each.
-4. Two packs for one language (tiny + the optional small): keep "first by name", or add a
-   choice in Settings → Voice input? Today the user removes one to switch (2026-11-05).
+4. Two packs for one language (tiny + the optional small): today the first by name is used and
+   the user removes one to switch (2026-11-05). Roadmap: a per-language pack choice for voice AND
+   dictionary packs (`docs/plans/2026-10-05-recommended-features-and-gaps.md` §3.2, target 2.1).
+5. Engine setting: XNNPACK (or the arena on) takes ~40 % off every pass on a Saga (research §6.7);
+   switch after a long-period RSS check on a phone (maintainer).
 
 ## Future Enhancements
 - A model VAD (Silero, as the official runtime) carried by the pack, if the energy VAD proves

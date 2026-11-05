@@ -34,7 +34,8 @@ editor that used to be listed here already ship in 2.0.)
 - **Voice input — offline dictation in the keyboard.** A new **Voice input** key (Extra Keys) and
   `voice_input` command type what you say, recognised on the phone by a speech model you import
   once as a voice pack (`voicepack-moonshine-v2-tiny-en.zip`, English, Moonshine v2 tiny
-  streaming, MIT, about 45 MB, from the `langpacks` release; Settings → Voice input → Import
+  streaming, MIT, about 45 MB, from the `langpacks` release, or the more accurate
+  `voicepack-moonshine-v2-small-en.zip`, about 142 MB; Settings → Voice input → Import
   voice pack). Words appear as you speak — the newest underlined until the model confirms them —
   and stop on a second tap; ✕ cancels and drops the unconfirmed words; moving to another field
   ends dictation without writing anything into the new field. Terminals and

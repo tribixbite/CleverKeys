@@ -29,14 +29,18 @@ MAINTAINER only: the soak sign-off (items 8, 9 and 30's real-voice/TalkBack/Rust
 audit M1), the string-review decision (item 10, now including the licenses-screen strings; M2),
 then the tag sequence (M4) with the full suites and an instrumented run at the tag commit (A2).
 2.1 (not started): toolbar row above the keys and card-grid clipboard
-(`docs/plans/2026-10-05-recommended-features-and-gaps.md` §4.4, §4.5), item 20's unowned roadmap,
+(`docs/plans/2026-10-05-recommended-features-and-gaps.md` §4.4, §4.5), the pack library (§3.2,
+item 33: choose the dictionary / voice pack per language), item 20's unowned roadmap,
 the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
 
-Test phones (DHCP leases as reported by the maintainer on 2026-10-18, not verified from this
-box — rediscover with `nmap -sn` and `getprop ro.product.model`): Pixel 8 Pro `192.168.0.216`
+Test phones (seen from this box 2026-11-05: Pixel 8 Pro `192.168.0.216` wireless port 43213, Android
+17; Sagas `192.168.1.130` Android 14 no Termux, `192.168.0.144` and `192.168.0.83` Android 13 with
+Termux — `.83` was running a game, leave it alone; Play Protect blocks the DEBUG APK on the Pixel
+and on `.1.130`. Older leases as reported on 2026-10-18 — rediscover with `nmap -sn` and
+`getprop ro.product.model`): Pixel 8 Pro `192.168.0.216`
 (wireless-debugging port rotates), Saga `192.168.0.202` (CleverKeys installed, enabled, not
 default), second Saga `192.168.0.144` (Termux installed; CleverKeys installed, IME disabled,
 Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when idle). Never
@@ -1160,17 +1164,20 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    small.en is equally accurate but a 252 MiB single file over the 128 MiB per-file cap, and a
    second native runtime. Not recommended. Agent-side done 2026-11-05: sub-hop final chunk fix
    (`runFrontend` pads < 80 samples; `aStopThatLeavesLessThanOneFrontendHopStillFinishes`).
-   Later 2026-11-05 (`f63100eb` + research §6.5.6): the small pack is BUILT
-   (`build_voice_pack.py --variant small`, zip sha256 `f75cd82a…`, NOT uploaded) and passes the JVM
-   engine test 8/8 and emulator.wtf API 34 4/4. (c) DEVICE, still owed: small on a phone (per-pass
-   time, RSS, real mic). The Saga (192.168.1.130 on 11-05, the one without Termux) now has a PIN
-   lock screen and Play Protect refuses the debug APK on it ("upload for scan" needs a person), so
-   this needs the maintainer to unlock it or to run `VoiceInputInstrumentedTest
-   -e voicePack voicepack-moonshine-v2-small-en.zip` on the Pixel. The Saga was updated to the
-   release build of `ee203b73` (it ran an Oct 28 build without voice). (d) MAINTAINER: with tiny and
-   small both installed, the active pack is the first by name (small); no choice in Settings
-   (spec Open Question 4). ACFT small.en quantisations: none worth pursuing — q3_k is the only
-   usable one under the cap and it doubles long-dictation errors and runs 2.6–2.9× slower.
+   Later 2026-11-05: the small pack is BUILT and PUBLISHED (`langpacks` release, zip sha256
+   `f75cd82a…`, re-hashed after upload; release notes row added) and DEVICE-TESTED on the Saga
+   `192.168.0.144` (research §6.7, spec "Device test 2026-11-05"): engine pass median 387 ms (tiny
+   168) as shipped; real microphone 9–10 vs 18–19 errors in 228 words, lag 0.84 vs 0.75 s, keyboard
+   RSS 459–698 vs 324–522 MB. ACFT small.en quantisations: none worth pursuing (§6.5.6).
+   Still open: (a) MAINTAINER: switch the Moonshine session to XNNPACK (or the arena on) — 1.7–1.8×
+   faster per pass on the Saga for both packs — after a long-period RSS check on a phone; the Pixel
+   could not run the debug benchmark (Play Protect blocks the debug APK there and on the Android 14
+   Saga). (b) DEVICE: a person's voice and a noisy room for small; the Pixel dictation run.
+   (c) Pack choice → item 33.
+33. [ ] agent (2.1): pack library — several dictionary and voice packs per language, a per-language
+   choice in Settings, Remove with a confirmation (`docs/plans/2026-10-05-recommended-features-and-gaps.md`
+   §3.2; maintainer request 2026-11-05). Today dictionary packs replace each other per language code
+   and voice packs use the first by name with no indication.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

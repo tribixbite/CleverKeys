@@ -18,7 +18,7 @@ while you dictate, is never stored and never leaves the device.
 | **Purpose** | Dictate into any text field without switching to another keyboard |
 | **Access** | Settings → Voice input (off by default); the **Voice input** key or the `voice_input` command |
 | **Model** | A voice pack ZIP from the [`langpacks` release](https://github.com/tribixbite/CleverKeys/releases/tag/langpacks), imported with the file picker |
-| **First pack** | English — Moonshine v2 tiny (streaming), about 45 MB, MIT license |
+| **Packs** | English — Moonshine v2 tiny (streaming), about 45 MB, MIT license; optional English — Moonshine v2 small (streaming), about 142 MB, MIT, more accurate |
 | **Permission** | Microphone, asked for only when you turn voice input on or import a pack |
 | **Privacy** | On device; nothing recorded to storage; no internet permission |
 
@@ -36,7 +36,14 @@ while you dictate, is never stored and never leaves the device.
    command to a short swipe or open it from the command palette.
 
 The pack row shows its name, size, engine, languages and license; **License and notice** shows the
-pack's LICENSE and NOTICE text, and **Remove** deletes it.
+pack's LICENSE and NOTICE text, and **Remove** deletes it (at once, without asking).
+
+**Tiny or small?** Start with tiny. The small pack (`voicepack-moonshine-v2-small-en.zip`) made about
+half the mistakes in our tests (9–10 against 18–19 words wrong out of 228, read aloud near the phone),
+but it is three times the download and storage, needs about twice the processing per second of speech
+and roughly 150–200 MB more memory while you dictate. On a 2022 flagship it kept up comfortably.
+Install one of them: with both installed, CleverKeys uses small, and you switch back by removing it.
+A choice between installed packs is planned.
 
 ## Dictating
 

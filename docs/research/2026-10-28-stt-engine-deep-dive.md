@@ -32,7 +32,7 @@ section lists what this dive changed there). Three questions from the maintainer
 4. **Whisper** (added 2026-11-05, §6.4): measured on the same clips with a source-built whisper.cpp.
    Its 30 s fixed encoder window makes the best config (tiny.en q8_0, 44 MB) cost ~3.4× Moonshine
    per 1 s pass on short dictation; shrinking the window makes it loop. Moonshine stays the pick.
-5. **Follow-up** (2026-11-05, §6.5, every engine in §6.6): FUTO's ACFT checkpoints fix Whisper's
+5. **Follow-up** (2026-11-05, §6.5, every engine in §6.6, phones in §6.7): FUTO's ACFT checkpoints fix Whisper's
    shortened window, so ACFT tiny.en costs no more per pass than Moonshine tiny, but it retracts
    more. ACFT small.en is the most accurate model measured (tied with Moonshine small), but it is a
    252 MiB single file, about twice the 128 MiB per-file voice-pack cap; its only quantisation that
@@ -42,7 +42,10 @@ section lists what this dive changed there). Three questions from the maintainer
    cut is essential: without it Moonshine falls to 29–63 % WER on long clips. Two app findings: a
    stop that left under 80 samples failed the final pass (fixed, with a test), and the
    CPU EP with the arena off (the app's setting) runs the decoder 2–2.5× slower than arena on or
-   XNNPACK; that is to be measured on a device. No qualifying model was released in the past week.
+   XNNPACK; on a Saga that is 1.7–1.8× per pass (§6.7). No qualifying model was released in the past week.
+   **On a phone** (§6.7, Saga): small keeps the 1 s cadence (387 ms median pass as shipped, 226 ms with
+   XNNPACK) and through a real microphone makes 9–10 errors in 228 words against tiny's 18–19, for
+   ~0.1 s more lag and ~150–200 MB more keyboard memory. It is published as an optional pack.
 
 Marking: **[U]** = not verified from a primary source. Everything else was read or measured on
 2026-10-28; every measurement line carries the box's load average because other sessions were
@@ -711,14 +714,13 @@ segmented stream. Pass times are from a separate back-to-back run with q8_0 befo
 engine runs it unchanged: JVM test 8/8, WER 2/125 on the eight 5 s clips (tiny 5/125) and 7/228
 on the 88 s segmented dictation; emulator.wtf Pixel 7 API 34, 4/4. On that emulator it needed
 11.2 s of compute for 11.1 s of audio fed at once (tiny 3.8 s) and 8.0 s to load (tiny 1.7 s).
-**Not measured on a phone**: the Saga reachable on 2026-11-05 is behind a PIN lock screen, and
-Play Protect refused the debug APK the instrumented test needs. So the arena/XNNPACK question
-(§7.5) and small's real per-pass time on a phone are still open.
+Phone results (Saga): §6.7. The pack is on the `langpacks` release since 2026-11-05.
 
 ### 6.6 Every engine and configuration in one table
 
 Sources: **[O]** = the Oct 28 series (§5, CPU EP with the arena **on** for Moonshine), **[A]** = the
-§6.4 Whisper run (2026-11-05, first series), **[B]** = the §6.5 series. Long-clip WER is the app-like
+§6.4 Whisper run (2026-11-05, first series), **[B]** = the §6.5 series, **[S]** = a Saga phone
+(§6.7; its WER is on a different, 353-word clip set, so it is given in that section only). Long-clip WER is the app-like
 configuration where one exists (segmented stream for streaming engines), otherwise a whole-clip
 batch, marked "b". "Fits caps" means the voice-pack limits as coded: each file ≤ 128 MiB, total
 ≤ 256 MiB. Fitting the caps is not the same as fitting the app: only ORT engines run on the
@@ -733,6 +735,8 @@ runtime the app ships. Pass time is the median per 1 s pseudo-stream pass, 5 s s
 | Moonshine tiny, CPU, arena off, capped (= the app) | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 398 / 478 | B |
 | Moonshine tiny, XNNPACK, arena off, capped | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 212 / 272 | B |
 | **Moonshine small-streaming**, CPU, arena off, capped | ORT · MIT weights | 142 MB | **yes** | 3.57 % | 1.95 % | 3.41 % | 676 / 866 | B |
+| Moonshine tiny, **Saga**, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 45 MB | yes | §6.7 | §6.7 | §6.7 | 168 / 94 / 98 (all clips) | S |
+| Moonshine small, **Saga**, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 142 MB | yes | §6.7 | §6.7 | §6.7 | 387 / 226 / 226 (all clips) | S |
 | Moonshine medium-streaming | ORT · MIT weights | 269 MB | no (decoder 140 MiB) | 2.86 % | 1.62 % | 30.6 % b | — | B |
 | Moonshine tiny, Masterx ONNX fp32 / int8 | ORT · MIT weights | 135 / 76 MB | yes | 4.64 / 4.29 % | 3.25 / 3.57 % | — | — | B |
 | sherpa Zipformer 20M int8 | ORT · Apache-2.0 weights | 35 MB | yes | 5.71 % | 0.97 % | 4.29 % | 41–49 per 0.32 s step | O, B |
@@ -757,6 +761,65 @@ runtime the app ships. Pass time is the median per 1 s pseudo-stream pass, 5 s s
 
 WER denominators: 280 words (5 s), 308 (15 s), 1,260 (long). One word is 0.36 / 0.32 / 0.08
 points, so differences of one or two words on the short sets are noise.
+
+### 6.7 On the phones (2026-11-05)
+
+Four test phones: the Pixel 8 Pro (Android 17) and three Sagas (Snapdragon 8+ Gen 1; Android 14,
+13, 13). What ran where, and why:
+
+- **Engine benchmark** (`VoiceEngineDeviceBenchmark`, debug APK + test APK, the app's Kotlin engine
+  on the phone's ORT 1.21.1, no microphone): the Saga `192.168.0.144` (Android 13, idle). Play
+  Protect refused the debug APK on the Pixel and on the Android 14 Saga ("Harmful app blocked", no
+  way to install anyway without turning scanning off, which was not done). The third Saga had a
+  game running in the foreground at 93 % CPU and was left alone.
+- **Real microphone through the release app** (Settings import, Chrome textarea, the 10 long-set
+  clips, 228 words, played through the phone's own speaker with 1.5 s gaps, 107 s): the Saga
+  `.144`. On the Android 14 Saga the same run produced **no text at all**: the capture
+  (`VOICE_RECOGNITION` source) heard almost nothing while the phone itself played the speech, and
+  the period ended by its 10 s idle rule. That fits the platform cancelling the phone's own
+  playback (echo cancellation) and says nothing about a person speaking. Speaker playback on the
+  same phone is therefore not a usable test path on that Saga; the Pixel run was not completed
+  (another app's prompt was open in Chrome and was left untouched).
+
+**Engine benchmark, Saga `.144`.** 18 LibriSpeech clips (the 10 long-set clips + the eight 5 s
+clips; 119.5 s, 353 words), each fed in 1 s chunks = 112 passes per run, one pack and one setting per
+process. Peak RSS is the test process's `VmHWM` and includes ~190 MB before the model loads.
+
+| pack · ORT setting | load | median pass | p90 | max | passes > 1 s | final pass | errors | peak RSS |
+|---|---|---|---|---|---|---|---|---|
+| tiny · CPU EP, arena off (**the app today**) | 142 ms | **168 ms** | 267 | 597 | 0 | 111 ms | 14/353 | 472 MB |
+| tiny · CPU EP, arena on | 148 ms | 94 ms | 134 | 259 | 0 | 81 ms | 14/353 | 536 MB |
+| tiny · XNNPACK, arena off | 155 ms | 98 ms | 144 | 306 | 0 | 87 ms | 14/353 | 496 MB |
+| small · CPU EP, arena off | 320 ms | **387 ms** | 497 | 1,533 | 3 | 344 ms | **9/353** | 674 MB |
+| small · CPU EP, arena on | 339 ms | 226 ms | 313 | 741 | 0 | 249 ms | 9/353 | 786 MB |
+| small · XNNPACK, arena off | 442 ms | 226 ms | 307 | 736 | 0 | 231 ms | 9/353 | 764 MB |
+
+- **The arena-off slowdown of §6.5.2 is real on the phone**: 1.8× (tiny) and 1.7× (small) per pass
+  on the APK's ORT 1.21.1. XNNPACK with the arena off is as fast as the arena on, with a smaller
+  peak (tiny +24 vs +64 MB over arena off). Every pass here belongs to a clip of ≤ 23 s, so the
+  long-session growth that made §5.3 turn the arena off (one 23 s utterance → 508 MB) is bounded
+  by the app's 20 s segment cut but was **not** measured over a long period on the phone.
+- **Small on a Saga keeps the 1 s cadence** as shipped (arena off): 387 ms median, 3 of 112 passes
+  over 1 s (all early passes of a session); with XNNPACK none are.
+- WER on this path (16 kHz WAV straight into the engine): small 9/353 = 2.5 %, tiny 14/353 = 4.0 %.
+
+**Real microphone, Saga `.144`, release build of `ee203b73`** (keyboard process RSS from
+`dumpsys meminfo`; lag = time from a clip's end until the field shows the final text through it).
+Each pack twice, in the order tiny, small, small, tiny; switching to tiny exercised Settings →
+Remove (the controller reloaded the engine on its own).
+
+| pack | errors (228 words) | lag median / max | keyboard RSS while listening | after |
+|---|---|---|---|---|
+| tiny, run 1 / 2 | 19 (8.3 %) / 18 (7.9 %) | 0.75 / 1.21 s; 0.76 / 1.58 s | 324–469 / 374–522 MB | 362 MB |
+| small, run 1 / 2 | **10 (4.4 %) / 9 (3.9 %)** | 0.84 / 1.15 s; 0.84 / 1.19 s | 483–678 / 459–698 MB | 529 MB |
+
+Small halves the errors through a real speaker → microphone path too, at ~0.1 s more lag and
+~150–200 MB more keyboard memory while dictating. Model load in the keyboard: tiny 117 ms, small
+286 ms. Tiny's 8 % here is better than the 19.7 % of Oct 30 on the same clips and the same Saga
+(that run: the release of `b243ce3d`, 1 s gaps instead of 1.5 s, an unrecorded volume), so compare
+packs only within one session.
+Found on the way: Remove deletes a pack at once, without a confirmation (a 142 MB re-import if
+tapped by mistake).
 
 ---
 
@@ -822,10 +885,12 @@ still be a second native runtime.
 
 **Upgrade path inside the same engine: Moonshine small-streaming** (§6.5.2–6.5.3). It is the same
 runtime, tokenizer and pack format, 135.7 MiB within every cap, and makes fewer errors than tiny on
-every set measured here (10 vs 14, 6 vs 11, 43 vs 83). Its cost is about 2× tiny's RSS and per-pass time, so it should be offered
-as a second, optional English pack ("accurate", for fast phones) and not as the default. The
-decision belongs to the maintainer once the arena/XNNPACK question (§7.5) is measured on a phone,
-because that setting alone moves per-pass time by about 2×.
+every set measured here (10 vs 14, 6 vs 11, 43 vs 83) and on a phone (§6.7: 9 vs 14 of 353 words
+on the engine path, 9–10 vs 18–19 of 228 through a real microphone). Its cost is about 2.3× tiny's
+per-pass time (387 vs 168 ms on a Saga as shipped) and ~150–200 MB more keyboard memory while
+dictating. It is published as a second, optional English pack (2026-11-05); tiny stays the
+default. Switching the engine to XNNPACK (or the arena on) would take ~40 % off every pass for both
+packs (§6.7); that change is the maintainer's, after a long-period RSS check.
 
 **sherpa Zipformer** is the fallback if the Moonshine port stalls or if retractions prove
 unacceptable in practice: true streaming, 35 MB int8, Apache-2.0, but English-only at this size,
@@ -860,12 +925,11 @@ Pixel); Whisper-normalised WER; more than 28 clips or any non-English clip; batt
 build (the JVM probe used the APK's ORT natives, not an Android process); NNAPI on a real HAL;
 keyword biasing in the pseudo-stream; a Kotlin port of any pipeline.
 
-Open after the 2026-11-05 follow-up (§6.5): **on-device timing of the app's Moonshine session with
-the arena off vs on vs XNNPACK**, the 2–2.5× decoder gap in §6.5.2, measured on the Pixel 8 Pro and
-a Saga with the APK's ORT 1.21.1 (this box ran Python ORT 1.26; the gap's cause is not
-established); the XNNPACK RSS growth on long sessions with the batch pass excluded; Moonshine
-small in the app (pack build and the `MoonshineV2StreamingEngineTest` suite against it); non-English
-clips; Phonon-2.5, if its runtime turns out to be FLOSS.
+Open after the 2026-11-05 follow-up (§6.5, §6.7): the arena/XNNPACK timing is measured on a Saga
+(§6.7: arena off costs 1.7×; XNNPACK matches arena on) but not on the Pixel (Play Protect refused
+the debug APK), and not over a long listening period (RSS growth with the arena on or XNNPACK);
+why the official graphs slow down with the arena off is not established; a person's voice and a
+noisy room for small; non-English clips; Phonon-2.5, if its runtime turns out to be FLOSS.
 
 ---
 
@@ -906,6 +970,11 @@ python3 -I scripts/research/stt/acft_safetensors_to_ggml.py --safetensors model.
     --template ggml-acft-small_en-q8_0.bin --out ggml-acft-small_en-f16.bin
 for q in q5_k q4_k q3_k q2_k; do wcb/bin/whisper-quantize ggml-acft-small_en-f16.bin ggml-acft-small_en-$q.bin $q; done
 # Moonshine small voice pack: python3 scripts/build_voice_pack.py --variant small
+# §6.7 phone benchmark: copy both pack zips to src/androidTest/assets/voicepack/ and the clips (<id>.wav +
+#   <id>.txt) to src/androidTest/assets/voicepack/bench/, build assembleDebug assembleDebugAndroidTest, install both, then
+adb shell am instrument -w -e class tribixbite.cleverkeys.stt.VoiceEngineDeviceBenchmark -e voiceBench 1 \
+    -e voicePack voicepack-moonshine-v2-small-en.zip -e voiceBenchHints arena=off,ep=xnnpack \
+    tribixbite.cleverkeys.debug.test/androidx.test.runner.AndroidJUnitRunner   # logcat -s VoiceBench
 # Moonshine: moonshine-ai/moonshine-voice-assets model/{tiny,small,medium}-streaming-en/quantized_26_08_21/*
 python3 scripts/research/stt/moonshine_stream_ort.py --model-dir $STT/models/small-streaming-en --tokenizer tokenizer.json \
     --no-arena --tokens-per-s 6.5 [--ep xnnpack] stream $STT/audio/manifest_long.json --max-segment 20
