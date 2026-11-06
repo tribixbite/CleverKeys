@@ -1,9 +1,10 @@
 package tribixbite.cleverkeys.theme
 
 /**
- * The built-in keyboard looks: iOS-, Gboard-, SwiftKey- and Samsung-style (plus the previous
- * iOS 18 look), each with a light and a dark palette that follow the system. The four
- * familiar-style layouts bind to the first four
+ * The built-in keyboard looks: CleverKeys' own default look ([cleverkeysLook]) and the FAMILIAR
+ * looks — iOS-, Gboard-, SwiftKey- and Samsung-style (plus the previous iOS 18 look) — each with a
+ * light and a dark palette that follow the system. The four familiar-style layouts bind to the
+ * first four familiar looks
  * (`src/main/layouts/latn_qwerty_us_*_style.xml`, `theme="look_…"`), so with those layouts
  * enabled a space-bar swipe switches the whole look.
  *
@@ -25,6 +26,9 @@ object KeyboardLooks {
     const val SWIFTKEY = "look_swiftkey"
     const val SAMSUNG = "look_samsung"
     const val IOS18 = "look_ios18"
+
+    /** CleverKeys' own look: the default theme since 2026-11-06 (`Defaults.THEME`). */
+    const val CLEVERKEYS = "look_cleverkeys"
 
     private fun argb(rgb: Long): Int = (0xFF000000L or rgb).toInt()
 
@@ -318,10 +322,82 @@ object KeyboardLooks {
         spaceLanguage = true,
     )
 
-    /** Every look, in Theme Manager order. */
-    val ALL: List<KeyboardLook> = listOf(iosLook, gboardLook, swiftkeyLook, samsungLook, ios18Look)
+    /**
+     * CleverKeys' own look, the default theme (`Defaults.THEME`, 2026-11-06). It keeps what makes
+     * CleverKeys CleverKeys — every corner label (the short-swipe hints), the scrolling suggestion
+     * chips, the purple identity — and takes the parts the popular keyboards share (research
+     * docs/research/2026-10-27-familiar-keyboard-looks.md):
+     *  - light and dark follow the system (all four products);
+     *  - flat, borderless keys with 8 dp corners and visible gaps (iOS 26, Gboard, SwiftKey 8 dp;
+     *    Samsung 6 dp), a soft shadow in light mode only (Gboard, Samsung);
+     *  - a tonal function-key fill so Shift, Delete, 123 and Enter read apart from letters
+     *    (Gboard, Samsung, iOS 18);
+     *  - the primary action of Go / Search / Send / Done fields in the accent colour with an icon
+     *    (iOS, Gboard's highlighted Enter);
+     *  - a key-press preview bubble (all four) and a filled Shift arrow while shifted (Gboard).
+     * Because users get it without choosing it, it [KeyboardLook.yieldsToUserSettings]: key gaps,
+     * a custom border and a trail colour the user already tuned still apply. Light hint #716A78
+     * and dark hint #A69DAE are the subdued tones that still reach 3:1 on every key fill.
+     */
+    val cleverkeysLook = KeyboardLook(
+        id = CLEVERKEYS,
+        light = LookPalette(
+            keyboardBackground = argb(0xEFEAF3), key = argb(0xFFFFFF), keyPressed = argb(0xDCD4E3),
+            keyLocked = argb(0x7B3FA0), lockedLabel = argb(0xFFFFFF),
+            modifierKey = argb(0xE3D6EF), enterKey = argb(0xE3D6EF), enterLabel = argb(0x3A2650),
+            actionKey = argb(0x7B3FA0), actionLabel = argb(0xFFFFFF),
+            label = argb(0x1C1A1F), modifierLabel = argb(0x3A2650), hint = argb(0x716A78),
+            keyShadow = 0x1F000000, keyBorder = argb(0xFFFFFF),
+            barBackground = argb(0xEFEAF3), barText = argb(0x1C1A1F), barHighlight = argb(0x6B2F92),
+            barSeparator = argb(0xD6CEDD), swipeTrail = argb(0x8E44AD),
+            popupSelected = argb(0x7B3FA0), popupSelectedLabel = argb(0xFFFFFF),
+            // One-shot / auto-capitalised Shift keeps the function fill; the filled arrow says it.
+            latchedKey = argb(0xE3D6EF), latchedLabel = argb(0x3A2650),
+        ),
+        dark = LookPalette(
+            keyboardBackground = argb(0x16121A), key = argb(0x2A2430), keyPressed = argb(0x3F3747),
+            keyLocked = argb(0xCDA5EC), lockedLabel = argb(0x2E0F45),
+            modifierKey = argb(0x3A2E47), enterKey = argb(0x3A2E47), enterLabel = argb(0xEBDDF7),
+            actionKey = argb(0xCDA5EC), actionLabel = argb(0x2E0F45),
+            label = argb(0xEDE7F2), modifierLabel = argb(0xEBDDF7), hint = argb(0xA69DAE),
+            keyShadow = 0, keyBorder = argb(0x2A2430),
+            barBackground = argb(0x16121A), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
+            barSeparator = argb(0x3A3340), swipeTrail = argb(0xC79BE8),
+            popup = argb(0x3A3341), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
+            latchedKey = argb(0x3A2E47), latchedLabel = argb(0xEBDDF7),
+        ),
+        geometry = LookGeometry(
+            keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 8f,
+            borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
+        ),
+        // CleverKeys' short swipes are the product: every corner label stays.
+        legends = LookLegends.ALL,
+        preview = LookPreview(
+            LookPreviewShape.BUBBLE, widthScale = 1.3f, heightScale = 1.25f, labelScale = 1.2f, shadow = true,
+        ),
+        action = LookActionStyle(
+            icons = mapOf(
+                ActionKind.GO to ActionGlyph.ARROW, ActionKind.SEARCH to ActionGlyph.SEARCH,
+                ActionKind.SEND to ActionGlyph.SEND, ActionKind.NEXT to ActionGlyph.NEXT,
+                ActionKind.DONE to ActionGlyph.DONE, ActionKind.PREVIOUS to ActionGlyph.PREVIOUS,
+                ActionKind.ENTER to ActionGlyph.RETURN,
+            ),
+            accent = IOS_PROMINENT,
+        ),
+        shiftFilled = true,
+        yieldsToUserSettings = true,
+    )
 
-    /** Every look id, in Theme Manager order. */
+    /** The familiar looks, in Theme Manager's "Familiar looks" order. */
+    val FAMILIAR: List<KeyboardLook> = listOf(iosLook, gboardLook, swiftkeyLook, samsungLook, ios18Look)
+
+    /** Ids of [FAMILIAR], in order. */
+    val FAMILIAR_IDS: List<String> = FAMILIAR.map { it.id }
+
+    /** Every look: the CleverKeys default look, then [FAMILIAR]. */
+    val ALL: List<KeyboardLook> = listOf(cleverkeysLook) + FAMILIAR
+
+    /** Every look id, in [ALL] order. */
     val IDS: List<String> = ALL.map { it.id }
 
     private val BY_ID: Map<String, KeyboardLook> = ALL.associateBy { it.id }

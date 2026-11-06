@@ -271,11 +271,20 @@ class LayoutThemeBindingConfigTest {
             .containsExactlyElementsIn(ThemeSettingsActivity.BUILTIN_THEMES.map { it.id })
     }
 
-    /** Keyboard looks: Theme Manager's "Familiar looks" offers exactly the registered looks. */
+    /**
+     * Keyboard looks: Theme Manager's "Familiar looks" offers exactly the familiar looks, and the
+     * CleverKeys default look (the default theme) leads "Built-in Themes": every look is offered once.
+     */
     @Test
     fun keyboardLookIdsMatchTheThemeManagerList() {
+        val looks = tribixbite.cleverkeys.theme.KeyboardLooks
         assertThat(ThemeSettingsActivity.LOOK_THEMES.map { it.id })
-            .containsExactlyElementsIn(tribixbite.cleverkeys.theme.KeyboardLooks.IDS).inOrder()
+            .containsExactlyElementsIn(looks.FAMILIAR_IDS).inOrder()
+        assertThat(ThemeSettingsActivity.DEFAULT_LOOK_THEME.id).isEqualTo(looks.CLEVERKEYS)
+        assertWithMessage("the built-in default card is the default theme")
+            .that(ThemeSettingsActivity.DEFAULT_LOOK_THEME.id).isEqualTo(Defaults.THEME)
+        assertThat((ThemeSettingsActivity.LOOK_THEMES + ThemeSettingsActivity.DEFAULT_LOOK_THEME).map { it.id })
+            .containsExactlyElementsIn(looks.IDS)
         for (id in tribixbite.cleverkeys.theme.KeyboardLooks.IDS) {
             assertWithMessage("$id is a look, not a built-in XML theme")
                 .that(ThemeProvider.BUILT_IN_THEME_IDS).doesNotContain(id)

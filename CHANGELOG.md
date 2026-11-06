@@ -447,6 +447,13 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Changed
 
+- **A new default look: CleverKeys.** Rounded, borderless keys with clearer gaps, function keys
+  (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
+  icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
+  system's light or dark mode. Every corner hint for short swipes stays. Key gaps, a custom border
+  and a swipe-trail colour you already changed still apply. Only an unset theme changes: if you
+  chose a theme it stays, and CleverKeys Dark and Light are still in Theme Manager, where the
+  iOS-, Gboard-, SwiftKey- and Samsung-style looks now come first.
 - **Android 7.0+ (API 24) is now required** (was 5.0): ONNX Runtime 1.21.1 for 16 KB memory-page
   alignment declares minSdk 24. Devices on Android 5.0–6.0 remain on v1.5.0.
 - **Quick Settings tile toggles the keyboard**: when CleverKeys is the current keyboard, a tap

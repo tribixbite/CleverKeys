@@ -411,8 +411,8 @@
     <string name="appearance_key_horizontal_margin_desc">Jarak horizontal antar tombol</string>
     <string name="appearance_look_show_hints_title">Tampilkan petunjuk gestur pada tampilan familier</string>
     <string name="appearance_look_show_hints_desc">Tampilan gaya iOS, Gboard, SwiftKey, dan Samsung menyembunyikan petunjuk sudut seperti keyboard tersebut; aktifkan untuk menampilkan semuanya. Gestur tetap berfungsi.</string>
-    <string name="appearance_look_key_preview_title">Pratinjau tombol pada tampilan familier</string>
-    <string name="appearance_look_key_preview_desc">Tampilan gaya iOS, Gboard, SwiftKey, dan Samsung menampilkan karakter yang ditekan dalam pop-up berbentuk seperti keyboard tersebut.</string>
+    <string name="appearance_look_key_preview_title">Pratinjau tombol</string>
+    <string name="appearance_look_key_preview_desc">Tampilan CleverKeys dan tampilan bergaya iOS, Gboard, SwiftKey, dan Samsung menampilkan karakter yang ditekan dalam pop-up di atas tombol.</string>
     <string name="appearance_look_space_language_title">Nama bahasa di tombol spasi</string>
     <string name="appearance_look_space_language_desc">Tampilan Samsung menampilkan bahasa saat ini di tombol spasi, seperti Samsung Keyboard.</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
@@ -1619,7 +1619,7 @@
     <string name="calibration_legend_long_range">&gt; Maks</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Gelap</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Ungu tua dengan aksen perak (default)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Ungu tua dengan aksen perak</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Terang</string>
     <string name="theme_builtin_cleverkeyslight_desc">Tombol perak dengan aksen ungu</string>
     <string name="theme_builtin_dark_name">Gelap</string>
@@ -1661,6 +1661,7 @@
     <string name="theme_look_swiftkey_name">Gaya SwiftKey</string>
     <string name="theme_look_samsung_name">Gaya Samsung</string>
     <string name="theme_look_ios18_name">Gaya iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Tombol bulat modern; terang atau gelap mengikuti sistem (default)</string>
     <string name="theme_toast_applying">Menerapkan tema: %1$s</string>
     <string name="theme_default_custom_name">Tema Saya</string>
     <string name="swipe_debug_session_intro">=== Sesi Swipe Playground Dimulai ===\nGeser di kolom teks di atas. Setiap geseran menampilkan peringkat kandidatnya\ndan direkam (titik + geometri tombol + peringkat + kata yang dimasukkan).</string>

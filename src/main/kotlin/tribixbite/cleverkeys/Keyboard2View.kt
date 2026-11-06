@@ -42,6 +42,7 @@ import tribixbite.cleverkeys.popover.SubkeyPopoverMetrics
 import tribixbite.cleverkeys.popover.SubkeyPopoverRenderer
 import tribixbite.cleverkeys.popover.SubkeyPopoverState
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
+import tribixbite.cleverkeys.theme.LookUserYield
 import tribixbite.cleverkeys.theme.ThemeProvider
 import java.util.ArrayList
 
@@ -376,8 +377,14 @@ class Keyboard2View @JvmOverloads constructor(
         val density = resources.displayMetrics.density
 
         _swipeTrailPaint = Paint().apply {
-            // A keyboard look's trail colour wins while it is the effective theme (0 otherwise).
-            color = _previewTrailColor ?: _theme.swipeTrailColor.takeIf { it != 0 } ?: snap.swipe_trail_color
+            // A keyboard look's trail colour wins while it is the effective theme (0 otherwise);
+            // the CleverKeys default look gives way to a trail colour the user changed.
+            val lookTrail = _theme.swipeTrailColor.takeIf { it != 0 }?.let {
+                if (_theme.lookYieldsToUser) {
+                    LookUserYield.trailColor(it, snap.swipe_trail_color, Defaults.SWIPE_TRAIL_COLOR)
+                } else it
+            }
+            color = _previewTrailColor ?: lookTrail ?: snap.swipe_trail_color
             strokeWidth = snap.swipe_trail_width * density
             style = Paint.Style.STROKE
             isAntiAlias = true

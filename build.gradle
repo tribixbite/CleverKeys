@@ -914,6 +914,7 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-10-27 keyboard looks: look-vs-user geometry precedence; the four built-in looks'
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
+    'tribixbite.cleverkeys.theme.KeyboardLookUserYieldTest',
     'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
     'tribixbite.cleverkeys.theme.LookPopupsTest',

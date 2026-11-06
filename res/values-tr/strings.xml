@@ -410,8 +410,8 @@
     <string name="appearance_key_horizontal_margin_desc">Tuşlar arasındaki yatay boşluk</string>
     <string name="appearance_look_show_hints_title">Tanıdık görünümlerde hareket ipuçlarını göster</string>
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler köşe ipuçlarını bu klavyeler gibi gizler; tümünü göstermek için açın. Hareketler her iki durumda da çalışır.</string>
-    <string name="appearance_look_key_preview_title">Tanıdık görünümlerde tuş önizlemesi</string>
-    <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey ve Samsung tarzı görünümler basılan karakteri bu klavyelerinkine benzeyen bir açılır pencerede gösterir.</string>
+    <string name="appearance_look_key_preview_title">Tuş önizlemesi</string>
+    <string name="appearance_look_key_preview_desc">CleverKeys görünümü ile iOS, Gboard, SwiftKey ve Samsung tarzı görünümler basılan karakteri tuşun üstünde bir balonda gösterir.</string>
     <string name="appearance_look_space_language_title">Boşluk tuşunda dil adı</string>
     <string name="appearance_look_space_language_desc">Samsung tarzı görünüm, Samsung Klavye gibi boşluk tuşunda geçerli dili gösterir.</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
@@ -1654,7 +1654,7 @@
     <string name="calibration_legend_long_range">&gt; Maks</string>
     <string name="calibration_percent_value">%%%1$d</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Koyu</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Gümüş vurgulu koyu mor (varsayılan)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Gümüş vurgulu koyu mor</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Açık</string>
     <string name="theme_builtin_cleverkeyslight_desc">Mor vurgulu gümüş tuşlar</string>
     <string name="theme_builtin_dark_name">Koyu</string>
@@ -1696,6 +1696,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey tarzı</string>
     <string name="theme_look_samsung_name">Samsung tarzı</string>
     <string name="theme_look_ios18_name">iOS 18 tarzı</string>
+    <string name="theme_look_cleverkeys_desc">Modern yuvarlak tuşlar; açık veya koyu mod sistemi izler (varsayılan)</string>
     <string name="theme_toast_applying">Tema uygulanıyor: %1$s</string>
     <string name="theme_default_custom_name">Temam</string>
     <string name="swipe_debug_session_intro">=== Kaydırma Deneme Alanı Oturumu Başladı ===\nYukarıdaki metin alanında kaydırın. Her kaydırma aday sıralamasını gösterir\nve kaydedilir (noktalar + tuş geometrisi + sıralama + onaylanan kelime).</string>

@@ -78,6 +78,14 @@ data class KeyboardLook(
      * Lock (Gboard, [LookShiftGlyph]); the outline glyph at rest either way.
      */
     val shiftFilled: Boolean = false,
+    /**
+     * Whether the user's own appearance settings win over this look ([LookUserYield]): a key gap
+     * changed from its default, the custom border (`border_config`) and a swipe trail colour
+     * changed from its default. False for the familiar looks (choosing one is an explicit choice
+     * of that product's appearance); true for the CleverKeys default look, which users get
+     * without choosing it, so settings they tuned before it became the default must still apply.
+     */
+    val yieldsToUserSettings: Boolean = false,
 ) {
     /** The palette for the current system mode ([systemLight] = `Config.isSystemLight`). */
     fun palette(systemLight: Boolean): LookPalette = if (systemLight) light else dark
@@ -180,6 +188,38 @@ data class LookGeometry(
      */
     val functionLabelScale: Float? = null,
 )
+
+/**
+ * The precedence of a look with [KeyboardLook.yieldsToUserSettings]: every attribute the user set
+ * on purpose wins over the look, every attribute still at its default takes the look's value.
+ * Pure; `KeyboardLookUserYieldTest`.
+ *
+ * "On purpose" is judged per setting: a key gap whose stored value differs from its default (an
+ * unset pref is the default), the custom-border switch (`border_config`, which owns both the
+ * radius and the outline width) and a swipe trail colour that differs from its default.
+ */
+object LookUserYield {
+
+    /**
+     * [look] with the attributes the user owns removed (null = the user's value applies, see
+     * [KeyboardLookGeometry.resolve]).
+     */
+    fun geometry(
+        look: LookGeometry,
+        verticalGapCustomised: Boolean,
+        horizontalGapCustomised: Boolean,
+        customBorderOn: Boolean,
+    ): LookGeometry = look.copy(
+        keyGapVertical = look.keyGapVertical.takeUnless { verticalGapCustomised },
+        keyGapHorizontal = look.keyGapHorizontal.takeUnless { horizontalGapCustomised },
+        cornerRadiusDp = look.cornerRadiusDp.takeUnless { customBorderOn },
+        borderWidthDp = look.borderWidthDp.takeUnless { customBorderOn },
+    )
+
+    /** The trail colour to draw: the user's when they changed it from [userDefault], else the look's. */
+    fun trailColor(lookTrail: Int, userTrail: Int, userDefault: Int): Int =
+        if (userTrail != userDefault) userTrail else lookTrail
+}
 
 /** Which corner labels a look draws. */
 enum class LookLegends {

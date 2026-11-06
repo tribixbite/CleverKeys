@@ -1,7 +1,7 @@
 # Current work queue
 
-Updated: 2026-10-31. origin/main is `e3487b41`; the open-source licenses commits after it are
-local, not pushed. Pushes to origin/main are authorized (2026-10-07) and in use; tag, version
+Updated: 2026-11-06. Push state: read `git status -sb` (a hash written here went stale twice).
+Pushes to origin/main are authorized (2026-10-07) and in use; tag, version
 bump, release, publish and GitHub posts still need explicit authorization. Reference state and
 rules: [HANDOFF.md](HANDOFF.md). Release readiness, item by item:
 [`docs/audit/2026-10-31-v2.0-release-readiness.md`](../docs/audit/2026-10-31-v2.0-release-readiness.md)
@@ -1199,6 +1199,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    choice in Settings, Remove with a confirmation (`docs/plans/2026-10-05-recommended-features-and-gaps.md`
    §3.2; maintainer request 2026-11-05). Today dictionary packs replace each other per language code
    and voice packs use the first by name with no indication.
+
+34. [ ] device: the CleverKeys default look (agent, 2026-11-06; maintainer: "move ios/swift/sam/etc
+    familiar look themes to top and … modernize and slick-ify the cleverkeys default"). BUILT:
+    `look_cleverkeys` is `Defaults.THEME` (spec `layout-system.md` "The CleverKeys default look");
+    Theme Manager / Layout Manager list Familiar looks first; the default yields to tuned gaps,
+    custom border and trail colour (`LookUserYield`). Pure + mock suites green at the commit.
+    Still open: the five "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
+    on a test phone, and the maintainer's look-and-feel verdict.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

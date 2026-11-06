@@ -57,7 +57,9 @@ class LookKeyMarksTest {
     @Test
     fun gboardStyleFillsShiftWhileShiftedAndAddsABarInCapsLock() {
         assertThat(KeyboardLooks.gboardLook.shiftFilled).isTrue()
-        for (look in KeyboardLooks.ALL - KeyboardLooks.gboardLook) {
+        // The CleverKeys default look takes Gboard's filled Shift too.
+        assertThat(KeyboardLooks.cleverkeysLook.shiftFilled).isTrue()
+        for (look in KeyboardLooks.ALL - KeyboardLooks.gboardLook - KeyboardLooks.cleverkeysLook) {
             assertWithMessage("${look.id} keeps the outline Shift").that(look.shiftFilled).isFalse()
         }
         assertThat(LookShiftGlyph.state(down = false, locked = false)).isEqualTo(ShiftDrawState.REST)

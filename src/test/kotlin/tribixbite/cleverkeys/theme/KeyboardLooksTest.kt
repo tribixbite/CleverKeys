@@ -27,10 +27,12 @@ class KeyboardLooksTest {
 
     @Test
     fun theLooksAreRegisteredUnderTheLookPrefix() {
-        assertThat(KeyboardLooks.IDS).containsExactly(
+        assertThat(KeyboardLooks.FAMILIAR_IDS).containsExactly(
             KeyboardLooks.IOS, KeyboardLooks.GBOARD, KeyboardLooks.SWIFTKEY, KeyboardLooks.SAMSUNG,
             KeyboardLooks.IOS18,
         ).inOrder()
+        assertThat(KeyboardLooks.IDS).containsExactlyElementsIn(listOf(KeyboardLooks.CLEVERKEYS) + KeyboardLooks.FAMILIAR_IDS)
+            .inOrder()
         for (id in KeyboardLooks.IDS) {
             assertThat(id).startsWith(KeyboardLooks.ID_PREFIX)
             assertThat(KeyboardLooks.byId(id)!!.id).isEqualTo(id)
@@ -165,6 +167,32 @@ class KeyboardLooksTest {
         assertThat(look.geometry.keyGapVertical).isEqualTo(0.23f)
         assertThat(look.geometry.cornerRadiusDp).isEqualTo(6f)
         assertWithMessage("light keeps its blue action glyph too").that(look.light.actionLabel).isEqualTo(look.light.lockedLabel)
+    }
+
+    /**
+     * The CleverKeys default look (2026-11-06): CleverKeys' own parts stay — every corner label
+     * (short-swipe hints), the scrolling chips, the purple accent — and it takes what the familiar
+     * looks share: tonal function keys, an accented primary action, a press preview, a filled
+     * Shift, 8 dp borderless keys. It is the only look that yields to the user's settings.
+     */
+    @Test
+    fun theCleverKeysLookKeepsCleverKeysPartsAndTheSharedModernOnes() {
+        val look = KeyboardLooks.cleverkeysLook
+        assertThat(KeyboardLooks.byId(KeyboardLooks.CLEVERKEYS)).isSameInstanceAs(look)
+        assertWithMessage("short-swipe hints stay").that(look.legends).isEqualTo(LookLegends.ALL)
+        assertWithMessage("scrolling chips, not a three-slot bar").that(look.bar).isNull()
+        assertWithMessage("no wallpaper colours (Monet is its own theme)").that(look.dynamicColor).isFalse()
+        assertThat(look.preview.shape).isEqualTo(LookPreviewShape.BUBBLE)
+        assertThat(look.shiftFilled).isTrue()
+        assertThat(look.geometry.cornerRadiusDp).isEqualTo(8f)
+        assertThat(look.geometry.borderWidthDp).isEqualTo(0f)
+        for ((mode, p) in listOf("light" to look.light, "dark" to look.dark)) {
+            assertWithMessage("$mode: function keys read apart from letters").that(p.modifierKey).isNotEqualTo(p.key)
+            assertWithMessage("$mode: the primary action is accented").that(p.actionKey).isNotEqualTo(p.modifierKey)
+        }
+        assertWithMessage("a soft shadow in light mode only")
+            .that(listOf(look.light.keyShadow != 0, look.dark.keyShadow != 0)).containsExactly(true, false).inOrder()
+        assertThat(KeyboardLooks.ALL.filter { it.yieldsToUserSettings }).containsExactly(look)
     }
 
     /** Only Samsung prints the language on the space bar ("English (US)", 1.jpg). */

@@ -409,8 +409,8 @@
     <string name="appearance_key_horizontal_margin_desc">Espacement horizontal entre les touches</string>
     <string name="appearance_look_show_hints_title">Afficher les indices de gestes sur les apparences familières</string>
     <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indices d’angle comme ces claviers ; activer pour tous les afficher. Les gestes fonctionnent dans les deux cas.</string>
-    <string name="appearance_look_key_preview_title">Aperçu de la touche sur les apparences familières</string>
-    <string name="appearance_look_key_preview_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung affichent le caractère appuyé dans une bulle à la forme de ces claviers.</string>
+    <string name="appearance_look_key_preview_title">Aperçu de la touche</string>
+    <string name="appearance_look_key_preview_desc">L’apparence CleverKeys et les apparences style iOS, Gboard, SwiftKey et Samsung affichent le caractère appuyé dans une bulle au-dessus de la touche.</string>
     <string name="appearance_look_space_language_title">Nom de la langue sur la barre d’espace</string>
     <string name="appearance_look_space_language_desc">L’apparence Samsung affiche la langue actuelle sur la barre d’espace, comme le clavier Samsung.</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
@@ -1689,7 +1689,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d %%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Sombre</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Violet profond avec accents argentés (par défaut)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Violet profond avec accents argentés</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Clair</string>
     <string name="theme_builtin_cleverkeyslight_desc">Touches argentées avec accents violets</string>
     <string name="theme_builtin_dark_name">Sombre</string>
@@ -1731,6 +1731,7 @@
     <string name="theme_look_swiftkey_name">Style SwiftKey</string>
     <string name="theme_look_samsung_name">Style Samsung</string>
     <string name="theme_look_ios18_name">Style iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Touches arrondies modernes ; clair ou sombre selon le système (par défaut)</string>
     <string name="theme_toast_applying">Application du thème : %1$s</string>
     <string name="theme_default_custom_name">Mon thème</string>
     <string name="swipe_debug_session_intro">=== Session du bac à sable de glissé démarrée ===\nFaites un glissé dans le champ de texte ci-dessus. Chaque glissé affiche son classement de candidats\net est enregistré (points + géométrie des touches + classement + mot validé).</string>

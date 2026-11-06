@@ -19,8 +19,9 @@ class ConfigDefaultsTest {
     // =========================================================================
 
     @Test
-    fun `theme default is cleverkeysdark`() {
-        assertThat(Defaults.THEME).isEqualTo("cleverkeysdark")
+    fun `theme default is the CleverKeys look`() {
+        // 2026-11-06: the CleverKeys look (follows light/dark) replaced "cleverkeysdark".
+        assertThat(Defaults.THEME).isEqualTo("look_cleverkeys")
     }
 
     @Test

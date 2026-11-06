@@ -437,8 +437,8 @@
     <string name="appearance_key_horizontal_margin_desc">فاصله افقی بین کلیدها</string>
     <string name="appearance_look_show_hints_title">نمایش راهنمای حرکات در ظاهرهای آشنا</string>
     <string name="appearance_look_show_hints_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung مانند همان صفحه‌کلیدها راهنماهای گوشه را پنهان می‌کنند؛ برای نمایش همه روشن کنید. حرکات در هر حالت کار می‌کنند.</string>
-    <string name="appearance_look_key_preview_title">پیش‌نمایش کلید فشرده در ظاهرهای آشنا</string>
-    <string name="appearance_look_key_preview_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung نویسهٔ فشرده‌شده را در پنجره‌ای به شکل همان صفحه‌کلیدها نشان می‌دهند.</string>
+    <string name="appearance_look_key_preview_title">پیش‌نمایش کلید فشرده‌شده</string>
+    <string name="appearance_look_key_preview_desc">ظاهر CleverKeys و ظاهرهای به سبک iOS، Gboard، SwiftKey و Samsung نویسهٔ فشرده‌شده را در حبابی بالای کلید نشان می‌دهند.</string>
     <string name="appearance_look_space_language_title">نام زبان روی کلید فاصله</string>
     <string name="appearance_look_space_language_desc">ظاهر سامسونگ زبان فعلی را روی کلید فاصله نشان می‌دهد، مانند صفحه‌کلید سامسونگ.</string>
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
@@ -1681,7 +1681,7 @@
     <string name="calibration_legend_long_range">&gt; بیشینه</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys تیره</string>
-    <string name="theme_builtin_cleverkeysdark_desc">بنفش تیره با جزئیات نقره‌ای (پیش‌فرض)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">بنفش تیره با جزئیات نقره‌ای</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys روشن</string>
     <string name="theme_builtin_cleverkeyslight_desc">کلیدهای نقره‌ای با جزئیات بنفش</string>
     <string name="theme_builtin_dark_name">تیره</string>
@@ -1723,6 +1723,7 @@
     <string name="theme_look_swiftkey_name">سبک SwiftKey</string>
     <string name="theme_look_samsung_name">سبک Samsung</string>
     <string name="theme_look_ios18_name">سبک iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">کلیدهای گرد مدرن؛ روشن یا تیره مطابق سیستم (پیش‌فرض)</string>
     <string name="theme_toast_applying">در حال اعمال تم: %1$s</string>
     <string name="theme_default_custom_name">تم من</string>
     <string name="swipe_debug_session_intro">=== جلسهٔ زمین بازی کشیدن آغاز شد ===\nدر کادر متن بالا بکشید. هر کشیدن رتبه‌بندی نامزدهای خود را نشان می‌دهد\nو ضبط می‌شود (نقاط + هندسهٔ کلیدها + رتبه‌بندی + واژهٔ ثبت‌شده).</string>

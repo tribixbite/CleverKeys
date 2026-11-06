@@ -398,8 +398,8 @@
     <string name="appearance_key_horizontal_margin_desc">按键之间的横向间隔。</string>
     <string name="appearance_look_show_hints_title">在熟悉的外观中显示手势提示</string>
     <string name="appearance_look_show_hints_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会像原键盘一样隐藏角落提示；开启后显示全部提示。手势在两种情况下都可用。</string>
-    <string name="appearance_look_key_preview_title">在熟悉的外观中显示按键预览</string>
-    <string name="appearance_look_key_preview_desc">iOS、Gboard、SwiftKey 和 Samsung 风格的外观会以与原键盘相同形状的弹出框显示按下的字符。</string>
+    <string name="appearance_look_key_preview_title">按键预览</string>
+    <string name="appearance_look_key_preview_desc">CleverKeys 外观以及 iOS、Gboard、SwiftKey 和 Samsung 风格外观会在按键上方的气泡中显示按下的字符。</string>
     <string name="appearance_look_space_language_title">在空格键上显示语言名称</string>
     <string name="appearance_look_space_language_desc">Samsung 风格外观会像三星键盘一样在空格键上显示当前语言。</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
@@ -1605,7 +1605,7 @@
     <string name="calibration_legend_long_range">&gt; 最大</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys 深色</string>
-    <string name="theme_builtin_cleverkeysdark_desc">深紫色配银色点缀（默认）</string>
+    <string name="theme_builtin_cleverkeysdark_desc">深紫色配银色点缀</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys 浅色</string>
     <string name="theme_builtin_cleverkeyslight_desc">银色按键配紫色点缀</string>
     <string name="theme_builtin_dark_name">深色</string>
@@ -1647,6 +1647,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey 风格</string>
     <string name="theme_look_samsung_name">Samsung 风格</string>
     <string name="theme_look_ios18_name">iOS 18 风格</string>
+    <string name="theme_look_cleverkeys_desc">现代圆角按键；浅色或深色跟随系统（默认）</string>
     <string name="theme_toast_applying">正在应用主题：%1$s</string>
     <string name="theme_default_custom_name">我的主题</string>
     <string name="swipe_debug_session_intro">=== 滑动练习场会话已开始 ===\n在上方文本框中滑动。每次滑动都会显示候选排名\n并被记录（轨迹点 + 按键几何 + 排名 + 提交的单词）。</string>

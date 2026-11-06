@@ -402,8 +402,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontale ruimte tussen toetsen</string>
     <string name="appearance_look_show_hints_title">Gebarenhints tonen bij bekende looks</string>
     <string name="appearance_look_show_hints_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl verbergen hoekhints zoals die toetsenborden; zet aan om alle hints te tonen. Gebaren werken hoe dan ook.</string>
-    <string name="appearance_look_key_preview_title">Toetsvoorbeeld bij bekende looks</string>
-    <string name="appearance_look_key_preview_desc">Looks in iOS-, Gboard-, SwiftKey- en Samsung-stijl tonen het ingedrukte teken in een pop-up met de vorm van die toetsenborden.</string>
+    <string name="appearance_look_key_preview_title">Toetsvoorbeeld</string>
+    <string name="appearance_look_key_preview_desc">De CleverKeys-look en de looks in de stijl van iOS, Gboard, SwiftKey en Samsung tonen het ingedrukte teken in een pop-up boven de toets.</string>
     <string name="appearance_look_space_language_title">Taalnaam op de spatiebalk</string>
     <string name="appearance_look_space_language_desc">De Samsung-look toont de huidige taal op de spatiebalk, net als het Samsung-toetsenbord.</string>
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
@@ -1643,7 +1643,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Donker</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Dieppaars met zilveren accenten (standaard)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Dieppaars met zilveren accenten</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Licht</string>
     <string name="theme_builtin_cleverkeyslight_desc">Zilveren toetsen met paarse accenten</string>
     <string name="theme_builtin_dark_name">Donker</string>
@@ -1685,6 +1685,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey-stijl</string>
     <string name="theme_look_samsung_name">Samsung-stijl</string>
     <string name="theme_look_ios18_name">iOS 18-stijl</string>
+    <string name="theme_look_cleverkeys_desc">Moderne afgeronde toetsen; licht of donker volgt het systeem (standaard)</string>
     <string name="theme_toast_applying">Thema toepassen: %1$s</string>
     <string name="theme_default_custom_name">Mijn thema</string>
     <string name="swipe_debug_session_intro">=== Sessie veegtestomgeving gestart ===\nVeeg in het tekstveld hierboven. Elke veeg toont de rangschikking van kandidaten\nen wordt vastgelegd (punten + toetsgeometrie + rangschikking + ingevoerd woord).</string>

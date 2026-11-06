@@ -23,7 +23,10 @@ import kotlin.math.roundToInt
  */
 object Defaults {
     // Appearance
-    const val THEME = "cleverkeysdark"
+    // 2026-11-06: the CleverKeys look (follows light/dark, modern key shapes; KeyboardLooks
+    // .cleverkeysLook) replaced "cleverkeysdark". A user who chose a theme keeps it; only an unset
+    // `theme` pref takes the new default. The old XML themes stay selectable as before.
+    const val THEME = tribixbite.cleverkeys.theme.KeyboardLooks.CLEVERKEYS
     // 2026-05-15: lowered from 30% to 27% — feels less cramped on most phones
     // and gives the input field more breathing room above.
     const val KEYBOARD_HEIGHT_PORTRAIT = 27
@@ -877,6 +880,12 @@ class Config private constructor(
     @JvmField var horizontal_margin = 0f
     @JvmField var key_vertical_margin = 0f
     @JvmField var key_horizontal_margin = 0f
+    /**
+     * The user changed the key gap from its default (an unset pref is the default). The CleverKeys
+     * default look takes its own gaps only where these are false (`LookUserYield`).
+     */
+    @JvmField var keyVerticalMarginCustomised = false
+    @JvmField var keyHorizontalMarginCustomised = false
     @JvmField var labelBrightness = 0
     @JvmField var keyboardOpacity = 0
     @JvmField var customBorderRadius = 0f
@@ -1270,6 +1279,8 @@ class Config private constructor(
 
         key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) / 100
         key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) / 100
+        keyVerticalMarginCustomised = isDipPrefCustomised(_prefs, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN)
+        keyHorizontalMarginCustomised = isDipPrefCustomised(_prefs, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN)
 
         labelBrightness = safeGetInt(_prefs, "label_brightness", Defaults.LABEL_BRIGHTNESS) * 255 / 100
         keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", Defaults.KEYBOARD_OPACITY) * 255 / 100
@@ -1897,6 +1908,12 @@ class Config private constructor(
          * caller then uses its default. An unreadable value is logged (audit L8: it used to be
          * swallowed by three silent catches in `get_dip_pref`).
          */
+        /** True when [key] is stored with a value other than [default] (unset = not customised). */
+        internal fun isDipPrefCustomised(prefs: SharedPreferences, key: String, default: Float): Boolean {
+            val stored = dipPrefValue(prefs, key)
+            return stored >= 0f && stored != default
+        }
+
         internal fun dipPrefValue(prefs: SharedPreferences, key: String): Float = try {
             prefs.getInt(key, -1).toFloat()
         } catch (e: ClassCastException) {

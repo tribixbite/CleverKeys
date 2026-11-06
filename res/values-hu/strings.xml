@@ -407,8 +407,8 @@
     <string name="appearance_key_horizontal_margin_desc">Vízszintes távolság a billentyűk között</string>
     <string name="appearance_look_show_hints_title">Mozdulattippek megjelenítése ismerős megjelenéseknél</string>
     <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A mozdulatok mindkét esetben működnek.</string>
-    <string name="appearance_look_key_preview_title">Billentyű-előnézet ismerős megjelenéseknél</string>
-    <string name="appearance_look_key_preview_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések a lenyomott karaktert az adott billentyűzetéhez hasonló felugró ablakban mutatják.</string>
+    <string name="appearance_look_key_preview_title">Billentyű előnézete</string>
+    <string name="appearance_look_key_preview_desc">A CleverKeys megjelenés és az iOS, Gboard, SwiftKey és Samsung stílusú megjelenések buborékban mutatják a lenyomott karaktert a billentyű fölött.</string>
     <string name="appearance_look_space_language_title">Nyelv neve a szóköz billentyűn</string>
     <string name="appearance_look_space_language_desc">A Samsung megjelenés a szóköz billentyűn mutatja az aktuális nyelvet, ahogy a Samsung billentyűzet.</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
@@ -1649,7 +1649,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Sötét</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Mélylila ezüst kiemelésekkel (alapértelmezett)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Mélylila ezüst kiemelésekkel</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Világos</string>
     <string name="theme_builtin_cleverkeyslight_desc">Ezüst billentyűk lila kiemelésekkel</string>
     <string name="theme_builtin_dark_name">Sötét</string>
@@ -1691,6 +1691,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey-stílus</string>
     <string name="theme_look_samsung_name">Samsung-stílus</string>
     <string name="theme_look_ios18_name">iOS 18-stílus</string>
+    <string name="theme_look_cleverkeys_desc">Modern, lekerekített billentyűk; a világos vagy sötét mód a rendszert követi (alapértelmezett)</string>
     <string name="theme_toast_applying">Téma alkalmazása: %1$s</string>
     <string name="theme_default_custom_name">Saját téma</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground munkamenet elindult ===\nCsúsztasson a fenti szövegmezőben. Minden csúsztatás megmutatja a jelöltek rangsorát,\nés rögzítésre kerül (pontok + billentyűgeometria + rangsor + véglegesített szó).</string>

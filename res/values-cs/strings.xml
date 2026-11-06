@@ -406,8 +406,8 @@
     <string name="appearance_key_horizontal_margin_desc">Vodorovné mezery mezi klávesami</string>
     <string name="appearance_look_show_hints_title">Zobrazit nápovědy gest u známých vzhledů</string>
     <string name="appearance_look_show_hints_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung skrývají rohové nápovědy jako tyto klávesnice; zapnutím se zobrazí všechny. Gesta fungují v obou případech.</string>
-    <string name="appearance_look_key_preview_title">Náhled stisknuté klávesy u známých vzhledů</string>
-    <string name="appearance_look_key_preview_desc">Vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung zobrazí stisknutý znak v bublině tvarované jako u těchto klávesnic.</string>
+    <string name="appearance_look_key_preview_title">Náhled stisknuté klávesy</string>
+    <string name="appearance_look_key_preview_desc">Vzhled CleverKeys a vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung zobrazují stisknutý znak v bublině nad klávesou.</string>
     <string name="appearance_look_space_language_title">Název jazyka na mezerníku</string>
     <string name="appearance_look_space_language_desc">Vzhled Samsung zobrazuje na mezerníku aktuální jazyk, stejně jako klávesnice Samsung.</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
@@ -1715,7 +1715,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d %%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Tmavý</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Sytě fialová se stříbrnými akcenty (výchozí)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Sytě fialová se stříbrnými akcenty</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Světlý</string>
     <string name="theme_builtin_cleverkeyslight_desc">Stříbrné klávesy s fialovými akcenty</string>
     <string name="theme_builtin_dark_name">Tmavý</string>
@@ -1757,6 +1757,7 @@
     <string name="theme_look_swiftkey_name">Styl SwiftKey</string>
     <string name="theme_look_samsung_name">Styl Samsung</string>
     <string name="theme_look_ios18_name">Styl iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Moderní zaoblené klávesy; světlý nebo tmavý režim podle systému (výchozí)</string>
     <string name="theme_toast_applying">Použije se motiv: %1$s</string>
     <string name="theme_default_custom_name">Můj motiv</string>
     <string name="swipe_debug_session_intro">=== Relace testovacího hřiště tahů zahájena ===\nTáhněte v textovém poli výše. Každý tah zobrazí pořadí kandidátů\na zaznamená se (body + geometrie kláves + pořadí + potvrzené slovo).</string>

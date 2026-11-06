@@ -411,8 +411,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontal na espasyo sa pagitan ng mga key</string>
     <string name="appearance_look_show_hints_title">Ipakita ang mga hint ng gesture sa mga pamilyar na hitsura</string>
     <string name="appearance_look_show_hints_desc">Itinatago ng mga hitsurang istilong iOS, Gboard, SwiftKey at Samsung ang mga hint sa sulok gaya ng mga keyboard na iyon; i-on para ipakita ang lahat. Gumagana ang mga gesture alinman dito.</string>
-    <string name="appearance_look_key_preview_title">Preview ng pinindot na key sa mga pamilyar na hitsura</string>
-    <string name="appearance_look_key_preview_desc">Ipinapakita ng mga hitsurang istilong iOS, Gboard, SwiftKey at Samsung ang pinindot na character sa pop-up na hugis gaya ng sa mga keyboard na iyon.</string>
+    <string name="appearance_look_key_preview_title">Preview ng pinindot na key</string>
+    <string name="appearance_look_key_preview_desc">Ipinapakita ng CleverKeys look at ng mga look na istilong iOS, Gboard, SwiftKey at Samsung ang pinindot na character sa isang pop-up sa itaas ng key.</string>
     <string name="appearance_look_space_language_title">Pangalan ng wika sa space bar</string>
     <string name="appearance_look_space_language_desc">Ipinapakita ng Samsung-style ang kasalukuyang wika sa space bar, gaya ng Samsung Keyboard.</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
@@ -1655,7 +1655,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Madilim</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Malalim na lila na may pilak na accent (default)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Malalim na lila na may pilak na accent</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Maliwanag</string>
     <string name="theme_builtin_cleverkeyslight_desc">Pilak na mga key na may lilang accent</string>
     <string name="theme_builtin_dark_name">Madilim</string>
@@ -1697,6 +1697,7 @@
     <string name="theme_look_swiftkey_name">Istilong SwiftKey</string>
     <string name="theme_look_samsung_name">Istilong Samsung</string>
     <string name="theme_look_ios18_name">Istilong iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Modernong bilugang mga key; sumusunod sa system ang maliwanag o madilim (default)</string>
     <string name="theme_toast_applying">Inilalapat ang tema: %1$s</string>
     <string name="theme_default_custom_name">Aking Tema</string>
     <string name="swipe_debug_session_intro">=== Nagsimula ang Swipe Playground Session ===\nMag-swipe sa text field sa itaas. Bawat swipe ay nagpapakita ng ranking ng mga kandidato nito\nat nire-record (mga point + geometry ng key + ranking + na-commit na salita).</string>

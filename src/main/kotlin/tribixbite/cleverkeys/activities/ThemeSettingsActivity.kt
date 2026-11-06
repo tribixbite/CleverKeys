@@ -86,8 +86,17 @@ class ThemeSettingsActivity : ComponentActivity() {
         )
 
         /**
-         * The keyboard looks Theme Manager offers ("Familiar looks"), with their display names.
-         * Drift-pinned against [KeyboardLooks.IDS] by KeyboardLookRegistrationTest.
+         * The CleverKeys default look ([KeyboardLooks.cleverkeysLook], `Defaults.THEME`): the
+         * first card of "Built-in Themes", ahead of the XML themes.
+         */
+        val DEFAULT_LOOK_THEME = LookTheme(
+            KeyboardLooks.CLEVERKEYS, R.string.theme_look_cleverkeys_name, R.string.theme_look_cleverkeys_desc,
+        )
+
+        /**
+         * The familiar looks Theme Manager offers ("Familiar looks", the TOP section since
+         * 2026-11-06), with their display names. Drift-pinned against [KeyboardLooks.FAMILIAR_IDS]
+         * by LayoutThemeBindingConfigTest.
          */
         val LOOK_THEMES = listOf(
             LookTheme(KeyboardLooks.IOS, R.string.theme_look_ios_name),
@@ -98,8 +107,8 @@ class ThemeSettingsActivity : ComponentActivity() {
         )
     }
 
-    /** A keyboard look in Theme Manager: its stored id and display-name resource. */
-    data class LookTheme(val id: String, @StringRes val nameRes: Int)
+    /** A keyboard look in Theme Manager: its stored id, display name and optional description. */
+    data class LookTheme(val id: String, @StringRes val nameRes: Int, @StringRes val descriptionRes: Int? = null)
 
     /**
      * Represents a built-in XML theme with preview colors.
@@ -225,18 +234,23 @@ class ThemeSettingsActivity : ComponentActivity() {
                                 }
                             }
 
+                            // The CleverKeys look draws its own light/dark trail unless the user
+                            // changed the trail colour (LookUserYield), so choosing it must not
+                            // write one mode's trail as if the user had picked it.
+                            val writesTrail = KeyboardLooks.byId(themeId)?.yieldsToUserSettings != true
+
                             // Save selected theme to device protected storage (same prefs the keyboard listens to)
                             // This will immediately trigger the keyboard's OnSharedPreferenceChangeListener
                             prefs.edit()
                                 .putString("theme", themeId)
-                                .putInt("swipe_trail_color", swipeTrailColor)
+                                .also { if (writesTrail) it.putInt("swipe_trail_color", swipeTrailColor) }
                                 .commit() // Use commit() for synchronous write
 
                             // Also save to default preferences for backup/consistency
                             PreferenceManager.getDefaultSharedPreferences(this)
                                 .edit()
                                 .putString("theme", themeId)
-                                .putInt("swipe_trail_color", swipeTrailColor)
+                                .also { if (writesTrail) it.putInt("swipe_trail_color", swipeTrailColor) }
                                 .commit()
 
                             // Send broadcast to notify service immediately (legacy support)
@@ -287,7 +301,7 @@ fun ThemeSettingsScreen(
     // Use DirectBootAwarePreferences to ensure we read the same prefs as the service
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
     // Use mutableStringStateOf instead of mutableStateOf to avoid type inference issues
-    var currentThemeId by remember { mutableStateOf(prefs.getString("theme", "cleverkeysdark") ?: "cleverkeysdark") }
+    var currentThemeId by remember { mutableStateOf(prefs.getString("theme", Defaults.THEME) ?: Defaults.THEME) }
     // Audit H-4: mutate the SAME store instance ThemeProvider renders from — a private
     // CustomThemeManager here wrote the same prefs file but left the provider's
     // in-memory theme list stale, so active-theme edits didn't reach the keyboard
@@ -355,6 +369,31 @@ fun ThemeSettingsScreen(
             )
         }
     ) { padding ->
+        // One card per look (familiar or the CleverKeys default): its scheme for the current
+        // system mode, so the card follows light/dark like the keyboard.
+        @Composable
+        fun LookCard(lookTheme: ThemeSettingsActivity.LookTheme) {
+            val lookName = stringResource(lookTheme.nameRes)
+            val lookDescription = lookTheme.descriptionRes?.let { stringResource(it) }
+            val lookScheme = remember(lookTheme.id, systemDark) {
+                ThemeProvider.getInstance(context).getColorScheme(lookTheme.id)
+            }
+            if (lookScheme != null) {
+                ThemeCard(
+                    name = lookName,
+                    colorScheme = lookScheme,
+                    description = lookDescription,
+                    isCustom = false,
+                    isSelected = currentThemeId == lookTheme.id,
+                    onSelect = {
+                        currentThemeId = lookTheme.id
+                        onThemeSelected(lookTheme.id, lookName)
+                    },
+                    onExport = { exportThemeXml(lookTheme.id, lookName) }
+                )
+            }
+        }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -362,8 +401,28 @@ fun ThemeSettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // Familiar looks FIRST (maintainer, 2026-11-06): colours AND key shapes of familiar
+            // keyboards, light/dark follow the system. The familiar-style layouts bind to them
+            // (layout XML theme="look_…").
+            item {
+                Text(
+                    stringResource(R.string.theme_section_looks),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    stringResource(R.string.theme_looks_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            items(ThemeSettingsActivity.LOOK_THEMES) { lookTheme -> LookCard(lookTheme) }
+
             // Built-in XML Themes Section (these ACTUALLY work with the keyboard)
             item {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     stringResource(R.string.theme_section_builtin),
                     style = MaterialTheme.typography.titleMedium,
@@ -377,6 +436,8 @@ fun ThemeSettingsScreen(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
+            // The CleverKeys default look leads the built-in themes.
+            item { LookCard(ThemeSettingsActivity.DEFAULT_LOOK_THEME) }
             // Filter Monet themes on Android < 12 (API 31) - Material You requires Android 12+
             val availableThemes = ThemeSettingsActivity.BUILTIN_THEMES.filter { theme ->
                 if (theme.id.startsWith("monet")) {
@@ -395,43 +456,6 @@ fun ThemeSettingsScreen(
                         onThemeSelected(builtinTheme.id, builtinName)
                     }
                 )
-            }
-
-            // Keyboard looks: colours AND key shapes of familiar keyboards, light/dark follow
-            // the system. The familiar-style layouts bind to them (layout XML theme="look_…").
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    stringResource(R.string.theme_section_looks),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
-                )
-                Text(
-                    stringResource(R.string.theme_looks_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-            }
-            items(ThemeSettingsActivity.LOOK_THEMES) { lookTheme ->
-                val lookName = stringResource(lookTheme.nameRes)
-                val lookScheme = remember(lookTheme.id, systemDark) {
-                    ThemeProvider.getInstance(context).getColorScheme(lookTheme.id)
-                }
-                if (lookScheme != null) {
-                    ThemeCard(
-                        name = lookName,
-                        colorScheme = lookScheme,
-                        isCustom = false,
-                        isSelected = currentThemeId == lookTheme.id,
-                        onSelect = {
-                            currentThemeId = lookTheme.id
-                            onThemeSelected(lookTheme.id, lookName)
-                        },
-                        onExport = { exportThemeXml(lookTheme.id, lookName) }
-                    )
-                }
             }
 
             // Custom Themes Section (user-created)

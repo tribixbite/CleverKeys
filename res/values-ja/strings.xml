@@ -399,8 +399,8 @@
     <string name="appearance_key_horizontal_margin_desc">キー間の横方向のスペース</string>
     <string name="appearance_look_show_hints_title">おなじみの外観でジェスチャーのヒントを表示</string>
     <string name="appearance_look_show_hints_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観は、元のキーボードと同じく角のヒントを表示しません。オンにするとすべて表示します。ジェスチャーはどちらでも使えます。</string>
-    <string name="appearance_look_key_preview_title">おなじみの外観でキーのプレビューを表示</string>
-    <string name="appearance_look_key_preview_desc">iOS風・Gboard風・SwiftKey風・Samsung風の外観で、押した文字を元のキーボードと同じ形のポップアップで表示します。</string>
+    <string name="appearance_look_key_preview_title">キーのプレビュー</string>
+    <string name="appearance_look_key_preview_desc">CleverKeys の外観と、iOS風・Gboard風・SwiftKey風・Samsung風の外観で、押した文字をキーの上のポップアップに表示します。</string>
     <string name="appearance_look_space_language_title">スペースキーに言語名を表示</string>
     <string name="appearance_look_space_language_desc">Samsung 風の外観では、Samsung キーボードと同じくスペースキーに現在の言語を表示します。</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
@@ -1606,7 +1606,7 @@
     <string name="calibration_legend_long_range">&gt; 最大</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys ダーク</string>
-    <string name="theme_builtin_cleverkeysdark_desc">シルバーのアクセントが入ったディープパープル(デフォルト)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">シルバーのアクセントが入ったディープパープル</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys ライト</string>
     <string name="theme_builtin_cleverkeyslight_desc">紫のアクセントが入ったシルバーのキー</string>
     <string name="theme_builtin_dark_name">ダーク</string>
@@ -1648,6 +1648,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey風</string>
     <string name="theme_look_samsung_name">Samsung風</string>
     <string name="theme_look_ios18_name">iOS 18風</string>
+    <string name="theme_look_cleverkeys_desc">モダンな角丸キー。ライト/ダークはシステムに従います(デフォルト)</string>
     <string name="theme_toast_applying">テーマを適用中: %1$s</string>
     <string name="theme_default_custom_name">マイテーマ</string>
     <string name="swipe_debug_session_intro">=== スワイププレイグラウンドのセッション開始 ===\n上のテキスト欄でスワイプしてください。各スワイプの候補ランキングが表示され、\n記録されます(座標点 + キー配置 + ランキング + 確定した単語)。</string>

@@ -610,8 +610,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontal spacing between keys</string>
     <string name="appearance_look_show_hints_title">Show gesture hints on familiar looks</string>
     <string name="appearance_look_show_hints_desc">iOS-, Gboard-, SwiftKey- and Samsung-style looks hide corner hints as those keyboards do; turn on to show every hint. Gestures work either way.</string>
-    <string name="appearance_look_key_preview_title">Key-press preview on familiar looks</string>
-    <string name="appearance_look_key_preview_desc">iOS-, Gboard-, SwiftKey- and Samsung-style looks show the pressed character in a pop-up shaped like those keyboards\' own.</string>
+    <string name="appearance_look_key_preview_title">Key-press preview</string>
+    <string name="appearance_look_key_preview_desc">The CleverKeys look and the iOS-, Gboard-, SwiftKey- and Samsung-style looks show the pressed character in a pop-up above the key.</string>
     <string name="appearance_look_space_language_title">Language name on the space bar</string>
     <string name="appearance_look_space_language_desc">Samsung-style shows the current language on the space bar, as Samsung Keyboard does.</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
@@ -2060,7 +2060,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Dark</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Deep purple with silver accents (default)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Deep purple with silver accents</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Light</string>
     <string name="theme_builtin_cleverkeyslight_desc">Silver keys with purple accents</string>
     <string name="theme_builtin_dark_name">Dark</string>
@@ -2102,6 +2102,8 @@
     <string name="theme_look_swiftkey_name">SwiftKey-style</string>
     <string name="theme_look_samsung_name">Samsung-style</string>
     <string name="theme_look_ios18_name">iOS 18-style</string>
+    <string name="theme_look_cleverkeys_name" translatable="false">CleverKeys</string>
+    <string name="theme_look_cleverkeys_desc">Modern rounded keys; light or dark follows the system (default)</string>
     <string name="theme_toast_applying">Applying theme: %1$s</string>
     <string name="theme_default_custom_name">My Theme</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground Session Started ===\nSwipe in the text field above. Each swipe shows its candidate ranking\nand is recorded (points + key geometry + ranking + committed word).</string>

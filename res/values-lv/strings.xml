@@ -415,8 +415,8 @@
     <string name="appearance_key_horizontal_margin_desc">Horizontālais atstatums starp taustiņiem</string>
     <string name="appearance_look_show_hints_title">Rādīt žestu norādes pazīstamiem izskatiem</string>
     <string name="appearance_look_show_hints_desc">iOS, Gboard, SwiftKey un Samsung stila izskati slēpj stūru norādes tāpat kā šīs tastatūras; ieslēdziet, lai rādītu visas. Žesti darbojas jebkurā gadījumā.</string>
-    <string name="appearance_look_key_preview_title">Taustiņa priekšskatījums pazīstamiem izskatiem</string>
-    <string name="appearance_look_key_preview_desc">iOS, Gboard, SwiftKey un Samsung stila izskati rāda nospiesto rakstzīmi uznirstošā logā, kas veidots kā šīm tastatūrām.</string>
+    <string name="appearance_look_key_preview_title">Nospiestā taustiņa priekšskatījums</string>
+    <string name="appearance_look_key_preview_desc">CleverKeys izskats un iOS, Gboard, SwiftKey un Samsung stila izskati parāda nospiesto rakstzīmi uznirstošā logā virs taustiņa.</string>
     <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
     <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
@@ -1690,7 +1690,7 @@
     <string name="calibration_legend_long_range">&gt; Maks.</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys tumšā</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Tumši violeta ar sudraba akcentiem (noklusējums)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Tumši violeta ar sudraba akcentiem</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys gaišā</string>
     <string name="theme_builtin_cleverkeyslight_desc">Sudraba taustiņi ar violetiem akcentiem</string>
     <string name="theme_builtin_dark_name">Tumšā</string>
@@ -1732,6 +1732,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey stils</string>
     <string name="theme_look_samsung_name">Samsung stils</string>
     <string name="theme_look_ios18_name">iOS 18 stils</string>
+    <string name="theme_look_cleverkeys_desc">Mūsdienīgi noapaļoti taustiņi; gaišais vai tumšais režīms seko sistēmai (noklusējums)</string>
     <string name="theme_toast_applying">Lieto tēmu: %1$s</string>
     <string name="theme_default_custom_name">Mana tēma</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground sesija sākta ===\nVelciet teksta laukā augstāk. Katrs vilkums parāda savu kandidātu rangu\nun tiek ierakstīts (punkti + taustiņu ģeometrija + rangs + apstiprinātais vārds).</string>

@@ -223,7 +223,9 @@ class LookBarArrangementTest {
 
     @Test
     fun everyLookHasThreeCentredSlotsAndOnlyTheIosLooksQuote() {
-        for (look in KeyboardLooks.ALL) {
+        // The CleverKeys default look keeps CleverKeys' scrolling chips (KeyboardLooksTest).
+        assertThat(KeyboardLooks.cleverkeysLook.bar).isNull()
+        for (look in KeyboardLooks.FAMILIAR) {
             val bar = look.bar
             assertWithMessage(look.id).that(bar).isNotNull()
             assertThat(bar!!.slots).isEqualTo(3)

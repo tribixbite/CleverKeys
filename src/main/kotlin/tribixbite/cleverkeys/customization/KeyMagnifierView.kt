@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.R
@@ -70,7 +71,7 @@ class KeyMagnifierView @JvmOverloads constructor(
 
         /** The keyboard theme the magnifier draws with: the active one, or the default theme. */
         private fun activeTheme(context: Context): Theme =
-            ThemeProvider.getInstance(context).getTheme(Config.globalConfig()?.themeName ?: "cleverkeysdark")
+            ThemeProvider.getInstance(context).getTheme(Config.globalConfig()?.themeName ?: Defaults.THEME)
 
         /**
          * Colour for text drawn OVER the magnifier (the customization dialog's direction

@@ -421,8 +421,8 @@
     <string name="appearance_key_horizontal_margin_desc">Espaciado horizontal entre teclas</string>
     <string name="appearance_look_show_hints_title">Mostrar pistas de gestos en aspectos conocidos</string>
     <string name="appearance_look_show_hints_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung ocultan las pistas de las esquinas como esos teclados; actívalo para mostrarlas todas. Los gestos funcionan igual.</string>
-    <string name="appearance_look_key_preview_title">Vista previa de tecla en aspectos conocidos</string>
-    <string name="appearance_look_key_preview_desc">Los aspectos estilo iOS, Gboard, SwiftKey y Samsung muestran el carácter pulsado en una ventana emergente con la forma de esos teclados.</string>
+    <string name="appearance_look_key_preview_title">Vista previa de la tecla</string>
+    <string name="appearance_look_key_preview_desc">El aspecto CleverKeys y los aspectos estilo iOS, Gboard, SwiftKey y Samsung muestran el carácter pulsado en una burbuja sobre la tecla.</string>
     <string name="appearance_look_space_language_title">Nombre del idioma en la barra espaciadora</string>
     <string name="appearance_look_space_language_desc">El aspecto Samsung muestra el idioma actual en la barra espaciadora, como el teclado de Samsung.</string>
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
@@ -1697,7 +1697,7 @@
     <string name="calibration_legend_long_range">&gt; Máx</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Oscuro</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Púrpura intenso con detalles plateados (predeterminado)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Púrpura intenso con detalles plateados</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Claro</string>
     <string name="theme_builtin_cleverkeyslight_desc">Teclas plateadas con detalles púrpura</string>
     <string name="theme_builtin_dark_name">Oscuro</string>
@@ -1739,6 +1739,7 @@
     <string name="theme_look_swiftkey_name">Estilo SwiftKey</string>
     <string name="theme_look_samsung_name">Estilo Samsung</string>
     <string name="theme_look_ios18_name">Estilo iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Teclas redondeadas modernas; claro u oscuro según el sistema (predeterminado)</string>
     <string name="theme_toast_applying">Aplicando tema: %1$s</string>
     <string name="theme_default_custom_name">Mi tema</string>
     <string name="swipe_debug_session_intro">=== Sesión del área de pruebas de deslizamiento iniciada ===\nDesliza en el campo de texto de arriba. Cada deslizamiento muestra su clasificación de candidatas\ny se registra (puntos + geometría de teclas + clasificación + palabra confirmada).</string>

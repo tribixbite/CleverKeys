@@ -437,6 +437,7 @@ class ThemeProvider(
             lookSpaceLanguage = look.spaceLanguage,
             lookKeyLegends = look.keyLegends,
             lookShiftFilled = look.shiftFilled,
+            lookYieldsToUser = look.yieldsToUserSettings,
         )
     }
 

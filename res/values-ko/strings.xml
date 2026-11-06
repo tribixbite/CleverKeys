@@ -400,8 +400,8 @@
     <string name="appearance_key_horizontal_margin_desc">키 사이의 가로 간격</string>
     <string name="appearance_look_show_hints_title">익숙한 모양에서 제스처 힌트 표시</string>
     <string name="appearance_look_show_hints_desc">iOS·Gboard·SwiftKey·Samsung 스타일 모양은 해당 키보드처럼 모서리 힌트를 숨깁니다. 켜면 모든 힌트를 표시합니다. 제스처는 어느 쪽이든 작동합니다.</string>
-    <string name="appearance_look_key_preview_title">익숙한 모양에서 키 누름 미리보기</string>
-    <string name="appearance_look_key_preview_desc">iOS·Gboard·SwiftKey·Samsung 스타일 모양에서 누른 문자를 해당 키보드와 같은 모양의 팝업으로 표시합니다.</string>
+    <string name="appearance_look_key_preview_title">키 누름 미리보기</string>
+    <string name="appearance_look_key_preview_desc">CleverKeys 모양과 iOS·Gboard·SwiftKey·Samsung 스타일 모양은 누른 문자를 키 위의 팝업으로 보여 줍니다.</string>
     <string name="appearance_look_space_language_title">스페이스바에 언어 이름 표시</string>
     <string name="appearance_look_space_language_desc">Samsung 스타일은 삼성 키보드처럼 스페이스바에 현재 언어를 표시합니다.</string>
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
@@ -1607,7 +1607,7 @@
     <string name="calibration_legend_long_range">&gt; 최대</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys 다크</string>
-    <string name="theme_builtin_cleverkeysdark_desc">실버 포인트의 딥 퍼플(기본값)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">실버 포인트의 딥 퍼플</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys 라이트</string>
     <string name="theme_builtin_cleverkeyslight_desc">보라색 포인트의 실버 키</string>
     <string name="theme_builtin_dark_name">다크</string>
@@ -1649,6 +1649,7 @@
     <string name="theme_look_swiftkey_name">SwiftKey 스타일</string>
     <string name="theme_look_samsung_name">Samsung 스타일</string>
     <string name="theme_look_ios18_name">iOS 18 스타일</string>
+    <string name="theme_look_cleverkeys_desc">모던한 둥근 키, 라이트/다크는 시스템을 따름(기본값)</string>
     <string name="theme_toast_applying">테마 적용 중: %1$s</string>
     <string name="theme_default_custom_name">내 테마</string>
     <string name="swipe_debug_session_intro">=== 스와이프 플레이그라운드 세션 시작 ===\n위의 텍스트 필드에서 스와이프하세요. 각 스와이프의 후보 순위가 표시되며\n기록됩니다(좌표 + 키 배치 + 순위 + 확정된 단어).</string>

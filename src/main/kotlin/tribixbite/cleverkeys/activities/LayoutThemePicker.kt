@@ -59,12 +59,27 @@ data class LayoutThemeChoice(
 )
 
 /**
- * Every theme Theme Manager offers, in its order — Built-in (Monet only on Android 12+, as there),
- * Custom, then the decorative categories — with the ids Theme Manager stores in `theme`.
+ * Every theme Theme Manager offers, in its order — Familiar looks, Built-in (the CleverKeys
+ * default look first; Monet only on Android 12+, as there), Custom, then the decorative
+ * categories — with the ids Theme Manager stores in `theme`.
  */
 fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<LayoutThemeChoice> {
     val builtInSection = res.getString(R.string.theme_section_builtin)
-    val builtIn = ThemeSettingsActivity.BUILTIN_THEMES
+    val systemLight = Config.isSystemLight(res)
+    /** A look entry in [section], drawn with its palette for the current system mode. */
+    fun lookChoice(entry: ThemeSettingsActivity.LookTheme, section: String): LayoutThemeChoice? {
+        val palette = KeyboardLooks.byId(entry.id)?.palette(systemLight) ?: return null
+        return LayoutThemeChoice(
+            id = entry.id,
+            name = res.getString(entry.nameRes),
+            section = section,
+            background = Color(palette.keyboardBackground),
+            key = Color(palette.key),
+            label = Color(palette.label),
+        )
+    }
+    val defaultLook = listOfNotNull(lookChoice(ThemeSettingsActivity.DEFAULT_LOOK_THEME, builtInSection))
+    val builtIn = defaultLook + ThemeSettingsActivity.BUILTIN_THEMES
         .filter { !it.id.startsWith("monet") || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S }
         .map {
             LayoutThemeChoice(
@@ -77,18 +92,7 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
             )
         }
     val looksSection = res.getString(R.string.theme_section_looks)
-    val systemLight = Config.isSystemLight(res)
-    val looks = ThemeSettingsActivity.LOOK_THEMES.mapNotNull { entry ->
-        val palette = KeyboardLooks.byId(entry.id)?.palette(systemLight) ?: return@mapNotNull null
-        LayoutThemeChoice(
-            id = entry.id,
-            name = res.getString(entry.nameRes),
-            section = looksSection,
-            background = Color(palette.keyboardBackground),
-            key = Color(palette.key),
-            label = Color(palette.label),
-        )
-    }
+    val looks = ThemeSettingsActivity.LOOK_THEMES.mapNotNull { lookChoice(it, looksSection) }
     val customSection = res.getString(R.string.theme_section_custom)
     val custom = customThemes.map {
         LayoutThemeChoice(
@@ -114,7 +118,7 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
             )
         }
     }
-    return builtIn + looks + custom + decorative
+    return looks + builtIn + custom + decorative
 }
 
 /**
@@ -123,7 +127,8 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
  */
 fun layoutThemeDisplayName(id: String, res: Resources, customThemes: List<CustomTheme>): String {
     ThemeSettingsActivity.BUILTIN_THEMES.firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
-    ThemeSettingsActivity.LOOK_THEMES.firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
+    (ThemeSettingsActivity.LOOK_THEMES + ThemeSettingsActivity.DEFAULT_LOOK_THEME)
+        .firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
     if (id.startsWith("decorative_")) getThemeById(id.removePrefix("decorative_"))?.let { return it.displayName(res) }
     if (id.startsWith("custom_")) customThemes.firstOrNull { "custom_${it.id}" == id }?.let { return it.name }
     return id

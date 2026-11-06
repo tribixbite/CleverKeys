@@ -428,8 +428,8 @@
     <string name="appearance_key_horizontal_margin_desc">Khoảng cách ngang giữa các phím</string>
     <string name="appearance_look_show_hints_title">Hiện gợi ý cử chỉ trên giao diện quen thuộc</string>
     <string name="appearance_look_show_hints_desc">Các giao diện kiểu iOS, Gboard, SwiftKey và Samsung ẩn gợi ý ở góc giống các bàn phím đó; bật để hiện tất cả. Cử chỉ vẫn hoạt động.</string>
-    <string name="appearance_look_key_preview_title">Xem trước phím nhấn trên giao diện quen thuộc</string>
-    <string name="appearance_look_key_preview_desc">Các giao diện kiểu iOS, Gboard, SwiftKey và Samsung hiện ký tự đã nhấn trong cửa sổ bật lên có hình dạng giống các bàn phím đó.</string>
+    <string name="appearance_look_key_preview_title">Xem trước phím nhấn</string>
+    <string name="appearance_look_key_preview_desc">Giao diện CleverKeys và các giao diện kiểu iOS, Gboard, SwiftKey và Samsung hiển thị ký tự được nhấn trong bong bóng phía trên phím.</string>
     <string name="appearance_look_space_language_title">Tên ngôn ngữ trên phím cách</string>
     <string name="appearance_look_space_language_desc">Giao diện kiểu Samsung hiện ngôn ngữ hiện tại trên phím cách, giống Bàn phím Samsung.</string>
     <string name="appearance_custom_border_title">Cấu hình viền tùy chỉnh</string>
@@ -1635,7 +1635,7 @@
     <string name="calibration_legend_long_range">&gt; Max</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Tối</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Tím đậm điểm xuyết bạc (mặc định)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Tím đậm điểm xuyết bạc</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Sáng</string>
     <string name="theme_builtin_cleverkeyslight_desc">Phím bạc điểm xuyết tím</string>
     <string name="theme_builtin_dark_name">Tối</string>
@@ -1677,6 +1677,7 @@
     <string name="theme_look_swiftkey_name">Kiểu SwiftKey</string>
     <string name="theme_look_samsung_name">Kiểu Samsung</string>
     <string name="theme_look_ios18_name">Kiểu iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Phím bo tròn hiện đại; sáng hoặc tối theo hệ thống (mặc định)</string>
     <string name="theme_toast_applying">Đang áp dụng chủ đề: %1$s</string>
     <string name="theme_default_custom_name">Chủ đề của tôi</string>
     <string name="swipe_debug_session_intro">=== Đã bắt đầu phiên Sân thử vuốt ===\nVuốt trong ô văn bản ở trên. Mỗi lần vuốt hiển thị thứ hạng ứng viên\nvà được ghi lại (điểm + hình học phím + thứ hạng + từ đã nhập).</string>

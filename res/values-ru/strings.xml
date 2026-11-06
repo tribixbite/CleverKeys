@@ -406,8 +406,8 @@
     <string name="appearance_key_horizontal_margin_desc">Горизонтальный интервал между клавишами</string>
     <string name="appearance_look_show_hints_title">Показывать подсказки жестов в знакомых стилях</string>
     <string name="appearance_look_show_hints_desc">Стили iOS, Gboard, SwiftKey и Samsung скрывают подсказки в углах клавиш, как эти клавиатуры; включите, чтобы показать все. Жесты работают в любом случае.</string>
-    <string name="appearance_look_key_preview_title">Просмотр нажатой клавиши в знакомых стилях</string>
-    <string name="appearance_look_key_preview_desc">Стили iOS, Gboard, SwiftKey и Samsung показывают нажатый символ во всплывающем окне в форме, как у этих клавиатур.</string>
+    <string name="appearance_look_key_preview_title">Предпросмотр нажатой клавиши</string>
+    <string name="appearance_look_key_preview_desc">Оформление CleverKeys и оформления в стиле iOS, Gboard, SwiftKey и Samsung показывают нажатый символ во всплывающем окне над клавишей.</string>
     <string name="appearance_look_space_language_title">Название языка на пробеле</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показывает текущий язык на клавише пробела, как клавиатура Samsung.</string>
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
@@ -1720,7 +1720,7 @@
     <string name="calibration_legend_long_range">&gt; Макс</string>
     <string name="calibration_percent_value">%1$d%%</string>
     <string name="theme_builtin_cleverkeysdark_name">CleverKeys Тёмная</string>
-    <string name="theme_builtin_cleverkeysdark_desc">Тёмно-фиолетовая с серебристыми акцентами (по умолчанию)</string>
+    <string name="theme_builtin_cleverkeysdark_desc">Тёмно-фиолетовая с серебристыми акцентами</string>
     <string name="theme_builtin_cleverkeyslight_name">CleverKeys Светлая</string>
     <string name="theme_builtin_cleverkeyslight_desc">Серебристые клавиши с фиолетовыми акцентами</string>
     <string name="theme_builtin_dark_name">Тёмная</string>
@@ -1762,6 +1762,7 @@
     <string name="theme_look_swiftkey_name">В стиле SwiftKey</string>
     <string name="theme_look_samsung_name">В стиле Samsung</string>
     <string name="theme_look_ios18_name">В стиле iOS 18</string>
+    <string name="theme_look_cleverkeys_desc">Современные скруглённые клавиши; светлая или тёмная — как в системе (по умолчанию)</string>
     <string name="theme_toast_applying">Применение темы: %1$s</string>
     <string name="theme_default_custom_name">Моя тема</string>
     <string name="swipe_debug_session_intro">=== Сеанс Swipe Playground начат ===\nПроводите свайпы в текстовом поле выше. Для каждого свайпа показывается ранжирование кандидатов,\nи он записывается (точки + геометрия клавиш + ранжирование + введённое слово).</string>

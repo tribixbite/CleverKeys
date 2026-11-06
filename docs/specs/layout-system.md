@@ -363,6 +363,25 @@ built-in XML, `decorative_` and `custom_` themes and reuses everything above: th
 attribute, the Layout Manager chip, Theme Manager selection ("Familiar looks" section), the
 `layouts` backup blob and the stale-view tracker. There is no parallel system.
 
+**The CleverKeys default look** (`look_cleverkeys`, `KeyboardLooks.cleverkeysLook`, 2026-11-06).
+`Defaults.THEME` is this look (it was the XML theme `cleverkeysdark`): a user whose `theme` pref is
+unset gets it, a user who chose any theme keeps that choice, and CleverKeys Dark / Light stay
+selectable. It keeps CleverKeys' own parts — every corner label (`LookLegends.ALL`: the
+short-swipe hints), the scrolling suggestion chips (`bar = null`), a purple accent — and takes
+what the popular keyboards share (research `2026-10-27-familiar-keyboard-looks.md`): light/dark
+follow the system; flat borderless keys, 8 dp corners, gaps 0.12 / 0.16, a light-mode-only shadow;
+a tonal function-key fill; the Go / Search / Send / Done action in the accent with an icon; a
+BUBBLE press preview; a filled Shift while shifted. It is the only look with
+`yieldsToUserSettings` (`LookUserYield`, pure, `KeyboardLookUserYieldTest`): because users get it
+without choosing it, a key gap whose stored value differs from its default
+(`Config.keyVerticalMarginCustomised` / `keyHorizontalMarginCustomised`), the custom border
+(`border_config`: radius and outline) and a trail colour that differs from `Defaults.SWIPE_TRAIL_COLOR`
+keep the user's value; untouched settings take the look's. Choosing it in Theme Manager writes
+`theme` only, never `swipe_trail_color` (a one-mode trail would then count as the user's).
+Theme Manager and Layout Manager's picker list Familiar looks FIRST, then Built-in Themes led by
+this look (`ThemeSettingsActivity.DEFAULT_LOOK_THEME`), then custom and decorative themes.
+`ThemeProvider.FALLBACK_THEME_ID` (unknown or broken theme ids) stays the XML `cleverkeysdark`.
+
 **Data** (`theme/KeyboardLook.kt`, pure): `KeyboardLook(id, light, dark, geometry,
 functionChars)`. `LookPalette` holds opaque ARGB roles: keyboard background; letter, pressed,
 Caps Lock and modifier/function-key fills; plain Enter and editor-action (Go / Search / Send /
@@ -397,8 +416,8 @@ key-press preview and has no preference for one on other themes; nothing changes
 look draws its product's default preview — iOS's key-pop balloon (`BALLOON`), Gboard's stadium
 bubble (`BUBBLE`; Gboard's own "Pop-up on keypress", on as shipped on the reference Pixel),
 SwiftKey's key-wide column (`COLUMN`) and Samsung's plate (`PLATE`) — for character keys
-(not space or function keys), unless Appearance → "Key-press preview on familiar looks"
-(`look_key_preview`, boolean, default ON, `SettingsDefaults`) is off. Because the preference
+(not space or function keys), unless Appearance → "Key-press preview"
+(`look_key_preview`, named "… on familiar looks" until 2026-11-06, boolean, default ON, `SettingsDefaults`) is off. Because the preference
 is new, there is no earlier user choice to respect; turning it off is the user's choice and the
 look never overrides it. The preview is drawn inside the keyboard view (an IME window cannot
 draw above itself): a top-row preview moves down until it fits and an edge-key preview moves

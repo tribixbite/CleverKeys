@@ -18,6 +18,7 @@ import tribixbite.cleverkeys.theme.LookPalette
 import tribixbite.cleverkeys.theme.LookPopupColors
 import tribixbite.cleverkeys.theme.LookPreview
 import tribixbite.cleverkeys.theme.LookTypeface
+import tribixbite.cleverkeys.theme.LookUserYield
 import kotlin.math.min
 
 /**
@@ -228,6 +229,13 @@ class Theme {
     @JvmField
     val lookShiftFilled: Boolean
 
+    /**
+     * The look lets the user's own appearance settings win (`KeyboardLook.yieldsToUserSettings`,
+     * `LookUserYield`): the CleverKeys default look. False for every other theme.
+     */
+    @JvmField
+    val lookYieldsToUser: Boolean
+
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
     val keyShadowColor: Int
@@ -319,6 +327,7 @@ class Theme {
         lookSpaceLanguage = false
         lookKeyLegends = emptyList()
         lookShiftFilled = false
+        lookYieldsToUser = false
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -376,6 +385,8 @@ class Theme {
         lookKeyLegends: List<tribixbite.cleverkeys.theme.LookKeyLegend> = emptyList(),
         /** A look draws a filled Shift arrow while shifted. */
         lookShiftFilled: Boolean = false,
+        /** A look lets the user's tuned gaps, border and trail colour win ([lookYieldsToUser]). */
+        lookYieldsToUser: Boolean = false,
     ) {
         getKeyFont(context) // Initialize font
 
@@ -454,6 +465,7 @@ class Theme {
         this.lookSpaceLanguage = lookSpaceLanguage && lookPalette != null
         this.lookKeyLegends = if (lookPalette != null) lookKeyLegends else emptyList()
         this.lookShiftFilled = lookShiftFilled && lookPalette != null
+        this.lookYieldsToUser = lookYieldsToUser && lookPalette != null
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0
@@ -628,8 +640,18 @@ class Theme {
                 borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
                 borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
             )
+            // The CleverKeys default look gives way to the gaps and border the user tuned.
+            val look = theme.lookGeometry?.let {
+                if (!theme.lookYieldsToUser) it
+                else LookUserYield.geometry(
+                    it,
+                    verticalGapCustomised = config.keyVerticalMarginCustomised,
+                    horizontalGapCustomised = config.keyHorizontalMarginCustomised,
+                    customBorderOn = borderOn,
+                )
+            }
             return LayoutKeyGeometry.applyTo(
-                KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density),
+                KeyboardLookGeometry.resolve(look, user, keyWidth, row_height, theme.density),
                 overrides = overrides,
                 globals = LayoutKeyGeometry.Globals(
                     borderOn = config.borderConfig,
