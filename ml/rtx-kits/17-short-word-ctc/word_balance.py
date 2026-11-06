@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path
-from typing import Dict, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple, cast
 
 import numpy as np
 import torch
@@ -97,8 +97,10 @@ def build_sampler(ds, pool_paths: Sequence[Path], tau: float, short_final_boost:
         w[is_synth] = synth_frac / n_synth
     gen = torch.Generator()
     gen.manual_seed(seed)
-    sampler = WeightedRandomSampler(torch.as_tensor(w, dtype=torch.double), num_samples=n,
-                                    replacement=True, generator=gen)
+    # The sampler takes a tensor (it calls torch.as_tensor itself); its stubs only say
+    # Sequence[float], so the cast is for mypy and changes nothing at runtime.
+    weights = cast(Sequence[float], torch.as_tensor(w, dtype=torch.double))
+    sampler = WeightedRandomSampler(weights, num_samples=n, replacement=True, generator=gen)
     summary = {"rows": float(n), "real_words": float(len(counts)), "synth_rows": float(n_synth),
                "short_final_boosted_rows": float(n_boost), "tau": tau, "synth_frac": synth_frac}
     return sampler, summary

@@ -543,6 +543,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (`docs/eval/2026-10-07-short-word-ctc.md`, `…final-letter-drops.md` §6).
     KIT READY (2026-11-04): `ml/rtx-kits/17-short-word-ctc/`. Gate = FUTO swipe-1 VALIDATION,
     session-disjoint from all training (567 ad/wet-class traces, 377 words, 271 sessions).
+    PREP CHECK 2026-11-05 (phone, kit README §7.1): hashes, step-2 byte-identical re-run,
+    patch vs ML origin/main, preset parity, gate smoke (identical model fails C2 as it must),
+    contract_rows holdout exclusion, mypy — all PASS. Ready for the RTX box.
 18. [x] agent: apostrophe context chooser — round 3 (listed-evidence, `its` only) scored once
     on the phone 2026-11-04 (maintainer: "run item 18 here") and PASSED every bar: GUM `its`
     +30.44 pt (166/15), Ubuntu 125,001–150,000 `its` +6.15 pt (1,139/897), 0 structural

@@ -221,6 +221,35 @@ done
   That is expected for an untrained net, and the export itself is CleverKeys-ML's established
   step.
 
+## 7.1 Prep check on the phone (2026-11-05, app `c0466391`, CleverKeys-ML `8778fef` = origin/main)
+
+Nothing here trains or reads a gate row through a candidate. All checks passed:
+
+* **Hashes:** shipped encoder `84718e6e…88e5`; `class_words.tsv` `05991866…5d23`; the local copies of
+  `dev.jsonl` (`8d9d34ec…`), `futo_swipe1_test_sample.jsonl.gz` (`03118771…`), `val_hwsfuto`
+  (`0ac53f4d…`), `test_hwsfuto` (`e58eeb23…`) and `futo_en_wordlist.combined` (`771d87cd…`) all
+  match §DATA_MANIFEST.
+* **Step 2 reproduces byte-identically on today's code** (selector, `en_enhanced.json`, QWERTY
+  geometry): `class_words` `05991866…`, `gate_rows` `5a906469…`, `controls_rows` `0197362a…`;
+  377 words, 567 traces, 271 sessions, 2 development rows dropped. (Train counts from the HF
+  `word` column, as on 11-04.)
+* **Patch:** `git apply --check` clean against CleverKeys-ML `8778fef`, which is still origin/main.
+* **Decoder preset:** `short_word_ctc_eval.py` γ 0.9, λ 4.0, β 0.25, γ_prune 0.25, β_prune 0.9882,
+  beam 100 equal the app's English preset (`CtcScoringParams.tunedV2`, `LAMBDA_EN_JSON_SCALE` 4.0).
+* **Gate harness smoke** (`--limit 10`, controls standing in for the class, the SHIPPED model as
+  the candidate): every Δ is 0.00 and C2 FAILS with 0 gains / 0 losses, i.e. a candidate that
+  changes nothing cannot pass. 24 s on the phone.
+* **`contract_rows.py` smoke:** 3,000 `train_hwsfuto` rows + 50 planted `val_hwsfuto` rows →
+  62 dropped as holdout (the 50 planted + 12 train rows that are bit-exact copies of val/test
+  traces), 2,988 kept, 5.6 s. Over all of `train_hwsfuto`: 35 of 2,399 test traces and 182 of
+  9,907 val traces occur verbatim in train — the known CleverKeys-ML audit #3 overlap
+  (`ctc/README.md`, there 35 / 186), which `prepare_data.py` and this kit already exclude.
+* **Types:** all seven scripts compile; mypy clean after a typing-only `cast` in
+  `word_balance.py` (the sampler draws identical indices before and after).
+* **Not checkable here:** `finetune_cmd.py` and the export need `ckpt/v2kd-fresh-w1/best.pt`, and
+  the tiers `tier_t3/t3hws/sw234/sw5q` exist only on the RTX box (record their sha256 before
+  step 3).
+
 ## 8. What to send back
 
 * `$WD/gate17/<run>/gate_report.tsv` and `<run>.log` for the 3 seeds.
