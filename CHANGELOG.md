@@ -251,6 +251,12 @@ editor that used to be listed here already ship in 2.0.)
   (`dont` → `don't`, `cest` → `c'est`) and commit accented forms (`cafe` → `café`).
   The bundled English contraction set is gated on the language you are typing in, so a
   French or German swipe never offers English contractions or possessives.
+- Swiping the letters of `its` in English now chooses between `its` and `it's` from the word
+  before it (the installed English next-word model): after a word such as `of` that the model
+  lists with `its`, `its` comes first and is the word inserted. Measured once on text the rule
+  had never seen: +30.4 points on UD English-GUM (166 corrected, 15 made wrong) and +6.2 on chat
+  text; no other contraction is affected (`docs/eval/2026-10-07-apostrophe-context.md` §8). It
+  never acts in password fields, for other languages, or over a word you added yourself.
 - **"Learn From My Typing" master switch** (Privacy & Data): a single
   toggle that gates every on-device learning path — learned phrases, personalization
   vocabulary, selection adaptation and swipe-gesture capture — plus the read paths that
@@ -434,6 +440,10 @@ editor that used to be listed here already ship in 2.0.)
   in any other script still ends the word. Autocorrect never adds, removes or moves a
   half-space — the other spelling is offered in the suggestion bar instead. Arabic ي/ك (and
   ى, ۀ, ة, ە) find their Persian dictionary words without changing what was typed.
+- Bangla (2026-11-04): vowel signs, the hasanta and the other Bengali marks on a Bengali letter are
+  part of the word, so `আমি` is typed, selected, completed and predicted as one word instead of
+  ending at its vowel sign (a Bangla pack's tap predictions depended on it). Marks of other
+  scripts are unchanged; the rule follows WM Keyboard.
 
 ### Changed
 

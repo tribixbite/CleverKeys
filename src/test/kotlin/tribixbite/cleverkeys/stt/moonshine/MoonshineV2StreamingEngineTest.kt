@@ -106,6 +106,46 @@ class MoonshineV2StreamingEngineTest {
         }
     }
 
+    /**
+     * The optional small pack (`scripts/build_voice_pack.py --variant small`) runs on the same
+     * engine: its shape comes from the pack's `streaming_config.json`, not from code. Research
+     * §6.5: 10 vs tiny's 14 errors on the 5 s set. Skips unless that pack has been built.
+     */
+    @Test
+    fun theSmallPackLoadsWithItsOwnShapeAndTranscribes() {
+        val small = File(pack.parentFile, "voicepack-moonshine-v2-small-en.zip")
+        assumeTrue("small voice pack not built ($small)", small.isFile)
+        val clips = clips()
+        assumeTrue("no sample clips in $samples", clips.isNotEmpty())
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-small").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            val imported = manager.import(small.inputStream())
+            assertWithMessage("import: $imported").that(imported).isInstanceOf(VoicePackManager.ImportResult.Success::class.java)
+            val installed = manager.activePack("en")!!
+            assertThat(installed.manifest.id).isEqualTo("en-moonshine2-small")
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions()).use { engine ->
+                assertThat(engine.memoryReport().detail).contains("depth 10 dim 620/512")
+                var errors = 0
+                var words = 0
+                for ((wav, reference) in clips) {
+                    val pcm = readWav(wav)
+                    val session = engine.newSession()
+                    // 1 s pieces: one engine pass each, the keyboard's cadence.
+                    for (off in pcm.indices step 16_000) session.accept(pcm.copyOfRange(off, minOf(off + 16_000, pcm.size)))
+                    val final = session.finish()
+                    session.close()
+                    errors += wordErrors(reference, final.text)
+                    words += norm(reference).size
+                }
+                println("small voice pack WER $errors/$words")
+                assertWithMessage("small streaming WER").that(errors.toDouble() / words).isLessThan(0.10)
+            }
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
     @Test
     fun cancelStopsASessionAndLaterAudioIsIgnored() {
         assumeTrue("voice pack not built ($pack)", pack.isFile)

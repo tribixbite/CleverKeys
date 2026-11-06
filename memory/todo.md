@@ -550,6 +550,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Shipped per the pass branch: chooser in `src/main/.../swipe/`, wired in
     `SuggestionHandler.chooseContractionForm`, real-path `SwipeContractionChoiceTest`.
     Device check of the swipe bar after "of" still to do with the next APK.
+    DEVICE CHECK 2026-11-05 (Saga `.144`, release of `a9d7b351`, Chrome textarea, adb-swiped i→t→s):
+    empty field → bar Its | It's, `Its ` inserted (overlay order); `A piece of ` → `its `;
+    `I think ` → bar it's | its | is, `it's ` inserted; `Yesterday ` → `its `. Field cleared, tab
+    closed. Release notes: CHANGELOG + RELEASE_RECORD rows added 2026-11-05.
 19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
     model/pack (`docs/guides/adding-a-new-language.md`); ARC-061 `ctc_golden` fixture fix.
     KIT (2026-11-04): `ml/rtx-kits/19-bangla-pack/`. A 20,627-word subset of WM Keyboard bn.txt
@@ -993,15 +997,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (`ClipboardHistoryView.kt:2783`) copies it to the OS clipboard — the phone's previous clip
     was replaced by `Meet at noon` and could not be restored (no root, history was empty).
     Device agents: expand a row with a single tap, never long-press it.
-29. [ ] agent, 2026-10-29 (maintainer: unfinished-word behaviour as a setting — Keep what I typed /
+29. [x] agent, 2026-10-29 (maintainer: unfinished-word behaviour as a setting — Keep what I typed /
     Complete the word / Off; follows item 25's `tomorr` finding). Round 7 pre-registered
     (`836f133c`, eval doc §19): rule C7, 252-config DEV grid, new Leipzig-weighted T-trunc-L.
     DEV: NOTHING ADMISSIBLE (§19.5) — best completion accuracy 14.5 % at ≤ 15 % wrong (needs 20 %),
     any config reaching 20 % completes ≥ 26.8 % of its changes into the wrong word. TEST not run;
     "Complete the word" NOT offered. SHIPPED: Ranking & Tuning "Unfinished Words" = Keep what I
     typed (default, ρ) | Off (pre-round-6), pref `autocorrect_unfinished_word_mode`, 5 strings ×
-    22 files; ρ slider greyed under Off. C7 kept only as the unoffered eval seam. Open (device):
-    the dropdown and greyed slider not yet looked at on a phone.
+    22 files; ρ slider greyed under Off. C7 kept only as the unoffered eval seam. DEVICE PASS
+    2026-11-05 (Saga `.144`, release of `a9d7b351`, reached via Settings search "Unfinished"):
+    "Keep what I typed" shows the keep explanation and the Unfinished Word Cost slider at 1.50;
+    Off switches the explanation ("Space treats tomorr like any typo…") and greys the slider (value
+    kept); restored to Keep what I typed. Item can close.
 30. [ ] maintainer + device: on-device voice input — SHIPS IN 2.0.0 (maintainer decision 2026-10-29;
     was proposed for 2.1). Built `02de7f61`, fixes `c6734644` (no lost audio, 30 s auto-stop) and
     `1a26da24` (bar ✕/messages fit, password notice, no repeated word), `30983ed1` (a field
