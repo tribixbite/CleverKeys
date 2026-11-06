@@ -113,17 +113,29 @@ Also add the WM Keyboard MIT block, and complete the guide §6 checklist.
   `UserJoinerPreference.joinerFree`. Cursor sync, `EditorTextNavigation` and
   `VerifiedSuffixEdit` were already mark-aware. Tests: `BanglaSpellingMarkBoundaryTest` (pure),
   `BanglaSpellingMarkTypingTest` (mock, real handler + predictor over `bn` keys).
-  Remaining, not done:
-  * the danda `।` is not a sentence boundary for next-word context or learning (WM Keyboard
-    treats it as one); both paths must change together (TODO);
-  * typo-tolerant prefix search and the doubled-letter autocorrect step skip any typed word with
-    a mark (`all { isLetter() }` gates in `WordPredictor`), so Bangla gets exact-prefix
-    completion only (TODO);
-  * the double-space period reads 2 characters, so it does not fire after a word that ends in
-    a mark (Bangla ends sentences with `।` anyway);
-  * ZWJ inside a word (`র‍্য`) still splits it; the bn word list has none;
-  * other Indic layouts (Devanagari, Gujarati, Kannada, Tamil, Sinhala) have the same split;
-    each needs its script added to `WordChars.SPELLING_MARK_SCRIPTS` with tests (TODO).
+  Remainder DONE 2026-11-06 (maintainer asked to finish it; WM Keyboard read at `18f277375`):
+  * DONE: the danda `।` (and the double danda `॥`) is a sentence boundary for next-word context
+    AND learning, through ONE predicate `WordChars.isSentenceEnd`
+    (`NextWordPredictor.contextFromEditorText` and `SuggestionHandler` → `onSentenceBoundary`),
+    matching WM Keyboard's `SENTENCE_ENDERS` (`. ! ? ।`). Autocapitalisation is unchanged
+    (no letter case in the Indic scripts);
+  * DONE: typo-tolerant prefix search and the step-1.45 dropped-double gate accept attached
+    marks (`WordChars.isSpelledWithLetters`), and step 1.4 collapses a doubled sign (`আমিি` →
+    `আমি`); a one-key typo of `কুকুর` gets a fuzzy suggestion (mock test). TODO: a doubled
+    consonant is a conjunct in Bangla (`ক্ক`), which step 1.45 does not model;
+  * DONE: the double-space period fires after a word that ends in a mark (`আমি` + two spaces →
+    `আমি. `). It inserts `. `, not `।`: WM Keyboard's `doubleSpacePeriod` rule also commits
+    `. ` in every script;
+  * DONE: a ZWJ inside a Bengali word (`র‍্যাব`) is a word character (strict both-sides rule,
+    cursor-edge rule for a just-typed ZWJ, Bengali only), wired into every mark call site plus
+    `EditorTextNavigation`, `VerifiedSuffixEdit` and `UserJoinerPreference.joinerFree`. Sinhala
+    and Kannada joined the ZWJ rule the same day (both layouts carry a ZWJ key; Unicode spells
+    the rakaransaya/yansaya as virama + ZWJ, `ශ්‍රී`); Devanagari's eyelash ra stays a TODO;
+  * DONE: the danda and double danda pull back over an automatic space (`আমি ` + `।` →
+    `আমি।`, `SmartAutoSpace` closing set), as WM Keyboard's auto-space does;
+  * DONE: Devanagari, Gujarati, Kannada, Tamil and Sinhala (every Indic script with a shipped
+    layout) are in `WordChars.SPELLING_MARK_SCRIPTS`, one real word each in
+    `IndicSpellingMarkBoundaryTest`. No Gurmukhi/Oriya/Telugu/Malayalam layout ships.
 * `build_wordlist.py`'s evidence classifier rejects marked words (`isalpha()`) and has no `bn`
   row. This kit bypasses the classifier, which is a deliberate difference from the standard
   pipeline, stated here. A `bn` classifier row needs a Bengali-script validator.

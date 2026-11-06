@@ -49,6 +49,8 @@ class VerifiedSuffixEdit private constructor(
             val c = text[i]
             // A Persian half-space continues the word only between Arabic-script letters.
             if (c == WordChars.ZWNJ) return WordChars.isJoiningZwnjAt(text, i)
+            // A ZWJ continues the word only inside a Bengali word (`র‍্যাব`, WordChars).
+            if (c == WordChars.ZWJ) return WordChars.isJoiningZwjAt(text, i)
             return c.isLetterOrDigit() ||
                 Character.getType(c) in setOf(Character.NON_SPACING_MARK.toInt(),
                     Character.COMBINING_SPACING_MARK.toInt(), Character.ENCLOSING_MARK.toInt()) ||

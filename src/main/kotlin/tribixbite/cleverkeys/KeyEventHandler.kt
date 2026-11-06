@@ -456,13 +456,22 @@ class KeyEventHandler(
             // swipe/suggestion commits never reset it, so trusting it alone made
             // space→backspace→space delete a LETTER ("hix"→"hi. ") and turned the
             // auto-space after a swipe commit into an unrequested period.
-            val textBefore = conn.getTextBeforeCursor(2, 0)
-            val spacePrecedesCursor = textBefore?.length == 2 && textBefore[1] == ' '
-            val charBeforeSpace = textBefore?.getOrNull(0)
-            // Shared word-character rule (WordChars): a letter/digit, or a Persian half-space
-            // joining Arabic letters — which cannot sit right before a space, so this is the
-            // letter/digit check it always was.
-            if (spacePrecedesCursor && charBeforeSpace != null && WordChars.isWordCharAt(textBefore, 0)) {
+            // The space and the character before it, plus WordChars.MARK_BASE_LOOKBACK more: a
+            // word that ends in an Indic vowel sign or virama (`আমি`, `தமிழ்`) is judged by the
+            // letter the mark sits on, which a 2-character read cut off.
+            val textBefore = conn.getTextBeforeCursor(2 + WordChars.MARK_BASE_LOOKBACK, 0)
+            val charBeforeSpaceIndex = (textBefore?.length ?: 0) - 2
+            // Shared word-character rule (WordChars): a letter/digit, an Indic mark on its letter
+            // (the word ends in a mark exactly as one ending in a letter), or a Persian
+            // half-space / Bengali ZWJ joining two letters — neither can sit right before a
+            // space, so for every other script this is the letter/digit check it always was.
+            // The inserted text stays ". " in every script: WM Keyboard, which this follows for
+            // Bangla, also types ". " on a double space (its `doubleSpacePeriod` rule), and
+            // its danda is a key of its own.
+            if (textBefore != null && charBeforeSpaceIndex >= 0 &&
+                textBefore[textBefore.length - 1] == ' ' &&
+                WordChars.isWordCharAt(textBefore, charBeforeSpaceIndex)
+            ) {
                 // Delete the previous space and insert ". "
                 deleteBeforeCursor(conn, 1)
                 textToCommit = ". "

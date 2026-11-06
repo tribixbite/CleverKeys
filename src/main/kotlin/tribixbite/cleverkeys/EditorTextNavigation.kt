@@ -262,8 +262,10 @@ object EditorTextNavigation {
             return left > 0 && isWordCodePoint(Character.codePointBefore(text, left)) &&
                 i < text.length && isWordCodePoint(Character.codePointAt(text, i))
         }
-        // Persian half-space: inside a word only between Arabic-script letters (WordChars).
+        // Persian half-space: inside a word only between Arabic-script letters (WordChars), and
+        // a ZWJ only inside a Bengali word (`র‍্যাব`).
         if (cp == WordChars.ZWNJ.code) return WordChars.isJoiningZwnjAt(text, i - 1)
+        if (cp == WordChars.ZWJ.code) return WordChars.isJoiningZwjAt(text, i - 1)
         return isWordCodePoint(cp)
     }
 
@@ -276,6 +278,7 @@ object EditorTextNavigation {
                 i + 1 < text.length && isWordCodePoint(Character.codePointAt(text, i + 1))
         }
         if (cp == WordChars.ZWNJ.code) return WordChars.isJoiningZwnjAt(text, i)
+        if (cp == WordChars.ZWJ.code) return WordChars.isJoiningZwjAt(text, i)
         return isWordCodePoint(cp)
     }
 

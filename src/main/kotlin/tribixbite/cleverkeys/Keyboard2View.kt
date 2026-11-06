@@ -2745,17 +2745,18 @@ internal object TextActionPolicy {
      * A word character is a letter, a digit, or an apostrophe — the apostrophe is included so
      * `don't` and `qu'est` select whole rather than splitting at the elision mark — or a Persian
      * half-space between Arabic-script letters ([WordChars]; `می‌شود` selects whole, and a
-     * half-space just typed before the cursor stays with its word), or a Bangla vowel sign or
-     * hasanta on its letter (`আমি` selects whole).
+     * half-space just typed before the cursor stays with its word), or an Indic vowel sign or
+     * virama on its letter (`আমি`, `किताब` select whole), or a ZWJ inside a Bengali word
+     * (`র‍্যাব` selects whole; a ZWJ just typed before the cursor stays with its word).
      */
     fun wordAtCursor(textBefore: String, textAfter: String): WordSpan {
         var startOffset = textBefore.length
         for (i in textBefore.lastIndex downTo 0) {
             val c = textBefore[i]
-            val inWord = if (c == WordChars.ZWNJ) {
-                WordChars.isZwnjWordCharBeforeCursor(textBefore, i, textAfter)
-            } else {
-                isWordChar(c) || WordChars.isAttachedSpellingMarkAt(textBefore, i)
+            val inWord = when (c) {
+                WordChars.ZWNJ -> WordChars.isZwnjWordCharBeforeCursor(textBefore, i, textAfter)
+                WordChars.ZWJ -> WordChars.isZwjWordCharBeforeCursor(textBefore, i, textAfter)
+                else -> isWordChar(c) || WordChars.isAttachedSpellingMarkAt(textBefore, i)
             }
             if (!inWord) break
             startOffset = i
@@ -2764,10 +2765,10 @@ internal object TextActionPolicy {
         var endOffset = 0
         for (i in textAfter.indices) {
             val c = textAfter[i]
-            val inWord = if (c == WordChars.ZWNJ) {
-                WordChars.isZwnjWordCharAfterCursor(textAfter, i, textBefore)
-            } else {
-                isWordChar(c) || WordChars.isSpellingMarkWordCharAfterCursor(textAfter, i, textBefore)
+            val inWord = when (c) {
+                WordChars.ZWNJ -> WordChars.isZwnjWordCharAfterCursor(textAfter, i, textBefore)
+                WordChars.ZWJ -> WordChars.isZwjWordCharAfterCursor(textAfter, i, textBefore)
+                else -> isWordChar(c) || WordChars.isSpellingMarkWordCharAfterCursor(textAfter, i, textBefore)
             }
             if (!inWord) break
             endOffset = i + 1

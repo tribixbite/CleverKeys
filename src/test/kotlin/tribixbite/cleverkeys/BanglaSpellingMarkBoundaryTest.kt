@@ -11,9 +11,13 @@ import tribixbite.cleverkeys.swipe.UserJoinerPreference
  * A Bengali vowel sign, hasanta, nukta, candrabindu, anusvara or visarga is a combining mark,
  * not a letter, so the `isLetterOrDigit` scanners cut `আমি` into `আম` + `ি`. Every scanner must
  * now agree that a mark on a letter of its script is inside the word, and nothing else may
- * change: a mark with no base, a mark after a Latin letter or a digit, and the marks of other
- * scripts (Persian harakat, Hebrew niqqud, Latin combining accents, Devanagari) keep the
+ * change: a mark with no base, a mark after a Latin letter or a digit, and the marks of
+ * non-Indic scripts (Persian harakat, Hebrew niqqud, Latin combining accents) keep the
  * classification they had. The test words are entries of WM Keyboard's `bn.txt`.
+ *
+ * Since 2026-11-06 Devanagari, Gujarati, Kannada, Tamil and Sinhala get the same rule
+ * ([IndicSpellingMarkBoundaryTest]); the assertions below that pinned Devanagari as UNCHANGED now
+ * pin it whole. ZWJ inside a Bengali word (`র‍্যাব`) is covered at the end of this class.
  */
 class BanglaSpellingMarkBoundaryTest {
 
@@ -21,7 +25,9 @@ class BanglaSpellingMarkBoundaryTest {
     private val kukur = "কুকুর"       // "dog": ু (Mn u-sign) twice
     private val khoma = "ক্ষমা"       // "forgiveness": ক + ্ (hasanta) + ষ, a conjunct
     private val bangla = "বাংলা"      // "Bangla": া ং (anusvara) া
-    private val hindi = "किताब"       // Devanagari: ि is a mark of a script without the rule (yet)
+    private val hindi = "किताब"       // Devanagari "book": ि and ा, marks of a rule script since 2026-11-06
+    private val zwj = "\u200D"
+    private val rab = "র${zwj}্যাব"     // "RAB": র + ZWJ + ্ + য (the ra-phala), া, ব
     private val fathaWord = "كَتَبَ"     // Arabic with harakat (Mn)
     private val decomposedCafe = "café"
 
@@ -47,7 +53,7 @@ class BanglaSpellingMarkBoundaryTest {
 
     @Test
     fun `marks of other scripts keep their old classification`() {
-        assertWithMessage("Devanagari vowel sign").that(WordChars.isWordCharAt(hindi, 1)).isFalse()
+        assertWithMessage("Devanagari vowel sign: now a rule script").that(WordChars.isWordCharAt(hindi, 1)).isTrue()
         assertWithMessage("Arabic fatha").that(WordChars.isWordCharAt(fathaWord, 1)).isFalse()
         assertWithMessage("Latin combining acute").that(WordChars.isWordCharAt(decomposedCafe, 4)).isFalse()
     }
@@ -78,8 +84,8 @@ class BanglaSpellingMarkBoundaryTest {
 
     @Test
     fun `word at cursor is unchanged for other scripts`() {
-        assertWithMessage("Devanagari still splits at its sign")
-            .that(TextActionPolicy.wordAtCursor(hindi, "").backward).isEqualTo(1)
+        assertWithMessage("Devanagari selects whole since 2026-11-06")
+            .that(TextActionPolicy.wordAtCursor(hindi, "").backward).isEqualTo(hindi.length)
         assertWithMessage("apostrophe rule kept").that(TextActionPolicy.wordAtCursor("we don't", "").backward)
             .isEqualTo(5)
     }
@@ -114,9 +120,9 @@ class BanglaSpellingMarkBoundaryTest {
     fun `next-word context is unchanged for other scripts`() {
         assertWithMessage("English apostrophe kept").that(NextWordPredictor.contextFromEditorText("i don't know "))
             .containsExactly("i", "don't", "know").inOrder()
-        assertWithMessage("Devanagari still splits at its sign, as before")
+        assertWithMessage("Devanagari is one token since 2026-11-06")
             .that(NextWordPredictor.contextFromEditorText("$hindi "))
-            .containsExactly("क", "त", "ब").inOrder()
+            .containsExactly(hindi).inOrder()
     }
 
     // ── Shared isWordCharAt callers: emoji search token, swipe-correction joining ─────────
@@ -137,5 +143,63 @@ class BanglaSpellingMarkBoundaryTest {
         assertWithMessage("আমি-তুমি").that(UserJoinerPreference.joinerFree("$ami-তুমি")).isEqualTo("আমিতুমি")
         assertWithMessage("a mark straight after the hyphen has no base")
             .that(UserJoinerPreference.joinerFree("আম-ি")).isNull()
+    }
+
+    // ── ZWJ inside a Bengali word (2026-11-06) ───────────────────────────────────────────
+
+    @Test
+    fun `every character of a Bengali word with a ZWJ is a word character`() {
+        for (i in rab.indices) {
+            assertWithMessage("$rab[$i] U+${"%04X".format(rab[i].code)}")
+                .that(WordChars.isWordCharAt(rab, i)).isTrue()
+        }
+        assertWithMessage("the hasanta finds র across the ZWJ")
+            .that(WordChars.isAttachedSpellingMarkAt(rab, 2)).isTrue()
+    }
+
+    @Test
+    fun `a ZWJ outside a Bengali word is not a word character`() {
+        assertWithMessage("between Latin letters").that(WordChars.isJoiningZwjAt("a${zwj}b", 1)).isFalse()
+        assertWithMessage("emoji sequence").that(WordChars.isWordCharAt("\uD83D\uDC68$zwj\uD83D\uDC69", 2)).isFalse()
+        assertWithMessage("trailing").that(WordChars.isJoiningZwjAt("র$zwj", 1)).isFalse()
+        assertWithMessage("leading").that(WordChars.isJoiningZwjAt("${zwj}র", 0)).isFalse()
+        assertWithMessage("before a space").that(WordChars.isJoiningZwjAt("র$zwj য", 1)).isFalse()
+        assertWithMessage("Bengali then Latin").that(WordChars.isJoiningZwjAt("র${zwj}a", 1)).isFalse()
+        assertWithMessage("after a Bengali digit").that(WordChars.isJoiningZwjAt("১${zwj}্য", 1)).isFalse()
+        assertWithMessage("Devanagari is not a ZWJ script (TODO in WordChars)")
+            .that(WordChars.isJoiningZwjAt("र्${zwj}य", 2)).isFalse()
+        assertWithMessage("edge flag").that(WordChars.hasEdgeZwj("র$zwj")).isTrue()
+        assertWithMessage("inner is not an edge").that(WordChars.hasEdgeZwj(rab)).isFalse()
+    }
+
+    @Test
+    fun `a ZWJ just typed before the cursor stays with its Bengali word`() {
+        assertWithMessage("nothing after").that(WordChars.isZwjWordCharBeforeCursor("র$zwj", 1, "")).isTrue()
+        assertWithMessage("hasanta after").that(WordChars.isZwjWordCharBeforeCursor("র$zwj", 1, "্যাব")).isTrue()
+        assertWithMessage("space after").that(WordChars.isZwjWordCharBeforeCursor("র$zwj", 1, " ")).isTrue()
+        assertWithMessage("Latin letter after").that(WordChars.isZwjWordCharBeforeCursor("র$zwj", 1, "ab")).isFalse()
+        assertWithMessage("after a Latin letter").that(WordChars.isZwjWordCharBeforeCursor("a$zwj", 1, "")).isFalse()
+        assertWithMessage("after the cursor: base from before")
+            .that(WordChars.isZwjWordCharAfterCursor("$zwj্যাব", 0, "র")).isTrue()
+        assertWithMessage("a mark after a ZWJ after the cursor finds its base before it")
+            .that(WordChars.isSpellingMarkWordCharAfterCursor("$zwj্যাব", 1, "র")).isTrue()
+    }
+
+    @Test
+    fun `a Bengali word with a ZWJ is whole at every call site`() {
+        val span = TextActionPolicy.wordAtCursor("$ami র$zwj", "্যাব")
+        assertWithMessage("select: backward র + ZWJ").that(span.backward).isEqualTo(2)
+        assertWithMessage("select: forward ্যাব").that(span.forward).isEqualTo(4)
+        assertWithMessage("next-word token").that(NextWordPredictor.contextFromEditorText("$ami $rab "))
+            .containsExactly(ami, rab).inOrder()
+        val text = "$ami $rab"
+        assertWithMessage("navigation selects the word").that(EditorTextNavigation.wordBounds(text, 6, 6))
+            .isEqualTo(4 until text.length)
+        assertWithMessage("an owned suffix does not split at the ZWJ")
+            .that(VerifiedSuffixEdit.isWordContinuationAt(rab, 1)).isTrue()
+        assertWithMessage("a Latin ZWJ is still no continuation")
+            .that(VerifiedSuffixEdit.isWordContinuationAt("a${zwj}b", 1)).isFalse()
+        assertWithMessage("joiner-free surface drops the ZWJ, keeps the marks")
+            .that(UserJoinerPreference.joinerFree("$rab-x")).isEqualTo("র্যাবx")
     }
 }

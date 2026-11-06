@@ -650,6 +650,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.WordCharsTest',
     // Bangla spelling marks are word characters at every scanner (2026-11-04).
     'tribixbite.cleverkeys.BanglaSpellingMarkBoundaryTest',
+    // Devanagari/Gujarati/Kannada/Tamil/Sinhala marks, danda sentence ends, the fuzzy letters gate (2026-11-06).
+    'tribixbite.cleverkeys.IndicSpellingMarkBoundaryTest',
     'tribixbite.cleverkeys.ArabicScriptFoldTest',
     'tribixbite.cleverkeys.CaseCycleTest',
     'tribixbite.cleverkeys.ProcessTextReturnTest',

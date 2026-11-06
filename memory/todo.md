@@ -562,8 +562,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     KIT (2026-11-04): `ml/rtx-kits/19-bangla-pack/`. A 20,627-word subset of WM Keyboard bn.txt
     (MIT seed + FrequencyWords CC BY-SA 4.0) verified spelling-preserving with
     `build_dictionary.py --keep-script-marks`. WordChars mark fix DONE 2026-11-04 (maintainer
-    approved; kit §3 lists what remains: danda boundary, fuzzy search on marked words, ZWJ,
-    other Indic scripts). Still blocked: the model needs a layout decision (centre keys cover
+    approved); the kit §3 remainder DONE 2026-11-06: danda/double danda sentence end for
+    next-word context AND learning (`WordChars.isSentenceEnd`), fuzzy search + dropped-double
+    gate on marked words (`isSpelledWithLetters`), double-space period after a mark (inserts
+    `. ` like WM Keyboard), Bengali ZWJ (`র‍্যাব`), and Devanagari/Gujarati/Kannada/Tamil/Sinhala
+    marks; then Sinhala/Kannada ZWJ and the danda pulling back over an auto-space. Open TODOs:
+    Devanagari eyelash-ra ZWJ, the Bangla conjunct form of a doubled consonant (`ক্ক`). Still blocked: the model needs a layout decision (centre keys cover
     17–31 % of words); maintainer rule: Bangla questions follow WM Keyboard (native speaker).
 20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar,

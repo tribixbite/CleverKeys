@@ -88,10 +88,11 @@ class SuggestionHandler(
         /**
          * W7: a leading/trailing joiner is punctuation, not part of the word (`kids'` → `kids`).
          * A dangling Persian half-space is trimmed too (`می‌` + space learns `می`): at a word edge
-         * U+200C never joins anything ([WordChars]).
+         * U+200C never joins anything ([WordChars]). The same holds for a dangling Bengali ZWJ
+         * (`র‍` + space learns `র`).
          */
         internal fun trimJoiners(token: String): String =
-            token.trim { isIntraWordJoiner(it) || it == WordChars.ZWNJ }
+            token.trim { isIntraWordJoiner(it) || it == WordChars.ZWNJ || it == WordChars.ZWJ }
 
         /**
          * The Termux package retained for test/editor fixtures; live detection is shared
@@ -1876,14 +1877,16 @@ class SuggestionHandler(
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
                             if (before.isNotEmpty()) {
                                 // A Persian half-space is part of the partial between Arabic
-                                // letters and at the cursor edge, and a Bangla vowel sign or
-                                // hasanta on its letter is part of it too (WordChars).
+                                // letters and at the cursor edge, and an Indic vowel sign or
+                                // virama on its letter, or a ZWJ inside a Bengali word (also at
+                                // the cursor edge), is part of it too (WordChars).
                                 var wordStart = before.length
                                 while (wordStart > 0) {
                                     val c = before[wordStart - 1]
                                     val inWord = c.isLetterOrDigit() || c == '\'' || c == '-' ||
                                         WordChars.isZwnjWordCharBeforeCursor(before, wordStart - 1, null) ||
-                                        WordChars.isAttachedSpellingMarkAt(before, wordStart - 1)
+                                        WordChars.isAttachedSpellingMarkAt(before, wordStart - 1) ||
+                                        WordChars.isZwjWordCharBeforeCursor(before, wordStart - 1, null)
                                     if (!inWord) break
                                     wordStart--
                                 }
@@ -3128,8 +3131,10 @@ class SuggestionHandler(
      */
     private fun editorEndsWithWholeToken(ic: InputConnection?, token: String, suffix: String): Boolean {
         val expected = token + suffix
+        // A few characters beyond the one before the token: an Indic mark there is judged by the
+        // letter it sits on (WordChars), which a 1-character read would cut off.
         val before = try {
-            ic?.getTextBeforeCursor(expected.length + 1, 0)?.toString()
+            ic?.getTextBeforeCursor(expected.length + 1 + WordChars.MARK_BASE_LOOKBACK, 0)?.toString()
         } catch (e: Exception) {
             null
         }
@@ -3137,10 +3142,11 @@ class SuggestionHandler(
         if (!before.endsWith(expected)) return false
         val charIndex = before.length - expected.length - 1
         val charBefore = before.getOrNull(charIndex) ?: return true
-        // A half-space joining an Arabic letter, or a Bangla mark on its letter, before the token
-        // means the token is a word's tail.
+        // A half-space joining an Arabic letter, an Indic mark on its letter or a ZWJ inside a
+        // Bengali word before the token means the token is a word's tail.
         return !charBefore.isLetterOrDigit() && !isIntraWordJoiner(charBefore) &&
-            !WordChars.isJoiningZwnjAt(before, charIndex) && !WordChars.isAttachedSpellingMarkAt(before, charIndex)
+            !WordChars.isJoiningZwnjAt(before, charIndex) && !WordChars.isAttachedSpellingMarkAt(before, charIndex) &&
+            !WordChars.isJoiningZwjAt(before, charIndex)
     }
 
     /**
@@ -3311,11 +3317,27 @@ class SuggestionHandler(
                 pendingTypedWord = contextTracker.getCurrentWord()
                 updatePredictionsForCurrentWord(ic, editorInfo)
             }
-            // Bangla spelling mark (2026-11-04, WordChars): a vowel sign, hasanta, nukta,
-            // candrabindu, anusvara or visarga typed on a letter of its script CONTINUES the word,
-            // so `আম` + `ি` composes `আমি` instead of ending `আম` at a non-letter. A mark with no
-            // composing base (the word was just committed, or the cursor moved) falls through to
-            // the non-letter branch, as before.
+            // ZWJ inside a Bengali word (2026-11-06, WordChars): U+200D typed after a Bengali
+            // letter continues the word, so র + ZWJ + ্ + য composes `র‍্য` (the ra-phala of
+            // `র‍্যাব`) instead of ending `র` at a non-letter. The hasanta that follows finds র as
+            // its base across the ZWJ (branch below). Any other ZWJ (an emoji sequence, a Latin
+            // word) falls to the non-letter branch and ends the word, as before.
+            text.length == 1 && text[0] == WordChars.ZWJ &&
+                WordChars.isComposingZwj(
+                    WordChars.baseCharBefore(contextTracker.getCurrentWord(), contextTracker.getCurrentWordLength()),
+                    null
+                ) -> {
+                nextWordSuggestionsActive = false
+                contextTracker.appendToCurrentWord(text)
+                pendingTypedWord = contextTracker.getCurrentWord()
+                updatePredictionsForCurrentWord(ic, editorInfo)
+            }
+            // Indic spelling mark (Bangla 2026-11-04; Devanagari, Gujarati, Kannada, Tamil and
+            // Sinhala 2026-11-06, WordChars): a vowel sign, virama, nukta, candrabindu, anusvara
+            // or visarga typed on a letter of its script CONTINUES the word, so `আম` + `ি`
+            // composes `আমি` instead of ending `আম` at a non-letter. A mark with no composing
+            // base (the word was just committed, or the cursor moved) falls through to the
+            // non-letter branch, as before.
             text.length == 1 && WordChars.isSpellingMark(text[0]) &&
                 contextTracker.getCurrentWordLength() > 0 &&
                 WordChars.isAttachedSpellingMarkAt(contextTracker.getCurrentWord() + text, contextTracker.getCurrentWordLength()) -> {
@@ -3571,11 +3593,13 @@ class SuggestionHandler(
                     }
                 }
 
-                // Sentence boundary (audit 2026-08-06 §4.6): after `.` `?` `!` the
-                // learned-context window resets so recordSequence never learns
-                // bigrams spanning a sentence boundary (noise for both context
-                // boosting and next-word generation).
-                if (text[0] == '.' || text[0] == '?' || text[0] == '!') {
+                // Sentence boundary (audit 2026-08-06 §4.6): after `.` `?` `!` — and the danda
+                // `।` / double danda `॥` (2026-11-06) — the learned-context window resets so
+                // recordSequence never learns bigrams spanning a sentence boundary (noise for
+                // both context boosting and next-word generation). WordChars.isSentenceEnd is
+                // the predicate NextWordPredictor.contextFromEditorText segments by, so the
+                // learned and the editor-derived context agree.
+                if (WordChars.isSentenceEnd(text[0])) {
                     predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
                     // No word can answer a swipe undo across a sentence end; a kept re-swipe settles.
                     swipeOffer = swipeOffer ?: noteSwipeCorrectionBoundary(editorInfo)
@@ -3595,7 +3619,7 @@ class SuggestionHandler(
                 // space or sentence end, one deferred from a moment the bar could not show it.
                 // (Not after other characters: a digit or a comma mid-token is no idle moment.)
                 val offerNow = swipeOffer
-                    ?: if (text == " " || text[0] == '.' || text[0] == '?' || text[0] == '!') {
+                    ?: if (text == " " || WordChars.isSentenceEnd(text[0])) {
                         takeDeferredSwipeOffer(editorInfo)
                     } else {
                         null

@@ -118,7 +118,8 @@ class SmartAutoSpaceLogicTest {
 
     @Test
     fun `closer set matches spec`() {
-        for (closer in listOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '”', '’', '…', '\'')) {
+        // The danda and double danda close a Bengali / Devanagari sentence like '.' (WM Keyboard).
+        for (closer in listOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '”', '’', '…', '\'', '।', '॥')) {
             assertThat(SmartAutoSpace.isClosingPunctuation(closer)).isTrue()
         }
     }

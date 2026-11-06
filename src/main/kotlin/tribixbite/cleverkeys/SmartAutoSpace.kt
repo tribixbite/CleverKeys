@@ -35,9 +35,14 @@ object SmartAutoSpace {
      * path (the char before the cursor is a letter, not the pending space),
      * so an apostrophe typed right after an auto-space is a possessive or
      * closing quote in virtually all real input (`kids ` + `'` → `kids'`).
+     *
+     * The danda `।` and double danda `॥` (Bengali and Devanagari full stops, the sentence ends of
+     * `WordChars.isSentenceEnd`) close a sentence like `.`: `আমি ` + `।` → `আমি।`. WM Keyboard
+     * (maintained by a native Bangla speaker) lists `।` among the characters its auto-space
+     * pulls back onto the word (2026-11-06).
      */
     private val CLOSING_PUNCTUATION =
-        setOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '”', '’', '…', '\'')
+        setOf('.', ',', ';', ':', '!', '?', ')', ']', '}', '”', '’', '…', '\'', '।', '॥')
 
     /**
      * Feature A: is [prevChar] (the char immediately before the insertion

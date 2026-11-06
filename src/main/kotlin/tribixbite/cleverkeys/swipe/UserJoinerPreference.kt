@@ -92,8 +92,10 @@ object UserJoinerPreference {
         val lower = word.lowercase(Locale.ROOT)
         for (i in lower.indices) {
             val ch = lower[i]
-            if (ch in JOINERS || WordChars.isJoiningZwnjAt(lower, i)) continue
-            // A Bangla vowel sign or hasanta on its letter is spelling, not a joiner (WordChars).
+            // A ZWJ inside a Bengali word (`র‍্যাব`) is dropped like a joining half-space: no
+            // engine spells a default-ignorable joiner (LayoutProjection skips U+200D too).
+            if (ch in JOINERS || WordChars.isJoiningZwnjAt(lower, i) || WordChars.isJoiningZwjAt(lower, i)) continue
+            // An Indic vowel sign or virama on its letter is spelling, not a joiner (WordChars).
             if (!ch.isLetter() && !WordChars.isAttachedSpellingMarkAt(lower, i)) return null
             sb.append(ch)
         }

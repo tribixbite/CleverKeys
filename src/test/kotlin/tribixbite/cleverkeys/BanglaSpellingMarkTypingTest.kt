@@ -19,6 +19,8 @@ import org.junit.Before
 import org.junit.Test
 import org.objenesis.ObjenesisStd
 import tribixbite.cleverkeys.autocorrect.AutocorrectMemo
+import tribixbite.cleverkeys.autocorrect.AutocorrectRanking
+import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
 import tribixbite.cleverkeys.autocorrect.KeyAdjacency
 import java.util.concurrent.ConcurrentHashMap
@@ -38,6 +40,11 @@ import java.util.concurrent.atomic.AtomicReference
  * space; cursor-sync composes across marks and keeps them (it stores the raw editor text); a
  * bare mark with no composing base does not join the previous word.
  *
+ * Added 2026-11-06: a one-key typo of a marked word gets a typo-tolerant suggestion (the
+ * `all { isLetter() }` gate skipped it), a doubled vowel sign collapses and a dropped doubled
+ * letter is restored on a marked word, a ZWJ inside a Bengali word composes `র‍্যাব`, and the
+ * danda `।` closes the learning window exactly as `.` does.
+ *
  * Pure-JVM call-site coverage is [BanglaSpellingMarkBoundaryTest].
  */
 class BanglaSpellingMarkTypingTest {
@@ -46,6 +53,8 @@ class BanglaSpellingMarkTypingTest {
     private val ami = "আমি"
     private val kukur = "কুকুর"
     private val khoma = "ক্ষমা"
+    private val rab = "র\u200D্যাব"   // র + ZWJ + ্ + য (ra-phala), া, ব
+    private val lolit = "ললিত"         // "graceful": a genuinely doubled letter, then ি
 
     private lateinit var config: Config
     private lateinit var tracker: PredictionContextTracker
@@ -91,7 +100,10 @@ class BanglaSpellingMarkTypingTest {
 
         tracker = PredictionContextTracker()
         predictor = banglaPredictor(
-            mapOf(ami to 900_000, "আমার" to 850_000, kukur to 600_000, khoma to 500_000, "কথা" to 700_000)
+            mapOf(
+                ami to 900_000, "আমার" to 850_000, kukur to 600_000, khoma to 500_000, "কথা" to 700_000,
+                rab to 400_000, lolit to 300_000,
+            )
         )
         val coordinator = mockk<PredictionCoordinator>(relaxed = true)
         every { coordinator.getWordPredictor() } returns predictor
@@ -265,6 +277,71 @@ class BanglaSpellingMarkTypingTest {
         syncAt("আম", "ি")
         assertWithMessage("a sign right after the cursor is the word's suffix")
             .that(tracker.getCurrentWordSuffix()).isEqualTo("ি")
+    }
+
+    // ------------------------------------------------------------------ typo tolerance (2026-11-06)
+
+    @Test
+    fun aOneLetterTypoOfAMarkedWordGetsAFuzzySuggestion() {
+        type("কুকুল", field()) // ল for র: a substitution in the last letter
+        runPredictions()
+        assertWithMessage("কুকুল offers কুকুর").that(posts.last().first).contains(kukur)
+    }
+
+    @Test
+    fun aMarkTypoIsAnOrdinaryEdit() {
+        type("কাকুর", field()) // া for ু: the vowel sign is a character like any other
+        runPredictions()
+        assertWithMessage("কাকুর offers কুকুর").that(posts.last().first).contains(kukur)
+    }
+
+    @Test
+    fun aDoubledVowelSignCollapses() {
+        assertWithMessage("আমিি → আমি (key repeat on the sign)").that(predictor.autoCorrect("আমিি")).isEqualTo(ami)
+    }
+
+    @Test
+    fun aDroppedDoubledLetterIsRestoredInAMarkedWord() {
+        val band = AutocorrectTuning.DEFAULT.copy(ranking = AutocorrectRanking.BAND)
+        assertWithMessage("লিত → ললিত (step 1.45, band ranking)").that(predictor.autoCorrect("লিত", band)).isEqualTo(lolit)
+    }
+
+    // ------------------------------------------------------------------ ZWJ (2026-11-06)
+
+    @Test
+    fun aZwjInsideABengaliWordContinuesIt() {
+        type(rab, field())
+        assertWithMessage("র + ZWJ + ্ + য + া + ব is one composing word").that(tracker.getCurrentWord()).isEqualTo(rab)
+        type(" ", field())
+        assertWithMessage("space keeps it as typed").that(editor.toString()).isEqualTo("$rab ")
+        assertWithMessage("learned whole").that(recentWords()).containsExactly(rab)
+    }
+
+    @Test
+    fun aZwjAfterALatinLetterStillEndsTheWord() {
+        type("ab\u200D", field())
+        assertWithMessage("nothing composes after a Latin ZWJ").that(tracker.getCurrentWord()).isEmpty()
+    }
+
+    // ------------------------------------------------------------------ danda (2026-11-06)
+
+    @Test
+    fun theDandaClosesTheLearningWindow() {
+        type("$ami $kukur।", field())
+        assertWithMessage("no bigram spans the danda: the window is empty").that(recentWords()).isEmpty()
+    }
+
+    @Test
+    fun aCommaDoesNotCloseTheLearningWindow() {
+        type("$ami $kukur,", field())
+        assertWithMessage("control: both words stay in the window").that(recentWords()).containsExactly(ami, kukur).inOrder()
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun recentWords(): List<String> {
+        val f = WordPredictor::class.java.getDeclaredField("recentWords")
+        f.isAccessible = true
+        return (f.get(predictor) as List<String>).toList()
     }
 
     private fun Any.setField(name: String, value: Any?) {

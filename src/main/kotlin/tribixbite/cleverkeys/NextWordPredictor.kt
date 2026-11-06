@@ -375,7 +375,8 @@ object NextWordPredictor {
      * the cursor instead of this session's committed-word history.
      *
      * Rules (kept consistent with the learn path):
-     * - Only the segment AFTER the last sentence-final punctuation (`.` `?` `!`)
+     * - Only the segment AFTER the last sentence-final punctuation (`.` `?` `!`,
+     *   the danda `।` and double danda `॥`: [WordChars.isSentenceEnd])
      *   or line break is considered — mirrors `WordPredictor.onSentenceBoundary`'s
      *   contract that learned context never spans a sentence boundary. Parking
      *   right after a sentence end therefore yields an EMPTY context (show
@@ -400,11 +401,13 @@ object NextWordPredictor {
     ): List<String> {
         if (maxWords <= 0) return emptyList()
 
-        // Start of the segment after the last sentence boundary.
+        // Start of the segment after the last sentence boundary. WordChars.isSentenceEnd is the
+        // same predicate the learn path (SuggestionHandler → onSentenceBoundary) uses, so the
+        // danda `।` / double danda `॥` end a Bangla or Hindi sentence here exactly as `.` does.
         var segmentStart = 0
         for (i in textBeforeCursor.indices) {
             val c = textBeforeCursor[i]
-            if (c == '.' || c == '?' || c == '!' || c == '\n') segmentStart = i + 1
+            if (WordChars.isSentenceEnd(c) || c == '\n') segmentStart = i + 1
         }
 
         val tokens = ArrayList<String>()
@@ -418,10 +421,11 @@ object NextWordPredictor {
         for (i in segmentStart until textBeforeCursor.length) {
             val c = textBeforeCursor[i]
             // A Persian half-space between Arabic-script letters stays inside the token
-            // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before. A Bangla
-            // vowel sign or hasanta on its letter stays inside it too (`আমি`, `ক্ষমা`).
+            // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before. An Indic
+            // vowel sign or virama on its letter stays inside it too (`আমি`, `ক্ষমা`, `किताब`), and
+            // so does a ZWJ inside a Bengali word (`র‍্যাব`).
             if (c.isLetter() || c == '\'' || c == '-' || WordChars.isJoiningZwnjAt(textBeforeCursor, i) ||
-                WordChars.isAttachedSpellingMarkAt(textBeforeCursor, i)
+                WordChars.isAttachedSpellingMarkAt(textBeforeCursor, i) || WordChars.isJoiningZwjAt(textBeforeCursor, i)
             ) {
                 current.append(c)
             } else {

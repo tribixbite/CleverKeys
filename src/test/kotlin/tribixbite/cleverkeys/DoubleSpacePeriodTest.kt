@@ -127,4 +127,29 @@ class DoubleSpacePeriodTest {
         assertWithMessage("non-alphanumeric before the first space must not trigger a period")
             .that(text.toString()).isEqualTo("hi,  ")
     }
+
+    /**
+     * 2026-11-06 (kit 19 §3): a word ending in an Indic vowel sign or virama ends like a word
+     * ending in a letter. The guard read 2 characters, so the mark had no base in view and the
+     * double space stayed two spaces. ". " is inserted in every script, as WM Keyboard does.
+     */
+    @Test
+    fun doubleSpaceAfterAWordEndingInAMarkProducesPeriod() {
+        for (word in listOf("আমি", "তুমি", "தமிழ்", "किताबें")) {
+            text.setLength(0)
+            text.append(word)
+            type(' ')
+            type(' ')
+            assertWithMessage("$word + double space").that(text.toString()).isEqualTo("$word. ")
+        }
+    }
+
+    @Test
+    fun doubleSpaceAfterABareMarkStillDeclines() {
+        // A vowel sign with no letter before it (after a space) is no word end.
+        text.append("a ি")
+        type(' ')
+        type(' ')
+        assertWithMessage("an unattached mark is not a word").that(text.toString()).isEqualTo("a ি  ")
+    }
 }

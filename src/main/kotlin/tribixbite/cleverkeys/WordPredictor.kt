@@ -2859,7 +2859,9 @@ class WordPredictor : Predictor {
     @Volatile private var fuzzyAlphabetIndexSize: Int = -1
 
     /**
-     * Should the typo-tolerant search run for [seq]? Only for all-letter input whose length
+     * Should the typo-tolerant search run for [seq]? Only for all-letter input (letters plus the
+     * Indic spelling marks on them and a ZWJ inside a Bengali word, [WordChars.isSpelledWithLetters],
+     * so a one-key typo of `কুকুর` or `किताब` gets fuzzy completion like a Latin word) whose length
      * [FuzzyPrefixMatcher.budgetFor] allows (3..24 letters), and only when the exact results
      * cannot fill the bar ([exactCount] < [MAX_PREDICTIONS_TYPING]) or even the most frequent
      * of them ([bestExactFrequency]) is outside the dictionary's top
@@ -2869,7 +2871,7 @@ class WordPredictor : Predictor {
      */
     private fun shouldSearchFuzzy(seq: String, exactCount: Int, bestExactFrequency: Int): Boolean {
         if (FuzzyPrefixMatcher.budgetFor(seq.length) <= 0f) return false
-        if (!seq.all { it.isLetter() }) return false
+        if (!WordChars.isSpelledWithLetters(seq)) return false
         if (exactCount < MAX_PREDICTIONS_TYPING) return true
         return bestExactFrequency < strongExactFrequency(dictionary.get())
     }
@@ -3186,6 +3188,8 @@ class WordPredictor : Predictor {
 
         // A dangling Persian half-space (`می‌` + space) is never part of a word: nothing to correct.
         if (WordChars.hasEdgeZwnj(typedWord)) return typedWord
+        // Likewise a dangling Bengali ZWJ (`র‍` + space): an unfinished ra-phala, not a typo.
+        if (WordChars.hasEdgeZwj(typedWord)) return typedWord
 
         // Lowercase + the language's Arabic-script lookup fold (fa/ckb; identity elsewhere). The
         // fold is length-preserving, so typedWord indices stay valid; a word whose folded key is
@@ -3254,8 +3258,10 @@ class WordPredictor : Predictor {
             var collapseBest: String? = null
             var collapseBestFreq = -1
             for (i in 0 until lowerTypedWord.length - 1) {
+                // A doubled letter, or a doubled Indic vowel sign/virama on its letter (`আমিি`:
+                // the same key repeat on a mark key; WordChars) — never a doubled digit/symbol.
                 if (lowerTypedWord[i] != lowerTypedWord[i + 1] ||
-                    !lowerTypedWord[i].isLetter()
+                    !(lowerTypedWord[i].isLetter() || WordChars.isAttachedSpellingMarkAt(lowerTypedWord, i))
                 ) continue
                 val collapsed = lowerTypedWord.removeRange(i, i + 1)
                 val freq = dict[collapsed] ?: continue
@@ -3913,17 +3919,22 @@ class WordPredictor : Predictor {
      * Step 1.45 candidate: the most frequent dictionary word made by doubling one
      * letter of [lowerTypedWord] in place ("helo" → "hello"), or null. Same gates
      * as the step-1.4 collapse (typed length above `autocorrect_min_word_length`,
-     * `autocorrect_max_length_diff >= 1`); letters-only input; disabled words are
-     * never offered; the frequency floor applies except to the user's own words.
+     * `autocorrect_max_length_diff >= 1`); letters-only input ([WordChars.isSpelledWithLetters]:
+     * Indic spelling marks on their letters count as letters, so a Bangla word is not skipped);
+     * disabled words are never offered; the frequency floor applies except to the user's own
+     * words. Only a LETTER is doubled: a doubled vowel sign or virama is never a spelling.
+     * TODO: a Bangla doubled consonant is a conjunct (`ক্ক`, letter + hasanta + letter), not a
+     * repeated letter; offering `পাকা` → `পাক্কা` needs its own insertion rule and an eval.
      */
     private fun droppedDoubleTarget(lowerTypedWord: String, dict: Map<String, Int>, frequencyFloor: Int): String? {
         if (lowerTypedWord.length <= (config?.autocorrect_min_word_length ?: Defaults.AUTOCORRECT_MIN_WORD_LENGTH) ||
             (config?.autocorrect_max_length_diff ?: Defaults.AUTOCORRECT_MAX_LENGTH_DIFF) < 1 ||
-            !lowerTypedWord.all { it.isLetter() }
+            !WordChars.isSpelledWithLetters(lowerTypedWord)
         ) return null
         var best: String? = null
         var bestFreq = -1
         for (i in lowerTypedWord.indices) {
+            if (!lowerTypedWord[i].isLetter()) continue
             val inserted = StringBuilder(lowerTypedWord).insert(i, lowerTypedWord[i]).toString()
             val freq = dict[inserted] ?: continue
             if (disabledWords.isNotEmpty() && isWordDisabled(inserted)) continue

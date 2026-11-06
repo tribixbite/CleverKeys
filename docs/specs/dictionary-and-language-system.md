@@ -384,7 +384,7 @@ characters on both sides (combining marks skipped) are Arabic-script letters
 character before the cursor, after an Arabic-script letter, belongs to the word when the first
 character after the cursor is an Arabic-script letter, a non-letter/digit, or absent (`می‌|`).
 Everything else — Latin/Cyrillic/Greek/Hebrew/Indic/Sinhala ZWNJ, edges, digits, Arabic next
-to Latin — is a boundary. U+200D is not covered. Call sites (each keeps its own base rule and
+to Latin — is a boundary. U+200D has its own Bengali-only rule (section below). Call sites (each keeps its own base rule and
 ORs the half-space clause in): `TextActionPolicy.wordAtCursor`, `PredictionContextTracker`
 prefix/suffix extraction, `EditorTextNavigation.isWordAt/isWordBefore`,
 `VerifiedSuffixEdit.isWordContinuationAt`, `NextWordPredictor.contextFromEditorText`,
@@ -442,3 +442,66 @@ autocorrect. `PredictionContextTracker.normalizeForPrediction` no longer runs NF
 Arabic-script characters (NFD turned ۀ into Kurdish ە + hamza and stripped hamza/madda from
 أ ؤ ئ آ); it applies the fold and drops harakat. The `fa` pack builder applies the same `fa`
 table (the shipped `langpack-fa.zip` has 0 of the six variant letters).
+
+## Indic spelling marks, Bengali ZWJ and the danda (2026-11-04, 2026-11-06)
+
+Kit `ml/rtx-kits/19-bangla-pack/README.md` §3; maintainer rule: Bangla questions follow WM
+Keyboard (maintained by a native speaker).
+
+### Word characters — `WordChars`
+
+- **Spelling marks.** A combining mark (Mn/Mc/Me) of a `SPELLING_MARK_SCRIPTS` script is a word
+  character when its nearest base (other marks skipped) is a letter of the same script:
+  `isAttachedSpellingMarkAt`, `isSpellingMarkWordCharAfterCursor`. Scripts: Bengali
+  (2026-11-04) and Devanagari, Gujarati, Kannada, Tamil, Sinhala (2026-11-06) — every Indic
+  script with a layout in `srcs/layouts`. Gurmukhi, Oriya, Telugu and Malayalam have none and are
+  not in the set. Persian harakat, Hebrew niqqud and Latin combining accents are unchanged.
+  WM Keyboard's `WordContext.isWordChar` treats every combining mark as part of a word.
+- **ZWJ (Bengali only).** U+200D is a word character when the base before it (marks skipped) is
+  a Bengali letter and the next character is a Bengali letter or mark (`র‍্যাব` = র ZWJ ্ য া ব);
+  at the cursor edge a just-typed ZWJ stays with its word (`isZwjWordCharBeforeCursor`), and a
+  spelling mark after it finds its base across it. Emoji ZWJ sequences, Latin and edge ZWJ are
+  untouched; a dangling ZWJ is trimmed from the learned token and the word is not autocorrected.
+  WM Keyboard lists ZWJ in `WordContext.WORD_JOINERS`. `ZWJ_JOINING_SCRIPTS` = Bengali, Sinhala,
+  Kannada (both latter layouts carry a ZWJ key; Unicode spells Sinhala's rakaransaya/yansaya as
+  virama + ZWJ, `ශ්‍රී`). TODO: Devanagari's eyelash ra (no ZWJ key on the shipped layout).
+  The danda and double danda are closing punctuation for the automatic space
+  (`SmartAutoSpace`, `আমি ` + `।` → `আমি।`), as in WM Keyboard.
+- **Call sites** (each ORs the clauses into its own base rule): `isWordCharAt` (double-space
+  period, `EmojiSearchManager`, `SwipeCorrectionTracker`), `TextActionPolicy.wordAtCursor`,
+  `NextWordPredictor.contextFromEditorText`, `SuggestionHandler` (typing branches, #78 editor
+  scan, `editorEndsWithWholeToken`, `trimJoiners`), `EditorTextNavigation.isWordAt/isWordBefore`,
+  `VerifiedSuffixEdit.isWordContinuationAt`, `UserJoinerPreference.joinerFree` (drops a joining
+  ZWJ, keeps marks). `PredictionContextTracker` cursor sync already kept marks and ZWJ (they are
+  not in its boundary set). Short editor reads add `WordChars.MARK_BASE_LOOKBACK` (8) characters
+  so a mark's base is in view.
+
+### Sentence ends — `WordChars.isSentenceEnd`
+
+`.` `?` `!`, the danda `।` (U+0964) and the double danda `॥` (U+0965). ONE predicate for both
+next-word context (`contextFromEditorText` segments after the last one) and the learning window
+(`SuggestionHandler` calls `WordPredictor.onSentenceBoundary` when one is typed), so learned and
+editor-derived context agree. WM Keyboard's `SENTENCE_ENDERS` is `. ! ? ।`; `॥` is added here as
+the verse/paragraph end. Autocapitalisation is not given the danda (the Indic scripts have no
+letter case; it would be a no-op).
+
+### Typo tolerance
+
+`WordChars.isSpelledWithLetters` (letters, attached spelling marks, joining Bengali ZWJ) replaces
+`all { isLetter() }` in `WordPredictor.shouldSearchFuzzy` and the step-1.45 dropped-double gate,
+so a one-key typo of `কুকুর` gets a fuzzy suggestion. It is exactly `all { isLetter() }` for every
+other word (a Persian half-space word still skips the fuzzy search). Marks are ordinary
+characters to `FuzzyPrefixMatcher` (no adjacency for Indic layouts: every substitution costs a
+full edit; `AccentNormalizer` folds only U+0300–036F, so a decomposable sign such as `ো` = `ে`+`া`
+meets `ে` at the accent-variant cost). Step 1.4 also collapses a doubled attached mark
+(`আমিি` → `আমি`); step 1.45 only doubles letters. TODO: a Bangla doubled consonant is a conjunct
+(`ক্ক`), which step 1.45 does not model.
+
+### Double-space period
+
+A word ending in an attached mark ends like one ending in a letter: `আমি` + two spaces → `আমি. `.
+The inserted text stays `. ` in every script, as WM Keyboard's `doubleSpacePeriod` rule does (its
+danda is a key of its own).
+
+Tests: `BanglaSpellingMarkBoundaryTest`, `IndicSpellingMarkBoundaryTest` (pure),
+`BanglaSpellingMarkTypingTest`, `DoubleSpacePeriodTest` (mock).
