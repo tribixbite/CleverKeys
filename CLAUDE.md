@@ -99,6 +99,10 @@ app never has. Use `--tokens-per-s 6.5` (the app's per-pass decode cap; without 
 20 s) and `--max-segment 20` for long clips. Moonshine's frontend rejects chunks < 80 samples;
 both sides pad them. ORT's CPU EP with the arena off ran the official decoder 2–2.5× slower;
 compare latencies only within one series, with the EP and arena recorded.
+The app now runs the arena ON; never XNNPACK for the voice engine: ORT 1.21's XNNPACK allocator
+is ONE process-wide BFC arena (`GetStoredAllocator`), deaf to `setCPUArenaAllocator(false)` and
+never freed, so closing the engine left 274–540 MB in the process. Check leaks with
+`Debug.getNativeHeapAllocatedSize()` after close, not RSS (RSS swings ±50 MB with freed pages).
 
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 
