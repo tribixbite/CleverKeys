@@ -1176,8 +1176,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    long-period check"); XNNPACK REJECTED (ORT 1.21's process-wide XNNPACK arena keeps 274–540 MB
    after the engine closes); the engine now runs the CPU EP with the arena ON (as fast as XNNPACK,
    flat over 12 min, freed on the 60 s idle release); checked in the keyboard on `.144` with small.
-   Still open: (a) DEVICE: tiny through the microphone with the arena on, and a low-RAM phone
-   (keyboard RSS while dictating with small is now up to 840 MB on a Saga).
+   2026-11-05 night: `.1.130` re-run in its new sound box (tiny 28/28, small 12/15 errors in 228
+   words) and the keyboard's memory measured with and without dictation (research §6.7.1): voice
+   unused PSS 140–152 MB; dictating 330–460 (tiny) / 553–731 MB (small); after the idle release
+   ~90 MB of freed native memory stays with the allocator (not a leak; live bytes at baseline).
+   Still open: (a) DEVICE: a low-RAM phone (keyboard RSS while dictating with small is up to
+   843 MB on a Saga); optional: whether the ~90 MB retained after release is worth a JNI purge.
    (b) DEVICE: a person's voice and a noisy room for small; the Pixel (busy on 11-05).
    (c) Pack choice → item 33.
 33. [ ] agent (2.1): pack library — several dictionary and voice packs per language, a per-language

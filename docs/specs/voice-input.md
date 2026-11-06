@@ -396,6 +396,12 @@ Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.
   689–840 MB (459–698 MB with the arena off); 60 s after the session ended the engine was released
   and the keyboard fell to 480 / 510 MB (529 MB after the arena-off runs). Tiny was not re-run
   through the microphone (same code path; benchmark only). Restored afterwards.
+- Saga `.1.130`, now in a sound box like `.144`'s (release build, arena on, speaker 18/25): tiny 28
+  and 28 errors in 228 words, small 12 and 15 (45/41 and 23/22 before the box); lag median
+  0.77–0.95 s. Keyboard memory: PSS 140–152 MB / RSS 250–263 MB with voice unused; dictating PSS
+  330–460 (tiny) / 553–731 MB (small); after the idle release PSS 237–261 MB — the extra ~90 MB is
+  freed native memory the allocator keeps (live native bytes back at baseline; research §6.7.1).
+  Restored afterwards (packs removed, voice off, microphone revoked, volume 9).
 
 ## Testing Strategy
 

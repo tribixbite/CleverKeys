@@ -908,6 +908,28 @@ benchmarks; pinned by `MoonshineV2StreamingEngineTest.keyboardDefaultIsTheCpuAre
 XNNPACK stays a benchmark-only hint until ORT frees its allocator (not fixed upstream as of
 2026-11; ORT #32461/#32489 fixed a race in the same allocator's creation, not its lifetime).
 
+**Saga `.1.130` with a sound box (2026-11-05 night)**: the phone now sits in an enclosure like
+`.144`'s. Release build with the arena on, speaker 18/25 (raised with Volume Up keys), same
+228-word clips, two runs per pack: tiny 28 and 28 errors (12.3 %; 45/41 before the box at
+25/25), small 12 and 15 (5.3 / 6.6 %; 23/22 before); lag median tiny 0.83 / 0.77 s, small
+0.85 / 0.95 s (max 1.60 s). The engine benchmark was not re-run: it feeds WAV files straight
+into the engine, so the enclosure cannot change it.
+
+**Keyboard process memory, release build** (`dumpsys meminfo tribixbite.cleverkeys`, `.1.130`):
+
+| state | PSS | RSS | native heap (dirty / live) |
+|---|---|---|---|
+| keyboard open, typing and swiping, voice never used since start | 140–152 MB | 250–263 MB | 37 / 42 MB |
+| dictating, tiny | 330–460 MB | 441–572 MB | — |
+| dictating, small (`.144`: PSS 498–721, RSS 602–820) | 553–731 MB | 665–843 MB | — |
+| 75 s+ after the session (engine released), tiny | 237–247 MB | 352–361 MB | 130 / 41 MB |
+| 75 s+ after, small | 261 MB | 376 MB | 121 / 42 MB |
+
+After the release the live native bytes are back at baseline (41–42 MB), so nothing leaks; the
+~85–95 MB of extra dirty native heap is memory the native allocator freed but has not returned
+to the kernel, and it did not drain over 3.5 min. Java heap also sat ~30 MB higher (not yet
+collected). The app has no JNI of its own to ask the allocator to purge (`mallopt(M_PURGE)`).
+
 ---
 
 ## 7. Conclusions
