@@ -141,7 +141,8 @@ graphs, ~112 MB steady RSS with the ORT arena off).
 
 ### Non-Functional Requirements
 1. **NFR-1** Performance: ≤ 1 s chunks (1.0 s chunks proved the floor for two-pass agreement),
-   decoding off the main thread, ORT arena disabled for the streaming sessions, intra-op threads
+   decoding off the main thread, CPU EP with ORT's arena ON for the streaming sessions (since
+   2026-11-05; it is freed when the idle engine is released; XNNPACK is not used, research §6.7.1), intra-op threads
    2. Session load from `.ort` files (0.3–0.8 s measured on the JVM).
 2. **NFR-2** Privacy: no audio file is written; PCM lives in memory for the session only; the
    app has no network permission.
@@ -381,6 +382,21 @@ Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.
   the two Sagas and the Pixel.
 - Found: Settings → Remove deletes a voice pack without a confirmation.
 
+### Engine setting, long-period check (2026-11-05 evening, research §6.7.1)
+- Both Sagas, `VoiceEngineDeviceBenchmark` with 6 rounds (12 min of audio), 20 reloads and
+  14–19 s utterances: the CPU EP with the arena ON is as fast as XNNPACK (small 218–303 vs
+  360–462 ms per pass with it off; 0–2 vs 4–9 passes over 1 s), uses less CPU per second of audio,
+  stays flat over the rounds and leaves 6–11 MB of native heap after close. XNNPACK leaves 274 MB
+  (tiny) / 540 MB (small) after close for the life of the process (ORT 1.21's process-wide XNNPACK
+  arena). Errors identical in every setting. The engine now defaults to the arena on.
+- In the keyboard (release build, Saga `.144`, small, speaker 18/25): the log reads
+  `CPU EP, 2 threads, arena on`; 14 and 10 errors in 228 words (10 and 9 with the arena off on
+  11-05; the benchmark text is identical for both settings, so this is speaker → microphone
+  variance); lag median 0.79 / 0.83 s, max 1.37 / 1.24 s; keyboard RSS while listening 617–739 /
+  689–840 MB (459–698 MB with the arena off); 60 s after the session ended the engine was released
+  and the keyboard fell to 480 / 510 MB (529 MB after the arena-off runs). Tiny was not re-run
+  through the microphone (same code path; benchmark only). Restored afterwards.
+
 ## Testing Strategy
 
 ### Unit Tests (pure, `runPureTests`)
@@ -473,8 +489,9 @@ ten further test-clean clips in `~/.cache/cleverkeys-test/voice-samples-long/` o
 4. Two packs for one language (tiny + the optional small): today the first by name is used and
    the user removes one to switch (2026-11-05). Roadmap: a per-language pack choice for voice AND
    dictionary packs (`docs/plans/2026-10-05-recommended-features-and-gaps.md` §3.2, target 2.1).
-5. Engine setting: XNNPACK (or the arena on) takes ~40 % off every pass on a Saga (research §6.7);
-   switch after a long-period RSS check on a phone (maintainer).
+5. ~~Engine setting~~ DECIDED 2026-11-05 (research §6.7.1): the CPU EP with the arena ON (1.6–2×
+   faster per pass, less CPU, flat RSS over 12 min, freed on release). XNNPACK is equally fast
+   but ORT 1.21's XNNPACK allocator is a process-wide arena that keeps 274–540 MB after close.
 
 ## Future Enhancements
 - A model VAD (Silero, as the official runtime) carried by the pack, if the energy VAD proves

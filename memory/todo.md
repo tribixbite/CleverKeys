@@ -1170,10 +1170,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    `192.168.0.144` (research §6.7, spec "Device test 2026-11-05"): engine pass median 387 ms (tiny
    168) as shipped; real microphone 9–10 vs 18–19 errors in 228 words, lag 0.84 vs 0.75 s, keyboard
    RSS 459–698 vs 324–522 MB. ACFT small.en quantisations: none worth pursuing (§6.5.6).
-   Still open: (a) MAINTAINER: switch the Moonshine session to XNNPACK (or the arena on) — 1.7–1.8×
-   faster per pass on both Sagas for both packs (XNNPACK is CPU code in the shipped ORT for every
-   ABI, so every phone has it) — after a long-period RSS check on a phone. Android 14 Saga
-   `.1.130` confirmed the same (small 23/22 vs tiny 45/41 errors through its speaker at 25/25).
+   Android 14 Saga `.1.130` confirmed the same (small 23/22 vs tiny 45/41 errors through its
+   speaker at 25/25). DONE 2026-11-05 evening (maintainer: "do the rss check … if no reason not to
+   switch then switch"): long-period check on both Sagas (research §6.7.1, spec "Engine setting,
+   long-period check"); XNNPACK REJECTED (ORT 1.21's process-wide XNNPACK arena keeps 274–540 MB
+   after the engine closes); the engine now runs the CPU EP with the arena ON (as fast as XNNPACK,
+   flat over 12 min, freed on the 60 s idle release); checked in the keyboard on `.144` with small.
+   Still open: (a) DEVICE: tiny through the microphone with the arena on, and a low-RAM phone
+   (keyboard RSS while dictating with small is now up to 840 MB on a Saga).
    (b) DEVICE: a person's voice and a noisy room for small; the Pixel (busy on 11-05).
    (c) Pack choice → item 33.
 33. [ ] agent (2.1): pack library — several dictionary and voice packs per language, a per-language

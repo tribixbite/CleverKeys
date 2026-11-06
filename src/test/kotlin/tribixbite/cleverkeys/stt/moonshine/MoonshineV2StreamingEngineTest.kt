@@ -135,6 +135,31 @@ class MoonshineV2StreamingEngineTest {
     }
 
     /**
+     * The keyboard passes no hints, so it gets the CPU EP with ORT's arena ON (1.6–2× faster
+     * per pass on both Sagas) and never XNNPACK, whose process-wide arena outlives close()
+     * (research §6.7, 2026-11-05). The hints still reach the old setting for benchmarks.
+     */
+    @Test
+    fun keyboardDefaultIsTheCpuArenaAndHintsOverrideIt() {
+        assumeTrue("voice pack not built ($pack)", pack.isFile)
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-ep").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            manager.import(pack.inputStream())
+            val installed = manager.activePack("en")!!
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions()).use { engine ->
+                assertThat(engine.memoryReport().detail).contains("CPU EP, 2 threads, arena on, spin on")
+            }
+            val hints = mapOf(MoonshineV2StreamingEngine.HINT_ARENA to "off", MoonshineV2StreamingEngine.HINT_SPIN to "off")
+            MoonshineV2StreamingEngine.Factory.load(installed.dir, SpeechEngineOptions(engineHints = hints)).use { engine ->
+                assertThat(engine.memoryReport().detail).contains("CPU EP, 2 threads, arena off, spin off")
+            }
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
+    /**
      * The frontend's first Conv needs one 5 ms hop (80 samples); a shorter `audio_chunk` fails
      * with `Invalid input shape: {N}`. Stop can leave such a tail: the segmenter flushes its
      * partial hop (1–511 samples) and the session holds `total mod 16000`. Seen 2026-11-05 in

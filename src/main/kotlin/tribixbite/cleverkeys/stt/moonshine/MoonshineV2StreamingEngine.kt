@@ -490,13 +490,21 @@ class MoonshineV2StreamingEngine private constructor(
                 OrtSession.SessionOptions().use { so ->
                     so.setIntraOpNumThreads(options.threads.coerceIn(1, 8))
                     so.setInterOpNumThreads(1)
-                    // ORT's BFC arena never shrinks, and every streaming pass has a new input
-                    // shape: with it on, a 23 s utterance held 508 MB; off, 112 MB (research §5.3).
-                    // HINT_ARENA / HINT_EP exist only so device benchmarks can compare settings.
-                    val arena = options.engineHints[HINT_ARENA] == "on"
+                    // ORT's CPU arena is ON: the CPU EP with it off ran every pass 1.6–2× slower
+                    // and with more CPU time on both Sagas (small: 8–9 passes over the 1 s budget
+                    // per 2 min of 20 s segments, 0–2 with it on). The arena never shrinks, so
+                    // RSS while loaded is ~130 (tiny) / ~220 MB (small) higher, flat over 12 min; it is
+                    // owned by these sessions and freed by close(), i.e. ENGINE_IDLE_MILLIS after
+                    // the last dictation (research §6.7). XNNPACK is equally fast but NOT used: its
+                    // allocator is a process-wide arena in ORT 1.21 that close() never frees
+                    // (540 MB left behind after small with 20 s segments).
+                    // HINT_ARENA / HINT_EP / HINT_SPIN exist so device benchmarks can compare settings.
+                    val arena = options.engineHints[HINT_ARENA] != "off"
                     val xnnpack = options.engineHints[HINT_EP] == EP_XNNPACK
+                    val spin = options.engineHints[HINT_SPIN] != "off"
                     so.setCPUArenaAllocator(arena)
                     so.setMemoryPatternOptimization(false)
+                    if (!spin) so.addConfigEntry("session.intra_op.allow_spinning", "0")
                     if (xnnpack) so.addXnnpack(mapOf("intra_op_num_threads" to options.threads.coerceIn(1, 8).toString()))
                     fun open(name: String) = env.createSession(File(packDir, name).path, so).also { opened += it }
                     val frontend = open(FRONTEND_MODEL)
@@ -527,7 +535,8 @@ class MoonshineV2StreamingEngine private constructor(
                         loadMillis = (System.nanoTime() - started) / 1_000_000,
                         // Any streaming size loads here (tiny, small); name it by its shape.
                         detail = "moonshine-v2-streaming depth ${config.depth} dim ${config.encoderDim}/${config.decoderDim}, " +
-                            "${if (xnnpack) "XNNPACK" else "CPU"} EP, ${options.threads} threads, arena ${if (arena) "on" else "off"}",
+                            "${if (xnnpack) "XNNPACK" else "CPU"} EP, ${options.threads} threads, arena ${if (arena) "on" else "off"}, " +
+                            "spin ${if (spin) "on" else "off"}",
                     )
                     return MoonshineV2StreamingEngine(
                         env, config, frontend, weightTensors, encoder, adapter, crossKv, decoder, tokenizer, report,
@@ -544,12 +553,21 @@ class MoonshineV2StreamingEngine private constructor(
     companion object {
         const val ENGINE_ID = "moonshine-v2-streaming"
 
-        /** [SpeechEngineOptions.engineHints] key: "on" enables ORT's CPU memory arena (default off). */
+        /** [SpeechEngineOptions.engineHints] key: "off" disables ORT's CPU memory arena (default on). */
         const val HINT_ARENA = "arena"
 
-        /** [SpeechEngineOptions.engineHints] key: [EP_XNNPACK] adds the XNNPACK execution provider. */
+        /**
+         * [SpeechEngineOptions.engineHints] key: [EP_XNNPACK] adds the XNNPACK execution provider
+         * (measurement only: its process-wide arena outlives the engine, see [Factory.load]).
+         */
         const val HINT_EP = "ep"
         const val EP_XNNPACK = "xnnpack"
+
+        /**
+         * [SpeechEngineOptions.engineHints] key: "off" stops ORT's intra-op threads busy-waiting
+         * between ops (ORT default on); ORT recommends it off beside XNNPACK's own thread pool.
+         */
+        const val HINT_SPIN = "spin"
         const val SAMPLE_RATE = 16_000
 
         /** Seconds of audio per recognition pass (two-pass agreement floor, research §5.2). */

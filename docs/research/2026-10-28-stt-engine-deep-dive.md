@@ -42,7 +42,10 @@ section lists what this dive changed there). Three questions from the maintainer
    cut is essential: without it Moonshine falls to 29–63 % WER on long clips. Two app findings: a
    stop that left under 80 samples failed the final pass (fixed, with a test), and the
    CPU EP with the arena off (the app's setting) runs the decoder 2–2.5× slower than arena on or
-   XNNPACK; on a Saga that is 1.7–1.8× per pass (§6.7). No qualifying model was released in the past week.
+   XNNPACK; on a Saga that is 1.7–1.8× per pass (§6.7). The app now runs the arena ON (§6.7.1:
+   flat over 12 min of dictation and freed when the engine closes); XNNPACK was rejected because
+   ORT 1.21's XNNPACK allocator is a process-wide arena that keeps up to 540 MB after close.
+   No qualifying model was released in the past week.
    **On a phone** (§6.7, Saga): small keeps the 1 s cadence (387 ms median pass as shipped, 226 ms with
    XNNPACK) and through a real microphone makes 9–10 errors in 228 words against tiny's 18–19, for
    ~0.1 s more lag and ~150–200 MB more keyboard memory. It is published as an optional pack.
@@ -833,6 +836,78 @@ packs only within one session.
 Found on the way: Remove deletes a pack at once, without a confirmation (a 142 MB re-import if
 tapped by mistake).
 
+#### 6.7.1 Long-period memory and the engine setting (2026-11-05 evening)
+
+The open question above: does a faster setting grow over a long dictation, and what does it leave
+behind when the keyboard releases the engine (60 s idle, `VoiceInputController.ENGINE_IDLE_MILLIS`)?
+`VoiceEngineDeviceBenchmark` gained `-e voiceBenchRounds N` (the clip set N times on one engine),
+`-e voiceBenchReloads K` (load, one clip, close; K times), `-e voiceBenchSettleS S` (GC, wait,
+RSS once more), `-e voiceBenchJoinS N` (clips joined into utterances ≤ N s, one session each) and
+CPU time per second of audio (`Process.getElapsedCpuTime`, all threads, so busy-waiting counts).
+After each close it logs `Debug.getNativeHeapAllocatedSize()` ("native live"): bytes still
+allocated, unlike RSS, which also holds freed-but-unreturned pages. Both Sagas, same chip, run in
+parallel; the Pixel was busy, the third Saga in a game.
+
+**6 rounds of the 18 clips (12 min of audio per run), passes median, CPU s per audio s, RSS while
+loaded (min–max over the rounds), native live after close:**
+
+| pack · setting | `.144` median | `.130` median | CPU/s (`.144` / `.130`) | RSS loaded | native live after close |
+|---|---|---|---|---|---|
+| tiny · CPU, arena off (app until now) | 162–208 ms | 186–201 ms | 0.33–0.42 / 0.40–0.42 | 324–349 MB | 0–11 MB |
+| tiny · CPU, arena on | 105–114 | 98–103 | 0.26–0.29 / 0.27–0.28 | 458–498 | 9–11 |
+| tiny · XNNPACK | 103–110 | 100–103 | 0.25–0.27 / 0.27–0.28 | 425–476 | **139–142** |
+| tiny · XNNPACK, spin off | 141–158 | 114–128 | 0.29–0.30 / 0.22–0.23 | 425–473 | — |
+| tiny · CPU, arena off, spin off | 306–317 | 289–306 | 0.51–0.53 / 0.51–0.52 | 301–350 | — |
+| small · CPU, arena off | 414–462 | 360–376 | 0.83–0.91 / 0.73–0.75 | 433–537 | 0–11 |
+| small · CPU, arena on | 246–303 | 218–229 | 0.60–0.74 / 0.55–0.57 | 693–760 | 6–11 |
+| small · XNNPACK | 256–292 | 221–232 | 0.62–0.70 / 0.57–0.58 | 663–740 | **268–276** |
+| small · XNNPACK, spin off | 308–329 | 246–262 | 0.58–0.60 / 0.47–0.49 | 667–691 | — |
+| small · CPU, arena off, spin off | 606–620 | 487–511 | 1.04–1.06 / 0.86–0.88 | 434–522 | — |
+
+Errors were identical in every row and round (tiny 14/353, small 9/353). Passes over 1 s per
+round: small arena off 4–5 (`.144`) and 4 (`.130`), arena off + spin off 6–8, every other setting
+0–1. RSS while loaded was flat over the 6 rounds in every setting (no growth).
+
+**Clips joined into 14–19 s utterances** (`voiceBenchJoinS 20`, 7 sessions per round, near the
+app's 20 s segment cap — the case §5.3 worried about), 3 rounds:
+
+| pack · setting | median (`.144` / `.130`) | passes > 1 s per round | peak RSS | native live after close |
+|---|---|---|---|---|
+| tiny · arena off | 270–281 / 220–223 ms | 3–4 / 2 | 575 / 646 MB | 0–11 MB |
+| tiny · arena on | 133–137 / 120–123 | 0 / 0 | 624 / 638 | 10–11 |
+| tiny · XNNPACK | 136–162 / 119–123 | 0 / 0 | 590 / 618 | **274** |
+| small · arena off | 550–574 / 431–437 | 9 / 8 | 796 / 862 | 0–11 |
+| small · arena on | 422–444 / 286–298 | 1–2 / 0 | 898 / 917 | 9–11 |
+| small · XNNPACK | 415–432 / 295–302 | 1–2 / 0 | 856 / 870 | **539–540** |
+
+- **XNNPACK keeps memory after the engine closes**, and how much depends on the longest segment it
+  has run: 142 MB (tiny) / 276 MB (small) with ≤ 11 s clips, 274 / 540 MB with ≤ 19 s utterances.
+  It is constant over 20 reloads, so not a per-load leak. Cause, read in the ORT 1.21.1 source
+  (`core/providers/xnnpack/xnnpack_execution_provider.cc` `CreatePreferredAllocators`,
+  `xnnpack_init.cc` `GetStoredAllocator`): the XNNPACK EP's allocator is ONE process-wide static,
+  created with the default `AllocatorCreationInfo`, i.e. a BFC arena; the session's
+  `setCPUArenaAllocator(false)` does not reach it and nothing ever frees or shrinks it. In the
+  keyboard that would defeat the idle release: after one dictation with small, ~0.5 GB stays in
+  the IME process until Android kills it. (The CTC swipe encoder already uses XNNPACK,
+  `onnx/ModelLoader.kt`, so the keyboard has this arena today; its sessions live as long as the
+  keyboard anyway.)
+- **The CPU EP with the arena on is as fast as XNNPACK** (within a few %), uses the same or less
+  CPU, and its arena belongs to the sessions: native live after close is back to 6–11 MB in every
+  run. It costs ~130 MB (tiny) / ~220 MB (small) more RSS while loaded (flat over 12 min) and
+  −8 to +102 MB peak with 20 s segments, for at most 60 s after the last dictation.
+- **Spin off** (`session.intra_op.allow_spinning=0`) trades speed for CPU inconsistently: on
+  `.130` XNNPACK spin-off used 15–20 % less CPU for 10–20 % slower passes; on `.144` tiny it used
+  more. With the CPU EP it is much slower AND uses more CPU. Not adopted.
+- The reload cycles' RSS (not native live) swings ±50 MB between cycles in every setting,
+  including arena off: freed pages the allocator has not yet returned. Read native live, not RSS,
+  for leaks.
+
+**Decision (2026-11-05): the engine now runs the CPU EP with the arena ON by default**
+(`MoonshineV2StreamingEngine.Factory.load`; `HINT_ARENA=off` restores the old setting for
+benchmarks; pinned by `MoonshineV2StreamingEngineTest.keyboardDefaultIsTheCpuArenaAndHintsOverrideIt`).
+XNNPACK stays a benchmark-only hint until ORT frees its allocator (not fixed upstream as of
+2026-11; ORT #32461/#32489 fixed a race in the same allocator's creation, not its lifetime).
+
 ---
 
 ## 7. Conclusions
@@ -987,6 +1062,8 @@ for q in q5_k q4_k q3_k q2_k; do wcb/bin/whisper-quantize ggml-acft-small_en-f16
 adb shell am instrument -w -e class tribixbite.cleverkeys.stt.VoiceEngineDeviceBenchmark -e voiceBench 1 \
     -e voicePack voicepack-moonshine-v2-small-en.zip -e voiceBenchHints arena=off,ep=xnnpack \
     tribixbite.cleverkeys.debug.test/androidx.test.runner.AndroidJUnitRunner   # logcat -s VoiceBench
+#   §6.7.1 long period: add -e voiceBenchRounds 6 -e voiceBenchReloads 20 -e voiceBenchSettleS 30
+#   [-e voiceBenchJoinS 20]; hints arena=on|off, ep=cpu|xnnpack, spin=on|off (default now arena on, cpu, spin on)
 # Moonshine: moonshine-ai/moonshine-voice-assets model/{tiny,small,medium}-streaming-en/quantized_26_08_21/*
 python3 scripts/research/stt/moonshine_stream_ort.py --model-dir $STT/models/small-streaming-en --tokenizer tokenizer.json \
     --no-arena --tokens-per-s 6.5 [--ep xnnpack] stream $STT/audio/manifest_long.json --max-segment 20
