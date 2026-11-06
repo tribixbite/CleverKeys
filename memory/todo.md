@@ -708,8 +708,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     scrolling and swipe-to-delete unchanged (the five throwaway to-dos were swiped away; History,
     Pinned and To-dos back to 0 / 0 / 0 as recorded before). Open: (a) TalkBack moves not
     driven on a device (adb cannot run custom actions) — pinned by `ClipboardReorderViewTest`;
-    (b) `ClipboardReorderDatabaseTest` (instrumented: SQL, renumbering, backup round trip) not
-    yet run on emulator.wtf; (c) DONE 2026-10-27, Saga 144 release `6bc336b2…` (acd3b79e): four
+    (b) DONE 2026-11-05: `ClipboardReorderDatabaseTest` 6/6 in the full instrumented run at
+    `eb5c394a` on API 34–37; (c) DONE 2026-10-27, Saga 144 release `6bc336b2…` (acd3b79e): four
     imported Pinned rows, row A dragged by its handle below B, order kept after pane close/reopen;
     rows swiped away, History / Pinned / To-dos back to 0 / 0 / 0.
 25. [ ] agent, 2026-10-27 (maintainer: the familiar-style layouts should also bring the
