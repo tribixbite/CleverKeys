@@ -50,6 +50,26 @@ class MoonshineV2StreamingEngineTest {
         dir.listFiles().orEmpty().filter { it.extension == "wav" }.sortedBy { it.name }
             .mapNotNull { wav -> File(wav.path.removeSuffix(".wav") + ".txt").takeIf { it.isFile }?.let { wav to it.readText().trim() } }
 
+    /**
+     * The shipped ORT setting without a pack, so CI pins it (the pack-backed test below skips
+     * there): the keyboard's default options select the CPU EP with the arena ON (`a9d7b351`),
+     * and each benchmark hint turns its setting off or on.
+     */
+    @Test
+    fun theShippedOrtSettingNeedsNoPack() {
+        val shipped = MoonshineV2StreamingEngine.OrtSettings.of(SpeechEngineOptions().engineHints)
+        assertWithMessage("keyboard default").that(shipped)
+            .isEqualTo(MoonshineV2StreamingEngine.OrtSettings(arena = true, xnnpack = false, spin = true))
+        val hinted = MoonshineV2StreamingEngine.OrtSettings.of(
+            mapOf(
+                MoonshineV2StreamingEngine.HINT_ARENA to "off",
+                MoonshineV2StreamingEngine.HINT_EP to MoonshineV2StreamingEngine.EP_XNNPACK,
+                MoonshineV2StreamingEngine.HINT_SPIN to "off",
+            )
+        )
+        assertThat(hinted).isEqualTo(MoonshineV2StreamingEngine.OrtSettings(arena = false, xnnpack = true, spin = false))
+    }
+
     @Test
     fun streamsLibriSpeechClipsThroughAnImportedPack() {
         assumeTrue("voice pack not built ($pack)", pack.isFile)

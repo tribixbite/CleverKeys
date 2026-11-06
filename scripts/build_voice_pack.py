@@ -127,7 +127,7 @@ VARIANTS: dict[str, Variant] = {
         zip_time=(2026, 10, 29, 0, 0, 0),
     ),
     # Optional "accurate" pack (verified 2026-11-05 against the Hub's tree API at HF_REVISION;
-    # the decoder, 78.1 MiB, is the largest file and the total, 135.5 MiB, is within the caps).
+    # the decoder, 78.1 MiB, is the largest file and the total, 135.7 MiB (142,300,974 bytes), is within the caps).
     # Same tokenizer as tiny. decoder_kv_with_attention.ort is not packed: the runtime does not
     # use it (alignment output only).
     "small": Variant(

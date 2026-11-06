@@ -66,7 +66,7 @@ committed coordination over working-tree edits.
 
 ## Active handoff (2026-10-31)
 
-origin/main is `e3487b41`; everything through it is pushed. Pushes to origin/main are authorized
+Push state: `git status -sb` (hashes written here went stale). Pushes to origin/main are authorized
 (maintainer, 2026-10-07/10-21); tag, version bump, release and GitHub posts still are not.
 v2.0.0 is code-complete and NOT tagged; it now includes on-device voice input (pause-based
 endpointing) and the in-app Open-source licenses screen. Release gates, item by item:

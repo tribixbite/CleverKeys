@@ -39,10 +39,10 @@ The pack row shows its name, size, engine, languages and license; **License and 
 pack's LICENSE and NOTICE text, and **Remove** deletes it (at once, without asking).
 
 **Tiny or small?** Start with tiny. The small pack (`voicepack-moonshine-v2-small-en.zip`) made about
-half the mistakes in our tests (on two phones, 9–10 against 18–19 and 22–23 against 41–45 words wrong
-out of 228, played through the phone's speaker),
+half the mistakes in our tests (on three phones, 9–10 against 18–19, 12–15 against 28 and 5–6
+against 15–17 words wrong out of 228, played through the phone's speaker),
 but it is three times the download and storage, needs about twice the processing per second of speech
-and roughly 150–200 MB more memory while you dictate. On a 2022 flagship it kept up comfortably.
+and roughly 220–270 MB more memory while you dictate. On a 2022 flagship it kept up comfortably.
 Install one of them: with both installed, CleverKeys uses small, and you switch back by removing it.
 A choice between installed packs is planned.
 

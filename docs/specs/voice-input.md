@@ -20,7 +20,8 @@ Users asked for dictation without switching to another voice IME. The research n
 `docs/research/2026-10-28-stt-engine-deep-dive.md` measured three FLOSS engines on the app's exact
 ORT 1.21.1 natives and recommended **Moonshine v2 tiny-streaming** (MIT weights and runtime,
 incremental encoder, partial after 1.0 s, commit after 2.0 s, ~45 MB of official quantised
-graphs, ~112 MB steady RSS with the ORT arena off).
+graphs, ~112 MB steady RSS with the ORT arena off — the app later turned the arena ON for speed,
+see NFR-1 and research §6.7.1).
 
 ### Maintainer decisions (2026-10-29)
 1. Engine: Moonshine v2 tiny-streaming.
@@ -370,7 +371,8 @@ Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.
   (small) after each clip, max 1.58 s; keyboard RSS while listening 324–522 MB (tiny),
   459–698 MB (small); model load 117 / 286 ms.
 - Engine benchmark (`VoiceEngineDeviceBenchmark`, debug + test APK): per-pass median tiny 168 ms,
-  small 387 ms as shipped (CPU EP, arena off); arena on or XNNPACK 1.7–1.8× faster for both.
+  small 387 ms as shipped then (CPU EP, arena off); arena on or XNNPACK 1.7–1.8× faster for both.
+  (History: the engine runs the arena ON since `a9d7b351`.)
 - Android 14 Saga (`192.168.1.130`), same flow at 25/25 speaker volume: tiny 45 and 41 errors,
   small 23 and 22; lag median ~1.0–1.2 s; benchmark tiny 203 ms, small 369 ms per pass as shipped,
   ~2× faster with XNNPACK or the arena on. Its first runs gave no text only because

@@ -46,9 +46,10 @@ section lists what this dive changed there). Three questions from the maintainer
    flat over 12 min of dictation and freed when the engine closes); XNNPACK was rejected because
    ORT 1.21's XNNPACK allocator is a process-wide arena that keeps up to 540 MB after close.
    No qualifying model was released in the past week.
-   **On a phone** (§6.7, Saga): small keeps the 1 s cadence (387 ms median pass as shipped, 226 ms with
-   XNNPACK) and through a real microphone makes 9–10 errors in 228 words against tiny's 18–19, for
-   ~0.1 s more lag and ~150–200 MB more keyboard memory. It is published as an optional pack.
+   **On a phone** (§6.7, Saga): small keeps the 1 s cadence (387 ms median pass with the arena off,
+   226 ms with the arena on as shipped since `a9d7b351`) and through a real microphone makes 9–10
+   errors in 228 words against tiny's 18–19, for ~0.1 s more lag and ~150–200 MB more keyboard
+   memory with the arena off (~220–270 MB with it on, §6.7.1). It is published as an optional pack.
 
 Marking: **[U]** = not verified from a primary source. Everything else was read or measured on
 2026-10-28; every measurement line carries the box's load average because other sessions were
@@ -603,14 +604,14 @@ ASR average): tiny 34 M params 4.49 / 12.09 / 12.01, small 123 M 2.49 / 6.78 / 7
   890–1048 ms (decoder 774–865), both at 14/280. The Masterx plain-ONNX graphs do not show it
   (360 / 329 ms with the arena off, table above), so this is specific to the official graphs as
   loaded by ORT 1.26. Why is not established **[U]**. §5.3 recommended the arena off for its RSS (112 vs 707 MB on long
-  streams), and the app's engine does that (`MoonshineV2StreamingEngine`: "CPU EP, arena off").
+  streams), and the app's engine did that until 2026-11-05 (`MoonshineV2StreamingEngine`: "CPU EP, arena off"; the arena is ON since `a9d7b351`, §6.7.1).
   The Oct 28 latency rows (364 ms batch, 200 ms per pass) were measured **with the arena on**, so
   the app's real per-pass cost is about twice what §5 shows. The XNNPACK EP with the arena off gets
   arena-on speed back (batch 372–410 ms) at more RSS:
 
 | Moonshine tiny, capped stream (6.5 tok/s) | median pass ms 5 s / 15 s | max pass ms | passes > 1 s | first commit | RSS end / peak MB (15 s) |
 |---|---|---|---|---|---|
-| CPU EP, arena off (the app today) | 398 / 478 | 1000 / 2404 | 1 / 11 | 2.0 s + 0.44 s | 114 / 243 |
+| CPU EP, arena off (the app until `a9d7b351`) | 398 / 478 | 1000 / 2404 | 1 / 11 | 2.0 s + 0.44 s | 114 / 243 |
 | XNNPACK EP, arena off | **212 / 272** | 393 / 1161 | 0 / 1 | 2.0 s + 0.21 s | 281 / 296 |
 
   On the long clips (segmented at 20 s) XNNPACK cut tiny's median pass from 449 to 289 ms and its
@@ -735,7 +736,7 @@ runtime the app ships. Pass time is the median per 1 s pseudo-stream pass, 5 s s
 | Whistle ORT fp32 | ORT · Apache-2.0 export | 145 MB | yes | 5.00 % | 2.27 % | — | 509 / 1106 | O |
 | Whistle ORT int8 | ORT · Apache-2.0 export | 55 MB | yes | 5.36 % | 1.95 % | 15.95 % b | 272 / 577 | O, B |
 | **Moonshine tiny-streaming (shipped)**, CPU, arena on | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | — | 200 / 307 | O |
-| Moonshine tiny, CPU, arena off, capped (= the app) | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 398 / 478 | B |
+| Moonshine tiny, CPU, arena off, capped (= the app until `a9d7b351`) | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 398 / 478 | B |
 | Moonshine tiny, XNNPACK, arena off, capped | ORT · MIT weights | 45 MB | yes | 5.00 % | 3.57 % | 6.59 % | 212 / 272 | B |
 | **Moonshine small-streaming**, CPU, arena off, capped | ORT · MIT weights | 142 MB | **yes** | 3.57 % | 1.95 % | 3.41 % | 676 / 866 | B |
 | Moonshine tiny, **Saga** `.144` / `.1.130`, app engine: arena off / on / XNNPACK | ORT 1.21.1 (APK) · MIT weights | 45 MB | yes | §6.7 | §6.7 | §6.7 | 168 / 94 / 98 · 203 / 101 / 99 (all clips) | S |
@@ -789,7 +790,7 @@ process. Peak RSS is the test process's `VmHWM` and includes ~190 MB before the 
 
 | pack · ORT setting | load | median pass | p90 | max | passes > 1 s | final pass | errors | peak RSS |
 |---|---|---|---|---|---|---|---|---|
-| tiny · CPU EP, arena off (**the app today**) | 142 ms | **168 ms** | 267 | 597 | 0 | 111 ms | 14/353 | 472 MB |
+| tiny · CPU EP, arena off (**the app until `a9d7b351`**) | 142 ms | **168 ms** | 267 | 597 | 0 | 111 ms | 14/353 | 472 MB |
 | tiny · CPU EP, arena on | 148 ms | 94 ms | 134 | 259 | 0 | 81 ms | 14/353 | 536 MB |
 | tiny · XNNPACK, arena off | 155 ms | 98 ms | 144 | 306 | 0 | 87 ms | 14/353 | 496 MB |
 | small · CPU EP, arena off | 320 ms | **387 ms** | 497 | 1,533 | 3 | 344 ms | **9/353** | 674 MB |
@@ -800,7 +801,7 @@ process. Peak RSS is the test process's `VmHWM` and includes ~190 MB before the 
   on the APK's ORT 1.21.1. XNNPACK with the arena off is as fast as the arena on, with a smaller
   peak (tiny +24 vs +64 MB over arena off). Every pass here belongs to a clip of ≤ 23 s, so the
   long-session growth that made §5.3 turn the arena off (one 23 s utterance → 508 MB) is bounded
-  by the app's 20 s segment cut but was **not** measured over a long period on the phone.
+  by the app's 20 s segment cut; the long-period check followed in §6.7.1 (flat over 12 min, freed on close).
 - **Small on a Saga keeps the 1 s cadence** as shipped (arena off): 387 ms median, 3 of 112 passes
   over 1 s (all early passes of a session); with XNNPACK none are.
 - WER on this path (16 kHz WAV straight into the engine): small 9/353 = 2.5 %, tiny 14/353 = 4.0 %.
@@ -829,7 +830,8 @@ median tiny 0.95 / 1.13 s, small 1.22 / 1.05 s (max 3.3 s); keyboard RSS while l
 packs (louder playback, a different unit); the ratio holds.
 
 Small halves the errors through a real speaker → microphone path on both Sagas, at ~0.1–0.2 s more
-lag and ~150–200 MB more keyboard memory while dictating. Model load in the keyboard: tiny 117 ms, small
+lag and ~150–200 MB more keyboard memory while dictating (arena off; ~220–270 MB with the arena on,
+§6.7.1). Model load in the keyboard: tiny 117 ms, small
 286 ms. Tiny's 8 % here is better than the 19.7 % of Oct 30 on the same clips and the same Saga
 (that run: the release of `b243ce3d`, 1 s gaps instead of 1.5 s, an unrecorded volume), so compare
 packs only within one session.
@@ -1005,10 +1007,11 @@ still be a second native runtime.
 runtime, tokenizer and pack format, 135.7 MiB within every cap, and makes fewer errors than tiny on
 every set measured here (10 vs 14, 6 vs 11, 43 vs 83) and on a phone (§6.7: 9 vs 14 of 353 words
 on the engine path, 9–10 vs 18–19 of 228 through a real microphone). Its cost is about 2.3× tiny's
-per-pass time (387 vs 168 ms on a Saga as shipped) and ~150–200 MB more keyboard memory while
-dictating. It is published as a second, optional English pack (2026-11-05); tiny stays the
-default. Switching the engine to XNNPACK (or the arena on) would take ~40 % off every pass for both
-packs (§6.7); that change is the maintainer's, after a long-period RSS check.
+per-pass time (387 vs 168 ms on a Saga with the arena off; 226 vs 94 ms with the arena on) and
+more keyboard memory while dictating (§6.7.1 has the arena-on figures). It is published as a second,
+optional English pack (2026-11-05); tiny stays the default. The engine runs the ORT arena ON since
+`a9d7b351` (2026-11-05, after the long-period RSS check of §6.7.1): ~40 % off every pass for both
+packs; XNNPACK was rejected (its process-wide arena keeps up to 540 MB after close).
 
 **sherpa Zipformer** is the fallback if the Moonshine port stalls or if retractions prove
 unacceptable in practice: true streaming, 35 MB int8, Apache-2.0, but English-only at this size,
@@ -1018,8 +1021,9 @@ a 2023 model, Kaldi-fbank plumbing and 36 state tensors per step to carry in Kot
 
 - **ORT**: none for compatibility — all graphs run on 1.21.1 CPU/XNNPACK (§5.4). Ship ORT-format or
   offline-optimised graphs to avoid multi-second first loads (Whistle fp32: 13.6 s on the JVM;
-  Moonshine `.ort`: 0.8 s for five graphs). Create sessions with `enable_cpu_mem_arena = false` for
-  streaming sessions (§5.3) and an intra-op thread count that is a setting (1–2 likely **[U]**).
+  Moonshine `.ort`: 0.8 s for five graphs). §5.3 first recommended `enable_cpu_mem_arena = false`
+  for streaming sessions; the phone measurements (§6.7, §6.7.1) reversed that and the app runs the
+  arena ON, with an intra-op thread count that is a setting (1–2 likely **[U]**).
 - **Model size**: Moonshine tiny-streaming-en 45–51 MB; Whistle int8 55 MB (+17 MB `.cact` for
   filterbank/tokenizer/engram, or extract those three records at import, ≈ 5 MB); Zipformer 35 MB.
   All exceed the language-pack 8 MiB model cap → the voice-pack kind needs its own cap and
@@ -1043,10 +1047,9 @@ Pixel); Whisper-normalised WER; more than 28 clips or any non-English clip; batt
 build (the JVM probe used the APK's ORT natives, not an Android process); NNAPI on a real HAL;
 keyword biasing in the pseudo-stream; a Kotlin port of any pipeline.
 
-Open after the 2026-11-05 follow-up (§6.5, §6.7): the arena/XNNPACK timing is measured on a Saga
-(§6.7: arena off costs 1.7×; XNNPACK matches arena on) but not on the Pixel (Play Protect refused
-the debug APK there; the Pixel was busy on the second attempt), and not over a long listening period (RSS growth with the arena on or XNNPACK);
-why the official graphs slow down with the arena off is not established; a person's voice and a
+Open after the 2026-11-05 follow-up (§6.5, §6.7, §6.7.1): the arena/XNNPACK timing and the
+long-period RSS check are done (Sagas and the Pixel 8 Pro, §6.7.1; the arena is on since
+`a9d7b351`); why the official graphs slow down with the arena off is not established; a person's voice and a
 noisy room for small; non-English clips; Phonon-2.5, if its runtime turns out to be FLOSS.
 
 ---

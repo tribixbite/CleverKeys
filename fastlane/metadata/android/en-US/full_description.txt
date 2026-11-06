@@ -12,7 +12,7 @@ CleverKeys is the only open-source keyboard with stable, production-ready gestur
 
 <b>ON-DEVICE VOICE INPUT (OPT-IN)</b>
 • Dictate with a Voice input key; recognition runs on the phone, offline
-• Uses a voice pack you import once (English, Moonshine v2, MIT, about 45 MB); no speech model is bundled
+• Uses a voice pack you import once (English, Moonshine v2, MIT: tiny about 45 MB, or the more accurate small about 142 MB); no speech model is bundled
 • Off by default: the microphone permission is requested only when you turn voice input on or import a voice pack
 • Audio is never stored and never leaves the device
 

@@ -499,9 +499,7 @@ class MoonshineV2StreamingEngine private constructor(
                     // allocator is a process-wide arena in ORT 1.21 that close() never frees
                     // (540 MB left behind after small with 20 s segments).
                     // HINT_ARENA / HINT_EP / HINT_SPIN exist so device benchmarks can compare settings.
-                    val arena = options.engineHints[HINT_ARENA] != "off"
-                    val xnnpack = options.engineHints[HINT_EP] == EP_XNNPACK
-                    val spin = options.engineHints[HINT_SPIN] != "off"
+                    val (arena, xnnpack, spin) = OrtSettings.of(options.engineHints)
                     so.setCPUArenaAllocator(arena)
                     so.setMemoryPatternOptimization(false)
                     if (!spin) so.addConfigEntry("session.intra_op.allow_spinning", "0")
@@ -547,6 +545,22 @@ class MoonshineV2StreamingEngine private constructor(
                 if (e is SpeechEngineException) throw e
                 throw SpeechEngineException("Could not load the Moonshine graphs: ${e.message}", e)
             }
+        }
+    }
+
+    /**
+     * The ORT session settings [SpeechEngineOptions.engineHints] select. With no hints — what the
+     * keyboard passes (`SpeechEngineOptions()`) — that is the shipped setting: CPU EP, arena ON,
+     * spinning on. Pure, so the default is pinned without a voice pack
+     * (`MoonshineV2StreamingEngineTest.theShippedOrtSettingNeedsNoPack`).
+     */
+    internal data class OrtSettings(val arena: Boolean, val xnnpack: Boolean, val spin: Boolean) {
+        companion object {
+            fun of(hints: Map<String, String>) = OrtSettings(
+                arena = hints[HINT_ARENA] != "off",
+                xnnpack = hints[HINT_EP] == EP_XNNPACK,
+                spin = hints[HINT_SPIN] != "off",
+            )
         }
     }
 
