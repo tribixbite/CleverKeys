@@ -176,11 +176,17 @@ class CustomThemePrefPolicyTest {
     // ------------------------------------------------------------------ drift pin
 
     /** The hardcoded fallback trail colour must track the fallback theme's scheme. */
+    /**
+     * The fallback is the CleverKeys look (2026-11-06), which yields to a trail colour that
+     * differs from the default: resetting to the default lets the look draw its own trail.
+     */
     @Test
-    fun fallbackTrailColour_matchesTheFallbackThemesScheme() {
-        val provider = ThemeProvider(mockk(relaxed = true), mockk())
-        val scheme = provider.getColorScheme(ThemeProvider.FALLBACK_THEME_ID)
+    fun fallbackTrailColour_letsTheFallbackLookDrawItsOwnTrail() {
+        assertThat(ThemeProvider.FALLBACK_THEME_ID).isEqualTo(KeyboardLooks.CLEVERKEYS)
+        assertThat(KeyboardLooks.cleverkeysLook.yieldsToUserSettings).isTrue()
         assertThat(CustomThemePrefPolicy.FALLBACK_SWIPE_TRAIL_COLOR)
-            .isEqualTo(scheme!!.swipeTrail.toArgb())
+            .isEqualTo(tribixbite.cleverkeys.Defaults.SWIPE_TRAIL_COLOR)
+        assertThat(LookUserYield.trailColor(0xFF123456.toInt(), CustomThemePrefPolicy.FALLBACK_SWIPE_TRAIL_COLOR,
+            tribixbite.cleverkeys.Defaults.SWIPE_TRAIL_COLOR)).isEqualTo(0xFF123456.toInt())
     }
 }

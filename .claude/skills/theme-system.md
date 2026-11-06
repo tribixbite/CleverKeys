@@ -124,8 +124,10 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    look + `FAMILIAR` (Theme Manager's "Familiar looks" = `LOOK_THEMES` = `FAMILIAR_IDS`; the
    CleverKeys look is `DEFAULT_LOOK_THEME`, first under Built-in). `yieldsToUserSettings` →
    `Theme.lookYieldsToUser` → `LookUserYield` in `Theme.Computed.geometryFor` (tuned gaps; NOT the custom
-   border — the look's frame wins) and `Keyboard2View.initSwipeTrailPaint` (tuned trail). The fallback for broken ids is
-   still the XML `cleverkeysdark`.
+   border — the look's frame wins) and `Keyboard2View.initSwipeTrailPaint` (tuned trail). Choosing it stores the DEFAULT trail
+   (never skips the write: the old theme's trail would count as the user's). The fallback for
+   broken/deleted ids (`FALLBACK_THEME_ID`) is this look too, built in code. No process kill
+   anywhere in Theme Manager: "Restart keyboard" sends `EXTRA_REBUILD_KEYBOARD`.
 13. **Look pop-ups, hint style, letter keys, wallpaper colours** (2026-10-28,
    `theme/LookPopups.kt`, `theme/LookDynamicColors.kt`; spec `layout-system.md`). A look's
    `preview` (`LookPreviewShape` BUBBLE Gboard / BALLOON iOS / COLUMN SwiftKey / PLATE Samsung)

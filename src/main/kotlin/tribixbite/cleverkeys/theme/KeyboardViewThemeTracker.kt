@@ -80,8 +80,13 @@ class KeyboardViewThemeTracker(private val currentStamp: () -> KeyboardViewTheme
     /**
      * `ACTION_THEME_CHANGED`, after the config refresh: rebuild now? Hidden → false; the next
      * [shouldRebuildOnShow] sees the same staleness, so nothing has to be remembered.
+     * [forced] (the "Restart keyboard" button) forgets the view's stamp, so the view is stale
+     * whatever its colours: rebuilt now when shown, else by the next [shouldRebuildOnShow].
      */
-    fun shouldRebuildOnThemeBroadcast(inputViewShown: Boolean): Boolean = inputViewShown && isViewStale()
+    fun shouldRebuildOnThemeBroadcast(inputViewShown: Boolean, forced: Boolean = false): Boolean {
+        if (forced) viewStamp = null
+        return inputViewShown && isViewStale()
+    }
 
     /** `onStartInputView`: rebuild before showing? */
     fun shouldRebuildOnShow(): Boolean = isViewStale()

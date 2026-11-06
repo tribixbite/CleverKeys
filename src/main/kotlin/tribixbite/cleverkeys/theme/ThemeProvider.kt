@@ -270,7 +270,7 @@ class ThemeProvider(
                 val xml = loadBuiltInTheme(themeId)
                 xmlThemeSpec(xml) to floatArrayOf(xml.keyBorderRadius, xml.keyBorderWidth, xml.keyBorderWidthActivated)
             }
-        } ?: (ThemeSpecs.fromScheme(getBuiltInColorScheme(FALLBACK_THEME_ID)) to null)
+        } ?: (ThemeSpecs.fromLook(KeyboardLooks.cleverkeysLook, lookPalette(KeyboardLooks.cleverkeysLook)) to null)
     }
 
     /** An XML theme's rendered colours as role colours (its trail follows the user: not set). */
@@ -567,8 +567,8 @@ class ThemeProvider(
      * the default theme's palette rather than XML style resolution so the fallback has no
      * failure modes of its own; the user can reselect a theme normally afterwards.
      */
-    private fun fallbackTheme(): Theme =
-        Theme(context, getBuiltInColorScheme(FALLBACK_THEME_ID))
+    /** [FALLBACK_THEME_ID] drawn from in-code values only (no XML style), so it cannot fail. */
+    private fun fallbackTheme(): Theme = lookTheme(KeyboardLooks.cleverkeysLook, systemLight())
 
     private fun getDecorativeColorScheme(themeId: String): KeyboardColorScheme? {
         // Strip "decorative_" prefix to get the actual theme name
@@ -614,8 +614,10 @@ class ThemeProvider(
         private const val TAG = "ThemeProvider"
 
         /** The theme every dangling-id fallback resolves to (audit H-2). Also the id the
-         *  delete-active-theme guard resets the `theme` pref to (CustomThemePrefPolicy). */
-        const val FALLBACK_THEME_ID = "cleverkeysdark"
+         *  delete-active-theme guard resets the `theme` pref to (CustomThemePrefPolicy).
+         *  The default look since 2026-11-06 (was "cleverkeysdark"), so a broken or deleted
+         *  theme lands on the same theme a fresh install draws (`Defaults.THEME`). */
+        const val FALLBACK_THEME_ID = KeyboardLooks.CLEVERKEYS
 
         /**
          * Ids of the built-in XML themes — the `theme` values Theme Manager offers in its

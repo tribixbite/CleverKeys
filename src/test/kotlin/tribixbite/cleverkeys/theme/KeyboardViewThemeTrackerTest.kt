@@ -58,8 +58,8 @@ class KeyboardViewThemeTrackerTest {
         }
 
         /** ACTION_THEME_CHANGED receiver (the config refresh already happened). */
-        fun themeBroadcast() {
-            if (tracker.shouldRebuildOnThemeBroadcast(shown)) inflate()
+        fun themeBroadcast(forced: Boolean = false) {
+            if (tracker.shouldRebuildOnThemeBroadcast(shown, forced)) inflate()
         }
 
         /** ConfigurationManager saw the style id or the theme name change. */
@@ -87,6 +87,29 @@ class KeyboardViewThemeTrackerTest {
             finishInputView()
             inflations = 0
         }
+
+    /**
+     * Theme Manager's "Restart keyboard" button (2026-11-06) sends the broadcast with
+     * EXTRA_REBUILD_KEYBOARD instead of killing the process: the view is rebuilt although its
+     * theme is current — at once when shown, at the next show when hidden, and only once.
+     */
+    @Test
+    fun aForcedBroadcastRebuildsACurrentViewOnce() {
+        val shown = hiddenKeyboard().apply { startInputView() }
+        shown.themeBroadcast()
+        assertWithMessage("an unforced broadcast leaves a current view alone").that(shown.inflations).isEqualTo(0)
+        shown.themeBroadcast(forced = true)
+        assertWithMessage("forced while shown: rebuilt now").that(shown.inflations).isEqualTo(1)
+
+        val hidden = hiddenKeyboard()
+        hidden.themeBroadcast(forced = true)
+        assertWithMessage("forced while hidden: not rebuilt yet").that(hidden.inflations).isEqualTo(0)
+        hidden.startInputView()
+        assertWithMessage("…the next show rebuilds it").that(hidden.inflations).isEqualTo(1)
+        hidden.finishInputView()
+        hidden.startInputView()
+        assertWithMessage("…and only that show").that(hidden.inflations).isEqualTo(1)
+    }
 
     @Test
     fun editingTheActiveCustomThemeWhileHiddenRebuildsOnTheNextShow() {
@@ -214,7 +237,9 @@ class KeyboardViewThemeTrackerTest {
         assertWithMessage("the receiver refreshes the config first")
             .that(receiver).contains("_configManager.refresh(resources)")
         assertWithMessage("…then lets the tracker decide (hidden → the next show rebuilds)")
-            .that(receiver).contains("shouldRebuildOnThemeBroadcast(isInputViewShown)")
+            .that(receiver).contains("shouldRebuildOnThemeBroadcast(isInputViewShown, forced)")
+        assertWithMessage("…forced by the Restart keyboard extra")
+            .that(receiver).contains("getBooleanExtra(EXTRA_REBUILD_KEYBOARD, false)")
     }
 
     @Test

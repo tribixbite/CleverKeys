@@ -128,7 +128,7 @@ class ThemeSettingsActivity : ComponentActivity() {
     private lateinit var prefs: SharedPreferences
 
     // commit() (not apply()) in onThemeSelected: the theme write must be on disk before the
-    // broadcast, and before the top-bar "Restart keyboard" button can kill the process.
+    // broadcast that makes the keyboard re-read it.
     @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -232,23 +232,26 @@ class ThemeSettingsActivity : ComponentActivity() {
                                 }
                             }
 
-                            // The CleverKeys look draws its own light/dark trail unless the user
-                            // changed the trail colour (LookUserYield), so choosing it must not
-                            // write one mode's trail as if the user had picked it.
-                            val writesTrail = KeyboardLooks.byId(themeId)?.yieldsToUserSettings != true
+                            // Every theme choice sets the trail. The CleverKeys look draws its own
+                            // light/dark trail unless the stored one differs from the default
+                            // (LookUserYield), so choosing it stores the default: the previous
+                            // theme's trail must not stay behind looking like the user's own.
+                            if (KeyboardLooks.byId(themeId)?.yieldsToUserSettings == true) {
+                                swipeTrailColor = Defaults.SWIPE_TRAIL_COLOR
+                            }
 
                             // Save selected theme to device protected storage (same prefs the keyboard listens to)
                             // This will immediately trigger the keyboard's OnSharedPreferenceChangeListener
                             prefs.edit()
                                 .putString("theme", themeId)
-                                .also { if (writesTrail) it.putInt("swipe_trail_color", swipeTrailColor) }
+                                .putInt("swipe_trail_color", swipeTrailColor)
                                 .commit() // Use commit() for synchronous write
 
                             // Also save to default preferences for backup/consistency
                             PreferenceManager.getDefaultSharedPreferences(this)
                                 .edit()
                                 .putString("theme", themeId)
-                                .also { if (writesTrail) it.putInt("swipe_trail_color", swipeTrailColor) }
+                                .putInt("swipe_trail_color", swipeTrailColor)
                                 .commit()
 
                             // Send broadcast to notify service immediately (legacy support)
@@ -281,9 +284,10 @@ class ThemeSettingsActivity : ComponentActivity() {
  * key backgrounds, borders, suggestion bar, ripple, surface — applies immediately
  * without a process restart.
  */
-private fun notifyKeyboardThemeChanged(context: android.content.Context) {
+private fun notifyKeyboardThemeChanged(context: android.content.Context, rebuild: Boolean = false) {
     val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
     intent.setPackage(context.packageName) // Restrict to our own package
+    if (rebuild) intent.putExtra(CleverKeysService.EXTRA_REBUILD_KEYBOARD, true)
     context.sendBroadcast(intent)
 }
 
@@ -353,9 +357,10 @@ fun ThemeSettingsScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        // "Nuclear option": Kill the process to force a full restart
-                        android.os.Process.killProcess(android.os.Process.myPid())
-                        System.exit(0)
+                        // Rebuild the keyboard view in place (2026-11-06). This used to kill the
+                        // process, which also cut the keyboard off from the focused field: the
+                        // next text field showed nothing until two field switches.
+                        notifyKeyboardThemeChanged(context, rebuild = true)
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.theme_restart_keyboard))
                     }

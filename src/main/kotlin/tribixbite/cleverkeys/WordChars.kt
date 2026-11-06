@@ -52,7 +52,7 @@ package tribixbite.cleverkeys
  * Latin combining accents keep each caller's existing behaviour, since those are optional
  * vowel/accent marks that the lookup folds strip.
  *
- * ## ZWJ inside a Bengali, Sinhala or Kannada word (2026-11-06)
+ * ## ZWJ inside a Bengali, Sinhala, Kannada or Devanagari word (2026-11-06)
  *
  * U+200D ZERO WIDTH JOINER spells the ra-phala after ra (`র‍্যাব` = র + ZWJ + ্ + য + া + ব) and
  * explicit half forms. Same strict both-sides shape as the half-space: a ZWJ is a word character
@@ -66,8 +66,9 @@ package tribixbite.cleverkeys
  * spells Sinhala's rakaransaya and yansaya as virama + ZWJ + ra / ya (`ශ්‍රී` = ශ ් ZWJ ර ී, the
  * Unicode Sinhala FAQ) and Kannada's explicit half forms as virama + ZWJ. The rule skips marks,
  * so the ZWJ after a virama finds the letter before it.
- * TODO: Devanagari's eyelash ra (र + ् + ZWJ) has no ZWJ key on the shipped layout; add
- * DEVANAGARI with a native-checked test word if pasted Hindi text needs it.
+ * Devanagari joined too (2026-11-06): its layouts carry no ZWJ key, but pasted and field text
+ * do, and the Unicode Standard (§12.1) spells the eyelash ra as र + ् + ZWJ and the explicit half
+ * form as virama + ZWJ; splitting there cut Marathi `दऱ्या` written that way in two.
  *
  * ## Sentence ends
  *
@@ -94,6 +95,7 @@ object WordChars {
     /** Scripts in which a ZWJ between letters/marks is part of the word (class KDoc). */
     private val ZWJ_JOINING_SCRIPTS: Set<Character.UnicodeScript> = setOf(
         Character.UnicodeScript.BENGALI, Character.UnicodeScript.SINHALA, Character.UnicodeScript.KANNADA,
+        Character.UnicodeScript.DEVANAGARI,
     )
 
     /**

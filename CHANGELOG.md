@@ -447,13 +447,14 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Changed
 
-- **A new default look: CleverKeys.** Rounded, borderless keys with clearer gaps, function keys
+- **A new default look: CleverKeys.** Rounded keys with a fine outline and clearer gaps, function keys
   (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
   icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
-  system's light or dark mode. Every corner hint for short swipes stays, drawn smaller. Key gaps
+  system's light or dark mode. Every corner hint for short swipes stays, drawn a little smaller. Key gaps
   and a swipe-trail colour you already changed still apply. Choosing a theme in Theme Manager no
-  longer restarts the keyboard (the next text field could stay without a keyboard until you
-  switched fields twice). Only an unset theme changes: if you
+  longer restarts the keyboard, and neither does its Restart keyboard button, which now reloads
+  the keyboard in place (the next text field could stay without a keyboard until you switched
+  fields twice). A deleted or broken theme falls back to this look. Only an unset theme changes: if you
   chose a theme it stays, and CleverKeys Dark and Light are still in Theme Manager, where the
   iOS-, Gboard-, SwiftKey- and Samsung-style looks now come first.
 - **Android 7.0+ (API 24) is now required** (was 5.0): ONNX Runtime 1.21.1 for 16 KB memory-page

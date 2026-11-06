@@ -193,7 +193,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     val customThemes by themeProvider.customThemeManager.customThemes.collectAsState()
     val themeChoices = remember(customThemes) { layoutThemeChoices(context.resources, customThemes) }
     fun themeName(id: String): String = layoutThemeDisplayName(id, context.resources, customThemes)
-    val globalThemeName = themeName(prefs.getString("theme", null) ?: ThemeProvider.FALLBACK_THEME_ID)
+    val globalThemeName = themeName(prefs.getString("theme", null) ?: Defaults.THEME)
 
     // Dialog states
     var showAddDialog by remember { mutableStateOf(false) }
@@ -1310,7 +1310,7 @@ private fun saveLayoutThemeAsCustom(
     val name = (layout as? LayoutsPreference.CustomLayout)?.parsed?.name?.takeIf { it.isNotBlank() }
         ?: spec.name
         ?: context.getString(R.string.layout_manager_custom_layout_name)
-    val global = prefs.getString("theme", null) ?: ThemeProvider.FALLBACK_THEME_ID
+    val global = prefs.getString("theme", null) ?: Defaults.THEME
     val saved = tribixbite.cleverkeys.theme.LayoutThemeTransfer.saveAsCustomTheme(provider, spec, name, global)
     val message = if (saved != null) context.getString(R.string.layout_theme_saved_custom, saved.name)
     else context.getString(R.string.layout_theme_save_full, tribixbite.cleverkeys.theme.CustomThemeManager.MAX_CUSTOM_THEMES)

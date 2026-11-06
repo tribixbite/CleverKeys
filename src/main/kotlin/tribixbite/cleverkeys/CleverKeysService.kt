@@ -180,6 +180,13 @@ class CleverKeysService : InputMethodService(),
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
 
+        /**
+         * Boolean extra of [ACTION_THEME_CHANGED]: rebuild the keyboard view even when its theme
+         * looks current (Theme Manager's "Restart keyboard" button). It replaced a process kill,
+         * which left the next text field without a keyboard until two field switches.
+         */
+        const val EXTRA_REBUILD_KEYBOARD = "tribixbite.cleverkeys.extra.REBUILD_KEYBOARD"
+
         /** Logcat tag for the Quick Settings tile diagnostics (verbose builds only). */
         const val TILE_TAG = "CleverKeys/Tile"
 
@@ -492,7 +499,9 @@ class CleverKeysService : InputMethodService(),
                     // (onThemeChanged), so it is not stale here. A HIDDEN keyboard is left
                     // alone: onStartInputView rebuilds it before it is shown (Pixel 2026-10-25:
                     // the old `if (isInputViewShown)` alone dropped hidden edits for good).
-                    if (_viewTheme.shouldRebuildOnThemeBroadcast(isInputViewShown)) {
+                    // EXTRA_REBUILD_KEYBOARD forces it (shown now, hidden at the next show).
+                    val forced = intent.getBooleanExtra(EXTRA_REBUILD_KEYBOARD, false)
+                    if (_viewTheme.shouldRebuildOnThemeBroadcast(isInputViewShown, forced)) {
                         onThemeChanged(0, 0)
                     }
                 }

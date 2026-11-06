@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.theme
 
+import com.google.common.collect.Range
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
@@ -173,7 +174,9 @@ class KeyboardLooksTest {
      * The CleverKeys default look (2026-11-06): CleverKeys' own parts stay — every corner label
      * (short-swipe hints), the scrolling chips, the purple accent — and it takes what the familiar
      * looks share: tonal function keys, an accented primary action, a press preview, a filled
-     * Shift, 8 dp borderless keys. It is the only look that yields to the user's settings.
+     * Shift, 8 dp keys framed by a 1 dp hairline (maintainer 2026-11-06: "make keys not
+     * borderless"), corner hints between the familiar looks' sizes (0.34 was "too small"). It is
+     * the only look that yields to the user's settings.
      */
     @Test
     fun theCleverKeysLookKeepsCleverKeysPartsAndTheSharedModernOnes() {
@@ -185,8 +188,12 @@ class KeyboardLooksTest {
         assertThat(look.preview.shape).isEqualTo(LookPreviewShape.BUBBLE)
         assertThat(look.shiftFilled).isTrue()
         assertThat(look.geometry.cornerRadiusDp).isEqualTo(8f)
-        assertThat(look.geometry.borderWidthDp).isEqualTo(0f)
+        assertThat(look.geometry.borderWidthDp).isEqualTo(1f)
+        assertWithMessage("hints sit in the familiar looks' 0.38..0.45 band, not 0.34")
+            .that(look.hintStyle.sizeFraction).isIn(Range.closed(0.38f, 0.45f))
         for ((mode, p) in listOf("light" to look.light, "dark" to look.dark)) {
+            assertWithMessage("$mode: the hairline shows against the key").that(p.keyBorder).isNotEqualTo(p.key)
+            assertWithMessage("$mode: and against the background").that(p.keyBorder).isNotEqualTo(p.keyboardBackground)
             assertWithMessage("$mode: function keys read apart from letters").that(p.modifierKey).isNotEqualTo(p.key)
             assertWithMessage("$mode: the primary action is accented").that(p.actionKey).isNotEqualTo(p.modifierKey)
         }

@@ -369,17 +369,27 @@ unset gets it, a user who chose any theme keeps that choice, and CleverKeys Dark
 selectable. It keeps CleverKeys' own parts — every corner label (`LookLegends.ALL`: the
 short-swipe hints), the scrolling suggestion chips (`bar = null`), a purple accent — and takes
 what the popular keyboards share (research `2026-10-27-familiar-keyboard-looks.md`): light/dark
-follow the system; flat borderless keys, 8 dp corners, gaps 0.12 / 0.16, a light-mode-only shadow;
+follow the system; flat keys framed by a 1 dp hairline one step off the key fill (light #D3CADB,
+dark #3D3546; maintainer 2026-11-06: "make keys not borderless"), 8 dp corners, gaps 0.12 / 0.16,
+a light-mode-only shadow;
 a tonal function-key fill; the Go / Search / Send / Done action in the accent with an icon; a
 BUBBLE press preview; a filled Shift while shifted. It is the only look with
 `yieldsToUserSettings` (`LookUserYield`, pure, `KeyboardLookUserYieldTest`): because users get it
 without choosing it, a key gap whose stored value differs from its default
 (`Config.keyVerticalMarginCustomised` / `keyHorizontalMarginCustomised`) and a trail colour that
 differs from `Defaults.SWIPE_TRAIL_COLOR` keep the user's value; untouched settings take the
-look's. The custom border (`border_config`) does NOT win: the borderless key is the look
-(maintainer, 2026-11-06: the border was "too distracting"), as for every familiar look. Corner
-hints are drawn at 0.34 of the label (`LookHintStyle`; "too large" at CleverKeys' old size). Choosing it in Theme Manager writes
-`theme` only, never `swipe_trail_color` (a one-mode trail would then count as the user's).
+look's. The custom border (`border_config`) does NOT win: the look's own hairline is the frame
+(maintainer, 2026-11-06: the custom border was "too distracting"), as for every familiar look.
+Corner hints are drawn at 0.44 of the label (`LookHintStyle`; CleverKeys' old 0.67 was "too
+large", a first 0.34 "too small"; Gboard 0.40, Samsung 0.45). Choosing it in Theme Manager stores
+`swipe_trail_color` = `Defaults.SWIPE_TRAIL_COLOR`, the untouched value, so the look draws its own
+light/dark trail and the previous theme's trail does not stay behind as if the user had set it.
+`ThemeProvider.FALLBACK_THEME_ID` (a broken, unknown or deleted theme) is this look too since
+2026-11-06 (was `cleverkeysdark`), built in code (`lookTheme`), and the delete-active-theme reset
+writes the same default trail (`CustomThemePrefPolicy.FALLBACK_SWIPE_TRAIL_COLOR`).
+Theme Manager's top-bar "Restart keyboard" button rebuilds the keyboard view in place
+(`ACTION_THEME_CHANGED` + `EXTRA_REBUILD_KEYBOARD` → `KeyboardViewThemeTracker` forgets its stamp)
+instead of killing the process, which left the next text field without a keyboard.
 Theme Manager and Layout Manager's picker list Familiar looks FIRST, then Built-in Themes led by
 this look (`ThemeSettingsActivity.DEFAULT_LOOK_THEME`), then custom and decorative themes.
 `ThemeProvider.FALLBACK_THEME_ID` (unknown or broken theme ids) stays the XML `cleverkeysdark`.

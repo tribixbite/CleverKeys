@@ -15,7 +15,7 @@ class KeyboardLookUserYieldTest {
 
     private val look = KeyboardLooks.cleverkeysLook.geometry
     private val user = KeyboardLookGeometry.UserGeometry(
-        verticalMargin = 3f, horizontalMargin = 4f, borderRadius = 5f, borderWidth = 1f, borderWidthActivated = 2f,
+        verticalMargin = 3f, horizontalMargin = 4f, borderRadius = 5f, borderWidth = 1f, borderWidthActivated = 3f,
     )
 
     private fun resolve(g: LookGeometry) =
@@ -29,7 +29,7 @@ class KeyboardLookUserYieldTest {
         assertThat(e.verticalMargin).isEqualTo(look.keyGapVertical!! * 50f)
         assertThat(e.horizontalMargin).isEqualTo(look.keyGapHorizontal!! * 100f)
         assertThat(e.borderRadius).isEqualTo(look.cornerRadiusDp!! * 2f)
-        assertThat(e.borderWidth).isEqualTo(0f)
+        assertWithMessage("the look's 1 dp hairline").that(e.borderWidth).isEqualTo(look.borderWidthDp!! * 2f)
     }
 
     @Test
@@ -44,11 +44,11 @@ class KeyboardLookUserYieldTest {
 
     @Test
     fun theFrameIsAlwaysTheLooksEvenOverACustomBorder() {
-        // The user geometry here carries a custom border (radius 5, outline 1/2): the look wins.
+        // The user geometry here carries a custom border (radius 5, outline 1/3): the look wins.
         val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = true))
         assertThat(e.borderRadius).isEqualTo(look.cornerRadiusDp!! * 2f)
-        assertThat(e.borderWidth).isEqualTo(0f)
-        assertThat(e.borderWidthActivated).isEqualTo(0f)
+        assertThat(e.borderWidth).isEqualTo(look.borderWidthDp!! * 2f)
+        assertThat(e.borderWidthActivated).isEqualTo(look.borderWidthDp!! * 2f)
         assertWithMessage("label scale is the look's either way").that(e.labelScale).isEqualTo(look.labelScale)
     }
 

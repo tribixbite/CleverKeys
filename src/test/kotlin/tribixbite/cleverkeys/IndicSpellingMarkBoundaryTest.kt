@@ -103,6 +103,24 @@ class IndicSpellingMarkBoundaryTest {
         assertWithMessage("Sinhala then Latin stays a boundary").that(WordChars.isJoiningZwjAt("ශ්${zwj}a", 2)).isFalse()
     }
 
+    // ── ZWJ in Devanagari (pasted or field text: deva_* layouts carry no ZWJ key) ─────────
+
+    @Test
+    fun `a Devanagari ZWJ after the virama joins the word`() {
+        val zwj = "\u200D"
+        // The Unicode Standard §12.1 spellings: the eyelash ra is र + ् + ZWJ (Marathi दऱ्या
+        // written with it), the explicit half form क + ् + ZWJ + ष. Structure only.
+        val eyelash = "दर्${zwj}या"
+        for (i in eyelash.indices) {
+            assertWithMessage("दर्‍या[$i]").that(WordChars.isWordCharAt(eyelash, i)).isTrue()
+        }
+        assertWithMessage("one token in next-word context")
+            .that(NextWordPredictor.contextFromEditorText("$eyelash आणि ")).containsExactly(eyelash, "आणि").inOrder()
+        assertWithMessage("half form").that(WordChars.isJoiningZwjAt("क्${zwj}ष", 2)).isTrue()
+        assertWithMessage("Devanagari then Latin stays a boundary").that(WordChars.isJoiningZwjAt("क्${zwj}a", 2)).isFalse()
+        assertWithMessage("Devanagari then Bengali stays a boundary").that(WordChars.isJoiningZwjAt("क्${zwj}ক", 2)).isFalse()
+    }
+
     // ── The typo-tolerant search gate ─────────────────────────────────────────────────────
 
     @Test

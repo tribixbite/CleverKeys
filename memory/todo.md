@@ -566,8 +566,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     next-word context AND learning (`WordChars.isSentenceEnd`), fuzzy search + dropped-double
     gate on marked words (`isSpelledWithLetters`), double-space period after a mark (inserts
     `. ` like WM Keyboard), Bengali ZWJ (`র‍্যাব`), and Devanagari/Gujarati/Kannada/Tamil/Sinhala
-    marks; then Sinhala/Kannada ZWJ and the danda pulling back over an auto-space. Open TODOs:
-    Devanagari eyelash-ra ZWJ, the Bangla conjunct form of a doubled consonant (`ক্ক`). Still blocked: the model needs a layout decision (centre keys cover
+    marks; then Sinhala/Kannada ZWJ and the danda pulling back over an auto-space. Devanagari ZWJ (eyelash ra, half
+    forms) DONE 2026-11-06. Open TODO: the Bangla conjunct form of a doubled consonant (`ক্ক`). Still blocked: the model needs a layout decision (centre keys cover
     17–31 % of words); maintainer rule: Bangla questions follow WM Keyboard (native speaker).
 20. [ ] unowned roadmap: 1.3 at-rest clipboard encryption, 2.3 dwell picker (measure first),
     4.2 spline swipe trail (benchmark first), #187 below-accents, #175(3)/#80(3) toolbar,
@@ -1211,8 +1211,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     trail colour (`LookUserYield`; NOT the custom border, maintainer 2026-11-06). Maintainer's
     first install was a STALE release APK (built 11-05 19:58, before `f8786c76`); feedback acted
     on: hints smaller (0.34), border no longer yields, Theme Manager no longer kills the process
-    (dead first tap after a theme change).
-    Still open: the five "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
+    (dead first tap after a theme change). Second round (same day: "make keys not borderless",
+    hints "now too small"): a 1 dp hairline (#D3CADB / #3D3546), hints 0.44; the Restart keyboard
+    button rebuilds in place (`EXTRA_REBUILD_KEYBOARD`), the broken-theme fallback is the look,
+    choosing the look stores the default trail.
+    Still open: the "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
     on a test phone, and the maintainer's look-and-feel verdict.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)

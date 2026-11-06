@@ -36,11 +36,12 @@ object CustomThemePrefPolicy {
     const val SWIPE_TRAIL_PREF_KEY = "swipe_trail_color"
 
     /**
-     * [ThemeProvider.FALLBACK_THEME_ID]'s swipe-trail colour (getBuiltInColorScheme
-     * "cleverkeysdark": silver). Drift-pinned against getColorScheme by
+     * The swipe-trail pref written with [ThemeProvider.FALLBACK_THEME_ID]: the untouched
+     * default (`Defaults.SWIPE_TRAIL_COLOR`), so the fallback look draws its own light/dark trail
+     * instead of yielding to the deleted theme's (`LookUserYield.trailColor`). Pinned by
      * CustomThemePrefPolicyTest.
      */
-    const val FALLBACK_SWIPE_TRAIL_COLOR = 0xFFC0C0C0.toInt()
+    const val FALLBACK_SWIPE_TRAIL_COLOR = tribixbite.cleverkeys.Defaults.SWIPE_TRAIL_COLOR
 
     /** The `theme` pref value that selects the custom theme with raw store id [rawThemeId]. */
     fun themePrefId(rawThemeId: String): String = "custom_$rawThemeId"

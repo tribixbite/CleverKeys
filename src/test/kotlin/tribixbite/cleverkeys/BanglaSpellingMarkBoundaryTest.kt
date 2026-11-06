@@ -166,8 +166,8 @@ class BanglaSpellingMarkBoundaryTest {
         assertWithMessage("before a space").that(WordChars.isJoiningZwjAt("র$zwj য", 1)).isFalse()
         assertWithMessage("Bengali then Latin").that(WordChars.isJoiningZwjAt("র${zwj}a", 1)).isFalse()
         assertWithMessage("after a Bengali digit").that(WordChars.isJoiningZwjAt("১${zwj}্য", 1)).isFalse()
-        assertWithMessage("Devanagari is not a ZWJ script (TODO in WordChars)")
-            .that(WordChars.isJoiningZwjAt("र्${zwj}य", 2)).isFalse()
+        // Devanagari joins too since 2026-11-06 (IndicSpellingMarkBoundaryTest); across scripts not.
+        assertWithMessage("Bengali then Devanagari").that(WordChars.isJoiningZwjAt("র্${zwj}य", 2)).isFalse()
         assertWithMessage("edge flag").that(WordChars.hasEdgeZwj("র$zwj")).isTrue()
         assertWithMessage("inner is not an edge").that(WordChars.hasEdgeZwj(rab)).isFalse()
     }

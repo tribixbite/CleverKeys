@@ -35,8 +35,8 @@ import tribixbite.cleverkeys.Theme
  * ## The contract pinned here
  *
  * [ThemeProvider.getTheme] is TOTAL: for any theme id — dangling custom, unknown
- * decorative, garbage — it returns a usable [Theme] (the default cleverkeysdark
- * palette) instead of throwing. The fallback is built from the in-code colour scheme
+ * decorative, garbage — it returns a usable [Theme] (the default look, CleverKeys, since
+ * 2026-11-06; cleverkeysdark before) instead of throwing. The fallback is built from the in-code colour scheme
  * (not XML style resolution) so the escape hatch has no failure modes of its own.
  *
  * Red (pre-fix):
@@ -98,6 +98,15 @@ class ThemeProviderFallbackTest {
             ((green * 255).toInt() shl 8) or
             (blue * 255).toInt()
 
+    /** The fallback is the CleverKeys look (ThemeProvider.FALLBACK_THEME_ID) in either mode. */
+    private fun assertFallbackLook(theme: Theme) {
+        val look = KeyboardLooks.cleverkeysLook
+        val modes = listOf(look.light, look.dark).map { KeyboardLookSchemes.colorScheme(it) }
+        assertWithMessage("fallback must draw the default CleverKeys look (either mode)")
+            .that(theme.colorKeyboardBackground to theme.colorKey)
+            .isIn(modes.map { it.keyboardBackground.toThemeArgb() to it.keyDefault.toThemeArgb() })
+    }
+
     // ------------------------------------------------------------- dangling custom id
 
     @Test
@@ -108,11 +117,7 @@ class ThemeProviderFallbackTest {
         // thrown from here — in production, straight into Keyboard2View's constructor.
         val theme = provider.getTheme("custom_nonexistent")
 
-        val expected = provider.getColorScheme("cleverkeysdark")
-        assertWithMessage("fallback must carry the default cleverkeysdark palette")
-            .that(theme.colorKeyboardBackground)
-            .isEqualTo(expected!!.keyboardBackground.toThemeArgb())
-        assertThat(theme.colorKey).isEqualTo(expected.keyDefault.toThemeArgb())
+        assertFallbackLook(theme)
     }
 
     // ------------------------------------------------------------- stale decorative id
@@ -123,9 +128,7 @@ class ThemeProviderFallbackTest {
         // via a backup restored from a build with different decorative IDs.
         val theme = provider.getTheme("decorative_from_some_other_build")
 
-        val expected = provider.getColorScheme("cleverkeysdark")
-        assertThat(theme.colorKeyboardBackground)
-            .isEqualTo(expected!!.keyboardBackground.toThemeArgb())
+        assertFallbackLook(theme)
     }
 
     // ------------------------------------------------------------- intact path untouched

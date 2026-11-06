@@ -464,7 +464,8 @@ Keyboard (maintained by a native speaker).
   untouched; a dangling ZWJ is trimmed from the learned token and the word is not autocorrected.
   WM Keyboard lists ZWJ in `WordContext.WORD_JOINERS`. `ZWJ_JOINING_SCRIPTS` = Bengali, Sinhala,
   Kannada (both latter layouts carry a ZWJ key; Unicode spells Sinhala's rakaransaya/yansaya as
-  virama + ZWJ, `ශ්‍රී`). TODO: Devanagari's eyelash ra (no ZWJ key on the shipped layout).
+  virama + ZWJ, `ශ්‍රී`) and Devanagari (no ZWJ key, but pasted and field text carry the eyelash
+  ra र + ् + ZWJ and half forms, Unicode Standard §12.1).
   The danda and double danda are closing punctuation for the automatic space
   (`SmartAutoSpace`, `আমি ` + `।` → `আমি।`), as in WM Keyboard.
 - **Call sites** (each ORs the clauses into its own base rule): `isWordCharAt` (double-space

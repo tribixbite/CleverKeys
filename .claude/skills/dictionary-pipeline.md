@@ -258,7 +258,7 @@ add-to-dictionary offers:
 - An Indic vowel sign or virama on a letter of its script is a WORD CHARACTER (`WordChars`:
   Bengali, Devanagari, Gujarati, Kannada, Tamil, Sinhala — every script with a shipped layout).
   Dictionary keys for these scripts keep their marks (`build_dictionary.py --keep-script-marks`).
-  A ZWJ inside a Bengali, Sinhala or Kannada word (`র‍্যাব`, `ශ්‍රී`) is a word character too.
+  A ZWJ inside a Bengali, Sinhala, Kannada or Devanagari word (`র‍্যাব`, `ශ්‍රී`, `दर्‍या`) is a word character too.
 - `WordChars.isSentenceEnd` (`. ? ! । ॥`) is the one sentence-end set for next-word context and
   learning; `WordChars.isSpelledWithLetters` is the fuzzy-search / dropped-double "all letters"
   gate (identical to `all { isLetter() }` outside Indic marks and Bengali ZWJ).

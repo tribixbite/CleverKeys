@@ -328,8 +328,9 @@ object KeyboardLooks {
      * chips, the purple identity — and takes the parts the popular keyboards share (research
      * docs/research/2026-10-27-familiar-keyboard-looks.md):
      *  - light and dark follow the system (all four products);
-     *  - flat, borderless keys with 8 dp corners and visible gaps (iOS 26, Gboard, SwiftKey 8 dp;
-     *    Samsung 6 dp), a soft shadow in light mode only (Gboard, Samsung);
+     *  - flat keys with 8 dp corners and visible gaps (iOS 26, Gboard, SwiftKey 8 dp; Samsung
+     *    6 dp), framed by a 1 dp hairline one step off the key fill (Gboard's "key borders" option;
+     *    maintainer 2026-11-06: "make keys not borderless"), a soft shadow in light mode only;
      *  - a tonal function-key fill so Shift, Delete, 123 and Enter read apart from letters
      *    (Gboard, Samsung, iOS 18);
      *  - the primary action of Go / Search / Send / Done fields in the accent colour with an icon
@@ -337,9 +338,9 @@ object KeyboardLooks {
      *  - a key-press preview bubble (all four) and a filled Shift arrow while shifted (Gboard).
      * Because users get it without choosing it, it [KeyboardLook.yieldsToUserSettings]: key gaps
      * and a trail colour the user already tuned still apply (a custom border does not: the
-     * borderless key is the look). Corner hints are small (0.34 of the label, as iOS's 0.38 and
-     * Gboard's 0.40 — maintainer 2026-11-06: hints "too large") in the subdued #716A78 / #A69DAE
-     * that still reach 3:1 on every key fill.
+     * look's own hairline is the frame). Corner hints are 0.44 of the label, between Gboard's 0.40
+     * and Samsung's 0.45 (maintainer 2026-11-06: CleverKeys' old 0.67 was "too large", 0.34 "too
+     * small"), in the subdued #716A78 / #A69DAE that still reach 3:1 on every key fill.
      */
     val cleverkeysLook = KeyboardLook(
         id = CLEVERKEYS,
@@ -349,7 +350,7 @@ object KeyboardLooks {
             modifierKey = argb(0xE3D6EF), enterKey = argb(0xE3D6EF), enterLabel = argb(0x3A2650),
             actionKey = argb(0x7B3FA0), actionLabel = argb(0xFFFFFF),
             label = argb(0x1C1A1F), modifierLabel = argb(0x3A2650), hint = argb(0x716A78),
-            keyShadow = 0x1F000000, keyBorder = argb(0xFFFFFF),
+            keyShadow = 0x1F000000, keyBorder = argb(0xD3CADB),
             barBackground = argb(0xEFEAF3), barText = argb(0x1C1A1F), barHighlight = argb(0x6B2F92),
             barSeparator = argb(0xD6CEDD), swipeTrail = argb(0x8E44AD),
             popupSelected = argb(0x7B3FA0), popupSelectedLabel = argb(0xFFFFFF),
@@ -362,7 +363,7 @@ object KeyboardLooks {
             modifierKey = argb(0x3A2E47), enterKey = argb(0x3A2E47), enterLabel = argb(0xEBDDF7),
             actionKey = argb(0xCDA5EC), actionLabel = argb(0x2E0F45),
             label = argb(0xEDE7F2), modifierLabel = argb(0xEBDDF7), hint = argb(0xA69DAE),
-            keyShadow = 0, keyBorder = argb(0x2A2430),
+            keyShadow = 0, keyBorder = argb(0x3D3546),
             barBackground = argb(0x16121A), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
             barSeparator = argb(0x3A3340), swipeTrail = argb(0xC79BE8),
             popup = argb(0x3A3341), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
@@ -370,11 +371,11 @@ object KeyboardLooks {
         ),
         geometry = LookGeometry(
             keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 8f,
-            borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
+            borderWidthDp = 1f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
         ),
         // CleverKeys' short swipes are the product: every corner label stays, drawn small.
         legends = LookLegends.ALL,
-        hintStyle = LookHintStyle(sizeFraction = 0.34f, weight = 400),
+        hintStyle = LookHintStyle(sizeFraction = 0.44f, weight = 400),
         preview = LookPreview(
             LookPreviewShape.BUBBLE, widthScale = 1.3f, heightScale = 1.25f, labelScale = 1.2f, shadow = true,
         ),
