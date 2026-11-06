@@ -335,9 +335,11 @@ object KeyboardLooks {
      *  - the primary action of Go / Search / Send / Done fields in the accent colour with an icon
      *    (iOS, Gboard's highlighted Enter);
      *  - a key-press preview bubble (all four) and a filled Shift arrow while shifted (Gboard).
-     * Because users get it without choosing it, it [KeyboardLook.yieldsToUserSettings]: key gaps,
-     * a custom border and a trail colour the user already tuned still apply. Light hint #716A78
-     * and dark hint #A69DAE are the subdued tones that still reach 3:1 on every key fill.
+     * Because users get it without choosing it, it [KeyboardLook.yieldsToUserSettings]: key gaps
+     * and a trail colour the user already tuned still apply (a custom border does not: the
+     * borderless key is the look). Corner hints are small (0.34 of the label, as iOS's 0.38 and
+     * Gboard's 0.40 — maintainer 2026-11-06: hints "too large") in the subdued #716A78 / #A69DAE
+     * that still reach 3:1 on every key fill.
      */
     val cleverkeysLook = KeyboardLook(
         id = CLEVERKEYS,
@@ -370,8 +372,9 @@ object KeyboardLooks {
             keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 8f,
             borderWidthDp = 0f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
         ),
-        // CleverKeys' short swipes are the product: every corner label stays.
+        // CleverKeys' short swipes are the product: every corner label stays, drawn small.
         legends = LookLegends.ALL,
+        hintStyle = LookHintStyle(sizeFraction = 0.34f, weight = 400),
         preview = LookPreview(
             LookPreviewShape.BUBBLE, widthScale = 1.3f, heightScale = 1.25f, labelScale = 1.2f, shadow = true,
         ),

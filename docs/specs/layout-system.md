@@ -374,9 +374,11 @@ a tonal function-key fill; the Go / Search / Send / Done action in the accent wi
 BUBBLE press preview; a filled Shift while shifted. It is the only look with
 `yieldsToUserSettings` (`LookUserYield`, pure, `KeyboardLookUserYieldTest`): because users get it
 without choosing it, a key gap whose stored value differs from its default
-(`Config.keyVerticalMarginCustomised` / `keyHorizontalMarginCustomised`), the custom border
-(`border_config`: radius and outline) and a trail colour that differs from `Defaults.SWIPE_TRAIL_COLOR`
-keep the user's value; untouched settings take the look's. Choosing it in Theme Manager writes
+(`Config.keyVerticalMarginCustomised` / `keyHorizontalMarginCustomised`) and a trail colour that
+differs from `Defaults.SWIPE_TRAIL_COLOR` keep the user's value; untouched settings take the
+look's. The custom border (`border_config`) does NOT win: the borderless key is the look
+(maintainer, 2026-11-06: the border was "too distracting"), as for every familiar look. Corner
+hints are drawn at 0.34 of the label (`LookHintStyle`; "too large" at CleverKeys' old size). Choosing it in Theme Manager writes
 `theme` only, never `swipe_trail_color` (a one-mode trail would then count as the user's).
 Theme Manager and Layout Manager's picker list Familiar looks FIRST, then Built-in Themes led by
 this look (`ThemeSettingsActivity.DEFAULT_LOOK_THEME`), then custom and decorative themes.

@@ -1208,7 +1208,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     familiar look themes to top and … modernize and slick-ify the cleverkeys default"). BUILT:
     `look_cleverkeys` is `Defaults.THEME` (spec `layout-system.md` "The CleverKeys default look");
     Theme Manager / Layout Manager list Familiar looks first; the default yields to tuned gaps,
-    custom border and trail colour (`LookUserYield`). Pure + mock suites green at the commit.
+    trail colour (`LookUserYield`; NOT the custom border, maintainer 2026-11-06). Maintainer's
+    first install was a STALE release APK (built 11-05 19:58, before `f8786c76`); feedback acted
+    on: hints smaller (0.34), border no longer yields, Theme Manager no longer kills the process
+    (dead first tap after a theme change).
     Still open: the five "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
     on a test phone, and the maintainer's look-and-feel verdict.
 

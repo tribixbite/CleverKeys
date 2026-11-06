@@ -640,14 +640,13 @@ class Theme {
                 borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
                 borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
             )
-            // The CleverKeys default look gives way to the gaps and border the user tuned.
+            // The CleverKeys default look gives way to the key gaps the user tuned.
             val look = theme.lookGeometry?.let {
                 if (!theme.lookYieldsToUser) it
                 else LookUserYield.geometry(
                     it,
                     verticalGapCustomised = config.keyVerticalMarginCustomised,
                     horizontalGapCustomised = config.keyHorizontalMarginCustomised,
-                    customBorderOn = borderOn,
                 )
             }
             return LayoutKeyGeometry.applyTo(

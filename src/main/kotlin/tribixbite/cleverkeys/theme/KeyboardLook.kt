@@ -80,8 +80,9 @@ data class KeyboardLook(
     val shiftFilled: Boolean = false,
     /**
      * Whether the user's own appearance settings win over this look ([LookUserYield]): a key gap
-     * changed from its default, the custom border (`border_config`) and a swipe trail colour
-     * changed from its default. False for the familiar looks (choosing one is an explicit choice
+     * changed from its default and a swipe trail colour changed from its default. The custom
+     * border (`border_config`) does NOT: the borderless key is the look (maintainer 2026-11-06:
+     * the border was "too distracting"). False for the familiar looks (choosing one is an explicit choice
      * of that product's appearance); true for the CleverKeys default look, which users get
      * without choosing it, so settings they tuned before it became the default must still apply.
      */
@@ -195,8 +196,8 @@ data class LookGeometry(
  * Pure; `KeyboardLookUserYieldTest`.
  *
  * "On purpose" is judged per setting: a key gap whose stored value differs from its default (an
- * unset pref is the default), the custom-border switch (`border_config`, which owns both the
- * radius and the outline width) and a swipe trail colour that differs from its default.
+ * unset pref is the default) and a swipe trail colour that differs from its default. The custom
+ * border (`border_config`) is deliberately not one of them: radius and outline are the look's.
  */
 object LookUserYield {
 
@@ -208,12 +209,9 @@ object LookUserYield {
         look: LookGeometry,
         verticalGapCustomised: Boolean,
         horizontalGapCustomised: Boolean,
-        customBorderOn: Boolean,
     ): LookGeometry = look.copy(
         keyGapVertical = look.keyGapVertical.takeUnless { verticalGapCustomised },
         keyGapHorizontal = look.keyGapHorizontal.takeUnless { horizontalGapCustomised },
-        cornerRadiusDp = look.cornerRadiusDp.takeUnless { customBorderOn },
-        borderWidthDp = look.borderWidthDp.takeUnless { customBorderOn },
     )
 
     /** The trail colour to draw: the user's when they changed it from [userDefault], else the look's. */

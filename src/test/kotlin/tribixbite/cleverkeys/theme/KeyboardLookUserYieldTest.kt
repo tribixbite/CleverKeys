@@ -7,7 +7,8 @@ import org.junit.Test
 /**
  * [LookUserYield]: the CleverKeys default look ([KeyboardLooks.cleverkeysLook]) gives way to the
  * appearance settings a user tuned before it became the default — key gaps changed from their
- * defaults, the custom border, a changed trail colour — and takes its own values everywhere else.
+ * defaults and a changed trail colour — and takes its own values everywhere else, the frame
+ * included (a custom border does not survive: the borderless key is the look).
  * Pure JVM.
  */
 class KeyboardLookUserYieldTest {
@@ -22,7 +23,7 @@ class KeyboardLookUserYieldTest {
 
     @Test
     fun untouchedSettingsTakeTheLookGeometry() {
-        val g = LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = false, customBorderOn = false)
+        val g = LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = false)
         assertThat(g).isEqualTo(look)
         val e = resolve(g)
         assertThat(e.verticalMargin).isEqualTo(look.keyGapVertical!! * 50f)
@@ -33,21 +34,22 @@ class KeyboardLookUserYieldTest {
 
     @Test
     fun aTunedGapKeepsTheUsersValueOnlyForThatGap() {
-        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = false, customBorderOn = false))
+        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = false))
         assertWithMessage("the user's vertical gap").that(e.verticalMargin).isEqualTo(3f)
         assertWithMessage("the look's horizontal gap").that(e.horizontalMargin).isEqualTo(look.keyGapHorizontal!! * 100f)
-        val h = resolve(LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = true, customBorderOn = false))
+        val h = resolve(LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = true))
         assertThat(h.horizontalMargin).isEqualTo(4f)
         assertThat(h.verticalMargin).isEqualTo(look.keyGapVertical!! * 50f)
     }
 
     @Test
-    fun theCustomBorderKeepsTheUsersRadiusAndOutline() {
-        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = false, customBorderOn = true))
-        assertThat(e.borderRadius).isEqualTo(5f)
-        assertThat(e.borderWidth).isEqualTo(1f)
-        assertThat(e.borderWidthActivated).isEqualTo(2f)
-        assertWithMessage("shadow and label scale are the look's either way").that(e.labelScale).isEqualTo(look.labelScale)
+    fun theFrameIsAlwaysTheLooksEvenOverACustomBorder() {
+        // The user geometry here carries a custom border (radius 5, outline 1/2): the look wins.
+        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = true))
+        assertThat(e.borderRadius).isEqualTo(look.cornerRadiusDp!! * 2f)
+        assertThat(e.borderWidth).isEqualTo(0f)
+        assertThat(e.borderWidthActivated).isEqualTo(0f)
+        assertWithMessage("label scale is the look's either way").that(e.labelScale).isEqualTo(look.labelScale)
     }
 
     @Test

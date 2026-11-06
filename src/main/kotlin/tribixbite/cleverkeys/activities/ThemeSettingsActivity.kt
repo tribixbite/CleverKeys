@@ -127,10 +127,8 @@ class ThemeSettingsActivity : ComponentActivity() {
 
     private lateinit var prefs: SharedPreferences
 
-    // commit() (not apply()) is required in onThemeSelected: the theme write is
-    // immediately followed by Process.killProcess()/System.exit() to force a clean
-    // restart, so the preference MUST be flushed to disk synchronously before the
-    // process dies — an async apply() could lose the write to the kill.
+    // commit() (not apply()) in onThemeSelected: the theme write must be on disk before the
+    // broadcast, and before the top-bar "Restart keyboard" button can kill the process.
     @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -259,14 +257,16 @@ class ThemeSettingsActivity : ComponentActivity() {
                             sendBroadcast(intent)
                             
                             Toast.makeText(this, getString(R.string.theme_toast_applying, themeDisplayName), Toast.LENGTH_SHORT).show()
-                            
-                            // Restart the app to the LauncherActivity to ensure clean theme application
-                            // Delay slightly to allow toast to show and preference to commit
-                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                                // "Nuclear option": Kill the process to force a full restart
-                                android.os.Process.killProcess(android.os.Process.myPid())
-                                System.exit(0)
-                            }, 500)
+
+                            // No process kill (2026-11-06). Selecting a theme used to kill the
+                            // process 500 ms later (Dec 2025, before the live path existed). The
+                            // keyboard service lives in this process, so the kill also dropped
+                            // the IME's binding: the next text field got no keyboard until the
+                            // user switched fields or apps twice (maintainer report). The keyboard
+                            // now applies a theme live — the `theme` pref listener refreshes
+                            // Config and re-inflates on a style change, the broadcast above
+                            // rebuilds stale colours, and a hidden keyboard is rebuilt by
+                            // onStartInputView (KeyboardViewThemeTracker).
                         }
                     )
                 }
