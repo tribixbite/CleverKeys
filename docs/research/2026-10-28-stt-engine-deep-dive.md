@@ -930,6 +930,15 @@ After the release the live native bytes are back at baseline (41–42 MB), so no
 to the kernel, and it did not drain over 3.5 min. Java heap also sat ~30 MB higher (not yet
 collected). The app has no JNI of its own to ask the allocator to purge (`mallopt(M_PURGE)`).
 
+**Pixel 8 Pro (Android 17), 2026-11-05 23:00** (release build with the arena on, no enclosure,
+speaker 18/25 — set with Volume keys; `cmd media_session volume --set` does nothing on the Pixel
+either; same 228-word clips, two runs per pack): tiny 17 and 15 errors (7.5 / 6.6 %), small **5
+and 6** (2.2 / 2.6 %) — the best of the three phones; lag median tiny 0.62 / 0.72 s, small
+0.84 / 0.86 s (max 1.41 s). Keyboard PSS 169 MB / RSS 313 MB before; dictating PSS 254–398 MB
+(tiny) / 482–641 MB (small); after the idle release PSS 220 MB with live native bytes back at
+baseline (45 vs 44 MB). Small's second period ran 148 s instead of 108 s (18 segments): the
+room kept the speech detector going ~40 s after playback, with no text added.
+
 ---
 
 ## 7. Conclusions

@@ -402,6 +402,11 @@ Research §6.7 has the tables. Release build of `ee203b73` on the Saga `192.168.
   330–460 (tiny) / 553–731 MB (small); after the idle release PSS 237–261 MB — the extra ~90 MB is
   freed native memory the allocator keeps (live native bytes back at baseline; research §6.7.1).
   Restored afterwards (packs removed, voice off, microphone revoked, volume 9).
+- Pixel 8 Pro (Android 17, release build, arena on, speaker 18/25, no enclosure): tiny 17 and 15
+  errors in 228 words, small 5 and 6; lag median 0.62–0.86 s; keyboard PSS 169 MB idle, 254–398
+  (tiny) / 482–641 MB (small) dictating, 220 MB after the idle release. The engine log reads
+  `CPU EP, 2 threads, arena on`. Restored afterwards (packs removed, voice off, microphone
+  revoked, volume 0).
 
 ## Testing Strategy
 

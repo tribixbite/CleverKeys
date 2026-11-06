@@ -1192,7 +1192,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    ~90 MB of freed native memory stays with the allocator (not a leak; live bytes at baseline).
    Still open: (a) DEVICE: a low-RAM phone (keyboard RSS while dictating with small is up to
    843 MB on a Saga); optional: whether the ~90 MB retained after release is worth a JNI purge.
-   (b) DEVICE: a person's voice and a noisy room for small; the Pixel (busy on 11-05).
+   (b) DEVICE: a person's voice and a noisy room for small. Pixel DONE 2026-11-05 23:00 (research
+   §6.7.1): tiny 17/15, small 5/6 errors in 228 words, lag 0.62–0.86 s, restored.
    (c) Pack choice → item 33.
 33. [ ] agent (2.1): pack library — several dictionary and voice packs per language, a per-language
    choice in Settings, Remove with a confirmation (`docs/plans/2026-10-05-recommended-features-and-gaps.md`
