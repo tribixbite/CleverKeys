@@ -334,6 +334,17 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     }
                 )
 
+                SettingsSwitch(
+                    title = stringResource(R.string.input_space_before_opening_punctuation_title),
+                    description = stringResource(R.string.input_space_before_opening_punctuation_desc),
+                    checked = spaceBeforeOpeningPunctuation,
+                    onCheckedChange = {
+                        spaceBeforeOpeningPunctuation = it
+                        saveSetting("space_before_opening_punctuation", it)
+                        Config.globalConfig().space_before_opening_punctuation = it
+                    }
+                )
+
                 // v1.2.8: Vibration settings moved to Accessibility section
 
                 SettingsSlider(

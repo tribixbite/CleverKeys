@@ -917,6 +917,7 @@ tasks.register('runPureTests', JavaExec) {
     // registry, light/dark palettes and WCAG contrast of labels, hints and bar text.
     'tribixbite.cleverkeys.theme.KeyboardLookGeometryTest',
     'tribixbite.cleverkeys.theme.KeyboardLookUserYieldTest',
+    'tribixbite.cleverkeys.theme.LookBackdropTest',
     'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
     'tribixbite.cleverkeys.theme.LookPopupsTest',
@@ -1645,6 +1646,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.KeyboardViewLateBindingDriftTest',
     'tribixbite.cleverkeys.KeyEventReceiverBridgeDelegationTest',
     'tribixbite.cleverkeys.DoubleSpacePeriodTest',
+    'tribixbite.cleverkeys.OpeningPunctuationSpacingTest',
     'tribixbite.cleverkeys.gif.GifFtsSanitizerTest',
     'tribixbite.cleverkeys.gif.GifAssetManagerPartialImportTest',
     // ARC-079 (2026-08-29): with DictionaryManager's duplicate predictor cache deleted, the

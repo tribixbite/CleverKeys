@@ -2019,7 +2019,11 @@ class SuggestionHandler(
                 // SAS-1: capture the pre-commit cursor position so the pending
                 // auto-space carries a position stamp (validated at punctuation time;
                 // -1 when the editor doesn't support ExtractedText → legacy check)
-                val preCommitCursorPos = if (addedTrailingSpace) {
+                // Feature C: a word committed with no space after it because the user turned
+                // the automatic space off ends where an opening mark gets a space before it.
+                val endsWithoutSpace =
+                    trailingSpaceMode == SmartAutoSpace.TrailingSpaceMode.NO_SPACE_USER_DISABLED
+                val preCommitCursorPos = if (addedTrailingSpace || endsWithoutSpace) {
                     PredictionContextTracker.currentCursorPosition(inputConnection)
                 } else {
                     -1
@@ -2048,6 +2052,11 @@ class SuggestionHandler(
                 processedWord = capitalizedWord
                 lastSelectionCommitText = textToInsert
 
+                if (endsWithoutSpace && preCommitCursorPos >= 0) {
+                    contextTracker.markWordEnd(preCommitCursorPos + textToInsert.length)
+                } else {
+                    contextTracker.invalidateWordEnd()
+                }
                 if (addedTrailingSpace) {
                     contextTracker.markAutoSpacePending(
                         if (preCommitCursorPos >= 0) preCommitCursorPos + textToInsert.length else -1

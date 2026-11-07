@@ -447,11 +447,14 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Changed
 
-- **A new default look: CleverKeys.** Rounded keys with a fine outline and clearer gaps, function keys
+- **A new default look: CleverKeys.** Rounded keys with a fine outline and even gaps (the same
+  space between rows as between keys), function keys
   (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
   icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
-  system's light or dark mode. Every corner hint for short swipes stays, drawn a little smaller. Key gaps
-  and a swipe-trail colour you already changed still apply. Choosing a theme in Theme Manager no
+  system's light or dark mode; in dark mode the keys sit on a near-black background lit by a still
+  purple aurora with a few stars. Every corner hint for short swipes stays, drawn a little smaller. A
+  swipe-trail colour you already changed still applies; key gaps come from the look (set per layout
+  in Layout Manager to change them). Choosing a theme in Theme Manager no
   longer restarts the keyboard, and neither does its Restart keyboard button, which now reloads
   the keyboard in place (the next text field could stay without a keyboard until you switched
   fields twice). A deleted or broken theme falls back to this look. Only an unset theme changes: if you
@@ -529,6 +532,17 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- **French and Italian elisions with accents swipe.** `d'être`, `l'été`, `l'école`, `l'état`,
+  `j'étais`, `dov'è` and about 8,600 more never appeared from a swipe: the data kept the accents in
+  the swipe key, which the decoder cannot spell, so they were dropped as unreachable. They are now
+  keyed by their plain spelling (`detre` → `d'être`); where that spelling is itself a word
+  (`dame`, `dove`), the elision is offered beside it rather than replacing it.
+- **A space before opening punctuation after a swiped word** (new setting under Smart
+  Punctuation, on by default). `(` `[` `"` `'` `$` `@` `#` and similar typed straight after a swiped
+  or chosen word, or after the comma attached to it, get a space before them (`hello, (`), while
+  closing marks still attach (`(hello)`). A second `"` or `'` closes the quote and attaches; `'`
+  after a word ending in s stays the possessive (`kids'`), and a letter tapped right after `'`
+  joins it to the word (`John's`). Typing letter by letter (`f(x)`, `user@mail`) is unchanged.
 - Voice input after "Don't allow" twice: turning voice input on in Settings showed no prompt and no
   response, because the app trusted its own memory of the refusal even after the permission was
   changed in system settings. The switch now always asks Android; when Android will not show the

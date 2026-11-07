@@ -18,7 +18,6 @@ import tribixbite.cleverkeys.theme.LookPalette
 import tribixbite.cleverkeys.theme.LookPopupColors
 import tribixbite.cleverkeys.theme.LookPreview
 import tribixbite.cleverkeys.theme.LookTypeface
-import tribixbite.cleverkeys.theme.LookUserYield
 import kotlin.math.min
 
 /**
@@ -230,11 +229,18 @@ class Theme {
     val lookShiftFilled: Boolean
 
     /**
-     * The look lets the user's own appearance settings win (`KeyboardLook.yieldsToUserSettings`,
+     * The look lets the user's own swipe trail colour win (`KeyboardLook.yieldsToUserSettings`,
      * `LookUserYield`): the CleverKeys default look. False for every other theme.
      */
     @JvmField
     val lookYieldsToUser: Boolean
+
+    /**
+     * The look's painted keyboard background (`LookPalette.backdrop`: aurora, stars) over
+     * [colorKeyboardBackground]; null = the flat colour (every non-look theme).
+     */
+    @JvmField
+    val lookBackdrop: tribixbite.cleverkeys.theme.LookBackdrop?
 
     /** Colour of the shadow under each key; 0 = none (needs [lookGeometry] `shadowDyDp`). */
     @JvmField
@@ -328,6 +334,7 @@ class Theme {
         lookKeyLegends = emptyList()
         lookShiftFilled = false
         lookYieldsToUser = false
+        lookBackdrop = null
         colorKeyLatched = 0
         latchedLabelColor = 0
         keyShadowColor = 0
@@ -385,7 +392,7 @@ class Theme {
         lookKeyLegends: List<tribixbite.cleverkeys.theme.LookKeyLegend> = emptyList(),
         /** A look draws a filled Shift arrow while shifted. */
         lookShiftFilled: Boolean = false,
-        /** A look lets the user's tuned gaps, border and trail colour win ([lookYieldsToUser]). */
+        /** A look lets the user's tuned trail colour win ([lookYieldsToUser]). */
         lookYieldsToUser: Boolean = false,
     ) {
         getKeyFont(context) // Initialize font
@@ -466,6 +473,7 @@ class Theme {
         this.lookKeyLegends = if (lookPalette != null) lookKeyLegends else emptyList()
         this.lookShiftFilled = lookShiftFilled && lookPalette != null
         this.lookYieldsToUser = lookYieldsToUser && lookPalette != null
+        lookBackdrop = lookPalette?.backdrop
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
         keyShadowColor = lookPalette?.keyShadow ?: 0
@@ -640,17 +648,8 @@ class Theme {
                 borderWidth = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidth,
                 borderWidthActivated = if (borderOn) config.customBorderLineWidth else theme.keyBorderWidthActivated,
             )
-            // The CleverKeys default look gives way to the key gaps the user tuned.
-            val look = theme.lookGeometry?.let {
-                if (!theme.lookYieldsToUser) it
-                else LookUserYield.geometry(
-                    it,
-                    verticalGapCustomised = config.keyVerticalMarginCustomised,
-                    horizontalGapCustomised = config.keyHorizontalMarginCustomised,
-                )
-            }
             return LayoutKeyGeometry.applyTo(
-                KeyboardLookGeometry.resolve(look, user, keyWidth, row_height, theme.density),
+                KeyboardLookGeometry.resolve(theme.lookGeometry, user, keyWidth, row_height, theme.density),
                 overrides = overrides,
                 globals = LayoutKeyGeometry.Globals(
                     borderOn = config.borderConfig,

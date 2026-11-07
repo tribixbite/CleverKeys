@@ -1215,8 +1215,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     hints "now too small"): a 1 dp hairline (#D3CADB / #3D3546), hints 0.44; the Restart keyboard
     button rebuilds in place (`EXTRA_REBUILD_KEYBOARD`), the broken-theme fallback is the look,
     choosing the look stores the default trail.
+    Third round (2026-11-07, maintainer screenshots vs SwiftKey): equal gaps (0.11 of a key,
+    rows the same in px, `equal_gaps`), the global gaps no longer yield (a tuned gap had the
+    keys touching), dark mode darker keys on a near-black aurora with static stars
+    (`LookBackdrop` / `AuroraBackdropDrawable`). Not yet seen on a phone.
     Still open: the "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
     on a test phone, and the maintainer's look-and-feel verdict.
+35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
+    swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
+    spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
+    `BundledContractionDataTest`. Open: swipe `d'être`, `l'été`, `l'école` on a phone with French
+    primary; the beam ranking of the new injected keys was not replayed (`ctc_injection_ab.py`);
+    the geometric engine still cannot produce non-word elisions (it builds only lexicon words).
+36. [ ] device: "Space before opening punctuation" (2026-11-07, default on; spec
+    `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Mock-tested through the real
+    sendText (`OpeningPunctuationSpacingTest`); not run on a phone. Ellipsis after a swiped word
+    chains to `wait... ` (pinned); the maintainer's half-remembered "space after a period"
+    ellipsis bug was not reproduced.
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

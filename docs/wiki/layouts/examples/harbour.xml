@@ -42,6 +42,7 @@
       latched_label="#FFFFFF"
       gap_horizontal="0.12"
       gap_vertical="0.16"
+      equal_gaps="false"
       corner_radius="10"
       border_width="0"
       shadow_dy="1"

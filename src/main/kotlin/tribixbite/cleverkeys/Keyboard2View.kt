@@ -225,9 +225,7 @@ class Keyboard2View @JvmOverloads constructor(
         // Fix #92: For runtime themes (custom/decorative), the XML attribute
         // ?attr/colorKeyboard resolves to the hardcoded base style (CleverKeysDark).
         // Override with the actual keyboard background from the Theme's color scheme.
-        if (snap.isRuntimeTheme && _theme.colorKeyboardBackground != 0) {
-            setBackgroundColor(_theme.colorKeyboardBackground)
-        }
+        if (snap.isRuntimeTheme) applyThemeBackground(_theme)
 
         _pointers = Pointers(this, _config, getContext())
         _swipeRecognizer = _pointers._swipeRecognizer // Share the recognizer
@@ -631,7 +629,7 @@ class Keyboard2View @JvmOverloads constructor(
         _previewTrailColor = trailColor
         // Cached frames hold the previous theme's paints.
         _themeCache.evictAll()
-        if (theme.colorKeyboardBackground != 0) setBackgroundColor(theme.colorKeyboardBackground)
+        applyThemeBackground(theme)
         val kw = _keyboard
         _tc = if (kw != null && _keyWidth > 0f) Theme.Computed(_theme, _config, _keyWidth, kw) else null
         initSwipeTrailPaint()
@@ -1838,6 +1836,23 @@ class Keyboard2View @JvmOverloads constructor(
         } else {
             @Suppress("DEPRECATION")
             wi.consumeSystemWindowInsets()
+        }
+    }
+
+    /**
+     * The keyboard background of a runtime theme: the look's painted backdrop (aurora and stars,
+     * `LookBackdrop`) when its palette has one, otherwise the flat background colour; a theme
+     * without a background colour (0) keeps the XML style's.
+     */
+    private fun applyThemeBackground(theme: Theme) {
+        val base = theme.colorKeyboardBackground
+        if (base == 0) return
+        val backdrop = theme.lookBackdrop
+        if (backdrop == null) {
+            setBackgroundColor(base)
+        } else {
+            // onDraw sets the keyboard opacity on whichever background is current.
+            background = tribixbite.cleverkeys.theme.AuroraBackdropDrawable(base, backdrop, theme.density)
         }
     }
 

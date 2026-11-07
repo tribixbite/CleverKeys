@@ -445,6 +445,10 @@ class KeyEventHandler(
         // SAS-1: set when sentence-ending punctuation swallows the auto-space and
         // re-adds one — the fresh space is re-marked pending AFTER the commit below.
         var reMarkAutoSpaceAfterCommit = false
+        // Feature C (SmartAutoSpace): stamps to set AFTER the commit below — the end of the word
+        // plus the closing mark just attached to it, or a `'` read as an opening quote.
+        var markWordEndAfterCommit = false
+        var markApostropheAfterCommit = false
         val config = Config.globalConfig()
         if (config.double_space_to_period && !isKeyRepeat &&
             text.length == 1 && text[0] == ' ' && lastTypedChar == ' ' &&
@@ -480,6 +484,26 @@ class KeyEventHandler(
             }
         } else if (text.length == 1) {
             val char = text[0]
+            // Feature C: the word-end stamps, read before anything clears them. The cursor is
+            // read only while a stamp is set, so ordinary typing costs no extra editor call.
+            val spaceOpeners = config.space_before_opening_punctuation
+            val wordEndStamp = recv.getWordEndStamp()
+            val apostropheStamp = recv.getOpeningApostropheStamp()
+            val cursorNow = if (spaceOpeners && (wordEndStamp >= 0 || apostropheStamp >= 0)) {
+                PredictionContextTracker.currentCursorPosition(conn)
+            } else -1
+            recv.invalidateWordEnd()
+            var attachedCloser = false
+
+            // A letter tapped straight after a `'` spaced as an opening quote: it was a
+            // possessive or contraction after all (`John '` + `s` → `John's`). A swiped word
+            // there never reaches this path, so `said 'hello` stays quoted.
+            if (spaceOpeners && char.isLetter() && cursorNow >= 0 && cursorNow == apostropheStamp &&
+                conn.getTextBeforeCursor(2, 0)?.toString() == " '"
+            ) {
+                deleteBeforeCursor(conn, 2)
+                textToCommit = "'$char"
+            }
 
             // Smart punctuation: If typing punctuation and previous char is space, delete the space
             // This attaches punctuation to the end of the previous word (e.g., "word ." -> "word.")
@@ -506,9 +530,17 @@ class KeyEventHandler(
                     actualPosition = selection?.first ?: -1
                 )
 
-                if (isPunctChar && eligible) {
+                // Feature C: with spacing on, a `'` after the automatic space is a quote mark
+                // unless a single quote is open (closing) or the word ends in s (possessive).
+                val openingApostrophe = char == '\'' && spaceOpeners && eligible && textBefore != null &&
+                    SmartAutoSpace.apostropheRole(textBefore.trimEnd()) == SmartAutoSpace.ApostropheRole.OPENING
+                if (openingApostrophe) {
+                    // Keep the automatic space: `said ` + `'` → `said '`.
+                    markApostropheAfterCommit = true
+                } else if (isPunctChar && eligible) {
                     // Closing punctuation: swallow the automatic space to attach to the word
                     deleteBeforeCursor(conn, 1)
+                    attachedCloser = true
                     // v1.2.8: For sentence-ending punctuation, add space after so autocap triggers
                     // "hello " + "." → "hello. " (enables getCursorCapsMode to detect sentence end)
                     if (isSentenceEndingPunctuation(char)) {
@@ -524,10 +556,27 @@ class KeyEventHandler(
                     if (isClosingQuote(char, textBefore)) {
                         // Closing quote: delete space to attach to word
                         deleteBeforeCursor(conn, 1)
+                        attachedCloser = true
                     }
                     // Opening quote: keep the space (do nothing)
                 }
             }
+
+            // Feature C: an opening mark straight after a keyboard-committed word, or after the
+            // closing mark attached to it, gets a space before it (`hello,` + `(` → `hello, (`).
+            // A closing mark typed there extends the word end instead (`hello` + `,`).
+            if (spaceOpeners && cursorNow >= 0 && cursorNow == wordEndStamp) {
+                val before = conn.getTextBeforeCursor(500, 0)
+                if (SmartAutoSpace.needsSpaceBeforeOpener(char, before, wordEndStamp, cursorNow)) {
+                    textToCommit = " $char"
+                    if (char == '\'') markApostropheAfterCommit = true
+                } else if (isSmartPunctuationChar(char) || (isQuoteChar(char) && isClosingQuote(char, before))) {
+                    attachedCloser = true
+                }
+            }
+            // The end of the word now sits after the attached closer, unless a sentence end
+            // re-added the automatic space (an opener after it already has its space).
+            if (spaceOpeners && attachedCloser && !reMarkAutoSpaceAfterCommit) markWordEndAfterCommit = true
 
             // v1.2.7/SAS-1: Any other single-char input invalidates the pending
             // auto-space (flag + position stamp), cleared AFTER the swallow check.
@@ -538,6 +587,7 @@ class KeyEventHandler(
         } else {
             // SAS-1: multi-char input (macros, emoji strings) invalidates too
             recv.setLastSpaceAutoInserted(false)
+            recv.invalidateWordEnd()
             lastTypedChar = '\u0000' // Reset on multi-char input
         }
         lastTypedTimestamp = currentTime
@@ -545,8 +595,9 @@ class KeyEventHandler(
         // SAS-1: capture the pre-commit cursor position for the chaining stamp
         // (after the swallow deletion above, right before the commit)
         val preCommitPos =
-            if (reMarkAutoSpaceAfterCommit) PredictionContextTracker.currentCursorPosition(conn)
-            else -1
+            if (reMarkAutoSpaceAfterCommit || markWordEndAfterCommit || markApostropheAfterCommit) {
+                PredictionContextTracker.currentCursorPosition(conn)
+            } else -1
 
         // #151 TSR: repair the editor-dropped trailing space. Verify at use — the text
         // before the cursor must still read exactly the committed word (no space after
@@ -556,8 +607,11 @@ class KeyEventHandler(
         // below (autocap/handle_text_typed) still sees the bare char — the space is an
         // editor-text repair, not a typed character (the word context was already
         // committed at suggestion time).
+        // An opening mark is owed the space too (Feature C, when on): `hello` + `(` → `hello (`.
         val repairOwedSpace = owedTrailingSpaceWord != null &&
-            text.length == 1 && text[0].isLetterOrDigit() &&
+            text.length == 1 && !textToCommit.startsWith(' ') &&
+            (text[0].isLetterOrDigit() || (config.space_before_opening_punctuation &&
+                SmartAutoSpace.isSpacedOpener(text[0], owedTrailingSpaceWord))) &&
             conn.getTextBeforeCursor(owedTrailingSpaceWord.length, 0)?.toString() ==
             owedTrailingSpaceWord
         if (owedTrailingSpaceWord != null && BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -579,6 +633,12 @@ class KeyEventHandler(
             recv.markAutoSpacePending(
                 if (preCommitPos >= 0) preCommitPos + textToCommit.length else -1
             )
+        }
+        // Feature C: only with a known position (verified at use; unknown = no spacing).
+        if (preCommitPos >= 0) {
+            val after = preCommitPos + textToCommit.length + (if (repairOwedSpace) 1 else 0)
+            if (markWordEndAfterCommit) recv.markWordEnd(after)
+            if (markApostropheAfterCommit) recv.markOpeningApostrophe(after)
         }
         autocap.typed(textToCommit)
         recv.handle_text_typed(textToCommit.toString())
@@ -1826,6 +1886,13 @@ class KeyEventHandler(
         // PredictionContextTracker.markAutoSpacePending / SmartAutoSpace)
         fun getAutoSpaceStampedPosition(): Int = -1
         fun markAutoSpacePending(expectedCursorPosition: Int) {}
+        // Feature C: the word-end and opening-apostrophe stamps (PredictionContextTracker,
+        // SmartAutoSpace.needsSpaceBeforeOpener)
+        fun getWordEndStamp(): Int = -1
+        fun markWordEnd(position: Int) {}
+        fun getOpeningApostropheStamp(): Int = -1
+        fun markOpeningApostrophe(position: Int) {}
+        fun invalidateWordEnd() {}
         // #151 TSR: consult-and-clear the owed-trailing-space state (see
         // PredictionContextTracker.takeOwedTrailingSpace) — non-null means a
         // composing-less editor dropped the trailing space of the last suggestion

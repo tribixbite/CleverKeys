@@ -370,15 +370,21 @@ selectable. It keeps CleverKeys' own parts — every corner label (`LookLegends.
 short-swipe hints), the scrolling suggestion chips (`bar = null`), a purple accent — and takes
 what the popular keyboards share (research `2026-10-27-familiar-keyboard-looks.md`): light/dark
 follow the system; flat keys framed by a 1 dp hairline one step off the key fill (light #D3CADB,
-dark #3D3546; maintainer 2026-11-06: "make keys not borderless"), 8 dp corners, gaps 0.12 / 0.16,
-a light-mode-only shadow;
+dark #332B3D; maintainer 2026-11-06: "make keys not borderless"), 8 dp corners, SwiftKey's 0.11
+horizontal gap with the row gap equal to it in pixels (`LookGeometry.equalGaps`, XML
+`equal_gaps`; maintainer 2026-11-07), a light-mode-only shadow; in dark mode darker keys (#1D1924)
+on a near-black base (#0A080E) painted with an aurora (`LookPalette.backdrop` →
+`KeyboardLooks.CLEVERKEYS_AURORA`: three tilted violet / orchid / indigo glows at about a third
+opacity and a static star field with an occasional glint, faded into the base over the top 18 %
+so the bar joins without a seam; `AuroraBackdropDrawable`, stars placed by `LookStars`,
+`LookBackdropTest`); light mode stays flat;
 a tonal function-key fill; the Go / Search / Send / Done action in the accent with an icon; a
 BUBBLE press preview; a filled Shift while shifted. It is the only look with
 `yieldsToUserSettings` (`LookUserYield`, pure, `KeyboardLookUserYieldTest`): because users get it
-without choosing it, a key gap whose stored value differs from its default
-(`Config.keyVerticalMarginCustomised` / `keyHorizontalMarginCustomised`) and a trail colour that
-differs from `Defaults.SWIPE_TRAIL_COLOR` keep the user's value; untouched settings take the
-look's. The custom border (`border_config`) does NOT win: the look's own hairline is the frame
+without choosing it, a trail colour that differs from `Defaults.SWIPE_TRAIL_COLOR` keeps the
+user's value. The global key gaps no longer do (2026-11-07: the maintainer asked for this look's
+own spacing, and a gap tuned before it became the default left the keys touching); a per-layout
+gap set in Layout Manager still wins (`LayoutKeyGeometry`). The custom border (`border_config`) does NOT win: the look's own hairline is the frame
 (maintainer, 2026-11-06: the custom border was "too distracting"), as for every familiar look.
 Corner hints are drawn at 0.44 of the label (`LookHintStyle`; CleverKeys' old 0.67 was "too
 large", a first 0.34 "too small"; Gboard 0.40, Samsung 0.45). Choosing it in Theme Manager stores

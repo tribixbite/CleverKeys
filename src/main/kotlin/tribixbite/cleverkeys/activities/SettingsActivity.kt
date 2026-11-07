@@ -428,6 +428,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var doubleTapLockShift by mutableStateOf(Defaults.DOUBLE_TAP_LOCK_SHIFT)
     internal var switchInputImmediate by mutableStateOf(Defaults.SWITCH_INPUT_IMMEDIATE)
     internal var smartPunctuationEnabled by mutableStateOf(Defaults.SMART_PUNCTUATION) // Attach punctuation to end of last word
+    internal var spaceBeforeOpeningPunctuation by mutableStateOf(Defaults.SPACE_BEFORE_OPENING_PUNCTUATION) // Space before ( " ' $ @
     // #139: Enter inserts a newline in multi-line fields instead of the editor action.
     internal var enterAlwaysNewline by mutableStateOf(Defaults.ENTER_ALWAYS_NEWLINE)
 

@@ -125,6 +125,7 @@ The same colour attributes are allowed on `<theme>` (both modes), `<light>` and 
 |-----------|-------|---------|
 | `gap_horizontal` | 0–0.5 | Gap between keys, as a fraction of one key's width. |
 | `gap_vertical` | 0–0.5 | Gap between rows, as a fraction of the row height. |
+| `equal_gaps` | `true` / `false` | Make the gap between rows the same width in pixels as `gap_horizontal`, so every key has equal space on all sides at any keyboard height; `gap_vertical` is then ignored. The CleverKeys look uses it. |
 | `corner_radius` | 0–64 (dp) | Key corner radius. |
 | `border_width` | 0–8 (dp) | Key outline width (0 = none). |
 | `shadow_dy` | 0–8 (dp) | How far below each key its `key_shadow` is drawn (0 = none). |
@@ -281,6 +282,7 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       latched_label="#FFFFFF"
       gap_horizontal="0.12"
       gap_vertical="0.16"
+      equal_gaps="false"
       corner_radius="10"
       border_width="0"
       shadow_dy="1"

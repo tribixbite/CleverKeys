@@ -5,11 +5,10 @@ import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
- * [LookUserYield]: the CleverKeys default look ([KeyboardLooks.cleverkeysLook]) gives way to the
- * appearance settings a user tuned before it became the default — key gaps changed from their
- * defaults and a changed trail colour — and takes its own values everywhere else, the frame
- * included (a custom border does not survive: the borderless key is the look).
- * Pure JVM.
+ * [LookUserYield]: the CleverKeys default look ([KeyboardLooks.cleverkeysLook]) gives way only to
+ * a swipe trail colour the user changed. Its geometry is its own: the global key gaps (maintainer
+ * 2026-11-07: SwiftKey's spacing, equal on every side) and a custom border (the hairline is the
+ * frame) both lose to it. Pure JVM.
  */
 class KeyboardLookUserYieldTest {
 
@@ -22,34 +21,32 @@ class KeyboardLookUserYieldTest {
         KeyboardLookGeometry.resolve(g, user, keyWidth = 100f, rowHeight = 50f, density = 2f)
 
     @Test
-    fun untouchedSettingsTakeTheLookGeometry() {
-        val g = LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = false)
-        assertThat(g).isEqualTo(look)
-        val e = resolve(g)
-        assertThat(e.verticalMargin).isEqualTo(look.keyGapVertical!! * 50f)
+    fun theLookGapsWinOverTheUsersGlobalGaps() {
+        val e = resolve(look)
         assertThat(e.horizontalMargin).isEqualTo(look.keyGapHorizontal!! * 100f)
-        assertThat(e.borderRadius).isEqualTo(look.cornerRadiusDp!! * 2f)
-        assertWithMessage("the look's 1 dp hairline").that(e.borderWidth).isEqualTo(look.borderWidthDp!! * 2f)
-    }
-
-    @Test
-    fun aTunedGapKeepsTheUsersValueOnlyForThatGap() {
-        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = false))
-        assertWithMessage("the user's vertical gap").that(e.verticalMargin).isEqualTo(3f)
-        assertWithMessage("the look's horizontal gap").that(e.horizontalMargin).isEqualTo(look.keyGapHorizontal!! * 100f)
-        val h = resolve(LookUserYield.geometry(look, verticalGapCustomised = false, horizontalGapCustomised = true))
-        assertThat(h.horizontalMargin).isEqualTo(4f)
-        assertThat(h.verticalMargin).isEqualTo(look.keyGapVertical!! * 50f)
+        assertWithMessage("rows are as far apart as keys").that(e.verticalMargin).isEqualTo(e.horizontalMargin)
     }
 
     @Test
     fun theFrameIsAlwaysTheLooksEvenOverACustomBorder() {
         // The user geometry here carries a custom border (radius 5, outline 1/3): the look wins.
-        val e = resolve(LookUserYield.geometry(look, verticalGapCustomised = true, horizontalGapCustomised = true))
+        val e = resolve(look)
         assertThat(e.borderRadius).isEqualTo(look.cornerRadiusDp!! * 2f)
         assertThat(e.borderWidth).isEqualTo(look.borderWidthDp!! * 2f)
         assertThat(e.borderWidthActivated).isEqualTo(look.borderWidthDp!! * 2f)
-        assertWithMessage("label scale is the look's either way").that(e.labelScale).isEqualTo(look.labelScale)
+        assertWithMessage("label scale is the look's").that(e.labelScale).isEqualTo(look.labelScale)
+    }
+
+    @Test
+    fun equalGapsAreCappedLikeAFractionalGap() {
+        // A short row: the horizontal gap (40 px) would exceed half the row (25 px).
+        val g = LookGeometry(keyGapHorizontal = 0.4f, equalGaps = true)
+        val e = resolve(g)
+        assertThat(e.horizontalMargin).isEqualTo(40f)
+        assertThat(e.verticalMargin).isEqualTo(KeyboardLookGeometry.MAX_GAP * 50f)
+        // Without a horizontal gap there is nothing to copy: the vertical fraction (or the user's) applies.
+        assertThat(resolve(LookGeometry(keyGapVertical = 0.2f, equalGaps = true)).verticalMargin).isEqualTo(10f)
+        assertThat(resolve(LookGeometry(equalGaps = true)).verticalMargin).isEqualTo(3f)
     }
 
     @Test

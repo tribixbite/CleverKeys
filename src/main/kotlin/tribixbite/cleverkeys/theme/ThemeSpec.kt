@@ -190,6 +190,7 @@ object ThemeSpecs {
                 labelScale = t.geometry.labelScale ?: b.geometry.labelScale,
                 labelWeight = t.geometry.labelWeight ?: b.geometry.labelWeight,
                 functionLabelScale = t.geometry.functionLabelScale ?: b.geometry.functionLabelScale,
+                equalGaps = t.geometry.equalGaps ?: b.geometry.equalGaps,
             ),
             functionChars = t.functionChars ?: b.functionChars,
             legends = t.legends ?: b.legends,

@@ -550,6 +550,8 @@
     <string name="input_capitalize_i_desc">「I」と短縮形（I\'m、I\'ll、I\'d、I\'ve）を自動的に大文字にします</string>
     <string name="input_smart_punctuation_title">スマート句読点</string>
     <string name="input_smart_punctuation_desc">単語の末尾に句読点を付けます（.、,、!、?などの前のスペースを削除）</string>
+    <string name="input_space_before_opening_punctuation_title">開き記号の前にスペース</string>
+    <string name="input_space_before_opening_punctuation_desc">スワイプ入力した単語の後、( \" \' $ @ などの前にスペースを入れます。閉じ記号は引き続き単語に付きます</string>
     <string name="input_swipe_distance_threshold_title">スワイプ距離の閾値</string>
     <string name="input_swipe_distance_threshold_desc">スワイプ中にスライダー/イベントサブキーを起動する距離（デバイス換算単位）。スペースバーカーソルスライダーなどに使用。バックスペースなど幅広キーのショートスワイプ最小値も制限します。</string>
     <string name="input_circle_gesture_title">円ジェスチャー感度</string>

@@ -323,6 +323,25 @@ object KeyboardLooks {
     )
 
     /**
+     * The CleverKeys look's dark backdrop (declared before [cleverkeysLook]: object properties
+     * initialise in order): violet, orchid and indigo glows tilted like aurora
+     * curtains, peaking at about a third opacity so the background stays darker than the keys
+     * overall, and a sparse static star field with an occasional glint. Fractions of the view.
+     */
+    val CLEVERKEYS_AURORA = LookBackdrop(
+        glows = listOf(
+            AuroraGlow(cx = 0.22f, cy = 0.62f, rx = 0.58f, ry = 0.34f, rotationDeg = -14f, color = 0x5C7A3CC8),
+            AuroraGlow(cx = 0.74f, cy = 0.46f, rx = 0.52f, ry = 0.28f, rotationDeg = 11f, color = 0x449E3FB8),
+            AuroraGlow(cx = 0.50f, cy = 0.92f, rx = 0.75f, ry = 0.24f, rotationDeg = -4f, color = 0x504A2EA6),
+        ),
+        stars = LookStarfield(
+            perSquare100Dp = 4f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),
+            minAlpha = 50, maxAlpha = 170, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 7,
+        ),
+        topFade = 0.18f,
+    )
+
+    /**
      * CleverKeys' own look, the default theme (`Defaults.THEME`, 2026-11-06). It keeps what makes
      * CleverKeys CleverKeys — every corner label (the short-swipe hints), the scrolling suggestion
      * chips, the purple identity — and takes the parts the popular keyboards share (research
@@ -336,9 +355,11 @@ object KeyboardLooks {
      *  - the primary action of Go / Search / Send / Done fields in the accent colour with an icon
      *    (iOS, Gboard's highlighted Enter);
      *  - a key-press preview bubble (all four) and a filled Shift arrow while shifted (Gboard).
-     * Because users get it without choosing it, it [KeyboardLook.yieldsToUserSettings]: key gaps
-     * and a trail colour the user already tuned still apply (a custom border does not: the
-     * look's own hairline is the frame). Corner hints are 0.44 of the label, between Gboard's 0.40
+     * In dark mode the keys sit on a near-black aurora ([CLEVERKEYS_AURORA]) with equal gaps on
+     * every side, SwiftKey's spacing (maintainer 2026-11-07). Because users get it without
+     * choosing it, a trail colour the user already tuned still applies
+     * ([KeyboardLook.yieldsToUserSettings]); the global key gaps and a custom border do not (a
+     * per-layout gap in Layout Manager does). Corner hints are 0.44 of the label, between Gboard's 0.40
      * and Samsung's 0.45 (maintainer 2026-11-06: CleverKeys' old 0.67 was "too large", 0.34 "too
      * small"), in the subdued #716A78 / #A69DAE that still reach 3:1 on every key fill.
      */
@@ -357,20 +378,26 @@ object KeyboardLooks {
             // One-shot / auto-capitalised Shift keeps the function fill; the filled arrow says it.
             latchedKey = argb(0xE3D6EF), latchedLabel = argb(0x3A2650),
         ),
+        // Dark keys on a near-black aurora (maintainer 2026-11-07): the base is darker than every
+        // key fill, the glows show in the gaps and margins, and the hairline frame (a step
+        // lighter than the key) keeps each key's edge on the black.
         dark = LookPalette(
-            keyboardBackground = argb(0x16121A), key = argb(0x2A2430), keyPressed = argb(0x3F3747),
+            keyboardBackground = argb(0x0A080E), key = argb(0x1D1924), keyPressed = argb(0x342C3E),
             keyLocked = argb(0xCDA5EC), lockedLabel = argb(0x2E0F45),
-            modifierKey = argb(0x3A2E47), enterKey = argb(0x3A2E47), enterLabel = argb(0xEBDDF7),
+            modifierKey = argb(0x2A2234), enterKey = argb(0x2A2234), enterLabel = argb(0xEBDDF7),
             actionKey = argb(0xCDA5EC), actionLabel = argb(0x2E0F45),
             label = argb(0xEDE7F2), modifierLabel = argb(0xEBDDF7), hint = argb(0xA69DAE),
-            keyShadow = 0, keyBorder = argb(0x3D3546),
-            barBackground = argb(0x16121A), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
-            barSeparator = argb(0x3A3340), swipeTrail = argb(0xC79BE8),
-            popup = argb(0x3A3341), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
-            latchedKey = argb(0x3A2E47), latchedLabel = argb(0xEBDDF7),
+            keyShadow = 0, keyBorder = argb(0x332B3D),
+            barBackground = argb(0x0A080E), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
+            barSeparator = argb(0x2C2633), swipeTrail = argb(0xC79BE8),
+            popup = argb(0x2E2838), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
+            latchedKey = argb(0x2A2234), latchedLabel = argb(0xEBDDF7),
+            backdrop = CLEVERKEYS_AURORA,
         ),
         geometry = LookGeometry(
-            keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 8f,
+            // SwiftKey's horizontal gap (12 px of a 92 px key unit in the maintainer's
+            // screenshot, 2026-11-07), with the gap between rows the same in pixels.
+            keyGapHorizontal = 0.11f, equalGaps = true, cornerRadiusDp = 8f,
             borderWidthDp = 1f, shadowDyDp = 0.6f, labelScale = 1.1f, labelWeight = 400,
         ),
         // CleverKeys' short swipes are the product: every corner label stays, drawn small.

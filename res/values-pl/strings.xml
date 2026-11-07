@@ -567,6 +567,8 @@
     <string name="input_capitalize_i_desc">Automatycznie używaj wielkich liter dla „I” i skrótów (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Inteligentna interpunkcja</string>
     <string name="input_smart_punctuation_desc">Dołącz interpunkcję na końcu słów (usuwa spację przed . , ! ? itp.)</string>
+    <string name="input_space_before_opening_punctuation_title">Spacja przed otwierającą interpunkcją</string>
+    <string name="input_space_before_opening_punctuation_desc">Po słowie wpisanym przesunięciem wstawia spację przed ( \" \' $ @ i podobnymi; znaki zamykające nadal dołączają do słowa</string>
     <string name="input_swipe_distance_threshold_title">Próg odległości gestu</string>
     <string name="input_swipe_distance_threshold_desc">Odległość (jednostki skalowane urządzenia) do aktywacji suwaka/podklawiszy w trakcie gestu (np. suwak kursora na spacji). Ogranicza też minimum krótkiego gestu na szerokich klawiszach jak Backspace.</string>
     <string name="input_circle_gesture_title">Czułość gestu koła</string>

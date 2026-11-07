@@ -562,6 +562,8 @@
     <string name="input_capitalize_i_desc">Auto-capitalize ang \"I\" at mga contraction (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Matalinong Bantas</string>
     <string name="input_smart_punctuation_desc">Ilakip ang mga punctuation sa dulo ng mga salita (tinatanggal ang space bago ang . , ! ? atbp.)</string>
+    <string name="input_space_before_opening_punctuation_title">Espasyo bago ang pambukas na bantas</string>
+    <string name="input_space_before_opening_punctuation_desc">Pagkatapos ng salitang sinwipe, maglagay ng espasyo bago ang ( \" \' $ @ at katulad; nakadikit pa rin ang mga pansarang bantas</string>
     <string name="input_swipe_distance_threshold_title">Threshold ng Distansya ng Swipe</string>
     <string name="input_swipe_distance_threshold_desc">Distansya (mga unit na naka-scale sa device) para i-activate ang slider/event subkey sa gitna ng swipe (hal. spacebar cursor slider). Nililimitahan din ang minimum ng maikling swipe sa malalawak na key tulad ng backspace.</string>
     <string name="input_circle_gesture_title">Sensitivity ng Circle Gesture</string>

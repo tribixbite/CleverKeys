@@ -26,6 +26,9 @@ class KeyboardLooksTest {
 
     private fun luminanceOrder(palette: LookPalette) = contrast(palette.keyboardBackground, 0xFF000000.toInt())
 
+    /** WCAG relative luminance, recovered from the contrast against black: (L + 0.05) / 0.05. */
+    private fun relativeLuminance(color: Int) = contrast(color, 0xFF000000.toInt()) * 0.05 - 0.05
+
     @Test
     fun theLooksAreRegisteredUnderTheLookPrefix() {
         assertThat(KeyboardLooks.FAMILIAR_IDS).containsExactly(
@@ -60,13 +63,16 @@ class KeyboardLooksTest {
     fun eachLookDefinesItsKeyShapeAndGaps() {
         for (look in KeyboardLooks.ALL) {
             val g = look.geometry
-            assertWithMessage("${look.id} gaps").that(listOf(g.keyGapHorizontal, g.keyGapVertical)).doesNotContain(null)
+            assertWithMessage("${look.id} horizontal gap").that(g.keyGapHorizontal).isNotNull()
+            // Either a vertical fraction or "equal to the horizontal gap" (the CleverKeys look).
+            assertWithMessage("${look.id} vertical gap")
+                .that(g.keyGapVertical != null || g.equalGaps == true).isTrue()
             assertWithMessage("${look.id} radius").that(g.cornerRadiusDp).isNotNull()
             assertWithMessage("${look.id} outline").that(g.borderWidthDp).isNotNull()
             assertWithMessage("${look.id} label scale").that(g.labelScale).isNotNull()
             // The resolved values must sit inside the resolver's clamps (no silent clamping).
             assertThat(g.keyGapHorizontal!!).isAtMost(KeyboardLookGeometry.MAX_GAP)
-            assertThat(g.keyGapVertical!!).isAtMost(KeyboardLookGeometry.MAX_GAP)
+            g.keyGapVertical?.let { assertThat(it).isAtMost(KeyboardLookGeometry.MAX_GAP) }
             assertThat(g.labelScale!!).isIn(
                 com.google.common.collect.Range.closed(KeyboardLookGeometry.MIN_LABEL_SCALE, KeyboardLookGeometry.MAX_LABEL_SCALE)
             )
@@ -200,6 +206,91 @@ class KeyboardLooksTest {
         assertWithMessage("a soft shadow in light mode only")
             .that(listOf(look.light.keyShadow != 0, look.dark.keyShadow != 0)).containsExactly(true, false).inOrder()
         assertThat(KeyboardLooks.ALL.filter { it.yieldsToUserSettings }).containsExactly(look)
+    }
+
+    /**
+     * Maintainer 2026-11-07: SwiftKey's spacing with the same gap between rows as between keys,
+     * darker keys, and a background darker than the keys painted as an aurora (dark mode only).
+     */
+    @Test
+    fun theCleverKeysLookHasEqualGapsAndADarkAuroraBehindDarkerKeys() {
+        val look = KeyboardLooks.cleverkeysLook
+        val g = look.geometry
+        assertThat(g.equalGaps).isTrue()
+        assertWithMessage("SwiftKey's horizontal gap, about 0.11..0.12 of a key")
+            .that(g.keyGapHorizontal).isIn(Range.closed(0.10f, 0.12f))
+        // Equal in pixels at any row height.
+        val e = KeyboardLookGeometry.resolve(
+            g, KeyboardLookGeometry.UserGeometry(1f, 1f, 1f, 1f, 1f), keyWidth = 92f, rowHeight = 137f, density = 2.6f,
+        )
+        assertThat(e.verticalMargin).isEqualTo(e.horizontalMargin)
+
+        val dark = look.dark
+        val backdrop = dark.backdrop
+        assertWithMessage("the dark palette paints the aurora").that(backdrop).isNotNull()
+        assertWithMessage("light mode stays flat").that(look.light.backdrop).isNull()
+        val base = relativeLuminance(dark.keyboardBackground)
+        for ((role, fill) in listOf("key" to dark.key, "function key" to dark.modifierKey, "border" to dark.keyBorder)) {
+            assertWithMessage("the base is darker than the $role").that(base).isLessThan(relativeLuminance(fill))
+        }
+        // "Darker than the keys overall": the painted background's mean luminance, sampled on a
+        // phone-shaped keyboard with the falloff AuroraBackdropDrawable draws, stays below the
+        // key fill's. (Single glow cores may be brighter: that is the aurora in the gaps.)
+        val mean = meanBackdropLuminance(dark.keyboardBackground, backdrop!!, width = 411f, height = 290f)
+        assertWithMessage("mean background luminance vs the key fill")
+            .that(mean).isLessThan(relativeLuminance(dark.key))
+        assertWithMessage("the darker keys still carry the hints at 3:1")
+            .that(contrast(dark.hint, dark.key)).isAtLeast(3.0)
+        assertWithMessage("the bar joins the faded top edge in the base colour")
+            .that(dark.barBackground).isEqualTo(dark.keyboardBackground)
+        assertThat(backdrop.topFade).isGreaterThan(0f)
+    }
+
+    /**
+     * Mean relative luminance of [backdrop] painted over [base] on a [width] × [height] view: the
+     * glows' radial falloff (full alpha at the centre, 45 % at half the radius, 0 at the edge, on
+     * an ellipse tilted by its rotation) and the top fade, as AuroraBackdropDrawable paints them.
+     */
+    private fun meanBackdropLuminance(base: Int, backdrop: LookBackdrop, width: Float, height: Float): Double {
+        val cols = 96
+        val rows = 64
+        var sum = 0.0
+        for (j in 0 until rows) for (i in 0 until cols) {
+            val x = (i + 0.5f) / cols * width
+            val y = (j + 0.5f) / rows * height
+            var color = base
+            for (g in backdrop.glows) {
+                val rx = g.rx * width
+                val ry = g.ry * height
+                val a = Math.toRadians(-g.rotationDeg.toDouble())
+                val dx = x - g.cx * width
+                val dy = y - g.cy * height
+                val u = dx * Math.cos(a) - dy * Math.sin(a)
+                val v = (dx * Math.sin(a) + dy * Math.cos(a)) * rx / ry
+                val t = Math.hypot(u, v) / rx
+                val f = when {
+                    t <= 0.5 -> 1.0 - (1.0 - 0.45) * (t / 0.5)
+                    t <= 1.0 -> 0.45 * (1.0 - (t - 0.5) / 0.5)
+                    else -> 0.0
+                }
+                val alpha = (((g.color ushr 24) and 0xFF) * f).toInt()
+                color = blend((alpha shl 24) or (g.color and 0xFFFFFF), color)
+            }
+            val fadeH = backdrop.topFade * height
+            if (y < fadeH) {
+                val alpha = (255 * (1 - y / fadeH)).toInt()
+                color = blend((alpha shl 24) or (base and 0xFFFFFF), color)
+            }
+            sum += relativeLuminance(color)
+        }
+        return sum / (cols * rows)
+    }
+
+    /** [top] (with alpha) over the opaque [under], per channel. */
+    private fun blend(top: Int, under: Int): Int {
+        val a = ((top ushr 24) and 0xFF) / 255.0
+        fun ch(shift: Int) = (((top shr shift) and 0xFF) * a + ((under shr shift) and 0xFF) * (1 - a)).toInt()
+        return (0xFF shl 24) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
     }
 
     /** Only Samsung prints the language on the space bar ("English (US)", 1.jpg). */

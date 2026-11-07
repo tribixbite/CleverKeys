@@ -77,6 +77,88 @@ object SmartAutoSpace {
     /** Feature B: closing punctuation that attaches to the previous word. */
     fun isClosingPunctuation(c: Char): Boolean = c in CLOSING_PUNCTUATION
 
+    // ==================== Feature C: a space before opening punctuation ====================
+    // Maintainer 2026-11-07 ("Space before opening punctuation", default on): when swipe typing,
+    // an opening mark typed straight after a word the keyboard committed (`hello,` + `(` or, with
+    // the automatic space off, `hello` + `@`) gets a space before it, while a closing mark still
+    // attaches (Feature B). Only the end of a keyboard-committed word qualifies (a position stamp,
+    // KeyEventHandler), so typing `f(x)`, `user@mail` or `US$5` letter by letter is unchanged.
+
+    /** Marks that always open (Feature C), besides the quotes resolved by context below. */
+    private val SPACED_OPENERS = setOf('(', '[', '{', '“', '‘', '¿', '¡', '$', '€', '£', '¥', '@', '#')
+
+    /** How a straight apostrophe typed after a word reads (Feature C). */
+    enum class ApostropheRole {
+        /** Closes a single quote that is still open: attaches (`'hello'`). */
+        CLOSING,
+        /** After a word ending in s: the plural possessive, attaches (`kids'`). */
+        POSSESSIVE,
+        /**
+         * Opens a quote (`said 'hello`): keeps or gets a space before it. A letter TAPPED right
+         * after it turns it back into a possessive or contraction (`John` + `'` + `s` → `John's`,
+         * KeyEventHandler); a swiped word after it stays quoted.
+         */
+        OPENING,
+    }
+
+    /**
+     * The role of a `'` typed after [textBefore] (the text before it, trailing spaces already
+     * trimmed: the word it follows is the end of the text).
+     */
+    fun apostropheRole(textBefore: CharSequence): ApostropheRole = when {
+        hasUnmatchedSingleQuote(textBefore) -> ApostropheRole.CLOSING
+        textBefore.lastOrNull()?.let { it == 's' || it == 'S' } == true -> ApostropheRole.POSSESSIVE
+        else -> ApostropheRole.OPENING
+    }
+
+    /**
+     * Whether [text] holds a single quote that opened and has not closed. An apostrophe opens
+     * when it follows the start, whitespace or an opener and is followed by a non-space; it
+     * closes an open quote when it follows a non-space. One between two letters (`don't`) is
+     * neither.
+     */
+    fun hasUnmatchedSingleQuote(text: CharSequence): Boolean {
+        var open = false
+        for (i in text.indices) {
+            if (text[i] != '\'') continue
+            val before = text.getOrNull(i - 1)
+            val after = text.getOrNull(i + 1)
+            if (before != null && after != null && before.isLetter() && after.isLetter()) continue
+            val opensHere = (before == null || before.isWhitespace() || before in UNAMBIGUOUS_OPENERS) &&
+                after != null && !after.isWhitespace()
+            when {
+                opensHere -> open = true
+                open && before != null && !before.isWhitespace() -> open = false
+            }
+        }
+        return open
+    }
+
+    /**
+     * Whether [c], typed straight after a keyboard-committed word that ends [textBefore], is an
+     * opening mark that gets a space before it: the [SPACED_OPENERS], a straight `"` that opens
+     * (an even count before it, as KeyEventHandler.isClosingQuote) and a `'` whose
+     * [apostropheRole] is [ApostropheRole.OPENING].
+     */
+    fun isSpacedOpener(c: Char, textBefore: CharSequence): Boolean = when (c) {
+        in SPACED_OPENERS -> true
+        '"' -> textBefore.count { it == '"' } % 2 == 0
+        '\'' -> apostropheRole(textBefore.trimEnd()) == ApostropheRole.OPENING
+        else -> false
+    }
+
+    /**
+     * Feature C: does [c] get a space before it? Only at the end of a keyboard-committed word:
+     * [wordEndStamp] (where that word, or the closing mark attached to it, ended) must equal
+     * [cursor], both known, and the character before the cursor must not be whitespace.
+     */
+    fun needsSpaceBeforeOpener(c: Char, textBefore: CharSequence?, wordEndStamp: Int, cursor: Int): Boolean {
+        if (wordEndStamp < 0 || cursor < 0 || cursor != wordEndStamp) return false
+        val prev = textBefore?.lastOrNull() ?: return false
+        if (prev.isWhitespace()) return false
+        return isSpacedOpener(c, textBefore)
+    }
+
     /**
      * Feature B: may the pending automatic trailing space be swallowed?
      *

@@ -123,8 +123,11 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    default look"). `Defaults.THEME = KeyboardLooks.CLEVERKEYS`; `KeyboardLooks.ALL` = the CleverKeys
    look + `FAMILIAR` (Theme Manager's "Familiar looks" = `LOOK_THEMES` = `FAMILIAR_IDS`; the
    CleverKeys look is `DEFAULT_LOOK_THEME`, first under Built-in). `yieldsToUserSettings` →
-   `Theme.lookYieldsToUser` → `LookUserYield` in `Theme.Computed.geometryFor` (tuned gaps; NOT the custom
-   border — the look's frame wins) and `Keyboard2View.initSwipeTrailPaint` (tuned trail). Choosing it stores the DEFAULT trail
+   `Theme.lookYieldsToUser` → `Keyboard2View.initSwipeTrailPaint` (tuned trail ONLY; since 2026-11-07
+   neither the global gaps nor the custom border yield — the look's equal gaps and hairline win, a
+   per-layout gap still beats it). Its dark palette paints `LookPalette.backdrop`
+   (`AuroraBackdropDrawable` via `Keyboard2View.applyThemeBackground`; `CLEVERKEYS_AURORA` must be
+   declared BEFORE `cleverkeysLook` — object properties initialise in order, a later one is null). Choosing it stores the DEFAULT trail
    (never skips the write: the old theme's trail would count as the user's). The fallback for
    broken/deleted ids (`FALLBACK_THEME_ID`) is this look too, built in code. No process kill
    anywhere in Theme Manager: "Restart keyboard" sends `EXTRA_REBUILD_KEYBOARD`.

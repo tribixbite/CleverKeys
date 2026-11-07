@@ -568,6 +568,8 @@
     <string name="input_capitalize_i_desc">Автоматично писати «I» з великої та скорочення (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Розумна пунктуація</string>
     <string name="input_smart_punctuation_desc">Приєднувати знаки пунктуації до слів (видаляти пробіл перед . , ! ? тощо)</string>
+    <string name="input_space_before_opening_punctuation_title">Пробіл перед відкривними знаками</string>
+    <string name="input_space_before_opening_punctuation_desc">Після слова, введеного жестом, ставить пробіл перед ( \" \' $ @ та подібними; закривні знаки й далі прилипають до слова</string>
     <string name="input_swipe_distance_threshold_title">Поріг відстані свайпу</string>
     <string name="input_swipe_distance_threshold_desc">Відстань (в одиницях пристрою) для активації слайдера/підклавіш посередині свайпу. Також обмежує мінімум коротких свайпів на широких клавішах.</string>
     <string name="input_circle_gesture_title">Чутливість кругового жесту</string>

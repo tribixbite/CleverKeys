@@ -50,8 +50,9 @@ import java.io.File
  *     lexicon can emit the key, or the swipe engines INJECT it as its own decodable surface
  *     (`CtcContractionKeys.inject`, and the deleted vocabulary's equivalent). Judging by the
  *     first route alone is what wrongly deleted 27,256 fr + 22,355 it productive elisions on
- *     2026-08-17; they are restored, and what stays trimmed is only the keys no a–z decoder
- *     can spell at all (accents, hyphens).
+ *     2026-08-17; they are restored. Accented keys (`dêtre`) are no longer trimmed but
+ *     re-keyed to their a–z spelling (`detre` → `d'être`, 2026-11-07); what stays trimmed is
+ *     only a key with no a–z spelling at all.
  *  2. **the two files are disjoint, and the REPLACE file holds no common word** — the
  *     classification is explicit, so nothing is left for the runtime rank guard to catch.
  *  3. **every value differs from its key by apostrophes, hyphens and ACCENTS only** — never by
@@ -215,11 +216,14 @@ class BundledContractionDataTest {
      *
      * Deliberately NOT `CtcAzProjection.project`: that also lowercases, strips joiners and
      * REJECTS anything outside a–z by returning null, which would silently pass a value the
-     * beam can never spell instead of failing on it. This folds accents and nothing else.
+     * beam can never spell instead of failing on it. This folds accents and spells out the four
+     * letters the a–z head writes as two (`ß œ æ ø`, `CtcAzProjection`'s expansions: `d'écœurement`
+     * is keyed `decoeurement`, 2026-11-07), and nothing else.
      */
     private fun foldAccents(s: String): String =
         java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD)
             .filterNot { Character.getType(it) == Character.NON_SPACING_MARK.toInt() }
+            .replace("ß", "ss").replace("œ", "oe").replace("æ", "ae").replace("ø", "o")
 
     private fun isReachable(language: String, key: String): Boolean =
         key in emitted.getValue(language) || CtcContractionKeys.isInjectable(key, AZ_ALPHABET)
@@ -274,23 +278,32 @@ class BundledContractionDataTest {
         // values, Phase B's 28 accent-carrying values (which required folding accents in the
         // projection invariant above), and `rendezvous`, which landed last because it needed the
         // cross-language collision guard rather than a data change.
-        assertThat(files.getValue("fr")).hasSize(17_976)
+        //
+        // 2026-11-07: +7,602 replace / +16 pairs. Keys used to keep their accents (`dêtre`),
+        // which no a–z decoder can spell, so every elision with an accent was dropped as dead:
+        // `d'être`, `l'été`, `l'école`, `j'étais` (maintainer: "can't get d'être to swipe").
+        // The generator now keys them by the a–z projection (`detre`), or by a word's displayed
+        // form when the projection is already a word (`dame` → `d'âme`, paired). Hyphenated
+        // accented compounds stay out (curated by hand; the longest sat at the emit budget).
+        assertThat(files.getValue("fr")).hasSize(25_578)
         // 183 elision pairs + 272 verb inversions (2026-09-01, `FRENCH_INVERSION_VERBS` in the
-        // generator — the closed subject-pronoun family, PAIRED-only; see the inversion test).
-        assertThat(pairFiles.getValue("fr")).hasSize(455)
+        // generator — the closed subject-pronoun family, PAIRED-only; see the inversion test)
+        // + 16 accented elisions whose a–z key is a French word (2026-11-07).
+        assertThat(pairFiles.getValue("fr")).hasSize(471)
         val fr = coverageOf("fr")
         assertWithMessage("dead French mappings: ${deadKeysOf("fr")}").that(fr.dead).isEqualTo(0)
         // 17_976 replace + 455 pairs. The elision half of the pairs file was untouched by BOTH
         // curated hyphen phases (every curated verdict there is REPLACE; the 2026-08-20 Phase B
         // run was +28/-0 on the replace file and left pairs at 183); the inversion family then
         // added its 272 PAIRED entries and nothing to the replace file (+0/-0 on regeneration).
-        assertThat(fr.entries).isEqualTo(18_431)
+        assertThat(fr.entries).isEqualTo(26_049)
 
-        assertThat(files.getValue("it")).hasSize(21_214)
-        assertThat(pairFiles.getValue("it")).hasSize(148)
+        // 2026-11-07: +1,032 replace / +11 pairs, the same accent re-keying (`dov'è`, `com'è`).
+        assertThat(files.getValue("it")).hasSize(22_246)
+        assertThat(pairFiles.getValue("it")).hasSize(159)
         val it = coverageOf("it")
         assertWithMessage("dead Italian mappings: ${deadKeysOf("it")}").that(it.dead).isEqualTo(0)
-        assertThat(it.entries).isEqualTo(21_362)
+        assertThat(it.entries).isEqualTo(22_405)
     }
 
     @Test
@@ -324,6 +337,15 @@ class BundledContractionDataTest {
             // vocabulary on the beam's lambda * logFreq term.
             assertThat(trie.logFrequencyOf(key)!!).isWithin(1e-6).of(0.0)
         }
+
+        // Accented elisions (2026-11-07): keyed by what the beam spells, injected, displayed
+        // with their accents. `d'être` is the maintainer's report.
+        for ((key, display) in listOf("detre" to "d'être", "lete" to "l'été", "lecole" to "l'école", "letat" to "l'état")) {
+            assertWithMessage("$key → $display").that(files.getValue("fr")[key]).isEqualTo(display)
+            assertWithMessage("$key must be decodable after injection").that(trie.contains(key)).isTrue()
+        }
+        assertWithMessage("an accented elision whose key is a word is paired, not replacing the word")
+            .that(pairFiles.getValue("fr")["jetais"]).containsExactly("j'étais")
 
         // The everyday elisions the maintainer called crucial resolve to their apostrophe form.
         assertThat(files.getValue("fr")["lhomme"]).isEqualTo("l'homme")

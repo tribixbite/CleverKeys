@@ -19,8 +19,10 @@ class ThemeSpecRenderTest {
         for (look in KeyboardLooks.ALL) for (light in listOf(true, false)) {
             val palette = look.palette(light)
             val r = ThemeSpecs.render(ThemeSpecs.fromLook(look, palette))
+            // A spec carries colours, not the painted backdrop (LookPalette.backdrop's TODO):
+            // a custom theme made from the CleverKeys look draws the flat base colour.
             assertWithMessage("${look.id} light=$light palette (latched Shift colours included)")
-                .that(r.palette).isEqualTo(palette)
+                .that(r.palette).isEqualTo(palette.copy(backdrop = null))
             assertWithMessage("${look.id} light=$light scheme").that(r.scheme).isEqualTo(KeyboardLookSchemes.colorScheme(palette))
             assertThat(r.geometry).isEqualTo(look.geometry)
             assertThat(r.preview).isEqualTo(look.preview)

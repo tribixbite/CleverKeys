@@ -572,6 +572,8 @@
     <string name="input_capitalize_i_desc">\"I\" und Kontraktionen automatisch großschreiben (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Intelligente Zeichensetzung</string>
     <string name="input_smart_punctuation_desc">Satzzeichen an Wortende anfügen (entfernt Leerzeichen vor . , ! ? usw.)</string>
+    <string name="input_space_before_opening_punctuation_title">Leerzeichen vor öffnenden Satzzeichen</string>
+    <string name="input_space_before_opening_punctuation_desc">Nach einem gewischten Wort ein Leerzeichen vor ( \" \' $ @ und ähnlichen setzen; schließende Zeichen hängen weiter am Wort</string>
     <string name="input_swipe_distance_threshold_title">Wischwegstrecken-Schwelle</string>
     <string name="input_swipe_distance_threshold_desc">Distanz (geräteskalierte Einheiten) zum Aktivieren von Schieber-/Ereignis-Untertasten beim Wischen (z. B. Leertasten-Cursor-Schieber). Begrenzt auch die Kurz-Wisch-Mindestlänge bei breiten Tasten wie Rücktaste, damit deren Flicks einfach bleiben.</string>
     <string name="input_circle_gesture_title">Kreisgestenempfindlichkeit</string>

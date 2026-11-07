@@ -197,6 +197,10 @@ class SmartAutoSpaceTest {
         sharedConfig!!.auto_space_before_suggestion = true
         sharedConfig!!.auto_space_after_suggestion = true
         sharedConfig!!.smart_punctuation = true
+        // Features A and B as they were: the space before opening punctuation (Feature C, on by
+        // default since 2026-11-07, which spaces an opening `'`) is driven through the real
+        // sendText by OpeningPunctuationSpacingTest; this receiver does not carry its stamps.
+        sharedConfig!!.space_before_opening_punctuation = false
         sharedConfig!!.double_space_to_period = false
         sharedConfig!!.backspace_undo_swipe = false
         sharedConfig!!.backspace_undo_autocorrect = false

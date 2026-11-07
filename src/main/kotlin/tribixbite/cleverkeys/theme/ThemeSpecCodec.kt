@@ -60,6 +60,7 @@ object ThemeSpecXml {
     const val FUNCTION_LABEL_SCALE = "function_label_scale"
     const val KEY_LEGENDS = "key_legends"
     const val SHIFT_FILLED = "shift_filled"
+    const val EQUAL_GAPS = "equal_gaps"
 
     val GAP_RANGE = 0f..KeyboardLookGeometry.MAX_GAP
     val CORNER_RADIUS_RANGE = 0f..64f
@@ -79,7 +80,7 @@ object ThemeSpecXml {
         PREVIEW_HEIGHT, PREVIEW_LABEL_SCALE, PREVIEW_CORNER, PREVIEW_SHADOW, HINT_SIZE, HINT_WEIGHT,
         DYNAMIC_COLOR, BAR_SLOTS, BAR_CENTRE, BAR_QUOTE_TYPED, BAR_EMPHASIS,
         ACTION_ICONS, ACTION_ACCENT, ACTION_LOWERCASE, ACTION_ICON_SCALE, SPACE_LANGUAGE,
-        FUNCTION_LABEL_SCALE, KEY_LEGENDS, SHIFT_FILLED,
+        FUNCTION_LABEL_SCALE, KEY_LEGENDS, SHIFT_FILLED, EQUAL_GAPS,
     )
 
     private val PILL_NAMES = mapOf("enter" to LookPillKey.ENTER, "action" to LookPillKey.ACTION, "numbers" to LookPillKey.NUMBERS)
@@ -139,6 +140,7 @@ object ThemeSpecXml {
             labelScale = floatAttr(LABEL_SCALE, LABEL_SCALE_RANGE),
             labelWeight = intAttr(LABEL_WEIGHT, WEIGHT_RANGE),
             functionLabelScale = floatAttr(FUNCTION_LABEL_SCALE, LABEL_SCALE_RANGE),
+            equalGaps = boolAttr(EQUAL_GAPS),
         )
         val functionChars = theme[FUNCTION_CHARS]?.let { raw ->
             if (raw.length <= MAX_FUNCTION_CHARS) raw else { bad(TAG, FUNCTION_CHARS, raw); null }
@@ -243,6 +245,7 @@ object ThemeSpecXml {
         g.labelScale?.let { attrs.add(LABEL_SCALE to ThemeValues.formatFloat(it)) }
         g.labelWeight?.let { attrs.add(LABEL_WEIGHT to it.toString()) }
         g.functionLabelScale?.let { attrs.add(FUNCTION_LABEL_SCALE to ThemeValues.formatFloat(it)) }
+        g.equalGaps?.let { attrs.add(EQUAL_GAPS to it.toString()) }
         spec.functionChars?.let { attrs.add(FUNCTION_CHARS to it) }
         spec.legends?.let { attrs.add(HINTS to it.name.lowercase(Locale.ROOT)) }
         spec.pillKeys?.let { set -> attrs.add(PILL_KEYS to PILL_NAMES.filterValues { it in set }.keys.joinToString(" ")) }
@@ -363,6 +366,7 @@ object ThemeSpecJson {
             g.labelScale?.let { put("labelScale", num(it)) }
             g.labelWeight?.let { put("labelWeight", it) }
             g.functionLabelScale?.let { put("functionLabelScale", num(it)) }
+            g.equalGaps?.let { put("equalGaps", it) }
         }
         if (geometry.length() > 0) put("geometry", geometry)
         spec.functionChars?.let { put("functionChars", it) }
@@ -460,6 +464,7 @@ object ThemeSpecJson {
                 labelScale = f(g, "labelScale"),
                 labelWeight = i(g, "labelWeight"),
                 functionLabelScale = f(g, "functionLabelScale"),
+                equalGaps = if (g != null && g.has("equalGaps")) g.optBoolean("equalGaps") else null,
             ),
             functionChars = if (json.has("functionChars")) json.getString("functionChars") else null,
             legends = if (json.has("hints")) LookLegends.entries.firstOrNull { it.name == json.getString("hints") } else null,
@@ -514,6 +519,7 @@ object ThemeSpecJson {
                 labelScale = g.labelScale.within(ThemeSpecXml.LABEL_SCALE_RANGE),
                 labelWeight = g.labelWeight?.takeIf { it in ThemeSpecXml.WEIGHT_RANGE },
                 functionLabelScale = g.functionLabelScale.within(ThemeSpecXml.LABEL_SCALE_RANGE),
+                equalGaps = g.equalGaps,
             ),
             functionChars = spec.functionChars?.takeIf { it.length <= ThemeSpecXml.MAX_FUNCTION_CHARS },
             preview = spec.preview?.let { p ->

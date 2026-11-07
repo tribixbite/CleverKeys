@@ -452,10 +452,13 @@ def extract_apostrophe_words(dict_path: Path, lang: str = "") -> tuple:
 CKDT_MAGIC = 0x54444B43  # "CKDT" little-endian
 CKDT_HEADER_SIZE = 48
 JOINERS = frozenset("'’-")
+# CtcAzProjection.EXPANSIONS: letters the a-z head cannot represent, spelled out.
+EXPANSIONS = {"ß": "ss", "œ": "oe", "æ": "ae", "ø": "o"}
 
 
 def project_az(word: str):
-    """CtcAzProjection.project: NFD, drop combining marks, drop joiners, require a-z."""
+    """CtcAzProjection.project: NFD, drop combining marks, drop joiners, expand ß/œ/æ/ø,
+    require a-z."""
     if not word:
         return None
     decomposed = unicodedata.normalize("NFD", word.lower())
@@ -465,10 +468,73 @@ def project_az(word: str):
             continue
         if ch in JOINERS:
             continue
+        expansion = EXPANSIONS.get(ch)
+        if expansion is not None:
+            out.append(expansion)
+            continue
         if not ("a" <= ch <= "z"):
             return None
         out.append(ch)
     return "".join(out) if out else None
+
+
+def display_forms(lexicon: dict) -> dict:
+    """a-z surface -> the canonical form CTC displays for it (the highest-frequency word on
+    that surface, as CtcAzProjection.projectLexicon resolves collisions)."""
+    best, display = {}, {}
+    for word, freq in lexicon.items():
+        surface = project_az(word)
+        if surface is None:
+            continue
+        existing = best.get(surface)
+        if existing is not None and freq <= existing:
+            continue
+        best[surface] = freq
+        display[surface] = word.lower()
+    return display
+
+
+def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set) -> tuple:
+    """
+    Re-key every mapping whose key no engine can produce onto the string the decoder
+    actually hands the overlay (2026-11-07, fr "d'être" never swiped).
+
+    Keys used to keep their accents (`dêtre`), but the CTC beam emits a-z only and an
+    accented key cannot be injected, so 9,354 fr elisions (`d'être`, `l'été`, `l'école`,
+    `j'étais`) and the it ones were dropped as dead.  The key is now the a-z projection
+    (`detre`), injected like any other elision.  When that projection is already a word's
+    surface (`lame` for `l'âme`), the overlay sees the word's DISPLAYED form, so the
+    mapping is keyed by it and classify_mappings guards it into the paired bucket (as
+    `légal` -> `l'égal` always was): the word itself stays a suggestion.
+
+    Reachable keys are untouched (a curated accented key that IS a displayed form keeps
+    working), and a re-keyed mapping never overwrites an existing key.  Hyphenated values
+    (`chef-d'œuvre`, `d'auteurs-compositeurs-interprètes`) stay dead: hyphen compounds are
+    curated by hand (docs/proposals/2026-08-20-hyphen-compound-contractions.md), and the
+    longest of them would sit at the CTC emit budget (CtcBundledLexiconEmitBudgetTest).
+    Returns (contractions, rekeyed count, skipped-as-taken count).
+    """
+    display = display_forms(lexicon)
+    out = {}
+    pending = []
+    for key, value in contractions.items():
+        if key in emitted or is_ctc_injectable(key):
+            out[key] = value
+        else:
+            pending.append((key, value))
+    rekeyed = skipped = 0
+    for key, value in pending:
+        folded = project_az(key)
+        if folded is None or "-" in value:
+            out[key] = value  # still dead; the reachability filter drops and counts it
+            continue
+        new_key = display.get(folded, folded)
+        if new_key in out:
+            skipped += 1
+            continue
+        out[new_key] = value
+        rekeyed += 1
+    return out, rekeyed, skipped
 
 
 def read_ckdt(path: Path) -> list:
@@ -770,6 +836,7 @@ def build_language(lang: str, dict_path: Path) -> dict:
 
     dead = 0
     injected = 0
+    rekeyed = rekey_skipped = 0
     inversions = {}
     if spec["lexicon"]:
         lexicon = load_lexicon(spec["lexicon"])
@@ -791,6 +858,7 @@ def build_language(lang: str, dict_path: Path) -> dict:
             contractions.update(inversions)
 
         emitted = emitted_forms(lexicon)
+        contractions, rekeyed, rekey_skipped = rekey_unreachable(contractions, lexicon, emitted)
         # An entry is REACHABLE if either the bundled lexicon can already emit its key,
         # or the key is a pure a-z string that the CTC adapter injects into the lexicon
         # trie (CtcEngineAdapter.lexiconFor -> CtcContractionKeys.inject).  Before that
@@ -822,6 +890,8 @@ def build_language(lang: str, dict_path: Path) -> dict:
         "curated": len(curated),
         "dead": dead,
         "injected": injected,
+        "rekeyed": rekeyed,
+        "rekey_skipped": rekey_skipped,
         "replace": dict(sorted(replace.items())),
         "append": dict(sorted(append.items())),
     }
@@ -1222,6 +1292,10 @@ def main():
             f" - {report['dead']} unreachable"
             f" ({report['injected']} reachable only via CTC injection)"
             f" = {len(report['replace'])} REPLACE + {len(report['append'])} APPEND"
+        )
+        print(
+            f"  re-keyed {report['rekeyed']} accented keys to what the decoder emits"
+            f" ({report['rekey_skipped']} skipped: key already mapped)"
         )
         write_language(lang, report, args.dry_run)
         print_sample(lang, report)

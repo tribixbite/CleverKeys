@@ -251,6 +251,23 @@ class KeyEventReceiverBridge(
         contextTracker?.markAutoSpacePending(expectedCursorPosition)
     }
 
+    // Feature C: word-end / opening-apostrophe stamps (space before opening punctuation)
+    override fun getWordEndStamp(): Int = contextTracker?.wordEndStamp ?: -1
+
+    override fun markWordEnd(position: Int) {
+        contextTracker?.markWordEnd(position)
+    }
+
+    override fun getOpeningApostropheStamp(): Int = contextTracker?.openingApostropheStamp ?: -1
+
+    override fun markOpeningApostrophe(position: Int) {
+        contextTracker?.markOpeningApostrophe(position)
+    }
+
+    override fun invalidateWordEnd() {
+        contextTracker?.invalidateWordEnd()
+    }
+
     // #151 TSR: owed-trailing-space consult-and-clear (dropped-space repair)
     override fun takeOwedTrailingSpace(): String? {
         return contextTracker?.takeOwedTrailingSpace()

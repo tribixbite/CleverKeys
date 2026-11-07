@@ -5,6 +5,14 @@
   "cest": [
     "en"
   ],
+  "da": [
+    "de",
+    "en",
+    "es",
+    "it",
+    "pt",
+    "sv"
+  ],
   "dab": [
     "de",
     "en",
@@ -29,11 +37,21 @@
   "dagen": [
     "sv"
   ],
+  "dai": [
+    "de",
+    "it",
+    "pt",
+    "sv"
+  ],
   "dail": [
     "en"
   ],
   "dain": [
     "en"
+  ],
+  "dales": [
+    "en",
+    "es"
   ],
   "dali": [
     "en",
@@ -54,6 +72,15 @@
   "damos": [
     "es",
     "pt"
+  ],
+  "dane": [
+    "en",
+    "es",
+    "pt",
+    "sv"
+  ],
+  "danes": [
+    "en"
   ],
   "dangle": [
     "en"
@@ -116,6 +143,13 @@
     "it",
     "pt",
     "sv"
+  ],
+  "dares": [
+    "en",
+    "pt"
+  ],
+  "darete": [
+    "it"
   ],
   "darezzo": [
     "en"
@@ -181,6 +215,9 @@
     "es",
     "pt"
   ],
+  "dejection": [
+    "en"
+  ],
   "del": [
     "de",
     "en",
@@ -202,6 +239,9 @@
     "it",
     "pt"
   ],
+  "delis": [
+    "en"
+  ],
   "della": [
     "de",
     "en",
@@ -220,6 +260,12 @@
   "delvis": [
     "sv"
   ],
+  "demotion": [
+    "en"
+  ],
+  "demotions": [
+    "en"
+  ],
   "den": [
     "de",
     "en",
@@ -229,6 +275,18 @@
   ],
   "dentre": [
     "pt"
+  ],
+  "deon": [
+    "en"
+  ],
+  "depone": [
+    "it"
+  ],
+  "dere": [
+    "en"
+  ],
+  "deric": [
+    "en"
   ],
   "derwin": [
     "en"
@@ -243,7 +301,38 @@
   "deste": [
     "pt"
   ],
+  "detain": [
+    "en"
+  ],
+  "detat": [
+    "en"
+  ],
+  "detre": [
+    "en"
+  ],
+  "detuve": [
+    "es"
+  ],
   "deu": [
+    "pt"
+  ],
+  "deva": [
+    "en",
+    "it",
+    "pt"
+  ],
+  "devaluations": [
+    "en"
+  ],
+  "deve": [
+    "it",
+    "pt"
+  ],
+  "devolution": [
+    "en"
+  ],
+  "devora": [
+    "es",
     "pt"
   ],
   "dex": [
@@ -262,8 +351,14 @@
   "dile": [
     "es"
   ],
+  "diles": [
+    "es"
+  ],
   "dille": [
     "it"
+  ],
+  "dines": [
+    "en"
   ],
   "dintel": [
     "es"
@@ -347,6 +442,10 @@
   "dotage": [
     "en"
   ],
+  "dou": [
+    "en",
+    "pt"
+  ],
   "dove": [
     "de",
     "en",
@@ -429,6 +528,10 @@
   "lagar": [
     "sv"
   ],
+  "lage": [
+    "de",
+    "pt"
+  ],
   "lain": [
     "en"
   ],
@@ -465,6 +568,14 @@
   "lanche": [
     "pt"
   ],
+  "lane": [
+    "de",
+    "en",
+    "es",
+    "it",
+    "pt",
+    "sv"
+  ],
   "lap": [
     "en"
   ],
@@ -482,6 +593,9 @@
   ],
   "larmet": [
     "sv"
+  ],
+  "larreta": [
+    "es"
   ],
   "lasa": [
     "en",
@@ -544,8 +658,20 @@
     "de",
     "en"
   ],
+  "lebre": [
+    "pt"
+  ],
+  "lecho": [
+    "es"
+  ],
   "ledda": [
     "sv"
+  ],
+  "leden": [
+    "sv"
+  ],
+  "legare": [
+    "it"
   ],
   "leider": [
     "de"
@@ -590,8 +716,24 @@
     "en",
     "sv"
   ],
+  "letais": [
+    "pt"
+  ],
+  "letal": [
+    "es",
+    "pt"
+  ],
+  "letat": [
+    "sv"
+  ],
+  "lete": [
+    "en"
+  ],
   "leut": [
     "de"
+  ],
+  "levite": [
+    "en"
   ],
   "lex": [
     "de",
@@ -749,6 +891,12 @@
   "loud": [
     "en"
   ],
+  "louie": [
+    "en",
+    "it",
+    "pt",
+    "sv"
+  ],
   "love": [
     "de",
     "en",
@@ -810,6 +958,14 @@
   ],
   "mest": [
     "sv"
+  ],
+  "metais": [
+    "pt"
+  ],
+  "metes": [
+    "en",
+    "es",
+    "pt"
   ],
   "my": [
     "de",
@@ -897,6 +1053,9 @@
   "samarra": [
     "en"
   ],
+  "segare": [
+    "sv"
+  ],
   "sembrasse": [
     "it"
   ],
@@ -913,6 +1072,9 @@
   ],
   "soffre": [
     "it"
+  ],
+  "soter": [
+    "en"
   ],
   "suse": [
     "en"

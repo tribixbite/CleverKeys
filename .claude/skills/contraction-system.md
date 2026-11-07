@@ -39,11 +39,11 @@ file an entry lives in*.
 The rank guard still exists as defence in depth for **imported language packs**, which ship only
 an uncurated `contractions.json`.
 
-### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01)
+### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01; fr/it re-keyed 2026-11-07)
 
 ```
-contractions_fr.json     17,976   contraction_pairs_fr.json   455   collisions_fr   238
-contractions_it.json     21,214   contraction_pairs_it.json   148   collisions_it   103
+contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   282
+contractions_it.json     22,246   contraction_pairs_it.json   159   collisions_it   105
 contractions_de.json         21   (no pairs file)                   collisions_de     7
 contractions_en.json        119   contraction_pairings.json 1,744   collisions_en    10
 contractions_nl.json        118   (import-only pack language)
@@ -506,7 +506,19 @@ guard.
 3. **`es`/`pt`/`sv` emptiness is a linguistic claim with evidence.** Read §7 before generating.
 4. **Two managers, two lifetimes.** Swipe adapters own their own `ContractionManager` instance;
    the typing path uses the service's. A change to one does not affect the other.
-5. **Verify a source pin by breaking it.** Both `CoreImeHygieneDriftTest` contraction pins were
+5. **A key must be what the decoder SPELLS, accents folded (2026-11-07).** The generator used to
+   build keys as `word.replace("'", "")`, keeping accents (`dêtre`); the CTC beam emits a–z, an
+   accented key is not injectable, and the reachability filter silently dropped 9,354 fr + ~1,100 it
+   elisions (`d'être`, `l'été`, `dov'è`) as "dead" — the maintainer found it by failing to swipe
+   `d'être`. `rekey_unreachable` now re-keys an unreachable key to `project_az(key)` (Python port of
+   `CtcAzProjection`, ß/œ/æ/ø expansions included), or to a word's DISPLAYED form when that
+   projection is already a lexicon surface (`dame` → `d'âme`, paired by the ordinal guard).
+   Reachable keys (a curated accented display form like `légal`) are never touched, and hyphenated
+   values are never re-keyed (hyphen compounds are curated; reviving 1,449 fr of them put
+   `d'auteurs-compositeurs-interprètes` at the emit budget). The generator reads the SHIPPED files
+   back as input, so a bad run's additions persist until removed by hand. A big "dead"
+   count in a regeneration is a bug signal, not cleanup.
+6. **Verify a source pin by breaking it.** Both `CoreImeHygieneDriftTest` contraction pins were
    validated by injecting a violation and confirming the failure message, then reverting. A source
    guard that cannot fail reads as coverage while providing none.
 

@@ -208,4 +208,44 @@ class SmartAutoSpaceLogicTest {
             autoSpacePending = true, stampedPosition = 5, actualPrevChar = '\t', actualPosition = 5
         )).isFalse()
     }
+
+    // =========================================================================
+    // Feature C — a space before opening punctuation (2026-11-07)
+    // =========================================================================
+
+    @Test
+    fun singleQuotesPairAndApostrophesInsideWordsAreIgnored() {
+        assertThat(SmartAutoSpace.hasUnmatchedSingleQuote("he said 'hello")).isTrue()
+        assertThat(SmartAutoSpace.hasUnmatchedSingleQuote("he said 'hello' and")).isFalse()
+        assertThat(SmartAutoSpace.hasUnmatchedSingleQuote("don't it's")).isFalse()
+        assertThat(SmartAutoSpace.hasUnmatchedSingleQuote("('quoted")).isTrue()
+        assertThat(SmartAutoSpace.hasUnmatchedSingleQuote("the kids' toys")).isFalse()
+    }
+
+    @Test
+    fun theApostropheRoleFollowsTheOpenQuoteThenTheWordsEnding() {
+        assertThat(SmartAutoSpace.apostropheRole("he said 'hello")).isEqualTo(SmartAutoSpace.ApostropheRole.CLOSING)
+        assertThat(SmartAutoSpace.apostropheRole("the kids")).isEqualTo(SmartAutoSpace.ApostropheRole.POSSESSIVE)
+        assertThat(SmartAutoSpace.apostropheRole("James")).isEqualTo(SmartAutoSpace.ApostropheRole.POSSESSIVE)
+        assertThat(SmartAutoSpace.apostropheRole("he said")).isEqualTo(SmartAutoSpace.ApostropheRole.OPENING)
+    }
+
+    @Test
+    fun onlyTheEndOfACommittedWordSpacesAnOpener() {
+        for (c in listOf('(', '[', '{', '$', '@', '#', '“', '¿')) {
+            assertThat(SmartAutoSpace.needsSpaceBeforeOpener(c, "hello,", wordEndStamp = 6, cursor = 6)).isTrue()
+        }
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('(', "hello,", wordEndStamp = 6, cursor = 7)).isFalse()
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('(', "hello,", wordEndStamp = -1, cursor = 6)).isFalse()
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('(', "hello ", wordEndStamp = 6, cursor = 6)).isFalse()
+        // Closers and plain characters never get a space.
+        for (c in listOf(')', ',', '.', 'a', '-')) {
+            assertThat(SmartAutoSpace.needsSpaceBeforeOpener(c, "hello", wordEndStamp = 5, cursor = 5)).isFalse()
+        }
+        // Straight quotes: by parity (") and by role (').
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('"', "hello", 5, 5)).isTrue()
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('"', "\"hello", 6, 6)).isFalse()
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('\'', "said", 4, 4)).isTrue()
+        assertThat(SmartAutoSpace.needsSpaceBeforeOpener('\'', "kids", 4, 4)).isFalse()
+    }
 }

@@ -101,6 +101,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "switch_input_immediate" to PrefValue.Bool(Defaults.SWITCH_INPUT_IMMEDIATE),
     "enter_always_newline" to PrefValue.Bool(Defaults.ENTER_ALWAYS_NEWLINE),
     "smart_punctuation" to PrefValue.Bool(Defaults.SMART_PUNCTUATION),
+    "space_before_opening_punctuation" to PrefValue.Bool(Defaults.SPACE_BEFORE_OPENING_PUNCTUATION),
     "tap_duration_threshold" to PrefValue.IntV(Defaults.TAP_DURATION_THRESHOLD),
 
     // ── Gesture ───────────────────────────────────────────────────────

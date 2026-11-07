@@ -314,6 +314,34 @@ fun onCursorPositionChanged(newPosition: Int) {
 }
 ```
 
+## Feature C — A Space Before Opening Punctuation (2026-11-07)
+
+Setting **Space before opening punctuation** (`space_before_opening_punctuation`, default on,
+under Smart Punctuation). An opening mark typed straight after a word the keyboard committed
+(a swipe or a chosen suggestion) gets a space before it; closing marks still attach (Feature B).
+
+- **Where it fires.** Only at a *word-end stamp* (`PredictionContextTracker.wordEndStamp`): set by
+  `SuggestionHandler` when a word is committed without a trailing space because the automatic
+  space is off, and by `KeyEventHandler.sendText` after a closing mark attached to such a word
+  (`hello ` + `,` → `hello,`, stamped after the comma; not after `.` `!` `?`, which re-add the
+  automatic space). Verified at use against the editor's cursor; any other keystroke clears it.
+  Typing `f(x)`, `user@mail` or `US$5` letter by letter never has a stamp, so it is unchanged.
+  An editor that dropped the automatic space (#151 TSR) owes the space to an opener as well.
+- **Openers** (`SmartAutoSpace.isSpacedOpener`): `( [ { “ ‘ ¿ ¡ $ € £ ¥ @ #`, a straight `"` that
+  opens (even count before it), and a `'` whose `apostropheRole` is OPENING.
+- **The apostrophe** (`SmartAutoSpace.apostropheRole`): after the automatic space (or at a word
+  end) a `'` CLOSES when a single quote is still open (`said 'hello` + `'` → `said 'hello'`), is
+  the plural POSSESSIVE after a word ending in s (`kids` + `'` → `kids'`), and otherwise OPENS a
+  quote, keeping or getting its space (`said` + `'` → `said '`). A letter TAPPED right after a
+  spaced `'` (the opening-apostrophe stamp) pulls it back onto the word: `John '` + `s` →
+  `John's`; a swiped word there stays quoted. With the setting off, `'` after the automatic space
+  always attaches, as before.
+- Tests: `SmartAutoSpaceLogicTest` (pure: pairing, roles, the stamp rule) and
+  `OpeningPunctuationSpacingTest` (mock, the real `sendText`: comma then opener, the automatic
+  space off, both quote kinds closing, possessives, letter-by-letter typing, the setting off, and
+  the ellipsis chain `wait` + `...` → `wait... `). The instrumented `SmartAutoSpaceTest` pins
+  Features A/B with this setting off.
+
 ## Key Code Patterns
 
 ### Closer set
@@ -433,6 +461,7 @@ override fun markAutoSpacePending(expectedCursorPosition: Int) {
 | Setting | Config Key | Default | Source |
 |---------|------------|---------|--------|
 | Smart Punctuation | `smart_punctuation` | `true` | `Config.kt:581` (default `Config.kt:95`) |
+| Space before opening punctuation | `space_before_opening_punctuation` | `true` | `Defaults.SPACE_BEFORE_OPENING_PUNCTUATION` (Feature C) |
 | Auto-space before suggestion | `auto_space_before_suggestion` | `true` | `Config.kt:611` (default `Config.kt:309`) |
 | Auto-space after suggestion | `auto_space_after_suggestion` | `true` | `Config.kt:610` (default `Config.kt:308`) |
 | Double Space Period | `double_space_to_period` | `true` | `Config.kt:579` (default `Config.kt:104`) |
@@ -459,6 +488,7 @@ The pure suite covers the opener/closer classification tables and every `isSwall
 
 | Version | Change |
 |---------|--------|
+| v2.0.0 | Feature C: space before opening punctuation at a committed word's end (setting, default on); `'` opens / closes / possessive by context |
 | v1.5.0 | SAS-1: shared `SmartAutoSpace` pure logic; leading-space suppression after opening punctuation; position-stamped verify-at-use swallow eligibility; closer set extended with `”` `’` `…` `'`; chaining clobber fixed |
 | v1.2.8 | Auto-space after sentence-ending punctuation for autocap integration |
 | v1.2.7 | Added auto-inserted space tracking for manual space preservation |

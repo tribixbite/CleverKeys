@@ -91,8 +91,6 @@ class DefaultsSingleDefinitionDriftTest {
         "customBorderLineWidth" to "dp → px",
         "key_vertical_margin" to "dp → px / 100",
         "key_horizontal_margin" to "dp → px / 100",
-        "keyVerticalMarginCustomised" to "stored value ≠ the default (Boolean)",
-        "keyHorizontalMarginCustomised" to "stored value ≠ the default (Boolean)",
         "characterSize" to "× orientation scale",
         "margin_bottom" to "percent of screen height → px",
         "margin_left" to "percent of screen width → px",

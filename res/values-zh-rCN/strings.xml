@@ -549,6 +549,8 @@
     <string name="input_capitalize_i_desc">自动将「I」及缩略形式（I\'m、I\'ll、I\'d、I\'ve）大写。</string>
     <string name="input_smart_punctuation_title">智能标点</string>
     <string name="input_smart_punctuation_desc">将标点符号附加到单词末尾（删除 .、,、!、? 等前的空格）。</string>
+    <string name="input_space_before_opening_punctuation_title">左侧标点前加空格</string>
+    <string name="input_space_before_opening_punctuation_desc">滑行输入单词后，在 ( \" \' $ @ 等符号前加空格；右侧标点仍紧贴单词</string>
     <string name="input_swipe_distance_threshold_title">滑动距离阈值</string>
     <string name="input_swipe_distance_threshold_desc">滑动过程中激活滑块/事件子键的距离（设备换算单位），例如空格光标滑块。也限制退格等宽键的最小短滑动距离，使快划保持轻松。</string>
     <string name="input_circle_gesture_title">圆圈手势灵敏度</string>

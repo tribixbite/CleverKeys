@@ -157,6 +157,34 @@ class PredictionContextTracker {
         private set
 
     /**
+     * Feature C (SmartAutoSpace.needsSpaceBeforeOpener, 2026-11-07): cursor position where a
+     * keyboard-committed word ended without a space after it (the automatic space is off), or
+     * where a closing mark attached to such a word ended (`hello,`). An opening mark typed
+     * exactly here gets a space before it. -1 = none. Verified at use against the editor's
+     * cursor, so a cursor move simply never matches; any other keystroke clears it.
+     */
+    var wordEndStamp: Int = -1
+        private set
+
+    /**
+     * Feature C: cursor position right after a `'` the keyboard read as an OPENING quote and
+     * spaced (`John '`). A letter tapped exactly here pulls it back onto the word (`John's`).
+     * -1 = none.
+     */
+    var openingApostropheStamp: Int = -1
+        private set
+
+    fun markWordEnd(position: Int) { wordEndStamp = position }
+
+    fun markOpeningApostrophe(position: Int) { openingApostropheStamp = position }
+
+    /** Feature C: drop both stamps (any other input, a field switch). */
+    fun invalidateWordEnd() {
+        wordEndStamp = -1
+        openingApostropheStamp = -1
+    }
+
+    /**
      * SAS-1: mark that an automatic trailing space was just committed.
      *
      * @param expectedCursorPosition Absolute cursor position the commit left the
@@ -550,6 +578,7 @@ class PredictionContextTracker {
         expectingSelectionUpdate = false
         // SAS-1: field switch invalidates the pending auto-space swallow
         invalidateAutoSpacePending()
+        invalidateWordEnd()
         // #151 TSR: field switch also drops any trailing-space watch / owed space
         clearTrailingSpaceWatch()
     }

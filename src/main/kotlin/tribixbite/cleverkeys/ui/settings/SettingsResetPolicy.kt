@@ -112,6 +112,7 @@ object SettingsResetPolicy {
         put("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
         put("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
         put("smart_punctuation", Defaults.SMART_PUNCTUATION)
+        put("space_before_opening_punctuation", Defaults.SPACE_BEFORE_OPENING_PUNCTUATION)
         put("tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)
 
         // Haptic feedback

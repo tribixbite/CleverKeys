@@ -59,6 +59,7 @@ class ThemeSpecTest {
             LookGeometry(
                 keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 10f, borderWidthDp = 0f,
                 shadowDyDp = 1f, labelScale = 1.15f, labelWeight = 500, functionLabelScale = 1f,
+                equalGaps = false,
             )
         )
         assertWithMessage("key_legends=\"\" is defined as none").that(spec.keyLegends).isEmpty()
@@ -92,6 +93,18 @@ class ThemeSpecTest {
         val awkward = ThemeSpec(name = "Tom & \"Jerry\" <1>", functionChars = "&<\"", pillKeys = emptySet())
         assertWithMessage("free text is escaped; an empty pill set stays defined-as-empty")
             .that(roundTrip(awkward)).isEqualTo(awkward)
+    }
+
+    /** 2026-11-07: `equal_gaps` (the CleverKeys look's spacing) survives XML, JSON and a base merge. */
+    @Test
+    fun equalGapsRoundTripAndInheritFromTheBase() {
+        val spec = ThemeSpec(geometry = LookGeometry(keyGapHorizontal = 0.11f, equalGaps = true))
+        assertThat(ThemeSpecXml.write(spec)).contains("equal_gaps=\"true\"")
+        assertThat(roundTrip(spec)).isEqualTo(spec)
+        assertThat(ThemeSpecJson.fromJson(JSONObject(ThemeSpecJson.toJson(spec).toString()))).isEqualTo(spec)
+        assertThat(ThemeSpecs.ofLook(KeyboardLooks.cleverkeysLook).geometry.equalGaps).isTrue()
+        val merged = ThemeSpecs.resolve(ThemeSpec(geometry = LookGeometry(cornerRadiusDp = 4f)), spec, systemLight = false)
+        assertWithMessage("undefined on top: the base's").that(merged.geometry.equalGaps).isTrue()
     }
 
     /**

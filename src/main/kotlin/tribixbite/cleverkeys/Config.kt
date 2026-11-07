@@ -113,6 +113,9 @@ object Defaults {
     // ON makes Enter insert a newline in multi-line fields; see EditorInfoHelper.shouldSwapEnterActionKey.
     const val ENTER_ALWAYS_NEWLINE = false
     const val SMART_PUNCTUATION = true
+    // An opening mark (`(` `"` `'` `$` `@` …) typed straight after a swiped or chosen word gets a
+    // space before it (SmartAutoSpace Feature C, maintainer 2026-11-07).
+    const val SPACE_BEFORE_OPENING_PUNCTUATION = true
 
     // Gesture settings
     const val SWIPE_DIST = "23"
@@ -880,12 +883,6 @@ class Config private constructor(
     @JvmField var horizontal_margin = 0f
     @JvmField var key_vertical_margin = 0f
     @JvmField var key_horizontal_margin = 0f
-    /**
-     * The user changed the key gap from its default (an unset pref is the default). The CleverKeys
-     * default look takes its own gaps only where these are false (`LookUserYield`).
-     */
-    @JvmField var keyVerticalMarginCustomised = false
-    @JvmField var keyHorizontalMarginCustomised = false
     @JvmField var labelBrightness = 0
     @JvmField var keyboardOpacity = 0
     @JvmField var customBorderRadius = 0f
@@ -1098,6 +1095,7 @@ class Config private constructor(
     @JvmField var double_space_to_period = Defaults.DOUBLE_SPACE_TO_PERIOD // Enable double-space-to-period feature
     @JvmField var double_space_threshold = Defaults.DOUBLE_SPACE_THRESHOLD.toLong() // Max time between spaces for period replacement (ms)
     @JvmField var smart_punctuation = Defaults.SMART_PUNCTUATION // Attach punctuation to end of last word (no space before)
+    @JvmField var space_before_opening_punctuation = Defaults.SPACE_BEFORE_OPENING_PUNCTUATION // Space before ( " ' $ @ after a committed word
     @JvmField var swipe_min_dwell_time = Defaults.SWIPE_MIN_DWELL_TIME.toLong() // Min time to register a key during swipe (ms)
     @JvmField var swipe_noise_threshold = Defaults.SWIPE_NOISE_THRESHOLD // Min distance to register movement (pixels)
     @JvmField var swipe_high_velocity_threshold = Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD // Velocity threshold for fast swipes (px/sec)
@@ -1279,8 +1277,6 @@ class Config private constructor(
 
         key_vertical_margin = get_dip_pref(dm, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN) / 100
         key_horizontal_margin = get_dip_pref(dm, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN) / 100
-        keyVerticalMarginCustomised = isDipPrefCustomised(_prefs, "key_vertical_margin", Defaults.KEY_VERTICAL_MARGIN)
-        keyHorizontalMarginCustomised = isDipPrefCustomised(_prefs, "key_horizontal_margin", Defaults.KEY_HORIZONTAL_MARGIN)
 
         labelBrightness = safeGetInt(_prefs, "label_brightness", Defaults.LABEL_BRIGHTNESS) * 255 / 100
         keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", Defaults.KEYBOARD_OPACITY) * 255 / 100
@@ -1445,6 +1441,9 @@ class Config private constructor(
         double_space_to_period = _prefs.getBoolean("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
         double_space_threshold = safeGetInt(_prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD).toLong()
         smart_punctuation = _prefs.getBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
+        space_before_opening_punctuation = _prefs.getBoolean(
+            "space_before_opening_punctuation", Defaults.SPACE_BEFORE_OPENING_PUNCTUATION,
+        )
         swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME).toLong()
         swipe_noise_threshold = safeGetFloat(_prefs, "swipe_noise_threshold", Defaults.SWIPE_NOISE_THRESHOLD)
         swipe_high_velocity_threshold = safeGetFloat(_prefs, "swipe_high_velocity_threshold", Defaults.SWIPE_HIGH_VELOCITY_THRESHOLD)
@@ -1908,12 +1907,6 @@ class Config private constructor(
          * caller then uses its default. An unreadable value is logged (audit L8: it used to be
          * swallowed by three silent catches in `get_dip_pref`).
          */
-        /** True when [key] is stored with a value other than [default] (unset = not customised). */
-        internal fun isDipPrefCustomised(prefs: SharedPreferences, key: String, default: Float): Boolean {
-            val stored = dipPrefValue(prefs, key)
-            return stored >= 0f && stored != default
-        }
-
         internal fun dipPrefValue(prefs: SharedPreferences, key: String): Float = try {
             prefs.getInt(key, -1).toFloat()
         } catch (e: ClassCastException) {

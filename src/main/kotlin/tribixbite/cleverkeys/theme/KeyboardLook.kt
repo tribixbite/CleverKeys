@@ -79,12 +79,13 @@ data class KeyboardLook(
      */
     val shiftFilled: Boolean = false,
     /**
-     * Whether the user's own appearance settings win over this look ([LookUserYield]): a key gap
-     * changed from its default and a swipe trail colour changed from its default. The custom
-     * border (`border_config`) does NOT: the borderless key is the look (maintainer 2026-11-06:
-     * the border was "too distracting"). False for the familiar looks (choosing one is an explicit choice
-     * of that product's appearance); true for the CleverKeys default look, which users get
-     * without choosing it, so settings they tuned before it became the default must still apply.
+     * Whether the user's swipe trail colour, when changed from its default, wins over this look's
+     * ([LookUserYield]). Nothing else yields: the custom border (`border_config`) does not (the
+     * look's hairline is the frame; maintainer 2026-11-06: the old border was "too distracting"),
+     * and since 2026-11-07 neither do the global key gaps (maintainer: the CleverKeys look's
+     * spacing should match SwiftKey's, equal on every side; a per-layout gap in Layout Manager
+     * still wins, `LayoutKeyGeometry`). False for the familiar looks; true for the CleverKeys
+     * default look, which users get without choosing it.
      */
     val yieldsToUserSettings: Boolean = false,
 ) {
@@ -160,6 +161,12 @@ data class LookPalette(
      * label. Only drawn when [latchedKey] is defined.
      */
     val latchedLabel: Int = 0,
+    /**
+     * A painted keyboard background ([LookBackdrop]: aurora glows, stars) over [keyboardBackground];
+     * null = the flat colour. A custom theme made from the look keeps the flat colour.
+     */
+    // TODO: carry the backdrop into ThemeSpec (codec + editor) if custom themes should keep it.
+    val backdrop: LookBackdrop? = null,
 )
 
 /**
@@ -188,31 +195,20 @@ data class LookGeometry(
      * as its letters ([LookLabelSizing.mainLabelSize], research §12 and §13). Icons are not affected.
      */
     val functionLabelScale: Float? = null,
+    /**
+     * The vertical gap equals the horizontal gap in pixels (the same space on every side of a
+     * key, at any keyboard height); [keyGapVertical] is then ignored. Needs [keyGapHorizontal].
+     * Null = undefined (a spec inherits its base's), like every other attribute here.
+     */
+    val equalGaps: Boolean? = null,
 )
 
 /**
- * The precedence of a look with [KeyboardLook.yieldsToUserSettings]: every attribute the user set
- * on purpose wins over the look, every attribute still at its default takes the look's value.
- * Pure; `KeyboardLookUserYieldTest`.
- *
- * "On purpose" is judged per setting: a key gap whose stored value differs from its default (an
- * unset pref is the default) and a swipe trail colour that differs from its default. The custom
- * border (`border_config`) is deliberately not one of them: radius and outline are the look's.
+ * The precedence of a look with [KeyboardLook.yieldsToUserSettings]: a swipe trail colour the user
+ * changed from its default wins over the look's. Geometry never yields (gaps, radius, outline are
+ * the look's). Pure; `KeyboardLookUserYieldTest`.
  */
 object LookUserYield {
-
-    /**
-     * [look] with the attributes the user owns removed (null = the user's value applies, see
-     * [KeyboardLookGeometry.resolve]).
-     */
-    fun geometry(
-        look: LookGeometry,
-        verticalGapCustomised: Boolean,
-        horizontalGapCustomised: Boolean,
-    ): LookGeometry = look.copy(
-        keyGapVertical = look.keyGapVertical.takeUnless { verticalGapCustomised },
-        keyGapHorizontal = look.keyGapHorizontal.takeUnless { horizontalGapCustomised },
-    )
 
     /** The trail colour to draw: the user's when they changed it from [userDefault], else the look's. */
     fun trailColor(lookTrail: Int, userTrail: Int, userDefault: Int): Int =
@@ -337,9 +333,14 @@ object KeyboardLookGeometry {
             )
         }
         val borderWidth = look.borderWidthDp?.let { it.coerceAtLeast(0f) * density }
+        val horizontal = look.keyGapHorizontal?.let { it.coerceIn(0f, MAX_GAP) * keyWidth }
         return Effective(
-            verticalMargin = look.keyGapVertical?.let { it.coerceIn(0f, MAX_GAP) * rowHeight } ?: user.verticalMargin,
-            horizontalMargin = look.keyGapHorizontal?.let { it.coerceIn(0f, MAX_GAP) * keyWidth } ?: user.horizontalMargin,
+            verticalMargin = when {
+                // Capped like a fractional gap: at most MAX_GAP of the row.
+                look.equalGaps == true && horizontal != null -> minOf(horizontal, MAX_GAP * rowHeight)
+                else -> look.keyGapVertical?.let { it.coerceIn(0f, MAX_GAP) * rowHeight } ?: user.verticalMargin
+            },
+            horizontalMargin = horizontal ?: user.horizontalMargin,
             borderRadius = look.cornerRadiusDp?.let { it.coerceAtLeast(0f) * density } ?: user.borderRadius,
             borderWidth = borderWidth ?: user.borderWidth,
             // A look draws one outline width in both states (pressed keys change fill, not frame).

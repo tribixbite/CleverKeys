@@ -363,6 +363,9 @@ internal fun SettingsActivity.loadCurrentSettings() {
         switchInputImmediate = prefs.getSafeBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
         enterAlwaysNewline = prefs.getSafeBoolean("enter_always_newline", Defaults.ENTER_ALWAYS_NEWLINE)
         smartPunctuationEnabled = prefs.getSafeBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
+        spaceBeforeOpeningPunctuation = prefs.getSafeBoolean(
+            "space_before_opening_punctuation", Defaults.SPACE_BEFORE_OPENING_PUNCTUATION,
+        )
 
         // Gesture tuning settings
         tapDurationThreshold = Config.safeGetInt(prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD)

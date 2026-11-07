@@ -74,6 +74,12 @@
   "chio": [
     "ch'io"
   ],
+  "come": [
+    "com'è"
+  ],
+  "cose": [
+    "cos'è"
+  ],
   "dada": [
     "d'ada"
   ],
@@ -169,6 +175,9 @@
   ],
   "dosso": [
     "d'osso"
+  ],
+  "dove": [
+    "dov'è"
   ],
   "doveri": [
     "dov'eri"
@@ -280,6 +289,9 @@
   ],
   "lavorio": [
     "l'avorio"
+  ],
+  "le": [
+    "l'è"
   ],
   "lecce": [
     "l'ecce"
@@ -398,6 +410,9 @@
   "lutero": [
     "l'utero"
   ],
+  "me": [
+    "m'è"
+  ],
   "mera": [
     "m'era"
   ],
@@ -407,8 +422,20 @@
   "mezzora": [
     "mezz'ora"
   ],
+  "nando": [
+    "n'andò"
+  ],
   "nera": [
     "n'era"
+  ],
+  "quale": [
+    "qual'è"
+  ],
+  "quante": [
+    "quant'è"
+  ],
+  "sapri": [
+    "s'aprì"
   ],
   "sera": [
     "s'era"
@@ -418,6 +445,9 @@
   ],
   "signora": [
     "s'ignora"
+  ],
+  "tante": [
+    "tant'è"
   ],
   "terzultima": [
     "terz'ultima"
@@ -433,6 +463,9 @@
   ],
   "tè": [
     "t'è"
+  ],
+  "ve": [
+    "v'è"
   ],
   "ventiquattrore": [
     "ventiquattr'ore"
