@@ -128,6 +128,13 @@ class LauncherActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        // I-7: remind (once per boot) when CleverKeys is enabled but another keyboard is the
+        // default. Before it is enabled the setup cards already say what to do.
+        if (isCleverKeysEnabled(this)) IMEStatusHelper.checkAndPromptFromApp(this)
+    }
+
     private fun launchKeyboardSettings() {
         try {
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))

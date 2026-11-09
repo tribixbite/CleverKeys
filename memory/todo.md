@@ -36,15 +36,19 @@ the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
 
-Test phones (2026-11-09: Sagas `192.168.0.144` (landscape, CleverKeys Dark, Termux) and
-`192.168.1.130` (landscape, CleverKeys Dark) answer on `:5555` with CleverKeys default; `.83` has
-Gboard default and CleverKeys 1.6.0 — left alone; `192.168.0.81` is THIS HOST (same boot_id) —
-never use it; the Pixel `.216` and Seeker `.199` refused `:5555`. Neither Saga has `su`. Recipe
-for exact text checks: a Chrome `data:` textarea read over CDP (`adb forward tcp:N
-localabstract:chrome_devtools_remote`), synthetic swipes as one `adb shell` chain of `input motionevent` through key centres
-(landscape Saga, CleverKeys look: rows y 702/812/922/1027, Q at x 348, pitch 204; short swipes as
-DOWN + one 70 px MOVE + UP). The session's helper scripts were scratch, not kept. google/artemis is
-cloned at `~/git/artemis` but has no `.env` (no model key) and no helper on any phone; not used.
+Test phones (2026-11-09, later): EVERY phone answers on `:5555` — Pixel 8 Pro `192.168.0.216`,
+Sagas `192.168.0.144` / `192.168.1.130` (CleverKeys Dark, CleverKeys default) and `.83` (ROOTED,
+`persist.adb.tcp.port=5555`, Gboard default, CleverKeys 2.0 release since 2026-11-09, IME disabled),
+Galaxy Note10+ `192.168.0.55` (secure lock screen — unusable unattended). Unrooted phones keep
+5555 until reboot; the host cron `~/git/termux-tools/tools/adb-pin-5555.sh` (list
+`~/.config/adb-pin-5555.list`) re-pins them through the rotated wireless port after one. **Check a
+phone OUT/IN in `/sdcard/agent-sharing.md` on the phone** (append a row; other projects' agents use
+the Pixel). `192.168.0.81` is THIS HOST (same boot_id) — never use it. Recipe for exact text checks: a
+Chrome `data:` textarea read over CDP (`adb forward tcp:N localabstract:chrome_devtools_remote`);
+where Chrome refuses `data:` (.83) use CleverKeys' own launcher field and read it with uiautomator.
+Synthetic swipes: one `adb shell` chain of `input motionevent` through key centres (landscape Saga:
+rows y 702/812/922/1027, Q at x 348, pitch 204; portrait Saga: rows y 1710/1872/2036, Q x 64,
+pitch 106; short swipes as DOWN + one MOVE + UP). google/artemis (`~/git/artemis`) has no model key.
 Seen from this box 2026-11-05: Pixel 8 Pro `192.168.0.216` wireless port 43213, Android
 17; Sagas `192.168.1.130` Android 14 no Termux, `192.168.0.144` and `192.168.0.83` Android 13 with
 Termux — `.83` was running a game, leave it alone; Play Protect blocks the DEBUG APK on the Pixel
@@ -301,6 +305,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    (`100-`, `101-`); `minimize_fab` → round button, app full screen, a tap elsewhere reaches the
    app, tap on the button restores (`102-`–`105-`). Left: the maintainer's feel checks only.
    Checklist pass (29 pass / 1 fail / 8 maintainer): `docs/plans/v2.0.0-manual-test-checklist.md`.
+   FULL LIST 2026-11-09 on the Pixel (destructive items maintainer-approved for that run;
+   `build/nov09-pixel/`): 43 pass / 5 fail / 3 partial / 12 not run. Fixed the same day: the
+   default-keyboard reminder never fired (only the IME service checked, and Android creates it
+   only while it IS the default → launcher/Settings `onResume` now check; service check removed) and the suggestion bar
+   kept its scroll across swipes. Still open: `d'être` (item 35), the spoken TalkBack pass, the
+   emoji panel by hand, voice/GIF items (no packs on the phone), autofill inline.
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21
     locales — command catalogue 465, popover 18, clipboard selection/bulk 25, clear-clipboard 4,
     #184 refusal, terminal packages, language binding, Oct 7 dialog strings, Oct 8 swipe
@@ -1234,6 +1244,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `build/nov09-saga144/`, `build/nov09-saga130/`). Still open: the maintainer's look-and-feel
     verdict; fresh install / upgrade-keeps-theme / custom-theme-delete / per-layout gap /
     Layout Manager picker / Key-press preview switch items.
+    Fourth round (2026-11-09, maintainer: "the purple is too cloud like and less aurora like"):
+    the glows became two rayed curtains (`AuroraRibbon` / `AuroraRaster`, `a5427cd6`); release
+    `3db9b885` shows them on Saga .144 portrait and on Saga .83 after a real 1.6.0 → 2.0 upgrade
+    with no stored theme (→ the look, as designed) (`build/nov09b-saga144/02-*`,
+    `build/nov09-saga83/03-*`). Verdict on the new aurora: maintainer.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
@@ -1246,6 +1261,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     surfaces it (rank 2–3) but costs real words at every margin (15: 6, 30: 3, 50: 1 of 2,179
     traces) → **maintainer decision**, patch + numbers in
     `docs/eval/2026-11-09-elision-base-frequency.md`. Also wants a human swipe of `d'être`.
+    Follow-up the same day: ranking each elision by its OWN Leipzig corpus frequency (margin 0)
+    is the best arm yet — t1 84.26 → 85.13, 2 regressions (`laisse`→`l'aise`, `donjon`→`d'union`),
+    17 improvements, `d'être` rank 1–2 (same doc, "Follow-up"; scripts `scripts/research/elision/`).
+    Not shipped: needs a per-key table + NOTICE and relaxing `CoreImeHygieneDriftTest`.
+    Also fixed (`a5427cd6`): it `c'è`/`s'è`/`n'è` were unswipeable (their keys `cè`… lose their
+    projection to `ce`…) — now PAIRED on `ce`/`se`/`ne`; DEVICE Saga .83 (Italian primary):
+    `ce` → bar `Ce, Cr, Le, Che, Ci, …, C'è` (slot ≈9, after scrolling), tapping commits `C'è `.
+    A paired variant sits late in the bar (like `bowie's`): ranking it higher is open. And
+    unaccented ASK duplicates respelled (`l'âme`, `l'étoile`, `l'éveil`, `l'écu`, it `l'élite`);
+    it `l'attivita` kept until it.cklm is rebuilt (TODO in the generator).
 36. [ ] device: "Space before opening punctuation" (2026-11-07, default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Mock-tested through the real
     sendText (`OpeningPunctuationSpacingTest`); not run on a phone. Ellipsis after a swiped word

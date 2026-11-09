@@ -836,12 +836,31 @@ class SuggestionBar : LinearLayout {
             Log.e("SuggestionBar", "Error updating suggestion views: ${e.message}")
         }
 
+        // New content starts at the bar's start: a scroll the user made to read the last list
+        // must not carry over, or the next list opens mid-way with its top word off-screen
+        // (Pixel checklist run 2026-11-09).
+        scrollParentToStart()
+
         // Show or hide the entire bar based on suggestions (unless always visible mode)
         // NOTE: Visibility is now controlled by the parent HorizontalScrollView
         visibility = if (alwaysVisible) {
             VISIBLE // Always keep visible to prevent UI rerendering
         } else {
             if (currentSuggestions.isEmpty()) GONE else VISIBLE
+        }
+    }
+
+    /**
+     * Scrolls the [HorizontalScrollView] hosting this bar back to its start edge: x 0 left to
+     * right, the far end right to left (measured after the next layout, when the new
+     * children's width is known).
+     */
+    private fun scrollParentToStart() {
+        val scroller = parent as? HorizontalScrollView ?: return
+        if (scroller.layoutDirection == View.LAYOUT_DIRECTION_RTL) {
+            scroller.post { scroller.scrollTo((width - scroller.width).coerceAtLeast(0), 0) }
+        } else if (scroller.scrollX != 0) {
+            scroller.scrollTo(0, 0)
         }
     }
 

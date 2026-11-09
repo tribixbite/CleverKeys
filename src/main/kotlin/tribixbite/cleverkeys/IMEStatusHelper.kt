@@ -82,6 +82,7 @@ object IMEStatusHelper {
         try {
             // I-7: permanent opt-out — the Settings reminder switch wrote false.
             if (!prefs.getBoolean(PREF_KEY_PROMPT_ENABLED, Defaults.IME_DEFAULT_PROMPT_ENABLED)) {
+                Log.i(TAG, "reminder: off in Settings")
                 return
             }
 
@@ -90,6 +91,7 @@ object IMEStatusHelper {
             val bootInstant = System.currentTimeMillis() - SystemClock.elapsedRealtime()
             val lastPromptBoot = prefs.getLong(PREF_KEY_LAST_PROMPT_BOOT_MS, 0L)
             if (abs(bootInstant - lastPromptBoot) <= BOOT_INSTANT_TOLERANCE_MS) {
+                Log.i(TAG, "reminder: already shown this boot")
                 return // Already prompted this boot (possibly in an earlier process)
             }
 
@@ -110,6 +112,7 @@ object IMEStatusHelper {
             val ourIme = "$packageName/$serviceClassName"
 
             // Check if we're the default
+            Log.i(TAG, "reminder: default IME is ${defaultIme ?: "unset"}")
             if (ourIme != defaultIme) {
                 // I-7 (comprehensive audit 2026-09-06): the message names THIS app via
                 // its app_name resource — the old hardcoded constant said "Unexpected
@@ -135,6 +138,26 @@ object IMEStatusHelper {
         } catch (e: Exception) {
             Log.e(TAG, "Error checking default IME", e)
         }
+    }
+
+    /**
+     * The reminder for the app's own screens (launcher, Settings), called from their
+     * `onResume`. The IME service cannot be the only caller: Android creates an input-method
+     * service only while it is the SELECTED keyboard, so the service-side check runs exactly
+     * when there is nothing to remind about (Pixel checklist run 2026-11-09: no toast with
+     * Gboard default, before or after a reboot). Same guards as [checkAndPromptDefaultIME]:
+     * once per boot, permanent opt-out.
+     */
+    @JvmStatic
+    fun checkAndPromptFromApp(context: Context) {
+        val app = context.applicationContext
+        checkAndPromptDefaultIME(
+            app,
+            Handler(android.os.Looper.getMainLooper()),
+            DirectBootAwarePreferences.get_shared_preferences(app),
+            app.packageName,
+            CleverKeysService::class.java.name,
+        )
     }
 
     /**

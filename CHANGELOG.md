@@ -224,7 +224,8 @@ editor that used to be listed here already ship in 2.0.)
   colours and a sample swipe trail, using your opacity, border and trail settings.
 - Four new settings: clipboard media capture toggle + size cap (MB), exact-typed-word suggestion,
   numpad height scaling.
-- Default-keyboard reminder fires once per boot with a permanent opt-out switch.
+- Default-keyboard reminder fires once per boot with a permanent opt-out switch, when you open
+  CleverKeys or its Settings while another keyboard is the default.
 - Learned trigrams are included in Backup & Restore export/import.
 - Swipe playground (Settings → Advanced → Swipe Debug Log): per-swipe candidate ranking, latency,
   key geometry, and explicit-session trace recording with export/share and clear.
@@ -532,6 +533,10 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The suggestion bar opens at its start for each new word. After you scrolled it to read a
+  long list, the next word's list opened scrolled too, with the best word off-screen.
+- The default-keyboard reminder never appeared: only the keyboard itself checked, and Android runs
+  a keyboard only while it is the default.
 - **French and Italian elisions with accents swipe.** `d'être`, `l'été`, `l'école`, `l'état`,
   `j'étais`, `dov'è` and about 8,600 more never appeared from a swipe: the data kept the accents in
   the swipe key, which the decoder cannot spell, so they were dropped as unreachable. They are now

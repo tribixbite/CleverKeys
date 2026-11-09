@@ -53,6 +53,7 @@ class ImeDefaultDetectionTest {
     fun setUp() {
         mockkStatic(Log::class)
         every { Log.w(any(), any<String>()) } returns 0
+        every { Log.i(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
         mockkStatic(Settings.Secure::class)
         // The boot-instant computation needs a stable elapsed-realtime. The SDK

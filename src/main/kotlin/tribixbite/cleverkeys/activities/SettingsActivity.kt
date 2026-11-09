@@ -953,6 +953,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         refreshBoundLayoutLanguages()
         // The microphone may have been granted in system settings, or by the keyboard's prompt.
         tribixbite.cleverkeys.ui.settings.io.refreshVoiceInputState(this)
+        // I-7: remind (once per boot) when another keyboard is the default.
+        IMEStatusHelper.checkAndPromptFromApp(this)
     }
 
     override fun onPause() {

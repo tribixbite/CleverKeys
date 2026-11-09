@@ -515,8 +515,10 @@ class CleverKeysService : InputMethodService(),
             registerReceiver(_themeChangeReceiver, filter)
         }
 
-        // Check if we're the default IME and remind user if not
-        checkAndPromptDefaultIME()
+        // The default-keyboard reminder (I-7) is NOT checked here: Android creates this service
+        // only while CleverKeys is becoming the selected keyboard, so the check could only misfire
+        // (reading the previous default mid-switch) and burn the once-per-boot slot. The launcher
+        // and Settings check on resume instead (IMEStatusHelper.checkAndPromptFromApp).
         _keyboardView = inflate_view(R.layout.keyboard) as Keyboard2View
         _keyboardView.reset()
         Logs.set_debug_logs(resources.getBoolean(R.bool.debug_logs))
@@ -1541,12 +1543,6 @@ class CleverKeysService : InputMethodService(),
      */
     fun showSuggestionBarMessage(message: String, durationMs: Long = 1500L) {
         _suggestionBar?.showTemporaryMessage(message, durationMs)
-    }
-
-    // Check if default IME, show notification if not (v1.32.377: Delegated to IMEStatusHelper)
-    private fun checkAndPromptDefaultIME() {
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        IMEStatusHelper.checkAndPromptDefaultIME(this, _handler, prefs, packageName, javaClass.name)
     }
 
     // v1.32.341: loadContractionMappings() method removed - functionality moved to ContractionManager class
