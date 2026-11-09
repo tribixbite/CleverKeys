@@ -452,7 +452,7 @@ editor that used to be listed here already ship in 2.0.)
   (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
   icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
   system's light or dark mode; in dark mode the keys sit on a near-black background lit by a still
-  purple aurora with a few stars. Every corner hint for short swipes stays, drawn a little smaller. A
+  purple aurora (rayed curtains with a bright wavy rim, not soft glows) and a few stars. Every corner hint for short swipes stays, drawn a little smaller. A
   swipe-trail colour you already changed still applies; key gaps come from the look (set per layout
   in Layout Manager to change them). Choosing a theme in Theme Manager no
   longer restarts the keyboard, and neither does its Restart keyboard button, which now reloads
@@ -536,7 +536,10 @@ editor that used to be listed here already ship in 2.0.)
   `j'étais`, `dov'è` and about 8,600 more never appeared from a swipe: the data kept the accents in
   the swipe key, which the decoder cannot spell, so they were dropped as unreachable. They are now
   keyed by their plain spelling (`detre` → `d'être`); where that spelling is itself a word
-  (`dame`, `dove`), the elision is offered beside it rather than replacing it.
+  (`dame`, `dove`), the elision is offered beside it rather than replacing it. Italian `c'è`,
+  `s'è` and `n'è` are now offered beside `ce`, `se` and `ne`, and a few elisions that were spelled
+  without their accents now carry them (`l'âme`, `l'étoile`, `l'éveil`, `l'élite`; reform
+  spellings such as `l'ile` and `d'oeil`, and `l'email`, stay).
 - **A space before opening punctuation after a swiped word** (new setting under Smart
   Punctuation, on by default). `(` `[` `"` `'` `$` `@` `#` and similar typed straight after a swiped
   or chosen word, or after the comma attached to it, get a space before them (`hello, (`), while

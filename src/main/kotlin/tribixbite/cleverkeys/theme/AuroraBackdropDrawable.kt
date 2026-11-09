@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.theme
 
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.LinearGradient
@@ -12,10 +13,12 @@ import android.graphics.Shader
 import android.graphics.drawable.Drawable
 
 /**
- * Paints a [LookBackdrop] (aurora glows and a static star field) over [baseColor]: the keyboard
- * view's background while a look whose palette defines one is effective. Shaders and star
- * positions are built once per size in [onBoundsChange]; [draw] only replays them, so the
- * keyboard's per-frame cost is a handful of shader fills.
+ * Paints a [LookBackdrop] (aurora curtains, glows and a static star field) over [baseColor]: the
+ * keyboard view's background while a look whose palette defines one is effective. The curtains
+ * are rendered once per size at half resolution ([AuroraRaster], cached across instances so a
+ * re-inflated keyboard does not render them again); shaders and star positions are built in
+ * [onBoundsChange]; [draw] only replays them, so the per-frame cost is a bitmap blit and a
+ * handful of shader fills.
  */
 class AuroraBackdropDrawable(
     private val baseColor: Int,
@@ -31,6 +34,9 @@ class AuroraBackdropDrawable(
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
     }
+    private val ribbonPaint = Paint(Paint.FILTER_BITMAP_FLAG)
+    private var ribbons: Bitmap? = null
+    private val ribbonDst = Rect()
     private var stars: List<Star> = emptyList()
     /** Whole-drawable alpha: the keyboard opacity setting (`Keyboard2View` sets `background.alpha`). */
     private var drawableAlpha = 0xFF
@@ -40,6 +46,8 @@ class AuroraBackdropDrawable(
         val w = bounds.width().toFloat()
         val h = bounds.height().toFloat()
         if (w <= 0f || h <= 0f) return
+        ribbons = if (backdrop.ribbons.isEmpty()) null else ribbonBitmap(bounds.width(), bounds.height())
+        ribbonDst.set(bounds)
         backdrop.glows.forEachIndexed { i, g ->
             val cx = bounds.left + g.cx * w
             val cy = bounds.top + g.cy * h
@@ -74,7 +82,9 @@ class AuroraBackdropDrawable(
         val layer = if (drawableAlpha < 0xFF) canvas.saveLayerAlpha(
             b.left.toFloat(), b.top.toFloat(), b.right.toFloat(), b.bottom.toFloat(), drawableAlpha,
         ) else -1
-        canvas.drawRect(b, basePaint)
+        val curtains = ribbons
+        if (curtains != null) canvas.drawBitmap(curtains, null, ribbonDst, ribbonPaint)
+        else canvas.drawRect(b, basePaint)
         for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
         val field = backdrop.stars
         if (field != null) {
@@ -111,6 +121,7 @@ class AuroraBackdropDrawable(
 
     override fun setColorFilter(colorFilter: ColorFilter?) {
         basePaint.colorFilter = colorFilter
+        ribbonPaint.colorFilter = colorFilter
         glowPaints.forEach { it.colorFilter = colorFilter }
         starPaint.colorFilter = colorFilter
         glintPaint.colorFilter = colorFilter
@@ -121,7 +132,35 @@ class AuroraBackdropDrawable(
     override fun getOpacity(): Int =
         if (alphaOf(baseColor) == 0xFF && drawableAlpha == 0xFF) PixelFormat.OPAQUE else PixelFormat.TRANSLUCENT
 
+    /** The curtains over the base colour at half the view's size, from the cache or rendered. */
+    private fun ribbonBitmap(widthPx: Int, heightPx: Int): Bitmap {
+        val w = (widthPx / RIBBON_SCALE).coerceAtLeast(1)
+        val h = (heightPx / RIBBON_SCALE).coerceAtLeast(1)
+        val key = RibbonKey(baseColor, backdrop.ribbons, w, h, density)
+        synchronized(cache) {
+            cache[key]?.let { return it }
+        }
+        val pixels = AuroraRaster.render(baseColor, backdrop.ribbons, w, h, density / RIBBON_SCALE)
+        val bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
+        synchronized(cache) { cache[key] = bitmap }
+        return bitmap
+    }
+
+    private data class RibbonKey(val base: Int, val ribbons: List<AuroraRibbon>, val w: Int, val h: Int, val density: Float)
+
     private companion object {
+        /** Curtains are soft; half resolution quarters the render cost and the memory. */
+        const val RIBBON_SCALE = 2
+
+        /**
+         * The last few rendered sizes (portrait, landscape, a split screen), shared by every
+         * instance: the keyboard view and its drawable are re-created on theme and layout
+         * changes, and each render walks every pixel. An access-ordered map evicting the eldest.
+         */
+        val cache = object : LinkedHashMap<RibbonKey, Bitmap>(4, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<RibbonKey, Bitmap>?) = size > 3
+        }
+
         fun alphaOf(color: Int): Int = (color ushr 24) and 0xFF
         fun withAlpha(color: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) shl 24) or (color and 0x00FFFFFF)
     }

@@ -300,10 +300,13 @@ class BundledContractionDataTest {
 
         // 2026-11-07: +1,032 replace / +11 pairs, the same accent re-keying (`dov'è`, `com'è`).
         assertThat(files.getValue("it")).hasSize(22_246)
-        assertThat(pairFiles.getValue("it")).hasSize(159)
+        // 2026-11-09: +3 curated pairs `ce`/`se`/`ne` → `c'è`/`s'è`/`n'è`, whose own keys
+        // (`cè`, …) the CTC beam can never spell (their projection loses to the real word).
+        assertThat(pairFiles.getValue("it")).hasSize(162)
+        assertThat(pairFiles.getValue("it")["ce"]).containsExactly("c'è")
         val it = coverageOf("it")
         assertWithMessage("dead Italian mappings: ${deadKeysOf("it")}").that(it.dead).isEqualTo(0)
-        assertThat(it.entries).isEqualTo(22_405)
+        assertThat(it.entries).isEqualTo(22_408)
     }
 
     @Test

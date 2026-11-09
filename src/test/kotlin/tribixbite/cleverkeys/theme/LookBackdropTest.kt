@@ -46,11 +46,45 @@ class LookBackdropTest {
     @Test
     fun glowsAreTranslucentAndTheTopFadesIntoTheBar() {
         val aurora = KeyboardLooks.CLEVERKEYS_AURORA
-        assertThat(aurora.glows).isNotEmpty()
         for (g in aurora.glows) {
             val alpha = (g.color ushr 24) and 0xFF
-            assertWithMessage("glow alpha").that(alpha).isIn(com.google.common.collect.Range.closed(0x20, 0x66))
+            assertWithMessage("glow alpha").that(alpha).isIn(com.google.common.collect.Range.closed(0x10, 0x66))
         }
         assertThat(aurora.topFade).isIn(com.google.common.collect.Range.openClosed(0f, 0.5f))
+    }
+
+    /**
+     * The curtains (maintainer 2026-11-09: the glows alone were "too cloud like"): rayed, lit
+     * over the base and never dimmer than it, brightest at a curtain's rim, the same picture for
+     * the same size.
+     */
+    @Test
+    fun theAuroraIsRayedCurtainsOverTheBase() {
+        val aurora = KeyboardLooks.CLEVERKEYS_AURORA
+        assertWithMessage("the look paints curtains, not only glows").that(aurora.ribbons).isNotEmpty()
+        val base = 0xFF0A080E.toInt()
+        val w = 200
+        val h = 120
+        val a = AuroraRaster.render(base, aurora.ribbons, w, h, 0.5f)
+        assertThat(a.size).isEqualTo(w * h)
+        assertWithMessage("deterministic").that(a).isEqualTo(AuroraRaster.render(base, aurora.ribbons, w, h, 0.5f))
+        fun channelSum(c: Int) = ((c shr 16) and 0xFF) + ((c shr 8) and 0xFF) + (c and 0xFF)
+        val baseSum = channelSum(base)
+        for (c in a) {
+            assertThat(c ushr 24).isEqualTo(0xFF)
+            assertThat(channelSum(c)).isAtLeast(baseSum)
+        }
+        assertWithMessage("some of the view is lit").that(a.count { channelSum(it) > baseSum + 30 }).isGreaterThan(w * h / 20)
+        assertWithMessage("and some is left as dark sky").that(a.count { channelSum(it) <= baseSum + 3 }).isGreaterThan(w * h / 10)
+
+        // Rays: along a row through the near curtain, brightness varies column to column.
+        val near = aurora.ribbons.first()
+        val rays = AuroraRaster.rayProfile(near, w, 0.5f)
+        assertThat(rays.all { it in 0.15f..1f }).isTrue()
+        assertWithMessage("rays stand out of the band").that(rays.maxOrNull()!! - rays.minOrNull()!!).isGreaterThan(0.4f)
+
+        assertThat(AuroraRaster.render(base, aurora.ribbons, 0, h, 0.5f)).isEmpty()
+        assertWithMessage("no curtains = the base alone")
+            .that(AuroraRaster.render(base, emptyList(), 4, 3, 1f).toSet()).containsExactly(base)
     }
 }

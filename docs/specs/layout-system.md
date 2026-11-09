@@ -374,8 +374,10 @@ dark #332B3D; maintainer 2026-11-06: "make keys not borderless"), 8 dp corners, 
 horizontal gap with the row gap equal to it in pixels (`LookGeometry.equalGaps`, XML
 `equal_gaps`; maintainer 2026-11-07), a light-mode-only shadow; in dark mode darker keys (#1D1924)
 on a near-black base (#0A080E) painted with an aurora (`LookPalette.backdrop` →
-`KeyboardLooks.CLEVERKEYS_AURORA`: three tilted violet / orchid / indigo glows at about a third
-opacity and a static star field with an occasional glint, faded into the base over the top 18 %
+`KeyboardLooks.CLEVERKEYS_AURORA`: since 2026-11-09 two rayed curtains (`AuroraRibbon`: a wavy
+lilac rim with seeded vertical rays fading upward into violet, rendered once per size at half
+resolution by the pure `AuroraRaster` and cached across drawables) under one faint violet haze glow
+— the earlier three soft glows read as clouds — and a static star field with an occasional glint, faded into the base over the top 18 %
 so the bar joins without a seam; `AuroraBackdropDrawable`, stars placed by `LookStars`,
 `LookBackdropTest`); light mode stays flat;
 a tonal function-key fill; the Go / Search / Send / Done action in the accent with an icon; a

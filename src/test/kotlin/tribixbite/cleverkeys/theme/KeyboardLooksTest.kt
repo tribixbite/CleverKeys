@@ -235,7 +235,7 @@ class KeyboardLooksTest {
         }
         // "Darker than the keys overall": the painted background's mean luminance, sampled on a
         // phone-shaped keyboard with the falloff AuroraBackdropDrawable draws, stays below the
-        // key fill's. (Single glow cores may be brighter: that is the aurora in the gaps.)
+        // key fill's. (A curtain's rim may be brighter: that is the aurora in the gaps.)
         val mean = meanBackdropLuminance(dark.keyboardBackground, backdrop!!, width = 411f, height = 290f)
         assertWithMessage("mean background luminance vs the key fill")
             .that(mean).isLessThan(relativeLuminance(dark.key))
@@ -248,17 +248,20 @@ class KeyboardLooksTest {
 
     /**
      * Mean relative luminance of [backdrop] painted over [base] on a [width] × [height] view: the
-     * glows' radial falloff (full alpha at the centre, 45 % at half the radius, 0 at the edge, on
+     * curtains ([AuroraRaster]), then the glows' radial falloff (full alpha at the centre, 45 % at half the radius, 0 at the edge, on
      * an ellipse tilted by its rotation) and the top fade, as AuroraBackdropDrawable paints them.
      */
     private fun meanBackdropLuminance(base: Int, backdrop: LookBackdrop, width: Float, height: Float): Double {
         val cols = 96
         val rows = 64
+        // The curtains exactly as AuroraBackdropDrawable renders them, at the sample grid's size
+        // (width and height are in dp, so the grid's density is cols / width).
+        val curtains = AuroraRaster.render(base, backdrop.ribbons, cols, rows, cols / width)
         var sum = 0.0
         for (j in 0 until rows) for (i in 0 until cols) {
             val x = (i + 0.5f) / cols * width
             val y = (j + 0.5f) / rows * height
-            var color = base
+            var color = curtains[j * cols + i]
             for (g in backdrop.glows) {
                 val rx = g.rx * width
                 val ry = g.ry * height

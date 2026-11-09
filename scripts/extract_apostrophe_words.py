@@ -264,6 +264,17 @@ CURATED_CONTRACTIONS = {
         "wenns": "wenn's",
         "wirds": "wird's",
     },
+    # Italian elisions onto è (2026-11-09). The lexicon carries the apostrophe-less
+    # spellings `cè`/`sè`/`nè`, so the extraction keys them by those; but a swipe reaches
+    # them only through their a-z projection, `ce`/`se`/`ne`, which the real words win,
+    # and the CTC beam therefore never produced `c'è` (there is). Keyed by the word, the
+    # classifier files them as PAIRED: swiping `ce` keeps `ce` and offers `c'è` beside it.
+    # `ch'è` and `t'è` are literary and would sit beside `che`/`te` on every swipe: left out.
+    "it": {
+        "ce": "c'è",
+        "se": "s'è",
+        "ne": "n'è",
+    },
     # es/pt/sv deliberately have NO curated entries: Spanish ("al", "del") and
     # Portuguese ("do", "da", "no", "na", "pelo") amalgams are written solid, and
     # modern Swedish writes its reduced forms solid too ("stan", not "sta'n").
@@ -285,6 +296,17 @@ FORCED_APPEND = {
     # defence in depth for the day one does, per the HANDOFF §1 landmine note.
     "fr": {"entretemps"},
 }
+# Elided words hunspell rejects that are nonetheless the usual spelling, so
+# rekey_unreachable must not respell them with accents. fr `email` is the common
+# anglicism (`l'email`, `d'email`); `émail` is enamel.
+RESPELL_KEEP = {
+    "fr": frozenset({"email"}),
+    # TODO: drop once it.cklm is rebuilt — the shipped Italian static LM names `l'attivita`
+    # (an unaccented corpus spelling), and StaticLmAssetDriftTest requires every word it names
+    # to stay showable. Rebuilding a shipped LM needs its own pre-registered gate.
+    "it": frozenset({"attivita"}),
+}
+
 FORCED_REPLACE = {
     # German capitalises its nouns, so the attestation probe has to try the
     # capitalised form too - which makes "Ichs" (plural of the noun "das Ich")
@@ -494,7 +516,7 @@ def display_forms(lexicon: dict) -> dict:
     return display
 
 
-def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set) -> tuple:
+def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set, attest=None) -> tuple:
     """
     Re-key every mapping whose key no engine can produce onto the string the decoder
     actually hands the overlay (2026-11-07, fr "d'être" never swiped).
@@ -512,6 +534,13 @@ def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set) -> tuple:
     (`chef-d'œuvre`, `d'auteurs-compositeurs-interprètes`) stay dead: hyphen compounds are
     curated by hand (docs/proposals/2026-08-20-hyphen-compound-contractions.md), and the
     longest of them would sit at the CTC emit budget (CtcBundledLexiconEmitBudgetTest).
+    A re-keyed mapping whose key is taken by the SAME contraction spelled without its
+    accents (ASK lists `l'etoile` beside `l'étoile`, `d'oeil` beside `d'œil`) replaces it
+    when `attest` (the language's hunspell check, a callable over a word list returning
+    the accepted subset) rejects the holder's elided word: `etoile` is no French word, so
+    `letoile` now gives `l'étoile` (2026-11-09; `lame` gave `l'ame`). When both elided words
+    are real (`l'arrête` / `l'arrêté`, `l'aine` / `l'aîné`), or the two differ only by a 1990-reform
+    spelling (`l'ile` / `l'île`, `d'oeil` / `d'œil`, see reform_fold), the holder stays.
     Returns (contractions, rekeyed count, skipped-as-taken count).
     """
     display = display_forms(lexicon)
@@ -523,6 +552,7 @@ def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set) -> tuple:
         else:
             pending.append((key, value))
     rekeyed = skipped = 0
+    respelled = []  # (key, accented value) whose holder may be the same word unaccented
     for key, value in pending:
         folded = project_az(key)
         if folded is None or "-" in value:
@@ -530,11 +560,40 @@ def rekey_unreachable(contractions: dict, lexicon: dict, emitted: set) -> tuple:
             continue
         new_key = display.get(folded, folded)
         if new_key in out:
-            skipped += 1
+            held = out[new_key]
+            if attest is not None and isinstance(held, str) and held != value \
+                    and project_az(held) == project_az(value):
+                respelled.append((new_key, value))
+            else:
+                skipped += 1
             continue
         out[new_key] = value
         rekeyed += 1
+    if respelled:
+        accepted = attest({elided_word(out[k]) for k, _ in respelled})
+        for new_key, value in respelled:
+            held = out[new_key]
+            if elided_word(held) in accepted or reform_fold(held) == reform_fold(value):
+                skipped += 1
+            else:
+                out[new_key] = value
+                rekeyed += 1
     return out, rekeyed, skipped
+
+
+def reform_fold(value: str) -> str:
+    """Folds the spellings the 1990 French reform (and ordinary typing) makes equivalent, so
+    `l'ile`, `d'oeil`, `entrainement`, `s'avèrera` count as the same word as `l'île`, `d'œil`,
+    `entraînement`, `s'avérera`: no circumflex on i/u, oe/ae for the ligatures, è for the
+    é before a mute syllable. hunspell fr_FR rejects these valid spellings, and the static LM
+    names them, so they must stay (StaticLmAssetDriftTest)."""
+    return (value.replace("î", "i").replace("û", "u").replace("œ", "oe").replace("æ", "ae")
+            .replace("é", "è"))
+
+
+def elided_word(value: str) -> str:
+    """The word after a contraction's last apostrophe, lowercased: `l'Étoile` -> `étoile`."""
+    return value.rsplit("'", 1)[-1].lower()
 
 
 def read_ckdt(path: Path) -> list:
@@ -858,7 +917,13 @@ def build_language(lang: str, dict_path: Path) -> dict:
             contractions.update(inversions)
 
         emitted = emitted_forms(lexicon)
-        contractions, rekeyed, rekey_skipped = rekey_unreachable(contractions, lexicon, emitted)
+        attest = None
+        if spec["hunspell"]:
+            dictionary = spec["hunspell"]
+            extra = RESPELL_KEEP.get(lang, frozenset())
+            attest = lambda words: hunspell_attested(dictionary, words) | (set(words) & extra)  # noqa: E731
+        contractions, rekeyed, rekey_skipped = rekey_unreachable(
+            contractions, lexicon, emitted, attest)
         # An entry is REACHABLE if either the bundled lexicon can already emit its key,
         # or the key is a pure a-z string that the CTC adapter injects into the lexicon
         # trie (CtcEngineAdapter.lexiconFor -> CtcContractionKeys.inject).  Before that

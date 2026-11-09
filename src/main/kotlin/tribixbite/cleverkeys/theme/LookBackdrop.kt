@@ -14,8 +14,14 @@ import kotlin.random.Random
  * borealis, purples on black, with a subtle dash of stardust, not animated").
  */
 data class LookBackdrop(
-    /** Glows painted in order over the base colour. */
+    /** Glows painted in order over the base colour (and over the [ribbons]). */
     val glows: List<AuroraGlow>,
+    /**
+     * Aurora curtains painted first over the base colour ([AuroraRaster]): a wavy bright lower
+     * edge with vertical rays fading upward, the shape a real aurora has. Soft [glows] alone read
+     * as clouds (maintainer 2026-11-09: "too cloud like and less aurora like").
+     */
+    val ribbons: List<AuroraRibbon> = emptyList(),
     /** Stars over the glows; null = none. */
     val stars: LookStarfield? = null,
     /**
@@ -40,6 +46,153 @@ data class AuroraGlow(
     val rotationDeg: Float,
     val color: Int,
 )
+
+/**
+ * One aurora curtain: a band of light whose lower edge waves across the view and whose rays
+ * rise from it and fade. Positions are fractions of the view (y from the top); colours carry
+ * their peak opacity in the alpha byte. Painted by [AuroraRaster].
+ */
+data class AuroraRibbon(
+    /** Mean height of the lower edge, fraction of the view height from the top. */
+    val edgeY: Float,
+    /** How far the edge waves up and down, fraction of the height. */
+    val amplitude: Float,
+    /** Wave periods across the view width (the edge is a sum of this and a slower half-wave). */
+    val waves: Float,
+    /** Phase of the edge's wave, in periods (0..1), so two ribbons do not run parallel. */
+    val phase: Float,
+    /** The edge rises by this fraction of the height from the left edge to the right one. */
+    val slope: Float,
+    /** How high the rays reach above the edge, fraction of the height. */
+    val height: Float,
+    /** Colour just above the lower edge, where a curtain is brightest. */
+    val edgeColor: Int,
+    /** Colour the rays fade into at the top of the curtain. */
+    val topColor: Int,
+    /** Rays per 100 dp of width. */
+    val raysPer100Dp: Float,
+    /** 0 = an even band, 1 = only the rays shine. */
+    val rayContrast: Float,
+    /** Seeds the ray placement, so the same size always draws the same curtain. */
+    val seed: Long,
+    /** Horizontal extent, fractions of the width; the curtain thins out over its last tenth. */
+    val xStart: Float = 0f,
+    val xEnd: Float = 1f,
+)
+
+/**
+ * Paints [AuroraRibbon]s over an opaque base colour into an ARGB pixel array (pure JVM, so the
+ * look's "darker than the keys" rule can measure the real painting). Rendered once per view
+ * size; `AuroraBackdropDrawable` scales the result up, the curtains being soft at any size.
+ */
+object AuroraRaster {
+
+    /**
+     * The opaque pixels ([width] × [height], row-major) of [ribbons] lit over [base] on a view
+     * with [density] px per dp (the density of the RASTER: half the screen's at half size).
+     * Light adds: two curtains crossing glow brighter, as they do in the sky.
+     */
+    fun render(base: Int, ribbons: List<AuroraRibbon>, width: Int, height: Int, density: Float): IntArray {
+        val n = width.coerceAtLeast(0) * height.coerceAtLeast(0)
+        val r = FloatArray(n)
+        val g = FloatArray(n)
+        val b = FloatArray(n)
+        if (n == 0) return IntArray(0)
+        for (ribbon in ribbons) paint(ribbon, width, height, density, r, g, b)
+        val br = ((base shr 16) and 0xFF).toFloat()
+        val bg = ((base shr 8) and 0xFF).toFloat()
+        val bb = (base and 0xFF).toFloat()
+        return IntArray(n) { i ->
+            val cr = (br + r[i]).coerceAtMost(255f).toInt()
+            val cg = (bg + g[i]).coerceAtMost(255f).toInt()
+            val cb = (bb + b[i]).coerceAtMost(255f).toInt()
+            (0xFF shl 24) or (cr shl 16) or (cg shl 8) or cb
+        }
+    }
+
+    private fun paint(rb: AuroraRibbon, w: Int, h: Int, density: Float, r: FloatArray, g: FloatArray, b: FloatArray) {
+        val rays = rayProfile(rb, w, density)
+        val x0 = rb.xStart * w
+        val x1 = rb.xEnd * w
+        val ramp = ((x1 - x0) * 0.1f).coerceAtLeast(1f)
+        val soft = (0.035f * h).coerceAtLeast(1f) // the glow just under the edge
+        // The vertical profile and colour, tabulated over t = (height above the edge) / reach.
+        val steps = 64
+        val er = FloatArray(steps + 1); val eg = FloatArray(steps + 1); val eb = FloatArray(steps + 1)
+        for (s in 0..steps) {
+            val t = s.toFloat() / steps
+            // A bright rim just above the edge (the fast term) over a slower glow that carries
+            // the rays up, reaching nothing at the top.
+            val f = (0.55f * kotlin.math.exp(-7f * t) + 0.45f * kotlin.math.exp(-1.8f * t)) * (1f - t * t)
+            er[s] = lerpChannel(rb.edgeColor, rb.topColor, 16, t) * f
+            eg[s] = lerpChannel(rb.edgeColor, rb.topColor, 8, t) * f
+            eb[s] = lerpChannel(rb.edgeColor, rb.topColor, 0, t) * f
+        }
+        val twoPi = (2 * Math.PI).toFloat()
+        for (x in 0 until w) {
+            val fx = x + 0.5f
+            if (fx < x0 || fx > x1) continue
+            val env = minOf(1f, (fx - x0) / ramp, (x1 - fx) / ramp)
+            val u = fx / w
+            val edge = h * (rb.edgeY - rb.slope * (u - 0.5f) +
+                rb.amplitude * (0.7f * kotlin.math.sin(twoPi * (rb.waves * u + rb.phase)) +
+                    0.3f * kotlin.math.sin(twoPi * (0.5f * u + rb.phase * 0.37f))))
+            val ray = rays[x]
+            val column = env * ((1f - rb.rayContrast) + rb.rayContrast * ray)
+            // Brighter rays also reach higher, which is what makes a curtain look rayed.
+            val reach = (rb.height * h * (0.55f + 0.45f * ray)).coerceAtLeast(1f)
+            val top = (edge - reach).toInt().coerceAtLeast(0)
+            val bottom = (edge + 3 * soft).toInt().coerceAtMost(h - 1)
+            for (y in top..bottom) {
+                val fy = y + 0.5f
+                val i = y * w + x
+                if (fy <= edge) {
+                    val s = (((edge - fy) / reach) * steps).toInt().coerceIn(0, steps)
+                    r[i] += er[s] * column; g[i] += eg[s] * column; b[i] += eb[s] * column
+                } else {
+                    val d = (fy - edge) / soft
+                    val f = kotlin.math.exp(-d * d) * column
+                    r[i] += er[0] * f; g[i] += eg[0] * f; b[i] += eb[0] * f
+                }
+            }
+        }
+    }
+
+    /**
+     * Per-column ray strength in 0..1: seeded rays of 1–7 dp wide Gaussian profile over a faint
+     * floor. Deterministic for the same ribbon, width and density.
+     */
+    internal fun rayProfile(rb: AuroraRibbon, w: Int, density: Float): FloatArray {
+        val out = FloatArray(w)
+        if (w <= 0 || density <= 0f) return out
+        val widthDp = w / density
+        val count = (widthDp / 100f * rb.raysPer100Dp).toInt().coerceIn(0, MAX_RAYS)
+        val rng = kotlin.random.Random(rb.seed xor (w.toLong() shl 16))
+        repeat(count) {
+            val cx = rng.nextFloat() * w
+            val sigma = (1f + 6f * rng.nextFloat() * rng.nextFloat()) * density
+            val strength = 0.35f + 0.65f * rng.nextFloat()
+            val from = (cx - 3 * sigma).toInt().coerceAtLeast(0)
+            val to = (cx + 3 * sigma).toInt().coerceAtMost(w - 1)
+            for (x in from..to) {
+                val d = (x + 0.5f - cx) / sigma
+                out[x] += strength * kotlin.math.exp(-d * d)
+            }
+        }
+        for (x in 0 until w) out[x] = (0.15f + out[x]).coerceAtMost(1f)
+        return out
+    }
+
+    /** Channel [shift] of the colour between [a] and [b] at [t], premultiplied by its alpha. */
+    private fun lerpChannel(a: Int, b: Int, shift: Int, t: Float): Float {
+        val ca = ((a shr shift) and 0xFF) * (((a ushr 24) and 0xFF) / 255f)
+        val cb = ((b shr shift) and 0xFF) * (((b ushr 24) and 0xFF) / 255f)
+        return ca + (cb - ca) * t
+    }
+
+    /** A cap so a huge view cannot place an unbounded number of rays. */
+    const val MAX_RAYS = 600
+}
 
 /**
  * A static star field: [perSquare100Dp] stars per 100 × 100 dp, placed by a seeded generator so a

@@ -127,7 +127,10 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    neither the global gaps nor the custom border yield — the look's equal gaps and hairline win, a
    per-layout gap still beats it). Its dark palette paints `LookPalette.backdrop`
    (`AuroraBackdropDrawable` via `Keyboard2View.applyThemeBackground`; `CLEVERKEYS_AURORA` must be
-   declared BEFORE `cleverkeysLook` — object properties initialise in order, a later one is null). Choosing it stores the DEFAULT trail
+   declared BEFORE `cleverkeysLook` — object properties initialise in order, a later one is null).
+   Its curtains are `AuroraRibbon`s painted by the pure `AuroraRaster` (half resolution, cached in
+   the drawable's companion for 3 sizes); tune them with a numpy port first — a device build per
+   tweak costs 20 min — and keep `KeyboardLooksTest`'s mean-luminance-below-the-key rule green. Choosing it stores the DEFAULT trail
    (never skips the write: the old theme's trail would count as the user's). The fallback for
    broken/deleted ids (`FALLBACK_THEME_ID`) is this look too, built in code. No process kill
    anywhere in Theme Manager: "Restart keyboard" sends `EXTRA_REBUILD_KEYBOARD`.

@@ -324,15 +324,28 @@ object KeyboardLooks {
 
     /**
      * The CleverKeys look's dark backdrop (declared before [cleverkeysLook]: object properties
-     * initialise in order): violet, orchid and indigo glows tilted like aurora
-     * curtains, peaking at about a third opacity so the background stays darker than the keys
-     * overall, and a sparse static star field with an occasional glint. Fractions of the view.
+     * initialise in order): two rayed aurora curtains ([AuroraRibbon]; until 2026-11-09 three
+     * soft tilted glows, which the maintainer found "too cloud like"), lit so the background's
+     * mean stays darker than the keys (`KeyboardLooksTest`), a faint haze, and a sparse static
+     * star field with an occasional glint. Fractions of the view.
      */
     val CLEVERKEYS_AURORA = LookBackdrop(
+        // Two curtains: a near one whose lilac rim waves low across the keys and rises to the
+        // right, and a fainter orchid one higher up on the right; rays fade upward into violet.
+        ribbons = listOf(
+            AuroraRibbon(
+                edgeY = 0.78f, amplitude = 0.10f, waves = 1.6f, phase = 0.10f, slope = 0.24f, height = 0.62f,
+                edgeColor = 0x66C88CFF, topColor = 0x307A3CC8, raysPer100Dp = 34f, rayContrast = 0.42f, seed = 11L,
+            ),
+            AuroraRibbon(
+                edgeY = 0.42f, amplitude = 0.07f, waves = 1.1f, phase = 0.60f, slope = -0.12f, height = 0.40f,
+                edgeColor = 0x46E07AD8, topColor = 0x205A2EA6, raysPer100Dp = 26f, rayContrast = 0.5f, seed = 23L,
+                xStart = 0.28f, xEnd = 1f,
+            ),
+        ),
+        // A faint violet haze under the curtains, so the dark between them is not dead black.
         glows = listOf(
-            AuroraGlow(cx = 0.22f, cy = 0.62f, rx = 0.58f, ry = 0.34f, rotationDeg = -14f, color = 0x5C7A3CC8),
-            AuroraGlow(cx = 0.74f, cy = 0.46f, rx = 0.52f, ry = 0.28f, rotationDeg = 11f, color = 0x449E3FB8),
-            AuroraGlow(cx = 0.50f, cy = 0.92f, rx = 0.75f, ry = 0.24f, rotationDeg = -4f, color = 0x504A2EA6),
+            AuroraGlow(cx = 0.35f, cy = 0.62f, rx = 0.75f, ry = 0.42f, rotationDeg = -10f, color = 0x1C4A2EA6),
         ),
         stars = LookStarfield(
             perSquare100Dp = 4f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),

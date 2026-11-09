@@ -524,6 +524,16 @@ guard.
    `CoreImeHygieneDriftTest` pins one injection frequency per lexicon; the patch and numbers wait
    for the maintainer in `docs/eval/2026-11-09-elision-base-frequency.md`. Clear a ranking change
    on the WHOLE corpus: 400 traces showed 0 regressions where 2,179 showed 6.
+   **"Emitted" is not "swipeable" (2026-11-09).** `emitted_forms` counts what ANY engine emits,
+   so an accented lexicon word whose projection a real word wins (it `cè` → `ce`, 173 vs 85) looks
+   reachable but the CTC beam never produces it: `c'è` was unswipeable. Fix by a curated row keyed
+   by the winning word (it `ce`/`se`/`ne` → PAIRED). Re-check with: every key either a–z or equal
+   to `display_forms(lexicon)[project_az(key)]`. And ASK carries unaccented duplicates
+   (`l'etoile`, `l'ame`) that took the projection key first: `rekey_unreachable` now respells a
+   held value when hunspell rejects its elided word, EXCEPT a 1990-reform spelling (`reform_fold`:
+   `l'ile`, `d'oeil`, `entrainement`, `s'avèrera` — hunspell rejects them, but they are valid and
+   the static LM names them, so `StaticLmAssetDriftTest` fails if they go) and `RESPELL_KEEP`
+   (fr `email`; it `attivita` until it.cklm is rebuilt, a TODO). Net change: 4 fr + 3 it values.
 6. **Verify a source pin by breaking it.** Both `CoreImeHygieneDriftTest` contraction pins were
    validated by injecting a violation and confirming the failure message, then reverting. A source
    guard that cannot fail reads as coverage while providing none.

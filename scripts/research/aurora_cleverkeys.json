@@ -1,0 +1,6 @@
+{"W": 1200, "H": 380, "density": 2.4, "gap": 18, "topFade": 0.18, "out": "aurora_cleverkeys.png",
+ "ribbons": [
+  {"edgeY": 0.78, "amp": 0.10, "waves": 1.6, "phase": 0.10, "slope": 0.24, "height": 0.62, "edge": "66C88CFF", "top": "307A3CC8", "rays": 34, "rc": 0.42, "seed": 11},
+  {"edgeY": 0.42, "amp": 0.07, "waves": 1.1, "phase": 0.60, "slope": -0.12, "height": 0.40, "edge": "46E07AD8", "top": "205A2EA6", "rays": 26, "rc": 0.5, "seed": 23, "x0": 0.28, "x1": 1}
+ ],
+ "glows": [{"cx": 0.35, "cy": 0.62, "rx": 0.75, "ry": 0.42, "rot": -10, "c": "1C4A2EA6"}]}
