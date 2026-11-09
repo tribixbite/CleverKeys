@@ -518,6 +518,12 @@ guard.
    `d'auteurs-compositeurs-interprètes` at the emit budget). The generator reads the SHIPPED files
    back as input, so a bad run's additions persist until removed by hand. A big "dead"
    count in a regeneration is a bug signal, not cleanup.
+   Reachable is not competitive: at the floor (fr 68) `d'être` (`être` 144) still loses its own
+   d-e-t-r-e trace to `d'été`/`d'ère`/`dette`. Raising elisions to `freq(base) − margin` was
+   measured and NOT shipped — every margin cost real words (15: 6 lost, 50: 1) and
+   `CoreImeHygieneDriftTest` pins one injection frequency per lexicon; the patch and numbers wait
+   for the maintainer in `docs/eval/2026-11-09-elision-base-frequency.md`. Clear a ranking change
+   on the WHOLE corpus: 400 traces showed 0 regressions where 2,179 showed 6.
 6. **Verify a source pin by breaking it.** Both `CoreImeHygieneDriftTest` contraction pins were
    validated by injecting a violation and confirming the failure message, then reverting. A source
    guard that cannot fail reads as coverage while providing none.

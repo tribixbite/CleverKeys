@@ -157,6 +157,15 @@ class PredictionContextTracker {
         private set
 
     /**
+     * The one cursor position an IME edit passes through on its way to [autoSpaceStampedPosition]
+     * (-1 = none). A sentence end deletes the automatic space and then commits `. `, so the
+     * editor reports the cursor after the deletion before it reports the stamp; that first
+     * callback is the keyboard's own and must not read as a cursor move (it did on a Saga,
+     * 2026-11-09: `wait` + `...` gave `Wait. ..`). Consumed by its callback.
+     */
+    private var autoSpaceTransitPosition: Int = -1
+
+    /**
      * Feature C (SmartAutoSpace.needsSpaceBeforeOpener, 2026-11-07): cursor position where a
      * keyboard-committed word ended without a space after it (the automatic space is off), or
      * where a closing mark attached to such a word ended (`hello,`). An opening mark typed
@@ -189,10 +198,13 @@ class PredictionContextTracker {
      *
      * @param expectedCursorPosition Absolute cursor position the commit left the
      *   cursor at (pre-commit position + committed text length), or -1 if unknown.
+     * @param transitPosition The cursor position an earlier step of the same edit left
+     *   (the deletion before the commit), whose callback is still to come; -1 = none.
      */
-    fun markAutoSpacePending(expectedCursorPosition: Int) {
+    fun markAutoSpacePending(expectedCursorPosition: Int, transitPosition: Int = -1) {
         lastSpaceWasAutoInserted = true
         autoSpaceStampedPosition = expectedCursorPosition
+        autoSpaceTransitPosition = if (expectedCursorPosition >= 0) transitPosition else -1
     }
 
     /**
@@ -203,6 +215,7 @@ class PredictionContextTracker {
     fun invalidateAutoSpacePending() {
         lastSpaceWasAutoInserted = false
         autoSpaceStampedPosition = -1
+        autoSpaceTransitPosition = -1
     }
 
     /**
@@ -214,11 +227,15 @@ class PredictionContextTracker {
      * SmartAutoSpace.isSwallowEligible still guards against eating a manual space.
      */
     fun onCursorPositionChanged(newPosition: Int) {
-        if (lastSpaceWasAutoInserted &&
-            autoSpaceStampedPosition >= 0 &&
-            newPosition != autoSpaceStampedPosition
-        ) {
-            invalidateAutoSpacePending()
+        if (lastSpaceWasAutoInserted && autoSpaceStampedPosition >= 0) {
+            when (newPosition) {
+                // The stamp itself: the edit is complete; no transit callback is still owed
+                // (an editor may coalesce it away).
+                autoSpaceStampedPosition -> autoSpaceTransitPosition = -1
+                // The keyboard's own intermediate callback, once.
+                autoSpaceTransitPosition -> autoSpaceTransitPosition = -1
+                else -> invalidateAutoSpacePending()
+            }
         }
         // #151 TSR: independent of SAS-1 — the dropped-space callback (stamp−1) that
         // invalidates the auto-space above is exactly the signature that ARMS the

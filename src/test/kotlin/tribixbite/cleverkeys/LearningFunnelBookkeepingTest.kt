@@ -608,6 +608,25 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("we→think").that(bigram("we", "think")).isEqualTo(1)
     }
 
+    /**
+     * Saga 2026-11-09: tap `cat`, clear the field app-side (select all + delete collapses the
+     * selection to its start, so no cursor sync runs and the tracker still holds `cat`), swipe
+     * `kids` → the editor read `" kids "`. The separator is verified at use: the text before the
+     * cursor no longer ends in the word, so no space, and the deleted word is not learned.
+     */
+    @Test
+    fun aSwipeAfterTheTypedWordWasDeletedAppSideGetsNoSeparator() {
+        editor.append("so ")
+        handler.updateContext("so")
+        type("cat")
+        editor.setLength(0)
+        swipe("kids")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("kids ")
+        assertWithMessage("the deleted word is not learned").that(bigram("so", "cat")).isEqualTo(0)
+        assertWithMessage("nor followed by the swipe").that(bigram("cat", "kids")).isEqualTo(0)
+    }
+
     // ================================================================ W7
 
     @Test

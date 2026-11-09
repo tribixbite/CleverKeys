@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-11-06. Push state: read `git status -sb` (a hash written here went stale twice).
+Updated: 2026-11-09. Push state: read `git status -sb` (a hash written here went stale twice).
 Pushes to origin/main are authorized (2026-10-07) and in use; tag, version
 bump, release, publish and GitHub posts still need explicit authorization. Reference state and
 rules: [HANDOFF.md](HANDOFF.md). Release readiness, item by item:
@@ -36,7 +36,16 @@ the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
 
-Test phones (seen from this box 2026-11-05: Pixel 8 Pro `192.168.0.216` wireless port 43213, Android
+Test phones (2026-11-09: Sagas `192.168.0.144` (landscape, CleverKeys Dark, Termux) and
+`192.168.1.130` (landscape, CleverKeys Dark) answer on `:5555` with CleverKeys default; `.83` has
+Gboard default and CleverKeys 1.6.0 — left alone; `192.168.0.81` is THIS HOST (same boot_id) —
+never use it; the Pixel `.216` and Seeker `.199` refused `:5555`. Neither Saga has `su`. Recipe
+for exact text checks: a Chrome `data:` textarea read over CDP (`adb forward tcp:N
+localabstract:chrome_devtools_remote`), synthetic swipes as one `adb shell` chain of `input motionevent` through key centres
+(landscape Saga, CleverKeys look: rows y 702/812/922/1027, Q at x 348, pitch 204; short swipes as
+DOWN + one 70 px MOVE + UP). The session's helper scripts were scratch, not kept. google/artemis is
+cloned at `~/git/artemis` but has no `.env` (no model key) and no helper on any phone; not used.
+Seen from this box 2026-11-05: Pixel 8 Pro `192.168.0.216` wireless port 43213, Android
 17; Sagas `192.168.1.130` Android 14 no Termux, `192.168.0.144` and `192.168.0.83` Android 13 with
 Termux — `.83` was running a game, leave it alone; Play Protect blocks the DEBUG APK on the Pixel
 and on `.1.130` unless `settings put global verifier_verify_adb_installs 0` (delete it afterwards);
@@ -1218,20 +1227,35 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Third round (2026-11-07, maintainer screenshots vs SwiftKey): equal gaps (0.11 of a key,
     rows the same in px, `equal_gaps`), the global gaps no longer yield (a tuned gap had the
     keys touching), dark mode darker keys on a near-black aurora with static stars
-    (`LookBackdrop` / `AuroraBackdropDrawable`). Not yet seen on a phone.
-    Still open: the "Default look" items of `docs/plans/v2.0.0-manual-test-checklist.md`
-    on a test phone, and the maintainer's look-and-feel verdict.
+    (`LookBackdrop` / `AuroraBackdropDrawable`). DEVICE 2026-11-09 (agent, `9d4003b3`): Saga .144
+    landscape ~22 px gaps both ways, Saga .1.130 portrait 12/12 px; aurora + stars render, no
+    seam under the bar; light flat and flips live; Restart keyboard keeps the process; action
+    keys, filled Shift arrow and press bubble PASS (checklist "Default look", evidence
+    `build/nov09-saga144/`, `build/nov09-saga130/`). Still open: the maintainer's look-and-feel
+    verdict; fresh install / upgrade-keeps-theme / custom-theme-delete / per-layout gap /
+    Layout Manager picker / Key-press preview switch items.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
     `BundledContractionDataTest`. Open: swipe `d'être`, `l'été`, `l'école` on a phone with French
-    primary; the beam ranking of the new injected keys was not replayed (`ctc_injection_ab.py`);
-    the geometric engine still cannot produce non-word elisions (it builds only lexicon words).
+    primary; the geometric engine still cannot produce non-word elisions (it builds only lexicon
+    words). 2026-11-09: replay DONE (`ctc_injection_ab.py --corpus azerty`, 0 regressions, 6
+    improvements, t1 81.10 → 82.68). DEVICE (Saga .144, synthetic swipes): `l'école`, `c'est`
+    top, `l'été` and `d'âme` offered, **`d'être` not offered** — reachable but outranked at the
+    floor (68 vs `être` 144) by `d'été`/`d'ère`/`dette`. Raising elisions to `freq(base) − margin`
+    surfaces it (rank 2–3) but costs real words at every margin (15: 6, 30: 3, 50: 1 of 2,179
+    traces) → **maintainer decision**, patch + numbers in
+    `docs/eval/2026-11-09-elision-base-frequency.md`. Also wants a human swipe of `d'être`.
 36. [ ] device: "Space before opening punctuation" (2026-11-07, default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Mock-tested through the real
     sendText (`OpeningPunctuationSpacingTest`); not run on a phone. Ellipsis after a swiped word
-    chains to `wait... ` (pinned); the maintainer's half-remembered "space after a period"
-    ellipsis bug was not reproduced.
+    chains to `wait... ` (pinned). DEVICE 2026-11-09 (Saga .144, Chrome): the ellipsis FAILED on
+    `9d4003b3` (`Wait. ..` — the maintainer's "space after a period" bug, reproduced): the
+    period's delete-then-commit made the editor report an intermediate cursor that dropped the
+    re-stamped space. Fixed (transit position, spec "The sentence-end chain on a real editor"),
+    plus a leading space on a swipe after an app-side select-all + delete. On the fix's release
+    every item of the checklist's "Punctuation and elisions" passes except `d'être` (item 35).
+    Open: a human run; the translations of the setting (item 10).
 
 ## Done 2026-10-10 → 10-17 (moved out of Open now on 2026-10-18)
 

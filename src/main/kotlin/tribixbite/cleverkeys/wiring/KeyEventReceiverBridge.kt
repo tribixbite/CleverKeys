@@ -251,6 +251,10 @@ class KeyEventReceiverBridge(
         contextTracker?.markAutoSpacePending(expectedCursorPosition)
     }
 
+    override fun markAutoSpacePendingAfterTransit(expectedCursorPosition: Int, transitPosition: Int) {
+        contextTracker?.markAutoSpacePending(expectedCursorPosition, transitPosition)
+    }
+
     // Feature C: word-end / opening-apostrophe stamps (space before opening punctuation)
     override fun getWordEndStamp(): Int = contextTracker?.wordEndStamp ?: -1
 

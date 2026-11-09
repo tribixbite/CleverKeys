@@ -1160,7 +1160,23 @@ class SuggestionHandler(
                 // the tracker's word, and the terminating space below must still be committed.
                 val typingInProgress = contextTracker.getCurrentWordLength() > 0 ||
                     pendingTypedWord != null || pendingJoinerStem != null
-                if (typingInProgress) {
+                // Verified at use (2026-11-09, Saga): the tracker can outlive the typed word. An
+                // app-side select-all + delete collapses the selection to its START, so no
+                // cursor-move sync runs (onUpdateSelection syncs only when the start moves) and a
+                // swipe into the now-empty field began with a space (" Kids "). An ordinary
+                // editor whose text no longer ends in the word gets no separator, and the gone
+                // word is not learned; terminal and remote fields keep the old rule (their
+                // readback cannot be trusted).
+                val typedWordGone = typingInProgress &&
+                    TerminalUtils.editorKind(editorInfo, config.custom_terminal_packages) ==
+                    TerminalUtils.EditorKind.TEXT &&
+                    (try { ic.getTextBeforeCursor(1, 0) } catch (_: Exception) { null })
+                        ?.let { it.isEmpty() || it.last().isWhitespace() } == true
+                if (typedWordGone) {
+                    pendingTypedWord = null
+                    pendingJoinerStem = null
+                    contextTracker.clearCurrentWord()
+                } else if (typingInProgress) {
                     // The separator is an editor write too: never learn the typed word
                     // or append a prediction when that boundary was rejected. Batch edits
                     // do not provide rollback for a provider that partially mutates text.

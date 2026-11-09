@@ -115,6 +115,15 @@ so test fixtures modelling an ordinary editor must set `TYPE_CLASS_TEXT` (11 moc
 Normalize relative HTML hrefs against each page URL before checking targets; an absolute-only
 checker missed 29 broken engineering-note links. Run after the site build finishes (2026-10-06).
 
+## Multi-step IME edits and selection callbacks (2026-11-09)
+
+A delete followed by a commit makes the editor report a selection callback for EACH step, after
+the code has already stamped its post-commit state. A stamp invalidated "on any other cursor
+position" must own the intermediate position too (`markAutoSpacePending(stamp, transit)`); the
+ellipsis chain broke on Chrome while mock tests (no callbacks) passed. Mock such paths with the
+real tracker and queued callbacks. Clear a ranking change on a WHOLE human corpus: 400 of 2,291
+azerty traces showed 0 regressions where all of them showed 6.
+
 ## Kotlin compiler execution on Termux
 
 Use `-Pkotlin.compiler.execution.strategy=in-process` (Gradle property), not the old

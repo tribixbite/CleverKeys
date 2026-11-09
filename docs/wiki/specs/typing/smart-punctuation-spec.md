@@ -342,6 +342,28 @@ under Smart Punctuation). An opening mark typed straight after a word the keyboa
   the ellipsis chain `wait` + `...` → `wait... `). The instrumented `SmartAutoSpaceTest` pins
   Features A/B with this setting off.
 
+### The sentence-end chain on a real editor (fixed 2026-11-09)
+
+A `.` `!` `?` that swallows the automatic space deletes it and then commits `. `, two editor
+writes. The editor reports a selection callback for EACH, after `sendText` has already re-stamped
+the new space; the first callback (the cursor after the deletion) read as a cursor move and
+dropped the stamp, so on a Saga in Chrome `wait` + `...` gave `Wait. ..` (`?!` takes the same
+path; pinned in the mock test, not run on the phone) — the maintainer's half-remembered "space
+after a period" bug. The re-stamp now records
+that intermediate position as a TRANSIT (`PredictionContextTracker.markAutoSpacePending(stamp,
+transitPosition)`, via `IReceiver.markAutoSpacePendingAfterTransit`): its one callback is the
+keyboard's own and is consumed; any other position still invalidates. Pinned with the real
+tracker and late callbacks in `OpeningPunctuationSpacingTest.anEllipsisChainsWhenTheEditorReportsEveryStep`
+and `aRealCursorMoveStillEndsTheChain`; device PASS after the fix in `memory/todo.md` item 36.
+
+A swipe that starts while a typed word is tracked commits a separating space first (`i` + swipe
+`think` → `i think `). That space is now verified at use (`SuggestionHandler`): in an ordinary
+editor whose text before the cursor no longer ends in a word character it is skipped and the gone
+word is not learned. An app-side select-all + delete collapses the selection to its START, which
+`onUpdateSelection` never syncs, so a swipe into the emptied field began with a space (`" Kids "`,
+Saga 2026-11-09). Terminal and remote fields keep the old rule. Pinned in
+`LearningFunnelBookkeepingTest.aSwipeAfterTheTypedWordWasDeletedAppSideGetsNoSeparator`.
+
 ## Key Code Patterns
 
 ### Closer set

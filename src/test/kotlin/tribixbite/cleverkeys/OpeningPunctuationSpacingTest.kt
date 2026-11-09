@@ -83,6 +83,9 @@ class OpeningPunctuationSpacingTest {
         every { recv.wasLastSpaceAutoInserted() } answers { autoSpacePending }
         every { recv.getAutoSpaceStampedPosition() } answers { autoSpaceStamp }
         every { recv.markAutoSpacePending(any()) } answers { autoSpacePending = true; autoSpaceStamp = firstArg() }
+        every { recv.markAutoSpacePendingAfterTransit(any(), any()) } answers {
+            autoSpacePending = true; autoSpaceStamp = firstArg()
+        }
         every { recv.setLastSpaceAutoInserted(any()) } answers {
             autoSpacePending = firstArg()
             if (!autoSpacePending) autoSpaceStamp = -1
@@ -206,5 +209,63 @@ class OpeningPunctuationSpacingTest {
         swiped("", "wait")
         type("...")
         assertText("wait... ", "each period swallows the space the previous one re-added")
+    }
+
+    /**
+     * Saga 2026-11-09 (Chrome): the same chain with the REAL tracker and the editor's selection
+     * callbacks delivered after each keystroke, as Android delivers them. A period deletes the
+     * automatic space and commits `. `, so the editor reports the cursor after the deletion
+     * first; that callback dropped the fresh stamp and the second period stayed apart
+     * (`Wait. ..`). The same holds for `?!`.
+     */
+    @Test
+    fun anEllipsisChainsWhenTheEditorReportsEveryStep() {
+        val tracker = PredictionContextTracker()
+        val callbacks = ArrayDeque<Int>()
+        every { conn.deleteSurroundingText(any(), any()) } answers {
+            repeat(firstArg<Int>()) { if (text.isNotEmpty()) text.deleteCharAt(text.length - 1) }
+            callbacks.addLast(text.length)
+            true
+        }
+        every { conn.commitText(any(), any()) } answers {
+            text.append(firstArg<CharSequence>())
+            callbacks.addLast(text.length)
+            true
+        }
+        every { recv.wasLastSpaceAutoInserted() } answers { tracker.lastSpaceWasAutoInserted }
+        every { recv.getAutoSpaceStampedPosition() } answers { tracker.autoSpaceStampedPosition }
+        every { recv.markAutoSpacePending(any()) } answers { tracker.markAutoSpacePending(firstArg()) }
+        every { recv.markAutoSpacePendingAfterTransit(any(), any()) } answers {
+            tracker.markAutoSpacePending(firstArg(), secondArg())
+        }
+        every { recv.setLastSpaceAutoInserted(any()) } answers {
+            if (firstArg()) tracker.lastSpaceWasAutoInserted = true else tracker.invalidateAutoSpacePending()
+        }
+
+        for ((word, marks, expected) in listOf(
+            Triple("wait", "...", "wait... "),
+            Triple("what", "?!", "what?! "),
+        )) {
+            text.setLength(0)
+            text.append(word).append(' ')
+            tracker.markAutoSpacePending(text.length) // the swipe commit, its callback delivered
+            for (c in marks) {
+                type(c.toString())
+                while (callbacks.isNotEmpty()) tracker.onCursorPositionChanged(callbacks.removeFirst())
+            }
+            assertText(expected, "each mark swallows the space the previous one re-added")
+        }
+    }
+
+    @Test
+    fun aRealCursorMoveStillEndsTheChain() {
+        val tracker = PredictionContextTracker()
+        tracker.markAutoSpacePending(10, transitPosition = 8)
+        tracker.onCursorPositionChanged(8)
+        assertWithMessage("the transit callback is the keyboard's own")
+            .that(tracker.lastSpaceWasAutoInserted).isTrue()
+        tracker.onCursorPositionChanged(8)
+        assertWithMessage("the same position again is a move (the transit is owed once)")
+            .that(tracker.lastSpaceWasAutoInserted).isFalse()
     }
 }

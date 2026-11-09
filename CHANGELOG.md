@@ -543,6 +543,12 @@ editor that used to be listed here already ship in 2.0.)
   closing marks still attach (`(hello)`). A second `"` or `'` closes the quote and attaches; `'`
   after a word ending in s stays the possessive (`kids'`), and a letter tapped right after `'`
   joins it to the word (`John's`). Typing letter by letter (`f(x)`, `user@mail`) is unchanged.
+- **An ellipsis after a swiped word.** `wait` then `...` gave `wait. ..` in browsers and other
+  apps: each period removes the automatic space and adds a new one, and the app's report of the
+  first step made the keyboard forget the new space was its own. It now reads `wait... `, and
+  `what?!` works the same way.
+- A swipe into a field just emptied with Select all + delete no longer starts with a space when
+  you had typed a word there before.
 - Voice input after "Don't allow" twice: turning voice input on in Settings showed no prompt and no
   response, because the app trusted its own memory of the refusal even after the permission was
   changed in system settings. The switch now always asks Android; when Android will not show the

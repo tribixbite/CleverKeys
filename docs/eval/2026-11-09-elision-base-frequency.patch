@@ -1,0 +1,189 @@
+diff --git a/src/main/kotlin/tribixbite/cleverkeys/ContractionManager.kt b/src/main/kotlin/tribixbite/cleverkeys/ContractionManager.kt
+index df8dd4a8..1849afdf 100644
+--- a/src/main/kotlin/tribixbite/cleverkeys/ContractionManager.kt
++++ b/src/main/kotlin/tribixbite/cleverkeys/ContractionManager.kt
+@@ -599,6 +599,18 @@ class ContractionManager(private val context: Context) {
+         return keys
+     }
+ 
++    /**
++     * The display forms of the alias key [key] (lowercase): its REPLACE target and its APPEND
++     * variants. The CTC engine reads them to rank an elision key by its base word
++     * (`CtcContractionKeys.elisionBaseFrequency`).
++     */
++    fun getAliasDisplayForms(key: String): List<String> {
++        val forms = ArrayList<String>(2)
++        nonPairedContractions[key]?.let(forms::add)
++        pairedContractions[key]?.let(forms::addAll)
++        return forms
++    }
++
+     /**
+      * Gets the number of non-paired contractions loaded.
+      * Useful for testing and diagnostics.
+diff --git a/src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt b/src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt
+index ca611345..b48353c5 100644
+--- a/src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt
++++ b/src/main/kotlin/tribixbite/cleverkeys/swipe/CtcEngineAdapter.kt
+@@ -754,6 +754,10 @@ class CtcEngineAdapter(
+         // contraction-injection floor from this lexicon's rarest real word.
+         val lexiconFrequencies: Collection<Double>
+         val rescueFrequencies: Map<String, Double>
++        // The CKDT projection, for ranking an elision alias key by its base word
++        // ([CtcContractionKeys.elisionBaseFrequency]). Null for en JSON: that scale and λ were
++        // not measured, so its keys keep the floor.
++        var elisionProject: ((String) -> String?)? = null
+         // The alphabet the trie, the rescue index and the projection all share. It MUST be the
+         // same array the layout was built over — a trie on one alphabet and a layout on another
+         // is a silent, total mismatch (every path simply fails to match).
+@@ -793,6 +797,7 @@ class CtcEngineAdapter(
+                 } else {
+                     CtcAzProjection::project
+                 }
++                elisionProject = project
+                 // Joiner USER words project separately: they raise their surface's frequency
+                 // but never take its display slot, which used to make a user `l'une` REPLACE
+                 // every decoded `lune` (contraction-system skill §2 casualty, per user).
+@@ -838,8 +843,18 @@ class CtcEngineAdapter(
+         // German. See [CtcContractionKeys.derivedFloor].
+         val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
+         val contractions = contractionsFor(lang)
++        // An elision (fr `d'être`) enters at its base word's frequency less a measured margin
++        // instead of the floor: at the floor `d'être` lost to `d'été`, `d'ère` and `dette` on its
++        // own trace (maintainer 2026-11-07). See [CtcContractionKeys.ELISION_BASE_MARGIN].
++        val raisedFrequency: (String) -> Double? = elisionProject?.let { project ->
++            { key ->
++                contractions.getAliasDisplayForms(key).mapNotNull {
++                    CtcContractionKeys.elisionBaseFrequency(it, project, rescueFrequencies::get)
++                }.maxOrNull()
++            }
++        } ?: { null }
+         val injected = CtcContractionKeys.inject(
+-            trie, contractions.getAliasKeys(), injectionFloor
++            trie, contractions.getAliasKeys(), injectionFloor, raisedFrequency
+         )
+         // Base frequencies for the overlay's promotion rule — see [TrieMemo]. Looked up in the
+         // MERGED map, so a user word's calibrated frequency (wave U2) is what the variant is
+diff --git a/src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeys.kt b/src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeys.kt
+index f1f17dc5..4c053069 100644
+--- a/src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeys.kt
++++ b/src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeys.kt
+@@ -112,26 +112,71 @@ object CtcContractionKeys {
+         return true
+     }
+ 
++    /**
++     * How far below its base word an elision key enters the trie ([elisionBaseFrequency]), in
++     * the CKDT `255 − rank` units.
++     *
++     * Measured 2026-11-09 on the human FUTO azerty corpus (all 2,291 traces, shipped fr data,
++     * app preset) against the [derivedFloor] arm: a margin of 1 let two elisions take a real
++     * word's own trace (`quatre` → `qu'autre`, `l'intentionnalité` → `l'internationale`);
++     * 15 and 30 took none, and 15 surfaced more (top-1 +0.78 points on the first 400 traces,
++     * `d'être` from rank 5–9 or absent to 2–3 on synthetic QWERTY traces, 30 left it 2–4).
++     * Evidence: `docs/eval/2026-11-09-elision-base-frequency.md`.
++     */
++    const val ELISION_BASE_MARGIN: Double = 15.0
++
++    /**
++     * The frequency an alias key with display form [display] enters at when that form is an
++     * ELISION, `X'base` (fr `d'être`, `l'été`, it `dov'è`) whose base word is real: the base's
++     * frequency minus [ELISION_BASE_MARGIN]. Null for anything else (no apostrophe, an
++     * unspellable base, a base the lexicon does not hold), which keeps the floor.
++     *
++     * ## Why the floor alone fails here (maintainer 2026-11-07: "can't get d'être to swipe")
++     *
++     * Every alias key sat at [derivedFloor] (fr 68). `être` is 144, so `d'être` started
++     * 2·ln(144/68) ≈ 1.5 nats behind its own base, and on a trace that runs back along one row
++     * (d-e-t-r-e) the cheaper floor keys `d'été` / `d'ère` and the real `dette` won; it ranked
++     * 5th–9th or fell off the slate. An elision is as common as its base word, so the base
++     * (less a measured margin) is the honest prior; the corpus replay above is the guard the
++     * floor's by-construction invariant used to be.
++     *
++     * @param project the lexicon's a–z (or script) projection, as the trie was built with.
++     * @param realFrequency a projected surface's REAL frequency before injection, or null.
++     */
++    fun elisionBaseFrequency(
++        display: String,
++        project: (String) -> String?,
++        realFrequency: (String) -> Double?,
++    ): Double? {
++        val apostrophe = display.indexOfFirst { it == '\'' || it == '’' }
++        if (apostrophe < 0 || apostrophe == display.lastIndex) return null
++        val base = project(display.substring(apostrophe + 1).lowercase(Locale.ROOT)) ?: return null
++        return realFrequency(base)?.let { it - ELISION_BASE_MARGIN }
++    }
++
+     /**
+      * Insert every injectable key of [keys] that the trie does not already contain, at
+-     * [INJECTED_FREQUENCY].
++     * [frequency] — or higher where [raisedFrequency] gives a higher one for that key (an
++     * elision's base word, [elisionBaseFrequency]).
+      *
+      * @param trie the merged lexicon trie for the active language; mutated in place.
+      * @param keys contraction alias keys (both the REPLACE and the APPEND side —
+      *   `ContractionManager.getAliasKeys()`).
++     * @param raisedFrequency the lowered key's raised frequency, or null for the floor.
+      * @return the number of keys actually inserted (skipped ones are not counted).
+      */
+     fun inject(
+         trie: CtcLexiconTrie,
+         keys: Iterable<String>,
+         frequency: Double = INJECTED_FREQUENCY,
++        raisedFrequency: (String) -> Double? = { null },
+     ): Int {
+         var inserted = 0
+         for (key in keys) {
+             if (!isInjectable(key, trie.alphabet)) continue
+             val lowered = key.lowercase(Locale.ROOT)
+             if (trie.contains(lowered)) continue
+-            trie.insert(lowered, frequency)
++            trie.insert(lowered, maxOf(frequency, raisedFrequency(lowered) ?: frequency))
+             inserted++
+         }
+         return inserted
+diff --git a/src/test/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeysTest.kt b/src/test/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeysTest.kt
+index cbada158..5bdac795 100644
+--- a/src/test/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeysTest.kt
++++ b/src/test/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcContractionKeysTest.kt
+@@ -103,4 +103,40 @@ class CtcContractionKeysTest {
+     fun `the injected frequency is the bottom of the scale the tuned lambda expects`() {
+         assertThat(CtcContractionKeys.INJECTED_FREQUENCY).isEqualTo(CtcLexiconMerge.MIN_FREQ)
+     }
++
++    // ---- elisions ranked by their base word (maintainer 2026-11-07: "can't get d'être") ----
++
++    private val frReal = mapOf("etre" to 144.0, "ete" to 160.0)
++
++    private fun elision(display: String) =
++        CtcContractionKeys.elisionBaseFrequency(display, CtcAzProjection::project, frReal::get)
++
++    @Test
++    fun `an elision enters at its base word's frequency less the measured margin`() {
++        // The base is projected exactly as the trie was (ê → e), straight or curly apostrophe.
++        assertThat(elision("d'être")).isEqualTo(144.0 - CtcContractionKeys.ELISION_BASE_MARGIN)
++        assertThat(elision("l’été")).isEqualTo(160.0 - CtcContractionKeys.ELISION_BASE_MARGIN)
++    }
++
++    @Test
++    fun `anything that is not an elision of a real word keeps the floor`() {
++        assertWithMessage("no apostrophe").that(elision("cetera")).isNull()
++        assertWithMessage("trailing apostrophe (a possessive)").that(elision("kids'")).isNull()
++        assertWithMessage("base not in the lexicon").that(elision("d'abaissement")).isNull()
++        assertWithMessage("en suffix shape: `t` is not a word here").that(elision("don't")).isNull()
++    }
++
++    @Test
++    fun `a raised key goes in above the floor and never below it`() {
++        val trie = trieOf("dette" to 120.0)
++        val floor = 68.0
++        val raised = mapOf("detre" to 129.0, "dabaissement" to 10.0)
++        CtcContractionKeys.inject(trie, listOf("detre", "dabaissement", "dette"), floor, raised::get)
++
++        assertThat(trie.logFrequencyOf("detre")).isWithin(1e-9).of(ln(129.0 + 1e-10))
++        assertWithMessage("a raise below the floor is ignored")
++            .that(trie.logFrequencyOf("dabaissement")).isWithin(1e-9).of(ln(floor + 1e-10))
++        assertWithMessage("a real word is still skipped, its frequency untouched")
++            .that(trie.logFrequencyOf("dette")).isWithin(1e-9).of(ln(120.0 + 1e-10))
++    }
+ }

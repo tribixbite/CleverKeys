@@ -630,8 +630,11 @@ class KeyEventHandler(
         if (reMarkAutoSpaceAfterCommit) {
             // SAS-1: fixes the v1.2.7 clobber where the chain flag was set BEFORE the
             // unconditional clear above and thus never survived — mark AFTER commit.
-            recv.markAutoSpacePending(
-                if (preCommitPos >= 0) preCommitPos + textToCommit.length else -1
+            // The swallow's deletion left the cursor at preCommitPos before the commit moved
+            // it on; the editor reports both, the first must not drop the fresh stamp.
+            recv.markAutoSpacePendingAfterTransit(
+                if (preCommitPos >= 0) preCommitPos + textToCommit.length else -1,
+                preCommitPos,
             )
         }
         // Feature C: only with a known position (verified at use; unknown = no spacing).
@@ -1886,6 +1889,10 @@ class KeyEventHandler(
         // PredictionContextTracker.markAutoSpacePending / SmartAutoSpace)
         fun getAutoSpaceStampedPosition(): Int = -1
         fun markAutoSpacePending(expectedCursorPosition: Int) {}
+        /** As [markAutoSpacePending], for an edit whose earlier step (a deletion) left the cursor
+         *  at [transitPosition] first: that callback is the keyboard's own, not a cursor move. */
+        fun markAutoSpacePendingAfterTransit(expectedCursorPosition: Int, transitPosition: Int) =
+            markAutoSpacePending(expectedCursorPosition)
         // Feature C: the word-end and opening-apostrophe stamps (PredictionContextTracker,
         // SmartAutoSpace.needsSpaceBeforeOpener)
         fun getWordEndStamp(): Int = -1
