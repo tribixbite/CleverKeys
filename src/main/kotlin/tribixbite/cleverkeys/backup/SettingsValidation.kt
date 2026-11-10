@@ -350,6 +350,11 @@ object SettingsValidation {
             "key_activated_opacity", "key_border_opacity", "suggestion_bar_opacity",
         )) put(k, SettingsRanges.OPACITY_PERCENT)
 
+        // Moving backdrops: the sliders' ranges.
+        put("look_motion_speed", SettingsRanges.LOOK_MOTION_SPEED)
+        put("look_motion_intensity", SettingsRanges.LOOK_MOTION_INTENSITY)
+        put("look_motion_twinkle", SettingsRanges.LOOK_MOTION_TWINKLE)
+
         // Keyboard height percentages
         // One range for all four heights: the sliders' (SettingsRanges.KEYBOARD_HEIGHT).
         for (k in tribixbite.cleverkeys.KeyboardHeightPrefs.ALL_KEYS) put(k, tribixbite.cleverkeys.SettingsRanges.KEYBOARD_HEIGHT)

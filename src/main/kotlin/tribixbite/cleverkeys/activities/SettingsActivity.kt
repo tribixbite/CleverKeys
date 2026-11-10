@@ -423,6 +423,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var lookKeyPreview by mutableStateOf(Defaults.LOOK_KEY_PREVIEW)
     internal var lookSpaceLanguage by mutableStateOf(Defaults.LOOK_SPACE_LANGUAGE)
     internal var lookBackdropMotion by mutableStateOf(Defaults.LOOK_BACKDROP_MOTION)
+    internal var lookMotionSpeed by mutableIntStateOf(Defaults.LOOK_MOTION_SPEED)
+    internal var lookMotionIntensity by mutableIntStateOf(Defaults.LOOK_MOTION_INTENSITY)
+    internal var lookMotionTwinkle by mutableIntStateOf(Defaults.LOOK_MOTION_TWINKLE)
+    internal var lookSceneCrisp by mutableStateOf(Defaults.LOOK_SCENE_CRISP)
     internal var customBorderRadius by mutableIntStateOf(Defaults.CUSTOM_BORDER_RADIUS)
     internal var customBorderLineWidth by mutableIntStateOf(Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

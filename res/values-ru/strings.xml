@@ -413,7 +413,15 @@
     <string name="appearance_look_space_language_title">Название языка на пробеле</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показывает текущий язык на клавише пробела, как клавиатура Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Анимированные сцены</string>
-    <string name="appearance_look_backdrop_motion_desc">Темы раздела «Сцены» (CleverKeys Aurora, Луг, Ручей, Речная галька, Лес, Снег, Пляж) плавно движутся: сияние и вода плывут, трава колышется, падают снег и листья. Через 20 секунд без ввода они замирают и не движутся в режиме энергосбережения. Пока движутся, расходуют немного больше заряда. Android 10 или новее.</string>
+    <string name="appearance_look_backdrop_motion_desc">Темы раздела «Сцены» (CleverKeys Aurora, Луг, Ручей, Речная галька, Лес, Снег, Пляж) плавно движутся: сияние и вода плывут, трава и листья колышутся, падают снег и дождь. Через 20 секунд без ввода они замирают и не движутся в режиме энергосбережения. Пока движутся, расходуют немного больше заряда. Android 10 или новее.</string>
+    <string name="appearance_look_motion_speed_title">Скорость сцен</string>
+    <string name="appearance_look_motion_speed_desc">Как быстро движутся сцены</string>
+    <string name="appearance_look_motion_intensity_title">Сила движения сцен</string>
+    <string name="appearance_look_motion_intensity_desc">Насколько сильно движутся сияние, вода, трава и ветви</string>
+    <string name="appearance_look_motion_twinkle_title">Мерцание</string>
+    <string name="appearance_look_motion_twinkle_desc">Насколько мерцают звёзды, дождь и другие частицы</string>
+    <string name="appearance_look_scene_crisp_title">Чёткие сцены</string>
+    <string name="appearance_look_scene_crisp_desc">Рисовать сияние, ручей и снег в полном разрешении: тоньше лучи и рябь, немного больше памяти</string>
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
     <string name="appearance_custom_border_desc">Включить пользовательский стиль рамки клавиш</string>
     <string name="appearance_border_radius_title">Радиус скругления рамки</string>

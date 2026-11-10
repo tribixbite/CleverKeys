@@ -58,6 +58,17 @@ class BackdropDrawable(
         strokeCap = Paint.Cap.ROUND
     }
     private val ovalRect = RectF()
+    /** The direction rain falls (unit vector along the field's drift; straight down without one). */
+    private val rainX: Float
+    private val rainY: Float
+
+    init {
+        val dx = backdrop.stars?.driftXDpPerS ?: 0f
+        val dy = backdrop.stars?.driftYDpPerS ?: 0f
+        val n = kotlin.math.hypot(dx, dy)
+        rainX = if (n > 0f) dx / n else 0f
+        rainY = if (n > 0f) dy / n else 1f
+    }
     private val paintingPaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val layerPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
     /** The rendered painting for the current size; null until the background render delivers it. */
@@ -69,8 +80,18 @@ class BackdropDrawable(
     /** Bumped on every new size: a render that finishes for an older size is dropped. */
     private var generation = 0
 
-    /** View px per painted px: the scene's own scale, or half resolution for the soft curtains. */
-    private val paintScale = backdrop.scene?.paintScale ?: AURORA_PAINT_SCALE
+    /**
+     * The user's tuning of the motion and the soft backdrops' resolution ([SceneMotionTuning];
+     * `Keyboard2View` sets it from the settings with [setTuning]).
+     */
+    var tuning: SceneMotionTuning = SceneMotionTuning.DEFAULT
+        private set
+
+    /**
+     * View px per painted px: the scene's own scale, or half resolution for the soft curtains;
+     * full resolution for every backdrop with [SceneMotionTuning.crisp].
+     */
+    private val paintScale: Int get() = if (tuning.crisp) 1 else backdrop.scene?.paintScale ?: AURORA_PAINT_SCALE
 
     /** Time between motion frames ([SceneKind.frameMs], or the aurora's). */
     private val frameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
@@ -103,6 +124,20 @@ class BackdropDrawable(
      */
     var motionEnabled = false
         private set
+
+    /**
+     * Applies the user's [SceneMotionTuning]: speed, intensity and twinkle from the next frame
+     * (the clock's pace changes, its position does not jump); a change of [SceneMotionTuning.crisp]
+     * paints the backdrop again at its new resolution.
+     */
+    fun setTuning(value: SceneMotionTuning) {
+        if (value == tuning) return
+        val repaint = value.crisp != tuning.crisp
+        tuning = value
+        clock.rate = value.speed
+        if (repaint && !bounds.isEmpty) requestPainting(bounds.width(), bounds.height())
+        invalidateSelf()
+    }
 
     fun setMotionEnabled(enabled: Boolean) {
         if (enabled == motionEnabled) return
@@ -235,7 +270,7 @@ class BackdropDrawable(
         val rendered = painting
         val seconds = clock.motionMs / 1000.0
         val alt = rendered?.alt
-        val frame = if (motionEnabled && rendered != null) AuroraMotion.frame(seconds, motionStyle) else null
+        val frame = if (motionEnabled && rendered != null) AuroraMotion.frame(seconds, motionStyle, tuning) else null
         if (rendered == null) {
             canvas.drawRect(b, basePaint)
         } else if (frame != null && alt != null) {
@@ -276,7 +311,7 @@ class BackdropDrawable(
             val share = SceneMotion.alpha(layer.motion, seconds)
             if (share <= 0.003f) continue
             val verts = meshes.getOrNull(i) ?: continue
-            SceneMotion.mesh(layer, seconds, scale, verts)
+            SceneMotion.mesh(layer, seconds, scale, verts, tuning.intensity)
             if (bounds.left != 0 || bounds.top != 0) {
                 for (k in verts.indices step 2) { verts[k] += bounds.left; verts[k + 1] += bounds.top }
             }
@@ -313,6 +348,13 @@ class BackdropDrawable(
                 starPaint.color = (alpha shl 24) or rgb
                 canvas.drawCircle(x, y, s.radius, starPaint)
             }
+            ParticleShape.RAIN -> {
+                // A streak trailing back along the fall, about one frame of travel long.
+                val len = s.radius * RAIN_STREAK_RADII
+                glintPaint.strokeWidth = 0.8f * density
+                glintPaint.color = (alpha shl 24) or rgb
+                canvas.drawLine(x - rainX * len, y - rainY * len, x, y, glintPaint)
+            }
             ParticleShape.LEAF -> {
                 starPaint.color = (alpha shl 24) or rgb
                 val save = canvas.save()
@@ -334,6 +376,10 @@ class BackdropDrawable(
     private fun drawParticleGroups(canvas: Canvas, field: LookStarfield, frame: AuroraMotionFrame) {
         val b = bounds
         val drifts = field.driftXDpPerS != 0f || field.driftYDpPerS != 0f
+        // The system frees the display lists of drawn nodes when the keyboard's window hides
+        // (switching apps): a kept node then draws nothing, and the particles vanished after
+        // the first app switch while the frames kept coming. Record again when that happened.
+        if (particleNodes?.any { !(it as RenderNode).hasDisplayList() } == true) particleNodes = null
         val nodes = particleNodes ?: Array<Any>(AuroraMotion.STAR_GROUPS) { g ->
             RenderNode("BackdropParticles$g").apply {
                 setPosition(b)
@@ -360,8 +406,8 @@ class BackdropDrawable(
             val node = nodes[g] as RenderNode
             node.setAlpha(frame.starAlpha[g])
             if (drifts) {
-                // Near groups travel faster than far ones: 0.7×, 1× and 1.3× of the drift.
-                val speed = 0.7f + 0.3f * g
+                // Near groups travel faster than far ones: from 0.7× to 1.3× of the drift.
+                val speed = 0.7f + 0.6f * g / (nodes.size - 1).coerceAtLeast(1)
                 node.translationX = AuroraMotion.wrap((field.driftXDpPerS * speed * density * seconds).toFloat(), b.width())
                 node.translationY = AuroraMotion.wrap((field.driftYDpPerS * speed * density * seconds).toFloat(), b.height())
             }
@@ -371,13 +417,14 @@ class BackdropDrawable(
 
     /**
      * The two images of the painting, each stretched past both edges by the style's margin
-     * ([MotionStyle.marginDp]: a stretch of a few percent, invisible on a soft painting) and
+     * ([MotionStyle.marginDp] at the user's intensity: a stretch of a few percent, invisible on a
+     * soft painting) and
      * shifted by its drift; the second over the first at the cross-fade. Both are opaque, so the
      * result is their blend.
      */
     private fun drawDrifting(canvas: Canvas, a: Bitmap, alt: Bitmap, frame: AuroraMotionFrame) {
         val b = bounds
-        val margin = motionStyle.marginDp * density
+        val margin = motionStyle.marginDp(tuning.intensity) * density
         driftDst.set(b.left - margin + frame.driftADp * density, b.top.toFloat(),
             b.right + margin + frame.driftADp * density, b.bottom.toFloat())
         canvas.drawBitmap(a, null, driftDst, paintingPaint)
@@ -442,6 +489,9 @@ class BackdropDrawable(
 
         /** The aurora's curtains are soft; half resolution quarters the render cost and the memory. */
         private const val AURORA_PAINT_SCALE = 2
+
+        /** A raindrop's streak, in radii. */
+        private const val RAIN_STREAK_RADII = 20f
 
         /** Offsets, in view sizes, of the four copies of a drifting particle group. */
         private val WRAP_COPIES = intArrayOf(0, 0, -1, 0, 0, -1, -1, -1)

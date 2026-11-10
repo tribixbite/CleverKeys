@@ -428,7 +428,15 @@
     <string name="appearance_look_space_language_title">Nombre del idioma en la barra espaciadora</string>
     <string name="appearance_look_space_language_desc">El aspecto Samsung muestra el idioma actual en la barra espaciadora, como el teclado de Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Escenas animadas</string>
-    <string name="appearance_look_backdrop_motion_desc">Los temas Escenas (CleverKeys Aurora, Pradera, Arroyo, Cantos rodados, Bosque, Nieve, Playa) se mueven suavemente: la aurora y el agua se desplazan, la hierba se mece, caen la nieve y las hojas. Se detienen tras 20 segundos sin escribir y quedan quietos en ahorro de batería. Usan algo más de batería mientras se mueven. Android 10 o posterior.</string>
+    <string name="appearance_look_backdrop_motion_desc">Los temas Escenas (CleverKeys Aurora, Pradera, Arroyo, Cantos rodados, Bosque, Nieve, Playa) se mueven suavemente: la aurora y el agua se desplazan, la hierba y las hojas se mecen, caen la nieve y la lluvia. Se detienen tras 20 segundos sin escribir y quedan quietos en ahorro de batería. Usan algo más de batería mientras se mueven. Android 10 o posterior.</string>
+    <string name="appearance_look_motion_speed_title">Velocidad de las escenas</string>
+    <string name="appearance_look_motion_speed_desc">Qué tan rápido se mueven las escenas</string>
+    <string name="appearance_look_motion_intensity_title">Intensidad del movimiento</string>
+    <string name="appearance_look_motion_intensity_desc">Cuánto se mueven la aurora, el agua, la hierba y las ramas</string>
+    <string name="appearance_look_motion_twinkle_title">Centelleo</string>
+    <string name="appearance_look_motion_twinkle_desc">Cuánto centellean las estrellas, la lluvia y otras partículas</string>
+    <string name="appearance_look_scene_crisp_title">Escenas nítidas</string>
+    <string name="appearance_look_scene_crisp_desc">Dibujar la aurora, el arroyo y la nieve a resolución completa: rayos y ondas más finos, algo más de memoria</string>
     <string name="appearance_custom_border_title">Configuración de borde personalizada</string>
     <string name="appearance_custom_border_desc">Activar estilo de borde de tecla personalizado</string>
     <string name="appearance_border_radius_title">Radio de borde</string>

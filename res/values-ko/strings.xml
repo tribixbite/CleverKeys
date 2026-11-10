@@ -407,7 +407,15 @@
     <string name="appearance_look_space_language_title">스페이스바에 언어 이름 표시</string>
     <string name="appearance_look_space_language_desc">Samsung 스타일은 삼성 키보드처럼 스페이스바에 현재 언어를 표시합니다.</string>
     <string name="appearance_look_backdrop_motion_title">움직이는 장면</string>
-    <string name="appearance_look_backdrop_motion_desc">장면 테마(CleverKeys Aurora, 초원, 시냇물, 강돌, 숲, 눈, 해변)가 부드럽게 움직입니다. 오로라와 물이 흐르고, 풀이 흔들리고, 눈과 낙엽이 떨어집니다. 20초 동안 입력이 없으면 멈추고 절전 모드에서는 정지합니다. 움직이는 동안 배터리를 조금 더 사용합니다. Android 10 이상.</string>
+    <string name="appearance_look_backdrop_motion_desc">장면 테마(CleverKeys Aurora, 초원, 시냇물, 강돌, 숲, 눈, 해변)가 부드럽게 움직입니다. 오로라와 물이 흐르고, 풀과 잎이 흔들리고, 눈과 비가 내립니다. 20초 동안 입력이 없으면 멈추고 절전 모드에서는 정지합니다. 움직이는 동안 배터리를 조금 더 사용합니다. Android 10 이상.</string>
+    <string name="appearance_look_motion_speed_title">장면 속도</string>
+    <string name="appearance_look_motion_speed_desc">장면이 움직이는 속도</string>
+    <string name="appearance_look_motion_intensity_title">장면 움직임 강도</string>
+    <string name="appearance_look_motion_intensity_desc">오로라, 물, 풀, 가지가 움직이는 정도</string>
+    <string name="appearance_look_motion_twinkle_title">반짝임</string>
+    <string name="appearance_look_motion_twinkle_desc">별, 비 등 입자가 반짝이는 정도</string>
+    <string name="appearance_look_scene_crisp_title">선명한 장면</string>
+    <string name="appearance_look_scene_crisp_desc">오로라, 시냇물, 눈을 최대 해상도로 그립니다. 빛줄기와 물결이 더 섬세해지고 메모리를 조금 더 씁니다</string>
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
     <string name="appearance_custom_border_desc">키의 사용자 정의 테두리 스타일을 활성화합니다</string>
     <string name="appearance_border_radius_title">테두리 둥글기</string>

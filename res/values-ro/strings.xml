@@ -433,7 +433,15 @@
     <string name="appearance_look_space_language_title">Numele limbii pe bara de spațiu</string>
     <string name="appearance_look_space_language_desc">Aspectul Samsung afișează limba curentă pe bara de spațiu, ca tastatura Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Scene animate</string>
-    <string name="appearance_look_backdrop_motion_desc">Temele Scene (CleverKeys Aurora, Pajiște, Pârâu, Pietre de râu, Pădure, Zăpadă, Plajă) se mișcă lin: aurora și apa plutesc, iarba se leagănă, cad zăpada și frunzele. Se opresc după 20 de secunde fără tastare și stau nemișcate în modul de economisire. Consumă puțin mai multă baterie cât se mișcă. Android 10 sau mai nou.</string>
+    <string name="appearance_look_backdrop_motion_desc">Temele Scene (CleverKeys Aurora, Pajiște, Pârâu, Pietre de râu, Pădure, Zăpadă, Plajă) se mișcă lin: aurora și apa plutesc, iarba și frunzele se leagănă, cad zăpada și ploaia. Se opresc după 20 de secunde fără tastare și stau nemișcate în modul de economisire. Consumă puțin mai multă baterie cât se mișcă. Android 10 sau mai nou.</string>
+    <string name="appearance_look_motion_speed_title">Viteza scenelor</string>
+    <string name="appearance_look_motion_speed_desc">Cât de repede se mișcă scenele</string>
+    <string name="appearance_look_motion_intensity_title">Intensitatea mișcării</string>
+    <string name="appearance_look_motion_intensity_desc">Cât de mult se mișcă aurora, apa, iarba și ramurile</string>
+    <string name="appearance_look_motion_twinkle_title">Sclipire</string>
+    <string name="appearance_look_motion_twinkle_desc">Cât de mult sclipesc stelele, ploaia și alte particule</string>
+    <string name="appearance_look_scene_crisp_title">Scene clare</string>
+    <string name="appearance_look_scene_crisp_desc">Desenează aurora, pârâul și zăpada la rezoluție completă: raze și unduiri mai fine, puțin mai multă memorie</string>
     <string name="appearance_custom_border_title">Chenar personalizat</string>
     <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>

@@ -67,6 +67,10 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "look_key_preview" to PrefValue.Bool(Defaults.LOOK_KEY_PREVIEW),
     "look_space_language" to PrefValue.Bool(Defaults.LOOK_SPACE_LANGUAGE),
     "look_backdrop_motion" to PrefValue.Bool(Defaults.LOOK_BACKDROP_MOTION),
+    "look_motion_speed" to PrefValue.IntV(Defaults.LOOK_MOTION_SPEED),
+    "look_motion_intensity" to PrefValue.IntV(Defaults.LOOK_MOTION_INTENSITY),
+    "look_motion_twinkle" to PrefValue.IntV(Defaults.LOOK_MOTION_TWINKLE),
+    "look_scene_crisp" to PrefValue.Bool(Defaults.LOOK_SCENE_CRISP),
     "custom_border_radius" to PrefValue.IntV(Defaults.CUSTOM_BORDER_RADIUS),
     "custom_border_line_width" to PrefValue.FloatV(Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat()),
 

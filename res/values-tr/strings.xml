@@ -417,7 +417,15 @@
     <string name="appearance_look_space_language_title">Boşluk tuşunda dil adı</string>
     <string name="appearance_look_space_language_desc">Samsung tarzı görünüm, Samsung Klavye gibi boşluk tuşunda geçerli dili gösterir.</string>
     <string name="appearance_look_backdrop_motion_title">Hareketli sahneler</string>
-    <string name="appearance_look_backdrop_motion_desc">Sahneler temaları (CleverKeys Aurora, Çayır, Dere, Dere taşları, Orman, Kar, Plaj) yavaşça hareket eder: kutup ışığı ve su süzülür, çimen salınır, kar ve yapraklar düşer. 20 saniye yazılmayınca durur, pil tasarrufunda hareketsiz kalır. Hareket ederken biraz daha fazla pil kullanır. Android 10 veya üstü.</string>
+    <string name="appearance_look_backdrop_motion_desc">Sahneler temaları (CleverKeys Aurora, Çayır, Dere, Dere taşları, Orman, Kar, Plaj) yavaşça hareket eder: kutup ışığı ve su süzülür, çimen ve yapraklar salınır, kar ve yağmur yağar. 20 saniye yazılmayınca durur, pil tasarrufunda hareketsiz kalır. Hareket ederken biraz daha fazla pil kullanır. Android 10 veya üstü.</string>
+    <string name="appearance_look_motion_speed_title">Sahne hızı</string>
+    <string name="appearance_look_motion_speed_desc">Sahnelerin ne kadar hızlı hareket ettiği</string>
+    <string name="appearance_look_motion_intensity_title">Sahne hareketi yoğunluğu</string>
+    <string name="appearance_look_motion_intensity_desc">Kutup ışığının, suyun, çimenin ve dalların ne kadar hareket ettiği</string>
+    <string name="appearance_look_motion_twinkle_title">Parıltı</string>
+    <string name="appearance_look_motion_twinkle_desc">Yıldızların, yağmurun ve diğer parçacıkların ne kadar parıldadığı</string>
+    <string name="appearance_look_scene_crisp_title">Keskin sahneler</string>
+    <string name="appearance_look_scene_crisp_desc">Kutup ışığını, dereyi ve karı tam çözünürlükte çiz: daha ince ışınlar ve dalgacıklar, biraz daha fazla bellek</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>

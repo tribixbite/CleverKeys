@@ -68,6 +68,12 @@ object Defaults {
      * 2026-11-10).
      */
     const val LOOK_BACKDROP_MOTION = false
+    /** How the moving backdrops move (SceneMotionTuning): speed, intensity, twinkle, percent. */
+    const val LOOK_MOTION_SPEED = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_SPEED_PERCENT
+    const val LOOK_MOTION_INTENSITY = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_INTENSITY_PERCENT
+    const val LOOK_MOTION_TWINKLE = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_TWINKLE_PERCENT
+    /** Paint the soft backdrops (aurora, stream, snow) at full resolution; off: half, a quarter of the memory. */
+    const val LOOK_SCENE_CRISP = false
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -683,6 +689,11 @@ object SettingsRanges {
     /** Opacity / brightness percent (`label_brightness`, `*_opacity`). */
     val OPACITY_PERCENT: IntRange = 0..100
 
+    /** Moving backdrops (`look_motion_speed`, `look_motion_intensity`, `look_motion_twinkle`), percent. */
+    val LOOK_MOTION_SPEED: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.SPEED_PERCENT
+    val LOOK_MOTION_INTENSITY: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.INTENSITY_PERCENT
+    val LOOK_MOTION_TWINKLE: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.TWINKLE_PERCENT
+
     /** Circle-gesture sensitivity (`circle_sensitivity`, stored as a String "1".."5"). */
     val CIRCLE_SENSITIVITY: IntRange = 1..5
 
@@ -984,6 +995,8 @@ class Config private constructor(
     @JvmField var look_key_preview = Defaults.LOOK_KEY_PREVIEW
     @JvmField var look_space_language = Defaults.LOOK_SPACE_LANGUAGE
     @JvmField var look_backdrop_motion = Defaults.LOOK_BACKDROP_MOTION
+    /** The user's tuning of the moving backdrops (`look_motion_*`, `look_scene_crisp`). */
+    @JvmField var look_motion_tuning = tribixbite.cleverkeys.theme.SceneMotionTuning.fromPercent(Defaults.LOOK_MOTION_SPEED, Defaults.LOOK_MOTION_INTENSITY, Defaults.LOOK_MOTION_TWINKLE, Defaults.LOOK_SCENE_CRISP)
     @JvmField var circle_sensitivity = Defaults.CIRCLE_SENSITIVITY_FALLBACK
     @JvmField var clipboard_history_enabled = Defaults.CLIPBOARD_HISTORY_ENABLED
     @JvmField var clipboard_history_limit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
@@ -1322,6 +1335,13 @@ class Config private constructor(
         look_key_preview = _prefs.getBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         look_space_language = _prefs.getBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
         look_backdrop_motion = _prefs.getBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
+        // fromPercent clamps each to SettingsRanges.LOOK_MOTION_* (the same ranges).
+        look_motion_tuning = tribixbite.cleverkeys.theme.SceneMotionTuning.fromPercent(
+            speed = safeGetInt(_prefs, "look_motion_speed", Defaults.LOOK_MOTION_SPEED),
+            intensity = safeGetInt(_prefs, "look_motion_intensity", Defaults.LOOK_MOTION_INTENSITY),
+            twinkle = safeGetInt(_prefs, "look_motion_twinkle", Defaults.LOOK_MOTION_TWINKLE),
+            crisp = _prefs.getBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP),
+        )
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
@@ -1626,6 +1646,7 @@ class Config private constructor(
         look_key_preview = look_key_preview,
         look_space_language = look_space_language,
         look_backdrop_motion = look_backdrop_motion,
+        look_motion_tuning = look_motion_tuning,
         characterSize = characterSize,
         keyboardOpacity = keyboardOpacity,
         themeName = themeName,

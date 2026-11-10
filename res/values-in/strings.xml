@@ -418,7 +418,15 @@
     <string name="appearance_look_space_language_title">Nama bahasa di tombol spasi</string>
     <string name="appearance_look_space_language_desc">Tampilan Samsung menampilkan bahasa saat ini di tombol spasi, seperti Samsung Keyboard.</string>
     <string name="appearance_look_backdrop_motion_title">Adegan bergerak</string>
-    <string name="appearance_look_backdrop_motion_desc">Tema Adegan (CleverKeys Aurora, Padang rumput, Sungai kecil, Batu sungai, Hutan, Salju, Pantai) bergerak lembut: aurora dan air mengalir, rumput bergoyang, salju dan daun berjatuhan. Diam setelah 20 detik tanpa mengetik dan tetap diam dalam mode hemat baterai. Memakai sedikit baterai tambahan selama bergerak. Android 10 atau lebih baru.</string>
+    <string name="appearance_look_backdrop_motion_desc">Tema Adegan (CleverKeys Aurora, Padang rumput, Sungai kecil, Batu sungai, Hutan, Salju, Pantai) bergerak lembut: aurora dan air mengalir, rumput dan daun bergoyang, salju dan hujan turun. Diam setelah 20 detik tanpa mengetik dan tetap diam dalam mode hemat baterai. Memakai sedikit baterai tambahan selama bergerak. Android 10 atau lebih baru.</string>
+    <string name="appearance_look_motion_speed_title">Kecepatan adegan</string>
+    <string name="appearance_look_motion_speed_desc">Seberapa cepat adegan bergerak</string>
+    <string name="appearance_look_motion_intensity_title">Intensitas gerak adegan</string>
+    <string name="appearance_look_motion_intensity_desc">Seberapa jauh aurora, air, rumput, dan dahan bergerak</string>
+    <string name="appearance_look_motion_twinkle_title">Kerlip</string>
+    <string name="appearance_look_motion_twinkle_desc">Seberapa banyak bintang, hujan, dan partikel lain berkerlip</string>
+    <string name="appearance_look_scene_crisp_title">Adegan tajam</string>
+    <string name="appearance_look_scene_crisp_desc">Gambar aurora, sungai kecil, dan salju dalam resolusi penuh: sinar dan riak lebih halus, sedikit lebih banyak memori</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
     <string name="appearance_custom_border_desc">Aktifkan gaya batas tombol kustom</string>
     <string name="appearance_border_radius_title">Radius Batas</string>

@@ -423,7 +423,15 @@
     <string name="appearance_look_space_language_title">Nazwa języka na spacji</string>
     <string name="appearance_look_space_language_desc">Wygląd Samsung pokazuje bieżący język na spacji tak jak klawiatura Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Animowane sceny</string>
-    <string name="appearance_look_backdrop_motion_desc">Motywy Sceny (CleverKeys Aurora, Łąka, Strumień, Otoczaki, Las, Śnieg, Plaża) poruszają się łagodnie: zorza i woda płyną, trawa się kołysze, padają śnieg i liście. Zatrzymują się po 20 sekundach bez pisania i nie ruszają się w trybie oszczędzania baterii. W ruchu zużywają nieco więcej baterii. Android 10 lub nowszy.</string>
+    <string name="appearance_look_backdrop_motion_desc">Motywy Sceny (CleverKeys Aurora, Łąka, Strumień, Otoczaki, Las, Śnieg, Plaża) poruszają się łagodnie: zorza i woda płyną, trawa i liście się kołyszą, pada śnieg i deszcz. Zatrzymują się po 20 sekundach bez pisania i nie ruszają się w trybie oszczędzania baterii. W ruchu zużywają nieco więcej baterii. Android 10 lub nowszy.</string>
+    <string name="appearance_look_motion_speed_title">Tempo scen</string>
+    <string name="appearance_look_motion_speed_desc">Jak szybko poruszają się sceny</string>
+    <string name="appearance_look_motion_intensity_title">Siła ruchu scen</string>
+    <string name="appearance_look_motion_intensity_desc">Jak daleko poruszają się zorza, woda, trawa i gałęzie</string>
+    <string name="appearance_look_motion_twinkle_title">Migotanie</string>
+    <string name="appearance_look_motion_twinkle_desc">Jak mocno migoczą gwiazdy, deszcz i inne cząstki</string>
+    <string name="appearance_look_scene_crisp_title">Ostre sceny</string>
+    <string name="appearance_look_scene_crisp_desc">Rysuj zorzę, strumień i śnieg w pełnej rozdzielczości: drobniejsze promienie i zmarszczki, trochę więcej pamięci</string>
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
     <string name="appearance_custom_border_desc">Włącz własny styl obramowania klawiszy</string>
     <string name="appearance_border_radius_title">Promień narożników</string>

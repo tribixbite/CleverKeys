@@ -27,13 +27,19 @@ class SceneRasterTest {
                 assertThat(layer.pixels.size).isEqualTo(layer.width * layer.height)
                 assertWithMessage("$kind: a layer is a part, not a sheet").that(layer.pixels.any { it ushr 24 == 0 }).isTrue()
             }
+            assertWithMessage("$kind moves by a second image or by its layers, not both")
+                .that(a.alt != null && a.layers.isNotEmpty()).isFalse()
+            // The river rocks' painting is still: the rain over it is the look's particles.
+            if (kind == SceneKind.RIVER_ROCKS) {
+                assertThat(a.alt).isNull()
+                assertThat(a.layers).isEmpty()
+                continue
+            }
             // Something moves: the cross-faded image, or the layers between two moments.
             val still = SceneMotion.composite(a, 0.0)
             val later = SceneMotion.composite(a, 1.7, altShare = 1f)
             val changed = still.indices.count { still[it] != later[it] }
             assertWithMessage("$kind moves").that(changed).isGreaterThan(still.size / 200)
-            assertWithMessage("$kind moves either by a second image or by its layers, not both")
-                .that((a.alt != null) xor a.layers.isNotEmpty()).isTrue()
         }
     }
 
@@ -47,14 +53,14 @@ class SceneRasterTest {
         assertThat(SceneKind.SNOW.paintScale).isEqualTo(2)
     }
 
-    /** Grass bands sway from their roots, branches from the top, the beach's water rolls and washes. */
+    /** Grass bands sway from their roots, branches from the top, the beach's water rolls and washes; the stones lie still. */
     @Test
     fun eachSceneMovesTheWayItsSubjectDoes() {
         fun kinds(kind: SceneKind) = SceneRaster.paint(kind, 200, 140, 0.5f).layers.map { it.motion.kind }.toSet()
         assertThat(kinds(SceneKind.MEADOW)).containsExactly(LayerMotionKind.SWAY_UP)
         assertThat(kinds(SceneKind.FOREST)).containsExactly(LayerMotionKind.SWAY_DOWN, LayerMotionKind.SWAY_UP)
         assertThat(kinds(SceneKind.BEACH)).containsExactly(LayerMotionKind.ROLL, LayerMotionKind.WASH)
-        assertThat(kinds(SceneKind.RIVER_ROCKS)).containsExactly(LayerMotionKind.RIPPLE)
+        assertWithMessage("rain, not rippling light (it falls as particles)").that(kinds(SceneKind.RIVER_ROCKS)).isEmpty()
     }
 
     @Test

@@ -444,7 +444,15 @@
     <string name="appearance_look_space_language_title">نام زبان روی کلید فاصله</string>
     <string name="appearance_look_space_language_desc">ظاهر سامسونگ زبان فعلی را روی کلید فاصله نشان می‌دهد، مانند صفحه‌کلید سامسونگ.</string>
     <string name="appearance_look_backdrop_motion_title">صحنه‌های متحرک</string>
-    <string name="appearance_look_backdrop_motion_desc">تم‌های صحنه (CleverKeys Aurora، چمنزار، جویبار، سنگ‌های رود، جنگل، برف، ساحل) آرام حرکت می‌کنند: شفق و آب شناورند، چمن تاب می‌خورد، برف و برگ می‌بارد. پس از ۲۰ ثانیه بدون تایپ می‌ایستند و در حالت صرفه‌جویی باتری ساکن می‌مانند. هنگام حرکت کمی باتری بیشتری مصرف می‌کنند. Android 10 یا جدیدتر.</string>
+    <string name="appearance_look_backdrop_motion_desc">تم‌های صحنه (CleverKeys Aurora، چمنزار، جویبار، سنگ‌های رود، جنگل، برف، ساحل) آرام حرکت می‌کنند: شفق و آب شناورند، چمن و برگ تاب می‌خورند، برف و باران می‌بارد. پس از ۲۰ ثانیه بدون تایپ می‌ایستند و در حالت صرفه‌جویی باتری ساکن می‌مانند. هنگام حرکت کمی باتری بیشتری مصرف می‌کنند. Android 10 یا جدیدتر.</string>
+    <string name="appearance_look_motion_speed_title">سرعت صحنه</string>
+    <string name="appearance_look_motion_speed_desc">سرعت حرکت صحنه‌ها</string>
+    <string name="appearance_look_motion_intensity_title">شدت حرکت صحنه</string>
+    <string name="appearance_look_motion_intensity_desc">میزان حرکت شفق، آب، چمن و شاخه‌ها</string>
+    <string name="appearance_look_motion_twinkle_title">چشمک</string>
+    <string name="appearance_look_motion_twinkle_desc">میزان درخشش ستاره‌ها، باران و ذرات دیگر</string>
+    <string name="appearance_look_scene_crisp_title">صحنه‌های واضح</string>
+    <string name="appearance_look_scene_crisp_desc">شفق، جویبار و برف با وضوح کامل کشیده شوند: پرتوها و موج‌های ظریف‌تر، کمی حافظهٔ بیشتر</string>
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
     <string name="appearance_custom_border_desc">استایل‌دهی سفارشی حاشیه کلید را فعال کنید</string>
     <string name="appearance_border_radius_title">شعاع گوشه</string>

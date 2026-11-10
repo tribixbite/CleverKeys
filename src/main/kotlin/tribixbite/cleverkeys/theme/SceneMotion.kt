@@ -172,9 +172,10 @@ object SceneMotion {
     /**
      * The `drawBitmapMesh` vertices of [layer] at [seconds]: (columns + 1) × (rows + 1) points,
      * row by row, in VIEW pixels ([scale] view px per raster px), written to [out] (size
-     * `2 × (cols + 1) × (rows + 1)`).
+     * `2 × (cols + 1) × (rows + 1)`). [intensity] scales every displacement (the user's
+     * [SceneMotionTuning.intensity]; 0 = the layer rests where it was painted).
      */
-    fun mesh(layer: SceneLayer, seconds: Double, scale: Float, out: FloatArray) {
+    fun mesh(layer: SceneLayer, seconds: Double, scale: Float, out: FloatArray, intensity: Float = 1f) {
         val cols = meshColumns(layer.width)
         val rows = meshRows(layer.height)
         val d = FloatArray(2)
@@ -184,8 +185,8 @@ object SceneMotion {
             for (c in 0..cols) {
                 val x = layer.left + layer.width * c.toFloat() / cols
                 displace(layer.motion, x, y, seconds, d)
-                out[k++] = (x + d[0]) * scale
-                out[k++] = (y + d[1]) * scale
+                out[k++] = (x + intensity * d[0]) * scale
+                out[k++] = (y + intensity * d[1]) * scale
             }
         }
     }

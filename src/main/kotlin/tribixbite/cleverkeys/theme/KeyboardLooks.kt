@@ -332,11 +332,18 @@ object KeyboardLooks {
         spaceLanguage = true,
     )
 
+    /** The wave every aurora curtain's lower edge follows (periods across the view), and its phase. */
+    private const val AURORA_WAVES = 1.25f
+    private const val AURORA_PHASE = 0.12f
+
+    /** How far the aurora's rays lean towards the radiant overhead at the top of their reach. */
+    private const val AURORA_CONVERGENCE = 0.35f
+
     /**
      * The CleverKeys Aurora look's backdrop (declared before the looks that use it: object
-     * properties initialise in order): four rayed aurora curtains ([AuroraRibbon]; until
+     * properties initialise in order): five rayed aurora curtains ([AuroraRibbon]; until
      * 2026-11-09 three soft tilted glows, which the maintainer found "too cloud like"), a faint
-     * haze, and a star field with frequent glints. Fractions of the view.
+     * haze, and a shimmering star field. Fractions of the view.
      *
      * History: the CleverKeys look's dark mode carried it 2026-11-07..10. Maintainer 2026-11-10,
      * after ten previews and one round on the device: finer rays, a third curtain and the lowest
@@ -344,40 +351,53 @@ object KeyboardLooks {
      * the lowest curtain back down over the nav keys; keys without a fill but with their outline,
      * and its own theme, the CleverKeys look going back to plain. Later the same day: a fourth
      * curtain, one of the middle two in an indigo gradient, and livelier motion
-     * ([MotionStyle.AURORA]).
+     * ([MotionStyle.AURORA]). Then: the curtains redrawn as parallel folds whose rays converge,
+     * a fifth in the empty top right, green at one end of the low one, the indigo turning teal,
+     * and the stars back to shimmering.
      */
     val CLEVERKEYS_AURORA = LookBackdrop(
-        // A near curtain whose lilac rim runs low and nearly level behind the bottom row and the
-        // nav keys, an indigo one above it on the left, an orchid one higher up on the right,
-        // and a faint lilac veil along the top left; rays fade upward into violet or deep indigo.
+        // Five folds of one sheet, as a real aurora's curtains are (maintainer 2026-11-10, with
+        // photos and a Yellowknife clip: "more in-sync"): every lower edge follows the same wave
+        // ([AURORA_WAVES], [AURORA_PHASE]) and every ray leans towards one radiant overhead.
+        // Low and nearly level behind the bottom row and the nav keys: the hallmark green on the
+        // left turning lilac; above it on the left, indigo into teal; an orchid fold on the right;
+        // a lilac veil top left and a rose one top right, in what was empty sky.
         ribbons = listOf(
             AuroraRibbon(
-                edgeY = 0.78f, amplitude = 0.10f, waves = 1.6f, phase = 0.10f, slope = 0.06f, height = 0.62f,
-                edgeColor = 0x66C88CFF, topColor = 0x307A3CC8, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
+                edgeY = 0.79f, amplitude = 0.08f, waves = AURORA_WAVES, phase = AURORA_PHASE, slope = 0.06f, height = 0.60f,
+                edgeColor = 0x583CF58C, topColor = 0x2E5A3CB4, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
+                edgeColorEnd = 0x66C88CFF, topColorEnd = 0x307A3CC8, convergence = AURORA_CONVERGENCE,
             ),
             AuroraRibbon(
-                edgeY = 0.58f, amplitude = 0.06f, waves = 1.2f, phase = 0.80f, slope = 0.08f, height = 0.36f,
+                edgeY = 0.60f, amplitude = 0.07f, waves = AURORA_WAVES, phase = AURORA_PHASE + 0.04f, slope = 0.07f, height = 0.36f,
                 edgeColor = 0x5A6E6CFF, topColor = 0x2A2E1A9A, raysPer100Dp = 44f, rayContrast = 0.64f, seed = 53L,
-                xStart = 0f, xEnd = 0.72f,
+                xStart = 0f, xEnd = 0.74f, edgeColorEnd = 0x4434D8C4, topColorEnd = 0x261E4A8C, convergence = AURORA_CONVERGENCE,
             ),
             AuroraRibbon(
-                edgeY = 0.42f, amplitude = 0.07f, waves = 1.1f, phase = 0.60f, slope = -0.12f, height = 0.40f,
+                edgeY = 0.43f, amplitude = 0.07f, waves = AURORA_WAVES, phase = AURORA_PHASE + 0.08f, slope = 0.08f, height = 0.38f,
                 edgeColor = 0x46E07AD8, topColor = 0x205A2EA6, raysPer100Dp = 40f, rayContrast = 0.66f, seed = 23L,
-                xStart = 0.28f, xEnd = 1f,
+                xStart = 0.30f, xEnd = 1f, convergence = AURORA_CONVERGENCE,
             ),
             AuroraRibbon(
-                edgeY = 0.26f, amplitude = 0.05f, waves = 1.3f, phase = 0.35f, slope = 0.10f, height = 0.22f,
-                edgeColor = 0x30B48CFF, topColor = 0x14603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 37L,
-                xStart = 0f, xEnd = 0.55f,
+                edgeY = 0.29f, amplitude = 0.06f, waves = AURORA_WAVES, phase = AURORA_PHASE + 0.12f, slope = 0.08f, height = 0.24f,
+                edgeColor = 0x46B48CFF, topColor = 0x1C603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 37L,
+                xStart = 0f, xEnd = 0.52f, convergence = AURORA_CONVERGENCE,
+            ),
+            AuroraRibbon(
+                edgeY = 0.31f, amplitude = 0.06f, waves = AURORA_WAVES, phase = AURORA_PHASE + 0.14f, slope = 0.08f, height = 0.24f,
+                edgeColor = 0x56F07AC0, topColor = 0x20702AA0, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 71L,
+                xStart = 0.46f, xEnd = 1f, convergence = AURORA_CONVERGENCE,
             ),
         ),
         // A faint violet haze under the curtains, so the dark between them is not dead black.
         glows = listOf(
             AuroraGlow(cx = 0.35f, cy = 0.62f, rx = 0.75f, ry = 0.42f, rotationDeg = -10f, color = 0x1C4A2EA6),
         ),
+        // Shimmering stars (maintainer 2026-11-10: "add the shimmering stars back"): denser and
+        // brighter than the faint dust of the first rounds, every third with a glint.
         stars = LookStarfield(
-            perSquare100Dp = 8f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),
-            minAlpha = 50, maxAlpha = 200, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 5,
+            perSquare100Dp = 14f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),
+            minAlpha = 70, maxAlpha = 235, minRadiusDp = 0.45f, maxRadiusDp = 1.15f, glintEvery = 3,
         ),
         topFade = 0.18f,
     )
@@ -551,7 +571,7 @@ object KeyboardLooks {
         ),
     )
 
-    /** River rocks: wet stones of many colours (agate, slate, jasper, jade), light rippling over them, glints. */
+    /** River rocks: wet stones of many colours (slate, jasper, jade, four banded agates) in the rain. */
     val riverRocksLook = sceneLook(
         RIVER_ROCKS,
         scenePalette(
@@ -560,9 +580,12 @@ object KeyboardLooks {
             accent = 0xC9D3DA, onAccent = 0x14181C, popup = 0x24282C,
             backdrop = LookBackdrop(
                 glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f,
+                // Rain falling on the stones, slanting a little in the wind (maintainer 2026-11-10:
+                // rain instead of the glints and the rippling light).
                 stars = LookStarfield(
-                    perSquare100Dp = 3f, seed = 0x20C5L, color = 0xFFFFFFFF.toInt(), minAlpha = 70, maxAlpha = 230,
-                    minRadiusDp = 0.5f, maxRadiusDp = 1.1f, glintEvery = 0, shape = ParticleShape.GLINT,
+                    perSquare100Dp = 9f, seed = 0x20C5L, color = 0xFFDCEEF8.toInt(), minAlpha = 100, maxAlpha = 210,
+                    minRadiusDp = 0.7f, maxRadiusDp = 1.3f, glintEvery = 0, shape = ParticleShape.RAIN,
+                    driftXDpPerS = -40f, driftYDpPerS = 260f,
                 ),
             ),
         ),

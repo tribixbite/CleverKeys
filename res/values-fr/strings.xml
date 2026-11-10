@@ -416,7 +416,15 @@
     <string name="appearance_look_space_language_title">Nom de la langue sur la barre d’espace</string>
     <string name="appearance_look_space_language_desc">L’apparence Samsung affiche la langue actuelle sur la barre d’espace, comme le clavier Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Scènes animées</string>
-    <string name="appearance_look_backdrop_motion_desc">Les thèmes Scènes (CleverKeys Aurora, Prairie, Ruisseau, Galets, Forêt, Neige, Plage) bougent doucement : l’aurore et l’eau dérivent, l’herbe ondule, la neige et les feuilles tombent. Ils s’arrêtent après 20 secondes sans saisie et restent immobiles en économie d’énergie. Consomme un peu plus de batterie pendant le mouvement. Android 10 ou ultérieur.</string>
+    <string name="appearance_look_backdrop_motion_desc">Les thèmes Scènes (CleverKeys Aurora, Prairie, Ruisseau, Galets, Forêt, Neige, Plage) bougent doucement : l’aurore et l’eau dérivent, l’herbe et les feuilles ondulent, la neige et la pluie tombent. Ils s’arrêtent après 20 secondes sans saisie et restent immobiles en économie d’énergie. Consomme un peu plus de batterie pendant le mouvement. Android 10 ou ultérieur.</string>
+    <string name="appearance_look_motion_speed_title">Vitesse des scènes</string>
+    <string name="appearance_look_motion_speed_desc">La vitesse à laquelle les scènes bougent</string>
+    <string name="appearance_look_motion_intensity_title">Intensité du mouvement</string>
+    <string name="appearance_look_motion_intensity_desc">L’amplitude du mouvement de l’aurore, de l’eau, de l’herbe et des branches</string>
+    <string name="appearance_look_motion_twinkle_title">Scintillement</string>
+    <string name="appearance_look_motion_twinkle_desc">À quel point les étoiles, la pluie et les autres particules scintillent</string>
+    <string name="appearance_look_scene_crisp_title">Scènes nettes</string>
+    <string name="appearance_look_scene_crisp_desc">Dessiner l’aurore, le ruisseau et la neige en pleine résolution : rayons et ondulations plus fins, un peu plus de mémoire</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
     <string name="appearance_custom_border_desc">Activer le style de bordure de touche personnalisé</string>
     <string name="appearance_border_radius_title">Rayon de bordure</string>

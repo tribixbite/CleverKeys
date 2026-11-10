@@ -607,10 +607,15 @@ class Keyboard2View @JvmOverloads constructor(
         invalidateAccessibilityRoot()
     }
 
-    /** The backdrop moves as the user's "Animated scenes" says; theme previews in Settings stay still. */
+    /**
+     * The backdrop moves as the user's "Animated scenes" says, at their speed, intensity, twinkle
+     * and sharpness; theme previews in Settings stay still.
+     */
     private fun syncBackdropMotion() {
-        (background as? tribixbite.cleverkeys.theme.BackdropDrawable)
-            ?.setMotionEnabled(_config.snapshot.look_backdrop_motion && !_previewMode)
+        val backdrop = background as? tribixbite.cleverkeys.theme.BackdropDrawable ?: return
+        val snap = _config.snapshot
+        backdrop.setTuning(snap.look_motion_tuning)
+        backdrop.setMotionEnabled(snap.look_backdrop_motion && !_previewMode)
     }
 
     /**

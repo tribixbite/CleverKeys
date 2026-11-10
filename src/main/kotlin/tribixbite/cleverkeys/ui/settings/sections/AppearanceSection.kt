@@ -351,6 +351,56 @@ internal fun SettingsActivity.AppearanceSection() {
                     }
                 )
 
+                // How the scenes move (SceneMotionTuning), one set for every scene, shown while
+                // they move; the sharpness also applies to a still scene.
+                if (lookBackdropMotion) {
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_speed_title),
+                        description = stringResource(R.string.appearance_look_motion_speed_desc),
+                        value = lookMotionSpeed.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_SPEED.toSliderRange(),
+                        increment = 5f,
+                        onValueChange = {
+                            lookMotionSpeed = it.roundToInt()
+                            saveSetting("look_motion_speed", lookMotionSpeed)
+                        },
+                        displayValue = "$lookMotionSpeed%"
+                    )
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_intensity_title),
+                        description = stringResource(R.string.appearance_look_motion_intensity_desc),
+                        value = lookMotionIntensity.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_INTENSITY.toSliderRange(),
+                        increment = 5f,
+                        onValueChange = {
+                            lookMotionIntensity = it.roundToInt()
+                            saveSetting("look_motion_intensity", lookMotionIntensity)
+                        },
+                        displayValue = "$lookMotionIntensity%"
+                    )
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_twinkle_title),
+                        description = stringResource(R.string.appearance_look_motion_twinkle_desc),
+                        value = lookMotionTwinkle.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_TWINKLE.toSliderRange(),
+                        increment = 5f,
+                        onValueChange = {
+                            lookMotionTwinkle = it.roundToInt()
+                            saveSetting("look_motion_twinkle", lookMotionTwinkle)
+                        },
+                        displayValue = "$lookMotionTwinkle%"
+                    )
+                }
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_look_scene_crisp_title),
+                    description = stringResource(R.string.appearance_look_scene_crisp_desc),
+                    checked = lookSceneCrisp,
+                    onCheckedChange = {
+                        lookSceneCrisp = it
+                        saveSetting("look_scene_crisp", it)
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_custom_border_title),
                     description = stringResource(R.string.appearance_custom_border_desc),

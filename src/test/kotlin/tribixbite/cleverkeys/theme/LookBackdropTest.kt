@@ -24,8 +24,8 @@ class LookBackdropTest {
     fun starsStayInsideTheViewWithinTheirRanges() {
         val density = 2.625f
         val stars = LookStars.place(field, 1080, 760, density)
-        // 411 × 290 dp ≈ 11.9 units of 100 × 100 dp at 8 per unit (2026-11-10: twice the stars).
-        assertThat(stars.size).isEqualTo(95)
+        // 411 × 290 dp ≈ 11.9 units of 100 × 100 dp at 14 per unit (2026-11-10: shimmering stars).
+        assertThat(stars.size).isEqualTo(167)
         for (s in stars) {
             assertThat(s.x).isAtLeast(0f); assertThat(s.x).isLessThan(1080f)
             assertThat(s.y).isAtLeast(0f); assertThat(s.y).isLessThan(760f)
@@ -33,7 +33,7 @@ class LookBackdropTest {
             assertThat(s.radius).isAtMost(field.maxRadiusDp * density + 1e-3f)
             assertThat(s.alpha).isAtLeast(field.minAlpha); assertThat(s.alpha).isAtMost(field.maxAlpha)
         }
-        assertWithMessage("every 5th star glints").that(stars.count { it.glint }).isEqualTo(19)
+        assertWithMessage("every 3rd star glints").that(stars.count { it.glint }).isEqualTo(56)
     }
 
     @Test
@@ -117,6 +117,48 @@ class LookBackdropTest {
         }
         val snow = KeyboardLooks.snowLook.dark.backdrop!!.stars!!
         assertWithMessage("snow falls").that(snow.driftYDpPerS).isGreaterThan(0f)
+        // Maintainer 2026-11-10: "a rain effect instead of 'glistening'" over the river rocks.
+        val rain = KeyboardLooks.riverRocksLook.dark.backdrop!!.stars!!
+        assertThat(rain.shape).isEqualTo(ParticleShape.RAIN)
+        assertWithMessage("rain falls fast, nearly straight down")
+            .that(rain.driftYDpPerS).isGreaterThan(4 * kotlin.math.abs(rain.driftXDpPerS))
+        assertThat(rain.driftYDpPerS).isAtLeast(150f)
+    }
+
+    /**
+     * A curtain whose colour changes along it (green into lilac, indigo into teal) and whose rays
+     * lean towards one radiant overhead (maintainer 2026-11-10: "more in-sync like the real aurora
+     * borealis"): the start of the curtain wears its start colour, the end its end colour, and a
+     * ray's light moves towards the radiant as it rises.
+     */
+    @Test
+    fun aCurtainChangesColourAlongItAndItsRaysConverge() {
+        val base = 0xFF000000.toInt()
+        val w = 300
+        val h = 200
+        val curtain = AuroraRibbon(
+            edgeY = 0.9f, amplitude = 0f, waves = 1f, phase = 0f, slope = 0f, height = 0.8f,
+            edgeColor = 0xFF00FF00.toInt(), topColor = 0xFF00FF00.toInt(), raysPer100Dp = 0f, rayContrast = 0f, seed = 1L,
+            edgeColorEnd = 0xFFFF0000.toInt(), topColorEnd = 0xFFFF0000.toInt(),
+        )
+        val px = AuroraRaster.render(base, listOf(curtain), w, h, 1f)
+        val row = (0.85f * h).toInt() * w
+        fun red(c: Int) = (c shr 16) and 0xFF
+        fun green(c: Int) = (c shr 8) and 0xFF
+        assertWithMessage("green at the start").that(green(px[row + w / 10])).isGreaterThan(red(px[row + w / 10]))
+        assertWithMessage("red at the end").that(red(px[row + w * 9 / 10])).isGreaterThan(green(px[row + w * 9 / 10]))
+
+        // One bright ray at the left, rays everywhere else dark: its light moves right as it rises.
+        val ray = curtain.copy(edgeColorEnd = null, topColorEnd = null, rayContrast = 1f, convergence = 0.6f, radiantX = 0.9f)
+        fun brightestColumn(pixels: IntArray, y: Int): Int = (0 until w).maxBy { x -> green(pixels[y * w + x]) }
+        val single = FloatArray(w) { x -> if (x in 40..44) 1f else 0f }
+        val lean = AuroraRaster.paintRays(base, ray, single, w, h)
+        val straight = AuroraRaster.paintRays(base, ray.copy(convergence = 0f), single, w, h)
+        val low = (0.88f * h).toInt()
+        val high = (0.4f * h).toInt()
+        assertWithMessage("a straight ray stays in its column").that(brightestColumn(straight, high)).isIn(com.google.common.collect.Range.closed(40, 44))
+        assertWithMessage("at its foot the leaning ray is where it rises").that(brightestColumn(lean, low)).isIn(com.google.common.collect.Range.closed(40, 46))
+        assertWithMessage("higher up it leans towards the radiant").that(brightestColumn(lean, high)).isGreaterThan(60)
     }
 }
 

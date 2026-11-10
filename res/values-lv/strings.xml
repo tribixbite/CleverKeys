@@ -422,7 +422,15 @@
     <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
     <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
     <string name="appearance_look_backdrop_motion_title">Animētas ainas</string>
-    <string name="appearance_look_backdrop_motion_desc">Ainu motīvi (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle šūpojas, krīt sniegs un lapas. Pēc 20 sekundēm bez rakstīšanas tie apstājas un enerģijas taupīšanas režīmā paliek nekustīgi. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
+    <string name="appearance_look_backdrop_motion_desc">Ainu motīvi (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle un lapas šūpojas, krīt sniegs un lietus. Pēc 20 sekundēm bez rakstīšanas tie apstājas un enerģijas taupīšanas režīmā paliek nekustīgi. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
+    <string name="appearance_look_motion_speed_title">Ainu ātrums</string>
+    <string name="appearance_look_motion_speed_desc">Cik ātri ainas kustas</string>
+    <string name="appearance_look_motion_intensity_title">Ainu kustības stiprums</string>
+    <string name="appearance_look_motion_intensity_desc">Cik tālu kustas blāzma, ūdens, zāle un zari</string>
+    <string name="appearance_look_motion_twinkle_title">Mirgošana</string>
+    <string name="appearance_look_motion_twinkle_desc">Cik stipri mirgo zvaigznes, lietus un citas daļiņas</string>
+    <string name="appearance_look_scene_crisp_title">Asas ainas</string>
+    <string name="appearance_look_scene_crisp_desc">Zīmēt ziemeļblāzmu, strautu un sniegu pilnā izšķirtspējā: smalkāki stari un viļņi, nedaudz vairāk atmiņas</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>

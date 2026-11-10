@@ -405,7 +405,15 @@
     <string name="appearance_look_space_language_title">在空格键上显示语言名称</string>
     <string name="appearance_look_space_language_desc">Samsung 风格外观会像三星键盘一样在空格键上显示当前语言。</string>
     <string name="appearance_look_backdrop_motion_title">动态场景</string>
-    <string name="appearance_look_backdrop_motion_desc">场景主题（CleverKeys Aurora、草地、溪流、河石、森林、雪景、海滩）会轻柔地运动：极光和水流飘动，草随风摇曳，雪花与落叶飘落。20 秒无输入后静止，省电模式下保持不动。运动时会多耗一点电量。需要 Android 10 或更高版本。</string>
+    <string name="appearance_look_backdrop_motion_desc">场景主题（CleverKeys Aurora、草地、溪流、河石、森林、雪景、海滩）会轻柔地运动：极光和水流飘动，草和树叶随风摇曳，雪花与雨滴飘落。20 秒无输入后静止，省电模式下保持不动。运动时会多耗一点电量。需要 Android 10 或更高版本。</string>
+    <string name="appearance_look_motion_speed_title">场景速度</string>
+    <string name="appearance_look_motion_speed_desc">场景运动的快慢</string>
+    <string name="appearance_look_motion_intensity_title">场景运动幅度</string>
+    <string name="appearance_look_motion_intensity_desc">极光、水流、草和树枝的运动幅度</string>
+    <string name="appearance_look_motion_twinkle_title">闪烁</string>
+    <string name="appearance_look_motion_twinkle_desc">星星、雨滴等粒子闪烁的程度</string>
+    <string name="appearance_look_scene_crisp_title">清晰场景</string>
+    <string name="appearance_look_scene_crisp_desc">以全分辨率绘制极光、溪流和雪景：光线和涟漪更细腻，多占用一点内存</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
     <string name="appearance_custom_border_desc">启用自定义按键边框样式。</string>
     <string name="appearance_border_radius_title">边框圆角</string>

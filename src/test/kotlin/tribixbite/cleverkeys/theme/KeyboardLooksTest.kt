@@ -254,35 +254,53 @@ class KeyboardLooksTest {
      */
     /**
      * Maintainer 2026-11-10, round two: a fourth curtain, one of the middle two indigo (an indigo
-     * gradient), over keys with no fill and a full-strength outline.
+     * gradient), over keys with no fill and a full-strength outline. Round three (with aurora
+     * photos and a Yellowknife clip): curtains "more in-sync like the real aurora borealis" —
+     * parallel folds whose rays converge on one radiant — a fifth in the empty top right, the
+     * hallmark green at one end of the low curtain, the indigo turning teal, shimmering stars.
      */
     @Test
-    fun theAuroraLookIsOutlinedKeysOverFourRayedCurtains() {
+    fun theAuroraLookIsOutlinedKeysOverFiveConvergingCurtains() {
         val look = KeyboardLooks.auroraLook
         assertThat(KeyboardLooks.byId(KeyboardLooks.AURORA)).isSameInstanceAs(look)
         val p = look.dark
         val aurora = p.backdrop!!
         assertThat(aurora.scene).isNull()
-        assertThat(aurora.ribbons).hasSize(4)
+        assertThat(aurora.ribbons).hasSize(5)
+        fun rgb(argb: Int) = Triple((argb shr 16) and 0xFF, (argb shr 8) and 0xFF, argb and 0xFF)
+        // Blue well above red, red and green close: indigo, not violet, cyan or lilac.
+        fun isIndigo(argb: Int) = rgb(argb).let { (r, g, b) -> b > r + 60 && b > g + 60 && abs(r - g) < 40 }
+        fun isTeal(argb: Int) = rgb(argb).let { (r, g, b) -> g > r + 100 && b > r + 100 && abs(g - b) < 40 }
+        fun isGreen(argb: Int) = rgb(argb).let { (r, g, b) -> g > r + 100 && g > b + 60 }
         val middle = aurora.ribbons.sortedByDescending { it.edgeY }.subList(1, 3)
-        fun isIndigo(argb: Int): Boolean {
-            val r = (argb shr 16) and 0xFF; val g = (argb shr 8) and 0xFF; val b = argb and 0xFF
-            // Blue well above red, red and green close: indigo, not violet, cyan or lilac.
-            return b > r + 60 && b > g + 60 && abs(r - g) < 40
+        assertWithMessage("one of the middle two curtains runs from indigo into teal")
+            .that(middle.count { isIndigo(it.edgeColor) && isIndigo(it.topColor) && it.edgeColorEnd?.let(::isTeal) == true })
+            .isEqualTo(1)
+        // In sync: one wave for every lower edge, and every ray leaning to the same radiant.
+        val first = aurora.ribbons.first()
+        for (r in aurora.ribbons) {
+            assertWithMessage("parallel folds").that(r.waves).isEqualTo(first.waves)
+            assertThat(abs(r.phase - first.phase)).isAtMost(0.15f)
+            assertWithMessage("converging rays").that(r.convergence).isGreaterThan(0f)
+            assertThat(r.radiantX).isEqualTo(first.radiantX)
         }
-        assertWithMessage("one of the middle two curtains is an indigo gradient")
-            .that(middle.count { isIndigo(it.edgeColor) && isIndigo(it.topColor) }).isEqualTo(1)
-        val near = aurora.ribbons.first()
+        assertWithMessage("a curtain in what was empty sky, top middle to right").that(
+            aurora.ribbons.count { it.edgeY < 0.35f && it.xStart >= 0.4f && it.xEnd == 1f },
+        ).isEqualTo(1)
+        val near = aurora.ribbons.maxBy { it.edgeY }
         assertWithMessage("the lowest curtain runs nearly level").that(abs(near.slope)).isAtMost(0.1f)
         assertWithMessage("low, over the nav keys").that(near.edgeY).isAtLeast(0.75f)
         assertWithMessage("not folded").that(near.waves).isLessThan(2f)
-        val rimGreenOverRed = ((near.edgeColor shr 8) and 0xFF) - ((near.edgeColor shr 16) and 0xFF)
-        assertWithMessage("a lilac rim, not green").that(rimGreenOverRed).isLessThan(0)
-        assertWithMessage("not dimmed").that((near.edgeColor ushr 24) and 0xFF).isAtLeast(0x60)
+        assertWithMessage("the hallmark green at one end of the low curtain").that(isGreen(near.edgeColor)).isTrue()
+        val endGreenOverRed = ((near.edgeColorEnd!! shr 8) and 0xFF) - ((near.edgeColorEnd!! shr 16) and 0xFF)
+        assertWithMessage("turning lilac at the other").that(endGreenOverRed).isLessThan(0)
+        // Green reads about twice as bright as lilac for the same light, so its rim carries less
+        // alpha (0x58) than the lilac one did (0x66); the hint-contrast check below is the bound.
+        assertWithMessage("not dimmed").that((near.edgeColor ushr 24) and 0xFF).isAtLeast(0x50)
         for (r in aurora.ribbons) assertWithMessage("finer rays").that(r.raysPer100Dp).isAtLeast(40f)
         val stars = aurora.stars!!
-        assertThat(stars.perSquare100Dp).isAtLeast(8f)
-        assertThat(stars.glintEvery).isIn(Range.closed(1, 5))
+        assertWithMessage("shimmering stars").that(stars.perSquare100Dp).isAtLeast(12f)
+        assertThat(stars.glintEvery).isIn(Range.closed(1, 3))
         assertWithMessage("no key fill").that(look.geometry.keyFillOpacity).isEqualTo(0f)
         assertWithMessage("a full-strength outline").that(look.geometry.keyBorderOpacity).isEqualTo(1f)
         assertWithMessage("so the outline must show on the base")

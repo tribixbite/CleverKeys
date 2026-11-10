@@ -253,7 +253,7 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    on their own). `BackdropDrawable` renders on one background thread (`renderer`), caches by size
    under a byte budget, shows the base colour until delivery, and warps each layer per frame with
    `Canvas.drawBitmapMesh` from `SceneMotion.mesh` (SWAY_UP grass / ferns, SWAY_DOWN branches,
-   RIPPLE caustics, WASH / ROLL beach water). Never cross-fade two positions of something sharp
+   RIPPLE (unused since the rocks' caustics went), WASH / ROLL beach water). Never cross-fade two positions of something sharp
    (maintainer: grass "pulses to blurry"): move it as a layer. Detailed scenes paint at full
    resolution (`SceneKind.paintScale` 1), soft ones at 2; each has its own `frameMs`. Preview
    any scene change off-device first: compile `SceneRaster.kt` + `SceneMotion.kt` with kotlinc
@@ -264,6 +264,14 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    user `key_opacity` / `key_border_opacity` × the theme's `LookGeometry.keyFillOpacity` /
    `keyBorderOpacity` (XML `key_fill_opacity` / `key_border_opacity`, JSON `keyFillOpacity` /
    `keyBorderOpacity`, Creator `GeometryField.FILL_OPACITY` / `BORDER_OPACITY`).
+   The user tunes every moving backdrop with one `SceneMotionTuning` (speed = the clock's
+   `rate`, intensity scales drift / cross-fade / mesh displacement, twinkle = how far star
+   groups dim, crisp = full-resolution soft backdrops); `syncBackdropMotion` hands it to
+   `BackdropDrawable.setTuning`. Aurora curtains are folds of one sheet: every `AuroraRibbon`
+   shares `AURORA_WAVES` / `AURORA_PHASE` and leans its rays to one radiant (`convergence`);
+   a curtain's colour can change along it (`edgeColorEnd` / `topColorEnd`). River rocks are a
+   still painting with RAIN particles (`ParticleShape.RAIN`); only `AGATE_STONES` stones carry
+   rings.
 
 ## Traps
 

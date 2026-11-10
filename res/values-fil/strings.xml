@@ -418,7 +418,15 @@
     <string name="appearance_look_space_language_title">Pangalan ng wika sa space bar</string>
     <string name="appearance_look_space_language_desc">Ipinapakita ng Samsung-style ang kasalukuyang wika sa space bar, gaya ng Samsung Keyboard.</string>
     <string name="appearance_look_backdrop_motion_title">Gumagalaw na mga eksena</string>
-    <string name="appearance_look_backdrop_motion_desc">Marahang gumagalaw ang mga tema ng Mga Eksena (CleverKeys Aurora, Parang, Batis, Bato sa ilog, Gubat, Niyebe, Dalampasigan): lumulutang ang aurora at tubig, umiindayog ang damo, nahuhulog ang niyebe at mga dahon. Tumitigil pagkalipas ng 20 segundong walang pagta-type at hindi gumagalaw sa battery saver. Gumagamit ng kaunting dagdag na baterya habang gumagalaw. Android 10 o mas bago.</string>
+    <string name="appearance_look_backdrop_motion_desc">Marahang gumagalaw ang mga tema ng Mga Eksena (CleverKeys Aurora, Parang, Batis, Bato sa ilog, Gubat, Niyebe, Dalampasigan): lumulutang ang aurora at tubig, umiindayog ang damo at mga dahon, bumabagsak ang niyebe at ulan. Tumitigil pagkalipas ng 20 segundong walang pagta-type at hindi gumagalaw sa battery saver. Gumagamit ng kaunting dagdag na baterya habang gumagalaw. Android 10 o mas bago.</string>
+    <string name="appearance_look_motion_speed_title">Bilis ng eksena</string>
+    <string name="appearance_look_motion_speed_desc">Kung gaano kabilis gumalaw ang mga eksena</string>
+    <string name="appearance_look_motion_intensity_title">Lakas ng galaw ng eksena</string>
+    <string name="appearance_look_motion_intensity_desc">Kung gaano kalayo gumalaw ang aurora, tubig, damo at mga sanga</string>
+    <string name="appearance_look_motion_twinkle_title">Kislap</string>
+    <string name="appearance_look_motion_twinkle_desc">Kung gaano kumikislap ang mga bituin, ulan at iba pang butil</string>
+    <string name="appearance_look_scene_crisp_title">Malinaw na mga eksena</string>
+    <string name="appearance_look_scene_crisp_desc">Iguhit ang aurora, batis at niyebe sa buong resolusyon: mas pinong sinag at alon, bahagyang mas maraming memorya</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
     <string name="appearance_custom_border_desc">I-enable ang custom na styling ng border ng key</string>
     <string name="appearance_border_radius_title">Radius ng Border</string>

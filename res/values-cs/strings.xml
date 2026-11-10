@@ -413,7 +413,15 @@
     <string name="appearance_look_space_language_title">Název jazyka na mezerníku</string>
     <string name="appearance_look_space_language_desc">Vzhled Samsung zobrazuje na mezerníku aktuální jazyk, stejně jako klávesnice Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Animované scény</string>
-    <string name="appearance_look_backdrop_motion_desc">Motivy Scény (CleverKeys Aurora, Louka, Potok, Oblázky, Les, Sníh, Pláž) se jemně pohybují: polární záře a voda plynou, tráva se vlní, padá sníh a listí. Po 20 sekundách bez psaní se zastaví a v úsporném režimu zůstávají v klidu. Během pohybu spotřebují o něco více baterie. Android 10 nebo novější.</string>
+    <string name="appearance_look_backdrop_motion_desc">Motivy Scény (CleverKeys Aurora, Louka, Potok, Oblázky, Les, Sníh, Pláž) se jemně pohybují: polární záře a voda plynou, tráva a listí se vlní, padá sníh a déšť. Po 20 sekundách bez psaní se zastaví a v úsporném režimu zůstávají v klidu. Během pohybu spotřebují o něco více baterie. Android 10 nebo novější.</string>
+    <string name="appearance_look_motion_speed_title">Rychlost scén</string>
+    <string name="appearance_look_motion_speed_desc">Jak rychle se scény pohybují</string>
+    <string name="appearance_look_motion_intensity_title">Síla pohybu scén</string>
+    <string name="appearance_look_motion_intensity_desc">Jak daleko se pohybuje záře, voda, tráva a větve</string>
+    <string name="appearance_look_motion_twinkle_title">Třpyt</string>
+    <string name="appearance_look_motion_twinkle_desc">Jak moc se třpytí hvězdy, déšť a další částice</string>
+    <string name="appearance_look_scene_crisp_title">Ostré scény</string>
+    <string name="appearance_look_scene_crisp_desc">Polární záři, potok a sníh kreslit v plném rozlišení: jemnější paprsky a vlnky, o něco více paměti</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
     <string name="appearance_custom_border_desc">Povolit vlastní styl ohraničení kláves</string>
     <string name="appearance_border_radius_title">Poloměr rohů</string>

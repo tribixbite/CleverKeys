@@ -46,14 +46,15 @@ object AuroraMotion {
     const val MAX_DRIFT_DP = 5f
 
 
-    /** Stars twinkle in this many groups (star index modulo the count), each on its own cycle. */
-    const val STAR_GROUPS = 3
+    /**
+     * Stars twinkle in this many groups (star index modulo the count), each on its own cycle:
+     * five, so neighbouring stars rarely brighten together and the sky shimmers (three read as
+     * a slow pulse; maintainer 2026-11-10: "add the shimmering stars back").
+     */
+    const val STAR_GROUPS = 5
 
-    /** Lowest brightness a twinkling star group dims to, as a share of its own. */
-    const val STAR_MIN = 0.45f
-
-    /** Each star group's twinkle period, seconds. */
-    private val STAR_PERIODS_S = doubleArrayOf(5.3, 7.1, 8.9)
+    /** Each star group's twinkle period, seconds; unrelated, so the groups never fall into step. */
+    private val STAR_PERIODS_S = doubleArrayOf(3.1, 3.7, 4.3, 5.3, 6.1)
 
     /**
      * The second curtain image: other ray seeds, the folds moved along, and a little more light,
@@ -79,6 +80,7 @@ object AuroraMotion {
             it.copy(
                 seed = it.seed + ALT_SEED_OFFSET, phase = it.phase + ALT_PHASE_SHIFT,
                 edgeColor = brighter(it.edgeColor), topColor = brighter(it.topColor),
+                edgeColorEnd = it.edgeColorEnd?.let(::brighter), topColorEnd = it.topColorEnd?.let(::brighter),
             )
         }
 
@@ -90,24 +92,78 @@ object AuroraMotion {
 
     /**
      * The motion at [seconds] of motion time (which only advances while moving, so a resumed
-     * backdrop carries on from where it rested) in [style]. Periods are unrelated (and the stars'
-     * 5.3, 7.1, 8.9 s), so the pattern never visibly repeats.
+     * backdrop carries on from where it rested) in [style], as the user tuned it ([tuning]:
+     * [SceneMotionTuning.intensity] scales the drift and the cross-fade, [SceneMotionTuning.twinkle]
+     * how far the stars dim; its speed is the clock's). Periods are unrelated, so the pattern
+     * never visibly repeats.
      */
-    fun frame(seconds: Double, style: MotionStyle = MotionStyle.GENTLE): AuroraMotionFrame {
+    fun frame(seconds: Double, style: MotionStyle = MotionStyle.GENTLE, tuning: SceneMotionTuning = SceneMotionTuning.DEFAULT): AuroraMotionFrame {
         fun wave(period: Double, phase: Double) = sin(2 * PI * seconds / period + phase)
-        // Two cycles summed keep the cross-fade from beating at one obvious rhythm.
-        val crossfade = (0.5 + 0.5 * (0.6 * wave(style.fadePeriodS, 0.0) + 0.4 * wave(style.fadePeriodS * 1.44, 1.3)))
-            .toFloat().coerceIn(0f, 1f)
+        // Two cycles summed keep the cross-fade from beating at one obvious rhythm. Below full
+        // intensity it sweeps less of the way to the second image (none at 0: the still picture).
+        val crossfade = ((0.5 + 0.5 * (0.6 * wave(style.fadePeriodS, 0.0) + 0.4 * wave(style.fadePeriodS * 1.44, 1.3)))
+            .toFloat() * tuning.intensity.coerceAtMost(1f)).coerceIn(0f, 1f)
+        val low = 1f - tuning.twinkle
         val stars = FloatArray(STAR_GROUPS) { i ->
             val lift = 0.5 + 0.5 * wave(STAR_PERIODS_S[i % STAR_PERIODS_S.size], i * 2.1)
-            (STAR_MIN + (1f - STAR_MIN) * lift.toFloat()).coerceIn(STAR_MIN, 1f)
+            (low + (1f - low) * lift.toFloat()).coerceIn(low, 1f)
         }
+        val drift = style.driftDp * tuning.intensity
         return AuroraMotionFrame(
             crossfade = crossfade,
-            driftADp = (style.driftDp * wave(style.driftPeriodS, 0.0)).toFloat(),
-            driftBDp = (-0.8f * style.driftDp * wave(style.driftPeriodS * 1.42, 0.7)).toFloat(),
+            driftADp = (drift * wave(style.driftPeriodS, 0.0)).toFloat(),
+            driftBDp = (-0.8f * drift * wave(style.driftPeriodS * 1.42, 0.7)).toFloat(),
             starAlpha = stars,
         )
+    }
+}
+
+/**
+ * The user's tuning of every moving backdrop (Appearance → Animated scenes; maintainer
+ * 2026-11-10: "control all dynamic scene settings … speed, variation intensity,
+ * twinkling/shimmer, crispness"). One set for all scenes: each scene keeps its own character and
+ * these scale it.
+ *
+ * @property speed how fast motion time runs, 1 = as designed (`look_motion_speed`, 25–200 %).
+ * @property intensity how far things move: the curtains' and water's drift and cross-fade, the
+ *   bend of grass and branches, the run of the waves (`look_motion_intensity`, 0–200 %).
+ * @property twinkle how far stars, glints and particles dim as they twinkle, 0 = steady
+ *   (`look_motion_twinkle`, 0–100 %).
+ * @property crisp paint the soft backdrops (aurora, stream, snow) at full resolution instead of
+ *   half (`look_scene_crisp`): finer rays and ripples for four times the pixels.
+ */
+data class SceneMotionTuning(
+    val speed: Float = 1f,
+    val intensity: Float = 1f,
+    val twinkle: Float = DEFAULT_TWINKLE,
+    val crisp: Boolean = false,
+) {
+    companion object {
+        /** The twinkle depth as designed: a star dims to 45 % of its brightness. */
+        const val DEFAULT_TWINKLE = 0.55f
+
+        val DEFAULT = SceneMotionTuning()
+
+        /**
+         * From the settings' percentages, clamped to their ranges (a hand-edited or old backup
+         * can hold anything).
+         */
+        fun fromPercent(speed: Int, intensity: Int, twinkle: Int, crisp: Boolean) = SceneMotionTuning(
+            speed = speed.coerceIn(SPEED_PERCENT) / 100f,
+            intensity = intensity.coerceIn(INTENSITY_PERCENT) / 100f,
+            twinkle = twinkle.coerceIn(TWINKLE_PERCENT) / 100f,
+            crisp = crisp,
+        )
+
+        /** The settings' ranges, percent (`SettingsRanges` hands them to the sliders and the backup check). */
+        val SPEED_PERCENT: IntRange = 25..200
+        val INTENSITY_PERCENT: IntRange = 0..200
+        val TWINKLE_PERCENT: IntRange = 0..100
+
+        /** The settings' defaults, percent: the motion as designed. */
+        const val DEFAULT_SPEED_PERCENT = 100
+        const val DEFAULT_INTENSITY_PERCENT = 100
+        const val DEFAULT_TWINKLE_PERCENT = 55
     }
 }
 
@@ -117,10 +173,10 @@ object AuroraMotion {
  */
 class MotionStyle(val driftDp: Float, val fadePeriodS: Double, val driftPeriodS: Double) {
     /**
-     * Each image is drawn this much wider than the view on both sides, so a drift never uncovers
-     * its edge.
+     * Each image is drawn this much wider than the view on both sides at [intensity], so a drift
+     * never uncovers its edge.
      */
-    val marginDp: Float get() = driftDp + 1f
+    fun marginDp(intensity: Float = 1f): Float = driftDp * intensity.coerceAtLeast(0f) + 1f
 
     companion object {
         /** The stream and the snow: a slow cross-fade, a drift of a few dp. */
@@ -145,7 +201,7 @@ class AuroraMotionFrame(
     val starAlpha: FloatArray,
 ) {
     companion object {
-        /** The still aurora: the first image only, undrifted, every star at full brightness. */
+        /** The still backdrop: the first image only, undrifted, every star at full brightness. */
         val REST = AuroraMotionFrame(0f, 0f, 0f, FloatArray(AuroraMotion.STAR_GROUPS) { 1f })
     }
 }
@@ -165,6 +221,12 @@ class AuroraMotionClock(
     /** Accumulated motion time, ms. */
     var motionMs: Double = 0.0
         private set
+
+    /**
+     * Motion ms per real ms at full speed ([SceneMotionTuning.speed]). Applied to each step, so
+     * changing it changes the pace from here on without a jump.
+     */
+    var rate: Float = 1f
 
     /** Current speed, 0 (at rest) to 1. */
     var speed: Float = 0f
@@ -189,7 +251,7 @@ class AuroraMotionClock(
         val step = if (easeMs <= 0) 1f else dt.toFloat() / easeMs
         // Speed eases linearly, so position eases quadratically: no visible start or stop.
         speed = if (awake) (speed + step).coerceAtMost(1f) else (speed - step).coerceAtLeast(0f)
-        motionMs += dt * speed.toDouble()
+        motionMs += dt * speed.toDouble() * rate.coerceAtLeast(0f)
         return awake || speed > 0f
     }
 

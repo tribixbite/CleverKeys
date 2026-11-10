@@ -86,6 +86,20 @@ data class AuroraRibbon(
     /** Horizontal extent, fractions of the width; the curtain thins out over its last tenth. */
     val xStart: Float = 0f,
     val xEnd: Float = 1f,
+    /**
+     * The colours at [xEnd], for a curtain whose colour changes along its length (green at one
+     * end of the low curtain, indigo into teal; maintainer 2026-11-10); null = [edgeColor] /
+     * [topColor] all along.
+     */
+    val edgeColorEnd: Int? = null,
+    val topColorEnd: Int? = null,
+    /**
+     * How far the rays lean towards [radiantX] (a fraction of the width) at the top of their
+     * reach, as a share of their distance from it: rays converge on a point overhead, the
+     * perspective of every real aurora's rays. 0 = straight up.
+     */
+    val convergence: Float = 0f,
+    val radiantX: Float = 0.5f,
 )
 
 /**
@@ -106,7 +120,24 @@ object AuroraRaster {
         val g = FloatArray(n)
         val b = FloatArray(n)
         if (n == 0) return IntArray(0)
-        for (ribbon in ribbons) paint(ribbon, width, height, density, r, g, b)
+        for (ribbon in ribbons) paint(ribbon, rayProfile(ribbon, width, density), width, height, r, g, b)
+        return lit(base, r, g, b)
+    }
+
+    /**
+     * One [ribbon] over [base] with the given per-column [rays] instead of its seeded ones: the
+     * test hook for how rays rise and lean (`LookBackdropTest`).
+     */
+    internal fun paintRays(base: Int, ribbon: AuroraRibbon, rays: FloatArray, width: Int, height: Int): IntArray {
+        val n = width * height
+        val r = FloatArray(n); val g = FloatArray(n); val b = FloatArray(n)
+        paint(ribbon, rays, width, height, r, g, b)
+        return lit(base, r, g, b)
+    }
+
+    /** [base] with the light in [r], [g], [b] added, clamped, as opaque ARGB. */
+    private fun lit(base: Int, r: FloatArray, g: FloatArray, b: FloatArray): IntArray {
+        val n = r.size
         val br = ((base shr 16) and 0xFF).toFloat()
         val bg = ((base shr 8) and 0xFF).toFloat()
         val bb = (base and 0xFF).toFloat()
@@ -118,53 +149,88 @@ object AuroraRaster {
         }
     }
 
-    private fun paint(rb: AuroraRibbon, w: Int, h: Int, density: Float, r: FloatArray, g: FloatArray, b: FloatArray) {
-        val rays = rayProfile(rb, w, density)
+    private fun paint(rb: AuroraRibbon, rays: FloatArray, w: Int, h: Int, r: FloatArray, g: FloatArray, b: FloatArray) {
         val x0 = rb.xStart * w
         val x1 = rb.xEnd * w
         val ramp = ((x1 - x0) * 0.1f).coerceAtLeast(1f)
         val soft = (0.035f * h).coerceAtLeast(1f) // the glow just under the edge
-        // The vertical profile and colour, tabulated over t = (height above the edge) / reach.
+        // The vertical profile and colour, tabulated over t = (height above the edge) / reach,
+        // at the curtain's start and (when its colour changes along it) its end.
         val steps = 64
-        val er = FloatArray(steps + 1); val eg = FloatArray(steps + 1); val eb = FloatArray(steps + 1)
-        for (s in 0..steps) {
-            val t = s.toFloat() / steps
-            // A bright rim just above the edge (the fast term) over a slower glow that carries
-            // the rays up, reaching nothing at the top.
-            val f = (0.55f * kotlin.math.exp(-7f * t) + 0.45f * kotlin.math.exp(-1.8f * t)) * (1f - t * t)
-            er[s] = lerpChannel(rb.edgeColor, rb.topColor, 16, t) * f
-            eg[s] = lerpChannel(rb.edgeColor, rb.topColor, 8, t) * f
-            eb[s] = lerpChannel(rb.edgeColor, rb.topColor, 0, t) * f
-        }
+        val start = profile(rb.edgeColor, rb.topColor, steps)
+        val end = if (rb.edgeColorEnd == null && rb.topColorEnd == null) start
+        else profile(rb.edgeColorEnd ?: rb.edgeColor, rb.topColorEnd ?: rb.topColor, steps)
         val twoPi = (2 * Math.PI).toFloat()
+        val radiant = rb.radiantX * w
         for (x in 0 until w) {
             val fx = x + 0.5f
             if (fx < x0 || fx > x1) continue
             val env = minOf(1f, (fx - x0) / ramp, (x1 - fx) / ramp)
             val u = fx / w
+            // Where along the curtain: its colour, eased so the change reads as a blend.
+            val along = ((fx - x0) / (x1 - x0)).coerceIn(0f, 1f)
+            val mix = along * along * (3f - 2f * along)
             val edge = h * (rb.edgeY - rb.slope * (u - 0.5f) +
                 rb.amplitude * (0.7f * kotlin.math.sin(twoPi * (rb.waves * u + rb.phase)) +
                     0.3f * kotlin.math.sin(twoPi * (0.5f * u + rb.phase * 0.37f))))
             val ray = rays[x]
-            val column = env * ((1f - rb.rayContrast) + rb.rayContrast * ray)
-            // Brighter rays also reach higher, which is what makes a curtain look rayed.
-            val reach = (rb.height * h * (0.55f + 0.45f * ray)).coerceAtLeast(1f)
-            val top = (edge - reach).toInt().coerceAtLeast(0)
+            val full = (rb.height * h).coerceAtLeast(1f)
+            val top = (edge - full).toInt().coerceAtLeast(0)
             val bottom = (edge + 3 * soft).toInt().coerceAtMost(h - 1)
             for (y in top..bottom) {
                 val fy = y + 0.5f
                 val i = y * w + x
                 if (fy <= edge) {
+                    // A ray rooted at x0 rises leaning towards the radiant: at this height it
+                    // stands at x0 + (radiant - x0)·c, so this pixel shows the ray rooted at
+                    // (fx - radiant·c) / (1 - c).
+                    val c = (rb.convergence * (edge - fy) / h).coerceAtMost(0.9f)
+                    val here = if (c == 0f) ray else sample(rays, (fx - radiant * c) / (1f - c))
+                    // Brighter rays also reach higher, which is what makes a curtain look rayed.
+                    val reach = full * (0.55f + 0.45f * here)
+                    if (edge - fy > reach) continue
+                    val column = env * ((1f - rb.rayContrast) + rb.rayContrast * here)
                     val s = (((edge - fy) / reach) * steps).toInt().coerceIn(0, steps)
-                    r[i] += er[s] * column; g[i] += eg[s] * column; b[i] += eb[s] * column
+                    r[i] += lerp(start.r[s], end.r[s], mix) * column
+                    g[i] += lerp(start.g[s], end.g[s], mix) * column
+                    b[i] += lerp(start.b[s], end.b[s], mix) * column
                 } else {
                     val d = (fy - edge) / soft
-                    val f = kotlin.math.exp(-d * d) * column
-                    r[i] += er[0] * f; g[i] += eg[0] * f; b[i] += eb[0] * f
+                    val f = kotlin.math.exp(-d * d) * env * ((1f - rb.rayContrast) + rb.rayContrast * ray)
+                    r[i] += lerp(start.r[0], end.r[0], mix) * f
+                    g[i] += lerp(start.g[0], end.g[0], mix) * f
+                    b[i] += lerp(start.b[0], end.b[0], mix) * f
                 }
             }
         }
     }
+
+    /** A curtain's light up its reach (premultiplied channels over t = 0..1 in [steps] steps). */
+    private class Profile(val r: FloatArray, val g: FloatArray, val b: FloatArray)
+
+    private fun profile(edgeColor: Int, topColor: Int, steps: Int): Profile {
+        val r = FloatArray(steps + 1); val g = FloatArray(steps + 1); val b = FloatArray(steps + 1)
+        for (s in 0..steps) {
+            val t = s.toFloat() / steps
+            // A bright rim just above the edge (the fast term) over a slower glow that carries
+            // the rays up, reaching nothing at the top.
+            val f = (0.55f * kotlin.math.exp(-7f * t) + 0.45f * kotlin.math.exp(-1.8f * t)) * (1f - t * t)
+            r[s] = lerpChannel(edgeColor, topColor, 16, t) * f
+            g[s] = lerpChannel(edgeColor, topColor, 8, t) * f
+            b[s] = lerpChannel(edgeColor, topColor, 0, t) * f
+        }
+        return Profile(r, g, b)
+    }
+
+    /** [rays] at fractional column [x] (pixel centres at i + 0.5), linearly interpolated. */
+    private fun sample(rays: FloatArray, x: Float): Float {
+        val p = (x - 0.5f).coerceIn(0f, (rays.size - 1).toFloat())
+        val i = p.toInt()
+        val k = p - i
+        return if (i + 1 < rays.size) rays[i] + (rays[i + 1] - rays[i]) * k else rays[i]
+    }
+
+    private fun lerp(a: Float, b: Float, t: Float) = a + (b - a) * t
 
     /**
      * Per-column ray strength in 0..1: seeded rays of 1–7 dp wide Gaussian profile over a faint
@@ -227,7 +293,7 @@ data class LookStarfield(
     /**
      * How the particles travel while the backdrop moves ([AuroraMotion]), dp per second: snow
      * falls, leaves drift down, motes rise, sparkles go with the current. The twinkle groups go
-     * at 0.7×, 1× and 1.3× of it, so near and far particles part. 0 = they stay put and twinkle.
+     * at 0.7× to 1.3× of it, so near and far particles part. 0 = they stay put and twinkle.
      */
     val driftXDpPerS: Float = 0f,
     val driftYDpPerS: Float = 0f,
@@ -245,6 +311,11 @@ enum class ParticleShape {
     MOTE,
     /** A four-point sparkle: sun on water, a wet stone. */
     GLINT,
+    /**
+     * A falling raindrop: a thin streak about twenty radii long along the field's drift, as a
+     * drop looks at a fraction of a second's exposure (the river rocks, maintainer 2026-11-10).
+     */
+    RAIN,
 }
 
 /**

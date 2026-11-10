@@ -424,7 +424,15 @@
     <string name="appearance_look_space_language_title">Назва мови на пробілі</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показує поточну мову на клавіші пробілу, як клавіатура Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Анімовані сцени</string>
-    <string name="appearance_look_backdrop_motion_desc">Теми розділу «Сцени» (CleverKeys Aurora, Луг, Струмок, Річкова галька, Ліс, Сніг, Пляж) плавно рухаються: сяйво й вода пливуть, трава гойдається, падають сніг і листя. Через 20 секунд без введення вони завмирають і не рухаються в режимі енергозбереження. Поки рухаються, витрачають трохи більше заряду. Android 10 або новіше.</string>
+    <string name="appearance_look_backdrop_motion_desc">Теми розділу «Сцени» (CleverKeys Aurora, Луг, Струмок, Річкова галька, Ліс, Сніг, Пляж) плавно рухаються: сяйво й вода пливуть, трава й листя гойдаються, падають сніг і дощ. Через 20 секунд без введення вони завмирають і не рухаються в режимі енергозбереження. Поки рухаються, витрачають трохи більше заряду. Android 10 або новіше.</string>
+    <string name="appearance_look_motion_speed_title">Швидкість сцен</string>
+    <string name="appearance_look_motion_speed_desc">Як швидко рухаються сцени</string>
+    <string name="appearance_look_motion_intensity_title">Сила руху сцен</string>
+    <string name="appearance_look_motion_intensity_desc">Наскільки рухаються сяйво, вода, трава й гілки</string>
+    <string name="appearance_look_motion_twinkle_title">Мерехтіння</string>
+    <string name="appearance_look_motion_twinkle_desc">Наскільки мерехтять зорі, дощ та інші частинки</string>
+    <string name="appearance_look_scene_crisp_title">Чіткі сцени</string>
+    <string name="appearance_look_scene_crisp_desc">Малювати сяйво, струмок і сніг у повній роздільності: тонші промені та брижі, трохи більше пам’яті</string>
     <string name="appearance_custom_border_title">Власна рамка</string>
     <string name="appearance_custom_border_desc">Увімкнути власний стиль рамки клавіш</string>
     <string name="appearance_border_radius_title">Радіус скруглення рамки</string>

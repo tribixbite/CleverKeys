@@ -16,16 +16,19 @@ class AuroraMotionTest {
     @Test
     fun everyFrameStaysInRangeAndADriftNeverUncoversAnEdge() {
         for (style in listOf(MotionStyle.GENTLE, MotionStyle.AURORA)) {
-            assertThat(style.marginDp).isAtLeast(style.driftDp)
-            var t = 0.0
-            while (t < 600.0) {
-                val f = AuroraMotion.frame(t, style)
-                assertThat(f.crossfade).isIn(Range.closed(0f, 1f))
-                assertThat(abs(f.driftADp)).isAtMost(style.driftDp)
-                assertThat(abs(f.driftBDp)).isAtMost(style.driftDp)
-                assertThat(f.starAlpha.size).isEqualTo(AuroraMotion.STAR_GROUPS)
-                for (a in f.starAlpha) assertThat(a).isIn(Range.closed(AuroraMotion.STAR_MIN, 1f))
-                t += 0.37
+            for (intensity in listOf(0f, 1f, 2f)) {
+                val tuning = SceneMotionTuning(intensity = intensity)
+                assertThat(style.marginDp(intensity)).isAtLeast(style.driftDp * intensity)
+                var t = 0.0
+                while (t < 600.0) {
+                    val f = AuroraMotion.frame(t, style, tuning)
+                    assertThat(f.crossfade).isIn(Range.closed(0f, 1f))
+                    assertThat(abs(f.driftADp)).isAtMost(style.driftDp * intensity)
+                    assertThat(abs(f.driftBDp)).isAtMost(style.driftDp * intensity)
+                    assertThat(f.starAlpha.size).isEqualTo(AuroraMotion.STAR_GROUPS)
+                    for (a in f.starAlpha) assertThat(a).isIn(Range.closed(1f - tuning.twinkle, 1f))
+                    t += 0.37
+                }
             }
         }
     }
@@ -75,7 +78,7 @@ class AuroraMotionTest {
         assertThat(samples.maxOf { it.driftADp } - samples.minOf { it.driftADp }).isGreaterThan(8f)
         val rest = AuroraMotionFrame.REST
         assertThat(rest.crossfade).isEqualTo(0f)
-        assertThat(rest.starAlpha.toList()).containsExactly(1f, 1f, 1f)
+        assertThat(rest.starAlpha.toList()).containsExactlyElementsIn(List(AuroraMotion.STAR_GROUPS) { 1f })
     }
 
     /** The second image: other rays, folds moved along, more light (the cross-fade shimmers). */
@@ -96,6 +99,41 @@ class AuroraMotionTest {
         assertWithMessage("a different picture")
             .that(AuroraRaster.render(base, alt, 120, 80, 0.5f))
             .isNotEqualTo(AuroraRaster.render(base, ribbons, 120, 80, 0.5f))
+    }
+
+    /**
+     * The user's tuning (maintainer 2026-11-10: "control all dynamic scene settings … speed,
+     * variation intensity, twinkling/shimmer, crispness"): intensity 0 holds the still picture,
+     * twinkle 0 holds every star steady, and the speed changes the clock's pace without moving
+     * where it is.
+     */
+    @Test
+    fun theTuningScalesTheMotionWithoutAJump() {
+        for (t in listOf(0.0, 3.3, 17.9)) {
+            val still = AuroraMotion.frame(t, MotionStyle.AURORA, SceneMotionTuning(intensity = 0f, twinkle = 0f))
+            assertThat(still.crossfade).isEqualTo(0f)
+            assertThat(still.driftADp).isEqualTo(0f)
+            assertThat(still.starAlpha.toList()).containsExactlyElementsIn(List(AuroraMotion.STAR_GROUPS) { 1f })
+            val wide = AuroraMotion.frame(t, MotionStyle.AURORA, SceneMotionTuning(intensity = 2f))
+            val usual = AuroraMotion.frame(t, MotionStyle.AURORA)
+            assertThat(wide.driftADp).isWithin(1e-4f).of(2 * usual.driftADp)
+        }
+        val shimmer = (0 until 200).flatMap { AuroraMotion.frame(it * 0.2, MotionStyle.AURORA, SceneMotionTuning(twinkle = 1f)).starAlpha.toList() }
+        assertWithMessage("full twinkle dims a star nearly out").that(shimmer.min()).isLessThan(0.05f)
+
+        val clock = AuroraMotionClock(idleMs = 60_000, easeMs = 0, maxStepMs = 2_000)
+        clock.wake(0); clock.advance(0)
+        clock.advance(1_000)
+        assertThat(clock.motionMs).isWithin(1e-6).of(1_000.0)
+        clock.rate = 2f
+        assertWithMessage("a new speed does not move the clock").that(clock.motionMs).isWithin(1e-6).of(1_000.0)
+        clock.advance(1_100)
+        assertThat(clock.motionMs).isWithin(1e-6).of(1_200.0)
+
+        // The settings' percentages, clamped to the sliders' ranges.
+        assertThat(SceneMotionTuning.fromPercent(100, 100, 55, false)).isEqualTo(SceneMotionTuning.DEFAULT)
+        val wild = SceneMotionTuning.fromPercent(speed = 9_999, intensity = -5, twinkle = 400, crisp = true)
+        assertThat(wild).isEqualTo(SceneMotionTuning(speed = 2f, intensity = 0f, twinkle = 1f, crisp = true))
     }
 
     @Test

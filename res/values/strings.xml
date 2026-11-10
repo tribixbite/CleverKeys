@@ -617,7 +617,15 @@
     <string name="appearance_look_space_language_title">Language name on the space bar</string>
     <string name="appearance_look_space_language_desc">Samsung-style shows the current language on the space bar, as Samsung Keyboard does.</string>
     <string name="appearance_look_backdrop_motion_title">Animated scenes</string>
-    <string name="appearance_look_backdrop_motion_desc">The Scenes themes (CleverKeys Aurora, Meadow, Stream, River rocks, Forest, Snow, Beach) move gently: curtains and water drift, grass sways, snow and leaves fall. They rest after 20 seconds without typing and stay still in battery saver. Uses a little extra battery while moving. Android 10 or later.</string>
+    <string name="appearance_look_backdrop_motion_desc">The Scenes themes (CleverKeys Aurora, Meadow, Stream, River rocks, Forest, Snow, Beach) move gently: curtains and water drift, grass and leaves sway, snow and rain fall. They rest after 20 seconds without typing and stay still in battery saver. Uses a little extra battery while moving. Android 10 or later.</string>
+    <string name="appearance_look_motion_speed_title">Scene Speed</string>
+    <string name="appearance_look_motion_speed_desc">How fast the scenes move</string>
+    <string name="appearance_look_motion_intensity_title">Scene Motion Intensity</string>
+    <string name="appearance_look_motion_intensity_desc">How far curtains, water, grass and branches move</string>
+    <string name="appearance_look_motion_twinkle_title">Twinkle</string>
+    <string name="appearance_look_motion_twinkle_desc">How much stars, rain and other particles shimmer</string>
+    <string name="appearance_look_scene_crisp_title">Sharp Scenes</string>
+    <string name="appearance_look_scene_crisp_desc">Paint the aurora, stream and snow at full resolution: finer rays and ripples, a little more memory</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>

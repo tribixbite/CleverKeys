@@ -144,6 +144,10 @@ A setting read only in `onDraw` never reaches a re-shown keyboard whose display 
 change) and `onWindowVisibilityChanged`. Never cross-fade two positions of sharp content (grass
 "pulsed to blurry"): move it as a layer through `drawBitmapMesh` (`SceneMotion`), and preview a
 scene off-device with kotlinc on `SceneRaster.kt` + `SceneMotion.kt` before a 20-minute build.
+A RenderNode you keep and replay (`drawRenderNode`) loses its display list when the IME window
+hides (app switch): it then draws nothing, silently, while frames keep coming. Check
+`hasDisplayList()` before replaying and record again (the rain vanished after one app switch,
+2026-11-10). A pixel diff of two screenshots, not a frame count, is what proves motion.
 
 ## Kotlin compiler execution on Termux
 

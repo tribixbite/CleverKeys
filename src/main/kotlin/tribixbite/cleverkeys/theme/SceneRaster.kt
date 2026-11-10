@@ -19,8 +19,8 @@ import kotlin.random.Random
  * keyboard size into a [ScenePainting]: a still base, and either a second image to cross-fade
  * (the stream's water, the snow's glitter) or the parts that move on their own ([SceneLayer]:
  * grass bands that bend in a travelling breeze, branches and ferns that sway, waves that roll in
- * and wash up the sand, light rippling over the stones), which `BackdropDrawable` warps per frame
- * through [SceneMotion] instead of painting anything again.
+ * and wash up the sand), which `BackdropDrawable` warps per frame through [SceneMotion] instead of
+ * painting anything again. The river rocks are still: the rain over them is the look's particles.
  *
  * The detailed scenes paint at full resolution ([SceneKind.paintScale] 1: blades, leaves and
  * stone banding stay sharp); the soft ones at half. Pure JVM and deterministic for the same size:
@@ -207,7 +207,7 @@ object SceneRaster {
         return p.toArgb()
     }
 
-    // ---- River rocks: wet, many-coloured stones — agate, slate, jasper, jade — under moving light ----
+    // ---- River rocks: wet, many-coloured stones — slate, jasper, jade, a few banded agates — in the rain ----
 
     private enum class StoneKind { AGATE, SLATE, GEM, SPECKLED }
 
@@ -243,11 +243,19 @@ object SceneRaster {
         0xFFB09A8C.toInt(), 0xFF4A3A36.toInt(),
     )
 
+    /**
+     * How many stones are banded agates (maintainer 2026-11-10: the "white topo-like circles" on
+     * all but a few of them go): the largest stones that lie well inside the view, so all of
+     * them show.
+     */
+    private const val AGATE_STONES = 4
+
     private fun riverRocks(w: Int, h: Int, d: Float, seed: Long): ScenePainting {
         val p = Paint2D(w, h, opaque = true)
         p.fill(0xFF080D0F.toInt())
         val rng = Random(seed)
         val stones = ArrayList<Stone>()
+        var agates = 0
         // Placed big-first without overlapping, down to gravel that fills the gaps; a grid of
         // cells one largest stone wide keeps the overlap test local.
         val maxR = 36f * d
@@ -279,10 +287,14 @@ object SceneRaster {
             }
             if (free) {
                 val kindPick = rng.nextFloat()
+                // Stones are placed largest first, so the first big ones well inside the view
+                // that draw "agate" are the few banded ones; every later pick goes to the others.
+                val inside = x > r && y > r && x < w - r && y < h - r
                 val kind = when {
-                    kindPick < 0.32f -> StoneKind.AGATE
-                    kindPick < 0.64f -> StoneKind.SLATE
-                    kindPick < 0.88f -> StoneKind.GEM
+                    kindPick < 0.32f && agates < AGATE_STONES && inside && r > 16f * d -> StoneKind.AGATE.also { agates++ }
+                    kindPick < 0.48f -> StoneKind.GEM
+                    kindPick < 0.80f -> StoneKind.SLATE
+                    kindPick < 0.92f -> StoneKind.GEM
                     else -> StoneKind.SPECKLED
                 }
                 val table = when (kind) {
@@ -304,22 +316,10 @@ object SceneRaster {
         p.tint(0xFF0C3440.toInt(), 0.08f)
         p.multiply(0.88f)
 
-        // Light refracted by the moving water: a web of caustics that wobbles over the stones.
-        val lp = Paint2D(w, h, opaque = false)
-        val cell = 34f * d
-        for (y in 0 until h) for (x in 0 until w) {
-            val wx = x + 9f * d * (Noise.fbm(x / (30f * d), y / (30f * d), 2, seed + 21) - 0.5f)
-            val wy = y + 9f * d * (Noise.fbm(x / (30f * d), y / (30f * d), 2, seed + 22) - 0.5f)
-            val f = Worley.edge(wx / cell, wy / cell, seed + 23)
-            // Patchy, as sunlight through a riffle is: bright in places, gone in others.
-            val patch = ((Noise.fbm(x / (60f * d), y / (60f * d), 2, seed + 24) - 0.35f) * 2.2f).coerceIn(0f, 1f)
-            val a = patch * (0.16f * exp(-f / 0.035f) + 0.04f * exp(-f / 0.2f))
-            if (a > 0.008f) lp.over(y * w + x, 0xFFE4F8FF.toInt(), a)
-        }
-        val caustics = SceneLayer(0, 0, w, h, lp.toArgb(), LayerMotion(
-            LayerMotionKind.RIPPLE, amplitude = 3.2f * d, periodS = 5.5f, wavelength = 70f * d,
-        ))
-        return ScenePainting(w, h, p.toArgb(), null, listOf(caustics))
+        // Still: the rain falling on it is the look's particles (ParticleShape.RAIN), which
+        // replaced moving caustic light (maintainer 2026-11-10: "a rain effect instead of
+        // 'glistening'").
+        return ScenePainting(w, h, p.toArgb(), null, emptyList())
     }
 
     // The stones' light: from the upper left, towards the viewer; and the half vector between it
@@ -371,9 +371,11 @@ object SceneRaster {
                 }
                 StoneKind.SLATE -> {
                     val across = (u * 0.8f + v * 0.6f) * s.r / (3.2f * d) + 1.4f * Noise.fbm(x / (14f * d), y / (14f * d), 3, s.seed)
-                    val strata = (0.5f + 0.5f * sin(2 * PI * across).toFloat()).pow(6f)
+                    // Broad, faint tonal strata: sharp light lines read as contour rings
+                    // (maintainer 2026-11-10: banding on a few agates only).
+                    val strata = (0.5f + 0.5f * sin(2 * PI * across * 0.5f).toFloat()).pow(2f)
                     val mottled = Noise.fbm(x / (5f * d), y / (5f * d), 2, s.seed + 1)
-                    lerpColor(scale(s.c1, 0.85f + 0.3f * mottled), s.c2, 0.55f * strata)
+                    lerpColor(scale(s.c1, 0.85f + 0.3f * mottled), s.c2, 0.18f * strata)
                 }
                 StoneKind.GEM -> {
                     val mottled = Noise.fbm(x / (6f * d), y / (6f * d), 3, s.seed)

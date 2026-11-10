@@ -1291,6 +1291,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     background thread; aurora `MotionStyle.AURORA` (12 dp, 10 fps, brighter alt). Previews in
     the session scratchpad (`scene2/`). Open: device check of motion on the Pixel, battery
     re-measure at the new frame rates (12 fps for the swaying scenes), maintainer's verdict.
+    Eighth round (2026-11-10, maintainer with aurora photos + a Yellowknife clip: curtains
+    "more in-sync like the real aurora", a 5th in the empty top right, the hallmark green on one
+    side of the bottom, indigo into teal, the shimmering stars back; river rocks without the
+    "white topo-like circles" on all but 1–4 stones and rain instead of glistening; controls for
+    speed / intensity / twinkle / crispness; motion surviving app switches; battery at the new
+    frame rates). Done: `AuroraRibbon.edgeColorEnd/topColorEnd/convergence/radiantX`, five
+    curtains on one wave (`AURORA_WAVES`), 14 stars/100 dp² glinting every 3rd, 5 twinkle groups;
+    rocks with `AGATE_STONES` = 4, faint slate strata, `ParticleShape.RAIN`, no caustics layer;
+    `SceneMotionTuning` (`look_motion_speed` / `_intensity` / `_twinkle`, `look_scene_crisp`).
+    Pixel found the real app-switch bug: kept particle RenderNodes lose their display list when
+    the IME window hides, so stars / rain vanished after one switch while frames kept coming
+    (fixed: re-record when `!hasDisplayList()`). Open: re-verify that fix on the Pixel, the
+    battery A/B on this build, maintainer's verdict.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

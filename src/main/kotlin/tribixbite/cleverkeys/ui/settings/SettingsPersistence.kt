@@ -161,6 +161,18 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "look_backdrop_motion" -> {
                 lookBackdropMotion = prefs.getBoolean(key, Defaults.LOOK_BACKDROP_MOTION)
             }
+            "look_motion_speed" -> {
+                lookMotionSpeed = prefs.getInt(key, Defaults.LOOK_MOTION_SPEED)
+            }
+            "look_motion_intensity" -> {
+                lookMotionIntensity = prefs.getInt(key, Defaults.LOOK_MOTION_INTENSITY)
+            }
+            "look_motion_twinkle" -> {
+                lookMotionTwinkle = prefs.getInt(key, Defaults.LOOK_MOTION_TWINKLE)
+            }
+            "look_scene_crisp" -> {
+                lookSceneCrisp = prefs.getBoolean(key, Defaults.LOOK_SCENE_CRISP)
+            }
             "custom_border_radius" -> {
                 customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
@@ -295,6 +307,10 @@ internal fun SettingsActivity.loadCurrentSettings() {
         lookKeyPreview = prefs.getSafeBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         lookSpaceLanguage = prefs.getSafeBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
         lookBackdropMotion = prefs.getSafeBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
+        lookMotionSpeed = prefs.getSafeInt("look_motion_speed", Defaults.LOOK_MOTION_SPEED)
+        lookMotionIntensity = prefs.getSafeInt("look_motion_intensity", Defaults.LOOK_MOTION_INTENSITY)
+        lookMotionTwinkle = prefs.getSafeInt("look_motion_twinkle", Defaults.LOOK_MOTION_TWINKLE)
+        lookSceneCrisp = prefs.getSafeBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 
