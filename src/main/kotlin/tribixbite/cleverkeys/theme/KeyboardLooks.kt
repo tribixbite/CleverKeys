@@ -30,6 +30,16 @@ object KeyboardLooks {
     /** CleverKeys' own look: the default theme since 2026-11-06 (`Defaults.THEME`). */
     const val CLEVERKEYS = "look_cleverkeys"
 
+    // The scene looks (maintainer 2026-11-10): CleverKeys' keys over a painted backdrop that can
+    // move ("Animated scenes", AuroraMotion). Ids are stored in `theme`; never change them.
+    const val AURORA = "look_aurora"
+    const val MEADOW = "look_meadow"
+    const val STREAM = "look_stream"
+    const val RIVER_ROCKS = "look_river_rocks"
+    const val FOREST = "look_forest"
+    const val SNOW = "look_snow"
+    const val BEACH = "look_beach"
+
     private fun argb(rgb: Long): Int = (0xFF000000L or rgb).toInt()
 
     /** iOS key-pop: head 12 pt wider than the key on each side, ~50 pt over a 43 pt key, 12 pt corners. */
@@ -323,33 +333,34 @@ object KeyboardLooks {
     )
 
     /**
-     * The CleverKeys look's dark backdrop (declared before [cleverkeysLook]: object properties
-     * initialise in order): three rayed aurora curtains ([AuroraRibbon]; until 2026-11-09 three
-     * soft tilted glows, which the maintainer found "too cloud like"), lit so the background's
-     * mean stays darker than the keys (`KeyboardLooksTest`), a faint haze, and a star field with
-     * frequent glints. Fractions of the view.
+     * The CleverKeys Aurora look's backdrop (declared before the looks that use it: object
+     * properties initialise in order): three rayed aurora curtains ([AuroraRibbon]; until
+     * 2026-11-09 three soft tilted glows, which the maintainer found "too cloud like"), a faint
+     * haze, and a star field with frequent glints. Fractions of the view.
      *
-     * Maintainer's pick from ten previews (2026-11-10): finer rays, more folds, a third curtain,
-     * the lowest curtain nearly level rather than slanted, a partly green rim, the curtains 30 %
-     * quieter with twice the stars, and keys slightly translucent ([LookBackdrop.keyOpacity]).
+     * History: the CleverKeys look's dark mode carried it 2026-11-07..10. Maintainer 2026-11-10,
+     * after ten previews and one round on the device: finer rays, a third curtain and the lowest
+     * curtain nearly level (kept); the extra folds, the green rim and the 30 % dimming reverted;
+     * the lowest curtain back down over the nav keys; keys without a fill but with their outline,
+     * and its own theme, the CleverKeys look going back to plain.
      */
     val CLEVERKEYS_AURORA = LookBackdrop(
-        // A near curtain whose mint-to-lilac rim folds low across the bottom rows, an orchid one
-        // higher up on the right, and a faint lilac veil along the top left; rays fade upward
-        // into violet. Alphas are the 2026-11-09 values × 0.7 ("quieter").
+        // A near curtain whose lilac rim runs low and nearly level behind the bottom row and the
+        // nav keys, an orchid one higher up on the right, and a faint lilac veil along the top
+        // left; rays fade upward into violet.
         ribbons = listOf(
             AuroraRibbon(
-                edgeY = 0.72f, amplitude = 0.12f, waves = 2.6f, phase = 0.10f, slope = 0.06f, height = 0.62f,
-                edgeColor = 0x3F8CE0C8, topColor = 0x227A3CC8, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
+                edgeY = 0.78f, amplitude = 0.10f, waves = 1.6f, phase = 0.10f, slope = 0.06f, height = 0.62f,
+                edgeColor = 0x66C88CFF, topColor = 0x307A3CC8, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
             ),
             AuroraRibbon(
-                edgeY = 0.42f, amplitude = 0.09f, waves = 1.9f, phase = 0.60f, slope = -0.12f, height = 0.40f,
-                edgeColor = 0x31E07AD8, topColor = 0x165A2EA6, raysPer100Dp = 40f, rayContrast = 0.66f, seed = 23L,
+                edgeY = 0.42f, amplitude = 0.07f, waves = 1.1f, phase = 0.60f, slope = -0.12f, height = 0.40f,
+                edgeColor = 0x46E07AD8, topColor = 0x205A2EA6, raysPer100Dp = 40f, rayContrast = 0.66f, seed = 23L,
                 xStart = 0.28f, xEnd = 1f,
             ),
             AuroraRibbon(
-                edgeY = 0.26f, amplitude = 0.05f, waves = 2.0f, phase = 0.35f, slope = 0.10f, height = 0.22f,
-                edgeColor = 0x22B48CFF, topColor = 0x0E603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 37L,
+                edgeY = 0.26f, amplitude = 0.05f, waves = 1.3f, phase = 0.35f, slope = 0.10f, height = 0.22f,
+                edgeColor = 0x30B48CFF, topColor = 0x14603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 37L,
                 xStart = 0f, xEnd = 0.55f,
             ),
         ),
@@ -362,7 +373,8 @@ object KeyboardLooks {
             minAlpha = 50, maxAlpha = 200, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 5,
         ),
         topFade = 0.18f,
-        keyOpacity = 0.88f,
+        // No key fill at all: the outline alone draws each key (maintainer 2026-11-10).
+        keyOpacity = 0f,
     )
 
     /**
@@ -379,8 +391,8 @@ object KeyboardLooks {
      *  - the primary action of Go / Search / Send / Done fields in the accent colour with an icon
      *    (iOS, Gboard's highlighted Enter);
      *  - a key-press preview bubble (all four) and a filled Shift arrow while shifted (Gboard).
-     * In dark mode the keys sit on a near-black aurora ([CLEVERKEYS_AURORA]) with equal gaps on
-     * every side, SwiftKey's spacing (maintainer 2026-11-07). Because users get it without
+     * Keys have equal gaps on every side, SwiftKey's spacing (maintainer 2026-11-07); its dark
+     * mode is plain again since the aurora became its own look ([auroraLook], 2026-11-10). Because users get it without
      * choosing it, a trail colour the user already tuned still applies
      * ([KeyboardLook.yieldsToUserSettings]); the global key gaps and a custom border do not (a
      * per-layout gap in Layout Manager does). Corner hints are 0.44 of the label, between Gboard's 0.40
@@ -402,21 +414,19 @@ object KeyboardLooks {
             // One-shot / auto-capitalised Shift keeps the function fill; the filled arrow says it.
             latchedKey = argb(0xE3D6EF), latchedLabel = argb(0x3A2650),
         ),
-        // Dark keys on a near-black aurora (maintainer 2026-11-07): the base is darker than every
-        // key fill, the glows show in the gaps and margins, and the hairline frame (a step
-        // lighter than the key) keeps each key's edge on the black.
+        // Plain dark (maintainer 2026-11-10: the aurora moved to its own look, CleverKeys Aurora):
+        // the palette of 2026-11-06, before the aurora.
         dark = LookPalette(
-            keyboardBackground = argb(0x0A080E), key = argb(0x1D1924), keyPressed = argb(0x342C3E),
+            keyboardBackground = argb(0x16121A), key = argb(0x2A2430), keyPressed = argb(0x3F3747),
             keyLocked = argb(0xCDA5EC), lockedLabel = argb(0x2E0F45),
-            modifierKey = argb(0x2A2234), enterKey = argb(0x2A2234), enterLabel = argb(0xEBDDF7),
+            modifierKey = argb(0x3A2E47), enterKey = argb(0x3A2E47), enterLabel = argb(0xEBDDF7),
             actionKey = argb(0xCDA5EC), actionLabel = argb(0x2E0F45),
             label = argb(0xEDE7F2), modifierLabel = argb(0xEBDDF7), hint = argb(0xA69DAE),
-            keyShadow = 0, keyBorder = argb(0x332B3D),
-            barBackground = argb(0x0A080E), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
-            barSeparator = argb(0x2C2633), swipeTrail = argb(0xC79BE8),
-            popup = argb(0x2E2838), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
-            latchedKey = argb(0x2A2234), latchedLabel = argb(0xEBDDF7),
-            backdrop = CLEVERKEYS_AURORA,
+            keyShadow = 0, keyBorder = argb(0x3D3546),
+            barBackground = argb(0x16121A), barText = argb(0xEDE7F2), barHighlight = argb(0xD9B8F3),
+            barSeparator = argb(0x3A3340), swipeTrail = argb(0xC79BE8),
+            popup = argb(0x3A3341), popupSelected = argb(0xCDA5EC), popupSelectedLabel = argb(0x2E0F45),
+            latchedKey = argb(0x3A2E47), latchedLabel = argb(0xEBDDF7),
         ),
         geometry = LookGeometry(
             // SwiftKey's horizontal gap (12 px of a 92 px key unit in the maintainer's
@@ -443,14 +453,175 @@ object KeyboardLooks {
         yieldsToUserSettings = true,
     )
 
+    /**
+     * A scene look's palette (the same in light and dark: a scene has its own light): keys that
+     * show the scene through them ([LookBackdrop.keyOpacity] of their fill) with a lighter
+     * outline, light labels, and the scene's accent on the action and Caps Lock glyphs rather
+     * than as a fill, so a see-through fill never puts a dark glyph on a dark scene.
+     */
+    private fun scenePalette(
+        base: Int, key: Int, pressed: Int, modifier: Int, label: Int, hint: Int, border: Int,
+        accent: Int, onAccent: Int, popup: Int, backdrop: LookBackdrop,
+    ) = LookPalette(
+        keyboardBackground = argb(base.toLong() and 0xFFFFFF), key = argb(key.toLong() and 0xFFFFFF),
+        keyPressed = argb(pressed.toLong() and 0xFFFFFF),
+        keyLocked = argb(pressed.toLong() and 0xFFFFFF), lockedLabel = argb(accent.toLong() and 0xFFFFFF),
+        modifierKey = argb(modifier.toLong() and 0xFFFFFF), enterKey = argb(modifier.toLong() and 0xFFFFFF),
+        enterLabel = argb(label.toLong() and 0xFFFFFF),
+        actionKey = argb(modifier.toLong() and 0xFFFFFF), actionLabel = argb(accent.toLong() and 0xFFFFFF),
+        label = argb(label.toLong() and 0xFFFFFF), modifierLabel = argb(label.toLong() and 0xFFFFFF),
+        hint = argb(hint.toLong() and 0xFFFFFF),
+        keyShadow = 0, keyBorder = argb(border.toLong() and 0xFFFFFF),
+        barBackground = argb(base.toLong() and 0xFFFFFF), barText = argb(label.toLong() and 0xFFFFFF),
+        barHighlight = argb(accent.toLong() and 0xFFFFFF),
+        barSeparator = argb(border.toLong() and 0xFFFFFF), swipeTrail = argb(accent.toLong() and 0xFFFFFF),
+        popup = argb(popup.toLong() and 0xFFFFFF),
+        popupSelected = argb(accent.toLong() and 0xFFFFFF), popupSelectedLabel = argb(onAccent.toLong() and 0xFFFFFF),
+        latchedKey = argb(modifier.toLong() and 0xFFFFFF), latchedLabel = argb(label.toLong() and 0xFFFFFF),
+        backdrop = backdrop,
+    )
+
+    /** A scene look: the CleverKeys look's keys, legends and shapes over [palette] in both modes. */
+    private fun sceneLook(id: String, palette: LookPalette) =
+        cleverkeysLook.copy(id = id, light = palette, dark = palette, yieldsToUserSettings = false)
+
+    /** Share of the user's key opacity a nature scene's key fills keep: the scene shows through. */
+    private const val SCENE_KEY_OPACITY = 0.55f
+
+    /**
+     * CleverKeys Aurora: the aurora ([CLEVERKEYS_AURORA]) behind keys drawn by their outline
+     * alone, the action and Caps Lock glyphs in lilac (a dark glyph on no fill would vanish).
+     */
+    val auroraLook = sceneLook(
+        AURORA,
+        scenePalette(
+            base = 0x0A080E, key = 0x1D1924, pressed = 0x342C3E, modifier = 0x2A2234,
+            label = 0xEDE7F2, hint = 0xA69DAE, border = 0x7A6893,
+            accent = 0xD9B8F3, onAccent = 0x2E0F45, popup = 0x2E2838, backdrop = CLEVERKEYS_AURORA,
+        ),
+    )
+
+    /** Meadow: grass blades that lean with the wind, a few flowers, pollen drifting up. */
+    val meadowLook = sceneLook(
+        MEADOW,
+        scenePalette(
+            base = 0x111B1F, key = 0x0E1A0F, pressed = 0x2E4A2C, modifier = 0x162616,
+            label = 0xF1F5EC, hint = 0xC6D3BE, border = 0x5E7A55,
+            accent = 0xC9E89A, onAccent = 0x15240F, popup = 0x22361F,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.MEADOW, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 4f, seed = 0x3EAD0L, color = 0xFFF3D27A.toInt(), minAlpha = 60, maxAlpha = 170,
+                    minRadiusDp = 0.6f, maxRadiusDp = 1.3f, glintEvery = 0, shape = ParticleShape.MOTE,
+                    driftXDpPerS = 3f, driftYDpPerS = -2f,
+                ),
+            ),
+        ),
+    )
+
+    /** Stream: dark water with streaks of light running with the current, sparkles riding it. */
+    val streamLook = sceneLook(
+        STREAM,
+        scenePalette(
+            base = 0x061820, key = 0x05141B, pressed = 0x1E4250, modifier = 0x0A2029,
+            label = 0xEAF6F8, hint = 0xB9D4DA, border = 0x3F6E7C,
+            accent = 0x8FD2E0, onAccent = 0x05202A, popup = 0x10303C,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.STREAM, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 5f, seed = 0x57AEL, color = 0xFFDFF6FF.toInt(), minAlpha = 60, maxAlpha = 210,
+                    minRadiusDp = 0.5f, maxRadiusDp = 1.0f, glintEvery = 0, shape = ParticleShape.GLINT,
+                    driftXDpPerS = 10f,
+                ),
+            ),
+        ),
+    )
+
+    /** River rocks: wet rounded stones, their sheen glistening. */
+    val riverRocksLook = sceneLook(
+        RIVER_ROCKS,
+        scenePalette(
+            base = 0x101416, key = 0x0E1012, pressed = 0x3A3F44, modifier = 0x1A1D20,
+            label = 0xF0F0EE, hint = 0xC4C6C8, border = 0x5E646A,
+            accent = 0xC9D3DA, onAccent = 0x14181C, popup = 0x24282C,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 3f, seed = 0x20C5L, color = 0xFFFFFFFF.toInt(), minAlpha = 70, maxAlpha = 230,
+                    minRadiusDp = 0.5f, maxRadiusDp = 1.1f, glintEvery = 0, shape = ParticleShape.GLINT,
+                ),
+            ),
+        ),
+    )
+
+    /** Forest: twilight trunks under a swaying canopy, leaves drifting down. */
+    val forestLook = sceneLook(
+        FOREST,
+        scenePalette(
+            base = 0x0C120E, key = 0x0A110B, pressed = 0x2C3E2A, modifier = 0x131D14,
+            label = 0xEEF3E8, hint = 0xC2CDB8, border = 0x52664A,
+            accent = 0xE6B26A, onAccent = 0x2A1606, popup = 0x1E2A1C,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.FOREST, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 2.5f, seed = 0xF0AE57L, color = 0xFFD98A3A.toInt(), minAlpha = 120, maxAlpha = 220,
+                    minRadiusDp = 1.2f, maxRadiusDp = 2.0f, glintEvery = 0, shape = ParticleShape.LEAF,
+                    tints = listOf(0xFFD98A3A.toInt(), 0xFFC4682C.toInt(), 0xFF9CB84A.toInt(), 0xFFE0B048.toInt()),
+                    driftXDpPerS = 4f, driftYDpPerS = 7f,
+                ),
+            ),
+        ),
+    )
+
+    /** Snow: a blue night over snowy hills and pines, snow falling. */
+    val snowLook = sceneLook(
+        SNOW,
+        scenePalette(
+            base = 0x141C2C, key = 0x111827, pressed = 0x34405A, modifier = 0x1A2335,
+            label = 0xF4F7FC, hint = 0xC8D2E4, border = 0x6C7C9C,
+            accent = 0xBFD6F5, onAccent = 0x101C30, popup = 0x26304A,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.SNOW, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 10f, seed = 0x5A0FL, color = 0xFFFFFFFF.toInt(), minAlpha = 110, maxAlpha = 230,
+                    minRadiusDp = 0.6f, maxRadiusDp = 1.6f, glintEvery = 0, shape = ParticleShape.FLAKE,
+                    driftXDpPerS = 2f, driftYDpPerS = 12f,
+                ),
+            ),
+        ),
+    )
+
+    /** Beach: sea, a foam line washing up and back over wet sand, sun sparkling on the water. */
+    val beachLook = sceneLook(
+        BEACH,
+        scenePalette(
+            base = 0x0A2A44, key = 0x16130F, pressed = 0x4A4034, modifier = 0x231E18,
+            label = 0xFBF6EE, hint = 0xD9CFC0, border = 0x8A7A62,
+            accent = 0xF4D9A6, onAccent = 0x2A1E0C, popup = 0x2E281F,
+            backdrop = LookBackdrop(
+                glows = emptyList(), scene = SceneKind.BEACH, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                stars = LookStarfield(
+                    perSquare100Dp = 3f, seed = 0xBEAC4L, color = 0xFFFFF6E0.toInt(), minAlpha = 50, maxAlpha = 200,
+                    minRadiusDp = 0.5f, maxRadiusDp = 1.0f, glintEvery = 0, shape = ParticleShape.GLINT,
+                ),
+            ),
+        ),
+    )
+
+    /** The scene looks, in Theme Manager's "Scenes" order. */
+    val SCENES: List<KeyboardLook> = listOf(auroraLook, meadowLook, streamLook, riverRocksLook, forestLook, snowLook, beachLook)
+
+    /** Ids of [SCENES], in order. */
+    val SCENE_IDS: List<String> = SCENES.map { it.id }
+
     /** The familiar looks, in Theme Manager's "Familiar looks" order. */
     val FAMILIAR: List<KeyboardLook> = listOf(iosLook, gboardLook, swiftkeyLook, samsungLook, ios18Look)
 
     /** Ids of [FAMILIAR], in order. */
     val FAMILIAR_IDS: List<String> = FAMILIAR.map { it.id }
 
-    /** Every look: the CleverKeys default look, then [FAMILIAR]. */
-    val ALL: List<KeyboardLook> = listOf(cleverkeysLook) + FAMILIAR
+    /** Every look: the CleverKeys default look, then [FAMILIAR], then [SCENES]. */
+    val ALL: List<KeyboardLook> = listOf(cleverkeysLook) + FAMILIAR + SCENES
 
     /** Every look id, in [ALL] order. */
     val IDS: List<String> = ALL.map { it.id }

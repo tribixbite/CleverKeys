@@ -187,15 +187,22 @@ class Keyboard2View @JvmOverloads constructor(
     /** True once [enterThemePreviewMode] ran; never reverts for this instance. */
     private var _previewMode = false
 
-    // ---- Aurora motion (AuroraBackdropDrawable.motionEnabled) ----
-    // A background drawable's invalidate re-runs onDraw, so while the aurora moves the keys are
-    // recorded once into a RenderNode and replayed on frames where only the aurora changed.
-    /** The cached key drawing (a [RenderNode], API 29+); null while the aurora is still. */
+    // ---- Backdrop motion (BackdropDrawable.motionEnabled) ----
+    // A background drawable's invalidate re-runs onDraw, so while the backdrop moves the keys are
+    // recorded once into a RenderNode and replayed on frames where only the backdrop changed.
+    /** The cached key drawing (a [RenderNode], API 29+); null while the backdrop is still. */
     private var _keysNode: Any? = null
-    /** Something other than the aurora asked for a redraw since the keys were recorded. */
+    /** Something other than the backdrop asked for a redraw since the keys were recorded. */
     private var _keysDirty = true
-    /** True while the background drawable invalidates this view (an aurora frame). */
-    private var _auroraInvalidating = false
+    /** True while the background drawable invalidates this view (a backdrop frame). */
+    private var _backdropInvalidating = false
+    /**
+     * The frame-rate vote now set on this view: low on frames where only the backdrop moved, so
+     * an LTPO panel need not refresh at its full rate for an 8 fps painting; the default as soon
+     * as anything else redraws (typing, a swipe trail). Measured on the Pixel 8 Pro 2026-11-10:
+     * the moving aurora cost 136 mW, 58 of them in the display rails.
+     */
+    private var _lowFrameRateVote = false
     /** What the cached keys were drawn from: a change to any of them re-records. */
     private var _keysSnap: Any? = null
     private var _keysTheme: Any? = null
@@ -1505,9 +1512,9 @@ class Keyboard2View @JvmOverloads constructor(
         if (event == null) return false
 
         val action = event.actionMasked
-        // A touch keeps a moving aurora moving (it rests after AuroraMotion.IDLE_MS idle).
+        // A touch keeps a moving backdrop moving (it rests after AuroraMotion.IDLE_MS idle).
         if (action == MotionEvent.ACTION_DOWN) {
-            (background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable)?.wake()
+            (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.wake()
         }
 
         when (action) {
@@ -1861,9 +1868,9 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * The keyboard background of a runtime theme: the look's painted backdrop (aurora and stars,
-     * `LookBackdrop`) when its palette has one, otherwise the flat background colour; a theme
-     * without a background colour (0) keeps the XML style's.
+     * The keyboard background of a runtime theme: the look's painted backdrop (aurora or scene,
+     * and its particles: `LookBackdrop`) when its palette has one, otherwise the flat background
+     * colour; a theme without a background colour (0) keeps the XML style's.
      */
     private fun applyThemeBackground(theme: Theme) {
         val base = theme.colorKeyboardBackground
@@ -1873,17 +1880,17 @@ class Keyboard2View @JvmOverloads constructor(
             setBackgroundColor(base)
         } else {
             // onDraw sets the keyboard opacity on whichever background is current.
-            background = tribixbite.cleverkeys.theme.AuroraBackdropDrawable(base, backdrop, theme.density) {
-                tribixbite.cleverkeys.theme.AuroraBackdropDrawable.systemAllowsMotion(context)
+            background = tribixbite.cleverkeys.theme.BackdropDrawable(base, backdrop, theme.density) {
+                tribixbite.cleverkeys.theme.BackdropDrawable.systemAllowsMotion(context)
             }
         }
     }
 
     override fun onDraw(canvas: Canvas) {
-        // The user's "Moving aurora": theme previews in Settings stay still.
-        val aurora = background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable
-        aurora?.setMotionEnabled(_config.snapshot.look_aurora_motion && !_previewMode)
-        if (VERSION.SDK_INT >= 29 && aurora?.motionEnabled == true && canvas.isHardwareAccelerated) {
+        // The user's "Animated scenes": theme previews in Settings stay still.
+        val backdrop = background as? tribixbite.cleverkeys.theme.BackdropDrawable
+        backdrop?.setMotionEnabled(_config.snapshot.look_backdrop_motion && !_previewMode)
+        if (VERSION.SDK_INT >= 29 && backdrop?.motionEnabled == true && canvas.isHardwareAccelerated) {
             drawKeysCached(canvas)
         } else {
             _keysNode = null
@@ -1892,15 +1899,15 @@ class Keyboard2View @JvmOverloads constructor(
     }
 
     /**
-     * The keys from [_keysNode], re-recorded only when something besides the aurora changed:
+     * The keys from [_keysNode], re-recorded only when something besides the backdrop changed:
      * an invalidate that did not come from the background ([_keysDirty]), a new config
-     * snapshot, theme or keyboard, or a new size. An aurora frame thus costs a display-list
+     * snapshot, theme or keyboard, or a new size. A backdrop frame thus costs a display-list
      * replay of the keys, not a redraw of them.
      */
     @RequiresApi(29)
     private fun drawKeysCached(canvas: Canvas) {
         val node = _keysNode as? RenderNode ?: RenderNode("CleverKeysKeys").also {
-            // Rasterised once into a GPU texture: an aurora frame blends one image instead of
+            // Rasterised once into a GPU texture: a backdrop frame blends one image instead of
             // replaying every key, label and outline (measured on the Pixel 8 Pro, 2026-11-10).
             it.setUseCompositingLayer(true, null)
             _keysNode = it
@@ -1925,34 +1932,48 @@ class Keyboard2View @JvmOverloads constructor(
         canvas.drawRenderNode(node)
     }
 
-    // Every redraw request except the aurora's own marks the cached keys stale. (View's
+    // Every redraw request except the backdrop's own marks the cached keys stale. (View's
     // invalidateDrawable reaches the four-int invalidate below.)
     override fun invalidate() {
-        if (!_auroraInvalidating) _keysDirty = true
+        if (!_backdropInvalidating) keysChanged()
         super.invalidate()
+    }
+
+    /** Something besides the backdrop changed: re-record the keys and draw at the default rate. */
+    private fun keysChanged() {
+        _keysDirty = true
+        if (_lowFrameRateVote) {
+            _lowFrameRateVote = false
+            FrameRateVote.set(this, FrameRateVote.DEFAULT)
+        }
     }
 
     @Deprecated("Deprecated in Java")
     @Suppress("DEPRECATION")
     override fun invalidate(dirty: Rect) {
-        if (!_auroraInvalidating) _keysDirty = true
+        if (!_backdropInvalidating) keysChanged()
         super.invalidate(dirty)
     }
 
     @Deprecated("Deprecated in Java")
     @Suppress("DEPRECATION")
     override fun invalidate(l: Int, t: Int, r: Int, b: Int) {
-        if (!_auroraInvalidating) _keysDirty = true
+        if (!_backdropInvalidating) keysChanged()
         super.invalidate(l, t, r, b)
     }
 
     override fun invalidateDrawable(drawable: Drawable) {
         if (drawable !== background) return super.invalidateDrawable(drawable)
-        _auroraInvalidating = true
+        val moving = (drawable as? tribixbite.cleverkeys.theme.BackdropDrawable)?.motionEnabled == true
+        if (moving && !_lowFrameRateVote && !_keysDirty) {
+            _lowFrameRateVote = true
+            FrameRateVote.set(this, FrameRateVote.LOW)
+        }
+        _backdropInvalidating = true
         try {
             super.invalidateDrawable(drawable)
         } finally {
-            _auroraInvalidating = false
+            _backdropInvalidating = false
         }
     }
 
@@ -2237,7 +2258,7 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         cancelContinuousSwipe()
         super.onDetachedFromWindow()
-        (background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable)?.stopMotion()
+        (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.stopMotion()
         _keysNode = null
         if (_shortSwipeListenerRegistered) {
             _shortSwipeManager.removeChangeListener(_shortSwipeMappingsChanged)
@@ -2960,5 +2981,29 @@ internal object NavBarAppearance {
             disableContrastEnforcement = sdkInt >= FIRST_SELF_CONTRASTING_API,
             useInsetsController = sdkInt >= FIRST_INSETS_CONTROLLER_API
         )
+    }
+}
+
+/**
+ * `View.setRequestedFrameRate` (Android 15, API 35) through reflection: this build compiles
+ * against API 34. The method is public SDK API, not a hidden one; below API 35 it is absent and
+ * the vote is a no-op.
+ */
+// TODO: call View.setRequestedFrameRate directly once compileSdk is 35 or higher.
+private object FrameRateVote {
+    /** `View.REQUESTED_FRAME_RATE_CATEGORY_LOW`: content that updates slowly. */
+    const val LOW = -2f
+
+    /** `View.REQUESTED_FRAME_RATE_CATEGORY_DEFAULT`: the system decides. */
+    const val DEFAULT = Float.NaN
+
+    private val setter: java.lang.reflect.Method? by lazy {
+        if (VERSION.SDK_INT < 35) null
+        else runCatching { View::class.java.getMethod("setRequestedFrameRate", Float::class.javaPrimitiveType) }.getOrNull()
+    }
+
+    fun set(view: View, rate: Float) {
+        val m = setter ?: return
+        runCatching { m.invoke(view, rate) }
     }
 }

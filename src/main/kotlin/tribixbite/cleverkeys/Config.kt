@@ -58,10 +58,11 @@ object Defaults {
     /** Looks that print the language on the space bar (Samsung-style) do so; on by default. */
     const val LOOK_SPACE_LANGUAGE = true
     /**
-     * The CleverKeys look's aurora drifts and shimmers (AuroraMotion); off by default until its
-     * battery cost is measured (maintainer 2026-11-10).
+     * The scene looks' backdrops move (AuroraMotion: CleverKeys Aurora, Meadow, Stream, River
+     * rocks, Forest, Snow, Beach); off by default until its battery cost is measured (maintainer
+     * 2026-11-10).
      */
-    const val LOOK_AURORA_MOTION = false
+    const val LOOK_BACKDROP_MOTION = false
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -956,7 +957,7 @@ class Config private constructor(
     @JvmField var look_show_hints = Defaults.LOOK_SHOW_HINTS
     @JvmField var look_key_preview = Defaults.LOOK_KEY_PREVIEW
     @JvmField var look_space_language = Defaults.LOOK_SPACE_LANGUAGE
-    @JvmField var look_aurora_motion = Defaults.LOOK_AURORA_MOTION
+    @JvmField var look_backdrop_motion = Defaults.LOOK_BACKDROP_MOTION
     @JvmField var circle_sensitivity = Defaults.CIRCLE_SENSITIVITY_FALLBACK
     @JvmField var clipboard_history_enabled = Defaults.CLIPBOARD_HISTORY_ENABLED
     @JvmField var clipboard_history_limit = Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
@@ -1293,7 +1294,7 @@ class Config private constructor(
         look_show_hints = _prefs.getBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
         look_key_preview = _prefs.getBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         look_space_language = _prefs.getBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
-        look_aurora_motion = _prefs.getBoolean("look_aurora_motion", Defaults.LOOK_AURORA_MOTION)
+        look_backdrop_motion = _prefs.getBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
         double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
@@ -1597,7 +1598,7 @@ class Config private constructor(
         look_show_hints = look_show_hints,
         look_key_preview = look_key_preview,
         look_space_language = look_space_language,
-        look_aurora_motion = look_aurora_motion,
+        look_backdrop_motion = look_backdrop_motion,
         characterSize = characterSize,
         keyboardOpacity = keyboardOpacity,
         themeName = themeName,

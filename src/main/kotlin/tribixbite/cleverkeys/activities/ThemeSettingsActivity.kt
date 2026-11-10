@@ -105,6 +105,21 @@ class ThemeSettingsActivity : ComponentActivity() {
             LookTheme(KeyboardLooks.SAMSUNG, R.string.theme_look_samsung_name),
             LookTheme(KeyboardLooks.IOS18, R.string.theme_look_ios18_name),
         )
+
+        /**
+         * The scene looks ("Scenes", after the familiar looks; maintainer 2026-11-10): CleverKeys'
+         * keys over a painted backdrop that moves with Appearance → Animated scenes. Drift-pinned
+         * against [KeyboardLooks.SCENE_IDS] by LayoutThemeBindingConfigTest.
+         */
+        val SCENE_THEMES = listOf(
+            LookTheme(KeyboardLooks.AURORA, R.string.theme_look_aurora_name, R.string.theme_look_aurora_desc),
+            LookTheme(KeyboardLooks.MEADOW, R.string.theme_look_meadow_name, R.string.theme_look_meadow_desc),
+            LookTheme(KeyboardLooks.STREAM, R.string.theme_look_stream_name, R.string.theme_look_stream_desc),
+            LookTheme(KeyboardLooks.RIVER_ROCKS, R.string.theme_look_river_rocks_name, R.string.theme_look_river_rocks_desc),
+            LookTheme(KeyboardLooks.FOREST, R.string.theme_look_forest_name, R.string.theme_look_forest_desc),
+            LookTheme(KeyboardLooks.SNOW, R.string.theme_look_snow_name, R.string.theme_look_snow_desc),
+            LookTheme(KeyboardLooks.BEACH, R.string.theme_look_beach_name, R.string.theme_look_beach_desc),
+        )
     }
 
     /** A keyboard look in Theme Manager: its stored id, display name and optional description. */
@@ -374,7 +389,7 @@ fun ThemeSettingsScreen(
             )
         }
     ) { padding ->
-        // One card per look (familiar or the CleverKeys default): its scheme for the current
+        // One card per look (familiar, scene or the CleverKeys default): its scheme for the current
         // system mode, so the card follows light/dark like the keyboard.
         @Composable
         fun LookCard(lookTheme: ThemeSettingsActivity.LookTheme) {
@@ -424,6 +439,24 @@ fun ThemeSettingsScreen(
                 )
             }
             items(ThemeSettingsActivity.LOOK_THEMES) { lookTheme -> LookCard(lookTheme) }
+
+            // Scenes: CleverKeys keys over a painted backdrop (aurora, nature scenes).
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    stringResource(R.string.theme_section_scenes),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    stringResource(R.string.theme_scenes_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+            items(ThemeSettingsActivity.SCENE_THEMES) { lookTheme -> LookCard(lookTheme) }
 
             // Built-in XML Themes Section (these ACTUALLY work with the keyboard)
             item {

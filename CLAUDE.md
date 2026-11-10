@@ -134,6 +134,11 @@ left per frame is the window's fixed cost, so frame rate is the only lever. Meas
 the lines doubles the count; per-thread CPU from `/proc/<pid>/task/*/stat`, never with a
 Settings screen of the same process open. `am force-stop tribixbite.cleverkeys` on the Pixel
 makes Android fall back to Gboard as default IME: re-run `ime set` afterwards.
+Power: the Pixel's energy rails need no root through Perfetto (`android.power` data source,
+`collect_power_rails: true`; sysfs `iio:device*/energy_value` and the power-stats HAL dump are
+denied to shell, and batterystats does not accumulate on AC). A `--background` trace stays a
+0-byte file until its `duration_ms` ends: pull after that. Type with ONE `monkey -f` script
+(Tap/UserWait); an `input tap` per key starts a JVM each time and swamps the measurement.
 
 ## Kotlin compiler execution on Termux
 

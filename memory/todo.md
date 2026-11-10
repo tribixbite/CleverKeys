@@ -1262,6 +1262,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     rested = 0 frames, 0.2 %; screen diff 73k px changing over 3 s, 0 at rest. Open: the
     maintainer's verdict on look and motion; battery over a real typing session
     (`batterystats`) before considering motion on by default.
+    Sixth round (2026-11-10, maintainer: revert the folds, green and dimming, lower the curtain
+    back over the nav keys, key fill 0 with full outline, a visible action glyph, make it its
+    own CleverKeys Aurora theme, the default look plain again, and nature scenes with motion):
+    `KeyboardLooks.auroraLook` + `SCENES` (Meadow, Stream, River rocks, Forest, Snow, Beach;
+    `SceneRaster`, particles `ParticleShape` with drift), Theme Manager "Scenes", switch renamed
+    "Animated scenes" (`look_backdrop_motion`, unreleased so no migration). Battery, Pixel 8 Pro,
+    Perfetto power rails over 4 × 5-min scripted typing sessions (monkey into the Wi-Fi password
+    field, brightness pinned 102/255, ABBA): motion ON 982 / 980 mW, OFF 846 / 843 mW, i.e.
+    +136 mW (+16 %, ≈0.7 % battery per hour of keyboard time); display rails +58, CPU +36,
+    memory +12, GPU +8. Then a low frame-rate vote on backdrop-only frames
+    (`View.setRequestedFrameRate` via reflection, compileSdk 34). Re-measure (`5425f513`, one
+    pair): ON 942 / OFF 834 mW = +108 mW; the vote saved CPU (little cores 85 vs 96–102 mW)
+    but NOT the display rails (still +57 mW: the panel stays at its higher refresh while content
+    updates at 8 fps). Next levers if wanted: a slower FRAME_MS, or motion only for a few
+    seconds after the keyboard opens.
+    All 7 scenes checked on the Pixel (`5425f513`, Settings test field). Open: maintainer's
+    verdict on the scenes.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

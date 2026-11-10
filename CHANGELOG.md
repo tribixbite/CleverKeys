@@ -457,11 +457,7 @@ editor that used to be listed here already ship in 2.0.)
   space between rows as between keys), function keys
   (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
   icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
-  system's light or dark mode; in dark mode slightly see-through keys sit on a near-black
-  background lit by a purple aurora (three rayed, folded curtains with a mint-to-lilac rim, not
-  soft glows) and a field of stars. Appearance → Moving aurora (off by default) lets the curtains
-  drift and shimmer and the stars twinkle; it comes to rest 20 seconds after you stop typing and
-  stays still in battery saver. Every corner hint for short swipes stays, drawn a little smaller. A
+  system's light or dark mode. Every corner hint for short swipes stays, drawn a little smaller. A
   swipe-trail colour you already changed still applies; key gaps come from the look (set per layout
   in Layout Manager to change them). Choosing a theme in Theme Manager no
   longer restarts the keyboard, and neither does its Restart keyboard button, which now reloads
@@ -469,6 +465,13 @@ editor that used to be listed here already ship in 2.0.)
   fields twice). A deleted or broken theme falls back to this look. Only an unset theme changes: if you
   chose a theme it stays, and CleverKeys Dark and Light are still in Theme Manager, where the
   iOS-, Gboard-, SwiftKey- and Samsung-style looks now come first.
+- **Scenes.** A new Theme Manager section of looks with CleverKeys' keys over a painted scene:
+  CleverKeys Aurora (rayed purple curtains and stars, keys drawn by their outline alone with a
+  lilac action key), Meadow, Stream, River rocks, Forest, Snow and Beach (the keys are
+  see-through, labels stay readable). Appearance → Animated scenes (off by default) lets them
+  move gently: the aurora and water drift, grass sways, foam washes up the sand, snow and leaves
+  fall, stars and sparkles twinkle. A scene comes to rest 20 seconds after you stop typing, and
+  stays still in battery saver, with animations turned off and on Android 9 or older.
 - **Android 7.0+ (API 24) is now required** (was 5.0): ONNX Runtime 1.21.1 for 16 KB memory-page
   alignment declares minSdk 24. Devices on Android 5.0–6.0 remain on v1.5.0.
 - **Quick Settings tile toggles the keyboard**: when CleverKeys is the current keyboard, a tap

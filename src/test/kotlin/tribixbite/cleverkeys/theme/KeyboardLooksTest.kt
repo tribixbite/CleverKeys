@@ -36,8 +36,13 @@ class KeyboardLooksTest {
             KeyboardLooks.IOS, KeyboardLooks.GBOARD, KeyboardLooks.SWIFTKEY, KeyboardLooks.SAMSUNG,
             KeyboardLooks.IOS18,
         ).inOrder()
-        assertThat(KeyboardLooks.IDS).containsExactlyElementsIn(listOf(KeyboardLooks.CLEVERKEYS) + KeyboardLooks.FAMILIAR_IDS)
-            .inOrder()
+        assertThat(KeyboardLooks.SCENE_IDS).containsExactly(
+            KeyboardLooks.AURORA, KeyboardLooks.MEADOW, KeyboardLooks.STREAM, KeyboardLooks.RIVER_ROCKS,
+            KeyboardLooks.FOREST, KeyboardLooks.SNOW, KeyboardLooks.BEACH,
+        ).inOrder()
+        assertThat(KeyboardLooks.IDS).containsExactlyElementsIn(
+            listOf(KeyboardLooks.CLEVERKEYS) + KeyboardLooks.FAMILIAR_IDS + KeyboardLooks.SCENE_IDS,
+        ).inOrder()
         for (id in KeyboardLooks.IDS) {
             assertThat(id).startsWith(KeyboardLooks.ID_PREFIX)
             assertThat(KeyboardLooks.byId(id)!!.id).isEqualTo(id)
@@ -52,7 +57,9 @@ class KeyboardLooksTest {
 
     @Test
     fun eachLookFollowsTheSystemWithADistinctLightAndDarkPalette() {
-        for (look in KeyboardLooks.ALL) {
+        // A scene look has one palette for both: the scene brings its own light.
+        for (look in KeyboardLooks.SCENES) assertThat(look.light).isSameInstanceAs(look.dark)
+        for (look in KeyboardLooks.ALL - KeyboardLooks.SCENES.toSet()) {
             assertThat(look.palette(systemLight = true)).isSameInstanceAs(look.light)
             assertThat(look.palette(systemLight = false)).isSameInstanceAs(look.dark)
             assertWithMessage("${look.id}: the light keyboard background must be lighter than the dark one")
@@ -210,11 +217,13 @@ class KeyboardLooksTest {
     }
 
     /**
-     * Maintainer 2026-11-07: SwiftKey's spacing with the same gap between rows as between keys,
-     * darker keys, and a background darker than the keys painted as an aurora (dark mode only).
+     * Maintainer 2026-11-07: SwiftKey's spacing with the same gap between rows as between keys.
+     * Its dark mode carried an aurora 2026-11-07..10; since then it is plain again and the aurora
+     * is the CleverKeys Aurora look (maintainer 2026-11-10: "put back in the more boring original
+     * … as default").
      */
     @Test
-    fun theCleverKeysLookHasEqualGapsAndADarkAuroraBehindDarkerKeys() {
+    fun theCleverKeysLookHasEqualGapsAndAPlainDarkMode() {
         val look = KeyboardLooks.cleverkeysLook
         val g = look.geometry
         assertThat(g.equalGaps).isTrue()
@@ -227,110 +236,90 @@ class KeyboardLooksTest {
         assertThat(e.verticalMargin).isEqualTo(e.horizontalMargin)
 
         val dark = look.dark
-        val backdrop = dark.backdrop
-        assertWithMessage("the dark palette paints the aurora").that(backdrop).isNotNull()
-        assertWithMessage("light mode stays flat").that(look.light.backdrop).isNull()
+        assertWithMessage("plain dark: no backdrop").that(dark.backdrop).isNull()
+        assertWithMessage("plain light: no backdrop").that(look.light.backdrop).isNull()
         val base = relativeLuminance(dark.keyboardBackground)
         for ((role, fill) in listOf("key" to dark.key, "function key" to dark.modifierKey, "border" to dark.keyBorder)) {
             assertWithMessage("the base is darker than the $role").that(base).isLessThan(relativeLuminance(fill))
         }
-        // "Darker than the keys overall": the painted background's mean luminance, sampled on a
-        // phone-shaped keyboard with the falloff AuroraBackdropDrawable draws, stays below the
-        // key fill's. (A curtain's rim may be brighter: that is the aurora in the gaps.)
-        val mean = meanBackdropLuminance(dark.keyboardBackground, backdrop!!, width = 411f, height = 290f)
-        assertWithMessage("mean background luminance vs the key fill")
-            .that(mean).isLessThan(relativeLuminance(dark.key))
-        assertWithMessage("the darker keys still carry the hints at 3:1")
-            .that(contrast(dark.hint, dark.key)).isAtLeast(3.0)
-        assertWithMessage("the bar joins the faded top edge in the base colour")
-            .that(dark.barBackground).isEqualTo(dark.keyboardBackground)
-        assertThat(backdrop.topFade).isGreaterThan(0f)
+        assertWithMessage("the keys carry the hints at 3:1").that(contrast(dark.hint, dark.key)).isAtLeast(3.0)
     }
 
     /**
-     * Maintainer's pick from ten previews (2026-11-10): three curtains, the lowest one nearly level
-     * and folded, finer rays, a partly green rim, twice the stars with more glints, and keys a
-     * little translucent. Translucent fills must still carry every label and hint over the
-     * brightest spot of the painted aurora.
+     * CleverKeys Aurora (maintainer 2026-11-10, after a round on the device): finer rays, three
+     * curtains, the lowest one nearly level and low over the nav keys, more stars with more
+     * glints; the folds, the green rim and the dimming of the previous round reverted; keys with
+     * no fill but their outline, and a lilac action glyph ("black arrow on dark background is
+     * not" visible). Every glyph must read over the brightest spot of the painting.
      */
     @Test
-    fun theAuroraPickHasThreeFoldedCurtainsAndLegibleTranslucentKeys() {
-        val dark = KeyboardLooks.cleverkeysLook.dark
-        val aurora = dark.backdrop!!
+    fun theAuroraLookIsOutlinedKeysOverThreeRayedCurtains() {
+        val look = KeyboardLooks.auroraLook
+        assertThat(KeyboardLooks.byId(KeyboardLooks.AURORA)).isSameInstanceAs(look)
+        val p = look.dark
+        val aurora = p.backdrop!!
+        assertThat(aurora.scene).isNull()
         assertThat(aurora.ribbons).hasSize(3)
         val near = aurora.ribbons.first()
         assertWithMessage("the lowest curtain runs nearly level").that(abs(near.slope)).isAtMost(0.1f)
-        assertWithMessage("and folds more than twice across the view").that(near.waves).isAtLeast(2f)
-        for (r in aurora.ribbons) assertWithMessage("finer rays").that(r.raysPer100Dp).isAtLeast(40f)
+        assertWithMessage("low, over the nav keys").that(near.edgeY).isAtLeast(0.75f)
+        assertWithMessage("not folded").that(near.waves).isLessThan(2f)
         val rimGreenOverRed = ((near.edgeColor shr 8) and 0xFF) - ((near.edgeColor shr 16) and 0xFF)
-        assertWithMessage("a green-leaning rim").that(rimGreenOverRed).isGreaterThan(0)
+        assertWithMessage("a lilac rim, not green").that(rimGreenOverRed).isLessThan(0)
+        assertWithMessage("not dimmed").that((near.edgeColor ushr 24) and 0xFF).isAtLeast(0x60)
+        for (r in aurora.ribbons) assertWithMessage("finer rays").that(r.raysPer100Dp).isAtLeast(40f)
         val stars = aurora.stars!!
         assertThat(stars.perSquare100Dp).isAtLeast(8f)
         assertThat(stars.glintEvery).isIn(Range.closed(1, 5))
-        assertWithMessage("slightly translucent keys").that(aurora.keyOpacity).isIn(Range.closedOpen(0.8f, 1f))
+        assertWithMessage("no key fill").that(aurora.keyOpacity).isEqualTo(0f)
+        assertWithMessage("so the outline must show on the base")
+            .that(contrast(p.keyBorder, p.keyboardBackground)).isAtLeast(3.0)
+        assertWithMessage("the bar joins the faded top edge in the base colour")
+            .that(p.barBackground).isEqualTo(p.keyboardBackground)
 
         // The brightest backdrop pixel any key can sit over (curtains at a phone keyboard's raster).
-        val w = 205
-        val h = 145
-        val curtains = AuroraRaster.render(dark.keyboardBackground, aurora.ribbons, w, h, w / 411f)
+        val curtains = AuroraRaster.render(p.keyboardBackground, aurora.ribbons, 205, 145, 205 / 411f)
         val brightest = curtains.maxByOrNull { relativeLuminance(it) }!!
-        for ((role, fill, label) in listOf(
-            Triple("key", dark.key, dark.label),
-            Triple("function key", dark.modifierKey, dark.modifierLabel),
-        )) {
-            val seen = blend(withAlpha(fill, aurora.keyOpacity), brightest)
-            assertWithMessage("label on a translucent $role over the brightest aurora")
-                .that(contrast(label, seen)).isAtLeast(4.5)
-            assertWithMessage("hint on a translucent $role over the brightest aurora")
-                .that(contrast(dark.hint, seen)).isAtLeast(3.0)
+        assertWithMessage("labels over the brightest aurora").that(contrast(p.label, brightest)).isAtLeast(4.5)
+        assertWithMessage("hints over the brightest aurora").that(contrast(p.hint, brightest)).isAtLeast(3.0)
+        for ((role, glyph) in listOf("action" to p.actionLabel, "Caps Lock" to p.lockedLabel)) {
+            assertWithMessage("the $role glyph over the brightest aurora").that(contrast(glyph, brightest)).isAtLeast(3.0)
         }
-        assertWithMessage("light mode keeps opaque keys").that(KeyboardLooks.cleverkeysLook.light.backdrop).isNull()
+    }
+
+    /**
+     * The nature scene looks (maintainer 2026-11-10: meadow, stream, river rocks, forest, snow,
+     * beach): see-through key fills over the painting must keep labels at 4.5:1 and hints and the
+     * accent glyphs at 3:1, over both images of the painting, at its brightest and darkest. "Brightest"
+     * is the 99th percentile: a specular dot on a stone under one stroke of a letter does not
+     * decide legibility, a patch of sand does.
+     */
+    @Test
+    fun everySceneLookKeepsItsKeysLegibleOverItsPainting() {
+        val scenes = KeyboardLooks.SCENES - KeyboardLooks.auroraLook
+        assertThat(scenes.mapNotNull { it.dark.backdrop?.scene }.toSet()).containsExactlyElementsIn(SceneKind.entries)
+        for (look in scenes) {
+            val p = look.dark
+            val backdrop = p.backdrop!!
+            assertWithMessage("${look.id}: the scene shows through the keys").that(backdrop.keyOpacity).isIn(Range.open(0f, 1f))
+            assertThat(p.barBackground).isEqualTo(p.keyboardBackground)
+            for (frame in 0..1) {
+                val px = SceneRaster.render(backdrop.scene!!, 205, 145, 205 / 411f, frame)
+                val sorted = px.sortedBy { relativeLuminance(it) }
+                for ((where, under) in listOf("brightest" to sorted[sorted.size * 99 / 100], "darkest" to sorted.first())) {
+                    for ((role, fill) in listOf("key" to p.key, "function key" to p.modifierKey)) {
+                        val seen = blend(withAlpha(fill, backdrop.keyOpacity), under)
+                        val at = "${look.id} frame $frame, $role over the $where painting"
+                        assertWithMessage("$at: label").that(contrast(p.label, seen)).isAtLeast(4.5)
+                        assertWithMessage("$at: hint").that(contrast(p.hint, seen)).isAtLeast(3.0)
+                        assertWithMessage("$at: action glyph").that(contrast(p.actionLabel, seen)).isAtLeast(3.0)
+                    }
+                }
+            }
+        }
     }
 
     private fun withAlpha(color: Int, share: Float) = ((255 * share).toInt() shl 24) or (color and 0xFFFFFF)
-
-    /**
-     * Mean relative luminance of [backdrop] painted over [base] on a [width] × [height] view: the
-     * curtains ([AuroraRaster]), then the glows' radial falloff (full alpha at the centre, 45 % at half the radius, 0 at the edge, on
-     * an ellipse tilted by its rotation) and the top fade, as AuroraBackdropDrawable paints them.
-     */
-    private fun meanBackdropLuminance(base: Int, backdrop: LookBackdrop, width: Float, height: Float): Double {
-        val cols = 96
-        val rows = 64
-        // The curtains exactly as AuroraBackdropDrawable renders them, at the sample grid's size
-        // (width and height are in dp, so the grid's density is cols / width).
-        val curtains = AuroraRaster.render(base, backdrop.ribbons, cols, rows, cols / width)
-        var sum = 0.0
-        for (j in 0 until rows) for (i in 0 until cols) {
-            val x = (i + 0.5f) / cols * width
-            val y = (j + 0.5f) / rows * height
-            var color = curtains[j * cols + i]
-            for (g in backdrop.glows) {
-                val rx = g.rx * width
-                val ry = g.ry * height
-                val a = Math.toRadians(-g.rotationDeg.toDouble())
-                val dx = x - g.cx * width
-                val dy = y - g.cy * height
-                val u = dx * Math.cos(a) - dy * Math.sin(a)
-                val v = (dx * Math.sin(a) + dy * Math.cos(a)) * rx / ry
-                val t = Math.hypot(u, v) / rx
-                val f = when {
-                    t <= 0.5 -> 1.0 - (1.0 - 0.45) * (t / 0.5)
-                    t <= 1.0 -> 0.45 * (1.0 - (t - 0.5) / 0.5)
-                    else -> 0.0
-                }
-                val alpha = (((g.color ushr 24) and 0xFF) * f).toInt()
-                color = blend((alpha shl 24) or (g.color and 0xFFFFFF), color)
-            }
-            val fadeH = backdrop.topFade * height
-            if (y < fadeH) {
-                val alpha = (255 * (1 - y / fadeH)).toInt()
-                color = blend((alpha shl 24) or (base and 0xFFFFFF), color)
-            }
-            sum += relativeLuminance(color)
-        }
-        return sum / (cols * rows)
-    }
 
     /** [top] (with alpha) over the opaque [under], per channel. */
     private fun blend(top: Int, under: Int): Int {

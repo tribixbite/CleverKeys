@@ -4,12 +4,13 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * The aurora's optional motion (Appearance → "Moving aurora", `look_aurora_motion`, off by
- * default; maintainer 2026-11-10: "move / shimmer / float gently, ethereally, with negligible
- * overhead … time out with inactivity so the phone can idle").
+ * The optional motion of a look's backdrop (Appearance → "Animated scenes",
+ * `look_backdrop_motion`, off by default; maintainer 2026-11-10: "move / shimmer / float gently,
+ * ethereally, with negligible overhead … time out with inactivity so the phone can idle"): the
+ * CleverKeys Aurora curtains and the nature scenes.
  *
- * Nothing is re-rendered while it moves. [AuroraBackdropDrawable] keeps two pre-rendered curtain
- * bitmaps (the second with other ray seeds and a slightly shifted wave), cross-fades between them
+ * Nothing is re-rendered while it moves. [BackdropDrawable] keeps two pre-rendered images of
+ * the painting (curtains with other ray seeds, or the scene a moment later), cross-fades between them
  * and drifts each sideways by a few dp, and dims three groups of stars in turn. A frame is two
  * bitmap blits, the glows and the stars; `Keyboard2View` replays its keys from a cached display
  * list on these frames, so the keys are not redrawn either. Frames come at [FRAME_MS] (8 per
@@ -54,6 +55,16 @@ object AuroraMotion {
     /** Differing ray seeds and a slight wave shift: the second curtain image cross-fades in. */
     const val ALT_SEED_OFFSET = 1000L
     const val ALT_PHASE_SHIFT = 0.03f
+
+    /**
+     * [v] folded into 0 until [size]: a drifting particle group's offset. The group is drawn in
+     * four copies one view-size apart, so any offset in that range covers the whole view.
+     */
+    fun wrap(v: Float, size: Int): Float {
+        if (size <= 0) return 0f
+        val m = v % size
+        return if (m < 0) m + size else m
+    }
 
     /** The curtains of the second image: same light, other rays, the folds slightly moved. */
     fun alternate(ribbons: List<AuroraRibbon>): List<AuroraRibbon> =

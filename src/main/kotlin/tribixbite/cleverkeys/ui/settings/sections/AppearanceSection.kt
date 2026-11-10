@@ -325,15 +325,15 @@ internal fun SettingsActivity.AppearanceSection() {
                     }
                 )
 
-                // The CleverKeys look's dark aurora drifts and shimmers until the keyboard has been
-                // idle a while (AuroraMotion). Off by default until its battery cost is measured.
+                // The scene looks' backdrops move until the keyboard has been idle a while
+                // (AuroraMotion). Off by default until its battery cost is measured.
                 SettingsSwitch(
-                    title = stringResource(R.string.appearance_look_aurora_motion_title),
-                    description = stringResource(R.string.appearance_look_aurora_motion_desc),
-                    checked = lookAuroraMotion,
+                    title = stringResource(R.string.appearance_look_backdrop_motion_title),
+                    description = stringResource(R.string.appearance_look_backdrop_motion_desc),
+                    checked = lookBackdropMotion,
                     onCheckedChange = {
-                        lookAuroraMotion = it
-                        saveSetting("look_aurora_motion", it)
+                        lookBackdropMotion = it
+                        saveSetting("look_backdrop_motion", it)
                     }
                 )
 

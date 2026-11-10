@@ -87,4 +87,30 @@ class LookBackdropTest {
         assertWithMessage("no curtains = the base alone")
             .that(AuroraRaster.render(base, emptyList(), 4, 3, 1f).toSet()).containsExactly(base)
     }
+
+    /**
+     * Scene particles (leaves, snow, sparkles): a leaf field picks each particle's colour from its
+     * tints and a tilt; a plain star field keeps exactly its sky (no extra random draws).
+     */
+    @Test
+    fun leavesGetTheirOwnColoursAndTiltsAndStarsAreUnchanged() {
+        val leaves = KeyboardLooks.forestLook.dark.backdrop!!.stars!!
+        assertThat(leaves.shape).isEqualTo(ParticleShape.LEAF)
+        val placed = LookStars.place(leaves, 1080, 760, 2.625f)
+        val tints = leaves.tints.map { it and 0xFFFFFF }.toSet()
+        assertThat(placed).isNotEmpty()
+        for (s in placed) {
+            assertThat(s.tint).isIn(tints)
+            assertThat(s.angle).isIn(com.google.common.collect.Range.closedOpen(0f, 180f))
+        }
+        assertWithMessage("several colours in use").that(placed.map { it.tint }.toSet().size).isGreaterThan(1)
+        for (s in LookStars.place(field, 1080, 760, 2.625f)) {
+            assertThat(s.tint).isEqualTo(0)
+            assertThat(s.angle).isEqualTo(0f)
+        }
+        val snow = KeyboardLooks.snowLook.dark.backdrop!!.stars!!
+        assertWithMessage("snow falls").that(snow.driftYDpPerS).isGreaterThan(0f)
+        assertWithMessage("leaves fall").that(leaves.driftYDpPerS).isGreaterThan(0f)
+    }
 }
+

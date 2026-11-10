@@ -10,7 +10,7 @@ import kotlin.random.Random
  * still unless the user turns on "Moving aurora" ([AuroraMotion]).
  *
  * Pure JVM (ARGB ints and fractions of the view), so the definition, the star placement and the
- * "darker than the keys" rule run in `runPureTests`; [AuroraBackdropDrawable] paints it.
+ * "darker than the keys" rule run in `runPureTests`; [BackdropDrawable] paints it.
  * The CleverKeys look's dark palette uses it (maintainer 2026-11-07: "a gradient of an aurora
  * borealis, purples on black, with a subtle dash of stardust, not animated"; 2026-11-10: motion as
  * an opt-in, off by default until its battery cost is measured).
@@ -24,6 +24,12 @@ data class LookBackdrop(
      * as clouds (maintainer 2026-11-09: "too cloud like and less aurora like").
      */
     val ribbons: List<AuroraRibbon> = emptyList(),
+    /**
+     * A painted nature scene ([SceneRaster]) in place of the curtains: the scene looks' meadow,
+     * stream, river rocks, forest, snow and beach (maintainer 2026-11-10). Null = the curtains
+     * (or the plain base colour when there are none).
+     */
+    val scene: SceneKind? = null,
     /** Stars over the glows; null = none. */
     val stars: LookStarfield? = null,
     /**
@@ -91,7 +97,7 @@ data class AuroraRibbon(
 /**
  * Paints [AuroraRibbon]s over an opaque base colour into an ARGB pixel array (pure JVM, so the
  * look's "darker than the keys" rule can measure the real painting). Rendered once per view
- * size; `AuroraBackdropDrawable` scales the result up, the curtains being soft at any size.
+ * size; `BackdropDrawable` scales the result up, the curtains being soft at any size.
  */
 object AuroraRaster {
 
@@ -217,10 +223,49 @@ data class LookStarfield(
     val maxRadiusDp: Float,
     /** Every Nth star also draws a faint four-point glint (the "twinkle"); 0 = none. */
     val glintEvery: Int,
+    /** What each particle looks like: a star (the default), a snowflake, a leaf, a mote, a glint. */
+    val shape: ParticleShape = ParticleShape.STAR,
+    /**
+     * Colours the particles are drawn in, one picked per particle (leaves in autumn colours);
+     * empty = all in [color]. Alphas come from each particle as for [color].
+     */
+    val tints: List<Int> = emptyList(),
+    /**
+     * How the particles travel while the backdrop moves ([AuroraMotion]), dp per second: snow
+     * falls, leaves drift down, motes rise, sparkles go with the current. The twinkle groups go
+     * at 0.7×, 1× and 1.3× of it, so near and far particles part. 0 = they stay put and twinkle.
+     */
+    val driftXDpPerS: Float = 0f,
+    val driftYDpPerS: Float = 0f,
 )
 
-/** One placed star, in pixels. */
-data class Star(val x: Float, val y: Float, val radius: Float, val alpha: Int, val glint: Boolean)
+/** The look of a [LookStarfield]'s particles ([BackdropDrawable] draws them). */
+enum class ParticleShape {
+    /** A dot, every Nth with a faint four-point glint. */
+    STAR,
+    /** A soft white flake with a halo. */
+    FLAKE,
+    /** A small tilted oval leaf. */
+    LEAF,
+    /** A soft glowing mote (pollen, a firefly). */
+    MOTE,
+    /** A four-point sparkle: sun on water, a wet stone. */
+    GLINT,
+}
+
+/**
+ * One placed star (or other particle), in pixels: [tint] is its colour without alpha (0 = the
+ * field's), [angle] its tilt in degrees (leaves).
+ */
+data class Star(
+    val x: Float,
+    val y: Float,
+    val radius: Float,
+    val alpha: Int,
+    val glint: Boolean,
+    val tint: Int = 0,
+    val angle: Float = 0f,
+)
 
 /** Places a [LookStarfield] on a view of a given size. Pure; `LookBackdropTest`. */
 object LookStars {
@@ -237,6 +282,10 @@ object LookStars {
         val rng = Random(field.seed xor (widthPx.toLong() shl 20) xor heightPx.toLong())
         val lowAlpha = field.minAlpha.coerceIn(0, 255)
         val highAlpha = field.maxAlpha.coerceIn(lowAlpha, 255)
+        // Tints and tilts draw extra random numbers only for fields that use them, so a plain
+        // star field keeps exactly the sky it always had.
+        val tinted = field.tints.isNotEmpty()
+        val tilted = field.shape == ParticleShape.LEAF
         return List(count) { i ->
             val t = rng.nextFloat()
             Star(
@@ -246,6 +295,8 @@ object LookStars {
                 radius = (field.minRadiusDp + (field.maxRadiusDp - field.minRadiusDp) * t * t) * density,
                 alpha = lowAlpha + ((highAlpha - lowAlpha) * rng.nextFloat()).roundToInt(),
                 glint = field.glintEvery > 0 && i % field.glintEvery == 0,
+                tint = if (tinted) field.tints[rng.nextInt(field.tints.size)] and 0x00FFFFFF else 0,
+                angle = if (tilted) rng.nextFloat() * 180f else 0f,
             )
         }
     }

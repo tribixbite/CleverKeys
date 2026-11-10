@@ -59,7 +59,7 @@ data class LayoutThemeChoice(
 )
 
 /**
- * Every theme Theme Manager offers, in its order — Familiar looks, Built-in (the CleverKeys
+ * Every theme Theme Manager offers, in its order — Familiar looks, Scenes, Built-in (the CleverKeys
  * default look first; Monet only on Android 12+, as there), Custom, then the decorative
  * categories — with the ids Theme Manager stores in `theme`.
  */
@@ -93,6 +93,8 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
         }
     val looksSection = res.getString(R.string.theme_section_looks)
     val looks = ThemeSettingsActivity.LOOK_THEMES.mapNotNull { lookChoice(it, looksSection) }
+    val scenesSection = res.getString(R.string.theme_section_scenes)
+    val scenes = ThemeSettingsActivity.SCENE_THEMES.mapNotNull { lookChoice(it, scenesSection) }
     val customSection = res.getString(R.string.theme_section_custom)
     val custom = customThemes.map {
         LayoutThemeChoice(
@@ -118,7 +120,7 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
             )
         }
     }
-    return looks + builtIn + custom + decorative
+    return looks + scenes + builtIn + custom + decorative
 }
 
 /**
@@ -127,7 +129,7 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
  */
 fun layoutThemeDisplayName(id: String, res: Resources, customThemes: List<CustomTheme>): String {
     ThemeSettingsActivity.BUILTIN_THEMES.firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
-    (ThemeSettingsActivity.LOOK_THEMES + ThemeSettingsActivity.DEFAULT_LOOK_THEME)
+    (ThemeSettingsActivity.LOOK_THEMES + ThemeSettingsActivity.SCENE_THEMES + ThemeSettingsActivity.DEFAULT_LOOK_THEME)
         .firstOrNull { it.id == id }?.let { return res.getString(it.nameRes) }
     if (id.startsWith("decorative_")) getThemeById(id.removePrefix("decorative_"))?.let { return it.displayName(res) }
     if (id.startsWith("custom_")) customThemes.firstOrNull { "custom_${it.id}" == id }?.let { return it.name }

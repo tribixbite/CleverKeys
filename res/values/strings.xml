@@ -614,8 +614,8 @@
     <string name="appearance_look_key_preview_desc">The CleverKeys look and the iOS-, Gboard-, SwiftKey- and Samsung-style looks show the pressed character in a pop-up above the key.</string>
     <string name="appearance_look_space_language_title">Language name on the space bar</string>
     <string name="appearance_look_space_language_desc">Samsung-style shows the current language on the space bar, as Samsung Keyboard does.</string>
-    <string name="appearance_look_aurora_motion_title">Moving aurora</string>
-    <string name="appearance_look_aurora_motion_desc">The CleverKeys look\'s dark aurora drifts and shimmers gently, then rests after 20 seconds without typing. Uses a little extra battery while it moves. Android 10 or later.</string>
+    <string name="appearance_look_backdrop_motion_title">Animated scenes</string>
+    <string name="appearance_look_backdrop_motion_desc">The Scenes themes (CleverKeys Aurora, Meadow, Stream, River rocks, Forest, Snow, Beach) move gently: curtains and water drift, grass sways, snow and leaves fall. They rest after 20 seconds without typing and stay still in battery saver. Uses a little extra battery while moving. Android 10 or later.</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>
@@ -2101,6 +2101,22 @@
     <string name="theme_builtin_monetdark_desc">Material You dark variant</string>
     <string name="theme_section_looks">Familiar looks</string>
     <string name="theme_looks_desc">Colours and key shapes of familiar phone keyboards; light or dark follows the system. Not affiliated with Apple, Google, Microsoft or Samsung.</string>
+    <string name="theme_section_scenes">Scenes</string>
+    <string name="theme_scenes_desc">CleverKeys keys over a painted scene that shows through them. Turn on Appearance → Animated scenes to let it move.</string>
+    <string name="theme_look_aurora_name" translatable="false">CleverKeys Aurora</string>
+    <string name="theme_look_aurora_desc">Aurora curtains and stars behind keys drawn by their outline</string>
+    <string name="theme_look_meadow_name">Meadow</string>
+    <string name="theme_look_meadow_desc">Grass swaying in the breeze, wildflowers and drifting pollen</string>
+    <string name="theme_look_stream_name">Stream</string>
+    <string name="theme_look_stream_desc">Flowing water with light running on the current</string>
+    <string name="theme_look_river_rocks_name">River rocks</string>
+    <string name="theme_look_river_rocks_desc">Wet river stones, glistening</string>
+    <string name="theme_look_forest_name">Forest</string>
+    <string name="theme_look_forest_desc">A twilight forest with falling leaves</string>
+    <string name="theme_look_snow_name">Snow</string>
+    <string name="theme_look_snow_desc">Snowy hills at night with falling snow</string>
+    <string name="theme_look_beach_name">Beach</string>
+    <string name="theme_look_beach_desc">Waves washing over the sand, sun sparkling on the sea</string>
     <string name="theme_look_ios_name">iOS-style</string>
     <string name="theme_look_gboard_name">Gboard-style</string>
     <string name="theme_look_swiftkey_name">SwiftKey-style</string>

@@ -806,9 +806,11 @@ class Theme {
                     }
                 } else null
 
-                // A look's backdrop may ask for slightly translucent fills so its painting shows
-                // through (LookBackdrop.keyOpacity); outlines, shadows and labels are unaffected.
-                val fillShare = theme.lookBackdrop?.keyOpacity?.coerceIn(0f, 1f) ?: 1f
+                // A look's backdrop may ask for see-through fills so its painting shows through
+                // (LookBackdrop.keyOpacity, down to none: CleverKeys Aurora); outlines, shadows
+                // and labels are unaffected, and a pressed key keeps its whole fill so the press
+                // still shows on a key drawn by its outline alone.
+                val fillShare = if (activated) 1f else theme.lookBackdrop?.keyOpacity?.coerceIn(0f, 1f) ?: 1f
                 bg_paint.alpha = ((if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare).roundToInt()
                 // H-4: the activated frame's border uses the Theme-Creator's "Border
                 // Activated" colour (XML themes default it to keyBorderColorTop).

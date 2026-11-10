@@ -118,4 +118,19 @@ class AuroraMotionTest {
         clock.advance(50_000)
         assertWithMessage("the first frame after rest() starts from zero elapsed").that(clock.motionMs).isEqualTo(rested)
     }
+
+    /** A drifting particle group's offset always lands inside the view, from any motion time. */
+    @Test
+    fun aDriftWrapsIntoTheView() {
+        assertThat(AuroraMotion.wrap(0f, 100)).isEqualTo(0f)
+        assertThat(AuroraMotion.wrap(250f, 100)).isEqualTo(50f)
+        assertThat(AuroraMotion.wrap(-30f, 100)).isEqualTo(70f)
+        assertThat(AuroraMotion.wrap(42f, 0)).isEqualTo(0f)
+        var v = -1000f
+        while (v < 1000f) {
+            assertThat(AuroraMotion.wrap(v, 97)).isIn(Range.closedOpen(0f, 97f))
+            v += 13.7f
+        }
+    }
 }
+
