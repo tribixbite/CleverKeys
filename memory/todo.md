@@ -1279,6 +1279,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     seconds after the keyboard opens.
     All 7 scenes checked on the Pixel (`5425f513`, Settings test field). Open: maintainer's
     verdict on the scenes.
+    Seventh round (2026-11-10, maintainer: separate key fill vs border opacity everywhere; the
+    toggle only moved after a reload and often not at all; a 4th aurora curtain with an indigo
+    middle one and livelier aurora; redo river rocks as multicoloured slate / gem / agate, forest
+    as real swaying leaves without line artifacts or falling specks, beach with texture and
+    full waves, meadow grass that sways instead of pulsing to blurry). Done: user
+    `key_border_opacity` (v6 migration copies `key_opacity`), theme shares
+    `LookGeometry.keyFillOpacity` / `keyBorderOpacity` through XML / JSON / backup / Creator /
+    look export; `syncBackdropMotion` on every setKeyboard + window-visible + attach; scenes as
+    layers warped by `drawBitmapMesh` (`SceneMotion`), painted at full resolution on a
+    background thread; aurora `MotionStyle.AURORA` (12 dp, 10 fps, brighter alt). Previews in
+    the session scratchpad (`scene2/`). Open: device check of motion on the Pixel, battery
+    re-measure at the new frame rates (12 fps for the swaying scenes), maintainer's verdict.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

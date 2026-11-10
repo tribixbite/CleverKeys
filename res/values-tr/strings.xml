@@ -396,8 +396,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Tuş etiketlerinin parlaklığı (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Klavye Opaklığı</string>
     <string name="appearance_keyboard_opacity_desc">Klavye arka planının opaklığı</string>
-    <string name="appearance_key_opacity_title">Tuş Opaklığı</string>
-    <string name="appearance_key_opacity_desc">Tek tek tuşların opaklığı</string>
+    <string name="appearance_key_opacity_title">Tuş Arka Planı Opaklığı</string>
+    <string name="appearance_key_opacity_desc">Her tuşun dolgusunun opaklığı</string>
+    <string name="appearance_key_border_opacity_title">Tuş Kenarlığı Opaklığı</string>
+    <string name="appearance_key_border_opacity_desc">Her tuşun dış çizgisinin opaklığı</string>
     <string name="appearance_activated_key_opacity_title">Etkinleştirilen Tuş Opaklığı</string>
     <string name="appearance_activated_key_opacity_desc">Tuşa basıldığındaki opaklık</string>
     <string name="appearance_character_size_title">Karakter Boyutu</string>
@@ -2644,6 +2646,8 @@
     <string name="theme_function_chars">İşlev tuşu olarak çizilen karakterler</string>
     <string name="theme_dynamic_color">Duvar kâğıdı renklerini izle (Android 12+)</string>
     <string name="theme_shape_function_label_scale">İşlev Tuşu Metin Boyutu</string>
+    <string name="theme_shape_key_fill_opacity">Tuş Dolgusu Opaklığı</string>
+    <string name="theme_shape_key_border_opacity">Tuş Dış Çizgisi Opaklığı</string>
     <string name="theme_shift_filled">Büyük harfte dolu Shift oku</string>
     <string name="theme_section_bar">Öneri Çubuğu Düzeni</string>
     <string name="theme_bar_desc">Tanıdık klavyelerdeki gibi, kayan öneriler yerine sabit yuvalar. Yalnızca görünüm değişir: boşluk yine aynı kelimeyi ekler.</string>

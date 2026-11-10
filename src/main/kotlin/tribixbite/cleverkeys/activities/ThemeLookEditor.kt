@@ -478,6 +478,8 @@ private fun geometryLabel(field: GeometryField): Int = when (field) {
     GeometryField.LABEL_SCALE -> R.string.theme_shape_label_scale
     GeometryField.LABEL_WEIGHT -> R.string.theme_shape_label_weight
     GeometryField.FUNCTION_LABEL_SCALE -> R.string.theme_shape_function_label_scale
+    GeometryField.FILL_OPACITY -> R.string.theme_shape_key_fill_opacity
+    GeometryField.BORDER_OPACITY -> R.string.theme_shape_key_border_opacity
 }
 
 private fun hintsLabel(l: LookLegends): Int = when (l) {

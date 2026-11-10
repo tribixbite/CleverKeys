@@ -139,6 +139,11 @@ Power: the Pixel's energy rails need no root through Perfetto (`android.power` d
 denied to shell, and batterystats does not accumulate on AC). A `--background` trace stays a
 0-byte file until its `duration_ms` ends: pull after that. Type with ONE `monkey -f` script
 (Tap/UserWait); an `input tap` per key starts a JVM each time and swamps the measurement.
+A setting read only in `onDraw` never reaches a re-shown keyboard whose display list is unchanged
+(the "Animated scenes" toggle did nothing until a reload): apply it in `setKeyboard` (every pref
+change) and `onWindowVisibilityChanged`. Never cross-fade two positions of sharp content (grass
+"pulsed to blurry"): move it as a layer through `drawBitmapMesh` (`SceneMotion`), and preview a
+scene off-device with kotlinc on `SceneRaster.kt` + `SceneMotion.kt` before a 20-minute build.
 
 ## Kotlin compiler execution on Termux
 

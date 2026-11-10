@@ -414,8 +414,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Độ sáng của nhãn phím (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Độ mờ bàn phím</string>
     <string name="appearance_keyboard_opacity_desc">Độ mờ của nền bàn phím</string>
-    <string name="appearance_key_opacity_title">Độ mờ phím</string>
-    <string name="appearance_key_opacity_desc">Độ mờ của từng phím riêng lẻ</string>
+    <string name="appearance_key_opacity_title">Độ mờ nền phím</string>
+    <string name="appearance_key_opacity_desc">Độ mờ của phần tô của từng phím</string>
+    <string name="appearance_key_border_opacity_title">Độ mờ viền phím</string>
+    <string name="appearance_key_border_opacity_desc">Độ mờ của đường viền từng phím</string>
     <string name="appearance_activated_key_opacity_title">Độ mờ phím được kích hoạt</string>
     <string name="appearance_activated_key_opacity_desc">Độ mờ khi phím được nhấn</string>
     <string name="appearance_character_size_title">Cỡ ký tự</string>
@@ -2616,6 +2618,8 @@
     <string name="theme_function_chars">Ký tự vẽ như phím chức năng</string>
     <string name="theme_dynamic_color">Theo màu hình nền (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Cỡ chữ phím chức năng</string>
+    <string name="theme_shape_key_fill_opacity">Độ mờ phần tô phím</string>
+    <string name="theme_shape_key_border_opacity">Độ mờ đường viền phím</string>
     <string name="theme_shift_filled">Mũi tên Shift tô đầy khi bật</string>
     <string name="theme_section_bar">Bố cục thanh gợi ý</string>
     <string name="theme_bar_desc">Các ô cố định thay cho gợi ý cuộn, như trên các bàn phím quen thuộc. Chỉ cách hiển thị thay đổi: phím cách vẫn chèn cùng một từ.</string>

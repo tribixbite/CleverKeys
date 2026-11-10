@@ -87,6 +87,7 @@ class DefaultsSingleDefinitionDriftTest {
         "keyboardOpacity" to "percent × 255 / 100",
         "keyOpacity" to "percent × 255 / 100",
         "keyActivatedOpacity" to "percent × 255 / 100",
+        "keyBorderOpacity" to "percent × 255 / 100",
         "customBorderRadius" to "percent / 100 (fraction of key width)",
         "customBorderLineWidth" to "dp → px",
         "key_vertical_margin" to "dp → px / 100",

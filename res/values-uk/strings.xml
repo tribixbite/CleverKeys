@@ -403,8 +403,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Яскравість написів на клавішах (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Прозорість клавіатури</string>
     <string name="appearance_keyboard_opacity_desc">Непрозорість фону клавіатури</string>
-    <string name="appearance_key_opacity_title">Прозорість клавіш</string>
-    <string name="appearance_key_opacity_desc">Непрозорість окремих клавіш</string>
+    <string name="appearance_key_opacity_title">Непрозорість фону клавіш</string>
+    <string name="appearance_key_opacity_desc">Непрозорість заливки кожної клавіші</string>
+    <string name="appearance_key_border_opacity_title">Непрозорість рамки клавіш</string>
+    <string name="appearance_key_border_opacity_desc">Непрозорість контуру кожної клавіші</string>
     <string name="appearance_activated_key_opacity_title">Прозорість натиснутої клавіші</string>
     <string name="appearance_activated_key_opacity_desc">Непрозорість під час натискання клавіші</string>
     <string name="appearance_character_size_title">Розмір символів</string>
@@ -2734,6 +2736,8 @@
     <string name="theme_function_chars">Символи, що відображаються як функціональні клавіші</string>
     <string name="theme_dynamic_color">Кольори шпалер (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Розмір тексту функціональних клавіш</string>
+    <string name="theme_shape_key_fill_opacity">Непрозорість заливки клавіш</string>
+    <string name="theme_shape_key_border_opacity">Непрозорість контуру клавіш</string>
     <string name="theme_shift_filled">Заповнена стрілка Shift у верхньому регістрі</string>
     <string name="theme_section_bar">Розташування панелі підказок</string>
     <string name="theme_bar_desc">Фіксовані комірки замість прокручуваних підказок, як на звичних клавіатурах. Змінюється лише відображення: пробіл і далі вставляє те саме слово.</string>

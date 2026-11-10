@@ -191,6 +191,8 @@ object ThemeSpecs {
                 labelWeight = t.geometry.labelWeight ?: b.geometry.labelWeight,
                 functionLabelScale = t.geometry.functionLabelScale ?: b.geometry.functionLabelScale,
                 equalGaps = t.geometry.equalGaps ?: b.geometry.equalGaps,
+                keyFillOpacity = t.geometry.keyFillOpacity ?: b.geometry.keyFillOpacity,
+                keyBorderOpacity = t.geometry.keyBorderOpacity ?: b.geometry.keyBorderOpacity,
             ),
             functionChars = t.functionChars ?: b.functionChars,
             legends = t.legends ?: b.legends,

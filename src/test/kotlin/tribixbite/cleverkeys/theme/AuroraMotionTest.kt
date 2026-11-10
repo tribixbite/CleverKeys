@@ -15,33 +15,56 @@ class AuroraMotionTest {
 
     @Test
     fun everyFrameStaysInRangeAndADriftNeverUncoversAnEdge() {
-        assertThat(AuroraMotion.DRIFT_MARGIN_DP).isAtLeast(AuroraMotion.MAX_DRIFT_DP)
-        var t = 0.0
-        while (t < 600.0) {
-            val f = AuroraMotion.frame(t)
-            assertThat(f.crossfade).isIn(Range.closed(0f, 1f))
-            assertThat(abs(f.driftADp)).isAtMost(AuroraMotion.MAX_DRIFT_DP)
-            assertThat(abs(f.driftBDp)).isAtMost(AuroraMotion.MAX_DRIFT_DP)
-            assertThat(f.starAlpha.size).isEqualTo(AuroraMotion.STAR_GROUPS)
-            for (a in f.starAlpha) assertThat(a).isIn(Range.closed(AuroraMotion.STAR_MIN, 1f))
-            t += 0.37
+        for (style in listOf(MotionStyle.GENTLE, MotionStyle.AURORA)) {
+            assertThat(style.marginDp).isAtLeast(style.driftDp)
+            var t = 0.0
+            while (t < 600.0) {
+                val f = AuroraMotion.frame(t, style)
+                assertThat(f.crossfade).isIn(Range.closed(0f, 1f))
+                assertThat(abs(f.driftADp)).isAtMost(style.driftDp)
+                assertThat(abs(f.driftBDp)).isAtMost(style.driftDp)
+                assertThat(f.starAlpha.size).isEqualTo(AuroraMotion.STAR_GROUPS)
+                for (a in f.starAlpha) assertThat(a).isIn(Range.closed(AuroraMotion.STAR_MIN, 1f))
+                t += 0.37
+            }
         }
     }
 
-    /** "Gently": between two frames at the frame rate nothing visibly jumps. */
+    /**
+     * "Gently": between two frames at the frame rate nothing visibly jumps — a sliver of a dp for
+     * the stream and the snow, about half a dp for the livelier aurora at its faster frame rate.
+     */
     @Test
     fun consecutiveFramesMoveByASliverOfADp() {
-        val dt = AuroraMotion.FRAME_MS / 1000.0
-        var t = 0.0
-        while (t < 300.0) {
-            val a = AuroraMotion.frame(t)
-            val b = AuroraMotion.frame(t + dt)
-            assertWithMessage("drift per frame at $t").that(abs(b.driftADp - a.driftADp)).isLessThan(0.2f)
-            assertThat(abs(b.driftBDp - a.driftBDp)).isLessThan(0.2f)
-            assertWithMessage("cross-fade per frame").that(abs(b.crossfade - a.crossfade)).isLessThan(0.05f)
-            for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isLessThan(0.08f)
-            t += 0.5
+        for ((style, frameMs, maxDrift, maxFade) in listOf(
+            Quad(MotionStyle.GENTLE, AuroraMotion.FRAME_MS, 0.2f, 0.05f),
+            Quad(MotionStyle.AURORA, AuroraMotion.AURORA_FRAME_MS, 0.6f, 0.06f),
+        )) {
+            val dt = frameMs / 1000.0
+            var t = 0.0
+            while (t < 300.0) {
+                val a = AuroraMotion.frame(t, style)
+                val b = AuroraMotion.frame(t + dt, style)
+                assertWithMessage("drift per frame at $t").that(abs(b.driftADp - a.driftADp)).isLessThan(maxDrift)
+                assertThat(abs(b.driftBDp - a.driftBDp)).isLessThan(maxDrift)
+                assertWithMessage("cross-fade per frame").that(abs(b.crossfade - a.crossfade)).isLessThan(maxFade)
+                for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isLessThan(0.08f)
+                t += 0.5
+            }
         }
+    }
+
+    private data class Quad(val style: MotionStyle, val frameMs: Long, val maxDrift: Float, val maxFade: Float)
+
+    /**
+     * Maintainer 2026-11-10: "aurora is barely perceptible". Its motion sways well over twice as
+     * far as the gentle scenes' and cycles faster.
+     */
+    @Test
+    fun theAuroraMovesVisiblyMoreThanTheGentleScenes() {
+        assertThat(MotionStyle.AURORA.driftDp).isAtLeast(2 * MotionStyle.GENTLE.driftDp)
+        assertThat(MotionStyle.AURORA.fadePeriodS).isLessThan(MotionStyle.GENTLE.fadePeriodS)
+        assertThat(MotionStyle.AURORA.driftPeriodS).isLessThan(MotionStyle.GENTLE.driftPeriodS)
     }
 
     @Test
@@ -55,17 +78,19 @@ class AuroraMotionTest {
         assertThat(rest.starAlpha.toList()).containsExactly(1f, 1f, 1f)
     }
 
+    /** The second image: other rays, folds moved along, more light (the cross-fade shimmers). */
     @Test
-    fun theSecondImageHasOtherRaysAndTheSameLight() {
+    fun theSecondImageHasOtherRaysAndMoreLight() {
         val ribbons = KeyboardLooks.CLEVERKEYS_AURORA.ribbons
         val alt = AuroraMotion.alternate(ribbons)
         assertThat(alt).hasSize(ribbons.size)
         for ((a, b) in ribbons.zip(alt)) {
             assertThat(b.seed).isNotEqualTo(a.seed)
-            assertThat(b.edgeColor).isEqualTo(a.edgeColor)
-            assertThat(b.topColor).isEqualTo(a.topColor)
+            assertThat(b.edgeColor and 0xFFFFFF).isEqualTo(a.edgeColor and 0xFFFFFF)
+            assertWithMessage("brighter").that(b.edgeColor ushr 24).isGreaterThan(a.edgeColor ushr 24)
+            assertThat(b.topColor and 0xFFFFFF).isEqualTo(a.topColor and 0xFFFFFF)
             assertThat(b.edgeY).isEqualTo(a.edgeY)
-            assertThat(abs(b.phase - a.phase)).isAtMost(0.05f)
+            assertThat(abs(b.phase - a.phase)).isAtMost(0.1f)
         }
         val base = 0xFF0A080E.toInt()
         assertWithMessage("a different picture")

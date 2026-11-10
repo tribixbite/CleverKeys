@@ -103,6 +103,23 @@ class KeyboardLookGeometryTest {
         assertThat(resolve(LookGeometry(functionLabelScale = 9f)).functionLabelScale).isEqualTo(KeyboardLookGeometry.MAX_LABEL_SCALE)
     }
 
+    /**
+     * 2026-11-10 (maintainer: "key opacity 0 but key border opacity 100%"): a theme's fill and
+     * outline opacity shares are separate, clamped to 0..1, and 1 wherever a theme leaves them
+     * undefined, so every other theme draws as before.
+     */
+    @Test
+    fun aThemesFillAndOutlineOpacitySharesAreSeparateAndDefaultToOne() {
+        assertThat(resolve(null).fillOpacity).isEqualTo(1f)
+        assertThat(resolve(null).borderOpacity).isEqualTo(1f)
+        val e = resolve(LookGeometry(keyFillOpacity = 0f, keyBorderOpacity = 0.4f))
+        assertThat(e.fillOpacity).isEqualTo(0f)
+        assertThat(e.borderOpacity).isEqualTo(0.4f)
+        assertThat(resolve(LookGeometry(keyFillOpacity = 3f, keyBorderOpacity = -1f)).let { it.fillOpacity to it.borderOpacity })
+            .isEqualTo(1f to 0f)
+        assertThat(KeyboardLookGeometry.opacityShare(Float.NaN)).isEqualTo(1f)
+    }
+
     // ── legends (corner labels) and per-key shapes (lead review 2026-10-27) ──────────
 
     @Test

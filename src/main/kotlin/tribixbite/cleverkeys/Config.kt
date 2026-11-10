@@ -38,6 +38,11 @@ object Defaults {
     // activated/pressed state is more visually obvious as press feedback
     // than a pure color shift.
     const val KEY_ACTIVATED_OPACITY = 80
+    /**
+     * Key outline opacity, separate from [KEY_OPACITY] (the fill's) since 2026-11-10; an upgrade
+     * starts at its key opacity ([KeyBorderOpacityMigration]) so nothing it draws changes.
+     */
+    const val KEY_BORDER_OPACITY = 100
     const val CHARACTER_SIZE = 1.18f
     // #133: Secondary-key (flick) label size as fraction of key height.
     // Exposed so a preference can scale it independently of the primary label.
@@ -784,6 +789,25 @@ object LearningMigration {
 }
 
 /**
+ * v6 (2026-11-10): the key outline got its own opacity (`key_border_opacity`, maintainer: "key
+ * opacity 0 but key border opacity 100%"); before it, `key_opacity` drew fill and outline alike.
+ */
+object KeyBorderOpacityMigration {
+    const val PREF_KEY = "key_border_opacity"
+    private const val INTRODUCED_IN_VERSION = 6
+
+    /**
+     * The `key_border_opacity` to seed on an upgrade, or null to leave it alone: until v6 the
+     * outline was drawn at the key opacity ([keyOpacityPercent], `key_opacity`, null = never set =
+     * the default), so an upgrading install starts there and looks exactly as before. A fresh
+     * install, or one that already holds the setting (a restored backup), keeps what it has.
+     */
+    fun seed(isFreshInstall: Boolean, savedVersion: Int, hasExplicitChoice: Boolean, keyOpacityPercent: Int?): Int? =
+        if (isFreshInstall || savedVersion >= INTRODUCED_IN_VERSION || hasExplicitChoice || keyOpacityPercent == null) null
+        else keyOpacityPercent
+}
+
+/**
  * v5 (2026-09-30): the hold-then-select subkey popover defaults ON for fresh installs
  * (`Defaults.SUBKEY_POPOVER_ENABLED`) but must not change what holding a letter does for
  * someone who already uses the keyboard — for them holding still repeats. Upgrades are seeded
@@ -895,6 +919,8 @@ class Config private constructor(
     @JvmField var customBorderLineWidth = 0f
     @JvmField var keyOpacity = 0
     @JvmField var keyActivatedOpacity = 0
+    /** Key outline alpha, 0..255 (`key_border_opacity`); the fill's is [keyOpacity]. */
+    @JvmField var keyBorderOpacity = 0
     @JvmField var double_tap_lock_shift = Defaults.DOUBLE_TAP_LOCK_SHIFT
     @JvmField var characterSize = 0f
     /** Android style id of the EFFECTIVE theme ([themeName]); what the keyboard view inflates with. */
@@ -1289,6 +1315,7 @@ class Config private constructor(
         keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", Defaults.KEYBOARD_OPACITY) * 255 / 100
         keyOpacity = safeGetInt(_prefs, "key_opacity", Defaults.KEY_OPACITY) * 255 / 100
         keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY) * 255 / 100
+        keyBorderOpacity = safeGetInt(_prefs, KeyBorderOpacityMigration.PREF_KEY, Defaults.KEY_BORDER_OPACITY) * 255 / 100
 
         borderConfig = _prefs.getBoolean("border_config", Defaults.BORDER_CONFIG)
         look_show_hints = _prefs.getBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
@@ -1808,7 +1835,7 @@ class Config private constructor(
         // so LearningMigration can seed the master gate and stamp the one-time
         // selection-history reset. v1.5.0 devices sit exactly at version == 3.
         // 4 → 5 (2026-09-30): SubkeyPopoverMigration seeds the popover OFF for upgrades.
-        private const val CONFIG_VERSION = 5
+        private const val CONFIG_VERSION = 6
         private const val MARGIN_PREFS_VERSION = 1  // For dp→percentage migration
 
         // `isSwipeTypingSupportedForLayout` (the #9 "QWERTY-Latin only" allowlist) was
@@ -2169,6 +2196,13 @@ class Config private constructor(
             // The three legacy steps, each run once for every version below the one that
             // introduced it (audit L4: they were pasted into each `when` branch to emulate the
             // Java switch fallthrough of the original).
+            // v6 (2026-11-10): the outline's own opacity — rules in [KeyBorderOpacityMigration].
+            KeyBorderOpacityMigration.seed(
+                isFreshInstall, saved_version,
+                hasExplicitChoice = prefs.contains(KeyBorderOpacityMigration.PREF_KEY),
+                keyOpacityPercent = if (prefs.contains("key_opacity")) safeGetInt(prefs, "key_opacity", Defaults.KEY_OPACITY) else null,
+            )?.let { e.putInt(KeyBorderOpacityMigration.PREF_KEY, it) }
+
             if (saved_version < 1) {
                 // v1: the layout list replaces the layout / second_layout / custom_layout trio.
                 val l = mutableListOf<LayoutsPreference.Layout>()

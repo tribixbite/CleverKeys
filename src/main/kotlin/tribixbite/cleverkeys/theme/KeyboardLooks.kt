@@ -334,7 +334,7 @@ object KeyboardLooks {
 
     /**
      * The CleverKeys Aurora look's backdrop (declared before the looks that use it: object
-     * properties initialise in order): three rayed aurora curtains ([AuroraRibbon]; until
+     * properties initialise in order): four rayed aurora curtains ([AuroraRibbon]; until
      * 2026-11-09 three soft tilted glows, which the maintainer found "too cloud like"), a faint
      * haze, and a star field with frequent glints. Fractions of the view.
      *
@@ -342,16 +342,23 @@ object KeyboardLooks {
      * after ten previews and one round on the device: finer rays, a third curtain and the lowest
      * curtain nearly level (kept); the extra folds, the green rim and the 30 % dimming reverted;
      * the lowest curtain back down over the nav keys; keys without a fill but with their outline,
-     * and its own theme, the CleverKeys look going back to plain.
+     * and its own theme, the CleverKeys look going back to plain. Later the same day: a fourth
+     * curtain, one of the middle two in an indigo gradient, and livelier motion
+     * ([MotionStyle.AURORA]).
      */
     val CLEVERKEYS_AURORA = LookBackdrop(
         // A near curtain whose lilac rim runs low and nearly level behind the bottom row and the
-        // nav keys, an orchid one higher up on the right, and a faint lilac veil along the top
-        // left; rays fade upward into violet.
+        // nav keys, an indigo one above it on the left, an orchid one higher up on the right,
+        // and a faint lilac veil along the top left; rays fade upward into violet or deep indigo.
         ribbons = listOf(
             AuroraRibbon(
                 edgeY = 0.78f, amplitude = 0.10f, waves = 1.6f, phase = 0.10f, slope = 0.06f, height = 0.62f,
                 edgeColor = 0x66C88CFF, topColor = 0x307A3CC8, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
+            ),
+            AuroraRibbon(
+                edgeY = 0.58f, amplitude = 0.06f, waves = 1.2f, phase = 0.80f, slope = 0.08f, height = 0.36f,
+                edgeColor = 0x5A6E6CFF, topColor = 0x2A2E1A9A, raysPer100Dp = 44f, rayContrast = 0.64f, seed = 53L,
+                xStart = 0f, xEnd = 0.72f,
             ),
             AuroraRibbon(
                 edgeY = 0.42f, amplitude = 0.07f, waves = 1.1f, phase = 0.60f, slope = -0.12f, height = 0.40f,
@@ -373,8 +380,6 @@ object KeyboardLooks {
             minAlpha = 50, maxAlpha = 200, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 5,
         ),
         topFade = 0.18f,
-        // No key fill at all: the outline alone draws each key (maintainer 2026-11-10).
-        keyOpacity = 0f,
     )
 
     /**
@@ -455,7 +460,7 @@ object KeyboardLooks {
 
     /**
      * A scene look's palette (the same in light and dark: a scene has its own light): keys that
-     * show the scene through them ([LookBackdrop.keyOpacity] of their fill) with a lighter
+     * show the scene through them ([LookGeometry.keyFillOpacity] of their fill) with a lighter
      * outline, light labels, and the scene's accent on the action and Caps Lock glyphs rather
      * than as a fill, so a see-through fill never puts a dark glyph on a dark scene.
      */
@@ -481,12 +486,19 @@ object KeyboardLooks {
         backdrop = backdrop,
     )
 
-    /** A scene look: the CleverKeys look's keys, legends and shapes over [palette] in both modes. */
-    private fun sceneLook(id: String, palette: LookPalette) =
-        cleverkeysLook.copy(id = id, light = palette, dark = palette, yieldsToUserSettings = false)
+    /**
+     * A scene look: the CleverKeys look's keys, legends and shapes over [palette] in both modes,
+     * the key fills drawn at [fillOpacity] of the user's key background opacity and the outlines at
+     * full strength ([LookGeometry.keyFillOpacity] / [LookGeometry.keyBorderOpacity]).
+     */
+    private fun sceneLook(id: String, palette: LookPalette, fillOpacity: Float = SCENE_KEY_OPACITY) =
+        cleverkeysLook.copy(
+            id = id, light = palette, dark = palette, yieldsToUserSettings = false,
+            geometry = cleverkeysLook.geometry.copy(keyFillOpacity = fillOpacity, keyBorderOpacity = 1f),
+        )
 
-    /** Share of the user's key opacity a nature scene's key fills keep: the scene shows through. */
-    private const val SCENE_KEY_OPACITY = 0.55f
+    /** Share of the user's key background opacity a nature scene's key fills keep: the scene shows through. */
+    const val SCENE_KEY_OPACITY = 0.55f
 
     /**
      * CleverKeys Aurora: the aurora ([CLEVERKEYS_AURORA]) behind keys drawn by their outline
@@ -499,9 +511,11 @@ object KeyboardLooks {
             label = 0xEDE7F2, hint = 0xA69DAE, border = 0x7A6893,
             accent = 0xD9B8F3, onAccent = 0x2E0F45, popup = 0x2E2838, backdrop = CLEVERKEYS_AURORA,
         ),
+        // No key fill at all: the outline alone draws each key (maintainer 2026-11-10).
+        fillOpacity = 0f,
     )
 
-    /** Meadow: grass blades that lean with the wind, a few flowers, pollen drifting up. */
+    /** Meadow: grass that bends in a travelling breeze, wild flowers, a little pollen drifting up. */
     val meadowLook = sceneLook(
         MEADOW,
         scenePalette(
@@ -509,9 +523,9 @@ object KeyboardLooks {
             label = 0xF1F5EC, hint = 0xC6D3BE, border = 0x5E7A55,
             accent = 0xC9E89A, onAccent = 0x15240F, popup = 0x22361F,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.MEADOW, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                glows = emptyList(), scene = SceneKind.MEADOW, topFade = 0.1f,
                 stars = LookStarfield(
-                    perSquare100Dp = 4f, seed = 0x3EAD0L, color = 0xFFF3D27A.toInt(), minAlpha = 60, maxAlpha = 170,
+                    perSquare100Dp = 2f, seed = 0x3EAD0L, color = 0xFFF3D27A.toInt(), minAlpha = 50, maxAlpha = 150,
                     minRadiusDp = 0.6f, maxRadiusDp = 1.3f, glintEvery = 0, shape = ParticleShape.MOTE,
                     driftXDpPerS = 3f, driftYDpPerS = -2f,
                 ),
@@ -527,7 +541,7 @@ object KeyboardLooks {
             label = 0xEAF6F8, hint = 0xB9D4DA, border = 0x3F6E7C,
             accent = 0x8FD2E0, onAccent = 0x05202A, popup = 0x10303C,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.STREAM, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                glows = emptyList(), scene = SceneKind.STREAM, topFade = 0.1f,
                 stars = LookStarfield(
                     perSquare100Dp = 5f, seed = 0x57AEL, color = 0xFFDFF6FF.toInt(), minAlpha = 60, maxAlpha = 210,
                     minRadiusDp = 0.5f, maxRadiusDp = 1.0f, glintEvery = 0, shape = ParticleShape.GLINT,
@@ -537,7 +551,7 @@ object KeyboardLooks {
         ),
     )
 
-    /** River rocks: wet rounded stones, their sheen glistening. */
+    /** River rocks: wet stones of many colours (agate, slate, jasper, jade), light rippling over them, glints. */
     val riverRocksLook = sceneLook(
         RIVER_ROCKS,
         scenePalette(
@@ -545,16 +559,18 @@ object KeyboardLooks {
             label = 0xF0F0EE, hint = 0xC4C6C8, border = 0x5E646A,
             accent = 0xC9D3DA, onAccent = 0x14181C, popup = 0x24282C,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f,
                 stars = LookStarfield(
                     perSquare100Dp = 3f, seed = 0x20C5L, color = 0xFFFFFFFF.toInt(), minAlpha = 70, maxAlpha = 230,
                     minRadiusDp = 0.5f, maxRadiusDp = 1.1f, glintEvery = 0, shape = ParticleShape.GLINT,
                 ),
             ),
         ),
+        // Vivid wet stones with highlights: the fills keep more of the key colour so labels stay at 4.5:1.
+        fillOpacity = 0.66f,
     )
 
-    /** Forest: twilight trunks under a swaying canopy, leaves drifting down. */
+    /** Forest: a misty glade under leafy branches that sway, ferns swaying below. */
     val forestLook = sceneLook(
         FOREST,
         scenePalette(
@@ -562,13 +578,7 @@ object KeyboardLooks {
             label = 0xEEF3E8, hint = 0xC2CDB8, border = 0x52664A,
             accent = 0xE6B26A, onAccent = 0x2A1606, popup = 0x1E2A1C,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.FOREST, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
-                stars = LookStarfield(
-                    perSquare100Dp = 2.5f, seed = 0xF0AE57L, color = 0xFFD98A3A.toInt(), minAlpha = 120, maxAlpha = 220,
-                    minRadiusDp = 1.2f, maxRadiusDp = 2.0f, glintEvery = 0, shape = ParticleShape.LEAF,
-                    tints = listOf(0xFFD98A3A.toInt(), 0xFFC4682C.toInt(), 0xFF9CB84A.toInt(), 0xFFE0B048.toInt()),
-                    driftXDpPerS = 4f, driftYDpPerS = 7f,
-                ),
+                glows = emptyList(), scene = SceneKind.FOREST, topFade = 0.1f, stars = null,
             ),
         ),
     )
@@ -581,7 +591,7 @@ object KeyboardLooks {
             label = 0xF4F7FC, hint = 0xC8D2E4, border = 0x6C7C9C,
             accent = 0xBFD6F5, onAccent = 0x101C30, popup = 0x26304A,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.SNOW, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
+                glows = emptyList(), scene = SceneKind.SNOW, topFade = 0.1f,
                 stars = LookStarfield(
                     perSquare100Dp = 10f, seed = 0x5A0FL, color = 0xFFFFFFFF.toInt(), minAlpha = 110, maxAlpha = 230,
                     minRadiusDp = 0.6f, maxRadiusDp = 1.6f, glintEvery = 0, shape = ParticleShape.FLAKE,
@@ -591,19 +601,15 @@ object KeyboardLooks {
         ),
     )
 
-    /** Beach: sea, a foam line washing up and back over wet sand, sun sparkling on the water. */
+    /** Beach: swells rolling in and washing up rippled sand. */
     val beachLook = sceneLook(
         BEACH,
         scenePalette(
-            base = 0x0A2A44, key = 0x16130F, pressed = 0x4A4034, modifier = 0x231E18,
+            base = 0x071D30, key = 0x16130F, pressed = 0x4A4034, modifier = 0x231E18,
             label = 0xFBF6EE, hint = 0xD9CFC0, border = 0x8A7A62,
             accent = 0xF4D9A6, onAccent = 0x2A1E0C, popup = 0x2E281F,
             backdrop = LookBackdrop(
-                glows = emptyList(), scene = SceneKind.BEACH, topFade = 0.1f, keyOpacity = SCENE_KEY_OPACITY,
-                stars = LookStarfield(
-                    perSquare100Dp = 3f, seed = 0xBEAC4L, color = 0xFFFFF6E0.toInt(), minAlpha = 50, maxAlpha = 200,
-                    minRadiusDp = 0.5f, maxRadiusDp = 1.0f, glintEvery = 0, shape = ParticleShape.GLINT,
-                ),
+                glows = emptyList(), scene = SceneKind.BEACH, topFade = 0.1f, stars = null,
             ),
         ),
     )

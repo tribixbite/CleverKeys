@@ -401,8 +401,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Taustiņu uzrakstu spilgtums (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Tastatūras necaurredzamība</string>
     <string name="appearance_keyboard_opacity_desc">Tastatūras fona necaurredzamība</string>
-    <string name="appearance_key_opacity_title">Taustiņu necaurredzamība</string>
-    <string name="appearance_key_opacity_desc">Atsevišķo taustiņu necaurredzamība</string>
+    <string name="appearance_key_opacity_title">Taustiņu fona necaurredzamība</string>
+    <string name="appearance_key_opacity_desc">Katra taustiņa aizpildījuma necaurredzamība</string>
+    <string name="appearance_key_border_opacity_title">Taustiņu apmales necaurredzamība</string>
+    <string name="appearance_key_border_opacity_desc">Katra taustiņa kontūras necaurredzamība</string>
     <string name="appearance_activated_key_opacity_title">Aktivētā taustiņa necaurredzamība</string>
     <string name="appearance_activated_key_opacity_desc">Necaurredzamība, nospiežot taustiņu</string>
     <string name="appearance_character_size_title">Rakstzīmju izmērs</string>
@@ -2689,6 +2691,8 @@
     <string name="theme_function_chars">Rakstzīmes, kas zīmētas kā funkciju taustiņi</string>
     <string name="theme_dynamic_color">Sekot ekrāntapetes krāsām (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Funkciju taustiņu teksta izmērs</string>
+    <string name="theme_shape_key_fill_opacity">Taustiņu aizpildījuma necaurredzamība</string>
+    <string name="theme_shape_key_border_opacity">Taustiņu kontūras necaurredzamība</string>
     <string name="theme_shift_filled">Aizpildīta Shift bultiņa lielo burtu režīmā</string>
     <string name="theme_section_bar">Ieteikumu joslas izkārtojums</string>
     <string name="theme_bar_desc">Fiksētas vietas ritināmu ieteikumu vietā, kā pazīstamās tastatūrās. Mainās tikai attēlojums: atstarpe joprojām ievieto to pašu vārdu.</string>

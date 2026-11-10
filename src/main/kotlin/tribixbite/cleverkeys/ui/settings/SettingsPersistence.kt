@@ -129,6 +129,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "key_activated_opacity" -> {
                 keyActivatedOpacity = prefs.getInt(key, Defaults.KEY_ACTIVATED_OPACITY)
             }
+            "key_border_opacity" -> {
+                keyBorderOpacity = prefs.getInt(key, Defaults.KEY_BORDER_OPACITY)
+            }
             // Spacing and sizing settings
             "character_size" -> {
                 characterSize = (prefs.getFloat(key, Defaults.CHARACTER_SIZE) * 100).toInt()
@@ -278,6 +281,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         keyboardOpacity = prefs.getSafeInt("keyboard_opacity", Defaults.KEYBOARD_OPACITY)
         keyOpacity = prefs.getSafeInt("key_opacity", Defaults.KEY_OPACITY)
         keyActivatedOpacity = prefs.getSafeInt("key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY)
+        keyBorderOpacity = prefs.getSafeInt("key_border_opacity", Defaults.KEY_BORDER_OPACITY)
 
         // Spacing and sizing settings
         characterSize = (prefs.getSafeFloat("character_size", Defaults.CHARACTER_SIZE) * 100).toInt()

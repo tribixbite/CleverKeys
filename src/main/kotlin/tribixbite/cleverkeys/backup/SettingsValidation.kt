@@ -347,7 +347,7 @@ object SettingsValidation {
         // Opacity values (0-100)
         for (k in listOf(
             "label_brightness", "keyboard_opacity", "key_opacity",
-            "key_activated_opacity", "suggestion_bar_opacity",
+            "key_activated_opacity", "key_border_opacity", "suggestion_bar_opacity",
         )) put(k, SettingsRanges.OPACITY_PERCENT)
 
         // Keyboard height percentages

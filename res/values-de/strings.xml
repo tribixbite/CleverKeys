@@ -407,8 +407,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Helligkeit der Tastenbeschriftungen (0–100 %)</string>
     <string name="appearance_keyboard_opacity_title">Tastatur-Deckkraft</string>
     <string name="appearance_keyboard_opacity_desc">Deckkraft des Tastaturhintergrunds</string>
-    <string name="appearance_key_opacity_title">Tasten-Deckkraft</string>
-    <string name="appearance_key_opacity_desc">Deckkraft der einzelnen Tasten</string>
+    <string name="appearance_key_opacity_title">Deckkraft des Tastenhintergrunds</string>
+    <string name="appearance_key_opacity_desc">Deckkraft der Füllung jeder Taste</string>
+    <string name="appearance_key_border_opacity_title">Deckkraft des Tastenrahmens</string>
+    <string name="appearance_key_border_opacity_desc">Deckkraft des Umrisses jeder Taste</string>
     <string name="appearance_activated_key_opacity_title">Aktive Tasten-Deckkraft</string>
     <string name="appearance_activated_key_opacity_desc">Deckkraft beim Drücken einer Taste</string>
     <string name="appearance_character_size_title">Zeichengröße</string>
@@ -2653,6 +2655,8 @@
     <string name="theme_function_chars">Zeichen, die als Funktionstasten erscheinen</string>
     <string name="theme_dynamic_color">Hintergrundbildfarben folgen (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Textgröße Funktionstasten</string>
+    <string name="theme_shape_key_fill_opacity">Deckkraft der Tastenfüllung</string>
+    <string name="theme_shape_key_border_opacity">Deckkraft des Tastenumrisses</string>
     <string name="theme_shift_filled">Gefüllter Shift-Pfeil bei Großschreibung</string>
     <string name="theme_section_bar">Layout der Vorschlagsleiste</string>
     <string name="theme_bar_desc">Feste Felder statt scrollender Vorschläge, wie bei bekannten Tastaturen. Nur die Darstellung ändert sich: Die Leertaste fügt weiterhin dasselbe Wort ein.</string>

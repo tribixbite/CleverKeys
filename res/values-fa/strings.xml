@@ -423,8 +423,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">روشنایی برچسب‌های کلید (۰ تا ۱۰۰٪)</string>
     <string name="appearance_keyboard_opacity_title">کدری صفحه‌کلید</string>
     <string name="appearance_keyboard_opacity_desc">کدری پس‌زمینه صفحه‌کلید</string>
-    <string name="appearance_key_opacity_title">کدری کلید</string>
-    <string name="appearance_key_opacity_desc">کدری کلیدهای جداگانه</string>
+    <string name="appearance_key_opacity_title">کدری پس‌زمینه کلید</string>
+    <string name="appearance_key_opacity_desc">کدری رنگ داخل هر کلید</string>
+    <string name="appearance_key_border_opacity_title">کدری حاشیه کلید</string>
+    <string name="appearance_key_border_opacity_desc">کدری خط دور هر کلید</string>
     <string name="appearance_activated_key_opacity_title">کدری کلید فعال</string>
     <string name="appearance_activated_key_opacity_desc">کدری هنگام فشردن کلید</string>
     <string name="appearance_character_size_title">اندازه نویسه</string>
@@ -2671,6 +2673,8 @@
     <string name="theme_function_chars">نویسه‌هایی که به شکل کلید عملکرد کشیده می‌شوند</string>
     <string name="theme_dynamic_color">پیروی از رنگ‌های کاغذدیواری (Android 12 و بالاتر)</string>
     <string name="theme_shape_function_label_scale">اندازه متن کلیدهای عملکرد</string>
+    <string name="theme_shape_key_fill_opacity">کدری رنگ داخل کلید</string>
+    <string name="theme_shape_key_border_opacity">کدری خط دور کلید</string>
     <string name="theme_shift_filled">پیکان پرشده Shift هنگام فعال بودن</string>
     <string name="theme_section_bar">چیدمان نوار پیشنهاد</string>
     <string name="theme_bar_desc">خانه‌های ثابت به‌جای پیشنهادهای پیمایشی، مانند صفحه‌کلیدهای آشنا. فقط نمایش تغییر می‌کند: فاصله همچنان همان واژه را درج می‌کند.</string>

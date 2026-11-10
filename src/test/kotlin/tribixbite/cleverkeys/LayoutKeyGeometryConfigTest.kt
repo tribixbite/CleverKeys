@@ -184,6 +184,7 @@ class LayoutKeyGeometryConfigTest {
             screenHeightPixels = 2000
             keyboardHeightPercent = 30
             keyOpacity = 255
+            keyBorderOpacity = 255
             keyActivatedOpacity = 255
             key_vertical_margin = 0.02f
             key_horizontal_margin = 0.03f

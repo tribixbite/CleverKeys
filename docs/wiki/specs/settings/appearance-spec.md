@@ -143,7 +143,12 @@ if (config.borderConfig) {
     border_width = if (activated) theme.keyBorderWidthActivated else theme.keyBorderWidth
 }
 
-bg_paint.alpha = if (activated) config.keyActivatedOpacity else config.keyOpacity
+// Fill and outline are separate (2026-11-10): the user's opacity times the theme's share
+// (LookGeometry.keyFillOpacity / keyBorderOpacity, 1 unless a theme sets it); a pressed key
+// keeps its whole fill.
+val fillShare = if (activated) 1f else geometry?.fillOpacity ?: 1f
+bg_paint.alpha = ((if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare).roundToInt()
+border_paint.alpha = (config.keyBorderOpacity * (geometry?.borderOpacity ?: 1f)).roundToInt()
 ```
 
 `Theme.Computed.roleOf` (`Keyboard2View.kt:1584`) selects one of five prebuilt frames —
@@ -159,7 +164,7 @@ scale/highlight animation setting and no key-preview popup above the key.
 
 ### Opacity and label brightness
 
-The four 0-100 percentage preferences are converted to 0-255 alpha once, at read time:
+The five 0-100 percentage preferences are converted to 0-255 alpha once, at read time:
 
 ```kotlin
 // Config.kt:828-831
@@ -167,7 +172,12 @@ labelBrightness = safeGetInt(_prefs, "label_brightness", Defaults.LABEL_BRIGHTNE
 keyboardOpacity = safeGetInt(_prefs, "keyboard_opacity", Defaults.KEYBOARD_OPACITY) * 255 / 100
 keyOpacity = safeGetInt(_prefs, "key_opacity", Defaults.KEY_OPACITY) * 255 / 100
 keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY) * 255 / 100
+keyBorderOpacity = safeGetInt(_prefs, KeyBorderOpacityMigration.PREF_KEY, Defaults.KEY_BORDER_OPACITY) * 255 / 100
 ```
+
+`key_border_opacity` (2026-11-10) is the key outline's; until then `key_opacity` drew fill and
+outline alike, so the v6 config migration (`KeyBorderOpacityMigration`) starts an upgraded
+install's border opacity at its key opacity.
 
 `keyboardOpacity` is applied to the view background (`Keyboard2View.kt:1548`); the other
 three land on the per-role paints (`Theme.kt:377`, `Theme.kt:389`), with label brightness
@@ -208,7 +218,8 @@ are shown.
 | **Right Margin (Landscape)** | `margin_right_landscape` | 5 | 0-45, same combined cap |
 | **Label Brightness** | `label_brightness` | 100 | 0-100% |
 | **Keyboard Opacity** | `keyboard_opacity` | 100 | 0-100% |
-| **Key Opacity** | `key_opacity` | 100 | 0-100% |
+| **Key Background Opacity** | `key_opacity` | 100 | 0-100% (the key fill) |
+| **Key Border Opacity** | `key_border_opacity` | 100 | 0-100% (the key outline; an upgrade starts at its key opacity) |
 | **Activated Key Opacity** | `key_activated_opacity` | 80 | 0-100% |
 | **Character Size** | `character_size` | 1.18 | 0.5-2.0 (`SettingsRanges.CHARACTER_SIZE`; UI slider 50%-200%) |
 | **Secondary Label Size** | `secondary_label_size_scale` | 1.0 (100% = unchanged) | 0.5-2.0 (UI slider 50%-200%) |

@@ -6,7 +6,7 @@ import kotlin.random.Random
 /**
  * A painted keyboard background for a look's palette ([LookPalette.backdrop]): soft coloured
  * glows over [LookPalette.keyboardBackground] (an aurora) and a star field. It shows in the gaps
- * between keys and around them, and faintly through the keys when [keyOpacity] is below 1. It is
+ * between keys and around them, and faintly through the keys when the look's [LookGeometry.keyFillOpacity] is below 1. It is
  * still unless the user turns on "Moving aurora" ([AuroraMotion]).
  *
  * Pure JVM (ARGB ints and fractions of the view), so the definition, the star placement and the
@@ -38,12 +38,6 @@ data class LookBackdrop(
      * a seam. 0 = no fade.
      */
     val topFade: Float = 0.2f,
-    /**
-     * Share of the user's key opacity the key fills keep over this backdrop (`Theme.Computed.Key`),
-     * so the aurora shows faintly through them (maintainer 2026-11-10: "slightly transparent
-     * keys"). Labels, hints and key outlines stay at the user's opacity. 1 = as the user set it.
-     */
-    val keyOpacity: Float = 1f,
 )
 
 /**

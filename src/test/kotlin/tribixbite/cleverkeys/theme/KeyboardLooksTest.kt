@@ -252,14 +252,26 @@ class KeyboardLooksTest {
      * no fill but their outline, and a lilac action glyph ("black arrow on dark background is
      * not" visible). Every glyph must read over the brightest spot of the painting.
      */
+    /**
+     * Maintainer 2026-11-10, round two: a fourth curtain, one of the middle two indigo (an indigo
+     * gradient), over keys with no fill and a full-strength outline.
+     */
     @Test
-    fun theAuroraLookIsOutlinedKeysOverThreeRayedCurtains() {
+    fun theAuroraLookIsOutlinedKeysOverFourRayedCurtains() {
         val look = KeyboardLooks.auroraLook
         assertThat(KeyboardLooks.byId(KeyboardLooks.AURORA)).isSameInstanceAs(look)
         val p = look.dark
         val aurora = p.backdrop!!
         assertThat(aurora.scene).isNull()
-        assertThat(aurora.ribbons).hasSize(3)
+        assertThat(aurora.ribbons).hasSize(4)
+        val middle = aurora.ribbons.sortedByDescending { it.edgeY }.subList(1, 3)
+        fun isIndigo(argb: Int): Boolean {
+            val r = (argb shr 16) and 0xFF; val g = (argb shr 8) and 0xFF; val b = argb and 0xFF
+            // Blue well above red, red and green close: indigo, not violet, cyan or lilac.
+            return b > r + 60 && b > g + 60 && abs(r - g) < 40
+        }
+        assertWithMessage("one of the middle two curtains is an indigo gradient")
+            .that(middle.count { isIndigo(it.edgeColor) && isIndigo(it.topColor) }).isEqualTo(1)
         val near = aurora.ribbons.first()
         assertWithMessage("the lowest curtain runs nearly level").that(abs(near.slope)).isAtMost(0.1f)
         assertWithMessage("low, over the nav keys").that(near.edgeY).isAtLeast(0.75f)
@@ -271,7 +283,8 @@ class KeyboardLooksTest {
         val stars = aurora.stars!!
         assertThat(stars.perSquare100Dp).isAtLeast(8f)
         assertThat(stars.glintEvery).isIn(Range.closed(1, 5))
-        assertWithMessage("no key fill").that(aurora.keyOpacity).isEqualTo(0f)
+        assertWithMessage("no key fill").that(look.geometry.keyFillOpacity).isEqualTo(0f)
+        assertWithMessage("a full-strength outline").that(look.geometry.keyBorderOpacity).isEqualTo(1f)
         assertWithMessage("so the outline must show on the base")
             .that(contrast(p.keyBorder, p.keyboardBackground)).isAtLeast(3.0)
         assertWithMessage("the bar joins the faded top edge in the base colour")
@@ -290,9 +303,10 @@ class KeyboardLooksTest {
     /**
      * The nature scene looks (maintainer 2026-11-10: meadow, stream, river rocks, forest, snow,
      * beach): see-through key fills over the painting must keep labels at 4.5:1 and hints and the
-     * accent glyphs at 3:1, over both images of the painting, at its brightest and darkest. "Brightest"
-     * is the 99th percentile: a specular dot on a stone under one stroke of a letter does not
-     * decide legibility, a patch of sand does.
+     * accent glyphs at 3:1, over the painting as it moves (both cross-faded images, the layers at
+     * several moments), at its brightest and darkest. "Brightest" is the 99th percentile: a
+     * specular dot on a stone under one stroke of a letter does not decide legibility, a patch of
+     * sand does.
      */
     @Test
     fun everySceneLookKeepsItsKeysLegibleOverItsPainting() {
@@ -301,15 +315,18 @@ class KeyboardLooksTest {
         for (look in scenes) {
             val p = look.dark
             val backdrop = p.backdrop!!
-            assertWithMessage("${look.id}: the scene shows through the keys").that(backdrop.keyOpacity).isIn(Range.open(0f, 1f))
+            val fillShare = look.geometry.keyFillOpacity!!
+            assertWithMessage("${look.id}: the scene shows through the keys").that(fillShare).isIn(Range.open(0f, 1f))
+            assertWithMessage("${look.id}: outlines at full strength").that(look.geometry.keyBorderOpacity).isEqualTo(1f)
             assertThat(p.barBackground).isEqualTo(p.keyboardBackground)
-            for (frame in 0..1) {
-                val px = SceneRaster.render(backdrop.scene!!, 205, 145, 205 / 411f, frame)
+            val painting = SceneRaster.paint(backdrop.scene!!, 205, 145, 205 / 411f)
+            for ((frame, seconds) in listOf(0.0, 1.3, 2.9, 4.4, 6.1).withIndex()) {
+                val px = SceneMotion.composite(painting, seconds, altShare = if (frame % 2 == 0) 0f else 1f)
                 val sorted = px.sortedBy { relativeLuminance(it) }
                 for ((where, under) in listOf("brightest" to sorted[sorted.size * 99 / 100], "darkest" to sorted.first())) {
                     for ((role, fill) in listOf("key" to p.key, "function key" to p.modifierKey)) {
-                        val seen = blend(withAlpha(fill, backdrop.keyOpacity), under)
-                        val at = "${look.id} frame $frame, $role over the $where painting"
+                        val seen = blend(withAlpha(fill, fillShare), under)
+                        val at = "${look.id} at ${seconds}s, $role over the $where painting"
                         assertWithMessage("$at: label").that(contrast(p.label, seen)).isAtLeast(4.5)
                         assertWithMessage("$at: hint").that(contrast(p.hint, seen)).isAtLeast(3.0)
                         assertWithMessage("$at: action glyph").that(contrast(p.actionLabel, seen)).isAtLeast(3.0)

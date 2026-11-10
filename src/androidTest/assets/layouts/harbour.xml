@@ -49,6 +49,8 @@
       label_scale="1.15"
       label_weight="500"
       function_label_scale="1"
+      key_fill_opacity="1"
+      key_border_opacity="1"
       function_chars=",."
       hints="digits"
       pill_keys="enter action"

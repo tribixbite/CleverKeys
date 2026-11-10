@@ -409,6 +409,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var keyboardOpacity by mutableIntStateOf(Defaults.KEYBOARD_OPACITY)
     internal var keyOpacity by mutableIntStateOf(Defaults.KEY_OPACITY)
     internal var keyActivatedOpacity by mutableIntStateOf(Defaults.KEY_ACTIVATED_OPACITY)
+    internal var keyBorderOpacity by mutableIntStateOf(Defaults.KEY_BORDER_OPACITY)
 
     // Spacing and sizing settings
     internal var characterSize by mutableIntStateOf((Defaults.CHARACTER_SIZE * 100).toInt())

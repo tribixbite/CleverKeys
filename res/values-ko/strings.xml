@@ -386,8 +386,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">키 라벨의 밝기（0~100%）</string>
     <string name="appearance_keyboard_opacity_title">키보드 불투명도</string>
     <string name="appearance_keyboard_opacity_desc">키보드 배경의 불투명도</string>
-    <string name="appearance_key_opacity_title">키 불투명도</string>
-    <string name="appearance_key_opacity_desc">개별 키의 불투명도</string>
+    <string name="appearance_key_opacity_title">키 배경 불투명도</string>
+    <string name="appearance_key_opacity_desc">각 키 채우기의 불투명도</string>
+    <string name="appearance_key_border_opacity_title">키 테두리 불투명도</string>
+    <string name="appearance_key_border_opacity_desc">각 키 윤곽선의 불투명도</string>
     <string name="appearance_activated_key_opacity_title">누름 키 불투명도</string>
     <string name="appearance_activated_key_opacity_desc">키를 누를 때의 불투명도</string>
     <string name="appearance_character_size_title">문자 크기</string>
@@ -2588,6 +2590,8 @@
     <string name="theme_function_chars">기능 키로 표시할 문자</string>
     <string name="theme_dynamic_color">배경화면 색상 따르기 (Android 12+)</string>
     <string name="theme_shape_function_label_scale">기능 키 글자 크기</string>
+    <string name="theme_shape_key_fill_opacity">키 채우기 불투명도</string>
+    <string name="theme_shape_key_border_opacity">키 윤곽선 불투명도</string>
     <string name="theme_shift_filled">Shift 활성 시 채워진 화살표</string>
     <string name="theme_section_bar">추천 표시줄 배치</string>
     <string name="theme_bar_desc">스크롤되는 추천 대신 고정된 칸을 표시합니다(익숙한 키보드처럼). 표시만 바뀌며 스페이스는 같은 단어를 입력합니다.</string>

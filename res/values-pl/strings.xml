@@ -402,8 +402,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Jasność etykiet klawiszy (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Krycie klawiatury</string>
     <string name="appearance_keyboard_opacity_desc">Krycie tła klawiatury</string>
-    <string name="appearance_key_opacity_title">Krycie klawisza</string>
-    <string name="appearance_key_opacity_desc">Krycie poszczególnych klawiszy</string>
+    <string name="appearance_key_opacity_title">Krycie tła klawiszy</string>
+    <string name="appearance_key_opacity_desc">Krycie wypełnienia każdego klawisza</string>
+    <string name="appearance_key_border_opacity_title">Krycie obramowania klawiszy</string>
+    <string name="appearance_key_border_opacity_desc">Krycie konturu każdego klawisza</string>
     <string name="appearance_activated_key_opacity_title">Krycie aktywowanego klawisza</string>
     <string name="appearance_activated_key_opacity_desc">Krycie przy naciśnięciu klawisza</string>
     <string name="appearance_character_size_title">Rozmiar znaków</string>
@@ -2733,6 +2735,8 @@
     <string name="theme_function_chars">Znaki rysowane jako klawisze funkcyjne</string>
     <string name="theme_dynamic_color">Kolory z tapety (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Rozmiar tekstu klawiszy funkcyjnych</string>
+    <string name="theme_shape_key_fill_opacity">Krycie wypełnienia klawiszy</string>
+    <string name="theme_shape_key_border_opacity">Krycie konturu klawiszy</string>
     <string name="theme_shift_filled">Wypełniona strzałka Shift przy wielkich literach</string>
     <string name="theme_section_bar">Układ paska podpowiedzi</string>
     <string name="theme_bar_desc">Stałe pola zamiast przewijanych podpowiedzi, jak na znanych klawiaturach. Zmienia się tylko wygląd: spacja nadal wstawia to samo słowo.</string>

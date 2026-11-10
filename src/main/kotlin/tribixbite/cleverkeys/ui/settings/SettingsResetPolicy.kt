@@ -78,6 +78,7 @@ object SettingsResetPolicy {
         put("label_brightness", Defaults.LABEL_BRIGHTNESS)
         put("keyboard_opacity", Defaults.KEYBOARD_OPACITY)
         put("key_opacity", Defaults.KEY_OPACITY)
+        put("key_border_opacity", Defaults.KEY_BORDER_OPACITY)
         put("character_size", Defaults.CHARACTER_SIZE)
 
         // Margins (0% bottom, 1% sides)

@@ -291,6 +291,8 @@ class Keyboard2View @JvmOverloads constructor(
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        syncBackdropMotion()
+        (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.wake()
         if (!_shortSwipeListenerRegistered) {
             _shortSwipeManager.addChangeListener(_shortSwipeMappingsChanged)
             _shortSwipeListenerRegistered = true
@@ -597,8 +599,31 @@ class Keyboard2View @JvmOverloads constructor(
         }
 
         reset()
+        // Every preference change reaches here (PreferenceUIUpdateHandler), so "Animated scenes"
+        // applies at once, also while the keyboard is hidden — not at the next key redraw, which
+        // a re-shown keyboard with an unchanged display list never makes.
+        syncBackdropMotion()
         // Layout changed → rebuild the TalkBack virtual-view tree.
         invalidateAccessibilityRoot()
+    }
+
+    /** The backdrop moves as the user's "Animated scenes" says; theme previews in Settings stay still. */
+    private fun syncBackdropMotion() {
+        (background as? tribixbite.cleverkeys.theme.BackdropDrawable)
+            ?.setMotionEnabled(_config.snapshot.look_backdrop_motion && !_previewMode)
+    }
+
+    /**
+     * The keyboard showing again (window visible) or re-attached: the backdrop moves for a while.
+     * Its own visibility callback does not fire when the drawable never saw itself hidden, e.g.
+     * after a detach that only stopped its frames.
+     */
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        super.onWindowVisibilityChanged(visibility)
+        if (visibility == VISIBLE) {
+            syncBackdropMotion()
+            (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.wake()
+        }
     }
 
     fun reset() {
@@ -627,6 +652,8 @@ class Keyboard2View @JvmOverloads constructor(
     fun enterThemePreviewMode() {
         if (_previewMode) return
         _previewMode = true
+        // Previews stay still (the backdrop may have started moving during construction).
+        syncBackdropMotion()
         setOnTouchListener(null)
         isClickable = false
         isFocusable = false
@@ -1883,13 +1910,14 @@ class Keyboard2View @JvmOverloads constructor(
             background = tribixbite.cleverkeys.theme.BackdropDrawable(base, backdrop, theme.density) {
                 tribixbite.cleverkeys.theme.BackdropDrawable.systemAllowsMotion(context)
             }
+            syncBackdropMotion()
         }
     }
 
     override fun onDraw(canvas: Canvas) {
-        // The user's "Animated scenes": theme previews in Settings stay still.
+        // The user's "Animated scenes" (also applied as it changes: syncBackdropMotion).
+        syncBackdropMotion()
         val backdrop = background as? tribixbite.cleverkeys.theme.BackdropDrawable
-        backdrop?.setMotionEnabled(_config.snapshot.look_backdrop_motion && !_previewMode)
         if (VERSION.SDK_INT >= 29 && backdrop?.motionEnabled == true && canvas.isHardwareAccelerated) {
             drawKeysCached(canvas)
         } else {

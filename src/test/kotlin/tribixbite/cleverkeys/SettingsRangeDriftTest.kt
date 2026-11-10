@@ -216,7 +216,7 @@ class SettingsRangeDriftTest {
         put("circle_sensitivity", SettingsRanges.CIRCLE_SENSITIVITY)
         put("autocorrect_min_word_length", SettingsRanges.AUTOCORRECT_MIN_WORD_LENGTH)
         for (k in KeyboardHeightPrefs.ALL_KEYS) put(k, SettingsRanges.KEYBOARD_HEIGHT)
-        for (k in listOf("label_brightness", "keyboard_opacity", "key_opacity", "key_activated_opacity", "suggestion_bar_opacity")) {
+        for (k in listOf("label_brightness", "keyboard_opacity", "key_opacity", "key_activated_opacity", "key_border_opacity", "suggestion_bar_opacity")) {
             put(k, SettingsRanges.OPACITY_PERCENT)
         }
         for (o in listOf("portrait", "landscape", "portrait_unfolded", "landscape_unfolded")) {

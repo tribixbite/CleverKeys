@@ -65,7 +65,7 @@ class SubkeyPopoverMigrationTest {
         val (prefs, editor) = prefsAt(version = 4)
         Config.migrate(prefs)
         verify { editor.putBoolean(SubkeyPopoverMigration.PREF_KEY, false) }
-        verify { editor.putInt("version", 5) }
+        verify { editor.putInt("version", 6) }  // v6 since 2026-11-10 (KeyBorderOpacityMigration)
     }
 
     @Test

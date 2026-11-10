@@ -57,6 +57,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "keyboard_opacity" to PrefValue.IntV(Defaults.KEYBOARD_OPACITY),
     "key_opacity" to PrefValue.IntV(Defaults.KEY_OPACITY),
     "key_activated_opacity" to PrefValue.IntV(Defaults.KEY_ACTIVATED_OPACITY),
+    "key_border_opacity" to PrefValue.IntV(Defaults.KEY_BORDER_OPACITY),
     "character_size" to PrefValue.FloatV(Defaults.CHARACTER_SIZE),
     "secondary_label_size_scale" to PrefValue.FloatV(Defaults.SECONDARY_LABEL_SIZE_SCALE),
     "key_vertical_margin" to PrefValue.FloatV(Defaults.KEY_VERTICAL_MARGIN),

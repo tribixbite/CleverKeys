@@ -384,8 +384,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">按键标签的亮度（0~100%）。</string>
     <string name="appearance_keyboard_opacity_title">键盘不透明度</string>
     <string name="appearance_keyboard_opacity_desc">键盘背景的不透明度。</string>
-    <string name="appearance_key_opacity_title">按键不透明度</string>
-    <string name="appearance_key_opacity_desc">单个按键的不透明度。</string>
+    <string name="appearance_key_opacity_title">按键背景不透明度</string>
+    <string name="appearance_key_opacity_desc">每个按键填充色的不透明度。</string>
+    <string name="appearance_key_border_opacity_title">按键边框不透明度</string>
+    <string name="appearance_key_border_opacity_desc">每个按键轮廓线的不透明度。</string>
     <string name="appearance_activated_key_opacity_title">按下键不透明度</string>
     <string name="appearance_activated_key_opacity_desc">按键被按下时的不透明度。</string>
     <string name="appearance_character_size_title">字符大小</string>
@@ -2586,6 +2588,8 @@
     <string name="theme_function_chars">按功能键样式绘制的字符</string>
     <string name="theme_dynamic_color">跟随壁纸颜色（Android 12+）</string>
     <string name="theme_shape_function_label_scale">功能键文字大小</string>
+    <string name="theme_shape_key_fill_opacity">按键填充不透明度</string>
+    <string name="theme_shape_key_border_opacity">按键轮廓不透明度</string>
     <string name="theme_shift_filled">大写时 Shift 箭头填充</string>
     <string name="theme_section_bar">候选栏布局</string>
     <string name="theme_bar_desc">使用固定的候选位，而非滚动的候选，与常见键盘一致。只改变显示：空格键插入的词不变。</string>

@@ -132,6 +132,8 @@ The same colour attributes are allowed on `<theme>` (both modes), `<light>` and 
 | `label_scale` | 0.5–2 | Label size relative to **your** label size setting. |
 | `label_weight` | 100–900 | Label font weight (400 regular, 700 bold; Android 9+). |
 | `function_label_scale` | 0.5–2 | Size of the function keys' text labels (`!#1`, `ABC`, `1/2`, `123`) relative to CleverKeys' size for them (three quarters of a letter); icons keep their size. Samsung-style uses 1.25, about as large as One UI draws them. |
+| `key_fill_opacity` | 0–1 | Share of each key's fill that is drawn, on top of **your** *Key background opacity* setting: 0 draws keys by their outline alone (CleverKeys Aurora), 0.55 lets a scene show through (the scene looks). A pressed key keeps its whole fill. |
+| `key_border_opacity` | 0–1 | Share of each key's outline opacity, on top of **your** *Key border opacity* setting, separate from the fill. |
 
 Gaps here are relative so they fit any keyboard height; the `key_*` gaps on `<keyboard>`,
 `<row>` and `<key>` use the Appearance slider's unit and win over these.
@@ -289,6 +291,8 @@ tests load (`docs/wiki/layouts/examples/harbour.xml`).
       label_scale="1.15"
       label_weight="500"
       function_label_scale="1"
+      key_fill_opacity="1"
+      key_border_opacity="1"
       function_chars=",."
       hints="digits"
       pill_keys="enter action"

@@ -797,25 +797,27 @@ class Theme {
                     border_radius = theme.keyBorderRadius
                     border_width = if (activated) theme.keyBorderWidthActivated else theme.keyBorderWidth
                 }
+                // Fill and outline opacity are separate (maintainer 2026-11-10): the user's "Key
+                // background opacity" (key_opacity) and "Key border opacity" (key_border_opacity),
+                // each times the theme's share (LookGeometry.keyFillOpacity / keyBorderOpacity,
+                // down to none: CleverKeys Aurora draws keys by their outline alone). A pressed key
+                // keeps its whole fill so the press still shows on an outline-only key.
+                val fillShare = if (activated) 1f else geometry?.fillOpacity ?: 1f
+                val fillAlpha = (if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare
                 shadow_dy = geometry?.shadowDy ?: 0f
                 shadow_paint = if (shadow_dy > 0f && theme.keyShadowColor != 0) {
                     Paint(Paint.ANTI_ALIAS_FLAG).apply {
                         color = theme.keyShadowColor
-                        // Same opacity contract as the key fill (keyOpacity owns the alpha).
-                        alpha = (((theme.keyShadowColor ushr 24) and 0xFF) * config.keyOpacity) / 255
+                        // Same opacity contract as the key fill (a shadow belongs to the fill).
+                        alpha = (((theme.keyShadowColor ushr 24) and 0xFF) * config.keyOpacity * (geometry?.fillOpacity ?: 1f) / 255).roundToInt()
                     }
                 } else null
 
-                // A look's backdrop may ask for see-through fills so its painting shows through
-                // (LookBackdrop.keyOpacity, down to none: CleverKeys Aurora); outlines, shadows
-                // and labels are unaffected, and a pressed key keeps its whole fill so the press
-                // still shows on a key drawn by its outline alone.
-                val fillShare = if (activated) 1f else theme.lookBackdrop?.keyOpacity?.coerceIn(0f, 1f) ?: 1f
-                bg_paint.alpha = ((if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare).roundToInt()
+                bg_paint.alpha = fillAlpha.roundToInt()
                 // H-4: the activated frame's border uses the Theme-Creator's "Border
                 // Activated" colour (XML themes default it to keyBorderColorTop).
                 border_paint = init_border_paint(
-                    config,
+                    (config.keyBorderOpacity * (geometry?.borderOpacity ?: 1f)).roundToInt(),
                     border_width,
                     when {
                         borderColorOverride != 0 -> borderColorOverride
@@ -927,16 +929,17 @@ class Theme {
             fun frameLabelColor(base: Int, override: Int, theme: Theme): Int =
                 if (override != 0 && (base == theme.labelColor || base == theme.secondaryLabelColor)) override else base
 
-            private fun init_border_paint(config: Config, border_width: Float, color: Int): Paint {
+            /** The key outline paint, its alpha [opacity] (0..255: the user's border opacity × the theme's share). */
+            private fun init_border_paint(opacity: Int, border_width: Float, color: Int): Paint {
                 return Paint().apply {
                     style = Paint.Style.STROKE
                     strokeWidth = border_width
                     // Audit H-6: colour FIRST, then alpha — setColor writes the full ARGB
-                    // (the colour's own alpha included), so the reverse order discarded
-                    // keyOpacity and borders stayed opaque on a translucent keyboard.
+                    // (the colour's own alpha included), so the reverse order discarded the
+                    // opacity and borders stayed opaque on a translucent keyboard.
                     // Same contract as bg_paint in Key.init (color = …, then alpha = …).
                     setColor(color)
-                    alpha = config.keyOpacity
+                    alpha = opacity.coerceIn(0, 255)
                 }
             }
 

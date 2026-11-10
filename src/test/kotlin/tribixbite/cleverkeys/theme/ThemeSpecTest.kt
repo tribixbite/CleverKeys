@@ -59,7 +59,7 @@ class ThemeSpecTest {
             LookGeometry(
                 keyGapHorizontal = 0.12f, keyGapVertical = 0.16f, cornerRadiusDp = 10f, borderWidthDp = 0f,
                 shadowDyDp = 1f, labelScale = 1.15f, labelWeight = 500, functionLabelScale = 1f,
-                equalGaps = false,
+                equalGaps = false, keyFillOpacity = 1f, keyBorderOpacity = 1f,
             )
         )
         assertWithMessage("key_legends=\"\" is defined as none").that(spec.keyLegends).isEmpty()
@@ -105,6 +105,35 @@ class ThemeSpecTest {
         assertThat(ThemeSpecs.ofLook(KeyboardLooks.cleverkeysLook).geometry.equalGaps).isTrue()
         val merged = ThemeSpecs.resolve(ThemeSpec(geometry = LookGeometry(cornerRadiusDp = 4f)), spec, systemLight = false)
         assertWithMessage("undefined on top: the base's").that(merged.geometry.equalGaps).isTrue()
+    }
+
+    /**
+     * 2026-11-10: a theme's separate key fill and outline opacity (CleverKeys Aurora: no fill, a
+     * full outline) survive layout XML, a custom theme's JSON (and so the backup), the export of a
+     * look as layout XML, and a base merge; an out-of-range value is reported or dropped.
+     */
+    @Test
+    fun keyFillAndOutlineOpacityRoundTripAndInheritFromTheBase() {
+        val spec = ThemeSpec(geometry = LookGeometry(keyFillOpacity = 0f, keyBorderOpacity = 1f))
+        val xml = ThemeSpecXml.write(spec)
+        assertThat(xml).contains("key_fill_opacity=\"0\"")
+        assertThat(xml).contains("key_border_opacity=\"1\"")
+        assertThat(roundTrip(spec)).isEqualTo(spec)
+        assertThat(ThemeSpecJson.fromJson(JSONObject(ThemeSpecJson.toJson(spec).toString()))).isEqualTo(spec)
+        val exported = ThemeSpecs.ofLook(KeyboardLooks.auroraLook).geometry
+        assertThat(exported.keyFillOpacity).isEqualTo(0f)
+        assertThat(exported.keyBorderOpacity).isEqualTo(1f)
+        val merged = ThemeSpecs.resolve(ThemeSpec(geometry = LookGeometry(keyBorderOpacity = 0.5f)), spec, systemLight = false)
+        assertWithMessage("undefined on top: the base's").that(merged.geometry.keyFillOpacity).isEqualTo(0f)
+        assertWithMessage("defined on top: its own").that(merged.geometry.keyBorderOpacity).isEqualTo(0.5f)
+
+        val problems = ArrayList<String>()
+        assertThat(parseTheme("<keyboard><theme key_fill_opacity=\"1.5\" key_border_opacity=\"-0.2\"/></keyboard>", problems))
+            .isEqualTo(ThemeSpec())
+        assertThat(problems).hasSize(2)
+        assertWithMessage("an out-of-range share from a hand-edited backup is dropped")
+            .that(ThemeSpecJson.sanitize(ThemeSpec(geometry = LookGeometry(keyFillOpacity = 2f))).geometry)
+            .isEqualTo(LookGeometry())
     }
 
     /**

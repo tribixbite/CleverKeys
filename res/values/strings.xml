@@ -596,8 +596,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Brightness of key labels (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Keyboard Opacity</string>
     <string name="appearance_keyboard_opacity_desc">Opacity of keyboard background</string>
-    <string name="appearance_key_opacity_title">Key Opacity</string>
-    <string name="appearance_key_opacity_desc">Opacity of individual keys</string>
+    <string name="appearance_key_opacity_title">Key Background Opacity</string>
+    <string name="appearance_key_opacity_desc">Opacity of each key\'s fill</string>
+    <string name="appearance_key_border_opacity_title">Key Border Opacity</string>
+    <string name="appearance_key_border_opacity_desc">Opacity of each key\'s outline</string>
     <string name="appearance_activated_key_opacity_title">Activated Key Opacity</string>
     <string name="appearance_activated_key_opacity_desc">Opacity when key is pressed</string>
     <string name="appearance_character_size_title">Character Size</string>
@@ -3070,6 +3072,8 @@
     <string name="theme_function_chars">Characters drawn as function keys</string>
     <string name="theme_dynamic_color">Follow wallpaper colors (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Function Key Text Size</string>
+    <string name="theme_shape_key_fill_opacity">Key Fill Opacity</string>
+    <string name="theme_shape_key_border_opacity">Key Outline Opacity</string>
     <string name="theme_shift_filled">Filled Shift arrow while shifted</string>
     <string name="theme_section_bar">Suggestion Bar Layout</string>
     <string name="theme_bar_desc">Fixed slots instead of scrolling suggestions, as on familiar keyboards. Only the drawing changes: space still inserts the same word.</string>

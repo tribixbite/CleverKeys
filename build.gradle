@@ -920,6 +920,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.LookBackdropTest',
     'tribixbite.cleverkeys.theme.AuroraMotionTest',
     'tribixbite.cleverkeys.theme.SceneRasterTest',
+    'tribixbite.cleverkeys.theme.SceneMotionTest',
     'tribixbite.cleverkeys.theme.KeyboardLooksTest',
     'tribixbite.cleverkeys.theme.LookDynamicColorsTest',
     'tribixbite.cleverkeys.theme.LookPopupsTest',
@@ -1428,6 +1429,7 @@ tasks.register('runMockTests', JavaExec) {
     // Subkey popover (2026-09-30): v5 migration seeds it OFF for upgrades (mocked prefs), and
     // Pointers routes hold / release / dwell through it (Unsafe-built Pointers, real manager).
     'tribixbite.cleverkeys.SubkeyPopoverMigrationTest',
+    'tribixbite.cleverkeys.KeyBorderOpacityMigrationTest',
     'tribixbite.cleverkeys.PointersSubkeyPopoverTest',
     // Learning-system audit 2026-09-26 (W4/W6): selection history persists via debounced
     // write-back and ages by halving instead of a 30-day wholesale wipe.

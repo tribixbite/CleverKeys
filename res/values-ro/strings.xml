@@ -412,8 +412,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Luminozitatea etichetelor tastelor (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Opacitate tastatură</string>
     <string name="appearance_keyboard_opacity_desc">Opacitatea fundalului tastaturii</string>
-    <string name="appearance_key_opacity_title">Opacitate taste</string>
-    <string name="appearance_key_opacity_desc">Opacitatea tastelor individuale</string>
+    <string name="appearance_key_opacity_title">Opacitatea fundalului tastelor</string>
+    <string name="appearance_key_opacity_desc">Opacitatea umplerii fiecărei taste</string>
+    <string name="appearance_key_border_opacity_title">Opacitatea bordurii tastelor</string>
+    <string name="appearance_key_border_opacity_desc">Opacitatea conturului fiecărei taste</string>
     <string name="appearance_activated_key_opacity_title">Opacitate tastă apăsată</string>
     <string name="appearance_activated_key_opacity_desc">Opacitate când tasta este apăsată</string>
     <string name="appearance_character_size_title">Dimensiune caractere</string>
@@ -2705,6 +2707,8 @@
     <string name="theme_function_chars">Caractere desenate ca taste funcționale</string>
     <string name="theme_dynamic_color">Urmează culorile imaginii de fundal (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Dimensiunea textului tastelor funcționale</string>
+    <string name="theme_shape_key_fill_opacity">Opacitatea umplerii tastelor</string>
+    <string name="theme_shape_key_border_opacity">Opacitatea conturului tastelor</string>
     <string name="theme_shift_filled">Săgeată Shift plină când este activă</string>
     <string name="theme_section_bar">Aranjarea barei de sugestii</string>
     <string name="theme_bar_desc">Poziții fixe în loc de sugestii derulante, ca la tastaturile cunoscute. Se schimbă doar desenul: spațiul inserează în continuare același cuvânt.</string>

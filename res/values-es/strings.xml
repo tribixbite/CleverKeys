@@ -407,8 +407,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Brillo de las etiquetas de teclas (0–100 %)</string>
     <string name="appearance_keyboard_opacity_title">Opacidad del teclado</string>
     <string name="appearance_keyboard_opacity_desc">Opacidad del fondo del teclado</string>
-    <string name="appearance_key_opacity_title">Opacidad de teclas</string>
-    <string name="appearance_key_opacity_desc">Opacidad de las teclas individuales</string>
+    <string name="appearance_key_opacity_title">Opacidad del fondo de las teclas</string>
+    <string name="appearance_key_opacity_desc">Opacidad del relleno de cada tecla</string>
+    <string name="appearance_key_border_opacity_title">Opacidad del borde de las teclas</string>
+    <string name="appearance_key_border_opacity_desc">Opacidad del contorno de cada tecla</string>
     <string name="appearance_activated_key_opacity_title">Opacidad de tecla activada</string>
     <string name="appearance_activated_key_opacity_desc">Opacidad al pulsar una tecla</string>
     <string name="appearance_character_size_title">Tamaño de caracteres</string>
@@ -2696,6 +2698,8 @@
     <string name="theme_function_chars">Caracteres dibujados como teclas de función</string>
     <string name="theme_dynamic_color">Seguir los colores del fondo de pantalla (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Tamaño del texto de teclas de función</string>
+    <string name="theme_shape_key_fill_opacity">Opacidad del relleno de teclas</string>
+    <string name="theme_shape_key_border_opacity">Opacidad del contorno de teclas</string>
     <string name="theme_shift_filled">Flecha de mayúsculas rellena al activarse</string>
     <string name="theme_section_bar">Diseño de la barra de sugerencias</string>
     <string name="theme_bar_desc">Casillas fijas en lugar de sugerencias desplazables, como en los teclados conocidos. Solo cambia el dibujo: la barra espaciadora sigue insertando la misma palabra.</string>

@@ -392,8 +392,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Яркость меток клавиш (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Прозрачность клавиатуры</string>
     <string name="appearance_keyboard_opacity_desc">Непрозрачность фона клавиатуры</string>
-    <string name="appearance_key_opacity_title">Прозрачность клавиш</string>
-    <string name="appearance_key_opacity_desc">Непрозрачность отдельных клавиш</string>
+    <string name="appearance_key_opacity_title">Непрозрачность фона клавиш</string>
+    <string name="appearance_key_opacity_desc">Непрозрачность заливки каждой клавиши</string>
+    <string name="appearance_key_border_opacity_title">Непрозрачность рамки клавиш</string>
+    <string name="appearance_key_border_opacity_desc">Непрозрачность контура каждой клавиши</string>
     <string name="appearance_activated_key_opacity_title">Прозрачность нажатой клавиши</string>
     <string name="appearance_activated_key_opacity_desc">Непрозрачность при нажатии клавиши</string>
     <string name="appearance_character_size_title">Размер символов</string>
@@ -2728,6 +2730,8 @@
     <string name="theme_function_chars">Символы, отображаемые как функциональные клавиши</string>
     <string name="theme_dynamic_color">Цвета обоев (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Размер текста функциональных клавиш</string>
+    <string name="theme_shape_key_fill_opacity">Непрозрачность заливки клавиш</string>
+    <string name="theme_shape_key_border_opacity">Непрозрачность контура клавиш</string>
     <string name="theme_shift_filled">Залитая стрелка Shift в верхнем регистре</string>
     <string name="theme_section_bar">Расположение панели подсказок</string>
     <string name="theme_bar_desc">Фиксированные ячейки вместо прокручиваемых подсказок, как на привычных клавиатурах. Меняется только отображение: пробел по-прежнему вставляет то же слово.</string>

@@ -126,7 +126,7 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    `Theme.lookYieldsToUser` → `Keyboard2View.initSwipeTrailPaint` (tuned trail ONLY; since 2026-11-07
    neither the global gaps nor the custom border yield — the look's equal gaps and hairline win, a
    per-layout gap still beats it). Its dark palette paints `LookPalette.backdrop`
-   (`AuroraBackdropDrawable` via `Keyboard2View.applyThemeBackground`; `CLEVERKEYS_AURORA` must be
+   (`BackdropDrawable` via `Keyboard2View.applyThemeBackground`; `CLEVERKEYS_AURORA` must be
    declared BEFORE `cleverkeysLook` — object properties initialise in order, a later one is null).
    Its curtains are `AuroraRibbon`s painted by the pure `AuroraRaster` (half resolution, cached in
    the drawable's companion for 3 sizes); tune them with a numpy port first — a device build per
@@ -246,6 +246,24 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    Creator edits the last two (key legends: XML / JSON only). Tests: `theme/LookKeyMarksTest`
    (pure), `KeyboardLookRenderTest.perKeyMarksReachTheThemeFromALookAndFromASpec` (mock),
    `LookKeyMarksShowcaseTest` (instrumented, writes `oct30-looks/` PNGs).
+
+21. **Backdrops, scenes and key opacity** (2026-11-10). A look's `LookPalette.backdrop` paints
+   aurora curtains (`AuroraRaster`) or a nature scene (`SceneRaster.paint` → `ScenePainting`: a
+   still base, plus EITHER an `alt` image to cross-fade (stream, snow) OR `SceneLayer`s that move
+   on their own). `BackdropDrawable` renders on one background thread (`renderer`), caches by size
+   under a byte budget, shows the base colour until delivery, and warps each layer per frame with
+   `Canvas.drawBitmapMesh` from `SceneMotion.mesh` (SWAY_UP grass / ferns, SWAY_DOWN branches,
+   RIPPLE caustics, WASH / ROLL beach water). Never cross-fade two positions of something sharp
+   (maintainer: grass "pulses to blurry"): move it as a layer. Detailed scenes paint at full
+   resolution (`SceneKind.paintScale` 1), soft ones at 2; each has its own `frameMs`. Preview
+   any scene change off-device first: compile `SceneRaster.kt` + `SceneMotion.kt` with kotlinc
+   and composite frames with `SceneMotion.composite` (a device build costs 20 min).
+   "Animated scenes" applies through `Keyboard2View.syncBackdropMotion` on every `setKeyboard`
+   (every pref change) and on window-visible / attach, not only in `onDraw` (a re-shown keyboard
+   with an unchanged display list never redraws). Key fill and outline opacity are separate:
+   user `key_opacity` / `key_border_opacity` × the theme's `LookGeometry.keyFillOpacity` /
+   `keyBorderOpacity` (XML `key_fill_opacity` / `key_border_opacity`, JSON `keyFillOpacity` /
+   `keyBorderOpacity`, Creator `GeometryField.FILL_OPACITY` / `BORDER_OPACITY`).
 
 ## Traps
 

@@ -16,23 +16,30 @@ import android.graphics.RenderNode
 import android.graphics.Shader
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
+import android.os.Process
 import android.os.SystemClock
+import android.util.Log
 import androidx.annotation.RequiresApi
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * Paints a [LookBackdrop] over [baseColor]: the keyboard view's background while a look whose
  * palette defines one is effective. The painting (aurora curtains, [AuroraRaster], or a nature
- * scene, [SceneRaster]) is rendered once per size at half resolution and cached across
- * instances, so a re-inflated keyboard does not render it again; shaders and particle positions
- * are built in [onBoundsChange]; [draw] only replays them, so the per-frame cost is a bitmap
- * blit, a handful of shader fills and the particles.
+ * scene, [SceneRaster]) is rendered once per size on a background thread and cached across
+ * instances, so a re-inflated keyboard does not render it again; until it is ready the base
+ * colour shows. Shaders and particle positions are built in [onBoundsChange]; [draw] only replays
+ * them, so the per-frame cost is a few bitmap blits, a handful of shader fills and the particles.
  *
- * With [motionEnabled] (the user's "Animated scenes") it also moves ([AuroraMotion]): a second
- * image of the painting cross-fades over the first while both drift, and the particles twinkle
- * in groups and travel (snow falls, leaves drift, sparkles follow the current). Frames are
- * scheduled through the drawable's own callback ([scheduleSelf]), only while it is visible,
- * [motionGate] allows it and the user touched the keyboard within [AuroraMotion.IDLE_MS].
+ * With [motionEnabled] (the user's "Animated scenes") it also moves: the aurora, the stream and
+ * the snow cross-fade a second image over the first while both drift ([AuroraMotion]); the other
+ * scenes warp their own layers through a mesh ([SceneMotion]: grass bends, branches sway, waves
+ * roll in and wash up); particles twinkle in groups and travel. Frames are scheduled through the
+ * drawable's own callback ([scheduleSelf]), only while it is visible, [motionGate] allows it and
+ * the user touched or opened the keyboard within [AuroraMotion.IDLE_MS].
  */
 class BackdropDrawable(
     private val baseColor: Int,
@@ -52,21 +59,33 @@ class BackdropDrawable(
     }
     private val ovalRect = RectF()
     private val paintingPaint = Paint(Paint.FILTER_BITMAP_FLAG)
-    /** The still painting (curtains or scene frame 0); null when the backdrop paints neither. */
-    private var painting: Bitmap? = null
+    private val layerPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+    /** The rendered painting for the current size; null until the background render delivers it. */
+    private var painting: Rendered? = null
     private val paintingDst = Rect()
     private var stars: List<Star> = emptyList()
     /** Whole-drawable alpha: the keyboard opacity setting (`Keyboard2View` sets `background.alpha`). */
     private var drawableAlpha = 0xFF
+    /** Bumped on every new size: a render that finishes for an older size is dropped. */
+    private var generation = 0
+
+    /** View px per painted px: the scene's own scale, or half resolution for the soft curtains. */
+    private val paintScale = backdrop.scene?.paintScale ?: AURORA_PAINT_SCALE
+
+    /** Time between motion frames ([SceneKind.frameMs], or the aurora's). */
+    private val frameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
+
+    /** How the cross-faded images move. */
+    private val motionStyle = if (backdrop.scene == null) MotionStyle.AURORA else MotionStyle.GENTLE
 
     // ---- Motion (off unless the user turns on "Animated scenes") ----
-    /** The second image ([AuroraMotion.alternate] curtains, or scene frame 1); made when motion is enabled. */
-    private var paintingAlt: Bitmap? = null
     private val paintingAltPaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val driftDst = RectF()
     private val clock = AuroraMotionClock()
     private var ticking = false
     private val tick = Runnable { onTick() }
+    /** Per-layer mesh vertices, reused across frames. */
+    private var meshes: Array<FloatArray> = emptyArray()
     /**
      * Each particle group recorded once ([RenderNode]s, API 29+), so a motion frame only sets a
      * group's alpha and offset instead of re-recording every particle; null until first drawn
@@ -78,8 +97,9 @@ class BackdropDrawable(
     private val hasPainting get() = backdrop.scene != null || backdrop.ribbons.isNotEmpty()
 
     /**
-     * Whether the backdrop may move (set by `Keyboard2View` from the user's setting on every key
-     * redraw). Turning it off stops at once and paints the still backdrop again.
+     * Whether the backdrop may move (set by `Keyboard2View` from the user's setting whenever it
+     * changes and as the keyboard shows). Turning it off stops at once; the backdrop rests where
+     * it is.
      */
     var motionEnabled = false
         private set
@@ -87,25 +107,20 @@ class BackdropDrawable(
     fun setMotionEnabled(enabled: Boolean) {
         if (enabled == motionEnabled) return
         motionEnabled = enabled
-        if (enabled) {
-            if (painting != null && paintingAlt == null) paintingAlt = altPaintingBitmap(bounds.width(), bounds.height())
-            wake()
-        } else {
-            stopMotion()
-            paintingAlt = null
-        }
+        if (enabled) wake() else stopMotion()
         invalidateSelf()
     }
 
     /**
      * The user is at the keyboard (a touch, the keyboard showing): move for the next
      * [AuroraMotion.IDLE_MS]. Cheap when already moving; [motionGate] is asked only to start.
+     * Before the painting is ready only the clock is woken; its delivery starts the frames.
      */
     fun wake() {
-        if (!motionEnabled || !isVisible || painting == null) return
+        if (!motionEnabled || !isVisible) return
         val now = SystemClock.uptimeMillis()
         clock.wake(now)
-        if (!ticking && motionGate()) {
+        if (!ticking && painting != null && motionGate()) {
             ticking = true
             scheduleSelf(tick, now)
         }
@@ -123,13 +138,13 @@ class BackdropDrawable(
         val now = SystemClock.uptimeMillis()
         val moving = clock.advance(now)
         invalidateSelf()
-        if (moving) scheduleSelf(tick, now + AuroraMotion.FRAME_MS) else ticking = false
+        if (moving) scheduleSelf(tick, now + frameMs) else ticking = false
     }
 
-    /** Hidden (keyboard closed, view detached): stop; shown again: move for a while. */
+    /** Hidden (keyboard closed, view detached): stop; shown: move for a while. */
     override fun setVisible(visible: Boolean, restart: Boolean): Boolean {
         val changed = super.setVisible(visible, restart)
-        if (!visible) stopMotion() else if (changed) wake()
+        if (!visible) stopMotion() else wake()
         return changed
     }
 
@@ -138,8 +153,7 @@ class BackdropDrawable(
         val w = bounds.width().toFloat()
         val h = bounds.height().toFloat()
         if (w <= 0f || h <= 0f) return
-        painting = if (hasPainting) paintingBitmap(bounds.width(), bounds.height()) else null
-        paintingAlt = if (motionEnabled && painting != null) altPaintingBitmap(bounds.width(), bounds.height()) else null
+        requestPainting(bounds.width(), bounds.height())
         paintingDst.set(bounds)
         backdrop.glows.forEachIndexed { i, g ->
             val cx = bounds.left + g.cx * w
@@ -169,6 +183,46 @@ class BackdropDrawable(
         particleNodes = null
     }
 
+    /**
+     * The painting for a [widthPx] × [heightPx] view: from the cache at once, or rendered on the
+     * background thread and delivered on the main thread (the detailed scenes take about a
+     * second; the IME must not wait for them).
+     */
+    private fun requestPainting(widthPx: Int, heightPx: Int) {
+        val gen = ++generation
+        if (!hasPainting) {
+            setPainting(null)
+            return
+        }
+        val key = paintKey(widthPx, heightPx)
+        val cached = synchronized(cache) { cache[key] }
+        if (cached != null) {
+            setPainting(cached)
+            return
+        }
+        // Keep showing the old size's painting (stretched) rather than flashing the base colour.
+        renderer.execute {
+            val rendered = try {
+                synchronized(cache) { cache[key] } ?: render(key).also { r -> synchronized(cache) { cache.put(key, r) } }
+            } catch (t: Throwable) {
+                // Out of memory or a bug: the plain base colour is a fine backdrop.
+                Log.w(TAG, "backdrop render failed", t)
+                null
+            }
+            mainHandler.post { if (gen == generation) setPainting(rendered) }
+        }
+    }
+
+    private fun setPainting(rendered: Rendered?) {
+        painting = rendered
+        meshes = rendered?.layers?.map { (layer, _) ->
+            FloatArray(2 * (SceneMotion.meshColumns(layer.width) + 1) * (SceneMotion.meshRows(layer.height) + 1))
+        }?.toTypedArray() ?: emptyArray()
+        invalidateSelf()
+        // A wake that came before the painting (keyboard just shown) starts the frames now.
+        if (motionEnabled && rendered != null) wake()
+    }
+
     override fun draw(canvas: Canvas) {
         val b = bounds
         // A translucent keyboard composites the whole painting once, so glows over the base do
@@ -176,18 +230,20 @@ class BackdropDrawable(
         val layer = if (drawableAlpha < 0xFF) canvas.saveLayerAlpha(
             b.left.toFloat(), b.top.toFloat(), b.right.toFloat(), b.bottom.toFloat(), drawableAlpha,
         ) else -1
-        val still = painting
-        val alt = paintingAlt
-        val frame = if (motionEnabled && still != null && alt != null) {
-            AuroraMotion.frame(clock.motionMs / 1000.0)
-        } else null
-        if (frame != null && still != null && alt != null) {
-            drawDrifting(canvas, still, alt, frame)
-        } else if (still != null) {
-            canvas.drawBitmap(still, null, paintingDst, paintingPaint)
-        } else {
+        val clip = canvas.save()
+        canvas.clipRect(b)
+        val rendered = painting
+        val seconds = clock.motionMs / 1000.0
+        val alt = rendered?.alt
+        val frame = if (motionEnabled && rendered != null) AuroraMotion.frame(seconds, motionStyle) else null
+        if (rendered == null) {
             canvas.drawRect(b, basePaint)
+        } else if (frame != null && alt != null) {
+            drawDrifting(canvas, rendered.base, alt, frame)
+        } else {
+            canvas.drawBitmap(rendered.base, null, paintingDst, paintingPaint)
         }
+        if (rendered != null) drawLayers(canvas, rendered, seconds)
         for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
         val field = backdrop.stars
         if (field != null && frame != null && Build.VERSION.SDK_INT >= 29 && canvas.isHardwareAccelerated) {
@@ -204,7 +260,32 @@ class BackdropDrawable(
         }
         // Last, so particles and glows fade into the base colour where the suggestion bar meets the keys.
         if (fadePaint.shader != null) canvas.drawRect(b, fadePaint)
+        canvas.restoreToCount(clip)
         if (layer >= 0) canvas.restoreToCount(layer)
+    }
+
+    /**
+     * The scene's moving layers at [seconds] of motion time (0 while it has never moved: the still
+     * picture), each warped through its mesh ([SceneMotion.mesh]) so blades bend and branches
+     * swing rather than slide.
+     */
+    private fun drawLayers(canvas: Canvas, rendered: Rendered, seconds: Double) {
+        val scale = bounds.width().toFloat() / rendered.width
+        for ((i, pair) in rendered.layers.withIndex()) {
+            val (layer, bitmap) = pair
+            val share = SceneMotion.alpha(layer.motion, seconds)
+            if (share <= 0.003f) continue
+            val verts = meshes.getOrNull(i) ?: continue
+            SceneMotion.mesh(layer, seconds, scale, verts)
+            if (bounds.left != 0 || bounds.top != 0) {
+                for (k in verts.indices step 2) { verts[k] += bounds.left; verts[k + 1] += bounds.top }
+            }
+            layerPaint.alpha = (255 * share).toInt().coerceIn(0, 255)
+            canvas.drawBitmapMesh(
+                bitmap, SceneMotion.meshColumns(layer.width), SceneMotion.meshRows(layer.height),
+                verts, 0, null, 0, layerPaint,
+            )
+        }
     }
 
     /** One particle of [field] at ([x], [y]) with [alpha], in its [ParticleShape]. */
@@ -275,8 +356,6 @@ class BackdropDrawable(
             }
         }.also { particleNodes = it }
         val seconds = clock.motionMs / 1000.0
-        val save = canvas.save()
-        canvas.clipRect(b)
         for (g in nodes.indices) {
             val node = nodes[g] as RenderNode
             node.setAlpha(frame.starAlpha[g])
@@ -288,19 +367,17 @@ class BackdropDrawable(
             }
             canvas.drawRenderNode(node)
         }
-        canvas.restoreToCount(save)
     }
 
     /**
-     * The two images of the painting, each stretched [AuroraMotion.DRIFT_MARGIN_DP] past both
-     * edges (a stretch of about 1 %, invisible on a soft painting) and shifted by its drift; the
-     * second over the first at the cross-fade. Both are opaque, so the result is their blend.
+     * The two images of the painting, each stretched past both edges by the style's margin
+     * ([MotionStyle.marginDp]: a stretch of a few percent, invisible on a soft painting) and
+     * shifted by its drift; the second over the first at the cross-fade. Both are opaque, so the
+     * result is their blend.
      */
     private fun drawDrifting(canvas: Canvas, a: Bitmap, alt: Bitmap, frame: AuroraMotionFrame) {
         val b = bounds
-        val margin = AuroraMotion.DRIFT_MARGIN_DP * density
-        val save = canvas.save()
-        canvas.clipRect(b)
+        val margin = motionStyle.marginDp * density
         driftDst.set(b.left - margin + frame.driftADp * density, b.top.toFloat(),
             b.right + margin + frame.driftADp * density, b.bottom.toFloat())
         canvas.drawBitmap(a, null, driftDst, paintingPaint)
@@ -311,7 +388,6 @@ class BackdropDrawable(
                 b.right + margin + frame.driftBDp * density, b.bottom.toFloat())
             canvas.drawBitmap(alt, null, driftDst, paintingAltPaint)
         }
-        canvas.restoreToCount(save)
     }
 
     override fun setAlpha(alpha: Int) {
@@ -328,6 +404,7 @@ class BackdropDrawable(
         basePaint.colorFilter = colorFilter
         paintingPaint.colorFilter = colorFilter
         paintingAltPaint.colorFilter = colorFilter
+        layerPaint.colorFilter = colorFilter
         glowPaints.forEach { it.colorFilter = colorFilter }
         starPaint.colorFilter = colorFilter
         glintPaint.colorFilter = colorFilter
@@ -339,53 +416,87 @@ class BackdropDrawable(
     override fun getOpacity(): Int =
         if (alphaOf(baseColor) == 0xFF && drawableAlpha == 0xFF) PixelFormat.OPAQUE else PixelFormat.TRANSLUCENT
 
-    /** The still painting at half the view's size, from the cache or rendered. */
-    private fun paintingBitmap(widthPx: Int, heightPx: Int): Bitmap = paintingBitmap(0, widthPx, heightPx)
-
-    /** The second image of a moving backdrop ([AuroraMotion.alternate] curtains, scene frame 1). */
-    private fun altPaintingBitmap(widthPx: Int, heightPx: Int): Bitmap? =
-        if (widthPx <= 0 || heightPx <= 0) null else paintingBitmap(1, widthPx, heightPx)
-
-    private fun paintingBitmap(frame: Int, widthPx: Int, heightPx: Int): Bitmap {
-        val w = (widthPx / PAINT_SCALE).coerceAtLeast(1)
-        val h = (heightPx / PAINT_SCALE).coerceAtLeast(1)
-        val scene = backdrop.scene
-        val curtains = if (scene != null) emptyList()
-        else if (frame == 0) backdrop.ribbons else AuroraMotion.alternate(backdrop.ribbons)
-        val key = PaintKey(baseColor, curtains, scene, frame, w, h, density)
-        synchronized(cache) {
-            cache[key]?.let { return it }
-        }
-        val raster = density / PAINT_SCALE
-        val pixels = if (scene != null) SceneRaster.render(scene, w, h, raster, frame)
-        else AuroraRaster.render(baseColor, curtains, w, h, raster)
-        val bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
-        synchronized(cache) { cache[key] = bitmap }
-        return bitmap
+    private fun paintKey(widthPx: Int, heightPx: Int): PaintKey {
+        val w = (widthPx / paintScale).coerceAtLeast(1)
+        val h = (heightPx / paintScale).coerceAtLeast(1)
+        return PaintKey(baseColor, backdrop.ribbons, backdrop.scene, w, h, density / paintScale)
     }
 
+    /** The painting and its second image (curtains: [AuroraMotion.alternate]) or moving layers. */
+    private class Rendered(
+        val width: Int,
+        val base: Bitmap,
+        val alt: Bitmap?,
+        val layers: List<Pair<SceneLayer, Bitmap>>,
+        /** Bytes held, for the cache's budget. */
+        val bytes: Long,
+    )
+
     private data class PaintKey(
-        val base: Int, val ribbons: List<AuroraRibbon>, val scene: SceneKind?, val frame: Int,
-        val w: Int, val h: Int, val density: Float,
+        val base: Int, val ribbons: List<AuroraRibbon>, val scene: SceneKind?,
+        val w: Int, val h: Int, val rasterDensity: Float,
     )
 
     companion object {
-        /** Paintings are soft; half resolution quarters the render cost and the memory. */
-        private const val PAINT_SCALE = 2
+        private const val TAG = "BackdropDrawable"
+
+        /** The aurora's curtains are soft; half resolution quarters the render cost and the memory. */
+        private const val AURORA_PAINT_SCALE = 2
 
         /** Offsets, in view sizes, of the four copies of a drifting particle group. */
         private val WRAP_COPIES = intArrayOf(0, 0, -1, 0, 0, -1, -1, -1)
         private val NO_COPIES = intArrayOf(0, 0)
 
+        /** Cache budget: about two full-resolution scenes with their layers, plus curtains. */
+        private const val CACHE_BYTES = 40L * 1024 * 1024
+
         /**
-         * The last few rendered sizes (portrait, landscape, a split screen; two images each while
-         * the backdrop moves), shared by every instance: the keyboard view and its drawable are
-         * re-created on theme and layout changes, and each render walks every pixel. An
-         * access-ordered map evicting the eldest.
+         * The last few paintings (portrait, landscape, a split screen), shared by every instance:
+         * the keyboard view and its drawable are re-created on theme and layout changes, and each
+         * render walks every pixel. Access-ordered; the eldest go once over [CACHE_BYTES] (the
+         * newest always stays).
          */
-        private val cache = object : LinkedHashMap<PaintKey, Bitmap>(8, 0.75f, true) {
-            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<PaintKey, Bitmap>?) = size > 6
+        private val cache = object : LinkedHashMap<PaintKey, Rendered>(8, 0.75f, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<PaintKey, Rendered>?): Boolean {
+                var total = values.sumOf { it.bytes }
+                val it = entries.iterator()
+                while (total > CACHE_BYTES && size > 1 && it.hasNext()) {
+                    val e = it.next()
+                    total -= e.value.bytes
+                    it.remove()
+                }
+                return false
+            }
         }
+
+        /** One low-priority thread renders every painting, in order. */
+        private val renderer: ExecutorService = Executors.newSingleThreadExecutor { r ->
+            Thread({
+                Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND)
+                r.run()
+            }, "BackdropRender").apply { isDaemon = true }
+        }
+
+        private val mainHandler = Handler(Looper.getMainLooper())
+
+        /** Renders [key] (on the render thread): the painting's bitmaps. */
+        private fun render(key: PaintKey): Rendered {
+            val scene = key.scene
+            return if (scene != null) {
+                val p = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity)
+                val layers = p.layers.map { it to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
+                Rendered(
+                    key.w, bitmap(p.base, key.w, key.h), p.alt?.let { bitmap(it, key.w, key.h) }, layers,
+                    bytes = 4L * p.pixelCount,
+                )
+            } else {
+                val base = AuroraRaster.render(key.base, key.ribbons, key.w, key.h, key.rasterDensity)
+                val alt = AuroraRaster.render(key.base, AuroraMotion.alternate(key.ribbons), key.w, key.h, key.rasterDensity)
+                Rendered(key.w, bitmap(base, key.w, key.h), bitmap(alt, key.w, key.h), emptyList(), bytes = 8L * key.w * key.h)
+            }
+        }
+
+        private fun bitmap(pixels: IntArray, w: Int, h: Int): Bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
 
         /**
          * Whether the system lets the backdrop move now: Android 10+ (`Keyboard2View` caches its

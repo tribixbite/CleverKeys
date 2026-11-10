@@ -385,8 +385,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">キーラベルの輝度（0〜100%）</string>
     <string name="appearance_keyboard_opacity_title">キーボードの不透明度</string>
     <string name="appearance_keyboard_opacity_desc">キーボード背景の不透明度</string>
-    <string name="appearance_key_opacity_title">キーの不透明度</string>
-    <string name="appearance_key_opacity_desc">個々のキーの不透明度</string>
+    <string name="appearance_key_opacity_title">キー背景の不透明度</string>
+    <string name="appearance_key_opacity_desc">各キーの塗りの不透明度</string>
+    <string name="appearance_key_border_opacity_title">キー枠線の不透明度</string>
+    <string name="appearance_key_border_opacity_desc">各キーの輪郭線の不透明度</string>
     <string name="appearance_activated_key_opacity_title">押下時のキー不透明度</string>
     <string name="appearance_activated_key_opacity_desc">キー押下時の不透明度</string>
     <string name="appearance_character_size_title">文字サイズ</string>
@@ -2587,6 +2589,8 @@
     <string name="theme_function_chars">機能キーとして描画する文字</string>
     <string name="theme_dynamic_color">壁紙の色に合わせる (Android 12+)</string>
     <string name="theme_shape_function_label_scale">機能キーの文字サイズ</string>
+    <string name="theme_shape_key_fill_opacity">キーの塗りの不透明度</string>
+    <string name="theme_shape_key_border_opacity">キーの輪郭線の不透明度</string>
     <string name="theme_shift_filled">シフト中は塗りつぶしの Shift 矢印</string>
     <string name="theme_section_bar">候補バーのレイアウト</string>
     <string name="theme_bar_desc">スクロールする候補の代わりに固定の枠を表示します（おなじみのキーボードと同様）。変わるのは表示だけで、スペースで入力される単語は同じです。</string>

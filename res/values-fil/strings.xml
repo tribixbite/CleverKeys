@@ -397,8 +397,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Liwanag ng mga label ng key (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Opacity ng Keyboard</string>
     <string name="appearance_keyboard_opacity_desc">Opacity ng background ng keyboard</string>
-    <string name="appearance_key_opacity_title">Opacity ng Key</string>
-    <string name="appearance_key_opacity_desc">Opacity ng mga indibidwal na key</string>
+    <string name="appearance_key_opacity_title">Opacity ng Background ng Key</string>
+    <string name="appearance_key_opacity_desc">Opacity ng fill ng bawat key</string>
+    <string name="appearance_key_border_opacity_title">Opacity ng Border ng Key</string>
+    <string name="appearance_key_border_opacity_desc">Opacity ng outline ng bawat key</string>
     <string name="appearance_activated_key_opacity_title">Opacity ng Aktibong Key</string>
     <string name="appearance_activated_key_opacity_desc">Opacity kapag pinindot ang key</string>
     <string name="appearance_character_size_title">Sukat ng Karakter</string>
@@ -2645,6 +2647,8 @@
     <string name="theme_function_chars">Mga character na iginuhit bilang function key</string>
     <string name="theme_dynamic_color">Sundin ang mga kulay ng wallpaper (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Laki ng Teksto ng Function Key</string>
+    <string name="theme_shape_key_fill_opacity">Opacity ng Fill ng Key</string>
+    <string name="theme_shape_key_border_opacity">Opacity ng Outline ng Key</string>
     <string name="theme_shift_filled">Punong Shift arrow kapag naka-shift</string>
     <string name="theme_section_bar">Ayos ng Bar ng Suhestiyon</string>
     <string name="theme_bar_desc">Mga nakapirming puwang sa halip na nag-i-scroll na suhestiyon, gaya ng mga kilalang keyboard. Ang pagguhit lang ang nagbabago: ang space ay naglalagay pa rin ng parehong salita.</string>

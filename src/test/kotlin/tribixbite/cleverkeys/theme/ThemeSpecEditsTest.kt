@@ -99,6 +99,19 @@ class ThemeSpecEditsTest {
         assertThat(f.get(LookGeometry(functionLabelScale = 1.3f))).isEqualTo(1.3f)
     }
 
+    /** 2026-11-10: the Creator edits a theme's key fill and outline opacity as two sliders. */
+    @Test
+    fun theKeyFillAndOutlineOpacitiesAreGeometrySliders() {
+        val fill = ThemeSpecEdits.GeometryField.FILL_OPACITY
+        val border = ThemeSpecEdits.GeometryField.BORDER_OPACITY
+        assertThat(fill.set(LookGeometry(), 0.02f).keyFillOpacity).isEqualTo(0f)
+        assertThat(border.set(LookGeometry(), 0.53f).keyBorderOpacity).isEqualTo(0.55f)
+        assertThat(fill.set(LookGeometry(keyFillOpacity = 0.5f), null).keyFillOpacity).isNull()
+        assertWithMessage("unset shows what the keyboard draws: the whole fill").that(fill.neutral).isEqualTo(1f)
+        assertThat(border.neutral).isEqualTo(1f)
+        assertThat(border.get(LookGeometry(keyBorderOpacity = 0.3f))).isEqualTo(0.3f)
+    }
+
     @Test
     fun followingTheGlobalThemeOverALayoutsOwnThemeIsStoredExplicitly() {
         assertThat(LayoutThemeBinding.entryValueFor(null, declared = null, hasEmbedded = true)).isEqualTo(LayoutThemeBinding.UNBOUND)

@@ -428,8 +428,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Luminosità delle etichette dei tasti (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Opacità tastiera</string>
     <string name="appearance_keyboard_opacity_desc">Opacità dello sfondo della tastiera</string>
-    <string name="appearance_key_opacity_title">Opacità tasto</string>
-    <string name="appearance_key_opacity_desc">Opacità dei singoli tasti</string>
+    <string name="appearance_key_opacity_title">Opacità sfondo tasti</string>
+    <string name="appearance_key_opacity_desc">Opacità del riempimento di ogni tasto</string>
+    <string name="appearance_key_border_opacity_title">Opacità bordo tasti</string>
+    <string name="appearance_key_border_opacity_desc">Opacità del contorno di ogni tasto</string>
     <string name="appearance_activated_key_opacity_title">Opacità tasto attivato</string>
     <string name="appearance_activated_key_opacity_desc">Opacità quando il tasto è premuto</string>
     <string name="appearance_character_size_title">Dimensione caratteri</string>
@@ -2718,6 +2720,8 @@
     <string name="theme_function_chars">Caratteri disegnati come tasti funzione</string>
     <string name="theme_dynamic_color">Segui i colori dello sfondo (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Dimensione testo tasti funzione</string>
+    <string name="theme_shape_key_fill_opacity">Opacità riempimento tasti</string>
+    <string name="theme_shape_key_border_opacity">Opacità contorno tasti</string>
     <string name="theme_shift_filled">Freccia Maiusc piena quando attiva</string>
     <string name="theme_section_bar">Disposizione della barra dei suggerimenti</string>
     <string name="theme_bar_desc">Caselle fisse invece di suggerimenti scorrevoli, come nelle tastiere conosciute. Cambia solo il disegno: lo spazio inserisce sempre la stessa parola.</string>

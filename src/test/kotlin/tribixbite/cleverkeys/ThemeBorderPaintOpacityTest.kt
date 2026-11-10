@@ -21,14 +21,17 @@ import org.objenesis.ObjenesisStd
  * Runs against the functional `android.graphics.Paint` test-source shadow, which
  * reproduces the two REAL semantics under test: `setColor` replaces the whole ARGB,
  * `setAlpha`/`getAlpha` touch only the top byte. The factory under test is private, so
- * it is reached by reflection; Config is Objenesis-allocated with only `keyOpacity` set.
+ * it is reached by reflection; Config is Objenesis-allocated with only `keyBorderOpacity` set.
+ *
+ * 2026-11-10: the outline has its own opacity (`key_border_opacity`, separate from the fill's
+ * `key_opacity`); the factory takes the resolved alpha, and the contract is unchanged.
  */
 class ThemeBorderPaintOpacityTest {
 
     @Test
     fun borderPaint_honoursKeyOpacity() {
         val config = ObjenesisStd().newInstance(Config::class.java)
-        config.keyOpacity = 100
+        config.keyBorderOpacity = 100
 
         // The private companion factory under test (Theme.Computed.init_border_paint).
         val companionClass = Class.forName("tribixbite.cleverkeys.Theme\$Computed\$Companion")
@@ -36,16 +39,16 @@ class ThemeBorderPaintOpacityTest {
             .getDeclaredField("Companion").get(null)
         val method = companionClass.getDeclaredMethod(
             "init_border_paint",
-            Config::class.java,
+            Int::class.javaPrimitiveType,
             Float::class.javaPrimitiveType,
             Int::class.javaPrimitiveType,
         ).apply { isAccessible = true }
 
         // An opaque border colour — what every shipped theme and the runtime scheme carry.
-        val paint = method.invoke(companion, config, 2f, 0xFF424242.toInt()) as Paint
+        val paint = method.invoke(companion, config.keyBorderOpacity, 2f, 0xFF424242.toInt()) as Paint
 
         assertWithMessage(
-            "border_paint must honour keyOpacity — setColor(opaque) after `alpha = keyOpacity` " +
+            "border_paint must honour the border opacity — setColor(opaque) after `alpha = …` " +
                 "discards the opacity (audit H-6); set the colour first, then the alpha"
         ).that(paint.alpha).isEqualTo(100)
     }
@@ -54,19 +57,19 @@ class ThemeBorderPaintOpacityTest {
     @Test
     fun borderPaint_keepsTheBorderColourChannels() {
         val config = ObjenesisStd().newInstance(Config::class.java)
-        config.keyOpacity = 100
+        config.keyBorderOpacity = 100
 
         val companionClass = Class.forName("tribixbite.cleverkeys.Theme\$Computed\$Companion")
         val companion = Class.forName("tribixbite.cleverkeys.Theme\$Computed")
             .getDeclaredField("Companion").get(null)
         val method = companionClass.getDeclaredMethod(
             "init_border_paint",
-            Config::class.java,
+            Int::class.javaPrimitiveType,
             Float::class.javaPrimitiveType,
             Int::class.javaPrimitiveType,
         ).apply { isAccessible = true }
 
-        val paint = method.invoke(companion, config, 2f, 0xFF424242.toInt()) as Paint
+        val paint = method.invoke(companion, config.keyBorderOpacity, 2f, 0xFF424242.toInt()) as Paint
 
         assertWithMessage("RGB channels come from the theme's border colour")
             .that(paint.color and 0x00FFFFFF).isEqualTo(0x424242)

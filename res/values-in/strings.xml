@@ -397,8 +397,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Kecerahan label tombol (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Opasitas Keyboard</string>
     <string name="appearance_keyboard_opacity_desc">Opasitas latar belakang keyboard</string>
-    <string name="appearance_key_opacity_title">Opasitas Tombol</string>
-    <string name="appearance_key_opacity_desc">Opasitas tombol individual</string>
+    <string name="appearance_key_opacity_title">Opasitas Latar Tombol</string>
+    <string name="appearance_key_opacity_desc">Opasitas isian setiap tombol</string>
+    <string name="appearance_key_border_opacity_title">Opasitas Bingkai Tombol</string>
+    <string name="appearance_key_border_opacity_desc">Opasitas garis tepi setiap tombol</string>
     <string name="appearance_activated_key_opacity_title">Opasitas Tombol Aktif</string>
     <string name="appearance_activated_key_opacity_desc">Opasitas saat tombol ditekan</string>
     <string name="appearance_character_size_title">Ukuran Karakter</string>
@@ -2600,6 +2602,8 @@
     <string name="theme_function_chars">Karakter yang digambar sebagai tombol fungsi</string>
     <string name="theme_dynamic_color">Ikuti warna wallpaper (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Ukuran Teks Tombol Fungsi</string>
+    <string name="theme_shape_key_fill_opacity">Opasitas Isian Tombol</string>
+    <string name="theme_shape_key_border_opacity">Opasitas Garis Tepi Tombol</string>
     <string name="theme_shift_filled">Panah Shift terisi saat aktif</string>
     <string name="theme_section_bar">Tata Letak Bilah Saran</string>
     <string name="theme_bar_desc">Slot tetap alih-alih saran yang bergulir, seperti pada keyboard yang dikenal. Hanya tampilannya yang berubah: spasi tetap menyisipkan kata yang sama.</string>

@@ -392,8 +392,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Jas popisků kláves (0–100 %)</string>
     <string name="appearance_keyboard_opacity_title">Průhlednost klávesnice</string>
     <string name="appearance_keyboard_opacity_desc">Průhlednost pozadí klávesnice</string>
-    <string name="appearance_key_opacity_title">Průhlednost klávesy</string>
-    <string name="appearance_key_opacity_desc">Průhlednost jednotlivých kláves</string>
+    <string name="appearance_key_opacity_title">Průhlednost pozadí kláves</string>
+    <string name="appearance_key_opacity_desc">Průhlednost výplně každé klávesy</string>
+    <string name="appearance_key_border_opacity_title">Průhlednost okraje kláves</string>
+    <string name="appearance_key_border_opacity_desc">Průhlednost obrysu každé klávesy</string>
     <string name="appearance_activated_key_opacity_title">Průhlednost aktivované klávesy</string>
     <string name="appearance_activated_key_opacity_desc">Průhlednost při stisku klávesy</string>
     <string name="appearance_character_size_title">Velikost znaků</string>
@@ -2723,6 +2725,8 @@
     <string name="theme_function_chars">Znaky vykreslené jako funkční klávesy</string>
     <string name="theme_dynamic_color">Barvy podle tapety (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Velikost textu funkčních kláves</string>
+    <string name="theme_shape_key_fill_opacity">Průhlednost výplně kláves</string>
+    <string name="theme_shape_key_border_opacity">Průhlednost obrysu kláves</string>
     <string name="theme_shift_filled">Plná šipka Shift při velkých písmenech</string>
     <string name="theme_section_bar">Rozvržení panelu návrhů</string>
     <string name="theme_bar_desc">Pevná pole místo posuvných návrhů, jako na známých klávesnicích. Mění se jen vzhled: mezerník stále vloží stejné slovo.</string>

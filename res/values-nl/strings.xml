@@ -388,8 +388,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Helderheid van toetslabels (0–100%)</string>
     <string name="appearance_keyboard_opacity_title">Dekking toetsenbord</string>
     <string name="appearance_keyboard_opacity_desc">Dekking van de toetsenbordachtergrond</string>
-    <string name="appearance_key_opacity_title">Toetsdekking</string>
-    <string name="appearance_key_opacity_desc">Dekking van afzonderlijke toetsen</string>
+    <string name="appearance_key_opacity_title">Dekking toetsachtergrond</string>
+    <string name="appearance_key_opacity_desc">Dekking van de vulling van elke toets</string>
+    <string name="appearance_key_border_opacity_title">Dekking toetsrand</string>
+    <string name="appearance_key_border_opacity_desc">Dekking van de omtrek van elke toets</string>
     <string name="appearance_activated_key_opacity_title">Dekking geactiveerde toets</string>
     <string name="appearance_activated_key_opacity_desc">Dekking wanneer de toets wordt ingedrukt</string>
     <string name="appearance_character_size_title">Tekengrootte</string>
@@ -2633,6 +2635,8 @@
     <string name="theme_function_chars">Tekens getekend als functietoetsen</string>
     <string name="theme_dynamic_color">Achtergrondkleuren volgen (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Tekstgrootte functietoetsen</string>
+    <string name="theme_shape_key_fill_opacity">Dekking toetsvulling</string>
+    <string name="theme_shape_key_border_opacity">Dekking toetsomtrek</string>
     <string name="theme_shift_filled">Gevulde Shift-pijl bij hoofdletters</string>
     <string name="theme_section_bar">Indeling suggestiebalk</string>
     <string name="theme_bar_desc">Vaste vakken in plaats van scrollende suggesties, zoals op bekende toetsenborden. Alleen de weergave verandert: de spatiebalk voegt nog steeds hetzelfde woord in.</string>

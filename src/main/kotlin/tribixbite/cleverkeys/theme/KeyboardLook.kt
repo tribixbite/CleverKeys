@@ -201,6 +201,18 @@ data class LookGeometry(
      * Null = undefined (a spec inherits its base's), like every other attribute here.
      */
     val equalGaps: Boolean? = null,
+    /**
+     * Share of the key FILL that is drawn, 0..1, on top of the user's "Key background opacity"
+     * (`key_opacity`): 0 = keys drawn by their outline alone over the keyboard background (the
+     * CleverKeys Aurora look), 0.55 = a scene shows through the keys. A pressed key keeps its whole
+     * fill so the press still shows. Null = undefined (1).
+     */
+    val keyFillOpacity: Float? = null,
+    /**
+     * Share of the key OUTLINE's opacity, 0..1, on top of the user's "Key border opacity"
+     * (`key_border_opacity`), independent of [keyFillOpacity]. Null = undefined (1).
+     */
+    val keyBorderOpacity: Float? = null,
 )
 
 /**
@@ -319,6 +331,10 @@ object KeyboardLookGeometry {
         val labelWeight: Int?,
         /** Multiplier on function-key text labels ([LookLabelSizing]; 1 = CleverKeys' size). */
         val functionLabelScale: Float = 1f,
+        /** Share of a resting key's fill that is drawn ([LookGeometry.keyFillOpacity]; 1 = all). */
+        val fillOpacity: Float = 1f,
+        /** Share of the key outline's opacity ([LookGeometry.keyBorderOpacity]; 1 = all). */
+        val borderOpacity: Float = 1f,
     )
 
     /**
@@ -349,8 +365,13 @@ object KeyboardLookGeometry {
             labelScale = (look.labelScale ?: 1f).coerceIn(MIN_LABEL_SCALE, MAX_LABEL_SCALE),
             labelWeight = look.labelWeight?.coerceIn(100, 900),
             functionLabelScale = (look.functionLabelScale ?: 1f).coerceIn(MIN_LABEL_SCALE, MAX_LABEL_SCALE),
+            fillOpacity = opacityShare(look.keyFillOpacity),
+            borderOpacity = opacityShare(look.keyBorderOpacity),
         )
     }
+
+    /** A theme's opacity share, 0..1; undefined or not a number = 1 (the user's opacity alone). */
+    fun opacityShare(v: Float?): Float = if (v == null || v.isNaN()) 1f else v.coerceIn(0f, 1f)
 
     /** A gap above half the key would leave keys thinner than their gaps. */
     const val MAX_GAP = 0.5f

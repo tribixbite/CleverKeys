@@ -2,7 +2,7 @@ package tribixbite.cleverkeys.theme
 
 /**
  * The Theme Creator's edits of a custom theme's version-2 extension (the "Keyboard look"
- * section): which colour map a row edits, the seven geometry sliders with their ranges and
+ * section): which colour map a row edits, the geometry sliders with their ranges and
  * steps, and the "Use keyboard setting" (= not defined) state of every field. Pure, so the
  * editor's rules are pinned off-device (`ThemeSpecEditsTest`); the composables only render them.
  */
@@ -42,7 +42,11 @@ object ThemeSpecEdits {
         SHADOW(0f..4f, 0.1f),
         LABEL_SCALE(ThemeSpecXml.LABEL_SCALE_RANGE, 0.05f),
         LABEL_WEIGHT(100f..900f, 100f),
-        FUNCTION_LABEL_SCALE(ThemeSpecXml.LABEL_SCALE_RANGE, 0.05f);
+        FUNCTION_LABEL_SCALE(ThemeSpecXml.LABEL_SCALE_RANGE, 0.05f),
+        /** Share of the key fill drawn (0 = outline-only keys), on top of the user's key opacity. */
+        FILL_OPACITY(ThemeSpecXml.OPACITY_RANGE, 0.05f),
+        /** Share of the key outline's opacity, on top of the user's key border opacity. */
+        BORDER_OPACITY(ThemeSpecXml.OPACITY_RANGE, 0.05f);
 
         fun get(g: LookGeometry): Float? = when (this) {
             GAP_HORIZONTAL -> g.keyGapHorizontal
@@ -53,6 +57,8 @@ object ThemeSpecEdits {
             LABEL_SCALE -> g.labelScale
             LABEL_WEIGHT -> g.labelWeight?.toFloat()
             FUNCTION_LABEL_SCALE -> g.functionLabelScale
+            FILL_OPACITY -> g.keyFillOpacity
+            BORDER_OPACITY -> g.keyBorderOpacity
         }
 
         /** [g] with this field set to [v] snapped to the step and clamped, or unset (null). */
@@ -67,6 +73,8 @@ object ThemeSpecEdits {
                 LABEL_SCALE -> g.copy(labelScale = s)
                 LABEL_WEIGHT -> g.copy(labelWeight = s?.toInt())
                 FUNCTION_LABEL_SCALE -> g.copy(functionLabelScale = s)
+                FILL_OPACITY -> g.copy(keyFillOpacity = s)
+                BORDER_OPACITY -> g.copy(keyBorderOpacity = s)
             }
         }
 
@@ -80,7 +88,7 @@ object ThemeSpecEdits {
         /** The value a slider shows while the field is unset: what the keyboard uses without it. */
         val neutral: Float
             get() = when (this) {
-                LABEL_SCALE, FUNCTION_LABEL_SCALE -> 1f
+                LABEL_SCALE, FUNCTION_LABEL_SCALE, FILL_OPACITY, BORDER_OPACITY -> 1f
                 LABEL_WEIGHT -> 400f
                 else -> range.start
             }

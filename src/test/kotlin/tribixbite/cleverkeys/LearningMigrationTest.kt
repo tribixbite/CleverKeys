@@ -124,7 +124,7 @@ class LearningMigrationTest {
         Config.migrate(prefs)
         verify { editor.putBoolean("on_device_learning_enabled", true) }
         verify { editor.putBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, true) }
-        verify { editor.putInt("version", 5) }  // v5 since 2026-09-30 (SubkeyPopoverMigration)
+        verify { editor.putInt("version", 6) }  // v6 since 2026-11-10 (KeyBorderOpacityMigration)
     }
 
     @Test
@@ -145,7 +145,7 @@ class LearningMigrationTest {
         verify(exactly = 0) {
             editor.putBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, any())
         }
-        verify { editor.putInt("version", 5) }  // v5 since 2026-09-30 (SubkeyPopoverMigration)
+        verify { editor.putInt("version", 6) }  // v6 since 2026-11-10 (KeyBorderOpacityMigration)
     }
 
     // ── The consuming half (UserAdaptationManager's seam) ────────────────────

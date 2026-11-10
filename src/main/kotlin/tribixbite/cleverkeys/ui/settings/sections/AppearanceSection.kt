@@ -219,6 +219,20 @@ internal fun SettingsActivity.AppearanceSection() {
                     displayValue = "$keyOpacity%"
                 )
 
+                // The outline's own opacity (2026-11-10): keys can be drawn by their outline alone.
+                SettingsSlider(
+                    title = stringResource(R.string.appearance_key_border_opacity_title),
+                    description = stringResource(R.string.appearance_key_border_opacity_desc),
+                    value = keyBorderOpacity.toFloat(),
+                    valueRange = SettingsRanges.OPACITY_PERCENT.toSliderRange(),
+                    increment = 1f,
+                    onValueChange = {
+                        keyBorderOpacity = it.roundToInt()
+                        saveSetting("key_border_opacity", keyBorderOpacity)
+                    },
+                    displayValue = "$keyBorderOpacity%"
+                )
+
                 SettingsSlider(
                     title = stringResource(R.string.appearance_activated_key_opacity_title),
                     description = stringResource(R.string.appearance_activated_key_opacity_desc),

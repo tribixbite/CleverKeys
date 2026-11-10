@@ -395,8 +395,10 @@
     <string name="appearance_label_brightness_desc" formatted="false">Luminosité des étiquettes de touches (0–100 %)</string>
     <string name="appearance_keyboard_opacity_title">Opacité du clavier</string>
     <string name="appearance_keyboard_opacity_desc">Opacité de l\'arrière-plan du clavier</string>
-    <string name="appearance_key_opacity_title">Opacité des touches</string>
-    <string name="appearance_key_opacity_desc">Opacité des touches individuelles</string>
+    <string name="appearance_key_opacity_title">Opacité du fond des touches</string>
+    <string name="appearance_key_opacity_desc">Opacité du remplissage de chaque touche</string>
+    <string name="appearance_key_border_opacity_title">Opacité de la bordure des touches</string>
+    <string name="appearance_key_border_opacity_desc">Opacité du contour de chaque touche</string>
     <string name="appearance_activated_key_opacity_title">Opacité de touche activée</string>
     <string name="appearance_activated_key_opacity_desc">Opacité lors de l\'appui sur une touche</string>
     <string name="appearance_character_size_title">Taille des caractères</string>
@@ -2688,6 +2690,8 @@
     <string name="theme_function_chars">Caractères dessinés comme des touches de fonction</string>
     <string name="theme_dynamic_color">Suivre les couleurs du fond d\'écran (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Taille du texte des touches de fonction</string>
+    <string name="theme_shape_key_fill_opacity">Opacité du remplissage des touches</string>
+    <string name="theme_shape_key_border_opacity">Opacité du contour des touches</string>
     <string name="theme_shift_filled">Flèche Maj pleine en majuscules</string>
     <string name="theme_section_bar">Disposition de la barre de suggestions</string>
     <string name="theme_bar_desc">Des cases fixes au lieu de suggestions défilantes, comme sur les claviers connus. Seul le dessin change : la barre d\'espace insère toujours le même mot.</string>

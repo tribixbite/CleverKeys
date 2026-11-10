@@ -9,24 +9,32 @@ import kotlin.math.sin
  * ethereally, with negligible overhead … time out with inactivity so the phone can idle"): the
  * CleverKeys Aurora curtains and the nature scenes.
  *
- * Nothing is re-rendered while it moves. [BackdropDrawable] keeps two pre-rendered images of
- * the painting (curtains with other ray seeds, or the scene a moment later), cross-fades between them
- * and drifts each sideways by a few dp, and dims three groups of stars in turn. A frame is two
- * bitmap blits, the glows and the stars; `Keyboard2View` replays its keys from a cached display
- * list on these frames, so the keys are not redrawn either. Frames come at [FRAME_MS] (8 per
- * second): every movement here is slower than 1.5 dp per second, so more would be waste.
+ * Nothing is re-rendered while it moves. For the aurora, the stream and the snow
+ * [BackdropDrawable] keeps two pre-rendered images of the painting (curtains with other rays and
+ * a little more light, or the scene a moment later), cross-fades between them and drifts each
+ * sideways ([MotionStyle]), and dims three groups of stars in turn; the other scenes move their
+ * own layers ([SceneMotion]). A frame is a few bitmap blits, the glows and the particles;
+ * `Keyboard2View` replays its keys from a cached display list on these frames, so the keys are
+ * not redrawn either.
  *
  * Pure JVM: `AuroraMotionTest` pins the ranges, the continuity and the idle timeout.
  */
 object AuroraMotion {
 
     /**
-     * Time between frames while moving: 8 per second. Each frame costs the IME window's fixed
-     * per-frame overhead (about 1 ms on the main thread and 1.5 ms of draw commands on the
-     * Pixel 8 Pro, 2026-11-10), so the rate is the only lever left; the slowest steps here are
-     * a fifth of a dp and 5 % of the cross-fade per frame, below what reads as a step.
+     * Time between frames of the soft cross-fading scenes (stream, snow): 8 per second. Each
+     * frame costs the IME window's fixed per-frame overhead (about 1 ms on the main thread and
+     * 1.5 ms of draw commands on the Pixel 8 Pro, 2026-11-10), so the rate is the main lever; the
+     * steps here stay a fraction of a dp. The aurora runs at [AURORA_FRAME_MS], the sharp
+     * swaying scenes at their [SceneKind.frameMs].
      */
     const val FRAME_MS = 125L
+
+    /**
+     * The aurora's frames: 10 per second, for its livelier motion (maintainer 2026-11-10: "a bit
+     * more vibrant … aurora is barely perceptible").
+     */
+    const val AURORA_FRAME_MS = 100L
 
     /** Moving stops this long after the last touch or the keyboard showing. */
     const val IDLE_MS = 20_000L
@@ -34,14 +42,9 @@ object AuroraMotion {
     /** Speeding up from rest and slowing down to it each take this long (no jolt either way). */
     const val EASE_MS = 2_500L
 
-    /** The widest sideways drift of a curtain layer, dp. */
+    /** The widest sideways drift of a [MotionStyle.GENTLE] image, dp. */
     const val MAX_DRIFT_DP = 5f
 
-    /**
-     * Each curtain bitmap is drawn this much wider than the view on both sides, so a drift never
-     * uncovers its edge. Must be at least [MAX_DRIFT_DP].
-     */
-    const val DRIFT_MARGIN_DP = 6f
 
     /** Stars twinkle in this many groups (star index modulo the count), each on its own cycle. */
     const val STAR_GROUPS = 3
@@ -52,9 +55,13 @@ object AuroraMotion {
     /** Each star group's twinkle period, seconds. */
     private val STAR_PERIODS_S = doubleArrayOf(5.3, 7.1, 8.9)
 
-    /** Differing ray seeds and a slight wave shift: the second curtain image cross-fades in. */
+    /**
+     * The second curtain image: other ray seeds, the folds moved along, and a little more light,
+     * so the cross-fade reads as the curtains rippling and brightening, as an aurora does.
+     */
     const val ALT_SEED_OFFSET = 1000L
-    const val ALT_PHASE_SHIFT = 0.03f
+    const val ALT_PHASE_SHIFT = 0.08f
+    const val ALT_BRIGHTNESS = 1.3f
 
     /**
      * [v] folded into 0 until [size]: a drifting particle group's offset. The group is drawn in
@@ -66,29 +73,64 @@ object AuroraMotion {
         return if (m < 0) m + size else m
     }
 
-    /** The curtains of the second image: same light, other rays, the folds slightly moved. */
+    /** The curtains of the second image: other rays, the folds moved along, more light. */
     fun alternate(ribbons: List<AuroraRibbon>): List<AuroraRibbon> =
-        ribbons.map { it.copy(seed = it.seed + ALT_SEED_OFFSET, phase = it.phase + ALT_PHASE_SHIFT) }
+        ribbons.map {
+            it.copy(
+                seed = it.seed + ALT_SEED_OFFSET, phase = it.phase + ALT_PHASE_SHIFT,
+                edgeColor = brighter(it.edgeColor), topColor = brighter(it.topColor),
+            )
+        }
+
+    /** [argb] with its alpha (how much light it adds) raised by [ALT_BRIGHTNESS]. */
+    private fun brighter(argb: Int): Int {
+        val a = (((argb ushr 24) and 0xFF) * ALT_BRIGHTNESS).toInt().coerceAtMost(0xFF)
+        return (a shl 24) or (argb and 0x00FFFFFF)
+    }
 
     /**
      * The motion at [seconds] of motion time (which only advances while moving, so a resumed
-     * aurora carries on from where it rested). Periods are unrelated (9, 13, 26, 37 s and the
-     * stars' 5.3, 7.1, 8.9 s), so the pattern never visibly repeats.
+     * backdrop carries on from where it rested) in [style]. Periods are unrelated (and the stars'
+     * 5.3, 7.1, 8.9 s), so the pattern never visibly repeats.
      */
-    fun frame(seconds: Double): AuroraMotionFrame {
+    fun frame(seconds: Double, style: MotionStyle = MotionStyle.GENTLE): AuroraMotionFrame {
         fun wave(period: Double, phase: Double) = sin(2 * PI * seconds / period + phase)
         // Two cycles summed keep the cross-fade from beating at one obvious rhythm.
-        val crossfade = (0.5 + 0.5 * (0.6 * wave(9.0, 0.0) + 0.4 * wave(13.0, 1.3))).toFloat().coerceIn(0f, 1f)
+        val crossfade = (0.5 + 0.5 * (0.6 * wave(style.fadePeriodS, 0.0) + 0.4 * wave(style.fadePeriodS * 1.44, 1.3)))
+            .toFloat().coerceIn(0f, 1f)
         val stars = FloatArray(STAR_GROUPS) { i ->
             val lift = 0.5 + 0.5 * wave(STAR_PERIODS_S[i % STAR_PERIODS_S.size], i * 2.1)
             (STAR_MIN + (1f - STAR_MIN) * lift.toFloat()).coerceIn(STAR_MIN, 1f)
         }
         return AuroraMotionFrame(
             crossfade = crossfade,
-            driftADp = (MAX_DRIFT_DP * wave(26.0, 0.0)).toFloat(),
-            driftBDp = (-0.8f * MAX_DRIFT_DP * wave(37.0, 0.7)).toFloat(),
+            driftADp = (style.driftDp * wave(style.driftPeriodS, 0.0)).toFloat(),
+            driftBDp = (-0.8f * style.driftDp * wave(style.driftPeriodS * 1.42, 0.7)).toFloat(),
             starAlpha = stars,
         )
+    }
+}
+
+/**
+ * How a cross-fading backdrop moves: the widest sideways drift of its images and the periods of
+ * the cross-fade and the drift.
+ */
+class MotionStyle(val driftDp: Float, val fadePeriodS: Double, val driftPeriodS: Double) {
+    /**
+     * Each image is drawn this much wider than the view on both sides, so a drift never uncovers
+     * its edge.
+     */
+    val marginDp: Float get() = driftDp + 1f
+
+    companion object {
+        /** The stream and the snow: a slow cross-fade, a drift of a few dp. */
+        val GENTLE = MotionStyle(AuroraMotion.MAX_DRIFT_DP, fadePeriodS = 9.0, driftPeriodS = 26.0)
+
+        /**
+         * The aurora: curtains that visibly ripple, brighten and sway (maintainer 2026-11-10:
+         * "barely perceptible" before). About a dp per frame at its frame rate, still soft.
+         */
+        val AURORA = MotionStyle(driftDp = 12f, fadePeriodS = 5.5, driftPeriodS = 14.0)
     }
 }
 

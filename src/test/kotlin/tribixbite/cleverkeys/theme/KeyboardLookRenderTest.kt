@@ -81,6 +81,7 @@ class KeyboardLookRenderTest {
         screenHeightPixels = 2000
         keyboardHeightPercent = 30
         keyOpacity = 255
+        keyBorderOpacity = 255
         keyActivatedOpacity = 255
         key_vertical_margin = 0.02f
         key_horizontal_margin = 0.03f
@@ -387,6 +388,30 @@ class KeyboardLookRenderTest {
         assertThat(custom.lookKeyLegends).isEqualTo(spec.keyLegends)
         assertThat(custom.lookShiftFilled).isTrue()
         assertThat(Theme.Computed(custom, config(), 100f, layout()).function_label_scale).isEqualTo(1.4f)
+    }
+
+    /**
+     * 2026-11-10: key fill and outline opacity are separate — the user's two settings
+     * (`key_opacity`, `key_border_opacity`), each times the theme's share. CleverKeys Aurora draws
+     * keys by their outline alone; a pressed key keeps its fill so the press still shows; a theme
+     * without shares draws exactly the user's opacities.
+     */
+    @Test
+    fun keyFillAndOutlineOpacityAreSeparate() {
+        val config = config().apply { keyOpacity = 200; keyBorderOpacity = 120; keyActivatedOpacity = 230 }
+        val provider = ThemeProvider(context, mockk(relaxed = true))
+        val aurora = Theme.Computed(provider.getTheme(KeyboardLooks.AURORA), config, 100f, layout())
+        assertWithMessage("no fill at rest").that(aurora.key.bg_paint.alpha).isEqualTo(0)
+        assertWithMessage("the outline at the user's border opacity").that(aurora.key.border_paint.alpha).isEqualTo(120)
+        assertWithMessage("a pressed key keeps its fill").that(aurora.key_activated.bg_paint.alpha).isEqualTo(230)
+        val plain = Theme.Computed(Theme(context, darkKeyboardColorScheme(), density = 2f), config, 100f, layout())
+        assertThat(plain.key.bg_paint.alpha).isEqualTo(200)
+        assertThat(plain.key.border_paint.alpha).isEqualTo(120)
+        val spec = ThemeSpec(geometry = LookGeometry(keyFillOpacity = 0.5f, keyBorderOpacity = 0.5f))
+        val custom = provider.themeForCustom(CustomTheme(id = "custom_op", name = "Op", colors = darkKeyboardColorScheme(), extension = spec))
+        val c = Theme.Computed(custom, config, 100f, layout())
+        assertThat(c.key.bg_paint.alpha).isEqualTo(100)
+        assertThat(c.key.border_paint.alpha).isEqualTo(60)
     }
 
     /** 2026-10-30: a custom theme's bar arrangement reaches the theme the keyboard and the Creator preview draw. */
