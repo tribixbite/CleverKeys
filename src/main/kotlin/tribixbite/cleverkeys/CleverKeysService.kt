@@ -585,6 +585,17 @@ class CleverKeysService : InputMethodService(),
         _debugLoggingManager.registerDebugModeReceiver(this)
     }
 
+    /**
+     * Memory pressure, or the keyboard's UI hidden: the painted backdrops keep only the
+     * painting used last (BackdropDrawable's cache otherwise holds up to its budget).
+     */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            tribixbite.cleverkeys.theme.BackdropDrawable.trimCache()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         _voiceInput?.release()

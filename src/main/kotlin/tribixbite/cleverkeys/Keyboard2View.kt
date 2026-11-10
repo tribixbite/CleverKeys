@@ -625,10 +625,23 @@ class Keyboard2View @JvmOverloads constructor(
      */
     override fun onWindowVisibilityChanged(visibility: Int) {
         super.onWindowVisibilityChanged(visibility)
+        val backdrop = background as? tribixbite.cleverkeys.theme.BackdropDrawable
         if (visibility == VISIBLE) {
             syncBackdropMotion()
-            (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.wake()
+            backdrop?.wake()
+        } else {
+            // Hidden (app switch, keyboard closed): stop at once rather than trusting the
+            // drawable's own visibility callback, and free the keys' GPU layer until shown.
+            backdrop?.stopMotion()
+            releaseKeysNode()
         }
+    }
+
+    /** Drops the cached keys and their compositing layer's GPU memory; recorded again when needed. */
+    private fun releaseKeysNode() {
+        val node = _keysNode ?: return
+        _keysNode = null
+        if (VERSION.SDK_INT >= 29) (node as RenderNode).discardDisplayList()
     }
 
     fun reset() {
@@ -1926,7 +1939,7 @@ class Keyboard2View @JvmOverloads constructor(
         if (VERSION.SDK_INT >= 29 && backdrop?.motionEnabled == true && canvas.isHardwareAccelerated) {
             drawKeysCached(canvas)
         } else {
-            _keysNode = null
+            releaseKeysNode()
             drawKeys(canvas)
         }
     }
@@ -2292,7 +2305,7 @@ class Keyboard2View @JvmOverloads constructor(
         cancelContinuousSwipe()
         super.onDetachedFromWindow()
         (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.stopMotion()
-        _keysNode = null
+        releaseKeysNode()
         if (_shortSwipeListenerRegistered) {
             _shortSwipeManager.removeChangeListener(_shortSwipeMappingsChanged)
             _shortSwipeListenerRegistered = false

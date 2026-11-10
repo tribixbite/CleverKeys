@@ -107,6 +107,8 @@ class BackdropDrawable(
     private val tick = Runnable { onTick() }
     /** Per-layer mesh vertices, reused across frames. */
     private var meshes: Array<FloatArray> = emptyArray()
+    /** One displacement, reused for every mesh point of every frame. */
+    private val meshScratch = FloatArray(2)
     /**
      * Each particle group recorded once ([RenderNode]s, API 29+), so a motion frame only sets a
      * group's alpha and offset instead of re-recording every particle; null until first drawn
@@ -161,11 +163,22 @@ class BackdropDrawable(
         }
     }
 
-    /** Stops scheduling frames; the backdrop rests where it is. */
+    /**
+     * Stops scheduling frames; the backdrop rests where it is. The particle groups' display lists
+     * are freed too (they are recorded again when it moves): a hidden keyboard holds no GPU
+     * memory for them.
+     */
     fun stopMotion() {
         if (ticking) unscheduleSelf(tick)
         ticking = false
         clock.rest()
+        releaseParticleNodes()
+    }
+
+    private fun releaseParticleNodes() {
+        val nodes = particleNodes ?: return
+        particleNodes = null
+        if (Build.VERSION.SDK_INT >= 29) for (n in nodes) (n as RenderNode).discardDisplayList()
     }
 
     private fun onTick() {
@@ -311,7 +324,7 @@ class BackdropDrawable(
             val share = SceneMotion.alpha(layer.motion, seconds)
             if (share <= 0.003f) continue
             val verts = meshes.getOrNull(i) ?: continue
-            SceneMotion.mesh(layer, seconds, scale, verts, tuning.intensity)
+            SceneMotion.mesh(layer, seconds, scale, verts, tuning.intensity, meshScratch)
             if (bounds.left != 0 || bounds.top != 0) {
                 for (k in verts.indices step 2) { verts[k] += bounds.left; verts[k + 1] += bounds.top }
             }
@@ -474,7 +487,8 @@ class BackdropDrawable(
         val width: Int,
         val base: Bitmap,
         val alt: Bitmap?,
-        val layers: List<Pair<SceneLayer, Bitmap>>,
+        /** Each moving layer's placement and its bitmap; its pixel array is not kept. */
+        val layers: List<Pair<LayerPlacement, Bitmap>>,
         /** Bytes held, for the cache's budget. */
         val bytes: Long,
     )
@@ -497,8 +511,11 @@ class BackdropDrawable(
         private val WRAP_COPIES = intArrayOf(0, 0, -1, 0, 0, -1, -1, -1)
         private val NO_COPIES = intArrayOf(0, 0)
 
-        /** Cache budget: about two full-resolution scenes with their layers, plus curtains. */
-        private const val CACHE_BYTES = 40L * 1024 * 1024
+        /**
+         * Cache budget: one full-resolution scene with its layers in both orientations, or a
+         * scene and the curtains. Was 40 MB, which an IME process kept for good.
+         */
+        private const val CACHE_BYTES = 24L * 1024 * 1024
 
         /**
          * The last few paintings (portrait, landscape, a split screen), shared by every instance:
@@ -529,12 +546,25 @@ class BackdropDrawable(
 
         private val mainHandler = Handler(Looper.getMainLooper())
 
+        /**
+         * Memory is short or the keyboard's UI went away (`CleverKeysService.onTrimMemory`):
+         * keep only the painting used last (the next show finds it at once); the rest is
+         * painted again if it is ever needed.
+         */
+        fun trimCache() {
+            synchronized(cache) {
+                val it = cache.entries.iterator()
+                // Access order: the eldest first, the newest last.
+                while (cache.size > 1 && it.hasNext()) { it.next(); it.remove() }
+            }
+        }
+
         /** Renders [key] (on the render thread): the painting's bitmaps. */
         private fun render(key: PaintKey): Rendered {
             val scene = key.scene
             return if (scene != null) {
                 val p = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity)
-                val layers = p.layers.map { it to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
+                val layers = p.layers.map { it.placement to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
                 Rendered(
                     key.w, bitmap(p.base, key.w, key.h), p.alt?.let { bitmap(it, key.w, key.h) }, layers,
                     bytes = 4L * p.pixelCount,

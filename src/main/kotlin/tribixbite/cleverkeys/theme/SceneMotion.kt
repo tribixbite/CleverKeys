@@ -38,7 +38,16 @@ class SceneLayer(
     val height: Int,
     val pixels: IntArray,
     val motion: LayerMotion,
-)
+) {
+    /** Where the layer sits and how it moves, without its pixels (what a drawn layer keeps). */
+    val placement: LayerPlacement get() = LayerPlacement(left, top, width, height, motion)
+}
+
+/**
+ * A [SceneLayer]'s box and motion alone: once its pixels are a bitmap, the drawable keeps only
+ * this (the pixel array would hold the same image a second time on the Java heap).
+ */
+data class LayerPlacement(val left: Int, val top: Int, val width: Int, val height: Int, val motion: LayerMotion)
 
 /** How a [SceneLayer] moves; every distance is in raster pixels. */
 enum class LayerMotionKind {
@@ -175,10 +184,14 @@ object SceneMotion {
      * `2 × (cols + 1) × (rows + 1)`). [intensity] scales every displacement (the user's
      * [SceneMotionTuning.intensity]; 0 = the layer rests where it was painted).
      */
-    fun mesh(layer: SceneLayer, seconds: Double, scale: Float, out: FloatArray, intensity: Float = 1f) {
+    fun mesh(layer: SceneLayer, seconds: Double, scale: Float, out: FloatArray, intensity: Float = 1f) =
+        mesh(layer.placement, seconds, scale, out, intensity, FloatArray(2))
+
+    /** [mesh] for a [LayerPlacement], with a caller-owned 2-float [scratch] (no allocation per frame). */
+    fun mesh(layer: LayerPlacement, seconds: Double, scale: Float, out: FloatArray, intensity: Float, scratch: FloatArray) {
         val cols = meshColumns(layer.width)
         val rows = meshRows(layer.height)
-        val d = FloatArray(2)
+        val d = scratch
         var k = 0
         for (r in 0..rows) {
             val y = layer.top + layer.height * r.toFloat() / rows
