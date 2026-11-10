@@ -468,11 +468,11 @@ editor that used to be listed here already ship in 2.0.)
 - **Scenes.** A new Theme Manager section of looks with CleverKeys' keys over a painted scene:
   CleverKeys Aurora (five rayed curtains that fold together like a real aurora's, green into
   lilac, indigo into teal, orchid and rose, under shimmering stars; keys drawn by their outline
-  alone with a lilac action key), Meadow, Stream, River rocks (many-coloured slate, jasper, jade
-  and a few banded agates, in the rain), Forest, Snow and Beach (the keys are see-through, labels
+  alone with a lilac action key), Meadow, Stream, River rocks (worn, chipped many-coloured slate,
+  jasper, jade and a few banded agates, rain splashing on them), Forest, Snow and Beach (the keys are see-through, labels
   stay readable). Appearance → Animated scenes (off by default) lets them move: the aurora ripples
-  and sways, grass bends in a breeze that travels across the field, branches and ferns sway, rain
-  falls on the stones, waves roll in and wash up the sand, water flows, snow falls, stars and
+  and sways, grass bends in a breeze that travels across the field, branches and ferns sway, raindrops
+  splash on the stones, waves roll in and wash up the sand, water flows, snow falls, stars and
   sparkles twinkle. Scene Speed, Scene Motion Intensity and Twinkle tune how they move, and Sharp
   Scenes paints the soft ones at full resolution. A scene comes to rest 20 seconds after you stop
   typing, and stays still in battery saver, with animations turned off and on Android 9 or older.

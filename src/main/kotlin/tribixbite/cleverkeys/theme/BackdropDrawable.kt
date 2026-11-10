@@ -52,23 +52,21 @@ class BackdropDrawable(
     private val basePaint = Paint().apply { color = baseColor }
     private val glowPaints = backdrop.glows.map { Paint(Paint.ANTI_ALIAS_FLAG) }
     private val fadePaint = Paint()
+    private val fadeRect = RectF()
     private val starPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glintPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
     }
     private val ovalRect = RectF()
-    /** The direction rain falls (unit vector along the field's drift; straight down without one). */
-    private val rainX: Float
-    private val rainY: Float
-
-    init {
-        val dx = backdrop.stars?.driftXDpPerS ?: 0f
-        val dy = backdrop.stars?.driftYDpPerS ?: 0f
-        val n = kotlin.math.hypot(dx, dy)
-        rainX = if (n > 0f) dx / n else 0f
-        rainY = if (n > 0f) dy / n else 1f
+    /** The live splashes of a rain field ([RainSplashes.at]), reused every frame. */
+    private val splashes: FloatArray =
+        FloatArray(if (backdrop.stars?.shape == ParticleShape.RAIN) RainSplashes.STRIDE * LookStars.MAX_STARS else 0)
+    /** A rain field's strike points and droplets per brightness bucket, reused every frame. */
+    private val splashDots: Array<FloatArray> = Array(if (splashes.isEmpty()) 0 else SPLASH_LEVELS) {
+        FloatArray(2 * (RainSplashes.DROPLETS + 1) * LookStars.MAX_STARS)
     }
+    private val splashDotCount = IntArray(SPLASH_LEVELS)
     private val paintingPaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val layerPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
     /** The rendered painting for the current size; null until the background render delivers it. */
@@ -204,30 +202,19 @@ class BackdropDrawable(
         requestPainting(bounds.width(), bounds.height())
         paintingDst.set(bounds)
         backdrop.glows.forEachIndexed { i, g ->
-            val cx = bounds.left + g.cx * w
-            val cy = bounds.top + g.cy * h
-            val rx = (g.rx * w).coerceAtLeast(1f)
-            val ry = (g.ry * h).coerceAtLeast(1f)
-            // A circle of radius rx, squashed to ry and tilted about its centre: an ellipse.
-            // The middle stop keeps a soft core instead of a linear cone.
-            val shader = RadialGradient(
-                cx, cy, rx,
-                intArrayOf(g.color, withAlpha(g.color, (alphaOf(g.color) * 0.45f).toInt()), withAlpha(g.color, 0)),
-                floatArrayOf(0f, 0.5f, 1f),
-                Shader.TileMode.CLAMP,
-            )
-            shader.setLocalMatrix(Matrix().apply {
-                setScale(1f, ry / rx, cx, cy)
-                postRotate(g.rotationDeg, cx, cy)
-            })
-            glowPaints[i].shader = shader
+            glowPaints[i].shader = glowShader(g, bounds.left.toFloat(), bounds.top.toFloat(), w, h)
         }
         val fadeH = backdrop.topFade.coerceIn(0f, 1f) * h
+        // Only the faded band is filled: the rest of a full-view rect would be shaded by the GPU
+        // every frame to no effect.
+        fadeRect.set(bounds.left.toFloat(), bounds.top.toFloat(), bounds.right.toFloat(), bounds.top + fadeH)
         fadePaint.shader = if (fadeH > 0f) LinearGradient(
             0f, bounds.top.toFloat(), 0f, bounds.top + fadeH,
             baseColor, withAlpha(baseColor, 0), Shader.TileMode.CLAMP,
         ) else null
-        stars = backdrop.stars?.let { LookStars.place(it, bounds.width(), bounds.height(), density) }.orEmpty()
+        // A rain field has no placed particles: its splashes come from RainSplashes each frame.
+        stars = backdrop.stars?.takeIf { it.shape != ParticleShape.RAIN }
+            ?.let { LookStars.place(it, bounds.width(), bounds.height(), density) }.orEmpty()
         particleNodes = null
     }
 
@@ -292,14 +279,19 @@ class BackdropDrawable(
             canvas.drawBitmap(rendered.base, null, paintingDst, paintingPaint)
         }
         if (rendered != null) drawLayers(canvas, rendered, seconds)
-        for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
+        // A painting carries its glows (baked in at render: they never move); only a backdrop
+        // without one, or before it is ready, draws them live.
+        if (rendered == null || !rendered.glowsBaked) for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
         val field = backdrop.stars
-        if (field != null && frame != null && Build.VERSION.SDK_INT >= 29 && canvas.isHardwareAccelerated) {
+        if (field != null && field.shape == ParticleShape.RAIN) {
+            drawSplashes(canvas, field, seconds)
+        } else if (field != null && frame != null && Build.VERSION.SDK_INT >= 29 && canvas.isHardwareAccelerated) {
             drawParticleGroups(canvas, field, frame)
         } else if (field != null) {
             // Still (or software-drawn): every particle where it was placed, a moving one dimmed
             // by its group's twinkle.
-            for (i in stars.indices) {
+            if (frame == null && batchable(field)) drawStarBatch(canvas, field, 0, 1, b.left.toFloat(), b.top.toFloat())
+            else for (i in stars.indices) {
                 val s = stars[i]
                 val alpha = if (frame == null) s.alpha
                 else (s.alpha * frame.starAlpha[i % AuroraMotion.STAR_GROUPS]).toInt()
@@ -307,7 +299,7 @@ class BackdropDrawable(
             }
         }
         // Last, so particles and glows fade into the base colour where the suggestion bar meets the keys.
-        if (fadePaint.shader != null) canvas.drawRect(b, fadePaint)
+        if (fadePaint.shader != null) canvas.drawRect(fadeRect, fadePaint)
         canvas.restoreToCount(clip)
         if (layer >= 0) canvas.restoreToCount(layer)
     }
@@ -336,6 +328,121 @@ class BackdropDrawable(
         }
     }
 
+    /**
+     * Rain landing on the scene at [seconds] ([RainSplashes]): per splash a ring spreading from
+     * the strike, a bright point where the drop hit while it is fresh, and droplets flung out.
+     * One draw call per ring plus [SPLASH_LEVELS] point batches a frame (was seven calls per
+     * splash), from reused buffers; a still scene shows the splashes of its first moment.
+     */
+    private fun drawSplashes(canvas: Canvas, field: LookStarfield, seconds: Double) {
+        val b = bounds
+        val n = RainSplashes.at(field, b.width(), b.height(), density, seconds, splashes, tuning.intensity.coerceAtLeast(0.25f))
+        val rgb = field.color and 0x00FFFFFF
+        glintPaint.strokeWidth = 0.7f * density
+        for (q in splashDots.indices) splashDotCount[q] = 0
+        for (j in 0 until n) {
+            val o = j * RainSplashes.STRIDE
+            val x = b.left + splashes[o]; val y = b.top + splashes[o + 1]
+            val r = splashes[o + 2]; val a = splashes[o + 3]; val k = splashes[o + 4]
+            val alpha = (a * 255).toInt().coerceIn(0, 255)
+            if (alpha == 0) continue
+            // The ring: one stroke per splash, the only per-splash draw call.
+            glintPaint.color = (alpha shl 24) or rgb
+            canvas.drawCircle(x, y, r, glintPaint)
+            // The strike point and the droplets go into a few point batches by brightness.
+            val bucket = (a * SPLASH_LEVELS).toInt().coerceIn(0, SPLASH_LEVELS - 1)
+            if (k < 0.3f) addSplashDot(bucket, x, y)
+            val seed = splashes[o + 5].toInt()
+            for (dI in 0 until RainSplashes.DROPLETS) {
+                // Droplets on seeded headings, flung a little past the ring.
+                val angle = ((seed * (dI + 3) * 2654435761L) and 0xFFFF) / 65535f * 6.2832f
+                val reach = r * (1.15f + 0.35f * ((seed shr dI) and 3) / 3f)
+                addSplashDot(bucket, x + reach * kotlin.math.cos(angle), y + reach * kotlin.math.sin(angle))
+            }
+        }
+        starPaint.style = Paint.Style.STROKE
+        starPaint.strokeCap = Paint.Cap.ROUND
+        starPaint.strokeWidth = 1.5f * density
+        for (q in 0 until SPLASH_LEVELS) {
+            val count = splashDotCount[q]
+            if (count == 0) continue
+            starPaint.color = (((q + 0.5f) / SPLASH_LEVELS * 255 * 0.8f).toInt() shl 24) or rgb
+            canvas.drawPoints(splashDots[q], 0, count, starPaint)
+        }
+        starPaint.style = Paint.Style.FILL
+    }
+
+    private fun addSplashDot(bucket: Int, x: Float, y: Float) {
+        val c = splashDotCount[bucket]
+        val arr = splashDots[bucket]
+        if (c + 2 > arr.size) return
+        arr[c] = x; arr[c + 1] = y
+        splashDotCount[bucket] = c + 2
+    }
+
+    /** Stars and sparkles in one colour can be drawn in batches ([drawStarBatch]). */
+    private fun batchable(field: LookStarfield) =
+        (field.shape == ParticleShape.STAR || field.shape == ParticleShape.GLINT) && field.tints.isEmpty()
+
+    /**
+     * Every [step]th star from [start], offset by ([offX], [offY]), in a handful of draw calls
+     * instead of one or three per star: dots grouped into [ALPHA_LEVELS] brightness ×
+     * [RADIUS_LEVELS] size buckets as round points, glints into one line batch per brightness.
+     * About 280 separate antialiased circles and lines a frame were the larger part of the
+     * aurora's GPU command time (framestats on the Pixel 8 Pro, 2026-11-10). Runs when a group
+     * is recorded, not per frame.
+     */
+    private fun drawStarBatch(canvas: Canvas, field: LookStarfield, start: Int, step: Int, offX: Float, offY: Float) {
+        val sparkle = field.shape == ParticleShape.GLINT
+        val rgb = field.color and 0x00FFFFFF
+        val lowA = field.minAlpha.toFloat()
+        val spanA = (field.maxAlpha - field.minAlpha).coerceAtLeast(1).toFloat()
+        val lowR = field.minRadiusDp * density
+        val spanR = ((field.maxRadiusDp - field.minRadiusDp) * density).coerceAtLeast(1e-3f)
+        val dots = arrayOfNulls<FloatList>(ALPHA_LEVELS * RADIUS_LEVELS)
+        val lines = arrayOfNulls<FloatList>(ALPHA_LEVELS)
+        for (i in start until stars.size step step) {
+            val s = stars[i]
+            val a = ((s.alpha - lowA) / spanA * ALPHA_LEVELS).toInt().coerceIn(0, ALPHA_LEVELS - 1)
+            val r = ((s.radius - lowR) / spanR * RADIUS_LEVELS).toInt().coerceIn(0, RADIUS_LEVELS - 1)
+            val x = offX + s.x; val y = offY + s.y
+            (dots[a * RADIUS_LEVELS + r] ?: FloatList().also { dots[a * RADIUS_LEVELS + r] = it }).add(x, y)
+            if (s.glint || sparkle) {
+                // About four radii long (five for a sparkle), at under half the alpha.
+                val arm = s.radius * (if (sparkle) 5f else 4f)
+                (lines[a] ?: FloatList().also { lines[a] = it }).apply {
+                    add(x - arm, y); add(x + arm, y); add(x, y - arm); add(x, y + arm)
+                }
+            }
+        }
+        starPaint.style = Paint.Style.STROKE
+        starPaint.strokeCap = Paint.Cap.ROUND
+        for (a in 0 until ALPHA_LEVELS) {
+            val alpha = (lowA + spanA * (a + 0.5f) / ALPHA_LEVELS).toInt().coerceIn(0, 255)
+            for (r in 0 until RADIUS_LEVELS) {
+                val pts = dots[a * RADIUS_LEVELS + r] ?: continue
+                starPaint.strokeWidth = 2f * (lowR + spanR * (r + 0.5f) / RADIUS_LEVELS)
+                starPaint.color = (alpha shl 24) or rgb
+                canvas.drawPoints(pts.values, 0, pts.size, starPaint)
+            }
+            val arms = lines[a] ?: continue
+            glintPaint.strokeWidth = (if (sparkle) 0.7f else 0.5f) * density
+            glintPaint.color = ((alpha * (if (sparkle) 3 else 2) / 5) shl 24) or rgb
+            canvas.drawLines(arms.values, 0, arms.size, glintPaint)
+        }
+        starPaint.style = Paint.Style.FILL
+    }
+
+    /** A growable float array (points for [drawStarBatch]). */
+    private class FloatList {
+        var values = FloatArray(32)
+        var size = 0
+        fun add(x: Float, y: Float) {
+            if (size + 2 > values.size) values = values.copyOf(values.size * 2)
+            values[size++] = x; values[size++] = y
+        }
+    }
+
     /** One particle of [field] at ([x], [y]) with [alpha], in its [ParticleShape]. */
     private fun drawParticle(canvas: Canvas, field: LookStarfield, s: Star, x: Float, y: Float, alpha: Int) {
         val rgb = if (s.tint != 0) s.tint else field.color and 0x00FFFFFF
@@ -361,13 +468,8 @@ class BackdropDrawable(
                 starPaint.color = (alpha shl 24) or rgb
                 canvas.drawCircle(x, y, s.radius, starPaint)
             }
-            ParticleShape.RAIN -> {
-                // A streak trailing back along the fall, about one frame of travel long.
-                val len = s.radius * RAIN_STREAK_RADII
-                glintPaint.strokeWidth = 0.8f * density
-                glintPaint.color = (alpha shl 24) or rgb
-                canvas.drawLine(x - rainX * len, y - rainY * len, x, y, glintPaint)
-            }
+            // Splashes are drawn by drawSplashes, never as placed particles.
+            ParticleShape.RAIN -> Unit
             ParticleShape.LEAF -> {
                 starPaint.color = (alpha shl 24) or rgb
                 val save = canvas.save()
@@ -404,7 +506,9 @@ class BackdropDrawable(
                     for (k in copies.indices step 2) {
                         val dx = copies[k] * b.width() - b.left
                         val dy = copies[k + 1] * b.height() - b.top
-                        for (i in g until stars.size step AuroraMotion.STAR_GROUPS) {
+                        if (batchable(field)) {
+                            drawStarBatch(c, field, g, AuroraMotion.STAR_GROUPS, b.left + dx.toFloat(), b.top + dy.toFloat())
+                        } else for (i in g until stars.size step AuroraMotion.STAR_GROUPS) {
                             val s = stars[i]
                             drawParticle(c, field, s, b.left + s.x + dx, b.top + s.y + dy, s.alpha)
                         }
@@ -479,7 +583,7 @@ class BackdropDrawable(
     private fun paintKey(widthPx: Int, heightPx: Int): PaintKey {
         val w = (widthPx / paintScale).coerceAtLeast(1)
         val h = (heightPx / paintScale).coerceAtLeast(1)
-        return PaintKey(baseColor, backdrop.ribbons, backdrop.scene, w, h, density / paintScale)
+        return PaintKey(baseColor, backdrop.ribbons, backdrop.glows, backdrop.scene, w, h, density / paintScale)
     }
 
     /** The painting and its second image (curtains: [AuroraMotion.alternate]) or moving layers. */
@@ -491,10 +595,12 @@ class BackdropDrawable(
         val layers: List<Pair<LayerPlacement, Bitmap>>,
         /** Bytes held, for the cache's budget. */
         val bytes: Long,
+        /** The backdrop's glows are painted into [base] and [alt]. */
+        val glowsBaked: Boolean = false,
     )
 
     private data class PaintKey(
-        val base: Int, val ribbons: List<AuroraRibbon>, val scene: SceneKind?,
+        val base: Int, val ribbons: List<AuroraRibbon>, val glows: List<AuroraGlow>, val scene: SceneKind?,
         val w: Int, val h: Int, val rasterDensity: Float,
     )
 
@@ -504,8 +610,12 @@ class BackdropDrawable(
         /** The aurora's curtains are soft; half resolution quarters the render cost and the memory. */
         private const val AURORA_PAINT_SCALE = 2
 
-        /** A raindrop's streak, in radii. */
-        private const val RAIN_STREAK_RADII = 20f
+        /** Brightness buckets of a frame's splash droplets. */
+        private const val SPLASH_LEVELS = 4
+
+        /** Brightness and size buckets of a star batch: fine enough that no step shows. */
+        private const val ALPHA_LEVELS = 6
+        private const val RADIUS_LEVELS = 3
 
         /** Offsets, in view sizes, of the four copies of a drifting particle group. */
         private val WRAP_COPIES = intArrayOf(0, 0, -1, 0, 0, -1, -1, -1)
@@ -572,11 +682,54 @@ class BackdropDrawable(
             } else {
                 val base = AuroraRaster.render(key.base, key.ribbons, key.w, key.h, key.rasterDensity)
                 val alt = AuroraRaster.render(key.base, AuroraMotion.alternate(key.ribbons), key.w, key.h, key.rasterDensity)
-                Rendered(key.w, bitmap(base, key.w, key.h), bitmap(alt, key.w, key.h), emptyList(), bytes = 8L * key.w * key.h)
+                Rendered(
+                    key.w, withGlows(base, key), withGlows(alt, key), emptyList(), bytes = 8L * key.w * key.h,
+                    glowsBaked = true,
+                )
             }
         }
 
         private fun bitmap(pixels: IntArray, w: Int, h: Int): Bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
+
+        /**
+         * [pixels] as a bitmap with the key's glows painted over it once, at the raster's size:
+         * a static haze shaded per frame was a full-view gradient pass for nothing.
+         */
+        private fun withGlows(pixels: IntArray, key: PaintKey): Bitmap {
+            if (key.glows.isEmpty()) return bitmap(pixels, key.w, key.h)
+            val out = Bitmap.createBitmap(key.w, key.h, Bitmap.Config.ARGB_8888)
+            out.setPixels(pixels, 0, key.w, 0, 0, key.w, key.h)
+            val canvas = Canvas(out)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            for (g in key.glows) {
+                paint.shader = glowShader(g, 0f, 0f, key.w.toFloat(), key.h.toFloat())
+                canvas.drawRect(0f, 0f, key.w.toFloat(), key.h.toFloat(), paint)
+            }
+            return out
+        }
+
+        /**
+         * One [AuroraGlow] as a shader over a [w] × [h] box at ([left], [top]): a circle of radius
+         * rx, squashed to ry and tilted about its centre (an ellipse); the middle stop keeps a soft
+         * core instead of a linear cone.
+         */
+        private fun glowShader(g: AuroraGlow, left: Float, top: Float, w: Float, h: Float): Shader {
+            val cx = left + g.cx * w
+            val cy = top + g.cy * h
+            val rx = (g.rx * w).coerceAtLeast(1f)
+            val ry = (g.ry * h).coerceAtLeast(1f)
+            return RadialGradient(
+                cx, cy, rx,
+                intArrayOf(g.color, withAlpha(g.color, (alphaOf(g.color) * 0.45f).toInt()), withAlpha(g.color, 0)),
+                floatArrayOf(0f, 0.5f, 1f),
+                Shader.TileMode.CLAMP,
+            ).apply {
+                setLocalMatrix(Matrix().apply {
+                    setScale(1f, ry / rx, cx, cy)
+                    postRotate(g.rotationDeg, cx, cy)
+                })
+            }
+        }
 
         /**
          * Whether the system lets the backdrop move now: Android 10+ (`Keyboard2View` caches its

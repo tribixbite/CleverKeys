@@ -332,6 +332,28 @@ object SceneRaster {
     private val HALF_Y = LIGHT_Y / HALF_LEN
     private val HALF_Z = (LIGHT_Z + 1f) / HALF_LEN
 
+    /** How strongly the surface relief tilts a stone's normal (per raster px of height change, per dp). */
+    private const val BUMP = 0.9f
+
+    /**
+     * A stone's relief at ([x], [y]), about 0..1: fine grain over shallow undulation, cut by
+     * creases ([creaseAt]).
+     */
+    private fun surface(x: Float, y: Float, d: Float, seed: Long): Float =
+        0.25f * Noise.fbm(x / (1.6f * d), y / (1.6f * d), 2, seed + 7) +
+            0.5f * Noise.fbm(x / (8f * d), y / (8f * d), 2, seed + 12) -
+            0.35f * creaseAt(x, y, d, seed)
+
+    /**
+     * Cracks and ridges, 0..1: thin where a smooth noise crosses its middle value (ridged noise),
+     * so they meander across a stone the way veins and fractures do.
+     */
+    private fun creaseAt(x: Float, y: Float, d: Float, seed: Long): Float {
+        val n = Noise.fbm(x / (16f * d), y / (16f * d), 3, seed + 8)
+        val ridge = 1f - kotlin.math.abs(2f * n - 1f)
+        return ridge.pow(40f)
+    }
+
     /** One stone: irregular outline, its kind's pattern, lit from the upper left and wet. */
     private fun paintStone(p: Paint2D, s: Stone, d: Float) {
         val ext = s.r * 1.15f + 2
@@ -348,7 +370,10 @@ object SceneRaster {
             val v = (-dx * sa + dy * ca) / ry
             val e = sqrt(u * u + v * v)
             val theta = atan2(v, u)
-            val outline = 1f + 0.06f * sin(3 * theta + ph1) + 0.045f * sin(5 * theta + ph2) + 0.03f * sin(7 * theta + ph1 * 2)
+            // A worn outline with chips: low harmonics for the shape, noise along the rim for
+            // the nicks a smooth ellipse never has (maintainer 2026-11-10: "too perfect").
+            val outline = 1f + 0.06f * sin(3 * theta + ph1) + 0.045f * sin(5 * theta + ph2) + 0.03f * sin(7 * theta + ph1 * 2) +
+                0.10f * (Noise.fbm(x / (4f * d), y / (4f * d), 2, s.seed + 5) - 0.5f)
             val q = e / outline
             if (q >= 1.04f) continue
             val cover = ((1f - q) * ry + 0.5f).coerceIn(0f, 1f)
@@ -356,7 +381,18 @@ object SceneRaster {
             // A flattened dome: river stones are flatter than spheres.
             val nzRaw = sqrt((1f - min(1f, q * q)).coerceAtLeast(0f))
             val nz = 0.35f + 0.65f * nzRaw
-            val gx = (u * ca - v * sa) * q; val gy = (u * sa + v * ca) * q
+            var gx = (u * ca - v * sa) * q; var gy = (u * sa + v * ca) * q
+            // Surface relief: grain, and creases where the stone is cracked or ridged. Its slope
+            // tilts the normal, so the light and the wet highlight break up over it.
+            val fx = x.toFloat(); val fy = y.toFloat()
+            val hx = surface(fx + 1f, fy, d, s.seed) - surface(fx - 1f, fy, d, s.seed)
+            val hy = surface(fx, fy + 1f, d, s.seed) - surface(fx, fy - 1f, d, s.seed)
+            // Polished agate and jade are smoother than slate and granite.
+            val bump = BUMP * d * when (s.kind) {
+                StoneKind.AGATE -> 0.35f; StoneKind.GEM -> 0.5f; StoneKind.SLATE -> 1f; StoneKind.SPECKLED -> 0.85f
+            }
+            gx -= bump * hx; gy -= bump * hy
+            val crease = creaseAt(fx, fy, d, s.seed)
             val nl = sqrt(gx * gx + gy * gy + nz * nz)
             val nx = gx / nl; val ny = gy / nl; val nzz = nz / nl
             val diffuse = (0.42f + 0.7f * (nx * lx + ny * ly + nzz * lz)).coerceIn(0.18f, 1.15f)
@@ -387,10 +423,14 @@ object SceneRaster {
                     lerpColor(scale(s.c1, 0.9f + 0.2f * Noise.value(x / (3f * d), y / (3f * d), s.seed + 1)), s.c2, ((speck - 0.6f) * 5f).coerceIn(0f, 1f))
                 }
             }
-            c = scale(c, diffuse * (0.7f + 0.3f * nzRaw))
-            // Wet: a sharp highlight and a broad sheen (Blinn-Phong, the viewer straight above).
+            // Mineral grain in the colour, and the cracks and pits darker (dirt and shade in them).
+            val grain = 0.88f + 0.24f * Noise.fbm(x / (1.3f * d), y / (1.3f * d), 2, s.seed + 11)
+            c = scale(c, diffuse * (0.7f + 0.3f * nzRaw) * grain * (1f - 0.4f * crease))
+            // Wet in patches, drier between: the gloss comes and goes over a stone instead of one
+            // perfect highlight (Blinn-Phong, the viewer straight above).
+            val wet = ((Noise.fbm(x / (9f * d), y / (9f * d), 2, s.seed + 9) - 0.38f) * 4f).coerceIn(0f, 1f)
             val ndh = (nx * HALF_X + ny * HALF_Y + nzz * HALF_Z).coerceAtLeast(0f)
-            val gloss = ndh.pow(90f) * (0.9f + 0.5f * s.sheen) + ndh.pow(12f) * 0.18f
+            val gloss = (ndh.pow(90f) * (0.9f + 0.5f * s.sheen) + ndh.pow(12f) * 0.18f) * (0.2f + 0.8f * wet) * (1f - crease)
             val rr = ch(c, 16) + 255f * gloss; val gg = ch(c, 8) + 255f * gloss; val bb = ch(c, 0) + 255f * gloss
             // The rim darkens where the stone turns away into the wet gaps.
             val rim = 0.55f + 0.45f * nzRaw.pow(0.5f)

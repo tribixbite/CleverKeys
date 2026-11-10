@@ -580,12 +580,11 @@ object KeyboardLooks {
             accent = 0xC9D3DA, onAccent = 0x14181C, popup = 0x24282C,
             backdrop = LookBackdrop(
                 glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f,
-                // Rain falling on the stones, slanting a little in the wind (maintainer 2026-11-10:
-                // rain instead of the glints and the rippling light).
+                // Rain landing on the stones, seen from above (maintainer 2026-11-10: "splattering
+                // on the rocks from above", not streaks): rings 8–20 dp across that spread and fade.
                 stars = LookStarfield(
-                    perSquare100Dp = 9f, seed = 0x20C5L, color = 0xFFDCEEF8.toInt(), minAlpha = 100, maxAlpha = 210,
-                    minRadiusDp = 0.7f, maxRadiusDp = 1.3f, glintEvery = 0, shape = ParticleShape.RAIN,
-                    driftXDpPerS = -40f, driftYDpPerS = 260f,
+                    perSquare100Dp = 11f, seed = 0x20C5L, color = 0xFFE4F2FA.toInt(), minAlpha = 0, maxAlpha = 230,
+                    minRadiusDp = 4f, maxRadiusDp = 10f, glintEvery = 0, shape = ParticleShape.RAIN,
                 ),
             ),
         ),

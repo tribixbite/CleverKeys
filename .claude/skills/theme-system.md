@@ -270,8 +270,14 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    `BackdropDrawable.setTuning`. Aurora curtains are folds of one sheet: every `AuroraRibbon`
    shares `AURORA_WAVES` / `AURORA_PHASE` and leans its rays to one radiant (`convergence`);
    a curtain's colour can change along it (`edgeColorEnd` / `topColorEnd`). River rocks are a
-   still painting with RAIN particles (`ParticleShape.RAIN`); only `AGATE_STONES` stones carry
-   rings.
+   still painting (stones with chipped outlines, bump-mapped grain and creases, patchy gloss)
+   under rain seen from above: `ParticleShape.RAIN` fields draw `RainSplashes` (rings that
+   spread and fade at new seeded spots each cycle, drawn per frame, no placed particles);
+   only `AGATE_STONES` stones carry rings. Cost rules in `BackdropDrawable`: glows are baked into
+   the painting bitmaps (`withGlows`), the top fade fills only its band, stars / sparkles draw in
+   brightness × size batches (`drawStarBatch`), kept RenderNodes are re-recorded when
+   `!hasDisplayList()`, the window hiding stops motion and frees the keys layer, and
+   `CleverKeysService.onTrimMemory` trims the painting cache to the last one used.
 
 ## Traps
 

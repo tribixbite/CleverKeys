@@ -148,6 +148,11 @@ A RenderNode you keep and replay (`drawRenderNode`) loses its display list when 
 hides (app switch): it then draws nothing, silently, while frames keep coming. Check
 `hasDisplayList()` before replaying and record again (the rain vanished after one app switch,
 2026-11-10). A pixel diff of two screenshots, not a frame count, is what proves motion.
+Per-frame cost: `dumpsys gfxinfo <pkg> reset`, then `framestats` (columns HandleInputStart …
+SyncQueued = main thread, IssueDrawCommandsStart → SwapBuffers = RenderThread); measure the IME
+in another app's field, never with CleverKeys Settings in front (its Compose screen costs more
+than the keyboard). Aurora on the Pixel 8 Pro: ~1.4 ms main + ~2.8 ms issue per frame at 10 fps,
+the window's fixed cost; batching stars and baking the glow did not move it.
 
 ## Kotlin compiler execution on Termux
 

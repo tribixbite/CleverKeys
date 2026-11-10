@@ -1302,8 +1302,20 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `SceneMotionTuning` (`look_motion_speed` / `_intensity` / `_twinkle`, `look_scene_crisp`).
     Pixel found the real app-switch bug: kept particle RenderNodes lose their display list when
     the IME window hides, so stars / rain vanished after one switch while frames kept coming
-    (fixed: re-record when `!hasDisplayList()`). Open: re-verify that fix on the Pixel, the
-    battery A/B on this build, maintainer's verdict.
+    (fixed: re-record when `!hasDisplayList()`; verified on the Pixel: 0 frames while away, motion
+    and stars back after 3 switches). Maintainer then reported lag (it coincided with Gradle runs
+    on the same phone): measured the keyboard alone at ~1.4 ms main + ~5.7 ms RenderThread CPU per
+    moving frame, 0 when hidden or resting; fixed real gaps anyway (layer pixel arrays no longer
+    kept beside their bitmaps, cache 40 → 24 MB with onTrimMemory trim, explicit stop + GPU
+    release on window hide, baked glow, banded fade, batched stars). River rocks then redone per
+    maintainer: rain as splashes seen from above (`RainSplashes`), stones with chipped outlines,
+    bump-mapped grain and creases, patchy gloss. Battery (Pixel 8 Pro, Perfetto rails, 5-min
+    scripted typing, brightness pinned): aurora ABBA on 1070 / 1104 mW vs off 829 / 809 =
+    +268 mW (+33 %); river rocks +238 mW in both orders, before and after batching the splashes
+    (batching cut CPU ticks ~20 % but not power). The cost is the display pipeline: VSYS_PWR_DISPLAY
+    +57, L22M_DISP (rail 20) +41, S6M_LLDO1 (rail 17) +49, CPU clusters +65. rails.py prints those
+    two by index: descriptor order in the trace names them. Only fewer frames or less time moving
+    lowers it. Open: maintainer's verdict (and on any frame-rate / idle-time trade).
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
