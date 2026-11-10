@@ -406,6 +406,8 @@
     <string name="appearance_look_key_preview_desc">De CleverKeys-look en de looks in de stijl van iOS, Gboard, SwiftKey en Samsung tonen het ingedrukte teken in een pop-up boven de toets.</string>
     <string name="appearance_look_space_language_title">Taalnaam op de spatiebalk</string>
     <string name="appearance_look_space_language_desc">De Samsung-look toont de huidige taal op de spatiebalk, net als het Samsung-toetsenbord.</string>
+    <string name="appearance_look_aurora_motion_title">Bewegend noorderlicht</string>
+    <string name="appearance_look_aurora_motion_desc">Het donkere noorderlicht van de CleverKeys-look drijft en glinstert zacht en staat stil na 20 seconden zonder typen. Gebruikt iets meer batterij zolang het beweegt. Android 10 of hoger.</string>
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
     <string name="appearance_custom_border_desc">Aangepaste toetsrandstijl inschakelen</string>
     <string name="appearance_border_radius_title">Randradius</string>

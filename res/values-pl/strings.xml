@@ -420,6 +420,8 @@
     <string name="appearance_look_key_preview_desc">Wygląd CleverKeys oraz wyglądy w stylu iOS, Gboard, SwiftKey i Samsung pokazują naciśnięty znak w dymku nad klawiszem.</string>
     <string name="appearance_look_space_language_title">Nazwa języka na spacji</string>
     <string name="appearance_look_space_language_desc">Wygląd Samsung pokazuje bieżący język na spacji tak jak klawiatura Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Ruchoma zorza</string>
+    <string name="appearance_look_aurora_motion_desc">Ciemna zorza wyglądu CleverKeys łagodnie dryfuje i migocze, a po 20 sekundach bez pisania zatrzymuje się. W ruchu zużywa nieco więcej baterii. Android 10 lub nowszy.</string>
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
     <string name="appearance_custom_border_desc">Włącz własny styl obramowania klawiszy</string>
     <string name="appearance_border_radius_title">Promień narożników</string>

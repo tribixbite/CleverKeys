@@ -4,6 +4,7 @@ import com.google.common.collect.Range
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
+import kotlin.math.abs
 import tribixbite.cleverkeys.LayoutThemeBinding
 import tribixbite.cleverkeys.SuggestionBarPalette
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
@@ -245,6 +246,48 @@ class KeyboardLooksTest {
             .that(dark.barBackground).isEqualTo(dark.keyboardBackground)
         assertThat(backdrop.topFade).isGreaterThan(0f)
     }
+
+    /**
+     * Maintainer's pick from ten previews (2026-11-10): three curtains, the lowest one nearly level
+     * and folded, finer rays, a partly green rim, twice the stars with more glints, and keys a
+     * little translucent. Translucent fills must still carry every label and hint over the
+     * brightest spot of the painted aurora.
+     */
+    @Test
+    fun theAuroraPickHasThreeFoldedCurtainsAndLegibleTranslucentKeys() {
+        val dark = KeyboardLooks.cleverkeysLook.dark
+        val aurora = dark.backdrop!!
+        assertThat(aurora.ribbons).hasSize(3)
+        val near = aurora.ribbons.first()
+        assertWithMessage("the lowest curtain runs nearly level").that(abs(near.slope)).isAtMost(0.1f)
+        assertWithMessage("and folds more than twice across the view").that(near.waves).isAtLeast(2f)
+        for (r in aurora.ribbons) assertWithMessage("finer rays").that(r.raysPer100Dp).isAtLeast(40f)
+        val rimGreenOverRed = ((near.edgeColor shr 8) and 0xFF) - ((near.edgeColor shr 16) and 0xFF)
+        assertWithMessage("a green-leaning rim").that(rimGreenOverRed).isGreaterThan(0)
+        val stars = aurora.stars!!
+        assertThat(stars.perSquare100Dp).isAtLeast(8f)
+        assertThat(stars.glintEvery).isIn(Range.closed(1, 5))
+        assertWithMessage("slightly translucent keys").that(aurora.keyOpacity).isIn(Range.closedOpen(0.8f, 1f))
+
+        // The brightest backdrop pixel any key can sit over (curtains at a phone keyboard's raster).
+        val w = 205
+        val h = 145
+        val curtains = AuroraRaster.render(dark.keyboardBackground, aurora.ribbons, w, h, w / 411f)
+        val brightest = curtains.maxByOrNull { relativeLuminance(it) }!!
+        for ((role, fill, label) in listOf(
+            Triple("key", dark.key, dark.label),
+            Triple("function key", dark.modifierKey, dark.modifierLabel),
+        )) {
+            val seen = blend(withAlpha(fill, aurora.keyOpacity), brightest)
+            assertWithMessage("label on a translucent $role over the brightest aurora")
+                .that(contrast(label, seen)).isAtLeast(4.5)
+            assertWithMessage("hint on a translucent $role over the brightest aurora")
+                .that(contrast(dark.hint, seen)).isAtLeast(3.0)
+        }
+        assertWithMessage("light mode keeps opaque keys").that(KeyboardLooks.cleverkeysLook.light.backdrop).isNull()
+    }
+
+    private fun withAlpha(color: Int, share: Float) = ((255 * share).toInt() shl 24) or (color and 0xFFFFFF)
 
     /**
      * Mean relative luminance of [backdrop] painted over [base] on a [width] × [height] view: the

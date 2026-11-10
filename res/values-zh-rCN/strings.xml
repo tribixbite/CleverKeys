@@ -402,6 +402,8 @@
     <string name="appearance_look_key_preview_desc">CleverKeys 外观以及 iOS、Gboard、SwiftKey 和 Samsung 风格外观会在按键上方的气泡中显示按下的字符。</string>
     <string name="appearance_look_space_language_title">在空格键上显示语言名称</string>
     <string name="appearance_look_space_language_desc">Samsung 风格外观会像三星键盘一样在空格键上显示当前语言。</string>
+    <string name="appearance_look_aurora_motion_title">动态极光</string>
+    <string name="appearance_look_aurora_motion_desc">CleverKeys 外观的深色极光会轻柔地飘动和闪烁，20 秒无输入后静止。运动时会多耗一点电量。需要 Android 10 或更高版本。</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
     <string name="appearance_custom_border_desc">启用自定义按键边框样式。</string>
     <string name="appearance_border_radius_title">边框圆角</string>

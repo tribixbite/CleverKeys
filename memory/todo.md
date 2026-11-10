@@ -1249,6 +1249,19 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `3db9b885` shows them on Saga .144 portrait and on Saga .83 after a real 1.6.0 → 2.0 upgrade
     with no stored theme (→ the look, as designed) (`build/nov09b-saga144/02-*`,
     `build/nov09-saga83/03-*`). Verdict on the new aurora: maintainer.
+    Fifth round (2026-11-10, maintainer picked from 10 previews: "finer rays, folded, 3 curtains
+    with bottom going more horizontal, partial green rim, quieter more stars, slightly
+    transparent keys"; motion "default off until we measure battery impact … time out with
+    inactivity"): `CLEVERKEYS_AURORA` now has 3 curtains (lowest slope 0.06, edge 0.72, 2.6 folds,
+    mint-to-lilac rim), alphas × 0.7, 8 stars/100 dp² glinting every 5th, `keyOpacity` 0.88
+    (key fills only). Appearance → Moving aurora (`look_aurora_motion`, off): two pre-rendered
+    curtain images cross-fade and drift, 3 star groups twinkle, 8 fps, rests 20 s after the
+    last touch (`AuroraMotionClock`), still in battery saver / animations off / < API 29.
+    Pixel 8 Pro release `17ba26e7`: renders as previewed; moving = 78 frames/10 s, about 6 % of
+    one core (57–64 CPU ticks/10 s; the first build at 12 fps without the keys layer was 129);
+    rested = 0 frames, 0.2 %; screen diff 73k px changing over 3 s, 0 at rest. Open: the
+    maintainer's verdict on look and motion; battery over a real typing session
+    (`batterystats`) before considering motion on by default.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

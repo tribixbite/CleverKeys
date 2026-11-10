@@ -414,6 +414,8 @@
     <string name="appearance_look_key_preview_desc">CleverKeys görünümü ile iOS, Gboard, SwiftKey ve Samsung tarzı görünümler basılan karakteri tuşun üstünde bir balonda gösterir.</string>
     <string name="appearance_look_space_language_title">Boşluk tuşunda dil adı</string>
     <string name="appearance_look_space_language_desc">Samsung tarzı görünüm, Samsung Klavye gibi boşluk tuşunda geçerli dili gösterir.</string>
+    <string name="appearance_look_aurora_motion_title">Hareketli kutup ışığı</string>
+    <string name="appearance_look_aurora_motion_desc">CleverKeys görünümünün koyu kutup ışığı yavaşça süzülür ve parıldar, 20 saniye yazılmayınca durur. Hareket ederken biraz daha fazla pil kullanır. Android 10 veya üstü.</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
     <string name="appearance_custom_border_desc">Özel tuş kenarlığı stilini etkinleştir</string>
     <string name="appearance_border_radius_title">Kenarlık Yarıçapı</string>

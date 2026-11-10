@@ -415,6 +415,8 @@
     <string name="appearance_look_key_preview_desc">Tampilan CleverKeys dan tampilan bergaya iOS, Gboard, SwiftKey, dan Samsung menampilkan karakter yang ditekan dalam pop-up di atas tombol.</string>
     <string name="appearance_look_space_language_title">Nama bahasa di tombol spasi</string>
     <string name="appearance_look_space_language_desc">Tampilan Samsung menampilkan bahasa saat ini di tombol spasi, seperti Samsung Keyboard.</string>
+    <string name="appearance_look_aurora_motion_title">Aurora bergerak</string>
+    <string name="appearance_look_aurora_motion_desc">Aurora gelap tampilan CleverKeys melayang dan berkilau lembut, lalu diam setelah 20 detik tanpa mengetik. Memakai sedikit baterai tambahan selama bergerak. Android 10 atau lebih baru.</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
     <string name="appearance_custom_border_desc">Aktifkan gaya batas tombol kustom</string>
     <string name="appearance_border_radius_title">Radius Batas</string>

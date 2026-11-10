@@ -415,6 +415,8 @@
     <string name="appearance_look_key_preview_desc">Ipinapakita ng CleverKeys look at ng mga look na istilong iOS, Gboard, SwiftKey at Samsung ang pinindot na character sa isang pop-up sa itaas ng key.</string>
     <string name="appearance_look_space_language_title">Pangalan ng wika sa space bar</string>
     <string name="appearance_look_space_language_desc">Ipinapakita ng Samsung-style ang kasalukuyang wika sa space bar, gaya ng Samsung Keyboard.</string>
+    <string name="appearance_look_aurora_motion_title">Gumagalaw na aurora</string>
+    <string name="appearance_look_aurora_motion_desc">Marahang lumulutang at kumikislap ang madilim na aurora ng CleverKeys look, saka tumitigil pagkalipas ng 20 segundong walang pagta-type. Gumagamit ng kaunting dagdag na baterya habang gumagalaw. Android 10 o mas bago.</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
     <string name="appearance_custom_border_desc">I-enable ang custom na styling ng border ng key</string>
     <string name="appearance_border_radius_title">Radius ng Border</string>

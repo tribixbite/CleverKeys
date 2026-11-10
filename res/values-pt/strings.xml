@@ -407,6 +407,8 @@
     <string name="appearance_look_key_preview_desc">A aparência CleverKeys e as aparências estilo iOS, Gboard, SwiftKey e Samsung mostram o caractere pressionado num balão acima da tecla.</string>
     <string name="appearance_look_space_language_title">Nome do idioma na barra de espaço</string>
     <string name="appearance_look_space_language_desc">O visual Samsung mostra o idioma atual na barra de espaço, como o teclado Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Aurora em movimento</string>
+    <string name="appearance_look_aurora_motion_desc">A aurora escura do visual CleverKeys flutua e cintila suavemente e para após 20 segundos sem digitar. Usa um pouco mais de bateria enquanto se move. Android 10 ou posterior.</string>
     <string name="appearance_custom_border_title">Borda personalizada</string>
     <string name="appearance_custom_border_desc">Ativar estilo de borda personalizada para teclas</string>
     <string name="appearance_border_radius_title">Raio de borda</string>

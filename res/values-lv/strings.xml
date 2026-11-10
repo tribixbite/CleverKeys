@@ -419,6 +419,8 @@
     <string name="appearance_look_key_preview_desc">CleverKeys izskats un iOS, Gboard, SwiftKey un Samsung stila izskati parāda nospiesto rakstzīmi uznirstošā logā virs taustiņa.</string>
     <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
     <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
+    <string name="appearance_look_aurora_motion_title">Kustīga ziemeļblāzma</string>
+    <string name="appearance_look_aurora_motion_desc">CleverKeys izskata tumšā ziemeļblāzma maigi slīd un mirgo, un pēc 20 sekundēm bez rakstīšanas apstājas. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
     <string name="appearance_custom_border_desc">Iespējot pielāgotu taustiņu apmales stilu</string>
     <string name="appearance_border_radius_title">Apmales rādiuss</string>

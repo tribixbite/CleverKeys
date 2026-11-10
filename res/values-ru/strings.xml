@@ -410,6 +410,8 @@
     <string name="appearance_look_key_preview_desc">Оформление CleverKeys и оформления в стиле iOS, Gboard, SwiftKey и Samsung показывают нажатый символ во всплывающем окне над клавишей.</string>
     <string name="appearance_look_space_language_title">Название языка на пробеле</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показывает текущий язык на клавише пробела, как клавиатура Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Движущееся сияние</string>
+    <string name="appearance_look_aurora_motion_desc">Тёмное северное сияние оформления CleverKeys плавно движется и мерцает, а через 20 секунд без ввода замирает. Пока оно движется, расходует немного больше заряда. Android 10 или новее.</string>
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
     <string name="appearance_custom_border_desc">Включить пользовательский стиль рамки клавиш</string>
     <string name="appearance_border_radius_title">Радиус скругления рамки</string>

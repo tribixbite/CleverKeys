@@ -410,6 +410,8 @@
     <string name="appearance_look_key_preview_desc">Vzhled CleverKeys a vzhledy ve stylu iOS, Gboard, SwiftKey a Samsung zobrazují stisknutý znak v bublině nad klávesou.</string>
     <string name="appearance_look_space_language_title">Název jazyka na mezerníku</string>
     <string name="appearance_look_space_language_desc">Vzhled Samsung zobrazuje na mezerníku aktuální jazyk, stejně jako klávesnice Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Pohyblivá polární záře</string>
+    <string name="appearance_look_aurora_motion_desc">Tmavá polární záře vzhledu CleverKeys jemně plyne a třpytí se a po 20 sekundách bez psaní se zastaví. Během pohybu spotřebuje o něco více baterie. Android 10 nebo novější.</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
     <string name="appearance_custom_border_desc">Povolit vlastní styl ohraničení kláves</string>
     <string name="appearance_border_radius_title">Poloměr rohů</string>

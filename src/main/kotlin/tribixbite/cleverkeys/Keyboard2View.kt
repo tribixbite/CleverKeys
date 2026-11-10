@@ -10,6 +10,8 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.RenderNode
+import android.graphics.drawable.Drawable
 import android.inputmethodservice.InputMethodService
 import android.os.Build.VERSION
 import android.util.AttributeSet
@@ -23,6 +25,7 @@ import android.view.Window
 import android.view.WindowInsets
 import android.view.accessibility.AccessibilityManager
 import android.view.inputmethod.InputMethodManager
+import androidx.annotation.RequiresApi
 import androidx.core.view.ViewCompat
 import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.KeyboardAccessibilityHelper
@@ -183,6 +186,20 @@ class Keyboard2View @JvmOverloads constructor(
 
     /** True once [enterThemePreviewMode] ran; never reverts for this instance. */
     private var _previewMode = false
+
+    // ---- Aurora motion (AuroraBackdropDrawable.motionEnabled) ----
+    // A background drawable's invalidate re-runs onDraw, so while the aurora moves the keys are
+    // recorded once into a RenderNode and replayed on frames where only the aurora changed.
+    /** The cached key drawing (a [RenderNode], API 29+); null while the aurora is still. */
+    private var _keysNode: Any? = null
+    /** Something other than the aurora asked for a redraw since the keys were recorded. */
+    private var _keysDirty = true
+    /** True while the background drawable invalidates this view (an aurora frame). */
+    private var _auroraInvalidating = false
+    /** What the cached keys were drawn from: a change to any of them re-records. */
+    private var _keysSnap: Any? = null
+    private var _keysTheme: Any? = null
+    private var _keysKeyboard: Any? = null
 
     /** Static sample trail drawn in preview mode (view coordinates), or null. */
     private var _previewTrail: List<PointF>? = null
@@ -1488,6 +1505,10 @@ class Keyboard2View @JvmOverloads constructor(
         if (event == null) return false
 
         val action = event.actionMasked
+        // A touch keeps a moving aurora moving (it rests after AuroraMotion.IDLE_MS idle).
+        if (action == MotionEvent.ACTION_DOWN) {
+            (background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable)?.wake()
+        }
 
         when (action) {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
@@ -1852,11 +1873,96 @@ class Keyboard2View @JvmOverloads constructor(
             setBackgroundColor(base)
         } else {
             // onDraw sets the keyboard opacity on whichever background is current.
-            background = tribixbite.cleverkeys.theme.AuroraBackdropDrawable(base, backdrop, theme.density)
+            background = tribixbite.cleverkeys.theme.AuroraBackdropDrawable(base, backdrop, theme.density) {
+                tribixbite.cleverkeys.theme.AuroraBackdropDrawable.systemAllowsMotion(context)
+            }
         }
     }
 
     override fun onDraw(canvas: Canvas) {
+        // The user's "Moving aurora": theme previews in Settings stay still.
+        val aurora = background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable
+        aurora?.setMotionEnabled(_config.snapshot.look_aurora_motion && !_previewMode)
+        if (VERSION.SDK_INT >= 29 && aurora?.motionEnabled == true && canvas.isHardwareAccelerated) {
+            drawKeysCached(canvas)
+        } else {
+            _keysNode = null
+            drawKeys(canvas)
+        }
+    }
+
+    /**
+     * The keys from [_keysNode], re-recorded only when something besides the aurora changed:
+     * an invalidate that did not come from the background ([_keysDirty]), a new config
+     * snapshot, theme or keyboard, or a new size. An aurora frame thus costs a display-list
+     * replay of the keys, not a redraw of them.
+     */
+    @RequiresApi(29)
+    private fun drawKeysCached(canvas: Canvas) {
+        val node = _keysNode as? RenderNode ?: RenderNode("CleverKeysKeys").also {
+            // Rasterised once into a GPU texture: an aurora frame blends one image instead of
+            // replaying every key, label and outline (measured on the Pixel 8 Pro, 2026-11-10).
+            it.setUseCompositingLayer(true, null)
+            _keysNode = it
+        }
+        val snap = _config.snapshot
+        val stale = _keysDirty || !node.hasDisplayList() || node.width != width || node.height != height ||
+            _keysSnap !== snap || _keysTheme !== _theme || _keysKeyboard !== _keyboard
+        if (stale) {
+            // Cleared first: an invalidate() issued while drawing must still count.
+            _keysDirty = false
+            _keysSnap = snap
+            _keysTheme = _theme
+            _keysKeyboard = _keyboard
+            node.setPosition(0, 0, width, height)
+            val recording = node.beginRecording()
+            try {
+                drawKeys(recording)
+            } finally {
+                node.endRecording()
+            }
+        }
+        canvas.drawRenderNode(node)
+    }
+
+    // Every redraw request except the aurora's own marks the cached keys stale. (View's
+    // invalidateDrawable reaches the four-int invalidate below.)
+    override fun invalidate() {
+        if (!_auroraInvalidating) _keysDirty = true
+        super.invalidate()
+    }
+
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    override fun invalidate(dirty: Rect) {
+        if (!_auroraInvalidating) _keysDirty = true
+        super.invalidate(dirty)
+    }
+
+    @Deprecated("Deprecated in Java")
+    @Suppress("DEPRECATION")
+    override fun invalidate(l: Int, t: Int, r: Int, b: Int) {
+        if (!_auroraInvalidating) _keysDirty = true
+        super.invalidate(l, t, r, b)
+    }
+
+    override fun invalidateDrawable(drawable: Drawable) {
+        if (drawable !== background) return super.invalidateDrawable(drawable)
+        _auroraInvalidating = true
+        try {
+            super.invalidateDrawable(drawable)
+        } finally {
+            _auroraInvalidating = false
+        }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        _keysDirty = true
+    }
+
+    /** The keyboard itself: every key, its labels, the swipe trail and the key-press preview. */
+    private fun drawKeys(canvas: Canvas) {
         val keyboard = _keyboard ?: return
         val tc = _tc ?: return
 
@@ -2131,6 +2237,8 @@ class Keyboard2View @JvmOverloads constructor(
     override fun onDetachedFromWindow() {
         cancelContinuousSwipe()
         super.onDetachedFromWindow()
+        (background as? tribixbite.cleverkeys.theme.AuroraBackdropDrawable)?.stopMotion()
+        _keysNode = null
         if (_shortSwipeListenerRegistered) {
             _shortSwipeManager.removeChangeListener(_shortSwipeMappingsChanged)
             _shortSwipeListenerRegistered = false

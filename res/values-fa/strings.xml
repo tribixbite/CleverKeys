@@ -441,6 +441,8 @@
     <string name="appearance_look_key_preview_desc">ظاهر CleverKeys و ظاهرهای به سبک iOS، Gboard، SwiftKey و Samsung نویسهٔ فشرده‌شده را در حبابی بالای کلید نشان می‌دهند.</string>
     <string name="appearance_look_space_language_title">نام زبان روی کلید فاصله</string>
     <string name="appearance_look_space_language_desc">ظاهر سامسونگ زبان فعلی را روی کلید فاصله نشان می‌دهد، مانند صفحه‌کلید سامسونگ.</string>
+    <string name="appearance_look_aurora_motion_title">شفق متحرک</string>
+    <string name="appearance_look_aurora_motion_desc">شفق تیرهٔ ظاهر CleverKeys آرام شناور می‌شود و می‌درخشد و پس از ۲۰ ثانیه بدون تایپ می‌ایستد. هنگام حرکت کمی باتری بیشتری مصرف می‌کند. Android 10 یا جدیدتر.</string>
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
     <string name="appearance_custom_border_desc">استایل‌دهی سفارشی حاشیه کلید را فعال کنید</string>
     <string name="appearance_border_radius_title">شعاع گوشه</string>

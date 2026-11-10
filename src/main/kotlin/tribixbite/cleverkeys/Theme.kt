@@ -19,6 +19,7 @@ import tribixbite.cleverkeys.theme.LookPopupColors
 import tribixbite.cleverkeys.theme.LookPreview
 import tribixbite.cleverkeys.theme.LookTypeface
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Theme class for keyboard rendering.
@@ -805,7 +806,10 @@ class Theme {
                     }
                 } else null
 
-                bg_paint.alpha = if (activated) config.keyActivatedOpacity else config.keyOpacity
+                // A look's backdrop may ask for slightly translucent fills so its painting shows
+                // through (LookBackdrop.keyOpacity); outlines, shadows and labels are unaffected.
+                val fillShare = theme.lookBackdrop?.keyOpacity?.coerceIn(0f, 1f) ?: 1f
+                bg_paint.alpha = ((if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare).roundToInt()
                 // H-4: the activated frame's border uses the Theme-Creator's "Border
                 // Activated" colour (XML themes default it to keyBorderColorTop).
                 border_paint = init_border_paint(

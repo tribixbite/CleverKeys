@@ -403,6 +403,8 @@
     <string name="appearance_look_key_preview_desc">CleverKeys の外観と、iOS風・Gboard風・SwiftKey風・Samsung風の外観で、押した文字をキーの上のポップアップに表示します。</string>
     <string name="appearance_look_space_language_title">スペースキーに言語名を表示</string>
     <string name="appearance_look_space_language_desc">Samsung 風の外観では、Samsung キーボードと同じくスペースキーに現在の言語を表示します。</string>
+    <string name="appearance_look_aurora_motion_title">動くオーロラ</string>
+    <string name="appearance_look_aurora_motion_desc">CleverKeys ルックの暗いオーロラがゆっくり漂いきらめき、20 秒入力がないと止まります。動いている間はバッテリーを少し多く使います。Android 10 以降。</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
     <string name="appearance_custom_border_desc">キーのカスタム枠線スタイルを有効にします</string>
     <string name="appearance_border_radius_title">枠線の角丸</string>

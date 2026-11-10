@@ -24,8 +24,8 @@ class LookBackdropTest {
     fun starsStayInsideTheViewWithinTheirRanges() {
         val density = 2.625f
         val stars = LookStars.place(field, 1080, 760, density)
-        // 411 × 290 dp ≈ 11.9 units of 100 × 100 dp at 4 per unit.
-        assertThat(stars.size).isEqualTo(48)
+        // 411 × 290 dp ≈ 11.9 units of 100 × 100 dp at 8 per unit (2026-11-10: twice the stars).
+        assertThat(stars.size).isEqualTo(95)
         for (s in stars) {
             assertThat(s.x).isAtLeast(0f); assertThat(s.x).isLessThan(1080f)
             assertThat(s.y).isAtLeast(0f); assertThat(s.y).isLessThan(760f)
@@ -33,7 +33,7 @@ class LookBackdropTest {
             assertThat(s.radius).isAtMost(field.maxRadiusDp * density + 1e-3f)
             assertThat(s.alpha).isAtLeast(field.minAlpha); assertThat(s.alpha).isAtMost(field.maxAlpha)
         }
-        assertWithMessage("every 7th star glints").that(stars.count { it.glint }).isEqualTo(7)
+        assertWithMessage("every 5th star glints").that(stars.count { it.glint }).isEqualTo(19)
     }
 
     @Test

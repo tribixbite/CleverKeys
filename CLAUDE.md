@@ -124,6 +124,17 @@ ellipsis chain broke on Chrome while mock tests (no callbacks) passed. Mock such
 real tracker and queued callbacks. Clear a ranking change on a WHOLE human corpus: 400 of 2,291
 azerty traces showed 0 regressions where all of them showed 6.
 
+## Animated keyboard backdrop and frame-cost measurement (2026-11-10)
+
+A background drawable's `invalidateSelf()` re-runs `Keyboard2View.onDraw` (all keys). The moving
+aurora therefore caches the keys in a RenderNode with a compositing layer (`drawKeysCached`;
+every non-background `invalidate` marks it stale) and its stars in recorded group nodes; what is
+left per frame is the window's fixed cost, so frame rate is the only lever. Measuring:
+`dumpsys gfxinfo <pkg>` prints "Total frames rendered" twice (process + window), so summing
+the lines doubles the count; per-thread CPU from `/proc/<pid>/task/*/stat`, never with a
+Settings screen of the same process open. `am force-stop tribixbite.cleverkeys` on the Pixel
+makes Android fall back to Gboard as default IME: re-run `ime set` afterwards.
+
 ## Kotlin compiler execution on Termux
 
 Use `-Pkotlin.compiler.execution.strategy=in-process` (Gradle property), not the old

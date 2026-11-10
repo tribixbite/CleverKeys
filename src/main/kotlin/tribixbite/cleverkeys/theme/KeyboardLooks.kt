@@ -324,23 +324,33 @@ object KeyboardLooks {
 
     /**
      * The CleverKeys look's dark backdrop (declared before [cleverkeysLook]: object properties
-     * initialise in order): two rayed aurora curtains ([AuroraRibbon]; until 2026-11-09 three
+     * initialise in order): three rayed aurora curtains ([AuroraRibbon]; until 2026-11-09 three
      * soft tilted glows, which the maintainer found "too cloud like"), lit so the background's
-     * mean stays darker than the keys (`KeyboardLooksTest`), a faint haze, and a sparse static
-     * star field with an occasional glint. Fractions of the view.
+     * mean stays darker than the keys (`KeyboardLooksTest`), a faint haze, and a star field with
+     * frequent glints. Fractions of the view.
+     *
+     * Maintainer's pick from ten previews (2026-11-10): finer rays, more folds, a third curtain,
+     * the lowest curtain nearly level rather than slanted, a partly green rim, the curtains 30 %
+     * quieter with twice the stars, and keys slightly translucent ([LookBackdrop.keyOpacity]).
      */
     val CLEVERKEYS_AURORA = LookBackdrop(
-        // Two curtains: a near one whose lilac rim waves low across the keys and rises to the
-        // right, and a fainter orchid one higher up on the right; rays fade upward into violet.
+        // A near curtain whose mint-to-lilac rim folds low across the bottom rows, an orchid one
+        // higher up on the right, and a faint lilac veil along the top left; rays fade upward
+        // into violet. Alphas are the 2026-11-09 values × 0.7 ("quieter").
         ribbons = listOf(
             AuroraRibbon(
-                edgeY = 0.78f, amplitude = 0.10f, waves = 1.6f, phase = 0.10f, slope = 0.24f, height = 0.62f,
-                edgeColor = 0x66C88CFF, topColor = 0x307A3CC8, raysPer100Dp = 34f, rayContrast = 0.42f, seed = 11L,
+                edgeY = 0.72f, amplitude = 0.12f, waves = 2.6f, phase = 0.10f, slope = 0.06f, height = 0.62f,
+                edgeColor = 0x3F8CE0C8, topColor = 0x227A3CC8, raysPer100Dp = 52f, rayContrast = 0.62f, seed = 11L,
             ),
             AuroraRibbon(
-                edgeY = 0.42f, amplitude = 0.07f, waves = 1.1f, phase = 0.60f, slope = -0.12f, height = 0.40f,
-                edgeColor = 0x46E07AD8, topColor = 0x205A2EA6, raysPer100Dp = 26f, rayContrast = 0.5f, seed = 23L,
+                edgeY = 0.42f, amplitude = 0.09f, waves = 1.9f, phase = 0.60f, slope = -0.12f, height = 0.40f,
+                edgeColor = 0x31E07AD8, topColor = 0x165A2EA6, raysPer100Dp = 40f, rayContrast = 0.66f, seed = 23L,
                 xStart = 0.28f, xEnd = 1f,
+            ),
+            AuroraRibbon(
+                edgeY = 0.26f, amplitude = 0.05f, waves = 2.0f, phase = 0.35f, slope = 0.10f, height = 0.22f,
+                edgeColor = 0x22B48CFF, topColor = 0x0E603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 37L,
+                xStart = 0f, xEnd = 0.55f,
             ),
         ),
         // A faint violet haze under the curtains, so the dark between them is not dead black.
@@ -348,10 +358,11 @@ object KeyboardLooks {
             AuroraGlow(cx = 0.35f, cy = 0.62f, rx = 0.75f, ry = 0.42f, rotationDeg = -10f, color = 0x1C4A2EA6),
         ),
         stars = LookStarfield(
-            perSquare100Dp = 4f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),
-            minAlpha = 50, maxAlpha = 170, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 7,
+            perSquare100Dp = 8f, seed = 0x5C1E7E4BL, color = 0xFFEDE3FF.toInt(),
+            minAlpha = 50, maxAlpha = 200, minRadiusDp = 0.45f, maxRadiusDp = 1.05f, glintEvery = 5,
         ),
         topFade = 0.18f,
+        keyOpacity = 0.88f,
     )
 
     /**

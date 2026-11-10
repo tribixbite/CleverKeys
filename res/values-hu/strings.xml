@@ -411,6 +411,8 @@
     <string name="appearance_look_key_preview_desc">A CleverKeys megjelenés és az iOS, Gboard, SwiftKey és Samsung stílusú megjelenések buborékban mutatják a lenyomott karaktert a billentyű fölött.</string>
     <string name="appearance_look_space_language_title">Nyelv neve a szóköz billentyűn</string>
     <string name="appearance_look_space_language_desc">A Samsung megjelenés a szóköz billentyűn mutatja az aktuális nyelvet, ahogy a Samsung billentyűzet.</string>
+    <string name="appearance_look_aurora_motion_title">Mozgó sarki fény</string>
+    <string name="appearance_look_aurora_motion_desc">A CleverKeys megjelenés sötét sarki fénye finoman úszik és csillog, majd 20 másodperc gépelés nélkül megáll. Mozgás közben kicsit több akkumulátort használ. Android 10 vagy újabb.</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
     <string name="appearance_custom_border_desc">Egyéni billentyűszegély stílus engedélyezése</string>
     <string name="appearance_border_radius_title">Szegély sugara</string>

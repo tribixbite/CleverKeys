@@ -614,6 +614,8 @@
     <string name="appearance_look_key_preview_desc">The CleverKeys look and the iOS-, Gboard-, SwiftKey- and Samsung-style looks show the pressed character in a pop-up above the key.</string>
     <string name="appearance_look_space_language_title">Language name on the space bar</string>
     <string name="appearance_look_space_language_desc">Samsung-style shows the current language on the space bar, as Samsung Keyboard does.</string>
+    <string name="appearance_look_aurora_motion_title">Moving aurora</string>
+    <string name="appearance_look_aurora_motion_desc">The CleverKeys look\'s dark aurora drifts and shimmers gently, then rests after 20 seconds without typing. Uses a little extra battery while it moves. Android 10 or later.</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
     <string name="appearance_custom_border_desc">Enable custom key border styling</string>
     <string name="appearance_border_radius_title">Border Radius</string>

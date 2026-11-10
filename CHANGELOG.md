@@ -445,6 +445,11 @@ editor that used to be listed here already ship in 2.0.)
   part of the word, so `আমি` is typed, selected, completed and predicted as one word instead of
   ending at its vowel sign (a Bangla pack's tap predictions depended on it). Marks of other
   scripts are unchanged; the rule follows WM Keyboard.
+- Indic scripts: `।` and `॥` end a sentence (next-word suggestions and learning start afresh after
+  them, and they pull back over an automatic space as `.` does); the vowel signs and other marks
+  of Devanagari, Gujarati, Kannada, Tamil and Sinhala are part of the word; a zero-width joiner
+  after a virama keeps a Bengali, Sinhala, Kannada or Devanagari word whole; spelling suggestions
+  find words with marks; and the double-space period works after a word ending in a mark.
 
 ### Changed
 
@@ -452,8 +457,11 @@ editor that used to be listed here already ship in 2.0.)
   space between rows as between keys), function keys
   (Shift, Delete, 123, Enter) in their own tone, the Go / Search / Send key highlighted with an
   icon, a pop-up of the pressed key and a filled Shift arrow while shifted — and it follows the
-  system's light or dark mode; in dark mode the keys sit on a near-black background lit by a still
-  purple aurora (rayed curtains with a bright wavy rim, not soft glows) and a few stars. Every corner hint for short swipes stays, drawn a little smaller. A
+  system's light or dark mode; in dark mode slightly see-through keys sit on a near-black
+  background lit by a purple aurora (three rayed, folded curtains with a mint-to-lilac rim, not
+  soft glows) and a field of stars. Appearance → Moving aurora (off by default) lets the curtains
+  drift and shimmer and the stars twinkle; it comes to rest 20 seconds after you stop typing and
+  stays still in battery saver. Every corner hint for short swipes stays, drawn a little smaller. A
   swipe-trail colour you already changed still applies; key gaps come from the look (set per layout
   in Layout Manager to change them). Choosing a theme in Theme Manager no
   longer restarts the keyboard, and neither does its Restart keyboard button, which now reloads

@@ -421,6 +421,8 @@
     <string name="appearance_look_key_preview_desc">Вигляд CleverKeys і вигляди в стилі iOS, Gboard, SwiftKey та Samsung показують натиснутий символ у спливному вікні над клавішею.</string>
     <string name="appearance_look_space_language_title">Назва мови на пробілі</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показує поточну мову на клавіші пробілу, як клавіатура Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Рухоме сяйво</string>
+    <string name="appearance_look_aurora_motion_desc">Темне полярне сяйво оформлення CleverKeys плавно пливе й мерехтить, а через 20 секунд без введення завмирає. Поки рухається, витрачає трохи більше заряду. Android 10 або новіше.</string>
     <string name="appearance_custom_border_title">Власна рамка</string>
     <string name="appearance_custom_border_desc">Увімкнути власний стиль рамки клавіш</string>
     <string name="appearance_border_radius_title">Радіус скруглення рамки</string>

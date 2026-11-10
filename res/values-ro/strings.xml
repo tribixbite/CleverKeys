@@ -430,6 +430,8 @@
     <string name="appearance_look_key_preview_desc">Aspectul CleverKeys și aspectele în stil iOS, Gboard, SwiftKey și Samsung arată caracterul apăsat într-un balon deasupra tastei.</string>
     <string name="appearance_look_space_language_title">Numele limbii pe bara de spațiu</string>
     <string name="appearance_look_space_language_desc">Aspectul Samsung afișează limba curentă pe bara de spațiu, ca tastatura Samsung.</string>
+    <string name="appearance_look_aurora_motion_title">Auroră în mișcare</string>
+    <string name="appearance_look_aurora_motion_desc">Aurora întunecată a aspectului CleverKeys plutește și sclipește lin, apoi se oprește după 20 de secunde fără tastare. Consumă puțin mai multă baterie cât se mișcă. Android 10 sau mai nou.</string>
     <string name="appearance_custom_border_title">Chenar personalizat</string>
     <string name="appearance_custom_border_desc">Activează stilul de chenar personalizat pentru taste</string>
     <string name="appearance_border_radius_title">Raza bordei</string>

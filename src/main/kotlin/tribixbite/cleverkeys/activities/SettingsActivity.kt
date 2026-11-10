@@ -421,6 +421,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var lookShowHints by mutableStateOf(Defaults.LOOK_SHOW_HINTS)
     internal var lookKeyPreview by mutableStateOf(Defaults.LOOK_KEY_PREVIEW)
     internal var lookSpaceLanguage by mutableStateOf(Defaults.LOOK_SPACE_LANGUAGE)
+    internal var lookAuroraMotion by mutableStateOf(Defaults.LOOK_AURORA_MOTION)
     internal var customBorderRadius by mutableIntStateOf(Defaults.CUSTOM_BORDER_RADIUS)
     internal var customBorderLineWidth by mutableIntStateOf(Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

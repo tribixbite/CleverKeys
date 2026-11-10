@@ -155,6 +155,9 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "look_space_language" -> {
                 lookSpaceLanguage = prefs.getBoolean(key, Defaults.LOOK_SPACE_LANGUAGE)
             }
+            "look_aurora_motion" -> {
+                lookAuroraMotion = prefs.getBoolean(key, Defaults.LOOK_AURORA_MOTION)
+            }
             "custom_border_radius" -> {
                 customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
@@ -287,6 +290,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         lookShowHints = prefs.getSafeBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
         lookKeyPreview = prefs.getSafeBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
         lookSpaceLanguage = prefs.getSafeBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
+        lookAuroraMotion = prefs.getSafeBoolean("look_aurora_motion", Defaults.LOOK_AURORA_MOTION)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 
