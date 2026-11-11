@@ -66,10 +66,35 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
 
+    # Only this dev-build workflow regenerates the icons. F-Droid builds the tagged commit with the
+    # committed res/mipmap-* icons and compares against release.yml's APK, which never runs this,
+    # so nothing here can change F-Droid's reproducibility check.
+    # The runner's apt mirrors fail DNS now and then (83896fe0: twice): skip the install when
+    # ImageMagick is already on the image, retry it otherwise, and if it still fails build with
+    # the committed icons (made from the same source image) rather than failing the dev build.
     - name: Install ImageMagick
-      run: sudo apt-get update && sudo apt-get install -y imagemagick
+      id: imagemagick
+      run: |
+        # A variable, not a pipe: under the runner's pipefail an early-exiting reader could
+        # SIGPIPE convert and make an installed ImageMagick look missing.
+        version=$(convert -version 2>/dev/null || true)
+        if [[ "$version" == *ImageMagick* ]]; then
+          echo "ImageMagick already installed: ${version%%$'\n'*}"
+          echo "available=true" >> "$GITHUB_OUTPUT"; exit 0
+        fi
+        for attempt in 1 2 3; do
+          if sudo apt-get update -o Acquire::Retries=3 \
+             && sudo apt-get install -y -o Acquire::Retries=3 imagemagick; then
+            echo "available=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "apt attempt $attempt failed"
+          [ $attempt -lt 3 ] && { echo "retrying in $((attempt * 30)) s"; sleep $((attempt * 30)); }
+        done
+        echo "::warning::ImageMagick could not be installed; building with the committed icons"
+        echo "available=false" >> "$GITHUB_OUTPUT"
 
     - name: Generate App Icons
+      if: steps.imagemagick.outputs.available == 'true'
       run: |
         chmod +x scripts/generate_icons.sh
         ./scripts/generate_icons.sh
