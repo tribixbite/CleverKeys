@@ -21,9 +21,41 @@ class ScenePainting(
     /** A second opaque image of the same size for the cross-fade, or null. */
     val alt: IntArray?,
     val layers: List<SceneLayer>,
+    /** Where the scene is solid (stones) rather than water, for rain to splash on; null = all solid. */
+    val surface: SurfaceMask? = null,
 ) {
     /** Pixels held, for the drawable's cache budget. */
     val pixelCount: Int get() = base.size + (alt?.size ?: 0) + layers.sumOf { it.pixels.size }
+}
+
+/**
+ * A coarse map of a scene's solid ground: one flag per [cell] × [cell] raster px. Rain lands on
+ * stone as a splash and a wet spot, and on water as ripples (the river rocks).
+ */
+class SurfaceMask(val cell: Int, val cols: Int, val rows: Int, private val solid: BooleanArray) {
+    /** Whether raster px ([x], [y]) is solid; outside the map counts as solid. */
+    fun isSolid(x: Float, y: Float): Boolean {
+        val c = (x / cell).toInt(); val r = (y / cell).toInt()
+        if (c < 0 || r < 0 || c >= cols || r >= rows) return true
+        return solid[r * cols + c]
+    }
+
+    /** The solid share of the map, 0..1. */
+    val solidShare: Float get() = solid.count { it }.toFloat() / solid.size.coerceAtLeast(1)
+
+    companion object {
+        /** The mask of [pixels] ([w] × [h]) where a cell's centre is brighter than [threshold] (0..255 luma). */
+        fun ofBrightness(pixels: IntArray, w: Int, h: Int, cell: Int, threshold: Int): SurfaceMask {
+            val cols = (w + cell - 1) / cell; val rows = (h + cell - 1) / cell
+            val solid = BooleanArray(cols * rows) { i ->
+                val x = ((i % cols) * cell + cell / 2).coerceAtMost(w - 1)
+                val y = ((i / cols) * cell + cell / 2).coerceAtMost(h - 1)
+                val c = pixels[y * w + x]
+                (((c shr 16) and 0xFF) * 3 + ((c shr 8) and 0xFF) * 6 + (c and 0xFF)) / 10 > threshold
+            }
+            return SurfaceMask(cell, cols, rows, solid)
+        }
+    }
 }
 
 /**
@@ -61,6 +93,12 @@ enum class LayerMotionKind {
     WASH,
     /** Travels [LayerMotion.amplitude] down the view once per period, fading in and out (a swell rolling to the shore). */
     ROLL,
+    /**
+     * Slides along x by [LayerMotion.amplitude] per period and wraps: the layer's pixels repeat
+     * every layer width (it is painted seamless across), so it runs on forever (light on flowing
+     * water). Drawn as two copies, not through a mesh.
+     */
+    FLOW,
 }
 
 /**
@@ -164,6 +202,7 @@ object SceneMotion {
             }
             LayerMotionKind.WASH -> dy = m.amplitude * surge(m, seconds)
             LayerMotionKind.ROLL -> dy = m.amplitude * cycle(m, seconds)
+            LayerMotionKind.FLOW -> dx = m.amplitude * cycle(m, seconds)
         }
         out[offset] = dx
         out[offset + 1] = dy
@@ -239,10 +278,13 @@ object SceneMotion {
             val x1 = min(w - 1, (layer.left + layer.width + reachX).toInt())
             val y0 = max(0, floor(layer.top - reachY).toInt())
             val y1 = min(h - 1, (layer.top + layer.height + reachY).toInt())
+            val flow = layer.motion.kind == LayerMotionKind.FLOW
             for (y in y0..y1) for (x in x0..x1) {
                 displace(layer.motion, x + 0.5f, y + 0.5f, seconds, d)
-                val sx = floor(x + 0.5f - d[0] - layer.left).toInt()
+                var sx = floor(x + 0.5f - d[0] - layer.left).toInt()
                 val sy = floor(y + 0.5f - d[1] - layer.top).toInt()
+                // A flowing layer repeats across its width.
+                if (flow) sx = Math.floorMod(sx, layer.width)
                 if (sx < 0 || sy < 0 || sx >= layer.width || sy >= layer.height) continue
                 val c = layer.pixels[sy * layer.width + sx]
                 val a = ((c ushr 24) and 0xFF) / 255f * share

@@ -572,6 +572,9 @@ class KeyboardReceiver(
             KeyValue.Event.MINIMIZE_FAB -> keyboard2.minimizeKeyboard(MinimizedStyle.FAB)
             // gh #175: hide the keyboard entirely (the app's own focus/tap brings it back).
             KeyValue.Event.HIDE_KEYBOARD -> keyboard2.hideKeyboardByUser()
+            // Apply the next / previous theme in Theme Manager's order.
+            KeyValue.Event.THEME_NEXT -> keyboard2.cycleTheme(1)
+            KeyValue.Event.THEME_PREVIOUS -> keyboard2.cycleTheme(-1)
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
                 subtypeManager.inputMethodManager.showInputMethodPicker()

@@ -126,12 +126,12 @@ class LookBackdropTest {
     }
 
     /**
-     * Rain seen from above ([RainSplashes]): a drop strikes, its ring spreads and fades within
-     * the lifetime, the slot rests, then splashes again somewhere else; every splash lies in the
-     * view, and the same moment is always the same picture.
+     * Rain seen from above ([RainSplashes]): a drop strikes, its wet spot fades over the lifetime
+     * while its age runs from 0, the slot rests, then splashes again somewhere else; every
+     * splash lies in the view, and the same moment is always the same picture.
      */
     @Test
-    fun rainSplashesSpreadFadeAndLandSomewhereNew() {
+    fun rainSplashesFadeAndLandSomewhereNew() {
         val rain = KeyboardLooks.riverRocksLook.dark.backdrop!!.stars!!
         val w = 1008; val h = 910; val d = 2.625f
         val slots = RainSplashes.slots(rain, w, h, d)
@@ -140,39 +140,40 @@ class LookBackdropTest {
         val again = FloatArray(buf.size)
         val seen = HashSet<Pair<Int, Int>>()
         var t = 0.0
-        var everLive = 0
         while (t < 30.0) {
             val n = RainSplashes.at(rain, w, h, d, t, buf)
             assertWithMessage("deterministic").that(RainSplashes.at(rain, w, h, d, t, again)).isEqualTo(n)
             assertThat(again.copyOf(n * RainSplashes.STRIDE)).isEqualTo(buf.copyOf(n * RainSplashes.STRIDE))
-            assertWithMessage("some rain is always landing, never all of it at once").that(n).isIn(com.google.common.collect.Range.closed(1, slots / 2))
+            assertWithMessage("some rain is always landing, never all of it at once").that(n).isIn(com.google.common.collect.Range.closed(1, slots * 4 / 5))
             for (j in 0 until n) {
                 val o = j * RainSplashes.STRIDE
                 assertThat(buf[o]).isIn(com.google.common.collect.Range.closedOpen(0f, w.toFloat()))
                 assertThat(buf[o + 1]).isIn(com.google.common.collect.Range.closedOpen(0f, h.toFloat()))
-                assertThat(buf[o + 2]).isAtMost(rain.maxRadiusDp * d + 1e-3f)
+                assertThat(buf[o + 2]).isIn(com.google.common.collect.Range.closed(rain.minRadiusDp * d - 1e-3f, rain.maxRadiusDp * d + 1e-3f))
                 assertThat(buf[o + 3]).isIn(com.google.common.collect.Range.closed(0f, 1f))
+                assertThat(buf[o + 6].toDouble()).isIn(com.google.common.collect.Range.closedOpen(0.0, RainSplashes.LIFETIME_S))
                 seen += buf[o].toInt() / 50 to buf[o + 1].toInt() / 50
             }
-            everLive += n
             t += 0.1
         }
         assertWithMessage("splashes land all over, not in a few fixed spots").that(seen.size).isGreaterThan(150)
 
-        // One splash over its life: the ring only grows and the light only fades.
+        // One splash over its life: its age only grows and its wet spot only fades.
         val one = rain.copy(perSquare100Dp = 0.5f)
-        var lastR = -1f; var lastA = 2f; var steps = 0
+        var lastAge = -1f; var lastA = 2f; var steps = 0
         var s = 0.0
-        while (steps < 4 && s < 60.0) {
+        while (steps < 10 && s < 60.0) {
             val n = RainSplashes.at(one, w, h, d, s, buf)
             if (n > 0) {
-                val r = buf[2]; val a = buf[3]
-                if (lastR >= 0f && r >= lastR) { assertThat(a).isAtMost(lastA); steps++ }
-                lastR = r; lastA = a
-            } else { lastR = -1f; lastA = 2f }
-            s += 0.05
+                val age = buf[6]; val a = buf[3]
+                if (lastAge >= 0f && age > lastAge) { assertThat(a).isAtMost(lastA); steps++ }
+                lastAge = age; lastA = a
+            } else { lastAge = -1f; lastA = 2f }
+            s += 0.1
         }
-        assertWithMessage("a splash was followed through its life").that(steps).isAtLeast(3)
+        assertWithMessage("a splash was followed through its life").that(steps).isAtLeast(5)
+        assertWithMessage("the crown and the ripples are the start of a splash").that(RainSplashes.CROWN_S).isLessThan(RainSplashes.RIPPLE_S)
+        assertThat(RainSplashes.RIPPLE_S).isLessThan(RainSplashes.LIFETIME_S)
     }
 
     /**

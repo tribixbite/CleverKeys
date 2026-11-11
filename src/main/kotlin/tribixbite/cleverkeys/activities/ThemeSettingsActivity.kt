@@ -2,8 +2,8 @@ package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
 import androidx.annotation.StringRes
+import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -120,6 +120,66 @@ class ThemeSettingsActivity : ComponentActivity() {
             LookTheme(KeyboardLooks.SNOW, R.string.theme_look_snow_name, R.string.theme_look_snow_desc),
             LookTheme(KeyboardLooks.BEACH, R.string.theme_look_beach_name, R.string.theme_look_beach_desc),
         )
+
+        /** The built-in XML themes this device can use: Material You (Monet) needs Android 12. */
+        fun availableBuiltinThemes(): List<BuiltinTheme> = BUILTIN_THEMES.filter { theme ->
+            !theme.id.startsWith("monet") || Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        }
+
+        /**
+         * Every theme in Theme Manager's display order — familiar looks, Scenes, the CleverKeys
+         * look and the built-in themes, the user's custom themes, then the decorative themes by
+         * category — as (stored id, display name). The `theme_next` / `theme_previous` commands
+         * step through exactly this ([ThemeOrder]); keep it in step with the screen's sections.
+         */
+        fun themesInOrder(context: Context): List<Pair<String, String>> {
+            val res = context.resources
+            val out = ArrayList<Pair<String, String>>()
+            for (look in LOOK_THEMES + SCENE_THEMES + DEFAULT_LOOK_THEME) out += look.id to res.getString(look.nameRes)
+            for (builtin in availableBuiltinThemes()) out += builtin.id to res.getString(builtin.nameRes)
+            for (custom in ThemeProvider.getInstance(context).customThemeManager.customThemes.value) {
+                out += "custom_${custom.id}" to custom.name
+            }
+            val decorative = getAllPredefinedThemes()
+            for (category in ThemeCategory.entries) {
+                if (category == ThemeCategory.CUSTOM) continue
+                for (info in decorative[category].orEmpty()) out += "decorative_${info.id}" to info.displayName(res)
+            }
+            return out
+        }
+
+        /**
+         * Applies [themeId] the way a Theme Manager card does: the swipe-trail colour that goes
+         * with it, the `theme` and trail prefs in both stores (the keyboard's device-protected
+         * one first), and the broadcast that makes a live keyboard rebuild its colours.
+         */
+        @SuppressLint("ApplySharedPref")
+        fun applyTheme(context: Context, themeId: String) {
+            val themeProvider = ThemeProvider.getInstance(context)
+            var swipeTrailColor = 0xFF9B59B6.toInt() // Default purple
+            // Built-in, custom and decorative themes carry their own trail colour.
+            if (BUILTIN_THEMES.any { it.id == themeId } || themeProvider.isRuntimeTheme(themeId)) {
+                themeProvider.getColorScheme(themeId)?.let { swipeTrailColor = it.swipeTrail.toArgb() }
+            }
+            // Every theme choice sets the trail. The CleverKeys look draws its own light/dark
+            // trail unless the stored one differs from the default (LookUserYield), so choosing it
+            // stores the default: the previous theme's trail must not stay behind looking like
+            // the user's own.
+            if (KeyboardLooks.byId(themeId)?.yieldsToUserSettings == true) {
+                swipeTrailColor = Defaults.SWIPE_TRAIL_COLOR
+            }
+            // commit(), not apply(): the write must be on disk before the broadcast that makes
+            // the keyboard re-read it. The device-protected store is the one the keyboard listens to.
+            DirectBootAwarePreferences.get_shared_preferences(context).edit()
+                .putString("theme", themeId)
+                .putInt("swipe_trail_color", swipeTrailColor)
+                .commit()
+            PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putString("theme", themeId)
+                .putInt("swipe_trail_color", swipeTrailColor)
+                .commit()
+            context.sendBroadcast(Intent(CleverKeysService.ACTION_THEME_CHANGED).setPackage(context.packageName))
+        }
     }
 
     /** A keyboard look in Theme Manager: its stored id, display name and optional description. */
@@ -140,11 +200,6 @@ class ThemeSettingsActivity : ComponentActivity() {
         val labelColor: Long        // For preview
     )
 
-    private lateinit var prefs: SharedPreferences
-
-    // commit() (not apply()) in onThemeSelected: the theme write must be on disk before the
-    // broadcast that makes the keyboard re-read it.
-    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -164,10 +219,6 @@ class ThemeSettingsActivity : ComponentActivity() {
         }
         */
 
-        // CRITICAL: Use DirectBootAwarePreferences to get the SAME SharedPreferences
-        // that CleverKeysService is listening to. This ensures when we write "theme",
-        // the service's OnSharedPreferenceChangeListener fires immediately.
-        prefs = DirectBootAwarePreferences.get_shared_preferences(this)
 
         setContent {
             // #35: Follow the system day/night setting. Dark keeps the original
@@ -222,58 +273,9 @@ class ThemeSettingsActivity : ComponentActivity() {
                     ThemeSettingsScreen(
                         onBack = { finish() },
                         onThemeSelected = { themeId, themeDisplayName ->
-                            // Find swipe trail color
-                            var swipeTrailColor = 0xFF9B59B6.toInt() // Default purple
-                            
-                            // 1. Check built-in themes
-                            // We use ThemeProvider's helper to get the color scheme for the built-in theme
-                            val builtin = BUILTIN_THEMES.find { it.id == themeId }
-                            if (builtin != null) {
-                                val themeProvider = ThemeProvider.getInstance(this)
-                                val colorScheme = themeProvider.getColorScheme(themeId)
-                                if (colorScheme != null) {
-                                    swipeTrailColor = colorScheme.swipeTrail.toArgb()
-                                }
-                            } else {
-                                // 2. Check decorative/custom themes
-                                // ThemeProvider isn't easily accessible here as a singleton without context, 
-                                // but we can check if it's custom/decorative
-                                if (ThemeProvider.getInstance(this).isRuntimeTheme(themeId)) {
-                                    val themeProvider = ThemeProvider.getInstance(this)
-                                    val colorScheme = themeProvider.getColorScheme(themeId)
-                                    if (colorScheme != null) {
-                                        swipeTrailColor = colorScheme.swipeTrail.toArgb()
-                                    }
-                                }
-                            }
+                            // One implementation with the keyboard's theme commands.
+                            applyTheme(this, themeId)
 
-                            // Every theme choice sets the trail. The CleverKeys look draws its own
-                            // light/dark trail unless the stored one differs from the default
-                            // (LookUserYield), so choosing it stores the default: the previous
-                            // theme's trail must not stay behind looking like the user's own.
-                            if (KeyboardLooks.byId(themeId)?.yieldsToUserSettings == true) {
-                                swipeTrailColor = Defaults.SWIPE_TRAIL_COLOR
-                            }
-
-                            // Save selected theme to device protected storage (same prefs the keyboard listens to)
-                            // This will immediately trigger the keyboard's OnSharedPreferenceChangeListener
-                            prefs.edit()
-                                .putString("theme", themeId)
-                                .putInt("swipe_trail_color", swipeTrailColor)
-                                .commit() // Use commit() for synchronous write
-
-                            // Also save to default preferences for backup/consistency
-                            PreferenceManager.getDefaultSharedPreferences(this)
-                                .edit()
-                                .putString("theme", themeId)
-                                .putInt("swipe_trail_color", swipeTrailColor)
-                                .commit()
-
-                            // Send broadcast to notify service immediately (legacy support)
-                            val intent = Intent(CleverKeysService.ACTION_THEME_CHANGED)
-                            intent.setPackage(packageName) // Restrict to our own package
-                            sendBroadcast(intent)
-                            
                             Toast.makeText(this, getString(R.string.theme_toast_applying, themeDisplayName), Toast.LENGTH_SHORT).show()
 
                             // No process kill (2026-11-06). Selecting a theme used to kill the
@@ -477,13 +479,7 @@ fun ThemeSettingsScreen(
             // The CleverKeys default look leads the built-in themes.
             item { LookCard(ThemeSettingsActivity.DEFAULT_LOOK_THEME) }
             // Filter Monet themes on Android < 12 (API 31) - Material You requires Android 12+
-            val availableThemes = ThemeSettingsActivity.BUILTIN_THEMES.filter { theme ->
-                if (theme.id.startsWith("monet")) {
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                } else {
-                    true
-                }
-            }
+            val availableThemes = ThemeSettingsActivity.availableBuiltinThemes()
             items(availableThemes) { builtinTheme ->
                 val builtinName = stringResource(builtinTheme.nameRes)
                 BuiltinThemeCard(

@@ -62,11 +62,10 @@ class BackdropDrawable(
     /** The live splashes of a rain field ([RainSplashes.at]), reused every frame. */
     private val splashes: FloatArray =
         FloatArray(if (backdrop.stars?.shape == ParticleShape.RAIN) RainSplashes.STRIDE * LookStars.MAX_STARS else 0)
-    /** A rain field's strike points and droplets per brightness bucket, reused every frame. */
-    private val splashDots: Array<FloatArray> = Array(if (splashes.isEmpty()) 0 else SPLASH_LEVELS) {
-        FloatArray(2 * (RainSplashes.DROPLETS + 1) * LookStars.MAX_STARS)
-    }
-    private val splashDotCount = IntArray(SPLASH_LEVELS)
+    /** A rain field's crown frames and wet-spot texture, drawn once on first use ([splashSprites]). */
+    private var sprites: SplashSprites? = null
+    private val spriteDst = RectF()
+    private val spritePaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val paintingPaint = Paint(Paint.FILTER_BITMAP_FLAG)
     private val layerPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
     /** The rendered painting for the current size; null until the background render delivers it. */
@@ -94,6 +93,9 @@ class BackdropDrawable(
     /** Time between motion frames ([SceneKind.frameMs], or the aurora's). */
     private val frameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
 
+    /** How far the scene's layers move: the user's intensity times the scene's own share. */
+    private val layerIntensity: Float get() = tuning.intensity * (backdrop.scene?.motionScale ?: 1f)
+
     /** How the cross-faded images move. */
     private val motionStyle = if (backdrop.scene == null) MotionStyle.AURORA else MotionStyle.GENTLE
 
@@ -107,6 +109,7 @@ class BackdropDrawable(
     private var meshes: Array<FloatArray> = emptyArray()
     /** One displacement, reused for every mesh point of every frame. */
     private val meshScratch = FloatArray(2)
+    private val flowDst = RectF()
     /**
      * Each particle group recorded once ([RenderNode]s, API 29+), so a motion frame only sets a
      * group's alpha and offset instead of re-recording every particle; null until first drawn
@@ -284,7 +287,7 @@ class BackdropDrawable(
         if (rendered == null || !rendered.glowsBaked) for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
         val field = backdrop.stars
         if (field != null && field.shape == ParticleShape.RAIN) {
-            drawSplashes(canvas, field, seconds)
+            drawSplashes(canvas, field, seconds, rendered)
         } else if (field != null && frame != null && Build.VERSION.SDK_INT >= 29 && canvas.isHardwareAccelerated) {
             drawParticleGroups(canvas, field, frame)
         } else if (field != null) {
@@ -315,8 +318,12 @@ class BackdropDrawable(
             val (layer, bitmap) = pair
             val share = SceneMotion.alpha(layer.motion, seconds)
             if (share <= 0.003f) continue
+            if (layer.motion.kind == LayerMotionKind.FLOW) {
+                drawFlowing(canvas, layer, bitmap, seconds, scale, share)
+                continue
+            }
             val verts = meshes.getOrNull(i) ?: continue
-            SceneMotion.mesh(layer, seconds, scale, verts, tuning.intensity, meshScratch)
+            SceneMotion.mesh(layer, seconds, scale, verts, layerIntensity, meshScratch)
             if (bounds.left != 0 || bounds.top != 0) {
                 for (k in verts.indices step 2) { verts[k] += bounds.left; verts[k + 1] += bounds.top }
             }
@@ -329,56 +336,127 @@ class BackdropDrawable(
     }
 
     /**
-     * Rain landing on the scene at [seconds] ([RainSplashes]): per splash a ring spreading from
-     * the strike, a bright point where the drop hit while it is fresh, and droplets flung out.
-     * One draw call per ring plus [SPLASH_LEVELS] point batches a frame (was seven calls per
-     * splash), from reused buffers; a still scene shows the splashes of its first moment.
+     * Rain landing on the scene at [seconds] ([RainSplashes]), seen from above. On stone (the
+     * painting's [SurfaceMask]) a drop leaves a dark wet spot that spreads and dries over its
+     * lifetime, and for its first [RainSplashes.CROWN_S] throws up a crown of shaded droplets
+     * (pre-drawn frames, [SplashSprites]); on the water between the stones it spreads two rings.
+     * One or two draw calls a splash; a still scene shows the splashes of its first moment.
      */
-    private fun drawSplashes(canvas: Canvas, field: LookStarfield, seconds: Double) {
+    private fun drawSplashes(canvas: Canvas, field: LookStarfield, seconds: Double, rendered: Rendered?) {
         val b = bounds
         val n = RainSplashes.at(field, b.width(), b.height(), density, seconds, splashes, tuning.intensity.coerceAtLeast(0.25f))
+        val sp = sprites ?: splashSprites(field).also { sprites = it }
+        val surface = rendered?.surface
+        val toRaster = if (rendered != null) rendered.width / b.width().toFloat() else 1f
         val rgb = field.color and 0x00FFFFFF
+        // The wet spots first, under every crown and ring.
+        for (j in 0 until n) {
+            val o = j * RainSplashes.STRIDE
+            val x = splashes[o]; val y = splashes[o + 1]
+            if (surface != null && !surface.isSolid(x * toRaster, y * toRaster)) continue
+            val age = splashes[o + 6]
+            // The wet spot spreads fast, then dries; a glint where its water film catches the
+            // light (upper left) is what makes the stone read as wet.
+            val size = 1.5f * splashes[o + 2] * (0.45f + 0.55f * (age / 0.25f).coerceAtMost(1f))
+            val a = splashes[o + 3]
+            spritePaint.alpha = (255 * a).toInt().coerceIn(0, 255)
+            spriteDst.set(b.left + x - size, b.top + y - size, b.left + x + size, b.top + y + size)
+            canvas.drawBitmap(sp.wet, null, spriteDst, spritePaint)
+            val g = 0.4f * size
+            spritePaint.alpha = (200 * a).toInt().coerceIn(0, 255)
+            spriteDst.set(b.left + x - 0.35f * size - g, b.top + y - 0.4f * size - g * 0.6f, b.left + x - 0.35f * size + g, b.top + y - 0.4f * size + g * 0.6f)
+            canvas.drawBitmap(sp.glint, null, spriteDst, spritePaint)
+        }
         glintPaint.strokeWidth = 0.7f * density
-        for (q in splashDots.indices) splashDotCount[q] = 0
         for (j in 0 until n) {
             val o = j * RainSplashes.STRIDE
             val x = b.left + splashes[o]; val y = b.top + splashes[o + 1]
-            val r = splashes[o + 2]; val a = splashes[o + 3]; val k = splashes[o + 4]
-            val alpha = (a * 255).toInt().coerceIn(0, 255)
-            if (alpha == 0) continue
-            // The ring: one stroke per splash, the only per-splash draw call.
-            glintPaint.color = (alpha shl 24) or rgb
-            canvas.drawCircle(x, y, r, glintPaint)
-            // The strike point and the droplets go into a few point batches by brightness.
-            val bucket = (a * SPLASH_LEVELS).toInt().coerceIn(0, SPLASH_LEVELS - 1)
-            if (k < 0.3f) addSplashDot(bucket, x, y)
-            val seed = splashes[o + 5].toInt()
-            for (dI in 0 until RainSplashes.DROPLETS) {
-                // Droplets on seeded headings, flung a little past the ring.
-                val angle = ((seed * (dI + 3) * 2654435761L) and 0xFFFF) / 65535f * 6.2832f
-                val reach = r * (1.15f + 0.35f * ((seed shr dI) and 3) / 3f)
-                addSplashDot(bucket, x + reach * kotlin.math.cos(angle), y + reach * kotlin.math.sin(angle))
+            val age = splashes[o + 6]
+            val onStone = surface == null || surface.isSolid(splashes[o] * toRaster, splashes[o + 1] * toRaster)
+            if (onStone) {
+                if (age >= RainSplashes.CROWN_S) continue
+                val q = age / RainSplashes.CROWN_S.toFloat()
+                val frame = (q * sp.crown.size).toInt().coerceIn(0, sp.crown.size - 1)
+                val half = sp.crownHalf * (0.7f + 0.3f * splashes[o + 2] / (field.maxRadiusDp * density))
+                spritePaint.alpha = (255 * (1f - q * q)).toInt().coerceIn(0, 255)
+                spriteDst.set(x - half, y - half, x + half, y + half)
+                canvas.drawBitmap(sp.crown[frame], null, spriteDst, spritePaint)
+            } else {
+                if (age >= RainSplashes.RIPPLE_S) continue
+                // Two rings racing out and fading on the water.
+                val q = age / RainSplashes.RIPPLE_S.toFloat()
+                val r = splashes[o + 2] * (0.15f + 1.1f * (1f - (1f - q) * (1f - q)))
+                val alpha = (field.maxAlpha * (1f - q) * (1f - q)).toInt().coerceIn(0, 255)
+                glintPaint.color = (alpha shl 24) or rgb
+                canvas.drawCircle(x, y, r, glintPaint)
+                if (q > 0.15f) {
+                    glintPaint.color = ((alpha / 2) shl 24) or rgb
+                    canvas.drawCircle(x, y, r * 0.55f, glintPaint)
+                }
             }
         }
-        starPaint.style = Paint.Style.STROKE
-        starPaint.strokeCap = Paint.Cap.ROUND
-        starPaint.strokeWidth = 1.5f * density
-        for (q in 0 until SPLASH_LEVELS) {
-            val count = splashDotCount[q]
-            if (count == 0) continue
-            starPaint.color = (((q + 0.5f) / SPLASH_LEVELS * 255 * 0.8f).toInt() shl 24) or rgb
-            canvas.drawPoints(splashDots[q], 0, count, starPaint)
-        }
-        starPaint.style = Paint.Style.FILL
     }
 
-    private fun addSplashDot(bucket: Int, x: Float, y: Float) {
-        val c = splashDotCount[bucket]
-        val arr = splashDots[bucket]
-        if (c + 2 > arr.size) return
-        arr[c] = x; arr[c + 1] = y
-        splashDotCount[bucket] = c + 2
+    /**
+     * The splash textures for [field], drawn once: [SplashSprites.crown] frames — the strike's
+     * bulge, a crown of droplets spreading and breaking up — each droplet round and lit from the
+     * upper left with a shadow below right, so it stands on the stone; and the wet spot, a soft
+     * dark disc that darkens the stone it lands on.
+     */
+    private fun splashSprites(field: LookStarfield): SplashSprites {
+        val half = (field.maxRadiusDp * 1.5f * density).coerceAtLeast(8f)
+        val size = (2 * half).toInt().coerceAtLeast(8)
+        val c = size / 2f
+        val water = field.color or 0xFF000000.toInt()
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG)
+        val frames = List(4) { f ->
+            val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val cv = Canvas(bmp)
+            fun droplet(x: Float, y: Float, r: Float, a: Int) {
+                // Shadow, body, highlight.
+                fill.shader = null
+                fill.color = (a / 3 shl 24)
+                cv.drawCircle(x + 0.45f * r, y + 0.55f * r, r, fill)
+                // Opaque paint for the body: a paint's alpha multiplies its shader, and the
+                // shadow above left it at a third (the droplets drew as faint ghosts on device).
+                fill.color = 0xFF000000.toInt()
+                fill.shader = RadialGradient(
+                    x - 0.35f * r, y - 0.35f * r, 1.4f * r,
+                    intArrayOf(withAlpha(0xFFFFFFFF.toInt(), a), withAlpha(water, a), withAlpha(scaleRgb(water, 0.55f), a)),
+                    floatArrayOf(0f, 0.45f, 1f), Shader.TileMode.CLAMP,
+                )
+                cv.drawCircle(x, y, r, fill)
+            }
+            val unit = half / 9f
+            when (f) {
+                0 -> droplet(c, c, 2.4f * unit, 235)
+                else -> {
+                    val ring = (2.8f + 2.2f * f) * unit
+                    val drops = 12
+                    for (i in 0 until drops) {
+                        val a = (i + 0.3f * (f % 2)) / drops * 2f * Math.PI.toFloat()
+                        val jitter = 1f + 0.18f * kotlin.math.sin(i * 2.7f + f)
+                        val r = (1.7f - 0.3f * f) * unit * (0.8f + 0.4f * ((i * 7) % 5) / 4f)
+                        droplet(c + ring * jitter * kotlin.math.cos(a), c + ring * jitter * kotlin.math.sin(a), r.coerceAtLeast(0.8f), 255 - 30 * f)
+                    }
+                    if (f == 1) droplet(c, c, 1.6f * unit, 200)
+                }
+            }
+            bmp
+        }
+        val wet = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888)
+        Canvas(wet).drawCircle(32f, 32f, 32f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(32f, 32f, 32f, intArrayOf(0xB4000000.toInt(), 0x8C000000.toInt(), 0x00000000), floatArrayOf(0f, 0.65f, 1f), Shader.TileMode.CLAMP)
+        })
+        val glint = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888)
+        Canvas(glint).drawCircle(16f, 16f, 16f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(16f, 16f, 16f, intArrayOf(0xE6FFFFFF.toInt(), 0x50FFFFFF, 0x00FFFFFF), floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP)
+        })
+        return SplashSprites(frames, half, wet, glint)
     }
+
+    /** Pre-drawn splash textures ([splashSprites]). */
+    private class SplashSprites(val crown: List<Bitmap>, val crownHalf: Float, val wet: Bitmap, val glint: Bitmap)
 
     /** Stars and sparkles in one colour can be drawn in batches ([drawStarBatch]). */
     private fun batchable(field: LookStarfield) =
@@ -441,6 +519,23 @@ class BackdropDrawable(
             if (size + 2 > values.size) values = values.copyOf(values.size * 2)
             values[size++] = x; values[size++] = y
         }
+    }
+
+    /**
+     * A [LayerMotionKind.FLOW] layer: two copies side by side, slid along by the flow (the layer
+     * repeats across its width), so it runs on without a seam. Two bitmap draws, no mesh.
+     */
+    private fun drawFlowing(canvas: Canvas, layer: LayerPlacement, bitmap: Bitmap, seconds: Double, scale: Float, share: Float) {
+        SceneMotion.displace(layer.motion, 0f, 0f, seconds, meshScratch)
+        val wView = layer.width * scale
+        val shift = (meshScratch[0] * layerIntensity.coerceAtLeast(0f) * scale) % wView
+        val left = bounds.left + layer.left * scale + shift
+        val top = bounds.top + layer.top * scale
+        layerPaint.alpha = (255 * share).toInt().coerceIn(0, 255)
+        flowDst.set(left, top, left + wView, top + layer.height * scale)
+        canvas.drawBitmap(bitmap, null, flowDst, layerPaint)
+        flowDst.offset(-wView, 0f)
+        canvas.drawBitmap(bitmap, null, flowDst, layerPaint)
     }
 
     /** One particle of [field] at ([x], [y]) with [alpha], in its [ParticleShape]. */
@@ -569,6 +664,7 @@ class BackdropDrawable(
         paintingPaint.colorFilter = colorFilter
         paintingAltPaint.colorFilter = colorFilter
         layerPaint.colorFilter = colorFilter
+        spritePaint.colorFilter = colorFilter
         glowPaints.forEach { it.colorFilter = colorFilter }
         starPaint.colorFilter = colorFilter
         glintPaint.colorFilter = colorFilter
@@ -597,6 +693,8 @@ class BackdropDrawable(
         val bytes: Long,
         /** The backdrop's glows are painted into [base] and [alt]. */
         val glowsBaked: Boolean = false,
+        /** Where rain splashes on stone rather than water ([ScenePainting.surface]). */
+        val surface: SurfaceMask? = null,
     )
 
     private data class PaintKey(
@@ -609,9 +707,6 @@ class BackdropDrawable(
 
         /** The aurora's curtains are soft; half resolution quarters the render cost and the memory. */
         private const val AURORA_PAINT_SCALE = 2
-
-        /** Brightness buckets of a frame's splash droplets. */
-        private const val SPLASH_LEVELS = 4
 
         /** Brightness and size buckets of a star batch: fine enough that no step shows. */
         private const val ALPHA_LEVELS = 6
@@ -677,7 +772,7 @@ class BackdropDrawable(
                 val layers = p.layers.map { it.placement to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
                 Rendered(
                     key.w, bitmap(p.base, key.w, key.h), p.alt?.let { bitmap(it, key.w, key.h) }, layers,
-                    bytes = 4L * p.pixelCount,
+                    bytes = 4L * p.pixelCount, surface = p.surface,
                 )
             } else {
                 val base = AuroraRaster.render(key.base, key.ribbons, key.w, key.h, key.rasterDensity)
@@ -745,5 +840,9 @@ class BackdropDrawable(
 
         private fun alphaOf(color: Int): Int = (color ushr 24) and 0xFF
         private fun withAlpha(color: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) shl 24) or (color and 0x00FFFFFF)
+        private fun scaleRgb(color: Int, f: Float): Int {
+            fun ch(shift: Int) = (((color shr shift) and 0xFF) * f).toInt().coerceIn(0, 255)
+            return (color and 0xFF000000.toInt()) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+        }
     }
 }

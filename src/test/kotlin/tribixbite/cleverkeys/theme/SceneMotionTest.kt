@@ -103,7 +103,9 @@ class SceneMotionTest {
                     for (y in listOf(layer.top.toFloat(), layer.top + layer.height / 2f, (layer.top + layer.height).toFloat())) {
                         SceneMotion.displace(m, 100f, y, t, a)
                         SceneMotion.displace(m, 100f, y, t + dt, b)
-                        val step = abs(b[0] - a[0]) + abs(b[1] - a[1])
+                        var step = abs(b[0] - a[0]) + abs(b[1] - a[1])
+                        // A flowing layer repeats across its width: its wrap is no jump.
+                        if (m.kind == LayerMotionKind.FLOW) step = minOf(step, abs(m.amplitude - step))
                         // ROLL wraps while invisible; WASH surges fastest.
                         val limit = if (m.kind == LayerMotionKind.ROLL && SceneMotion.alpha(m, t) < 0.05f) Float.MAX_VALUE
                         else if (m.kind == LayerMotionKind.WASH) 4.5f * 2.625f else 2.6f * 2.625f / kind.paintScale
@@ -113,6 +115,25 @@ class SceneMotionTest {
                 }
             }
         }
+    }
+
+    /** Light on a stream: slides downstream at a steady pace and wraps, seamless. */
+    @Test
+    fun aFlowSlidesOnAndWraps() {
+        val flow = LayerMotion(LayerMotionKind.FLOW, amplitude = 400f, periodS = 20f)
+        val out = FloatArray(2)
+        SceneMotion.displace(flow, 0f, 0f, 5.0, out)
+        assertThat(out[0]).isWithin(1e-3f).of(100f)
+        assertThat(out[1]).isZero()
+        SceneMotion.displace(flow, 0f, 0f, 25.0, out)
+        assertWithMessage("one period later it is where it was").that(out[0]).isWithin(1e-2f).of(100f)
+        assertThat(SceneMotion.alpha(flow, 7.0)).isEqualTo(1f)
+        // The compositor wraps it: a pixel that slides off the right comes back on the left.
+        val px = IntArray(10 * 1) { if (it == 9) 0xFFFF0000.toInt() else 0 }
+        val painting = ScenePainting(10, 1, IntArray(10) { 0xFF000000.toInt() }, null,
+            listOf(SceneLayer(0, 0, 10, 1, px, LayerMotion(LayerMotionKind.FLOW, amplitude = 10f, periodS = 10f))))
+        val moved = SceneMotion.composite(painting, 2.0)
+        assertThat(moved[1]).isEqualTo(0xFFFF0000.toInt())
     }
 
     @Test

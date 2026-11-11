@@ -111,8 +111,8 @@ data class ConfigSnapshot(
     val look_key_preview: Boolean = true,
     /** Looks print the language on the space bar (`look_space_language`, Samsung-style). */
     val look_space_language: Boolean = true,
-    /** A look's painted backdrop moves (`look_backdrop_motion`, AuroraMotion); off by default. */
-    val look_backdrop_motion: Boolean = false,
+    /** A look's painted backdrop moves (`look_backdrop_motion`, AuroraMotion); on by default. */
+    val look_backdrop_motion: Boolean = true,
     /** How it moves (`look_motion_speed` / `_intensity` / `_twinkle`, `look_scene_crisp`). */
     val look_motion_tuning: tribixbite.cleverkeys.theme.SceneMotionTuning = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT,
     val characterSize: Float,

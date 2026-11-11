@@ -1316,6 +1316,24 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     +57, L22M_DISP (rail 20) +41, S6M_LLDO1 (rail 17) +49, CPU clusters +65. rails.py prints those
     two by index: descriptor order in the trace names them. Only fewer frames or less time moving
     lowers it. Open: maintainer's verdict (and on any frame-rate / idle-time trade).
+    Ninth round (2026-11-10/11, maintainer: "longer test on 2 different devices… 3x each"; forest
+    with trees and real leaves; rain that hits the rocks; a less regular stream; aurora + stars in
+    snow and faster snow; meadow at golden hour and half the motion; brighter beach sand; new
+    descriptions; Animated scenes on by default; theme + / − commands). Battery, 10-min scripted
+    typing in a Chrome text box (guarded chunks), Aurora, same build: Pixel 8 Pro power rails
+    on 1673 / 1678 vs off 1428 / 1488 mW = +217 mW (+15 %); Note10+ unplugged battery current
+    on 1106 / 966 / 993 vs off 879 / 912 = +126 mW (+14 %); Saga USB input with charging
+    restricted (qcom-battery restrict_chg) on 2131 / 2244 / 2280 vs off 2122 / 2057 / 2135 =
+    +114 mW (+5 %). Missing for 3 + 3: Pixel 1 on / 1 off (its last runs lost to adb drops and
+    a landscape rotation), Note10+ 1 off (it locked). Done in code: forest rebuilt (barkTrunk,
+    foliage clusters, canopy + hanging branch layers), stream as FLOW layers over a refracted
+    pebble bed, rocks rain = wet spot + crown sprites on stone / rings on water
+    (ScenePainting.surface), snow aurora + stars, meadow golden hour + SceneKind.motionScale
+    0.5, beach sand brighter, fills meadow 0.7 / forest 0.68 / snow 0.58, LOOK_BACKDROP_MOTION
+    true, theme_next / theme_previous (243 commands). Open: Pixel still on CleverKeys Aurora
+    with Animated scenes on (the maintainer was using it; restore to Cyberpunk + off); Note10+
+    has CleverKeys installed and as its IME, brightness pinned — restore (uninstall, Samsung
+    Keyboard, auto/91) once unlocked; theme commands not device-tested.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

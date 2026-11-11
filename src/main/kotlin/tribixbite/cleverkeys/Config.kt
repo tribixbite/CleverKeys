@@ -64,10 +64,11 @@ object Defaults {
     const val LOOK_SPACE_LANGUAGE = true
     /**
      * The scene looks' backdrops move (AuroraMotion: CleverKeys Aurora, Meadow, Stream, River
-     * rocks, Forest, Snow, Beach); off by default until its battery cost is measured (maintainer
-     * 2026-11-10).
+     * rocks, Forest, Snow, Beach). On by default (maintainer 2026-11-10: the app ships with a
+     * plain static theme, so only someone who picks a scene sees motion); battery cost measured
+     * in memory/todo.md (Scenes, eighth round).
      */
-    const val LOOK_BACKDROP_MOTION = false
+    const val LOOK_BACKDROP_MOTION = true
     /** How the moving backdrops move (SceneMotionTuning): speed, intensity, twinkle, percent. */
     const val LOOK_MOTION_SPEED = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_SPEED_PERCENT
     const val LOOK_MOTION_INTENSITY = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_INTENSITY_PERCENT

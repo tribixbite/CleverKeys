@@ -340,7 +340,8 @@ internal fun SettingsActivity.AppearanceSection() {
                 )
 
                 // The scene looks' backdrops move until the keyboard has been idle a while
-                // (AuroraMotion). Off by default until its battery cost is measured.
+                // (AuroraMotion). On by default: the default theme is static, so it only matters
+                // once a scene is chosen.
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_look_backdrop_motion_title),
                     description = stringResource(R.string.appearance_look_backdrop_motion_desc),

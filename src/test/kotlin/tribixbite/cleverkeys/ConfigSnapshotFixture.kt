@@ -50,7 +50,7 @@ internal fun testConfigSnapshot(
     look_show_hints: Boolean = false,
     look_key_preview: Boolean = true,
     look_space_language: Boolean = true,
-    look_backdrop_motion: Boolean = false,
+    look_backdrop_motion: Boolean = true,
     look_motion_tuning: tribixbite.cleverkeys.theme.SceneMotionTuning = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT,
     characterSize: Float = 1f,
     keyboardOpacity: Int = 100,

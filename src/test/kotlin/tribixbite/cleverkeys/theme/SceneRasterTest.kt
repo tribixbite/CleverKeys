@@ -29,10 +29,12 @@ class SceneRasterTest {
             }
             assertWithMessage("$kind moves by a second image or by its layers, not both")
                 .that(a.alt != null && a.layers.isNotEmpty()).isFalse()
-            // The river rocks' painting is still: the rain over it is the look's particles.
+            // The river rocks' painting is still: the rain over it is the look's particles, and
+            // it maps where that rain lands on stone (most of it) or on water (the gaps).
             if (kind == SceneKind.RIVER_ROCKS) {
                 assertThat(a.alt).isNull()
                 assertThat(a.layers).isEmpty()
+                assertThat(a.surface!!.solidShare).isIn(com.google.common.collect.Range.open(0.5f, 0.97f))
                 continue
             }
             // Something moves: the cross-faded image, or the layers between two moments.
@@ -59,6 +61,7 @@ class SceneRasterTest {
         fun kinds(kind: SceneKind) = SceneRaster.paint(kind, 200, 140, 0.5f).layers.map { it.motion.kind }.toSet()
         assertThat(kinds(SceneKind.MEADOW)).containsExactly(LayerMotionKind.SWAY_UP)
         assertThat(kinds(SceneKind.FOREST)).containsExactly(LayerMotionKind.SWAY_DOWN, LayerMotionKind.SWAY_UP)
+        assertWithMessage("the stream's light flows downstream").that(kinds(SceneKind.STREAM)).containsExactly(LayerMotionKind.FLOW)
         assertThat(kinds(SceneKind.BEACH)).containsExactly(LayerMotionKind.ROLL, LayerMotionKind.WASH)
         assertWithMessage("rain, not rippling light (it falls as particles)").that(kinds(SceneKind.RIVER_ROCKS)).isEmpty()
     }

@@ -228,7 +228,7 @@ are shown.
 | **Custom Border** | `border_config` | false | bool — gates the two rows below |
 | **Border Radius** | `custom_border_radius` | 0 | slider 0-20; validator 0-100. Stored value / 100 = fraction of key width |
 | **Border Line Width** | `custom_border_line_width` | 0 | 0-10 dp (`SettingsRanges.CUSTOM_BORDER_LINE_WIDTH`) |
-| **Animated scenes** | `look_backdrop_motion` | false | bool — the Scenes themes move (`AuroraMotion`, `SceneMotion`); gates the three sliders below |
+| **Animated scenes** | `look_backdrop_motion` | true (the default theme is static, so it applies once a scene is chosen) | bool — the Scenes themes move (`AuroraMotion`, `SceneMotion`); gates the three sliders below |
 | **Scene Speed** | `look_motion_speed` | 100 | 25-200% (`SettingsRanges.LOOK_MOTION_SPEED`): the pace of motion time (`AuroraMotionClock.rate`; a change does not jump) |
 | **Scene Motion Intensity** | `look_motion_intensity` | 100 | 0-200% (`LOOK_MOTION_INTENSITY`): the drift and cross-fade of the aurora, stream and snow, the bend of grass and branches, the run of the waves; 0 = the still picture |
 | **Twinkle** | `look_motion_twinkle` | 55 | 0-100% (`LOOK_MOTION_TWINKLE`): how far a twinkling star or particle dims (55 = to 45 % of its brightness) |

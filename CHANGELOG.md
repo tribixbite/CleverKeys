@@ -468,14 +468,17 @@ editor that used to be listed here already ship in 2.0.)
 - **Scenes.** A new Theme Manager section of looks with CleverKeys' keys over a painted scene:
   CleverKeys Aurora (five rayed curtains that fold together like a real aurora's, green into
   lilac, indigo into teal, orchid and rose, under shimmering stars; keys drawn by their outline
-  alone with a lilac action key), Meadow, Stream, River rocks (worn, chipped many-coloured slate,
-  jasper, jade and a few banded agates, rain splashing on them), Forest, Snow and Beach (the keys are see-through, labels
-  stay readable). Appearance → Animated scenes (off by default) lets them move: the aurora ripples
-  and sways, grass bends in a breeze that travels across the field, branches and ferns sway, raindrops
-  splash on the stones, waves roll in and wash up the sand, water flows, snow falls, stars and
-  sparkles twinkle. Scene Speed, Scene Motion Intensity and Twinkle tune how they move, and Sharp
-  Scenes paints the soft ones at full resolution. A scene comes to rest 20 seconds after you stop
-  typing, and stays still in battery saver, with animations turned off and on Android 9 or older.
+  alone with a lilac action key), Meadow (a sunlit field at golden hour), Stream (a clear stream
+  over pebbles with caustic light), River rocks (worn, many-coloured stones with rain splashing on
+  them), Forest (sunlit woods in morning mist, with trees, a leafy canopy and ferns), Snow (snowy
+  hills under the northern lights and stars) and Beach (waves rolling up bright sand); the keys
+  are see-through and labels stay readable. Scenes move by default (Appearance → Animated
+  scenes): the aurora ripples and sways, grass bends in a breeze that travels across the field,
+  the canopy and ferns sway, light flows down the stream, raindrops splash and wet the stones,
+  waves roll in and wash up the sand, snow falls, stars twinkle. Scene Speed, Scene Motion
+  Intensity and Twinkle tune how they move, and Sharp Scenes paints the soft ones at full
+  resolution. A scene comes to rest 20 seconds after you stop typing, and stays still in battery
+  saver, with animations turned off and on Android 9 or older; the default theme is static.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current

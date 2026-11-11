@@ -177,6 +177,9 @@ class CleverKeysService : InputMethodService(),
     private var _themeChangeReceiver: BroadcastReceiver? = null
 
     companion object {
+        /** Lets a theme change re-inflate the keyboard before its name shows in the bar. */
+        private const val THEME_MESSAGE_DELAY_MS = 350L
+
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
 
@@ -1152,6 +1155,21 @@ class CleverKeysService : InputMethodService(),
     fun hideKeyboardByUser() {
         _tileShow.noteUserDismiss()
         requestHideSelf(0)
+    }
+
+    /**
+     * The `theme_next` / `theme_previous` commands: applies the theme [delta] steps from the
+     * current one in Theme Manager's order (wrapping), exactly as choosing its card does, and
+     * names it in the suggestion bar once the keyboard has redrawn (a Toast would sit under
+     * the keyboard window).
+     */
+    fun cycleTheme(delta: Int) {
+        val themes = ThemeSettingsActivity.themesInOrder(this)
+        val current = DirectBootAwarePreferences.get_shared_preferences(this).getString("theme", Defaults.THEME) ?: Defaults.THEME
+        val next = tribixbite.cleverkeys.theme.ThemeOrder.step(themes.map { it.first }, current, delta) ?: return
+        ThemeSettingsActivity.applyTheme(this, next)
+        val name = themes.first { it.first == next }.second
+        _handler.postDelayed({ showSuggestionBarMessage(getString(R.string.theme_cycle_message, name)) }, THEME_MESSAGE_DELAY_MS)
     }
 
     override fun onWindowShown() {

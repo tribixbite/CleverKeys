@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 241 commands, four quick actions |
+| **Features** | Search, 21 categories, 243 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 241 commands are grouped into these categories, in this order. Category headers stay
+The 243 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -70,7 +70,7 @@ at the top while their commands scroll.
 | **Navigation** | 6 | `home`, `end`, `doc_home`, `doc_end`, `page_up`, `page_down` |
 | **Selection** | 8 | `selection_cursor_left`, `selection_cursor_right`, `selection_cancel`, `selection_mode`, `select_word_left`, `select_word_right`, `select_word`, `select_line` |
 | **Delete** | 5 | `backspace`, `delete`, `delete_word`, `forward_delete_word`, `delete_last_word` |
-| **Keyboard Events** | 20 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `voice_input`, `minimize_bar`, `minimize_fab`, `hide_keyboard` |
+| **Keyboard Events** | 22 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `voice_input`, `minimize_bar`, `minimize_fab`, `hide_keyboard`, `theme_next`, `theme_previous` |
 | **Modifiers** | 5 | `shift`, `ctrl`, `alt`, `meta`, `fn` |
 | **Function Keys** | 12 | `f1`–`f12` |
 | **Special Keys** | 9 | `esc`, `enter`, `tab`, `menu`, `insert`, `compose`, `removed` |
@@ -109,6 +109,12 @@ Three Keyboard Events commands shrink or close the keyboard:
 
 A minimized keyboard returns to full size the next time it is shown after being hidden.
 The minimize commands cannot bring back a keyboard the system has already hidden.
+
+**Next Theme** (`theme_next`) and **Previous Theme** (`theme_previous`) step through Theme
+Manager's themes in the order the screen lists them (familiar looks, Scenes, the built-in
+themes, your custom themes, the decorative ones), wrapping at either end, and apply each one as
+choosing its card does; the suggestion bar names the new theme. Put them on a short swipe or
+in the extra keys row to flip through themes from the keyboard.
 
 ## Text Assist and Replace Text
 
@@ -174,7 +180,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 241 commands. Use search to find one quickly.
+> The palette lists 243 commands. Use search to find one quickly.
 
 ## Common Questions
 

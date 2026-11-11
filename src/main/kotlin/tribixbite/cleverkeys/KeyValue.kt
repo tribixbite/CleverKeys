@@ -50,6 +50,10 @@ class KeyValue private constructor(
         // 2026-10-29: on-device voice input (docs/specs/voice-input.md); NOT the voice-IME switch
         // (SWITCH_VOICE_TYPING). Appended (ordinal).
         VOICE_INPUT,
+        // 2026-11-11: apply the next / previous theme in Theme Manager's order (ThemeOrder).
+        // Appended (ordinal).
+        THEME_NEXT,
+        THEME_PREVIOUS,
     }
 
     /**
@@ -671,6 +675,9 @@ class KeyValue private constructor(
             "minimize_bar" -> eventKey("▁", Event.MINIMIZE_BAR, 0)
             "minimize_fab" -> eventKey("◉", Event.MINIMIZE_FAB, 0)
             "hide_keyboard" -> eventKey("⌄", Event.HIDE_KEYBOARD, 0)
+            // Step through Theme Manager's themes from the current one, applying each.
+            "theme_next" -> eventKey("◐+", Event.THEME_NEXT, FLAG_SMALLER_FONT)
+            "theme_previous" -> eventKey("◐−", Event.THEME_PREVIOUS, FLAG_SMALLER_FONT)
             "switch_back_gif" -> eventKey("ABC", Event.SWITCH_BACK_GIF, 0)
 
             /* Key events */

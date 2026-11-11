@@ -125,6 +125,8 @@ object KeyLabels {
             KeyValue.Event.MINIMIZE_BAR -> getString(R.string.cmd_minimize_bar)
             KeyValue.Event.MINIMIZE_FAB -> getString(R.string.cmd_minimize_fab)
             KeyValue.Event.HIDE_KEYBOARD -> getString(R.string.cmd_hide_keyboard)
+            KeyValue.Event.THEME_NEXT -> getString(R.string.cmd_theme_next)
+            KeyValue.Event.THEME_PREVIOUS -> getString(R.string.cmd_theme_previous)
             KeyValue.Event.ACTION -> describeAction(kv, getString)
         }
 

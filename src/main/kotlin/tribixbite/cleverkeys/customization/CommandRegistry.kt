@@ -240,6 +240,11 @@ object CommandRegistry {
         // gh #175: dismiss the keyboard outright.
         Command("hide_keyboard", R.string.cmd_hide_keyboard, R.string.cmd_hide_keyboard_desc, Category.EVENTS,
             keywords = listOf("hide", "dismiss", "close", "keyboard", "down")),
+        // 2026-11-11: step through Theme Manager's themes from the current one and apply it.
+        Command("theme_next", R.string.cmd_theme_next, R.string.cmd_theme_next_desc, Category.EVENTS,
+            keywords = listOf("theme", "next", "plus", "+", "cycle", "skin", "look", "colors", "colours", "scene")),
+        Command("theme_previous", R.string.cmd_theme_previous, R.string.cmd_theme_previous_desc, Category.EVENTS,
+            keywords = listOf("theme", "previous", "prev", "minus", "-", "back", "cycle", "skin", "look", "colors", "colours", "scene")),
 
         // ========== MODIFIERS ==========
         Command("shift", R.string.cmd_shift, R.string.cmd_shift_desc, Category.MODIFIERS,

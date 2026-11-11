@@ -312,8 +312,9 @@ enum class ParticleShape {
     /** A four-point sparkle: sun on water, a wet stone. */
     GLINT,
     /**
-     * Rain seen from above, landing on the scene ([RainSplashes]): each drop strikes, spreads a
-     * ring and flings a few droplets, then fades; the next lands somewhere else (the river rocks;
+     * Rain seen from above, landing on the scene ([RainSplashes]): on stone a drop throws up a
+     * crown of droplets and leaves a dark wet spot that dries; on water it spreads ripples; the
+     * next lands somewhere else (the river rocks;
      * maintainer 2026-11-10: "splattering on the rocks from above", not streaks falling down
      * the screen). The field's [LookStarfield.perSquare100Dp] is the number of splash slots.
      */
@@ -327,14 +328,24 @@ enum class ParticleShape {
  */
 object RainSplashes {
 
-    /** How long one splash lasts, from the strike until it has faded, seconds. */
-    const val LIFETIME_S = 0.6
+    /**
+     * How long one splash shows, from the strike until its wet spot has dried away, seconds:
+     * the crown and the ripples are its first fraction ([CROWN_S], [RIPPLE_S]).
+     */
+    const val LIFETIME_S = 2.2
 
-    /** Floats per splash in [at]'s output: x, y, ring radius, alpha 0..1, progress 0..1, slot seed. */
-    const val STRIDE = 6
+    /** How long a drop's crown of droplets stands on stone, seconds. */
+    const val CROWN_S = 0.45
 
-    /** Droplets each splash flings. */
-    const val DROPLETS = 4
+    /** How long a drop's rings spread on water, seconds. */
+    const val RIPPLE_S = 0.9
+
+    /**
+     * Floats per splash in [at]'s output: x, y, size (px: the ripple's and wet spot's full
+     * radius), alpha 0..1 (fading over the lifetime), progress 0..1, slot seed, age (seconds).
+     */
+    const val STRIDE = 7
+
 
     /** Splash slots for [field] on a [widthPx] × [heightPx] view (capped like a star field). */
     fun slots(field: LookStarfield, widthPx: Int, heightPx: Int, density: Float): Int {
@@ -345,15 +356,15 @@ object RainSplashes {
 
     /**
      * The splashes alive at [seconds] of motion time, written to [out] ([STRIDE] floats each,
-     * room for [slots] of them); returns how many. Ring radii run from a pinpoint to the field's
-     * [LookStarfield.maxRadiusDp] × [scale]; the alpha falls from the field's maxAlpha.
+     * room for [slots] of them); returns how many. Sizes run from the field's minRadiusDp to its
+     * maxRadiusDp × [scale]; the alpha falls from the field's maxAlpha over the lifetime.
      */
     fun at(field: LookStarfield, widthPx: Int, heightPx: Int, density: Float, seconds: Double, out: FloatArray, scale: Float = 1f): Int {
         val n = slots(field, widthPx, heightPx, density)
         var live = 0
         for (i in 0 until n) {
-            // Each slot rests between splashes: its period is 3–7 lifetimes, its start seeded.
-            val period = LIFETIME_S * (3.0 + 4.0 * unit(field.seed, i, 0))
+            // Each slot rests between splashes: its period is 1.6–4 lifetimes, its start seeded.
+            val period = LIFETIME_S * (1.6 + 2.4 * unit(field.seed, i, 0))
             val cycles = seconds / period + unit(field.seed, i, 1)
             val cycle = kotlin.math.floor(cycles).toLong()
             val age = (cycles - cycle) * period
@@ -364,11 +375,12 @@ object RainSplashes {
             val o = live * STRIDE
             out[o] = unit(spot, 0, 3).toFloat() * widthPx
             out[o + 1] = unit(spot, 0, 4).toFloat() * heightPx
-            // The ring races out, then slows (ease-out); the light fades as it spreads.
-            out[o + 2] = size * density * scale * (0.15f + 0.85f * (1f - (1f - k) * (1f - k)))
-            out[o + 3] = (1f - k) * (1f - k) * (field.maxAlpha / 255f)
+            out[o + 2] = size * density * scale
+            // The wet spot dries slowly at first, then fades out.
+            out[o + 3] = (1f - k * k) * (field.maxAlpha / 255f)
             out[o + 4] = k
             out[o + 5] = (spot and 0xFFFF).toFloat()
+            out[o + 6] = age.toFloat()
             live++
         }
         return live

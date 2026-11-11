@@ -153,6 +153,16 @@ SyncQueued = main thread, IssueDrawCommandsStart → SwapBuffers = RenderThread)
 in another app's field, never with CleverKeys Settings in front (its Compose screen costs more
 than the keyboard). Aurora on the Pixel 8 Pro: ~1.4 ms main + ~2.8 ms issue per frame at 10 fps,
 the window's fixed cost; batching stars and baking the glow did not move it.
+Scripted typing for measurements (2026-11-10): NEVER type into a settings screen — the Wi-Fi
+Add-network dialog closed mid-run and the remaining blind taps joined the Saga to another Wi-Fi
+network (it vanished from adb). Type in a Chrome page holding only a text box, in ~30 s monkey
+chunks, and check focus + `mInputShown=true` before every chunk (`session5.sh` pattern). A phone
+with `animator_duration_scale` 0 never animates scenes (`systemAllowsMotion`): check it first,
+or on/off runs measure the same thing. Older Chrome refuses `data:` VIEW intents; serve the page
+over the LAN instead.
+A Paint's alpha multiplies its shader: setting `color` to a low-alpha shadow and then a gradient
+`shader` on the same Paint draws the gradient faint (the rain crowns were ghosts on device while
+the off-device preview looked right). Reset the colour to opaque before the shader draw.
 
 ## Kotlin compiler execution on Termux
 

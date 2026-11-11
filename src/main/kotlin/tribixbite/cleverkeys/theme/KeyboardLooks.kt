@@ -551,6 +551,8 @@ object KeyboardLooks {
                 ),
             ),
         ),
+        // The sunlit golden-hour field is bright: labels keep 4.5:1 with fills at 0.7 (0.65 needed).
+        fillOpacity = 0.7f,
     )
 
     /** Stream: dark water with streaks of light running with the current, sparkles riding it. */
@@ -583,7 +585,7 @@ object KeyboardLooks {
                 // Rain landing on the stones, seen from above (maintainer 2026-11-10: "splattering
                 // on the rocks from above", not streaks): rings 8–20 dp across that spread and fade.
                 stars = LookStarfield(
-                    perSquare100Dp = 11f, seed = 0x20C5L, color = 0xFFE4F2FA.toInt(), minAlpha = 0, maxAlpha = 230,
+                    perSquare100Dp = 14f, seed = 0x20C5L, color = 0xFFE4F2FA.toInt(), minAlpha = 0, maxAlpha = 230,
                     minRadiusDp = 4f, maxRadiusDp = 10f, glintEvery = 0, shape = ParticleShape.RAIN,
                 ),
             ),
@@ -603,6 +605,8 @@ object KeyboardLooks {
                 glows = emptyList(), scene = SceneKind.FOREST, topFade = 0.1f, stars = null,
             ),
         ),
+        // The sunlit mist is bright: labels keep 4.5:1 with fills at 0.68 (0.62 needed).
+        fillOpacity = 0.68f,
     )
 
     /** Snow: a blue night over snowy hills and pines, snow falling. */
@@ -617,10 +621,13 @@ object KeyboardLooks {
                 stars = LookStarfield(
                     perSquare100Dp = 10f, seed = 0x5A0FL, color = 0xFFFFFFFF.toInt(), minAlpha = 110, maxAlpha = 230,
                     minRadiusDp = 0.6f, maxRadiusDp = 1.6f, glintEvery = 0, shape = ParticleShape.FLAKE,
-                    driftXDpPerS = 2f, driftYDpPerS = 12f,
+                    // A little faster than the first rounds' 12 dp/s (maintainer 2026-11-10).
+                    driftXDpPerS = 3f, driftYDpPerS = 18f,
                 ),
             ),
         ),
+        // The aurora-lit snow needs 0.53; 0.58 keeps a margin.
+        fillOpacity = 0.58f,
     )
 
     /** Beach: swells rolling in and washing up rippled sand. */

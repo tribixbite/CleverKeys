@@ -253,7 +253,9 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    on their own). `BackdropDrawable` renders on one background thread (`renderer`), caches by size
    under a byte budget, shows the base colour until delivery, and warps each layer per frame with
    `Canvas.drawBitmapMesh` from `SceneMotion.mesh` (SWAY_UP grass / ferns, SWAY_DOWN branches,
-   RIPPLE (unused since the rocks' caustics went), WASH / ROLL beach water). Never cross-fade two positions of something sharp
+   RIPPLE (unused since the rocks' caustics went), WASH / ROLL beach water, FLOW stream light
+   (two copies of a layer painted seamless across, slid and wrapped; `Noise.fbmP` /
+   `Worley.edge(period)` make the seam vanish)). Never cross-fade two positions of something sharp
    (maintainer: grass "pulses to blurry"): move it as a layer. Detailed scenes paint at full
    resolution (`SceneKind.paintScale` 1), soft ones at 2; each has its own `frameMs`. Preview
    any scene change off-device first: compile `SceneRaster.kt` + `SceneMotion.kt` with kotlinc
@@ -273,7 +275,11 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    still painting (stones with chipped outlines, bump-mapped grain and creases, patchy gloss)
    under rain seen from above: `ParticleShape.RAIN` fields draw `RainSplashes` (rings that
    spread and fade at new seeded spots each cycle, drawn per frame, no placed particles);
-   only `AGATE_STONES` stones carry rings. Cost rules in `BackdropDrawable`: glows are baked into
+   only `AGATE_STONES` stones carry rings. The rocks' `ScenePainting.surface` (`SurfaceMask`)
+   says where a drop hits stone (wet spot + pre-drawn crown frames) or water (rings).
+   `SceneKind.motionScale` is a scene's own share of the user's intensity (meadow 0.5). Scene
+   key fills are set per look from the brightest painting (meadow 0.7, forest 0.68, snow 0.58,
+   rocks 0.66, others 0.55): recompute when a painting gets brighter. Cost rules in `BackdropDrawable`: glows are baked into
    the painting bitmaps (`withGlows`), the top fade fills only its band, stars / sparkles draw in
    brightness × size batches (`drawStarBatch`), kept RenderNodes are re-recorded when
    `!hasDisplayList()`, the window hiding stops motion and frees the keys layer, and
