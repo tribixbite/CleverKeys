@@ -1346,8 +1346,17 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     showers (`RainSplashes.shower`), sizes skewed small, flash + uneven wet spots + lopsided
     hopping beads (`splatter`), ferns as clumps of drooping lobed fronds, forest leaves ×1.4,
     canopy to half height, two hanging branches in one layer, snow aurora in the look's palette,
-    Animated scenes description in 22 locales. Open: re-measure on the Pixel (continuous typing
-    and one tap + 60 s untouched); rain look on a phone.
+    Animated scenes description in 22 locales; Theme Manager Scenes intro (22 locales). Device:
+    the first build crashed the IME on the first motion tick (argument-order bug, fixed in
+    1c740edf, verified on the Note10+); rain on stone was invisible until wet spots got a sheen.
+    Pixel re-measure (Perfetto rails, 10-min typing, brightness pinned): motion on 1583 mW vs
+    off 1652 / 1774 — the motion cost is now below run-to-run noise (display rail alone varied
+    736–1061 mW between runs); before the hold it was +217. Frames: on 5514 vs off ~2700 (the
+    motion resumes in the script's pauses between chunks, as designed). Idle (one tap + 59 s,
+    on): 1717 mW, 2198 frames ≈ 20 s of motion a minute; the idle-off pair and a second
+    typing-on run were lost to adb dropping the Pixel at ~5–9 min three times (no crash; the
+    pin cron did not cause it). Open: Pixel restore (Cyberpunk, Animated scenes off, brightness
+    manual 12) once reachable; Note10+ Chrome test tabs.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
