@@ -175,6 +175,10 @@ of compute per frame (Pixel, 2026-11-11), so frame rate is the lever, not draw w
 (`ro.surface_flinger.set_idle_timer_ms`), so 10 fps keeps it near full refresh (+57 mW
 unpinned). Report the trace per rail (`VSYS_PWR_DISPLAY` vs the CPUCL/G3D/MIF/MEM rails), not
 only the total: the display rail swings by hundreds of mW between runs and hides a 100 mW delta.
+The Pixel 8 Pro's display draws on THREE rails, not one: `VSYS_PWR_DISPLAY`, `L22M_DISP` and
+`S6M_LLDO1` (subsystem "LDO", r = 0.997 with the display rail). Read every rail descriptor's name
+and subsystem (field 3) from the trace; a parser that kept only VDD/PWR names printed two of them
+as bare ids and the display cost looked like an unknown 80 mW (2026-11-11).
 
 ## Kotlin compiler execution on Termux
 

@@ -1395,6 +1395,28 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     step now skips when present, retries apt and falls back to the committed icons
     (`eeaed98a`; 83896fe0's build failed twice on runner DNS). Pixel restored and checked IN
     13:55 (force-stopped apps stay stopped until opened).
+    Thirteenth round (2026-11-11, maintainer: "add the fps setting and write and test the
+    hardware blend"; then tile fixes, "a true black option for the bright scenes", 5 fps
+    videos, the unknown rail). Built: Frame Rate (`look_motion_fps`, 0 = scene's own, 1–15),
+    Blend on Display Hardware (`look_scene_overlay`, `SceneOverlay`: curtains + stars as
+    `SurfaceControl` children of an empty SurfaceView anchor under the IME window, moved by
+    transactions, all four layers DEVICE composition in the HWC table; frame-rate vote added
+    after the run), True Black Scenes (`look_scene_true_black`, `SceneTrueBlack`: broad areas
+    black, light/detail/colour kept; −76…−99 % light, the top fade black too), and the tile
+    fixes (monochrome raccoon, then inverted as a disc with the strokes cut out; "Toggle"; the
+    show is asked for with no editor focused — Pixel PASS over Clock: shown and kept, second tap
+    hides). Round 13: Aurora, still keyboard, refresh UNPINNED, brightness 12, 5-min ABBA,
+    Δ vs motion off (display rails | CPU | total mW): window 10 fps +257 | +38 | +340,
+    layers 10 fps +91 | +26 | +152, window 5 fps +81 | +16 | +115, layers 5 fps +97 | +15 | +150
+    (the layers' build had no frame-rate vote yet). The display side is three rails:
+    `VSYS_PWR_DISPLAY`, `L22M_DISP` (subsystem Display) and `S6M_LLDO1` (LDO; r = 0.997 with
+    the display rail across the 10 runs, 0.83 with CPU) — the 80 mW "unknown" rail of the first
+    readout was rails.py dropping names without VDD/PWR. So unpinned, most of the motion's cost
+    is the panel kept refreshing, and the layers halve it at 10 fps. Videos of every scene at
+    5 fps vs its own rate sent to the maintainer for a look decision (5 fps runs dropped on the
+    maintainer's call). Open: measure the frame-rate vote (layers 10 fps, unpinned); True Black
+    in the theme picker previews; native review of the new strings in 21 locales. Pixel
+    restored and checked IN 17:52.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
