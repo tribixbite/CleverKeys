@@ -27,8 +27,10 @@ class SceneRasterTest {
                 assertThat(layer.pixels.size).isEqualTo(layer.width * layer.height)
                 assertWithMessage("$kind: a layer is a part, not a sheet").that(layer.pixels.any { it ushr 24 == 0 }).isTrue()
             }
+            // A still layer is a foreground in front of a moving image (the snow's ground).
+            val moving = a.layers.filter { it.motion.kind != LayerMotionKind.STILL }
             assertWithMessage("$kind moves by a second image or by its layers, not both")
-                .that(a.alt != null && a.layers.isNotEmpty()).isFalse()
+                .that(a.alt != null && moving.isNotEmpty()).isFalse()
             // The river rocks' painting is still: the rain over it is the look's particles, and
             // it maps where that rain lands on stone (most of it) or on water (the gaps).
             if (kind == SceneKind.RIVER_ROCKS) {
@@ -64,6 +66,33 @@ class SceneRasterTest {
         assertWithMessage("the stream's light flows downstream").that(kinds(SceneKind.STREAM)).containsExactly(LayerMotionKind.FLOW)
         assertThat(kinds(SceneKind.BEACH)).containsExactly(LayerMotionKind.ROLL, LayerMotionKind.WASH)
         assertWithMessage("rain, not rippling light (it falls as particles)").that(kinds(SceneKind.RIVER_ROCKS)).isEmpty()
+        assertWithMessage("the snow's hills and pines stand still before its moving sky").that(kinds(SceneKind.SNOW))
+            .containsExactly(LayerMotionKind.STILL)
+    }
+
+    /**
+     * The snow's aurora ripples as the aurora look's curtains do (maintainer 2026-11-11): its sky is
+     * a cross-faded pair that drifts with the aurora's style, at the aurora's frame rate, while the
+     * ground in front stays where it was painted (nothing of it moves between two moments).
+     */
+    @Test
+    fun theSnowsAuroraSkyMovesLikeTheAuroraLook() {
+        assertThat(MotionStyle.forScene(SceneKind.SNOW)).isSameInstanceAs(MotionStyle.AURORA)
+        assertThat(MotionStyle.forScene(null)).isSameInstanceAs(MotionStyle.AURORA)
+        assertThat(MotionStyle.forScene(SceneKind.STREAM)).isSameInstanceAs(MotionStyle.GENTLE)
+        assertThat(SceneKind.SNOW.frameMs).isEqualTo(AuroraMotion.AURORA_FRAME_MS)
+        val p = SceneRaster.paint(SceneKind.SNOW, 200, 140, 0.5f)
+        assertWithMessage("a second sky image to cross-fade").that(p.alt).isNotNull()
+        val ground = p.layers.single()
+        val opaque = ground.pixels.indices.filter { ground.pixels[it] ushr 24 == 0xFF }
+        assertWithMessage("the ground covers the lower part").that(opaque.size).isGreaterThan(ground.pixels.size / 5)
+        assertWithMessage("the sky above it shows through")
+            .that((0 until ground.width * ground.height / 4).count { ground.pixels[it] ushr 24 == 0 })
+            .isGreaterThan(ground.width * ground.height / 8)
+        val a = SceneMotion.composite(p, 0.0, altShare = 0f)
+        val b = SceneMotion.composite(p, 2.5, altShare = 1f)
+        assertWithMessage("the opaque ground does not change with the sky")
+            .that(opaque.count { a[it] != b[it] }).isEqualTo(0)
     }
 
     @Test

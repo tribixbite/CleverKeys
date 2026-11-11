@@ -493,7 +493,9 @@ editor that used to be listed here already ship in 2.0.)
   **True Black Scenes** (off by default) shows the painted scenes as night views on pure black:
   sky, sand, snow and fog go black while the light, fine detail and colourful parts (the sun,
   blades of grass, foam, the snow's aurora) stay, so on an OLED screen most of the scene's pixels
-  are off; the scenes give off 76–99 % less light.
+  are off; the scenes give off 76–99 % less light. The Aurora theme gets a pure black sky too
+  (it was already near black, so that saves little). The Snow scene's aurora now ripples and
+  drifts like the Aurora theme's, behind still hills and pines.
   Scenes now keep moving on a phone that reports itself only moderately warm (they stopped at
   that level, which some Galaxy phones report under ordinary load, so they never moved); they
   still rest when the phone is severely hot, in battery saver, with animations off or on a low

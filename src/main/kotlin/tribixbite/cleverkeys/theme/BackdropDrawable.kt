@@ -107,7 +107,7 @@ class BackdropDrawable(
     private val layerIntensity: Float get() = tuning.intensity * (backdrop.scene?.motionScale ?: 1f)
 
     /** How the cross-faded images move. */
-    private val motionStyle = if (backdrop.scene == null) MotionStyle.AURORA else MotionStyle.GENTLE
+    private val motionStyle = MotionStyle.forScene(backdrop.scene)
 
     // ---- Motion (off unless the user turns on "Animated scenes") ----
     private val paintingAltPaint = Paint(Paint.FILTER_BITMAP_FLAG)
@@ -183,7 +183,7 @@ class BackdropDrawable(
         clock.holdMs = value.resumeMs
         clock.idleMs = value.idleMs
         if (repaint && !bounds.isEmpty) requestPainting(bounds.width(), bounds.height())
-        if (!bounds.isEmpty) placeFade(bounds, bounds.height().toFloat())
+        if (!bounds.isEmpty) placeFade(bounds, bounds.width().toFloat(), bounds.height().toFloat())
         syncOverlay()
         invalidateSelf()
     }
@@ -371,17 +371,21 @@ class BackdropDrawable(
     }
 
     /**
-     * The colour under and above the painting (the fill before it is ready, the top fade): the
-     * look's base, or black for a scene in true black, so the band above the keys is off too.
+     * The colour under and above the painting (the fill before it is ready, the top fade, the
+     * aurora's sky): the look's base, or black in true black, so those pixels are off too.
      */
     private val shownBaseColor: Int
-        get() = if (tuning.trueBlack && backdrop.scene != null) baseColor and 0xFF000000.toInt() else baseColor
+        get() = if (tuning.trueBlack) baseColor and 0xFF000000.toInt() else baseColor
 
     /**
-     * The top fade for a view of height [h] at [bounds], in [shownBaseColor]. Only the faded band
-     * is filled: the rest of a full-view rect would be shaded by the GPU every frame to no effect.
+     * The live glows and the top fade for a [w] × [h] view at [bounds], in [shownBaseColor] (true
+     * black has no haze). Only the faded band is filled: the rest of a full-view rect would be
+     * shaded by the GPU every frame to no effect.
      */
-    private fun placeFade(bounds: Rect, h: Float) {
+    private fun placeFade(bounds: Rect, w: Float, h: Float) {
+        backdrop.glows.forEachIndexed { i, g ->
+            glowPaints[i].shader = if (tuning.trueBlack) null else glowShader(g, bounds.left.toFloat(), bounds.top.toFloat(), w, h)
+        }
         val fadeH = backdrop.topFade.coerceIn(0f, 1f) * h
         val color = shownBaseColor
         basePaint.color = color
@@ -397,10 +401,7 @@ class BackdropDrawable(
         requestPainting(bounds.width(), bounds.height())
         paintingDst.set(bounds)
         shownGate.reset()
-        backdrop.glows.forEachIndexed { i, g ->
-            glowPaints[i].shader = glowShader(g, bounds.left.toFloat(), bounds.top.toFloat(), w, h)
-        }
-        placeFade(bounds, h)
+        placeFade(bounds, w, h)
         // A rain field has no placed particles: its splashes come from RainSplashes each frame.
         stars = backdrop.stars?.takeIf { it.shape != ParticleShape.RAIN }
             ?.let { LookStars.place(it, bounds.width(), bounds.height(), density) }.orEmpty()
@@ -654,6 +655,15 @@ class BackdropDrawable(
             if (share <= 0.003f) continue
             if (layer.motion.kind == LayerMotionKind.FLOW) {
                 drawFlowing(canvas, layer, bitmap, seconds, scale, share)
+                continue
+            }
+            if (layer.motion.kind == LayerMotionKind.STILL) {
+                // A foreground that never moves: one bitmap where it was painted.
+                val left = bounds.left + layer.left * scale
+                val top = bounds.top + layer.top * scale
+                layerPaint.alpha = 0xFF
+                flowDst.set(left, top, left + layer.width * scale, top + layer.height * scale)
+                canvas.drawBitmap(bitmap, null, flowDst, layerPaint)
                 continue
             }
             val verts = meshes.getOrNull(i) ?: continue
@@ -1041,9 +1051,13 @@ class BackdropDrawable(
     private fun paintKey(widthPx: Int, heightPx: Int): PaintKey {
         val w = (widthPx / paintScale).coerceAtLeast(1)
         val h = (heightPx / paintScale).coerceAtLeast(1)
-        // True black changes a painted scene only; the aurora is already near black.
-        val trueBlack = tuning.trueBlack && backdrop.scene != null
-        return PaintKey(baseColor, backdrop.ribbons, backdrop.glows, backdrop.scene, w, h, density / paintScale, trueBlack)
+        // True black repaints a scene (SceneTrueBlack); the aurora keeps its curtains as they are
+        // over a black sky, without the violet haze between them (maintainer 2026-11-11: "aurora
+        // theme should get oled black too"; it was near black already: ~40 % less light, ~1 mW).
+        val trueBlack = tuning.trueBlack
+        val scene = backdrop.scene
+        val glows = if (trueBlack && scene == null) emptyList() else backdrop.glows
+        return PaintKey(shownBaseColor, backdrop.ribbons, glows, scene, w, h, density / paintScale, trueBlack && scene != null)
     }
 
     /** The painting and its second image (curtains: [AuroraMotion.alternate]) or moving layers. */

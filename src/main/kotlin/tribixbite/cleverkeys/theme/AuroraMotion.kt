@@ -252,6 +252,13 @@ class MotionStyle(val driftDp: Float, val fadePeriodS: Double, val driftPeriodS:
          * "barely perceptible" before). About a dp per frame at its frame rate, still soft.
          */
         val AURORA = MotionStyle(driftDp = 12f, fadePeriodS = 5.5, driftPeriodS = 14.0)
+
+        /**
+         * How a backdrop showing [scene] moves (null = the aurora look): the aurora's lively drift
+         * and shimmer, also for the snow scene's aurora sky (maintainer 2026-11-11: "make the Snow
+         * aurora ripple … like the regular aurora"); the other scenes gently.
+         */
+        fun forScene(scene: SceneKind?): MotionStyle = if (scene == null || scene == SceneKind.SNOW) AURORA else GENTLE
     }
 }
 

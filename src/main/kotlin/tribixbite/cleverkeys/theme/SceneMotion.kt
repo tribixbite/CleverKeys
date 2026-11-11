@@ -99,6 +99,11 @@ enum class LayerMotionKind {
      * water). Drawn as two copies, not through a mesh.
      */
     FLOW,
+    /**
+     * Does not move: a foreground in front of a backdrop that does (the snow's hills and pines
+     * before its drifting aurora sky). Drawn as one bitmap, not through a mesh.
+     */
+    STILL,
 }
 
 /**
@@ -203,6 +208,7 @@ object SceneMotion {
             LayerMotionKind.WASH -> dy = m.amplitude * surge(m, seconds)
             LayerMotionKind.ROLL -> dy = m.amplitude * cycle(m, seconds)
             LayerMotionKind.FLOW -> dx = m.amplitude * cycle(m, seconds)
+            LayerMotionKind.STILL -> Unit
         }
         out[offset] = dx
         out[offset + 1] = dy

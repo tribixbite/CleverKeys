@@ -47,7 +47,10 @@ object SceneRaster {
             SceneKind.STREAM -> stream(width, height, d, seed)
             SceneKind.RIVER_ROCKS -> riverRocks(width, height, d, seed)
             SceneKind.FOREST -> forest(width, height, d, seed)
-            SceneKind.SNOW -> ScenePainting(width, height, snow(width, height, d, 0, seed), snow(width, height, d, 1, seed), emptyList())
+            SceneKind.SNOW -> ScenePainting(
+                width, height, snowSky(width, height, d, 0, seed), snowSky(width, height, d, 1, seed),
+                listOf(SceneLayer(0, 0, width, height, snowGround(width, height, d, seed), LayerMotion(LayerMotionKind.STILL, amplitude = 0f, periodS = 1f))),
+            )
             SceneKind.BEACH -> beach(width, height, d, seed)
         }
     }
@@ -858,10 +861,14 @@ object SceneRaster {
         ),
     )
 
-    private fun snow(w: Int, h: Int, d: Float, frame: Int, seed: Long): IntArray {
+    /**
+     * The snow scene's sky, frame [frame] of two: the night gradient, the aurora (the second
+     * image the shimmering one) and stars, a third of them twinkling. It drifts and cross-fades
+     * as the aurora look's curtains do ([MotionStyle.forScene]), behind [snowGround].
+     */
+    private fun snowSky(w: Int, h: Int, d: Float, frame: Int, seed: Long): IntArray {
         val p = Paint2D(w, h, opaque = true)
         p.verticalGradient(0f to 0xFF0A1020.toInt(), 0.5f to 0xFF1A2540.toInt(), 1f to 0xFF2C3854.toInt())
-        // The aurora's light over the sky; the second image is the shimmering one.
         val curtains = if (frame == 0) SNOW_AURORA else AuroraMotion.alternate(SNOW_AURORA)
         val light = AuroraRaster.render(0xFF000000.toInt(), curtains, w, h, d)
         for (i in light.indices) {
@@ -869,7 +876,6 @@ object SceneRaster {
             val r = (c shr 16) and 0xFF; val g = (c shr 8) and 0xFF; val b = c and 0xFF
             if (r or g or b != 0) { p.r[i] += r; p.g[i] += g; p.b[i] += b }
         }
-        // Stars in the sky: the same places in both images, a third of them twinkling.
         val stars = Random(seed + 5)
         repeat((w * h / (d * d) / 260f).toInt().coerceIn(30, 900)) { k ->
             val x = stars.nextFloat() * w
@@ -878,8 +884,17 @@ object SceneRaster {
             val twinkle = if (frame == 1 && k % 3 == 0) 0.35f else 1f
             p.disc(x, y, (0.45f + 0.5f * stars.nextFloat() * stars.nextFloat()) * d, 0xFFF2F0FF.toInt(), bright * twinkle)
         }
+        return p.toArgb()
+    }
+
+    /**
+     * The snow scene's ground, in front of the moving sky and still: pines on the far ridge, two
+     * snowy hills lit by the aurora's green and violet, and glitter on the crust. Transparent
+     * above the hills, where the sky shows.
+     */
+    private fun snowGround(w: Int, h: Int, d: Float, seed: Long): IntArray {
+        val p = Paint2D(w, h, opaque = false)
         val rng = Random(seed)
-        // Pines on the far ridge.
         val pines = (w / d / 28f).toInt().coerceAtLeast(4)
         repeat(pines) {
             val x = rng.nextFloat() * w
@@ -887,13 +902,23 @@ object SceneRaster {
             val hgt = (30f + 40f * rng.nextFloat()) * d
             p.pine(x, base, hgt, 0xFF0F1828.toInt())
         }
-        // Two snowy hills, lit by the aurora; the glitter on their crust moves between frames.
         p.ridge(0.66f, 0.06f, 0.9f, seed + 1, 0xFF7E98AE.toInt())
         p.ridge(0.80f, 0.05f, 1.6f, seed + 2, 0xFFA8BED0.toInt())
-        // The aurora's green and violet light on the snow.
-        p.band(0.64f, 0.78f, 0xFF4AE0A0.toInt(), 0.06f)
-        p.band(0.74f, 0.9f, 0xFFB48CFF.toInt(), 0.04f)
-        val glitter = Random(seed + 10 + frame)
+        // The aurora's light on the snow, only where there is snow (the sky above stays clear).
+        val lit = Paint2D(w, h, opaque = false)
+        lit.band(0.64f, 0.78f, 0xFF4AE0A0.toInt(), 0.06f)
+        lit.band(0.74f, 0.9f, 0xFFB48CFF.toInt(), 0.04f)
+        // Channels are premultiplied: the band's colour at its strength s over the snow, keeping
+        // the snow's own coverage A (lit holds c·s and s).
+        for (i in 0 until w * h) {
+            val s = lit.a[i]
+            val cover = p.a[i]
+            if (s <= 0f || cover <= 0f) continue
+            p.r[i] = p.r[i] * (1 - s) + lit.r[i] * cover
+            p.g[i] = p.g[i] * (1 - s) + lit.g[i] * cover
+            p.b[i] = p.b[i] * (1 - s) + lit.b[i] * cover
+        }
+        val glitter = Random(seed + 10)
         repeat((w * h / (d * d) / 90f).toInt().coerceIn(40, 2000)) {
             val x = glitter.nextFloat() * w
             val y = h * (0.7f + 0.3f * glitter.nextFloat())
@@ -1442,5 +1467,6 @@ object SceneRaster {
  *   sways at half (maintainer 2026-11-10: "50% default scene motion intensity for meadow").
  */
 enum class SceneKind(val paintScale: Int, val frameMs: Long, val motionScale: Float = 1f) {
-    MEADOW(1, 83L, motionScale = 0.5f), STREAM(2, 125L), RIVER_ROCKS(1, 100L), FOREST(1, 83L), SNOW(2, 125L), BEACH(1, 83L)
+    // The snow's aurora sky moves as the aurora look does, at its frame rate (MotionStyle.forScene).
+    MEADOW(1, 83L, motionScale = 0.5f), STREAM(2, 125L), RIVER_ROCKS(1, 100L), FOREST(1, 83L), SNOW(2, AuroraMotion.AURORA_FRAME_MS), BEACH(1, 83L)
 }
