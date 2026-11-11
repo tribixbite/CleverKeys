@@ -1715,7 +1715,7 @@
     <string name="theme_section_looks">Bekannte Looks</string>
     <string name="theme_looks_desc">Farben und Tastenformen bekannter Handy-Tastaturen; hell oder dunkel folgt dem System. Nicht mit Apple, Google, Microsoft oder Samsung verbunden.</string>
     <string name="theme_section_scenes">Szenen</string>
-    <string name="theme_scenes_desc">CleverKeys-Tasten über einem gemalten Bild, das durch sie hindurchscheint. Unter Darstellung → Animierte Szenen bewegt es sich.</string>
+    <string name="theme_scenes_desc">CleverKeys-Tasten über einem gemalten Bild, das durch sie hindurchscheint. Es bewegt sich sanft; unter Darstellung → Animierte Szenen lässt sich das ausschalten.</string>
     <string name="theme_look_aurora_desc">Polarlicht und funkelnde Sterne hinter Tasten, die nur ihr Umriss zeichnet</string>
     <string name="theme_look_meadow_name">Wiese</string>
     <string name="theme_look_meadow_desc">Eine sonnige Wiese in der goldenen Stunde: wiegendes Gras, Wildblumen und schwebende Pollen</string>

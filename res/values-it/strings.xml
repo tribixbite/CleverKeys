@@ -1771,7 +1771,7 @@
     <string name="theme_section_looks">Aspetti familiari</string>
     <string name="theme_looks_desc">Colori e forme dei tasti di tastiere per telefono note; chiaro o scuro segue il sistema. Non affiliato con Apple, Google, Microsoft o Samsung.</string>
     <string name="theme_section_scenes">Scene</string>
-    <string name="theme_scenes_desc">Tasti di CleverKeys su una scena dipinta che traspare. Attiva Aspetto → Scene animate per farla muovere.</string>
+    <string name="theme_scenes_desc">Tasti di CleverKeys su una scena dipinta che traspare. Si muove dolcemente; Aspetto → Scene animate lo disattiva.</string>
     <string name="theme_look_aurora_desc">Tende di aurora e stelle scintillanti dietro tasti disegnati dal solo contorno</string>
     <string name="theme_look_meadow_name">Prato</string>
     <string name="theme_look_meadow_desc">Un prato soleggiato all’ora d’oro: erba che ondeggia, fiori selvatici e polline sospeso</string>

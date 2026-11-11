@@ -1671,7 +1671,7 @@
     <string name="theme_section_looks">Tampilan yang familier</string>
     <string name="theme_looks_desc">Warna dan bentuk tombol keyboard ponsel yang dikenal; terang atau gelap mengikuti sistem. Tidak berafiliasi dengan Apple, Google, Microsoft, atau Samsung.</string>
     <string name="theme_section_scenes">Adegan</string>
-    <string name="theme_scenes_desc">Tombol CleverKeys di atas adegan lukis yang terlihat menembusnya. Aktifkan Tampilan → Adegan bergerak agar bergerak.</string>
+    <string name="theme_scenes_desc">Tombol CleverKeys di atas adegan lukis yang terlihat menembusnya. Adegan bergerak lembut; matikan di Tampilan → Adegan bergerak.</string>
     <string name="theme_look_aurora_desc">Tirai aurora dan bintang berkelip di balik tombol yang digambar hanya dengan garis tepinya</string>
     <string name="theme_look_meadow_name">Padang rumput</string>
     <string name="theme_look_meadow_desc">Padang rumput cerah di jam emas: rumput bergoyang, bunga liar, dan serbuk sari melayang</string>

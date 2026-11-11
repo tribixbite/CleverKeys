@@ -1733,7 +1733,7 @@
     <string name="theme_section_looks">ظاهرهای آشنا</string>
     <string name="theme_looks_desc">رنگ‌ها و شکل کلیدهای صفحه‌کلیدهای آشنای تلفن؛ روشن یا تیره مطابق سیستم. وابسته به Apple، Google، Microsoft یا Samsung نیست.</string>
     <string name="theme_section_scenes">صحنه‌ها</string>
-    <string name="theme_scenes_desc">کلیدهای CleverKeys روی صحنه‌ای نقاشی‌شده که از میانشان دیده می‌شود. برای حرکت، ظاهر ← صحنه‌های متحرک را روشن کنید.</string>
+    <string name="theme_scenes_desc">کلیدهای CleverKeys روی صحنه‌ای نقاشی‌شده که از میانشان دیده می‌شود. آرام حرکت می‌کند؛ با ظاهر ← صحنه‌های متحرک می‌توانید آن را خاموش کنید.</string>
     <string name="theme_look_aurora_desc">پرده‌های شفق و ستاره‌های چشمک‌زن پشت کلیدهایی که فقط با خط دورشان کشیده شده‌اند</string>
     <string name="theme_look_meadow_name">چمنزار</string>
     <string name="theme_look_meadow_desc">چمنزاری آفتابی در ساعت طلایی: علف‌های موّاج، گل‌های وحشی و گرده‌های شناور</string>

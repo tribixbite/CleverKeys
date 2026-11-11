@@ -1687,7 +1687,7 @@
     <string name="theme_section_looks">Giao diện quen thuộc</string>
     <string name="theme_looks_desc">Màu sắc và hình dạng phím của các bàn phím điện thoại quen thuộc; sáng hoặc tối theo hệ thống. Không liên kết với Apple, Google, Microsoft hay Samsung.</string>
     <string name="theme_section_scenes">Cảnh</string>
-    <string name="theme_scenes_desc">Phím CleverKeys trên một cảnh vẽ nhìn xuyên qua phím. Bật Giao diện → Cảnh chuyển động để cảnh chuyển động.</string>
+    <string name="theme_scenes_desc">Phím CleverKeys trên một cảnh vẽ nhìn xuyên qua phím. Cảnh chuyển động nhẹ nhàng; tắt trong Giao diện → Cảnh chuyển động.</string>
     <string name="theme_look_aurora_desc">Màn cực quang và những ngôi sao lấp lánh sau các phím chỉ vẽ bằng đường viền</string>
     <string name="theme_look_meadow_name">Đồng cỏ</string>
     <string name="theme_look_meadow_desc">Đồng cỏ đầy nắng giờ vàng: cỏ đung đưa, hoa dại và phấn hoa bay lơ lửng</string>

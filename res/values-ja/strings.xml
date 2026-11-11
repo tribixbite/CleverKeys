@@ -1658,7 +1658,7 @@
     <string name="theme_section_looks">おなじみの外観</string>
     <string name="theme_looks_desc">よく知られたスマートフォンキーボードの色とキーの形。ライト／ダークはシステムに従います。Apple、Google、Microsoft、Samsung とは提携していません。</string>
     <string name="theme_section_scenes">シーン</string>
-    <string name="theme_scenes_desc">描かれた風景が透けて見える CleverKeys のキー。外観 → 動くシーン をオンにすると動きます。</string>
+    <string name="theme_scenes_desc">描かれた風景が透けて見える CleverKeys のキー。ゆっくり動きます。外観 → 動くシーン でオフにできます。</string>
     <string name="theme_look_aurora_desc">輪郭だけで描かれたキーの後ろにオーロラとまたたく星</string>
     <string name="theme_look_meadow_name">草原</string>
     <string name="theme_look_meadow_desc">ゴールデンアワーの陽だまりの草原：揺れる草、野の花、漂う花粉</string>

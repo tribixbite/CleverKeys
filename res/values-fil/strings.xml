@@ -1707,7 +1707,7 @@
     <string name="theme_section_looks">Mga pamilyar na hitsura</string>
     <string name="theme_looks_desc">Mga kulay at hugis ng key ng mga kilalang keyboard ng telepono; sinusunod ng light o dark ang system. Hindi kaugnay ng Apple, Google, Microsoft o Samsung.</string>
     <string name="theme_section_scenes">Mga Eksena</string>
-    <string name="theme_scenes_desc">Mga key ng CleverKeys sa ibabaw ng ipinintang eksena na tanaw sa mga ito. I-on ang Itsura → Gumagalaw na mga eksena para gumalaw ito.</string>
+    <string name="theme_scenes_desc">Mga key ng CleverKeys sa ibabaw ng ipinintang eksena na tanaw sa mga ito. Marahan itong gumagalaw; pinapatay ito ng Itsura → Gumagalaw na mga eksena.</string>
     <string name="theme_look_aurora_desc">Mga kurtina ng aurora at kumikislap na bituin sa likod ng mga key na balangkas lang ang guhit</string>
     <string name="theme_look_meadow_name">Parang</string>
     <string name="theme_look_meadow_desc">Isang maaraw na parang sa ginintuang oras: umiindayog na damo, ligaw na bulaklak at lumulutang na polen</string>

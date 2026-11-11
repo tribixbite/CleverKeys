@@ -1731,7 +1731,7 @@
     <string name="theme_section_looks">Visuais conhecidos</string>
     <string name="theme_looks_desc">Cores e formatos de teclas de teclados de telefone conhecidos; claro ou escuro segue o sistema. Sem afiliação com Apple, Google, Microsoft ou Samsung.</string>
     <string name="theme_section_scenes">Cenas</string>
-    <string name="theme_scenes_desc">Teclas do CleverKeys sobre uma cena pintada que aparece através delas. Ative Aparência → Cenas animadas para que ela se mova.</string>
+    <string name="theme_scenes_desc">Teclas do CleverKeys sobre uma cena pintada que aparece através delas. Ela se move suavemente; Aparência → Cenas animadas desativa isso.</string>
     <string name="theme_look_aurora_desc">Cortinas de aurora e estrelas cintilantes atrás de teclas desenhadas só pelo contorno</string>
     <string name="theme_look_meadow_name">Prado</string>
     <string name="theme_look_meadow_desc">Um prado ensolarado na hora dourada: grama balançando, flores silvestres e pólen flutuando</string>

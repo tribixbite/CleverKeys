@@ -1695,7 +1695,7 @@
     <string name="theme_section_looks">Bekende looks</string>
     <string name="theme_looks_desc">Kleuren en toetsvormen van bekende telefoontoetsenborden; licht of donker volgt het systeem. Niet verbonden aan Apple, Google, Microsoft of Samsung.</string>
     <string name="theme_section_scenes">Scènes</string>
-    <string name="theme_scenes_desc">CleverKeys-toetsen boven een geschilderde scène die erdoorheen schijnt. Zet Weergave → Bewegende scènes aan om hem te laten bewegen.</string>
+    <string name="theme_scenes_desc">CleverKeys-toetsen boven een geschilderde scène die erdoorheen schijnt. Hij beweegt zacht; Weergave → Bewegende scènes zet dat uit.</string>
     <string name="theme_look_aurora_desc">Noorderlichtgordijnen en fonkelende sterren achter toetsen die alleen hun omtrek tekent</string>
     <string name="theme_look_meadow_name">Weide</string>
     <string name="theme_look_meadow_desc">Een zonnige weide in het gouden uur: wuivend gras, wilde bloemen en zwevend stuifmeel</string>

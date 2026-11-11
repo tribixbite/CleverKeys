@@ -1657,7 +1657,7 @@
     <string name="theme_section_looks">熟悉的外观</string>
     <string name="theme_looks_desc">知名手机键盘的颜色和按键形状；浅色或深色跟随系统。与 Apple、Google、Microsoft 或 Samsung 无关联。</string>
     <string name="theme_section_scenes">场景</string>
-    <string name="theme_scenes_desc">CleverKeys 按键浮在一幅透出的手绘场景上。打开 外观 → 动态场景 即可让它动起来。</string>
+    <string name="theme_scenes_desc">CleverKeys 按键浮在一幅透出的手绘场景上。场景会轻柔地动起来；可在 外观 → 动态场景 中关闭。</string>
     <string name="theme_look_aurora_desc">仅以轮廓描绘的按键后，是极光帘幕与闪烁的星星</string>
     <string name="theme_look_meadow_name">草地</string>
     <string name="theme_look_meadow_desc">黄金时刻阳光下的草地：摇曳的青草、野花与飘浮的花粉</string>

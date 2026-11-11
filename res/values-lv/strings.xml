@@ -1742,7 +1742,7 @@
     <string name="theme_section_looks">Pazīstami izskati</string>
     <string name="theme_looks_desc">Pazīstamu tālruņa tastatūru krāsas un taustiņu formas; gaišais vai tumšais režīms seko sistēmai. Nav saistīts ar Apple, Google, Microsoft vai Samsung.</string>
     <string name="theme_section_scenes">Ainas</string>
-    <string name="theme_scenes_desc">CleverKeys taustiņi virs gleznotas ainas, kas spīd tiem cauri. Ieslēdziet Izskats → Animētas ainas, lai tā kustētos.</string>
+    <string name="theme_scenes_desc">CleverKeys taustiņi virs gleznotas ainas, kas spīd tiem cauri. Tā maigi kustas; to var izslēgt sadaļā Izskats → Animētas ainas.</string>
     <string name="theme_look_aurora_desc">Ziemeļblāzmas aizkari un mirdzošas zvaigznes aiz taustiņiem, ko zīmē tikai to kontūra</string>
     <string name="theme_look_meadow_name">Pļava</string>
     <string name="theme_look_meadow_desc">Saulaina pļava zelta stundā: šūpojoša zāle, pļavas puķes un lidojoši ziedputekšņi</string>

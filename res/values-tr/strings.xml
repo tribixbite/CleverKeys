@@ -1706,7 +1706,7 @@
     <string name="theme_section_looks">Tanıdık görünümler</string>
     <string name="theme_looks_desc">Bilinen telefon klavyelerinin renkleri ve tuş şekilleri; açık veya koyu mod sistemi izler. Apple, Google, Microsoft veya Samsung ile bağlantılı değildir.</string>
     <string name="theme_section_scenes">Sahneler</string>
-    <string name="theme_scenes_desc">CleverKeys tuşları, içlerinden görünen boyanmış bir sahnenin üzerinde. Hareket etmesi için Görünüm → Hareketli sahneler\'i açın.</string>
+    <string name="theme_scenes_desc">CleverKeys tuşları, içlerinden görünen boyanmış bir sahnenin üzerinde. Yavaşça hareket eder; Görünüm → Hareketli sahneler ile kapatılır.</string>
     <string name="theme_look_aurora_desc">Yalnızca dış çizgisiyle çizilen tuşların ardında kutup ışığı perdeleri ve parıldayan yıldızlar</string>
     <string name="theme_look_meadow_name">Çayır</string>
     <string name="theme_look_meadow_desc">Altın saatte güneşli bir çayır: salınan çimen, kır çiçekleri ve uçuşan polen</string>

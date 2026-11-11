@@ -2112,7 +2112,7 @@
     <string name="theme_section_looks">Familiar looks</string>
     <string name="theme_looks_desc">Colours and key shapes of familiar phone keyboards; light or dark follows the system. Not affiliated with Apple, Google, Microsoft or Samsung.</string>
     <string name="theme_section_scenes">Scenes</string>
-    <string name="theme_scenes_desc">CleverKeys keys over a painted scene that shows through them. Turn on Appearance → Animated scenes to let it move.</string>
+    <string name="theme_scenes_desc">CleverKeys keys over a painted scene that shows through them. It moves gently; Appearance → Animated scenes turns that off.</string>
     <string name="theme_look_aurora_name" translatable="false">CleverKeys Aurora</string>
     <string name="theme_look_aurora_desc">Aurora curtains and shimmering stars behind keys drawn by their outline</string>
     <string name="theme_look_meadow_name">Meadow</string>

@@ -1701,7 +1701,7 @@
     <string name="theme_section_looks">Ismerős megjelenések</string>
     <string name="theme_looks_desc">Ismert telefonos billentyűzetek színei és billentyűformái; a világos vagy sötét mód a rendszert követi. Nem áll kapcsolatban az Apple, a Google, a Microsoft vagy a Samsung céggel.</string>
     <string name="theme_section_scenes">Jelenetek</string>
-    <string name="theme_scenes_desc">CleverKeys-billentyűk egy festett jelenet fölött, amely átlátszik rajtuk. A Megjelenés → Animált jelenetek kapcsolóval mozog.</string>
+    <string name="theme_scenes_desc">CleverKeys-billentyűk egy festett jelenet fölött, amely átlátszik rajtuk. Finoman mozog; a Megjelenés → Animált jelenetek kapcsolóval kikapcsolható.</string>
     <string name="theme_look_aurora_desc">Sarki fény függönyei és csillámló csillagok a csak körvonallal rajzolt billentyűk mögött</string>
     <string name="theme_look_meadow_name">Rét</string>
     <string name="theme_look_meadow_desc">Napfényes rét az aranyórában: hajladozó fű, vadvirágok és szálló virágpor</string>

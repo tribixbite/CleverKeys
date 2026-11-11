@@ -1659,7 +1659,7 @@
     <string name="theme_section_looks">익숙한 모양</string>
     <string name="theme_looks_desc">잘 알려진 휴대폰 키보드의 색상과 키 모양. 라이트/다크는 시스템을 따릅니다. Apple, Google, Microsoft, Samsung과 제휴하지 않았습니다.</string>
     <string name="theme_section_scenes">장면</string>
-    <string name="theme_scenes_desc">키 너머로 비치는 그림 장면 위의 CleverKeys 키. 모양 → 움직이는 장면을 켜면 움직입니다.</string>
+    <string name="theme_scenes_desc">키 너머로 비치는 그림 장면 위의 CleverKeys 키. 부드럽게 움직이며, 모양 → 움직이는 장면에서 끌 수 있습니다.</string>
     <string name="theme_look_aurora_desc">윤곽선만 그려진 키 뒤로 오로라와 반짝이는 별</string>
     <string name="theme_look_meadow_name">초원</string>
     <string name="theme_look_meadow_desc">황금빛 시간의 햇살 가득한 초원: 흔들리는 풀, 들꽃, 떠다니는 꽃가루</string>

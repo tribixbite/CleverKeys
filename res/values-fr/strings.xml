@@ -1741,7 +1741,7 @@
     <string name="theme_section_looks">Apparences familières</string>
     <string name="theme_looks_desc">Couleurs et formes de touches de claviers de téléphone connus ; clair ou sombre selon le système. Sans lien avec Apple, Google, Microsoft ou Samsung.</string>
     <string name="theme_section_scenes">Scènes</string>
-    <string name="theme_scenes_desc">Les touches CleverKeys sur une scène peinte visible à travers elles. Activez Apparence → Scènes animées pour l’animer.</string>
+    <string name="theme_scenes_desc">Les touches CleverKeys sur une scène peinte visible à travers elles. Elle bouge doucement ; Apparence → Scènes animées désactive le mouvement.</string>
     <string name="theme_look_aurora_desc">Rideaux d’aurore et étoiles scintillantes derrière des touches dessinées par leur seul contour</string>
     <string name="theme_look_meadow_name">Prairie</string>
     <string name="theme_look_meadow_desc">Une prairie ensoleillée à l’heure dorée : herbe ondulante, fleurs sauvages et pollen en suspension</string>

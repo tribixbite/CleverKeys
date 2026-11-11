@@ -1749,7 +1749,7 @@
     <string name="theme_section_looks">Aspectos conocidos</string>
     <string name="theme_looks_desc">Colores y formas de teclas de teclados de móvil conocidos; claro u oscuro según el sistema. Sin relación con Apple, Google, Microsoft ni Samsung.</string>
     <string name="theme_section_scenes">Escenas</string>
-    <string name="theme_scenes_desc">Teclas de CleverKeys sobre una escena pintada que se ve a través de ellas. Activa Apariencia → Escenas animadas para que se mueva.</string>
+    <string name="theme_scenes_desc">Teclas de CleverKeys sobre una escena pintada que se ve a través de ellas. Se mueve suavemente; Apariencia → Escenas animadas lo desactiva.</string>
     <string name="theme_look_aurora_desc">Cortinas de aurora y estrellas titilantes tras teclas dibujadas solo por su contorno</string>
     <string name="theme_look_meadow_name">Pradera</string>
     <string name="theme_look_meadow_desc">Una pradera soleada a la hora dorada: hierba que se mece, flores silvestres y polen flotante</string>

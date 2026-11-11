@@ -1758,7 +1758,7 @@
     <string name="theme_section_looks">Aspecte cunoscute</string>
     <string name="theme_looks_desc">Culori și forme de taste ale tastaturilor de telefon cunoscute; luminos sau întunecat urmează sistemul. Fără afiliere cu Apple, Google, Microsoft sau Samsung.</string>
     <string name="theme_section_scenes">Scene</string>
-    <string name="theme_scenes_desc">Taste CleverKeys peste o scenă pictată care se vede prin ele. Activează Aspect → Scene animate ca să se miște.</string>
+    <string name="theme_scenes_desc">Taste CleverKeys peste o scenă pictată care se vede prin ele. Se mișcă lin; Aspect → Scene animate dezactivează mișcarea.</string>
     <string name="theme_look_aurora_desc">Perdele de auroră și stele sclipitoare în spatele tastelor desenate doar de contur</string>
     <string name="theme_look_meadow_name">Pajiște</string>
     <string name="theme_look_meadow_desc">O pajiște însorită la ora de aur: iarbă unduitoare, flori sălbatice și polen plutitor</string>

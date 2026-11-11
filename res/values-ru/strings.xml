@@ -1772,7 +1772,7 @@
     <string name="theme_section_looks">Знакомые стили</string>
     <string name="theme_looks_desc">Цвета и форма клавиш известных клавиатур телефонов; светлая или тёмная тема — как в системе. Не связано с Apple, Google, Microsoft или Samsung.</string>
     <string name="theme_section_scenes">Сцены</string>
-    <string name="theme_scenes_desc">Клавиши CleverKeys над нарисованной сценой, которая просвечивает сквозь них. Включите Внешний вид → Анимированные сцены, чтобы она двигалась.</string>
+    <string name="theme_scenes_desc">Клавиши CleverKeys над нарисованной сценой, которая просвечивает сквозь них. Она плавно движется; это отключается в разделе Внешний вид → Анимированные сцены.</string>
     <string name="theme_look_aurora_desc">Занавесы сияния и мерцающие звёзды за клавишами, нарисованными одним контуром</string>
     <string name="theme_look_meadow_name">Луг</string>
     <string name="theme_look_meadow_desc">Солнечный луг в золотой час: колышущаяся трава, полевые цветы и парящая пыльца</string>

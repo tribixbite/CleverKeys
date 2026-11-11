@@ -1767,7 +1767,7 @@
     <string name="theme_section_looks">Známé vzhledy</string>
     <string name="theme_looks_desc">Barvy a tvary kláves známých klávesnic telefonů; světlý nebo tmavý režim podle systému. Bez spojení se společnostmi Apple, Google, Microsoft a Samsung.</string>
     <string name="theme_section_scenes">Scény</string>
-    <string name="theme_scenes_desc">Klávesy CleverKeys nad malovanou scénou, která jimi prosvítá. Zapněte Vzhled → Animované scény, aby se pohybovala.</string>
+    <string name="theme_scenes_desc">Klávesy CleverKeys nad malovanou scénou, která jimi prosvítá. Jemně se pohybuje; vypnete to ve Vzhled → Animované scény.</string>
     <string name="theme_look_aurora_desc">Polární záře a třpytivé hvězdy za klávesami kreslenými jen obrysem</string>
     <string name="theme_look_meadow_name">Louka</string>
     <string name="theme_look_meadow_desc">Slunná louka ve zlaté hodině: vlnící se tráva, luční květy a vznášející se pyl</string>

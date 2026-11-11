@@ -1777,7 +1777,7 @@
     <string name="theme_section_looks">Znajome wyglądy</string>
     <string name="theme_looks_desc">Kolory i kształty klawiszy znanych klawiatur telefonów; jasny lub ciemny zgodnie z systemem. Bez powiązań z Apple, Google, Microsoft ani Samsung.</string>
     <string name="theme_section_scenes">Sceny</string>
-    <string name="theme_scenes_desc">Klawisze CleverKeys nad malowaną sceną, która przez nie prześwituje. Włącz Wygląd → Animowane sceny, aby się poruszała.</string>
+    <string name="theme_scenes_desc">Klawisze CleverKeys nad malowaną sceną, która przez nie prześwituje. Porusza się łagodnie; wyłączysz to w Wygląd → Animowane sceny.</string>
     <string name="theme_look_aurora_desc">Zasłony zorzy i migoczące gwiazdy za klawiszami rysowanymi samym konturem</string>
     <string name="theme_look_meadow_name">Łąka</string>
     <string name="theme_look_meadow_desc">Słoneczna łąka w złotej godzinie: kołysząca się trawa, polne kwiaty i unoszący się pyłek</string>
