@@ -38,18 +38,17 @@ itself. The tile's subtitle (Android 10+) names the action the next tap will tak
 | CleverKeys selected? | window | tap → action | subtitle |
 |---|---|---|---|
 | no, or service not running | any | `PICK_KEYBOARD`: `InputMethodManager.showInputMethodPicker()`; if no IMM, `startActivityAndCollapse` to `ACTION_INPUT_METHOD_SETTINGS` (PendingIntent overload on API 34+) | Switch keyboard |
-| yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` (`requestHideSelf`, marked as the user's) | Hide |
-| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → `hideFromTile()`: stays hidden, and `markHiddenByUser()` makes the next tap a show | Hide |
-| yes | otherwise | `SHOW` → `showFromTile()`: deferred show, full size | Show |
+| yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` (`requestHideSelf`, marked as the user's) | Toggle |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → `hideFromTile()`: stays hidden, and `markHiddenByUser()` makes the next tap a show | Toggle |
+| yes | otherwise | `SHOW` → `showFromTile()`: deferred show, full size | Toggle |
 
 Details that matter when reading the code:
 
 - **Deferred show.** `showFromTile` arms a `TileShowSession` request bound to the last editor's
   package and ticks at once and every `RETRY_INTERVAL_MS` (250 ms) for `RETRY_WINDOW_MS` (8 s).
-  A tick sends `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod` below) only while
-  a real editor is bound (`isRealEditor`: a typed field, or the `TYPE_NULL` field the keyboard
-  was last shown over); with the launcher's `TYPE_NULL` fallback connection it waits
-  (`Tick.WAIT`), so a show never lands over the home screen. `onWindowShown` reports the
+  Each tick sends `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod` below), with
+  or without an editor focused (maintainer 2026-11-11: show it anyway; the system decides).
+  `onWindowShown` reports the
   requested show once and the service expands to the full keyboard; `onStartInput` for another
   package, a hardware key, the deadline and `onDestroy` cancel it.
 - **Hide.** `hideFromTile` cancels any armed show; it calls `hideKeyboardByUser()` when the
@@ -64,7 +63,9 @@ Details that matter when reading the code:
   The tile re-reads its state 300 ms and 1 s after a tap (`TILE_REFRESH_DELAYS_MS`) and again
   after `onStartListening`, since opening the shade can itself hide the keyboard.
 - **Tile state.** `STATE_ACTIVE` when CleverKeys is the selected IME, else `STATE_INACTIVE`;
-  label is the app name; `contentDescription` comes from
+  label is the app name; the subtitle is "Toggle" for both keyboard actions (a label read as the
+  shade opened once said "Show" over a shown keyboard); the icon is the monochrome raccoon
+  `ic_qs_tile` (the launcher icon rendered as a solid shape); `contentDescription` comes from
   `KeyboardTileDecision.contentDescriptionFor(isCurrentIme, action)`.
 - **Diagnostics.** Verbose builds (`LOCAL_BUILD=true`) log every decision with its inputs under
   `CleverKeys/Tile` (`adb logcat -s CleverKeys/Tile`).
@@ -77,7 +78,7 @@ Details that matter when reading the code:
 ## Tests
 
 - `KeyboardTileActionTest` (pure): every `actionFor` branch, the `TileShowSession` state
-  machine (including the wait for an editor and the re-attributed shade hide), the
+  machine (including a show with no editor and the re-attributed shade hide), the
   subtitle/description strings in all locales.
 - `KeyboardTileServiceTest` (mock): source-level `onClick` routing.
 

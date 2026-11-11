@@ -6,17 +6,11 @@ import androidx.annotation.StringRes
  * Identity of the editor input is bound to, taken from the service's last `onStartInput`
  * EditorInfo. Only the fields the tile's decision needs, so the decision stays pure.
  *
- * @property typeNull `inputType == TYPE_NULL`: a terminal or remote-desktop view (blind
- *   fields), OR the platform's fallback connection for a window with no editor at all (Android
- *   14 binds one for the launcher; device report 2026-10-20). The two cannot be told apart from
- *   the EditorInfo, so a TYPE_NULL binding counts as an editor only when the keyboard was last
- *   shown over that same field ([isSameField]).
+ * @property typeNull `inputType == TYPE_NULL`: a terminal or remote-desktop view (blind fields),
+ *   or the platform's fallback connection for a window with no editor at all (Android 14 binds
+ *   one for the launcher). Kept for the verbose tile log.
  */
-data class EditorRef(val packageName: String?, val fieldId: Int, val typeNull: Boolean) {
-    /** Same app and same view id: the field the keyboard was shown over. */
-    fun isSameField(other: EditorRef?): Boolean =
-        other != null && packageName == other.packageName && fieldId == other.fieldId
-}
+data class EditorRef(val packageName: String?, val fieldId: Int, val typeNull: Boolean)
 
 /**
  * The input window as the Quick Settings tile sees it, read from the live service
@@ -55,7 +49,7 @@ enum class KeyboardTileAction {
      */
     HIDE,
 
-    /** The keyboard is hidden: show it, full size, once an editor has focus. */
+    /** The keyboard is hidden: show it, full size (asked for even with no editor focused). */
     SHOW,
 }
 
@@ -91,15 +85,6 @@ object KeyboardTileDecision {
     const val SYSTEM_UI_PACKAGE = "com.android.systemui"
 
     /**
-     * Whether [current] is an editor the keyboard can be shown for: any typed field, or a
-     * TYPE_NULL binding only when it is the very field the keyboard was last shown over
-     * ([lastEditor]); the launcher's fallback connection has neither. A deferred show is sent
-     * only while this holds ([TileShowSession.tick]), so it never lands over the launcher.
-     */
-    fun isRealEditor(current: EditorRef?, lastEditor: EditorRef?): Boolean =
-        current != null && (!current.typeNull || current.isSameField(lastEditor))
-
-    /**
      * Whether the input bound now still belongs to the app the keyboard was hidden over: the
      * same package, nothing bound (the shade may unbind it), or the shade itself (SystemUI). Any
      * other package means the user went elsewhere (e.g. home), so the hide was not the shade's.
@@ -126,8 +111,8 @@ object KeyboardTileDecision {
      *   users switch to CleverKeys.
      * - The window is on screen (full or minimized), or was until the shade opened
      *   ([wasShownBeforeTheShade]): hide it.
-     * - Otherwise: show it. With no editor focused yet the show waits for one (an IME can only
-     *   show itself for a focused editor); it never falls back to the picker.
+     * - Otherwise: show it, even with no editor focused (maintainer 2026-11-11: "it's supposed to
+     *   do so anyway"); the system decides whether it can. It never falls back to the picker.
      */
     fun actionFor(isCurrentIme: Boolean, window: TileWindowSnapshot?): KeyboardTileAction = when {
         !isCurrentIme || window == null -> KeyboardTileAction.PICK_KEYBOARD
@@ -135,12 +120,16 @@ object KeyboardTileDecision {
         else -> KeyboardTileAction.SHOW
     }
 
-    /** The tile subtitle (API 29+) naming what a tap does. */
+    /**
+     * The tile subtitle (API 29+): "Toggle" for both keyboard actions. The label is read when the
+     * shade opens, and it once said "Show" over a keyboard that was on screen (the tap then hid
+     * it, rightly; maintainer 2026-11-11: "it should say toggle instead of show/hide or be
+     * accurate"), so it names the toggle rather than guess the state.
+     */
     @StringRes
     fun subtitleFor(action: KeyboardTileAction): Int = when (action) {
         KeyboardTileAction.PICK_KEYBOARD -> R.string.tile_subtitle_switch
-        KeyboardTileAction.HIDE -> R.string.tile_subtitle_hide
-        KeyboardTileAction.SHOW -> R.string.tile_subtitle_show
+        KeyboardTileAction.HIDE, KeyboardTileAction.SHOW -> R.string.tile_subtitle_toggle
     }
 
     /**
@@ -152,8 +141,7 @@ object KeyboardTileDecision {
     fun contentDescriptionFor(isCurrentIme: Boolean, action: KeyboardTileAction): Int = when (action) {
         KeyboardTileAction.PICK_KEYBOARD ->
             if (isCurrentIme) R.string.tile_descr_active else R.string.tile_descr_inactive
-        KeyboardTileAction.HIDE -> R.string.tile_descr_hide
-        KeyboardTileAction.SHOW -> R.string.tile_descr_show
+        KeyboardTileAction.HIDE, KeyboardTileAction.SHOW -> R.string.tile_descr_toggle
     }
 }
 
@@ -166,8 +154,7 @@ object KeyboardTileDecision {
  * Deferred show: a tap with the keyboard hidden may not show it at once. The shade never takes
  * IME focus and `requestShowSelf` works under it (Saga 2026-10-20: shown 7 ms after the request),
  * but some apps hide their own keyboard while the shade is open or as it closes (Chrome:
- * `ORIGIN_CLIENT_HIDE_SOFT_INPUT`), so one request can be undone, and with no editor focused
- * there is nothing to show for yet. No overlay permission is involved
+ * `ORIGIN_CLIENT_HIDE_SOFT_INPUT`), so one request can be undone. No overlay permission is involved
  * (`docs/specs/keyboard-minimize.md`, "Overlay permission check"). [request] arms a show; the
  * service then calls [tick] every [RETRY_INTERVAL_MS], asking the system to show the keyboard
  * each time [tick] returns [Tick.REQUEST_SHOW], until the window is shown ([onWindowShown]
@@ -189,9 +176,6 @@ class TileShowSession {
 
         /** Still pending: ask the system to show the keyboard and tick again later. */
         REQUEST_SHOW,
-
-        /** Still pending, but no editor is focused to show for: tick again later. */
-        WAIT,
 
         /** The deadline passed with no show: the request is dropped; stop the loop. */
         EXPIRED,
@@ -257,17 +241,18 @@ class TileShowSession {
     }
 
     /**
-     * One retry step at [nowMs]; [windowVisible] short-circuits to a stop, and [editorReady]
-     * ([KeyboardTileDecision.isRealEditor] for the binding now) gates the actual request.
+     * One retry step at [nowMs]; [windowVisible] short-circuits to a stop. A request goes out
+     * whether or not an editor has focus (maintainer 2026-11-11: the tile must show the keyboard
+     * "in an app without text input … anyway"); the system decides whether it can show.
      */
-    fun tick(nowMs: Long, windowVisible: Boolean, editorReady: Boolean): Tick {
+    fun tick(nowMs: Long, windowVisible: Boolean): Tick {
         val p = pending ?: return Tick.IDLE
         if (windowVisible) return Tick.IDLE
         if (nowMs > p.deadlineMs) {
             pending = null
             return Tick.EXPIRED
         }
-        return if (editorReady) Tick.REQUEST_SHOW else Tick.WAIT
+        return Tick.REQUEST_SHOW
     }
 
     /** The window was shown: true, once, when it was the tile's requested show. */
@@ -298,7 +283,7 @@ class TileShowSession {
         /** How often a deferred show asks the system again. */
         const val RETRY_INTERVAL_MS = 250L
 
-        /** How long a deferred show waits for the app (and an editor) to have focus. */
+        /** How long a deferred show keeps asking while the app regains focus after the shade. */
         const val RETRY_WINDOW_MS = 8_000L
     }
 }

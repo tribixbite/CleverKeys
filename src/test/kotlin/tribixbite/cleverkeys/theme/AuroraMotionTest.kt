@@ -281,6 +281,28 @@ class AuroraMotionTest {
             .isEqualTo(AuroraMotion.TYPING_HOLD_MS to AuroraMotion.IDLE_MS)
     }
 
+    /**
+     * The user's frame rate replaces every scene's own (the Pixel measured ~9.5 mJ of compute a
+     * frame for every scene, so this is the battery lever); 0 keeps each scene's; out-of-range
+     * values from an old or hand-edited backup are clamped.
+     */
+    @Test
+    fun theUsersFrameRateSetsTheFrameInterval() {
+        assertWithMessage("0 = the scene's own").that(SceneMotionTuning.DEFAULT.frameMs(AuroraMotion.AURORA_FRAME_MS))
+            .isEqualTo(AuroraMotion.AURORA_FRAME_MS)
+        assertThat(SceneMotionTuning.DEFAULT.frameMs(83L)).isEqualTo(83L)
+        val five = SceneMotionTuning.fromPercent(100, 100, 55, false, fps = 5)
+        assertThat(five.frameMs(AuroraMotion.AURORA_FRAME_MS)).isEqualTo(200L)
+        assertThat(five.frameMs(AuroraMotion.FRAME_MS)).isEqualTo(200L)
+        assertThat(SceneMotionTuning.fromPercent(100, 100, 55, false, fps = 1).frameMs(100L)).isEqualTo(1_000L)
+        val wild = SceneMotionTuning.fromPercent(100, 100, 55, false, fps = 999)
+        assertThat(wild.fps).isEqualTo(SceneMotionTuning.FPS.last)
+        assertThat(SceneMotionTuning.fromPercent(100, 100, 55, false, fps = -3).fps).isEqualTo(0)
+        assertWithMessage("the overlay is on by default and passes through")
+            .that(SceneMotionTuning.DEFAULT.overlay to SceneMotionTuning.fromPercent(100, 100, 55, false, overlay = false).overlay)
+            .isEqualTo(true to false)
+    }
+
     /** Only a whole visible step on screen draws a frame; what is shown is never a step behind. */
     @Test
     fun anUnchangedFrameIsSkipped() {

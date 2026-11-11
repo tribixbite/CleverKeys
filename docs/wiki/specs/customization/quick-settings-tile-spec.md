@@ -36,7 +36,7 @@ enum class KeyboardTileAction {
     PICK_KEYBOARD,
     /** The keyboard is on screen, or was until the shade opened over it: hide it. */
     HIDE,
-    /** The keyboard is hidden: show it, full size, once an editor has focus. */
+    /** The keyboard is hidden: show it, full size (asked for even with no editor focused). */
     SHOW,
 }
 ```
@@ -51,21 +51,17 @@ showed, the `hide_keyboard` key was used, or the tile hid it.
 | CleverKeys selected? | Window | Tap | Subtitle (API 29+) |
 |---|---|---|---|
 | no, or service not running | any | input-method picker | Switch keyboard |
-| yes | visible, full or minimized | hide (`requestHideSelf`) | Hide |
-| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app, unbound, or SystemUI | stays hidden; the hide now counts as the user's, so the next tap shows | Hide |
-| yes | otherwise | deferred show, full size | Show |
+| yes | visible, full or minimized | hide (`requestHideSelf`) | Toggle |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app, unbound, or SystemUI | stays hidden; the hide now counts as the user's, so the next tap shows | Toggle |
+| yes | otherwise | deferred show, full size | Toggle |
 
 ## Deferred Show
 
 `TileShowSession` is pure; the service drives it on its main `Handler`:
 
-- the tap arms a request bound to the editor's package; the service ticks at once and then
-  every 250 ms for up to 8 s, and a tick calls `requestShowSelf(0)` (API 28+;
-  `showSoftInputFromInputMethod(token, 0)` below) only while a real editor is bound. A real
-  editor is a typed field (`inputType` class ≠ `TYPE_NULL`), or a `TYPE_NULL` field (terminal,
-  remote desktop) only when it is the field the keyboard was last shown over, because Android
-  14 binds a `TYPE_NULL` fallback connection for windows without an editor (the launcher).
-  With none bound the tick waits, so nothing shows over the home screen;
+- the tap arms a request bound to the editor's package; the service calls `requestShowSelf(0)`
+  (API 28+; `showSoftInputFromInputMethod(token, 0)` below) at once and then every 250 ms for up
+  to 8 s, with or without an editor focused;
 - `onWindowShown` stops the loop and reports the requested show once; the service expands to
   the full keyboard;
 - cancelled by `onStartInput` for another package, a hardware key (`onKeyDown`), a tile hide,
@@ -74,8 +70,8 @@ showed, the `hide_keyboard` key was used, or the tile hid it.
 
 ## Constraints
 
-- **No editor:** an IME can only show itself for a focused client, so the show waits up to 8 s
-  for one instead of opening the picker; tapping a field in that time shows the keyboard.
+- **No editor:** the show is asked for anyway, never the picker; the system decides whether it
+  can show over a window with no text field.
 - **Shade stays open.** `startActivityAndCollapse` and `showDialog` collapse it but take
   window focus from the app, so its editor loses the keyboard. `StatusBarManager.collapsePanels`
   is hidden API behind `EXPAND_STATUS_BAR` and blocked for apps targeting Android 12+.

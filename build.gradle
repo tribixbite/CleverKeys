@@ -919,6 +919,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.KeyboardLookUserYieldTest',
     'tribixbite.cleverkeys.theme.LookBackdropTest',
     'tribixbite.cleverkeys.theme.AuroraMotionTest',
+    'tribixbite.cleverkeys.theme.SceneOverlayPlanTest',
+    'tribixbite.cleverkeys.theme.SceneTrueBlackTest',
     'tribixbite.cleverkeys.theme.SceneRasterTest',
     'tribixbite.cleverkeys.theme.SceneMotionTest',
     'tribixbite.cleverkeys.theme.ThemeOrderTest',

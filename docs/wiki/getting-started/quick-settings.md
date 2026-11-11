@@ -29,9 +29,9 @@ Android 10 and later the tile's subtitle names the action before you tap.
 | CleverKeys is your keyboard? | Keyboard | Tap | Subtitle |
 |------------------------------|----------|-----|----------|
 | No | any | Opens the system keyboard picker | Switch keyboard |
-| Yes | On screen (full size or minimized) | Hides it | Hide |
-| Yes | Was on screen until you opened the shade (some phones hide it then) | Keeps it hidden | Hide |
-| Yes | Hidden | Shows it at full size | Show |
+| Yes | On screen (full size or minimized) | Hides it | Toggle |
+| Yes | Was on screen until you opened the shade (some phones hide it then) | Keeps it hidden | Toggle |
+| Yes | Hidden | Shows it at full size | Toggle |
 
 The tile acts on the keyboard as you saw it before pulling the shade down, so on phones where
 opening the shade hides the keyboard, a tap still means "hide" and the next tap shows it.
@@ -42,9 +42,8 @@ opening the shade hides the keyboard, a tap still means "hide" and the next tap 
   were typing in, so the keyboard change becomes visible once you close the shade yourself.
 - **Some apps hide the keyboard when the shade opens.** The tile keeps asking for the keyboard
   for up to 8 seconds after a tap, so it comes back once the shade closes.
-- **No text field focused?** On the home screen there is nothing to type into, so the keyboard
-  cannot appear there. The tile waits up to 8 seconds: tap into a text field in that time and
-  the keyboard opens.
+- **No text field focused?** The tile still asks for the keyboard; Android decides whether it can
+  show over that screen (on the home screen there is nothing to type into).
 - **Text boxes on web pages in Chrome** lose focus when the shade opens; after closing the
   shade, tap the field again. Native fields, including Chrome's address bar, work.
 - **No extra permission.** Showing the keyboard again does not need "Display over other

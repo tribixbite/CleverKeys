@@ -1041,8 +1041,7 @@ class CleverKeysService : InputMethodService(),
     private val _tileShowTick = object : Runnable {
         override fun run() {
             val visible = isTileWindowVisible()
-            val editorReady = KeyboardTileDecision.isRealEditor(currentEditorRef(), _tileShow.lastEditor)
-            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible, editorReady)) {
+            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible)) {
                 TileShowSession.Tick.REQUEST_SHOW -> {
                     _tileShowAttempts++
                     requestShowFromTile()
@@ -1052,9 +1051,6 @@ class CleverKeysService : InputMethodService(),
                     }
                     _handler.postDelayed(this, TileShowSession.RETRY_INTERVAL_MS)
                 }
-                // No editor focused yet (e.g. the shade is still open over the home screen):
-                // never show over the launcher's fallback connection, keep waiting for one.
-                TileShowSession.Tick.WAIT -> _handler.postDelayed(this, TileShowSession.RETRY_INTERVAL_MS)
                 TileShowSession.Tick.EXPIRED ->
                     tileLog { "deferred show expired after $_tileShowAttempts attempts, never shown" }
                 TileShowSession.Tick.IDLE ->

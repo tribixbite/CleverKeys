@@ -27,8 +27,8 @@ is the pure `KeyboardTileDecision.actionFor(isCurrentIme, CleverKeysService.tile
 **2026-11-11 revision (maintainer: "supposed to show kb not open kb picker… if already shown
 then hide").** The tile no longer minimizes or restores, and never opens the picker while
 CleverKeys is selected: a visible keyboard (full or minimized) is hidden, a hidden one is
-shown full size, and with no editor focused the show waits for one instead of falling back to
-the picker. The minimize commands (`minimize_bar`, `minimize_fab`) are unchanged. The
+shown full size, and with no editor focused the show is still asked for (the picker is never
+the fallback). The subtitle reads "Toggle" and the icon is the monochrome `ic_qs_tile`. The minimize commands (`minimize_bar`, `minimize_fab`) are unchanged. The
 remembered form (`_formAtFinishView`, `VisibleForm`, `ShowTarget`, `KeyboardMinimizer.lastStyle`)
 had no other consumer and was removed. The text below is the current behaviour; the device
 evidence from 2026-10-20/22 still applies to the show path.
@@ -63,17 +63,15 @@ hid it.
 **Deferred show** (`TileShowSession`, pure; driven by the service on its main `Handler`):
 - the tap arms a request bound to the editor's package, and the service calls
   `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod(token, 0)` below) at once and
-  then every 250 ms for up to 8 s, but only while a real editor is bound; with none (the
-  launcher's fallback connection) the tick waits (`Tick.WAIT`) instead of asking;
+  then every 250 ms for up to 8 s, with or without an editor focused;
 - `onWindowShown` stops the loop and reports the requested show once; the service expands to
   the full keyboard;
 - cancelled by `onStartInput` for another package, a hardware key (`onKeyDown`), a tile hide,
   the deadline, and `onDestroy` (which also removes the callback). The first show inside the
   window counts as the requested one: `requestShowSelf` is asynchronous with no token.
 
-- **No editor:** an IME can only show itself for a focused client. Until 2026-11-11 the picker
-  was the fallback; now the show waits up to 8 s for an editor (tapping a field in that time
-  shows the keyboard anyway), and nothing is shown over the launcher.
+- **No editor:** until 2026-11-11 the picker was the fallback; now the show is asked for anyway
+  (maintainer: "it's supposed to do so anyway") and the system decides whether it shows.
 - **Shade stays open.** `startActivityAndCollapse` and `showDialog` collapse it but take window
   focus from the app, so its editor loses the keyboard. `StatusBarManager.collapsePanels` is
   hidden API with `EXPAND_STATUS_BAR` and is blocked for apps targeting Android 12+. The tile

@@ -23,6 +23,7 @@ import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import androidx.annotation.RequiresApi
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -96,8 +97,11 @@ class BackdropDrawable(
      */
     private val paintScale: Int get() = if (tuning.crisp) 1 else backdrop.scene?.paintScale ?: AURORA_PAINT_SCALE
 
-    /** Time between motion frames ([SceneKind.frameMs], or the aurora's). */
-    private val frameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
+    /** The scene's own time between motion frames ([SceneKind.frameMs], or the aurora's). */
+    private val sceneFrameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
+
+    /** Time between motion frames: the user's frame rate ([SceneMotionTuning.fps]) or the scene's. */
+    private val frameMs: Long get() = tuning.frameMs(sceneFrameMs)
 
     /** How far the scene's layers move: the user's intensity times the scene's own share. */
     private val layerIntensity: Float get() = tuning.intensity * (backdrop.scene?.motionScale ?: 1f)
@@ -132,6 +136,28 @@ class BackdropDrawable(
      */
     private var particleNodes: Array<Any>? = null
 
+    /**
+     * The display-hardware layers ([SceneOverlay], API 33+) while they show the curtains and
+     * stars under the window; null while this drawable paints them itself. Held as Any: the field
+     * must not name an API 33 class.
+     */
+    private var overlay: Any? = null
+
+    /** The platform refused the layers once (no surface support, a driver error): paint from then on. */
+    private var overlayRefused = false
+
+    /** A build is waiting for its anchor's surface ([SceneOverlay.NotReady]): retried each tick. */
+    private var overlayPending = false
+
+    /** A colour filter is set (theme previews tint the backdrop): the layers cannot apply it. */
+    private var hasColorFilter = false
+
+    /**
+     * Inside [onBoundsChange]: a cached painting can arrive (and wake the motion) before the stars
+     * are placed for the new size, so the layers are built once at its end, not from that wake.
+     */
+    private var resizing = false
+
     private val hasPainting get() = backdrop.scene != null || backdrop.ribbons.isNotEmpty()
 
     /**
@@ -145,16 +171,20 @@ class BackdropDrawable(
     /**
      * Applies the user's [SceneMotionTuning]: speed, intensity and twinkle from the next frame
      * (the clock's pace changes, its position does not jump); a change of [SceneMotionTuning.crisp]
-     * paints the backdrop again at its new resolution.
+     * or [SceneMotionTuning.trueBlack] paints the backdrop again (new resolution, or new colours).
      */
     fun setTuning(value: SceneMotionTuning) {
         if (value == tuning) return
-        val repaint = value.crisp != tuning.crisp
+        val repaint = value.crisp != tuning.crisp || value.trueBlack != tuning.trueBlack
+        // The layers vote their frame rate when built: a new rate rebuilds them (below).
+        if (value.fps != tuning.fps) releaseOverlay()
         tuning = value
         clock.rate = value.speed
         clock.holdMs = value.resumeMs
         clock.idleMs = value.idleMs
         if (repaint && !bounds.isEmpty) requestPainting(bounds.width(), bounds.height())
+        if (!bounds.isEmpty) placeFade(bounds, bounds.height().toFloat())
+        syncOverlay()
         invalidateSelf()
     }
 
@@ -174,6 +204,7 @@ class BackdropDrawable(
         if (!motionEnabled || !isVisible) return
         val now = SystemClock.uptimeMillis()
         clock.wake(now)
+        syncOverlay()
         startTicking(now, throttled = false)
     }
 
@@ -217,6 +248,7 @@ class BackdropDrawable(
         ticking = false
         clock.rest()
         releaseParticleNodes()
+        releaseOverlay()
     }
 
     private fun releaseParticleNodes() {
@@ -243,7 +275,13 @@ class BackdropDrawable(
         // The count first: visibleState() may replace stateScratch with a larger array, and an
         // argument list reads stateScratch before calling it (the first tick crashed the IME).
         val count = visibleState()
-        if (shownGate.changed(stateScratch, count)) invalidateSelf()
+        if (shownGate.changed(stateScratch, count)) {
+            // On hardware layers a frame is a transaction of positions and alphas; otherwise the
+            // window draws it.
+            if (overlay != null) applyOverlayFrame(onDraw = false) else invalidateSelf()
+        }
+        // Layers that could not be built yet (the window had no surface when it showed).
+        if (overlayPending && overlay == null) syncOverlay()
         when {
             moving -> scheduleSelf(tick, now + frameMs)
             // Stopped by typing: nothing to draw until the hold ends, so sleep until then (a
@@ -318,23 +356,51 @@ class BackdropDrawable(
 
     override fun onBoundsChange(bounds: Rect) {
         super.onBoundsChange(bounds)
+        // The layers were built for the old size and stars; rebuilt at the end for the new ones.
+        releaseOverlay()
         val w = bounds.width().toFloat()
         val h = bounds.height().toFloat()
         if (w <= 0f || h <= 0f) return
+        resizing = true
+        try {
+            placeForBounds(bounds, w, h)
+        } finally {
+            resizing = false
+        }
+        syncOverlay()
+    }
+
+    /**
+     * The colour under and above the painting (the fill before it is ready, the top fade): the
+     * look's base, or black for a scene in true black, so the band above the keys is off too.
+     */
+    private val shownBaseColor: Int
+        get() = if (tuning.trueBlack && backdrop.scene != null) baseColor and 0xFF000000.toInt() else baseColor
+
+    /**
+     * The top fade for a view of height [h] at [bounds], in [shownBaseColor]. Only the faded band
+     * is filled: the rest of a full-view rect would be shaded by the GPU every frame to no effect.
+     */
+    private fun placeFade(bounds: Rect, h: Float) {
+        val fadeH = backdrop.topFade.coerceIn(0f, 1f) * h
+        val color = shownBaseColor
+        basePaint.color = color
+        fadeRect.set(bounds.left.toFloat(), bounds.top.toFloat(), bounds.right.toFloat(), bounds.top + fadeH)
+        fadePaint.shader = if (fadeH > 0f) LinearGradient(
+            0f, bounds.top.toFloat(), 0f, bounds.top + fadeH,
+            color, withAlpha(color, 0), Shader.TileMode.CLAMP,
+        ) else null
+    }
+
+    /** [onBoundsChange]'s work for a non-empty [bounds]: the painting, shaders, fade and particles. */
+    private fun placeForBounds(bounds: Rect, w: Float, h: Float) {
         requestPainting(bounds.width(), bounds.height())
         paintingDst.set(bounds)
         shownGate.reset()
         backdrop.glows.forEachIndexed { i, g ->
             glowPaints[i].shader = glowShader(g, bounds.left.toFloat(), bounds.top.toFloat(), w, h)
         }
-        val fadeH = backdrop.topFade.coerceIn(0f, 1f) * h
-        // Only the faded band is filled: the rest of a full-view rect would be shaded by the GPU
-        // every frame to no effect.
-        fadeRect.set(bounds.left.toFloat(), bounds.top.toFloat(), bounds.right.toFloat(), bounds.top + fadeH)
-        fadePaint.shader = if (fadeH > 0f) LinearGradient(
-            0f, bounds.top.toFloat(), 0f, bounds.top + fadeH,
-            baseColor, withAlpha(baseColor, 0), Shader.TileMode.CLAMP,
-        ) else null
+        placeFade(bounds, h)
         // A rain field has no placed particles: its splashes come from RainSplashes each frame.
         stars = backdrop.stars?.takeIf { it.shape != ParticleShape.RAIN }
             ?.let { LookStars.place(it, bounds.width(), bounds.height(), density) }.orEmpty()
@@ -372,6 +438,8 @@ class BackdropDrawable(
     }
 
     private fun setPainting(rendered: Rendered?) {
+        // Layers hold the old painting's images: built again for the new one (wake, below).
+        releaseOverlay()
         painting = rendered
         meshes = rendered?.layers?.map { (layer, _) ->
             FloatArray(2 * (SceneMotion.meshColumns(layer.width) + 1) * (SceneMotion.meshRows(layer.height) + 1))
@@ -379,6 +447,142 @@ class BackdropDrawable(
         invalidateSelf()
         // A wake that came before the painting (keyboard just shown) starts the frames now.
         if (motionEnabled && rendered != null) wake()
+    }
+
+    // ---- Display-hardware layers (SceneOverlay) ----
+
+    /** Whether the curtains may run on hardware layers now ([SceneOverlayPlan.eligible]). */
+    private fun overlayEligible(): Boolean {
+        val rendered = painting ?: return false
+        val field = backdrop.stars
+        return !overlayRefused && SceneOverlayPlan.eligible(
+            sdk = Build.VERSION.SDK_INT,
+            overlaySetting = tuning.overlay,
+            motionEnabled = motionEnabled,
+            hasAlt = rendered.alt != null,
+            hasMeshLayers = rendered.layers.isNotEmpty(),
+            rain = field?.shape == ParticleShape.RAIN,
+            drawableAlpha = drawableAlpha,
+            hasColorFilter = hasColorFilter,
+            starsDrift = field != null && (field.driftXDpPerS != 0f || field.driftYDpPerS != 0f),
+        )
+    }
+
+    /** The keyboard view this drawable is the background of, while it is on screen. */
+    private fun shownHost(): View? = (callback as? View)?.takeIf {
+        it.isAttachedToWindow && it.windowVisibility == View.VISIBLE
+    }
+
+    /** Builds the layers when they may run and are not up yet; releases them when they may not. */
+    private fun syncOverlay() {
+        if (!overlayEligible()) {
+            releaseOverlay()
+            return
+        }
+        if (overlay != null || resizing || !isVisible || Build.VERSION.SDK_INT < SceneOverlayPlan.MIN_SDK) return
+        val host = shownHost() ?: return
+        createOverlay(host)
+    }
+
+    @RequiresApi(SceneOverlayPlan.MIN_SDK)
+    private fun createOverlay(host: View) {
+        val rendered = painting ?: return
+        val alt = rendered.alt ?: return
+        // No surface yet: skip the star images rather than drawing them for nothing every tick.
+        if (host.rootSurfaceControl == null) return
+        val origin = IntArray(2).also { host.getLocationInWindow(it) }
+        val images = listOf(rendered.base, alt) + starLayerImages()
+        val built = try {
+            SceneOverlay.create(host, images, overlayFrame(origin[0], origin[1], images.size - 2), 1000f / frameMs)
+        } catch (e: SceneOverlay.NotReady) {
+            // The anchor is still getting its surface: the next tick or wake tries again.
+            overlayPending = true
+            for (i in 2 until images.size) images[i].recycle()
+            return
+        } catch (e: Exception) {
+            overlayPending = false
+            overlayRefused = true
+            for (i in 2 until images.size) images[i].recycle()
+            return
+        }
+        overlayPending = false
+        // The star images were copied to the GPU; their software copies are not needed.
+        for (i in 2 until images.size) images[i].recycle()
+        built.onMoved = { applyOverlayFrame(onDraw = true) }
+        overlay = built
+        invalidateSelf()
+    }
+
+    /** Moves the layers to the clock's frame: at once ([onDraw] false) or with the window's next frame. */
+    private fun applyOverlayFrame(onDraw: Boolean) {
+        if (Build.VERSION.SDK_INT < SceneOverlayPlan.MIN_SDK) return
+        val ov = overlay as? SceneOverlay ?: return
+        val origin = ov.hostOrigin()
+        val frame = overlayFrame(origin[0], origin[1], starLayerCount())
+        if (onDraw) ov.applyOnDraw(frame) else ov.apply(frame)
+    }
+
+    /**
+     * The layers' placements at the clock's time for a view at ([originX], [originY]) in its
+     * window: the curtains exactly where [drawDrifting] puts them, each star layer at its group's
+     * twinkle.
+     */
+    private fun overlayFrame(originX: Int, originY: Int, starLayers: Int): List<OverlayPlacement> {
+        val rendered = painting ?: return emptyList()
+        val b = bounds
+        val x = (originX + b.left).toFloat()
+        val y = (originY + b.top).toFloat()
+        val frame = AuroraMotion.frame(clock.motionMs / 1000.0, motionStyle, tuning)
+        val margin = motionStyle.marginDp(tuning.intensity) * density
+        val out = ArrayList<OverlayPlacement>(2 + starLayers)
+        out += SceneOverlayPlan.curtain(x, y, b.width(), b.height(), rendered.base.width, rendered.base.height,
+            margin, frame.driftADp * density, 1f)
+        out += SceneOverlayPlan.curtain(x, y, b.width(), b.height(), rendered.base.width, rendered.base.height,
+            margin, frame.driftBDp * density, frame.crossfade)
+        for (k in 0 until starLayers) out += SceneOverlayPlan.stars(x, y, k, frame.starAlpha)
+        return out
+    }
+
+    private fun starLayerCount(): Int = if (stars.isEmpty()) 0 else SceneOverlayPlan.STAR_LAYERS
+
+    /**
+     * The stars as [SceneOverlayPlan.STAR_LAYERS] transparent images of the view's size, at full
+     * resolution (a star scaled up from the half-resolution curtains would blur), each holding
+     * its twinkle groups at their full brightness: the layer's alpha does the twinkling.
+     */
+    private fun starLayerImages(): List<Bitmap> {
+        val field = backdrop.stars ?: return emptyList()
+        if (stars.isEmpty() || bounds.isEmpty) return emptyList()
+        return List(SceneOverlayPlan.STAR_LAYERS) { k ->
+            val image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
+            val c = Canvas(image)
+            for (i in stars.indices) {
+                if (!SceneOverlayPlan.groupOnLayer(i % AuroraMotion.STAR_GROUPS, k)) continue
+                val s = stars[i]
+                drawParticle(c, field, s, s.x, s.y, s.alpha)
+            }
+            image
+        }
+    }
+
+    /**
+     * Takes the layers down; the window paints the backdrop again from its next frame. While the
+     * keyboard shows, the layers leave in that same frame (no flash of the app below); a hiding
+     * window loses its surface anyway, so they go at once.
+     */
+    private fun releaseOverlay() {
+        val ov = overlay
+        if (ov == null) {
+            // An anchor waiting for its surface when the layers stopped being wanted.
+            if (overlayPending) {
+                overlayPending = false
+                if (Build.VERSION.SDK_INT >= SceneOverlayPlan.MIN_SDK) (callback as? View)?.let { SceneOverlay.discardAnchor(it) }
+            }
+            return
+        }
+        overlay = null
+        if (Build.VERSION.SDK_INT >= SceneOverlayPlan.MIN_SDK) (ov as SceneOverlay).release(onDraw = shownHost() != null)
+        invalidateSelf()
     }
 
     override fun draw(canvas: Canvas) {
@@ -390,6 +594,16 @@ class BackdropDrawable(
         ) else -1
         val clip = canvas.save()
         canvas.clipRect(b)
+        if (overlay != null) {
+            // The display hardware shows the curtains and stars under this window; only what lies
+            // over them is drawn here: live glows (none when baked) and the fade into the bar.
+            val rendered = painting
+            if (rendered == null || !rendered.glowsBaked) for (p in glowPaints) if (p.shader != null) canvas.drawRect(b, p)
+            if (fadePaint.shader != null) canvas.drawRect(fadeRect, fadePaint)
+            canvas.restoreToCount(clip)
+            if (layer >= 0) canvas.restoreToCount(layer)
+            return
+        }
         val rendered = painting
         val seconds = clock.motionMs / 1000.0
         val alt = rendered?.alt
@@ -796,6 +1010,7 @@ class BackdropDrawable(
         val a = alpha.coerceIn(0, 0xFF)
         if (a != drawableAlpha) {
             drawableAlpha = a
+            syncOverlay()
             invalidateSelf()
         }
     }
@@ -812,17 +1027,23 @@ class BackdropDrawable(
         starPaint.colorFilter = colorFilter
         glintPaint.colorFilter = colorFilter
         particleNodes = null
+        hasColorFilter = colorFilter != null
+        syncOverlay()
         invalidateSelf()
     }
 
     @Deprecated("Deprecated in Java")
     override fun getOpacity(): Int =
-        if (alphaOf(baseColor) == 0xFF && drawableAlpha == 0xFF) PixelFormat.OPAQUE else PixelFormat.TRANSLUCENT
+        // On hardware layers the window shows them through transparent pixels here.
+        if (overlay == null && alphaOf(baseColor) == 0xFF && drawableAlpha == 0xFF) PixelFormat.OPAQUE
+        else PixelFormat.TRANSLUCENT
 
     private fun paintKey(widthPx: Int, heightPx: Int): PaintKey {
         val w = (widthPx / paintScale).coerceAtLeast(1)
         val h = (heightPx / paintScale).coerceAtLeast(1)
-        return PaintKey(baseColor, backdrop.ribbons, backdrop.glows, backdrop.scene, w, h, density / paintScale)
+        // True black changes a painted scene only; the aurora is already near black.
+        val trueBlack = tuning.trueBlack && backdrop.scene != null
+        return PaintKey(baseColor, backdrop.ribbons, backdrop.glows, backdrop.scene, w, h, density / paintScale, trueBlack)
     }
 
     /** The painting and its second image (curtains: [AuroraMotion.alternate]) or moving layers. */
@@ -843,6 +1064,8 @@ class BackdropDrawable(
     private data class PaintKey(
         val base: Int, val ribbons: List<AuroraRibbon>, val glows: List<AuroraGlow>, val scene: SceneKind?,
         val w: Int, val h: Int, val rasterDensity: Float,
+        /** Painted as [SceneTrueBlack] (scenes only). */
+        val trueBlack: Boolean = false,
     )
 
     companion object {
@@ -956,7 +1179,8 @@ class BackdropDrawable(
         private fun render(key: PaintKey): Rendered {
             val scene = key.scene
             return if (scene != null) {
-                val p = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity)
+                val painted = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity)
+                val p = if (key.trueBlack) SceneTrueBlack.apply(painted, scene, key.rasterDensity) else painted
                 val layers = p.layers.map { it.placement to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
                 Rendered(
                     key.w, bitmap(p.base, key.w, key.h), p.alt?.let { bitmap(it, key.w, key.h) }, layers,

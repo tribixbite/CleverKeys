@@ -154,6 +154,14 @@ object AuroraMotion {
  *   of seconds after last key press/swipe before animation … user settings").
  * @property idleMs the motion stops this long after the last touch or the keyboard showing
  *   (`look_motion_idle_s`, stored in seconds).
+ * @property fps frames per second while moving, for every scene; 0 = each scene's own rate
+ *   ([SceneKind.frameMs], the aurora's [AuroraMotion.AURORA_FRAME_MS]) (`look_motion_fps`;
+ *   maintainer 2026-11-11, after the Pixel measured ~9.5 mJ of compute per frame for every scene:
+ *   the frame rate is what the motion costs).
+ * @property overlay let the display hardware blend the aurora's curtains (`look_scene_overlay`,
+ *   [SceneOverlay]): no window redraw per frame where the device supports it.
+ * @property trueBlack paint the scenes as night versions of themselves ([SceneTrueBlack]): broad
+ *   areas pure black, light, detail and colour kept (`look_scene_true_black`; OLED pixels off).
  */
 data class SceneMotionTuning(
     val speed: Float = 1f,
@@ -162,7 +170,13 @@ data class SceneMotionTuning(
     val crisp: Boolean = false,
     val resumeMs: Long = AuroraMotion.TYPING_HOLD_MS,
     val idleMs: Long = AuroraMotion.IDLE_MS,
+    val fps: Int = DEFAULT_FPS,
+    val overlay: Boolean = DEFAULT_OVERLAY,
+    val trueBlack: Boolean = DEFAULT_TRUE_BLACK,
 ) {
+    /** Time between frames for a scene whose own is [sceneFrameMs]: the user's rate, or the scene's. */
+    fun frameMs(sceneFrameMs: Long): Long = if (fps > 0) 1000L / fps else sceneFrameMs
+
     companion object {
         /** The twinkle depth as designed: a star dims to 45 % of its brightness. */
         const val DEFAULT_TWINKLE = 0.55f
@@ -180,6 +194,9 @@ data class SceneMotionTuning(
             crisp: Boolean,
             resumeMs: Int = DEFAULT_RESUME_MS,
             idleSeconds: Int = DEFAULT_IDLE_SECONDS,
+            fps: Int = DEFAULT_FPS,
+            overlay: Boolean = DEFAULT_OVERLAY,
+            trueBlack: Boolean = DEFAULT_TRUE_BLACK,
         ) = SceneMotionTuning(
             speed = speed.coerceIn(SPEED_PERCENT) / 100f,
             intensity = intensity.coerceIn(INTENSITY_PERCENT) / 100f,
@@ -187,6 +204,9 @@ data class SceneMotionTuning(
             crisp = crisp,
             resumeMs = resumeMs.coerceIn(RESUME_MS).toLong(),
             idleMs = idleSeconds.coerceIn(IDLE_SECONDS) * 1000L,
+            fps = fps.coerceIn(FPS),
+            overlay = overlay,
+            trueBlack = trueBlack,
         )
 
         /** The settings' ranges, percent (`SettingsRanges` hands them to the sliders and the backup check). */
@@ -197,6 +217,8 @@ data class SceneMotionTuning(
         val RESUME_MS: IntRange = 0..10_000
         /** Moving after the last touch, seconds (the slider steps five). */
         val IDLE_SECONDS: IntRange = 5..600
+        /** Frames per second while moving; 0 = each scene's own rate. */
+        val FPS: IntRange = 0..15
 
         /** The settings' defaults, percent: the motion as designed. */
         const val DEFAULT_SPEED_PERCENT = 100
@@ -204,6 +226,9 @@ data class SceneMotionTuning(
         const val DEFAULT_TWINKLE_PERCENT = 55
         const val DEFAULT_RESUME_MS = AuroraMotion.TYPING_HOLD_MS.toInt()
         const val DEFAULT_IDLE_SECONDS = (AuroraMotion.IDLE_MS / 1000).toInt()
+        const val DEFAULT_FPS = 0
+        const val DEFAULT_OVERLAY = true
+        const val DEFAULT_TRUE_BLACK = false
     }
 }
 

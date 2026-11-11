@@ -76,8 +76,12 @@ object Defaults {
     /** The pause after the last key press or swipe (ms) and the idle timeout (s) of the motion. */
     const val LOOK_MOTION_RESUME_MS = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_RESUME_MS
     const val LOOK_MOTION_IDLE_S = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_IDLE_SECONDS
+    /** Frames per second of the moving scenes (0 = each scene's own) and the display-hardware blend. */
+    const val LOOK_MOTION_FPS = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_FPS
+    const val LOOK_SCENE_OVERLAY = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_OVERLAY
     /** Paint the soft backdrops (aurora, stream, snow) at full resolution; off: half, a quarter of the memory. */
     const val LOOK_SCENE_CRISP = false
+    const val LOOK_SCENE_TRUE_BLACK = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_TRUE_BLACK
     const val CUSTOM_BORDER_RADIUS = 0
     const val CUSTOM_BORDER_LINE_WIDTH = 0
 
@@ -700,6 +704,8 @@ object SettingsRanges {
     /** The motion's typing pause (`look_motion_resume_ms`, ms) and idle timeout (`look_motion_idle_s`, s). */
     val LOOK_MOTION_RESUME_MS: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.RESUME_MS
     val LOOK_MOTION_IDLE_S: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.IDLE_SECONDS
+    /** Frames per second of the moving scenes (`look_motion_fps`); 0 = each scene's own rate. */
+    val LOOK_MOTION_FPS: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.FPS
 
     /** Circle-gesture sensitivity (`circle_sensitivity`, stored as a String "1".."5"). */
     val CIRCLE_SENSITIVITY: IntRange = 1..5
@@ -1002,7 +1008,7 @@ class Config private constructor(
     @JvmField var look_key_preview = Defaults.LOOK_KEY_PREVIEW
     @JvmField var look_space_language = Defaults.LOOK_SPACE_LANGUAGE
     @JvmField var look_backdrop_motion = Defaults.LOOK_BACKDROP_MOTION
-    /** The user's tuning of the moving backdrops (`look_motion_*`, `look_scene_crisp`). */
+    /** The user's tuning of the moving backdrops (`look_motion_*`, `look_scene_crisp`, `look_scene_true_black`). */
     @JvmField var look_motion_tuning = tribixbite.cleverkeys.theme.SceneMotionTuning.fromPercent(Defaults.LOOK_MOTION_SPEED, Defaults.LOOK_MOTION_INTENSITY, Defaults.LOOK_MOTION_TWINKLE, Defaults.LOOK_SCENE_CRISP)
     @JvmField var circle_sensitivity = Defaults.CIRCLE_SENSITIVITY_FALLBACK
     @JvmField var clipboard_history_enabled = Defaults.CLIPBOARD_HISTORY_ENABLED
@@ -1350,6 +1356,9 @@ class Config private constructor(
             crisp = _prefs.getBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP),
             resumeMs = safeGetInt(_prefs, "look_motion_resume_ms", Defaults.LOOK_MOTION_RESUME_MS),
             idleSeconds = safeGetInt(_prefs, "look_motion_idle_s", Defaults.LOOK_MOTION_IDLE_S),
+            fps = safeGetInt(_prefs, "look_motion_fps", Defaults.LOOK_MOTION_FPS),
+            overlay = _prefs.getBoolean("look_scene_overlay", Defaults.LOOK_SCENE_OVERLAY),
+            trueBlack = _prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK),
         )
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())

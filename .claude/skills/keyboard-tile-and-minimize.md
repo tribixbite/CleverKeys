@@ -45,9 +45,9 @@ before that it still said "the tile opens the input-method picker".)
   | CleverKeys selected? | window | action | subtitle |
   |---|---|---|---|
   | no, or service not running | any | `PICK_KEYBOARD` (`showInputMethodPicker`) | Switch keyboard |
-  | yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` | Hide |
-  | yes | hidden ≤ 10 s (`RECENT_HIDE_MS`), not by the user, over an editor, same app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → stays hidden, `markHiddenByUser()` so the next tap shows | Hide |
-  | yes | otherwise | `SHOW` → `showFromTile()` (deferred show, full) | Show |
+  | yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` | Toggle |
+  | yes | hidden ≤ 10 s (`RECENT_HIDE_MS`), not by the user, over an editor, same app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → stays hidden, `markHiddenByUser()` so the next tap shows | Toggle |
+  | yes | otherwise | `SHOW` → `showFromTile()` (deferred show, full) | Toggle |
 
 - The tile keeps NO reference to the service between callbacks: it calls
   `CleverKeysService.getInstance()` (set in `onCreate`, cleared in `onDestroy`) each time.
@@ -60,8 +60,8 @@ before that it still said "the tile opens the input-method picker".)
 - **Real editor** (`EditorRef(packageName, fieldId, typeNull)`): any typed field, or a
   `TYPE_NULL` field (terminal, remote desktop) only when it is the field the keyboard was last
   shown over — Android 14 binds a `TYPE_NULL` fallback connection for windows without an editor
-  (the launcher) and the EditorInfo cannot tell them apart. It gates the deferred show's
-  requests (`Tick.WAIT` without one), so nothing is shown over the launcher. A hide is the
+  (the launcher) and the EditorInfo cannot tell them apart. Since 2026-11-11 the deferred show
+  is asked for with or without an editor (maintainer: show it anyway). A hide is the
   user's when Back was pressed while the keyboard showed (`onKeyDown`), `hide_keyboard` ran or
   the tile hid it.
 - **Deferred show** (`TileShowSession`, pure, driven on the service's main `Handler`):
@@ -139,7 +139,7 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
 ## Tests
 
 - Pure: `KeyboardTileActionTest` (every decision branch, the session state machine incl. the
-  wait for an editor, strings in all locales), `minimize/KeyboardMinimizerTest` (minimize/expand,
+  show with no editor, strings in all locales), `minimize/KeyboardMinimizerTest` (minimize/expand,
   remembered views, reset on hide, `FabSidePolicy`, `MinimizedInsets`), `CommandRoutingTest` (both
   commands have an execution path).
 - Mock: `KeyboardTileServiceTest` (5, source-level `onClick` routing).

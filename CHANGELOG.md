@@ -485,6 +485,15 @@ editor that used to be listed here already ship in 2.0.)
   phone is hot, when the battery is low (15 % or less, not charging), with animations turned off
   and on Android 9 or older; the default theme is static. The **Animated Scenes On/Off**
   command (`toggle_scene_motion`, also an extra key) flips the switch from the keyboard.
+  **Frame Rate** sets how many frames a second every scene moves at (1–15, or each scene's own):
+  each frame costs about the same battery whatever the scene, so fewer frames cost less. On
+  Android 13 and later the aurora's curtains and stars are handed to the display hardware
+  (**Blend on Display Hardware**, on by default): the keyboard no longer redraws for each step,
+  the screen only moves the layers; turn it off if the aurora looks wrong on your phone.
+  **True Black Scenes** (off by default) shows the painted scenes as night views on pure black:
+  sky, sand, snow and fog go black while the light, fine detail and colourful parts (the sun,
+  blades of grass, foam, the snow's aurora) stay, so on an OLED screen most of the scene's pixels
+  are off; the scenes give off 76–99 % less light.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current
@@ -496,9 +505,8 @@ editor that used to be listed here already ship in 2.0.)
   no longer opens the keyboard picker then. With another keyboard selected it opens the picker
   as before. Where opening the shade hides the keyboard (seen on Android 14), the tap acts on how
   the keyboard looked just before: it was showing, so it stays hidden, and the next tap shows it.
-  With no text field focused (the home screen) the keyboard cannot appear; the tile waits up to
-  8 seconds and shows it if you tap into a field. The tile's subtitle (Android 10+) names the next
-  action. The shade stays open: collapsing it would take focus from the app. See
+  It asks for the keyboard even with no text field focused. The tile's icon is the raccoon, and
+  its subtitle (Android 10+) reads Toggle. The shade stays open: collapsing it would take focus from the app. See
   `docs/specs/keyboard-minimize.md`.
 - Release builds are R8-minified with resource shrinking — a smaller APK on top of the neural
   asset removal.

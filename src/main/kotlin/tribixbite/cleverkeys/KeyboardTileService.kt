@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -24,8 +25,8 @@ import androidx.annotation.StringRes
  *   opening the shade itself hides the keyboard, so the tap keeps it hidden (the hide it
  *   asked for) instead of bringing it straight back;
  * - otherwise: shows the full keyboard. The show is deferred ([CleverKeysService.showFromTile]):
- *   some apps hide their own keyboard around the shade, so the service retries, and with no
- *   editor focused (the home screen) it waits for one instead of showing over nothing. The
+ *   some apps hide their own keyboard around the shade, so the service retries. It is asked
+ *   for even with no text field focused; the system decides whether it can show there. The
  *   picker is never the fallback while CleverKeys is selected.
  *
  * The tile reaches the running IME through [CleverKeysService.getInstance], the process-local
@@ -167,6 +168,8 @@ class KeyboardTileService : TileService() {
 
         tile.state = if (isCurrent) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
         tile.label = appName
+        // The monochrome raccoon mask; the shade tints it (a colour icon renders as a solid shape).
+        tile.icon = Icon.createWithResource(this, R.drawable.ic_qs_tile)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             tile.subtitle = getString(KeyboardTileDecision.subtitleFor(action))
         }

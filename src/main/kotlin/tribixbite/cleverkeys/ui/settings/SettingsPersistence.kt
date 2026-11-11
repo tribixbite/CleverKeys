@@ -173,11 +173,20 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "look_scene_crisp" -> {
                 lookSceneCrisp = prefs.getBoolean(key, Defaults.LOOK_SCENE_CRISP)
             }
+            "look_scene_true_black" -> {
+                lookSceneTrueBlack = prefs.getBoolean(key, Defaults.LOOK_SCENE_TRUE_BLACK)
+            }
             "look_motion_resume_ms" -> {
                 lookMotionResumeMs = prefs.getInt(key, Defaults.LOOK_MOTION_RESUME_MS)
             }
             "look_motion_idle_s" -> {
                 lookMotionIdleS = prefs.getInt(key, Defaults.LOOK_MOTION_IDLE_S)
+            }
+            "look_motion_fps" -> {
+                lookMotionFps = prefs.getInt(key, Defaults.LOOK_MOTION_FPS)
+            }
+            "look_scene_overlay" -> {
+                lookSceneOverlay = prefs.getBoolean(key, Defaults.LOOK_SCENE_OVERLAY)
             }
             "custom_border_radius" -> {
                 customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
@@ -317,8 +326,11 @@ internal fun SettingsActivity.loadCurrentSettings() {
         lookMotionIntensity = prefs.getSafeInt("look_motion_intensity", Defaults.LOOK_MOTION_INTENSITY)
         lookMotionTwinkle = prefs.getSafeInt("look_motion_twinkle", Defaults.LOOK_MOTION_TWINKLE)
         lookSceneCrisp = prefs.getSafeBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP)
+        lookSceneTrueBlack = prefs.getSafeBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)
         lookMotionResumeMs = prefs.getSafeInt("look_motion_resume_ms", Defaults.LOOK_MOTION_RESUME_MS)
         lookMotionIdleS = prefs.getSafeInt("look_motion_idle_s", Defaults.LOOK_MOTION_IDLE_S)
+        lookMotionFps = prefs.getSafeInt("look_motion_fps", Defaults.LOOK_MOTION_FPS)
+        lookSceneOverlay = prefs.getSafeBoolean("look_scene_overlay", Defaults.LOOK_SCENE_OVERLAY)
         customBorderRadius = prefs.getSafeInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS)
         customBorderLineWidth = prefs.getSafeInt("custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

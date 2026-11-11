@@ -108,8 +108,13 @@ class KeyboardTileServiceTest {
             .that(Regex("""android:exported="true"""").containsMatchIn(declaration)).isTrue()
         assertWithMessage("the tile needs a label and icon to be pickable in the shade editor")
             .that(Regex("""android:label="@string/app_name"""").containsMatchIn(declaration)).isTrue()
-        assertWithMessage("the tile needs an icon to be pickable in the shade editor")
-            .that(Regex("""android:icon="@mipmap/[A-Za-z0-9_]+"""").containsMatchIn(declaration)).isTrue()
+        // The shade draws a tile icon as an alpha mask in one colour: the full-colour launcher
+        // icon came out as a solid shape (maintainer, 2026-11-11). It must be the monochrome mask.
+        assertWithMessage("the tile icon is the monochrome raccoon mask, never the launcher icon")
+            .that(declaration).contains("""android:icon="@drawable/ic_qs_tile"""")
+        for (dpi in listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")) {
+            assertWithMessage("ic_qs_tile at $dpi").that(File("res/drawable-$dpi/ic_qs_tile.png").isFile).isTrue()
+        }
     }
 
     // =========================================================================

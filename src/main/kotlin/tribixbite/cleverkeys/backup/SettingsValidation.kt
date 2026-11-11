@@ -356,6 +356,7 @@ object SettingsValidation {
         put("look_motion_twinkle", SettingsRanges.LOOK_MOTION_TWINKLE)
         put("look_motion_resume_ms", SettingsRanges.LOOK_MOTION_RESUME_MS)
         put("look_motion_idle_s", SettingsRanges.LOOK_MOTION_IDLE_S)
+        put("look_motion_fps", SettingsRanges.LOOK_MOTION_FPS)
 
         // Keyboard height percentages
         // One range for all four heights: the sliders' (SettingsRanges.KEYBOARD_HEIGHT).

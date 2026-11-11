@@ -423,6 +423,36 @@ internal fun SettingsActivity.AppearanceSection() {
                         },
                         displayValue = stringResource(R.string.appearance_look_motion_seconds, lookMotionIdleS.toString())
                     )
+                    // Frames per second (SceneMotionTuning.fps): every frame costs about the same
+                    // whatever the scene draws, so this is the battery lever; 0 = each scene's own.
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_fps_title),
+                        description = stringResource(R.string.appearance_look_motion_fps_desc),
+                        value = lookMotionFps.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_FPS.toSliderRange(),
+                        increment = 1f,
+                        onValueChange = {
+                            lookMotionFps = it.roundToInt()
+                            saveSetting("look_motion_fps", lookMotionFps)
+                        },
+                        displayValue = if (lookMotionFps == 0) {
+                            stringResource(R.string.appearance_look_motion_fps_scene)
+                        } else {
+                            stringResource(R.string.appearance_look_motion_fps_value, lookMotionFps)
+                        }
+                    )
+                    // The display hardware blends the aurora's curtains (SceneOverlay); off draws
+                    // every frame in the keyboard window, the escape hatch for a device that
+                    // shows the layers wrong.
+                    SettingsSwitch(
+                        title = stringResource(R.string.appearance_look_scene_overlay_title),
+                        description = stringResource(R.string.appearance_look_scene_overlay_desc),
+                        checked = lookSceneOverlay,
+                        onCheckedChange = {
+                            lookSceneOverlay = it
+                            saveSetting("look_scene_overlay", it)
+                        }
+                    )
                 }
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_look_scene_crisp_title),
@@ -431,6 +461,17 @@ internal fun SettingsActivity.AppearanceSection() {
                     onCheckedChange = {
                         lookSceneCrisp = it
                         saveSetting("look_scene_crisp", it)
+                    }
+                )
+                // Night versions of the painted scenes (SceneTrueBlack): broad areas pure black for
+                // OLED screens, light, detail and colour kept. Applies to a still scene too.
+                SettingsSwitch(
+                    title = stringResource(R.string.appearance_look_scene_true_black_title),
+                    description = stringResource(R.string.appearance_look_scene_true_black_desc),
+                    checked = lookSceneTrueBlack,
+                    onCheckedChange = {
+                        lookSceneTrueBlack = it
+                        saveSetting("look_scene_true_black", it)
                     }
                 )
 

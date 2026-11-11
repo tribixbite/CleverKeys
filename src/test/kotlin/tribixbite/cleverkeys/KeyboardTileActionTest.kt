@@ -135,11 +135,6 @@ class KeyboardTileActionTest {
 
     @Test
     fun editorHelpers() {
-        assertThat(KeyboardTileDecision.isRealEditor(chat, null)).isTrue()
-        assertThat(KeyboardTileDecision.isRealEditor(null, chat)).isFalse()
-        assertThat(KeyboardTileDecision.isRealEditor(launcherFallback, chat)).isFalse()
-        assertThat(KeyboardTileDecision.isRealEditor(terminal, terminal)).isTrue()
-        assertThat(KeyboardTileDecision.isRealEditor(terminal, terminal.copy(fieldId = 8))).isFalse()
         assertThat(KeyboardTileDecision.isSameAppOrShade(null, chat)).isTrue()
         assertThat(KeyboardTileDecision.isSameAppOrShade(shade, chat)).isTrue()
         assertThat(KeyboardTileDecision.isSameAppOrShade(chat.copy(fieldId = 9), chat)).isTrue()
@@ -208,33 +203,29 @@ class KeyboardTileActionTest {
     @Test
     fun session_retriesUntilShown_thenReportsTheRequestedShowOnce() {
         val s = TileShowSession()
-        assertThat(s.tick(0, windowVisible = false, editorReady = true)).isEqualTo(TileShowSession.Tick.IDLE)
+        assertThat(s.tick(0, windowVisible = false)).isEqualTo(TileShowSession.Tick.IDLE)
 
         s.request("com.example.chat", nowMs = 0)
         assertThat(s.hasPending).isTrue()
         // An app hiding its own keyboard around the shade: every tick asks again.
         for (t in 0L..TileShowSession.RETRY_WINDOW_MS step TileShowSession.RETRY_INTERVAL_MS) {
-            assertWithMessage("tick at $t").that(s.tick(t, windowVisible = false, editorReady = true))
+            assertWithMessage("tick at $t").that(s.tick(t, windowVisible = false))
                 .isEqualTo(TileShowSession.Tick.REQUEST_SHOW)
         }
         assertThat(s.onWindowShown()).isTrue()
         assertWithMessage("one-shot: a later show is left alone").that(s.onWindowShown()).isFalse()
-        assertThat(s.tick(9_000, windowVisible = true, editorReady = true)).isEqualTo(TileShowSession.Tick.IDLE)
+        assertThat(s.tick(9_000, windowVisible = true)).isEqualTo(TileShowSession.Tick.IDLE)
     }
 
-    /** Home screen: no request is sent until an editor has focus, and the wait has a deadline. */
+    /** No editor focused (home screen, an app without a text field): the show is asked for anyway. */
     @Test
-    fun session_waitsForAnEditor_neverRequestingOverNothing() {
+    fun session_asksEvenWithNoEditorFocused_untilItsDeadline() {
         val s = TileShowSession()
         s.request(null, nowMs = 0)
-        for (t in 0L..2_000L step TileShowSession.RETRY_INTERVAL_MS) {
-            assertWithMessage("no editor at $t").that(s.tick(t, windowVisible = false, editorReady = false))
-                .isEqualTo(TileShowSession.Tick.WAIT)
+        for (t in 0L..TileShowSession.RETRY_WINDOW_MS step TileShowSession.RETRY_INTERVAL_MS) {
+            assertWithMessage("tick at $t").that(s.tick(t, windowVisible = false)).isEqualTo(TileShowSession.Tick.REQUEST_SHOW)
         }
-        assertWithMessage("an editor gains focus").that(s.tick(2_250, windowVisible = false, editorReady = true))
-            .isEqualTo(TileShowSession.Tick.REQUEST_SHOW)
-        assertThat(s.tick(TileShowSession.RETRY_WINDOW_MS + 1, windowVisible = false, editorReady = false))
-            .isEqualTo(TileShowSession.Tick.EXPIRED)
+        assertThat(s.tick(TileShowSession.RETRY_WINDOW_MS + 1, windowVisible = false)).isEqualTo(TileShowSession.Tick.EXPIRED)
         assertThat(s.hasPending).isFalse()
     }
 
@@ -242,7 +233,7 @@ class KeyboardTileActionTest {
     fun session_stopsTicking_whileTheWindowIsVisible() {
         val s = TileShowSession()
         s.request(null, nowMs = 0)
-        assertThat(s.tick(250, windowVisible = true, editorReady = true)).isEqualTo(TileShowSession.Tick.IDLE)
+        assertThat(s.tick(250, windowVisible = true)).isEqualTo(TileShowSession.Tick.IDLE)
         assertWithMessage("the request waits for onWindowShown").that(s.hasPending).isTrue()
     }
 
@@ -250,7 +241,7 @@ class KeyboardTileActionTest {
     fun session_expiresAtItsDeadline() {
         val s = TileShowSession()
         s.request("com.example.chat", nowMs = 1_000)
-        assertThat(s.tick(1_000 + TileShowSession.RETRY_WINDOW_MS + 1, windowVisible = false, editorReady = true))
+        assertThat(s.tick(1_000 + TileShowSession.RETRY_WINDOW_MS + 1, windowVisible = false))
             .isEqualTo(TileShowSession.Tick.EXPIRED)
         assertThat(s.hasPending).isFalse()
         assertWithMessage("a show after expiry is not the tile's").that(s.onWindowShown()).isFalse()
@@ -278,7 +269,7 @@ class KeyboardTileActionTest {
         s.request(null, nowMs = 0)
         s.cancel()
         assertThat(s.hasPending).isFalse()
-        assertThat(s.tick(10, windowVisible = false, editorReady = true)).isEqualTo(TileShowSession.Tick.IDLE)
+        assertThat(s.tick(10, windowVisible = false)).isEqualTo(TileShowSession.Tick.IDLE)
     }
 
     @Test
@@ -286,7 +277,7 @@ class KeyboardTileActionTest {
         val s = TileShowSession()
         s.request(null, nowMs = 0)
         s.request(null, nowMs = 5_000)
-        assertThat(s.tick(5_000 + TileShowSession.RETRY_WINDOW_MS, windowVisible = false, editorReady = true))
+        assertThat(s.tick(5_000 + TileShowSession.RETRY_WINDOW_MS, windowVisible = false))
             .isEqualTo(TileShowSession.Tick.REQUEST_SHOW)
         assertThat(s.onWindowShown()).isTrue()
     }
@@ -299,8 +290,8 @@ class KeyboardTileActionTest {
     fun subtitlesAndDescriptions_nameWhatTheTapDoes() {
         val expected = mapOf(
             KeyboardTileAction.PICK_KEYBOARD to R.string.tile_subtitle_switch,
-            KeyboardTileAction.HIDE to R.string.tile_subtitle_hide,
-            KeyboardTileAction.SHOW to R.string.tile_subtitle_show,
+            KeyboardTileAction.HIDE to R.string.tile_subtitle_toggle,
+            KeyboardTileAction.SHOW to R.string.tile_subtitle_toggle,
         )
         assertThat(expected.keys).containsExactlyElementsIn(KeyboardTileAction.values().toList())
         for ((action, res) in expected) {
@@ -313,10 +304,10 @@ class KeyboardTileActionTest {
         assertWithMessage("picker, another keyboard: the original inactive description")
             .that(KeyboardTileDecision.contentDescriptionFor(false, KeyboardTileAction.PICK_KEYBOARD))
             .isEqualTo(R.string.tile_descr_inactive)
-        assertThat(KeyboardTileDecision.contentDescriptionFor(true, KeyboardTileAction.HIDE))
-            .isEqualTo(R.string.tile_descr_hide)
-        assertThat(KeyboardTileDecision.contentDescriptionFor(true, KeyboardTileAction.SHOW))
-            .isEqualTo(R.string.tile_descr_show)
+        for (a in listOf(KeyboardTileAction.HIDE, KeyboardTileAction.SHOW)) {
+            assertWithMessage("$a names the toggle, never a guessed state")
+                .that(KeyboardTileDecision.contentDescriptionFor(true, a)).isEqualTo(R.string.tile_descr_toggle)
+        }
     }
 
     /** The English wording TalkBack announces and the shade shows, as resolved by the tile. */
@@ -326,21 +317,22 @@ class KeyboardTileActionTest {
         fun descr(key: String) = en.getValue(key).replace("%1\$s", "CleverKeys")
 
         assertWithMessage("subtitles").that(
-            listOf("tile_subtitle_switch", "tile_subtitle_hide", "tile_subtitle_show").map(en::getValue)
-        ).containsExactly("Switch keyboard", "Hide", "Show").inOrder()
-        assertWithMessage("hide").that(descr("tile_descr_hide")).isEqualTo("CleverKeys is open. Tap to hide it.")
-        assertWithMessage("show").that(descr("tile_descr_show")).isEqualTo("CleverKeys is hidden. Tap to show it.")
-        for (gone in listOf("tile_subtitle_minimize", "tile_subtitle_restore", "tile_descr_minimize", "tile_descr_restore")) {
-            assertWithMessage("$gone belongs to the old minimize tile").that(en).doesNotContainKey(gone)
+            listOf("tile_subtitle_switch", "tile_subtitle_toggle").map(en::getValue)
+        ).containsExactly("Switch keyboard", "Toggle").inOrder()
+        assertWithMessage("toggle").that(descr("tile_descr_toggle")).isEqualTo("Tap to show or hide CleverKeys.")
+        for (gone in listOf(
+            "tile_subtitle_minimize", "tile_subtitle_restore", "tile_descr_minimize", "tile_descr_restore",
+            "tile_subtitle_hide", "tile_subtitle_show", "tile_descr_hide", "tile_descr_show",
+        )) {
+            assertWithMessage("$gone belongs to an earlier tile").that(en).doesNotContainKey(gone)
         }
     }
 
-    /** Every locale carries all five strings, and each description keeps the app-name slot. */
+    /** Every locale carries all three strings, and each description keeps the app-name slot. */
     @Test
     fun everyLocaleTranslatesTheNewStrings() {
         val keys = listOf(
-            "tile_subtitle_switch", "tile_subtitle_hide", "tile_subtitle_show",
-            "tile_descr_hide", "tile_descr_show",
+            "tile_subtitle_switch", "tile_subtitle_toggle", "tile_descr_toggle",
         )
         val en = TranslationResources.strings(TranslationResources.defaultDir)
         for (dir in TranslationResources.localeDirs) {
