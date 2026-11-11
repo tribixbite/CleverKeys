@@ -410,8 +410,13 @@ class VisibleChangeGate {
  * drawable asks it to start and again every [RECHECK_MS] while moving.
  */
 object MotionAllowance {
-    /** `PowerManager.THERMAL_STATUS_MODERATE`: the phone is warm and starts limiting itself. */
-    const val THERMAL_LIMIT = 2
+    /**
+     * `PowerManager.THERMAL_STATUS_SEVERE`: the phone is throttling hard. MODERATE (2) stopped the
+     * scenes for good on a Galaxy S25 Ultra that reports it under ordinary sustained load
+     * (maintainer 2026-11-11: "animation doesn't even work on my s25u"); a still keyboard there
+     * looked like a bug, and a scene's motion is a small share of a warm phone's load.
+     */
+    const val THERMAL_LIMIT = 3
 
     /** A battery this low keeps the backdrop still unless charging. */
     const val LOW_BATTERY_PERCENT = 15

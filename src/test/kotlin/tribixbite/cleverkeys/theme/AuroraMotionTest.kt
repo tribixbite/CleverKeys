@@ -367,6 +367,7 @@ class AuroraMotionTest {
         assertThat(allows(saver = true)).isFalse()
         assertThat(allows(anim = false)).isFalse()
         assertThat(allows(thermal = 1)).isTrue()
+        assertWithMessage("MODERATE: a Galaxy reports it under ordinary load").that(allows(thermal = 2)).isTrue()
         assertThat(allows(thermal = MotionAllowance.THERMAL_LIMIT)).isFalse()
         assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT)).isFalse()
         assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT, charging = true)).isTrue()

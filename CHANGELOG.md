@@ -494,6 +494,10 @@ editor that used to be listed here already ship in 2.0.)
   sky, sand, snow and fog go black while the light, fine detail and colourful parts (the sun,
   blades of grass, foam, the snow's aurora) stay, so on an OLED screen most of the scene's pixels
   are off; the scenes give off 76–99 % less light.
+  Scenes now keep moving on a phone that reports itself only moderately warm (they stopped at
+  that level, which some Galaxy phones report under ordinary load, so they never moved); they
+  still rest when the phone is severely hot, in battery saver, with animations off or on a low
+  battery.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current
