@@ -238,7 +238,10 @@ class BackdropDrawable(
             }
         }
         val moving = clock.advance(now)
-        if (shownGate.changed(stateScratch, visibleState())) invalidateSelf()
+        // The count first: visibleState() may replace stateScratch with a larger array, and an
+        // argument list reads stateScratch before calling it (the first tick crashed the IME).
+        val count = visibleState()
+        if (shownGate.changed(stateScratch, count)) invalidateSelf()
         when {
             moving -> scheduleSelf(tick, now + frameMs)
             // Stopped by typing: nothing to draw until the hold ends, so sleep until then (a
@@ -478,13 +481,9 @@ class BackdropDrawable(
             val r = size * (0.45f + 0.55f * (age / 0.2f).coerceAtMost(1f))
             spritePaint.alpha = (255 * a).toInt().coerceIn(0, 255)
             spriteDst.set(b.left + x - r, b.top + y - r, b.left + x + r, b.top + y + r)
+            // Darker, with the film's sheen on the light's side (in the sprite: on dark stone
+            // the sheen, not the darkening, is what shows the stone is wet).
             canvas.drawBitmap(sp.wet[seed % sp.wet.size], null, spriteDst, spritePaint)
-            // The film's glint, small and upper left (the light's side).
-            val g = 0.28f * r
-            spritePaint.alpha = (170 * a).toInt().coerceIn(0, 255)
-            val gx = b.left + x - 0.3f * r; val gy = b.top + y - 0.35f * r
-            spriteDst.set(gx - g, gy - g * 0.6f, gx + g, gy + g * 0.6f)
-            canvas.drawBitmap(sp.glint, null, spriteDst, spritePaint)
             if (age < RainSplashes.SPLATTER_S) continue
             // The beads have landed: a small wet dot where each came down.
             val beads = RainSplashes.splatter(seed, splashes[o + 7], beadScratch)
@@ -554,8 +553,11 @@ class BackdropDrawable(
         }
     }
 
-    /** A bead's radius in view px for its seeded [share] (0..1): 0.5–1.3 dp, as a flung drop is. */
-    private fun beadRadius(share: Float): Float = (0.5f + 0.8f * share) * density
+    /**
+     * A bead's radius in view px for its seeded [share] (0..1): 0.8–1.7 dp. Smaller beads were
+     * lost against the stone's grain on a phone (Note10+, 2026-11-11).
+     */
+    private fun beadRadius(share: Float): Float = (0.8f + 0.9f * share) * density
 
     /**
      * The splash textures for [field], drawn once: [SplashSprites.bead], a clear bead of water
@@ -576,8 +578,8 @@ class BackdropDrawable(
             p.shader = RadialGradient(15f, 15.5f, 6f, intArrayOf(withAlpha(water, 120), withAlpha(water, 0)), null, Shader.TileMode.CLAMP)
             drawCircle(15f, 15.5f, 6f, p)
             p.shader = null
-            p.color = 0xF5FFFFFF.toInt()
-            drawCircle(8.5f, 8f, 2.6f, p)
+            p.color = 0xFAFFFFFF.toInt()
+            drawCircle(8.5f, 8f, 3.4f, p)
         }
         val shadow = Bitmap.createBitmap(16, 16, Bitmap.Config.ARGB_8888)
         Canvas(shadow).drawCircle(8f, 8f, 8f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -854,13 +856,17 @@ class BackdropDrawable(
 
         /**
          * Wet-spot shape [variant]: a dark patch whose edge wanders (three unrelated waves round
-         * it), darker in the middle and soaking off softly at the edge, slightly off centre.
+         * it), darker in the middle and soaking off softly at the edge, with the water film's
+         * sheen — a bright crescent inside its upper-left edge and a hot spot of light — where it
+         * faces the light. Pixels are unpremultiplied ARGB: dark and light are mixed per pixel.
          */
         private fun unevenSpot(variant: Int): Bitmap {
             val n = 48
             val px = IntArray(n * n)
             val c = n / 2f
             val ph = DoubleArray(6) { k -> ((variant * 2654435761L + k * 40503L) % 6283L) / 1000.0 }
+            // The light comes from the upper left (as the stones are lit).
+            val lightAngle = -0.75 * kotlin.math.PI
             for (y in 0 until n) for (x in 0 until n) {
                 val dx = x + 0.5f - c; val dy = y + 0.5f - c
                 val theta = kotlin.math.atan2(dy.toDouble(), dx.toDouble())
@@ -869,8 +875,18 @@ class BackdropDrawable(
                 val r = kotlin.math.sqrt((dx * dx + dy * dy).toDouble()) / c / edge
                 if (r >= 1.0) continue
                 // Darkest inside, with a soft edge where it soaks off.
-                val a = (if (r < 0.6) 1.0 else 1.0 - (r - 0.6) / 0.4) * (0.62 + 0.1 * kotlin.math.sin(7 * theta + ph[4]) * r)
-                px[y * n + x] = ((a.coerceIn(0.0, 1.0) * 0xB4).toInt() shl 24)
+                val dark = ((if (r < 0.6) 1.0 else 1.0 - (r - 0.6) / 0.4) * (0.62 + 0.1 * kotlin.math.sin(7 * theta + ph[4]) * r))
+                    .coerceIn(0.0, 1.0) * 0.78
+                // The sheen: a crescent just inside the edge facing the light, and a hot spot.
+                val facing = kotlin.math.cos(theta - lightAngle).coerceAtLeast(0.0)
+                val rim = (1.0 - kotlin.math.abs(r - 0.72) / 0.16).coerceIn(0.0, 1.0)
+                val hx = dx / c + 0.32; val hy = dy / c + 0.36
+                val hot = (1.0 - kotlin.math.sqrt(hx * hx + hy * hy) / 0.16).coerceIn(0.0, 1.0)
+                val light = (0.55 * rim * facing * facing + 0.9 * hot).coerceIn(0.0, 1.0)
+                val alpha = light + dark * (1 - light)
+                if (alpha <= 0.0) continue
+                val v = (255 * light / alpha).toInt().coerceIn(0, 255)
+                px[y * n + x] = ((alpha * 255).toInt().coerceIn(0, 255) shl 24) or (v shl 16) or (v shl 8) or v
             }
             return Bitmap.createBitmap(px, n, n, Bitmap.Config.ARGB_8888)
         }

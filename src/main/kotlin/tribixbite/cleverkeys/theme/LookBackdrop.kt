@@ -337,8 +337,8 @@ object RainSplashes {
      */
     const val LIFETIME_S = 2.2
 
-    /** How long the bright strike shows, seconds. */
-    const val FLASH_S = 0.09
+    /** How long the bright strike shows, seconds: two frames or so at the rocks' 10 per second. */
+    const val FLASH_S = 0.16
 
     /** How long a drop's beads of water fly before they land, seconds. */
     const val SPLATTER_S = 0.3
@@ -410,7 +410,7 @@ object RainSplashes {
             out[o + 1] = unit(spot, 0, 4).toFloat() * heightPx
             out[o + 2] = size * density * scale.coerceAtLeast(0.25f)
             // The wet spot dries slowly at first, then fades out; bigger drops wet more.
-            val strength = 0.5f + 0.5f * (0.4f * unit(spot, 0, 6).toFloat() + 0.6f * u)
+            val strength = 0.65f + 0.35f * (0.4f * unit(spot, 0, 6).toFloat() + 0.6f * u)
             out[o + 3] = (1f - k * k) * strength * (field.maxAlpha / 255f)
             out[o + 4] = k
             out[o + 5] = (spot and 0xFFFF).toFloat()

@@ -163,6 +163,11 @@ over the LAN instead.
 A Paint's alpha multiplies its shader: setting `color` to a low-alpha shadow and then a gradient
 `shader` on the same Paint draws the gradient faint (the rain crowns were ghosts on device while
 the off-device preview looked right). Reset the colour to opaque before the shader draw.
+Kotlin evaluates arguments left to right: `gate.changed(buffer, fill())` passes the OLD
+`buffer` when `fill()` grows it, so the first motion tick crashed the IME with an
+ArrayIndexOutOfBounds (Note10+, 2026-11-11) while the pure tests of the gate passed. Call the
+filler first. Turn motion ON in a device check: a phone left with Animated scenes off from an
+"off" run never runs the frame loop, and a crash there takes the keyboard down every time it shows.
 
 ## Kotlin compiler execution on Termux
 
