@@ -414,7 +414,7 @@
     <string name="appearance_look_space_language_title">Nyelv neve a szóköz billentyűn</string>
     <string name="appearance_look_space_language_desc">A Samsung megjelenés a szóköz billentyűn mutatja az aktuális nyelvet, ahogy a Samsung billentyűzet.</string>
     <string name="appearance_look_backdrop_motion_title">Animált jelenetek</string>
-    <string name="appearance_look_backdrop_motion_desc">A Jelenetek témák (CleverKeys Aurora, Rét, Patak, Folyami kövek, Erdő, Hó, Strand) finoman mozognak: a sarki fény és a víz úszik, a fű és a levelek hajladoznak, hull a hó és az eső. 20 másodperc gépelés nélkül megállnak, energiatakarékos módban mozdulatlanok. Mozgás közben kicsit több akkumulátort használnak. Android 10 vagy újabb.</string>
+    <string name="appearance_look_backdrop_motion_desc">A Jelenetek témák (CleverKeys Aurora, Rét, Patak, Folyami kövek, Erdő, Hó, Strand) finoman mozognak: a sarki fény és a víz úszik, a fű és a levelek hajladoznak, hull a hó és az eső. Gépelés közben szünetelnek, 20 másodperc gépelés nélkül megállnak; energiatakarékos módban, felmelegedett telefonnál vagy gyenge akkumulátornál mozdulatlanok. Mozgás közben kicsit több akkumulátort használnak. Android 10 vagy újabb.</string>
     <string name="appearance_look_motion_speed_title">Jelenetek sebessége</string>
     <string name="appearance_look_motion_speed_desc">Milyen gyorsan mozognak a jelenetek</string>
     <string name="appearance_look_motion_intensity_title">Jelenetmozgás erőssége</string>

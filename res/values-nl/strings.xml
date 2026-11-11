@@ -409,7 +409,7 @@
     <string name="appearance_look_space_language_title">Taalnaam op de spatiebalk</string>
     <string name="appearance_look_space_language_desc">De Samsung-look toont de huidige taal op de spatiebalk, net als het Samsung-toetsenbord.</string>
     <string name="appearance_look_backdrop_motion_title">Bewegende scènes</string>
-    <string name="appearance_look_backdrop_motion_desc">De scène-thema’s (CleverKeys Aurora, Weide, Beek, Rivierstenen, Bos, Sneeuw, Strand) bewegen zacht: noorderlicht en water drijven, gras en bladeren wuiven, sneeuw en regen vallen. Ze staan stil na 20 seconden zonder typen en blijven stil in batterijbesparing. Gebruikt iets meer batterij zolang ze bewegen. Android 10 of hoger.</string>
+    <string name="appearance_look_backdrop_motion_desc">De scène-thema’s (CleverKeys Aurora, Weide, Beek, Rivierstenen, Bos, Sneeuw, Strand) bewegen zacht: noorderlicht en water drijven, gras en bladeren wuiven, sneeuw en regen vallen. Ze pauzeren terwijl je typt en staan stil na 20 seconden zonder typen; ze blijven stil in batterijbesparing, als de telefoon warm is of de batterij bijna leeg is. Gebruikt iets meer batterij zolang ze bewegen. Android 10 of hoger.</string>
     <string name="appearance_look_motion_speed_title">Scènetempo</string>
     <string name="appearance_look_motion_speed_desc">Hoe snel de scènes bewegen</string>
     <string name="appearance_look_motion_intensity_title">Bewegingssterkte</string>

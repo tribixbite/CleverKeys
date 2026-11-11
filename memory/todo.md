@@ -1334,6 +1334,20 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     with Animated scenes on (the maintainer was using it; restore to Cyberpunk + off); Note10+
     has CleverKeys installed and as its IME, brightness pinned — restore (uninstall, Samsung
     Keyboard, auto/91) once unlocked; theme commands not device-tested.
+    Tenth round (2026-11-11, maintainer: battery options 1, 2b, 4 from the Fable review, "resume
+    after 1s of no typing"; rain "way too aggressive", should vary, splash "too symmetrical and
+    large"; ferns "too dainty and perfect and similar", larger leaves, more coverage; snow
+    aurora "needs more of our aurora colors"). Done in code: typing hold (`AuroraMotionClock.touch`
+    on key press / swipe move, `TYPING_HOLD_MS` 1 s, `HOLD_EASE_MS` 250), `VisibleChangeGate`
+    (skip frames under half a pixel / two alpha levels; measured off-device it skips NONE at the
+    default tuning — every scene changes visibly each frame, as its frame rate was set by its
+    pace — and helps only slow tunings, e.g. intensity 0 + twinkle 0 draws one frame), `MotionAllowance` (thermal ≥ MODERATE,
+    battery ≤ 15 % not charging; rechecked every 5 s while moving), rain at 8 slots / 100 dp² in
+    showers (`RainSplashes.shower`), sizes skewed small, flash + uneven wet spots + lopsided
+    hopping beads (`splatter`), ferns as clumps of drooping lobed fronds, forest leaves ×1.4,
+    canopy to half height, two hanging branches in one layer, snow aurora in the look's palette,
+    Animated scenes description in 22 locales. Open: re-measure on the Pixel (continuous typing
+    and one tap + 60 s untouched); rain look on a phone.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

@@ -172,7 +172,8 @@ class LookBackdropTest {
             s += 0.1
         }
         assertWithMessage("a splash was followed through its life").that(steps).isAtLeast(5)
-        assertWithMessage("the crown and the ripples are the start of a splash").that(RainSplashes.CROWN_S).isLessThan(RainSplashes.RIPPLE_S)
+        assertWithMessage("the flash, the beads and the ripples are the start of a splash").that(RainSplashes.FLASH_S).isLessThan(RainSplashes.SPLATTER_S)
+        assertThat(RainSplashes.SPLATTER_S).isLessThan(RainSplashes.RIPPLE_S)
         assertThat(RainSplashes.RIPPLE_S).isLessThan(RainSplashes.LIFETIME_S)
     }
 
@@ -210,6 +211,69 @@ class LookBackdropTest {
         assertWithMessage("a straight ray stays in its column").that(brightestColumn(straight, high)).isIn(com.google.common.collect.Range.closed(40, 44))
         assertWithMessage("at its foot the leaning ray is where it rises").that(brightestColumn(lean, low)).isIn(com.google.common.collect.Range.closed(40, 46))
         assertWithMessage("higher up it leans towards the radiant").that(brightestColumn(lean, high)).isGreaterThan(60)
+    }
+
+    /**
+     * Rain varies (maintainer 2026-11-11: "way too aggressive … should vary in drop size,
+     * intensity and splash pattern"): showers come and go, most drops are small, and a drop
+     * flings its beads lopsidedly, small drops few or none.
+     */
+    @Test
+    fun rainComesInShowersOfMostlySmallDropsSplashingLopsidedly() {
+        var lo = 1f; var hi = 0f
+        var t = 0.0
+        while (t < 600.0) {
+            val s = RainSplashes.shower(t)
+            assertThat(s).isIn(com.google.common.collect.Range.closed(RainSplashes.SHOWER_MIN, 1f))
+            lo = minOf(lo, s); hi = maxOf(hi, s)
+            t += 0.5
+        }
+        assertWithMessage("drizzle to downpour").that(hi - lo).isGreaterThan(0.6f)
+
+        val rain = KeyboardLooks.riverRocksLook.dark.backdrop!!.stars!!
+        val w = 1008; val h = 910; val d = 2.625f
+        val buf = FloatArray(RainSplashes.STRIDE * RainSplashes.slots(rain, w, h, d))
+        var small = 0; var total = 0
+        val perSecond = ArrayList<Int>()
+        val seenSeeds = HashSet<Int>()
+        t = 0.0
+        while (t < 300.0) {
+            val n = RainSplashes.at(rain, w, h, d, t, buf)
+            var fresh = 0
+            for (j in 0 until n) {
+                val o = j * RainSplashes.STRIDE
+                if (buf[o + 6] < 1f && seenSeeds.add(buf[o + 5].toInt() xor (buf[o].toInt() shl 12))) fresh++
+                total++
+                if (buf[o + 7] < 0.25f) small++
+            }
+            perSecond += fresh
+            t += 1.0
+        }
+        assertWithMessage("most drops are small").that(small.toDouble() / total).isGreaterThan(0.55)
+        val mean = perSecond.average()
+        assertWithMessage("a few drops a second on a phone keyboard, not dozens").that(mean).isIn(com.google.common.collect.Range.closed(2.0, 10.0))
+        assertWithMessage("the rate swings with the showers").that(perSecond.max() - perSecond.min()).isAtLeast(6)
+
+        val out = FloatArray(RainSplashes.BEAD_STRIDE * RainSplashes.MAX_BEADS)
+        var lopsided = 0; var big = 0
+        for (seed in 0 until 400) {
+            assertWithMessage("a small drop flings few beads").that(RainSplashes.splatter(seed, 0f, out)).isAtMost(2)
+            val k = RainSplashes.splatter(seed, 1f, out)
+            assertThat(k).isAtMost(RainSplashes.MAX_BEADS)
+            if (k < 3) continue
+            big++
+            var sx = 0f; var sy = 0f
+            for (b in 0 until k) {
+                val o = b * RainSplashes.BEAD_STRIDE
+                assertThat(out[o] * out[o] + out[o + 1] * out[o + 1]).isWithin(1e-4f).of(1f)
+                assertThat(out[o + 2]).isIn(com.google.common.collect.Range.closed(0.5f, 2.2f))
+                sx += out[o]; sy += out[o + 1]
+            }
+            // The mean heading of an even ring is zero; a lopsided fan points somewhere.
+            if (kotlin.math.hypot(sx / k, sy / k) > 0.4f) lopsided++
+        }
+        assertThat(big).isGreaterThan(100)
+        assertWithMessage("a big drop's beads leave mostly one way").that(lopsided.toDouble() / big).isGreaterThan(0.8)
     }
 }
 

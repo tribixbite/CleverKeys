@@ -406,7 +406,7 @@
     <string name="appearance_look_space_language_title">スペースキーに言語名を表示</string>
     <string name="appearance_look_space_language_desc">Samsung 風の外観では、Samsung キーボードと同じくスペースキーに現在の言語を表示します。</string>
     <string name="appearance_look_backdrop_motion_title">動くシーン</string>
-    <string name="appearance_look_backdrop_motion_desc">シーンのテーマ（CleverKeys Aurora、草原、小川、川石、森、雪、ビーチ）がゆっくり動きます。オーロラと水が漂い、草と葉が揺れ、雪と雨が降ります。20 秒入力がないと止まり、バッテリーセーバー中は静止します。動いている間はバッテリーを少し多く使います。Android 10 以降。</string>
+    <string name="appearance_look_backdrop_motion_desc">シーンのテーマ（CleverKeys Aurora、草原、小川、川石、森、雪、ビーチ）がゆっくり動きます。オーロラと水が漂い、草と葉が揺れ、雪と雨が降ります。入力中は一時停止し、20 秒入力がないと止まります。バッテリーセーバー中、端末が熱いとき、電池残量が少ないときは静止します。動いている間はバッテリーを少し多く使います。Android 10 以降。</string>
     <string name="appearance_look_motion_speed_title">シーンの速さ</string>
     <string name="appearance_look_motion_speed_desc">シーンが動く速さ</string>
     <string name="appearance_look_motion_intensity_title">シーンの動きの強さ</string>

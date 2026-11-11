@@ -417,7 +417,7 @@
     <string name="appearance_look_space_language_title">Boşluk tuşunda dil adı</string>
     <string name="appearance_look_space_language_desc">Samsung tarzı görünüm, Samsung Klavye gibi boşluk tuşunda geçerli dili gösterir.</string>
     <string name="appearance_look_backdrop_motion_title">Hareketli sahneler</string>
-    <string name="appearance_look_backdrop_motion_desc">Sahneler temaları (CleverKeys Aurora, Çayır, Dere, Dere taşları, Orman, Kar, Plaj) yavaşça hareket eder: kutup ışığı ve su süzülür, çimen ve yapraklar salınır, kar ve yağmur yağar. 20 saniye yazılmayınca durur, pil tasarrufunda hareketsiz kalır. Hareket ederken biraz daha fazla pil kullanır. Android 10 veya üstü.</string>
+    <string name="appearance_look_backdrop_motion_desc">Sahneler temaları (CleverKeys Aurora, Çayır, Dere, Dere taşları, Orman, Kar, Plaj) yavaşça hareket eder: kutup ışığı ve su süzülür, çimen ve yapraklar salınır, kar ve yağmur yağar. Yazarken duraklar, 20 saniye yazılmayınca durur; pil tasarrufunda, telefon ısındığında veya pil azaldığında hareketsiz kalır. Hareket ederken biraz daha fazla pil kullanır. Android 10 veya üstü.</string>
     <string name="appearance_look_motion_speed_title">Sahne hızı</string>
     <string name="appearance_look_motion_speed_desc">Sahnelerin ne kadar hızlı hareket ettiği</string>
     <string name="appearance_look_motion_intensity_title">Sahne hareketi yoğunluğu</string>

@@ -449,7 +449,7 @@
     <string name="appearance_look_space_language_title">Nome della lingua sulla barra spaziatrice</string>
     <string name="appearance_look_space_language_desc">L’aspetto Samsung mostra la lingua attuale sulla barra spaziatrice, come la tastiera Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Scene animate</string>
-    <string name="appearance_look_backdrop_motion_desc">I temi Scene (CleverKeys Aurora, Prato, Ruscello, Ciottoli, Bosco, Neve, Spiaggia) si muovono dolcemente: l’aurora e l’acqua scorrono, l’erba e le foglie ondeggiano, cadono neve e pioggia. Si fermano dopo 20 secondi senza digitare e restano fermi in risparmio energetico. Consumano un po’ più di batteria mentre si muovono. Android 10 o successivo.</string>
+    <string name="appearance_look_backdrop_motion_desc">I temi Scene (CleverKeys Aurora, Prato, Ruscello, Ciottoli, Bosco, Neve, Spiaggia) si muovono dolcemente: l’aurora e l’acqua scorrono, l’erba e le foglie ondeggiano, cadono neve e pioggia. Si fermano mentre scrivi e si arrestano dopo 20 secondi senza digitare; restano fermi in risparmio energetico, con il telefono caldo o con la batteria scarica. Consumano un po’ più di batteria mentre si muovono. Android 10 o successivo.</string>
     <string name="appearance_look_motion_speed_title">Velocità delle scene</string>
     <string name="appearance_look_motion_speed_desc">Quanto velocemente si muovono le scene</string>
     <string name="appearance_look_motion_intensity_title">Intensità del movimento</string>

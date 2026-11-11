@@ -273,10 +273,20 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    shares `AURORA_WAVES` / `AURORA_PHASE` and leans its rays to one radiant (`convergence`);
    a curtain's colour can change along it (`edgeColorEnd` / `topColorEnd`). River rocks are a
    still painting (stones with chipped outlines, bump-mapped grain and creases, patchy gloss)
-   under rain seen from above: `ParticleShape.RAIN` fields draw `RainSplashes` (rings that
-   spread and fade at new seeded spots each cycle, drawn per frame, no placed particles);
-   only `AGATE_STONES` stones carry rings. The rocks' `ScenePainting.surface` (`SurfaceMask`)
-   says where a drop hits stone (wet spot + pre-drawn crown frames) or water (rings).
+   under rain seen from above: `ParticleShape.RAIN` fields draw `RainSplashes` (splashes at new
+   seeded spots each cycle, gated by `RainSplashes.shower` so showers come and go, sizes skewed
+   small, drawn per frame, no placed particles); only `AGATE_STONES` stones carry rings. The
+   rocks' `ScenePainting.surface` (`SurfaceMask`) says where a drop hits stone (a flash, an
+   uneven wet spot from `WET_SHAPES` variants, and `RainSplashes.splatter`'s lopsided beads that
+   hop off their shadows and leave dots) or water (rings). Symmetric crowns of round droplets
+   read as pearls, not water (maintainer 2026-11-11).
+   Frame budget (2026-11-11): a key press or swipe move calls `BackdropDrawable.touch()`, which
+   holds the clock still (`AuroraMotionClock.touch`, ease to 0 over `HOLD_EASE_MS`, no ticks
+   until `holdEndsAt` = 1 s after the last press); `VisibleChangeGate` skips a tick whose
+   visible state (drifts, cross-fade, star alphas, a 3 × 3 sample of each layer's displacement)
+   has not moved half a pixel or two alpha levels (at the default tuning that is never: it pays
+   only for slow tunings); `MotionAllowance` (battery saver, animator
+   scale, thermal ≥ MODERATE, battery ≤ 15 % not charging) is re-asked every 5 s while moving.
    `SceneKind.motionScale` is a scene's own share of the user's intensity (meadow 0.5). Scene
    key fills are set per look from the brightest painting (meadow 0.7, forest 0.68, snow 0.58,
    rocks 0.66, others 0.55): recompute when a painting gets brighter. Cost rules in `BackdropDrawable`: glows are baked into

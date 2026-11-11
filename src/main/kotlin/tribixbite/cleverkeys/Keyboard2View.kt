@@ -1557,9 +1557,13 @@ class Keyboard2View @JvmOverloads constructor(
         if (event == null) return false
 
         val action = event.actionMasked
-        // A touch keeps a moving backdrop moving (it rests after AuroraMotion.IDLE_MS idle).
-        if (action == MotionEvent.ACTION_DOWN) {
-            (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.wake()
+        // Typing (a key press, or a finger tracing a swipe) holds a moving backdrop still; it
+        // moves again a second after the finger last moved (AuroraMotion.TYPING_HOLD_MS) and
+        // rests after AuroraMotion.IDLE_MS idle.
+        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN ||
+            action == MotionEvent.ACTION_MOVE
+        ) {
+            (background as? tribixbite.cleverkeys.theme.BackdropDrawable)?.touch()
         }
 
         when (action) {

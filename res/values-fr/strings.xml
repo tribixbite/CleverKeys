@@ -416,7 +416,7 @@
     <string name="appearance_look_space_language_title">Nom de la langue sur la barre d’espace</string>
     <string name="appearance_look_space_language_desc">L’apparence Samsung affiche la langue actuelle sur la barre d’espace, comme le clavier Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Scènes animées</string>
-    <string name="appearance_look_backdrop_motion_desc">Les thèmes Scènes (CleverKeys Aurora, Prairie, Ruisseau, Galets, Forêt, Neige, Plage) bougent doucement : l’aurore et l’eau dérivent, l’herbe et les feuilles ondulent, la neige et la pluie tombent. Ils s’arrêtent après 20 secondes sans saisie et restent immobiles en économie d’énergie. Consomme un peu plus de batterie pendant le mouvement. Android 10 ou ultérieur.</string>
+    <string name="appearance_look_backdrop_motion_desc">Les thèmes Scènes (CleverKeys Aurora, Prairie, Ruisseau, Galets, Forêt, Neige, Plage) bougent doucement : l’aurore et l’eau dérivent, l’herbe et les feuilles ondulent, la neige et la pluie tombent. Ils se figent pendant la saisie et s’arrêtent après 20 secondes sans saisie ; ils restent immobiles en économie d’énergie, si le téléphone chauffe ou si la batterie est faible. Consomme un peu plus de batterie pendant le mouvement. Android 10 ou ultérieur.</string>
     <string name="appearance_look_motion_speed_title">Vitesse des scènes</string>
     <string name="appearance_look_motion_speed_desc">La vitesse à laquelle les scènes bougent</string>
     <string name="appearance_look_motion_intensity_title">Intensité du mouvement</string>

@@ -617,7 +617,7 @@
     <string name="appearance_look_space_language_title">Language name on the space bar</string>
     <string name="appearance_look_space_language_desc">Samsung-style shows the current language on the space bar, as Samsung Keyboard does.</string>
     <string name="appearance_look_backdrop_motion_title">Animated scenes</string>
-    <string name="appearance_look_backdrop_motion_desc">The Scenes themes (CleverKeys Aurora, Meadow, Stream, River rocks, Forest, Snow, Beach) move gently: curtains and water drift, grass and leaves sway, snow and rain fall. They rest after 20 seconds without typing and stay still in battery saver. Uses a little extra battery while moving. Android 10 or later.</string>
+    <string name="appearance_look_backdrop_motion_desc">The Scenes themes (CleverKeys Aurora, Meadow, Stream, River rocks, Forest, Snow, Beach) move gently: curtains and water drift, grass and leaves sway, snow and rain fall. They pause while you type and rest after 20 seconds without typing; they stay still in battery saver, when the phone is hot or when the battery is low. Uses a little extra battery while moving. Android 10 or later.</string>
     <string name="appearance_look_motion_speed_title">Scene Speed</string>
     <string name="appearance_look_motion_speed_desc">How fast the scenes move</string>
     <string name="appearance_look_motion_intensity_title">Scene Motion Intensity</string>

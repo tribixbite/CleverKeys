@@ -407,7 +407,7 @@
     <string name="appearance_look_space_language_title">스페이스바에 언어 이름 표시</string>
     <string name="appearance_look_space_language_desc">Samsung 스타일은 삼성 키보드처럼 스페이스바에 현재 언어를 표시합니다.</string>
     <string name="appearance_look_backdrop_motion_title">움직이는 장면</string>
-    <string name="appearance_look_backdrop_motion_desc">장면 테마(CleverKeys Aurora, 초원, 시냇물, 강돌, 숲, 눈, 해변)가 부드럽게 움직입니다. 오로라와 물이 흐르고, 풀과 잎이 흔들리고, 눈과 비가 내립니다. 20초 동안 입력이 없으면 멈추고 절전 모드에서는 정지합니다. 움직이는 동안 배터리를 조금 더 사용합니다. Android 10 이상.</string>
+    <string name="appearance_look_backdrop_motion_desc">장면 테마(CleverKeys Aurora, 초원, 시냇물, 강돌, 숲, 눈, 해변)가 부드럽게 움직입니다. 오로라와 물이 흐르고, 풀과 잎이 흔들리고, 눈과 비가 내립니다. 입력하는 동안 잠시 멈추고 20초 동안 입력이 없으면 멈춥니다. 절전 모드, 휴대전화가 뜨거울 때, 배터리가 부족할 때는 정지합니다. 움직이는 동안 배터리를 조금 더 사용합니다. Android 10 이상.</string>
     <string name="appearance_look_motion_speed_title">장면 속도</string>
     <string name="appearance_look_motion_speed_desc">장면이 움직이는 속도</string>
     <string name="appearance_look_motion_intensity_title">장면 움직임 강도</string>

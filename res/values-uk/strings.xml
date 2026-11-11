@@ -424,7 +424,7 @@
     <string name="appearance_look_space_language_title">Назва мови на пробілі</string>
     <string name="appearance_look_space_language_desc">Стиль Samsung показує поточну мову на клавіші пробілу, як клавіатура Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Анімовані сцени</string>
-    <string name="appearance_look_backdrop_motion_desc">Теми розділу «Сцени» (CleverKeys Aurora, Луг, Струмок, Річкова галька, Ліс, Сніг, Пляж) плавно рухаються: сяйво й вода пливуть, трава й листя гойдаються, падають сніг і дощ. Через 20 секунд без введення вони завмирають і не рухаються в режимі енергозбереження. Поки рухаються, витрачають трохи більше заряду. Android 10 або новіше.</string>
+    <string name="appearance_look_backdrop_motion_desc">Теми розділу «Сцени» (CleverKeys Aurora, Луг, Струмок, Річкова галька, Ліс, Сніг, Пляж) плавно рухаються: сяйво й вода пливуть, трава й листя гойдаються, падають сніг і дощ. Під час введення вони завмирають, а через 20 секунд без введення зупиняються; не рухаються в режимі енергозбереження, коли телефон гарячий або заряд низький. Поки рухаються, витрачають трохи більше заряду. Android 10 або новіше.</string>
     <string name="appearance_look_motion_speed_title">Швидкість сцен</string>
     <string name="appearance_look_motion_speed_desc">Як швидко рухаються сцени</string>
     <string name="appearance_look_motion_intensity_title">Сила руху сцен</string>

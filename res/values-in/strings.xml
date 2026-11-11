@@ -418,7 +418,7 @@
     <string name="appearance_look_space_language_title">Nama bahasa di tombol spasi</string>
     <string name="appearance_look_space_language_desc">Tampilan Samsung menampilkan bahasa saat ini di tombol spasi, seperti Samsung Keyboard.</string>
     <string name="appearance_look_backdrop_motion_title">Adegan bergerak</string>
-    <string name="appearance_look_backdrop_motion_desc">Tema Adegan (CleverKeys Aurora, Padang rumput, Sungai kecil, Batu sungai, Hutan, Salju, Pantai) bergerak lembut: aurora dan air mengalir, rumput dan daun bergoyang, salju dan hujan turun. Diam setelah 20 detik tanpa mengetik dan tetap diam dalam mode hemat baterai. Memakai sedikit baterai tambahan selama bergerak. Android 10 atau lebih baru.</string>
+    <string name="appearance_look_backdrop_motion_desc">Tema Adegan (CleverKeys Aurora, Padang rumput, Sungai kecil, Batu sungai, Hutan, Salju, Pantai) bergerak lembut: aurora dan air mengalir, rumput dan daun bergoyang, salju dan hujan turun. Berhenti sejenak saat Anda mengetik dan diam setelah 20 detik tanpa mengetik; tetap diam dalam mode hemat baterai, saat ponsel panas, atau saat baterai lemah. Memakai sedikit baterai tambahan selama bergerak. Android 10 atau lebih baru.</string>
     <string name="appearance_look_motion_speed_title">Kecepatan adegan</string>
     <string name="appearance_look_motion_speed_desc">Seberapa cepat adegan bergerak</string>
     <string name="appearance_look_motion_intensity_title">Intensitas gerak adegan</string>

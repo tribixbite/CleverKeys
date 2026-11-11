@@ -433,7 +433,7 @@
     <string name="appearance_look_space_language_title">Numele limbii pe bara de spațiu</string>
     <string name="appearance_look_space_language_desc">Aspectul Samsung afișează limba curentă pe bara de spațiu, ca tastatura Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Scene animate</string>
-    <string name="appearance_look_backdrop_motion_desc">Temele Scene (CleverKeys Aurora, Pajiște, Pârâu, Pietre de râu, Pădure, Zăpadă, Plajă) se mișcă lin: aurora și apa plutesc, iarba și frunzele se leagănă, cad zăpada și ploaia. Se opresc după 20 de secunde fără tastare și stau nemișcate în modul de economisire. Consumă puțin mai multă baterie cât se mișcă. Android 10 sau mai nou.</string>
+    <string name="appearance_look_backdrop_motion_desc">Temele Scene (CleverKeys Aurora, Pajiște, Pârâu, Pietre de râu, Pădure, Zăpadă, Plajă) se mișcă lin: aurora și apa plutesc, iarba și frunzele se leagănă, cad zăpada și ploaia. Se întrerup cât tastați și se opresc după 20 de secunde fără tastare; stau nemișcate în modul de economisire, când telefonul e fierbinte sau bateria e descărcată. Consumă puțin mai multă baterie cât se mișcă. Android 10 sau mai nou.</string>
     <string name="appearance_look_motion_speed_title">Viteza scenelor</string>
     <string name="appearance_look_motion_speed_desc">Cât de repede se mișcă scenele</string>
     <string name="appearance_look_motion_intensity_title">Intensitatea mișcării</string>

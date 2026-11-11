@@ -29,6 +29,12 @@ import kotlin.random.Random
 object SceneRaster {
 
     /**
+     * Forest leaves are drawn this much larger than the first forest's (maintainer 2026-11-11:
+     * "leaves should be slightly larger with more scene coverage").
+     */
+    private const val LEAF_SCALE = 1.4f
+
+    /**
      * [kind] painted for a raster of [width] × [height] px at [density] raster px per dp (the
      * screen's density divided by [SceneKind.paintScale]).
      */
@@ -562,7 +568,7 @@ object SceneRaster {
 
         val layers = ArrayList<SceneLayer>()
         layers += canopyLayer(w, h, d, Random(seed + 10))
-        layers += hangingBranchLayer(w, h, d, Random(seed + 11))
+        layers += hangingBranchesLayer(w, h, d, Random(seed + 11))
         layers += fernLayer(w, h, d, Random(seed + 12))
         return ScenePainting(w, h, p.toArgb(), null, layers)
     }
@@ -615,7 +621,8 @@ object SceneRaster {
             val toward = ((lx - cx) * 0.6f - (ly - cy) * 0.8f) / radius
             val outer = rr / radius
             val lit = (0.35f + 0.45f * toward + 0.3f * outer + 0.2f * (rng.nextFloat() - 0.5f)).coerceIn(0f, 1f)
-            leaves += floatArrayOf(lx, ly, lit, rng.nextFloat() * PI.toFloat(), (1.6f + 2.2f * rng.nextFloat()) * d)
+            // 2.3–5.4 dp long (maintainer 2026-11-11: "leaves should be slightly larger").
+            leaves += floatArrayOf(lx, ly, lit, rng.nextFloat() * PI.toFloat(), LEAF_SCALE * (1.6f + 2.2f * rng.nextFloat()) * d)
         }
         leaves.sortBy { it[2] }
         for (lf in leaves) {
@@ -630,28 +637,39 @@ object SceneRaster {
         }
     }
 
-    /** The canopy across the top: foliage clumps against bright gaps, swaying from above. */
+    /**
+     * The canopy across the top: foliage clumps against bright gaps, swaying from above. It
+     * reaches about half way down, deepest at the sides where the near trees stand, with clumps
+     * hanging lower here and there (maintainer 2026-11-11: "more scene coverage").
+     */
     private fun canopyLayer(w: Int, h: Int, d: Float, rng: Random): SceneLayer {
         val amp = 3.5f * d
         val margin = (amp + 30 * d).toInt()
-        val lh = (0.36f * h).toInt().coerceAtLeast(1)
+        val lh = (0.56f * h).toInt().coerceAtLeast(1)
         val lw = w + 2 * margin
         val lp = Paint2D(lw, lh, opaque = false)
-        // A dense, shaded back of the canopy first, so the clumps in front sit in foliage, not sky.
-        repeat((lw / d / 6f).toInt().coerceIn(40, 300)) {
-            val cx = rng.nextFloat() * lw
-            val cy = lh * 0.45f * rng.nextFloat().pow(2f)
-            val r = (12f + 14f * rng.nextFloat()) * d
-            foliage(lp, rng, cx, cy, r, (r * r / (d * d) / 2.5f).toInt().coerceIn(20, 220), d, 0.45f)
+        // How far down the canopy reaches at layer x: deeper at both sides.
+        fun reach(x: Float): Float {
+            val side = abs(2f * (x - margin) / w - 1f).coerceIn(0f, 1f)
+            return lh * (0.5f + 0.42f * side.pow(2.2f))
         }
-        val clumps = (lw / d / 7f).toInt().coerceIn(30, 260)
+        // Leaves per clump: enough to fill it with leaves of the larger size.
+        fun leavesFor(r: Float, per: Float) = (r * r / (d * d) / (per * LEAF_SCALE * LEAF_SCALE)).toInt()
+        // A dense, shaded back of the canopy first, so the clumps in front sit in foliage, not sky.
+        repeat((lw / d / 5f).toInt().coerceIn(40, 360)) {
+            val cx = rng.nextFloat() * lw
+            val cy = reach(cx) * 0.6f * rng.nextFloat().pow(1.6f)
+            val r = (13f + 15f * rng.nextFloat()) * d
+            foliage(lp, rng, cx, cy, r, leavesFor(r, 2.5f).coerceIn(14, 200), d, 0.45f)
+        }
+        val clumps = (lw / d / 5.5f).toInt().coerceIn(30, 320)
         repeat(clumps) {
             val cx = rng.nextFloat() * lw
             // Denser at the very top, thinning down; gaps let the sky through.
-            val cy = lh * 0.85f * rng.nextFloat().pow(1.7f)
-            val r = (9f + 16f * rng.nextFloat()) * d * (1f - 0.4f * cy / lh)
+            val cy = reach(cx) * 0.92f * rng.nextFloat().pow(1.5f)
+            val r = (10f + 18f * rng.nextFloat()) * d * (1f - 0.35f * cy / lh)
             val depth = 0.65f + 0.35f * rng.nextFloat()
-            foliage(lp, rng, cx, cy, r, (r * r / (d * d) / 3.2f).toInt().coerceIn(12, 160), d, depth)
+            foliage(lp, rng, cx, cy, r, leavesFor(r, 3.2f).coerceIn(10, 150), d, depth)
         }
         return SceneLayer(-margin, 0, lw, lh, lp.toArgb(), LayerMotion(
             LayerMotionKind.SWAY_DOWN, anchorY = 0f, reach = lh.toFloat(), amplitude = amp, bias = 0.1f,
@@ -659,27 +677,35 @@ object SceneRaster {
         ))
     }
 
-    /** A leafy branch hanging in from the top left, near the viewer, swaying more than the canopy. */
-    private fun hangingBranchLayer(w: Int, h: Int, d: Float, rng: Random): SceneLayer {
+    /**
+     * Two leafy branches hanging in near the viewer, from the top left and the top right,
+     * swaying more than the canopy. One layer: the gust travels across it, so the two never
+     * swing together, and one bitmap holds both.
+     */
+    private fun hangingBranchesLayer(w: Int, h: Int, d: Float, rng: Random): SceneLayer {
         val amp = 6f * d
         val margin = (amp + 30 * d).toInt()
-        val lh = (0.5f * h).toInt().coerceAtLeast(1)
+        val lh = (0.56f * h).toInt().coerceAtLeast(1)
         val lw = w + 2 * margin
         val lp = Paint2D(lw, lh, opaque = false)
         val n = 7
         val xs = FloatArray(n); val ys = FloatArray(n); val rs = FloatArray(n)
-        val sx = margin + 0.02f * w; val ex = margin + 0.42f * w; val ey = 0.4f * h
-        for (s in 0 until n) {
-            val t = s.toFloat() / (n - 1)
-            xs[s] = sx + (ex - sx) * t
-            ys[s] = -4f * d + ey * t * t * 0.9f + 0.1f * ey * t
-            rs[s] = 3f * (1f - 0.7f * t) * d
-        }
-        lp.stroke(xs, ys, rs, 0xFF2A2218.toInt(), 0xFF5A4630.toInt(), 1f, sideLight = 0.3f)
-        // Clumps of leaves along it and at its tip.
-        for (s in 1 until n) {
-            val t = s.toFloat() / (n - 1)
-            foliage(lp, rng, xs[s] + (rng.nextFloat() - 0.5f) * 10f * d, ys[s] + 6f * d, (10f + 10f * t) * d, (60 + 80 * t).toInt(), d, 1f)
+        // (start x, end x, end y) as shares of the view: the left one reaches further.
+        for (branch in arrayOf(floatArrayOf(0.02f, 0.42f, 0.42f), floatArrayOf(0.98f, 0.64f, 0.36f))) {
+            val sx = margin + branch[0] * w; val ex = margin + branch[1] * w; val ey = branch[2] * h
+            for (s in 0 until n) {
+                val t = s.toFloat() / (n - 1)
+                xs[s] = sx + (ex - sx) * t
+                ys[s] = -4f * d + ey * t * t * 0.9f + 0.1f * ey * t
+                rs[s] = 3f * (1f - 0.7f * t) * d
+            }
+            lp.stroke(xs, ys, rs, 0xFF2A2218.toInt(), 0xFF5A4630.toInt(), 1f, sideLight = 0.3f)
+            // Clumps of leaves along it and at its tip, bigger towards the tip.
+            for (s in 1 until n) {
+                val t = s.toFloat() / (n - 1)
+                val r = (12f + 12f * t) * d
+                foliage(lp, rng, xs[s] + (rng.nextFloat() - 0.5f) * 12f * d, ys[s] + 7f * d, r, (40 + 60 * t).toInt(), d, 1f)
+            }
         }
         return SceneLayer(-margin, 0, lw, lh, lp.toArgb(), LayerMotion(
             LayerMotionKind.SWAY_DOWN, anchorY = 0f, reach = lh.toFloat(), amplitude = amp, bias = 0.15f,
@@ -687,69 +713,148 @@ object SceneRaster {
         ))
     }
 
-    /** Fern fronds rising from the bottom edge, swaying from their roots. */
+    /**
+     * Ferns on the floor, swaying from their roots (maintainer 2026-11-11: the old fronds were
+     * "too dainty and perfect and similar"): clumps of four to eight fronds fanning from a
+     * crown, each frond its own length, lean and droop, its leaflets ([frond]) cut into
+     * lobes, unevenly spaced, a few missing or browned. Back clumps are smaller and darker.
+     */
     private fun fernLayer(w: Int, h: Int, d: Float, rng: Random): SceneLayer {
-        val amp = 4f * d
-        val margin = (amp + 20 * d).toInt()
-        val top = (0.55f * h).toInt()
+        val amp = 4.5f * d
+        val margin = (amp + 40 * d).toInt()
+        val top = (0.42f * h).toInt()
         val lw = w + 2 * margin
         val lh = h - top
         val lp = Paint2D(lw, lh, opaque = false)
-        val fronds = (w / d / 22f).toInt().coerceIn(8, 26)
-        repeat(fronds) { k ->
-            // A back row first (shorter, darker), then the front one.
-            val back = k < fronds / 2
-            val rx = margin + ((if (back) k else k - fronds / 2) + rng.nextFloat()) * w / (fronds / 2)
-            val ry = lh + (2f + 6f * rng.nextFloat()) * d
-            val len = (if (back) 0.18f else 0.24f + 0.14f * rng.nextFloat()) * h
-            val tone = (if (back) 0.62f else 0.9f) * (0.85f + 0.3f * rng.nextFloat())
-            val lean = (if (rng.nextBoolean()) 1f else -1f) * (0.25f + 0.5f * rng.nextFloat())
-            val n = 7
-            val xs = FloatArray(n); val ys = FloatArray(n); val rs = FloatArray(n)
-            for (s in 0 until n) {
-                val t = s.toFloat() / (n - 1)
-                xs[s] = rx + len * (sin(lean) * t + 0.35f * lean * t * t)
-                ys[s] = ry - len * cos(lean) * t + 0.25f * len * t * t * abs(lean)
-                rs[s] = (1.1f * (1f - 0.7f * t)) * d
-            }
-            lp.stroke(xs, ys, rs, scale(0xFF1C3A16.toInt(), tone), scale(0xFF4A7A30.toInt(), tone), 1f)
-            // Paired leaflets, shrinking to the tip.
-            val pairs = 14
-            for (j in 1 until pairs) {
-                val t = j.toFloat() / pairs
-                val i = (t * (n - 1)).toInt().coerceAtMost(n - 2)
-                val ft = t * (n - 1) - i
-                val px = xs[i] + (xs[i + 1] - xs[i]) * ft; val py = ys[i] + (ys[i + 1] - ys[i]) * ft
-                val dir = atan2(ys[i + 1] - ys[i], xs[i + 1] - xs[i])
-                val ll = len * 0.15f * (1f - t).pow(0.7f) + 1.2f * d
-                val c = scale(lerpColor(0xFF24502A.toInt(), 0xFF6E9E42.toInt(), t * 0.6f + 0.3f * rng.nextFloat()), tone)
-                for (side in intArrayOf(-1, 1)) {
-                    lp.leaf(px, py, ll, ll * 0.17f, dir + side * 1.2f - 0.15f, c, 0.1f, 1f)
-                }
+        val count = (w / d / 62f).toInt().coerceIn(4, 12)
+        // (x, depth): spread across the floor unevenly; drawn back to front.
+        val clumps = List(count) { k ->
+            floatArrayOf(margin + (k + 0.15f + 0.7f * rng.nextFloat()) * w / count, 0.55f + 0.45f * rng.nextFloat())
+        }.sortedBy { it[1] }
+        for (c in clumps) {
+            val depth = c[1]
+            val crownY = lh + (1f + 5f * rng.nextFloat()) * d
+            val fronds = 4 + rng.nextInt(5)
+            val size = (0.28f + 0.2f * rng.nextFloat()) * h * (0.65f + 0.35f * depth)
+            // The clump leans as a whole a little; its fronds fan around that.
+            val clumpLean = 0.25f * (rng.nextFloat() - 0.5f)
+            val spread = 1.5f + 0.8f * rng.nextFloat()
+            // Outer fronds first, so the upright middle ones lie over them.
+            val order = (0 until fronds).sortedByDescending { abs(it - (fronds - 1) / 2f) }
+            for (f in order) {
+                val u = if (fronds > 1) f / (fronds - 1f) - 0.5f else 0f
+                val angle = clumpLean + spread * u + 0.22f * (rng.nextFloat() - 0.5f)
+                val len = size * (0.7f + 0.45f * rng.nextFloat()) * (1f - 0.35f * abs(u))
+                // Outer fronds arch over and droop at the tip; the middle ones stand.
+                val droop = (0.35f + 1.1f * abs(u) + 0.3f * rng.nextFloat()) * (if (u < 0f) -1f else 1f)
+                val tone = (0.55f + 0.4f * depth) * (0.85f + 0.3f * rng.nextFloat())
+                frond(lp, rng, c[0] + (rng.nextFloat() - 0.5f) * 6f * d, crownY, len, angle, droop, tone, d)
             }
         }
         return SceneLayer(-margin, top, lw, lh, lp.toArgb(), LayerMotion(
-            LayerMotionKind.SWAY_UP, anchorY = h.toFloat(), reach = 0.4f * h, amplitude = amp, bias = 0.15f,
+            LayerMotionKind.SWAY_UP, anchorY = h.toFloat(), reach = 0.5f * h, amplitude = amp, bias = 0.15f,
             periodS = 4.8f, phase = 0.6f, wavelength = 0.7f * w,
         ))
+    }
+
+    /**
+     * One fern frond from ([x], [y]), [len] long, setting off at [angle] from upright (radians,
+     * positive = right) and bending by [droop] towards its tip: a rachis with leaflets (pinnae)
+     * along both sides, alternate rather than paired, longest a third of the way up and tapering
+     * to the tip. A long leaflet is cut into lobes (pinnules) so it reads as a fern, not a ladder
+     * of ovals; spacing and length vary, a few leaflets are missing and some tips are browned.
+     */
+    private fun frond(p: Paint2D, rng: Random, x: Float, y: Float, len: Float, angle: Float, droop: Float, tone: Float, d: Float) {
+        val n = 12
+        val xs = FloatArray(n); val ys = FloatArray(n); val rs = FloatArray(n)
+        val dirs = FloatArray(n)
+        var px = x; var py = y
+        for (s in 0 until n) {
+            val t = s.toFloat() / (n - 1)
+            // Heading from upright: bends more and more towards the tip.
+            val heading = angle + droop * t.pow(1.6f)
+            dirs[s] = heading
+            xs[s] = px; ys[s] = py
+            rs[s] = (1.5f * (1f - 0.75f * t)) * d * tone.coerceAtMost(1f)
+            px += sin(heading) * len / (n - 1)
+            py -= cos(heading) * len / (n - 1)
+        }
+        val base = lerpColor(0xFF22481E.toInt(), 0xFF64903A.toInt(), rng.nextFloat())
+        // Some fronds are older and yellower.
+        val green = if (rng.nextFloat() < 0.2f) lerpColor(base, 0xFF9AA046.toInt(), 0.45f) else base
+        val brownTip = rng.nextFloat() < 0.35f
+        p.stroke(xs, ys, rs, scale(0xFF2C3A18.toInt(), tone), scale(0xFF58702E.toInt(), tone), 1f)
+        val pinnae = 16 + rng.nextInt(9)
+        var side = if (rng.nextBoolean()) 1 else -1
+        for (j in 1 until pinnae) {
+            // Unevenly spaced along the rachis; now and then one is missing.
+            val t = ((j + 0.35f * (rng.nextFloat() - 0.5f)) / pinnae).coerceIn(0.04f, 0.98f)
+            side = -side
+            if (rng.nextFloat() < 0.07f) continue
+            val i = (t * (n - 1)).toInt().coerceAtMost(n - 2)
+            val ft = t * (n - 1) - i
+            val ax = xs[i] + (xs[i + 1] - xs[i]) * ft
+            val ay = ys[i] + (ys[i + 1] - ys[i]) * ft
+            val along = atan2(ys[i + 1] - ys[i], xs[i + 1] - xs[i])
+            // Longest a third of the way up, short at the base, tapering to the tip.
+            val profile = if (t < 0.3f) 0.55f + 0.45f * t / 0.3f else 1f - 0.85f * ((t - 0.3f) / 0.7f).pow(1.2f)
+            val pl = len * 0.24f * profile * (0.8f + 0.4f * rng.nextFloat())
+            if (pl < 1.2f * d) continue
+            // Swept towards the tip, the lower side of a drooping frond hanging a little more.
+            val dir = along + side * (1.15f + 0.25f * rng.nextFloat()) - side * 0.35f
+            var c = scale(lerpColor(green, 0xFF8CB250.toInt(), 0.15f + 0.35f * t + 0.15f * rng.nextFloat()), tone)
+            if (brownTip && t > 0.8f) c = lerpColor(c, scale(0xFF8A6A34.toInt(), tone), (t - 0.8f) / 0.2f * 0.7f)
+            // Low in the clump the fronds shade each other; the tips are out in the light.
+            c = scale(c, 0.62f + 0.38f * t)
+            val sun = if (side < 0) 0.35f else 0.05f
+            if (pl < 5f * d) {
+                // A short leaflet: one lobed blade.
+                p.leaf(ax, ay, pl, pl * 0.3f, dir, c, sun, 1f)
+                continue
+            }
+            // A long one: a midrib with lobes along both sides, shrinking to its tip.
+            val ca = cos(dir); val sa = sin(dir)
+            val lobes = (pl / (1.7f * d)).toInt().coerceIn(3, 9)
+            for (l in 0 until lobes) {
+                val v = (l + 0.5f) / lobes
+                val lx = ax + ca * pl * v; val ly = ay + sa * pl * v
+                val ll = pl * 0.3f * (1f - 0.65f * v) * (0.85f + 0.3f * rng.nextFloat()) + 0.6f * d
+                for (ls in intArrayOf(-1, 1)) {
+                    p.leaf(lx, ly, ll, ll * 0.42f, dir + ls * (0.95f + 0.2f * rng.nextFloat()), c, sun, 1f)
+                }
+            }
+            p.leaf(ax, ay, pl * 1.05f, 0.8f * d, dir, scale(c, 0.9f), sun, 0.9f)
+        }
     }
 
     // ---- Snow: an aurora over snowy hills at night, stars and a few pines; the snowfall is particles ----
 
     /**
      * The snow scene's aurora (maintainer 2026-11-10: "put an aurora and stars in the snow
-     * scene"): two green curtains with teal and violet tops over the ridge, folded together.
+     * scene"; 2026-11-11: "needs more of our aurora colors"): the aurora look's palette over the
+     * ridge — the hallmark green low across, turning teal, indigo into teal at the left,
+     * magenta into pink at the right, a violet fold above — folded together.
      */
     private val SNOW_AURORA = listOf(
         AuroraRibbon(
-            edgeY = 0.50f, amplitude = 0.06f, waves = 1.1f, phase = 0.2f, slope = 0.05f, height = 0.34f,
-            edgeColor = 0x7A46F08C, topColor = 0x2A5A3CC8, raysPer100Dp = 46f, rayContrast = 0.6f, seed = 91L,
-            edgeColorEnd = 0x6A3CD8C8, topColorEnd = 0x26304AB4, convergence = 0.3f,
+            edgeY = 0.47f, amplitude = 0.06f, waves = 1.1f, phase = 0.2f, slope = 0.05f, height = 0.32f,
+            edgeColor = 0x843CF58C.toInt(), topColor = 0x2A5A3CC8, raysPer100Dp = 46f, rayContrast = 0.6f, seed = 91L,
+            edgeColorEnd = 0x7046E6B4, topColorEnd = 0x2E7A3CC8, convergence = 0.3f,
         ),
         AuroraRibbon(
-            edgeY = 0.34f, amplitude = 0.05f, waves = 1.1f, phase = 0.26f, slope = 0.06f, height = 0.24f,
-            edgeColor = 0x4E5AE6B0, topColor = 0x1E6A3CB4, raysPer100Dp = 46f, rayContrast = 0.62f, seed = 97L,
-            xStart = 0.2f, xEnd = 1f, convergence = 0.3f,
+            edgeY = 0.40f, amplitude = 0.05f, waves = 1.1f, phase = 0.24f, slope = 0.06f, height = 0.26f,
+            edgeColor = 0x646E6CFF, topColor = 0x2A2E1A9A, raysPer100Dp = 44f, rayContrast = 0.62f, seed = 97L,
+            xStart = 0f, xEnd = 0.66f, edgeColorEnd = 0x5634D8C4, topColorEnd = 0x261E4A8C, convergence = 0.3f,
+        ),
+        AuroraRibbon(
+            edgeY = 0.37f, amplitude = 0.05f, waves = 1.1f, phase = 0.28f, slope = 0.06f, height = 0.26f,
+            edgeColor = 0x58E07AD8, topColor = 0x205A2EA6, raysPer100Dp = 42f, rayContrast = 0.64f, seed = 101L,
+            xStart = 0.42f, xEnd = 1f, edgeColorEnd = 0x56F07AC0, topColorEnd = 0x20702AA0, convergence = 0.3f,
+        ),
+        AuroraRibbon(
+            edgeY = 0.24f, amplitude = 0.05f, waves = 1.1f, phase = 0.32f, slope = 0.07f, height = 0.18f,
+            edgeColor = 0x48B48CFF, topColor = 0x1C603CB4, raysPer100Dp = 46f, rayContrast = 0.66f, seed = 103L,
+            xStart = 0.18f, xEnd = 0.72f, convergence = 0.3f,
         ),
     )
 
@@ -785,7 +890,9 @@ object SceneRaster {
         // Two snowy hills, lit by the aurora; the glitter on their crust moves between frames.
         p.ridge(0.66f, 0.06f, 0.9f, seed + 1, 0xFF7E98AE.toInt())
         p.ridge(0.80f, 0.05f, 1.6f, seed + 2, 0xFFA8BED0.toInt())
+        // The aurora's green and violet light on the snow.
         p.band(0.64f, 0.78f, 0xFF4AE0A0.toInt(), 0.06f)
+        p.band(0.74f, 0.9f, 0xFFB48CFF.toInt(), 0.04f)
         val glitter = Random(seed + 10 + frame)
         repeat((w * h / (d * d) / 90f).toInt().coerceIn(40, 2000)) {
             val x = glitter.nextFloat() * w

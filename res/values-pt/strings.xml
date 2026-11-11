@@ -410,7 +410,7 @@
     <string name="appearance_look_space_language_title">Nome do idioma na barra de espaço</string>
     <string name="appearance_look_space_language_desc">O visual Samsung mostra o idioma atual na barra de espaço, como o teclado Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Cenas animadas</string>
-    <string name="appearance_look_backdrop_motion_desc">Os temas Cenas (CleverKeys Aurora, Prado, Riacho, Seixos, Floresta, Neve, Praia) se movem suavemente: a aurora e a água flutuam, a grama e as folhas balançam, a neve e a chuva caem. Param após 20 segundos sem digitar e ficam parados na economia de bateria. Usam um pouco mais de bateria enquanto se movem. Android 10 ou posterior.</string>
+    <string name="appearance_look_backdrop_motion_desc">Os temas Cenas (CleverKeys Aurora, Prado, Riacho, Seixos, Floresta, Neve, Praia) se movem suavemente: a aurora e a água flutuam, a grama e as folhas balançam, a neve e a chuva caem. Pausam enquanto você digita e param após 20 segundos sem digitar; ficam parados na economia de bateria, com o telefone quente ou com pouca bateria. Usam um pouco mais de bateria enquanto se movem. Android 10 ou posterior.</string>
     <string name="appearance_look_motion_speed_title">Velocidade das cenas</string>
     <string name="appearance_look_motion_speed_desc">A rapidez com que as cenas se movem</string>
     <string name="appearance_look_motion_intensity_title">Intensidade do movimento</string>

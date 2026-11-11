@@ -413,7 +413,7 @@
     <string name="appearance_look_space_language_title">Název jazyka na mezerníku</string>
     <string name="appearance_look_space_language_desc">Vzhled Samsung zobrazuje na mezerníku aktuální jazyk, stejně jako klávesnice Samsung.</string>
     <string name="appearance_look_backdrop_motion_title">Animované scény</string>
-    <string name="appearance_look_backdrop_motion_desc">Motivy Scény (CleverKeys Aurora, Louka, Potok, Oblázky, Les, Sníh, Pláž) se jemně pohybují: polární záře a voda plynou, tráva a listí se vlní, padá sníh a déšť. Po 20 sekundách bez psaní se zastaví a v úsporném režimu zůstávají v klidu. Během pohybu spotřebují o něco více baterie. Android 10 nebo novější.</string>
+    <string name="appearance_look_backdrop_motion_desc">Motivy Scény (CleverKeys Aurora, Louka, Potok, Oblázky, Les, Sníh, Pláž) se jemně pohybují: polární záře a voda plynou, tráva a listí se vlní, padá sníh a déšť. Při psaní se pozastaví a po 20 sekundách bez psaní se zastaví; v úsporném režimu, při přehřátí telefonu nebo slabé baterii zůstávají v klidu. Během pohybu spotřebují o něco více baterie. Android 10 nebo novější.</string>
     <string name="appearance_look_motion_speed_title">Rychlost scén</string>
     <string name="appearance_look_motion_speed_desc">Jak rychle se scény pohybují</string>
     <string name="appearance_look_motion_intensity_title">Síla pohybu scén</string>

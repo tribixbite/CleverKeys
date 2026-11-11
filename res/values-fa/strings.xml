@@ -444,7 +444,7 @@
     <string name="appearance_look_space_language_title">نام زبان روی کلید فاصله</string>
     <string name="appearance_look_space_language_desc">ظاهر سامسونگ زبان فعلی را روی کلید فاصله نشان می‌دهد، مانند صفحه‌کلید سامسونگ.</string>
     <string name="appearance_look_backdrop_motion_title">صحنه‌های متحرک</string>
-    <string name="appearance_look_backdrop_motion_desc">تم‌های صحنه (CleverKeys Aurora، چمنزار، جویبار، سنگ‌های رود، جنگل، برف، ساحل) آرام حرکت می‌کنند: شفق و آب شناورند، چمن و برگ تاب می‌خورند، برف و باران می‌بارد. پس از ۲۰ ثانیه بدون تایپ می‌ایستند و در حالت صرفه‌جویی باتری ساکن می‌مانند. هنگام حرکت کمی باتری بیشتری مصرف می‌کنند. Android 10 یا جدیدتر.</string>
+    <string name="appearance_look_backdrop_motion_desc">تم‌های صحنه (CleverKeys Aurora، چمنزار، جویبار، سنگ‌های رود، جنگل، برف، ساحل) آرام حرکت می‌کنند: شفق و آب شناورند، چمن و برگ تاب می‌خورند، برف و باران می‌بارد. هنگام تایپ مکث می‌کنند و پس از ۲۰ ثانیه بدون تایپ می‌ایستند؛ در حالت صرفه‌جویی باتری، وقتی گوشی داغ است یا باتری کم است ساکن می‌مانند. هنگام حرکت کمی باتری بیشتری مصرف می‌کنند. Android 10 یا جدیدتر.</string>
     <string name="appearance_look_motion_speed_title">سرعت صحنه</string>
     <string name="appearance_look_motion_speed_desc">سرعت حرکت صحنه‌ها</string>
     <string name="appearance_look_motion_intensity_title">شدت حرکت صحنه</string>

@@ -474,11 +474,13 @@ editor that used to be listed here already ship in 2.0.)
   hills under the northern lights and stars) and Beach (waves rolling up bright sand); the keys
   are see-through and labels stay readable. Scenes move by default (Appearance → Animated
   scenes): the aurora ripples and sways, grass bends in a breeze that travels across the field,
-  the canopy and ferns sway, light flows down the stream, raindrops splash and wet the stones,
-  waves roll in and wash up the sand, snow falls, stars twinkle. Scene Speed, Scene Motion
-  Intensity and Twinkle tune how they move, and Sharp Scenes paints the soft ones at full
-  resolution. A scene comes to rest 20 seconds after you stop typing, and stays still in battery
-  saver, with animations turned off and on Android 9 or older; the default theme is static.
+  the canopy and ferns sway, light flows down the stream, rain comes in showers and splashes and
+  wets the stones, waves roll in and wash up the sand, snow falls, stars twinkle. Scene Speed,
+  Scene Motion Intensity and Twinkle tune how they move, and Sharp Scenes paints the soft ones at
+  full resolution. A scene holds still while you type and moves again a second after you stop;
+  it comes to rest 20 seconds after you stop typing, and stays still in battery saver, when the
+  phone is hot, when the battery is low (15 % or less, not charging), with animations turned off
+  and on Android 9 or older; the default theme is static.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current

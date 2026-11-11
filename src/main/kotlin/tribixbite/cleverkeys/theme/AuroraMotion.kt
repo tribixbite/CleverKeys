@@ -42,6 +42,20 @@ object AuroraMotion {
     /** Speeding up from rest and slowing down to it each take this long (no jolt either way). */
     const val EASE_MS = 2_500L
 
+    /**
+     * Typing holds the backdrop still: a key press stops the motion and it starts again this
+     * long after the last one (maintainer 2026-11-11: "resume after 1s of no typing"). While
+     * typing the eyes are on the keys and the text; frames there were the whole measured cost
+     * (+217 mW on the Pixel 8 Pro with the aurora moving under continuous typing).
+     */
+    const val TYPING_HOLD_MS = 1_000L
+
+    /**
+     * Slowing to a stop at a key press takes this long: short enough that a typing burst costs
+     * two or three frames, long enough that the stop does not jolt.
+     */
+    const val HOLD_EASE_MS = 250L
+
     /** The widest sideways drift of a [MotionStyle.GENTLE] image, dp. */
     const val MAX_DRIFT_DP = 5f
 
@@ -209,14 +223,17 @@ class AuroraMotionFrame(
 /**
  * Motion time with an idle timeout: it advances at full speed for [idleMs] after the last
  * [wake], then slows to a stop over [easeMs] and stays there until woken (and speeds up over
- * [easeMs] again). Times are milliseconds on any monotonic clock. A gap between [advance] calls
- * longer than [maxStepMs] (the keyboard was hidden, the device slept) counts as [maxStepMs], so
- * the aurora never jumps.
+ * [easeMs] again). A key press ([touch]) also holds it: it slows to a stop over [holdEaseMs] and
+ * stays still until [holdMs] after the last press, then speeds up again. Times are milliseconds
+ * on any monotonic clock. A gap between [advance] calls longer than [maxStepMs] (the keyboard was
+ * hidden, the device slept) counts as [maxStepMs], so the aurora never jumps.
  */
 class AuroraMotionClock(
     private val idleMs: Long = AuroraMotion.IDLE_MS,
     private val easeMs: Long = AuroraMotion.EASE_MS,
     private val maxStepMs: Long = 250L,
+    private val holdMs: Long = AuroraMotion.TYPING_HOLD_MS,
+    private val holdEaseMs: Long = AuroraMotion.HOLD_EASE_MS,
 ) {
     /** Accumulated motion time, ms. */
     var motionMs: Double = 0.0
@@ -234,6 +251,7 @@ class AuroraMotionClock(
 
     private var lastAdvance = NONE
     private var lastWake = NONE
+    private var lastTouch = NONE
 
     /** The user is here: move (again) for the next [idleMs]. */
     fun wake(now: Long) {
@@ -241,18 +259,41 @@ class AuroraMotionClock(
     }
 
     /**
+     * A key press: the user is here (as [wake]) and typing, so hold still until [holdMs] after
+     * the last press.
+     */
+    fun touch(now: Long) {
+        lastWake = now
+        lastTouch = now
+    }
+
+    /** Whether a recent key press holds the motion at [now]. */
+    fun isHeld(now: Long): Boolean = lastTouch != NONE && now - lastTouch < holdMs
+
+    /**
+     * When the hold of the last key press ends (an uptime ms); only meaningful while [isHeld].
+     * The frame loop sleeps until then instead of ticking at its frame rate.
+     */
+    val holdEndsAt: Long get() = if (lastTouch == NONE) Long.MIN_VALUE else lastTouch + holdMs
+
+    /**
      * Moves the clock to [now]. Returns whether it is still moving or about to; false = at rest,
-     * and nothing changes until the next [wake].
+     * and nothing changes until the next [wake]. A held clock that has slowed to a stop returns
+     * false too: there is nothing to draw until [holdEndsAt].
      */
     fun advance(now: Long): Boolean {
         val dt = if (lastAdvance == NONE) 0L else (now - lastAdvance).coerceIn(0L, maxStepMs)
         lastAdvance = now
         val awake = lastWake != NONE && now - lastWake < idleMs
-        val step = if (easeMs <= 0) 1f else dt.toFloat() / easeMs
+        val held = isHeld(now)
         // Speed eases linearly, so position eases quadratically: no visible start or stop.
-        speed = if (awake) (speed + step).coerceAtMost(1f) else (speed - step).coerceAtLeast(0f)
+        speed = when {
+            held -> (speed - (if (holdEaseMs <= 0) 1f else dt.toFloat() / holdEaseMs)).coerceAtLeast(0f)
+            awake -> (speed + (if (easeMs <= 0) 1f else dt.toFloat() / easeMs)).coerceAtMost(1f)
+            else -> (speed - (if (easeMs <= 0) 1f else dt.toFloat() / easeMs)).coerceAtLeast(0f)
+        }
         motionMs += dt * speed.toDouble() * rate.coerceAtLeast(0f)
-        return awake || speed > 0f
+        return if (held) speed > 0f else awake || speed > 0f
     }
 
     /** Stops at once (keyboard hidden): the next [advance] starts from rest without a jump. */
@@ -263,5 +304,79 @@ class AuroraMotionClock(
 
     private companion object {
         const val NONE = Long.MIN_VALUE
+    }
+}
+
+/**
+ * Skips motion frames that would show nothing new. A frame's visible state is a list of numbers
+ * already in visible steps (positions in half pixels, alphas in steps of [AuroraMotion]'s
+ * smallest visible change); a frame is drawn only once some number has moved a whole step from
+ * what is on screen. The frame rate is the worst case (the fastest moment of a motion); a sine's
+ * slow stretches need far fewer frames, and every pushed frame costs the display pipeline the
+ * same (Pixel 8 Pro rails, 2026-11-10). Invisible by construction: what is on screen is never
+ * more than a step behind.
+ */
+class VisibleChangeGate {
+    private var shown = FloatArray(0)
+    private var shownCount = -1
+
+    /** Forget what is on screen: the next [changed] says yes (a new size, a repaint). */
+    fun reset() {
+        shownCount = -1
+    }
+
+    /**
+     * Whether the first [count] values of [state] differ from those on screen by a whole step
+     * somewhere; when they do, they become what is on screen.
+     */
+    fun changed(state: FloatArray, count: Int): Boolean {
+        var differs = count != shownCount
+        if (!differs) for (i in 0 until count) {
+            if (kotlin.math.abs(state[i] - shown[i]) >= 1f) { differs = true; break }
+        }
+        if (!differs) return false
+        if (shown.size < count) shown = FloatArray(count)
+        state.copyInto(shown, 0, 0, count)
+        shownCount = count
+        return true
+    }
+
+    companion object {
+        /** View pixels per step of a position: half a pixel, which antialiased edges just show. */
+        const val POSITION_STEP_PX = 0.5f
+
+        /** 0..255 alpha levels per step: two, below what a fade over a busy painting shows. */
+        const val ALPHA_STEP = 2f
+    }
+}
+
+/**
+ * Whether the phone's state lets a backdrop move: never with battery saver, animations switched
+ * off, the phone warm (thermal status [THERMAL_LIMIT] or above) or the battery at
+ * [LOW_BATTERY_PERCENT] or less and not charging. Pure, so the policy is tested off-device; the
+ * drawable asks it to start and again every [RECHECK_MS] while moving.
+ */
+object MotionAllowance {
+    /** `PowerManager.THERMAL_STATUS_MODERATE`: the phone is warm and starts limiting itself. */
+    const val THERMAL_LIMIT = 2
+
+    /** A battery this low keeps the backdrop still unless charging. */
+    const val LOW_BATTERY_PERCENT = 15
+
+    /** While moving, the phone's state is asked again this often (each ask is a few binder calls). */
+    const val RECHECK_MS = 5_000L
+
+    /** [batteryPercent] < 0 = unknown (no battery, or the property is not reported): not limiting. */
+    fun allows(
+        powerSave: Boolean,
+        animatorsEnabled: Boolean,
+        thermalStatus: Int,
+        batteryPercent: Int,
+        charging: Boolean,
+    ): Boolean {
+        if (powerSave || !animatorsEnabled) return false
+        if (thermalStatus >= THERMAL_LIMIT) return false
+        if (batteryPercent in 0..LOW_BATTERY_PERCENT && !charging) return false
+        return true
     }
 }

@@ -418,7 +418,7 @@
     <string name="appearance_look_space_language_title">Pangalan ng wika sa space bar</string>
     <string name="appearance_look_space_language_desc">Ipinapakita ng Samsung-style ang kasalukuyang wika sa space bar, gaya ng Samsung Keyboard.</string>
     <string name="appearance_look_backdrop_motion_title">Gumagalaw na mga eksena</string>
-    <string name="appearance_look_backdrop_motion_desc">Marahang gumagalaw ang mga tema ng Mga Eksena (CleverKeys Aurora, Parang, Batis, Bato sa ilog, Gubat, Niyebe, Dalampasigan): lumulutang ang aurora at tubig, umiindayog ang damo at mga dahon, bumabagsak ang niyebe at ulan. Tumitigil pagkalipas ng 20 segundong walang pagta-type at hindi gumagalaw sa battery saver. Gumagamit ng kaunting dagdag na baterya habang gumagalaw. Android 10 o mas bago.</string>
+    <string name="appearance_look_backdrop_motion_desc">Marahang gumagalaw ang mga tema ng Mga Eksena (CleverKeys Aurora, Parang, Batis, Bato sa ilog, Gubat, Niyebe, Dalampasigan): lumulutang ang aurora at tubig, umiindayog ang damo at mga dahon, bumabagsak ang niyebe at ulan. Humihinto habang nagta-type ka at tumitigil pagkalipas ng 20 segundong walang pagta-type; hindi gumagalaw sa battery saver, kapag mainit ang telepono o mahina ang baterya. Gumagamit ng kaunting dagdag na baterya habang gumagalaw. Android 10 o mas bago.</string>
     <string name="appearance_look_motion_speed_title">Bilis ng eksena</string>
     <string name="appearance_look_motion_speed_desc">Kung gaano kabilis gumalaw ang mga eksena</string>
     <string name="appearance_look_motion_intensity_title">Lakas ng galaw ng eksena</string>

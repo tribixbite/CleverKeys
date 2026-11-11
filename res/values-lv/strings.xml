@@ -422,7 +422,7 @@
     <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
     <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
     <string name="appearance_look_backdrop_motion_title">Animētas ainas</string>
-    <string name="appearance_look_backdrop_motion_desc">Ainu motīvi (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle un lapas šūpojas, krīt sniegs un lietus. Pēc 20 sekundēm bez rakstīšanas tie apstājas un enerģijas taupīšanas režīmā paliek nekustīgi. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
+    <string name="appearance_look_backdrop_motion_desc">Ainu motīvi (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle un lapas šūpojas, krīt sniegs un lietus. Rakstīšanas laikā tie apstājas uz brīdi, pēc 20 sekundēm bez rakstīšanas apstājas; enerģijas taupīšanas režīmā, sakarsušā tālrunī vai pie zema akumulatora līmeņa paliek nekustīgi. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
     <string name="appearance_look_motion_speed_title">Ainu ātrums</string>
     <string name="appearance_look_motion_speed_desc">Cik ātri ainas kustas</string>
     <string name="appearance_look_motion_intensity_title">Ainu kustības stiprums</string>

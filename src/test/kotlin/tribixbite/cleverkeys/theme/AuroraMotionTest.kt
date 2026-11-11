@@ -195,5 +195,126 @@ class AuroraMotionTest {
             v += 13.7f
         }
     }
+
+    /**
+     * Typing holds the motion (maintainer 2026-11-11: "resume after 1s of no typing"): a key
+     * press slows it to a stop within the hold ease, no frames are asked for while presses keep
+     * coming, and it moves again one second after the last press.
+     */
+    @Test
+    fun typingHoldsTheMotionUntilASecondAfterTheLastPress() {
+        val clock = AuroraMotionClock(idleMs = 20_000, easeMs = 1_000, maxStepMs = 250, holdMs = 1_000, holdEaseMs = 250)
+        var now = 0L
+        clock.wake(now)
+        while (now < 2_000) { now += 100; clock.advance(now) }
+        assertThat(clock.speed).isEqualTo(1f)
+        // A burst of presses every 200 ms for three seconds.
+        val burstEnd = now + 3_000
+        var stoppedAt = -1L
+        var movingWhileHeld = 0
+        while (now < burstEnd) {
+            if (now % 200 == 0L) clock.touch(now)
+            now += 100
+            val moving = clock.advance(now)
+            if (clock.speed == 0f && stoppedAt < 0) stoppedAt = now
+            if (stoppedAt >= 0 && moving) movingWhileHeld++
+        }
+        assertWithMessage("stopped within the hold ease").that(stoppedAt - 2_000).isAtMost(300L)
+        assertWithMessage("no frames once stopped while typing").that(movingWhileHeld).isEqualTo(0)
+        val lastPress = burstEnd - 200
+        assertThat(clock.isHeld(lastPress + 999)).isTrue()
+        assertThat(clock.holdEndsAt).isEqualTo(lastPress + 1_000)
+        val held = clock.motionMs
+        clock.advance(lastPress + 999)
+        assertWithMessage("still while held").that(clock.motionMs).isEqualTo(held)
+        assertThat(clock.isHeld(lastPress + 1_000)).isFalse()
+        assertWithMessage("moving again after the hold").that(clock.advance(lastPress + 1_000)).isTrue()
+        clock.advance(lastPress + 1_100)
+        assertThat(clock.motionMs).isGreaterThan(held)
+        assertWithMessage("it speeds up gently, no jump").that(clock.motionMs - held).isAtMost(30.0)
+    }
+
+    /** A held clock still rests after the idle time once typing stops. */
+    @Test
+    fun aHoldDoesNotKeepTheBackdropAwake() {
+        val clock = AuroraMotionClock(idleMs = 5_000, easeMs = 500, maxStepMs = 250, holdMs = 1_000, holdEaseMs = 250)
+        clock.touch(0)
+        var now = 0L
+        var last = true
+        while (now < 10_000) { now += 100; last = clock.advance(now) }
+        assertThat(last).isFalse()
+        assertThat(clock.speed).isEqualTo(0f)
+    }
+
+    /** Only a whole visible step on screen draws a frame; what is shown is never a step behind. */
+    @Test
+    fun anUnchangedFrameIsSkipped() {
+        val gate = VisibleChangeGate()
+        val state = floatArrayOf(0f, 10f)
+        assertWithMessage("the first frame is always drawn").that(gate.changed(state, 2)).isTrue()
+        state[0] = 0.6f
+        assertThat(gate.changed(state, 2)).isFalse()
+        state[0] = 0.99f; state[1] = 9.2f
+        assertThat(gate.changed(state, 2)).isFalse()
+        state[0] = 1.0f
+        assertThat(gate.changed(state, 2)).isTrue()
+        state[0] = 1.5f
+        assertWithMessage("compared with what is shown, not the last tick").that(gate.changed(state, 2)).isFalse()
+        assertWithMessage("a different shape of state is a change").that(gate.changed(state, 1)).isTrue()
+        gate.reset()
+        assertThat(gate.changed(state, 1)).isTrue()
+    }
+
+    /**
+     * The gate never lets the screen fall a whole step behind the motion. At the designed tuning
+     * the aurora changes visibly every frame (its frame rate was set by its pace: measured
+     * 2026-11-11, every scene drew 100 % of its frames), so the gate saves frames only where the
+     * motion is slower: a tuning with no movement and no twinkle draws its first frame and then
+     * nothing, where before it redrew the same picture ten times a second.
+     */
+    @Test
+    fun theGateKeepsUpAndSkipsAStillTuning() {
+        val density = 2.75f
+        fun run(tuning: SceneMotionTuning): Pair<Int, Int> {
+            val gate = VisibleChangeGate()
+            val n = 3 + AuroraMotion.STAR_GROUPS
+            val state = FloatArray(n)
+            var shown = FloatArray(n)
+            var drawn = 0; var ticks = 0
+            var t = 0.0
+            while (t < 120.0) {
+                val f = AuroraMotion.frame(t, MotionStyle.AURORA, tuning)
+                state[0] = f.driftADp * density / VisibleChangeGate.POSITION_STEP_PX
+                state[1] = f.driftBDp * density / VisibleChangeGate.POSITION_STEP_PX
+                state[2] = f.crossfade * 255f / VisibleChangeGate.ALPHA_STEP
+                for (g in 0 until AuroraMotion.STAR_GROUPS) state[3 + g] = f.starAlpha[g] * 230f / VisibleChangeGate.ALPHA_STEP
+                ticks++
+                if (gate.changed(state, n)) { drawn++; shown = state.copyOf() }
+                for (i in 0 until n) assertThat(abs(state[i] - shown[i])).isLessThan(1f)
+                t += 0.1
+            }
+            return drawn to ticks
+        }
+        val (moving, ticks) = run(SceneMotionTuning.DEFAULT)
+        assertThat(moving).isGreaterThan(ticks / 2)
+        val (still, _) = run(SceneMotionTuning(intensity = 0f, twinkle = 0f))
+        assertWithMessage("no movement, no twinkle: only the first frame").that(still).isEqualTo(1)
+    }
+
+    /** Battery saver, animations off, a warm phone and a low battery (not charging) keep it still. */
+    @Test
+    fun thePhonesStateDecidesWhetherItMoves() {
+        fun allows(saver: Boolean = false, anim: Boolean = true, thermal: Int = 0, pct: Int = 80, charging: Boolean = false) =
+            MotionAllowance.allows(saver, anim, thermal, pct, charging)
+        assertThat(allows()).isTrue()
+        assertThat(allows(saver = true)).isFalse()
+        assertThat(allows(anim = false)).isFalse()
+        assertThat(allows(thermal = 1)).isTrue()
+        assertThat(allows(thermal = MotionAllowance.THERMAL_LIMIT)).isFalse()
+        assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT)).isFalse()
+        assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT, charging = true)).isTrue()
+        assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT + 1)).isTrue()
+        assertWithMessage("an unknown battery level does not limit").that(allows(pct = -1)).isTrue()
+    }
 }
 

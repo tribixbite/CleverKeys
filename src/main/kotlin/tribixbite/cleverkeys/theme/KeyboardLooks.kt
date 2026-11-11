@@ -583,10 +583,12 @@ object KeyboardLooks {
             backdrop = LookBackdrop(
                 glows = emptyList(), scene = SceneKind.RIVER_ROCKS, topFade = 0.1f,
                 // Rain landing on the stones, seen from above (maintainer 2026-11-10: "splattering
-                // on the rocks from above", not streaks): rings 8–20 dp across that spread and fade.
+                // on the rocks from above", not streaks; 2026-11-11: "way too aggressive in amount
+                // and frequency"): wet spots 6–18 dp across, most of them small, in showers that
+                // come and go — about 6 drops a second on a phone keyboard on average, 3 to 14.
                 stars = LookStarfield(
-                    perSquare100Dp = 14f, seed = 0x20C5L, color = 0xFFE4F2FA.toInt(), minAlpha = 0, maxAlpha = 230,
-                    minRadiusDp = 4f, maxRadiusDp = 10f, glintEvery = 0, shape = ParticleShape.RAIN,
+                    perSquare100Dp = 8f, seed = 0x20C5L, color = 0xFFE4F2FA.toInt(), minAlpha = 0, maxAlpha = 230,
+                    minRadiusDp = 3f, maxRadiusDp = 9f, glintEvery = 0, shape = ParticleShape.RAIN,
                 ),
             ),
         ),

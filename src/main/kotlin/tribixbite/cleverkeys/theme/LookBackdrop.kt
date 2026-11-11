@@ -312,11 +312,13 @@ enum class ParticleShape {
     /** A four-point sparkle: sun on water, a wet stone. */
     GLINT,
     /**
-     * Rain seen from above, landing on the scene ([RainSplashes]): on stone a drop throws up a
-     * crown of droplets and leaves a dark wet spot that dries; on water it spreads ripples; the
-     * next lands somewhere else (the river rocks;
-     * maintainer 2026-11-10: "splattering on the rocks from above", not streaks falling down
-     * the screen). The field's [LookStarfield.perSquare100Dp] is the number of splash slots.
+     * Rain seen from above, landing on the scene ([RainSplashes]): on stone a drop flashes where
+     * it strikes, flings a few beads of water off to one side (each hops, lands and leaves a dot)
+     * and leaves an uneven dark wet spot that dries; on water it spreads ripples. Showers come
+     * and go, and most drops are small (maintainer 2026-11-10: "splattering on the rocks from
+     * above", not streaks; 2026-11-11: less of it, varying in drop size and intensity, splashes
+     * not symmetrical or large). The field's [LookStarfield.perSquare100Dp] is the number of
+     * splash slots.
      */
     RAIN,
 }
@@ -324,28 +326,41 @@ enum class ParticleShape {
 /**
  * The splashes of a [ParticleShape.RAIN] field at a moment: pure and deterministic, so the
  * drawable only draws what this returns and `LookBackdropTest` pins the behaviour. Each slot
- * splashes once per its own period at a new seeded spot; between splashes it is dry.
+ * may splash once per its own period at a new seeded spot, if the shower at that moment is heavy
+ * enough ([shower]); between splashes it is dry. [splatter] lays out the beads one drop flings.
  */
 object RainSplashes {
 
     /**
      * How long one splash shows, from the strike until its wet spot has dried away, seconds:
-     * the crown and the ripples are its first fraction ([CROWN_S], [RIPPLE_S]).
+     * the flash, the beads' flight and the ripples are its first fraction.
      */
     const val LIFETIME_S = 2.2
 
-    /** How long a drop's crown of droplets stands on stone, seconds. */
-    const val CROWN_S = 0.45
+    /** How long the bright strike shows, seconds. */
+    const val FLASH_S = 0.09
+
+    /** How long a drop's beads of water fly before they land, seconds. */
+    const val SPLATTER_S = 0.3
 
     /** How long a drop's rings spread on water, seconds. */
     const val RIPPLE_S = 0.9
 
     /**
      * Floats per splash in [at]'s output: x, y, size (px: the ripple's and wet spot's full
-     * radius), alpha 0..1 (fading over the lifetime), progress 0..1, slot seed, age (seconds).
+     * radius), alpha 0..1 (fading over the lifetime), progress 0..1, slot seed, age (seconds),
+     * size share 0..1 (the smallest drop to the biggest, for [splatter]).
      */
-    const val STRIDE = 7
+    const val STRIDE = 8
 
+    /** Floats per bead in [splatter]'s output: direction x, direction y, distance, radius, hop. */
+    const val BEAD_STRIDE = 5
+
+    /** The most beads one drop flings ([splatter]). */
+    const val MAX_BEADS = 6
+
+    /** The lightest shower, as a share of the slots that splash: a drizzle between showers. */
+    const val SHOWER_MIN = 0.2f
 
     /** Splash slots for [field] on a [widthPx] × [heightPx] view (capped like a star field). */
     fun slots(field: LookStarfield, widthPx: Int, heightPx: Int, density: Float): Int {
@@ -355,35 +370,84 @@ object RainSplashes {
     }
 
     /**
+     * How hard it rains at [seconds], [SHOWER_MIN]..1: two slow unrelated swells, so a shower
+     * builds for a while and passes to a drizzle, never on an obvious beat.
+     */
+    fun shower(seconds: Double): Float {
+        val a = 0.5 + 0.5 * kotlin.math.sin(2 * kotlin.math.PI * seconds / 37.0)
+        val b = 0.5 + 0.5 * kotlin.math.sin(2 * kotlin.math.PI * seconds / 61.0 + 2.1)
+        val w = (0.6 * a + 0.4 * b).toFloat()
+        // Mostly lighter rain; the heavy spells are the peaks.
+        return SHOWER_MIN + (1f - SHOWER_MIN) * w * w
+    }
+
+    /**
      * The splashes alive at [seconds] of motion time, written to [out] ([STRIDE] floats each,
      * room for [slots] of them); returns how many. Sizes run from the field's minRadiusDp to its
-     * maxRadiusDp × [scale]; the alpha falls from the field's maxAlpha over the lifetime.
+     * maxRadiusDp × [scale], most drops small; a drop's darkness varies, and its alpha falls from
+     * there over the lifetime. [scale] also thins the rain below 1 (the user's motion intensity).
      */
     fun at(field: LookStarfield, widthPx: Int, heightPx: Int, density: Float, seconds: Double, out: FloatArray, scale: Float = 1f): Int {
         val n = slots(field, widthPx, heightPx, density)
         var live = 0
+        val thin = scale.coerceIn(0f, 1f)
         for (i in 0 until n) {
-            // Each slot rests between splashes: its period is 1.6–4 lifetimes, its start seeded.
-            val period = LIFETIME_S * (1.6 + 2.4 * unit(field.seed, i, 0))
+            // Each slot rests between splashes: its period is 2–5 lifetimes, its start seeded.
+            val period = LIFETIME_S * (2.0 + 3.0 * unit(field.seed, i, 0))
             val cycles = seconds / period + unit(field.seed, i, 1)
             val cycle = kotlin.math.floor(cycles).toLong()
             val age = (cycles - cycle) * period
             if (age >= LIFETIME_S) continue
-            val k = (age / LIFETIME_S).toFloat()
             val spot = field.seed xor (i.toLong() shl 24) xor (cycle * 0x9E3779B97F4A7C15uL.toLong())
-            val size = field.minRadiusDp + (field.maxRadiusDp - field.minRadiusDp) * unit(spot, 0, 2).toFloat()
+            // This slot's drop falls only if the shower when it struck was heavy enough.
+            if (unit(spot, 0, 5) >= shower(seconds - age) * thin) continue
+            val k = (age / LIFETIME_S).toFloat()
+            // Most drops are small; a few big ones (the size cubed).
+            val u = unit(spot, 0, 2).toFloat()
+            val size = field.minRadiusDp + (field.maxRadiusDp - field.minRadiusDp) * u * u * u
             val o = live * STRIDE
             out[o] = unit(spot, 0, 3).toFloat() * widthPx
             out[o + 1] = unit(spot, 0, 4).toFloat() * heightPx
-            out[o + 2] = size * density * scale
-            // The wet spot dries slowly at first, then fades out.
-            out[o + 3] = (1f - k * k) * (field.maxAlpha / 255f)
+            out[o + 2] = size * density * scale.coerceAtLeast(0.25f)
+            // The wet spot dries slowly at first, then fades out; bigger drops wet more.
+            val strength = 0.5f + 0.5f * (0.4f * unit(spot, 0, 6).toFloat() + 0.6f * u)
+            out[o + 3] = (1f - k * k) * strength * (field.maxAlpha / 255f)
             out[o + 4] = k
             out[o + 5] = (spot and 0xFFFF).toFloat()
             out[o + 6] = age.toFloat()
+            out[o + 7] = u * u * u
             live++
         }
         return live
+    }
+
+    /**
+     * The beads of water a drop of [sizeShare] (0 = the smallest, 1 = the biggest) flings, laid
+     * out from its [seed]; written to [out] ([BEAD_STRIDE] floats each), returns how many. A
+     * drop on rock throws its water mostly one way (it struck a slope, or slanted): the beads
+     * leave in a lopsided fan around a seeded heading, at uneven distances (0.5–2.2 wet-spot
+     * radii) and sizes, and each hops ([hop], a share of its distance) before it lands. Small
+     * drops fling none or one or two.
+     */
+    fun splatter(seed: Int, sizeShare: Float, out: FloatArray): Int {
+        val s = seed.toLong() * 0x2545F4914F6CDD1DL
+        val share = sizeShare.coerceIn(0f, 1f)
+        val count = ((share * 4.5f + 2.2f * unit(s, 0, 0).toFloat()) - 0.6f).toInt().coerceIn(0, MAX_BEADS)
+        val heading = unit(s, 0, 1) * 2 * kotlin.math.PI
+        // How wide the fan opens: 50–160 degrees.
+        val fan = (0.9 + 1.9 * unit(s, 0, 2))
+        for (b in 0 until count) {
+            // Skewed to one side of the heading, so the fan is never even.
+            val v = unit(s, b + 1, 3)
+            val angle = heading + fan * (v * v - 0.35) + 0.25 * (unit(s, b + 1, 4) - 0.5)
+            val o = b * BEAD_STRIDE
+            out[o] = kotlin.math.cos(angle).toFloat()
+            out[o + 1] = kotlin.math.sin(angle).toFloat()
+            out[o + 2] = (0.5 + 1.7 * unit(s, b + 1, 5)).toFloat()
+            out[o + 3] = (0.35 + 0.65 * unit(s, b + 1, 6)).toFloat()
+            out[o + 4] = (0.15 + 0.3 * unit(s, b + 1, 7)).toFloat()
+        }
+        return count
     }
 
     /** A seeded value in 0..1 for (seed, slot, salt). */
