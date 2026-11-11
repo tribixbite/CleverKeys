@@ -414,6 +414,12 @@
     <string name="appearance_look_motion_intensity_desc">오로라, 물, 풀, 가지가 움직이는 정도</string>
     <string name="appearance_look_motion_twinkle_title">반짝임</string>
     <string name="appearance_look_motion_twinkle_desc">별, 비 등 입자가 반짝이는 정도</string>
+    <string name="appearance_look_motion_resume_title">입력 중 멈춤</string>
+    <string name="appearance_look_motion_resume_desc">마지막 키 입력이나 스와이프 후 장면이 멈춰 있는 시간</string>
+    <string name="appearance_look_motion_resume_none">멈추지 않음</string>
+    <string name="appearance_look_motion_seconds">%1$s초</string>
+    <string name="appearance_look_motion_idle_title">움직이는 시간</string>
+    <string name="appearance_look_motion_idle_desc">키보드를 마지막으로 터치한 뒤 장면이 움직이는 시간</string>
     <string name="appearance_look_scene_crisp_title">선명한 장면</string>
     <string name="appearance_look_scene_crisp_desc">오로라, 시냇물, 눈을 최대 해상도로 그립니다. 빛줄기와 물결이 더 섬세해지고 메모리를 조금 더 씁니다</string>
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
@@ -2070,6 +2076,10 @@
     <string name="cmd_theme_previous">이전 테마</string>
     <string name="cmd_theme_previous_desc">테마 관리자 순서대로 이전 테마를 적용합니다</string>
     <string name="theme_cycle_message">테마: %1$s</string>
+    <string name="cmd_toggle_scene_motion">움직이는 장면 켜기/끄기</string>
+    <string name="cmd_toggle_scene_motion_desc">움직이는 장면 배경을 켜거나 끕니다</string>
+    <string name="scene_motion_on_message">움직이는 장면 켜짐</string>
+    <string name="scene_motion_off_message">움직이는 장면 꺼짐</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 보조 키(대문자/기호)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2478,6 +2488,7 @@
     <string name="clipboard_bulk_preview">미리보기: %1$s</string>
     <string name="clipboard_merge_message">선택한 텍스트로 기록에 새 클립 하나를 만듭니다. 오래된 것부터 한 줄에 하나씩 넣습니다(%1$s). 원본은 유지됩니다.</string>
     <string name="clipboard_merge_private_note">선택한 클립 중 비공개 클립이 있으므로 비공개로 저장됩니다.</string>
+    <string name="clipboard_merge_copied">클립보드에 있어 바로 붙여넣을 수 있습니다.</string>
     <string name="clipboard_merge_action">병합</string>
     <string name="clipboard_merge_too_few">병합하려면 텍스트 클립을 두 개 이상 선택하세요.</string>
     <string name="clipboard_merge_too_large">병합된 클립은 %1$s입니다. 한도는 %2$s입니다. 더 적은 클립을 선택하세요.</string>

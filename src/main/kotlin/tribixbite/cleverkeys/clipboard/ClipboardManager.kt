@@ -1183,8 +1183,11 @@ class ClipboardManager(
                 ) + "\n\n" + context.getString(R.string.clipboard_bulk_preview, ClipboardBulkPlans.preview(plan.text))
                 confirm(anchor, plural(R.plurals.clipboard_merge_title, plan.sources), message, R.string.clipboard_merge_action) {
                     historyView.mergeSelection(plan) { result ->
+                        if (result.isSuccess) historyView.placeMergedOnSystemClipboard(plan.text, plan.isPrivate)
                         showBulkFeedback(result.fold(
-                            { sentences(plural(R.plurals.clipboard_merge_result, plan.sources), mediaNote(plan.skippedMedia)) },
+                            { sentences(plural(R.plurals.clipboard_merge_result, plan.sources),
+                                if (plan.isPrivate) null else context.getString(R.string.clipboard_merge_copied),
+                                mediaNote(plan.skippedMedia)) },
                             { context.getString(R.string.clipboard_bulk_action_error) }))
                     }
                 }

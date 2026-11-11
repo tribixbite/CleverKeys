@@ -575,6 +575,7 @@ class KeyboardReceiver(
             // Apply the next / previous theme in Theme Manager's order.
             KeyValue.Event.THEME_NEXT -> keyboard2.cycleTheme(1)
             KeyValue.Event.THEME_PREVIOUS -> keyboard2.cycleTheme(-1)
+            KeyValue.Event.TOGGLE_SCENE_MOTION -> keyboard2.toggleSceneMotion()
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
                 subtypeManager.inputMethodManager.showInputMethodPicker()

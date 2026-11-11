@@ -420,6 +420,12 @@
     <string name="appearance_look_motion_intensity_desc">Jak daleko se pohybuje záře, voda, tráva a větve</string>
     <string name="appearance_look_motion_twinkle_title">Třpyt</string>
     <string name="appearance_look_motion_twinkle_desc">Jak moc se třpytí hvězdy, déšť a další částice</string>
+    <string name="appearance_look_motion_resume_title">Pauza při psaní</string>
+    <string name="appearance_look_motion_resume_desc">Jak dlouho scéna stojí po posledním stisku klávesy nebo tahu</string>
+    <string name="appearance_look_motion_resume_none">Bez pauzy</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Pohyb po dobu</string>
+    <string name="appearance_look_motion_idle_desc">Jak dlouho se scéna hýbe po posledním dotyku klávesnice</string>
     <string name="appearance_look_scene_crisp_title">Ostré scény</string>
     <string name="appearance_look_scene_crisp_desc">Polární záři, potok a sníh kreslit v plném rozlišení: jemnější paprsky a vlnky, o něco více paměti</string>
     <string name="appearance_custom_border_title">Vlastní konfigurace ohraničení</string>
@@ -2205,6 +2211,10 @@
     <string name="cmd_theme_previous">Předchozí motiv</string>
     <string name="cmd_theme_previous_desc">Použije předchozí motiv v pořadí Správce motivů</string>
     <string name="theme_cycle_message">Motiv: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Animované scény zap./vyp.</string>
+    <string name="cmd_toggle_scene_motion_desc">Zapnout nebo vypnout pohyblivá pozadí scén</string>
+    <string name="scene_motion_on_message">Animované scény zapnuty</string>
+    <string name="scene_motion_off_message">Animované scény vypnuty</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modifikátor Shift (velká písmena/symboly)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2613,6 +2623,7 @@
     <string name="clipboard_bulk_preview">Náhled: %1$s</string>
     <string name="clipboard_merge_message">Vytvoří jeden nový výstřižek v historii z vybraného textu, od nejstaršího, jeden na řádek (%1$s). Původní výstřižky zůstanou.</string>
     <string name="clipboard_merge_private_note">Bude soukromý, protože jeden z vybraných výstřižků je soukromý.</string>
+    <string name="clipboard_merge_copied">Je ve schránce, připraven k vložení.</string>
     <string name="clipboard_merge_action">Sloučit</string>
     <string name="clipboard_merge_too_few">Ke sloučení vyberte alespoň dva textové výstřižky.</string>
     <string name="clipboard_merge_too_large">Sloučený výstřižek by měl %1$s; limit je %2$s. Vyberte méně výstřižků.</string>

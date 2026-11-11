@@ -73,6 +73,9 @@ object Defaults {
     const val LOOK_MOTION_SPEED = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_SPEED_PERCENT
     const val LOOK_MOTION_INTENSITY = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_INTENSITY_PERCENT
     const val LOOK_MOTION_TWINKLE = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_TWINKLE_PERCENT
+    /** The pause after the last key press or swipe (ms) and the idle timeout (s) of the motion. */
+    const val LOOK_MOTION_RESUME_MS = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_RESUME_MS
+    const val LOOK_MOTION_IDLE_S = tribixbite.cleverkeys.theme.SceneMotionTuning.DEFAULT_IDLE_SECONDS
     /** Paint the soft backdrops (aurora, stream, snow) at full resolution; off: half, a quarter of the memory. */
     const val LOOK_SCENE_CRISP = false
     const val CUSTOM_BORDER_RADIUS = 0
@@ -694,6 +697,9 @@ object SettingsRanges {
     val LOOK_MOTION_SPEED: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.SPEED_PERCENT
     val LOOK_MOTION_INTENSITY: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.INTENSITY_PERCENT
     val LOOK_MOTION_TWINKLE: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.TWINKLE_PERCENT
+    /** The motion's typing pause (`look_motion_resume_ms`, ms) and idle timeout (`look_motion_idle_s`, s). */
+    val LOOK_MOTION_RESUME_MS: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.RESUME_MS
+    val LOOK_MOTION_IDLE_S: IntRange = tribixbite.cleverkeys.theme.SceneMotionTuning.IDLE_SECONDS
 
     /** Circle-gesture sensitivity (`circle_sensitivity`, stored as a String "1".."5"). */
     val CIRCLE_SENSITIVITY: IntRange = 1..5
@@ -1342,6 +1348,8 @@ class Config private constructor(
             intensity = safeGetInt(_prefs, "look_motion_intensity", Defaults.LOOK_MOTION_INTENSITY),
             twinkle = safeGetInt(_prefs, "look_motion_twinkle", Defaults.LOOK_MOTION_TWINKLE),
             crisp = _prefs.getBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP),
+            resumeMs = safeGetInt(_prefs, "look_motion_resume_ms", Defaults.LOOK_MOTION_RESUME_MS),
+            idleSeconds = safeGetInt(_prefs, "look_motion_idle_s", Defaults.LOOK_MOTION_IDLE_S),
         )
         customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())

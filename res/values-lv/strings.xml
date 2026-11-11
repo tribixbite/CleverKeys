@@ -429,6 +429,12 @@
     <string name="appearance_look_motion_intensity_desc">Cik tālu kustas blāzma, ūdens, zāle un zari</string>
     <string name="appearance_look_motion_twinkle_title">Mirgošana</string>
     <string name="appearance_look_motion_twinkle_desc">Cik stipri mirgo zvaigznes, lietus un citas daļiņas</string>
+    <string name="appearance_look_motion_resume_title">Pauze rakstot</string>
+    <string name="appearance_look_motion_resume_desc">Cik ilgi aina stāv pēc pēdējā taustiņa nospiešanas vai vilkšanas</string>
+    <string name="appearance_look_motion_resume_none">Bez pauzes</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Kustēties</string>
+    <string name="appearance_look_motion_idle_desc">Cik ilgi aina kustas pēc pēdējā tastatūras pieskāriena</string>
     <string name="appearance_look_scene_crisp_title">Asas ainas</string>
     <string name="appearance_look_scene_crisp_desc">Zīmēt ziemeļblāzmu, strautu un sniegu pilnā izšķirtspējā: smalkāki stari un viļņi, nedaudz vairāk atmiņas</string>
     <string name="appearance_custom_border_title">Pielāgota apmale</string>
@@ -2171,6 +2177,10 @@
     <string name="cmd_theme_previous">Iepriekšējais motīvs</string>
     <string name="cmd_theme_previous_desc">Lieto iepriekšējo motīvu motīvu pārvaldnieka secībā</string>
     <string name="theme_cycle_message">Motīvs: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Animētas ainas ieslēgt/izslēgt</string>
+    <string name="cmd_toggle_scene_motion_desc">Ieslēgt vai izslēgt kustīgos ainu fonus</string>
+    <string name="scene_motion_on_message">Animētas ainas ieslēgtas</string>
+    <string name="scene_motion_off_message">Animētas ainas izslēgtas</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifikators (lielie burti/simboli)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2579,6 +2589,7 @@
     <string name="clipboard_bulk_preview">Priekšskatījums: %1$s</string>
     <string name="clipboard_merge_message">Izveido vienu jaunu klipu vēsturē no atlasītā teksta, sākot ar vecāko, pa vienam rindiņā (%1$s). Oriģināli paliek.</string>
     <string name="clipboard_merge_private_note">Tas būs privāts, jo kāds no atlasītajiem klipiem ir privāts.</string>
+    <string name="clipboard_merge_copied">Tas ir starpliktuvē, gatavs ielīmēšanai.</string>
     <string name="clipboard_merge_action">Apvienot</string>
     <string name="clipboard_merge_too_few">Lai apvienotu, atlasiet vismaz divus teksta klipus.</string>
     <string name="clipboard_merge_too_large">Apvienotais klips būtu %1$s; ierobežojums ir %2$s. Atlasiet mazāk klipu.</string>

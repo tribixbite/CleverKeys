@@ -417,6 +417,12 @@
     <string name="appearance_look_motion_intensity_desc">Quanto a aurora, a água, a grama e os galhos se movem</string>
     <string name="appearance_look_motion_twinkle_title">Cintilação</string>
     <string name="appearance_look_motion_twinkle_desc">Quanto estrelas, chuva e outras partículas cintilam</string>
+    <string name="appearance_look_motion_resume_title">Pausa ao digitar</string>
+    <string name="appearance_look_motion_resume_desc">Quanto tempo a cena fica parada após o último toque de tecla ou deslize</string>
+    <string name="appearance_look_motion_resume_none">Sem pausa</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Mover durante</string>
+    <string name="appearance_look_motion_idle_desc">Quanto tempo a cena se move após o último toque no teclado</string>
     <string name="appearance_look_scene_crisp_title">Cenas nítidas</string>
     <string name="appearance_look_scene_crisp_desc">Desenhar a aurora, o riacho e a neve em resolução total: raios e ondulações mais finos, um pouco mais de memória</string>
     <string name="appearance_custom_border_title">Borda personalizada</string>
@@ -2160,6 +2166,10 @@
     <string name="cmd_theme_previous">Tema anterior</string>
     <string name="cmd_theme_previous_desc">Aplica o tema anterior na ordem do Gerenciador de temas</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Cenas animadas sim/não</string>
+    <string name="cmd_toggle_scene_motion_desc">Ativa ou desativa os fundos de cena em movimento</string>
+    <string name="scene_motion_on_message">Cenas animadas ativadas</string>
+    <string name="scene_motion_off_message">Cenas animadas desativadas</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modificador Shift (maiúsculas/símbolos)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2568,6 +2578,7 @@
     <string name="clipboard_bulk_preview">Prévia: %1$s</string>
     <string name="clipboard_merge_message">Cria um novo recorte no histórico com o texto selecionado, do mais antigo ao mais recente, um por linha (%1$s). Os originais permanecem.</string>
     <string name="clipboard_merge_private_note">Ele será privado, porque um recorte selecionado é privado.</string>
+    <string name="clipboard_merge_copied">Está na área de transferência, pronto para colar.</string>
     <string name="clipboard_merge_action">Mesclar</string>
     <string name="clipboard_merge_too_few">Selecione pelo menos dois recortes de texto para mesclar.</string>
     <string name="clipboard_merge_too_large">O recorte mesclado teria %1$s; o limite é %2$s. Selecione menos recortes.</string>

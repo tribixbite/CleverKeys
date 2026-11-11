@@ -412,6 +412,12 @@
     <string name="appearance_look_motion_intensity_desc">极光、水流、草和树枝的运动幅度</string>
     <string name="appearance_look_motion_twinkle_title">闪烁</string>
     <string name="appearance_look_motion_twinkle_desc">星星、雨滴等粒子闪烁的程度</string>
+    <string name="appearance_look_motion_resume_title">输入时暂停</string>
+    <string name="appearance_look_motion_resume_desc">最后一次按键或滑动后场景静止的时长</string>
+    <string name="appearance_look_motion_resume_none">不暂停</string>
+    <string name="appearance_look_motion_seconds">%1$s 秒</string>
+    <string name="appearance_look_motion_idle_title">持续动画</string>
+    <string name="appearance_look_motion_idle_desc">最后一次触摸键盘后场景继续移动的时长</string>
     <string name="appearance_look_scene_crisp_title">清晰场景</string>
     <string name="appearance_look_scene_crisp_desc">以全分辨率绘制极光、溪流和雪景：光线和涟漪更细腻，多占用一点内存</string>
     <string name="appearance_custom_border_title">自定义边框配置</string>
@@ -2068,6 +2074,10 @@
     <string name="cmd_theme_previous">上一个主题</string>
     <string name="cmd_theme_previous_desc">按主题管理器中的顺序应用上一个主题</string>
     <string name="theme_cycle_message">主题：%1$s</string>
+    <string name="cmd_toggle_scene_motion">动态场景开/关</string>
+    <string name="cmd_toggle_scene_motion_desc">开启或关闭动态场景背景</string>
+    <string name="scene_motion_on_message">动态场景已开启</string>
+    <string name="scene_motion_off_message">动态场景已关闭</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修饰键（大写/符号）</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2476,6 +2486,7 @@
     <string name="clipboard_bulk_preview">预览：%1$s</string>
     <string name="clipboard_merge_message">用所选文本在历史记录中新建一个剪贴项，按从旧到新排列，每项一行（%1$s）。原剪贴项保留。</string>
     <string name="clipboard_merge_private_note">由于所选剪贴项中有私密项，合并结果也将是私密的。</string>
+    <string name="clipboard_merge_copied">已复制到剪贴板，可直接粘贴。</string>
     <string name="clipboard_merge_action">合并</string>
     <string name="clipboard_merge_too_few">请至少选择两个文本剪贴项进行合并。</string>
     <string name="clipboard_merge_too_large">合并后的剪贴项将为 %1$s；上限为 %2$s。请减少所选剪贴项。</string>

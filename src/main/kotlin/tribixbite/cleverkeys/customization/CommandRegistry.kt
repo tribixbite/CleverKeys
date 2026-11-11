@@ -245,6 +245,10 @@ object CommandRegistry {
             keywords = listOf("theme", "next", "plus", "+", "cycle", "skin", "look", "colors", "colours", "scene")),
         Command("theme_previous", R.string.cmd_theme_previous, R.string.cmd_theme_previous_desc, Category.EVENTS,
             keywords = listOf("theme", "previous", "prev", "minus", "-", "back", "cycle", "skin", "look", "colors", "colours", "scene")),
+        // 2026-11-11: the Animated scenes switch as a key (maintainer: "add a toggle animations
+        // on/off subkey function").
+        Command("toggle_scene_motion", R.string.cmd_toggle_scene_motion, R.string.cmd_toggle_scene_motion_desc, Category.EVENTS,
+            keywords = listOf("animation", "animations", "animated", "motion", "moving", "scene", "scenes", "toggle", "battery", "still")),
 
         // ========== MODIFIERS ==========
         Command("shift", R.string.cmd_shift, R.string.cmd_shift_desc, Category.MODIFIERS,

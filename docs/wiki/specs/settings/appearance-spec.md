@@ -228,10 +228,12 @@ are shown.
 | **Custom Border** | `border_config` | false | bool — gates the two rows below |
 | **Border Radius** | `custom_border_radius` | 0 | slider 0-20; validator 0-100. Stored value / 100 = fraction of key width |
 | **Border Line Width** | `custom_border_line_width` | 0 | 0-10 dp (`SettingsRanges.CUSTOM_BORDER_LINE_WIDTH`) |
-| **Animated scenes** | `look_backdrop_motion` | true (the default theme is static, so it applies once a scene is chosen) | bool — the Scenes themes move (`AuroraMotion`, `SceneMotion`); gates the three sliders below |
+| **Animated scenes** | `look_backdrop_motion` | true (the default theme is static, so it applies once a scene is chosen) | bool — the Scenes themes move (`AuroraMotion`, `SceneMotion`); gates the five sliders below |
 | **Scene Speed** | `look_motion_speed` | 100 | 25-200% (`SettingsRanges.LOOK_MOTION_SPEED`): the pace of motion time (`AuroraMotionClock.rate`; a change does not jump) |
 | **Scene Motion Intensity** | `look_motion_intensity` | 100 | 0-200% (`LOOK_MOTION_INTENSITY`): the drift and cross-fade of the aurora, stream and snow, the bend of grass and branches, the run of the waves; 0 = the still picture |
 | **Twinkle** | `look_motion_twinkle` | 55 | 0-100% (`LOOK_MOTION_TWINKLE`): how far a twinkling star or particle dims (55 = to 45 % of its brightness) |
+| **Pause While Typing** | `look_motion_resume_ms` | 1000 | 0-10000 ms in quarter seconds (`LOOK_MOTION_RESUME_MS`): a key press or swipe holds the scene still until this long after the last one (`AuroraMotionClock.holdMs`); 0 = typing never holds it |
+| **Keep Moving For** | `look_motion_idle_s` | 20 | 5-600 s in fives (`LOOK_MOTION_IDLE_S`): the scene eases to rest this long after the last touch or the keyboard showing (`AuroraMotionClock.idleMs`) |
 | **Sharp Scenes** | `look_scene_crisp` | false | bool — the aurora, stream and snow paint at full resolution instead of half (four times the pixels, about 7 MB more per size on a Pixel 8 Pro); applies to a still scene too |
 
 On a foldable that reports itself unfolded, `Config` reads `_unfolded` variants of the height

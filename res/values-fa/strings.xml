@@ -451,6 +451,12 @@
     <string name="appearance_look_motion_intensity_desc">میزان حرکت شفق، آب، چمن و شاخه‌ها</string>
     <string name="appearance_look_motion_twinkle_title">چشمک</string>
     <string name="appearance_look_motion_twinkle_desc">میزان درخشش ستاره‌ها، باران و ذرات دیگر</string>
+    <string name="appearance_look_motion_resume_title">مکث هنگام تایپ</string>
+    <string name="appearance_look_motion_resume_desc">پس از آخرین فشردن کلید یا کشیدن، صحنه چه مدت ثابت بماند</string>
+    <string name="appearance_look_motion_resume_none">بدون مکث</string>
+    <string name="appearance_look_motion_seconds">%1$s ثانیه</string>
+    <string name="appearance_look_motion_idle_title">مدت حرکت</string>
+    <string name="appearance_look_motion_idle_desc">پس از آخرین لمس صفحه‌کلید، صحنه چه مدت حرکت کند</string>
     <string name="appearance_look_scene_crisp_title">صحنه‌های واضح</string>
     <string name="appearance_look_scene_crisp_desc">شفق، جویبار و برف با وضوح کامل کشیده شوند: پرتوها و موج‌های ظریف‌تر، کمی حافظهٔ بیشتر</string>
     <string name="appearance_custom_border_title">پیکربندی حاشیه سفارشی</string>
@@ -2153,6 +2159,10 @@
     <string name="cmd_theme_previous">تم قبلی</string>
     <string name="cmd_theme_previous_desc">تم قبلی را به ترتیب مدیر تم‌ها اعمال می‌کند</string>
     <string name="theme_cycle_message">تم: %1$s</string>
+    <string name="cmd_toggle_scene_motion">روشن/خاموش صحنه‌های متحرک</string>
+    <string name="cmd_toggle_scene_motion_desc">پس‌زمینه‌های متحرک صحنه را روشن یا خاموش می‌کند</string>
+    <string name="scene_motion_on_message">صحنه‌های متحرک روشن</string>
+    <string name="scene_motion_off_message">صحنه‌های متحرک خاموش</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">تغییردهندهٔ Shift (حروف بزرگ/نمادها)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2561,6 +2571,7 @@
     <string name="clipboard_bulk_preview">پیش‌نمایش: %1$s</string>
     <string name="clipboard_merge_message">از متن انتخاب‌شده یک بریده جدید در تاریخچه می‌سازد؛ قدیمی‌ترین اول، هر کدام در یک خط (%1$s). بریده‌های اصلی باقی می‌مانند.</string>
     <string name="clipboard_merge_private_note">این بریده خصوصی خواهد بود، چون یکی از بریده‌های انتخاب‌شده خصوصی است.</string>
+    <string name="clipboard_merge_copied">در بریده‌دان است و آماده چسباندن.</string>
     <string name="clipboard_merge_action">ادغام</string>
     <string name="clipboard_merge_too_few">برای ادغام دست‌کم دو بریده متنی انتخاب کنید.</string>
     <string name="clipboard_merge_too_large">حجم بریده ادغام‌شده %1$s می‌شد؛ حد مجاز %2$s است. بریده‌های کمتری انتخاب کنید.</string>

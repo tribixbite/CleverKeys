@@ -325,9 +325,11 @@ editor that used to be listed here already ship in 2.0.)
   with the checkboxes and count. It ends only on **Exit selection** or a completed action
   (Android closing the keyboard process loses it). The **⋮** button adds **Add to Pinned**,
   **Add to Todos**, **Merge** (one new History clipping from the selected text, oldest first,
-  one per line; originals stay) and **Clean** (removes trailing spaces and line breaks that
-  were inserted inside paragraphs; lists, blank lines, short lines, links and code keep
-  theirs). Merge and Clean ask first and show a preview.
+  one per line; originals stay, and the merged text is put on the clipboard so the system
+  paste gives it — a private one only after you confirm) and **Clean** (removes trailing
+  spaces, runs of spaces and line breaks that were inserted inside paragraphs, including
+  terminal output that indents its wrapped lines; lists, blank lines, short lines, links,
+  code and space-aligned tables keep theirs). Merge and Clean ask first and show a preview.
 - **Swipe to delete clipboard entries (#175)**: swipe an entry left or right to delete it from
   the current tab (History, Pinned or Todos; copies on other tabs stay). The entry disappears at
   once and the results row offers **Undo** for 5 seconds; the delete happens when that ends, or
@@ -478,9 +480,11 @@ editor that used to be listed here already ship in 2.0.)
   wets the stones, waves roll in and wash up the sand, snow falls, stars twinkle. Scene Speed,
   Scene Motion Intensity and Twinkle tune how they move, and Sharp Scenes paints the soft ones at
   full resolution. A scene holds still while you type and moves again a second after you stop;
-  it comes to rest 20 seconds after you stop typing, and stays still in battery saver, when the
+  it comes to rest 20 seconds after you stop typing (both times are settings: Pause While
+  Typing, 0–10 s, and Keep Moving For, 5 s–10 min), and stays still in battery saver, when the
   phone is hot, when the battery is low (15 % or less, not charging), with animations turned off
-  and on Android 9 or older; the default theme is static.
+  and on Android 9 or older; the default theme is static. The **Animated Scenes On/Off**
+  command (`toggle_scene_motion`, also an extra key) flips the switch from the keyboard.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current

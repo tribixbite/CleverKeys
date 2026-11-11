@@ -413,6 +413,12 @@
     <string name="appearance_look_motion_intensity_desc">オーロラ、水、草、枝が動く大きさ</string>
     <string name="appearance_look_motion_twinkle_title">きらめき</string>
     <string name="appearance_look_motion_twinkle_desc">星、雨などの粒子がきらめく強さ</string>
+    <string name="appearance_look_motion_resume_title">入力中の停止</string>
+    <string name="appearance_look_motion_resume_desc">最後のキー入力やスワイプのあと、シーンが止まっている時間</string>
+    <string name="appearance_look_motion_resume_none">停止しない</string>
+    <string name="appearance_look_motion_seconds">%1$s 秒</string>
+    <string name="appearance_look_motion_idle_title">動く時間</string>
+    <string name="appearance_look_motion_idle_desc">最後にキーボードに触れてからシーンが動き続ける時間</string>
     <string name="appearance_look_scene_crisp_title">くっきりしたシーン</string>
     <string name="appearance_look_scene_crisp_desc">オーロラ、小川、雪をフル解像度で描画します。光線や波紋が細かくなり、メモリを少し多く使います</string>
     <string name="appearance_custom_border_title">カスタム枠線設定</string>
@@ -2069,6 +2075,10 @@
     <string name="cmd_theme_previous">前のテーマ</string>
     <string name="cmd_theme_previous_desc">テーママネージャーの並び順で前のテーマを適用します</string>
     <string name="theme_cycle_message">テーマ：%1$s</string>
+    <string name="cmd_toggle_scene_motion">動くシーンのオン/オフ</string>
+    <string name="cmd_toggle_scene_motion_desc">動くシーン背景をオンまたはオフにします</string>
+    <string name="scene_motion_on_message">動くシーン：オン</string>
+    <string name="scene_motion_off_message">動くシーン：オフ</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修飾キー(大文字/記号)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2477,6 +2487,7 @@
     <string name="clipboard_bulk_preview">プレビュー: %1$s</string>
     <string name="clipboard_merge_message">選択したテキストから履歴に新しいクリップを 1 つ作成します。古い順に 1 行ずつ並べます（%1$s）。元のクリップは残ります。</string>
     <string name="clipboard_merge_private_note">選択したクリップにプライベートのものが含まれるため、プライベートになります。</string>
+    <string name="clipboard_merge_copied">クリップボードにコピーしたので、そのまま貼り付けられます。</string>
     <string name="clipboard_merge_action">結合</string>
     <string name="clipboard_merge_too_few">結合するには、テキストのクリップを 2 つ以上選択してください。</string>
     <string name="clipboard_merge_too_large">結合後のクリップは %1$s になります。上限は %2$s です。選択するクリップを減らしてください。</string>

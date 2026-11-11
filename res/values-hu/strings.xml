@@ -421,6 +421,12 @@
     <string name="appearance_look_motion_intensity_desc">Milyen messzire mozdul a sarki fény, a víz, a fű és az ágak</string>
     <string name="appearance_look_motion_twinkle_title">Csillogás</string>
     <string name="appearance_look_motion_twinkle_desc">Mennyire csillognak a csillagok, az eső és más részecskék</string>
+    <string name="appearance_look_motion_resume_title">Szünet gépelés közben</string>
+    <string name="appearance_look_motion_resume_desc">Mennyi ideig áll a jelenet az utolsó billentyűleütés vagy húzás után</string>
+    <string name="appearance_look_motion_resume_none">Nincs szünet</string>
+    <string name="appearance_look_motion_seconds">%1$s mp</string>
+    <string name="appearance_look_motion_idle_title">Mozgás időtartama</string>
+    <string name="appearance_look_motion_idle_desc">Mennyi ideig mozog a jelenet a billentyűzet utolsó érintése után</string>
     <string name="appearance_look_scene_crisp_title">Éles jelenetek</string>
     <string name="appearance_look_scene_crisp_desc">A sarki fény, a patak és a hó teljes felbontásban: finomabb sugarak és fodrok, kicsivel több memória</string>
     <string name="appearance_custom_border_title">Egyéni szegélykonfiguráció</string>
@@ -2121,6 +2127,10 @@
     <string name="cmd_theme_previous">Előző téma</string>
     <string name="cmd_theme_previous_desc">Az előző téma alkalmazása a Témakezelő sorrendjében</string>
     <string name="theme_cycle_message">Téma: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Animált jelenetek be/ki</string>
+    <string name="cmd_toggle_scene_motion_desc">A mozgó jelenethátterek be- vagy kikapcsolása</string>
+    <string name="scene_motion_on_message">Animált jelenetek bekapcsolva</string>
+    <string name="scene_motion_off_message">Animált jelenetek kikapcsolva</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift módosító (nagybetűk/szimbólumok)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2529,6 +2539,7 @@
     <string name="clipboard_bulk_preview">Előnézet: %1$s</string>
     <string name="clipboard_merge_message">Egy új kivágást hoz létre az előzményekben a kijelölt szövegből, a legrégebbivel kezdve, soronként egyet (%1$s). Az eredetiek megmaradnak.</string>
     <string name="clipboard_merge_private_note">Privát lesz, mert az egyik kijelölt kivágás privát.</string>
+    <string name="clipboard_merge_copied">A vágólapon van, beillesztésre készen.</string>
     <string name="clipboard_merge_action">Egyesítés</string>
     <string name="clipboard_merge_too_few">Az egyesítéshez jelöljön ki legalább két szöveges kivágást.</string>
     <string name="clipboard_merge_too_large">Az egyesített kivágás mérete %1$s lenne; a korlát %2$s. Jelöljön ki kevesebb kivágást.</string>

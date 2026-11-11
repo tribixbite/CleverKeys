@@ -416,6 +416,12 @@
     <string name="appearance_look_motion_intensity_desc">Hoe ver noorderlicht, water, gras en takken bewegen</string>
     <string name="appearance_look_motion_twinkle_title">Fonkelen</string>
     <string name="appearance_look_motion_twinkle_desc">Hoeveel sterren, regen en andere deeltjes fonkelen</string>
+    <string name="appearance_look_motion_resume_title">Pauze tijdens typen</string>
+    <string name="appearance_look_motion_resume_desc">Hoe lang een scène stilstaat na de laatste toetsaanslag of veeg</string>
+    <string name="appearance_look_motion_resume_none">Geen pauze</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Bewegen gedurende</string>
+    <string name="appearance_look_motion_idle_desc">Hoe lang een scène beweegt nadat je het toetsenbord voor het laatst aanraakte</string>
     <string name="appearance_look_scene_crisp_title">Scherpe scènes</string>
     <string name="appearance_look_scene_crisp_desc">Noorderlicht, beek en sneeuw op volle resolutie tekenen: fijnere stralen en rimpels, iets meer geheugen</string>
     <string name="appearance_custom_border_title">Aangepaste randconfiguratie</string>
@@ -2115,6 +2121,10 @@
     <string name="cmd_theme_previous">Vorig thema</string>
     <string name="cmd_theme_previous_desc">Het vorige thema in de volgorde van Themabeheer toepassen</string>
     <string name="theme_cycle_message">Thema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Bewegende scènes aan/uit</string>
+    <string name="cmd_toggle_scene_motion_desc">De bewegende scèneachtergronden aan- of uitzetten</string>
+    <string name="scene_motion_on_message">Bewegende scènes aan</string>
+    <string name="scene_motion_off_message">Bewegende scènes uit</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift-modificatie (hoofdletters/symbolen)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2523,6 +2533,7 @@
     <string name="clipboard_bulk_preview">Voorbeeld: %1$s</string>
     <string name="clipboard_merge_message">Maakt één nieuw fragment in de geschiedenis van de geselecteerde tekst, oudste eerst, één per regel (%1$s). De originelen blijven behouden.</string>
     <string name="clipboard_merge_private_note">Het wordt privé, omdat een geselecteerd fragment privé is.</string>
+    <string name="clipboard_merge_copied">Het staat op het klembord, klaar om te plakken.</string>
     <string name="clipboard_merge_action">Samenvoegen</string>
     <string name="clipboard_merge_too_few">Selecteer minstens twee tekstfragmenten om samen te voegen.</string>
     <string name="clipboard_merge_too_large">Het samengevoegde fragment zou %1$s zijn; de limiet is %2$s. Selecteer minder fragmenten.</string>

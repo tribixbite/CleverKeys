@@ -430,6 +430,12 @@
     <string name="appearance_look_motion_intensity_desc">Jak daleko poruszają się zorza, woda, trawa i gałęzie</string>
     <string name="appearance_look_motion_twinkle_title">Migotanie</string>
     <string name="appearance_look_motion_twinkle_desc">Jak mocno migoczą gwiazdy, deszcz i inne cząstki</string>
+    <string name="appearance_look_motion_resume_title">Pauza podczas pisania</string>
+    <string name="appearance_look_motion_resume_desc">Jak długo scena stoi po ostatnim naciśnięciu klawisza lub przesunięciu</string>
+    <string name="appearance_look_motion_resume_none">Bez pauzy</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Ruch przez</string>
+    <string name="appearance_look_motion_idle_desc">Jak długo scena się porusza po ostatnim dotknięciu klawiatury</string>
     <string name="appearance_look_scene_crisp_title">Ostre sceny</string>
     <string name="appearance_look_scene_crisp_desc">Rysuj zorzę, strumień i śnieg w pełnej rozdzielczości: drobniejsze promienie i zmarszczki, trochę więcej pamięci</string>
     <string name="appearance_custom_border_title">Własna konfiguracja obramowania</string>
@@ -2215,6 +2221,10 @@
     <string name="cmd_theme_previous">Poprzedni motyw</string>
     <string name="cmd_theme_previous_desc">Stosuje poprzedni motyw w kolejności Menedżera motywów</string>
     <string name="theme_cycle_message">Motyw: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Animowane sceny wł./wył.</string>
+    <string name="cmd_toggle_scene_motion_desc">Włącz lub wyłącz ruchome tła scen</string>
+    <string name="scene_motion_on_message">Animowane sceny włączone</string>
+    <string name="scene_motion_off_message">Animowane sceny wyłączone</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modyfikator Shift (wielkie litery/symbole)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2623,6 +2633,7 @@
     <string name="clipboard_bulk_preview">Podgląd: %1$s</string>
     <string name="clipboard_merge_message">Tworzy jeden nowy wycinek w historii z zaznaczonego tekstu, od najstarszego, po jednym w wierszu (%1$s). Oryginały pozostają.</string>
     <string name="clipboard_merge_private_note">Będzie prywatny, ponieważ jeden z zaznaczonych wycinków jest prywatny.</string>
+    <string name="clipboard_merge_copied">Jest w schowku, gotowy do wklejenia.</string>
     <string name="clipboard_merge_action">Scal</string>
     <string name="clipboard_merge_too_few">Zaznacz co najmniej dwa wycinki tekstowe, aby je scalić.</string>
     <string name="clipboard_merge_too_large">Scalony wycinek miałby %1$s; limit to %2$s. Zaznacz mniej wycinków.</string>

@@ -246,6 +246,41 @@ class AuroraMotionTest {
         assertThat(clock.speed).isEqualTo(0f)
     }
 
+    /**
+     * The pause after typing and the idle timeout are the user's (maintainer 2026-11-11: "make
+     * number of seconds after last key press/swipe before animation and duration until idle
+     * stop user settings"): the clock follows a changed value at once, 0 means typing never
+     * holds it, and a hand-edited backup is clamped into the sliders' ranges.
+     */
+    @Test
+    fun theUsersPauseAndIdleTimeoutDriveTheClock() {
+        val clock = AuroraMotionClock(easeMs = 0, maxStepMs = 250, holdEaseMs = 0)
+        clock.holdMs = 3_000
+        clock.idleMs = 8_000
+        clock.touch(0)
+        assertThat(clock.isHeld(2_999)).isTrue()
+        assertThat(clock.isHeld(3_000)).isFalse()
+        var now = 3_000L
+        while (now < 7_900) { now += 100; assertThat(clock.advance(now)).isTrue() }
+        now = 8_000
+        assertWithMessage("rests at the user's idle timeout").that(clock.advance(now)).isFalse()
+
+        clock.holdMs = 0
+        clock.touch(now)
+        assertWithMessage("no pause: a press never holds").that(clock.isHeld(now)).isFalse()
+        assertThat(clock.advance(now + 100)).isTrue()
+
+        val tuning = SceneMotionTuning.fromPercent(100, 100, 55, false, resumeMs = 2_500, idleSeconds = 45)
+        assertThat(tuning.resumeMs).isEqualTo(2_500L)
+        assertThat(tuning.idleMs).isEqualTo(45_000L)
+        val wild = SceneMotionTuning.fromPercent(100, 100, 55, false, resumeMs = -5, idleSeconds = 99_999)
+        assertThat(wild.resumeMs).isEqualTo(SceneMotionTuning.RESUME_MS.first.toLong())
+        assertThat(wild.idleMs).isEqualTo(SceneMotionTuning.IDLE_SECONDS.last * 1000L)
+        assertWithMessage("the defaults are the designed timings")
+            .that(SceneMotionTuning.DEFAULT.resumeMs to SceneMotionTuning.DEFAULT.idleMs)
+            .isEqualTo(AuroraMotion.TYPING_HOLD_MS to AuroraMotion.IDLE_MS)
+    }
+
     /** Only a whole visible step on screen draws a frame; what is shown is never a step behind. */
     @Test
     fun anUnchangedFrameIsSkipped() {

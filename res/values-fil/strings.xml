@@ -425,6 +425,12 @@
     <string name="appearance_look_motion_intensity_desc">Kung gaano kalayo gumalaw ang aurora, tubig, damo at mga sanga</string>
     <string name="appearance_look_motion_twinkle_title">Kislap</string>
     <string name="appearance_look_motion_twinkle_desc">Kung gaano kumikislap ang mga bituin, ulan at iba pang butil</string>
+    <string name="appearance_look_motion_resume_title">Hinto habang nagta-type</string>
+    <string name="appearance_look_motion_resume_desc">Gaano katagal nakatigil ang eksena pagkatapos ng huling pindot o swipe</string>
+    <string name="appearance_look_motion_resume_none">Walang hinto</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Gumagalaw nang</string>
+    <string name="appearance_look_motion_idle_desc">Gaano katagal gumagalaw ang eksena pagkatapos ng huling hawak sa keyboard</string>
     <string name="appearance_look_scene_crisp_title">Malinaw na mga eksena</string>
     <string name="appearance_look_scene_crisp_desc">Iguhit ang aurora, batis at niyebe sa buong resolusyon: mas pinong sinag at alon, bahagyang mas maraming memorya</string>
     <string name="appearance_custom_border_title">Custom na Config ng Border</string>
@@ -2127,6 +2133,10 @@
     <string name="cmd_theme_previous">Nakaraang tema</string>
     <string name="cmd_theme_previous_desc">Ilapat ang nakaraang tema ayon sa pagkakasunod sa Theme Manager</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Gumagalaw na mga eksena on/off</string>
+    <string name="cmd_toggle_scene_motion_desc">I-on o i-off ang gumagalaw na mga background ng eksena</string>
+    <string name="scene_motion_on_message">Naka-on ang gumagalaw na mga eksena</string>
+    <string name="scene_motion_off_message">Naka-off ang gumagalaw na mga eksena</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifier (malalaking titik/simbolo)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2535,6 +2545,7 @@
     <string name="clipboard_bulk_preview">Preview: %1$s</string>
     <string name="clipboard_merge_message">Gumagawa ng isang bagong clipping sa history mula sa napiling text, pinakaluma muna, isa bawat linya (%1$s). Mananatili ang mga orihinal.</string>
     <string name="clipboard_merge_private_note">Magiging private ito dahil private ang isa sa mga napiling clipping.</string>
+    <string name="clipboard_merge_copied">Nasa clipboard na ito, handang i-paste.</string>
     <string name="clipboard_merge_action">Pagsamahin</string>
     <string name="clipboard_merge_too_few">Pumili ng hindi bababa sa dalawang text clipping na pagsasamahin.</string>
     <string name="clipboard_merge_too_large">Magiging %1$s ang pinagsamang clipping; %2$s ang limitasyon. Pumili ng mas kaunting clipping.</string>

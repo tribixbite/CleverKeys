@@ -40,8 +40,8 @@ import java.util.concurrent.Executors
  * scenes warp their own layers through a mesh ([SceneMotion]: grass bends, branches sway, waves
  * roll in and wash up); particles twinkle in groups and travel. Frames are scheduled through the
  * drawable's own callback ([scheduleSelf]), only while it is visible, [motionGate] allows it and
- * the user touched or opened the keyboard within [AuroraMotion.IDLE_MS]; a key press holds it
- * still until [AuroraMotion.TYPING_HOLD_MS] after the last one ([touch]). A frame that would show
+ * the user touched or opened the keyboard within [SceneMotionTuning.idleMs]; a key press holds it
+ * still until [SceneMotionTuning.resumeMs] after the last one ([touch]). A frame that would show
  * nothing new is skipped ([VisibleChangeGate]).
  */
 class BackdropDrawable(
@@ -152,6 +152,8 @@ class BackdropDrawable(
         val repaint = value.crisp != tuning.crisp
         tuning = value
         clock.rate = value.speed
+        clock.holdMs = value.resumeMs
+        clock.idleMs = value.idleMs
         if (repaint && !bounds.isEmpty) requestPainting(bounds.width(), bounds.height())
         invalidateSelf()
     }
@@ -165,7 +167,7 @@ class BackdropDrawable(
 
     /**
      * The user is at the keyboard (a touch, the keyboard showing): move for the next
-     * [AuroraMotion.IDLE_MS]. Cheap when already moving; [motionGate] is asked only to start.
+     * [SceneMotionTuning.idleMs]. Cheap when already moving; [motionGate] is asked only to start.
      * Before the painting is ready only the clock is woken; its delivery starts the frames.
      */
     fun wake() {
@@ -176,8 +178,8 @@ class BackdropDrawable(
     }
 
     /**
-     * A key press: hold still while the user types, and move again [AuroraMotion.TYPING_HOLD_MS]
-     * after the last press (and on for [AuroraMotion.IDLE_MS]). A typing burst therefore costs the
+     * A key press: hold still while the user types, and move again [SceneMotionTuning.resumeMs]
+     * after the last press (and on for [SceneMotionTuning.idleMs]). A typing burst therefore costs the
      * two or three frames of slowing down, not a frame rate.
      */
     fun touch() {

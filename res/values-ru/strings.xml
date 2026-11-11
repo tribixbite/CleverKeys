@@ -420,6 +420,12 @@
     <string name="appearance_look_motion_intensity_desc">Насколько сильно движутся сияние, вода, трава и ветви</string>
     <string name="appearance_look_motion_twinkle_title">Мерцание</string>
     <string name="appearance_look_motion_twinkle_desc">Насколько мерцают звёзды, дождь и другие частицы</string>
+    <string name="appearance_look_motion_resume_title">Пауза при наборе</string>
+    <string name="appearance_look_motion_resume_desc">Сколько сцена стоит после последнего нажатия клавиши или свайпа</string>
+    <string name="appearance_look_motion_resume_none">Без паузы</string>
+    <string name="appearance_look_motion_seconds">%1$s с</string>
+    <string name="appearance_look_motion_idle_title">Движение в течение</string>
+    <string name="appearance_look_motion_idle_desc">Сколько сцена движется после последнего касания клавиатуры</string>
     <string name="appearance_look_scene_crisp_title">Чёткие сцены</string>
     <string name="appearance_look_scene_crisp_desc">Рисовать сияние, ручей и снег в полном разрешении: тоньше лучи и рябь, немного больше памяти</string>
     <string name="appearance_custom_border_title">Настраиваемая рамка</string>
@@ -2210,6 +2216,10 @@
     <string name="cmd_theme_previous">Предыдущая тема</string>
     <string name="cmd_theme_previous_desc">Применить предыдущую тему в порядке менеджера тем</string>
     <string name="theme_cycle_message">Тема: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Анимированные сцены вкл./выкл.</string>
+    <string name="cmd_toggle_scene_motion_desc">Включить или выключить движущиеся фоны сцен</string>
+    <string name="scene_motion_on_message">Анимированные сцены включены</string>
+    <string name="scene_motion_off_message">Анимированные сцены выключены</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модификатор Shift (заглавные/символы)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2618,6 +2628,7 @@
     <string name="clipboard_bulk_preview">Предпросмотр: %1$s</string>
     <string name="clipboard_merge_message">Создаёт один новый фрагмент в истории из выбранного текста: сначала самые старые, по одному на строку (%1$s). Исходные фрагменты остаются.</string>
     <string name="clipboard_merge_private_note">Он будет приватным, потому что один из выбранных фрагментов приватный.</string>
+    <string name="clipboard_merge_copied">Он в буфере обмена и готов к вставке.</string>
     <string name="clipboard_merge_action">Объединить</string>
     <string name="clipboard_merge_too_few">Выберите хотя бы два текстовых фрагмента для объединения.</string>
     <string name="clipboard_merge_too_large">Объединённый фрагмент занял бы %1$s; ограничение — %2$s. Выберите меньше фрагментов.</string>

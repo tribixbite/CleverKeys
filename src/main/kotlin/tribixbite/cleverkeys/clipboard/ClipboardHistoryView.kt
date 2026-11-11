@@ -334,6 +334,22 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         runBulk({ svc?.addMergedClip(plan) ?: unavailable() }, completed)
     }
 
+    /**
+     * Put a merged clipping on the OS clipboard, so the system paste and a paste shortcut give
+     * it too. A private merge goes through the same confirm-before-expose dialog as copying a
+     * private row (#156); the capture of our own write only moves the stored copy to the top
+     * (the history's duplicate rule), so nothing is stored twice.
+     */
+    fun placeMergedOnSystemClipboard(text: String, isPrivate: Boolean) {
+        if (isPrivate) {
+            confirmPrivateExposure(text)
+        } else {
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
+            runCatching { clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", text)) }
+                .onFailure { android.util.Log.w("ClipboardHistory", "Merged clip not copied: " + it.message) }
+        }
+    }
+
     /** Clean: apply the confirmed [plan]'s edits in place to [tab]'s rows. */
     fun cleanSelection(tab: ClipboardTab, plan: ClipboardBulkPlans.CleanPlan, completed: (Result<ClipboardCleanResult>) -> Unit) {
         val svc = service

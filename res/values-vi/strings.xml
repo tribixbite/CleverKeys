@@ -442,6 +442,12 @@
     <string name="appearance_look_motion_intensity_desc">Cực quang, nước, cỏ và cành cây chuyển động xa đến mức nào</string>
     <string name="appearance_look_motion_twinkle_title">Lấp lánh</string>
     <string name="appearance_look_motion_twinkle_desc">Sao, mưa và các hạt khác lấp lánh nhiều đến mức nào</string>
+    <string name="appearance_look_motion_resume_title">Tạm dừng khi gõ</string>
+    <string name="appearance_look_motion_resume_desc">Cảnh đứng yên bao lâu sau lần nhấn phím hoặc vuốt cuối cùng</string>
+    <string name="appearance_look_motion_resume_none">Không dừng</string>
+    <string name="appearance_look_motion_seconds">%1$s giây</string>
+    <string name="appearance_look_motion_idle_title">Chuyển động trong</string>
+    <string name="appearance_look_motion_idle_desc">Cảnh chuyển động bao lâu sau lần chạm bàn phím cuối cùng</string>
     <string name="appearance_look_scene_crisp_title">Cảnh sắc nét</string>
     <string name="appearance_look_scene_crisp_desc">Vẽ cực quang, suối và tuyết ở độ phân giải đầy đủ: tia sáng và gợn sóng mịn hơn, tốn thêm chút bộ nhớ</string>
     <string name="appearance_custom_border_title">Cấu hình viền tùy chỉnh</string>
@@ -2098,6 +2104,10 @@
     <string name="cmd_theme_previous">Giao diện trước</string>
     <string name="cmd_theme_previous_desc">Áp dụng giao diện trước theo thứ tự trong Trình quản lý giao diện</string>
     <string name="theme_cycle_message">Giao diện: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Bật/tắt cảnh chuyển động</string>
+    <string name="cmd_toggle_scene_motion_desc">Bật hoặc tắt nền cảnh chuyển động</string>
+    <string name="scene_motion_on_message">Đã bật cảnh chuyển động</string>
+    <string name="scene_motion_off_message">Đã tắt cảnh chuyển động</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Phím bổ trợ Shift (chữ hoa/ký hiệu)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2506,6 +2516,7 @@
     <string name="clipboard_bulk_preview">Xem trước: %1$s</string>
     <string name="clipboard_merge_message">Tạo một đoạn cắt mới trong lịch sử từ văn bản đã chọn, cũ nhất trước, mỗi đoạn một dòng (%1$s). Bản gốc vẫn được giữ.</string>
     <string name="clipboard_merge_private_note">Đoạn cắt này sẽ ở chế độ riêng tư vì có một đoạn cắt đã chọn là riêng tư.</string>
+    <string name="clipboard_merge_copied">Đã có trong bộ nhớ tạm, sẵn sàng để dán.</string>
     <string name="clipboard_merge_action">Gộp</string>
     <string name="clipboard_merge_too_few">Hãy chọn ít nhất hai đoạn cắt văn bản để gộp.</string>
     <string name="clipboard_merge_too_large">Đoạn cắt sau khi gộp sẽ có kích thước %1$s; giới hạn là %2$s. Hãy chọn ít đoạn cắt hơn.</string>

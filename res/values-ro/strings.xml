@@ -440,6 +440,12 @@
     <string name="appearance_look_motion_intensity_desc">Cât de mult se mișcă aurora, apa, iarba și ramurile</string>
     <string name="appearance_look_motion_twinkle_title">Sclipire</string>
     <string name="appearance_look_motion_twinkle_desc">Cât de mult sclipesc stelele, ploaia și alte particule</string>
+    <string name="appearance_look_motion_resume_title">Pauză la tastare</string>
+    <string name="appearance_look_motion_resume_desc">Cât timp stă nemișcată scena după ultima apăsare de tastă sau glisare</string>
+    <string name="appearance_look_motion_resume_none">Fără pauză</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Mișcare timp de</string>
+    <string name="appearance_look_motion_idle_desc">Cât timp se mișcă scena după ultima atingere a tastaturii</string>
     <string name="appearance_look_scene_crisp_title">Scene clare</string>
     <string name="appearance_look_scene_crisp_desc">Desenează aurora, pârâul și zăpada la rezoluție completă: raze și unduiri mai fine, puțin mai multă memorie</string>
     <string name="appearance_custom_border_title">Chenar personalizat</string>
@@ -2187,6 +2193,10 @@
     <string name="cmd_theme_previous">Tema anterioară</string>
     <string name="cmd_theme_previous_desc">Aplică tema anterioară în ordinea din Managerul de teme</string>
     <string name="theme_cycle_message">Temă: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Scene animate pornit/oprit</string>
+    <string name="cmd_toggle_scene_motion_desc">Pornește sau oprește fundalurile animate ale scenelor</string>
+    <string name="scene_motion_on_message">Scene animate pornite</string>
+    <string name="scene_motion_off_message">Scene animate oprite</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Modificator Shift (majuscule/simboluri)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2595,6 +2605,7 @@
     <string name="clipboard_bulk_preview">Previzualizare: %1$s</string>
     <string name="clipboard_merge_message">Creează un singur decupaj nou în istoric din textul selectat, de la cel mai vechi, câte unul pe rând (%1$s). Originalele rămân.</string>
     <string name="clipboard_merge_private_note">Va fi privat, deoarece un decupaj selectat este privat.</string>
+    <string name="clipboard_merge_copied">Este în clipboard, gata de lipit.</string>
     <string name="clipboard_merge_action">Îmbină</string>
     <string name="clipboard_merge_too_few">Selectați cel puțin două decupaje text pentru îmbinare.</string>
     <string name="clipboard_merge_too_large">Decupajul îmbinat ar avea %1$s; limita este %2$s. Selectați mai puține decupaje.</string>

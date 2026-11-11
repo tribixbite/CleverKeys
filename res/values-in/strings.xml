@@ -425,6 +425,12 @@
     <string name="appearance_look_motion_intensity_desc">Seberapa jauh aurora, air, rumput, dan dahan bergerak</string>
     <string name="appearance_look_motion_twinkle_title">Kerlip</string>
     <string name="appearance_look_motion_twinkle_desc">Seberapa banyak bintang, hujan, dan partikel lain berkerlip</string>
+    <string name="appearance_look_motion_resume_title">Jeda saat mengetik</string>
+    <string name="appearance_look_motion_resume_desc">Berapa lama adegan diam setelah tekanan tombol atau usapan terakhir</string>
+    <string name="appearance_look_motion_resume_none">Tanpa jeda</string>
+    <string name="appearance_look_motion_seconds">%1$s dtk</string>
+    <string name="appearance_look_motion_idle_title">Bergerak selama</string>
+    <string name="appearance_look_motion_idle_desc">Berapa lama adegan bergerak setelah sentuhan terakhir pada keyboard</string>
     <string name="appearance_look_scene_crisp_title">Adegan tajam</string>
     <string name="appearance_look_scene_crisp_desc">Gambar aurora, sungai kecil, dan salju dalam resolusi penuh: sinar dan riak lebih halus, sedikit lebih banyak memori</string>
     <string name="appearance_custom_border_title">Konfigurasi Batas Kustom</string>
@@ -2082,6 +2088,10 @@
     <string name="cmd_theme_previous">Tema sebelumnya</string>
     <string name="cmd_theme_previous_desc">Terapkan tema sebelumnya sesuai urutan Pengelola Tema</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Adegan bergerak aktif/nonaktif</string>
+    <string name="cmd_toggle_scene_motion_desc">Mengaktifkan atau menonaktifkan latar adegan yang bergerak</string>
+    <string name="scene_motion_on_message">Adegan bergerak aktif</string>
+    <string name="scene_motion_off_message">Adegan bergerak nonaktif</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Pengubah Shift (huruf kapital/simbol)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2490,6 +2500,7 @@
     <string name="clipboard_bulk_preview">Pratinjau: %1$s</string>
     <string name="clipboard_merge_message">Membuat satu klip baru di riwayat dari teks yang dipilih, yang terlama lebih dulu, satu per baris (%1$s). Klip aslinya tetap ada.</string>
     <string name="clipboard_merge_private_note">Klip ini akan bersifat pribadi karena salah satu klip yang dipilih bersifat pribadi.</string>
+    <string name="clipboard_merge_copied">Sudah ada di papan klip, siap ditempel.</string>
     <string name="clipboard_merge_action">Gabungkan</string>
     <string name="clipboard_merge_too_few">Pilih setidaknya dua klip teks untuk digabungkan.</string>
     <string name="clipboard_merge_too_large">Klip gabungan akan berukuran %1$s; batasnya %2$s. Pilih lebih sedikit klip.</string>

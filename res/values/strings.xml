@@ -624,6 +624,12 @@
     <string name="appearance_look_motion_intensity_desc">How far curtains, water, grass and branches move</string>
     <string name="appearance_look_motion_twinkle_title">Twinkle</string>
     <string name="appearance_look_motion_twinkle_desc">How much stars, rain and other particles shimmer</string>
+    <string name="appearance_look_motion_resume_title">Pause While Typing</string>
+    <string name="appearance_look_motion_resume_desc">How long a scene stays still after your last key press or swipe</string>
+    <string name="appearance_look_motion_resume_none">No pause</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Keep Moving For</string>
+    <string name="appearance_look_motion_idle_desc">How long a scene moves after you last touch the keyboard</string>
     <string name="appearance_look_scene_crisp_title">Sharp Scenes</string>
     <string name="appearance_look_scene_crisp_desc">Paint the aurora, stream and snow at full resolution: finer rays and ripples, a little more memory</string>
     <string name="appearance_custom_border_title">Custom Border Config</string>
@@ -2536,6 +2542,10 @@
     <string name="cmd_theme_previous">Previous Theme</string>
     <string name="cmd_theme_previous_desc">Apply the previous theme in Theme Manager\'s order</string>
     <string name="theme_cycle_message">Theme: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Animated Scenes On/Off</string>
+    <string name="cmd_toggle_scene_motion_desc">Turn the moving scene backdrops on or off</string>
+    <string name="scene_motion_on_message">Animated scenes on</string>
+    <string name="scene_motion_off_message">Animated scenes off</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifier (uppercase/symbols)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2957,6 +2967,7 @@
     <!-- %1$s = size of the merged clipping -->
     <string name="clipboard_merge_message">Creates one new History clipping from the selected text, oldest first, one per line (%1$s). The originals stay.</string>
     <string name="clipboard_merge_private_note">It will be private, because a selected clipping is private.</string>
+    <string name="clipboard_merge_copied">It is on the clipboard, ready to paste.</string>
     <string name="clipboard_merge_action">Merge</string>
     <string name="clipboard_merge_too_few">Select at least two text clippings to merge.</string>
     <!-- %1$s = merged size, %2$s = per-clipping size limit -->

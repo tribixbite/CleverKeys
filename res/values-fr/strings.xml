@@ -423,6 +423,12 @@
     <string name="appearance_look_motion_intensity_desc">L’amplitude du mouvement de l’aurore, de l’eau, de l’herbe et des branches</string>
     <string name="appearance_look_motion_twinkle_title">Scintillement</string>
     <string name="appearance_look_motion_twinkle_desc">À quel point les étoiles, la pluie et les autres particules scintillent</string>
+    <string name="appearance_look_motion_resume_title">Pause pendant la saisie</string>
+    <string name="appearance_look_motion_resume_desc">Durée pendant laquelle une scène reste immobile après la dernière touche ou le dernier glissement</string>
+    <string name="appearance_look_motion_resume_none">Aucune pause</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Mouvement pendant</string>
+    <string name="appearance_look_motion_idle_desc">Durée pendant laquelle une scène bouge après le dernier contact avec le clavier</string>
     <string name="appearance_look_scene_crisp_title">Scènes nettes</string>
     <string name="appearance_look_scene_crisp_desc">Dessiner l’aurore, le ruisseau et la neige en pleine résolution : rayons et ondulations plus fins, un peu plus de mémoire</string>
     <string name="appearance_custom_border_title">Configuration de bordure personnalisée</string>
@@ -2170,6 +2176,10 @@
     <string name="cmd_theme_previous">Thème précédent</string>
     <string name="cmd_theme_previous_desc">Applique le thème précédent dans l’ordre du gestionnaire de thèmes</string>
     <string name="theme_cycle_message">Thème : %1$s</string>
+    <string name="cmd_toggle_scene_motion">Scènes animées oui/non</string>
+    <string name="cmd_toggle_scene_motion_desc">Active ou désactive les fonds de scène animés</string>
+    <string name="scene_motion_on_message">Scènes animées activées</string>
+    <string name="scene_motion_off_message">Scènes animées désactivées</string>
     <string name="cmd_shift">Maj</string>
     <string name="cmd_shift_desc">Touche Maj (majuscules/symboles)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2578,6 +2588,7 @@
     <string name="clipboard_bulk_preview">Aperçu : %1$s</string>
     <string name="clipboard_merge_message">Crée un nouvel élément dans l\'historique à partir du texte sélectionné, du plus ancien au plus récent, un par ligne (%1$s). Les originaux sont conservés.</string>
     <string name="clipboard_merge_private_note">Il sera privé, car un élément sélectionné est privé.</string>
+    <string name="clipboard_merge_copied">Il est dans le presse-papiers, prêt à être collé.</string>
     <string name="clipboard_merge_action">Fusionner</string>
     <string name="clipboard_merge_too_few">Sélectionnez au moins deux éléments texte à fusionner.</string>
     <string name="clipboard_merge_too_large">L\'élément fusionné ferait %1$s ; la limite est de %2$s. Sélectionnez moins d\'éléments.</string>

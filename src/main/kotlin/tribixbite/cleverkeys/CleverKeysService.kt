@@ -1172,6 +1172,18 @@ class CleverKeysService : InputMethodService(),
         _handler.postDelayed({ showSuggestionBarMessage(getString(R.string.theme_cycle_message, name)) }, THEME_MESSAGE_DELAY_MS)
     }
 
+    /**
+     * The `toggle_scene_motion` command: flips Appearance → Animated scenes
+     * (`look_backdrop_motion`). The preference listener reloads the config and the keyboard
+     * view applies it at once (`setKeyboard`); the suggestion bar names the new state.
+     */
+    fun toggleSceneMotion() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val on = !prefs.getBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
+        prefs.edit().putBoolean("look_backdrop_motion", on).apply()
+        showSuggestionBarMessage(getString(if (on) R.string.scene_motion_on_message else R.string.scene_motion_off_message))
+    }
+
     override fun onWindowShown() {
         super.onWindowShown()
         _windowVisible = true

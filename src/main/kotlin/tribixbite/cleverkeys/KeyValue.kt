@@ -54,6 +54,8 @@ class KeyValue private constructor(
         // Appended (ordinal).
         THEME_NEXT,
         THEME_PREVIOUS,
+        // 2026-11-11: turn Animated scenes (`look_backdrop_motion`) on or off. Appended (ordinal).
+        TOGGLE_SCENE_MOTION,
     }
 
     /**
@@ -678,6 +680,8 @@ class KeyValue private constructor(
             // Step through Theme Manager's themes from the current one, applying each.
             "theme_next" -> eventKey("◐+", Event.THEME_NEXT, FLAG_SMALLER_FONT)
             "theme_previous" -> eventKey("◐−", Event.THEME_PREVIOUS, FLAG_SMALLER_FONT)
+            // Animated scenes on / off (the Appearance switch).
+            "toggle_scene_motion" -> eventKey("◐≈", Event.TOGGLE_SCENE_MOTION, FLAG_SMALLER_FONT)
             "switch_back_gif" -> eventKey("ABC", Event.SWITCH_BACK_GIF, 0)
 
             /* Key events */

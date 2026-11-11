@@ -509,6 +509,10 @@ confirmation shows the count, size, skipped media, the privacy note and a one-li
 preview (line breaks shown as ↵). The originals are kept. Stored via
 `ClipboardHistoryService.addMergedClip` (works even when OS-clipboard monitoring is off —
 it is an explicit user action), followed by the normal history limits, like any capture.
+The merged text is then put on the OS clipboard (`placeMergedOnSystemClipboard`; maintainer
+2026-11-11: pasting with the system paste or a shortcut must give it); a private merge goes
+through the private-copy confirmation first (#156). Our own capture of that write only
+moves the stored copy to the top (the duplicate rule).
 
 **Clean.** In place, through the inline editor's own path (`editEntryContent`: blank and
 size validation, per-table update, duplicate guard), so only the copies in the current
@@ -526,16 +530,28 @@ The transform (`ClipboardTextCleaner`, Android-free, `ClipboardTextCleanerTest`)
 2. Trailing whitespace is removed from every line and the end of the text: spaces, tabs,
    no-break and other Unicode spaces (U+00A0, U+2000–U+200A, U+202F, U+205F, U+3000) and
    U+FEFF. Leading whitespace is never touched.
-3. Preformatted text keeps every line break: a line indented by a tab or 2+ spaces, a
-   code fence, a line ending in `{`, `;` or `\` or starting with `}`, `//`, a block-comment
-   opener, `#!`, `#include`, `<?`, `$ `, `>>> ` or a markup tag.
-4. Otherwise a single line break is "inserted" — and replaced — only when neither
+3. Preformatted text keeps every line break: a line indented by a tab, a code fence, a
+   line ending in `{`, `;` or `\` or starting with `}`, `//`, a block-comment opener, `#!`,
+   `#include`, `<?`, `$ `, `>>> ` or a markup tag, a space-aligned table (two lines with a
+   gap of 2+ spaces, not after sentence punctuation, ending at the same column), a text
+   whose first line is space-indented, and any space-indented line that is not a
+   hanging-indent wrap (rule 4).
+4. A space-indented line is a hanging-indent wrap — terminal output and Markdown renderers
+   indent the continuation of a wrapped line (maintainer report 2026-11-11: a clip copied
+   from a terminal was "nothing to clean") — when the line before it is long (as in 5),
+   does not end in `:`, `{`, `[`, `(` or `\`, and is indented no deeper than it; after a
+   list item it must be indented deeper than the marker. Code fails this somewhere (a
+   block opens after a colon or brace, or a short line comes before an indented one).
+5. Otherwise a single line break is "inserted" — and replaced — only when neither
    neighbour is blank (blank lines are paragraph breaks), neither line is structural
    (bullet, numbered/lettered/roman item, checkbox, Markdown heading, quote, table row,
-   horizontal rule), the line before is long (≥ 20 characters and ≥ 60% of the longest
-   prose line, so addresses, poems, greetings and paragraph-final lines keep their
-   break) and no URL touches the break.
-5. A replaced break becomes one space (the next line's leading whitespace is dropped, so
+   horizontal rule) — except that a list item joins its own indented continuation — the
+   line before is long (≥ 20 characters and ≥ 60% of the longest prose line, so
+   addresses, poems, greetings and paragraph-final lines keep their break) and no URL
+   touches the break.
+6. In prose a run of spaces inside a line becomes one space; a kept line's indentation
+   stays.
+7. A replaced break becomes one space (the next line's leading whitespace is dropped, so
    no double spaces), except: letter + hyphen at the line end followed by a lowercase
    letter is a word hyphenated by the line break and is rejoined without the hyphen
    (`exam-\nple` → `example`); the hyphen is kept, with no space, when the token already

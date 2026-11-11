@@ -431,6 +431,12 @@
     <string name="appearance_look_motion_intensity_desc">Наскільки рухаються сяйво, вода, трава й гілки</string>
     <string name="appearance_look_motion_twinkle_title">Мерехтіння</string>
     <string name="appearance_look_motion_twinkle_desc">Наскільки мерехтять зорі, дощ та інші частинки</string>
+    <string name="appearance_look_motion_resume_title">Пауза під час набору</string>
+    <string name="appearance_look_motion_resume_desc">Скільки сцена стоїть після останнього натискання клавіші чи свайпу</string>
+    <string name="appearance_look_motion_resume_none">Без паузи</string>
+    <string name="appearance_look_motion_seconds">%1$s с</string>
+    <string name="appearance_look_motion_idle_title">Рух протягом</string>
+    <string name="appearance_look_motion_idle_desc">Скільки сцена рухається після останнього дотику до клавіатури</string>
     <string name="appearance_look_scene_crisp_title">Чіткі сцени</string>
     <string name="appearance_look_scene_crisp_desc">Малювати сяйво, струмок і сніг у повній роздільності: тонші промені та брижі, трохи більше пам’яті</string>
     <string name="appearance_custom_border_title">Власна рамка</string>
@@ -2216,6 +2222,10 @@
     <string name="cmd_theme_previous">Попередня тема</string>
     <string name="cmd_theme_previous_desc">Застосувати попередню тему в порядку менеджера тем</string>
     <string name="theme_cycle_message">Тема: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Анімовані сцени увімк./вимк.</string>
+    <string name="cmd_toggle_scene_motion_desc">Увімкнути або вимкнути рухомі тла сцен</string>
+    <string name="scene_motion_on_message">Анімовані сцени увімкнено</string>
+    <string name="scene_motion_off_message">Анімовані сцени вимкнено</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модифікатор Shift (великі літери/символи)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2624,6 +2634,7 @@
     <string name="clipboard_bulk_preview">Попередній перегляд: %1$s</string>
     <string name="clipboard_merge_message">Створює один новий фрагмент в історії з вибраного тексту: спершу найстаріші, по одному на рядок (%1$s). Оригінали залишаються.</string>
     <string name="clipboard_merge_private_note">Він буде приватним, бо один із вибраних фрагментів приватний.</string>
+    <string name="clipboard_merge_copied">Він у буфері обміну й готовий до вставлення.</string>
     <string name="clipboard_merge_action">Об’єднати</string>
     <string name="clipboard_merge_too_few">Виберіть щонайменше два текстові фрагменти для об’єднання.</string>
     <string name="clipboard_merge_too_large">Об’єднаний фрагмент мав би %1$s; обмеження — %2$s. Виберіть менше фрагментів.</string>

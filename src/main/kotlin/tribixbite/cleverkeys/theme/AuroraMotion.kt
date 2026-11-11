@@ -36,7 +36,10 @@ object AuroraMotion {
      */
     const val AURORA_FRAME_MS = 100L
 
-    /** Moving stops this long after the last touch or the keyboard showing. */
+    /**
+     * Moving stops this long after the last touch or the keyboard showing, by default; the user
+     * sets it (`look_motion_idle_s`, [SceneMotionTuning.idleMs]).
+     */
     const val IDLE_MS = 20_000L
 
     /** Speeding up from rest and slowing down to it each take this long (no jolt either way). */
@@ -46,7 +49,8 @@ object AuroraMotion {
      * Typing holds the backdrop still: a key press stops the motion and it starts again this
      * long after the last one (maintainer 2026-11-11: "resume after 1s of no typing"). While
      * typing the eyes are on the keys and the text; frames there were the whole measured cost
-     * (+217 mW on the Pixel 8 Pro with the aurora moving under continuous typing).
+     * (+217 mW on the Pixel 8 Pro with the aurora moving under continuous typing). The default;
+     * the user sets it (`look_motion_resume_ms`, [SceneMotionTuning.resumeMs]; 0 = no hold).
      */
     const val TYPING_HOLD_MS = 1_000L
 
@@ -145,12 +149,19 @@ object AuroraMotion {
  *   (`look_motion_twinkle`, 0–100 %).
  * @property crisp paint the soft backdrops (aurora, stream, snow) at full resolution instead of
  *   half (`look_scene_crisp`): finer rays and ripples for four times the pixels.
+ * @property resumeMs a key press or swipe holds the motion still until this long after the last
+ *   one; 0 = typing never holds it (`look_motion_resume_ms`; maintainer 2026-11-11: "make number
+ *   of seconds after last key press/swipe before animation … user settings").
+ * @property idleMs the motion stops this long after the last touch or the keyboard showing
+ *   (`look_motion_idle_s`, stored in seconds).
  */
 data class SceneMotionTuning(
     val speed: Float = 1f,
     val intensity: Float = 1f,
     val twinkle: Float = DEFAULT_TWINKLE,
     val crisp: Boolean = false,
+    val resumeMs: Long = AuroraMotion.TYPING_HOLD_MS,
+    val idleMs: Long = AuroraMotion.IDLE_MS,
 ) {
     companion object {
         /** The twinkle depth as designed: a star dims to 45 % of its brightness. */
@@ -162,22 +173,37 @@ data class SceneMotionTuning(
          * From the settings' percentages, clamped to their ranges (a hand-edited or old backup
          * can hold anything).
          */
-        fun fromPercent(speed: Int, intensity: Int, twinkle: Int, crisp: Boolean) = SceneMotionTuning(
+        fun fromPercent(
+            speed: Int,
+            intensity: Int,
+            twinkle: Int,
+            crisp: Boolean,
+            resumeMs: Int = DEFAULT_RESUME_MS,
+            idleSeconds: Int = DEFAULT_IDLE_SECONDS,
+        ) = SceneMotionTuning(
             speed = speed.coerceIn(SPEED_PERCENT) / 100f,
             intensity = intensity.coerceIn(INTENSITY_PERCENT) / 100f,
             twinkle = twinkle.coerceIn(TWINKLE_PERCENT) / 100f,
             crisp = crisp,
+            resumeMs = resumeMs.coerceIn(RESUME_MS).toLong(),
+            idleMs = idleSeconds.coerceIn(IDLE_SECONDS) * 1000L,
         )
 
         /** The settings' ranges, percent (`SettingsRanges` hands them to the sliders and the backup check). */
         val SPEED_PERCENT: IntRange = 25..200
         val INTENSITY_PERCENT: IntRange = 0..200
         val TWINKLE_PERCENT: IntRange = 0..100
+        /** Pause after the last key press or swipe, ms (the slider steps a quarter second). */
+        val RESUME_MS: IntRange = 0..10_000
+        /** Moving after the last touch, seconds (the slider steps five). */
+        val IDLE_SECONDS: IntRange = 5..600
 
         /** The settings' defaults, percent: the motion as designed. */
         const val DEFAULT_SPEED_PERCENT = 100
         const val DEFAULT_INTENSITY_PERCENT = 100
         const val DEFAULT_TWINKLE_PERCENT = 55
+        const val DEFAULT_RESUME_MS = AuroraMotion.TYPING_HOLD_MS.toInt()
+        const val DEFAULT_IDLE_SECONDS = (AuroraMotion.IDLE_MS / 1000).toInt()
     }
 }
 
@@ -229,10 +255,12 @@ class AuroraMotionFrame(
  * hidden, the device slept) counts as [maxStepMs], so the aurora never jumps.
  */
 class AuroraMotionClock(
-    private val idleMs: Long = AuroraMotion.IDLE_MS,
+    /** The user's idle timeout ([SceneMotionTuning.idleMs]); a change applies from now on. */
+    var idleMs: Long = AuroraMotion.IDLE_MS,
     private val easeMs: Long = AuroraMotion.EASE_MS,
     private val maxStepMs: Long = 250L,
-    private val holdMs: Long = AuroraMotion.TYPING_HOLD_MS,
+    /** The user's typing pause ([SceneMotionTuning.resumeMs]); 0 = key presses never hold. */
+    var holdMs: Long = AuroraMotion.TYPING_HOLD_MS,
     private val holdEaseMs: Long = AuroraMotion.HOLD_EASE_MS,
 ) {
     /** Accumulated motion time, ms. */

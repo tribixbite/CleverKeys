@@ -424,6 +424,12 @@
     <string name="appearance_look_motion_intensity_desc">Kutup ışığının, suyun, çimenin ve dalların ne kadar hareket ettiği</string>
     <string name="appearance_look_motion_twinkle_title">Parıltı</string>
     <string name="appearance_look_motion_twinkle_desc">Yıldızların, yağmurun ve diğer parçacıkların ne kadar parıldadığı</string>
+    <string name="appearance_look_motion_resume_title">Yazarken duraklama</string>
+    <string name="appearance_look_motion_resume_desc">Son tuş basışından veya kaydırmadan sonra sahnenin ne kadar duracağı</string>
+    <string name="appearance_look_motion_resume_none">Duraklama yok</string>
+    <string name="appearance_look_motion_seconds">%1$s sn</string>
+    <string name="appearance_look_motion_idle_title">Hareket süresi</string>
+    <string name="appearance_look_motion_idle_desc">Klavyeye son dokunuştan sonra sahnenin ne kadar hareket edeceği</string>
     <string name="appearance_look_scene_crisp_title">Keskin sahneler</string>
     <string name="appearance_look_scene_crisp_desc">Kutup ışığını, dereyi ve karı tam çözünürlükte çiz: daha ince ışınlar ve dalgacıklar, biraz daha fazla bellek</string>
     <string name="appearance_custom_border_title">Özel Kenarlık Yapılandırması</string>
@@ -2126,6 +2132,10 @@
     <string name="cmd_theme_previous">Önceki tema</string>
     <string name="cmd_theme_previous_desc">Tema Yöneticisi sırasındaki önceki temayı uygular</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Hareketli sahneler açık/kapalı</string>
+    <string name="cmd_toggle_scene_motion_desc">Hareketli sahne arka planlarını açar veya kapatır</string>
+    <string name="scene_motion_on_message">Hareketli sahneler açık</string>
+    <string name="scene_motion_off_message">Hareketli sahneler kapalı</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift değiştiricisi (büyük harf/sembol)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2534,6 +2544,7 @@
     <string name="clipboard_bulk_preview">Önizleme: %1$s</string>
     <string name="clipboard_merge_message">Seçili metinden geçmişte yeni bir kırpma oluşturur; en eskisi önce, her biri ayrı satırda (%1$s). Orijinaller kalır.</string>
     <string name="clipboard_merge_private_note">Seçili kırpmalardan biri gizli olduğu için bu da gizli olacak.</string>
+    <string name="clipboard_merge_copied">Panoda, yapıştırmaya hazır.</string>
     <string name="clipboard_merge_action">Birleştir</string>
     <string name="clipboard_merge_too_few">Birleştirmek için en az iki metin kırpması seçin.</string>
     <string name="clipboard_merge_too_large">Birleştirilmiş kırpma %1$s olurdu; sınır %2$s. Daha az kırpma seçin.</string>

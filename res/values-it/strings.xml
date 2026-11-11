@@ -456,6 +456,12 @@
     <string name="appearance_look_motion_intensity_desc">Quanto si muovono l’aurora, l’acqua, l’erba e i rami</string>
     <string name="appearance_look_motion_twinkle_title">Scintillio</string>
     <string name="appearance_look_motion_twinkle_desc">Quanto scintillano stelle, pioggia e altre particelle</string>
+    <string name="appearance_look_motion_resume_title">Pausa durante la digitazione</string>
+    <string name="appearance_look_motion_resume_desc">Per quanto una scena resta ferma dopo l\'ultimo tasto o scorrimento</string>
+    <string name="appearance_look_motion_resume_none">Nessuna pausa</string>
+    <string name="appearance_look_motion_seconds">%1$s s</string>
+    <string name="appearance_look_motion_idle_title">Movimento per</string>
+    <string name="appearance_look_motion_idle_desc">Per quanto una scena si muove dopo l\'ultimo tocco della tastiera</string>
     <string name="appearance_look_scene_crisp_title">Scene nitide</string>
     <string name="appearance_look_scene_crisp_desc">Disegna l’aurora, il ruscello e la neve a piena risoluzione: raggi e increspature più fini, un po’ più di memoria</string>
     <string name="appearance_custom_border_title">Bordo personalizzato</string>
@@ -2200,6 +2206,10 @@
     <string name="cmd_theme_previous">Tema precedente</string>
     <string name="cmd_theme_previous_desc">Applica il tema precedente nell’ordine della gestione temi</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
+    <string name="cmd_toggle_scene_motion">Scene animate sì/no</string>
+    <string name="cmd_toggle_scene_motion_desc">Attiva o disattiva gli sfondi animati delle scene</string>
+    <string name="scene_motion_on_message">Scene animate attive</string>
+    <string name="scene_motion_off_message">Scene animate disattivate</string>
     <string name="cmd_shift">Maiusc</string>
     <string name="cmd_shift_desc">Modificatore Maiusc (maiuscole/simboli)</string>
     <string name="cmd_ctrl">Ctrl</string>
@@ -2608,6 +2618,7 @@
     <string name="clipboard_bulk_preview">Anteprima: %1$s</string>
     <string name="clipboard_merge_message">Crea un nuovo ritaglio nella cronologia con il testo selezionato, dal più vecchio, uno per riga (%1$s). Gli originali restano.</string>
     <string name="clipboard_merge_private_note">Sarà privato, perché un ritaglio selezionato è privato.</string>
+    <string name="clipboard_merge_copied">È negli appunti, pronta da incollare.</string>
     <string name="clipboard_merge_action">Unisci</string>
     <string name="clipboard_merge_too_few">Seleziona almeno due ritagli di testo da unire.</string>
     <string name="clipboard_merge_too_large">Il ritaglio unito occuperebbe %1$s; il limite è %2$s. Seleziona meno ritagli.</string>

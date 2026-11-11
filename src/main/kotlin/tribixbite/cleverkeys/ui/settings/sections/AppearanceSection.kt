@@ -391,6 +391,38 @@ internal fun SettingsActivity.AppearanceSection() {
                         },
                         displayValue = "$lookMotionTwinkle%"
                     )
+                    // When it moves (SceneMotionTuning.resumeMs / idleMs): the pause after the last
+                    // key press or swipe, and how long it moves after the last touch.
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_resume_title),
+                        description = stringResource(R.string.appearance_look_motion_resume_desc),
+                        value = lookMotionResumeMs.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_RESUME_MS.toSliderRange(),
+                        increment = 250f,
+                        onValueChange = {
+                            lookMotionResumeMs = it.roundToInt()
+                            saveSetting("look_motion_resume_ms", lookMotionResumeMs)
+                        },
+                        displayValue = if (lookMotionResumeMs == 0) {
+                            stringResource(R.string.appearance_look_motion_resume_none)
+                        } else {
+                            stringResource(R.string.appearance_look_motion_seconds,
+                                java.text.NumberFormat.getNumberInstance().apply { maximumFractionDigits = 2 }
+                                    .format(lookMotionResumeMs / 1000.0))
+                        }
+                    )
+                    SettingsSlider(
+                        title = stringResource(R.string.appearance_look_motion_idle_title),
+                        description = stringResource(R.string.appearance_look_motion_idle_desc),
+                        value = lookMotionIdleS.toFloat(),
+                        valueRange = SettingsRanges.LOOK_MOTION_IDLE_S.toSliderRange(),
+                        increment = 5f,
+                        onValueChange = {
+                            lookMotionIdleS = it.roundToInt()
+                            saveSetting("look_motion_idle_s", lookMotionIdleS)
+                        },
+                        displayValue = stringResource(R.string.appearance_look_motion_seconds, lookMotionIdleS.toString())
+                    )
                 }
                 SettingsSwitch(
                     title = stringResource(R.string.appearance_look_scene_crisp_title),

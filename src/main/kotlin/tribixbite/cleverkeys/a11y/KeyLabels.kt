@@ -127,6 +127,7 @@ object KeyLabels {
             KeyValue.Event.HIDE_KEYBOARD -> getString(R.string.cmd_hide_keyboard)
             KeyValue.Event.THEME_NEXT -> getString(R.string.cmd_theme_next)
             KeyValue.Event.THEME_PREVIOUS -> getString(R.string.cmd_theme_previous)
+            KeyValue.Event.TOGGLE_SCENE_MOTION -> getString(R.string.cmd_toggle_scene_motion)
             KeyValue.Event.ACTION -> describeAction(kv, getString)
         }
 

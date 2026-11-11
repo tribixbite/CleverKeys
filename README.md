@@ -44,7 +44,7 @@
 
 # 🗺️ Project Overview
 
-CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, opt-in on-device voice input, 243 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
+CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe typing with autocorrect, multi-language hot-swap with per-language dictionaries, unlimited clipboard with pinning/todos/tags/regex search/inline editing, offline GIF packs, opt-in on-device voice input, 244 customizable short-swipe commands, TrackPoint cursor control, 35+ themes with DIY creator — all running 100% on-device with zero internet permissions.
 
 </div>
 
@@ -67,7 +67,7 @@ CleverKeys is a feature-rich open-source keyboard for Android. On-device swipe t
 | **APK Size** | ~25MB¹² | ~45MB | ~200MB | ~15MB | ~25MB | ~40MB |
 | **Clipboard History** | ✅ Unlimited | ⚠️ 10min default⁷ | ✅ 25 items | ✅ 20-100 items | ❌ 15s hint only | ✅ Encrypted |
 | **Short-Swipe Actions**⁸ | ✅ 208 gestures | ⚠️ Limited | ❌ | ⚠️ Limited | ⚠️ Limited | ⚠️ Space/Del only¹¹ |
-| **Per-Key Customization** | ✅ 243 commands | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **Per-Key Customization** | ✅ 244 commands | ❌ | ❌ | ❌ | ❌ | ✅ |
 | **Custom Layouts** | ✅ XML (8 sublabels) | ✅ JSON | ✅ YAML | ⚠️ JSON (no editor) | ⚠️ Addon packs only | ✅ |
 | **DIY Theme Creator** | ✅ | ✅ | ❌ (16 built-in) | ✅ Snygg v2 | ✅ | ✅ |
 | **Word Suggestions** | ✅ | ✅ | ✅ | ❌ (v0.6 planned) | ✅ | ✅ |
@@ -216,7 +216,7 @@ As an IME, CleverKeys has legitimate clipboard access that other apps don't:
 
 ### 🎯 208 Short Swipe Actions
 Assign custom actions to any key's 8 swipe directions:
-- **243 built-in commands** — navigation, editing, clipboard, function keys, special chars
+- **244 built-in commands** — navigation, editing, clipboard, function keys, special chars
 - **Custom text macros** — email addresses, signatures, code snippets, emoji sequences
 - **Explicit dynamic templates** — clipboard, selection, UUID and cursor tokens in per-key or popover assignments; ordinary text stays literal
 - **Verified apostrophe suffix commands** — append exact `'s` or `'` to the last verified word, with suffix-only undo and owned learning replacement

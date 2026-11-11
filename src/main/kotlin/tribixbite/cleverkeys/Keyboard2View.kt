@@ -1558,8 +1558,8 @@ class Keyboard2View @JvmOverloads constructor(
 
         val action = event.actionMasked
         // Typing (a key press, or a finger tracing a swipe) holds a moving backdrop still; it
-        // moves again a second after the finger last moved (AuroraMotion.TYPING_HOLD_MS) and
-        // rests after AuroraMotion.IDLE_MS idle.
+        // moves again a second after the finger last moved (SceneMotionTuning.resumeMs) and
+        // rests after SceneMotionTuning.idleMs idle (both user settings).
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN ||
             action == MotionEvent.ACTION_MOVE
         ) {

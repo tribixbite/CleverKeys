@@ -427,6 +427,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var lookMotionIntensity by mutableIntStateOf(Defaults.LOOK_MOTION_INTENSITY)
     internal var lookMotionTwinkle by mutableIntStateOf(Defaults.LOOK_MOTION_TWINKLE)
     internal var lookSceneCrisp by mutableStateOf(Defaults.LOOK_SCENE_CRISP)
+    internal var lookMotionResumeMs by mutableIntStateOf(Defaults.LOOK_MOTION_RESUME_MS)
+    internal var lookMotionIdleS by mutableIntStateOf(Defaults.LOOK_MOTION_IDLE_S)
     internal var customBorderRadius by mutableIntStateOf(Defaults.CUSTOM_BORDER_RADIUS)
     internal var customBorderLineWidth by mutableIntStateOf(Defaults.CUSTOM_BORDER_LINE_WIDTH)
 

@@ -163,6 +163,63 @@ class ClipboardTextCleanerTest {
     }
 
     @Test
+    fun terminalOutputWithAHangingIndentIsJoined() {
+        // Copied from a terminal (maintainer report 2026-11-11): every wrapped line is indented
+        // by three spaces. Indentation alone used to mark it as code, so nothing was cleaned.
+        val terminal = "Typing: the motion-on run used less power than both off\n" +
+            "   runs. The remaining cost is below the run-to-run\n" +
+            "   noise: the display alone varied by about 300 mW between\n" +
+            "   runs at the same pinned brightness."
+        assertThat(clean(terminal)).isEqualTo(
+            "Typing: the motion-on run used less power than both off runs. The remaining cost is " +
+                "below the run-to-run noise: the display alone varied by about 300 mW between runs at " +
+                "the same pinned brightness."
+        )
+    }
+
+    @Test
+    fun aListItemJoinsItsIndentedContinuationOnly() {
+        val item = "  - Frames: the on run still drew about twice as many frames as\n" +
+            "    the off runs, because the script pauses between bursts.\n" +
+            "  - Idle: the scene moves for about twenty seconds of a minute."
+        assertThat(clean(item)).isEqualTo(
+            "  - Frames: the on run still drew about twice as many frames as the off runs, because " +
+                "the script pauses between bursts.\n" +
+                "  - Idle: the scene moves for about twenty seconds of a minute."
+        )
+    }
+
+    @Test
+    fun spaceIndentedCodeKeepsEveryBreak() {
+        val python = "def compute_the_value(alpha, beta, gamma):\n" +
+            "    first_value = alpha * 2 + gamma_offset\n" +
+            "    return first_value + beta * gamma_offset"
+        assertThat(clean(python)).isEqualTo(python)
+        // A fragment from inside a block: it starts indented.
+        val fragment = "        result = compute_value(alpha, beta)\n        return result + offset_value"
+        assertThat(clean(fragment)).isEqualTo(fragment)
+        val yaml = "services:\n  keyboard:\n    image: cleverkeys/build-image-latest"
+        assertThat(clean(yaml)).isEqualTo(yaml)
+    }
+
+    @Test
+    fun runsOfSpacesInsideProseBecomeOne() {
+        assertThat(clean("One sentence.  Two  words   here.")).isEqualTo("One sentence. Two words here.")
+        // Double spacing between sentences does not make prose a table.
+        val doubleSpaced = "This paragraph was typed.  With two spaces after\n" +
+            "every period.  It wraps over lines as well.  Done."
+        assertThat(clean(doubleSpaced)).isEqualTo(
+            "This paragraph was typed. With two spaces after every period. It wraps over lines as well. Done."
+        )
+    }
+
+    @Test
+    fun aSpaceAlignedTableKeepsItsLayout() {
+        val table = "Name      Size   Date\nalpha.txt 12 KB  Monday\nbeta.txt  4 KB   Tuesday"
+        assertThat(clean(table)).isEqualTo(table)
+    }
+
+    @Test
     fun breaksNextToAUrlAreKept() {
         val text = "Read the full announcement on the project site at https://example.com/news\n" +
             "and tell me what you think about it."
@@ -204,6 +261,8 @@ class ClipboardTextCleanerTest {
             "fun main() {\n    println(\"hi\")   \n}\n",
             "Shopping list for the weekend trip to the lake:\n- apples\n- bread",
             "Hello\r\n\r\nWorld \r\n",
+            "Typing: the motion-on run used less power than both off\n   runs. The remaining cost is below\n   noise.",
+            "One sentence.  Two  words.",
         )
         for (text in samples) {
             val once = clean(text)
