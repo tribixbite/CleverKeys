@@ -1871,11 +1871,9 @@
     <string name="tile_descr_active">%1$s 正在使用。点按可切换键盘。</string>
     <string name="tile_descr_inactive">点按可切换到 %1$s 键盘。</string>
     <string name="tile_subtitle_switch">切换键盘</string>
-    <string name="tile_subtitle_minimize">最小化</string>
-    <string name="tile_subtitle_restore">恢复</string>
+    <string name="tile_subtitle_hide">隐藏</string>
     <string name="tile_subtitle_show">显示</string>
-    <string name="tile_descr_minimize">%1$s 已打开。点按可最小化。</string>
-    <string name="tile_descr_restore">%1$s 已最小化。点按可恢复。</string>
+    <string name="tile_descr_hide">%1$s 已打开。点按可隐藏。</string>
     <string name="tile_descr_show">%1$s 已隐藏。点按可显示。</string>
     <string name="swipe_engine_fallback_unnamed_layout">未命名布局</string>
     <string name="key_descr_keycode">按键 %1$d</string>

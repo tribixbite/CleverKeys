@@ -1997,11 +1997,9 @@
     <string name="tile_descr_active">%1$s è attiva. Tocca per cambiare tastiera.</string>
     <string name="tile_descr_inactive">Tocca per passare alla tastiera %1$s.</string>
     <string name="tile_subtitle_switch">Cambia tastiera</string>
-    <string name="tile_subtitle_minimize">Riduci</string>
-    <string name="tile_subtitle_restore">Ripristina</string>
+    <string name="tile_subtitle_hide">Nascondi</string>
     <string name="tile_subtitle_show">Mostra</string>
-    <string name="tile_descr_minimize">%1$s è aperta. Tocca per ridurla.</string>
-    <string name="tile_descr_restore">%1$s è ridotta. Tocca per ripristinarla.</string>
+    <string name="tile_descr_hide">%1$s è aperta. Tocca per nasconderla.</string>
     <string name="tile_descr_show">%1$s è nascosta. Tocca per mostrarla.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Layout senza nome</string>
     <string name="key_descr_keycode">Tasto %1$d</string>

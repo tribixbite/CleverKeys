@@ -1901,11 +1901,9 @@
     <string name="tile_descr_active">%1$s đang hoạt động. Chạm để chuyển bàn phím.</string>
     <string name="tile_descr_inactive">Chạm để chuyển sang bàn phím %1$s.</string>
     <string name="tile_subtitle_switch">Chuyển bàn phím</string>
-    <string name="tile_subtitle_minimize">Thu nhỏ</string>
-    <string name="tile_subtitle_restore">Khôi phục</string>
+    <string name="tile_subtitle_hide">Ẩn</string>
     <string name="tile_subtitle_show">Hiển thị</string>
-    <string name="tile_descr_minimize">%1$s đang mở. Chạm để thu nhỏ.</string>
-    <string name="tile_descr_restore">%1$s đang thu nhỏ. Chạm để khôi phục.</string>
+    <string name="tile_descr_hide">%1$s đang mở. Chạm để ẩn.</string>
     <string name="tile_descr_show">%1$s đang ẩn. Chạm để hiển thị.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Bố cục chưa đặt tên</string>
     <string name="key_descr_keycode">Phím %1$d</string>

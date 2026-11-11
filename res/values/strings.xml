@@ -2336,11 +2336,9 @@
     <string name="tile_descr_active">%1$s is active. Tap to switch keyboard.</string>
     <string name="tile_descr_inactive">Tap to switch to %1$s keyboard.</string>
     <string name="tile_subtitle_switch">Switch keyboard</string>
-    <string name="tile_subtitle_minimize">Minimize</string>
-    <string name="tile_subtitle_restore">Restore</string>
+    <string name="tile_subtitle_hide">Hide</string>
     <string name="tile_subtitle_show">Show</string>
-    <string name="tile_descr_minimize">%1$s is open. Tap to minimize it.</string>
-    <string name="tile_descr_restore">%1$s is minimized. Tap to restore it.</string>
+    <string name="tile_descr_hide">%1$s is open. Tap to hide it.</string>
     <string name="tile_descr_show">%1$s is hidden. Tap to show it.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Unnamed layout</string>
     <string name="key_descr_keycode">Key %1$d</string>

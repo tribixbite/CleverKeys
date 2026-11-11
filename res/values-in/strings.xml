@@ -1885,11 +1885,9 @@
     <string name="tile_descr_active">%1$s aktif. Ketuk untuk mengganti keyboard.</string>
     <string name="tile_descr_inactive">Ketuk untuk beralih ke keyboard %1$s.</string>
     <string name="tile_subtitle_switch">Ganti keyboard</string>
-    <string name="tile_subtitle_minimize">Perkecil</string>
-    <string name="tile_subtitle_restore">Pulihkan</string>
+    <string name="tile_subtitle_hide">Sembunyikan</string>
     <string name="tile_subtitle_show">Tampilkan</string>
-    <string name="tile_descr_minimize">%1$s terbuka. Ketuk untuk memperkecil.</string>
-    <string name="tile_descr_restore">%1$s diperkecil. Ketuk untuk memulihkan.</string>
+    <string name="tile_descr_hide">%1$s terbuka. Ketuk untuk menyembunyikan.</string>
     <string name="tile_descr_show">%1$s tersembunyi. Ketuk untuk menampilkan.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Tata letak tanpa nama</string>
     <string name="key_descr_keycode">Tombol %1$d</string>

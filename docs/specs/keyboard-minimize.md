@@ -19,10 +19,19 @@ Two catalogue commands (Events category), assignable to any short swipe, popover
 - The talkback label is "Show keyboard" (`short_swipe_show_keyboard`).
 - Out of scope for the minimized button: it lives in the input window, so it is gone once the keyboard is hidden. The Quick Settings tile below brings a hidden keyboard back with `requestShowSelf`, which needs no extra permission (checked 2026-10-22, "Overlay permission check"). Only a button that stays on screen after the input window is hidden needs an overlay (`SYSTEM_ALERT_WINDOW`; roadmap 4.3).
 
-## Quick Settings tile (2026-10-20)
+## Quick Settings tile (2026-10-20, show/hide since 2026-11-11)
 
 `KeyboardTileService` toggles the keyboard instead of always opening the picker. The decision
 is the pure `KeyboardTileDecision.actionFor(isCurrentIme, CleverKeysService.tileSnapshot())`.
+
+**2026-11-11 revision (maintainer: "supposed to show kb not open kb picker… if already shown
+then hide").** The tile no longer minimizes or restores, and never opens the picker while
+CleverKeys is selected: a visible keyboard (full or minimized) is hidden, a hidden one is
+shown full size, and with no editor focused the show waits for one instead of falling back to
+the picker. The minimize commands (`minimize_bar`, `minimize_fab`) are unchanged. The
+remembered form (`_formAtFinishView`, `VisibleForm`, `ShowTarget`, `KeyboardMinimizer.lastStyle`)
+had no other consumer and was removed. The text below is the current behaviour; the device
+evidence from 2026-10-20/22 still applies to the show path.
 
 **Some apps hide the keyboard when the shade opens.** On the Saga (Android 14) with Chrome,
 expanding the shade hid the IME (`mInputShown=false`, `mWindowVisible=false`) and it did not come
@@ -30,10 +39,10 @@ back after the shade collapsed (device report, 2026-10-20). The 2026-10-22 check
 was Chrome's own (`ORIGIN_CLIENT_HIDE_SOFT_INPUT` from `com.android.chrome`): the shade itself
 does not take IME focus, did not hide the keyboard over CleverKeys' Settings field, and
 `requestShowSelf` sent under the open shade showed the keyboard in 7 ms ("Overlay permission
-check" below). The retry loop covers apps that hide the keyboard themselves. The service remembers the form the
-window had when it was last hidden (`_formAtFinishView`, captured in `onFinishInputView` before
-the minimizer reset, recorded in `onWindowHidden`) and the hide time, and a tap acts on that
-form when the hide is recent.
+check" below). The retry loop covers apps that hide the keyboard themselves. The service records the hide
+time, the editor and whether the hide was the user's (`onWindowHidden`), and a tap reads a
+recent hide that was not the user's as the shade's: the keyboard was on screen when the user
+pulled the shade down, so the tap is a hide (it stays hidden).
 
 "Visible" needs both `onWindowShown`/`onWindowHidden` and `isInputViewShown()`: on the home
 screen the Saga reported `mIsInputViewShown=true` with `mDecorViewVisible=false`. A "real
@@ -41,32 +50,30 @@ editor" is a typed field (`inputType` class ≠ `TYPE_NULL`), or a `TYPE_NULL` f
 remote desktop) only when it is the field the keyboard was last shown over (same package and
 `fieldId`): Android 14 binds a `TYPE_NULL` fallback connection for windows without an editor,
 such as the launcher, and the EditorInfo cannot tell the two apart. A hide is the user's when
-Back was pressed while the keyboard showed, or the `hide_keyboard` key was used.
+Back was pressed while the keyboard showed, the `hide_keyboard` key was used, or the tile
+hid it.
 
 | CleverKeys selected? | window | tap | subtitle (API 29+) |
 |---|---|---|---|
 | no, or service not running | any | input-method picker | Switch keyboard |
-| yes | visible, full | minimize, to `KeyboardMinimizer.lastStyle` (FAB until a minimize command picks a style) | Minimize |
-| yes | visible, minimized | `expand()` | Restore |
-| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, input still in that app, unbound, or SystemUI; was full | deferred show, landing minimized | Minimize |
-| yes | same, was minimized | deferred show, landing full | Restore |
-| yes | otherwise, real editor bound | deferred show, landing full | Show |
-| yes | otherwise (e.g. home screen fallback connection) | input-method picker | Switch keyboard |
+| yes | visible, full or minimized | hide (`hideKeyboardByUser`) | Hide |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app, unbound, or SystemUI | stays hidden; the hide now counts as the user's (`markHiddenByUser`), so the next tap shows | Hide |
+| yes | otherwise | deferred show, full size | Show |
 
 **Deferred show** (`TileShowSession`, pure; driven by the service on its main `Handler`):
-- the tap arms a target (full / minimized + style) bound to the editor's package, and the
-  service calls `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod(token, 0)` below)
-  at once and then every 250 ms for up to 8 s;
-- `onWindowShown` stops the loop and applies the target once (`minimizeKeyboard(style)` or
-  `expand()`), so the user lands in the requested form after the shade collapses;
-- cancelled by `onStartInput` for another package, a hardware key (`onKeyDown`), a tile tap
-  acting on a visible keyboard, the deadline, and `onDestroy` (which also removes the callback).
-  The first show inside the window counts as the requested one: `requestShowSelf` is
-  asynchronous with no token, so a show the user triggers by tapping the same app's field in
-  those seconds lands in the form the tile asked for.
+- the tap arms a request bound to the editor's package, and the service calls
+  `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod(token, 0)` below) at once and
+  then every 250 ms for up to 8 s, but only while a real editor is bound; with none (the
+  launcher's fallback connection) the tick waits (`Tick.WAIT`) instead of asking;
+- `onWindowShown` stops the loop and reports the requested show once; the service expands to
+  the full keyboard;
+- cancelled by `onStartInput` for another package, a hardware key (`onKeyDown`), a tile hide,
+  the deadline, and `onDestroy` (which also removes the callback). The first show inside the
+  window counts as the requested one: `requestShowSelf` is asynchronous with no token.
 
-- **No editor:** an IME can only show itself for a focused client. The picker is kept as the
-  useful fallback; a Toast would sit under the open shade. The subtitle names it before the tap.
+- **No editor:** an IME can only show itself for a focused client. Until 2026-11-11 the picker
+  was the fallback; now the show waits up to 8 s for an editor (tapping a field in that time
+  shows the keyboard anyway), and nothing is shown over the launcher.
 - **Shade stays open.** `startActivityAndCollapse` and `showDialog` collapse it but take window
   focus from the app, so its editor loses the keyboard. `StatusBarManager.collapsePanels` is
   hidden API with `EXPAND_STATUS_BAR` and is blocked for apps targeting Android 12+. The tile
@@ -82,10 +89,10 @@ Back was pressed while the keyboard showed, or the `hide_keyboard` key was used.
   inputs, each retry and its outcome, and the window callbacks under the tag `CleverKeys/Tile`
   (`adb logcat -s CleverKeys/Tile`).
 - Tests: `KeyboardTileActionTest` (pure: every decision branch, the session state machine,
-  strings in all locales), `KeyboardTileServiceTest` (mock, source-level `onClick` routing),
-  `KeyboardMinimizerTest` (`lastStyle`).
+  strings in all locales), `KeyboardTileServiceTest` (mock, source-level `onClick` routing).
 - Device check owed: the shade flow (`cmd statusbar expand-settings` → `click-tile` →
-  `collapse`) for full, minimized and Back-dismissed keyboards.
+  `collapse`) for a shown, a minimized, a Back-dismissed and a shade-hidden keyboard, and a tap
+  on the home screen (must show nothing, then show on a field tap within 8 s).
 
 ### Overlay permission check (2026-10-22)
 

@@ -17,8 +17,8 @@ before that it still said "the tile opens the input-method picker".)
 - `minimize/KeyboardMinimizer<V>` (pure, generic over the view type): `resolve(requested)` wraps
   EVERY `setInputView`, remembers the newest full view and returns the minimized view while
   minimized; `minimize(style, prepare)` is ignored until a full view has been shown; `expand()`;
-  `reset()` = `expand()`, called from `onFinishInputView`. `lastStyle` (FAB before any minimize)
-  is what the tile minimizes to.
+  `reset()` = `expand()`, called from `onFinishInputView`. (`lastStyle`, the tile's old minimize
+  target, was removed on 2026-11-11 with the tile's minimize.)
 - `minimize/MinimizedKeyboardView`: BAR = 30 dp full-width strip (the app is resized above it);
   FAB = 52 dp round button at the end side, 12 dp from the edges (the app gets the whole screen,
   touches outside the button pass through). Drawn straight from `Theme` colours, nothing
@@ -34,21 +34,20 @@ before that it still said "the tile opens the input-method picker".)
   resolved direction nor the service configuration followed an Arabic system locale (no `ar`
   translation) or a Persian per-app locale on the Saga (2026-10-07).
 
-## Quick Settings tile (`f47d5f3f`, `4f70eb7e`, 2026-10-20)
+## Quick Settings tile (`f47d5f3f`, `4f70eb7e`, 2026-10-20; show/hide since 2026-11-11)
 
 - `KeyboardTileService` (manifest: `BIND_QUICK_SETTINGS_TILE`, exported, API 24+; the subtitle
   needs API 29). A tap computes `KeyboardTileDecision.actionFor(isCurrentIme,
-  service?.tileSnapshot())` (pure) → `KeyboardTileAction`:
+  service?.tileSnapshot())` (pure) → `KeyboardTileAction`. Maintainer rule (2026-11-11): "show
+  kb not open kb picker… if already shown then hide". The picker is ONLY for another keyboard
+  selected; never re-add it as a fallback, and the tile no longer minimizes or restores.
 
   | CleverKeys selected? | window | action | subtitle |
   |---|---|---|---|
   | no, or service not running | any | `PICK_KEYBOARD` (`showInputMethodPicker`) | Switch keyboard |
-  | yes | visible, full | `MINIMIZE` → `minimizeFromTile()` (to `lastStyle`) | Minimize |
-  | yes | visible, minimized | `RESTORE` → `restoreFromTile()` | Restore |
-  | yes | hidden ≤ 10 s (`RECENT_HIDE_MS`), not by the user, same app / unbound / SystemUI, was full | `SHOW_MINIMIZED` (deferred show, lands minimized) | Minimize |
-  | yes | same, was minimized | `SHOW_RESTORED` (deferred show, lands full) | Restore |
-  | yes | otherwise, a real editor is bound | `SHOW` (deferred show, full) | Show |
-  | yes | otherwise (e.g. launcher fallback connection) | `PICK_KEYBOARD` | Switch keyboard |
+  | yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` | Hide |
+  | yes | hidden ≤ 10 s (`RECENT_HIDE_MS`), not by the user, over an editor, same app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → stays hidden, `markHiddenByUser()` so the next tap shows | Hide |
+  | yes | otherwise | `SHOW` → `showFromTile()` (deferred show, full) | Show |
 
 - The tile keeps NO reference to the service between callbacks: it calls
   `CleverKeysService.getInstance()` (set in `onCreate`, cleared in `onDestroy`) each time.
@@ -58,20 +57,19 @@ before that it still said "the tile opens the input-method picker".)
 - **Visible** = `onWindowShown`/`onWindowHidden` flag AND `isInputViewShown()`
   (`isTileWindowVisible`): on the Saga's home screen the platform reported
   `mIsInputViewShown=true` with `mDecorViewVisible=false`.
-- **Which form was hidden**: `hiddenForm()` = the live minimized style, else `_formAtFinishView`
-  (captured in `onFinishInputView` BEFORE the minimizer's `reset()`, because `hideWindow` runs
-  `onFinishInputView` first), else Full.
 - **Real editor** (`EditorRef(packageName, fieldId, typeNull)`): any typed field, or a
   `TYPE_NULL` field (terminal, remote desktop) only when it is the field the keyboard was last
   shown over — Android 14 binds a `TYPE_NULL` fallback connection for windows without an editor
-  (the launcher) and the EditorInfo cannot tell them apart. A hide is the user's when Back was
-  pressed while the keyboard showed (`onKeyDown`) or `hide_keyboard` ran.
+  (the launcher) and the EditorInfo cannot tell them apart. It gates the deferred show's
+  requests (`Tick.WAIT` without one), so nothing is shown over the launcher. A hide is the
+  user's when Back was pressed while the keyboard showed (`onKeyDown`), `hide_keyboard` ran or
+  the tile hid it.
 - **Deferred show** (`TileShowSession`, pure, driven on the service's main `Handler`):
-  `request(target, packageName, now)` arms a one-shot target; `requestShowFromTile()` runs at once
-  and then every `RETRY_INTERVAL_MS` = 250 ms for `RETRY_WINDOW_MS` = 8 s (`requestShowSelf(0)` on
-  API 28+, `imm.showSoftInputFromInputMethod(token, 0)` below); `onWindowShown()` returns the
-  target to apply once (`minimizeKeyboard(style)` or `expand()`). Cancelled by `onStartInput` for
-  another package, any hardware key (`onUserInput`), a tap acting on a visible keyboard,
+  `request(packageName, now)` arms a one-shot show; `tick(now, visible, editorReady)` runs at once
+  and then every `RETRY_INTERVAL_MS` = 250 ms for `RETRY_WINDOW_MS` = 8 s, and `REQUEST_SHOW` sends
+  `requestShowSelf(0)` (API 28+, `imm.showSoftInputFromInputMethod(token, 0)` below);
+  `onWindowShown()` returns true once for the requested show (the service then `expand()`s).
+  Cancelled by `onStartInput` for another package, any hardware key (`onUserInput`), a tile hide,
   `onDestroy`, and the deadline. The first show inside the window counts as the requested one
   (`requestShowSelf` carries no token).
 - **The shade stays open** after a keyboard action: `startActivityAndCollapse` and `showDialog`
@@ -123,16 +121,14 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
 - `tile.subtitle` is API 29+; guard it.
 - Bar height includes the navigation inset under edge-to-edge
   (`Keyboard2ViewCustomMappingRenderTest`).
-- The `_formAtFinishView` capture is cleared by `onStartInputView`, so a field switch cannot reuse
-  an older capture.
 
 ## File map
 
 | File | Role |
 |------|------|
 | `KeyboardTileService.kt` | the `TileService`; picker fallback; refresh timing; `tileStateFor` |
-| `KeyboardTileAction.kt` | `VisibleForm`, `EditorRef`, `TileWindowSnapshot`, `KeyboardTileAction`, `ShowTarget`, `KeyboardTileDecision`, `TileShowSession` (all pure) |
-| `CleverKeysService.kt` (~876–1085) | `minimizeKeyboard`, `_tileShow`, `tileSnapshot`, `minimizeFromTile` / `restoreFromTile` / `showFromTile`, `requestShowFromTile`, `hideKeyboardByUser`, `onWindowShown` / `onWindowHidden` / `onKeyDown`, `logTileDecision`, `TILE_TAG` |
+| `KeyboardTileAction.kt` | `EditorRef`, `TileWindowSnapshot`, `KeyboardTileAction`, `KeyboardTileDecision`, `TileShowSession` (all pure) |
+| `CleverKeysService.kt` (~990–1180) | `minimizeKeyboard`, `_tileShow`, `tileSnapshot`, `hideFromTile` / `showFromTile`, `requestShowFromTile`, `hideKeyboardByUser`, `onWindowShown` / `onWindowHidden` / `onKeyDown`, `logTileDecision`, `TILE_TAG` |
 | `minimize/KeyboardMinimizer.kt`, `minimize/MinimizedKeyboardView.kt` (+ `FabSide`, `FabSidePolicy`, `MinimizedInsets`, `MinimizedStyle`) | the minimized state machine and view |
 | `KeyboardReceiver.kt` (~560) | `MINIMIZE_BAR` / `MINIMIZE_FAB` / `HIDE_KEYBOARD` events |
 | `AndroidManifest.xml` | the tile `<service>` |
@@ -142,9 +138,9 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
 
 ## Tests
 
-- Pure: `KeyboardTileActionTest` (20: every decision branch, the session state machine, strings
-  in all locales), `minimize/KeyboardMinimizerTest` (13: minimize/expand, remembered views,
-  reset on hide, `lastStyle`, `FabSidePolicy`, `MinimizedInsets`), `CommandRoutingTest` (both
+- Pure: `KeyboardTileActionTest` (every decision branch, the session state machine incl. the
+  wait for an editor, strings in all locales), `minimize/KeyboardMinimizerTest` (minimize/expand,
+  remembered views, reset on hide, `FabSidePolicy`, `MinimizedInsets`), `CommandRoutingTest` (both
   commands have an execution path).
 - Mock: `KeyboardTileServiceTest` (5, source-level `onClick` routing).
 - Instrumented: `Keyboard2ViewCustomMappingRenderTest` (FAB bounds in LTR and RTL, outside
@@ -152,5 +148,5 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
 - Device: Seeker bar/FAB minimize, expand and landscape pass-through PASS (2026-10-03..05); Saga
   tile in a native field and the home-screen picker PASS (2026-10-20); RTL FAB left for system
   `ar-XB` and per-app `fa` PASS (`c6fe3594`, 2026-10-07). Still owed: cross-app pass-through, the
-  shade flow for full / minimized / Back-dismissed keyboards, the web-editor limitation on
-  another browser.
+  show/hide shade flow for shown / minimized / Back-dismissed / shade-hidden keyboards and the
+  home-screen tap, the web-editor limitation on another browser.

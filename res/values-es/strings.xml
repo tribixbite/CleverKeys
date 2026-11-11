@@ -1975,11 +1975,9 @@
     <string name="tile_descr_active">%1$s está activo. Toca para cambiar de teclado.</string>
     <string name="tile_descr_inactive">Toca para cambiar al teclado %1$s.</string>
     <string name="tile_subtitle_switch">Cambiar teclado</string>
-    <string name="tile_subtitle_minimize">Minimizar</string>
-    <string name="tile_subtitle_restore">Restaurar</string>
+    <string name="tile_subtitle_hide">Ocultar</string>
     <string name="tile_subtitle_show">Mostrar</string>
-    <string name="tile_descr_minimize">%1$s está abierto. Toca para minimizarlo.</string>
-    <string name="tile_descr_restore">%1$s está minimizado. Toca para restaurarlo.</string>
+    <string name="tile_descr_hide">%1$s está abierto. Toca para ocultarlo.</string>
     <string name="tile_descr_show">%1$s está oculto. Toca para mostrarlo.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Distribución sin nombre</string>
     <string name="key_descr_keycode">Tecla %1$d</string>

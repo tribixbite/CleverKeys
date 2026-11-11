@@ -64,7 +64,7 @@ Technical documentation for CleverKeys, an Android keyboard with on-device swipe
 
 | Spec | Description |
 |------|-------------|
-| [Quick Settings Tile](./quick-settings-tile.md) | Shade tile: minimize / restore / show the keyboard, picker fallback (2026-10-20) |
+| [Quick Settings Tile](./quick-settings-tile.md) | Shade tile: show / hide the keyboard; picker only when another keyboard is selected (2026-11-11) |
 | [Clipboard System](./clipboard-system.md) | 3-tab clipboard (history/pinned/todos), schema V5 (`DATABASE_VERSION = 5`: #156 private copy), media, tags, todos |
 | [Clipboard Privacy](./clipboard-privacy.md) | Password manager exclusion + media privacy gating |
 | [Keyboard Minimize](./keyboard-minimize.md) | Assignable bar and floating-button minimize commands, lifecycle and touch geometry |

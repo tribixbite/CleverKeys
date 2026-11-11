@@ -1873,11 +1873,9 @@
     <string name="tile_descr_active">%1$s이(가) 활성 상태입니다. 탭하여 키보드를 전환하세요.</string>
     <string name="tile_descr_inactive">탭하여 %1$s 키보드로 전환하세요.</string>
     <string name="tile_subtitle_switch">키보드 전환</string>
-    <string name="tile_subtitle_minimize">최소화</string>
-    <string name="tile_subtitle_restore">복원</string>
+    <string name="tile_subtitle_hide">숨기기</string>
     <string name="tile_subtitle_show">표시</string>
-    <string name="tile_descr_minimize">%1$s이(가) 열려 있습니다. 탭하여 최소화하세요.</string>
-    <string name="tile_descr_restore">%1$s이(가) 최소화되어 있습니다. 탭하여 복원하세요.</string>
+    <string name="tile_descr_hide">%1$s이(가) 열려 있습니다. 탭하여 숨기세요.</string>
     <string name="tile_descr_show">%1$s이(가) 숨겨져 있습니다. 탭하여 표시하세요.</string>
     <string name="swipe_engine_fallback_unnamed_layout">이름 없는 레이아웃</string>
     <string name="key_descr_keycode">키 %1$d</string>

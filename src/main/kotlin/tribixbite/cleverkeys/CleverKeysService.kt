@@ -844,7 +844,6 @@ class CleverKeysService : InputMethodService(),
         // Voice input belongs to the field it started in: a new field ends it (FR-8) without a
         // write — the connection is already the new field's (a clear would delete its selection).
         _voiceInput?.onFieldChanged()
-        _formAtFinishView = null
         _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
@@ -997,7 +996,7 @@ class CleverKeysService : InputMethodService(),
     // cleared in onDestroy, so the tile never holds the service past its lifetime.
     // =========================================================================
 
-    /** Tile bookkeeping: the last visible form, the hide time and a deferred show. */
+    /** Tile bookkeeping: the hide time and editor, whose hide it was, and a deferred show. */
     private val _tileShow = TileShowSession()
 
     /**
@@ -1011,23 +1010,6 @@ class CleverKeysService : InputMethodService(),
 
     /** Deferred-show requests sent since the tile armed the current one (for the log). */
     private var _tileShowAttempts = 0
-
-    /**
-     * The form the window had at the last onFinishInputView, captured before the minimizer
-     * resets: hideWindow runs onFinishInputView (which expands a minimized keyboard) before
-     * onWindowHidden, so onWindowHidden alone would see the full keyboard. Cleared by
-     * onStartInputView, so a capture from an earlier field switch is never reused; see
-     * [hiddenForm].
-     */
-    private var _formAtFinishView: VisibleForm? = null
-
-    /**
-     * The form the window had as it hid: the live minimized style when the input view was not
-     * finished first (hideWindow skips onFinishInputView when the view had not started), else
-     * the capture made just before the reset, else the full keyboard.
-     */
-    private fun hiddenForm(): VisibleForm =
-        _minimizer.style?.let { VisibleForm.Minimized(it) } ?: _formAtFinishView ?: VisibleForm.Full
 
     /**
      * Both visibility signals must agree: on the Saga the platform's own flags disagreed
@@ -1059,7 +1041,8 @@ class CleverKeysService : InputMethodService(),
     private val _tileShowTick = object : Runnable {
         override fun run() {
             val visible = isTileWindowVisible()
-            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible)) {
+            val editorReady = KeyboardTileDecision.isRealEditor(currentEditorRef(), _tileShow.lastEditor)
+            when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible, editorReady)) {
                 TileShowSession.Tick.REQUEST_SHOW -> {
                     _tileShowAttempts++
                     requestShowFromTile()
@@ -1069,6 +1052,9 @@ class CleverKeysService : InputMethodService(),
                     }
                     _handler.postDelayed(this, TileShowSession.RETRY_INTERVAL_MS)
                 }
+                // No editor focused yet (e.g. the shade is still open over the home screen):
+                // never show over the launcher's fallback connection, keep waiting for one.
+                TileShowSession.Tick.WAIT -> _handler.postDelayed(this, TileShowSession.RETRY_INTERVAL_MS)
                 TileShowSession.Tick.EXPIRED ->
                     tileLog { "deferred show expired after $_tileShowAttempts attempts, never shown" }
                 TileShowSession.Tick.IDLE ->
@@ -1080,9 +1066,7 @@ class CleverKeysService : InputMethodService(),
     /** The input window as the Quick Settings tile sees it. Main thread. */
     fun tileSnapshot(): TileWindowSnapshot = TileWindowSnapshot(
         windowVisible = isTileWindowVisible(),
-        minimized = _minimizer.style != null,
         current = currentEditorRef(),
-        lastVisible = _tileShow.lastVisible,
         lastEditor = _tileShow.lastEditor,
         hiddenAgeMs = _tileShow.hiddenAgeMs(android.os.SystemClock.uptimeMillis()),
         dismissedByUser = _tileShow.dismissedByUser,
@@ -1100,35 +1084,30 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
-     * Tile tap while the keyboard shows: minimize to the style last used by a minimize
-     * command ([KeyboardMinimizer.lastStyle], the floating button before any), the same path
-     * the `minimize_bar` / `minimize_fab` commands take.
+     * Tile tap while the keyboard shows (full or minimized): hide it, as the user's own
+     * dismissal, the same path the `hide_keyboard` command takes. When the shade has already
+     * hidden it ([KeyboardTileDecision.wasShownBeforeTheShade]) it stays hidden, and that hide
+     * now counts as the user's, so the next tap shows it.
      */
-    fun minimizeFromTile() {
+    fun hideFromTile() {
         _tileShow.cancel()
-        minimizeKeyboard(_minimizer.lastStyle)
-    }
-
-    /** Tile tap while minimized: the same expand the bar or button itself performs. */
-    fun restoreFromTile() {
-        _tileShow.cancel()
-        _minimizer.expand()
+        _handler.removeCallbacks(_tileShowTick)
+        if (isTileWindowVisible()) hideKeyboardByUser() else _tileShow.markHiddenByUser()
     }
 
     /**
-     * Tile tap while the keyboard is hidden: arm a deferred show for [action]
-     * ([KeyboardTileDecision.showTargetFor]) and start the retry loop. The first request goes
-     * out at once (it works when the shade does not hold focus, e.g. `cmd statusbar
-     * click-tile`); while the shade is open the system ignores it, and the loop keeps asking
-     * until the app is focused again after the shade collapses. [onWindowShown] then applies
-     * the requested form. The request is bound to the app the keyboard was last shown in.
+     * Tile tap while the keyboard is hidden: arm a deferred show and start the retry loop. The
+     * first request goes out at once when an editor is focused (it works under the shade, and
+     * with `cmd statusbar click-tile`); the loop keeps asking while an app hides its own
+     * keyboard around the shade, and waits while no editor is focused, until the window shows
+     * or [TileShowSession.RETRY_WINDOW_MS] passes. [onWindowShown] then brings it back full
+     * size. The request is bound to the app the keyboard was last shown in.
      */
-    fun showFromTile(action: KeyboardTileAction) {
-        val target = KeyboardTileDecision.showTargetFor(action, _minimizer.lastStyle) ?: return
+    fun showFromTile() {
         val editorPackage = _tileShow.lastEditor?.packageName ?: currentEditorRef()?.packageName
-        _tileShow.request(target, editorPackage, android.os.SystemClock.uptimeMillis())
+        _tileShow.request(editorPackage, android.os.SystemClock.uptimeMillis())
         _tileShowAttempts = 0
-        tileLog { "deferred show armed: $target for $editorPackage" }
+        tileLog { "deferred show armed for $editorPackage" }
         _handler.removeCallbacks(_tileShowTick)
         _tileShowTick.run()
     }
@@ -1149,8 +1128,8 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
-     * The user's own hide_keyboard key: marks the hide as a dismissal (so the tile does not
-     * read it as the shade's) before asking the system to hide the window.
+     * The user's own hide: the hide_keyboard key or the tile. Marks the hide as a dismissal (so
+     * the tile does not read it as the shade's) before asking the system to hide the window.
      */
     fun hideKeyboardByUser() {
         _tileShow.noteUserDismiss()
@@ -1188,22 +1167,18 @@ class CleverKeysService : InputMethodService(),
         super.onWindowShown()
         _windowVisible = true
         _handler.removeCallbacks(_tileShowTick)
-        val target = _tileShow.onWindowShown()
-        tileLog { "onWindowShown: editor=$_viewEditor apply=$target after $_tileShowAttempts attempts" }
-        when (target) {
-            is ShowTarget.Minimized -> minimizeKeyboard(target.style)
-            ShowTarget.Full -> _minimizer.expand()
-            null -> Unit
-        }
+        val requested = _tileShow.onWindowShown()
+        tileLog { "onWindowShown: editor=$_viewEditor tileShow=$requested after $_tileShowAttempts attempts" }
+        // The tile's show is the full keyboard (a minimized one is reset on hide already).
+        if (requested) _minimizer.expand()
     }
 
     override fun onWindowHidden() {
         super.onWindowHidden()
         _voiceInput?.cancel()
         _windowVisible = false
-        val form = hiddenForm()
-        _tileShow.onWindowHidden(form, _viewEditor, android.os.SystemClock.uptimeMillis())
-        tileLog { "onWindowHidden: form=$form editor=$_viewEditor byUser=${_tileShow.dismissedByUser}" }
+        _tileShow.onWindowHidden(_viewEditor, android.os.SystemClock.uptimeMillis())
+        tileLog { "onWindowHidden: editor=$_viewEditor byUser=${_tileShow.dismissedByUser}" }
     }
 
     /**
@@ -1312,8 +1287,6 @@ class CleverKeysService : InputMethodService(),
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
         super.onFinishInputView(finishingInput)
-        // Tile: remember the form the keyboard had, before the reset below expands it.
-        _formAtFinishView = _minimizer.style?.let { VisibleForm.Minimized(it) } ?: VisibleForm.Full
         // gh #175: a minimized keyboard comes back full size the next time it is shown.
         _minimizer.reset()
         _keyboardView.reset()

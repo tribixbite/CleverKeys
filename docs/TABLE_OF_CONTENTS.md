@@ -95,7 +95,7 @@ review counts are not a current full-tree audit.
 | `trackpoint-navigation-mode.md` | Joystick-style cursor control | ✅ Implemented |
 | `selection-delete-mode.md` | Text selection via backspace gesture | ✅ Implemented |
 | `password-field-mode.md` | Password field input handling | ✅ Implemented |
-| `quick-settings-tile.md` | Shade tile: minimize / restore / show the keyboard, picker fallback (2026-10-20) | ✅ Implemented |
+| `quick-settings-tile.md` | Shade tile: show / hide the keyboard; picker only when another keyboard is selected (2026-11-11) | ✅ Implemented |
 | `timestamp-keys.md` | Date/time insertion keys | ✅ Implemented |
 | `termux_integration.md` | Terminal keyboard behaviour and custom terminal packages | ✅ Implemented |
 | `voice-input.md` | On-device voice input: engine-neutral `stt/`, voice pack format (manifest v1), Moonshine v2 pack, microphone opt-in; ships in 2.0.0 | ✅ Implemented 2026-10-29 |

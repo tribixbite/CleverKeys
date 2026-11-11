@@ -37,7 +37,7 @@ Work done since then (local main, unreleased; rows below updated as each branch 
   Enter-always-newline (`2a6c43fc`), #190 follow-finger backspace selection (`c5c598b5`),
   #147/#87 Short Swipes Only (`918dc322`), #187 macron-below / ring-below dead keys
   (`30f205d9`), audit H1/M1 inner-screen margins + one height range (`35034af6`), and a Quick
-  Settings tile that toggles show/minimize (`f47d5f3f`, reworked in `4f70eb7e` and `f2ce7c88`).
+  Settings tile that toggled show/minimize (`f47d5f3f`, reworked in `4f70eb7e` and `f2ce7c88`; a show/hide toggle since 2026-11-11).
   Rows below carry the details. Device-checked on the Saga 2026-10-20 (`memory/todo.md` 13c):
   the tile (native field, after Back, home-screen picker), the foldable sliders, #147, #190 and
   swipe into inline fields, #154, #187, and #139 (after `ea88d975` fixed a stale Enter-label cache the

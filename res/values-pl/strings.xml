@@ -2009,11 +2009,9 @@
     <string name="tile_descr_active">%1$s jest aktywna. Dotknij, aby zmienić klawiaturę.</string>
     <string name="tile_descr_inactive">Dotknij, aby przełączyć na klawiaturę %1$s.</string>
     <string name="tile_subtitle_switch">Zmień klawiaturę</string>
-    <string name="tile_subtitle_minimize">Minimalizuj</string>
-    <string name="tile_subtitle_restore">Przywróć</string>
+    <string name="tile_subtitle_hide">Ukryj</string>
     <string name="tile_subtitle_show">Pokaż</string>
-    <string name="tile_descr_minimize">%1$s jest otwarta. Dotknij, aby ją zminimalizować.</string>
-    <string name="tile_descr_restore">%1$s jest zminimalizowana. Dotknij, aby ją przywrócić.</string>
+    <string name="tile_descr_hide">%1$s jest otwarta. Dotknij, aby ją ukryć.</string>
     <string name="tile_descr_show">%1$s jest ukryta. Dotknij, aby ją pokazać.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Układ bez nazwy</string>
     <string name="key_descr_keycode">Klawisz %1$d</string>

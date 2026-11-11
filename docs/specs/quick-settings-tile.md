@@ -1,18 +1,20 @@
 # Quick Settings Tile
 
-> **Status (2026-10-23):** as built. The tile became a show/minimize/restore toggle on
-> 2026-10-20 (`f47d5f3f`…`be586c84`); the full behaviour, the device evidence and the
-> overlay-permission check live in [`keyboard-minimize.md`](keyboard-minimize.md)
-> "Quick Settings tile (2026-10-20)". This page is the short engineering summary. The wiki copy
-> at `docs/wiki/specs/customization/quick-settings-tile-spec.md` is maintained separately.
+> **Status (2026-11-11):** as built. The tile is a show/hide toggle (maintainer, 2026-11-11:
+> "supposed to show kb not open kb picker… if already shown then hide"); from 2026-10-20 until
+> then it minimized and restored the keyboard and fell back to the picker with no editor
+> (`f47d5f3f`…`be586c84`). The device evidence and the overlay-permission check live in
+> [`keyboard-minimize.md`](keyboard-minimize.md) "Quick Settings tile". This page is the short
+> engineering summary. The wiki copy at `docs/wiki/specs/customization/quick-settings-tile-spec.md`
+> is maintained separately.
 
 ## Overview
 
-CleverKeys registers an Android Quick Settings tile. A tap acts on the keyboard itself: it
-minimizes a visible keyboard, restores a minimized one, brings back a keyboard the shade (or
-the app) just hid, and only falls back to the system input-method picker when CleverKeys is
-not the selected IME or no editor is focused. The tile's subtitle (Android 10+) names the
-action the next tap will take.
+CleverKeys registers an Android Quick Settings tile. With CleverKeys as the selected IME a tap
+hides a keyboard that is on screen (full or minimized), keeps hidden a keyboard the shade just
+hid, and shows a hidden one full size. The system input-method picker opens only when another
+keyboard is selected (or the service is not running), since an app cannot select an IME
+itself. The tile's subtitle (Android 10+) names the action the next tap will take.
 
 ## Key files
 
@@ -20,11 +22,10 @@ action the next tap will take.
 |------|--------|---------|
 | `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileService.kt` | `KeyboardTileService` | `TileService`; reads state, dispatches the tap |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyboardTileAction.kt` | `KeyboardTileDecision.actionFor(isCurrentIme, window)` | pure decision table (tap → `KeyboardTileAction`) |
-| same | `KeyboardTileAction` | `PICK_KEYBOARD`, `MINIMIZE`, `RESTORE`, `SHOW_MINIMIZED`, `SHOW_RESTORED`, `SHOW` |
-| same | `TileWindowSnapshot`, `EditorRef`, `VisibleForm` | what the service reports about its window and editor |
-| same | `TileShowSession` | pure state machine for the deferred show (retry every 250 ms for up to 8 s) |
-| `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `tileSnapshot()`, `minimizeFromTile()`, `restoreFromTile()`, `showFromTile(action)`, `logTileDecision(…)` | the service side |
-| `src/main/kotlin/tribixbite/cleverkeys/minimize/KeyboardMinimizer.kt` | `lastStyle` | the style a tile minimize uses (floating button until a minimize command picks another) |
+| same | `KeyboardTileAction` | `PICK_KEYBOARD`, `HIDE`, `SHOW` |
+| same | `TileWindowSnapshot`, `EditorRef` | what the service reports about its window and editor |
+| same | `TileShowSession` | pure state machine: last hide (time, editor, whose) and the deferred show (every 250 ms for up to 8 s) |
+| `src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt` | `tileSnapshot()`, `hideFromTile()`, `showFromTile()`, `logTileDecision(…)` | the service side |
 | `AndroidManifest.xml` | `<service android:name="tribixbite.cleverkeys.KeyboardTileService" … BIND_QUICK_SETTINGS_TILE …>` | tile registration (`tools:targetApi="24"`) |
 
 ## Decision table
@@ -37,21 +38,23 @@ action the next tap will take.
 | CleverKeys selected? | window | tap → action | subtitle |
 |---|---|---|---|
 | no, or service not running | any | `PICK_KEYBOARD`: `InputMethodManager.showInputMethodPicker()`; if no IMM, `startActivityAndCollapse` to `ACTION_INPUT_METHOD_SETTINGS` (PendingIntent overload on API 34+) | Switch keyboard |
-| yes | visible, full | `MINIMIZE` → `minimizeFromTile()` (style `KeyboardMinimizer.lastStyle`) | Minimize |
-| yes | visible, minimized | `RESTORE` → `restoreFromTile()` (`expand()`) | Restore |
-| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not dismissed by the user, input still in that app / unbound / SystemUI; was full | `SHOW_MINIMIZED` → deferred show landing minimized | Minimize |
-| yes | same, was minimized | `SHOW_RESTORED` → deferred show landing full | Restore |
-| yes | otherwise, a real editor is bound (`isRealEditor`) | `SHOW` → deferred show landing full | Show |
-| yes | otherwise (e.g. the launcher's `TYPE_NULL` fallback connection) | `PICK_KEYBOARD` | Switch keyboard |
+| yes | visible, full or minimized | `HIDE` → `hideFromTile()` → `hideKeyboardByUser()` (`requestHideSelf`, marked as the user's) | Hide |
+| yes | hidden ≤ 10 s ago (`RECENT_HIDE_MS`), not by the user, over an editor, input still in that app / unbound / SystemUI (`wasShownBeforeTheShade`) | `HIDE` → `hideFromTile()`: stays hidden, and `markHiddenByUser()` makes the next tap a show | Hide |
+| yes | otherwise | `SHOW` → `showFromTile()`: deferred show, full size | Show |
 
 Details that matter when reading the code:
 
-- **Deferred show.** `showFromTile` arms a `TileShowSession` target and calls
-  `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod` below) at once and every
-  `RETRY_INTERVAL_MS` (250 ms) for `RETRY_WINDOW_MS` (8 s), because the system ignores the show
-  while the shade holds focus. `onWindowShown` applies the target once; `onStartInput` for
-  another package, a hardware key, a tap on a visible keyboard, the deadline and `onDestroy`
-  cancel it.
+- **Deferred show.** `showFromTile` arms a `TileShowSession` request bound to the last editor's
+  package and ticks at once and every `RETRY_INTERVAL_MS` (250 ms) for `RETRY_WINDOW_MS` (8 s).
+  A tick sends `requestShowSelf(0)` (API 28+; `showSoftInputFromInputMethod` below) only while
+  a real editor is bound (`isRealEditor`: a typed field, or the `TYPE_NULL` field the keyboard
+  was last shown over); with the launcher's `TYPE_NULL` fallback connection it waits
+  (`Tick.WAIT`), so a show never lands over the home screen. `onWindowShown` reports the
+  requested show once and the service expands to the full keyboard; `onStartInput` for another
+  package, a hardware key, the deadline and `onDestroy` cancel it.
+- **Hide.** `hideFromTile` cancels any armed show; it calls `hideKeyboardByUser()` when the
+  window is visible (minimized included: the minimizer resets to full on hide), else marks the
+  shade's hide as the user's.
 - **No overlay permission.** `requestShowSelf` needs nothing beyond being the current IME; the
   2026-10-22 check in `keyboard-minimize.md` "Overlay permission check" documents why
   `SYSTEM_ALERT_WINDOW` is only relevant to a floating button that outlives the input window
@@ -74,9 +77,9 @@ Details that matter when reading the code:
 ## Tests
 
 - `KeyboardTileActionTest` (pure): every `actionFor` branch, the `TileShowSession` state
-  machine, the subtitle/description strings in all locales.
+  machine (including the wait for an editor and the re-attributed shade hide), the
+  subtitle/description strings in all locales.
 - `KeyboardTileServiceTest` (mock): source-level `onClick` routing.
-- `KeyboardMinimizerTest`: `lastStyle`.
 
 ## Known limitation
 

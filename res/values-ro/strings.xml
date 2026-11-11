@@ -1984,11 +1984,9 @@
     <string name="tile_descr_active">%1$s este activă. Atingeți pentru a schimba tastatura.</string>
     <string name="tile_descr_inactive">Atingeți pentru a comuta la tastatura %1$s.</string>
     <string name="tile_subtitle_switch">Schimbare tastatură</string>
-    <string name="tile_subtitle_minimize">Minimizare</string>
-    <string name="tile_subtitle_restore">Restaurare</string>
+    <string name="tile_subtitle_hide">Ascundere</string>
     <string name="tile_subtitle_show">Afișare</string>
-    <string name="tile_descr_minimize">%1$s este deschisă. Atingeți pentru a o minimiza.</string>
-    <string name="tile_descr_restore">%1$s este minimizată. Atingeți pentru a o restaura.</string>
+    <string name="tile_descr_hide">%1$s este deschisă. Atingeți pentru a o ascunde.</string>
     <string name="tile_descr_show">%1$s este ascunsă. Atingeți pentru a o afișa.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Aranjament fără nume</string>
     <string name="key_descr_keycode">Tasta %1$d</string>

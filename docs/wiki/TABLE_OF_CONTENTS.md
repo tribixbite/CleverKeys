@@ -25,7 +25,7 @@ Welcome to the CleverKeys documentation. This guide covers everything you need t
 | [First-Time Setup](./getting-started/first-time-setup.md) | Enable keyboard and basic configuration |
 | [Basic Typing](./getting-started/basic-typing.md) | Tap and swipe typing fundamentals |
 | [Enabling the Keyboard](./getting-started/enabling-keyboard.md) | Android keyboard activation steps |
-| [Quick Settings Tile](./getting-started/quick-settings.md) | Show, minimize or restore the keyboard from the notification shade |
+| [Quick Settings Tile](./getting-started/quick-settings.md) | Show or hide the keyboard from the notification shade |
 
 ### 2. Typing and Input (P0)
 | Page | Description |

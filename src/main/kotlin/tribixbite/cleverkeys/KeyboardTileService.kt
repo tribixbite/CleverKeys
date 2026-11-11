@@ -16,22 +16,17 @@ import androidx.annotation.StringRes
 /**
  * Quick Settings tile for CleverKeys keyboard.
  *
- * A tap acts on the keyboard ([KeyboardTileDecision.actionFor] holds the table):
+ * A tap shows or hides the keyboard ([KeyboardTileDecision.actionFor] holds the table):
  * - another keyboard is selected: opens the input-method picker (how users switch to
- *   CleverKeys; the tile's original behaviour);
- * - the keyboard is on screen (possible where the shade does not take focus, or with
- *   `cmd statusbar click-tile`): minimizes it, to the style last used by a minimize command
- *   ([tribixbite.cleverkeys.minimize.KeyboardMinimizer.lastStyle], the floating button
- *   before any), or restores it when minimized;
- * - the keyboard was hidden a moment ago: on the Saga (Android 14) opening the shade itself
- *   hides the keyboard, so this is the usual case. The tap acts on the form it had just
- *   before: a full keyboard comes back minimized, a minimized one full size. The show is
- *   deferred ([CleverKeysService.showFromTile]): the system ignores it while the shade holds
- *   focus, so the service retries until the app is focused again after the shade closes;
- * - hidden for longer over a bound editor: shows the full keyboard the same way;
- * - hidden with no editor: opens the picker. An IME can only show itself for a focused
- *   editor, so nothing could appear; a Toast would sit under the open shade, and the subtitle
- *   ("Switch keyboard") already says what the tap will do.
+ *   CleverKeys; an app cannot select an IME itself);
+ * - the keyboard is on screen, full or minimized: hides it, as the user's own dismissal;
+ * - the keyboard was on screen until the shade opened over it: on the Saga (Android 14)
+ *   opening the shade itself hides the keyboard, so the tap keeps it hidden (the hide it
+ *   asked for) instead of bringing it straight back;
+ * - otherwise: shows the full keyboard. The show is deferred ([CleverKeysService.showFromTile]):
+ *   some apps hide their own keyboard around the shade, so the service retries, and with no
+ *   editor focused (the home screen) it waits for one instead of showing over nothing. The
+ *   picker is never the fallback while CleverKeys is selected.
  *
  * The tile reaches the running IME through [CleverKeysService.getInstance], the process-local
  * reference the service sets in onCreate and clears in onDestroy. The tile keeps no reference
@@ -88,11 +83,8 @@ class KeyboardTileService : TileService() {
         val action = KeyboardTileDecision.actionFor(isCurrent, snapshot)
         logDecision("tap", service, isCurrent, snapshot, action)
         when (action) {
-            KeyboardTileAction.MINIMIZE -> service?.minimizeFromTile()
-            KeyboardTileAction.RESTORE -> service?.restoreFromTile()
-            KeyboardTileAction.SHOW_MINIMIZED,
-            KeyboardTileAction.SHOW_RESTORED,
-            KeyboardTileAction.SHOW -> service?.showFromTile(action)
+            KeyboardTileAction.HIDE -> service?.hideFromTile()
+            KeyboardTileAction.SHOW -> service?.showFromTile()
             KeyboardTileAction.PICK_KEYBOARD -> {
                 // Show input method picker dialog
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -130,8 +122,7 @@ class KeyboardTileService : TileService() {
     }
 
     /**
-     * Minimize and restore swap the input view at once, but showing goes through the system
-     * and lands a frame or more later, and the shade's own hide of the keyboard lands after
+     * Showing and hiding go through the system and land a frame or more later, and the shade's own hide of the keyboard lands after
      * onStartListening, so the tile is re-read twice rather than guessed.
      */
     private fun scheduleTileRefresh() {

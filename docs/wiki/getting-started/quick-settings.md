@@ -1,6 +1,6 @@
 ---
 title: Quick Settings Tile
-description: Show, minimize or restore the keyboard from the notification shade; switch keyboards when CleverKeys is not active
+description: Show or hide the keyboard from the notification shade; switch keyboards when CleverKeys is not active
 category: Getting Started
 difficulty: beginner
 related_spec: ../specs/customization/quick-settings-tile-spec.md
@@ -8,10 +8,9 @@ related_spec: ../specs/customization/quick-settings-tile-spec.md
 
 # Quick Settings Tile
 
-The CleverKeys tile in the notification shade toggles the keyboard: it shows a hidden
-keyboard, minimizes a visible one, and restores a minimized one. When CleverKeys is not your
-current keyboard, or no text field is focused, the same tap opens the system keyboard picker
-instead.
+The CleverKeys tile in the notification shade shows and hides the keyboard: a tap hides it
+when it is on screen and shows it when it is hidden. When CleverKeys is not your current
+keyboard, the same tap opens the system keyboard picker so you can switch to it.
 
 ## Adding the Tile
 
@@ -30,22 +29,22 @@ Android 10 and later the tile's subtitle names the action before you tap.
 | CleverKeys is your keyboard? | Keyboard | Tap | Subtitle |
 |------------------------------|----------|-----|----------|
 | No | any | Opens the system keyboard picker | Switch keyboard |
-| Yes | Shown at full size | Minimizes it, using the last minimized style you picked (a floating button until you pick one) | Minimize |
-| Yes | Minimized | Restores it to full size | Restore |
-| Yes | Hidden by the app a moment ago (within 10 seconds, not by you) | Brings it back in the other form: minimized if it was full, full if it was minimized | Minimize / Restore |
-| Yes | Hidden earlier (you pressed Back, or long ago) while a text field is still focused | Shows it | Show |
-| Yes | No text field focused (home screen, for example) | Opens the system keyboard picker | Switch keyboard |
+| Yes | On screen (full size or minimized) | Hides it | Hide |
+| Yes | Was on screen until you opened the shade (some phones hide it then) | Keeps it hidden | Hide |
+| Yes | Hidden | Shows it at full size | Show |
 
-Minimized styles are the ones the [Command Palette](../customization/command-palette.md)'s
-minimize commands offer (floating button or bar).
+The tile acts on the keyboard as you saw it before pulling the shade down, so on phones where
+opening the shade hides the keyboard, a tap still means "hide" and the next tap shows it.
 
 ## Things to Know
 
 - **The shade stays open after a tap.** Closing it would take focus away from the app you
   were typing in, so the keyboard change becomes visible once you close the shade yourself.
 - **Some apps hide the keyboard when the shade opens.** The tile keeps asking for the keyboard
-  for up to 8 seconds after a tap, so it comes back in the form you chose once the shade
-  closes.
+  for up to 8 seconds after a tap, so it comes back once the shade closes.
+- **No text field focused?** On the home screen there is nothing to type into, so the keyboard
+  cannot appear there. The tile waits up to 8 seconds: tap into a text field in that time and
+  the keyboard opens.
 - **Text boxes on web pages in Chrome** lose focus when the shade opens; after closing the
   shade, tap the field again. Native fields, including Chrome's address bar, work.
 - **No extra permission.** Showing the keyboard again does not need "Display over other
@@ -63,12 +62,11 @@ minimize commands offer (floating button or bar).
 - Ensure CleverKeys is enabled in **Settings > System > Languages & Input > On-screen keyboard**
 
 ### The subtitle says "Switch keyboard" when I expected "Show"?
-- Either CleverKeys is not the current keyboard (pick it in the picker that opens), or no text
-  field is focused. The keyboard can only be shown for a focused field; tap into one first.
+- CleverKeys is not the current keyboard. Pick it in the picker that opens.
 
 ### Nothing seems to happen when I tap?
-- Close the shade: the keyboard changes underneath it. If the field is a web page text box in
-  Chrome, tap the field again.
+- Close the shade: the keyboard changes underneath it. If no text field is focused, tap into
+  one. If the field is a web page text box in Chrome, tap the field again.
 
 ## Technical Details
 

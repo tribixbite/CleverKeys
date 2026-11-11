@@ -18,10 +18,10 @@ import org.junit.Test
  *  2. the tile **reports the right state**, so the shade shows CleverKeys as active only
  *     when it really is typing ([tileStateFollowsTheSelectedIme]) and TalkBack announces
  *     the matching action ([tileContentDescriptionMatchesTheState]);
- *  3. tapping it **opens the input-method picker** when another keyboard is selected (or
- *     nothing can be shown) ([onClickOpensTheInputMethodPicker]), and otherwise minimizes,
- *     restores or shows CleverKeys ([onClickRoutesTheKeyboardActions]; the decision table
- *     itself is pure and covered by `KeyboardTileActionTest`).
+ *  3. tapping it **opens the input-method picker** when another keyboard is selected
+ *     ([onClickOpensTheInputMethodPicker]), and otherwise hides or shows CleverKeys
+ *     ([onClickRoutesTheKeyboardActions]; the decision table itself is pure and covered by
+ *     `KeyboardTileActionTest`).
  *
  * (3) is pinned at source level, deliberately and with no better option available off-device:
  * every [android.service.quicksettings.TileService] callback starts with a `super` call into
@@ -146,20 +146,13 @@ class KeyboardTileServiceTest {
         assertWithMessage("the tap decision must come from the pure table")
             .that(onClick).contains("KeyboardTileDecision.actionFor(")
         for ((action, call) in listOf(
-            "MINIMIZE" to "minimizeFromTile()",
-            "RESTORE" to "restoreFromTile()",
-            "SHOW" to "showFromTile(action)",
+            "HIDE" to "hideFromTile()",
+            "SHOW" to "showFromTile()",
         )) {
             assertWithMessage("$action must reach the running service")
                 .that(Regex("""KeyboardTileAction\.$action -> service\?\.${Regex.escape(call)}""").containsMatchIn(onClick))
                 .isTrue()
         }
-        // The two shade-recovery shows share the deferred show with SHOW (device report
-        // 2026-10-20: the shade hides the keyboard before the tap).
-        assertWithMessage("SHOW_MINIMIZED and SHOW_RESTORED take the deferred show path")
-            .that(Regex("""KeyboardTileAction\.SHOW_MINIMIZED,\s*KeyboardTileAction\.SHOW_RESTORED,\s*KeyboardTileAction\.SHOW -> """)
-                .containsMatchIn(onClick))
-            .isTrue()
         assertWithMessage("the service is reached through its lifecycle-cleared instance, never cached")
             .that(onClick).contains("CleverKeysService.getInstance()")
         assertWithMessage("a keyboard action must never start an activity: that steals the editor's focus")

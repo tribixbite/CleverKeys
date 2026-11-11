@@ -1953,11 +1953,9 @@
     <string name="tile_descr_active">%1$s فعال است. برای تغییر صفحه‌کلید ضربه بزنید.</string>
     <string name="tile_descr_inactive">برای رفتن به صفحه‌کلید %1$s ضربه بزنید.</string>
     <string name="tile_subtitle_switch">تغییر صفحه‌کلید</string>
-    <string name="tile_subtitle_minimize">کوچک کردن</string>
-    <string name="tile_subtitle_restore">بازگرداندن</string>
+    <string name="tile_subtitle_hide">پنهان کردن</string>
     <string name="tile_subtitle_show">نمایش</string>
-    <string name="tile_descr_minimize">%1$s باز است. برای کوچک کردن آن ضربه بزنید.</string>
-    <string name="tile_descr_restore">%1$s کوچک شده است. برای بازگرداندن آن ضربه بزنید.</string>
+    <string name="tile_descr_hide">%1$s باز است. برای پنهان کردن آن ضربه بزنید.</string>
     <string name="tile_descr_show">%1$s پنهان است. برای نمایش آن ضربه بزنید.</string>
     <string name="swipe_engine_fallback_unnamed_layout">چیدمان بی‌نام</string>
     <string name="key_descr_keycode">کلید %1$d</string>

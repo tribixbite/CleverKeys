@@ -2004,11 +2004,9 @@
     <string name="tile_descr_active">%1$s активна. Коснитесь, чтобы сменить клавиатуру.</string>
     <string name="tile_descr_inactive">Коснитесь, чтобы переключиться на клавиатуру %1$s.</string>
     <string name="tile_subtitle_switch">Сменить клавиатуру</string>
-    <string name="tile_subtitle_minimize">Свернуть</string>
-    <string name="tile_subtitle_restore">Развернуть</string>
+    <string name="tile_subtitle_hide">Скрыть</string>
     <string name="tile_subtitle_show">Показать</string>
-    <string name="tile_descr_minimize">%1$s открыта. Коснитесь, чтобы свернуть её.</string>
-    <string name="tile_descr_restore">%1$s свёрнута. Коснитесь, чтобы развернуть её.</string>
+    <string name="tile_descr_hide">%1$s открыта. Коснитесь, чтобы скрыть её.</string>
     <string name="tile_descr_show">%1$s скрыта. Коснитесь, чтобы показать её.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Раскладка без названия</string>
     <string name="key_descr_keycode">Клавиша %1$d</string>
