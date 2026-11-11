@@ -168,6 +168,13 @@ Kotlin evaluates arguments left to right: `gate.changed(buffer, fill())` passes 
 ArrayIndexOutOfBounds (Note10+, 2026-11-11) while the pure tests of the gate passed. Call the
 filler first. Turn motion ON in a device check: a phone left with Animated scenes off from an
 "off" run never runs the frame loop, and a crash there takes the keyboard down every time it shows.
+Price a scene's motion with the keyboard up and UNTOUCHED (raise "Keep Moving For" to outlast
+the run): typing doubles the compute baseline and drowns the delta. Every scene costs ~9.5 mJ
+of compute per frame (Pixel, 2026-11-11), so frame rate is the lever, not draw work. Pinning
+`peak/min_refresh_rate` hides the display share: the panel's kernel idle timer is 80 ms
+(`ro.surface_flinger.set_idle_timer_ms`), so 10 fps keeps it near full refresh (+57 mW
+unpinned). Report the trace per rail (`VSYS_PWR_DISPLAY` vs the CPUCL/G3D/MIF/MEM rails), not
+only the total: the display rail swings by hundreds of mW between runs and hides a 100 mW delta.
 
 ## Kotlin compiler execution on Termux
 

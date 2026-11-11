@@ -1357,6 +1357,44 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     typing-on run were lost to adb dropping the Pixel at ~5–9 min three times (no crash; the
     pin cron did not cause it). Open: Pixel restore (Cyberpunk, Animated scenes off, brightness
     manual 12) once reachable; Note10+ Chrome test tabs.
+    Eleventh round (2026-11-11, maintainer: quiet the Pixel and rerun Aurora / Stream / Meadow;
+    clean-up of terminal clips with hanging indents; merged clips onto the system clipboard;
+    pause and idle seconds as settings; a motion on/off command). Done (`83896fe0`): cleaner
+    hanging-indent joins + inner space runs, merge → OS clipboard (private asks first),
+    `look_motion_resume_ms` / `look_motion_idle_s` (backup/restore), `toggle_scene_motion`
+    (244 commands). Pixel quieted (`scratchpad/dev/quiet.sh`: BT/NFC/location/data/scans off,
+    60 Hz pinned, ~51 third-party apps force-stopped), 10-min runs, brightness 102. Per scene,
+    motion on / off, mW (display rail | CPU+GPU+memory rails | total):
+    typing Aurora 1041|315|1768 vs 1040|275|1711, Stream 1066|342|1829 vs 1068|295|1772, Meadow
+    1097|315|1830 vs 1097|293|1800; idle (tap + 59 s) Aurora 1081|187|1646 vs 1080|171|1627,
+    Stream 1106|182|1677 vs 1105|159|1647, Meadow 1134|208|1745 vs 1135|164|1689. The display
+    rail never moves with motion (refresh pinned); typing doubles the compute baseline, so
+    typing deltas are noise-dominated (Meadow typing +23 < its idle +44).
+    Twelfth round (maintainer: "10 min constant animations vs … no kb animations", then 5-min
+    runs): keyboard up and untouched in a Chrome text box, "Keep Moving For" 600 s, ABBA,
+    brightness 12, refresh pinned 60. Δ on−off (compute | total): Aurora 10.0 fps +96.5 | +129.5,
+    Stream 7.6 fps +74.4 | +92.2, Meadow 12.0 fps +110.2 | +141.5 mW. **Every scene costs
+    9.2–9.8 mJ of compute per frame**: power is frames × the window's fixed cost, not what is
+    drawn. Display 272–275 mW on and off at brightness 12 (≈1080 at 102). The Pixel's
+    `ro.surface_flinger.set_idle_timer_ms` = 80 with `support_kernel_idle_timer` = true, so at
+    10 fps (100 ms gaps) the panel can rest only ~20 ms per frame: the +57 mW display cost of
+    the sixth round (unpinned) is the refresh staying up. Fable review (maintainer asked for
+    < 50 mW): (1) 5 fps ≈ half the compute and lets the panel idle 120 of every 200 ms;
+    (2) curtains as two static `SurfaceControl` layers under the IME window, moved by
+    `Transaction.setAlpha/setPosition` so the display hardware blends them and HWUI draws
+    nothing (est. 5–20 mW compute); combine both. Next: a scene frame-rate setting and an
+    unpinned sweep (10/6/5/4 fps at brightness 12 and 102) to measure the panel-idle share,
+    then decide on (2) — awaiting the maintainer.
+    Quick Settings tile (`fcd6da88`, maintainer: "supposed to show kb not open kb picker… if
+    already shown then hide"): show/hide toggle, the picker only with another keyboard
+    selected; Pixel through the real shade PASS — visible → "Tap to hide it" → hidden; hidden →
+    shown under the open shade and kept after collapse; after Back → shown; home screen → no
+    picker and no keyboard over the launcher, also after the 8 s window. The Pixel's shade does
+    not hide the keyboard, so the shade-hidden path (Saga) is still owed, as are a minimized
+    keyboard and a field tap within 8 s of a home-screen tap. CI: the APK job's ImageMagick
+    step now skips when present, retries apt and falls back to the committed icons
+    (`eeaed98a`; 83896fe0's build failed twice on runner DNS). Pixel restored and checked IN
+    13:55 (force-stopped apps stay stopped until opened).
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
