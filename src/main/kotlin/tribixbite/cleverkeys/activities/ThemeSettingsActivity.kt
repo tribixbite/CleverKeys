@@ -902,10 +902,12 @@ private val scenePreviewCache: MutableMap<Triple<LookBackdrop, Int, Boolean>, Im
 @Composable
 private fun rememberScenePreview(backdrop: LookBackdrop, baseColor: Int, trueBlack: Boolean): ImageBitmap? {
     val key = Triple(backdrop, baseColor, trueBlack)
-    val image by produceState(scenePreviewCache[key], key) {
-        // One assignment on every path (lint ProduceStateDoesNotAssignValue): the cached
-        // picture, or a new render.
-        value = scenePreviewCache[key] ?: withContext(Dispatchers.Default) {
+    // The cached picture at once, or null until a render fills it in (a remembered state with a
+    // LaunchedEffect: the produceState form tripped lint's ProduceStateDoesNotAssignValue).
+    val image = remember(key) { mutableStateOf(scenePreviewCache[key]) }
+    LaunchedEffect(key) {
+        if (image.value != null) return@LaunchedEffect
+        image.value = withContext(Dispatchers.Default) {
             // A keyboard's proportions (411 × 260 dp) at a little over half a raster px per dp:
             // enough for the card's strip, cropped to its middle.
             val w = 240
@@ -914,7 +916,7 @@ private fun rememberScenePreview(backdrop: LookBackdrop, baseColor: Int, trueBla
                 ?.let { Bitmap.createBitmap(it, w, h, Bitmap.Config.ARGB_8888).asImageBitmap() }
         }?.also { scenePreviewCache[key] = it }
     }
-    return image
+    return image.value
 }
 
 /**
