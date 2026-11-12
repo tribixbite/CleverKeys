@@ -453,7 +453,7 @@
     <string name="appearance_look_motion_fps_scene">Mặc định của cảnh</string>
     <string name="appearance_look_motion_fps_value">%1$d khung/giây</string>
     <string name="appearance_look_scene_overlay_title">Hòa trộn bằng phần cứng màn hình</string>
-    <string name="appearance_look_scene_overlay_desc">Phần cứng màn hình di chuyển cực quang thay vì bàn phím vẽ lại, nên tốn ít pin hơn; tắt nếu cực quang hiển thị sai</string>
+    <string name="appearance_look_scene_overlay_desc">Từ 10 khung hình mỗi giây trở lên, phần cứng màn hình di chuyển cực quang thay vì bàn phím vẽ lại, nên tốn ít pin hơn; tắt nếu cực quang hiển thị sai</string>
     <string name="appearance_look_scene_crisp_title">Cảnh sắc nét</string>
     <string name="appearance_look_scene_crisp_desc">Vẽ cực quang, suối và tuyết ở độ phân giải đầy đủ: tia sáng và gợn sóng mịn hơn, tốn thêm chút bộ nhớ</string>
     <string name="appearance_look_scene_true_black_title">Cảnh nền đen tuyền</string>

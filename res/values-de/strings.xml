@@ -446,7 +446,7 @@
     <string name="appearance_look_motion_fps_scene">Wie die Szene</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Mit Display-Hardware überblenden</string>
-    <string name="appearance_look_scene_overlay_desc">Die Display-Hardware bewegt das Polarlicht, statt dass die Tastatur es neu zeichnet; spart Akku. Ausschalten, falls das Polarlicht falsch aussieht</string>
+    <string name="appearance_look_scene_overlay_desc">Ab 10 Bildern pro Sekunde bewegt die Display-Hardware das Polarlicht, statt dass die Tastatur es neu zeichnet; spart Akku. Ausschalten, falls das Polarlicht falsch aussieht</string>
     <string name="appearance_look_scene_crisp_title">Scharfe Szenen</string>
     <string name="appearance_look_scene_crisp_desc">Polarlicht, Bach und Schnee in voller Auflösung zeichnen: feinere Strahlen und Wellen, etwas mehr Speicher</string>
     <string name="appearance_look_scene_true_black_title">Szenen in echtem Schwarz</string>

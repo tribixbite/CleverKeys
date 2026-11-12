@@ -467,7 +467,7 @@
     <string name="appearance_look_motion_fps_scene">Come la scena</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Fusione con l\'hardware dello schermo</string>
-    <string name="appearance_look_scene_overlay_desc">L\'hardware dello schermo muove l\'aurora invece di ridisegnare la tastiera, consumando meno batteria; disattiva se l\'aurora appare sbagliata</string>
+    <string name="appearance_look_scene_overlay_desc">Da 10 fotogrammi al secondo in su, l\'hardware dello schermo muove l\'aurora invece di ridisegnare la tastiera, consumando meno batteria; disattiva se l\'aurora appare sbagliata</string>
     <string name="appearance_look_scene_crisp_title">Scene nitide</string>
     <string name="appearance_look_scene_crisp_desc">Disegna l’aurora, il ruscello e la neve a piena risoluzione: raggi e increspature più fini, un po’ più di memoria</string>
     <string name="appearance_look_scene_true_black_title">Scene in nero puro</string>

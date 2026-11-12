@@ -446,7 +446,7 @@
     <string name="appearance_look_motion_fps_scene">Según la escena</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Fundir con el hardware de pantalla</string>
-    <string name="appearance_look_scene_overlay_desc">El hardware de pantalla mueve la aurora en lugar de redibujar el teclado, y gasta menos batería; desactívalo si la aurora se ve mal</string>
+    <string name="appearance_look_scene_overlay_desc">A partir de 10 fotogramas por segundo, el hardware de pantalla mueve la aurora en lugar de redibujar el teclado, y gasta menos batería; desactívalo si la aurora se ve mal</string>
     <string name="appearance_look_scene_crisp_title">Escenas nítidas</string>
     <string name="appearance_look_scene_crisp_desc">Dibujar la aurora, el arroyo y la nieve a resolución completa: rayos y ondas más finos, algo más de memoria</string>
     <string name="appearance_look_scene_true_black_title">Escenas en negro puro</string>

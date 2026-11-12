@@ -431,7 +431,7 @@
     <string name="appearance_look_motion_fps_scene">Как у сцены</string>
     <string name="appearance_look_motion_fps_value">%1$d кадр/с</string>
     <string name="appearance_look_scene_overlay_title">Смешивание средствами дисплея</string>
-    <string name="appearance_look_scene_overlay_desc">Сияние двигает аппаратура дисплея, а не перерисовка клавиатуры, поэтому батарея расходуется меньше; выключите, если сияние выглядит неправильно</string>
+    <string name="appearance_look_scene_overlay_desc">От 10 кадров в секунду сияние двигает аппаратура дисплея, а не перерисовка клавиатуры, поэтому батарея расходуется меньше; выключите, если сияние выглядит неправильно</string>
     <string name="appearance_look_scene_crisp_title">Чёткие сцены</string>
     <string name="appearance_look_scene_crisp_desc">Рисовать сияние, ручей и снег в полном разрешении: тоньше лучи и рябь, немного больше памяти</string>
     <string name="appearance_look_scene_true_black_title">Сцены на чисто чёрном</string>

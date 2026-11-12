@@ -1,8 +1,8 @@
 # Scene Backdrops: Architecture, Power and Frames
 
-> **Status (2026-11-12):** as built, through round 17 (5–8 fps cost the same on the window path;
-> hardware layers only at 10 fps and above; the snow at 8 fps; the first spell after a rotation
-> now gets its layers; a tablet check). Every number here was
+> **Status (2026-11-12):** as built, through round 18 (5–9 fps cost the same on the window path,
+> at every brightness; hardware layers only at 10 fps and above; the snow at 8 fps; the first
+> spell after a rotation now gets its layers; a tablet check and a tablet show-path fix). Every number here was
 > measured on a Pixel 8 Pro (Tensor G3, LTPO OLED with 60/120 Hz modes only, no ARR) unless the
 > row says otherwise; "estimate" marks every number that was not measured. The measurement log
 > with the per-run detail is `memory/todo.md` (rounds 6–16, 2026-11-09…12).
@@ -17,21 +17,24 @@ round 17; ~195 mW ≈ 1 % of the battery per hour):
 
 | Theme | Default frame rate | Extra power while moving | Battery per hour of continuous motion | Ten 20-s spells an hour |
 |---|---|---|---|---|
-| Every scene at its default rate (Aurora and River rocks 5 fps; Stream, Meadow, Forest 7; Snow and Beach 8) | 5–8 fps | **~180 mW** (measured 178–187 at 5, 7 and 8 fps; one older run 115 at 5 fps) | ~0.9 % | ~0.05 % |
+| Every scene at its default rate (Aurora and River rocks 5 fps; Stream, Meadow, Forest 7; Snow and Beach 8) | 5–8 fps | **~180 mW** (measured 153–199 at 5, 7, 8 and 9 fps and at brightness 12, 102 and 255; one older run 115 at 5 fps) | ~0.9 % | ~0.05 % |
 | Any scene with Frame Rate 10 | 10 fps | ~340–374 mW; the aurora on display-hardware layers ~150–200 | ~1.7–1.9 % (layers ~0.9 %) | ~0.1 % |
 
-Between 5 and 8 fps the frame rate does not change the cost: the panel rests between frames at
-all of them (§3.2.2). Between themes the moving cost is the same; the still picture differs by
-its light, up to ~45 mW at brightness 102 (Meadow, Beach) and under 1 mW for the aurora, which
-True Black removes (§4.3). Before round 16 the defaults were 8–12 fps: ~340 mW for the 10-fps
+Between 5 and 9 fps the frame rate does not change the cost: the panel rests between frames at
+all of them (§3.2.2). Brightness does not change it either: the motion's display share is the
+panel kept refreshing, +77 / +84 / +89 mW at brightness 12 / 102 / 255 (§3.2.9). Between themes
+the moving cost is the same; the still picture differs by its light, up to ~45 mW at brightness
+102 and ~84 mW at 255 (Meadow, Beach), under 1 mW for the aurora, which True Black removes (§4.3). Before round 16 the defaults were 8–12 fps: ~340 mW for the 10-fps
 scenes, ~445 for the 12-fps ones.
 
 **Over a day** (model `scripts/research/scenes/battery_stories.py`, usage assumed, brightness
 102, details in `docs/eval/2026-11-12-scene-battery-day.md`): a light user (30 keyboard opens a
 day) pays 0.16–0.25 % of the battery a day, about a minute of screen-on time; a heavy chatter
 (150 opens, 225 messages, each followed by a full 20-s spell) 1.3–2.0 %, 8–12 minutes; a
-writer 0.5–0.9 %. Only raising both Keep Moving For and the frame rate reaches a cost the
-battery graph shows (6–7 %/day at 60 s and 12 fps).
+writer 0.5–0.9 %. A user modelled on a real phone's app time (85 min a day in chat apps with the
+keyboard always up, 36 searches a day elsewhere) pays ~0.6 % with the aurora at any brightness and
+0.7–1.3 % with Meadow (brightness 12–255; 0.76 % at 255 with True Black). Only raising both Keep
+Moving For and the frame rate reaches a cost the battery graph shows (6–7 %/day at 60 s and 12 fps).
 
 ## 1. What the backdrops are
 
@@ -148,6 +151,11 @@ that stopped after 20 s and was discarded.
 | 17 | same | window 8 fps | **+187** (display +82, CPU +50, memory +19) | 947 / 966; 7.6 fps |
 | 17 | landscape (user_rotation 1) | window 5 fps | **+169** (display +86, CPU +41, memory +15) | 903 / 910 |
 | 17 | landscape | "layers 5 fps" | +174 (display +85, CPU +44) | 908 / 916; **drew 1,470 window frames: the layers never came up** (bug below, fixed) — a second window-path pair |
+| 18 (11-12) | as 17, brightness per arm, Aurora, 14 × 5 min mirrored; off 2106 / 2110 (255), 1558 / 1546 (102), 786 / 753 (12) | window 5 fps, brightness 255 | **+180** (display +89, compute +74) | 2288 / 2288; 1,469–1,474 frames |
+| 18 | same | window 5 fps, brightness 102 | **+199** (display +84, compute +87) | 1789 / 1713 |
+| 18 | same | window 5 fps, brightness 12 | **+153** (display +77, compute +59) | 930 / 915 |
+| 18 | same | window 9 fps, brightness 12 | **+187** (display +80, compute +88) | 951 / 962; 2,551–2,570 frames (8.6 fps) |
+| 18 | Meadow, brightness 255, motion off | still picture | Meadow's screen **+84 mW** over Aurora's (all three display rails) | one run (the model predicted +84); the three later Meadow runs are void: the battery reached 33 °C and the phone dimmed the panel (display rail 1,633 → ~1,100 mW) at thermal status 0 |
 
 **Comparing rounds.** The rounds ran under different conditions, so their deltas are not one
 series: rounds 6–10 priced motion **while typing** (the "off" runs already keep the panel and
@@ -175,7 +183,8 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
    at 5, 7 and 8 fps alike (round 17); at 10 fps (100 ms) +250. The CPU part is +50 mW at all
    three rates in round 17 (round 13: +16 at 5 fps), so 5–8 fps cost the same ~180 mW within the
    run-to-run spread (±15 mW). Power is **not** linear in frame rate: flat from 5 to 8, then a
-   jump of ~160 mW by 10. The §4.1 curve that interpolated 5 → 10 fps (121 / 198 / 241 mW at 5 /
+   jump of ~160 mW by 10. 9 fps (111 ms) is still on the flat: +187 (round 18), so the step lies
+   between 9 and 10 fps. The §4.1 curve that interpolated 5 → 10 fps (121 / 198 / 241 mW at 5 /
    7 / 8) was wrong between its anchors.
 3. **Hardware layers halve it at 10 fps** (+152–197 vs +340–374): no window redraw, and the
    layers keep the panel at 60 Hz. Below 10 fps they gain little or nothing (+150 and +163 at
@@ -205,6 +214,20 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
    whole spell; on the window path the keyboard stayed DEVICE at 60 Hz. One more reason for the
    10-fps floor (item 3). The keyboard itself works there in landscape, portrait and a pop-up
    (freeform) window; it spans the screen width in every case (no split or floating mode).
+   Round 18 tried to price it with proxies (refresh rate, CPU, frames; it has no rails and was
+   full on AC) and found instead that **the scene did not move when the keyboard showed** after
+   CleverKeys Settings had been open in the same process: `startTicking` posted the first tick
+   (`scheduleSelf`, a Choreographer animation callback) and no frame ever ran it, until a key
+   press drew one. The first tick now goes through the main Handler. Diagnosed with logs on the
+   tablet; the fix itself is not yet confirmed there (the tablet was in use), and the Pixel never
+   showed the stall.
+9. **Brightness (round 18):** motion costs the same at brightness 12, 102 and 255 (+153 / +199 /
+   +180 mW, two runs each; the spread is the CPU part). The display share grows only from +77 to
+   +89 mW across the whole range: what motion adds is the panel refreshing instead of idling, not
+   light. What does scale with brightness is the still picture (§4.3): the display rails with
+   the keyboard still draw 420 / 1,195 / 1,735 mW at 12 / 102 / 255. At 255 the Pixel dims the
+   panel by itself once the battery is ~33 °C (thermal status still 0), so long runs at maximum
+   brightness measure a dimmer screen; check the display rail per run.
 
 ## 4. Estimating a scene's cost
 
@@ -213,8 +236,9 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
 While a scene moves (from the keyboard showing or the last touch, for Keep Moving For, and not
 while typing within Pause After Typing):
 
-- **Refresh free, window path, 5–8 fps** (every default): **~180 mW**, measured flat (round 17:
-  178–187; round 13's single pair: 115 at 5 fps). Frame rate does not matter in this range.
+- **Refresh free, window path, 5–9 fps** (every default): **~180 mW**, measured flat (rounds 17
+  and 18: 153–199 at 5–9 fps and brightness 12–255; round 13's single pair: 115 at 5 fps). Neither
+  frame rate nor brightness matters in this range.
 - **Refresh free, window path, 10 fps:** measured +340–374 mW (rounds 13, 14). 12 and 15 fps
   are unmeasured; the old two-point fit `8 mJ × fps + 373 mW × (1 − i)^1.67`, with
   `i = max(0, gap − 80 ms) / gap`, gives 444 and 493 there and is wrong below 10 fps.
@@ -231,9 +255,10 @@ in mW; measured in bold, otherwise estimate.
 
 | Frame rate | Refresh free | Refresh pinned / ARR | Scenes at this own rate |
 |---|---|---|---|
-| 5 fps | **115–183** (round 17: 183) | 62 | Aurora, River rocks |
+| 5 fps | **153–199** (rounds 17–18; round 13: 115) | 62 | Aurora, River rocks |
 | 7 fps | **178** | 86 | Stream, Meadow, Forest |
 | 8 fps | **187** | 98 (**92** Stream at 7.6) | Snow, Beach |
+| 9 fps | **187** | 111 | — |
 | 10 fps | **340–374** | **123–130** | — (Aurora layers: **152–197**) |
 | 12 fps | ~444 (old fit) | **142–148** | — |
 | 15 fps | ~493 (old fit) | 184 | — |
@@ -268,8 +293,11 @@ floats per pixel serves every image of a painting (it was six arrays per image):
 1008 × 840 fell from 65–86 MB to 14–34 MB per scene with byte-identical output (SHA-256 of every
 image unchanged, all six painted scenes).
 
-Estimate: ~153 mW per unit of mean light at brightness 102 (55 mW / (0.374 − 0.0145)), and a
-quarter of that at brightness 12 (display baseline 272 vs 1,080 mW). Not measured directly.
+Estimate: ~153 mW per unit of mean light at brightness 102 (55 mW / (0.374 − 0.0145)), a quarter
+of that at brightness 12 (display baseline 272 vs 1,080 mW) and ~233 mW at 255 (baseline 1,552 vs
+1,020 mW, round 18). Checked once at 255: Meadow's still screen drew +84 mW over Aurora's, as
+predicted (round 18, one run); so True Black saves ~70–80 mW for Meadow and Beach at maximum
+brightness.
 
 ## 5. Levers, in order of effect (refresh free)
 
@@ -284,9 +312,8 @@ quarter of that at brightness 12 (display baseline 272 vs 1,080 mW). Not measure
 Ideas not built: hardware layers for the other cross-fade scenes (needs the mesh/FLOW layers
 and drifting particles composited elsewhere); a shorter default Keep Moving For or a longer
 Pause After Typing (`docs/eval/2026-11-12-scene-battery-day.md` §8); measuring on an ARR phone;
-an untouched run at brightness 102 (every refresh-free motion number is at brightness 12);
-9 fps, to find where the step between 8 and 10 lies; tablet power (needs a rooted tablet or
-battery-current sampling unplugged).
+tablet power (needs a rooted tablet or battery-current sampling unplugged; round 18's proxy runs
+measured the show-path stall instead, §3.2.8).
 
 **Smoothness at the default rates** (absolute per-frame ceilings, round 17 review; the earlier
 bounds scaled with the frame interval and so loosened as the rate fell): every layer point

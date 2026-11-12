@@ -431,7 +431,7 @@
     <string name="appearance_look_motion_fps_scene">Podle scény</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Prolínání hardwarem displeje</string>
-    <string name="appearance_look_scene_overlay_desc">Polární záři pohybuje hardware displeje místo překreslování klávesnice, což šetří baterii; vypněte, pokud záře vypadá špatně</string>
+    <string name="appearance_look_scene_overlay_desc">Při 10 snímcích za sekundu a více polární záři pohybuje hardware displeje místo překreslování klávesnice, což šetří baterii; vypněte, pokud záře vypadá špatně</string>
     <string name="appearance_look_scene_crisp_title">Ostré scény</string>
     <string name="appearance_look_scene_crisp_desc">Polární záři, potok a sníh kreslit v plném rozlišení: jemnější paprsky a vlnky, o něco více paměti</string>
     <string name="appearance_look_scene_true_black_title">Scény v čisté černé</string>

@@ -432,7 +432,7 @@
     <string name="appearance_look_motion_fps_scene">A jelenet szerint</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Keverés a kijelző hardverével</string>
-    <string name="appearance_look_scene_overlay_desc">A kijelző hardvere mozgatja a sarki fényt a billentyűzet újrarajzolása helyett, így kevesebb az akkumulátorhasználat; kapcsolja ki, ha a sarki fény rosszul jelenik meg</string>
+    <string name="appearance_look_scene_overlay_desc">Másodpercenként legalább 10 képkockánál a kijelző hardvere mozgatja a sarki fényt a billentyűzet újrarajzolása helyett, így kevesebb az akkumulátorhasználat; kapcsolja ki, ha a sarki fény rosszul jelenik meg</string>
     <string name="appearance_look_scene_crisp_title">Éles jelenetek</string>
     <string name="appearance_look_scene_crisp_desc">A sarki fény, a patak és a hó teljes felbontásban: finomabb sugarak és fodrok, kicsivel több memória</string>
     <string name="appearance_look_scene_true_black_title">Jelenetek valódi feketén</string>

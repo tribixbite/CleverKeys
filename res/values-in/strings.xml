@@ -436,7 +436,7 @@
     <string name="appearance_look_motion_fps_scene">Bawaan adegan</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Padukan dengan perangkat keras layar</string>
-    <string name="appearance_look_scene_overlay_desc">Perangkat keras layar menggerakkan aurora alih-alih keyboard menggambar ulang, sehingga lebih hemat baterai; matikan jika aurora tampak salah</string>
+    <string name="appearance_look_scene_overlay_desc">Pada 10 frame per detik atau lebih, perangkat keras layar menggerakkan aurora alih-alih keyboard menggambar ulang, sehingga lebih hemat baterai; matikan jika aurora tampak salah</string>
     <string name="appearance_look_scene_crisp_title">Adegan tajam</string>
     <string name="appearance_look_scene_crisp_desc">Gambar aurora, sungai kecil, dan salju dalam resolusi penuh: sinar dan riak lebih halus, sedikit lebih banyak memori</string>
     <string name="appearance_look_scene_true_black_title">Adegan hitam pekat</string>

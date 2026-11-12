@@ -442,7 +442,7 @@
     <string name="appearance_look_motion_fps_scene">Як у сцени</string>
     <string name="appearance_look_motion_fps_value">%1$d кадр/с</string>
     <string name="appearance_look_scene_overlay_title">Змішування засобами дисплея</string>
-    <string name="appearance_look_scene_overlay_desc">Сяйво рухає апаратура дисплея, а не перемальовування клавіатури, тож батарея витрачається менше; вимкніть, якщо сяйво виглядає неправильно</string>
+    <string name="appearance_look_scene_overlay_desc">Від 10 кадрів на секунду сяйво рухає апаратура дисплея, а не перемальовування клавіатури, тож батарея витрачається менше; вимкніть, якщо сяйво виглядає неправильно</string>
     <string name="appearance_look_scene_crisp_title">Чіткі сцени</string>
     <string name="appearance_look_scene_crisp_desc">Малювати сяйво, струмок і сніг у повній роздільності: тонші промені та брижі, трохи більше пам’яті</string>
     <string name="appearance_look_scene_true_black_title">Сцени на чисто чорному</string>

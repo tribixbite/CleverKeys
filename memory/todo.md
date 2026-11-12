@@ -1492,6 +1492,27 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (`FoldStateTracker`, `KeyboardHeightPrefs`). Open: device check of the fix (first show after
     rotation builds layers), the Blend setting's text (says it saves battery; true only at 10+
     fps; 21 locales), brightness-102 untouched run, 9 fps, tablet power.
+    Eighteenth round (2026-11-12, maintainer: close the gaps; a user from this phone's app time,
+    keyboard always up in chat apps and once per 10 min in media apps; measure max brightness).
+    Pixel, Aurora, untouched, refresh free, Keep Moving For 600 s, 14 × 5 min mirrored + Meadow
+    ABBA at 255 (runs 7–18 resumed after the dev phone joined the car's Android Auto Wi-Fi mid-run
+    7; failed attempts kept in `b18/fail1`). Motion at 5 fps: +153 / +199 / +180 mW at brightness
+    12 / 102 / 255 (display +77 / +84 / +89, the rest CPU); 9 fps +187 → **flat 5–9 fps, at any
+    brightness**; the step is between 9 and 10. Still picture at 255: Meadow +84 mW over Aurora
+    (model predicted 84; one run — the other three Meadow runs are void, the Pixel dimmed the panel
+    at a 33 °C battery with thermal status 0). Blend text now says "at 10 frames per second or
+    more" in all 22 files. Real-phone user (`dumpsys usagestats`, 15 days, categories only,
+    model `OWNER_*`): chat 85.8 min/day keyboard up (48 launches) → 38 min moving; 36 searches →
+    2 min; aurora ~0.63 %/day at any brightness, Meadow 0.73 / 1.07 / 1.30 at 12 / 102 / 255,
+    0.76 at 255 with True Black. Tablet: proxy runs (render rate, CPU, frames) found **0 frames
+    on show after CK Settings had been open** — diag logs: `startTicking` ran, the
+    `scheduleSelf` Choreographer callback never did until a key press drew a frame; the first
+    tick now goes through `mainHandler` (`firstTick`). Pixel motion re-checked with it; **not yet
+    confirmed on the tablet** (a child was using it: YouTube Kids came to the front mid-test; up
+    to six Back presses and two Chrome launches reached that session, then all tablet work
+    stopped). Tablet left with a diagnostic build (CKDIAG logs, same fix) and Keep Moving For
+    600 s; to do when free: install the release, show after Settings (expect frames), restore
+    Keep Moving For 20 s. Tablet power: still unmeasured.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

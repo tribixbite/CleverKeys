@@ -635,7 +635,7 @@
     <string name="appearance_look_motion_fps_scene">Scene default</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Blend on Display Hardware</string>
-    <string name="appearance_look_scene_overlay_desc">The display hardware moves the aurora instead of the keyboard redrawing it, using less battery; turn off if the aurora looks wrong</string>
+    <string name="appearance_look_scene_overlay_desc">At 10 frames per second or more, the display hardware moves the aurora instead of the keyboard redrawing it, using less battery; turn off if the aurora looks wrong</string>
     <string name="appearance_look_scene_crisp_title">Sharp Scenes</string>
     <string name="appearance_look_scene_crisp_desc">Paint the aurora, stream and snow at full resolution: finer rays and ripples, a little more memory</string>
     <string name="appearance_look_scene_true_black_title">True Black Scenes</string>

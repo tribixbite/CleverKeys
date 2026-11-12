@@ -451,7 +451,7 @@
     <string name="appearance_look_motion_fps_scene">Ca scena</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Îmbinare prin hardware-ul ecranului</string>
-    <string name="appearance_look_scene_overlay_desc">Hardware-ul ecranului mișcă aurora în loc ca tastatura să o redeseneze, consumând mai puțină baterie; dezactivați dacă aurora arată greșit</string>
+    <string name="appearance_look_scene_overlay_desc">De la 10 cadre pe secundă în sus, hardware-ul ecranului mișcă aurora în loc ca tastatura să o redeseneze, consumând mai puțină baterie; dezactivați dacă aurora arată greșit</string>
     <string name="appearance_look_scene_crisp_title">Scene clare</string>
     <string name="appearance_look_scene_crisp_desc">Desenează aurora, pârâul și zăpada la rezoluție completă: raze și unduiri mai fine, puțin mai multă memorie</string>
     <string name="appearance_look_scene_true_black_title">Scene în negru pur</string>

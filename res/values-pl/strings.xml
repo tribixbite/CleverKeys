@@ -441,7 +441,7 @@
     <string name="appearance_look_motion_fps_scene">Według sceny</string>
     <string name="appearance_look_motion_fps_value">%1$d kl./s</string>
     <string name="appearance_look_scene_overlay_title">Mieszanie sprzętem ekranu</string>
-    <string name="appearance_look_scene_overlay_desc">Zorzę porusza sprzęt ekranu zamiast przerysowywania klawiatury, co oszczędza baterię; wyłącz, jeśli zorza wygląda źle</string>
+    <string name="appearance_look_scene_overlay_desc">Od 10 klatek na sekundę zorzę porusza sprzęt ekranu zamiast przerysowywania klawiatury, co oszczędza baterię; wyłącz, jeśli zorza wygląda źle</string>
     <string name="appearance_look_scene_crisp_title">Ostre sceny</string>
     <string name="appearance_look_scene_crisp_desc">Rysuj zorzę, strumień i śnieg w pełnej rozdzielczości: drobniejsze promienie i zmarszczki, trochę więcej pamięci</string>
     <string name="appearance_look_scene_true_black_title">Sceny w czystej czerni</string>

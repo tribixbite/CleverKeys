@@ -4,19 +4,21 @@
 in that directory; it writes every table to `tables.md` beside itself). First drafted by a Fable
 review agent from the measurements in `docs/specs/scene-backdrops-and-power.md` (rounds 6–16);
 revised the same day with round 17, which measured the window path flat from 5 to 8 fps (~180 mW)
-where the earlier model interpolated 121 / 198 / 241 mW. Usage numbers are assumptions; every
-physical constant in the script is tagged MEASURED or MODEL.
+where the earlier model interpolated 121 / 198 / 241 mW, and with round 18 (9 fps on the same flat;
+the motion cost independent of brightness; the still picture at maximum brightness), plus a user
+modelled on a real phone's app time (§3.1). Usage numbers are assumptions; every physical
+constant in the script is tagged MEASURED or MODEL.
 
 ## 1. Inputs
 
 | Input | Value | Kind |
 |---|---|---|
 | Battery | 19.5 Wh; 1 % = 702 J; 195 mW ≈ 1 %/h | spec §4.1 |
-| Any scene moving at its default rate (5–8 fps), window path, refresh free, brightness 12 | **~180 mW** (115–190) | measured, rounds 13 and 17 |
+| Any scene moving at its default rate (5–8 fps; 9 fps too), window path, refresh free, any brightness | **~180 mW** (150–200) | measured, rounds 17 and 18 (153 / 199 / 180 at brightness 12 / 102 / 255); round 13's 115 is the outlier |
 | Aurora on display-hardware layers (Frame Rate 10+ only since round 17) | 150–190 mW | measured, rounds 13, 14, 16, 17 |
 | Window path at 10 fps / 12 fps | 340–374 / ~444 mW | measured / old fit |
 | Refresh pinned or an ARR panel | 12.3 mJ per frame | measured pinned (round 12); ARR assumed |
-| Still-picture light | 153 mW per unit of mean linear light at brightness 102, a quarter at 12 | model from one measured pair (spec §4.3) |
+| Still-picture light | 153 mW per unit of mean linear light at brightness 102, a quarter at 12, ~233 at 255 | model from one measured pair (spec §4.3); checked at 255 (Meadow +84 mW measured and predicted, round 18) |
 | Cross-device | Note10+ and Saga paid 0.53–0.58× the Pixel in round 9 (typing, 10 fps) | measured, other meters |
 
 ## 2. Motion gating as built
@@ -43,18 +45,48 @@ US connection a day (CTIA 2024; 32–47 in marketing compilations), 36 WPM avera
 | Keyboard up while reading | 30 short opens plus 6 × 10 min with the keyboard up and untouched | 78 min | 17 min |
 | Tuner | the heavy chatter with Keep Moving For 60 s and Frame Rate 12 | 209 min | 168 min |
 
+### 3.1 A user from a real phone's app time
+
+`dumpsys usagestats` (in-memory monthly stats, 15.05 days to 2026-11-12) on the maintainer's own
+phone, developer tools left out, grouped by category only. The keyboard rule is the maintainer's:
+in chat apps the keyboard is up the whole time; in browsing, maps, media and shopping apps it
+opens once per 10 minutes of use; the search app's launches are one search each.
+
+| Category | Visible per day | Launches per day | Keyboard |
+|---|---|---|---|
+| Chat apps | 85.8 min | 48 | up the whole time: 85 min visible, 38 min moving (27–59 for 0.5–3 messages per launch) |
+| Browsing, maps, media, shopping | 218.8 min | 126 | 22 opens + 15 searches = 36 a day, hidden ~2 s after the last key: 1.9 min moving |
+| No keyboard (launchers, camera, clock, car, home cameras) | 69.6 min | 206 | none |
+
+Of the 85 minutes the keyboard is up in chat, it moves for 38: each launch and each message buys
+at most one ~22-s spell, and scrolling the chat does not touch the keyboard. The 4× longer
+browsing time adds almost nothing, because a search hides the keyboard before a spell can run.
+
 ## 4. Extra battery per day
 
-Refresh free, brightness 102, True Black off, as-built defaults (round 17). % of a 19.5 Wh
+Refresh free, brightness 102, True Black off, as-built defaults (rounds 17–18). % of a 19.5 Wh
 battery per day, central (low–high, the measurement spread, not the usage uncertainty):
 
 | Story | Aurora | River rocks | Stream | Forest | Snow | Meadow | Beach |
 |---|---|---|---|---|---|---|---|
-| Light user | 0.16 (0.11–0.17) | 0.18 | 0.18 | 0.18 | 0.20 | 0.25 | 0.23 |
-| Heavy chatter | 1.32 (0.86–1.39) | 1.42 | 1.49 | 1.48 | 1.66 | 2.04 (1.57–2.11) | 1.89 |
+| Light user | 0.16 (0.14–0.18) | 0.18 | 0.18 | 0.18 | 0.20 | 0.25 | 0.23 |
+| Heavy chatter | 1.32 (1.11–1.47) | 1.42 | 1.49 | 1.48 | 1.66 | 2.04 (1.82–2.18) | 1.89 |
 | Writer | 0.47 | 0.52 | 0.57 | 0.56 | 0.66 | 0.88 | 0.79 |
 | Keyboard up while reading | 0.28 | 0.33 | 0.36 | 0.36 | 0.45 | 0.64 | 0.57 |
+| Real phone's user (§3.1) | 0.63 (0.53–0.70) | 0.69 | 0.74 | 0.73 | 0.84 | 1.07 | 0.98 |
 | Tuner (60 s, 12 fps) | 6.4 (layers: 2.6) | 6.6 | 6.7 | 6.7 | 6.9 | 7.4 | 7.2 |
+
+By brightness (aurora / Meadow; only the still picture changes, the motion does not):
+
+| Story | brightness 12 | 102 | 255 | 255 with True Black |
+|---|---|---|---|---|
+| Light user | 0.16 / 0.18 | 0.16 / 0.25 | 0.16 / 0.30 | |
+| Heavy chatter | 1.30 / 1.48 | 1.32 / 2.04 | 1.34 / 2.43 | |
+| Writer | 0.45 / 0.56 | 0.47 / 0.88 | 0.47 / 1.10 | |
+| Real phone's user | 0.62 / 0.73 | 0.63 / 1.07 | 0.64 / 1.30 | 0.63 / 0.76 |
+
+For the real phone's user at maximum brightness, Meadow's still picture costs as much as its
+motion (0.134 vs 0.120 Wh a day); for the aurora the picture is 4 %.
 
 In screen-on minutes (at 2.0 W): light user about 1–1.5 min a day, heavy chatter 8–12 min,
 writer 3–5 min, reader 2–4 min, tuner 15–43 min. The themes differ mainly by the light of their
@@ -86,16 +118,20 @@ Animated scenes off (tables in `tables.md`).
 ## 7. Uncertainties, largest first
 
 1. **Usage.** Everything scales with seconds of motion; nothing public measures keyboard-up time.
-2. **Brightness.** Every refresh-free motion measurement was at brightness 12. The display share
-   is assumed brightness-independent (it is the panel kept refreshing, not emission); one
-   untouched run at brightness 102 would settle it. If it scaled with emission, the motion
-   figures would roughly triple.
-3. **The 5-fps window point** varies between rounds (115 in round 13, 183 in round 17); the band
-   carries both. 12 and 15 fps are unmeasured (old fit).
+   §3.1 replaces the guess with one real phone's app time, but the keyboard rule per category
+   (always up in chat, once per 10 minutes elsewhere) and the messages per launch are still
+   assumptions (0.5–3 per launch moves that user from 0.46 to 0.96 %/day).
+2. **Brightness: settled (round 18).** Motion costs +153 / +199 / +180 mW at brightness 12 /
+   102 / 255; its display share +77 / +84 / +89. Only the still picture scales with brightness,
+   and the model's prediction for it at 255 matched one measurement (+84 mW).
+3. **The 5-fps window point** now has six measurements at 153–199 (rounds 17–18) against round
+   13's single 115; the band is 150–200. 12 and 15 fps are unmeasured (old fit).
 4. **Other phones.** A fixed-60 Hz panel has no idle to lose: the pinned column applies (heavy
-   chatter 0.5–1.4 %/day). An ARR panel should land near it; none measured. A tablet whose
-   display hardware has few planes composed the aurora's layers on the GPU at 120 Hz, which is why
-   the layers now start only at 10 fps.
+   chatter 0.5–1.4 %/day). An ARR panel should land near it; none measured. The real phone of
+   §3.1 is a Galaxy S25 Ultra (LTPO, adaptive refresh): its own motion cost is not measured (it is
+   the development phone, never used for UI tests). A tablet whose display hardware has few planes
+   composed the aurora's layers on the GPU at 120 Hz, which is why the layers now start only at
+   10 fps; its power is not measured (no rails, full on AC).
 
 ## 8. Defaults the numbers do or do not support
 
@@ -108,11 +144,12 @@ Heavy chatter, % per day (central), Aurora / Meadow:
 | Keep Moving For 10 s | 0.75 | 1.46 |
 | Pause After Typing 3 s | 1.21 | 1.92 |
 
-1. **Frame rates 5–8 fps cost the same**, so the rate there is a smoothness choice, not a power
+1. **Frame rates 5–9 fps cost the same**, so the rate there is a smoothness choice, not a power
    one; 10 fps and above cost ~160 mW more while moving.
 2. **Keep Moving For 20 → 10 s** saves the heavy chatter ~0.6 %/day and the light user ~0.06; a
    taste decision, not one the numbers force (the slider already goes down to 5 s).
 3. **Pause After Typing 1 → 3 s** halves the writer's cost (0.47 → 0.24 %/day for the aurora) and
    changes little for anyone else; the 1 s was the maintainer's choice.
-4. **True Black** saves as much for the bright scenes as every motion lever together; worth a line
-   in the Scenes settings text.
+4. **True Black** saves as much for the bright scenes as every motion lever together, and more at
+   high brightness (the real phone's user with Meadow at 255: 1.30 → 0.76 %/day); worth a line in
+   the Scenes settings text.

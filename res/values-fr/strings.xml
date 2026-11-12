@@ -434,7 +434,7 @@
     <string name="appearance_look_motion_fps_scene">Selon la scène</string>
     <string name="appearance_look_motion_fps_value">%1$d i/s</string>
     <string name="appearance_look_scene_overlay_title">Fondu par le matériel d\'affichage</string>
-    <string name="appearance_look_scene_overlay_desc">Le matériel d\'affichage anime l\'aurore au lieu de redessiner le clavier, ce qui économise la batterie ; désactivez si l\'aurore s\'affiche mal</string>
+    <string name="appearance_look_scene_overlay_desc">À partir de 10 images par seconde, le matériel d\'affichage anime l\'aurore au lieu de redessiner le clavier, ce qui économise la batterie ; désactivez si l\'aurore s\'affiche mal</string>
     <string name="appearance_look_scene_crisp_title">Scènes nettes</string>
     <string name="appearance_look_scene_crisp_desc">Dessiner l’aurore, le ruisseau et la neige en pleine résolution : rayons et ondulations plus fins, un peu plus de mémoire</string>
     <string name="appearance_look_scene_true_black_title">Scènes en noir pur</string>

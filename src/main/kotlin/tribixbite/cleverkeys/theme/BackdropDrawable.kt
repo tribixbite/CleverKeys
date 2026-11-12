@@ -115,6 +115,8 @@ class BackdropDrawable(
     private val clock = AuroraMotionClock()
     private var ticking = false
     private val tick = Runnable { onTick() }
+    /** The first tick after a start, posted on the main Handler ([startTicking]). */
+    private val firstTick = Runnable { onTick() }
     /** When [motionGate] was last asked while moving (uptime ms). */
     private var gateCheckedAt = 0L
     /** When [motionGate] last said no ([NEVER]: it has not, or said yes since). */
@@ -243,7 +245,13 @@ class BackdropDrawable(
         }
         gateDeniedAt = NEVER
         ticking = true
-        scheduleSelf(tick, now)
+        // The first tick through the main Handler, the rest through scheduleSelf: on a Galaxy Tab
+        // S11 (Android 16) a show right after CleverKeys Settings had been open posted the tick as
+        // a Choreographer animation callback that no frame ever ran, so the scene stayed still
+        // until a key press drew a frame (round 18, 2026-11-12).
+        // TODO: confirm on the tablet that a show after Settings now moves (diagnosed with logs,
+        //  the fix itself not yet run there: the tablet was in use).
+        mainHandler.post(firstTick)
         // Every start (the keyboard showing, a key press or swipe after a rest) brings the
         // hardware layers back: they were released when the backdrop came to rest.
         syncOverlay()
@@ -255,7 +263,10 @@ class BackdropDrawable(
      * memory for them.
      */
     fun stopMotion() {
-        if (ticking) unscheduleSelf(tick)
+        if (ticking) {
+            unscheduleSelf(tick)
+            mainHandler.removeCallbacks(firstTick)
+        }
         ticking = false
         clock.rest()
         releaseParticleNodes()

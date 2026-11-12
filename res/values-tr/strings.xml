@@ -435,7 +435,7 @@
     <string name="appearance_look_motion_fps_scene">Sahnenin varsayılanı</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Ekran donanımıyla karıştır</string>
-    <string name="appearance_look_scene_overlay_desc">Kutup ışığını klavyenin yeniden çizmesi yerine ekran donanımı hareket ettirir, daha az pil kullanır; kutup ışığı yanlış görünürse kapatın</string>
+    <string name="appearance_look_scene_overlay_desc">Saniyede 10 kare ve üzerinde kutup ışığını klavyenin yeniden çizmesi yerine ekran donanımı hareket ettirir, daha az pil kullanır; kutup ışığı yanlış görünürse kapatın</string>
     <string name="appearance_look_scene_crisp_title">Keskin sahneler</string>
     <string name="appearance_look_scene_crisp_desc">Kutup ışığını, dereyi ve karı tam çözünürlükte çiz: daha ince ışınlar ve dalgacıklar, biraz daha fazla bellek</string>
     <string name="appearance_look_scene_true_black_title">Saf siyah sahneler</string>

@@ -46,9 +46,11 @@ J_PER_PERCENT = BATTERY_WH * 3600 / 100  # 702 J per 1 % of battery
 
 # Still-picture light cost (spec §4.3): ~153 mW per unit of mean linear light at brightness 102
 # (from the MEASURED +55 mW of Meadow's screen vs Aurora's at 102), scaled by the display's
-# emission baseline at brightness 12 (272 vs 1,080 mW, MEASURED round 12). "Not measured
-# directly" per the spec: tag MODEL.
-LIGHT_MW_PER_UNIT = {102: 153.0, 12: 153.0 * 272 / 1080}
+# emission baseline at brightness 12 (272 vs 1,080 mW, MEASURED round 12) and at 255 (1,552 vs
+# 1,020 mW on VSYS_PWR_DISPLAY with motion off, MEASURED round 18). MODEL; at 255 it predicts
+# Meadow's still picture at +84 mW over Aurora's and round 18 measured +83.5 (one run).
+LIGHT_MW_PER_UNIT = {102: 153.0, 12: 153.0 * 272 / 1080, 255: 153.0 * 1552 / 1020}
+BRIGHTNESSES = (12, 102, 255)
 
 # ----------------------------------------------------------------------------------------
 # Motion gating defaults (code, see docstring)
@@ -64,17 +66,21 @@ HOLD_EASE_S = 0.25         # frames drawn while slowing to a stop at a key press
 PANEL_IDLE_TIMER_MS = 80.0  # ro.surface_flinger.set_idle_timer_ms (MEASURED/read on the Pixel)
 
 
-# Window path from 5 to 8 fps: MEASURED flat (round 17, 2 runs per arm: +183 at 5 fps, +178 at
-# 7, +187 at 8; landscape 5 fps +169/+174; round 13's single pair gave +115 at 5 fps). The panel
-# rests between frames at every rate in that range; the §4.1 curve (121 / 198 / 241) was wrong
-# between its 5- and 10-fps anchors.
-WINDOW_FLAT_MW = (115.0, 180.0, 190.0)   # low, central, high, for frame intervals >= 125 ms
+# Window path from 5 to 9 fps: MEASURED flat. Round 17 (2 runs per arm, brightness 12): +183 at
+# 5 fps, +178 at 7, +187 at 8; landscape 5 fps +169/+174. Round 18 (2 runs per arm, mirrored):
+# 5 fps +153 at brightness 12, +199 at 102, +180 at 255; 9 fps +187 at 12. The motion's display
+# share (three display rails) is +77 / +84 / +89 mW at 12 / 102 / 255: it is the panel kept
+# refreshing, nearly independent of brightness. Round 13's single pair (+115 at 5 fps) is the
+# outlier and no longer sets the low end. The §4.1 curve (121 / 198 / 241) was wrong between its
+# 5- and 10-fps anchors.
+WINDOW_FLAT_MW = (150.0, 180.0, 200.0)   # low, central, high, for frame intervals >= 111 ms
+WINDOW_FLAT_MIN_FRAME_MS = 111.0          # 9 fps, the fastest rate measured on the flat
 
 
 def window_path_refresh_free_mw(frame_ms: float) -> float:
     """Spec §4.1 two-point fit of round 13 (5 fps -> 81 mW display, 10 fps -> 257) plus
-    ~8 mJ of compute per frame. MODEL, used only above 8 fps (10 fps measured +340-374;
-    12 and 15 fps unmeasured); 5-8 fps use WINDOW_FLAT_MW."""
+    ~8 mJ of compute per frame. MODEL, used only above 9 fps (10 fps measured +340-374;
+    12 and 15 fps unmeasured); 5-9 fps use WINDOW_FLAT_MW."""
     fps = 1000.0 / frame_ms
     idle_share = max(0.0, frame_ms - PANEL_IDLE_TIMER_MS) / frame_ms
     return 8.0 * fps + 373.0 * (1.0 - idle_share) ** 1.67
@@ -124,7 +130,7 @@ class Theme:
             # frames (round 13: ~2.2 mJ/frame on layers = (26-15)/5 mW per fps).
             extra = 2.2 * (1000.0 / fm - 10.0)
             return tuple(v + extra for v in AURORA_LAYERS_MW)  # type: ignore[return-value]
-        if fm >= 125:
+        if fm >= WINDOW_FLAT_MIN_FRAME_MS - 0.5:
             return WINDOW_FLAT_MW
         p = window_path_refresh_free_mw(fm)
         return (p * (1 - WINDOW_BAND), p, p * (1 + WINDOW_BAND))
@@ -296,6 +302,28 @@ TUNER = replace(HEAVY, name="Heavy chatter, Keep Moving For 60 s + 12 fps", idle
                 up_after_burst_s=45)
 STORIES: list[Story] = [LIGHT, HEAVY, WRITER, READER, TUNER]
 
+# A real phone's app time (MEASURED: `dumpsys usagestats`, in-memory monthly stats, 15.05 days to
+# 2026-11-12, the maintainer's own phone, developer tools such as Termux left out; categories only,
+# no app names). Keyboard use per category is the maintainer's rule (ASSUMPTION):
+#   chat apps           85.8 min/day visible, 48 launches/day: the keyboard is up the whole time
+#   browsing, maps,     218.8 min/day: the keyboard opens once per 10 minutes of use (22 opens),
+#   media, shopping     plus the search app's 14.9 launches/day, one search each -> 36 opens/day
+#   no keyboard         69.6 min/day (launchers, camera, clock, car, home cameras): nothing
+# Chat: per launch, ~15 s of reading before the first key (the show spell runs until then), 1.5
+# messages of ~10 s, then the keyboard stays up while reading (51 s, so the visible total matches
+# 85.8 min); every message ends in a full spell. Searches: the keyboard hides ~2 s after the last key.
+DEVICE_DAYS = 15.05
+OWNER_CHAT = Story("Owner's phone: chat apps, keyboard always up", opens=48, bursts_per_open=1.5,
+                   typing_s=10, first_key_after_show_s=15, up_after_burst_s=51)
+OWNER_SEARCH = Story("Owner's phone: browsing, maps, media (one search per 10 min)", opens=36,
+                     bursts_per_open=1.0, typing_s=8, first_key_after_show_s=2, up_after_burst_s=2)
+OWNER_PARTS: list[Story] = [OWNER_CHAT, OWNER_SEARCH]
+# Message-rate band for the chat part: 0.5 / 1.5 / 3 messages per launch, the low and high ends
+# also reading through the whole show spell before the first key.
+OWNER_CHAT_BAND = (replace(OWNER_CHAT, bursts_per_open=0.5, first_key_after_show_s=22.5, up_after_burst_s=158),
+                   OWNER_CHAT,
+                   replace(OWNER_CHAT, bursts_per_open=3.0, first_key_after_show_s=22.5, up_after_burst_s=18))
+
 
 # ----------------------------------------------------------------------------------------
 # Tables
@@ -348,12 +376,12 @@ def true_black_table(story: Story) -> list[str]:
     out = [f"**{story.name}**, still-light cost of the picture while the keyboard is visible "
            f"({story.visible_seconds() / 60:.0f} min/day), vs a black keyboard, Wh/day (% of battery)",
            "",
-           "| Theme | brightness 12 | brightness 12, True Black | brightness 102 | brightness 102, True Black |",
-           "|---|---|---|---|---|"]
+           "| Theme | " + " | ".join(f"brightness {b} | brightness {b}, True Black" for b in BRIGHTNESSES) + " |",
+           "|---|" + "---|---|" * len(BRIGHTNESSES)]
     vis = story.visible_seconds()
     for t in THEMES:
         cells = []
-        for b in (12, 102):
+        for b in BRIGHTNESSES:
             for tb in (False, True):
                 wh = t.still_light_mw(b, tb) * vis / 1000 / 3600
                 cells.append(f"{wh:.3f} ({wh * 3600 / J_PER_PERCENT:.2f} %)")
@@ -429,6 +457,47 @@ def summary_matrix(stories: Iterable[Story]) -> list[str]:
     return out
 
 
+def owner_cost(theme: Theme, brightness: int, chat: Story = OWNER_CHAT, true_black: bool = False) -> Cost:
+    """The owner's phone's day: the chat part plus the search part, summed."""
+    parts = [replace(chat, brightness=brightness, true_black=true_black),
+             replace(OWNER_SEARCH, brightness=brightness, true_black=true_black)]
+    costs = [cost(s, theme) for s in parts]
+    motion = tuple(sum(c.motion_j[i] for c in costs) for i in range(3))
+    return Cost(motion, sum(c.light_j for c in costs))  # type: ignore[arg-type]
+
+
+def owner_tables() -> list[str]:
+    """The example user deduced from a real phone's app time (OWNER_* above)."""
+    out = ["## Example user from a real phone's app time", "",
+           f"From {DEVICE_DAYS} days of `dumpsys usagestats` on the maintainer's phone (developer tools left out): "
+           "chat apps 85.8 min/day with the keyboard up the whole time (48 launches), browsing, maps, media "
+           "and shopping 218.8 min/day with one search per 10 minutes plus the search app's 14.9 searches "
+           "(36 keyboard opens), no keyboard 69.6 min/day.", ""]
+    out += usage_table(list(OWNER_CHAT_BAND) + [OWNER_SEARCH])
+    out += ["", "% of battery per day, central motion (motion band from the measurement spread); the chat-rate "
+            "column uses 0.5 / 3 messages per launch for its low / high", "",
+            "| Theme | " + " | ".join(f"brightness {b}" for b in BRIGHTNESSES)
+            + " | brightness 255, True Black | chat rate low–high at 102 |",
+            "|---|" + "---|" * (len(BRIGHTNESSES) + 2)]
+    for t in THEMES:
+        cells = []
+        for b in BRIGHTNESSES:
+            lo, mid, hi = owner_cost(t, b).pct()
+            cells.append(f"{mid:.2f} ({lo:.2f}–{hi:.2f})")
+        tb = owner_cost(t, 255, true_black=True).pct()[1]
+        lo_rate = owner_cost(t, 102, OWNER_CHAT_BAND[0]).pct()[1]
+        hi_rate = owner_cost(t, 102, OWNER_CHAT_BAND[2]).pct()[1]
+        out.append(f"| {t.name} | " + " | ".join(cells) + f" | {tb:.2f} | {lo_rate:.2f}–{hi_rate:.2f} |")
+    out += ["", "Same day split into motion and still light at brightness 255 (Wh/day):", "",
+            "| Theme | motion | still light | motion share |", "|---|---|---|---|"]
+    for t in THEMES:
+        c = owner_cost(t, 255)
+        m = c.motion_j[1] / 3600
+        light = c.light_j / 3600
+        out.append(f"| {t.name} | {m:.3f} | {light:.3f} | {100 * m / (m + light):.0f} % |")
+    return out + [""]
+
+
 def main() -> None:
     lines: list[str] = []
     lines += ["# Battery stories — computed tables", "",
@@ -453,6 +522,10 @@ def main() -> None:
     lines += ["## Same stories at brightness 12 (the measurement level) — only the still-light column changes", ""]
     for s in STORIES:
         lines += theme_table(replace(s, brightness=12)) + [""]
+    lines += ["## Same stories at brightness 255 (maximum) — only the still-light column changes", ""]
+    for s in STORIES:
+        lines += theme_table(replace(s, brightness=255)) + [""]
+    lines += owner_tables()
     lines += ["## True Black: still-light cost by brightness", ""]
     for s in (HEAVY, READER):
         lines += true_black_table(s) + [""]

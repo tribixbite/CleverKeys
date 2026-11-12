@@ -440,7 +440,7 @@
     <string name="appearance_look_motion_fps_scene">Kā ainai</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Sapludināt ar displeja aparatūru</string>
-    <string name="appearance_look_scene_overlay_desc">Displeja aparatūra kustina ziemeļblāzmu, nevis tastatūra to pārzīmē, tāpēc tiek patērēts mazāk akumulatora; izslēdziet, ja ziemeļblāzma izskatās nepareizi</string>
+    <string name="appearance_look_scene_overlay_desc">Pie 10 kadriem sekundē un vairāk displeja aparatūra kustina ziemeļblāzmu, nevis tastatūra to pārzīmē, tāpēc tiek patērēts mazāk akumulatora; izslēdziet, ja ziemeļblāzma izskatās nepareizi</string>
     <string name="appearance_look_scene_crisp_title">Asas ainas</string>
     <string name="appearance_look_scene_crisp_desc">Zīmēt ziemeļblāzmu, strautu un sniegu pilnā izšķirtspējā: smalkāki stari un viļņi, nedaudz vairāk atmiņas</string>
     <string name="appearance_look_scene_true_black_title">Ainas tīri melnā</string>

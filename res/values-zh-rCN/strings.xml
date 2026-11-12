@@ -423,7 +423,7 @@
     <string name="appearance_look_motion_fps_scene">场景默认</string>
     <string name="appearance_look_motion_fps_value">%1$d 帧/秒</string>
     <string name="appearance_look_scene_overlay_title">由显示硬件混合</string>
-    <string name="appearance_look_scene_overlay_desc">由显示硬件移动极光，键盘不再重绘，更省电；如果极光显示异常请关闭</string>
+    <string name="appearance_look_scene_overlay_desc">每秒 10 帧及以上时，由显示硬件移动极光，键盘不再重绘，更省电；如果极光显示异常请关闭</string>
     <string name="appearance_look_scene_crisp_title">清晰场景</string>
     <string name="appearance_look_scene_crisp_desc">以全分辨率绘制极光、溪流和雪景：光线和涟漪更细腻，多占用一点内存</string>
     <string name="appearance_look_scene_true_black_title">纯黑场景</string>

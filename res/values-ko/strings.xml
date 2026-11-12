@@ -425,7 +425,7 @@
     <string name="appearance_look_motion_fps_scene">장면 기본값</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">디스플레이 하드웨어로 합성</string>
-    <string name="appearance_look_scene_overlay_desc">키보드를 다시 그리는 대신 디스플레이 하드웨어가 오로라를 움직여 배터리를 덜 씁니다. 오로라가 이상하게 보이면 끄세요</string>
+    <string name="appearance_look_scene_overlay_desc">초당 10프레임 이상에서는 키보드를 다시 그리는 대신 디스플레이 하드웨어가 오로라를 움직여 배터리를 덜 씁니다. 오로라가 이상하게 보이면 끄세요</string>
     <string name="appearance_look_scene_crisp_title">선명한 장면</string>
     <string name="appearance_look_scene_crisp_desc">오로라, 시냇물, 눈을 최대 해상도로 그립니다. 빛줄기와 물결이 더 섬세해지고 메모리를 조금 더 씁니다</string>
     <string name="appearance_look_scene_true_black_title">완전한 검정 장면</string>

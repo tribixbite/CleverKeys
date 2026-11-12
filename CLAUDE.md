@@ -244,6 +244,12 @@ Galaxy Tab S11 put four extra layers AND the keyboard window on the GPU at 120 H
 Power vs frame rate on the Pixel is a step, not a line: 5, 7 and 8 fps all cost ~180 mW (round 17),
 10 fps ~350. Bound smoothness with absolute per-frame ceilings sampled densely; bounds scaled by the
 frame interval loosen as the rate falls and hid a visible beach wrap.
+Motion's cost does not depend on brightness (round 18: display share +77 / +84 / +89 mW at 12 /
+102 / 255); only the still picture does. At brightness 255 the Pixel dims the panel itself once the
+battery is ~33 °C, with thermal status still 0: check the display rail of every run. On a Galaxy
+Tab S11 the first `scheduleSelf` tick after a show never ran when CK Settings had been open (a
+Choreographer callback with no frame to run it); the first tick now goes through the main Handler.
+A frame counter that stays flat while the keyboard is up is the symptom; a key press "fixes" it.
 
 ## Compose produceState and CI lint (2026-11-12)
 

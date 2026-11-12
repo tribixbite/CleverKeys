@@ -462,7 +462,7 @@
     <string name="appearance_look_motion_fps_scene">پیش‌فرض صحنه</string>
     <string name="appearance_look_motion_fps_value">%1$d فریم/ثانیه</string>
     <string name="appearance_look_scene_overlay_title">ترکیب با سخت‌افزار نمایشگر</string>
-    <string name="appearance_look_scene_overlay_desc">سخت‌افزار نمایشگر شفق را حرکت می‌دهد و صفحه‌کلید دوباره کشیده نمی‌شود، پس باتری کمتری مصرف می‌شود؛ اگر شفق درست دیده نمی‌شود خاموشش کنید</string>
+    <string name="appearance_look_scene_overlay_desc">از ۱۰ فریم در ثانیه به بالا، سخت‌افزار نمایشگر شفق را حرکت می‌دهد و صفحه‌کلید دوباره کشیده نمی‌شود، پس باتری کمتری مصرف می‌شود؛ اگر شفق درست دیده نمی‌شود خاموشش کنید</string>
     <string name="appearance_look_scene_crisp_title">صحنه‌های واضح</string>
     <string name="appearance_look_scene_crisp_desc">شفق، جویبار و برف با وضوح کامل کشیده شوند: پرتوها و موج‌های ظریف‌تر، کمی حافظهٔ بیشتر</string>
     <string name="appearance_look_scene_true_black_title">صحنه‌ها با سیاه خالص</string>

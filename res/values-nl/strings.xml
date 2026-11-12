@@ -427,7 +427,7 @@
     <string name="appearance_look_motion_fps_scene">Zoals de scène</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Overvloeien met schermhardware</string>
-    <string name="appearance_look_scene_overlay_desc">De schermhardware beweegt het noorderlicht in plaats van dat het toetsenbord opnieuw tekent; dat bespaart batterij. Zet uit als het noorderlicht er verkeerd uitziet</string>
+    <string name="appearance_look_scene_overlay_desc">Vanaf 10 beelden per seconde beweegt de schermhardware het noorderlicht in plaats van dat het toetsenbord opnieuw tekent; dat bespaart batterij. Zet uit als het noorderlicht er verkeerd uitziet</string>
     <string name="appearance_look_scene_crisp_title">Scherpe scènes</string>
     <string name="appearance_look_scene_crisp_desc">Noorderlicht, beek en sneeuw op volle resolutie tekenen: fijnere stralen en rimpels, iets meer geheugen</string>
     <string name="appearance_look_scene_true_black_title">Scènes in echt zwart</string>

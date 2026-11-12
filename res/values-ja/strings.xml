@@ -424,7 +424,7 @@
     <string name="appearance_look_motion_fps_scene">シーンの既定</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">ディスプレイのハードウェアで合成</string>
-    <string name="appearance_look_scene_overlay_desc">キーボードを再描画せず、ディスプレイのハードウェアがオーロラを動かすので電池の消費が減ります。オーロラの表示がおかしい場合はオフにしてください</string>
+    <string name="appearance_look_scene_overlay_desc">毎秒10フレーム以上では、キーボードを再描画せず、ディスプレイのハードウェアがオーロラを動かすので電池の消費が減ります。オーロラの表示がおかしい場合はオフにしてください</string>
     <string name="appearance_look_scene_crisp_title">くっきりしたシーン</string>
     <string name="appearance_look_scene_crisp_desc">オーロラ、小川、雪をフル解像度で描画します。光線や波紋が細かくなり、メモリを少し多く使います</string>
     <string name="appearance_look_scene_true_black_title">純黒のシーン</string>

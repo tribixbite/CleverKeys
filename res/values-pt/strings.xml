@@ -428,7 +428,7 @@
     <string name="appearance_look_motion_fps_scene">Conforme a cena</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Mesclar no hardware da tela</string>
-    <string name="appearance_look_scene_overlay_desc">O hardware da tela move a aurora em vez de o teclado redesenhá-la, gastando menos bateria; desative se a aurora parecer errada</string>
+    <string name="appearance_look_scene_overlay_desc">A partir de 10 quadros por segundo, o hardware da tela move a aurora em vez de o teclado redesenhá-la, gastando menos bateria; desative se a aurora parecer errada</string>
     <string name="appearance_look_scene_crisp_title">Cenas nítidas</string>
     <string name="appearance_look_scene_crisp_desc">Desenhar a aurora, o riacho e a neve em resolução total: raios e ondulações mais finos, um pouco mais de memória</string>
     <string name="appearance_look_scene_true_black_title">Cenas em preto puro</string>

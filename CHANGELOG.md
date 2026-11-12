@@ -511,7 +511,10 @@ editor that used to be listed here already ship in 2.0.)
   default 5 they saved little on a Pixel and made a Galaxy tablet compose the whole keyboard on
   the graphics chip at 120 Hz. The first time the keyboard showed after turning the phone, the
   layers did not start until it showed again. A beach swell no longer jumps faintly back to the
-  horizon at the new frame rate.
+  horizon at the new frame rate. On a Galaxy tablet the scene sometimes stayed still when the
+  keyboard showed (after CleverKeys Settings had been open) until the first key press; it now
+  starts at once. The Blend on Display Hardware setting says that it applies from 10 frames per
+  second.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current
