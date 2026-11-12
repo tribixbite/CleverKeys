@@ -229,6 +229,13 @@ before its parent in the same frame (e.g. an edit mode that opens the label step
 ends up hidden UNDER the parent and taps look like no-ops. Compose sub-dialogs after the
 parent `Dialog` (CommandPaletteDialog, Saga 2026-10-07).
 
+## Compose produceState and CI lint (2026-11-12)
+
+CI's `lintDebug` fails `ProduceStateDoesNotAssignValue` on a `produceState` producer that
+returns early, and still did after it assigned `value` in one expression on every path (two red
+runs). Use `remember(key) { mutableStateOf(cached) }` + `LaunchedEffect(key)` instead; lint is
+too slow to run here (~45 min), so this check only shows up in CI.
+
 ## Compose "Recording currently in progress" crashes
 
 A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;
