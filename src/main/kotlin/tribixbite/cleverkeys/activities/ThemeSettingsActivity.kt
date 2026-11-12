@@ -903,8 +903,9 @@ private val scenePreviewCache: MutableMap<Triple<LookBackdrop, Int, Boolean>, Im
 private fun rememberScenePreview(backdrop: LookBackdrop, baseColor: Int, trueBlack: Boolean): ImageBitmap? {
     val key = Triple(backdrop, baseColor, trueBlack)
     val image by produceState(scenePreviewCache[key], key) {
-        if (value != null) return@produceState
-        value = withContext(Dispatchers.Default) {
+        // One assignment on every path (lint ProduceStateDoesNotAssignValue): the cached
+        // picture, or a new render.
+        value = scenePreviewCache[key] ?: withContext(Dispatchers.Default) {
             // A keyboard's proportions (411 × 260 dp) at a little over half a raster px per dp:
             // enough for the card's strip, cropped to its middle.
             val w = 240
