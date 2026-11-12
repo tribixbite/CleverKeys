@@ -66,6 +66,7 @@ review counts are not a current full-tree audit.
 | `gesture-system.md` | Gesture recognition | ✅ Implemented |
 | `layout-system.md` | Layout & extra keys (incl. `numpad_height`, GH #90), per-layout language/theme bindings, modified-layout cache | ✅ Implemented |
 | `foldable-keyboard-height.md` | Inner/outer-screen keyboard height on foldables | ✅ Implemented 2026-10-20 |
+| `scene-backdrops-and-power.md` | Scene backdrops (aurora, painted scenes): architecture, settings, every power/frame measurement, the cost model and estimates by scene / frame rate / path / brightness | ✅ Implemented 2026-11-12 |
 | `settings-system.md` | Settings & preferences | ✅ Implemented |
 | `settings-layout-integration.md` | Settings GUI mapping to the layout system | ✅ Implemented |
 | `performance-optimization.md` | Performance targets and strategies; `CleanupHandler` (no monitoring system exists) | 📖 Reference |

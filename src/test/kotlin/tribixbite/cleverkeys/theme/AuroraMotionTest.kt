@@ -358,6 +358,35 @@ class AuroraMotionTest {
         assertWithMessage("no movement, no twinkle: only the first frame").that(still).isEqualTo(1)
     }
 
+    /**
+     * The Frame Rate setting changes how often the scene is drawn, never how fast it moves: at
+     * 1 fps each 1 s tick advances 1 s of motion (a fixed 250 ms step cap made it quarter speed;
+     * Fable audit 2026-11-12), and a longer gap (the keyboard hidden) is still capped.
+     */
+    @Test
+    fun aLowFrameRateDoesNotSlowTheMotion() {
+        assertThat(AuroraMotionClock.stepCapFor(83L)).isEqualTo(AuroraMotionClock.DEFAULT_MAX_STEP_MS)
+        assertThat(AuroraMotionClock.stepCapFor(1000L)).isEqualTo(2000L)
+        for (fps in listOf(1, 2, 3, 5, 10)) {
+            val frameMs = SceneMotionTuning(fps = fps).frameMs(AuroraMotion.AURORA_FRAME_MS)
+            val clock = AuroraMotionClock(idleMs = 600_000L, maxStepMs = AuroraMotionClock.stepCapFor(frameMs))
+            clock.wake(0L)
+            var now = 0L
+            clock.advance(now)
+            // Past the ease-in, then one minute of ticks.
+            while (now < 10_000L) { now += frameMs; clock.advance(now) }
+            val before = clock.motionMs
+            repeat((60_000L / frameMs).toInt()) { now += frameMs; clock.advance(now) }
+            val perSecond = (clock.motionMs - before) / ((60_000L / frameMs) * frameMs / 1000.0)
+            assertWithMessage("$fps fps: motion ms per second").that(perSecond).isWithin(1.0).of(1000.0)
+            // A long gap (keyboard hidden, phone asleep) still counts as at most two frames.
+            val gapStart = clock.motionMs
+            clock.advance(now + 3_600_000L)
+            assertWithMessage("$fps fps: an hour's gap").that(clock.motionMs - gapStart)
+                .isAtMost(AuroraMotionClock.stepCapFor(frameMs).toDouble())
+        }
+    }
+
     /** Battery saver, animations off, a warm phone and a low battery (not charging) keep it still. */
     @Test
     fun thePhonesStateDecidesWhetherItMoves() {

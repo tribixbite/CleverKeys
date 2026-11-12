@@ -1,6 +1,14 @@
 package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import java.util.Collections
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.annotation.StringRes
 import android.content.Context
 import android.content.Intent
@@ -323,6 +331,9 @@ fun ThemeSettingsScreen(
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
     // Use mutableStringStateOf instead of mutableStateOf to avoid type inference issues
     var currentThemeId by remember { mutableStateOf(prefs.getString("theme", Defaults.THEME) ?: Defaults.THEME) }
+    // True Black Scenes (Appearance, also switched here and by the toggle_true_black key): the
+    // scene cards show their backdrop as the keyboard will.
+    var sceneTrueBlack by remember { mutableStateOf(prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)) }
     // Audit H-4: mutate the SAME store instance ThemeProvider renders from — a private
     // CustomThemeManager here wrote the same prefs file but left the provider's
     // in-memory theme list stale, so active-theme edits didn't reach the keyboard
@@ -400,6 +411,10 @@ fun ThemeSettingsScreen(
             val lookScheme = remember(lookTheme.id, systemDark) {
                 ThemeProvider.getInstance(context).getColorScheme(lookTheme.id)
             }
+            // A scene look shows its backdrop behind the sample keys, in true black when that is on.
+            val lookBackdrop = remember(lookTheme.id, systemDark) {
+                KeyboardLooks.byId(lookTheme.id)?.palette(!systemDark)?.backdrop
+            }
             if (lookScheme != null) {
                 ThemeCard(
                     name = lookName,
@@ -411,7 +426,9 @@ fun ThemeSettingsScreen(
                         currentThemeId = lookTheme.id
                         onThemeSelected(lookTheme.id, lookName)
                     },
-                    onExport = { exportThemeXml(lookTheme.id, lookName) }
+                    onExport = { exportThemeXml(lookTheme.id, lookName) },
+                    backdrop = lookBackdrop,
+                    trueBlack = sceneTrueBlack,
                 )
             }
         }
@@ -457,6 +474,37 @@ fun ThemeSettingsScreen(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
+                // True Black Scenes, next to the scenes it changes (maintainer 2026-11-12): the
+                // same preference as Appearance; the keyboard repaints, the cards below follow.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            sceneTrueBlack = !sceneTrueBlack
+                            prefs.edit().putBoolean("look_scene_true_black", sceneTrueBlack).apply()
+                        }
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            stringResource(R.string.appearance_look_scene_true_black_title),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            stringResource(R.string.theme_scenes_true_black_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    Switch(
+                        checked = sceneTrueBlack,
+                        onCheckedChange = {
+                            sceneTrueBlack = it
+                            prefs.edit().putBoolean("look_scene_true_black", it).apply()
+                        }
+                    )
+                }
             }
             items(ThemeSettingsActivity.SCENE_THEMES) { lookTheme -> LookCard(lookTheme) }
 
@@ -684,7 +732,11 @@ fun ThemeCard(
     onEdit: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     /** "Export as layout XML" (custom themes and looks); null hides the button. */
-    onExport: (() -> Unit)? = null
+    onExport: (() -> Unit)? = null,
+    /** A scene look's backdrop, shown behind the sample keys ([ScenePreview]); null = none. */
+    backdrop: LookBackdrop? = null,
+    /** Show [backdrop] in true black (`look_scene_true_black`). */
+    trueBlack: Boolean = false,
 ) {
     val borderColor by animateColorAsState(
         targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
@@ -766,65 +818,102 @@ fun ThemeCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Theme preview - mini keyboard
-            ThemePreview(colorScheme)
+            // Theme preview - mini keyboard (over the scene, for a scene look)
+            ThemePreview(colorScheme, backdrop, trueBlack)
         }
     }
 }
 
 @Composable
-fun ThemePreview(colorScheme: KeyboardColorScheme) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // Sample keys
-        listOf("Q", "W", "E", "R").forEach { letter ->
+fun ThemePreview(colorScheme: KeyboardColorScheme, backdrop: LookBackdrop? = null, trueBlack: Boolean = false) {
+    val scene = backdrop?.let { rememberScenePreview(it, colorScheme.keyboardBackground.toArgb(), trueBlack) }
+    Box(modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp))) {
+        // A scene look: its painting (or the aurora) behind the keys, as the keyboard shows it.
+        scene?.let {
+            Image(
+                bitmap = it,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize(),
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(if (backdrop != null) 8.dp else 0.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Sample keys
+            listOf("Q", "W", "E", "R").forEach { letter ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(Color(colorScheme.keyDefault.toArgb()))
+                        .border(
+                            1.dp,
+                            Color(colorScheme.keyBorder.toArgb()),
+                            RoundedCornerShape(4.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        letter,
+                        color = Color(colorScheme.keyLabel.toArgb()),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // Swipe trail indicator
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .height(32.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(Color(colorScheme.keyDefault.toArgb()))
-                    .border(
-                        1.dp,
-                        Color(colorScheme.keyBorder.toArgb()),
-                        RoundedCornerShape(4.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(colorScheme.swipeTrail.toArgb()).copy(alpha = 0.3f),
+                                Color(colorScheme.swipeTrail.toArgb())
+                            )
+                        )
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    letter,
-                    color = Color(colorScheme.keyLabel.toArgb()),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    stringResource(R.string.theme_trail_label),
+                    color = Color.White,
+                    fontSize = 10.sp
                 )
             }
         }
-
-        // Swipe trail indicator
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(32.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(colorScheme.swipeTrail.toArgb()).copy(alpha = 0.3f),
-                            Color(colorScheme.swipeTrail.toArgb())
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                stringResource(R.string.theme_trail_label),
-                color = Color.White,
-                fontSize = 10.sp
-            )
-        }
     }
+}
+
+/**
+ * Theme Manager's scene thumbnails, by backdrop, base colour and true black: each is rendered once
+ * per process off the main thread, not again every time its card scrolls back into view.
+ */
+private val scenePreviewCache: MutableMap<Triple<LookBackdrop, Int, Boolean>, ImageBitmap> =
+    Collections.synchronizedMap(HashMap())
+
+/** [backdrop] as a small still picture ([ScenePreview]), rendered on a background thread; null until ready. */
+@Composable
+private fun rememberScenePreview(backdrop: LookBackdrop, baseColor: Int, trueBlack: Boolean): ImageBitmap? {
+    val key = Triple(backdrop, baseColor, trueBlack)
+    val image by produceState(scenePreviewCache[key], key) {
+        if (value != null) return@produceState
+        value = withContext(Dispatchers.Default) {
+            // A keyboard's proportions (411 × 260 dp) at a little over half a raster px per dp:
+            // enough for the card's strip, cropped to its middle.
+            val w = 240
+            val h = 152
+            ScenePreview.pixels(backdrop, baseColor, w, h, w / 411f, trueBlack)
+                ?.let { Bitmap.createBitmap(it, w, h, Bitmap.Config.ARGB_8888).asImageBitmap() }
+        }?.also { scenePreviewCache[key] = it }
+    }
+    return image
 }
 
 /**

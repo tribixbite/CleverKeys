@@ -2140,6 +2140,11 @@
     <string name="cmd_toggle_scene_motion_desc">Hareketli sahne arka planlarını açar veya kapatır</string>
     <string name="scene_motion_on_message">Hareketli sahneler açık</string>
     <string name="scene_motion_off_message">Hareketli sahneler kapalı</string>
+    <string name="cmd_toggle_true_black">Saf siyah aç/kapat</string>
+    <string name="cmd_toggle_true_black_desc">Saf siyah sahneleri açar veya kapatır</string>
+    <string name="scene_true_black_on_message">Saf siyah açık</string>
+    <string name="scene_true_black_off_message">Saf siyah kapalı</string>
+    <string name="theme_scenes_true_black_desc">Sahnelerin saf siyah üzerinde gece sürümleri; OLED ekranlarda pil tasarrufu sağlar</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift değiştiricisi (büyük harf/sembol)</string>
     <string name="cmd_ctrl">Ctrl</string>

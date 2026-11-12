@@ -179,6 +179,7 @@ class BackdropDrawable(
         // The layers vote their frame rate when built: a new rate rebuilds them (below).
         if (value.fps != tuning.fps) releaseOverlay()
         tuning = value
+        clock.maxStepMs = AuroraMotionClock.stepCapFor(frameMs)
         clock.rate = value.speed
         clock.holdMs = value.resumeMs
         clock.idleMs = value.idleMs
@@ -204,7 +205,8 @@ class BackdropDrawable(
         if (!motionEnabled || !isVisible) return
         val now = SystemClock.uptimeMillis()
         clock.wake(now)
-        syncOverlay()
+        // Layers only for a backdrop that moves: startTicking builds them once the gate allows
+        // (battery saver or heat may refuse).
         startTicking(now, throttled = false)
     }
 
@@ -236,6 +238,9 @@ class BackdropDrawable(
         gateDeniedAt = NEVER
         ticking = true
         scheduleSelf(tick, now)
+        // Every start (the keyboard showing, a key press or swipe after a rest) brings the
+        // hardware layers back: they were released when the backdrop came to rest.
+        syncOverlay()
     }
 
     /**
@@ -268,6 +273,7 @@ class BackdropDrawable(
                 gateDeniedAt = now
                 ticking = false
                 clock.rest()
+                releaseOverlay()
                 return
             }
         }
@@ -287,7 +293,11 @@ class BackdropDrawable(
             // Stopped by typing: nothing to draw until the hold ends, so sleep until then (a
             // further key press moves the end later; the early tick just sleeps again).
             clock.isHeld(now) -> scheduleSelf(tick, clock.holdEndsAt)
-            else -> ticking = false
+            // At rest: the window shows the still picture; the layers come back with the next wake.
+            else -> {
+                ticking = false
+                releaseOverlay()
+            }
         }
     }
 
@@ -317,7 +327,10 @@ class BackdropDrawable(
         }
         if (field != null && field.shape != ParticleShape.RAIN && stars.isNotEmpty()) {
             val starLevel = field.maxAlpha / VisibleChangeGate.ALPHA_STEP
-            for (g in 0 until AuroraMotion.STAR_GROUPS) {
+            // On hardware layers each star layer twinkles with one group's alpha
+            // (SceneOverlayPlan.stars): the other groups' changes show nowhere.
+            val groups = if (overlay != null) SceneOverlayPlan.STAR_LAYERS else AuroraMotion.STAR_GROUPS
+            for (g in 0 until groups) {
                 out[n++] = frame.starAlpha[g] * starLevel
                 if (field.driftXDpPerS != 0f || field.driftYDpPerS != 0f) {
                     val speed = 0.7f + 0.6f * g / (AuroraMotion.STAR_GROUPS - 1)
@@ -474,9 +487,13 @@ class BackdropDrawable(
         it.isAttachedToWindow && it.windowVisibility == View.VISIBLE
     }
 
-    /** Builds the layers when they may run and are not up yet; releases them when they may not. */
+    /**
+     * Builds the layers when they may run and are not up yet; releases them when they may not. Only
+     * while the backdrop moves ([ticking]): a resting or gated keyboard is one window plane, not
+     * four hardware planes holding a picture that does not change.
+     */
     private fun syncOverlay() {
-        if (!overlayEligible()) {
+        if (!ticking || !overlayEligible()) {
             releaseOverlay()
             return
         }
@@ -489,12 +506,14 @@ class BackdropDrawable(
     private fun createOverlay(host: View) {
         val rendered = painting ?: return
         val alt = rendered.alt ?: return
-        // No surface yet: skip the star images rather than drawing them for nothing every tick.
-        if (host.rootSurfaceControl == null) return
-        val origin = IntArray(2).also { host.getLocationInWindow(it) }
+        // No surface yet (window or anchor): try again on a later tick, before drawing any image.
+        if (!SceneOverlay.anchorReady(host)) {
+            overlayPending = true
+            return
+        }
         val images = listOf(rendered.base, alt) + starLayerImages()
         val built = try {
-            SceneOverlay.create(host, images, overlayFrame(origin[0], origin[1], images.size - 2), 1000f / frameMs)
+            SceneOverlay.create(host, images, { x, y -> overlayFrame(x, y, images.size - 2) }, 1000f / frameMs)
         } catch (e: SceneOverlay.NotReady) {
             // The anchor is still getting its surface: the next tick or wake tries again.
             overlayPending = true

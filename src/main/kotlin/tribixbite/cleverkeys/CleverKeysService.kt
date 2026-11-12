@@ -1159,6 +1159,18 @@ class CleverKeysService : InputMethodService(),
         showSuggestionBarMessage(getString(if (on) R.string.scene_motion_on_message else R.string.scene_motion_off_message))
     }
 
+    /**
+     * The `toggle_true_black` command: flips Appearance → True Black Scenes
+     * (`look_scene_true_black`); the keyboard repaints its scene (BackdropDrawable.setTuning)
+     * and the suggestion bar names the new state.
+     */
+    fun toggleTrueBlack() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+        val on = !prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)
+        prefs.edit().putBoolean("look_scene_true_black", on).apply()
+        showSuggestionBarMessage(getString(if (on) R.string.scene_true_black_on_message else R.string.scene_true_black_off_message))
+    }
+
     override fun onWindowShown() {
         super.onWindowShown()
         _windowVisible = true

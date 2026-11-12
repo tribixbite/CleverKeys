@@ -71,13 +71,16 @@ object SceneTrueBlack {
 
     /**
      * [painting] (of [kind], painted at [density] raster px per dp) in true black: the base, the
-     * cross-fade image and every moving layer, with the same light cut-off (taken from the base)
-     * so a layer matches the ground it moves over. The surface map is unchanged.
+     * cross-fade image and every layer, with one light cut-off (taken from the whole picture at
+     * rest) so a layer matches the ground it moves over. The surface map is unchanged.
      */
     fun apply(painting: ScenePainting, kind: SceneKind, density: Float): ScenePainting {
         if (painting.base.isEmpty()) return painting
         val params = paramsFor(kind)
-        val cutoff = lumaQuantile(painting.base, params.lightQuantile)
+        // The cut-off from the picture as seen (layers over the base at rest): the snow's hills are
+        // a layer over a dark sky, and a cut-off from the sky alone left them lit (Fable audit).
+        val seen = if (painting.layers.isEmpty()) painting.base else SceneMotion.composite(painting, 0.0)
+        val cutoff = lumaQuantile(seen, params.lightQuantile)
         val radius = max(1, (DETAIL_RADIUS_DP * density).toInt())
         val w = painting.width
         val h = painting.height
@@ -123,6 +126,9 @@ object SceneTrueBlack {
      * an alpha-weighted blur, so a layer's transparent surroundings do not read as an edge.
      */
     internal fun darken(pixels: IntArray, w: Int, h: Int, radius: Int, cutoff: Float, params: Params): IntArray {
+        // TODO: six float arrays per image (24 B/px: ~20 MB for a 1008 × 840 scene, three images
+        //  for the snow) are allocated on the render thread; an OOM falls back to the base colour
+        //  (requestPainting), but reusing one scratch set per painting would halve the peak.
         val size = w * h
         val y = FloatArray(size)
         val a = FloatArray(size)

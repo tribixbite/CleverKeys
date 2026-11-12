@@ -2135,6 +2135,11 @@
     <string name="cmd_toggle_scene_motion_desc">A mozgó jelenethátterek be- vagy kikapcsolása</string>
     <string name="scene_motion_on_message">Animált jelenetek bekapcsolva</string>
     <string name="scene_motion_off_message">Animált jelenetek kikapcsolva</string>
+    <string name="cmd_toggle_true_black">Valódi fekete be/ki</string>
+    <string name="cmd_toggle_true_black_desc">Be- vagy kikapcsolja a valódi fekete jeleneteket</string>
+    <string name="scene_true_black_on_message">Valódi fekete bekapcsolva</string>
+    <string name="scene_true_black_off_message">Valódi fekete kikapcsolva</string>
+    <string name="theme_scenes_true_black_desc">A jelenetek éjszakai változata tiszta feketén; OLED kijelzőn kíméli az akkumulátort</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift módosító (nagybetűk/szimbólumok)</string>
     <string name="cmd_ctrl">Ctrl</string>

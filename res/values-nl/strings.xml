@@ -2129,6 +2129,11 @@
     <string name="cmd_toggle_scene_motion_desc">De bewegende scèneachtergronden aan- of uitzetten</string>
     <string name="scene_motion_on_message">Bewegende scènes aan</string>
     <string name="scene_motion_off_message">Bewegende scènes uit</string>
+    <string name="cmd_toggle_true_black">Echt zwart aan/uit</string>
+    <string name="cmd_toggle_true_black_desc">Scènes in echt zwart aan- of uitzetten</string>
+    <string name="scene_true_black_on_message">Echt zwart aan</string>
+    <string name="scene_true_black_off_message">Echt zwart uit</string>
+    <string name="theme_scenes_true_black_desc">Nachtversies van de scènes op puur zwart; bespaart batterij op OLED-schermen</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift-modificatie (hoofdletters/symbolen)</string>
     <string name="cmd_ctrl">Ctrl</string>

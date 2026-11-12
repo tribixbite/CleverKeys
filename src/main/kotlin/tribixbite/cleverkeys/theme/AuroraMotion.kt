@@ -290,7 +290,8 @@ class AuroraMotionClock(
     /** The user's idle timeout ([SceneMotionTuning.idleMs]); a change applies from now on. */
     var idleMs: Long = AuroraMotion.IDLE_MS,
     private val easeMs: Long = AuroraMotion.EASE_MS,
-    private val maxStepMs: Long = 250L,
+    /** The longest step one [advance] may take; [stepCapFor] the frame interval (BackdropDrawable). */
+    var maxStepMs: Long = DEFAULT_MAX_STEP_MS,
     /** The user's typing pause ([SceneMotionTuning.resumeMs]); 0 = key presses never hold. */
     var holdMs: Long = AuroraMotion.TYPING_HOLD_MS,
     private val holdEaseMs: Long = AuroraMotion.HOLD_EASE_MS,
@@ -362,8 +363,18 @@ class AuroraMotionClock(
         lastAdvance = NONE
     }
 
-    private companion object {
-        const val NONE = Long.MIN_VALUE
+    companion object {
+        private const val NONE = Long.MIN_VALUE
+
+        /** The step cap at the scenes' own rates: a quarter second (the keyboard was hidden, the phone slept). */
+        const val DEFAULT_MAX_STEP_MS = 250L
+
+        /**
+         * The step cap for ticks [frameMs] apart: two frames, at least [DEFAULT_MAX_STEP_MS]. A fixed
+         * quarter second slowed a 1–3 fps scene (each 1 s tick advanced 250 ms of motion); a gap
+         * longer than two frames is still a hiccup, not motion to catch up on.
+         */
+        fun stepCapFor(frameMs: Long): Long = maxOf(DEFAULT_MAX_STEP_MS, 2 * frameMs)
     }
 }
 

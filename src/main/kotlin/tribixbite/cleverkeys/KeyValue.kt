@@ -56,6 +56,8 @@ class KeyValue private constructor(
         THEME_PREVIOUS,
         // 2026-11-11: turn Animated scenes (`look_backdrop_motion`) on or off. Appended (ordinal).
         TOGGLE_SCENE_MOTION,
+        // 2026-11-12: turn True Black Scenes (`look_scene_true_black`) on or off. Appended (ordinal).
+        TOGGLE_TRUE_BLACK,
     }
 
     /**
@@ -682,6 +684,8 @@ class KeyValue private constructor(
             "theme_previous" -> eventKey("◐−", Event.THEME_PREVIOUS, FLAG_SMALLER_FONT)
             // Animated scenes on / off (the Appearance switch).
             "toggle_scene_motion" -> eventKey("◐≈", Event.TOGGLE_SCENE_MOTION, FLAG_SMALLER_FONT)
+            // True Black Scenes on / off (the Appearance switch).
+            "toggle_true_black" -> eventKey("◐●", Event.TOGGLE_TRUE_BLACK, FLAG_SMALLER_FONT)
             "switch_back_gif" -> eventKey("ABC", Event.SWITCH_BACK_GIF, 0)
 
             /* Key events */

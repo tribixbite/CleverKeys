@@ -2112,6 +2112,11 @@
     <string name="cmd_toggle_scene_motion_desc">Bật hoặc tắt nền cảnh chuyển động</string>
     <string name="scene_motion_on_message">Đã bật cảnh chuyển động</string>
     <string name="scene_motion_off_message">Đã tắt cảnh chuyển động</string>
+    <string name="cmd_toggle_true_black">Đen tuyền bật/tắt</string>
+    <string name="cmd_toggle_true_black_desc">Bật hoặc tắt cảnh nền đen tuyền</string>
+    <string name="scene_true_black_on_message">Đã bật đen tuyền</string>
+    <string name="scene_true_black_off_message">Đã tắt đen tuyền</string>
+    <string name="theme_scenes_true_black_desc">Phiên bản ban đêm của các cảnh trên nền đen tuyền; tiết kiệm pin trên màn hình OLED</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Phím bổ trợ Shift (chữ hoa/ký hiệu)</string>
     <string name="cmd_ctrl">Ctrl</string>

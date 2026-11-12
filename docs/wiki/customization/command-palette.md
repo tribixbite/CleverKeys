@@ -15,7 +15,7 @@ The command palette is a searchable dialog that appears when you assign an actio
 |------|-------------|
 | **Purpose** | Browse and search all assignable key actions |
 | **Access** | Per-Key Customization, or the [Subkey Popover](../gestures/subkey-popover.md) assign/edit screen |
-| **Features** | Search, 21 categories, 244 commands, four quick actions |
+| **Features** | Search, 21 categories, 245 commands, four quick actions |
 
 ## Where It Appears
 
@@ -59,7 +59,7 @@ The row scrolls away with the list. While you search, only tiles whose name matc
 
 ### Browse Categories
 
-The 244 commands are grouped into these categories, in this order. Category headers stay
+The 245 commands are grouped into these categories, in this order. Category headers stay
 at the top while their commands scroll.
 
 | Category | Commands | Examples |
@@ -70,7 +70,7 @@ at the top while their commands scroll.
 | **Navigation** | 6 | `home`, `end`, `doc_home`, `doc_end`, `page_up`, `page_down` |
 | **Selection** | 8 | `selection_cursor_left`, `selection_cursor_right`, `selection_cancel`, `selection_mode`, `select_word_left`, `select_word_right`, `select_word`, `select_line` |
 | **Delete** | 5 | `backspace`, `delete`, `delete_word`, `forward_delete_word`, `delete_last_word` |
-| **Keyboard Events** | 23 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `voice_input`, `minimize_bar`, `minimize_fab`, `hide_keyboard`, `theme_next`, `theme_previous`, `toggle_scene_motion` |
+| **Keyboard Events** | 24 | `config`, `switch_forward`, `switch_backward`, `switch_clipboard`, `switch_emoji`, `switch_numeric`, `voice_typing`, `voice_input`, `minimize_bar`, `minimize_fab`, `hide_keyboard`, `theme_next`, `theme_previous`, `toggle_scene_motion`, `toggle_true_black` |
 | **Modifiers** | 5 | `shift`, `ctrl`, `alt`, `meta`, `fn` |
 | **Function Keys** | 12 | `f1`–`f12` |
 | **Special Keys** | 9 | `esc`, `enter`, `tab`, `menu`, `insert`, `compose`, `removed` |
@@ -119,6 +119,10 @@ in the extra keys row to flip through themes from the keyboard.
 **Animated Scenes On/Off** (`toggle_scene_motion`) flips Appearance → Animated scenes, the
 same switch as in Settings; the suggestion bar says which way it went. Put it on a short swipe
 to stop a moving scene at once and start it again later.
+
+**True Black On/Off** (`toggle_true_black`) flips Appearance → True Black Scenes (also a switch
+at the top of Theme Manager's Scenes): the scenes become night views on pure black, which saves
+battery on an OLED screen. The suggestion bar says which way it went.
 
 ## Text Assist and Replace Text
 
@@ -184,7 +188,7 @@ description or keyword.
 - **Power user**: `selection_mode`, `doc_home`/`doc_end` and the function keys help in editors and terminals
 
 > [!TIP]
-> The palette lists 244 commands. Use search to find one quickly.
+> The palette lists 245 commands. Use search to find one quickly.
 
 ## Common Questions
 

@@ -67,6 +67,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "theme_next", // 2026-11-11: next / previous theme in Theme Manager's order
             "theme_previous",
             "toggle_scene_motion", // 2026-11-11: Animated scenes on / off
+            "toggle_true_black", // 2026-11-12: True Black Scenes on / off
             "switch_clipboard",
             "accent_aigu",
             "accent_grave",
@@ -197,7 +198,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         internal fun categorizedKeys(keys: List<String>): Map<Int, List<String>> =
             mapOf(
                 R.string.extra_keys_group_layout_switching to keys.filter { it in listOf("switch_forward", "switch_backward", "switch_greekmath") },
-                R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "voice_input", "theme_next", "theme_previous", "toggle_scene_motion", "switch_clipboard", "change_method", "capslock", "autofill") },
+                R.string.extra_keys_group_system to keys.filter { it in listOf("alt", "meta", "compose", "voice_typing", "voice_input", "theme_next", "theme_previous", "toggle_scene_motion", "toggle_true_black", "switch_clipboard", "change_method", "capslock", "autofill") },
                 R.string.extra_keys_group_navigation to keys.filter { it in listOf("tab", "esc", "page_up", "page_down", "home", "end", "word_left", "word_right") },
                 R.string.extra_keys_group_editing to keys.filter { it.startsWith("copy") || it.startsWith("paste") || it.startsWith("cut") || it.startsWith("selectAll") || it.startsWith("undo") || it.startsWith("redo") || it.contains("delete_word") || it == "shareText" || it == "clear_clipboard" || it.startsWith("append_") || it in EDITOR_SELECTION_KEYS },
                 R.string.extra_keys_group_formatting to keys.filter { it in listOf("superscript", "subscript") },
@@ -294,6 +295,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
                 "theme_next" -> id = R.string.cmd_theme_next_desc
                 "theme_previous" -> id = R.string.cmd_theme_previous_desc
                 "toggle_scene_motion" -> id = R.string.cmd_toggle_scene_motion_desc
+                "toggle_true_black" -> id = R.string.cmd_toggle_true_black_desc
                 "ª" -> id = R.string.key_descr_ª
                 "º" -> id = R.string.key_descr_º
                 "switch_clipboard" -> id = R.string.key_descr_clipboard
@@ -376,6 +378,7 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
             "theme_next" to R.string.cmd_theme_next,
             "theme_previous" to R.string.cmd_theme_previous,
             "toggle_scene_motion" to R.string.cmd_toggle_scene_motion,
+            "toggle_true_black" to R.string.cmd_toggle_true_black,
             "switch_clipboard" to R.string.extra_key_title_clipboard,
             "change_method" to R.string.extra_key_title_switch_ime,
             "capslock" to R.string.extra_key_title_caps_lock,

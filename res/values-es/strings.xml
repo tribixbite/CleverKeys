@@ -2192,6 +2192,11 @@
     <string name="cmd_toggle_scene_motion_desc">Activa o desactiva los fondos de escena en movimiento</string>
     <string name="scene_motion_on_message">Escenas animadas activadas</string>
     <string name="scene_motion_off_message">Escenas animadas desactivadas</string>
+    <string name="cmd_toggle_true_black">Negro puro sí/no</string>
+    <string name="cmd_toggle_true_black_desc">Activa o desactiva las escenas en negro puro</string>
+    <string name="scene_true_black_on_message">Negro puro activado</string>
+    <string name="scene_true_black_off_message">Negro puro desactivado</string>
+    <string name="theme_scenes_true_black_desc">Versiones nocturnas de las escenas sobre negro puro; ahorra batería en pantallas OLED</string>
     <string name="cmd_shift">Mayús</string>
     <string name="cmd_shift_desc">Modificador Mayús (mayúsculas/símbolos)</string>
     <string name="cmd_ctrl">Ctrl</string>

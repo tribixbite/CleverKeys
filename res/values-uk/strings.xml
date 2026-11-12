@@ -2230,6 +2230,11 @@
     <string name="cmd_toggle_scene_motion_desc">Увімкнути або вимкнути рухомі тла сцен</string>
     <string name="scene_motion_on_message">Анімовані сцени увімкнено</string>
     <string name="scene_motion_off_message">Анімовані сцени вимкнено</string>
+    <string name="cmd_toggle_true_black">Чисто чорний увімк/вимк</string>
+    <string name="cmd_toggle_true_black_desc">Вмикає або вимикає сцени на чисто чорному</string>
+    <string name="scene_true_black_on_message">Чисто чорний увімкнено</string>
+    <string name="scene_true_black_off_message">Чисто чорний вимкнено</string>
+    <string name="theme_scenes_true_black_desc">Нічні версії сцен на чисто чорному; заощаджує заряд на OLED-екранах</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модифікатор Shift (великі літери/символи)</string>
     <string name="cmd_ctrl">Ctrl</string>

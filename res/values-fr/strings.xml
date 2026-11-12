@@ -2184,6 +2184,11 @@
     <string name="cmd_toggle_scene_motion_desc">Active ou désactive les fonds de scène animés</string>
     <string name="scene_motion_on_message">Scènes animées activées</string>
     <string name="scene_motion_off_message">Scènes animées désactivées</string>
+    <string name="cmd_toggle_true_black">Noir pur oui/non</string>
+    <string name="cmd_toggle_true_black_desc">Active ou désactive les scènes en noir pur</string>
+    <string name="scene_true_black_on_message">Noir pur activé</string>
+    <string name="scene_true_black_off_message">Noir pur désactivé</string>
+    <string name="theme_scenes_true_black_desc">Versions de nuit des scènes sur noir pur ; économise la batterie sur les écrans OLED</string>
     <string name="cmd_shift">Maj</string>
     <string name="cmd_shift_desc">Touche Maj (majuscules/symboles)</string>
     <string name="cmd_ctrl">Ctrl</string>

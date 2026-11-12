@@ -2082,6 +2082,11 @@
     <string name="cmd_toggle_scene_motion_desc">开启或关闭动态场景背景</string>
     <string name="scene_motion_on_message">动态场景已开启</string>
     <string name="scene_motion_off_message">动态场景已关闭</string>
+    <string name="cmd_toggle_true_black">纯黑 开/关</string>
+    <string name="cmd_toggle_true_black_desc">开启或关闭纯黑场景</string>
+    <string name="scene_true_black_on_message">纯黑已开启</string>
+    <string name="scene_true_black_off_message">纯黑已关闭</string>
+    <string name="theme_scenes_true_black_desc">以纯黑背景显示场景的夜景版本；在 OLED 屏幕上更省电</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修饰键（大写/符号）</string>
     <string name="cmd_ctrl">Ctrl</string>

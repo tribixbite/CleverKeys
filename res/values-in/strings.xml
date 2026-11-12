@@ -2096,6 +2096,11 @@
     <string name="cmd_toggle_scene_motion_desc">Mengaktifkan atau menonaktifkan latar adegan yang bergerak</string>
     <string name="scene_motion_on_message">Adegan bergerak aktif</string>
     <string name="scene_motion_off_message">Adegan bergerak nonaktif</string>
+    <string name="cmd_toggle_true_black">Hitam pekat aktif/nonaktif</string>
+    <string name="cmd_toggle_true_black_desc">Mengaktifkan atau menonaktifkan adegan hitam pekat</string>
+    <string name="scene_true_black_on_message">Hitam pekat aktif</string>
+    <string name="scene_true_black_off_message">Hitam pekat nonaktif</string>
+    <string name="theme_scenes_true_black_desc">Versi malam adegan di atas hitam pekat; hemat baterai di layar OLED</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Pengubah Shift (huruf kapital/simbol)</string>
     <string name="cmd_ctrl">Ctrl</string>

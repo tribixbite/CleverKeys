@@ -249,6 +249,10 @@ object CommandRegistry {
         // on/off subkey function").
         Command("toggle_scene_motion", R.string.cmd_toggle_scene_motion, R.string.cmd_toggle_scene_motion_desc, Category.EVENTS,
             keywords = listOf("animation", "animations", "animated", "motion", "moving", "scene", "scenes", "toggle", "battery", "still")),
+        // 2026-11-12: the True Black Scenes switch as a key (maintainer: "add subkey fn for
+        // toggling true black").
+        Command("toggle_true_black", R.string.cmd_toggle_true_black, R.string.cmd_toggle_true_black_desc, Category.EVENTS,
+            keywords = listOf("true", "black", "oled", "amoled", "dark", "night", "scene", "scenes", "toggle", "battery")),
 
         // ========== MODIFIERS ==========
         Command("shift", R.string.cmd_shift, R.string.cmd_shift_desc, Category.MODIFIERS,

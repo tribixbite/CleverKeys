@@ -125,9 +125,13 @@ class SceneTrueBlackTest {
                     assertWithMessage("$kind layer alpha").that(d.pixels[i] ushr 24).isEqualTo(p.pixels[i] ushr 24)
                 }
             }
-            val before = meanLight(painted.base)
-            val after = meanLight(dark.base)
-            val black = dark.base.count { rgbOf(it) == 0 }.toDouble() / dark.base.size
+            // Measured on the picture as seen, layers included: the snow's hills are a layer over
+            // a dark sky, and a base-only check passed while they stayed lit (Fable audit).
+            val seenBefore = SceneMotion.composite(painted, 0.0)
+            val seenAfter = SceneMotion.composite(dark, 0.0)
+            val before = meanLight(seenBefore)
+            val after = meanLight(seenAfter)
+            val black = seenAfter.count { rgbOf(it) == 0 }.toDouble() / seenAfter.size
             assertWithMessage("$kind keeps under half its light ($before -> $after)").that(after).isLessThan(before * 0.5)
             assertWithMessage("$kind turns a fifth of its pixels off ($black)").that(black).isAtLeast(0.2)
             assertWithMessage("$kind still shows something").that(after).isGreaterThan(0.0)

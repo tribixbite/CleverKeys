@@ -2149,6 +2149,11 @@
     <string name="cmd_toggle_scene_motion_desc">Die bewegten Szenenhintergründe ein- oder ausschalten</string>
     <string name="scene_motion_on_message">Animierte Szenen an</string>
     <string name="scene_motion_off_message">Animierte Szenen aus</string>
+    <string name="cmd_toggle_true_black">Echtes Schwarz an/aus</string>
+    <string name="cmd_toggle_true_black_desc">Szenen in echtem Schwarz ein- oder ausschalten</string>
+    <string name="scene_true_black_on_message">Echtes Schwarz an</string>
+    <string name="scene_true_black_off_message">Echtes Schwarz aus</string>
+    <string name="theme_scenes_true_black_desc">Nachtversionen der Szenen auf reinem Schwarz; spart Akku auf OLED-Bildschirmen</string>
     <string name="cmd_shift">Umschalt</string>
     <string name="cmd_shift_desc">Umschalttaste (Großbuchstaben/Symbole)</string>
     <string name="cmd_ctrl">Strg</string>

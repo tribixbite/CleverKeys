@@ -143,6 +143,9 @@ internal class SceneOverlay private constructor(
 
     init {
         host.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+        // The newest overlay on an anchor owns it: a predecessor whose release is still queued
+        // (rebuilt in one pass: size, painting or tuning change) must not remove it (free()).
+        owners[anchor] = this
     }
 
     private val anchorLocation = IntArray(2)
@@ -224,7 +227,11 @@ internal class SceneOverlay private constructor(
     private fun free() {
         if (freed) return
         freed = true
-        removeAnchor(anchor)
+        // Only the anchor's current owner removes it: a successor may already have its layers on it.
+        if (owners[anchor] === this) {
+            owners.remove(anchor)
+            removeAnchor(anchor)
+        }
         for (sc in layers) sc.release()
         for (b in buffers) b.close()
         for (b in bitmaps) b.recycle()
@@ -235,6 +242,16 @@ internal class SceneOverlay private constructor(
 
     companion object {
         private const val TAG = "SceneOverlay"
+
+        /** Each anchor's current overlay (main thread only; weak, so a dropped anchor is not kept). */
+        private val owners = java.util.WeakHashMap<SurfaceView, SceneOverlay>()
+
+        /**
+         * Whether [host]'s anchor has its surface, adding the anchor the first time (it gets its
+         * surface on a later frame). The owner asks this before drawing the layer images, so a
+         * window that is slow to give the anchor a surface costs no image per frame.
+         */
+        fun anchorReady(host: View): Boolean = host.rootSurfaceControl != null && anchorOf(host) != null
 
         /**
          * [host]'s anchor SurfaceView once its surface exists; null while it is being created (it
@@ -272,7 +289,7 @@ internal class SceneOverlay private constructor(
         fun discardAnchor(host: View) {
             val decor = host.rootView as? ViewGroup ?: return
             (0 until decor.childCount).map(decor::getChildAt)
-                .filter { it.getTag(R_TAG) == ANCHOR }
+                .filter { it.getTag(R_TAG) == ANCHOR && owners[it as? SurfaceView] == null }
                 .forEach { decor.removeView(it) }
         }
 
@@ -282,13 +299,14 @@ internal class SceneOverlay private constructor(
 
         /**
          * Builds the layers for [images] (curtain A, curtain B, then the star layers; software
-         * bitmaps, copied to the GPU here) under [host]'s window and places them at [initial] with
+         * bitmaps, copied to the GPU here) under [host]'s window and places them at [initial] (given
+         * the view's origin relative to the anchor, as every later frame is placed) with
          * the window's next frame, each voting [frameRate] (frames per second) to the display's refresh
          * rate choice. Throws [NotReady] while the window has no surface, and any
          * other exception when the platform refuses the layers (the caller then paints the
          * backdrop in the window for good).
          */
-        fun create(host: View, images: List<Bitmap>, initial: List<OverlayPlacement>, frameRate: Float): SceneOverlay {
+        fun create(host: View, images: List<Bitmap>, initial: (originX: Int, originY: Int) -> List<OverlayPlacement>, frameRate: Float): SceneOverlay {
             val root = host.rootSurfaceControl ?: throw NotReady()
             val anchor = anchorOf(host) ?: throw NotReady()
             val parent = anchor.surfaceControl
@@ -321,7 +339,8 @@ internal class SceneOverlay private constructor(
                 }
                 val overlay = SceneOverlay(host, root, anchor, layers, bitmaps, buffers)
                 overlay.hostMoved()
-                overlay.write(t, initial)
+                val origin = overlay.hostOrigin()
+                overlay.write(t, initial(origin[0], origin[1]))
                 if (!root.applyTransactionOnDraw(t)) t.apply()
                 host.invalidate()
                 return overlay

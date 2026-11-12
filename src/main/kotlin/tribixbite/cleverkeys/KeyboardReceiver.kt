@@ -576,6 +576,7 @@ class KeyboardReceiver(
             KeyValue.Event.THEME_NEXT -> keyboard2.cycleTheme(1)
             KeyValue.Event.THEME_PREVIOUS -> keyboard2.cycleTheme(-1)
             KeyValue.Event.TOGGLE_SCENE_MOTION -> keyboard2.toggleSceneMotion()
+            KeyValue.Event.TOGGLE_TRUE_BLACK -> keyboard2.toggleTrueBlack()
 
             KeyValue.Event.CHANGE_METHOD_PICKER -> {
                 subtypeManager.inputMethodManager.showInputMethodPicker()

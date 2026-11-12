@@ -2224,6 +2224,11 @@
     <string name="cmd_toggle_scene_motion_desc">Включить или выключить движущиеся фоны сцен</string>
     <string name="scene_motion_on_message">Анимированные сцены включены</string>
     <string name="scene_motion_off_message">Анимированные сцены выключены</string>
+    <string name="cmd_toggle_true_black">Чисто чёрный вкл/выкл</string>
+    <string name="cmd_toggle_true_black_desc">Включает или выключает сцены на чисто чёрном</string>
+    <string name="scene_true_black_on_message">Чисто чёрный включён</string>
+    <string name="scene_true_black_off_message">Чисто чёрный выключен</string>
+    <string name="theme_scenes_true_black_desc">Ночные версии сцен на чисто чёрном; экономит заряд на OLED-экранах</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Модификатор Shift (заглавные/символы)</string>
     <string name="cmd_ctrl">Ctrl</string>

@@ -2167,6 +2167,11 @@
     <string name="cmd_toggle_scene_motion_desc">پس‌زمینه‌های متحرک صحنه را روشن یا خاموش می‌کند</string>
     <string name="scene_motion_on_message">صحنه‌های متحرک روشن</string>
     <string name="scene_motion_off_message">صحنه‌های متحرک خاموش</string>
+    <string name="cmd_toggle_true_black">سیاه خالص روشن/خاموش</string>
+    <string name="cmd_toggle_true_black_desc">صحنه‌ها با سیاه خالص را روشن یا خاموش می‌کند</string>
+    <string name="scene_true_black_on_message">سیاه خالص روشن شد</string>
+    <string name="scene_true_black_off_message">سیاه خالص خاموش شد</string>
+    <string name="theme_scenes_true_black_desc">نسخه‌های شبانهٔ صحنه‌ها روی سیاه خالص؛ در صفحه‌های OLED باتری را کمتر مصرف می‌کند</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">تغییردهندهٔ Shift (حروف بزرگ/نمادها)</string>
     <string name="cmd_ctrl">Ctrl</string>

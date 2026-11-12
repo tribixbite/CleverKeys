@@ -2083,6 +2083,11 @@
     <string name="cmd_toggle_scene_motion_desc">動くシーン背景をオンまたはオフにします</string>
     <string name="scene_motion_on_message">動くシーン：オン</string>
     <string name="scene_motion_off_message">動くシーン：オフ</string>
+    <string name="cmd_toggle_true_black">純黒 オン/オフ</string>
+    <string name="cmd_toggle_true_black_desc">純黒のシーンをオンまたはオフにします</string>
+    <string name="scene_true_black_on_message">純黒をオンにしました</string>
+    <string name="scene_true_black_off_message">純黒をオフにしました</string>
+    <string name="theme_scenes_true_black_desc">シーンを純黒の夜景で表示します。OLED 画面では電池の消費が減ります</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift 修飾キー(大文字/記号)</string>
     <string name="cmd_ctrl">Ctrl</string>

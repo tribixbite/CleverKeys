@@ -2185,6 +2185,11 @@
     <string name="cmd_toggle_scene_motion_desc">Ieslēgt vai izslēgt kustīgos ainu fonus</string>
     <string name="scene_motion_on_message">Animētas ainas ieslēgtas</string>
     <string name="scene_motion_off_message">Animētas ainas izslēgtas</string>
+    <string name="cmd_toggle_true_black">Tīri melns iesl./izsl.</string>
+    <string name="cmd_toggle_true_black_desc">Ieslēdz vai izslēdz ainas tīri melnā</string>
+    <string name="scene_true_black_on_message">Tīri melns ieslēgts</string>
+    <string name="scene_true_black_off_message">Tīri melns izslēgts</string>
+    <string name="theme_scenes_true_black_desc">Ainu nakts versijas uz tīri melna fona; OLED ekrānos taupa akumulatoru</string>
     <string name="cmd_shift">Shift</string>
     <string name="cmd_shift_desc">Shift modifikators (lielie burti/simboli)</string>
     <string name="cmd_ctrl">Ctrl</string>
