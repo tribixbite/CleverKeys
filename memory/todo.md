@@ -1414,9 +1414,22 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     readout was rails.py dropping names without VDD/PWR. So unpinned, most of the motion's cost
     is the panel kept refreshing, and the layers halve it at 10 fps. Videos of every scene at
     5 fps vs its own rate sent to the maintainer for a look decision (5 fps runs dropped on the
-    maintainer's call). Open: measure the frame-rate vote (layers 10 fps, unpinned); True Black
-    in the theme picker previews; native review of the new strings in 21 locales. Pixel
-    restored and checked IN 17:52.
+    maintainer's call). Open: True Black in the theme picker previews; native review of the new
+    strings in 21 locales. Pixel restored and checked IN 17:52.
+    Fourteenth round (2026-11-12, maintainer: "did you do frame rate vote?", snow aurora "ripple
+    like the regular aurora", aurora in true black). Done (`a6e64884`): the snow's sky is a
+    drifting cross-faded pair on the aurora's motion and frame rate behind a STILL ground layer;
+    true black also blacks the aurora's sky and drops its haze (~40 % less light, ~1 mW).
+    S25U (`a16143dc`): scenes never moved there because thermal status 2 (MODERATE) stopped
+    them; the gate now stops at SEVERE. The vote is applied (SurfaceFlinger: four layers
+    `requestedFrameRate 10 Hz`, panel 60 Hz, render rate 20 Hz) but does not lower the cost on
+    this panel: Aurora 10 fps, unpinned, brightness 12, vs motion off (run 1; the closing off
+    run had +190 mW of foreign CPU): display rails window +250 / layers +92 mW (round 13 layers
+    without the vote: +91), totals +374 / +197. The panel has only 60/120 Hz modes and content
+    every 100 ms keeps it from its 80 ms idle; the vote matters only on an ARR panel. The first
+    attempt was invalid: Keep Moving For was 20 s from a restore, so the scene stopped after
+    20 s (190 frames per run instead of ~3,050) — check the frame count after the first motion
+    run. Pixel restored and checked IN.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
