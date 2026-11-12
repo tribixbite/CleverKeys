@@ -1430,6 +1430,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     attempt was invalid: Keep Moving For was 20 s from a restore, so the scene stopped after
     20 s (190 frames per run instead of ~3,050) — check the frame count after the first motion
     run. Pixel restored and checked IN.
+    Fifteenth round (2026-11-12, maintainer: true black in the theme picker previews, "do any
+    other outstanding", a Fable review and audit, an architecture/power spec; then a True Black
+    key and a switch in Theme Manager's Scenes). Done: Theme Manager scene cards show their scene
+    behind the sample keys (`ScenePreview`, rendered off the main thread, cached), in true black
+    when on; the `toggle_true_black` command (245 commands; extra key / short swipe) and a True
+    Black Scenes switch at the top of Scenes (same pref); spec
+    `docs/specs/scene-backdrops-and-power.md` (architecture, every round, cost model and
+    estimates). Fable audit fixes: the overlay's shared anchor is owned by the newest overlay (a
+    rebuild in one pass let the old delayed free() remove the new layers' parent — not
+    reproduced on the device: rotation hides the IME in Settings and Chrome); layers built only
+    while moving and released at rest (Pixel: 4 moving / 0 at rest / 4 after a key press); no
+    star images while the anchor has no surface; first placement anchor-relative; overlay-mode
+    visible-change sampling of the 2 shown star groups; the clock's step cap follows the frame
+    interval (1–3 fps no longer slow the motion); true black takes its cut-off from the composite
+    (the snow's ground went black: 82 % of pixels off). Open: SceneTrueBlack scratch memory
+    (TODO in code); Fable's power ideas (one pre-blended curtain plane, re-issuing the vote per
+    transaction for ARR panels); native review of the new strings. Pixel restored, IN.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
