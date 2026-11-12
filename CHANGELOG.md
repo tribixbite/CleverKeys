@@ -503,10 +503,15 @@ editor that used to be listed here already ship in 2.0.)
   that level, which some Galaxy phones report under ordinary load, so they never moved); they
   still rest when the phone is severely hot, in battery saver, with animations off or on a low
   battery. The scenes now move at fewer frames a second by default, which roughly halves what a
-  moving scene costs: Aurora and River rocks 5, Beach 8, Snow, Stream, Meadow and Forest 7 (they
+  moving scene costs: Aurora and River rocks 5, Snow and Beach 8, Stream, Meadow and Forest 7 (they
   were 8–12). In landscape the aurora's layers now stay on the display hardware (they were
   turned by the graphics chip on every refresh), with Twinkle at 0 its stars take one layer
-  instead of two, and True Black repaints a scene with less than half the memory.
+  instead of two, and True Black repaints a scene with less than half the memory. The aurora uses
+  display-hardware layers only at a Frame Rate of 10 or more, where they halve the cost; at its
+  default 5 they saved little on a Pixel and made a Galaxy tablet compose the whole keyboard on
+  the graphics chip at 120 Hz. The first time the keyboard showed after turning the phone, the
+  layers did not start until it showed again. A beach swell no longer jumps faintly back to the
+  horizon at the new frame rate.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current

@@ -60,8 +60,8 @@ object SceneOverlayPlan {
      * painting without moving layers ([hasAlt], not [hasMeshLayers] or rain), at full keyboard
      * opacity (a translucent keyboard blends the curtains with each other before the app below;
      * separate layers cannot), without a colour filter (theme previews), and with particles that
-     * stay put ([starsDrift] would need wrapped copies per layer). Anything else draws in the
-     * window as before.
+     * stay put ([starsDrift] would need wrapped copies per layer), at [MIN_FRAME_MS] or faster
+     * ([frameMs]). Anything else draws in the window as before.
      */
     fun eligible(
         sdk: Int,
@@ -73,8 +73,21 @@ object SceneOverlayPlan {
         drawableAlpha: Int,
         hasColorFilter: Boolean,
         starsDrift: Boolean,
+        frameMs: Long,
     ): Boolean = sdk >= MIN_SDK && overlaySetting && motionEnabled && hasAlt && !hasMeshLayers && !rain &&
-        drawableAlpha == 0xFF && !hasColorFilter && !starsDrift
+        drawableAlpha == 0xFF && !hasColorFilter && !starsDrift && frameMs <= MIN_FRAME_MS
+
+    /**
+     * The slowest frame interval the layers are used at: 10 fps. There they halve the motion's
+     * cost on the Pixel 8 Pro (+152–197 mW over motion off vs +340–374 on the window path, rounds
+     * 13–14). At 5–8 fps the window path already lets the panel rest between frames and costs
+     * the same at every rate in that range (+178–187 mW, round 17), while the layers cost
+     * +150–163 (rounds 13, 17; the window path measured +115 in round 13): at most ~20 mW saved.
+     * On a Galaxy Tab S11 (MediaTek, 2026-11-12) the four layers exceeded its display hardware's
+     * planes, so they and the keyboard were all composed on the GPU and the panel stayed at
+     * 120 Hz, where the window path kept the keyboard on the display hardware at 60 Hz.
+     */
+    const val MIN_FRAME_MS = 100L
 
     /**
      * A curtain image of [bufferW] × [bufferH] px drawn into the view at ([viewX], [viewY]) of

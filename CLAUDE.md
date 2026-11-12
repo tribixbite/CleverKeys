@@ -237,6 +237,13 @@ Draw each buffer turned by `AttachedSurfaceControl.bufferTransformHint` (the dis
 rotation) and declare the INVERSE with `setBufferTransform`: declaring the hint itself shows
 upright too but leaves a net ROT_180. Landscape 90° ↔ 270° keeps the view size, so rebuild on
 `addOnBufferTransformHintChangedListener`, not on bounds. Check the Comp Type column, not the picture.
+A size change renders the painting async: whatever releases layers on its arrival must ask for
+them again itself (a `wake()` that returns early while already ticking left the first spell after
+every rotation on the window path, 2026-11-12). Fewer planes is not always cheaper elsewhere: a
+Galaxy Tab S11 put four extra layers AND the keyboard window on the GPU at 120 Hz.
+Power vs frame rate on the Pixel is a step, not a line: 5, 7 and 8 fps all cost ~180 mW (round 17),
+10 fps ~350. Bound smoothness with absolute per-frame ceilings sampled densely; bounds scaled by the
+frame interval loosen as the rate falls and hid a visible beach wrap.
 
 ## Compose produceState and CI lint (2026-11-12)
 

@@ -5,7 +5,7 @@ import kotlin.math.sin
 
 /**
  * The optional motion of a look's backdrop (Appearance → "Animated scenes",
- * `look_backdrop_motion`, off by default; maintainer 2026-11-10: "move / shimmer / float gently,
+ * `look_backdrop_motion`, on by default; maintainer 2026-11-10: "move / shimmer / float gently,
  * ethereally, with negligible overhead … time out with inactivity so the phone can idle"): the
  * CleverKeys Aurora curtains and the nature scenes.
  *
@@ -22,11 +22,11 @@ import kotlin.math.sin
 object AuroraMotion {
 
     /**
-     * Time between frames of the soft cross-fading scenes (stream, snow): 8 per second. Each
-     * frame costs the IME window's fixed per-frame overhead (about 1 ms on the main thread and
-     * 1.5 ms of draw commands on the Pixel 8 Pro, 2026-11-10), so the rate is the main lever; the
-     * steps here stay a fraction of a dp. The aurora runs at [AURORA_FRAME_MS], the sharp
-     * swaying scenes at their [SceneKind.frameMs].
+     * The gentle style's reference frame interval, 8 per second: the rate its per-frame steps are
+     * checked at (`AuroraMotionTest`). No scene runs at it: each runs at its [SceneKind.frameMs]
+     * and the aurora at [AURORA_FRAME_MS]. Each frame costs the IME window's fixed per-frame
+     * overhead (about 1 ms on the main thread and 1.5 ms of draw commands on the Pixel 8 Pro,
+     * 2026-11-10), so the rate is the main lever.
      */
     const val FRAME_MS = 125L
 
@@ -72,6 +72,13 @@ object AuroraMotion {
      * a slow pulse; maintainer 2026-11-10: "add the shimmering stars back").
      */
     const val STAR_GROUPS = 5
+
+    /**
+     * How fast twinkle group [group] of [groups] drifts, as a share of its field's drift: near
+     * groups travel faster than far ones, from 0.7× to 1.3×, so they part as they go.
+     */
+    fun groupSpeed(group: Int, groups: Int = STAR_GROUPS): Float =
+        0.7f + 0.6f * group / (groups - 1).coerceAtLeast(1)
 
     /** Each star group's twinkle period, seconds; unrelated, so the groups never fall into step. */
     private val STAR_PERIODS_S = doubleArrayOf(3.1, 3.7, 4.3, 5.3, 6.1)

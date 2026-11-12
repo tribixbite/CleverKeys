@@ -5,6 +5,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import kotlin.math.abs
+import kotlin.math.hypot
 
 /**
  * The aurora's optional motion (maintainer 2026-11-10: gentle, negligible overhead, and it must
@@ -34,27 +35,49 @@ class AuroraMotionTest {
     }
 
     /**
-     * "Gently": between two frames at the frame rate nothing visibly jumps — a sliver of a dp for
-     * the gentle style at 8 fps, and for the aurora about half a dp per tenth of a second (about a
-     * dp at its 5 fps since 2026-11-12, the maintainer's choice of fewer, larger steps).
+     * "Gently": between two frames at the rate each style is shown at, the curtains drift at most
+     * about a dp, the cross-fade changes by at most a tenth and a star group's brightness by about
+     * a tenth. Absolute ceilings, not bounds scaled by the frame interval: the aurora's 5 fps
+     * (maintainer, 2026-11-12) doubled every step of its former 10 fps and sits at these ceilings
+     * (drift 1.08 dp, cross-fade 0.100, stars 0.111); a lower rate or faster motion must fail here.
+     * The snow's sky moves in the aurora's style at the snow's 8 fps. Sampled every 50 ms.
      */
     @Test
     fun consecutiveFramesMoveByASliverOfADp() {
         for ((style, frameMs, maxDrift, maxFade) in listOf(
             Quad(MotionStyle.GENTLE, AuroraMotion.FRAME_MS, 0.2f, 0.05f),
-            Quad(MotionStyle.AURORA, AuroraMotion.AURORA_FRAME_MS, 0.6f * AuroraMotion.AURORA_FRAME_MS / 100f, 0.06f * AuroraMotion.AURORA_FRAME_MS / 100f),
+            Quad(MotionStyle.AURORA, AuroraMotion.AURORA_FRAME_MS, 1.1f, 0.101f),
+            Quad(MotionStyle.forScene(SceneKind.SNOW), SceneKind.SNOW.frameMs, 1.1f, 0.101f),
         )) {
             val dt = frameMs / 1000.0
             var t = 0.0
             while (t < 300.0) {
                 val a = AuroraMotion.frame(t, style)
                 val b = AuroraMotion.frame(t + dt, style)
-                assertWithMessage("drift per frame at $t").that(abs(b.driftADp - a.driftADp)).isLessThan(maxDrift)
-                assertThat(abs(b.driftBDp - a.driftBDp)).isLessThan(maxDrift)
-                assertWithMessage("cross-fade per frame").that(abs(b.crossfade - a.crossfade)).isLessThan(maxFade)
-                for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isLessThan(0.08f * frameMs / 100f)
-                t += 0.5
+                assertWithMessage("drift per frame at $t").that(abs(b.driftADp - a.driftADp)).isAtMost(maxDrift)
+                assertThat(abs(b.driftBDp - a.driftBDp)).isAtMost(maxDrift)
+                assertWithMessage("cross-fade per frame").that(abs(b.crossfade - a.crossfade)).isAtMost(maxFade)
+                for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isAtMost(0.115f)
+                t += 0.05
             }
+        }
+    }
+
+    /**
+     * A drifting particle (pollen, glints, snowflakes) travels at most [MAX_PARTICLE_STEP_DP]
+     * between two frames at its scene's own rate, at the fastest group's speed.
+     */
+    @Test
+    fun driftingParticlesStepAtMostAFewDpPerFrame() {
+        val fastest = AuroraMotion.groupSpeed(AuroraMotion.STAR_GROUPS - 1)
+        assertThat(fastest).isWithin(1e-6f).of(1.3f)
+        assertThat(AuroraMotion.groupSpeed(0)).isWithin(1e-6f).of(0.7f)
+        for (look in KeyboardLooks.SCENES) {
+            val backdrop = look.dark.backdrop ?: continue
+            val field = backdrop.stars ?: continue
+            val frameMs = backdrop.scene?.frameMs ?: AuroraMotion.AURORA_FRAME_MS
+            val step = hypot(field.driftXDpPerS, field.driftYDpPerS) * fastest * frameMs / 1000f
+            assertWithMessage("${look.id} particle step, dp").that(step.toDouble()).isAtMost(MAX_PARTICLE_STEP_DP.toDouble())
         }
     }
 
@@ -403,6 +426,17 @@ class AuroraMotionTest {
         assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT, charging = true)).isTrue()
         assertThat(allows(pct = MotionAllowance.LOW_BATTERY_PERCENT + 1)).isTrue()
         assertWithMessage("an unknown battery level does not limit").that(allows(pct = -1)).isTrue()
+    }
+
+    private companion object {
+        /**
+         * The farthest a particle may travel between two frames, dp: the width of the largest
+         * snowflake (1.6 dp radius), so the biggest particles overlap where they were a frame
+         * before. The snow's flakes (falling at up to 18 × 1.3 dp/s) step 2.9 dp at its 8 fps; at
+         * 7 fps they stepped 3.3, past their own width (round 17 review). The stream's glints step
+         * 1.9 dp at 7 fps, the meadow's pollen 0.7.
+         */
+        const val MAX_PARTICLE_STEP_DP = 3.2f
     }
 }
 

@@ -340,7 +340,7 @@ class BackdropDrawable(
                 out[n++] = (if (overlay != null) SceneOverlayPlan.stars(0f, 0f, g, frame.starAlpha, starLayers).alpha
                     else frame.starAlpha[g]) * starLevel
                 if (field.driftXDpPerS != 0f || field.driftYDpPerS != 0f) {
-                    val speed = 0.7f + 0.6f * g / (AuroraMotion.STAR_GROUPS - 1)
+                    val speed = AuroraMotion.groupSpeed(g)
                     out[n++] = (field.driftXDpPerS * speed * density * seconds).toFloat() * px
                     out[n++] = (field.driftYDpPerS * speed * density * seconds).toFloat() * px
                 }
@@ -468,6 +468,11 @@ class BackdropDrawable(
         invalidateSelf()
         // A wake that came before the painting (keyboard just shown) starts the frames now.
         if (motionEnabled && rendered != null) wake()
+        // Already moving (the keyboard showed at a new size, painted while the old picture moved):
+        // wake() does not start again, so the layers released above are asked for here. Without
+        // this the first spell after a rotation or a theme change ran on the window path
+        // (Pixel 8 Pro round 17: no layers in landscape until the keyboard showed a second time).
+        syncOverlay()
     }
 
     // ---- Display-hardware layers (SceneOverlay) ----
@@ -486,6 +491,7 @@ class BackdropDrawable(
             drawableAlpha = drawableAlpha,
             hasColorFilter = hasColorFilter,
             starsDrift = field != null && (field.driftXDpPerS != 0f || field.driftYDpPerS != 0f),
+            frameMs = frameMs,
         )
     }
 
@@ -1022,8 +1028,7 @@ class BackdropDrawable(
             val node = nodes[g] as RenderNode
             node.setAlpha(frame.starAlpha[g])
             if (drifts) {
-                // Near groups travel faster than far ones: from 0.7× to 1.3× of the drift.
-                val speed = 0.7f + 0.6f * g / (nodes.size - 1).coerceAtLeast(1)
+                val speed = AuroraMotion.groupSpeed(g, nodes.size)
                 node.translationX = AuroraMotion.wrap((field.driftXDpPerS * speed * density * seconds).toFloat(), b.width())
                 node.translationY = AuroraMotion.wrap((field.driftYDpPerS * speed * density * seconds).toFloat(), b.height())
             }

@@ -1471,6 +1471,27 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     10, 12, 10/8/12/12). Round 6 re-parsed with all three display rails: +58.6 display (its total
     +136.5 was complete; a guess that it missed two rails was wrong); it is lower than later rounds
     because it priced motion while typing at 8 fps. Spec §0 gives the per-theme cost.
+    Seventeenth round (2026-11-12, maintainer: smoothness tests relaxed? fps vs power linear? a
+    day's battery; floating/split/fold/tablet; landscape power). Pixel, Aurora, untouched, refresh
+    free, brightness 12, Keep Moving For 600 s, 16 × 5 min mirrored (off lay5 win5 win7 win8 offL
+    lay5L win5L | reverse): off 770/768, layers 5 fps +163, window 5 / 7 / 8 fps +183 / +178 /
+    +187 (display +80–82 at all three, CPU +50): **flat from 5 to 8 fps**, the §4.1 curve
+    (121/198/241) was wrong; landscape window +169/+174. The "layers, landscape" arm drew window
+    frames: bug — the first show at a new size renders the painting async, `setPainting` released
+    the pending layers and `wake()` returned early (already ticking); now `setPainting` calls
+    `syncOverlay()`. Layers gated to 10 fps+ (`SceneOverlayPlan.MIN_FRAME_MS`): ≤ ~20 mW saved at
+    5 fps on the Pixel, and on a Galaxy Tab S11 (192.168.0.68, CK installed as default IME by the
+    maintainer's leave) the 4 layers pushed the layers AND the keyboard window to CLIENT at 120 Hz
+    (window path: DEVICE, 60 Hz). Smoothness: the scaled per-frame bounds are now absolute
+    ceilings sampled densely (layers ≤ 2.2 dp, aurora ≤ 1.1 dp / 0.1 cross-fade, particles ≤ 3.2
+    dp); that found a visible beach ROLL wrap at 8 fps (fixed: `SceneMotion.ROLL_HIDDEN`) and
+    snowflakes stepping 3.3 dp > their width at 7 fps → Snow 8 fps (same cost). Day-of-use model
+    (Fable draft, revised with round 17): `docs/eval/2026-11-12-scene-battery-day.md`, light user
+    0.16–0.25 %/day, heavy chatter 1.3–2.0 %. Tablet: keyboard fine in landscape, portrait,
+    pop-up window; CK has no split or floating keyboard mode; foldables get per-screen heights
+    (`FoldStateTracker`, `KeyboardHeightPrefs`). Open: device check of the fix (first show after
+    rotation builds layers), the Blend setting's text (says it saves battery; true only at 10+
+    fps; 21 locales), brightness-102 untouched run, 9 fps, tablet power.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

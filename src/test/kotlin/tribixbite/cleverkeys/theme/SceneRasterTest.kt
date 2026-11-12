@@ -73,15 +73,16 @@ class SceneRasterTest {
 
     /**
      * The frame rates the maintainer chose (2026-11-12: "aurora and river rocks probably only need
-     * 5fps, beach 8, snow stream meadow and forest 7"): each frame costs about the same whatever
-     * the scene draws, so the rate is what the motion costs.
+     * 5fps, beach 8, snow stream meadow and forest 7"), the snow at 8 since round 17 (its flakes
+     * stepped past their own width at 7, and 8 cost the same): each frame costs about the same
+     * whatever the scene draws, so the rate is what the motion costs.
      */
     @Test
     fun eachSceneMovesAtItsChosenFrameRate() {
         val fps = SceneKind.entries.associateWith { (1000.0 / it.frameMs).roundToInt() }
         assertThat(fps).containsExactly(
             SceneKind.MEADOW, 7, SceneKind.STREAM, 7, SceneKind.RIVER_ROCKS, 5,
-            SceneKind.FOREST, 7, SceneKind.SNOW, 7, SceneKind.BEACH, 8,
+            SceneKind.FOREST, 7, SceneKind.SNOW, 8, SceneKind.BEACH, 8,
         )
         assertThat((1000.0 / AuroraMotion.AURORA_FRAME_MS).roundToInt()).isEqualTo(5)
     }

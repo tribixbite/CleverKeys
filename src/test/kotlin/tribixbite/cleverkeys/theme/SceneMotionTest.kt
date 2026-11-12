@@ -90,37 +90,56 @@ class SceneMotionTest {
     }
 
     /**
-     * At each scene's frame rate, no point of any layer moves faster than the bounds the scenes
-     * were designed to (a few raster pixels per 83 ms frame, scaled to the frame interval: the
-     * maintainer chose 5–8 fps on 2026-11-12, accepting larger steps), and nothing jumps where
-     * it shows (a rolling swell wraps only between frames where it is invisible).
+     * At each scene's own frame rate no point of any layer steps more than [MAX_LAYER_STEP_DP]
+     * between two frames, and nothing jumps where it shows (a rolling swell wraps only next to a
+     * frame where it is hidden). Absolute ceilings in dp, not a speed scaled by the frame
+     * interval: a lower default rate makes every step larger, and that has to fail here, not pass
+     * (2026-11-12: the scaled bound missed a visible beach wrap at 8 fps). Sampled every 37 ms over
+     * a minute, at three points across and along each layer.
      */
     @Test
     fun consecutiveFramesStepSmoothly() {
         for (kind in SceneKind.entries) {
             val painting = SceneRaster.paint(kind, 400, 360, 2.625f / kind.paintScale)
+            // Raster px to dp: a raster pixel is paintScale device px at density 2.625.
+            val toDp = kind.paintScale / 2.625f
             val dt = kind.frameMs / 1000.0
             for (layer in painting.layers) {
                 val m = layer.motion
                 var t = 0.0
                 val a = FloatArray(2); val b = FloatArray(2)
-                while (t < 16.0) {
+                while (t < 60.0) {
                     for (y in listOf(layer.top.toFloat(), layer.top + layer.height / 2f, (layer.top + layer.height).toFloat())) {
-                        SceneMotion.displace(m, 100f, y, t, a)
-                        SceneMotion.displace(m, 100f, y, t + dt, b)
-                        var step = abs(b[0] - a[0]) + abs(b[1] - a[1])
-                        // A flowing layer repeats across its width: its wrap is no jump.
-                        if (m.kind == LayerMotionKind.FLOW) step = minOf(step, abs(m.amplitude - step))
-                        // ROLL wraps while invisible; WASH surges fastest.
-                        val hidden = minOf(SceneMotion.alpha(m, t), SceneMotion.alpha(m, t + dt)) < 0.05f
-                        val perDesignFrame = if (m.kind == LayerMotionKind.WASH) 4.5f * 2.625f else 2.6f * 2.625f / kind.paintScale
-                        val limit = if (m.kind == LayerMotionKind.ROLL && hidden) Float.MAX_VALUE
-                        else perDesignFrame * (kind.frameMs / DESIGN_FRAME_MS).toFloat()
-                        assertWithMessage("$kind ${m.kind} at $t, y $y").that(step).isAtMost(limit)
+                        for (x in listOf(20f, 100f, 300f)) {
+                            SceneMotion.displace(m, x, y, t, a)
+                            SceneMotion.displace(m, x, y, t + dt, b)
+                            var step = abs(b[0] - a[0]) + abs(b[1] - a[1])
+                            // A flowing layer repeats across its width: its wrap is no jump.
+                            if (m.kind == LayerMotionKind.FLOW) step = minOf(step, abs(m.amplitude - step))
+                            val hidden = minOf(SceneMotion.alpha(m, t), SceneMotion.alpha(m, t + dt)) == 0f
+                            if (m.kind == LayerMotionKind.ROLL && hidden) continue
+                            assertWithMessage("$kind ${m.kind} at $t, ($x, $y)").that(step * toDp).isAtMost(MAX_LAYER_STEP_DP)
+                        }
                     }
-                    t += 0.29
+                    t += 0.037
                 }
             }
+        }
+    }
+
+    /** The swell's hidden stretch at the wrap outlasts a frame at every rate from 5 fps up. */
+    @Test
+    fun aSwellStaysHiddenForAWholeFrameAroundItsWrap() {
+        for (layer in SceneRaster.paint(SceneKind.BEACH, 400, 360, 2.625f / SceneKind.BEACH.paintScale).layers) {
+            val m = layer.motion
+            if (m.kind != LayerMotionKind.ROLL) continue
+            // From just before the wrap to just after it, in 1-ms steps: the longest fully hidden run.
+            val wrapAt = (1.0 - m.phase) * m.periodS
+            var run = 0; var longest = 0
+            for (ms in -500..500) {
+                if (SceneMotion.alpha(m, wrapAt + ms / 1000.0) == 0f) { run++; longest = maxOf(longest, run) } else run = 0
+            }
+            assertWithMessage("hidden ms around the wrap").that(longest).isGreaterThan(200)
         }
     }
 
@@ -171,7 +190,12 @@ class SceneMotionTest {
     }
 
     private companion object {
-        /** The frame interval the step bounds were written for (12 fps). */
-        const val DESIGN_FRAME_MS = 83.0
+        /**
+         * The most any layer point may move between two frames at its scene's own rate, dp. The
+         * gustiest grass tips step 2.1 dp at the meadow's 7 fps (1.2 at its former 12); the other
+         * layers stay under 2 dp. A sharp blade is about 1 dp wide, so this is the edge of what
+         * reads as motion rather than steps: a lower rate needs slower motion, not a looser bound.
+         */
+        const val MAX_LAYER_STEP_DP = 2.2f
     }
 }

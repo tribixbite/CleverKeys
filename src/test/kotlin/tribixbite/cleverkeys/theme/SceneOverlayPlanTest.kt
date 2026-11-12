@@ -14,8 +14,8 @@ class SceneOverlayPlanTest {
     private fun eligible(
         sdk: Int = 34, setting: Boolean = true, moving: Boolean = true, alt: Boolean = true,
         mesh: Boolean = false, rain: Boolean = false, alpha: Int = 0xFF, filter: Boolean = false,
-        drift: Boolean = false,
-    ) = SceneOverlayPlan.eligible(sdk, setting, moving, alt, mesh, rain, alpha, filter, drift)
+        drift: Boolean = false, frameMs: Long = 100L,
+    ) = SceneOverlayPlan.eligible(sdk, setting, moving, alt, mesh, rain, alpha, filter, drift, frameMs)
 
     @Test
     fun onlyAMovingCrossFadingBackdropAtFullOpacityRunsOnLayers() {
@@ -31,6 +31,13 @@ class SceneOverlayPlanTest {
             .that(eligible(alpha = 0xFE)).isFalse()
         assertWithMessage("theme previews tint the backdrop").that(eligible(filter = true)).isFalse()
         assertWithMessage("drifting particles would need wrapped copies").that(eligible(drift = true)).isFalse()
+        // Round 17 / Galaxy Tab S11: below 10 fps the window path costs about the same, and the
+        // layers can push a phone with fewer planes onto the GPU at its top refresh rate.
+        assertWithMessage("10 fps: the layers halve the cost").that(eligible(frameMs = SceneOverlayPlan.MIN_FRAME_MS)).isTrue()
+        assertWithMessage("15 fps").that(eligible(frameMs = 67L)).isTrue()
+        assertWithMessage("8 fps: the window path").that(eligible(frameMs = 125L)).isFalse()
+        assertWithMessage("the aurora's own 5 fps: the window path")
+            .that(eligible(frameMs = AuroraMotion.AURORA_FRAME_MS)).isFalse()
     }
 
     /** The rectangle drawDrifting fills: stretched past both sides by the margin, shifted by the drift. */

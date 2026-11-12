@@ -1468,7 +1468,9 @@ object SceneRaster {
  */
 enum class SceneKind(val paintScale: Int, val frameMs: Long, val motionScale: Float = 1f) {
     // Rates per maintainer 2026-11-12 (were meadow, forest, beach 12 fps; stream 8; rocks, snow 10):
-    // river rocks 5 fps, beach 8, the rest 7. The snow's aurora sky moves as the aurora look does
-    // (MotionStyle.forScene), at the snow's own rate.
-    MEADOW(1, 143L, motionScale = 0.5f), STREAM(2, 143L), RIVER_ROCKS(1, 200L), FOREST(1, 143L), SNOW(2, 143L), BEACH(1, 125L)
+    // river rocks 5 fps, beach 8, the rest 7. The snow at 8 since round 17: its falling flakes
+    // (up to 3.2 dp across, 23 dp/s) stepped 3.3 dp a frame at 7 fps, past their own width, and
+    // 8 fps cost the same as 7 on the Pixel 8 Pro (+187 vs +178 mW, within run-to-run spread).
+    // The snow's aurora sky moves as the aurora look does (MotionStyle.forScene), at its own rate.
+    MEADOW(1, 143L, motionScale = 0.5f), STREAM(2, 143L), RIVER_ROCKS(1, 200L), FOREST(1, 143L), SNOW(2, 125L), BEACH(1, 125L)
 }

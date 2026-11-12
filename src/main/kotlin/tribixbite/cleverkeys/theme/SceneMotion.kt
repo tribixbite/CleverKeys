@@ -144,6 +144,15 @@ object SceneMotion {
     private const val SURGE = 0.38f
 
     /**
+     * Below this share of its sine a [LayerMotionKind.ROLL] is fully transparent, so the swell is
+     * hidden for ~3 % of its period around the wrap (0.26 s of the beach's 8 s): longer than one
+     * frame at 5 fps or faster, so the jump from the shore back to the horizon always falls next
+     * to a hidden frame. Fading to zero only at the wrap instant let two 8-fps frames straddle it
+     * at ~6 % alpha each (2026-11-12, found by a denser `SceneMotionTest`).
+     */
+    const val ROLL_HIDDEN = 0.05f
+
+    /**
      * The gust at [x] and [seconds], -1..1 (plus [LayerMotion.bias]): two unrelated sines, one
      * travelling across the layer with the wind, so the field never sways in lockstep.
      */
@@ -179,7 +188,8 @@ object SceneMotion {
             if (p < SURGE) 1f - m.fade * (1f - p / SURGE) * (1f - p / SURGE)
             else 1f - m.fade * ((p - SURGE) / (1f - SURGE))
         }
-        LayerMotionKind.ROLL -> sin(PI * cycle(m, seconds)).toFloat().coerceAtLeast(0f).pow(0.8f)
+        LayerMotionKind.ROLL ->
+            ((sin(PI * cycle(m, seconds)).toFloat() - ROLL_HIDDEN) / (1f - ROLL_HIDDEN)).coerceAtLeast(0f).pow(0.8f)
         else -> 1f
     }
 
