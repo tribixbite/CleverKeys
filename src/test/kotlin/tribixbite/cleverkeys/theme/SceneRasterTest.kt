@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.theme
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
+import kotlin.math.roundToInt
 
 /**
  * The nature scenes (maintainer 2026-11-10): every scene paints an opaque, deterministic picture
@@ -71,8 +72,23 @@ class SceneRasterTest {
     }
 
     /**
+     * The frame rates the maintainer chose (2026-11-12: "aurora and river rocks probably only need
+     * 5fps, beach 8, snow stream meadow and forest 7"): each frame costs about the same whatever
+     * the scene draws, so the rate is what the motion costs.
+     */
+    @Test
+    fun eachSceneMovesAtItsChosenFrameRate() {
+        val fps = SceneKind.entries.associateWith { (1000.0 / it.frameMs).roundToInt() }
+        assertThat(fps).containsExactly(
+            SceneKind.MEADOW, 7, SceneKind.STREAM, 7, SceneKind.RIVER_ROCKS, 5,
+            SceneKind.FOREST, 7, SceneKind.SNOW, 7, SceneKind.BEACH, 8,
+        )
+        assertThat((1000.0 / AuroraMotion.AURORA_FRAME_MS).roundToInt()).isEqualTo(5)
+    }
+
+    /**
      * The snow's aurora ripples as the aurora look's curtains do (maintainer 2026-11-11): its sky is
-     * a cross-faded pair that drifts with the aurora's style, at the aurora's frame rate, while the
+     * a cross-faded pair that drifts with the aurora's style, while the
      * ground in front stays where it was painted (nothing of it moves between two moments).
      */
     @Test
@@ -80,7 +96,6 @@ class SceneRasterTest {
         assertThat(MotionStyle.forScene(SceneKind.SNOW)).isSameInstanceAs(MotionStyle.AURORA)
         assertThat(MotionStyle.forScene(null)).isSameInstanceAs(MotionStyle.AURORA)
         assertThat(MotionStyle.forScene(SceneKind.STREAM)).isSameInstanceAs(MotionStyle.GENTLE)
-        assertThat(SceneKind.SNOW.frameMs).isEqualTo(AuroraMotion.AURORA_FRAME_MS)
         val p = SceneRaster.paint(SceneKind.SNOW, 200, 140, 0.5f)
         assertWithMessage("a second sky image to cross-fade").that(p.alt).isNotNull()
         val ground = p.layers.single()

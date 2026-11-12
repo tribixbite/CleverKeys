@@ -149,6 +149,9 @@ class BackdropDrawable(
     /** A build is waiting for its anchor's surface ([SceneOverlay.NotReady]): retried each tick. */
     private var overlayPending = false
 
+    /** Star layers of the current [overlay] ([SceneOverlayPlan.starLayers]). */
+    private var starLayers = SceneOverlayPlan.STAR_LAYERS
+
     /** A colour filter is set (theme previews tint the backdrop): the layers cannot apply it. */
     private var hasColorFilter = false
 
@@ -176,8 +179,11 @@ class BackdropDrawable(
     fun setTuning(value: SceneMotionTuning) {
         if (value == tuning) return
         val repaint = value.crisp != tuning.crisp || value.trueBlack != tuning.trueBlack
-        // The layers vote their frame rate when built: a new rate rebuilds them (below).
-        if (value.fps != tuning.fps) releaseOverlay()
+        // The layers vote their frame rate and split the stars by twinkle when built: a change of
+        // either rebuilds them (below).
+        if (value.fps != tuning.fps || SceneOverlayPlan.starLayers(value.twinkle) != SceneOverlayPlan.starLayers(tuning.twinkle)) {
+            releaseOverlay()
+        }
         tuning = value
         clock.maxStepMs = AuroraMotionClock.stepCapFor(frameMs)
         clock.rate = value.speed
@@ -329,9 +335,10 @@ class BackdropDrawable(
             val starLevel = field.maxAlpha / VisibleChangeGate.ALPHA_STEP
             // On hardware layers each star layer twinkles with one group's alpha
             // (SceneOverlayPlan.stars): the other groups' changes show nowhere.
-            val groups = if (overlay != null) SceneOverlayPlan.STAR_LAYERS else AuroraMotion.STAR_GROUPS
+            val groups = if (overlay != null) starLayers else AuroraMotion.STAR_GROUPS
             for (g in 0 until groups) {
-                out[n++] = frame.starAlpha[g] * starLevel
+                out[n++] = (if (overlay != null) SceneOverlayPlan.stars(0f, 0f, g, frame.starAlpha, starLayers).alpha
+                    else frame.starAlpha[g]) * starLevel
                 if (field.driftXDpPerS != 0f || field.driftYDpPerS != 0f) {
                     val speed = 0.7f + 0.6f * g / (AuroraMotion.STAR_GROUPS - 1)
                     out[n++] = (field.driftXDpPerS * speed * density * seconds).toFloat() * px
@@ -493,13 +500,18 @@ class BackdropDrawable(
      * four hardware planes holding a picture that does not change.
      */
     private fun syncOverlay() {
-        if (!ticking || !overlayEligible()) {
-            releaseOverlay()
-            return
+        val host = shownHost()
+        val action = SceneOverlayPlan.sync(
+            ticking = ticking, eligible = overlayEligible(), up = overlay != null,
+            resizing = resizing, visible = isVisible, hostShown = host != null,
+        )
+        when (action) {
+            SceneOverlayPlan.Sync.RELEASE -> releaseOverlay()
+            SceneOverlayPlan.Sync.KEEP, SceneOverlayPlan.Sync.WAIT -> Unit
+            // Eligible implies API 33+; the explicit check is for the compiler.
+            SceneOverlayPlan.Sync.CREATE ->
+                if (host != null && Build.VERSION.SDK_INT >= SceneOverlayPlan.MIN_SDK) createOverlay(host)
         }
-        if (overlay != null || resizing || !isVisible || Build.VERSION.SDK_INT < SceneOverlayPlan.MIN_SDK) return
-        val host = shownHost() ?: return
-        createOverlay(host)
     }
 
     @RequiresApi(SceneOverlayPlan.MIN_SDK)
@@ -511,6 +523,7 @@ class BackdropDrawable(
             overlayPending = true
             return
         }
+        starLayers = SceneOverlayPlan.starLayers(tuning.twinkle)
         val images = listOf(rendered.base, alt) + starLayerImages()
         val built = try {
             SceneOverlay.create(host, images, { x, y -> overlayFrame(x, y, images.size - 2) }, 1000f / frameMs)
@@ -529,6 +542,11 @@ class BackdropDrawable(
         // The star images were copied to the GPU; their software copies are not needed.
         for (i in 2 until images.size) images[i].recycle()
         built.onMoved = { applyOverlayFrame(onDraw = true) }
+        // Turned the other way round: the buffers' pre-rotation no longer fits; build them again.
+        built.onRotated = {
+            releaseOverlay()
+            syncOverlay()
+        }
         overlay = built
         invalidateSelf()
     }
@@ -559,25 +577,25 @@ class BackdropDrawable(
             margin, frame.driftADp * density, 1f)
         out += SceneOverlayPlan.curtain(x, y, b.width(), b.height(), rendered.base.width, rendered.base.height,
             margin, frame.driftBDp * density, frame.crossfade)
-        for (k in 0 until starLayers) out += SceneOverlayPlan.stars(x, y, k, frame.starAlpha)
+        for (k in 0 until starLayers) out += SceneOverlayPlan.stars(x, y, k, frame.starAlpha, this.starLayers)
         return out
     }
 
-    private fun starLayerCount(): Int = if (stars.isEmpty()) 0 else SceneOverlayPlan.STAR_LAYERS
+    private fun starLayerCount(): Int = if (stars.isEmpty()) 0 else starLayers
 
     /**
-     * The stars as [SceneOverlayPlan.STAR_LAYERS] transparent images of the view's size, at full
+     * The stars as [starLayers] transparent images of the view's size, at full
      * resolution (a star scaled up from the half-resolution curtains would blur), each holding
      * its twinkle groups at their full brightness: the layer's alpha does the twinkling.
      */
     private fun starLayerImages(): List<Bitmap> {
         val field = backdrop.stars ?: return emptyList()
         if (stars.isEmpty() || bounds.isEmpty) return emptyList()
-        return List(SceneOverlayPlan.STAR_LAYERS) { k ->
+        return List(starLayers) { k ->
             val image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
             val c = Canvas(image)
             for (i in stars.indices) {
-                if (!SceneOverlayPlan.groupOnLayer(i % AuroraMotion.STAR_GROUPS, k)) continue
+                if (!SceneOverlayPlan.groupOnLayer(i % AuroraMotion.STAR_GROUPS, k, starLayers)) continue
                 val s = stars[i]
                 drawParticle(c, field, s, s.x, s.y, s.alpha)
             }

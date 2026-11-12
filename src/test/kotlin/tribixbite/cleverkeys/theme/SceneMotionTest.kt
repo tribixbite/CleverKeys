@@ -89,7 +89,12 @@ class SceneMotionTest {
         assertThat(SceneMotion.alpha(swell, 4.0)).isWithin(1e-3f).of(1f)
     }
 
-    /** At each scene's frame rate, no point of any layer steps more than a few raster pixels. */
+    /**
+     * At each scene's frame rate, no point of any layer moves faster than the bounds the scenes
+     * were designed to (a few raster pixels per 83 ms frame, scaled to the frame interval: the
+     * maintainer chose 5–8 fps on 2026-11-12, accepting larger steps), and nothing jumps where
+     * it shows (a rolling swell wraps only between frames where it is invisible).
+     */
     @Test
     fun consecutiveFramesStepSmoothly() {
         for (kind in SceneKind.entries) {
@@ -107,8 +112,10 @@ class SceneMotionTest {
                         // A flowing layer repeats across its width: its wrap is no jump.
                         if (m.kind == LayerMotionKind.FLOW) step = minOf(step, abs(m.amplitude - step))
                         // ROLL wraps while invisible; WASH surges fastest.
-                        val limit = if (m.kind == LayerMotionKind.ROLL && SceneMotion.alpha(m, t) < 0.05f) Float.MAX_VALUE
-                        else if (m.kind == LayerMotionKind.WASH) 4.5f * 2.625f else 2.6f * 2.625f / kind.paintScale
+                        val hidden = minOf(SceneMotion.alpha(m, t), SceneMotion.alpha(m, t + dt)) < 0.05f
+                        val perDesignFrame = if (m.kind == LayerMotionKind.WASH) 4.5f * 2.625f else 2.6f * 2.625f / kind.paintScale
+                        val limit = if (m.kind == LayerMotionKind.ROLL && hidden) Float.MAX_VALUE
+                        else perDesignFrame * (kind.frameMs / DESIGN_FRAME_MS).toFloat()
                         assertWithMessage("$kind ${m.kind} at $t, y $y").that(step).isAtMost(limit)
                     }
                     t += 0.29
@@ -161,5 +168,10 @@ class SceneMotionTest {
         val out = SceneMotion.composite(painting, 3.0)
         assertThat(out[(2 + 1) * 8 + (2 + 1)]).isEqualTo(0xFFFF0000.toInt())
         assertThat(out.count { it != 0xFF000000.toInt() }).isEqualTo(1)
+    }
+
+    private companion object {
+        /** The frame interval the step bounds were written for (12 fps). */
+        const val DESIGN_FRAME_MS = 83.0
     }
 }

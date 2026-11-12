@@ -1467,6 +1467,8 @@ object SceneRaster {
  *   sways at half (maintainer 2026-11-10: "50% default scene motion intensity for meadow").
  */
 enum class SceneKind(val paintScale: Int, val frameMs: Long, val motionScale: Float = 1f) {
-    // The snow's aurora sky moves as the aurora look does, at its frame rate (MotionStyle.forScene).
-    MEADOW(1, 83L, motionScale = 0.5f), STREAM(2, 125L), RIVER_ROCKS(1, 100L), FOREST(1, 83L), SNOW(2, AuroraMotion.AURORA_FRAME_MS), BEACH(1, 83L)
+    // Rates per maintainer 2026-11-12 (were meadow, forest, beach 12 fps; stream 8; rocks, snow 10):
+    // river rocks 5 fps, beach 8, the rest 7. The snow's aurora sky moves as the aurora look does
+    // (MotionStyle.forScene), at the snow's own rate.
+    MEADOW(1, 143L, motionScale = 0.5f), STREAM(2, 143L), RIVER_ROCKS(1, 200L), FOREST(1, 143L), SNOW(2, 143L), BEACH(1, 125L)
 }

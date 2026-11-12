@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.theme
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.hardware.DataSpace
 import android.hardware.HardwareBuffer
 import android.util.Log
@@ -39,6 +40,16 @@ object SceneOverlayPlan {
      * rather than one per group ([AuroraMotion.STAR_GROUPS]).
      */
     const val STAR_LAYERS = 2
+
+    /**
+     * The star layers for a twinkle of [twinkle] (0..1): [STAR_LAYERS], or one when the stars do
+     * not twinkle (every group then shows at full alpha, so one layer is the same picture).
+     * Round 16 (Pixel 8 Pro, 2026-11-12, Aurora 10 fps, keyboard untouched, 2 runs each): 4 layers
+     * +188 mW over motion off, 3 layers (one star layer) +160, 2 (no stars) +165: the second star
+     * layer costs ~28 mW, mostly memory traffic. One layer at the default twinkle would make
+     * every star pulse together, so it is used only where it changes nothing on screen.
+     */
+    fun starLayers(twinkle: Float): Int = if (twinkle <= 0f) 1 else STAR_LAYERS
 
     /** First Android release with every call used ([AttachedSurfaceControl], setBuffer, setDataSpace). */
     const val MIN_SDK = 33
@@ -81,14 +92,73 @@ object SceneOverlayPlan {
         alpha = alpha.coerceIn(0f, 1f),
     )
 
-    /** Star layer [layer] (full resolution, the view's size) at its group's twinkle. */
-    fun stars(viewX: Float, viewY: Float, layer: Int, starAlpha: FloatArray) = OverlayPlacement(
+    /**
+     * Star layer [layer] of [layers] (full resolution, the view's size) at its group's twinkle;
+     * a single layer holds every group and takes their mean.
+     */
+    fun stars(viewX: Float, viewY: Float, layer: Int, starAlpha: FloatArray, layers: Int = STAR_LAYERS) = OverlayPlacement(
         x = viewX, y = viewY, scaleX = 1f, scaleY = 1f,
-        alpha = starAlpha.getOrElse(layer) { 1f }.coerceIn(0f, 1f),
+        alpha = (if (layers == 1) starAlpha.average().toFloat() else starAlpha.getOrElse(layer) { 1f }).coerceIn(0f, 1f),
     )
 
-    /** Whether twinkle group [group] is drawn on star layer [layer]. */
-    fun groupOnLayer(group: Int, layer: Int): Boolean = group % STAR_LAYERS == layer
+    /** Whether twinkle group [group] is drawn on star layer [layer] of [layers]. */
+    fun groupOnLayer(group: Int, layer: Int, layers: Int = STAR_LAYERS): Boolean = group % layers == layer
+
+    /**
+     * The clockwise rotation, in degrees, to draw a layer's image into its buffer with, for the
+     * window's buffer transform hint [hint] (`SurfaceControl.BUFFER_TRANSFORM_*`, the display's own
+     * rotation): the hint's turn, so the buffer already lies the way the panel scans out, and the
+     * layer declares the inverse ([bufferTransformFor]) so its content shows upright. Without it a
+     * rotated screen left every layer to the GPU (Pixel 8 Pro, 2026-11-12: all four layers
+     * CLIENT, ROT_90, in landscape). Declaring the hint itself instead also showed upright but left
+     * a net ROT_180 for the composer. 0 for the identity or a mirror (not a rotation).
+     */
+    fun preRotationDegrees(hint: Int): Int = when (hint) {
+        BUFFER_TRANSFORM_ROTATE_90 -> 90
+        BUFFER_TRANSFORM_ROTATE_180 -> 180
+        BUFFER_TRANSFORM_ROTATE_270 -> 270
+        else -> 0
+    }
+
+    /** The buffer transform a layer declares for [hint]: the inverse rotation, none otherwise. */
+    fun bufferTransformFor(hint: Int): Int = when (hint) {
+        BUFFER_TRANSFORM_ROTATE_90 -> BUFFER_TRANSFORM_ROTATE_270
+        BUFFER_TRANSFORM_ROTATE_180 -> BUFFER_TRANSFORM_ROTATE_180
+        BUFFER_TRANSFORM_ROTATE_270 -> BUFFER_TRANSFORM_ROTATE_90
+        else -> 0
+    }
+
+    /** `SurfaceControl.BUFFER_TRANSFORM_*` values (API 33), here so the plan stays Android-free. */
+    const val BUFFER_TRANSFORM_ROTATE_90 = 4
+    const val BUFFER_TRANSFORM_ROTATE_180 = 3
+    const val BUFFER_TRANSFORM_ROTATE_270 = 7
+
+    /** What [BackdropDrawable] does with its layers when asked to bring them in line ([sync]). */
+    enum class Sync {
+        /** Take the layers down (or drop an anchor still waiting for its surface). */
+        RELEASE,
+        /** They are up and may stay. */
+        KEEP,
+        /** They may run but cannot be built now (mid-resize, hidden, not on screen): ask again later. */
+        WAIT,
+        /** Build them. */
+        CREATE,
+    }
+
+    /**
+     * The layers' lifecycle in one rule (Fable audit 2026-11-12: the release-then-create paths had
+     * produced two bugs). They exist only while the backdrop moves ([ticking]) and may run
+     * ([eligible]): a resting or gated keyboard is one window plane, not four hardware planes
+     * holding a picture that does not change. Up ([up]) they stay; otherwise they are built only
+     * when the drawable is not mid-resize ([resizing]), is [visible] and its view is on screen
+     * ([hostShown]).
+     */
+    fun sync(ticking: Boolean, eligible: Boolean, up: Boolean, resizing: Boolean, visible: Boolean, hostShown: Boolean): Sync = when {
+        !ticking || !eligible -> Sync.RELEASE
+        up -> Sync.KEEP
+        resizing || !visible || !hostShown -> Sync.WAIT
+        else -> Sync.CREATE
+    }
 
     /**
      * The layers' z among themselves, bottom first: curtain A, curtain B, then the star layers.
@@ -98,6 +168,32 @@ object SceneOverlayPlan {
      * curtains covered the keys).
      */
     fun zOrder(index: Int): Int = index + 1
+}
+
+/**
+ * Which overlay owns each anchor (pure; `AnchorOwnersTest`). An overlay rebuilt in one pass (a
+ * new size, painting or tuning) claims the anchor before its predecessor's release has
+ * committed: the newest claim wins, and only the current owner may remove the anchor when it
+ * frees, or the successor's layers would lose their parent (Fable audit, finding 1). Weak keys,
+ * so a dropped anchor is not kept. Main thread only.
+ */
+internal class AnchorOwners<A : Any, O : Any> {
+    private val owners = java.util.WeakHashMap<A, O>()
+
+    /** [owner] now owns [anchor], whoever did before. */
+    fun claim(anchor: A, owner: O) {
+        owners[anchor] = owner
+    }
+
+    /** [owner] is done with [anchor]: true when it was the owner, i.e. the anchor may go. */
+    fun release(anchor: A, owner: O): Boolean {
+        if (owners[anchor] !== owner) return false
+        owners.remove(anchor)
+        return true
+    }
+
+    /** Whether any overlay owns [anchor] (an unowned one is a leftover that may be removed). */
+    fun isOwned(anchor: A): Boolean = owners[anchor] != null
 }
 
 /**
@@ -125,6 +221,8 @@ internal class SceneOverlay private constructor(
     /** The hardware bitmaps behind [layers] (same order); recycled on [release]. */
     private val bitmaps: List<Bitmap>,
     private val buffers: List<HardwareBuffer>,
+    /** The window's buffer transform hint the buffers were pre-rotated for. */
+    private val hint: Int,
 ) {
     private val location = IntArray(2)
     private var lastX = Int.MIN_VALUE
@@ -141,11 +239,23 @@ internal class SceneOverlay private constructor(
         if (!released && hostMoved()) onMoved?.invoke()
     }
 
+    /**
+     * Set by the owner: build the layers again. Called when the screen turned to an orientation
+     * the buffers are not pre-rotated for (landscape one way to the other keeps the view's size,
+     * so no bounds change rebuilds them).
+     */
+    var onRotated: (() -> Unit)? = null
+
+    private val hintListener = AttachedSurfaceControl.OnBufferTransformHintChangedListener { newHint ->
+        if (!released && newHint != hint) onRotated?.invoke()
+    }
+
     init {
         host.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
+        root.addOnBufferTransformHintChangedListener(hintListener)
         // The newest overlay on an anchor owns it: a predecessor whose release is still queued
         // (rebuilt in one pass: size, painting or tuning change) must not remove it (free()).
-        owners[anchor] = this
+        owners.claim(anchor, this)
     }
 
     private val anchorLocation = IntArray(2)
@@ -207,6 +317,7 @@ internal class SceneOverlay private constructor(
         if (released) return
         released = true
         if (host.viewTreeObserver.isAlive) host.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
+        root.removeOnBufferTransformHintChangedListener(hintListener)
         val t = SurfaceControl.Transaction()
         for (sc in layers) t.reparent(sc, null)
         val queued = onDraw && runCatching {
@@ -228,10 +339,7 @@ internal class SceneOverlay private constructor(
         if (freed) return
         freed = true
         // Only the anchor's current owner removes it: a successor may already have its layers on it.
-        if (owners[anchor] === this) {
-            owners.remove(anchor)
-            removeAnchor(anchor)
-        }
+        if (owners.release(anchor, this)) removeAnchor(anchor)
         for (sc in layers) sc.release()
         for (b in buffers) b.close()
         for (b in bitmaps) b.recycle()
@@ -244,7 +352,7 @@ internal class SceneOverlay private constructor(
         private const val TAG = "SceneOverlay"
 
         /** Each anchor's current overlay (main thread only; weak, so a dropped anchor is not kept). */
-        private val owners = java.util.WeakHashMap<SurfaceView, SceneOverlay>()
+        private val owners = AnchorOwners<SurfaceView, SceneOverlay>()
 
         /**
          * Whether [host]'s anchor has its surface, adding the anchor the first time (it gets its
@@ -289,7 +397,7 @@ internal class SceneOverlay private constructor(
         fun discardAnchor(host: View) {
             val decor = host.rootView as? ViewGroup ?: return
             (0 until decor.childCount).map(decor::getChildAt)
-                .filter { it.getTag(R_TAG) == ANCHOR && owners[it as? SurfaceView] == null }
+                .filter { it.getTag(R_TAG) == ANCHOR && (it as? SurfaceView)?.let(owners::isOwned) != true }
                 .forEach { decor.removeView(it) }
         }
 
@@ -314,15 +422,23 @@ internal class SceneOverlay private constructor(
             val buffers = ArrayList<HardwareBuffer>(images.size)
             val layers = ArrayList<SurfaceControl>(images.size)
             val t = SurfaceControl.Transaction()
+            // Each buffer drawn pre-rotated for the screen's orientation (preRotationDegrees).
+            val hint = root.bufferTransformHint
+            val degrees = SceneOverlayPlan.preRotationDegrees(hint)
             try {
                 for ((i, image) in images.withIndex()) {
-                    val hw = image.copy(Bitmap.Config.HARDWARE, false) ?: error("no hardware copy of layer $i")
+                    val upright = if (degrees == 0) image else Bitmap.createBitmap(
+                        image, 0, 0, image.width, image.height, Matrix().apply { setRotate(degrees.toFloat()) }, false,
+                    )
+                    val hw = upright.copy(Bitmap.Config.HARDWARE, false)
+                    if (upright !== image) upright.recycle()
+                    hw ?: error("no hardware copy of layer $i")
                     bitmaps += hw
                     val buffer = hw.hardwareBuffer
                     buffers += buffer
                     val sc = SurfaceControl.Builder()
                         .setName("CleverKeysBackdrop$i")
-                        .setBufferSize(image.width, image.height)
+                        .setBufferSize(hw.width, hw.height)
                         // The curtains are fully painted; the star layers are transparent between stars.
                         .setOpaque(i < 2)
                         .setHidden(false)
@@ -331,13 +447,15 @@ internal class SceneOverlay private constructor(
                     layers += sc
                     t.setBuffer(sc, buffer)
                     t.setDataSpace(sc, DataSpace.DATASPACE_SRGB)
+                    // The placements scale the upright content (the buffer once this is applied).
+                    t.setBufferTransform(sc, SceneOverlayPlan.bufferTransformFor(hint))
                     t.setLayer(sc, SceneOverlayPlan.zOrder(i))
                     // The pace the layers move at: the display may then stay at 60 Hz rather than
                     // its 120 Hz for "smooth" content, as the window path's low vote asks for.
                     t.setFrameRate(sc, frameRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT, Surface.CHANGE_FRAME_RATE_ONLY_IF_SEAMLESS)
                     t.setVisibility(sc, true)
                 }
-                val overlay = SceneOverlay(host, root, anchor, layers, bitmaps, buffers)
+                val overlay = SceneOverlay(host, root, anchor, layers, bitmaps, buffers, hint)
                 overlay.hostMoved()
                 val origin = overlay.hostOrigin()
                 overlay.write(t, initial(origin[0], origin[1]))

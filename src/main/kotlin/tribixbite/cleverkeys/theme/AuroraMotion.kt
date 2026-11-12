@@ -31,10 +31,12 @@ object AuroraMotion {
     const val FRAME_MS = 125L
 
     /**
-     * The aurora's frames: 10 per second, for its livelier motion (maintainer 2026-11-10: "a bit
-     * more vibrant … aurora is barely perceptible").
+     * The aurora's frames: 5 per second (maintainer 2026-11-12: "aurora and river rocks probably
+     * only need 5fps"; it was 10 for its livelier motion from 2026-11-10, 8 before). Its cost per
+     * second of motion follows the frame rate on the window path; on display-hardware layers it
+     * is about the same at 5 and 10 (docs/specs/scene-backdrops-and-power.md).
      */
-    const val AURORA_FRAME_MS = 100L
+    const val AURORA_FRAME_MS = 200L
 
     /**
      * Moving stops this long after the last touch or the keyboard showing, by default; the user

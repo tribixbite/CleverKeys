@@ -229,6 +229,15 @@ before its parent in the same frame (e.g. an edit mode that opens the label step
 ends up hidden UNDER the parent and taps look like no-ops. Compose sub-dialogs after the
 parent `Dialog` (CommandPaletteDialog, Saga 2026-10-07).
 
+## SurfaceControl layers on a rotated screen (2026-11-12)
+
+App-made `SurfaceControl` layers with portrait-native buffers are composited by the GPU in
+landscape (`dumpsys SurfaceFlinger` HWC table: CLIENT, ROT_90), while the window stays DEVICE.
+Draw each buffer turned by `AttachedSurfaceControl.bufferTransformHint` (the display's own
+rotation) and declare the INVERSE with `setBufferTransform`: declaring the hint itself shows
+upright too but leaves a net ROT_180. Landscape 90° ↔ 270° keeps the view size, so rebuild on
+`addOnBufferTransformHintChangedListener`, not on bounds. Check the Comp Type column, not the picture.
+
 ## Compose produceState and CI lint (2026-11-12)
 
 CI's `lintDebug` fails `ProduceStateDoesNotAssignValue` on a `produceState` producer that

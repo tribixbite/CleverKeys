@@ -35,13 +35,14 @@ class AuroraMotionTest {
 
     /**
      * "Gently": between two frames at the frame rate nothing visibly jumps — a sliver of a dp for
-     * the stream and the snow, about half a dp for the livelier aurora at its faster frame rate.
+     * the gentle style at 8 fps, and for the aurora about half a dp per tenth of a second (about a
+     * dp at its 5 fps since 2026-11-12, the maintainer's choice of fewer, larger steps).
      */
     @Test
     fun consecutiveFramesMoveByASliverOfADp() {
         for ((style, frameMs, maxDrift, maxFade) in listOf(
             Quad(MotionStyle.GENTLE, AuroraMotion.FRAME_MS, 0.2f, 0.05f),
-            Quad(MotionStyle.AURORA, AuroraMotion.AURORA_FRAME_MS, 0.6f, 0.06f),
+            Quad(MotionStyle.AURORA, AuroraMotion.AURORA_FRAME_MS, 0.6f * AuroraMotion.AURORA_FRAME_MS / 100f, 0.06f * AuroraMotion.AURORA_FRAME_MS / 100f),
         )) {
             val dt = frameMs / 1000.0
             var t = 0.0
@@ -51,7 +52,7 @@ class AuroraMotionTest {
                 assertWithMessage("drift per frame at $t").that(abs(b.driftADp - a.driftADp)).isLessThan(maxDrift)
                 assertThat(abs(b.driftBDp - a.driftBDp)).isLessThan(maxDrift)
                 assertWithMessage("cross-fade per frame").that(abs(b.crossfade - a.crossfade)).isLessThan(maxFade)
-                for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isLessThan(0.08f)
+                for (i in a.starAlpha.indices) assertThat(abs(b.starAlpha[i] - a.starAlpha[i])).isLessThan(0.08f * frameMs / 100f)
                 t += 0.5
             }
         }

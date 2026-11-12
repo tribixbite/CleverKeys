@@ -84,15 +84,31 @@ object SceneTrueBlack {
         val radius = max(1, (DETAIL_RADIUS_DP * density).toInt())
         val w = painting.width
         val h = painting.height
+        // One scratch set for every image of the painting, sized for the largest.
+        val scratch = Scratch(max(painting.base.size, painting.layers.maxOfOrNull { it.pixels.size } ?: 0))
         return ScenePainting(
             w, h,
-            darken(painting.base, w, h, radius, cutoff, params),
-            painting.alt?.let { darken(it, w, h, radius, cutoff, params) },
+            darken(painting.base, w, h, radius, cutoff, params, scratch),
+            painting.alt?.let { darken(it, w, h, radius, cutoff, params, scratch) },
             painting.layers.map { l ->
-                SceneLayer(l.left, l.top, l.width, l.height, darken(l.pixels, l.width, l.height, radius, cutoff, params), l.motion)
+                SceneLayer(l.left, l.top, l.width, l.height, darken(l.pixels, l.width, l.height, radius, cutoff, params, scratch), l.motion)
             },
             painting.surface,
         )
+    }
+
+    /**
+     * The working memory of [darken], reused for every image of one painting: three floats per
+     * pixel of the largest image (12 B/px). Each image used to allocate six arrays of its own
+     * (24 B/px; a 1008 × 840 scene with five images allocated ~85 MB on the render thread).
+     */
+    internal class Scratch(size: Int) {
+        /** Each pixel's luma times its alpha, then its blur (the blur runs in place). */
+        val luma = FloatArray(size)
+        /** Each pixel's alpha, then its blur; unused for a fully opaque image. */
+        val alpha = FloatArray(size)
+        /** The blur's horizontal pass. */
+        val pass = FloatArray(size)
     }
 
     /** Rec. 709 luma of an ARGB colour, 0..1 (alpha ignored). */
@@ -122,30 +138,38 @@ object SceneTrueBlack {
     }
 
     /**
-     * [pixels] ([w] × [h], ARGB, alpha kept) darkened by [params]. The detail term compares with
-     * an alpha-weighted blur, so a layer's transparent surroundings do not read as an edge.
+     * [pixels] ([w] × [h], ARGB, alpha kept) darkened by [params], working in [scratch] (at least
+     * [w] × [h]; a fresh one when not given). The detail term compares with an alpha-weighted
+     * blur, so a layer's transparent surroundings do not read as an edge; a fully opaque image
+     * skips the alpha blur (it is 1 everywhere).
      */
-    internal fun darken(pixels: IntArray, w: Int, h: Int, radius: Int, cutoff: Float, params: Params): IntArray {
-        // TODO: six float arrays per image (24 B/px: ~20 MB for a 1008 × 840 scene, three images
-        //  for the snow) are allocated on the render thread; an OOM falls back to the base colour
-        //  (requestPainting), but reusing one scratch set per painting would halve the peak.
+    internal fun darken(
+        pixels: IntArray, w: Int, h: Int, radius: Int, cutoff: Float, params: Params,
+        scratch: Scratch = Scratch(w * h),
+    ): IntArray {
         val size = w * h
-        val y = FloatArray(size)
-        val a = FloatArray(size)
+        require(scratch.luma.size >= size) { "scratch for ${scratch.luma.size} px, image has $size" }
+        val blurY = scratch.luma
+        val blurA = scratch.alpha
+        var opaque = true
         for (i in 0 until size) {
             val c = pixels[i]
-            a[i] = (c ushr 24) / 255f
-            y[i] = luma(c) * a[i]
+            val alpha = c ushr 24
+            if (alpha != 0xFF) opaque = false
+            val a = alpha / 255f
+            blurA[i] = a
+            blurY[i] = luma(c) * a
         }
-        val blurY = boxBlur(y, w, h, radius)
-        val blurA = boxBlur(a, w, h, radius)
+        boxBlur(blurY, w, h, radius, scratch.pass, blurY)
+        if (!opaque) boxBlur(blurA, w, h, radius, scratch.pass, blurA)
         val out = IntArray(size)
         for (i in 0 until size) {
             val c = pixels[i]
             val alpha = c ushr 24
             if (alpha == 0) continue
             val lum = luma(c)
-            val surround = if (blurA[i] > 0f) blurY[i] / blurA[i] else lum
+            val weight = if (opaque) 1f else blurA[i]
+            val surround = if (weight > 0f) blurY[i] / weight else lum
             val scale = PEAK * max(
                 light(lum, cutoff),
                 max(smoothstep(DETAIL_FROM, DETAIL_TO, abs(lum - surround)), colour(c, params)),
@@ -184,10 +208,15 @@ object SceneTrueBlack {
         return t * t * (3f - 2f * t)
     }
 
-    /** A separable box blur of radius [r] (the window shrinks at the edges, no padding). */
-    internal fun boxBlur(src: FloatArray, w: Int, h: Int, r: Int): FloatArray {
-        val tmp = FloatArray(src.size)
-        val out = FloatArray(src.size)
+    /**
+     * A separable box blur of radius [r] (the window shrinks at the edges, no padding) of the
+     * first [w] × [h] values of [src] into [out], through [pass] (the horizontal pass). [out] may
+     * be [src]: the vertical pass reads only [pass].
+     */
+    internal fun boxBlur(
+        src: FloatArray, w: Int, h: Int, r: Int,
+        pass: FloatArray = FloatArray(w * h), out: FloatArray = FloatArray(w * h),
+    ): FloatArray {
         for (row in 0 until h) {
             val o = row * w
             var acc = 0f
@@ -196,16 +225,16 @@ object SceneTrueBlack {
             for (x in 0 until w) {
                 if (x + r < w) { acc += src[o + x + r]; n++ }
                 if (x - r - 1 >= 0) { acc -= src[o + x - r - 1]; n-- }
-                tmp[o + x] = acc / n
+                pass[o + x] = acc / n
             }
         }
         for (col in 0 until w) {
             var acc = 0f
             var n = 0
-            for (yy in 0 until min(r, h)) { acc += tmp[yy * w + col]; n++ }
+            for (yy in 0 until min(r, h)) { acc += pass[yy * w + col]; n++ }
             for (yy in 0 until h) {
-                if (yy + r < h) { acc += tmp[(yy + r) * w + col]; n++ }
-                if (yy - r - 1 >= 0) { acc -= tmp[(yy - r - 1) * w + col]; n-- }
+                if (yy + r < h) { acc += pass[(yy + r) * w + col]; n++ }
+                if (yy - r - 1 >= 0) { acc -= pass[(yy - r - 1) * w + col]; n-- }
                 out[yy * w + col] = acc / n
             }
         }

@@ -138,6 +138,46 @@ class SceneTrueBlackTest {
         }
     }
 
+    /**
+     * One scratch set serves every image of a painting: a smaller, translucent layer darkened in
+     * a set an opaque full-size image just used must come out exactly as with fresh memory (no
+     * stale blur or alpha leaks across images).
+     */
+    @Test
+    fun aReusedScratchGivesTheSameResultAsFreshMemory() {
+        val bigW = 48
+        val bigH = 36
+        val big = IntArray(bigW * bigH) { i -> argb(0xFF, (i * 37) and 0xFF, (i * 11) and 0xFF, (i * 5) and 0xFF) }
+        val w = 20
+        val h = 14
+        // Translucent and transparent pixels around a bright blob: the alpha blur matters here.
+        val layer = IntArray(w * h) { i ->
+            val x = i % w
+            val y = i / w
+            when {
+                x in 8..11 && y in 5..8 -> argb(0xFF, 0xF0, 0xE0, 0xA0)
+                (x + y) % 3 == 0 -> argb(0x80, 0x30, 0x60, 0x90)
+                else -> 0
+            }
+        }
+        val scratch = SceneTrueBlack.Scratch(bigW * bigH)
+        SceneTrueBlack.darken(big, bigW, bigH, 2, cutoff = 0.4f, params = beach, scratch = scratch)
+        val reused = SceneTrueBlack.darken(layer, w, h, 2, cutoff = 0.4f, params = beach, scratch = scratch)
+        val fresh = SceneTrueBlack.darken(layer, w, h, 2, cutoff = 0.4f, params = beach)
+        assertThat(reused.toList()).isEqualTo(fresh.toList())
+    }
+
+    @Test
+    fun theBlurMayWriteIntoItsOwnInput() {
+        val w = 9
+        val h = 7
+        val src = FloatArray(w * h) { (it * 7 % 11).toFloat() }
+        val separate = SceneTrueBlack.boxBlur(src.copyOf(), w, h, 2)
+        val inPlace = src.copyOf()
+        SceneTrueBlack.boxBlur(inPlace, w, h, 2, FloatArray(w * h), inPlace)
+        assertThat(inPlace.toList()).isEqualTo(separate.toList())
+    }
+
     @Test
     fun theSettingIsPartOfTheTuningAndOffByDefault() {
         assertThat(SceneMotionTuning.DEFAULT.trueBlack).isFalse()

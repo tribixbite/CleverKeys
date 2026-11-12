@@ -86,6 +86,23 @@ class ExtraKeysSwitchRemovalTest {
             .that(xml.contains("key8=\"loc switch_backward\"")).isTrue()
     }
 
+    /**
+     * The True Black key (maintainer 2026-11-12: "add subkey fn for toggling true black") sits on
+     * the Fn key's right swipe of every built-in bottom row, as `loc`: it shows there once ticked
+     * in Extra Keys and is off by default, so nobody's Fn key changes on upgrade.
+     */
+    @Test
+    fun fnKey_carriesTrueBlackAsLocOffByDefault() {
+        for (path in listOf(
+            "res/xml/bottom_row.xml", "src/main/layouts/latn_neo2.xml",
+            "src/main/layouts/arab_pc_ir.xml", "src/main/layouts/arab_pc_ckb_fa.xml",
+        )) {
+            val fn = File(path).readLines().single { "key0=\"fn\"" in it }
+            assertWithMessage("$path Fn key").that(fn).contains("key6=\"loc toggle_true_black\"")
+        }
+        assertThat(ExtraKeysPreference.defaultChecked("toggle_true_black")).isFalse()
+    }
+
     // ------------------------------------------------- defaults (value preservation)
 
     /**

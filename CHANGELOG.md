@@ -497,12 +497,16 @@ editor that used to be listed here already ship in 2.0.)
   (it was already near black, so that saves little). It can also be switched from Theme Manager's
   Scenes section, where the scene cards now show their scene (in true black when it is on), and
   from the keyboard with the **True Black On/Off** command (`toggle_true_black`, an extra key or
-  a short swipe). The Snow scene's aurora now ripples and
+  a short swipe; ticked in Extra Keys it sits on the Fn key's right swipe). The Snow scene's aurora now ripples and
   drifts like the Aurora theme's, behind still hills and pines.
   Scenes now keep moving on a phone that reports itself only moderately warm (they stopped at
   that level, which some Galaxy phones report under ordinary load, so they never moved); they
   still rest when the phone is severely hot, in battery saver, with animations off or on a low
-  battery.
+  battery. The scenes now move at fewer frames a second by default, which roughly halves what a
+  moving scene costs: Aurora and River rocks 5, Beach 8, Snow, Stream, Meadow and Forest 7 (they
+  were 8–12). In landscape the aurora's layers now stay on the display hardware (they were
+  turned by the graphics chip on every refresh), with Twinkle at 0 its stars take one layer
+  instead of two, and True Black repaints a scene with less than half the memory.
 - **Key border opacity.** Appearance has a separate opacity for the key outline next to the key
   background's, so keys can be drawn by their outline alone; a theme can set its own share of
   each (layout XML `key_fill_opacity` / `key_border_opacity`, the Theme Creator). Your current

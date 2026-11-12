@@ -42,7 +42,7 @@
   </row>
   <row height="0.95">
     <key width="1.7" key0="ctrl" key1="loc switch_greekmath" key2="loc meta" key4="switch_numeric"/>
-    <key width="1.1" key0="fn" key1="loc alt" key2="loc change_method" key3="switch_emoji" key4="config"/>
+    <key width="1.1" key0="fn" key1="loc alt" key2="loc change_method" key3="switch_emoji" key4="config" key6="loc toggle_true_black"/>
     <!-- #169: keep in sync with res/xml/bottom_row.xml — loc so the extra-keys checkboxes
          govern the layout-switch gestures. -->
     <key width="4.4" key0="space" key7="loc switch_forward" key8="loc switch_backward" key5="cursor_left" key6="cursor_right"/>

@@ -1447,6 +1447,30 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (the snow's ground went black: 82 % of pixels off). Open: SceneTrueBlack scratch memory
     (TODO in code); Fable's power ideas (one pre-blended curtain plane, re-issuing the vote per
     transaction for ARR panels); native review of the new strings. Pixel restored, IN.
+    Sixteenth round (2026-11-12, maintainer: "go ahead with the fewer-planes aurora idea and
+    measure it and the True Black repaint memory todo", plus the agent's top three; then new
+    default frame rates and the round-6 re-parse). Planes, Pixel, Aurora 10 fps layers, untouched,
+    refresh free, brightness 12, 8 × 5 min (off P4 P2 P3 | P3 P2 P4 off, a local-build-only
+    `files/star_layers` hook since removed; SurfaceFlinger confirmed 4/2/3 layers per arm): 4
+    planes +188 mW, 3 planes (one star layer) +160, 2 planes (no stars) +165 — the second star
+    layer costs ~28 mW (memory traffic), fewer planes beyond that nothing. Shipped only where it
+    is the same picture: Twinkle 0 → one star layer (`SceneOverlayPlan.starLayers`); the default
+    keeps the shimmer (maintainer's choice to trade it). Exact pre-blending of the curtains is not
+    possible (A and B drift independently). Landscape finding: un-rotated layers were all CLIENT
+    (GPU) with ROT_90; buffers now drawn turned by the window's buffer transform hint and
+    declaring the inverse → DEVICE, net transform 0 expected (declaring the hint itself was DEVICE
+    with ROT_180, content upright); rebuilt on a hint change (`onRotated`). True Black memory: one
+    scratch set per painting (12 B/px of the largest image) instead of six arrays per image:
+    65–86 MB → 14–34 MB allocated per scene at 1008 × 840, output SHA-256 identical for all six
+    scenes. Agent's top three: overlay lifecycle as a pure rule (`SceneOverlayPlan.sync`) and
+    anchor ownership as `AnchorOwners`, both pinned; on-device layout checks (clipboard pane
+    above, numeric pane, landscape: layers placed and sized right; the pane does not move the
+    keyboard view, so `onMoved` is still exercised only by the code path); `loc toggle_true_black`
+    on the Fn key's right swipe in all four built-in bottom rows (off until ticked). Default frame
+    rates (maintainer): Aurora and River rocks 5, Beach 8, Snow/Stream/Meadow/Forest 7 (were 10,
+    10, 12, 10/8/12/12). Round 6 re-parsed with all three display rails: +58.6 display (its total
+    +136.5 was complete; a guess that it missed two rails was wrong); it is lower than later rounds
+    because it priced motion while typing at 8 fps. Spec §0 gives the per-theme cost.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

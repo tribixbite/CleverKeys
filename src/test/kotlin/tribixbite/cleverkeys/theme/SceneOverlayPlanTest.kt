@@ -72,6 +72,93 @@ class SceneOverlayPlanTest {
         assertThat(s1.alpha).isEqualTo(0.9f)
     }
 
+    /** Round 16: one star layer saves ~28 mW, but only steady stars may share one (nothing changes on screen). */
+    @Test
+    fun steadyStarsShareOneLayerAndTwinklingStarsKeepTwo() {
+        assertThat(SceneOverlayPlan.starLayers(0f)).isEqualTo(1)
+        assertThat(SceneOverlayPlan.starLayers(0.01f)).isEqualTo(SceneOverlayPlan.STAR_LAYERS)
+        assertThat(SceneOverlayPlan.starLayers(SceneMotionTuning.DEFAULT.twinkle)).isEqualTo(SceneOverlayPlan.STAR_LAYERS)
+        // With twinkle 0 every group is at full alpha, so the single layer's mean is too.
+        val steady = AuroraMotion.frame(12.3, MotionStyle.AURORA, SceneMotionTuning.DEFAULT.copy(twinkle = 0f)).starAlpha
+        assertThat(SceneOverlayPlan.stars(0f, 0f, 0, steady, layers = 1).alpha).isEqualTo(1f)
+    }
+
+    @Test
+    fun aSingleStarLayerHoldsEveryGroupAtTheirMeanTwinkle() {
+        for (g in 0 until AuroraMotion.STAR_GROUPS) {
+            assertWithMessage("group $g").that(SceneOverlayPlan.groupOnLayer(g, 0, layers = 1)).isTrue()
+        }
+        val alphas = floatArrayOf(0.2f, 0.4f, 0.6f, 0.8f, 1.0f)
+        assertThat(SceneOverlayPlan.stars(0f, 0f, 0, alphas, layers = 1).alpha).isWithin(1e-6f).of(0.6f)
+    }
+
+    /**
+     * The layers' lifecycle (Fable audit): they exist only while the backdrop moves and may run,
+     * stay once up, and are built only when nothing stands in the way.
+     */
+    @Test
+    fun theLayersExistOnlyWhileMovingAndAreBuiltWhenNothingStandsInTheWay() {
+        fun sync(ticking: Boolean = true, eligible: Boolean = true, up: Boolean = false, resizing: Boolean = false,
+                 visible: Boolean = true, hostShown: Boolean = true) =
+            SceneOverlayPlan.sync(ticking, eligible, up, resizing, visible, hostShown)
+        assertWithMessage("moving and free to: build").that(sync()).isEqualTo(SceneOverlayPlan.Sync.CREATE)
+        assertWithMessage("at rest: down, even when up").that(sync(ticking = false, up = true)).isEqualTo(SceneOverlayPlan.Sync.RELEASE)
+        assertWithMessage("no longer eligible: down").that(sync(eligible = false, up = true)).isEqualTo(SceneOverlayPlan.Sync.RELEASE)
+        assertWithMessage("up and still wanted: kept").that(sync(up = true, resizing = true)).isEqualTo(SceneOverlayPlan.Sync.KEEP)
+        assertWithMessage("mid-resize: later").that(sync(resizing = true)).isEqualTo(SceneOverlayPlan.Sync.WAIT)
+        assertWithMessage("drawable hidden: later").that(sync(visible = false)).isEqualTo(SceneOverlayPlan.Sync.WAIT)
+        assertWithMessage("view off screen: later").that(sync(hostShown = false)).isEqualTo(SceneOverlayPlan.Sync.WAIT)
+        assertWithMessage("at rest and off screen: down (nothing is left waiting)")
+            .that(sync(ticking = false, hostShown = false)).isEqualTo(SceneOverlayPlan.Sync.RELEASE)
+    }
+
+    /**
+     * Fable audit, finding 1: an overlay rebuilt in one pass claims the anchor before its
+     * predecessor frees. The predecessor must not remove it; the newest owner does, once.
+     */
+    @Test
+    fun aReplacedOverlayNeverRemovesItsSuccessorsAnchor() {
+        val owners = AnchorOwners<Any, Any>()
+        val anchor = Any()
+        val old = Any()
+        val new = Any()
+        owners.claim(anchor, old)
+        owners.claim(anchor, new)
+        assertWithMessage("the replaced overlay frees: the anchor stays").that(owners.release(anchor, old)).isFalse()
+        assertWithMessage("still owned by the successor").that(owners.isOwned(anchor)).isTrue()
+        assertWithMessage("the successor frees: the anchor may go").that(owners.release(anchor, new)).isTrue()
+        assertWithMessage("now a leftover").that(owners.isOwned(anchor)).isFalse()
+        assertWithMessage("a second free removes nothing more").that(owners.release(anchor, new)).isFalse()
+    }
+
+    /**
+     * Landscape (Pixel 8 Pro, 2026-11-12): un-rotated layers were all composited by the GPU. Each
+     * buffer is drawn turned by the hint (the display's rotation) and declares the inverse: the
+     * declared turn undoes the drawn one (content upright), and the drawn one matches the display
+     * (no rotation left for the composer; declaring the hint itself left ROT_180 on the device).
+     */
+    @Test
+    fun aRotatedScreenGetsBuffersPreRotatedForTheDisplay() {
+        val clockwise = mapOf(
+            SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_90 to 90,
+            SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_180 to 180,
+            SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_270 to 270,
+        )
+        for ((hint, turn) in clockwise) {
+            val drawn = SceneOverlayPlan.preRotationDegrees(hint)
+            val declared = clockwise.getValue(SceneOverlayPlan.bufferTransformFor(hint))
+            assertWithMessage("hint $hint: upright").that((drawn + declared) % 360).isEqualTo(0)
+            assertWithMessage("hint $hint: lies as the panel scans out").that(drawn).isEqualTo(turn)
+        }
+        // android.view.SurfaceControl.BUFFER_TRANSFORM_* (HAL transform flags).
+        assertThat(listOf(SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_90, SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_180,
+            SceneOverlayPlan.BUFFER_TRANSFORM_ROTATE_270)).containsExactly(4, 3, 7).inOrder()
+        for (other in listOf(0, 1, 2)) {
+            assertWithMessage("identity or mirror $other: drawn as is").that(SceneOverlayPlan.preRotationDegrees(other)).isEqualTo(0)
+            assertWithMessage("identity or mirror $other: no transform").that(SceneOverlayPlan.bufferTransformFor(other)).isEqualTo(0)
+        }
+    }
+
     /** Curtain A at the bottom, then curtain B, then the stars; all above the anchor's own (empty) buffer. */
     @Test
     fun theLayersStackCurtainsFirstAboveTheAnchor() {
