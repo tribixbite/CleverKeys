@@ -219,8 +219,11 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
    CleverKeys Settings had been open in the same process: `startTicking` posted the first tick
    (`scheduleSelf`, a Choreographer animation callback) and no frame ever ran it, until a key
    press drew one. The first tick now goes through the main Handler. Diagnosed with logs on the
-   tablet; the fix itself is not yet confirmed there (the tablet was in use), and the Pixel never
-   showed the stall.
+   tablet and confirmed there with the release (2026-11-13): a show right after Settings moved in
+   two trials (screenshots 10 s apart differ; frame gaps 199–200 ms, i.e. the shipped 5 fps), and
+   at Keep Moving For 20 s it drew 0 frames 35 s after the show. The Pixel never showed the stall.
+   On this tablet `dumpsys gfxinfo` counts every frame twice in "Total frames rendered" (64 in
+   the histogram, 32 in the profile data for the same 6 s); read rates from the profile data.
 9. **Brightness (round 18):** motion costs the same at brightness 12, 102 and 255 (+153 / +199 /
    +180 mW, two runs each; the spread is the CPU part). The display share grows only from +77 to
    +89 mW across the whole range: what motion adds is the panel refreshing instead of idling, not

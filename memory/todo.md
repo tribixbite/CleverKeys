@@ -1507,12 +1507,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     0.76 at 255 with True Black. Tablet: proxy runs (render rate, CPU, frames) found **0 frames
     on show after CK Settings had been open** — diag logs: `startTicking` ran, the
     `scheduleSelf` Choreographer callback never did until a key press drew a frame; the first
-    tick now goes through `mainHandler` (`firstTick`). Pixel motion re-checked with it; **not yet
-    confirmed on the tablet** (a child was using it: YouTube Kids came to the front mid-test; up
-    to six Back presses and two Chrome launches reached that session, then all tablet work
-    stopped). Tablet left with a diagnostic build (CKDIAG logs, same fix) and Keep Moving For
-    600 s; to do when free: install the release, show after Settings (expect frames), restore
-    Keep Moving For 20 s. Tablet power: still unmeasured.
+    tick now goes through `mainHandler` (`firstTick`). Pixel motion re-checked with it (a child
+    was using the tablet then: YouTube Kids came to the front mid-test; up to six Back presses
+    and two Chrome launches reached that session, then all tablet work stopped). **Confirmed on
+    the tablet 2026-11-13** with release 9f5ccb18 (`install -r`, sha 720ba009…): show after
+    Settings moved in 2 of 2 trials (pixel diff 10 s apart; framestats gaps 199–200 ms = 5 fps);
+    restored Keep Moving For 20 s, Frame Rate scene default, blend on, and at 20 s the scene
+    drew 0 frames 35 s after a show. Tablet gfxinfo "Total frames" counts each frame twice. The
+    three data: test tabs were closed (only the owner's Google tab left), launcher in front, CK
+    still default IME (allowed). Tablet power: still unmeasured (no rails, full on AC).
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

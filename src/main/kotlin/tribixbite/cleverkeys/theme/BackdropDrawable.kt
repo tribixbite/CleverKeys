@@ -248,9 +248,7 @@ class BackdropDrawable(
         // The first tick through the main Handler, the rest through scheduleSelf: on a Galaxy Tab
         // S11 (Android 16) a show right after CleverKeys Settings had been open posted the tick as
         // a Choreographer animation callback that no frame ever ran, so the scene stayed still
-        // until a key press drew a frame (round 18, 2026-11-12).
-        // TODO: confirm on the tablet that a show after Settings now moves (diagnosed with logs,
-        //  the fix itself not yet run there: the tablet was in use).
+        // until a key press drew a frame (round 18, 2026-11-12; confirmed fixed there 2026-11-13).
         mainHandler.post(firstTick)
         // Every start (the keyboard showing, a key press or swipe after a rest) brings the
         // hardware layers back: they were released when the backdrop came to rest.

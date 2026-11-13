@@ -248,8 +248,10 @@ Motion's cost does not depend on brightness (round 18: display share +77 / +84 /
 102 / 255); only the still picture does. At brightness 255 the Pixel dims the panel itself once the
 battery is ~33 °C, with thermal status still 0: check the display rail of every run. On a Galaxy
 Tab S11 the first `scheduleSelf` tick after a show never ran when CK Settings had been open (a
-Choreographer callback with no frame to run it); the first tick now goes through the main Handler.
-A frame counter that stays flat while the keyboard is up is the symptom; a key press "fixes" it.
+Choreographer callback with no frame to run it); the first tick now goes through the main Handler
+(confirmed on the tablet 2026-11-13). A frame counter that stays flat while the keyboard is up is
+the symptom; a key press "fixes" it. That tablet's gfxinfo "Total frames rendered" counts each
+frame twice: take rates from the framestats rows (IntendedVsync gaps), not the total.
 
 ## Compose produceState and CI lint (2026-11-12)
 
