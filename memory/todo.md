@@ -1515,7 +1515,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     restored Keep Moving For 20 s, Frame Rate scene default, blend on, and at 20 s the scene
     drew 0 frames 35 s after a show. Tablet gfxinfo "Total frames" counts each frame twice. The
     three data: test tabs were closed (only the owner's Google tab left), launcher in front, CK
-    still default IME (allowed). Tablet power: still unmeasured (no rails, full on AC).
+    still default IME (allowed). Tablet power: still unmeasured (no rails, full on AC). Battery protection
+    set to Maximum (80 %) at the maintainer's request 2026-11-13 (`protect_battery` 3 Basic → 1;
+    undo: Basic in Battery protection): plugged in above 80 % it does NOT discharge — status 4
+    "not charging", level 100, charge counter, voltage (4403 mV) and current_avg 0 flat for an hour
+    with the screen awake, i.e. the charger runs the tablet. Power on this tablet needs it unplugged.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in
