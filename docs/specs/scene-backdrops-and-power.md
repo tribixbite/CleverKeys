@@ -224,6 +224,15 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
    at Keep Moving For 20 s it drew 0 frames 35 s after the show. The Pixel never showed the stall.
    On this tablet `dumpsys gfxinfo` counts every frame twice in "Total frames rendered" (64 in
    the histogram, 32 in the profile data for the same 6 s); read rates from the profile data.
+   **Power on battery (2026-11-14):** the tablet has no rails, so the battery's own current ×
+   voltage (`dumpsys battery`, every 3 s) priced it, unplugged, at brightness 102, keyboard up and
+   untouched in Chrome, eight mirrored 4-minute arms. Pair means (medians): off 2,604 (2,534) mW;
+   window 5 fps +96 (+85); layers 10 fps +147 (+134); window 10 fps +10 (+59). The two "off" arms
+   alone differed by 226 (147) mW, so every delta is inside run-to-run noise and the order of the
+   three motion arms is not resolved; motion costs at most about 150 mW, under 6 % of a ~2.6 W
+   tablet with its screen on (the Pixel: +153–199 mW, item 9). Layers are not cheaper here
+   (they went to the GPU, above), so the window path stays right for this tablet. Frames: 5 fps
+   and 10 fps on the window path as set (gfxinfo double count), 0 on the layer path as expected.
 9. **Brightness (round 18):** motion costs the same at brightness 12, 102 and 255 (+153 / +199 /
    +180 mW, two runs each; the spread is the CPU part). The display share grows only from +77 to
    +89 mW across the whole range: what motion adds is the panel refreshing instead of idling, not

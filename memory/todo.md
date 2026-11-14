@@ -1522,9 +1522,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     with the screen awake, i.e. the charger runs the tablet. Power on this tablet needs it unplugged.
     Unplugged 2026-11-13 ~17:00; the on-battery motion run (8 mirrored 4-min arms off / 5 fps /
     10 fps layers / 10 fps window at brightness 102, `dumpsys battery` current × voltage every
-    3 s) never started: the tablet has a SECURE keyguard, `wm dismiss-keyguard` cannot pass it, and
-    nobody unlocked it within the 2 h watch. No setting was changed. Open: needs the owner to unlock
-    it and leave it on the home screen. Byproduct: screen-off doze drain 100 → 94 % in 9.5 h
+    3 s) waited on its SECURE keyguard (`wm dismiss-keyguard` cannot pass it). **Measured
+    2026-11-14** after the owner unlocked it (spec §3.2 item 8): motion +10 to +150 mW on ~2.6 W,
+    all inside the 226 mW gap between the two "off" arms; not resolvable further with this meter.
+    A first attempt slept before arm 1: the 30 s timeout ran out and a WAKEUP key while awake does
+    not restart it, so set the long timeout before the unlock. Restored: auto brightness, 30 s
+    timeout, Keep Moving For 20 s. Left: the run's Chrome data: tabs (needs an unlock). Byproduct: screen-off doze drain 100 → 94 % in 9.5 h
     (charge counter −504 mAh ≈ 53 mA ≈ 230 mW average; idle readings 27–47 mA).
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
