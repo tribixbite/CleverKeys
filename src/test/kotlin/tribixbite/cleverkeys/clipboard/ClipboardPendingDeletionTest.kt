@@ -50,6 +50,28 @@ class ClipboardPendingDeletionTest {
     }
 
     @Test
+    fun aRowChangedSinceTheSwipeIsNotDeletedAndComesBack() {
+        // Review 2026-11-14 M26: re-copying the swiped text inside the window de-duplicates into
+        // the SAME History row (new timestamp, moved to the top); the timeout then deleted it.
+        var unchanged = false
+        val guarded = ClipboardPendingDeletion(scheduler, commitAction = { committed += it },
+            stillUnchanged = { unchanged }).also { it.listener = { change, p -> changes += change to p } }
+        guarded.begin(ClipboardTab.HISTORY, "otp 123456", version = 1_000L)
+
+        scheduler.fire(scheduler.tasks.single())
+
+        assertWithMessage("a changed row is never deleted").that(committed).isEmpty()
+        assertThat(changes.last().first).isEqualTo(Change.RESTORED)
+        assertThat(guarded.pending).isNull()
+
+        // Control: an unchanged row is deleted as before.
+        unchanged = true
+        guarded.begin(ClipboardTab.HISTORY, "otp 123456", version = 1_000L)
+        scheduler.fire(scheduler.tasks.last())
+        assertThat(committed.map { it.content }).containsExactly("otp 123456")
+    }
+
+    @Test
     fun theTimeoutCommitsExactlyOnce() {
         pending.begin(ClipboardTab.HISTORY, "a")
 

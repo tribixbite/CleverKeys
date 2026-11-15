@@ -258,38 +258,6 @@ class GifPackManager private constructor(private val context: Context) {
     // ==================== INTERNAL ====================
 
     /**
-     * Extract ZIP from InputStream to destination directory.
-     * Includes path traversal protection.
-     */
-    private fun extractZip(inputStream: java.io.InputStream, destDir: File) {
-        ZipInputStream(inputStream).use { zis ->
-            var entry = zis.nextEntry
-            while (entry != null) {
-                val destFile = File(destDir, entry.name)
-
-                // Path traversal protection
-                if (!destFile.canonicalFile.path.startsWith(destDir.canonicalPath)) {
-                    Log.w(TAG, "Skipping path traversal attempt: ${entry.name}")
-                    entry = zis.nextEntry
-                    continue
-                }
-
-                if (entry.isDirectory) {
-                    destFile.mkdirs()
-                } else {
-                    destFile.parentFile?.mkdirs()
-                    FileOutputStream(destFile).use { fos ->
-                        zis.copyTo(fos)
-                    }
-                }
-
-                zis.closeEntry()
-                entry = zis.nextEntry
-            }
-        }
-    }
-
-    /**
      * Parse manifest.json into GifPackManifest.
      */
     private fun parseManifest(json: String): GifPackManifest? {
@@ -316,6 +284,58 @@ class GifPackManager private constructor(private val context: Context) {
     }
 
     companion object {
+        /** Extraction caps: ten times the ~50 MB / ~1,100-GIF packs the spec describes. */
+        internal const val MAX_PACK_BYTES = 512L * 1024 * 1024
+        internal const val MAX_PACK_ENTRIES = 20_000
+
+        /**
+         * Extract a pack ZIP into [destDir]. A user-supplied archive (review 2026-11-14): every
+         * entry must land STRICTLY inside [destDir] — the old prefix check had no trailing
+         * separator, so `../<destDir name>X/…` passed — and the archive may expand to at most
+         * [maxTotalBytes] in at most [maxEntries] entries; past either cap the import fails as
+         * TOO_LARGE instead of filling the cache.
+         */
+        internal fun extractZip(
+            inputStream: java.io.InputStream,
+            destDir: File,
+            maxTotalBytes: Long = MAX_PACK_BYTES,
+            maxEntries: Int = MAX_PACK_ENTRIES,
+        ) {
+            val base = destDir.canonicalPath + File.separator
+            var total = 0L
+            var entries = 0
+            ZipInputStream(inputStream).use { zis ->
+                var entry = zis.nextEntry
+                while (entry != null) {
+                    if (++entries > maxEntries) throw tooLarge("more than $maxEntries entries")
+                    val destFile = File(destDir, entry.name)
+                    if (!destFile.canonicalPath.startsWith(base)) {
+                        Log.w(TAG, "Skipping path traversal attempt: ${entry.name}")
+                    } else if (entry.isDirectory) {
+                        destFile.mkdirs()
+                    } else {
+                        destFile.parentFile?.mkdirs()
+                        FileOutputStream(destFile).use { fos ->
+                            val buffer = ByteArray(64 * 1024)
+                            while (true) {
+                                val n = zis.read(buffer)
+                                if (n < 0) break
+                                total += n
+                                if (total > maxTotalBytes) throw tooLarge("expands past $maxTotalBytes bytes")
+                                fos.write(buffer, 0, n)
+                            }
+                        }
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+            }
+        }
+
+        private fun tooLarge(what: String) = tribixbite.cleverkeys.ClassifiedIoException(
+            tribixbite.cleverkeys.IoFailureReason.TOO_LARGE, "GIF pack archive $what"
+        )
+
         private const val TAG = "GifPackManager"
         private const val MANIFEST_FILE = "manifest.json"
         private const val PACK_DB_FILE = "pack.db"

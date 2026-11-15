@@ -187,6 +187,8 @@ class ClipboardManager(
             scheduler = MainLooperScheduler(),
             // The same per-tab service delete the edit-mode delete uses (media cleanup included).
             commitAction = { p -> ClipboardHistoryService.get_service(context)?.removeFromTab(p.tab, p.content) },
+            // A re-copy of the swiped text inside the window must survive (review 2026-11-14 M26).
+            stillUnchanged = { p -> ClipboardHistoryService.get_service(context)?.isPendingRowUnchanged(p) ?: true },
         ).also {
             pendingDeletionField = it
             wirePendingDeletion(it)

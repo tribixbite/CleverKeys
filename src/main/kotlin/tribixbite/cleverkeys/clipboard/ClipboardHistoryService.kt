@@ -820,6 +820,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /** Get all unique tags across pinned entries */
     fun getAllPinnedTags(): Set<String> = _database.getAllPinnedTags()
 
+    /** See [ClipboardDatabase.historyEntryTimestamp]. */
+    fun historyEntryTimestamp(content: String): Long? = _database.historyEntryTimestamp(content)
+
     /** Get all unique tags across todo entries */
     fun getAllTodoTags(): Set<String> = _database.getAllTodoTags()
 
@@ -1430,6 +1433,18 @@ class ClipboardHistoryService private constructor(ctx: Context) {
  * members, and as a static call it still reaches them on a mocked service, so tests keep
  * verifying the real per-tab delete instead of a stubbed wrapper.
  */
+/**
+ * Is the row a pending swipe-delete hid still the one swiped? Only History rows carry a version
+ * (their timestamp, bumped by a re-copy that de-duplicates into the same row); Pinned and Todos
+ * have no re-copy path, so they always count as unchanged. A row already gone counts as unchanged
+ * (the delete is then a no-op). Review 2026-11-14 M26.
+ */
+fun ClipboardHistoryService.isPendingRowUnchanged(p: tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion.Pending): Boolean {
+    if (p.tab != ClipboardTab.HISTORY || p.version == null) return true
+    val now = historyEntryTimestamp(p.content) ?: return true
+    return now == p.version
+}
+
 fun ClipboardHistoryService.removeFromTab(tab: ClipboardTab, clip: String) {
     when (tab) {
         ClipboardTab.HISTORY -> removeHistoryEntry(clip)

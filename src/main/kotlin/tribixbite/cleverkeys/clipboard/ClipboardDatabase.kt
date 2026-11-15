@@ -503,6 +503,24 @@ class ClipboardDatabase private constructor(context: Context) :
      * Remove a clipboard history entry by content. Returns the media_path of the deleted entry
      * (or null if text-only) so the caller can clean up the associated media file.
      */
+    /**
+     * The History row's timestamp for [content], or null when there is none. A re-copy of the
+     * same text bumps it (de-duplicated into the same row, moved to the top), so it tells a
+     * pending swipe-delete whether the row is still the one the user swiped (review 2026-11-14 M26).
+     */
+    fun historyEntryTimestamp(content: String?): Long? {
+        if (content.isNullOrBlank()) return null
+        return try {
+            readableDatabase.rawQuery(
+                "SELECT $COLUMN_TIMESTAMP FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(resolveContentKey(TABLE_CLIPBOARD, content))
+            ).use { cursor -> if (cursor.moveToFirst()) cursor.getLong(0) else null }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading a history entry's timestamp: ${e.message}")
+            null
+        }
+    }
+
     fun removeClipboardEntry(content: String?): String? {
         if (content.isNullOrBlank()) return null
         val contentKey = resolveContentKey(TABLE_CLIPBOARD, content)

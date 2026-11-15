@@ -29,6 +29,13 @@ class ClipboardPendingDeletion(
     private val scheduler: Scheduler,
     private val commitAction: (Pending) -> Unit,
     private val windowMs: Long = UNDO_WINDOW_MS,
+    /**
+     * Is the stored row still the one that was swiped? Asked right before the delete. Content
+     * is the delete key, so re-copying the same text inside the window (History de-duplicates
+     * it into the SAME row and moves it to the top) used to let the timeout delete the fresh
+     * copy (review 2026-11-14 M26). A changed row is left alone and shown again.
+     */
+    private val stillUnchanged: (Pending) -> Boolean = { true },
 ) {
     /** Runs [action] once after [delayMs] unless cancelled. */
     fun interface Scheduler {
@@ -40,8 +47,11 @@ class ClipboardPendingDeletion(
         fun cancel()
     }
 
-    /** The hidden row: its tab and content (the per-tab delete key). */
-    data class Pending(val tab: ClipboardTab, val content: String)
+    /**
+     * The hidden row: its tab and content (the per-tab delete key), and its [version] when the
+     * row was swiped (History: the entry's timestamp, which a re-copy bumps), or null.
+     */
+    data class Pending(val tab: ClipboardTab, val content: String, val version: Long? = null)
 
     /** What happened to the pending row, reported to [listener]. */
     enum class Change {
@@ -90,9 +100,9 @@ class ClipboardPendingDeletion(
      * Hide the row with [content] on [tab] and arm the undo window. A row already pending is
      * committed first ([CommitReason.NEXT_SWIPE]): only the latest swipe can be undone.
      */
-    fun begin(tab: ClipboardTab, content: String): Pending {
+    fun begin(tab: ClipboardTab, content: String, version: Long? = null): Pending {
         commitNow(CommitReason.NEXT_SWIPE)
-        val p = Pending(tab, content)
+        val p = Pending(tab, content, version)
         pending = p
         // Identity check: a timer that survived a cancel race can never commit a LATER row.
         timer = scheduler.schedule(windowMs) { if (pending === p) commitNow(CommitReason.TIMEOUT) }
@@ -118,6 +128,10 @@ class ClipboardPendingDeletion(
         val p = pending ?: return false
         clear()
         lastCommitReason = reason
+        if (!stillUnchanged(p)) {
+            listener?.invoke(Change.RESTORED, p)
+            return true
+        }
         val deleted = try {
             commitAction(p)
             true

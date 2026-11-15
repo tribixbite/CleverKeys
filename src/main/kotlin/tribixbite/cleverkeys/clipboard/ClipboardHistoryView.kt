@@ -401,7 +401,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             loadDataAsync()
         } else {
             expandedStates.remove(entry.timestamp)
-            pending.begin(currentTab, entry.content)
+            // Its timestamp is the row's version: a re-copy bumps it (review 2026-11-14 M26).
+            pending.begin(currentTab, entry.content, version = entry.timestamp)
         }
         return true
     }
