@@ -682,6 +682,8 @@ tasks.register('runPureTests', JavaExec) {
     // state kept across rotation, rows addressed by id, scroll_to on a singleTop relaunch, the
     // share import once per launch, prefs followed while paused, guarded browser launches.
     'tribixbite.cleverkeys.RotationSaveableStateDriftTest',
+    'tribixbite.cleverkeys.SettingsIntentHandlingDriftTest',
+    'tribixbite.cleverkeys.SettingsPrefListenerLifecycleDriftTest',
     // Review 2026-11-14 M22: Layout Manager row ids survive recreation; dialogs resolve rows by id.
     'tribixbite.cleverkeys.LayoutRowIdsTest',
     'tribixbite.cleverkeys.popover.SubkeyAssignSlotTest',

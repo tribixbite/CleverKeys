@@ -64,9 +64,9 @@ import tribixbite.cleverkeys.ui.settings.SettingsScreen
  * Shell host for the CleverKeys settings UI.
  *
  * Owns: all mutable Compose state fields, the 14-16 SAF ActivityResult launchers,
- * lifecycle callbacks (onCreate → setContent { SettingsScreen() }, onResume/onPause
+ * lifecycle callbacks (onCreate → setContent { SettingsScreen() }, onCreate/onDestroy
  * for preference listener registration, onSharedPreferenceChanged → handlePreferenceChanged,
- * onNewIntent → handleGifPackShareIntent), and the BackupRestoreViewModel held across
+ * onNewIntent → handleGifPackShareIntent + handleScrollToIntent), and the BackupRestoreViewModel held across
  * configuration changes.
  *
  * Screen/section composables, IO handlers, search/scroll logic, and persistence helpers
@@ -856,32 +856,18 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Load current settings
         loadCurrentSettings()
 
-        // Handle share intent for GIF pack ZIP import
-        handleGifPackShareIntent(intent)
+        // Review 2026-11-14 M24: listen from create to destroy. Unregistered in onPause, the
+        // keyboard's toggle_scene_motion / toggle_true_black writes (made while Settings sits
+        // paused behind it) never reached the switches, and onResume re-read only some state.
+        prefs.registerOnSharedPreferenceChangeListener(this)
 
-        // `scroll_to` extra: expand a named section + scroll/highlight on launch.
-        // Used by [BackupRestoreActivity] when redirected without a known intent
-        // action so the inline Backup & Restore section is the landing target.
-        intent.getStringExtra("scroll_to")?.let { target ->
-            when (target) {
-                SCROLL_TO_VOICE_INPUT -> {
-                    voiceSectionExpanded = true
-                    lifecycleScope.launch {
-                        kotlinx.coroutines.delay(300)
-                        scrollToSetting("voice_input")
-                    }
-                }
-                "backup_restore" -> {
-                    backupRestoreSectionExpanded = true
-                    lifecycleScope.launch {
-                        kotlinx.coroutines.delay(300)
-                        scrollToSetting("backup_restore")
-                        highlightedSettingId = "backup_restore"
-                        kotlinx.coroutines.delay(2000)
-                        highlightedSettingId = null
-                    }
-                }
-            }
+        // The launch intent is handled once: a recreation (rotation) restores the activity with
+        // the same intent, and re-running it re-imported a shared GIF pack (low, review
+        // 2026-11-14) and scrolled away from where the user was.
+        if (savedInstanceState == null) {
+            // Handle share intent for GIF pack ZIP import
+            handleGifPackShareIntent(intent)
+            handleScrollToIntent(intent)
         }
 
         try {
@@ -960,8 +946,6 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     
     override fun onResume() {
         super.onResume()
-        // Register for preference changes
-        prefs.registerOnSharedPreferenceChangeListener(this)
         // Layout Manager is a separate activity whose edits land while this one is paused.
         refreshBoundLayoutLanguages()
         // The microphone may have been granted in system settings, or by the keyboard's prompt.
@@ -972,10 +956,15 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     override fun onPause() {
         super.onPause()
-        // Unregister preference listener (balanced with onResume)
-        prefs.unregisterOnSharedPreferenceChangeListener(this)
         // Save all settings changes to protected storage
         DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
+    }
+
+    override fun onDestroy() {
+        // Balanced with onCreate (review 2026-11-14 M24). onCreate can bail out before `prefs`
+        // is set (fallbackEncrypted), and then it registered nothing.
+        if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(this)
+        super.onDestroy()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) = handlePreferenceChanged(sharedPreferences, key)
@@ -995,7 +984,41 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleGifPackShareIntent(intent)
+        // Review 2026-11-14 M23: Settings is singleTop, so the keyboard's "set up voice input"
+        // reaches a running Settings here; reading scroll_to only in onCreate left the user
+        // wherever Settings happened to be.
+        handleScrollToIntent(intent)
+    }
+
+    /**
+     * The `scroll_to` extra ([EXTRA_SCROLL_TO]): expand a named section and scroll to it (and
+     * highlight it). Used by the keyboard when voice input needs setting up, and by
+     * [BackupRestoreActivity] when redirected without a known intent action so the inline
+     * Backup & Restore section is the landing target. Called from onCreate (first launch) and
+     * onNewIntent (singleTop relaunch).
+     */
+    private fun handleScrollToIntent(intent: Intent) {
+        when (intent.getStringExtra(EXTRA_SCROLL_TO)) {
+            SCROLL_TO_VOICE_INPUT -> {
+                voiceSectionExpanded = true
+                lifecycleScope.launch {
+                    kotlinx.coroutines.delay(300)
+                    scrollToSetting("voice_input")
+                }
+            }
+            "backup_restore" -> {
+                backupRestoreSectionExpanded = true
+                lifecycleScope.launch {
+                    kotlinx.coroutines.delay(300)
+                    scrollToSetting("backup_restore")
+                    highlightedSettingId = "backup_restore"
+                    kotlinx.coroutines.delay(2000)
+                    highlightedSettingId = null
+                }
+            }
+        }
     }
 
 }
