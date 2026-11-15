@@ -684,6 +684,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.RotationSaveableStateDriftTest',
     'tribixbite.cleverkeys.SettingsIntentHandlingDriftTest',
     'tribixbite.cleverkeys.SettingsPrefListenerLifecycleDriftTest',
+    'tribixbite.cleverkeys.ExternalUrlLaunchDriftTest',
     // Review 2026-11-14 M22: Layout Manager row ids survive recreation; dialogs resolve rows by id.
     'tribixbite.cleverkeys.LayoutRowIdsTest',
     'tribixbite.cleverkeys.popover.SubkeyAssignSlotTest',

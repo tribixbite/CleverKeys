@@ -1,7 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.PerKeyCustomizationButton
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.ui.settings.openExternalUrl
 import tribixbite.cleverkeys.ShortSwipeCalibrationActivity
 import tribixbite.cleverkeys.ThemeSettingsActivity
 import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
@@ -251,8 +251,7 @@ internal fun SettingsActivity.ActivitiesSection() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest"))
-                            activityContext.startActivity(intent)
+                            activityContext.openExternalUrl("https://github.com/tribixbite/CleverKeys/releases/latest")
                         },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant

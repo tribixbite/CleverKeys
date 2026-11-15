@@ -1,7 +1,6 @@
 package tribixbite.cleverkeys.ui.settings
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.positionInRoot
 import androidx.lifecycle.lifecycleScope
@@ -250,7 +249,7 @@ internal fun SettingsActivity.executeSearchAction(setting: SearchableSetting) {
         startActivity(Intent(this, setting.activityClass))
     } else if (setting.settingId == "whats_new") {
         // Special handling for What's New - opens external URL
-        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/tribixbite/CleverKeys/releases/latest")))
+        openExternalUrl("https://github.com/tribixbite/CleverKeys/releases/latest")
     } else if (setting.settingId.isNotEmpty()) {
         expandAndScrollTo(setting.settingId, setting.gateIds) {
             collapseAllSections()

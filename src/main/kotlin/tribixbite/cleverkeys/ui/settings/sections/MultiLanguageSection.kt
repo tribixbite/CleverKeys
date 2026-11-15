@@ -1,9 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
 import tribixbite.cleverkeys.LanguagePrefs
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -56,6 +53,7 @@ import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
 import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.openExternalUrl
 import tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus
 import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
 import tribixbite.cleverkeys.langpack.NoticeTextLayout
@@ -296,7 +294,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .clickable {
-                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.LANGUAGE_PACKS_URL)))
+                                openExternalUrl(SettingsActivity.LANGUAGE_PACKS_URL)
                             }
                             .padding(bottom = 8.dp)
                     )
@@ -650,11 +648,8 @@ private fun SettingsActivity.LanguagePackAttributionSection(
                                         .fillMaxWidth()
                                         .heightIn(min = 48.dp)
                                         .clickable(role = Role.Button) {
-                                            try {
-                                                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(source.text)))
-                                            } catch (_: ActivityNotFoundException) {
-                                                // No browser: the URL is still readable on screen.
-                                            }
+                                            // No browser: the URL is still readable on screen.
+                                            openExternalUrl(source.text)
                                         }
                                 ) {
                                     Text(

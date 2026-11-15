@@ -119,7 +119,8 @@ class CtcSettingsActivity : ComponentActivity() {
                         onnxThreads = it.toInt()
                         updateParameters()
                     },
-                    displayValue = "$onnxThreads threads"
+                    // Low (review 2026-11-14): was an untranslated English suffix; the title names the unit.
+                    displayValue = onnxThreads.toString()
                 )
             }
 

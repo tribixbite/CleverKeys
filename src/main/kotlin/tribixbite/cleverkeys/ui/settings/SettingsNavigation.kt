@@ -1,5 +1,7 @@
 package tribixbite.cleverkeys.ui.settings
 
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -13,6 +15,24 @@ import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.GeometricSettingsActivity
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SwipeDebugActivity
+
+/**
+ * Opens [url] in the browser. Low (review 2026-11-14): Settings launched `ACTION_VIEW` unguarded
+ * in several places, and a device with no browser (a kiosk or work profile, a de-Googled phone)
+ * crashed Settings with ActivityNotFoundException. The URL stays readable on screen where it is
+ * shown, so failing quietly (logged) is enough.
+ *
+ * @return false when nothing can open it.
+ */
+internal fun Context.openExternalUrl(url: String): Boolean {
+    return try {
+        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        true
+    } catch (e: ActivityNotFoundException) {
+        android.util.Log.w(SettingsActivity.TAG, "No app can open $url", e)
+        false
+    }
+}
 
 internal fun SettingsActivity.openWikiInBrowser() {
         try {
