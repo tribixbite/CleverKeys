@@ -33,6 +33,13 @@ then the tag sequence (M4) with the full suites and an instrumented run at the t
 item 33: choose the dictionary / voice pack per language), item 20's unowned roadmap,
 the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
+**Review since v1.5.0 (2026-11-14, agent, not started):** `docs/audit/2026-11-14-post-v1.5-review.md`
+— 4 high (H1 next-word tap deletes the previous word with default settings; H2 swipe-ML capture in
+incognito fields; H3 imported clipboard `media_path` deletes arbitrary app files; H4 a wrong-typed
+imported pref crash-loops the IME), 26 medium, ~45 low. The scene path is direct-boot safe (§1).
+H1–H4, M1 (clip text in release logcat) and M2 (default-IME reminder nags users who chose
+CleverKeys) block the 2.0 tag in the agent's view; reproduce H1 on a test phone before fixing.
+
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
 
