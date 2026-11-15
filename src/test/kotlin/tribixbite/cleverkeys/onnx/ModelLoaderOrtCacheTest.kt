@@ -73,6 +73,27 @@ class ModelLoaderOrtCacheTest {
         ).that(wired).isTrue()
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): `OrtSession.SessionOptions` wraps a native
+     * `OrtSessionOptions` (plus the execution-provider options attached to it) and is
+     * AutoCloseable; `createSession` copies what it needs, so the options are dead weight the
+     * moment the session exists. The loader never closed them, leaking one native options
+     * object per load — every encoder (re)load and every language switch that evicts a session.
+     * Source-scanned (ORT natives do not load in the mock JVM): the options must be created
+     * inside a `.use { }` block around `createSession`.
+     */
+    @Test
+    fun `loader closes the session options once the session is created`() {
+        val code = loaderLines().filterNot(::isCommentOnly).joinToString("\n")
+        assertWithMessage(
+            "ModelLoader must create its SessionOptions in `createOptimizedSessionOptions().use { … }` " +
+                "so the native options object is released after createSession, on success and failure"
+        ).that(code).contains("createOptimizedSessionOptions().use")
+        val useAt = code.indexOf("createOptimizedSessionOptions().use")
+        val createAt = code.indexOf("ortEnvironment.createSession(modelData, sessionOptions)")
+        assertWithMessage("createSession must run inside that block").that(createAt).isGreaterThan(useAt)
+    }
+
     // ------------------------------------------------------------- purge behaviour
 
     private fun withScratchDir(block: (File) -> Unit) {

@@ -177,26 +177,29 @@ class ModelLoader(
         xnnpackThreads: Int = 2
     ): LoadResult {
         try {
-            // Create optimized session options
-            val sessionOptions = createOptimizedSessionOptions()
+            // Create optimized session options. They wrap a native OrtSessionOptions (plus
+            // the provider options attached to it) that createSession copies, so they are
+            // closed as soon as the session exists — on failure too. Review 2026-11-14: they
+            // were never closed, leaking one native options object per model load.
+            createOptimizedSessionOptions().use { sessionOptions ->
+                // Try hardware acceleration if enabled
+                val executionProvider = if (enableHardwareAcceleration) {
+                    tryEnableHardwareAcceleration(sessionOptions, sessionName, xnnpackThreads)
+                } else {
+                    "CPU"
+                }
 
-            // Try hardware acceleration if enabled
-            val executionProvider = if (enableHardwareAcceleration) {
-                tryEnableHardwareAcceleration(sessionOptions, sessionName, xnnpackThreads)
-            } else {
-                "CPU"
+                // Create session from model bytes
+                val session = ortEnvironment.createSession(modelData, sessionOptions)
+
+                Log.i(TAG, "✅ $sessionName session created successfully (${executionProvider})")
+
+                return LoadResult(
+                    session = session,
+                    executionProvider = executionProvider,
+                    modelSizeBytes = modelData.size.toLong()
+                )
             }
-
-            // Create session from model bytes
-            val session = ortEnvironment.createSession(modelData, sessionOptions)
-
-            Log.i(TAG, "✅ $sessionName session created successfully (${executionProvider})")
-
-            return LoadResult(
-                session = session,
-                executionProvider = executionProvider,
-                modelSizeBytes = modelData.size.toLong()
-            )
 
         } catch (e: Exception) {
             Log.e(TAG, "Failed to create $sessionName session from ${modelData.size} bytes", e)
