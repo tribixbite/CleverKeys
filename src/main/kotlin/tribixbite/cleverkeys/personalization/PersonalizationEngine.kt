@@ -65,10 +65,21 @@ class PersonalizationEngine(private val context: Context) {
     // Settings
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private var enabled: Boolean = prefs.getBoolean(PREF_ENABLED, true)
-    private var aggression: LearningAggression = LearningAggression.valueOf(
-        prefs.getString(PREF_AGGRESSION, LearningAggression.BALANCED.name)
-            ?: LearningAggression.BALANCED.name
-    )
+    private var aggression: LearningAggression = storedAggression()
+
+    /**
+     * The stored aggression, or BALANCED when it is absent, unknown (a newer build's value, a
+     * hand-edited file) or not a string. `valueOf` used to throw here and take the whole engine
+     * down with it (review 2026-11-14, pre-existing).
+     */
+    private fun storedAggression(): LearningAggression {
+        val stored = try {
+            prefs.getString(PREF_AGGRESSION, null)
+        } catch (e: ClassCastException) {
+            null
+        }
+        return LearningAggression.values().firstOrNull { it.name == stored } ?: LearningAggression.BALANCED
+    }
 
     init {
         Log.d(TAG, "PersonalizationEngine initialized (enabled=$enabled, aggression=$aggression)")
