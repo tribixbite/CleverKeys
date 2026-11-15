@@ -58,6 +58,22 @@ object SceneRaster {
     // ---- Meadow: golden hour over a field of grass that bends in a travelling breeze, with flowers ----
 
     private fun meadow(w: Int, h: Int, d: Float, seed: Long): ScenePainting {
+        val rng = Random(seed)
+        // The still field first, as pixels: its float canvas is dropped before the bands are
+        // painted, and each band's canvas before the next (review 2026-11-14 M19: these lived
+        // together until the end, ~100 MB at a tablet's 2 Mpx).
+        val base = meadowField(w, h, d, seed, rng)
+        // The field in five depth bands, far to near, each bending as one layer.
+        val layers = ArrayList<SceneLayer>()
+        for (k in 0 until MEADOW_EDGES.size - 1) meadowBand(w, h, d, rng, k)?.let { layers += it }
+        return ScenePainting(w, h, base, null, layers)
+    }
+
+    /** Where the meadow's depth bands start and end, as shares of the height, far to near. */
+    private val MEADOW_EDGES = floatArrayOf(0.56f, 0.62f, 0.69f, 0.78f, 0.89f, 1.04f)
+
+    /** The meadow's sky, sun, hills and far, still grass ([rng] then goes on to the bands). */
+    private fun meadowField(w: Int, h: Int, d: Float, seed: Long, rng: Random): IntArray {
         val p = Paint2D(w, h, opaque = true)
         // Golden hour (maintainer 2026-11-10: "daylight / golden hour, not dusk"): a clear sky
         // warming towards the horizon, a low sun, hazy warm hills, a sunlit field.
@@ -68,7 +84,6 @@ object SceneRaster {
         p.ridge(0.475f, 0.025f, 2.3f, seed + 1, 0xFF6F8A57.toInt())
         p.ridge(0.515f, 0.012f, 3.1f, seed + 2, 0xFF557A3A.toInt())
         p.shadeDown(0.52f, 1f, 0xFF223313.toInt(), 0.55f)
-        val rng = Random(seed)
         // Far grass: short, dim and still, a texture under the moving bands.
         repeat(((w / d) * 2.2f).toInt().coerceIn(150, 2400)) {
             val x = rng.nextFloat() * w
@@ -76,56 +91,55 @@ object SceneRaster {
             val len = (2.5f + 4f * rng.nextFloat()) * d
             blade(p, x, y, len, 0.45f * d, (rng.nextFloat() - 0.4f) * 0.5f, 0.2f, 0xFF3B5A26.toInt(), 0xFF9AAE62.toInt(), 0.9f)
         }
+        return p.toArgb()
+    }
 
-        // The field in five depth bands, far to near, each bending as one layer.
-        val edges = floatArrayOf(0.56f, 0.62f, 0.69f, 0.78f, 0.89f, 1.04f)
-        val layers = ArrayList<SceneLayer>()
-        for (k in 0 until edges.size - 1) {
-            val f = (k + 1f) / (edges.size - 1)
-            val amp = (2.5f + 9f * f) * d
-            val maxLen = (8f + 26f * f + 6f + 14f * f) * d
-            val margin = (amp + 6 * d).toInt()
-            val rootTop = edges[k] * h
-            val rootBottom = edges[k + 1] * h
-            val top = (rootTop - maxLen * 1.05f).toInt().coerceAtLeast(0)
-            val bottom = min(h, rootBottom.toInt() + 2)
-            if (bottom <= top) continue
-            val lw = w + 2 * margin
-            val lh = bottom - top
-            val lp = Paint2D(lw, lh, opaque = false)
-            val spacing = (1.9f + 2.6f * f) * d
-            val count = ((w + 2f * margin) * (rootBottom - rootTop) / (spacing * spacing)).toInt().coerceIn(80, 2200)
-            val roots = Array(count) { floatArrayOf(rng.nextFloat() * lw, rootTop + rng.nextFloat() * (rootBottom - rootTop) - top) }
-            roots.sortBy { it[1] }
-            val haze = (1f - f).pow(1.5f) * 0.45f
-            val light = 0.8f + 0.25f * f
-            for ((i, root) in roots.withIndex()) {
-                val len = (8f + 26f * f + rng.nextFloat() * (6f + 14f * f)) * d
-                val width = (0.45f + 1.05f * f) * d * (0.75f + 0.5f * rng.nextFloat())
-                val rootC = lerpColor(0xFF20381A.toInt(), 0xFF35561F.toInt(), rng.nextFloat())
-                val pick = rng.nextFloat()
-                // Tips lit gold by the low sun.
-                var tip = when {
-                    pick < 0.62f -> lerpColor(0xFF7FAE3E.toInt(), 0xFFB9D460.toInt(), rng.nextFloat())
-                    pick < 0.88f -> lerpColor(0xFFC2C65E.toInt(), 0xFFE9D77E.toInt(), rng.nextFloat())
-                    else -> lerpColor(0xFFD9B66A.toInt(), 0xFFF2DA98.toInt(), rng.nextFloat())
-                }
-                tip = scale(lerpColor(tip, 0xFFC9C39A.toInt(), haze), light)
-                val lean = (rng.nextFloat() - 0.5f) * 0.55f
-                val curl = (rng.nextFloat() - 0.5f) * 0.9f + 0.22f
-                blade(lp, root[0], root[1], len, width, lean, curl, scale(rootC, light), tip, 1f)
-                if (f > 0.3f && rng.nextFloat() < 0.07f) seedHead(lp, root[0], root[1], len, lean, curl, f * d, scale(0xFFC9B97A.toInt(), light))
-                if (f >= 0.5f && i % 26 == 0) flower(lp, rng, root[0], root[1], len, f, d, light)
+    /** Meadow depth band [k] ([MEADOW_EDGES]) as a layer that bends; null when it has no height. */
+    private fun meadowBand(w: Int, h: Int, d: Float, rng: Random, k: Int): SceneLayer? {
+        val edges = MEADOW_EDGES
+        val f = (k + 1f) / (edges.size - 1)
+        val amp = (2.5f + 9f * f) * d
+        val maxLen = (8f + 26f * f + 6f + 14f * f) * d
+        val margin = (amp + 6 * d).toInt()
+        val rootTop = edges[k] * h
+        val rootBottom = edges[k + 1] * h
+        val top = (rootTop - maxLen * 1.05f).toInt().coerceAtLeast(0)
+        val bottom = min(h, rootBottom.toInt() + 2)
+        if (bottom <= top) return null
+        val lw = w + 2 * margin
+        val lh = bottom - top
+        val lp = Paint2D(lw, lh, opaque = false)
+        val spacing = (1.9f + 2.6f * f) * d
+        val count = ((w + 2f * margin) * (rootBottom - rootTop) / (spacing * spacing)).toInt().coerceIn(80, 2200)
+        val roots = Array(count) { floatArrayOf(rng.nextFloat() * lw, rootTop + rng.nextFloat() * (rootBottom - rootTop) - top) }
+        roots.sortBy { it[1] }
+        val haze = (1f - f).pow(1.5f) * 0.45f
+        val light = 0.8f + 0.25f * f
+        for ((i, root) in roots.withIndex()) {
+            val len = (8f + 26f * f + rng.nextFloat() * (6f + 14f * f)) * d
+            val width = (0.45f + 1.05f * f) * d * (0.75f + 0.5f * rng.nextFloat())
+            val rootC = lerpColor(0xFF20381A.toInt(), 0xFF35561F.toInt(), rng.nextFloat())
+            val pick = rng.nextFloat()
+            // Tips lit gold by the low sun.
+            var tip = when {
+                pick < 0.62f -> lerpColor(0xFF7FAE3E.toInt(), 0xFFB9D460.toInt(), rng.nextFloat())
+                pick < 0.88f -> lerpColor(0xFFC2C65E.toInt(), 0xFFE9D77E.toInt(), rng.nextFloat())
+                else -> lerpColor(0xFFD9B66A.toInt(), 0xFFF2DA98.toInt(), rng.nextFloat())
             }
-            layers += SceneLayer(
-                left = -margin, top = top, width = lw, height = lh, pixels = lp.toArgb(),
-                motion = LayerMotion(
-                    LayerMotionKind.SWAY_UP, anchorY = rootBottom, reach = maxLen, amplitude = amp, bias = 0.3f,
-                    periodS = 4.6f, phase = -0.05f * k, wavelength = 0.85f * w,
-                ),
-            )
+            tip = scale(lerpColor(tip, 0xFFC9C39A.toInt(), haze), light)
+            val lean = (rng.nextFloat() - 0.5f) * 0.55f
+            val curl = (rng.nextFloat() - 0.5f) * 0.9f + 0.22f
+            blade(lp, root[0], root[1], len, width, lean, curl, scale(rootC, light), tip, 1f)
+            if (f > 0.3f && rng.nextFloat() < 0.07f) seedHead(lp, root[0], root[1], len, lean, curl, f * d, scale(0xFFC9B97A.toInt(), light))
+            if (f >= 0.5f && i % 26 == 0) flower(lp, rng, root[0], root[1], len, f, d, light)
         }
-        return ScenePainting(w, h, p.toArgb(), null, layers)
+        return SceneLayer(
+            left = -margin, top = top, width = lw, height = lh, pixels = lp.toArgb(),
+            motion = LayerMotion(
+                LayerMotionKind.SWAY_UP, anchorY = rootBottom, reach = maxLen, amplitude = amp, bias = 0.3f,
+                periodS = 4.6f, phase = -0.05f * k, wavelength = 0.85f * w,
+            ),
+        )
     }
 
     /** A grass blade rooted at ([x], [y]): [len] tall, [lean] radians off vertical, curling by [curl]. */
@@ -205,7 +219,19 @@ object SceneRaster {
      * faster glints and streaks on the surface.
      */
     private fun stream(w: Int, h: Int, d: Float, seed: Long): ScenePainting {
-        // The bed, painted dry, then seen through the water.
+        // Each canvas is turned into pixels and dropped before the next is made (review
+        // 2026-11-14 M19: the bed, the water and both light layers, 16 B a pixel each, used to
+        // live together until the end): the bed, painted dry, then seen through the water.
+        val base = streamWater(streamBed(w, h, d, seed), w, h, d, seed)
+        val layers = listOf(
+            SceneLayer(0, 0, w, h, streamCaustics(w, h, d, seed), LayerMotion(LayerMotionKind.FLOW, amplitude = w.toFloat(), periodS = 40f)),
+            SceneLayer(0, 0, w, h, streamGlints(w, h, d, seed), LayerMotion(LayerMotionKind.FLOW, amplitude = w.toFloat(), periodS = 22f)),
+        )
+        return ScenePainting(w, h, base, null, layers)
+    }
+
+    /** The stream's bed, dry: sand ripples and many-coloured pebbles. */
+    private fun streamBed(w: Int, h: Int, d: Float, seed: Long): IntArray {
         val bed = Paint2D(w, h, opaque = true)
         for (y in 0 until h) for (x in 0 until w) {
             val n = Noise.fbm(x / (40f * d), y / (40f * d), 3, seed + 1)
@@ -219,7 +245,11 @@ object SceneRaster {
             val c = PEBBLES[rng.nextInt(PEBBLES.size)]
             pebble(bed, rng.nextFloat() * w, rng.nextFloat() * h, r, 0.6f + 0.35f * rng.nextFloat(), rng.nextFloat() * 3.14f, c)
         }
-        val src = bed.toArgb()
+        return bed.toArgb()
+    }
+
+    /** The water over the bed [src] (its pixels): refraction, depth, the mossy banks. */
+    private fun streamWater(src: IntArray, w: Int, h: Int, d: Float, seed: Long): IntArray {
         val p = Paint2D(w, h, opaque = true)
         for (y in 0 until h) for (x in 0 until w) {
             // Refraction: the bed seen through a surface that leans with the current.
@@ -238,10 +268,15 @@ object SceneRaster {
         // Dark mossy banks at the top and the bottom edge.
         p.verticalShade(0f, 0.1f, 0xFF16261A.toInt(), 0.7f)
         p.shadeDown(0.93f, 1f, 0xFF16261A.toInt(), 0.6f)
+        return p.toArgb()
+    }
 
-        // The light: seamless across (it wraps as it flows), so its noise repeats every w.
-        // Caustics: bright, curving filaments where the moving surface focuses the light (ridged
-        // noise warped by the flow), patchy as on a real stream bed.
+    /**
+     * The light: seamless across (it wraps as it flows), so its noise repeats every w.
+     * Caustics: bright, curving filaments where the moving surface focuses the light (ridged
+     * noise warped by the flow), patchy as on a real stream bed.
+     */
+    private fun streamCaustics(w: Int, h: Int, d: Float, seed: Long): IntArray {
         val cx = max(2, (w / (24f * d)).toInt()); val sxs = cx / w.toFloat()
         val caustics = Paint2D(w, h, opaque = false)
         for (y in 0 until h) for (x in 0 until w) {
@@ -254,6 +289,11 @@ object SceneRaster {
             val a = patch * (0.32f * ridge1 + 0.18f * ridge2)
             if (a > 0.01f) caustics.over(y * w + x, 0xFFE6FFF4.toInt(), a)
         }
+        return caustics.toArgb()
+    }
+
+    /** The surface's glints, seamless across as the caustics are. */
+    private fun streamGlints(w: Int, h: Int, d: Float, seed: Long): IntArray {
         val glints = Paint2D(w, h, opaque = false)
         val gp = max(1, (w / (90f * d)).toInt())
         for (y in 0 until h) for (x in 0 until w) {
@@ -262,11 +302,7 @@ object SceneRaster {
             val streak = ((n - 0.68f) * 5f).coerceIn(0f, 1f)
             if (streak > 0f) glints.over(y * w + x, 0xFFD8F4F4.toInt(), 0.5f * streak * streak)
         }
-        val layers = listOf(
-            SceneLayer(0, 0, w, h, caustics.toArgb(), LayerMotion(LayerMotionKind.FLOW, amplitude = w.toFloat(), periodS = 40f)),
-            SceneLayer(0, 0, w, h, glints.toArgb(), LayerMotion(LayerMotionKind.FLOW, amplitude = w.toFloat(), periodS = 22f)),
-        )
-        return ScenePainting(w, h, p.toArgb(), null, layers)
+        return glints.toArgb()
     }
 
     /** Pebble colours on a stream bed: greys, ochres, rust, slate blue. */
@@ -535,6 +571,18 @@ object SceneRaster {
      * near branch and the ferns sway as layers.
      */
     private fun forest(w: Int, h: Int, d: Float, seed: Long): ScenePainting {
+        // The still wood first, as pixels: its float canvas is gone before the moving layers are
+        // painted (review 2026-11-14 M19).
+        val base = forestWood(w, h, d, seed)
+        val layers = ArrayList<SceneLayer>()
+        layers += canopyLayer(w, h, d, Random(seed + 10))
+        layers += hangingBranchesLayer(w, h, d, Random(seed + 11))
+        layers += fernLayer(w, h, d, Random(seed + 12))
+        return ScenePainting(w, h, base, null, layers)
+    }
+
+    /** The forest behind its moving layers: light, mist, trunks, shafts and the floor. */
+    private fun forestWood(w: Int, h: Int, d: Float, seed: Long): IntArray {
         val p = Paint2D(w, h, opaque = true)
         // Bright, hazy light high up behind the trees, deepening to the floor.
         p.verticalGradient(0f to 0xFFB7CFA0.toInt(), 0.3f to 0xFF7E9C74.toInt(), 0.62f to 0xFF4A6448.toInt(), 1f to 0xFF1E2C1C.toInt())
@@ -568,12 +616,7 @@ object SceneRaster {
         // Near trunks at both sides, partly off the view: the darkest and most detailed.
         barkTrunk(p, 0.04f * w, 52f * d, 64f * d, 1.02f * h, 0xFF2C2A20.toInt(), 1f, d, seed + 80, detail = 1f)
         barkTrunk(p, 0.95f * w, 40f * d, 50f * d, 1.02f * h, 0xFF302C22.toInt(), 1f, d, seed + 81, detail = 1f)
-
-        val layers = ArrayList<SceneLayer>()
-        layers += canopyLayer(w, h, d, Random(seed + 10))
-        layers += hangingBranchesLayer(w, h, d, Random(seed + 11))
-        layers += fernLayer(w, h, d, Random(seed + 12))
-        return ScenePainting(w, h, p.toArgb(), null, layers)
+        return p.toArgb()
     }
 
     /**
@@ -866,11 +909,16 @@ object SceneRaster {
      * image the shimmering one) and stars, a third of them twinkling. It drifts and cross-fades
      * as the aurora look's curtains do ([MotionStyle.forScene]), behind [snowGround].
      */
-    private fun snowSky(w: Int, h: Int, d: Float, frame: Int, seed: Long): IntArray {
-        val p = Paint2D(w, h, opaque = true)
-        p.verticalGradient(0f to 0xFF0A1020.toInt(), 0.5f to 0xFF1A2540.toInt(), 1f to 0xFF2C3854.toInt())
+    private fun snowSky(w: Int, h: Int, d: Float, frame: Int, seed: Long): IntArray =
+        // The canvas returned and converted here: the aurora's light is gone by then (review 2026-11-14 M19).
+        snowSkyCanvas(w, h, d, frame, seed).toArgb()
+
+    private fun snowSkyCanvas(w: Int, h: Int, d: Float, frame: Int, seed: Long): Paint2D {
+        // The aurora first: its own float buffers are gone before the sky's canvas is made.
         val curtains = if (frame == 0) SNOW_AURORA else AuroraMotion.alternate(SNOW_AURORA)
         val light = AuroraRaster.render(0xFF000000.toInt(), curtains, w, h, d)
+        val p = Paint2D(w, h, opaque = true)
+        p.verticalGradient(0f to 0xFF0A1020.toInt(), 0.5f to 0xFF1A2540.toInt(), 1f to 0xFF2C3854.toInt())
         for (i in light.indices) {
             val c = light[i]
             val r = (c shr 16) and 0xFF; val g = (c shr 8) and 0xFF; val b = c and 0xFF
@@ -884,7 +932,7 @@ object SceneRaster {
             val twinkle = if (frame == 1 && k % 3 == 0) 0.35f else 1f
             p.disc(x, y, (0.45f + 0.5f * stars.nextFloat() * stars.nextFloat()) * d, 0xFFF2F0FF.toInt(), bright * twinkle)
         }
-        return p.toArgb()
+        return p
     }
 
     /**
@@ -892,7 +940,11 @@ object SceneRaster {
      * snowy hills lit by the aurora's green and violet, and glitter on the crust. Transparent
      * above the hills, where the sky shows.
      */
-    private fun snowGround(w: Int, h: Int, d: Float, seed: Long): IntArray {
+    private fun snowGround(w: Int, h: Int, d: Float, seed: Long): IntArray =
+        // Converted once the aurora's light on the snow (a second canvas) is gone (review 2026-11-14 M19).
+        snowGroundCanvas(w, h, d, seed).toArgb()
+
+    private fun snowGroundCanvas(w: Int, h: Int, d: Float, seed: Long): Paint2D {
         val p = Paint2D(w, h, opaque = false)
         val rng = Random(seed)
         val pines = (w / d / 28f).toInt().coerceAtLeast(4)
@@ -905,18 +957,24 @@ object SceneRaster {
         p.ridge(0.66f, 0.06f, 0.9f, seed + 1, 0xFF7E98AE.toInt())
         p.ridge(0.80f, 0.05f, 1.6f, seed + 2, 0xFFA8BED0.toInt())
         // The aurora's light on the snow, only where there is snow (the sky above stays clear).
-        val lit = Paint2D(w, h, opaque = false)
+        // A band is the same along each row, so the light is one column of the view's height
+        // (review 2026-11-14 M19: a full second canvas, 16 B a pixel, held the same values).
+        val lit = Paint2D(1, h, opaque = false)
         lit.band(0.64f, 0.78f, 0xFF4AE0A0.toInt(), 0.06f)
         lit.band(0.74f, 0.9f, 0xFFB48CFF.toInt(), 0.04f)
         // Channels are premultiplied: the band's colour at its strength s over the snow, keeping
         // the snow's own coverage A (lit holds c·s and s).
-        for (i in 0 until w * h) {
-            val s = lit.a[i]
-            val cover = p.a[i]
-            if (s <= 0f || cover <= 0f) continue
-            p.r[i] = p.r[i] * (1 - s) + lit.r[i] * cover
-            p.g[i] = p.g[i] * (1 - s) + lit.g[i] * cover
-            p.b[i] = p.b[i] * (1 - s) + lit.b[i] * cover
+        for (y in 0 until h) {
+            val s = lit.a[y]
+            if (s <= 0f) continue
+            for (x in 0 until w) {
+                val i = y * w + x
+                val cover = p.a[i]
+                if (cover <= 0f) continue
+                p.r[i] = p.r[i] * (1 - s) + lit.r[y] * cover
+                p.g[i] = p.g[i] * (1 - s) + lit.g[y] * cover
+                p.b[i] = p.b[i] * (1 - s) + lit.b[y] * cover
+            }
         }
         val glitter = Random(seed + 10)
         repeat((w * h / (d * d) / 90f).toInt().coerceIn(40, 2000)) {
@@ -924,7 +982,7 @@ object SceneRaster {
             val y = h * (0.7f + 0.3f * glitter.nextFloat())
             p.disc(x, y, 0.6f * d, 0xFFFFFFFF.toInt(), 0.5f)
         }
-        return p.toArgb()
+        return p
     }
 
     // ---- Beach: a sea whose swells roll in and wash up textured sand ----
@@ -934,6 +992,28 @@ object SceneRaster {
         h * (0.30f + 0.022f * sin(2 * PI * (x / w * 1.2f + 0.15f)).toFloat() + 0.012f * (Noise.fbm(x / w * 6f, 0.5f, 3, seed) - 0.5f) * 2f)
 
     private fun beach(w: Int, h: Int, d: Float, seed: Long): ScenePainting {
+        // The still sea and sand first, as pixels, before the moving layers (review 2026-11-14 M19).
+        val base = beachShore(w, h, d, seed)
+        val layers = ArrayList<SceneLayer>()
+        val meanShore = 0.30f * h
+        // Two swells rolling in, the second smaller, half a cycle apart.
+        for ((k, strength) in listOf(1f, 0.6f).withIndex()) {
+            val startY = (0.05f + 0.06f * k) * h
+            layers += swellLayer(w, h, d, seed + 20 + k, startY, strength, LayerMotion(
+                LayerMotionKind.ROLL, amplitude = meanShore - startY - 4f * d, periodS = 8f, phase = 0.3f + 0.5f * k,
+            ))
+        }
+        // And the water each one sends up the sand.
+        for ((k, reach) in listOf(1f, 0.55f).withIndex()) {
+            layers += washLayer(w, h, d, seed, seed + 30 + k, reach, LayerMotion(
+                LayerMotionKind.WASH, amplitude = 0.075f * h * reach, periodS = 8f, phase = 0.3f + 0.5f * k, fade = 0.85f,
+            ))
+        }
+        return ScenePainting(w, h, base, null, layers)
+    }
+
+    /** The beach behind its moving water: the sea, wet and dry sand, the wrack line and shells. */
+    private fun beachShore(w: Int, h: Int, d: Float, seed: Long): IntArray {
         val p = Paint2D(w, h, opaque = true)
         for (y in 0 until h) for (x in 0 until w) {
             val fx = x + 0.5f; val fy = y + 0.5f
@@ -991,23 +1071,7 @@ object SceneRaster {
         // Bright sand (maintainer 2026-11-10: "brighten up the sand"), dimmed only a little; the
         // beach's key fill carries the legibility (KeyboardLooks.beachLook).
         p.multiply(0.9f)
-
-        val layers = ArrayList<SceneLayer>()
-        val meanShore = 0.30f * h
-        // Two swells rolling in, the second smaller, half a cycle apart.
-        for ((k, strength) in listOf(1f, 0.6f).withIndex()) {
-            val startY = (0.05f + 0.06f * k) * h
-            layers += swellLayer(w, h, d, seed + 20 + k, startY, strength, LayerMotion(
-                LayerMotionKind.ROLL, amplitude = meanShore - startY - 4f * d, periodS = 8f, phase = 0.3f + 0.5f * k,
-            ))
-        }
-        // And the water each one sends up the sand.
-        for ((k, reach) in listOf(1f, 0.55f).withIndex()) {
-            layers += washLayer(w, h, d, seed, seed + 30 + k, reach, LayerMotion(
-                LayerMotionKind.WASH, amplitude = 0.075f * h * reach, periodS = 8f, phase = 0.3f + 0.5f * k, fade = 0.85f,
-            ))
-        }
-        return ScenePainting(w, h, p.toArgb(), null, layers)
+        return p.toArgb()
     }
 
     /** A small ribbed shell. */

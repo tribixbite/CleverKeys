@@ -73,28 +73,39 @@ object SceneTrueBlack {
      * [painting] (of [kind], painted at [density] raster px per dp) in true black: the base, the
      * cross-fade image and every layer, with one light cut-off (taken from the whole picture at
      * rest) so a layer matches the ground it moves over. The surface map is unchanged.
+     *
+     * [inPlace]: darken [painting]'s own arrays (the returned painting shares them) instead of
+     * new ones, for a caller that drops the painted original (`BackdropDrawable.render`; review
+     * 2026-11-14 M19: a second copy of every image was 4 B a pixel of each on the render's peak).
      */
-    fun apply(painting: ScenePainting, kind: SceneKind, density: Float): ScenePainting {
+    fun apply(painting: ScenePainting, kind: SceneKind, density: Float, inPlace: Boolean = false): ScenePainting {
         if (painting.base.isEmpty()) return painting
         val params = paramsFor(kind)
-        // The cut-off from the picture as seen (layers over the base at rest): the snow's hills are
-        // a layer over a dark sky, and a cut-off from the sky alone left them lit (Fable audit).
-        val seen = if (painting.layers.isEmpty()) painting.base else SceneMotion.composite(painting, 0.0)
-        val cutoff = lumaQuantile(seen, params.lightQuantile)
+        val cutoff = cutoffOf(painting, params)
         val radius = max(1, (DETAIL_RADIUS_DP * density).toInt())
         val w = painting.width
         val h = painting.height
         // One scratch set for every image of the painting, sized for the largest.
         val scratch = Scratch(max(painting.base.size, painting.layers.maxOfOrNull { it.pixels.size } ?: 0))
+        fun dark(pixels: IntArray, iw: Int, ih: Int) =
+            darken(pixels, iw, ih, radius, cutoff, params, scratch, out = if (inPlace) pixels else IntArray(iw * ih))
         return ScenePainting(
             w, h,
-            darken(painting.base, w, h, radius, cutoff, params, scratch),
-            painting.alt?.let { darken(it, w, h, radius, cutoff, params, scratch) },
-            painting.layers.map { l ->
-                SceneLayer(l.left, l.top, l.width, l.height, darken(l.pixels, l.width, l.height, radius, cutoff, params, scratch), l.motion)
-            },
+            dark(painting.base, w, h),
+            painting.alt?.let { dark(it, w, h) },
+            painting.layers.map { l -> SceneLayer(l.left, l.top, l.width, l.height, dark(l.pixels, l.width, l.height), l.motion) },
             painting.surface,
         )
+    }
+
+    /**
+     * The light cut-off from the picture as seen (layers over the base at rest): the snow's hills
+     * are a layer over a dark sky, and a cut-off from the sky alone left them lit (Fable audit).
+     * Its own function so the composite (16 B a pixel) is gone before [darken]'s scratch is made.
+     */
+    private fun cutoffOf(painting: ScenePainting, params: Params): Float {
+        val seen = if (painting.layers.isEmpty()) painting.base else SceneMotion.composite(painting, 0.0)
+        return lumaQuantile(seen, params.lightQuantile)
     }
 
     /**
@@ -139,13 +150,15 @@ object SceneTrueBlack {
 
     /**
      * [pixels] ([w] × [h], ARGB, alpha kept) darkened by [params], working in [scratch] (at least
-     * [w] × [h]; a fresh one when not given). The detail term compares with an alpha-weighted
-     * blur, so a layer's transparent surroundings do not read as an edge; a fully opaque image
-     * skips the alpha blur (it is 1 everywhere).
+     * [w] × [h]; a fresh one when not given), into [out] (may be [pixels] itself: each pixel is
+     * read before it is written, and the blur reads only the scratch). The detail term compares
+     * with an alpha-weighted blur, so a layer's transparent surroundings do not read as an edge; a
+     * fully opaque image skips the alpha blur (it is 1 everywhere).
      */
     internal fun darken(
         pixels: IntArray, w: Int, h: Int, radius: Int, cutoff: Float, params: Params,
         scratch: Scratch = Scratch(w * h),
+        out: IntArray = IntArray(w * h),
     ): IntArray {
         val size = w * h
         require(scratch.luma.size >= size) { "scratch for ${scratch.luma.size} px, image has $size" }
@@ -162,11 +175,15 @@ object SceneTrueBlack {
         }
         boxBlur(blurY, w, h, radius, scratch.pass, blurY)
         if (!opaque) boxBlur(blurA, w, h, radius, scratch.pass, blurA)
-        val out = IntArray(size)
+        require(out.size >= size) { "output for ${out.size} px, image has $size" }
         for (i in 0 until size) {
             val c = pixels[i]
             val alpha = c ushr 24
-            if (alpha == 0) continue
+            // Transparent stays all zero (a fresh output's value; in place, the colour goes too).
+            if (alpha == 0) {
+                out[i] = 0
+                continue
+            }
             val lum = luma(c)
             val weight = if (opaque) 1f else blurA[i]
             val surround = if (weight > 0f) blurY[i] / weight else lum

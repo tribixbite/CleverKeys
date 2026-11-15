@@ -81,7 +81,11 @@ class BackdropDrawable(
     private var stars: List<Star> = emptyList()
     /** Whole-drawable alpha: the keyboard opacity setting (`Keyboard2View` sets `background.alpha`). */
     private var drawableAlpha = 0xFF
-    /** Bumped on every new size: a render that finishes for an older size is dropped. */
+    /**
+     * Bumped on every new size: a render that finishes for an older size is dropped, and one not
+     * started yet is skipped (read on the render thread: review 2026-11-14).
+     */
+    @Volatile
     private var generation = 0
 
     /**
@@ -456,14 +460,17 @@ class BackdropDrawable(
         }
         // Keep showing the old size's painting (stretched) rather than flashing the base colour.
         renderer.execute {
-            val rendered = try {
-                synchronized(cache) { cache[key] } ?: render(key).also { r -> synchronized(cache) { cache.put(key, r) } }
-            } catch (t: Throwable) {
-                // Out of memory or a bug: the plain base colour is a fine backdrop.
-                Log.w(TAG, "backdrop render failed", t)
-                null
-            }
-            mainHandler.post { if (gen == generation) setPainting(rendered) }
+            val outcome = PaintingJob.run(
+                key,
+                isCurrent = { gen == generation },
+                cached = { k -> synchronized(cache) { cache[k] } },
+                store = { k, r -> synchronized(cache) { cache.put(k, r) } },
+                render = ::render,
+                smaller = ::halfScale,
+                onFailure = { t -> Log.w(TAG, "backdrop render failed", t) },
+            )
+            // A newer size asked first (a resize storm): its own render delivers.
+            if (outcome is PaintingOutcome.Done) mainHandler.post { if (gen == generation) setPainting(outcome.painting) }
         }
     }
 
@@ -1255,8 +1262,11 @@ class BackdropDrawable(
         private fun render(key: PaintKey): Rendered {
             val scene = key.scene
             return if (scene != null) {
-                val painted = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity)
-                val p = if (key.trueBlack) SceneTrueBlack.apply(painted, scene, key.rasterDensity) else painted
+                // True black darkens the painting's own arrays (review 2026-11-14 M19: a second
+                // set of every image was the render's largest single cost).
+                val p = SceneRaster.paint(scene, key.w, key.h, key.rasterDensity).let { painted ->
+                    if (key.trueBlack) SceneTrueBlack.apply(painted, scene, key.rasterDensity, inPlace = true) else painted
+                }
                 val layers = p.layers.map { it.placement to Bitmap.createBitmap(it.pixels, it.width, it.height, Bitmap.Config.ARGB_8888) }
                 Rendered(
                     key.w, bitmap(p.base, key.w, key.h), p.alt?.let { bitmap(it, key.w, key.h) }, layers,
@@ -1271,6 +1281,15 @@ class BackdropDrawable(
                 )
             }
         }
+
+        /**
+         * [key] at half the resolution (half the size and the raster density: the same picture,
+         * a quarter of the pixels), drawn stretched to the view like any painting; null when that
+         * would be under a pixel. The retry after a render ran out of memory ([PaintingJob]).
+         */
+        private fun halfScale(key: PaintKey): PaintKey? =
+            if (key.w < 2 || key.h < 2) null
+            else key.copy(w = key.w / 2, h = key.h / 2, rasterDensity = key.rasterDensity / 2)
 
         private fun bitmap(pixels: IntArray, w: Int, h: Int): Bitmap = Bitmap.createBitmap(pixels, w, h, Bitmap.Config.ARGB_8888)
 
@@ -1341,5 +1360,60 @@ class BackdropDrawable(
             fun ch(shift: Int) = (((color shr shift) and 0xFF) * f).toInt().coerceIn(0, 255)
             return (color and 0xFF000000.toInt()) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
         }
+    }
+}
+
+/** What a painting request came to on the render thread ([PaintingJob.run]). */
+internal sealed class PaintingOutcome<out R> {
+    /** A newer size was asked for before this one started: nothing rendered, nothing delivered. */
+    object Stale : PaintingOutcome<Nothing>()
+
+    /** The painting for the key ([painting] null: it could not be made; the base colour shows). */
+    class Done<R>(val painting: R?) : PaintingOutcome<R>()
+}
+
+/**
+ * One painting request on `BackdropDrawable`'s render thread, Android-free so the JVM suite pins
+ * it (`SceneRenderMemoryTest`). Review 2026-11-14:
+ *
+ * - a request whose size is no longer the drawable's ([isCurrent] false; a resize storm queues
+ *   one per size) is skipped before it renders: rendering it cost a second of CPU and its store
+ *   evicted the painting in use from the 24 MB cache;
+ * - a render that runs out of memory (M19: a full-resolution scene on a large tablet keyboard)
+ *   is tried once more at half the resolution ([smaller]), stored under the original [key] so
+ *   that size does not run out again; any other failure, or a second one, gives no painting.
+ */
+internal object PaintingJob {
+    fun <K : Any, R : Any> run(
+        key: K,
+        isCurrent: () -> Boolean,
+        cached: (K) -> R?,
+        store: (K, R) -> Unit,
+        render: (K) -> R,
+        smaller: (K) -> K?,
+        onFailure: (Throwable) -> Unit,
+    ): PaintingOutcome<R> {
+        if (!isCurrent()) return PaintingOutcome.Stale
+        cached(key)?.let { return PaintingOutcome.Done(it) }
+        val rendered = try {
+            render(key)
+        } catch (e: OutOfMemoryError) {
+            onFailure(e)
+            // The failed attempt's arrays are garbage by now: a quarter of the pixels may fit.
+            val half = smaller(key)
+            if (!isCurrent()) return PaintingOutcome.Stale
+            if (half == null) null else try {
+                render(half)
+            } catch (t: Throwable) {
+                onFailure(t)
+                null
+            }
+        } catch (t: Throwable) {
+            // A bug: the plain base colour is a fine backdrop.
+            onFailure(t)
+            null
+        }
+        if (rendered != null) store(key, rendered)
+        return PaintingOutcome.Done(rendered)
     }
 }
