@@ -40,12 +40,12 @@ then the tag sequence (M4) with the full suites and an instrumented run at the t
 item 33: choose the dictionary / voice pack per language), item 20's unowned roadmap,
 the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
-**Review since v1.5.0 (2026-11-14, agent, not started):** `docs/audit/2026-11-14-post-v1.5-review.md`
-— 4 high (H1 next-word tap deletes the previous word with default settings; H2 swipe-ML capture in
-incognito fields; H3 imported clipboard `media_path` deletes arbitrary app files; H4 a wrong-typed
-imported pref crash-loops the IME), 26 medium, ~45 low. The scene path is direct-boot safe (§1).
-H1–H4, M1 (clip text in release logcat) and M2 (default-IME reminder nags users who chose
-CleverKeys) block the 2.0 tag in the agent's view; reproduce H1 on a test phone before fixing.
+**Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
+§2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
+of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
+unfixed code (or, for new API, not compiling). Still open: the low list in §2a's last row; native
+review of `io_error_backup_password_unreadable` and five Settings strings (item 10); device checks
+in §4 (lock-screen worst case, tablet landscape scene memory, aurora first tick, Settings rotation).
 
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
@@ -114,6 +114,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `1-translate.csv` 626 rows, `2-check.csv` 332, `3-read-through.csv` 33,163 optional; README
     there. Re-import: `python3 scripts/export_translation_review.py --import <locale>/*.csv
     [--dry-run]`. Leads: `docs/audit/2026-10-22-translation-audit.md`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-10)
+    Added 2026-11-15, NOT yet in the sheets (re-export first): `io_error_backup_password_unreadable`
+    (agent translations in all 21), and `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`,
+    `extra_keys_reset_message`, `extra_keys_reset_done` (English in every locale).
 11. [ ] maintainer decisions (2026-10-25 questionnaire) — every part reads DONE or CLOSED: es LM stays
     unshipped (pre-registered retry failed; only UD Spanish-PUD unused), FLOOR_ONE ships for
     de/fr/it/pt/sv (en keeps RAW), `finger_occlusion_offset` stays 0, the first Saga keeps CleverKeys
