@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -80,6 +81,33 @@ internal object LayoutListRefresh {
         if (layout is LayoutsPreference.CustomLayout) layout.copy(parsed = null) else layout
 }
 
+/**
+ * Layout Manager's row ids across recreation, and its dialogs' rows by id (review 2026-11-14 M22
+ * and the stale-index low). Rows used to get a random id each time the screen was built and the
+ * dialogs held a list INDEX: a rotation dropped every open dialog, and a list changed under an
+ * open dialog (the keyboard adding a "(modified)" copy) made Delete or Save act on another row.
+ * Pure (`LayoutRowIdsTest`).
+ */
+internal object LayoutRowIds {
+
+    /**
+     * The rows for [stored], reusing [savedIds] (the ids the screen had before it was recreated)
+     * when they still describe the same number of rows — the stored list is the one the screen
+     * last saved, in the same order. Otherwise, or when the saved ids repeat, every row gets a
+     * new id: an old id could then point a dialog at a different layout.
+     */
+    fun restore(stored: List<LayoutsPreference.Layout>, savedIds: List<String>?): List<LayoutWithId> {
+        val reusable = savedIds != null && savedIds.size == stored.size && savedIds.toSet().size == savedIds.size
+        return stored.mapIndexed { i, layout ->
+            if (reusable) LayoutWithId(id = savedIds!![i], layout = layout) else LayoutWithId(layout = layout)
+        }
+    }
+
+    /** The current index of row [id], or null when that row is gone (the dialog then closes). */
+    fun indexOf(rows: List<LayoutWithId>, id: String?): Int? =
+        id?.let { wanted -> rows.indexOfFirst { it.id == wanted }.takeIf { it >= 0 } }
+}
+
 class LayoutManagerActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,16 +151,24 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     // CRITICAL: Use DirectBootAwarePreferences to get the SAME SharedPreferences as the keyboard service
     val prefs = remember { DirectBootAwarePreferences.get_shared_preferences(context) }
 
-    // Load layouts from preferences with stable IDs for drag-reorder
-    var layoutsWithIds by remember {
-        mutableStateOf(
-            (ListGroupPreference.loadFromPreferences(
-                LayoutsPreference.KEY,
-                prefs,
-                LayoutsPreference.DEFAULT,
-                LayoutsPreference.SERIALIZER
-            ) ?: LayoutsPreference.DEFAULT).map { LayoutWithId(layout = it) }
+    fun loadStoredLayouts(): List<LayoutsPreference.Layout> = ListGroupPreference.loadFromPreferences(
+        LayoutsPreference.KEY,
+        prefs,
+        LayoutsPreference.DEFAULT,
+        LayoutsPreference.SERIALIZER
+    ) ?: LayoutsPreference.DEFAULT
+
+    // Load layouts from preferences with stable IDs for drag-reorder. Review 2026-11-14 M22: only
+    // the row ids go into the saved state (the layouts are re-read from prefs, where every edit
+    // is already saved), so the dialogs below, which name their row by id, survive a rotation.
+    val rowsSaver = remember(prefs) {
+        androidx.compose.runtime.saveable.Saver<List<LayoutWithId>, ArrayList<String>>(
+            save = { rows -> ArrayList(rows.map { it.id }) },
+            restore = { ids -> LayoutRowIds.restore(loadStoredLayouts(), ids) },
         )
+    }
+    var layoutsWithIds by rememberSaveable(stateSaver = rowsSaver) {
+        mutableStateOf(LayoutRowIds.restore(loadStoredLayouts(), null))
     }
 
     // Helper function to extract raw layouts for saving
@@ -142,13 +178,7 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     // creating a "(modified)" copy while this screen sits in the back stack — and re-read on every
     // resume in case a write happened while no listener was attached.
     fun reloadLayouts() {
-        val stored = ListGroupPreference.loadFromPreferences(
-            LayoutsPreference.KEY,
-            prefs,
-            LayoutsPreference.DEFAULT,
-            LayoutsPreference.SERIALIZER
-        ) ?: LayoutsPreference.DEFAULT
-        layoutsWithIds = LayoutListRefresh.reconcile(layoutsWithIds, stored)
+        layoutsWithIds = LayoutListRefresh.reconcile(layoutsWithIds, loadStoredLayouts())
     }
     // The hosting activity is the lifecycle owner (no lifecycle-compose dependency needed).
     val lifecycle = (context as? androidx.lifecycle.LifecycleOwner)?.lifecycle
@@ -195,15 +225,18 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     fun themeName(id: String): String = layoutThemeDisplayName(id, context.resources, customThemes)
     val globalThemeName = themeName(prefs.getString("theme", null) ?: Defaults.THEME)
 
-    // Dialog states
-    var showAddDialog by remember { mutableStateOf(false) }
-    var showLanguagePickerFor by remember { mutableStateOf<Int?>(null) }
-    var showThemePickerFor by remember { mutableStateOf<Int?>(null) }
-    var showKeyGeometryFor by remember { mutableStateOf<Int?>(null) }
-    var showCustomLayoutDialog by remember { mutableStateOf<Pair<Int, String>?>(null) }
-    var showDeleteConfirmDialog by remember { mutableStateOf<Int?>(null) }
+    // Dialog states. Review 2026-11-14 M22 + stale-index low: each names its row by ROW ID (resolved
+    // with LayoutRowIds.indexOf when it draws and acts, so a row moved or removed meanwhile is
+    // never confused with another) and lives in the saved state, so a rotation keeps it open.
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    var showLanguagePickerFor by rememberSaveable { mutableStateOf<String?>(null) }
+    var showThemePickerFor by rememberSaveable { mutableStateOf<String?>(null) }
+    var showKeyGeometryFor by rememberSaveable { mutableStateOf<String?>(null) }
+    // (row id or null for a new layout, initial XML); a Pair of Strings is Serializable.
+    var showCustomLayoutDialog by rememberSaveable { mutableStateOf<Pair<String?, String>?>(null) }
+    var showDeleteConfirmDialog by rememberSaveable { mutableStateOf<String?>(null) }
     // A modified copy (Short Swipe Customization) waiting for the revert confirmation
-    var showRevertConfirmFor by remember { mutableStateOf<Int?>(null) }
+    var showRevertConfirmFor by rememberSaveable { mutableStateOf<String?>(null) }
 
     // Reorderable state for drag-and-drop
     val reorderState = rememberReorderableLazyListState(
@@ -301,15 +334,15 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                             missingLanguage = declaredLanguages.bindingOf(layoutWithId.layout)
                                 ?.takeIf { it !in availableLanguages }
                                 ?.let(::languageName),
-                            onLanguage = { showLanguagePickerFor = index },
+                            onLanguage = { showLanguagePickerFor = layoutWithId.id },
                             themeLabel = layoutThemeLabel(layoutWithId.layout, ::themeName),
                             missingTheme = layoutThemeBindingOf(layoutWithId.layout)
                                 ?.takeIf { !themeProvider.isAvailable(it) },
-                            onTheme = { showThemePickerFor = index },
+                            onTheme = { showThemePickerFor = layoutWithId.id },
                             keyGeometryCustom = LayoutKeyGeometryEditor.hasOverrides(
                                 layoutWithId.layout.keyGeometry, declaredKeyGeometryOf(layoutWithId.layout),
                             ),
-                            onKeyGeometry = { showKeyGeometryFor = index },
+                            onKeyGeometry = { showKeyGeometryFor = layoutWithId.id },
                             onEdit = {
                                 val initialXml = when (val layout = layoutWithId.layout) {
                                     is LayoutsPreference.CustomLayout -> layout.xml
@@ -317,16 +350,16 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
                                     is LayoutsPreference.SystemLayout -> getLayoutXml(context, "latn_qwerty_us")
                                     else -> ""
                                 }
-                                showCustomLayoutDialog = Pair(index, initialXml)
+                                showCustomLayoutDialog = Pair(layoutWithId.id, initialXml)
                             },
                             onDelete = {
                                 if (layoutsWithIds.size > 1) {
-                                    showDeleteConfirmDialog = index
+                                    showDeleteConfirmDialog = layoutWithId.id
                                 }
                             },
                             reorderState = reorderState,
                             originalName = modifiedCopyOriginName(context, layoutWithId.layout, layoutNames, layoutDisplayNames),
-                            onRevert = { showRevertConfirmFor = index },
+                            onRevert = { showRevertConfirmFor = layoutWithId.id },
                             onSaveTheme = embeddedThemeOf(layoutWithId.layout)?.let { spec ->
                                 { saveLayoutThemeAsCustom(context, themeProvider, prefs, layoutWithId.layout, spec) }
                             }
@@ -355,13 +388,17 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             },
             onSelectCustom = {
                 showAddDialog = false
-                showCustomLayoutDialog = Pair(-1, readInitialCustomLayout(context))
+                showCustomLayoutDialog = Pair(null, readInitialCustomLayout(context))
             }
         )
     }
 
     // Custom Layout Editor Dialog
-    showCustomLayoutDialog?.let { (index, initialXml) ->
+    showCustomLayoutDialog?.let { (rowId, initialXml) ->
+        // The edited row's CURRENT index (-1: a new layout). A row that changed elsewhere while
+        // the editor was open has a new id; its edit is then saved as a new layout rather than
+        // written over whatever row now sits at the old index (stale-index low, 2026-11-14).
+        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId) ?: -1
         CustomLayoutEditorDialog(
             initialXml = initialXml,
             exportThemeEntry = layoutsWithIds.getOrNull(index)?.layout?.theme,
@@ -404,9 +441,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     }
 
     // Per-layout language picker (GH #186/#61)
-    showLanguagePickerFor?.let { index ->
-        val entry = layoutsWithIds.getOrNull(index)
-        if (entry == null) {
+    showLanguagePickerFor?.let { rowId ->
+        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId)
+        val entry = index?.let { layoutsWithIds[it] }
+        if (index == null || entry == null) {
             showLanguagePickerFor = null
         } else {
             LayoutLanguageDialog(
@@ -429,9 +467,10 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     }
 
     // Per-layout theme picker
-    showThemePickerFor?.let { index ->
-        val entry = layoutsWithIds.getOrNull(index)
-        if (entry == null) {
+    showThemePickerFor?.let { rowId ->
+        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId)
+        val entry = index?.let { layoutsWithIds[it] }
+        if (index == null || entry == null) {
             showThemePickerFor = null
         } else {
             LayoutThemeDialog(
@@ -467,14 +506,15 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     }
 
     // Per-layout key spacing & borders
-    showKeyGeometryFor?.let { index ->
-        val entry = layoutsWithIds.getOrNull(index)
-        if (entry == null) {
+    showKeyGeometryFor?.let { rowId ->
+        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId)
+        val entry = index?.let { layoutsWithIds[it] }
+        if (index == null || entry == null) {
             showKeyGeometryFor = null
         } else {
             LayoutKeyGeometryDialog(
                 layout = entry.layout,
-                globals = remember(index) { globalKeyGeometryValues(prefs) },
+                globals = remember(rowId) { globalKeyGeometryValues(prefs) },
                 onDismiss = { showKeyGeometryFor = null },
                 onSave = { choices ->
                     val updated = entry.layout.withKeyGeometry(
@@ -492,11 +532,12 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     }
 
     // Revert a modified copy to its built-in original (docs/specs/subkey-customization-current.md)
-    showRevertConfirmFor?.let { index ->
-        val entry = layoutsWithIds.getOrNull(index)
+    showRevertConfirmFor?.let { rowId ->
+        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId)
+        val entry = index?.let { layoutsWithIds[it] }
         val copy = entry?.layout as? LayoutsPreference.CustomLayout
         val original = copy?.revertedFrom()
-        if (entry == null || original == null) {
+        if (index == null || entry == null || original == null) {
             showRevertConfirmFor = null
         } else {
             AlertDialog(
@@ -529,7 +570,13 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     }
 
     // Delete Confirmation Dialog
-    showDeleteConfirmDialog?.let { index ->
+    showDeleteConfirmDialog?.let { rowId ->
+        // The row to remove, by id at the moment of the tap: an index taken when the dialog
+        // opened removed whatever row had moved into that place (stale-index low, 2026-11-14).
+        if (LayoutRowIds.indexOf(layoutsWithIds, rowId) == null) {
+            showDeleteConfirmDialog = null
+            return@let
+        }
         AlertDialog(
             onDismissRequest = { showDeleteConfirmDialog = null },
             title = { Text(stringResource(R.string.layout_manager_remove_title)) },
@@ -539,7 +586,8 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (layoutsWithIds.size > 1) {
+                        val index = LayoutRowIds.indexOf(layoutsWithIds, rowId)
+                        if (index != null && layoutsWithIds.size > 1) {
                             layoutsWithIds = layoutsWithIds.toMutableList().apply { removeAt(index) }
                             saveLayouts(prefs, getLayoutsForSaving())
                         }
@@ -1075,7 +1123,11 @@ fun CustomLayoutEditorDialog(
     onSave: (String) -> Unit,
     onRemove: () -> Unit
 ) {
-    var xmlText by remember { mutableStateOf(initialXml) }
+    // Review 2026-11-14 M22: the open edit, the export toggle and a pending export live in the
+    // saved state — a rotation lost the XML being edited, and an export whose file picker came
+    // back after a rotation found no content and left a 0-byte file. (The validation result is
+    // re-derived from the text below.)
+    var xmlText by rememberSaveable { mutableStateOf(initialXml) }
     var validationError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
@@ -1101,9 +1153,9 @@ fun CustomLayoutEditorDialog(
     }
 
     // Export Launcher
-    var pendingExportContent by remember { mutableStateOf<String?>(null) }
+    var pendingExportContent by rememberSaveable { mutableStateOf<String?>(null) }
     // Short swipes the exported file could not hold (XmlLayoutExporter.Injection.notWritten).
-    var pendingExportSkipped by remember { mutableStateOf(false) }
+    var pendingExportSkipped by rememberSaveable { mutableStateOf(false) }
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/xml")
     ) { uri ->
@@ -1136,7 +1188,7 @@ fun CustomLayoutEditorDialog(
     val themeProvider = remember { ThemeProvider.getInstance(context) }
     val boundCustomTheme = LayoutThemeBinding.effective(exportThemeEntry, LayoutThemeBinding.declaredThemeOfXml(xmlText))
         ?.takeIf { it.startsWith("custom_") && themeProvider.isAvailable(it) }
-    var includeTheme by remember { mutableStateOf(true) }
+    var includeTheme by rememberSaveable { mutableStateOf(true) }
 
     // Validate XML (the empty-input message is resolved here: LaunchedEffect is not composable)
     val emptyXmlError = stringResource(R.string.layout_manager_xml_empty_error)

@@ -678,6 +678,12 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.customization.SubkeySlotLabelTest',
     // 2026-10-30 Saga: Layout Manager follows layout-list changes made elsewhere.
     'tribixbite.cleverkeys.LayoutListRefreshTest',
+    // Review 2026-11-14 M22-M24 + settings-UI lows (source scans of Activity/Compose wiring):
+    // state kept across rotation, rows addressed by id, scroll_to on a singleTop relaunch, the
+    // share import once per launch, prefs followed while paused, guarded browser launches.
+    'tribixbite.cleverkeys.RotationSaveableStateDriftTest',
+    // Review 2026-11-14 M22: Layout Manager row ids survive recreation; dialogs resolve rows by id.
+    'tribixbite.cleverkeys.LayoutRowIdsTest',
     'tribixbite.cleverkeys.popover.SubkeyAssignSlotTest',
     // Subkey popover (2026-09-30, docs/specs/subkey-popover.md): neutral zone + sector
     // hit-testing, grid clamping and arming; slot resolution mirrors the short-swipe path.
