@@ -2298,7 +2298,8 @@ class WordPredictor : Predictor {
             // The locale-filtered read lives in UserDictionaryWords (ARC-081) — the same rows
             // the swipe adapters now merge into their lexicons, so tap and swipe can never
             // disagree about which personal words exist. Its KDoc owns the filter rationale.
-            val userRows = UserDictionaryWords.read(context, language)
+            // A failed read is null; the tap path loads it as empty, as it always has.
+            val userRows = UserDictionaryWords.read(context, language).orEmpty()
             for ((originalWord, frequency) in userRows) {
                 checkDictionaryLoadInterrupted()
                 val lowerWord = originalWord.lowercase()
@@ -2416,7 +2417,8 @@ class WordPredictor : Predictor {
             // The locale-filtered read lives in UserDictionaryWords (ARC-081) — the same rows
             // the swipe adapters now merge into their lexicons, so tap and swipe can never
             // disagree about which personal words exist. Its KDoc owns the filter rationale.
-            val userRows = UserDictionaryWords.read(context, language)
+            // A failed read is null; the tap path loads it as empty, as it always has.
+            val userRows = UserDictionaryWords.read(context, language).orEmpty()
             for ((originalWord, frequency) in userRows) {
                 val lowerWord = originalWord.lowercase()
                 // C-3: same shadowed-base recording as the custom-words loop above.

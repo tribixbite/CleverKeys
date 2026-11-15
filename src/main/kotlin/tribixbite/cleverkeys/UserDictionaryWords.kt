@@ -21,7 +21,7 @@ import tribixbite.cleverkeys.swipe.UserDictionarySnapshot
  *    for English. Untagged words are overwhelmingly English in practice, and admitting them
  *    into a French or German lexicon is the "English contamination" v1.2.0 fixed.
  *
- * Failures are swallowed and logged: the provider is optional (a device can deny the read, and
+ * Failures are logged and never thrown: the provider is optional (a device can deny the read, and
  * some ROMs ship no user-dictionary provider at all), and neither typing nor swiping may break
  * because a personal dictionary could not be listed.
  */
@@ -39,12 +39,14 @@ object UserDictionaryWords {
 
     /**
      * The provider's rows for [language] as `(word as stored, observed frequency)`, in provider
-     * order. Empty when the provider is unavailable or the read fails.
+     * order. Empty when the provider has none (or no provider exists: a null cursor); NULL when
+     * the read failed, so a caller that caches can tell a failure from an empty dictionary
+     * (review 2026-11-14: the snapshot cache stored a failure as "no user words").
      *
      * Word case is preserved — the caller decides whether to fold it (the tap path keeps the
      * original for proper nouns, `userWordOriginalCase`).
      */
-    fun read(context: Context, language: String): List<Pair<String, Int>> {
+    fun read(context: Context, language: String): List<Pair<String, Int>>? {
         val rows = ArrayList<Pair<String, Int>>()
         try {
             // Only English admits untagged (NULL-locale) rows — see the class KDoc.
@@ -75,7 +77,7 @@ object UserDictionaryWords {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to read user dictionary for '$language'", e)
-            return emptyList()
+            return null
         }
         return rows
     }
@@ -86,7 +88,7 @@ object UserDictionaryWords {
      */
     fun snapshot(context: Context, language: String): UserDictionarySnapshot =
         snapshotCache.snapshot(language) { lang ->
-            UserDictionarySnapshot.of(read(context, lang))
+            read(context, lang)?.let { UserDictionarySnapshot.of(it) }
         }
 
     /** Provider-wide invalidation signal; called before an observer reloads its local cache. */

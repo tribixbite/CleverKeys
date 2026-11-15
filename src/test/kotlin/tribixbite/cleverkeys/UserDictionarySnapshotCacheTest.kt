@@ -222,6 +222,40 @@ class UserDictionarySnapshotCacheTest {
 
     // ── wiring: the production seam uses this cache, and feeds its epoch ────────────
 
+    /**
+     * Review 2026-11-14 (Stores, low): the cache held its monitor across the provider query, so
+     * a slow binder read blocked the main-thread observer callback (and every other language)
+     * for its whole duration. The read now runs outside the lock; a change that lands during it
+     * is not lost — the rows read before it are returned once but never cached.
+     */
+    @Test(timeout = 10_000)
+    fun `a slow provider read does not block a change, and its rows are not cached`() {
+        val cache = UserDictionarySnapshotCache()
+        cache.observerStarted()
+        val inRead = java.util.concurrent.CountDownLatch(1)
+        val release = java.util.concurrent.CountDownLatch(1)
+        var reads = 0
+        val slow: (String) -> UserDictionarySnapshot = {
+            reads++
+            inRead.countDown()
+            release.await()
+            UserDictionarySnapshot.of(listOf("before" to 10))
+        }
+        val reader = Thread { cache.snapshot("en", slow) }.apply { start() }
+        inRead.await()
+        val changer = Thread { cache.providerChanged() }.apply { start() }
+        changer.join(2_000)
+        val blocked = changer.isAlive
+        release.countDown()
+        reader.join(5_000)
+        changer.join(5_000)
+        assertWithMessage("providerChanged() waited for the provider query").that(blocked).isFalse()
+        val after = cache.snapshot("en") { reads++; UserDictionarySnapshot.of(listOf("after" to 10)) }
+        assertWithMessage("rows read before the change are never served after it")
+            .that(after.entries).containsExactly("after" to 10)
+        assertThat(reads).isEqualTo(2)
+    }
+
     @Test
     fun `the production snapshot goes through the cache and the TODO is gone`() {
         val words = source("tribixbite/cleverkeys/UserDictionaryWords.kt")
