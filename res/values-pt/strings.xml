@@ -1122,17 +1122,7 @@
     <string name="launcher_test_field_label">Teste seu novo teclado aqui</string>
     <string name="launcher_footer">Um teclado de código aberto sem concessões.</string>
     <string name="launcher_step_completed_desc">Concluído</string>
-    <string name="theme_selector_title">Temas do teclado</string>
-    <string name="theme_selector_create_desc">Criar</string>
     <string name="theme_selector_custom">Personalizado</string>
-    <string name="theme_selector_more_options_desc">Mais opções</string>
-    <string name="theme_selector_selected_desc">Selecionado</string>
-    <string name="custom_theme_title">Criar tema personalizado</string>
-    <string name="custom_theme_name_label">Nome do tema</string>
-    <string name="custom_theme_name_placeholder">Meu tema</string>
-    <string name="custom_theme_palette">Paleta de cores</string>
-    <string name="custom_theme_preview">Prévia</string>
-    <string name="custom_theme_create">Criar</string>
     <string name="theme_select_attribute">Selecionar %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Arraste para reordenar • Toque para editar • %1$d layout</item><item quantity="many">Arraste para reordenar • Toque para editar • %1$d layouts</item><item quantity="other">Arraste para reordenar • Toque para editar • %1$d layouts</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1484,7 +1474,6 @@
     <string name="privacy_error_loading_data">Erro ao carregar os dados: %1$s</string>
     <string name="privacy_error_loading_stats">Erro ao carregar as estatísticas: %1$s</string>
     <string name="privacy_perf_stats_exported">Estatísticas de desempenho exportadas</string>
-    <string name="privacy_export_open_failed">Não foi possível abrir o arquivo para gravação</string>
     <string name="backup_headless_init_failed">Erro ao inicializar: %1$s</string>
     <string name="backup_headless_no_password">Primeiro defina uma senha de backup em Configurações → Backup e restauração</string>
     <string name="backup_headless_throttled">Ação de backup limitada — tente novamente em instantes</string>
@@ -1882,12 +1871,6 @@
     <string name="theme_category_modern">Moderno</string>
     <string name="theme_custom_created_today">Tema personalizado criado hoje</string>
     <string name="theme_custom_created_yesterday">Tema personalizado criado ontem</string>
-    <string name="theme_palette_dark_blue">Azul-escuro</string>
-    <string name="theme_palette_purple">Roxo</string>
-    <string name="theme_palette_teal">Verde-azulado</string>
-    <string name="theme_palette_burgundy">Vinho</string>
-    <string name="theme_palette_olive">Oliva</string>
-    <string name="theme_palette_navy">Azul-marinho</string>
     <string name="extra_key_title_voice">Voz</string>
     <string name="extra_key_title_clipboard">Área de transferência</string>
     <string name="extra_key_title_switch_ime">Trocar teclado</string>
@@ -2018,6 +2001,7 @@
     <string name="io_error_too_large">O arquivo é maior do que o CleverKeys consegue importar com segurança.</string>
     <string name="io_error_wrong_password_or_corrupt">Senha de backup incorreta, ou o arquivo está danificado ou foi alterado.</string>
     <string name="io_error_no_backup_password">Este backup está criptografado e nenhuma senha de backup está disponível.</string>
+    <string name="io_error_backup_password_unreadable">A senha de backup salva não pode mais ser lida neste dispositivo. Defina-a novamente em Configurações → Backup e restauração.</string>
     <string name="io_error_wrong_backup_kind">Este backup não contém o tipo de dados que esta importação espera.</string>
     <string name="io_error_no_file_picker">Nenhum app disponível para escolher arquivos.</string>
     <string name="io_error_read_write">Não foi possível ler ou gravar o arquivo.</string>

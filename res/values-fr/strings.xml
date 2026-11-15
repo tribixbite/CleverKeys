@@ -1133,17 +1133,7 @@
     <string name="launcher_test_field_label">Testez votre nouveau clavier ici</string>
     <string name="launcher_footer">Un clavier open source sans compromis.</string>
     <string name="launcher_step_completed_desc">Terminé</string>
-    <string name="theme_selector_title">Thèmes du clavier</string>
-    <string name="theme_selector_create_desc">Créer</string>
     <string name="theme_selector_custom">Personnalisé</string>
-    <string name="theme_selector_more_options_desc">Plus d\'options</string>
-    <string name="theme_selector_selected_desc">Sélectionné</string>
-    <string name="custom_theme_title">Créer un thème personnalisé</string>
-    <string name="custom_theme_name_label">Nom du thème</string>
-    <string name="custom_theme_name_placeholder">Mon thème</string>
-    <string name="custom_theme_palette">Palette de couleurs</string>
-    <string name="custom_theme_preview">Aperçu</string>
-    <string name="custom_theme_create">Créer</string>
     <string name="theme_select_attribute">Sélectionner %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1494,7 +1484,6 @@
     <string name="privacy_error_loading_data">Erreur lors du chargement des données : %1$s</string>
     <string name="privacy_error_loading_stats">Erreur lors du chargement des statistiques : %1$s</string>
     <string name="privacy_perf_stats_exported">Statistiques de performance exportées</string>
-    <string name="privacy_export_open_failed">Impossible d\'ouvrir le fichier en écriture</string>
     <string name="backup_headless_init_failed">Erreur d\'initialisation : %1$s</string>
     <string name="backup_headless_no_password">Définissez d\'abord un mot de passe de sauvegarde dans Paramètres → Sauvegarder &amp; Restaurer</string>
     <string name="backup_headless_throttled">Action de sauvegarde limitée — réessayez dans un instant</string>
@@ -1892,12 +1881,6 @@
     <string name="theme_category_modern">Moderne</string>
     <string name="theme_custom_created_today">Thème personnalisé créé aujourd\'hui</string>
     <string name="theme_custom_created_yesterday">Thème personnalisé créé hier</string>
-    <string name="theme_palette_dark_blue">Bleu foncé</string>
-    <string name="theme_palette_purple">Violet</string>
-    <string name="theme_palette_teal">Bleu canard</string>
-    <string name="theme_palette_burgundy">Bordeaux</string>
-    <string name="theme_palette_olive">Olive</string>
-    <string name="theme_palette_navy">Bleu marine</string>
     <string name="extra_key_title_voice">Voix</string>
     <string name="extra_key_title_clipboard">Presse-papiers</string>
     <string name="extra_key_title_switch_ime">Changer de clavier</string>
@@ -2028,6 +2011,7 @@
     <string name="io_error_too_large">Le fichier est plus volumineux que ce que CleverKeys peut importer en toute sécurité.</string>
     <string name="io_error_wrong_password_or_corrupt">Mot de passe de sauvegarde incorrect, ou le fichier est endommagé ou a été modifié.</string>
     <string name="io_error_no_backup_password">Cette sauvegarde est chiffrée et aucun mot de passe de sauvegarde n\'est disponible.</string>
+    <string name="io_error_backup_password_unreadable">Le mot de passe de sauvegarde enregistré ne peut plus être lu sur cet appareil. Définissez-le à nouveau dans Paramètres → Sauvegarder &amp; Restaurer.</string>
     <string name="io_error_wrong_backup_kind">Cette sauvegarde ne contient pas le type de données attendu par cette importation.</string>
     <string name="io_error_no_file_picker">Aucune application n\'est disponible pour choisir des fichiers.</string>
     <string name="io_error_read_write">Le fichier n\'a pas pu être lu ou écrit.</string>

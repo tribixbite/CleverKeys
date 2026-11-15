@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SafOutput
 import tribixbite.cleverkeys.SettingsActivity
 
 /** File-format names shown in the export toast; proper nouns, identical in every locale. */
@@ -44,11 +45,11 @@ internal fun SettingsActivity.performSwipeDataJsonExport(uri: Uri) {
     val _self = this
     lifecycleScope.launch {
         try {
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
+            SafOutput.open("the export file") { mode -> contentResolver.openOutputStream(uri, mode) }.use { outputStream ->
                 val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(_self)
                 val count = dataStore.exportToJSON(outputStream)
                 toastSwipeDataExported(count, SWIPE_FORMAT_JSON)
-            } ?: throw java.io.IOException(getString(R.string.privacy_export_open_failed))
+            }
         } catch (e: Exception) {
             toastExportFailed(e)
         }
@@ -59,11 +60,11 @@ internal fun SettingsActivity.performSwipeDataNdjsonExport(uri: Uri) {
     val _self = this
     lifecycleScope.launch {
         try {
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
+            SafOutput.open("the export file") { mode -> contentResolver.openOutputStream(uri, mode) }.use { outputStream ->
                 val dataStore = tribixbite.cleverkeys.ml.SwipeMLDataStore.getInstance(_self)
                 val count = dataStore.exportToNDJSON(outputStream)
                 toastSwipeDataExported(count, SWIPE_FORMAT_NDJSON)
-            } ?: throw java.io.IOException(getString(R.string.privacy_export_open_failed))
+            }
         } catch (e: Exception) {
             toastExportFailed(e)
         }

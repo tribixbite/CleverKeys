@@ -149,6 +149,27 @@ class DebugLoggingManagerTest {
     // close() test
     // =========================================================================
 
+    /**
+     * Review 2026-11-14 (low): the service opened this log and appended a "Started" line on every
+     * create, for a sink nothing wrote to. It now opens on the first write, and the service does
+     * not open it.
+     */
+    @Test
+    fun `the log opens on the first write, not at service create`() {
+        val log = java.io.File(manager.getLogFilePath())
+        log.delete()
+        val fresh = DebugLoggingManager(mockContext, testPackageName)
+        assertThat(log.exists()).isFalse()
+
+        fresh.writeToLogFile("trace 1\n")
+        fresh.close()
+
+        assertThat(log.readText()).isEqualTo("trace 1\n")
+        log.delete()
+        val service = SourceScan.read("src/main/kotlin/tribixbite/cleverkeys/CleverKeysService.kt")
+        assertThat(service).doesNotContain("initializeLogWriter")
+    }
+
     @Test
     fun `close can be called safely without prior init`() {
         // logWriter is null, close should not throw

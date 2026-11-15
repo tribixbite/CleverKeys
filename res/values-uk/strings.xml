@@ -853,12 +853,6 @@
     <string name="ctc_settings_threads_desc">Потоки CPU для інференсу XNNPACK у сеансі ONNX Runtime, що виконує енкодер CTC. Застосовується під час наступної побудови сеансу (перезапустіть клавіатуру).</string>
     <string name="ctc_settings_threads_title">Потоки ONNX</string>
     <string name="ctc_settings_title">Налаштування рушія CTC</string>
-    <string name="custom_theme_create">Створити</string>
-    <string name="custom_theme_name_label">Назва теми</string>
-    <string name="custom_theme_name_placeholder">Моя тема</string>
-    <string name="custom_theme_palette">Палітра кольорів</string>
-    <string name="custom_theme_preview">Попередній перегляд</string>
-    <string name="custom_theme_title">Створити власну тему</string>
     <string name="geo_settings_decoding_section">Декодування</string>
     <string name="geo_settings_endpoint_desc">Допуск до неточного початку/кінця свайпу, у ширинах клавіш. Більше = поблажливіше; занадто велике може давати неправильну першу/останню літеру.</string>
     <string name="geo_settings_endpoint_title">Допуск кінцевих точок</string>
@@ -1142,11 +1136,7 @@
     <string name="swipe_full_ctc_settings">Усі налаштування CTC</string>
     <string name="swipe_full_geometric_settings">Усі налаштування геометричного рушія</string>
     <string name="theme_select_attribute">Вибрати %1$s</string>
-    <string name="theme_selector_create_desc">Створити</string>
     <string name="theme_selector_custom">Власна</string>
-    <string name="theme_selector_more_options_desc">Більше опцій</string>
-    <string name="theme_selector_selected_desc">Вибрано</string>
-    <string name="theme_selector_title">Теми клавіатури</string>
     <plurals name="layout_manager_hint"><item quantity="one">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макет</item><item quantity="few">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макети</item><item quantity="many">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макетів</item><item quantity="other">Перетягніть, щоб змінити порядок • Торкніться, щоб редагувати • %1$d макета</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1508,7 +1498,6 @@
     <string name="privacy_error_loading_data">Помилка завантаження даних: %1$s</string>
     <string name="privacy_error_loading_stats">Помилка завантаження статистики: %1$s</string>
     <string name="privacy_perf_stats_exported">Статистику продуктивності експортовано</string>
-    <string name="privacy_export_open_failed">Не вдалося відкрити файл для запису</string>
     <string name="backup_headless_init_failed">Помилка ініціалізації: %1$s</string>
     <string name="backup_headless_no_password">Спершу задайте пароль резервної копії в Налаштування → Резервне копіювання та відновлення</string>
     <string name="backup_headless_throttled">Забагато запитів резервного копіювання — повторіть трохи згодом</string>
@@ -1931,12 +1920,6 @@
     <string name="theme_category_modern">Модерн</string>
     <string name="theme_custom_created_today">Власна тема, створена сьогодні</string>
     <string name="theme_custom_created_yesterday">Власна тема, створена вчора</string>
-    <string name="theme_palette_dark_blue">Темно-синій</string>
-    <string name="theme_palette_purple">Фіолетовий</string>
-    <string name="theme_palette_teal">Бірюзовий</string>
-    <string name="theme_palette_burgundy">Бордовий</string>
-    <string name="theme_palette_olive">Оливковий</string>
-    <string name="theme_palette_navy">Морський синій</string>
     <string name="extra_key_title_voice">Голос</string>
     <string name="extra_key_title_clipboard">Буфер обміну</string>
     <string name="extra_key_title_switch_ime">Змінити клавіатуру</string>
@@ -2074,6 +2057,7 @@
     <string name="io_error_too_large">Файл завеликий, щоб CleverKeys міг безпечно його імпортувати.</string>
     <string name="io_error_wrong_password_or_corrupt">Неправильний пароль резервної копії, або файл пошкоджено чи змінено.</string>
     <string name="io_error_no_backup_password">Ця резервна копія зашифрована, а пароль резервної копії недоступний.</string>
+    <string name="io_error_backup_password_unreadable">Збережений пароль резервної копії більше не вдається прочитати на цьому пристрої. Задайте його знову в Налаштування → Резервне копіювання та відновлення.</string>
     <string name="io_error_wrong_backup_kind">Ця резервна копія не містить даних того типу, на який розрахований цей імпорт.</string>
     <string name="io_error_no_file_picker">Немає застосунку для вибору файлів.</string>
     <string name="io_error_read_write">Не вдалося прочитати або записати файл.</string>

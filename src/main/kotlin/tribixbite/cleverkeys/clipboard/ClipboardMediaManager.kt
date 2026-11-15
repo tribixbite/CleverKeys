@@ -220,10 +220,6 @@ class ClipboardMediaManager(private val context: Context) {
                 Log.w(TAG, "Refusing to delete a media path outside clipboard_media")
                 return
             }
-            if (file.path == File(context.filesDir, MEDIA_DIR).canonicalPath) {
-                Log.w(TAG, "Refusing to delete the clipboard_media directory itself")
-                return
-            }
             if (file.isFile) {
                 val parentDir = file.parentFile
                 file.delete()
@@ -251,19 +247,22 @@ class ClipboardMediaManager(private val context: Context) {
      * from dropping a file elsewhere in the app sandbox (e.g. overwriting
      * short_swipe_customizations.json). Mirrors `gif/GifPackManager.extractZip`.
      *
-     * @throws SecurityException if the resolved path escapes the clipboard_media directory.
+     * The media directory ITSELF is refused too (review 2026-11-14): a backup member named
+     * `clipboard_media/.` (or `clipboard_media`) resolved to the directory, was staged as a file
+     * and committed over it, so every later media save failed. A media path always names a file
+     * below the directory.
+     *
+     * @throws SecurityException if the resolved path is not strictly inside the clipboard_media
+     *   directory.
      */
     fun getMediaFile(mediaPath: String): File {
         val target = File(context.filesDir, mediaPath)
-        // Canonicalize to collapse `..` / symlinks before the containment check.
+        // Canonicalize to collapse `..`, `.` and symlinks before the containment check.
         val canonicalBase = File(context.filesDir, MEDIA_DIR).canonicalPath
         val canonicalTarget = target.canonicalFile
-        // Ensure the target is the media dir itself or a descendant. Appending
-        // File.separator to the base prevents a sibling-prefix bypass
-        // (e.g. `<filesDir>/clipboard_media_evil`).
-        if (canonicalTarget.path != canonicalBase &&
-            !canonicalTarget.path.startsWith(canonicalBase + File.separator)
-        ) {
+        // Strict descendant only. Appending File.separator to the base also prevents a
+        // sibling-prefix bypass (e.g. `<filesDir>/clipboard_media_evil`).
+        if (!canonicalTarget.path.startsWith(canonicalBase + File.separator)) {
             throw SecurityException(
                 "Media path escapes clipboard_media dir: '$mediaPath' -> ${canonicalTarget.path}"
             )

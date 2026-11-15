@@ -251,6 +251,48 @@ class ImeDefaultDetectionTest {
         verify(exactly = 1) { editor.putLong(LAST_BOOT_KEY, any()) }
     }
 
+    /**
+     * Review 2026-11-14 (low): the boot was identified by wall clock minus uptime, so a clock step
+     * after boot (NTP correcting a wrong clock once the network is up — after the keyboard first
+     * started) looked like a new boot and prompted again. Where the OS gives a boot count, that
+     * count decides.
+     */
+    @Test
+    fun `a clock step within the same boot does not prompt again`() {
+        systemDefaultIme("com.example.other/com.example.other.OtherService")
+        mockkStatic(Settings.Global::class)
+        try {
+            every { Settings.Global.getInt(any(), Settings.Global.BOOT_COUNT, any()) } returns 7
+            every { prefs.getInt("ime_prompt_last_boot_count", any()) } returns 7
+            // The recorded instant is an hour off: the wall clock was stepped since the prompt.
+            every { prefs.getLong(LAST_BOOT_KEY, any()) } returns bootInstantNow() - 3_600_000L
+
+            IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+
+            verify(exactly = 0) { handler.postDelayed(any(), any()) }
+        } finally {
+            unmockkStatic(Settings.Global::class)
+        }
+    }
+
+    @Test
+    fun `a new boot count prompts and is recorded`() {
+        systemDefaultIme("com.example.other/com.example.other.OtherService")
+        mockkStatic(Settings.Global::class)
+        try {
+            every { Settings.Global.getInt(any(), Settings.Global.BOOT_COUNT, any()) } returns 8
+            every { prefs.getInt("ime_prompt_last_boot_count", any()) } returns 7
+            every { editor.putInt(any(), any()) } returns editor
+
+            IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+
+            verify(exactly = 1) { handler.postDelayed(any(), any()) }
+            verify(exactly = 1) { editor.putInt("ime_prompt_last_boot_count", 8) }
+        } finally {
+            unmockkStatic(Settings.Global::class)
+        }
+    }
+
     /** I-7 red (c): "don't ask again" (the Settings reminder switch) suppresses forever. */
     @Test
     fun `don't-ask-again suppresses the prompt even on a new boot`() {

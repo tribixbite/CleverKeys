@@ -1132,17 +1132,7 @@
     <string name="launcher_test_field_label">Yeni klavyenizi burada deneyin</string>
     <string name="launcher_footer">Ödün vermeyen açık kaynaklı bir klavye.</string>
     <string name="launcher_step_completed_desc">Tamamlandı</string>
-    <string name="theme_selector_title">Klavye Temaları</string>
-    <string name="theme_selector_create_desc">Oluştur</string>
     <string name="theme_selector_custom">Özel</string>
-    <string name="theme_selector_more_options_desc">Daha fazla seçenek</string>
-    <string name="theme_selector_selected_desc">Seçili</string>
-    <string name="custom_theme_title">Özel Tema Oluştur</string>
-    <string name="custom_theme_name_label">Tema Adı</string>
-    <string name="custom_theme_name_placeholder">Temam</string>
-    <string name="custom_theme_palette">Renk Paleti</string>
-    <string name="custom_theme_preview">Önizleme</string>
-    <string name="custom_theme_create">Oluştur</string>
     <string name="theme_select_attribute">%1$s Seç</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1482,7 +1472,6 @@
     <string name="privacy_error_loading_data">Veriler yüklenirken hata: %1$s</string>
     <string name="privacy_error_loading_stats">İstatistikler yüklenirken hata: %1$s</string>
     <string name="privacy_perf_stats_exported">Performans istatistikleri dışa aktarıldı</string>
-    <string name="privacy_export_open_failed">Dosya yazmak için açılamadı</string>
     <string name="backup_headless_init_failed">Başlatma hatası: %1$s</string>
     <string name="backup_headless_no_password">Önce Ayarlar → Yedekle &amp; Geri Yükle bölümünden bir yedek parolası belirleyin</string>
     <string name="backup_headless_throttled">Yedekleme işlemi sınırlandı — birazdan tekrar deneyin</string>
@@ -1855,12 +1844,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Bugün oluşturulan özel tema</string>
     <string name="theme_custom_created_yesterday">Dün oluşturulan özel tema</string>
-    <string name="theme_palette_dark_blue">Koyu Mavi</string>
-    <string name="theme_palette_purple">Mor</string>
-    <string name="theme_palette_teal">Camgöbeği</string>
-    <string name="theme_palette_burgundy">Bordo</string>
-    <string name="theme_palette_olive">Zeytin</string>
-    <string name="theme_palette_navy">Lacivert</string>
     <string name="extra_key_title_voice">Ses</string>
     <string name="extra_key_title_clipboard">Pano</string>
     <string name="extra_key_title_switch_ime">Klavye Değiştir</string>
@@ -1984,6 +1967,7 @@
     <string name="io_error_too_large">Dosya, CleverKeys\'in güvenle içe aktarabileceğinden daha büyük.</string>
     <string name="io_error_wrong_password_or_corrupt">Yedek parolası yanlış veya dosya hasarlı ya da değiştirilmiş.</string>
     <string name="io_error_no_backup_password">Bu yedek şifreli ve kullanılabilir bir yedek parolası yok.</string>
+    <string name="io_error_backup_password_unreadable">Kayıtlı yedek parolası artık bu cihazda okunamıyor. Ayarlar → Yedekle &amp; Geri Yükle bölümünden yeniden belirleyin.</string>
     <string name="io_error_wrong_backup_kind">Bu yedek, bu içe aktarmanın beklediği türde veri içermiyor.</string>
     <string name="io_error_no_file_picker">Dosya seçmek için kullanılabilir bir uygulama yok.</string>
     <string name="io_error_read_write">Dosya okunamadı veya yazılamadı.</string>

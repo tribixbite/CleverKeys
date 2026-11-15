@@ -79,6 +79,7 @@ class SubtypeLayoutFollowTest {
         val lm = objenesis.newInstance(LayoutManager::class.java)
         lm.setField("config", config)
         lm.setField("localeTextLayout", locale)
+        lm.setField("lastFollowedName", locale.name) // what the constructor's initialiser does
         return lm
     }
 
@@ -144,6 +145,21 @@ class SubtypeLayoutFollowTest {
 
         verify(exactly = 0) { config.set_current_layout(any()) }
         assertThat(lm.current_layout_unmodified()).isSameInstanceAs(jcukenRu)
+    }
+
+    @Test
+    fun aRealSwitchToTheFallbacksLayoutAfterTheFallbackStillFollows() {
+        // Follow-up review 2026-11-15 of M13: ru user, a transient failed resolution delivers the
+        // QWERTY (US) fallback unfollowed; the user then really switches to en. The guard compared
+        // with that fallback, called it "nothing changed", and the switch was invisible (gh #160).
+        val qwertyUs = layout("QWERTY (US)")
+        val jcukenRu = layout("ЙЦУКЕН (Русский)")
+        val lm = layoutManager(locale = jcukenRu, layouts = listOf(jcukenRu, qwertyUs))
+
+        lm.setLocaleTextLayout(qwertyUs, followSelection = false)
+        lm.setLocaleTextLayout(layout("QWERTY (US)"))
+
+        assertThat(lm.current_layout_unmodified()).isSameInstanceAs(qwertyUs)
     }
 
     @Test

@@ -2300,11 +2300,19 @@ class Pointers(
             return ModifiersDiffIterator(this, m2)
         }
 
-        override fun hashCode(): Int = _mods.contentHashCode()
+        // Over the first [_size] entries only (review 2026-11-14, low): `ofArray` dedupes in place,
+        // so the backing array can carry stale entries past `_size`; comparing the whole array
+        // made equal sets miss each other in KeyModifier's memo (extra sub-maps, never a wrong hit).
+        override fun hashCode(): Int {
+            var h = _size
+            for (i in 0 until _size) h = 31 * h + (_mods[i]?.hashCode() ?: 0)
+            return h
+        }
 
         override fun equals(other: Any?): Boolean {
-            if (other !is Modifiers) return false
-            return _mods.contentEquals(other._mods)
+            if (other !is Modifiers || other._size != _size) return false
+            for (i in 0 until _size) if (_mods[i] != other._mods[i]) return false
+            return true
         }
 
         companion object {

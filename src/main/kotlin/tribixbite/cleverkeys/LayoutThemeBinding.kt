@@ -47,9 +47,6 @@ object LayoutThemeBinding {
      */
     private val VALID_ID = Regex("^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$")
 
-    /** The `<keyboard …>` start tag of a layout XML document (attributes in group 1). */
-    private val ROOT_TAG = Regex("<keyboard(\\s[^>]*)?>")
-
     /** A `theme="…"` / `theme='…'` attribute inside a start tag, with its leading whitespace. */
     private val THEME_ATTRIBUTE = Regex("\\s$XML_ATTRIBUTE\\s*=\\s*(\"([^\"]*)\"|'([^']*)')")
 
@@ -157,7 +154,7 @@ object LayoutThemeBinding {
      * `KeyboardData.declared_theme` is the authoritative parse.
      */
     fun declaredThemeOfXml(xml: String): String? {
-        val attributes = ROOT_TAG.find(xml)?.groupValues?.get(1) ?: return null
+        val attributes = LayoutXmlRoot.find(xml)?.attributes ?: return null
         val match = THEME_ATTRIBUTE.find(attributes) ?: return null
         return match.groups[2]?.value ?: match.groups[3]?.value
     }
@@ -172,8 +169,8 @@ object LayoutThemeBinding {
      */
     fun applyToXml(xml: String, entry: String?): String {
         val choice = normalizeEntry(entry) ?: return xml
-        val root = ROOT_TAG.find(xml) ?: return xml
-        val attributes = root.groupValues[1]
+        val root = LayoutXmlRoot.find(xml) ?: return xml
+        val attributes = root.attributes
         val stripped = attributes.replace(THEME_ATTRIBUTE, "")
         val rewritten = if (choice == UNBOUND) stripped else " $XML_ATTRIBUTE=\"$choice\"$stripped"
         return xml.replaceRange(root.range, "<keyboard$rewritten>")

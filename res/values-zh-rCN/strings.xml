@@ -834,12 +834,6 @@
     <string name="ctc_settings_threads_desc">运行 CTC 编码器的 ONNX Runtime 会话中 XNNPACK 推理使用的 CPU 线程数。在下次构建会话时生效（请重启键盘）。</string>
     <string name="ctc_settings_threads_title">ONNX 线程数</string>
     <string name="ctc_settings_title">CTC 引擎设置</string>
-    <string name="custom_theme_create">创建</string>
-    <string name="custom_theme_name_label">主题名称</string>
-    <string name="custom_theme_name_placeholder">我的主题</string>
-    <string name="custom_theme_palette">调色板</string>
-    <string name="custom_theme_preview">预览</string>
-    <string name="custom_theme_title">创建自定义主题</string>
     <string name="geo_settings_decoding_section">解码</string>
     <string name="geo_settings_endpoint_desc">对滑动起点/终点偏差的容差，以按键宽度为单位。越高越宽容；过高可能出现错误的首/尾字母。</string>
     <string name="geo_settings_endpoint_title">端点容差</string>
@@ -1123,11 +1117,7 @@
     <string name="swipe_full_ctc_settings">完整 CTC 设置</string>
     <string name="swipe_full_geometric_settings">完整几何引擎设置</string>
     <string name="theme_select_attribute">选择%1$s</string>
-    <string name="theme_selector_create_desc">创建</string>
     <string name="theme_selector_custom">自定义</string>
-    <string name="theme_selector_more_options_desc">更多选项</string>
-    <string name="theme_selector_selected_desc">已选择</string>
-    <string name="theme_selector_title">键盘主题</string>
     <plurals name="layout_manager_hint"><item quantity="other">拖动以重新排序 • 点按以编辑 • %1$d 个布局</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1456,7 +1446,6 @@
     <string name="privacy_error_loading_data">加载数据出错：%1$s</string>
     <string name="privacy_error_loading_stats">加载统计数据出错：%1$s</string>
     <string name="privacy_perf_stats_exported">已导出性能统计</string>
-    <string name="privacy_export_open_failed">无法打开文件进行写入</string>
     <string name="backup_headless_init_failed">初始化出错：%1$s</string>
     <string name="backup_headless_no_password">请先在 设置 → 备份与恢复 中设置备份密码</string>
     <string name="backup_headless_throttled">备份操作过于频繁——请稍后再试</string>
@@ -1804,12 +1793,6 @@
     <string name="theme_category_modern">现代</string>
     <string name="theme_custom_created_today">今天创建的自定义主题</string>
     <string name="theme_custom_created_yesterday">昨天创建的自定义主题</string>
-    <string name="theme_palette_dark_blue">深蓝</string>
-    <string name="theme_palette_purple">紫色</string>
-    <string name="theme_palette_teal">青绿</string>
-    <string name="theme_palette_burgundy">酒红</string>
-    <string name="theme_palette_olive">橄榄绿</string>
-    <string name="theme_palette_navy">藏青</string>
     <string name="extra_key_title_voice">语音</string>
     <string name="extra_key_title_clipboard">剪贴板</string>
     <string name="extra_key_title_switch_ime">切换输入法</string>
@@ -1926,6 +1909,7 @@
     <string name="io_error_too_large">文件过大，CleverKeys 无法安全导入。</string>
     <string name="io_error_wrong_password_or_corrupt">备份密码错误，或文件已损坏或被篡改。</string>
     <string name="io_error_no_backup_password">此备份已加密，但没有可用的备份密码。</string>
+    <string name="io_error_backup_password_unreadable">此设备已无法读取保存的备份密码。请在 设置 → 备份与恢复 中重新设置。</string>
     <string name="io_error_wrong_backup_kind">此备份不包含本次导入所需的数据类型。</string>
     <string name="io_error_no_file_picker">没有可用于选择文件的应用。</string>
     <string name="io_error_read_write">无法读取或写入该文件。</string>

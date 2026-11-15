@@ -26,7 +26,7 @@ import java.io.IOException
  *   adb shell am broadcast -a tribixbite.cleverkeys.SET_DEBUG_MODE --ez debug_enabled true
  *
  * Responsibilities:
- * - Initialize log writer for file-based logging
+ * - File-based logging (the writer opens on first use)
  * - Register/unregister broadcast receiver for debug mode control
  * - Send debug messages to SwipeDebugActivity
  * - Propagate debug mode changes to components (SuggestionHandler, via DebugModePropagator)
@@ -95,24 +95,15 @@ class DebugLoggingManager(
     private val debugModeListeners = mutableListOf<DebugModeListener>()
 
     /**
-     * Initialize log writer for swipe analysis.
-     *
-     * Creates/opens the log file and writes a startup message.
-     * If initialization fails, file logging will be silently disabled.
-     *
-     * @return True if log writer was initialized successfully, false otherwise
+     * The swipe-analysis log writer, opened on first use (review 2026-11-14, low): the service used
+     * to open it and append a "Started" line on every create, for a sink nothing wrote to, so the
+     * file only ever grew and an fd was held for the service's lifetime. Null when it cannot open
+     * (file logging is then silently off).
      */
-    fun initializeLogWriter(): Boolean {
-        try {
-            logWriter = BufferedWriter(FileWriter(logFilePath, true))
-            logWriter?.write("\n=== CleverKeysService Started: ${java.util.Date()} ===\n")
-            logWriter?.flush()
-            return true
-        } catch (e: IOException) {
-            // Silently fail if log file can't be created
-            logWriter = null
-            return false
-        }
+    private fun openLogWriter(): BufferedWriter? = logWriter ?: try {
+        BufferedWriter(FileWriter(logFilePath, true)).also { logWriter = it }
+    } catch (e: IOException) {
+        null
     }
 
     /**
@@ -231,14 +222,15 @@ class DebugLoggingManager(
      * Write message to log file.
      *
      * For persistent logging of swipe analysis data.
-     * If log writer is not initialized, this is a no-op.
+     * Opens the log on first use; a no-op when it cannot be opened.
      *
      * @param message Message to write to log file
      */
     fun writeToLogFile(message: String) {
+        val writer = openLogWriter() ?: return
         try {
-            logWriter?.write(message)
-            logWriter?.flush()
+            writer.write(message)
+            writer.flush()
         } catch (e: IOException) {
             // Silently fail if logging fails
         }

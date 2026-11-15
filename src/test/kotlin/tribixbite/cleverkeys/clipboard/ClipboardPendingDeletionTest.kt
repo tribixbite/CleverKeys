@@ -157,4 +157,18 @@ class ClipboardPendingDeletionTest {
         assertThat(changes).isEmpty()
         assertThat(scheduler.tasks).isEmpty()
     }
+
+    /**
+     * Follow-up review 2026-11-15: the tests above stub `stillUnchanged`; this pins the production
+     * wiring, without which a re-copied row is deleted again (`version = null` restores M26).
+     */
+    @Test
+    fun productionPassesTheRowVersionAndChecksIt() {
+        val view = tribixbite.cleverkeys.SourceScan.read("src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryView.kt")
+        assertWithMessage("a History row's deletion carries its timestamp as the version")
+            .that(view).contains("pending.begin(currentTab, entry.content, version = entry.timestamp)")
+        val manager = tribixbite.cleverkeys.SourceScan.read("src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardManager.kt")
+        assertWithMessage("the manager checks the row is unchanged before committing")
+            .that(manager).contains("isPendingRowUnchanged(p)")
+    }
 }

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement
 import tribixbite.cleverkeys.KeyGeometryField
 import tribixbite.cleverkeys.LayoutKeyGeometry
 import tribixbite.cleverkeys.LayoutThemeBinding
+import tribixbite.cleverkeys.LayoutXmlRoot
 import tribixbite.cleverkeys.PredefinedLayoutThemes
 
 /**
@@ -51,7 +52,6 @@ object LayoutThemeBindingDiff {
         val geometry: Map<KeyGeometryField, Float> = emptyMap(),
     )
 
-    private val ROOT_TAG = Regex("<keyboard(\\s[^>]*)?>")
     private val NAME_ATTRIBUTE = Regex("\\sname\\s*=\\s*(\"([^\"]*)\"|'([^']*)')")
 
     /** True when [array] has the stored `layouts` shape (names and `{"kind":…}` objects). */
@@ -147,7 +147,7 @@ object LayoutThemeBindingDiff {
     }
 
     private fun xmlName(xml: String): String? {
-        val attributes = ROOT_TAG.find(xml)?.groupValues?.get(1) ?: return null
+        val attributes = LayoutXmlRoot.find(xml)?.attributes ?: return null
         val match = NAME_ATTRIBUTE.find(attributes) ?: return null
         return (match.groups[2]?.value ?: match.groups[3]?.value)?.takeIf { it.isNotBlank() }
     }

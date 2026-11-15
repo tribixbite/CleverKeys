@@ -1126,17 +1126,7 @@
     <string name="launcher_test_field_label">Próbálja ki itt az új billentyűzetét</string>
     <string name="launcher_footer">Egy megalkuvás nélküli nyílt forráskódú billentyűzet.</string>
     <string name="launcher_step_completed_desc">Befejezve</string>
-    <string name="theme_selector_title">Billentyűzet-témák</string>
-    <string name="theme_selector_create_desc">Létrehozás</string>
     <string name="theme_selector_custom">Egyéni</string>
-    <string name="theme_selector_more_options_desc">További lehetőségek</string>
-    <string name="theme_selector_selected_desc">Kiválasztva</string>
-    <string name="custom_theme_title">Egyéni téma létrehozása</string>
-    <string name="custom_theme_name_label">Téma neve</string>
-    <string name="custom_theme_name_placeholder">Saját téma</string>
-    <string name="custom_theme_palette">Színpaletta</string>
-    <string name="custom_theme_preview">Előnézet</string>
-    <string name="custom_theme_create">Létrehozás</string>
     <string name="theme_select_attribute">%1$s kiválasztása</string>
     <plurals name="layout_manager_hint"><item quantity="one">Húzza az átrendezéshez • Koppintson a szerkesztéshez • %1$d kiosztás</item><item quantity="other">Húzza az átrendezéshez • Koppintson a szerkesztéshez • %1$d kiosztás</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1477,7 +1467,6 @@
     <string name="privacy_error_loading_data">Hiba az adatok betöltésekor: %1$s</string>
     <string name="privacy_error_loading_stats">Hiba a statisztikák betöltésekor: %1$s</string>
     <string name="privacy_perf_stats_exported">Teljesítménystatisztikák exportálva</string>
-    <string name="privacy_export_open_failed">Nem sikerült megnyitni a fájlt írásra</string>
     <string name="backup_headless_init_failed">Hiba az inicializáláskor: %1$s</string>
     <string name="backup_headless_no_password">Előbb állítson be biztonsági mentési jelszót: Beállítások → Biztonsági mentés &amp; Visszaállítás</string>
     <string name="backup_headless_throttled">Mentési művelet korlátozva — próbálja újra egy kicsit később</string>
@@ -1850,12 +1839,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Ma létrehozott egyéni téma</string>
     <string name="theme_custom_created_yesterday">Tegnap létrehozott egyéni téma</string>
-    <string name="theme_palette_dark_blue">Sötétkék</string>
-    <string name="theme_palette_purple">Lila</string>
-    <string name="theme_palette_teal">Kékeszöld</string>
-    <string name="theme_palette_burgundy">Bordó</string>
-    <string name="theme_palette_olive">Olívazöld</string>
-    <string name="theme_palette_navy">Tengerészkék</string>
     <string name="extra_key_title_voice">Hang</string>
     <string name="extra_key_title_clipboard">Vágólap</string>
     <string name="extra_key_title_switch_ime">Billentyűzetváltás</string>
@@ -1979,6 +1962,7 @@
     <string name="io_error_too_large">A fájl nagyobb annál, amit a CleverKeys biztonságosan importálni tud.</string>
     <string name="io_error_wrong_password_or_corrupt">Hibás biztonsági mentési jelszó, vagy a fájl sérült, illetve módosították.</string>
     <string name="io_error_no_backup_password">Ez a biztonsági mentés titkosított, és nincs elérhető biztonsági mentési jelszó.</string>
+    <string name="io_error_backup_password_unreadable">A mentett biztonsági mentési jelszó ezen az eszközön már nem olvasható. Állítsa be újra: Beállítások → Biztonsági mentés &amp; Visszaállítás.</string>
     <string name="io_error_wrong_backup_kind">Ez a biztonsági mentés nem az ehhez az importáláshoz szükséges adatokat tartalmazza.</string>
     <string name="io_error_no_file_picker">Nincs elérhető alkalmazás fájlok kiválasztásához.</string>
     <string name="io_error_read_write">A fájl nem olvasható vagy nem írható.</string>

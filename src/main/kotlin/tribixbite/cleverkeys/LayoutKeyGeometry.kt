@@ -289,14 +289,11 @@ object LayoutKeyGeometry {
 
     private val BORDER_FIELDS = listOf(KeyGeometryField.BORDER, KeyGeometryField.BORDER_RADIUS, KeyGeometryField.BORDER_WIDTH)
 
-    /** The `<keyboard …>` start tag of a layout XML document (attributes in group 1). */
-    private val ROOT_TAG = Regex("<keyboard(\\s[^>]*)?>")
-
     private fun attributeRegex(name: String) = Regex("\\s$name\\s*=\\s*(\"([^\"]*)\"|'([^']*)')")
 
     /** Raw key-geometry root attributes of a layout XML document (textual; for the pure backup preview). */
     fun declaredOfXml(xml: String): Map<String, String> {
-        val attributes = ROOT_TAG.find(xml)?.groupValues?.get(1) ?: return emptyMap()
+        val attributes = LayoutXmlRoot.find(xml)?.attributes ?: return emptyMap()
         return KeyGeometryField.entries.mapNotNull { f ->
             attributeRegex(f.xmlAttribute).find(attributes)?.let { m ->
                 f.xmlAttribute to (m.groups[2]?.value ?: m.groups[3]?.value ?: "")
@@ -318,8 +315,8 @@ object LayoutKeyGeometry {
      */
     fun applyToXml(xml: String, entry: Map<KeyGeometryField, Choice>?): String {
         val e = normalized(entry) ?: return xml
-        val root = ROOT_TAG.find(xml) ?: return xml
-        var attributes = root.groupValues[1]
+        val root = LayoutXmlRoot.find(xml) ?: return xml
+        var attributes = root.attributes
         for ((f, c) in e) {
             attributes = attributes.replace(attributeRegex(f.xmlAttribute), "")
             if (c is Choice.Value) attributes = " ${f.xmlAttribute}=\"${formatValue(f, c.value)}\"$attributes"

@@ -1140,17 +1140,7 @@
     <string name="launcher_test_field_label">Testen Sie Ihre neue Tastatur hier</string>
     <string name="launcher_footer">Eine kompromisslose Open-Source-Tastatur.</string>
     <string name="launcher_step_completed_desc">Abgeschlossen</string>
-    <string name="theme_selector_title">Tastatur-Themes</string>
-    <string name="theme_selector_create_desc">Erstellen</string>
     <string name="theme_selector_custom">Eigene</string>
-    <string name="theme_selector_more_options_desc">Weitere Optionen</string>
-    <string name="theme_selector_selected_desc">Ausgewählt</string>
-    <string name="custom_theme_title">Eigenes Theme erstellen</string>
-    <string name="custom_theme_name_label">Theme-Name</string>
-    <string name="custom_theme_name_placeholder">Mein Theme</string>
-    <string name="custom_theme_palette">Farbpalette</string>
-    <string name="custom_theme_preview">Vorschau</string>
-    <string name="custom_theme_create">Erstellen</string>
     <string name="theme_select_attribute">%1$s auswählen</string>
     <plurals name="layout_manager_hint"><item quantity="one">Ziehen zum Umordnen • Tippen zum Bearbeiten • %1$d Layout</item><item quantity="other">Ziehen zum Umordnen • Tippen zum Bearbeiten • %1$d Layouts</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1491,7 +1481,6 @@
     <string name="privacy_error_loading_data">Fehler beim Laden der Daten: %1$s</string>
     <string name="privacy_error_loading_stats">Fehler beim Laden der Statistiken: %1$s</string>
     <string name="privacy_perf_stats_exported">Leistungsstatistiken exportiert</string>
-    <string name="privacy_export_open_failed">Datei konnte nicht zum Schreiben geöffnet werden</string>
     <string name="backup_headless_init_failed">Fehler bei der Initialisierung: %1$s</string>
     <string name="backup_headless_no_password">Legen Sie zuerst unter Einstellungen → Sichern &amp; Wiederherstellen ein Sicherungspasswort fest</string>
     <string name="backup_headless_throttled">Sicherungsaktion gedrosselt – bitte gleich erneut versuchen</string>
@@ -1864,12 +1853,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Eigenes Theme, heute erstellt</string>
     <string name="theme_custom_created_yesterday">Eigenes Theme, gestern erstellt</string>
-    <string name="theme_palette_dark_blue">Dunkelblau</string>
-    <string name="theme_palette_purple">Violett</string>
-    <string name="theme_palette_teal">Petrol</string>
-    <string name="theme_palette_burgundy">Bordeaux</string>
-    <string name="theme_palette_olive">Oliv</string>
-    <string name="theme_palette_navy">Marineblau</string>
     <string name="extra_key_title_voice">Sprache</string>
     <string name="extra_key_title_clipboard">Zwischenablage</string>
     <string name="extra_key_title_switch_ime">Tastatur wechseln</string>
@@ -1993,6 +1976,7 @@
     <string name="io_error_too_large">Die Datei ist größer, als CleverKeys sicher importieren kann.</string>
     <string name="io_error_wrong_password_or_corrupt">Falsches Sicherungspasswort, oder die Datei ist beschädigt oder wurde verändert.</string>
     <string name="io_error_no_backup_password">Diese Sicherung ist verschlüsselt, und es ist kein Sicherungspasswort verfügbar.</string>
+    <string name="io_error_backup_password_unreadable">Das gespeicherte Sicherungspasswort kann auf diesem Gerät nicht mehr gelesen werden. Legen Sie es unter Einstellungen → Sichern &amp; Wiederherstellen erneut fest.</string>
     <string name="io_error_wrong_backup_kind">Diese Sicherung enthält nicht die Art von Daten, die dieser Import erwartet.</string>
     <string name="io_error_no_file_picker">Keine App zur Dateiauswahl verfügbar.</string>
     <string name="io_error_read_write">Die Datei konnte nicht gelesen oder geschrieben werden.</string>

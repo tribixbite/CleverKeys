@@ -742,6 +742,20 @@ class SwipeCorrectionOfferTest {
     }
 
     @Test
+    fun aSwipeWhileDictationRunsCommitsNothing() {
+        // Follow-up review 2026-11-15 of M10: committing the slate's top word made a swipe during
+        // dictation write into the field (replacing the provisional composing text). Before M10
+        // the bar's refusal dropped it; the handler now drops it on purpose.
+        every { bar.isInVoiceMode() } returns true
+        editor.append("fix ")
+
+        swipe("git", "got")
+
+        assertWithMessage("nothing is committed while dictation owns the field")
+            .that(editor.toString()).isEqualTo("fix ")
+    }
+
+    @Test
     fun anIncognitoFieldCapturesNoSwipeTrace() {
         // Review 2026-11-14 H2: IME_FLAG_NO_PERSONALIZED_LEARNING (private tabs) forbids storing
         // the swipe trace and its word, whatever the collection toggle says — as for every

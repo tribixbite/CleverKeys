@@ -554,7 +554,7 @@ class KeyMagnifierView @JvmOverloads constructor(
         // Same size rule as the keyboard (SubLabelSizing): base x scale, then fit the slot.
         val size = keyRect.height() * SUB_LABEL_HEIGHT_FRACTION * sizeScale
         paint.textSize = size
-        paint.textSize = SubLabelSizing.fitToWidth(
+        paint.textSize = SubLabelSizing.fitToBudget(
             size, paint.measureText(text),
             SubLabelSizing.maxWidth(keyRect.width(), padding, direction.subLabelIndex, mainLabelWidth))
 

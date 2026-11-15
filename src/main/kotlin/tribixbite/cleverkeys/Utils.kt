@@ -34,6 +34,26 @@ object Utils {
         win.clearFlags(WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM)
         win.addFlags(ImeDialogWindowPolicy.ADDED_FLAGS)
         dialog.show()
+        shownImeDialogs[dialog] = Unit
+    }
+
+    /**
+     * Every dialog [show_dialog_on_ime] showed, weakly held (main thread only). Its window is a
+     * child of the IME window, so a dialog left open when the keyboard hides came back with the
+     * keyboard in whatever app the user typed in next — the private-exposure confirm with the
+     * private clipboard text it carries (review 2026-11-14). The service dismisses them all when
+     * the input view finishes ([dismiss_ime_dialogs]).
+     */
+    private val shownImeDialogs = java.util.WeakHashMap<AlertDialog, Unit>()
+
+    /** Dismiss every IME dialog still showing. Called on the main thread when the input view ends. */
+    @JvmStatic
+    fun dismiss_ime_dialogs() {
+        val dialogs = shownImeDialogs.keys.toList()
+        shownImeDialogs.clear()
+        for (dialog in dialogs) {
+            if (dialog.isShowing) runCatching { dialog.dismiss() }
+        }
     }
 
     /**

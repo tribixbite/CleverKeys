@@ -1159,17 +1159,7 @@
     <string name="launcher_test_field_label">صفحه‌کلید جدید خود را اینجا آزمایش کنید</string>
     <string name="launcher_footer">یک صفحه‌کلید متن‌باز بی‌مصالحه.</string>
     <string name="launcher_step_completed_desc">انجام شد</string>
-    <string name="theme_selector_title">تم‌های صفحه‌کلید</string>
-    <string name="theme_selector_create_desc">ایجاد</string>
     <string name="theme_selector_custom">سفارشی</string>
-    <string name="theme_selector_more_options_desc">گزینه‌های بیشتر</string>
-    <string name="theme_selector_selected_desc">انتخاب‌شده</string>
-    <string name="custom_theme_title">ایجاد تم سفارشی</string>
-    <string name="custom_theme_name_label">نام تم</string>
-    <string name="custom_theme_name_placeholder">تم من</string>
-    <string name="custom_theme_palette">پالت رنگ</string>
-    <string name="custom_theme_preview">پیش‌نمایش</string>
-    <string name="custom_theme_create">ایجاد</string>
     <string name="theme_select_attribute">انتخاب %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1509,7 +1499,6 @@
     <string name="privacy_error_loading_data">خطا در بارگذاری داده‌ها: %1$s</string>
     <string name="privacy_error_loading_stats">خطا در بارگذاری آمار: %1$s</string>
     <string name="privacy_perf_stats_exported">آمار کارایی برون‌بری شد</string>
-    <string name="privacy_export_open_failed">باز کردن فایل برای نوشتن ممکن نشد</string>
     <string name="backup_headless_init_failed">خطا در راه‌اندازی: %1$s</string>
     <string name="backup_headless_no_password">ابتدا در تنظیمات ← پشتیبان‌گیری و بازیابی یک گذرواژهٔ پشتیبان تعیین کنید</string>
     <string name="backup_headless_throttled">درخواست پشتیبان‌گیری محدود شد — کمی بعد دوباره تلاش کنید</string>
@@ -1882,12 +1871,6 @@
     <string name="theme_category_modern">مدرن</string>
     <string name="theme_custom_created_today">تم سفارشی ساخته‌شده امروز</string>
     <string name="theme_custom_created_yesterday">تم سفارشی ساخته‌شده دیروز</string>
-    <string name="theme_palette_dark_blue">آبی تیره</string>
-    <string name="theme_palette_purple">بنفش</string>
-    <string name="theme_palette_teal">سبزآبی</string>
-    <string name="theme_palette_burgundy">شرابی</string>
-    <string name="theme_palette_olive">زیتونی</string>
-    <string name="theme_palette_navy">سرمه‌ای</string>
     <string name="extra_key_title_voice">صدا</string>
     <string name="extra_key_title_clipboard">بریده‌دان</string>
     <string name="extra_key_title_switch_ime">تغییر صفحه‌کلید</string>
@@ -2011,6 +1994,7 @@
     <string name="io_error_too_large">فایل بزرگ‌تر از آن است که CleverKeys بتواند آن را با اطمینان وارد کند.</string>
     <string name="io_error_wrong_password_or_corrupt">گذرواژهٔ پشتیبان نادرست است، یا فایل آسیب دیده یا تغییر کرده است.</string>
     <string name="io_error_no_backup_password">این پشتیبان رمزگذاری شده است و هیچ گذرواژهٔ پشتیبانی در دسترس نیست.</string>
+    <string name="io_error_backup_password_unreadable">گذرواژهٔ پشتیبانِ ذخیره‌شده دیگر در این دستگاه خواندنی نیست. آن را دوباره در تنظیمات ← پشتیبان‌گیری و بازیابی تعیین کنید.</string>
     <string name="io_error_wrong_backup_kind">این پشتیبان نوع داده‌ای را که این واردسازی انتظار دارد در بر ندارد.</string>
     <string name="io_error_no_file_picker">هیچ برنامه‌ای برای انتخاب فایل در دسترس نیست.</string>
     <string name="io_error_read_write">خواندن یا نوشتن فایل ممکن نشد.</string>

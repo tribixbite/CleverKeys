@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -64,9 +66,11 @@ fun SettingsImportPreviewDialog(
         customThemeMode: ShortSwipeImportMode,
     ) -> Unit,
 ) {
-    val excluded = remember { mutableStateOf(emptySet<String>()) }
-    val shortSwipeMode = remember { mutableStateOf(ShortSwipeImportMode.MERGE) }
-    val customThemeMode = remember { mutableStateOf(ShortSwipeImportMode.MERGE) }
+    // Saveable (review 2026-11-14): a rotation reset the user's exclusions and modes to "apply
+    // everything" while the same preview stayed on screen. Strings and enums save as they are.
+    val excluded = rememberSaveable { mutableStateOf(emptySet<String>()) }
+    val shortSwipeMode = rememberSaveable { mutableStateOf(ShortSwipeImportMode.MERGE) }
+    val customThemeMode = rememberSaveable { mutableStateOf(ShortSwipeImportMode.MERGE) }
     // Per-theme diff against the device's themes; null when either side is unknown.
     val customThemeDiff = remember(plan) {
         CustomThemeBackup.parseStored(plan.customThemesImportRawJson)
@@ -979,8 +983,9 @@ fun DictionaryImportPreviewDialog(
     onCancel: () -> Unit,
     onApply: (excludedCustom: Set<LangWord>, excludedDisabled: Set<LangWord>) -> Unit,
 ) {
-    val excludedCustom = remember { mutableStateOf(emptySet<LangWord>()) }
-    val excludedDisabled = remember { mutableStateOf(emptySet<LangWord>()) }
+    // Saveable, like the settings preview's exclusions (a rotation reset them).
+    val excludedCustom = rememberSaveable(saver = PreviewStateSavers.LangWordSet) { mutableStateOf(emptySet()) }
+    val excludedDisabled = rememberSaveable(saver = PreviewStateSavers.LangWordSet) { mutableStateOf(emptySet()) }
 
     val totalCustom = plan.perLanguage.values.sumOf { it.newCustomWords.size }
     val totalDisabled = plan.perLanguage.values.sumOf { it.newDisabledWords.size }
@@ -1059,3 +1064,23 @@ fun DictionaryImportPreviewDialog(
 
 private fun toggleLW(set: Set<LangWord>, lw: LangWord): Set<LangWord> =
     if (lw in set) set - lw else set + lw
+
+/**
+ * A set of [LangWord]s as a flat `[lang, word, lang, word, …]` list, for the import previews'
+ * rotation-surviving state ([LangWord] is not Bundle-able). Kept apart from [PreviewStateSavers]
+ * so it loads without Compose (tested on the pure tier).
+ */
+internal object LangWordSetCodec {
+    fun encode(words: Set<LangWord>): ArrayList<String> = words.flatMapTo(ArrayList()) { listOf(it.lang, it.word) }
+
+    fun decode(flat: List<String>): Set<LangWord> =
+        flat.chunked(2).mapTo(LinkedHashSet()) { (lang, word) -> LangWord(lang, word) }
+}
+
+/** Savers for the import previews' rotation-surviving state. */
+internal object PreviewStateSavers {
+    val LangWordSet: Saver<MutableState<Set<LangWord>>, ArrayList<String>> = Saver(
+        save = { state -> LangWordSetCodec.encode(state.value) },
+        restore = { flat -> mutableStateOf(LangWordSetCodec.decode(flat)) },
+    )
+}

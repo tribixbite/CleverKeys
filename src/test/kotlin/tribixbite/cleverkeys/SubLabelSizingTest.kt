@@ -212,7 +212,11 @@ class SubLabelSizingTest {
         assertThat(magnifier).contains("SubLabelSizing.scaleFor(customMapping)")
         assertThat(magnifier).contains("SubLabelSizing.scaleFor(subKv)")
         assertThat(magnifier).contains("SubLabelSizing.scaleFor(mapping)")
-        assertThat(magnifier).contains("SubLabelSizing.fitToWidth(")
+        // A slot budget of 0 means "no room": every budgeted fit goes through fitToBudget, which
+        // draws nothing there, never fitToWidth, which reads 0 as "no limit" (follow-up 2026-11-15).
+        assertThat(magnifier).contains("SubLabelSizing.fitToBudget(")
+        assertThat(magnifier).doesNotContain("SubLabelSizing.fitToWidth(")
+        assertThat(Regex("SubLabelSizing\\.fitToBudget\\(").findAll(view).count()).isEqualTo(2)
         // The subkey popover (cells already shrink to their width; the factor keeps proportions).
         val slots = File("src/main/kotlin/tribixbite/cleverkeys/popover/SubkeyPopoverSlots.kt").readText()
         assertThat(slots).contains("SubLabelSizing.scaleFor(slot.value)")

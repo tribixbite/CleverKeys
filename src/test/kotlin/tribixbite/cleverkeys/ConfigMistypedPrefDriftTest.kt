@@ -35,6 +35,28 @@ class ConfigMistypedPrefDriftTest {
             .that(offenders).isEmpty()
     }
 
+    /**
+     * Follow-up review 2026-11-15: `refresh()` also calls out — `reloadSanitizationSettings()`
+     * read five keys raw, and `ExtraKeysPreference.getExtraKeys` every `extra_key_<name>` — so the
+     * scan covers the whole of Config.kt, and the extra-keys reader.
+     */
+    @Test
+    fun configReadsNoPreferenceWithARawGetterAnywhere() {
+        val raw = Regex("""\b_prefs\.get(Boolean|Int|Float|Long|String)\(""")
+        val offenders = config.withIndex().filter { raw.containsMatchIn(it.value) }
+            .map { "Config.kt:${it.index + 1}: ${it.value.trim()}" }
+        assertWithMessage("raw reads in Config (use the safeGet* helpers)").that(offenders).isEmpty()
+    }
+
+    @Test
+    fun theExtraKeysReaderIsSafe() {
+        val reader = File("src/main/kotlin/tribixbite/cleverkeys/prefs/ExtraKeysPreference.kt").readLines()
+        val offenders = reader.withIndex().filter { Regex("""\bprefs\.getBoolean\(""").containsMatchIn(it.value) }
+            .map { "ExtraKeysPreference.kt:${it.index + 1}: ${it.value.trim()}" }
+        assertWithMessage("raw extra_key_* reads (Config.refresh runs this on every keyboard start)")
+            .that(offenders).isEmpty()
+    }
+
     @Test
     fun theServicesCommandTimeReadsAreSafeToo() {
         // The scene toggles are read again when their keyboard command runs.

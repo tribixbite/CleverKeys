@@ -1130,17 +1130,7 @@
     <string name="launcher_test_field_label">Проверьте новую клавиатуру здесь</string>
     <string name="launcher_footer">Бескомпромиссная клавиатура с открытым исходным кодом.</string>
     <string name="launcher_step_completed_desc">Завершено</string>
-    <string name="theme_selector_title">Темы клавиатуры</string>
-    <string name="theme_selector_create_desc">Создать</string>
     <string name="theme_selector_custom">Пользовательская</string>
-    <string name="theme_selector_more_options_desc">Ещё параметры</string>
-    <string name="theme_selector_selected_desc">Выбрана</string>
-    <string name="custom_theme_title">Создать свою тему</string>
-    <string name="custom_theme_name_label">Название темы</string>
-    <string name="custom_theme_name_placeholder">Моя тема</string>
-    <string name="custom_theme_palette">Цветовая палитра</string>
-    <string name="custom_theme_preview">Предпросмотр</string>
-    <string name="custom_theme_create">Создать</string>
     <string name="theme_select_attribute">Выберите: %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1502,7 +1492,6 @@
     <string name="privacy_error_loading_data">Ошибка загрузки данных: %1$s</string>
     <string name="privacy_error_loading_stats">Ошибка загрузки статистики: %1$s</string>
     <string name="privacy_perf_stats_exported">Статистика производительности экспортирована</string>
-    <string name="privacy_export_open_failed">Не удалось открыть файл для записи</string>
     <string name="backup_headless_init_failed">Ошибка инициализации: %1$s</string>
     <string name="backup_headless_no_password">Сначала задайте пароль резервной копии в Настройки → Резервное копирование и восстановление</string>
     <string name="backup_headless_throttled">Слишком частые запросы резервного копирования — повторите чуть позже</string>
@@ -1925,12 +1914,6 @@
     <string name="theme_category_modern">Модерн</string>
     <string name="theme_custom_created_today">Пользовательская тема, создана сегодня</string>
     <string name="theme_custom_created_yesterday">Пользовательская тема, создана вчера</string>
-    <string name="theme_palette_dark_blue">Тёмно-синий</string>
-    <string name="theme_palette_purple">Фиолетовый</string>
-    <string name="theme_palette_teal">Бирюзовый</string>
-    <string name="theme_palette_burgundy">Бордовый</string>
-    <string name="theme_palette_olive">Оливковый</string>
-    <string name="theme_palette_navy">Тёмно-синий морской</string>
     <string name="extra_key_title_voice">Голос</string>
     <string name="extra_key_title_clipboard">Буфер обмена</string>
     <string name="extra_key_title_switch_ime">Сменить клавиатуру</string>
@@ -2068,6 +2051,7 @@
     <string name="io_error_too_large">Файл слишком велик, чтобы CleverKeys мог безопасно его импортировать.</string>
     <string name="io_error_wrong_password_or_corrupt">Неверный пароль резервной копии, либо файл повреждён или изменён.</string>
     <string name="io_error_no_backup_password">Эта резервная копия зашифрована, а пароль резервной копии недоступен.</string>
+    <string name="io_error_backup_password_unreadable">Сохранённый пароль резервной копии больше не удаётся прочитать на этом устройстве. Задайте его заново в Настройки → Резервное копирование и восстановление.</string>
     <string name="io_error_wrong_backup_kind">Эта резервная копия не содержит данных того типа, который ожидает этот импорт.</string>
     <string name="io_error_no_file_picker">Нет приложения для выбора файлов.</string>
     <string name="io_error_read_write">Не удалось прочитать или записать файл.</string>

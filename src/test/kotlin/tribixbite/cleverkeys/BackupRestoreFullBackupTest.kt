@@ -199,6 +199,7 @@ class BackupRestoreFullBackupTest {
         every { uri.scheme } returns "content"
         every { uri.lastPathSegment } returns "cleverkeys_full_backup_2026-05-21.zip"
         every { contentResolver.openOutputStream(uri) } returns capturedOutput
+        every { contentResolver.openOutputStream(uri, any()) } returns capturedOutput
         return uri
     }
 
@@ -590,6 +591,31 @@ class BackupRestoreFullBackupTest {
 
         verify(exactly = 1) { clipboardDb.getReferencedMediaPaths(false) }
         verify(exactly = 0) { clipboardDb.getReferencedMediaPaths(true) }
+    }
+
+    @Test
+    fun exportFullBackup_aMediaRowOutsideTheMediaDirIsSkippedNotFatal() {
+        // Follow-up review 2026-11-15: an older backup could import a crafted `media_path`. The
+        // export's getMediaFile threw SecurityException out of the loop, so EVERY full backup (and
+        // clipboard ZIP export) failed until that row was gone. Skip the row; export the rest.
+        val filesDir = File(System.getProperty("java.io.tmpdir"), "ck-test-files")
+        val good = File(filesDir, "clipboard_media/ab/good.png").apply { parentFile!!.mkdirs(); writeText("png") }
+        try {
+            // The fixture's getMediaFile skips containment; model the real manager, which throws.
+            every { anyConstructed<ClipboardMediaManager>().getMediaFile(match { ".." in it }) } throws
+                SecurityException("Media path escapes clipboard_media dir")
+            every { clipboardDb.getReferencedMediaPaths(any()) } returns
+                linkedSetOf("clipboard_media/../databases/clipboard.db", "clipboard_media/ab/good.png")
+
+            val result = newManager().exportFullBackup(fakeUriForOutput(), prefs)
+
+            assertTrue("the backup must still succeed: ${result.errorMessage}", result.success)
+            val entries = zipEntries(capturedOutput.toByteArray())
+            assertTrue("the valid media file is exported", "clipboard_media/ab/good.png" in entries)
+            assertFalse(entries.keys.any { ".." in it })
+        } finally {
+            good.delete()
+        }
     }
 
     @Test

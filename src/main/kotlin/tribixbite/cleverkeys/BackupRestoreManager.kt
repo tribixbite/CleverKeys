@@ -211,6 +211,16 @@ open class BackupRestoreManager(
     private fun resolveExportEncryption(): ExportEncryption {
         if (!shouldEncrypt()) return ExportEncryption(passphrase = null, willEncrypt = false)
         val passphrase = resolveExportPassphrase()
+        if (passphrase == null && passphraseStore.hasPassphrase()) {
+            // Review 2026-11-14: a password IS set but can no longer be unwrapped. Falling through
+            // to the "none configured" branch wrote plaintext for a user who asked for encryption
+            // (and tripped the HEADLESS_MANDATORY check below). Fail closed; Settings asks them to
+            // set the password again.
+            throw ClassifiedIoException(
+                IoFailureReason.BACKUP_PASSWORD_UNREADABLE,
+                "The stored backup password could not be unwrapped; refusing a plaintext export",
+            )
+        }
         if (passphrase == null) {
             check(encryptionPolicy != EncryptionPolicy.HEADLESS_MANDATORY) {
                 "HEADLESS_MANDATORY export reached resolveExportEncryption without a stored " +
@@ -357,14 +367,14 @@ open class BackupRestoreManager(
             // Plaintext path (opt-out, or UI_DEFAULT with no passphrase configured). The fail-closed
             // HEADLESS_MANDATORY-with-no-passphrase invariant is already enforced by
             // [resolveExportEncryption], so reaching here with willEncrypt=false is legitimate.
-            openOutputStream(uri)?.use { out -> writeZip(out) }
+            openOutputStream(uri).use { out -> writeZip(out) }
             return
         }
 
         val tempZip = File(context.cacheDir, "ck_export_${System.currentTimeMillis()}.zip")
         try {
             FileOutputStream(tempZip).use { tmpOut -> writeZip(tmpOut) }
-            openOutputStream(uri)?.use { out ->
+            openOutputStream(uri).use { out ->
                 FileInputStream(tempZip).use { tmpIn ->
                     BackupCrypto.encryptStream(
                         tmpIn, out, passphrase, contentType, System.currentTimeMillis()
@@ -392,24 +402,26 @@ open class BackupRestoreManager(
         val raw = context.contentResolver.openInputStream(uri)
             ?: throw ClassifiedIoException(IoFailureReason.FILE_NOT_FOUND, "Cannot open ZIP file")
         val buffered = java.io.BufferedInputStream(raw, 64 * 1024)
-        buffered.mark(EncryptedBackupFormat.HEADER_LEN + 8)
-        val head = ByteArray(EncryptedBackupFormat.HEADER_LEN)
-        var filled = 0
-        while (filled < head.size) {
-            val read = buffered.read(head, filled, head.size - filled)
-            if (read < 0) break
-            filled += read
-        }
-        buffered.reset()
-        val headSlice = if (filled == head.size) head else head.copyOf(filled)
-
-        val kind = EncryptedBackupFormat.sniff(headSlice)
-        // Fail-closed policy gate on the SAME stream we're about to parse (TOCTOU fix).
-        // Close the stream before throwing so a hostile content:// source can't leak it.
-        try {
-            enforceHeadlessEncryptionPolicy(kind)
-        } catch (e: BackupDecryptException) {
-            buffered.close()
+        // Close the stream on ANY failure before it is handed back — the header read, the sniff
+        // or the policy gate (review 2026-11-14: only the gate's exception closed it), so a hostile
+        // content:// source cannot leak it.
+        val kind = try {
+            buffered.mark(EncryptedBackupFormat.HEADER_LEN + 8)
+            val head = ByteArray(EncryptedBackupFormat.HEADER_LEN)
+            var filled = 0
+            while (filled < head.size) {
+                val read = buffered.read(head, filled, head.size - filled)
+                if (read < 0) break
+                filled += read
+            }
+            buffered.reset()
+            val headSlice = if (filled == head.size) head else head.copyOf(filled)
+            EncryptedBackupFormat.sniff(headSlice).also {
+                // Fail-closed policy gate on the SAME stream we're about to parse (TOCTOU fix).
+                enforceHeadlessEncryptionPolicy(it)
+            }
+        } catch (e: Throwable) {
+            runCatching { buffered.close() }
             throw e
         }
 
@@ -449,14 +461,18 @@ open class BackupRestoreManager(
      * 3. App-private external dir (always writable, but hidden from most file managers)
      *
      * The actual output path is stored in [lastOutputPath] for caller feedback.
+     *
+     * Never returns null (review 2026-11-14): an unopenable destination throws, so no export reports
+     * success for a file it never wrote; `content://` documents are truncated ([SafOutput]).
      */
     var lastOutputPath: String? = null
         private set
 
-    private fun openOutputStream(uri: Uri): OutputStream? {
+    private fun openOutputStream(uri: Uri): OutputStream {
         lastOutputPath = null
         if (uri.scheme == "file") {
-            val path = uri.path ?: return null
+            val path = uri.path
+                ?: throw ClassifiedIoException(IoFailureReason.FILE_NOT_FOUND, "file:// URI without a path")
             val fileName = File(path).name
             // Try 1: Direct write to requested path (works with MANAGE_EXTERNAL_STORAGE)
             return try {
@@ -466,9 +482,10 @@ open class BackupRestoreManager(
                     lastOutputPath = file.absolutePath
                 }
             } catch (e: Exception) {
-                // EPERM or SecurityException — scoped storage blocks /sdcard/ writes
-                if (e.message?.contains("EPERM") != true &&
-                    e !is SecurityException) throw e
+                // EPERM, EACCES or SecurityException — scoped storage blocks /sdcard/ writes, and
+                // reports most of them as EACCES (review 2026-11-14: only EPERM fell back).
+                val message = e.message.orEmpty()
+                if ("EPERM" !in message && "EACCES" !in message && e !is SecurityException) throw e
 
                 // Try 2: Downloads/ via MediaStore (visible to user, no permissions)
                 writeToDownloads(fileName)
@@ -476,7 +493,7 @@ open class BackupRestoreManager(
                     ?: writeToAppExternalDir(fileName)
             }
         }
-        return context.contentResolver.openOutputStream(uri)
+        return SafOutput.open("the export destination") { mode -> context.contentResolver.openOutputStream(uri, mode) }
     }
 
     /**
@@ -786,7 +803,7 @@ open class BackupRestoreManager(
             val enc = resolveExportEncryption()
             try {
                 val outBytes = encryptIfRequired(jsonBytes, EncryptedBackupFormat.SETTINGS_JSON, enc)
-                openOutputStream(uri)?.use { outputStream ->
+                openOutputStream(uri).use { outputStream ->
                     outputStream.write(outBytes)
                     outputStream.flush()
                 }
@@ -1110,7 +1127,7 @@ open class BackupRestoreManager(
             val enc = resolveExportEncryption()
             try {
                 val outBytes = encryptIfRequired(jsonBytes, EncryptedBackupFormat.DICTIONARIES_JSON, enc)
-                openOutputStream(uri)?.use { outputStream ->
+                openOutputStream(uri).use { outputStream ->
                     outputStream.write(outBytes)
                     outputStream.flush()
                 }
@@ -1440,7 +1457,7 @@ open class BackupRestoreManager(
 
             val jsonBytes = exportData.toString(2).toByteArray(Charsets.UTF_8)
             val outBytes = encryptIfRequired(jsonBytes, EncryptedBackupFormat.CLIPBOARD_JSON, enc)
-            openOutputStream(uri)?.use { outputStream ->
+            openOutputStream(uri).use { outputStream ->
                 outputStream.write(outBytes)
                 outputStream.flush()
             }
@@ -1496,11 +1513,7 @@ open class BackupRestoreManager(
                     // dropped its entry (leak reachable via sticky-dedup flipping is_private on media).
                     val mediaPaths = clipboardDb.getReferencedMediaPaths(includePrivate = enc.willEncrypt)
                     for (mediaPath in mediaPaths) {
-                        val file = mediaManager.getMediaFile(mediaPath)
-                        if (!file.exists()) {
-                            Log.w(TAG, "Media file not found during export, skipping: $mediaPath")
-                            continue
-                        }
+                        val file = exportableMediaFile(mediaManager, mediaPath) ?: continue
                         // mediaPath already contains "clipboard_media/" prefix from DB
                         val zipMediaEntry = java.util.zip.ZipEntry(mediaPath)
                         zipOut.putNextEntry(zipMediaEntry)
@@ -1936,11 +1949,7 @@ open class BackupRestoreManager(
                     // leak into the unencrypted ZIP while the manifest pretends they were excluded.
                     val mediaPaths = clipboardDb.getReferencedMediaPaths(includePrivate = enc.willEncrypt)
                     for (mediaPath in mediaPaths) {
-                        val file = mediaManager.getMediaFile(mediaPath)
-                        if (!file.exists()) {
-                            Log.w(TAG, "Media file not found during full backup, skipping: $mediaPath")
-                            continue
-                        }
+                        val file = exportableMediaFile(mediaManager, mediaPath) ?: continue
                         zipOut.putNextEntry(java.util.zip.ZipEntry(mediaPath))
                         val streamed = file.inputStream().use { it.copyTo(zipOut) }
                         totalBytes += streamed
@@ -2123,7 +2132,8 @@ open class BackupRestoreManager(
             }
 
             if (manifestJson == null) {
-                throw Exception("Full backup is missing manifest.json")
+                // Classified (review 2026-11-14): a plain Exception reported as "unknown error".
+                throw ClassifiedIoException(IoFailureReason.INVALID_FORMAT, "Full backup is missing manifest.json")
             }
 
             // The entire archive is now parsed, bounded, duplicate-free, and has a valid
@@ -2512,6 +2522,26 @@ open class BackupRestoreManager(
         return dir
     }
 
+    /**
+     * The file to export for a DB [mediaPath], or null (logged) to skip it: missing, not a regular
+     * file, or a path outside `clipboard_media/` (follow-up review 2026-11-15 — a crafted row
+     * imported from an old backup threw out of the export loop, so EVERY clipboard export and full
+     * backup failed until the row was gone).
+     */
+    private fun exportableMediaFile(mediaManager: ClipboardMediaManager, mediaPath: String): File? {
+        val file = try {
+            mediaManager.getMediaFile(mediaPath)
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Media path outside clipboard_media, skipping it in the export")
+            return null
+        }
+        if (!file.isFile) {
+            Log.w(TAG, "Media file not found during export, skipping: $mediaPath")
+            return null
+        }
+        return file
+    }
+
     private fun stageMediaEntry(
         input: InputStream,
         entryName: String,
@@ -2522,7 +2552,14 @@ open class BackupRestoreManager(
     ): StagedMedia {
         // Resolve now solely to validate traversal/canonical-path rules. Nothing is written to
         // the live media tree until the complete archive has been parsed and validated.
-        mediaManager.getMediaFile(entryName)
+        // A file member must not land on a live DIRECTORY (`clipboard_media/<partition>`): the
+        // commit would replace or fail on it. Refuse the archive, like a traversal member.
+        if (mediaManager.getMediaFile(entryName).isDirectory) {
+            throw ClassifiedIoException(
+                IoFailureReason.INVALID_FORMAT,
+                "Media entry '$entryName' names an existing directory",
+            )
+        }
         val staged = File(stagingDir, "media_$ordinal")
         staged.outputStream().use { out ->
             val buffer = ByteArray(64 * 1024)

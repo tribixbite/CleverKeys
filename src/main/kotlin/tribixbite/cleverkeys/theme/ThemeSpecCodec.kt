@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.theme
 
 import org.json.JSONArray
 import org.json.JSONObject
+import tribixbite.cleverkeys.LayoutXmlRoot
 import java.util.Locale
 
 /**
@@ -321,7 +322,6 @@ object ThemeSpecXml {
 
     /** A `<theme>` start tag or empty element anywhere in a layout document. */
     private val THEME_ELEMENT = Regex("<theme\\b([^>]*?)(/>|>[\\s\\S]*?</theme>)")
-    private val KEYBOARD_ROOT = Regex("<keyboard(\\s[^>]*)?>")
     private val COMMENT = Regex("<!--[\\s\\S]*?-->")
 
     /**
@@ -347,7 +347,7 @@ object ThemeSpecXml {
             return xml.substring(0, lineStart) + element + xml.substring(existing.range.last + 1)
         }
         if (element == null) return xml
-        val root = KEYBOARD_ROOT.findAll(xml).firstOrNull(::outside) ?: return xml
+        val root = LayoutXmlRoot.find(xml) ?: return xml
         return xml.substring(0, root.range.last + 1) + "\n" + element + xml.substring(root.range.last + 1)
     }
 }

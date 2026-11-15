@@ -1133,17 +1133,7 @@
     <string name="launcher_test_field_label">Izmēģiniet savu jauno tastatūru šeit</string>
     <string name="launcher_footer">Bezkompromisu atvērtā koda tastatūra.</string>
     <string name="launcher_step_completed_desc">Pabeigts</string>
-    <string name="theme_selector_title">Tastatūras tēmas</string>
-    <string name="theme_selector_create_desc">Izveidot</string>
     <string name="theme_selector_custom">Pielāgota</string>
-    <string name="theme_selector_more_options_desc">Vairāk opciju</string>
-    <string name="theme_selector_selected_desc">Atlasīta</string>
-    <string name="custom_theme_title">Izveidot pielāgotu tēmu</string>
-    <string name="custom_theme_name_label">Tēmas nosaukums</string>
-    <string name="custom_theme_name_placeholder">Mana tēma</string>
-    <string name="custom_theme_palette">Krāsu palete</string>
-    <string name="custom_theme_preview">Priekšskatījums</string>
-    <string name="custom_theme_create">Izveidot</string>
     <string name="theme_select_attribute">Atlasīt %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="zero">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumu</item><item quantity="one">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojums</item><item quantity="other">Velciet, lai pārkārtotu • Pieskarieties, lai rediģētu • %1$d izkārtojumi</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1495,7 +1485,6 @@
     <string name="privacy_error_loading_data">Kļūda, ielādējot datus: %1$s</string>
     <string name="privacy_error_loading_stats">Kļūda, ielādējot statistiku: %1$s</string>
     <string name="privacy_perf_stats_exported">Veiktspējas statistika eksportēta</string>
-    <string name="privacy_export_open_failed">Neizdevās atvērt failu rakstīšanai</string>
     <string name="backup_headless_init_failed">Inicializācijas kļūda: %1$s</string>
     <string name="backup_headless_no_password">Vispirms iestatiet dublējuma paroli sadaļā Iestatījumi → Dublēšana un atjaunošana</string>
     <string name="backup_headless_throttled">Dublēšanas darbība ierobežota — mēģiniet vēlreiz pēc brīža</string>
@@ -1893,12 +1882,6 @@
     <string name="theme_category_modern">Mūsdienīgās</string>
     <string name="theme_custom_created_today">Pielāgota tēma izveidota šodien</string>
     <string name="theme_custom_created_yesterday">Pielāgota tēma izveidota vakar</string>
-    <string name="theme_palette_dark_blue">Tumši zila</string>
-    <string name="theme_palette_purple">Violeta</string>
-    <string name="theme_palette_teal">Zilganzaļa</string>
-    <string name="theme_palette_burgundy">Bordo</string>
-    <string name="theme_palette_olive">Olīvzaļa</string>
-    <string name="theme_palette_navy">Jūras zila</string>
     <string name="extra_key_title_voice">Balss</string>
     <string name="extra_key_title_clipboard">Starpliktuve</string>
     <string name="extra_key_title_switch_ime">Mainīt tastatūru</string>
@@ -2029,6 +2012,7 @@
     <string name="io_error_too_large">Fails ir lielāks, nekā CleverKeys var droši importēt.</string>
     <string name="io_error_wrong_password_or_corrupt">Nepareiza dublējuma parole, vai fails ir bojāts vai mainīts.</string>
     <string name="io_error_no_backup_password">Šis dublējums ir šifrēts, un dublējuma parole nav pieejama.</string>
+    <string name="io_error_backup_password_unreadable">Saglabāto dublējuma paroli šajā ierīcē vairs nevar nolasīt. Iestatiet to vēlreiz sadaļā Iestatījumi → Dublēšana un atjaunošana.</string>
     <string name="io_error_wrong_backup_kind">Šajā dublējumā nav tāda veida datu, kādus gaida šī importēšana.</string>
     <string name="io_error_no_file_picker">Nav pieejamas lietotnes failu izvēlei.</string>
     <string name="io_error_read_write">Failu neizdevās nolasīt vai ierakstīt.</string>

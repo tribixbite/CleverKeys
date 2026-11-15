@@ -1162,7 +1162,7 @@ fun CustomLayoutEditorDialog(
         uri?.let {
             try {
                 pendingExportContent?.let { content ->
-                    LayoutXmlTransfer.write({ context.contentResolver.openOutputStream(it) }, content)
+                    LayoutXmlTransfer.write({ SafOutput.open("the layout XML file") { mode -> context.contentResolver.openOutputStream(it, mode) } }, content)
                     if (pendingExportSkipped) {
                         android.widget.Toast.makeText(
                             context, R.string.layout_manager_export_not_written, android.widget.Toast.LENGTH_LONG

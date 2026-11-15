@@ -5,6 +5,29 @@ import org.junit.Test
 
 class DictImportPlanBuilderTest {
 
+    /**
+     * Review 2026-11-14 (low): no word-count cap. A file within the read's byte cap can hold about
+     * a million words, all written into one preference value on apply. 100,000 per language (the
+     * language-pack dictionary ceiling) is refused above, accepted at the limit.
+     */
+    @Test
+    fun moreWordsThanTheCapForOneLanguageAreRefused() {
+        fun json(n: Int) = (0 until n).joinToString(
+            separator = ",",
+            prefix = "{\"custom_words_by_language\":{\"en\":{",
+            postfix = "}}}",
+        ) { "\"w$it\":1" }
+
+        val atCap = DictImportPlanBuilder.fromJson(json(100_000), emptyMap(), emptyMap())
+        assertThat(atCap.perLanguage["en"]!!.newCustomWords).hasSize(100_000)
+
+        val failure = runCatching { DictImportPlanBuilder.fromJson(json(100_001), emptyMap(), emptyMap()) }
+            .exceptionOrNull()
+        assertThat(failure).isNotNull()
+        assertThat(tribixbite.cleverkeys.IoFailureClassifier.classify(failure))
+            .isEqualTo(tribixbite.cleverkeys.IoFailureReason.TOO_LARGE)
+    }
+
     @Test
     fun v2Format_perLanguageDeltas() {
         val json = """{"custom_words_by_language":{"en":{"foo":50,"bar":100}}}"""

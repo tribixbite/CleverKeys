@@ -1130,17 +1130,7 @@
     <string name="launcher_test_field_label">Uji keyboard baru Anda di sini</string>
     <string name="launcher_footer">Keyboard open source tanpa kompromi.</string>
     <string name="launcher_step_completed_desc">Selesai</string>
-    <string name="theme_selector_title">Tema Keyboard</string>
-    <string name="theme_selector_create_desc">Buat</string>
     <string name="theme_selector_custom">Kustom</string>
-    <string name="theme_selector_more_options_desc">Opsi lainnya</string>
-    <string name="theme_selector_selected_desc">Dipilih</string>
-    <string name="custom_theme_title">Buat Tema Kustom</string>
-    <string name="custom_theme_name_label">Nama Tema</string>
-    <string name="custom_theme_name_placeholder">Tema Saya</string>
-    <string name="custom_theme_palette">Palet Warna</string>
-    <string name="custom_theme_preview">Pratinjau</string>
-    <string name="custom_theme_create">Buat</string>
     <string name="theme_select_attribute">Pilih %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="other">Seret untuk menyusun ulang • Ketuk untuk mengedit • %1$d tata letak</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1470,7 +1460,6 @@
     <string name="privacy_error_loading_data">Gagal memuat data: %1$s</string>
     <string name="privacy_error_loading_stats">Gagal memuat statistik: %1$s</string>
     <string name="privacy_perf_stats_exported">Statistik performa diekspor</string>
-    <string name="privacy_export_open_failed">Tidak dapat membuka file untuk ditulis</string>
     <string name="backup_headless_init_failed">Gagal menginisialisasi: %1$s</string>
     <string name="backup_headless_no_password">Setel kata sandi cadangan di Pengaturan → Cadangkan &amp; Pulihkan terlebih dahulu</string>
     <string name="backup_headless_throttled">Aksi cadangan dibatasi — coba lagi sebentar lagi</string>
@@ -1818,12 +1807,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Tema kustom dibuat hari ini</string>
     <string name="theme_custom_created_yesterday">Tema kustom dibuat kemarin</string>
-    <string name="theme_palette_dark_blue">Biru Tua</string>
-    <string name="theme_palette_purple">Ungu</string>
-    <string name="theme_palette_teal">Toska</string>
-    <string name="theme_palette_burgundy">Merah Anggur</string>
-    <string name="theme_palette_olive">Zaitun</string>
-    <string name="theme_palette_navy">Biru Dongker</string>
     <string name="extra_key_title_voice">Suara</string>
     <string name="extra_key_title_clipboard">Clipboard</string>
     <string name="extra_key_title_switch_ime">Ganti Keyboard</string>
@@ -1940,6 +1923,7 @@
     <string name="io_error_too_large">File lebih besar daripada yang dapat diimpor CleverKeys dengan aman.</string>
     <string name="io_error_wrong_password_or_corrupt">Kata sandi cadangan salah, atau file rusak atau telah diubah.</string>
     <string name="io_error_no_backup_password">Cadangan ini terenkripsi dan tidak ada kata sandi cadangan yang tersedia.</string>
+    <string name="io_error_backup_password_unreadable">Kata sandi cadangan yang tersimpan tidak dapat dibaca lagi di perangkat ini. Setel ulang di Pengaturan → Cadangkan &amp; Pulihkan.</string>
     <string name="io_error_wrong_backup_kind">Cadangan ini tidak berisi jenis data yang diharapkan oleh impor ini.</string>
     <string name="io_error_no_file_picker">Tidak ada aplikasi yang tersedia untuk memilih file.</string>
     <string name="io_error_read_write">File tidak dapat dibaca atau ditulis.</string>

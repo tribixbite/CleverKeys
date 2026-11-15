@@ -37,6 +37,14 @@ class LayoutManager(
 ) {
     // Layout state
     private var currentSpecialLayout: KeyboardData? = null
+
+    /**
+     * Name of the locale layout last delivered WITH `followSelection` — what the "nothing changed"
+     * guard in [setLocaleTextLayout] compares against. Not [localeTextLayout]: an unfollowed
+     * fallback in between (QWERTY (US) for a failed subtype resolution) would make the next real
+     * switch to that same layout look like a repeat and be ignored (follow-up review 2026-11-15).
+     */
+    private var lastFollowedName: String? = localeTextLayout.name
     private val keyboardDataCache = LruCache<Int, KeyboardData>(10)
 
     /**
@@ -75,10 +83,11 @@ class LayoutManager(
      *   switch to QWERTY (US) for a user on another layout (review 2026-11-14 M13).
      */
     fun setLocaleTextLayout(layout: KeyboardData, followSelection: Boolean = true) {
-        val previous = localeTextLayout
         localeTextLayout = layout
         if (!followSelection) return
-        if (layout.name != null && layout.name == previous.name) return // nothing changed
+        val lastFollowed = lastFollowedName
+        lastFollowedName = layout.name
+        if (layout.name != null && layout.name == lastFollowed) return // nothing changed
         val layouts = config.layouts
         // An index past the list resolves to entry 0, as in current_layout_unmodified (layouts
         // were deleted); the follow must judge the layout actually shown, not give up.

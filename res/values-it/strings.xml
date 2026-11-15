@@ -1162,17 +1162,7 @@
     <string name="launcher_test_field_label">Prova qui la tua nuova tastiera</string>
     <string name="launcher_footer">Una tastiera open source senza compromessi.</string>
     <string name="launcher_step_completed_desc">Completato</string>
-    <string name="theme_selector_title">Temi tastiera</string>
-    <string name="theme_selector_create_desc">Crea</string>
     <string name="theme_selector_custom">Personalizzato</string>
-    <string name="theme_selector_more_options_desc">Altre opzioni</string>
-    <string name="theme_selector_selected_desc">Selezionato</string>
-    <string name="custom_theme_title">Crea tema personalizzato</string>
-    <string name="custom_theme_name_label">Nome tema</string>
-    <string name="custom_theme_name_placeholder">Il mio tema</string>
-    <string name="custom_theme_palette">Tavolozza colori</string>
-    <string name="custom_theme_preview">Anteprima</string>
-    <string name="custom_theme_create">Crea</string>
     <string name="theme_select_attribute">Seleziona %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="many">Trascina per riordinare • Tocca per modificare • %1$d layout</item><item quantity="other">Trascina per riordinare • Tocca per modificare • %1$d layout</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1524,7 +1514,6 @@
     <string name="privacy_error_loading_data">Errore durante il caricamento dei dati: %1$s</string>
     <string name="privacy_error_loading_stats">Errore durante il caricamento delle statistiche: %1$s</string>
     <string name="privacy_perf_stats_exported">Statistiche delle prestazioni esportate</string>
-    <string name="privacy_export_open_failed">Impossibile aprire il file in scrittura</string>
     <string name="backup_headless_init_failed">Errore di inizializzazione: %1$s</string>
     <string name="backup_headless_no_password">Imposta prima una password di backup in Impostazioni → Backup e ripristino</string>
     <string name="backup_headless_throttled">Azione di backup limitata — riprova tra un momento</string>
@@ -1922,12 +1911,6 @@
     <string name="theme_category_modern">Moderni</string>
     <string name="theme_custom_created_today">Tema personalizzato creato oggi</string>
     <string name="theme_custom_created_yesterday">Tema personalizzato creato ieri</string>
-    <string name="theme_palette_dark_blue">Blu scuro</string>
-    <string name="theme_palette_purple">Viola</string>
-    <string name="theme_palette_teal">Verde acqua</string>
-    <string name="theme_palette_burgundy">Bordeaux</string>
-    <string name="theme_palette_olive">Oliva</string>
-    <string name="theme_palette_navy">Blu navy</string>
     <string name="extra_key_title_voice">Voce</string>
     <string name="extra_key_title_clipboard">Appunti</string>
     <string name="extra_key_title_switch_ime">Cambia tastiera</string>
@@ -2058,6 +2041,7 @@
     <string name="io_error_too_large">Il file è più grande di quanto CleverKeys possa importare in sicurezza.</string>
     <string name="io_error_wrong_password_or_corrupt">Password di backup errata, oppure il file è danneggiato o è stato modificato.</string>
     <string name="io_error_no_backup_password">Questo backup è crittografato e non è disponibile nessuna password di backup.</string>
+    <string name="io_error_backup_password_unreadable">La password di backup salvata non è più leggibile su questo dispositivo. Impostala di nuovo in Impostazioni → Backup e ripristino.</string>
     <string name="io_error_wrong_backup_kind">Questo backup non contiene il tipo di dati che questa importazione si aspetta.</string>
     <string name="io_error_no_file_picker">Nessuna app disponibile per scegliere i file.</string>
     <string name="io_error_read_write">Impossibile leggere o scrivere il file.</string>

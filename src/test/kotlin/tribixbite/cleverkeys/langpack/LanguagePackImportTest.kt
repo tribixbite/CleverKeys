@@ -1000,6 +1000,21 @@ class LanguagePackImportTest {
         assertThat(validator).doesNotContain("readBytes()")
     }
     @Test
+    fun aZeroWordDictionaryIsRefusedAtImport() {
+        // Follow-up review 2026-11-15: a 0-word CKDT was installed, then the CTC lexicon refused
+        // it on every swipe in that language for the pack's lifetime.
+        val dictionary = dictionaryBytes().also {
+            java.nio.ByteBuffer.wrap(it).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 0)
+        }
+        val zip = packZip("empty.zip", listOf(
+            "manifest.json" to manifestJson("el", "Greek", wordCount = 1).toByteArray(),
+            "dictionary.bin" to dictionary,
+        ))
+        assertThat(import(zip)).isEqualTo(ImportResult.Error(PackImportFailure.InvalidMember("dictionary.bin")))
+        assertThat(installedDir("el").exists()).isFalse()
+    }
+
+    @Test
     fun oversizedCanonicalCountIsRefusedEvenWhenManifestClaimsOneWord() {
         val dictionary = dictionaryBytes().also {
             java.nio.ByteBuffer.wrap(it).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(12, 1_000_000)
@@ -1248,6 +1263,22 @@ class LanguagePackImportTest {
         }
         assertWithMessage("after unlock the backup is restored and listed")
             .that(early.getInstalledPacks().map { it.code }).containsExactly("el")
+    }
+
+    @Test
+    fun theLangpacksDirectoryIsCreatedOnceStorageBecomesWritable() {
+        // Follow-up review 2026-11-15: the directory was created by a `lazy` that ran once, so a
+        // manager made while storage was locked never created it and deferred recovery on every
+        // call for the rest of the process.
+        check(filesDir.setWritable(false)) { "cannot make the test files dir read-only" }
+        val early = LanguagePackManager(context)
+        try {
+            assertThat(early.getInstalledPacks()).isEmpty()
+        } finally {
+            filesDir.setWritable(true)
+        }
+        early.getInstalledPacks()
+        assertWithMessage("created on the first call after unlock").that(File(filesDir, "langpacks").isDirectory).isTrue()
     }
 
     /**

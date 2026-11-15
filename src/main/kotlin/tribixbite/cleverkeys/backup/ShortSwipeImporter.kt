@@ -27,7 +27,13 @@ class RealShortSwipeImporter(
     override suspend fun importFromJson(json: String, merge: Boolean): Int =
         manager.importFromJson(json, merge = merge)
 
-    override suspend fun snapshot(): String = manager.exportToJson()
+    // Load first (follow-up review 2026-11-15): exportToJson reads the in-memory cache, which is
+    // empty in a process that has not loaded the mappings yet (Settings → Restore straight after a
+    // cold start). That empty snapshot made a failed restore ERASE the user's short swipes.
+    override suspend fun snapshot(): String {
+        manager.loadMappings()
+        return manager.exportToJson()
+    }
 
     override suspend fun restore(snapshot: String) {
         manager.restoreFromJson(snapshot)

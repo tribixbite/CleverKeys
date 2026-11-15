@@ -663,6 +663,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.DictionaryBinFormatTest',
     'tribixbite.cleverkeys.AutocorrectDefaultsDriftTest',
     'tribixbite.cleverkeys.ShortSwipeIntentTest',
+    'tribixbite.cleverkeys.SafOutputTest',
+    'tribixbite.cleverkeys.LayoutXmlRootTest',
+    'tribixbite.cleverkeys.BackupPreviewSaveableTest',
     'tribixbite.cleverkeys.customization.ShortSwipeMappingTest',
     // 2026-10-30 (maintainer screenshots 9/10): runtime key codes and key names (Enter captured
     // as "\n"), the per-key dialog's subkey sources, position-addressed layout XML edits.
@@ -937,6 +940,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.theme.LookBackdropTest',
     'tribixbite.cleverkeys.theme.AuroraMotionTest',
     'tribixbite.cleverkeys.theme.SceneOverlayPlanTest',
+    'tribixbite.cleverkeys.theme.SceneWiringDriftTest',
     'tribixbite.cleverkeys.theme.SceneTrueBlackTest',
     'tribixbite.cleverkeys.theme.ScenePreviewTest',
     'tribixbite.cleverkeys.theme.SceneRasterTest',
@@ -1453,6 +1457,7 @@ tasks.register('runMockTests', JavaExec) {
     // Audit 2026-10-20 L16: device-protected prefs cached, migration still runs once.
     'tribixbite.cleverkeys.DirectBootPrefsCacheTest',
     'tribixbite.cleverkeys.theme.MonetDynamicColorGateTest',
+    'tribixbite.cleverkeys.theme.MaterialThemeVariantRecoveryTest',
     'tribixbite.cleverkeys.langpack.LanguagePackImportTest',
     // 2026-10-08 audit: per-process dictionary-availability cache, invalidated by pack import/delete.
     'tribixbite.cleverkeys.LanguageAvailabilityCacheTest',
@@ -1676,6 +1681,10 @@ tasks.register('runMockTests', JavaExec) {
     // Backup encryption (2026-07-17) — Android-touching tests (need android.jar)
     'tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreTest',
     'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',
+    'tribixbite.cleverkeys.backup.ShortSwipeImporterSnapshotTest',
+    'tribixbite.cleverkeys.WordPredictorReloadFoldTest',
+    'tribixbite.cleverkeys.ImeDialogDismissTest',
+    'tribixbite.cleverkeys.BinaryDictionaryCorruptBodyTest',
     // Private copy/paste (#156)
     'tribixbite.cleverkeys.PrivateCopyServiceTest',
     // ARC-038 (2026-08-28): the GIF-pack thumbnail precondition (#149 blank tiles).

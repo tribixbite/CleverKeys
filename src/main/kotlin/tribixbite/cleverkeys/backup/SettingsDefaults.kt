@@ -305,6 +305,23 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 internal fun lookupDefault(key: String): PrefValue? = SETTINGS_DEFAULTS[key]
 
 /**
+ * A value of the type [key] is STORED as, for the import's storage-type check
+ * (`SettingsValidation.storageTypeError`): its default where it has one, else the read type of the
+ * keys that have none — [NON_DEFAULTED_KEYS] and the per-key `extra_key_<name>` toggles, which
+ * `ExtraKeysPreference.getExtraKeys` reads with getBoolean. Without these, a hand-edited
+ * `"clipboard_custom_rules_uri": true` or `"extra_key_<name>": 1` was imported as written and
+ * crashed every keyboard start (follow-up review 2026-11-15 of H4). Only the type is meaningful.
+ */
+internal fun lookupStorageType(key: String): PrefValue? = lookupDefault(key) ?: when {
+    key == "clipboard_custom_rules_uri" -> PrefValue.Str("")
+    key in KeyboardHeightPrefs.UNFOLDED_KEYS -> PrefValue.IntV(0)
+    // `ExtraKeysPreference.prefKeyOfKeyName` prefix, spelled out: that class is an Android
+    // PreferenceCategory and this file runs in pure-JVM tests.
+    key.startsWith("extra_key_") -> PrefValue.Bool(false)
+    else -> null
+}
+
+/**
  * Keys whose runtime default is literally `null` (read site passes `null`
  * to `prefs.getString`). Importing such a key with a non-null proposed
  * value is a real change — but we cannot express "the absence of a value"

@@ -56,6 +56,28 @@ class ShortSwipeIntentTest {
         assertThat(result.extras).containsEntry("key2", "value2")
     }
 
+    /**
+     * Review 2026-11-14 (low, "plausible"): a hand-edited or restored intent whose extras hold a
+     * number, boolean or nested object was thought to parse into non-String map values that crash
+     * the assign screen's `(k, v)` rendering. Pinned here instead: `extras` is declared
+     * `Map<String, String>` and String is final, so Gson reads every value with its String adapter —
+     * scalars become their text and a nested object fails the whole parse (null, the "invalid
+     * intent" row), so no non-String value can reach a consumer.
+     */
+    @Test
+    fun `parseFromGson never yields non-String extra values`() {
+        val scalars = IntentDefinition.parseFromGson(
+            """{"name":"x","extras":{"n":5,"b":true,"s":"t"}}"""
+        )
+        assertThat(scalars).isNotNull()
+        scalars!!.extras!!.values.forEach { assertThat(it).isInstanceOf(String::class.java) }
+        assertThat(scalars.extras).containsEntry("n", "5")
+        assertThat(scalars.extras).containsEntry("b", "true")
+
+        val nested = IntentDefinition.parseFromGson("""{"name":"x","extras":{"o":{"k":1}}}""")
+        assertThat(nested).isNull()
+    }
+
     @Test
     fun `parseFromGson with missing optional fields returns object with defaults`() {
         // Only required fields (name and targetType have defaults)

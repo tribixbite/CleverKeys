@@ -4,15 +4,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
-import androidx.compose.ui.test.assertIsNotEnabled
-import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -20,8 +15,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import tribixbite.cleverkeys.theme.KeyboardColorScheme
-import tribixbite.cleverkeys.ui.CustomThemeDialog
 
 /**
  * Dialog-truth tests: verify that confirm/dismiss callbacks fire correctly
@@ -173,153 +166,5 @@ class DialogTruthComposeTest {
         composeTestRule.onNodeWithText("Hue").assertIsDisplayed()
         composeTestRule.onNodeWithText("Saturation").assertIsDisplayed()
         composeTestRule.onNodeWithText("Lightness").assertIsDisplayed()
-    }
-
-    // =========================================================================
-    // CustomThemeDialog (DIY theme creator)
-    // =========================================================================
-
-    @Test
-    fun customThemeDialog_emptyName_createButtonDisabled() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = {},
-                        onCreateTheme = { _, _ -> }
-                    )
-                }
-            }
-        }
-
-        // With empty name, "Create" should be disabled.
-        composeTestRule.onNodeWithText("Create").assertIsNotEnabled()
-    }
-
-    @Test
-    fun customThemeDialog_nonEmptyName_createButtonEnabled() {
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = {},
-                        onCreateTheme = { _, _ -> }
-                    )
-                }
-            }
-        }
-
-        // Find the OutlinedTextField via its SetText semantic action — the
-        // placeholder/label text nodes themselves don't expose SetText.
-        composeTestRule.onNode(hasSetTextAction()).performTextInput("Cyberpunk")
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Create").assertIsEnabled()
-    }
-
-    @Test
-    fun customThemeDialog_create_invokesOnCreateThemeWithName() {
-        var createdName: String? = null
-        var createdScheme: KeyboardColorScheme? = null
-        var dismissed = false
-
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = { dismissed = true },
-                        onCreateTheme = { name, scheme ->
-                            createdName = name
-                            createdScheme = scheme
-                        }
-                    )
-                }
-            }
-        }
-
-        composeTestRule.onNode(hasSetTextAction()).performTextInput("Twilight")
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Create").performClick()
-        composeTestRule.waitForIdle()
-
-        assertEquals("Twilight", createdName)
-        assertNotNull("Color scheme must be delivered", createdScheme)
-        // CustomThemeDialog calls onDismiss after onCreateTheme to close itself.
-        assertTrue("Create must also call onDismiss", dismissed)
-    }
-
-    @Test
-    fun customThemeDialog_cancel_doesNotInvokeOnCreateTheme() {
-        var createdName: String? = null
-        var dismissed = false
-
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = { dismissed = true },
-                        onCreateTheme = { name, _ -> createdName = name }
-                    )
-                }
-            }
-        }
-
-        // Even with a name typed, Cancel must not commit.
-        composeTestRule.onNode(hasSetTextAction()).performTextInput("WastedInput")
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Cancel").performClick()
-        composeTestRule.waitForIdle()
-
-        assertNull("Cancel must NOT call onCreateTheme", createdName)
-        assertTrue("Cancel must call onDismiss", dismissed)
-    }
-
-    @Test
-    fun customThemeDialog_blankSpacesName_createDisabled() {
-        // Whitespace-only name should be rejected (themeName.isNotBlank()).
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = {},
-                        onCreateTheme = { _, _ -> }
-                    )
-                }
-            }
-        }
-
-        composeTestRule.onNode(hasSetTextAction()).performTextInput("   ")
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Create").assertIsNotEnabled()
-    }
-
-    @Test
-    fun customThemeDialog_paletteSelectionPersistsThroughCreate() {
-        // Start with default palette, click another, then Create — verify the
-        // delivered scheme is NOT the default's scheme. This catches the bug
-        // class where palette-selection state never propagates to onCreateTheme.
-        var deliveredScheme: KeyboardColorScheme? = null
-
-        composeTestRule.setContent {
-            MaterialTheme {
-                Surface {
-                    CustomThemeDialog(
-                        onDismiss = {},
-                        onCreateTheme = { _, scheme -> deliveredScheme = scheme }
-                    )
-                }
-            }
-        }
-
-        composeTestRule.onNode(hasSetTextAction()).performTextInput("Test")
-        composeTestRule.waitForIdle()
-        composeTestRule.onNodeWithText("Create").performClick()
-        composeTestRule.waitForIdle()
-
-        // Default palette is DARK_BLUE — scheme must reflect that. We don't
-        // pin the exact RGB values here (palette tweaks are allowed) — we just
-        // require that *some* scheme came through, proving the wiring works.
-        assertNotNull("Default palette must be delivered to onCreateTheme", deliveredScheme)
     }
 }

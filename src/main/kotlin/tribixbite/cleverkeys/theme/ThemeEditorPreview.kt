@@ -251,6 +251,7 @@ class ThemeKeyboardPreviewView(context: Context) : ViewGroup(context) {
         private fun ensureRendererData(context: Context) {
             if (Config.globalConfigOrNull() == null) {
                 val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+                Config.ensureThemeAvailability(context)
                 Config.initGlobalConfig(prefs, context.resources, null, null)
             }
             ComposeKeyData.initialize(context)

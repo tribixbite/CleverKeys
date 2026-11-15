@@ -719,7 +719,13 @@ class WordPredictor : Predictor {
             userWordOriginalCase.clear()
             // v1.1.90: Pass currentLanguage to filter by locale
             val customWords = loadCustomAndUserWords(it, currentLanguage)
-            customAndUserWords = customWords  // Track for disabled-word override check
+            // Persian/Kurdish lookup fold, as on the full-load paths: the reload wrote the user's
+            // words under their raw keys, so after a Dictionary Manager edit a fa/ckb user word
+            // typed with the other yeh/kaf was "unknown" until the next full load (follow-up
+            // review 2026-11-15). A no-op for every other language.
+            foldLoadedKeys(dictionary.get(), prefixIndex.get(), currentLanguage)
+            // Track for disabled-word override check
+            customAndUserWords = customWords.mapTo(HashSet()) { w -> ArabicScriptFold.fold(w, currentLanguage) }
             // NOTE: Full rebuild needed here because we don't track which words were removed
             // Future optimization: track previous custom words to compute diff (added/removed)
             buildPrefixIndex()

@@ -123,9 +123,10 @@ class LanguagePackManager(
         }
     }
 
-    private val langpacksDir: File by lazy {
-        File(context.filesDir, LANGPACKS_DIR).apply { mkdirs() }
-    }
+    // Created in [packsRoot], not here: a lazy `mkdirs()` ran once, so a manager made before the
+    // first unlock never created the directory and deferred recovery on every call afterwards
+    // (follow-up review 2026-11-15; VoicePackManager already does it this way).
+    private val langpacksDir: File by lazy { File(context.filesDir, LANGPACKS_DIR) }
 
     /** Install/remove swap and its crash recovery over [langpacksDir] (todo item 11). */
     private val swap: LanguagePackSwap by lazy { LanguagePackSwap(langpacksDir, fileOps) }
@@ -155,6 +156,7 @@ class LanguagePackManager(
         if (!recovered) {
             synchronized(installLock) {
                 if (!recovered) {
+                    langpacksDir.mkdirs()
                     if (langpacksDir.listFiles() == null) {
                         Log.w(TAG, "Language pack directory not readable yet (locked storage?); recovery deferred")
                         return langpacksDir
@@ -486,7 +488,10 @@ class LanguagePackManager(
                 val version = buffer.int
                 val wordCount = buffer.getInt(12)
                 when {
-                    magic != DICT_MAGIC || version != 2 || wordCount < 0 ->
+                    // A 0-word dictionary is refused too (follow-up review 2026-11-15): the CTC
+                    // lexicon rejects it on every swipe (two error lines and a wasted attempt
+                    // per swipe, for the pack's lifetime) and the pack carries no words.
+                    magic != DICT_MAGIC || version != 2 || wordCount <= 0 ->
                         PackImportFailure.InvalidMember(DICTIONARY_FILE)
                     wordCount > CkdtDictionaryReader.MAX_WORD_COUNT ->
                         PackImportFailure.DictionaryTooLarge(wordCount, CkdtDictionaryReader.MAX_WORD_COUNT)

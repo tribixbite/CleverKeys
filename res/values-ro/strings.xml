@@ -1150,17 +1150,7 @@
     <string name="launcher_test_field_label">Testați-vă noua tastatură aici</string>
     <string name="launcher_footer">O tastatură open source fără compromisuri.</string>
     <string name="launcher_step_completed_desc">Finalizat</string>
-    <string name="theme_selector_title">Teme pentru tastatură</string>
-    <string name="theme_selector_create_desc">Creează</string>
     <string name="theme_selector_custom">Personalizată</string>
-    <string name="theme_selector_more_options_desc">Mai multe opțiuni</string>
-    <string name="theme_selector_selected_desc">Selectată</string>
-    <string name="custom_theme_title">Creează temă personalizată</string>
-    <string name="custom_theme_name_label">Numele temei</string>
-    <string name="custom_theme_name_placeholder">Tema mea</string>
-    <string name="custom_theme_palette">Paletă de culori</string>
-    <string name="custom_theme_preview">Previzualizare</string>
-    <string name="custom_theme_create">Creează</string>
     <string name="theme_select_attribute">Selectează %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1511,7 +1501,6 @@
     <string name="privacy_error_loading_data">Eroare la încărcarea datelor: %1$s</string>
     <string name="privacy_error_loading_stats">Eroare la încărcarea statisticilor: %1$s</string>
     <string name="privacy_perf_stats_exported">Statistici de performanță exportate</string>
-    <string name="privacy_export_open_failed">Nu s-a putut deschide fișierul pentru scriere</string>
     <string name="backup_headless_init_failed">Eroare la inițializare: %1$s</string>
     <string name="backup_headless_no_password">Setați mai întâi o parolă de backup în Setări → Backup și restaurare</string>
     <string name="backup_headless_throttled">Acțiune de backup limitată – reîncercați în câteva momente</string>
@@ -1909,12 +1898,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Temă personalizată creată azi</string>
     <string name="theme_custom_created_yesterday">Temă personalizată creată ieri</string>
-    <string name="theme_palette_dark_blue">Albastru închis</string>
-    <string name="theme_palette_purple">Violet</string>
-    <string name="theme_palette_teal">Turcoaz închis</string>
-    <string name="theme_palette_burgundy">Vișiniu</string>
-    <string name="theme_palette_olive">Oliv</string>
-    <string name="theme_palette_navy">Bleumarin</string>
     <string name="extra_key_title_voice">Voce</string>
     <string name="extra_key_title_clipboard">Clipboard</string>
     <string name="extra_key_title_switch_ime">Schimbă tastatura</string>
@@ -2045,6 +2028,7 @@
     <string name="io_error_too_large">Fișierul este mai mare decât poate importa CleverKeys în siguranță.</string>
     <string name="io_error_wrong_password_or_corrupt">Parolă de backup greșită sau fișierul este deteriorat ori a fost modificat.</string>
     <string name="io_error_no_backup_password">Acest backup este criptat și nu este disponibilă nicio parolă de backup.</string>
+    <string name="io_error_backup_password_unreadable">Parola de backup salvată nu mai poate fi citită pe acest dispozitiv. Setați-o din nou în Setări → Backup și restaurare.</string>
     <string name="io_error_wrong_backup_kind">Acest backup nu conține tipul de date pe care îl așteaptă acest import.</string>
     <string name="io_error_no_file_picker">Nu este disponibilă nicio aplicație pentru alegerea fișierelor.</string>
     <string name="io_error_read_write">Fișierul nu a putut fi citit sau scris.</string>

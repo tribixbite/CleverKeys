@@ -328,6 +328,11 @@ class ReleaseRecordDriftTest {
         // (SwipeInput never carried shift state; the capture site is Pointers.onTouchDown).
         "src/main/kotlin/tribixbite/cleverkeys/SwipeInput.kt" to
             "swipe capitalization at gesture start (v1.2.8)",
+        // Review 2026-11-14: KeyboardPreviewView (and its host) had no reference anywhere and
+        // seeded Config from the wrong prefs file if revived; deleted. The v1.1.72 claim was
+        // already re-anchored by the v2.0.0 row, which records the original anchor was wrong.
+        "src/main/kotlin/tribixbite/cleverkeys/customization/KeyboardPreviewView.kt" to
+            "icon preview in customization dialog (v1.1.72)",
     )
 
     @Test

@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SafOutput
 import tribixbite.cleverkeys.SwipePerformanceStats
 import tribixbite.cleverkeys.SettingsActivity
 
@@ -135,7 +136,7 @@ internal fun SettingsActivity.performPerfStatsExport(uri: Uri) {
     val _self = this
     lifecycleScope.launch {
         try {
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
+            SafOutput.open("the export file") { mode -> contentResolver.openOutputStream(uri, mode) }.use { outputStream ->
                 val stats = SwipePerformanceStats.getInstance(_self)
                 val json = org.json.JSONObject().apply {
                     put("export_timestamp", System.currentTimeMillis())
@@ -155,7 +156,7 @@ internal fun SettingsActivity.performPerfStatsExport(uri: Uri) {
                     writer.write(json.toString(2))
                 }
                 Toast.makeText(_self, R.string.privacy_perf_stats_exported, Toast.LENGTH_SHORT).show()
-            } ?: throw java.io.IOException(getString(R.string.privacy_export_open_failed))
+            }
         } catch (e: Exception) {
             toastExportFailed(e)
         }

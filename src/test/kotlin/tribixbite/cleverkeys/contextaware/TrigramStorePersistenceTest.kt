@@ -153,6 +153,23 @@ class TrigramStorePersistenceTest {
     }
 
     @Test
+    fun `huge stored frequencies never overflow the prefix total on load`() {
+        // Follow-up review 2026-11-15: loading summed with a plain `+` (the import saturates).
+        val max = Int.MAX_VALUE
+        storage.seed(
+            TrigramStore.storageKey("en"),
+            """[{"word1":"i","word2":"want","word3":"to","frequency":$max,"probability":0.5},
+                {"word1":"i","word2":"want","word3":"it","frequency":$max,"probability":0.5}]"""
+        )
+        // Probabilities are stored; the loaded total is what the next observation divides by.
+        record(1, "en", "i", "want", "to")
+        for (w in listOf("to", "it")) {
+            val p = store.getProbability("en", "i", "want", w)
+            assertTrue("P($w|i want) must be in (0, 1]: $p", p > 0f && p <= 1f)
+        }
+    }
+
+    @Test
     fun `corrupted persisted JSON falls back to an empty table`() {
         storage.seed(TrigramStore.storageKey("en"), "{not json[")
         assertEquals(0, store.getTotalTrigramCount("en"))

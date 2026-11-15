@@ -281,7 +281,7 @@ object SettingsValidation {
      * string-but-numeric keys arrive as JSON numbers and are stored as Strings.
      */
     fun storageTypeError(key: String, value: PrefValue): String? {
-        val declared = lookupDefault(key)?.let(::storageFamily) ?: return null
+        val declared = lookupStorageType(key)?.let(::storageFamily) ?: return null
         val proposed = storageFamily(value) ?: return null
         return if (declared == proposed) null else "expected $declared, got $proposed"
     }

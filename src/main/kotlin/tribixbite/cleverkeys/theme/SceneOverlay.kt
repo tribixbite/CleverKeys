@@ -363,9 +363,9 @@ internal class SceneOverlay private constructor(
     init {
         host.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
         root.addOnBufferTransformHintChangedListener(hintListener)
-        // The newest overlay on an anchor owns it: a predecessor whose release is still queued
-        // (rebuilt in one pass: size, painting or tuning change) must not remove it (free()).
-        owners.claim(anchor, this)
+        // The anchor is claimed by create() once the overlay is fully set up, not here: a build
+        // that failed after claiming had overwritten a queued predecessor's claim, so the failure
+        // path removed the anchor from under the predecessor's layers (follow-up review 2026-11-15).
     }
 
     /** Stops listening to the host's layout and the window's rotation (release, or a failed build). */
@@ -580,6 +580,10 @@ internal class SceneOverlay private constructor(
                 built.write(t, initial(origin[0], origin[1]))
                 if (!root.applyTransactionOnDraw(t)) t.apply()
                 host.invalidate()
+                // The newest overlay on an anchor owns it: a predecessor whose release is still
+                // queued (rebuilt in one pass: size, painting or tuning change) must not remove it
+                // (free()). Claimed last, so a failure above leaves the predecessor's claim intact.
+                owners.claim(anchor, built)
                 return built
             } catch (e: Throwable) {
                 // Any Throwable (review 2026-11-14 M18): an OutOfMemoryError copying a view-sized

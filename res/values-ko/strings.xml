@@ -1118,17 +1118,7 @@
     <string name="launcher_test_field_label">여기서 새 키보드를 테스트해 보세요</string>
     <string name="launcher_footer">타협 없는 오픈 소스 키보드.</string>
     <string name="launcher_step_completed_desc">완료됨</string>
-    <string name="theme_selector_title">키보드 테마</string>
-    <string name="theme_selector_create_desc">만들기</string>
     <string name="theme_selector_custom">사용자 정의</string>
-    <string name="theme_selector_more_options_desc">추가 옵션</string>
-    <string name="theme_selector_selected_desc">선택됨</string>
-    <string name="custom_theme_title">사용자 정의 테마 만들기</string>
-    <string name="custom_theme_name_label">테마 이름</string>
-    <string name="custom_theme_name_placeholder">내 테마</string>
-    <string name="custom_theme_palette">색상 팔레트</string>
-    <string name="custom_theme_preview">미리보기</string>
-    <string name="custom_theme_create">만들기</string>
     <string name="theme_select_attribute">%1$s 선택</string>
     <plurals name="layout_manager_hint"><item quantity="other">드래그하여 순서 변경 • 탭하여 편집 • 레이아웃 %1$d개</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1458,7 +1448,6 @@
     <string name="privacy_error_loading_data">데이터 로드 오류: %1$s</string>
     <string name="privacy_error_loading_stats">통계 로드 오류: %1$s</string>
     <string name="privacy_perf_stats_exported">성능 통계를 내보냈습니다</string>
-    <string name="privacy_export_open_failed">쓰기용으로 파일을 열 수 없습니다</string>
     <string name="backup_headless_init_failed">초기화 오류: %1$s</string>
     <string name="backup_headless_no_password">먼저 설정 → 백업 및 복원에서 백업 비밀번호를 설정하세요</string>
     <string name="backup_headless_throttled">백업 요청이 너무 잦습니다 — 잠시 후 다시 시도하세요</string>
@@ -1806,12 +1795,6 @@
     <string name="theme_category_modern">모던</string>
     <string name="theme_custom_created_today">오늘 만든 사용자 정의 테마</string>
     <string name="theme_custom_created_yesterday">어제 만든 사용자 정의 테마</string>
-    <string name="theme_palette_dark_blue">다크 블루</string>
-    <string name="theme_palette_purple">보라</string>
-    <string name="theme_palette_teal">청록</string>
-    <string name="theme_palette_burgundy">버건디</string>
-    <string name="theme_palette_olive">올리브</string>
-    <string name="theme_palette_navy">네이비</string>
     <string name="extra_key_title_voice">음성 입력</string>
     <string name="extra_key_title_clipboard">클립보드</string>
     <string name="extra_key_title_switch_ime">키보드 전환</string>
@@ -1928,6 +1911,7 @@
     <string name="io_error_too_large">파일이 너무 커서 CleverKeys에서 안전하게 가져올 수 없습니다.</string>
     <string name="io_error_wrong_password_or_corrupt">백업 비밀번호가 틀렸거나 파일이 손상 또는 변조되었습니다.</string>
     <string name="io_error_no_backup_password">이 백업은 암호화되어 있으며 사용할 수 있는 백업 비밀번호가 없습니다.</string>
+    <string name="io_error_backup_password_unreadable">저장된 백업 비밀번호를 이 기기에서 더 이상 읽을 수 없습니다. 설정 → 백업 및 복원에서 다시 설정하세요.</string>
     <string name="io_error_wrong_backup_kind">이 백업에는 이 가져오기에 필요한 종류의 데이터가 없습니다.</string>
     <string name="io_error_no_file_picker">파일을 선택할 수 있는 앱이 없습니다.</string>
     <string name="io_error_read_write">파일을 읽거나 쓸 수 없습니다.</string>

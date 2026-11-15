@@ -67,6 +67,14 @@ object IMEStatusHelper {
     private const val PREF_KEY_PROMPT_ENABLED = "ime_default_prompt_enabled"
     /** I-7: boot instant of the boot the prompt last fired in. 0 = never prompted. */
     private const val PREF_KEY_LAST_PROMPT_BOOT_MS = "ime_prompt_last_boot_ms"
+    /**
+     * The `Settings.Global.BOOT_COUNT` of the boot the prompt last fired in; -1 = never, or the
+     * count was unavailable. Preferred over [PREF_KEY_LAST_PROMPT_BOOT_MS] (review 2026-11-14):
+     * that instant is derived from the wall clock, so a clock step after boot (NTP correcting a
+     * wrong clock, which happens AFTER the keyboard first starts) read as a new boot and prompted
+     * again.
+     */
+    private const val PREF_KEY_LAST_PROMPT_BOOT_COUNT = "ime_prompt_last_boot_count"
     /** Same-boot window: recomputed boot instants differ by ms-level drift, not more. */
     private const val BOOT_INSTANT_TOLERANCE_MS = 5_000L
     private const val TOAST_DELAY_MS = 2000L
@@ -105,9 +113,14 @@ object IMEStatusHelper {
 
             // I-7: once per boot. Both guards run BEFORE the settings read — they
             // are the cheap path taken on every service creation.
+            val bootCount = currentBootCount(context)
             val bootInstant = System.currentTimeMillis() - SystemClock.elapsedRealtime()
-            val lastPromptBoot = prefs.getLong(PREF_KEY_LAST_PROMPT_BOOT_MS, 0L)
-            if (abs(bootInstant - lastPromptBoot) <= BOOT_INSTANT_TOLERANCE_MS) {
+            val sameBoot = if (bootCount >= 0) {
+                prefs.getInt(PREF_KEY_LAST_PROMPT_BOOT_COUNT, -1) == bootCount
+            } else {
+                abs(bootInstant - prefs.getLong(PREF_KEY_LAST_PROMPT_BOOT_MS, 0L)) <= BOOT_INSTANT_TOLERANCE_MS
+            }
+            if (sameBoot) {
                 Log.i(TAG, "reminder: already shown this boot")
                 return // Already prompted this boot (possibly in an earlier process)
             }
@@ -147,12 +160,19 @@ object IMEStatusHelper {
 
                 // I-7: burn this boot's slot. Persisted so an IME process restart
                 // within the same boot cannot re-prompt.
-                prefs.edit().putLong(PREF_KEY_LAST_PROMPT_BOOT_MS, bootInstant).apply()
+                val edit = prefs.edit().putLong(PREF_KEY_LAST_PROMPT_BOOT_MS, bootInstant)
+                if (bootCount >= 0) edit.putInt(PREF_KEY_LAST_PROMPT_BOOT_COUNT, bootCount)
+                edit.apply()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error checking default IME", e)
         }
     }
+
+    /** `Settings.Global.BOOT_COUNT` (API 24+, no permission), or -1 when it cannot be read. */
+    private fun currentBootCount(context: Context): Int =
+        runCatching { Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1) }
+            .getOrDefault(-1)
 
     /**
      * The reminder for the app's own screens (launcher, Settings), called from their

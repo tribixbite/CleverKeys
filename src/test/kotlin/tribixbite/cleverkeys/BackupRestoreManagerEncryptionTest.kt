@@ -147,7 +147,23 @@ class BackupRestoreManagerEncryptionTest {
         every { uri.scheme } returns "content"
         every { uri.lastPathSegment } returns "out.dat"
         every { contentResolver.openOutputStream(uri) } returns sink
+        every { contentResolver.openOutputStream(uri, any()) } returns sink
         return uri
+    }
+
+    /**
+     * A provider document as Android 10+ external storage behaves: mode "w" writes from offset 0
+     * WITHOUT truncating, so a shorter rewrite keeps the old file's tail; "wt" truncates.
+     */
+    private class ProviderDocument(var bytes: ByteArray) {
+        fun open(mode: String): java.io.OutputStream = object : ByteArrayOutputStream() {
+            override fun close() {
+                super.close()
+                val written = toByteArray()
+                bytes = if ("t" in mode) written
+                else written + bytes.copyOfRange(minOf(written.size, bytes.size), bytes.size)
+            }
+        }
     }
 
     private fun encryptSettings(json: String): ByteArray =
@@ -462,5 +478,62 @@ class BackupRestoreManagerEncryptionTest {
         } catch (e: javax.crypto.AEADBadTagException) {
             // expected
         }
+    }
+    // ── review 2026-11-14: a set-but-unreadable password, null streams, truncation ──
+
+    @Test
+    fun uiDefaultExport_storedPasswordUnreadable_failsClosedInsteadOfWritingPlaintext() {
+        // The Keystore key is gone (Keystore reset, or the prefs restored onto another device):
+        // a password is SET, but getPassphrase() cannot unwrap it. The export used to take the
+        // "no password configured" branch and write plaintext for a user who asked for encryption.
+        every { passphraseStore.hasPassphrase() } returns true
+        every { passphraseStore.getPassphrase() } returns null
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_DEFAULT
+        val sink = ByteArrayOutputStream()
+
+        try {
+            mgr.exportConfig(uriForOutput(sink), prefs)
+            fail("an unreadable stored password must fail the export")
+        } catch (e: Exception) {
+            assertEquals(IoFailureReason.BACKUP_PASSWORD_UNREADABLE, IoFailureClassifier.classify(e))
+        }
+        assertEquals("nothing may be written", 0, sink.size())
+    }
+
+    @Test
+    fun export_providerReturnsNoStream_isAFailureNotASuccess() {
+        val uri = mockk<Uri>(relaxed = true)
+        every { uri.scheme } returns "content"
+        every { contentResolver.openOutputStream(uri) } returns null
+        every { contentResolver.openOutputStream(uri, any()) } returns null
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_PLAINTEXT_OPTOUT
+
+        try {
+            mgr.exportConfig(uri, prefs)
+            fail("an export whose destination never opened must not report success")
+        } catch (e: Exception) {
+            assertEquals(IoFailureReason.FILE_NOT_FOUND, IoFailureClassifier.classify(e))
+        }
+    }
+
+    @Test
+    fun export_overALongerExistingDocument_leavesNoStaleTail() {
+        val stale = ByteArray(64 * 1024) { 'x'.code.toByte() }
+        val doc = ProviderDocument(stale)
+        val uri = mockk<Uri>(relaxed = true)
+        every { uri.scheme } returns "content"
+        every { contentResolver.openOutputStream(uri) } answers { doc.open("w") }
+        every { contentResolver.openOutputStream(uri, any()) } answers { doc.open(secondArg()) }
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_PLAINTEXT_OPTOUT
+
+        mgr.exportConfig(uri, prefs)
+
+        val text = String(doc.bytes, Charsets.UTF_8)
+        assertTrue("the export is shorter than the stale file", text.length < stale.size)
+        // The whole document must be the new JSON: a kept tail makes it unparseable.
+        org.json.JSONObject(text)
     }
 }

@@ -1134,17 +1134,7 @@
     <string name="launcher_test_field_label">Przetestuj tutaj swoją nową klawiaturę</string>
     <string name="launcher_footer">Bezkompromisowa klawiatura open source.</string>
     <string name="launcher_step_completed_desc">Ukończono</string>
-    <string name="theme_selector_title">Motywy klawiatury</string>
-    <string name="theme_selector_create_desc">Utwórz</string>
     <string name="theme_selector_custom">Własny</string>
-    <string name="theme_selector_more_options_desc">Więcej opcji</string>
-    <string name="theme_selector_selected_desc">Wybrany</string>
-    <string name="custom_theme_title">Utwórz własny motyw</string>
-    <string name="custom_theme_name_label">Nazwa motywu</string>
-    <string name="custom_theme_name_placeholder">Mój motyw</string>
-    <string name="custom_theme_palette">Paleta kolorów</string>
-    <string name="custom_theme_preview">Podgląd</string>
-    <string name="custom_theme_create">Utwórz</string>
     <string name="theme_select_attribute">Wybierz %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układ</item><item quantity="few">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układy</item><item quantity="many">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układów</item><item quantity="other">Przeciągnij, aby zmienić kolejność • Dotknij, aby edytować • %1$d układu</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1507,7 +1497,6 @@
     <string name="privacy_error_loading_data">Błąd wczytywania danych: %1$s</string>
     <string name="privacy_error_loading_stats">Błąd wczytywania statystyk: %1$s</string>
     <string name="privacy_perf_stats_exported">Wyeksportowano statystyki wydajności</string>
-    <string name="privacy_export_open_failed">Nie można otworzyć pliku do zapisu</string>
     <string name="backup_headless_init_failed">Błąd inicjalizacji: %1$s</string>
     <string name="backup_headless_no_password">Najpierw ustaw hasło kopii zapasowej w Ustawienia → Kopia zapasowa &amp; przywracanie</string>
     <string name="backup_headless_throttled">Akcja kopii zapasowej ograniczona — spróbuj ponownie za chwilę</string>
@@ -1930,12 +1919,6 @@
     <string name="theme_category_modern">Nowoczesne</string>
     <string name="theme_custom_created_today">Własny motyw utworzony dzisiaj</string>
     <string name="theme_custom_created_yesterday">Własny motyw utworzony wczoraj</string>
-    <string name="theme_palette_dark_blue">Ciemnoniebieski</string>
-    <string name="theme_palette_purple">Fioletowy</string>
-    <string name="theme_palette_teal">Morski</string>
-    <string name="theme_palette_burgundy">Burgund</string>
-    <string name="theme_palette_olive">Oliwkowy</string>
-    <string name="theme_palette_navy">Granatowy</string>
     <string name="extra_key_title_voice">Głos</string>
     <string name="extra_key_title_clipboard">Schowek</string>
     <string name="extra_key_title_switch_ime">Zmień klawiaturę</string>
@@ -2073,6 +2056,7 @@
     <string name="io_error_too_large">Plik jest większy, niż CleverKeys może bezpiecznie zaimportować.</string>
     <string name="io_error_wrong_password_or_corrupt">Nieprawidłowe hasło kopii zapasowej albo plik jest uszkodzony lub zmieniony.</string>
     <string name="io_error_no_backup_password">Ta kopia zapasowa jest zaszyfrowana, a hasło kopii zapasowej jest niedostępne.</string>
+    <string name="io_error_backup_password_unreadable">Zapisanego hasła kopii zapasowej nie można już odczytać na tym urządzeniu. Ustaw je ponownie w Ustawienia → Kopia zapasowa &amp; przywracanie.</string>
     <string name="io_error_wrong_backup_kind">Ta kopia zapasowa nie zawiera danych, których oczekuje ten import.</string>
     <string name="io_error_no_file_picker">Brak aplikacji do wybierania plików.</string>
     <string name="io_error_read_write">Nie udało się odczytać ani zapisać pliku.</string>

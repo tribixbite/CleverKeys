@@ -97,6 +97,18 @@ class KeyModifierMemoTest {
     }
 
     @Test
+    fun `equal sets with different array tails are equal`() {
+        // Review 2026-11-14 (low): ofArray dedupes in place and leaves the tail of the array, so
+        // two equal sets compared unequal and took separate memo entries.
+        val shift = KeyValue.getKeyByName("shift")!!
+        val deduped = Pointers.Modifiers.ofArray(arrayOf(shift, shift), 2)
+        val single = Pointers.Modifiers.ofArray(arrayOf<KeyValue?>(shift, null), 1)
+        assertThat(deduped.size()).isEqualTo(1)
+        assertThat(deduped).isEqualTo(single)
+        assertThat(deduped.hashCode()).isEqualTo(single.hashCode())
+    }
+
+    @Test
     fun `a Modifiers with a null array tail still answers correctly`() {
         // Pointers.getModifiers() sizes the backing array by POINTER count and leaves a null
         // tail, while Modifiers.equals compares the whole array. So two logically identical

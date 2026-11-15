@@ -530,7 +530,9 @@ class ExtraKeysPreference(context: Context, attrs: AttributeSet?) : PreferenceCa
         fun getExtraKeys(prefs: SharedPreferences): Map<KeyValue, KeyboardData.PreferredPos> {
             val ks = mutableMapOf<KeyValue, KeyboardData.PreferredPos>()
             for (keyName in EXTRA_KEYS) {
-                if (prefs.getBoolean(prefKeyOfKeyName(keyName), defaultChecked(keyName))) {
+                // Safe getter: Config.refresh reads this on every keyboard start, so a mistyped
+                // imported value must not throw (follow-up review 2026-11-15 of H4).
+                if (tribixbite.cleverkeys.Config.safeGetBoolean(prefs, prefKeyOfKeyName(keyName), defaultChecked(keyName))) {
                     ks[KeyValue.getKeyByName(keyName)] = keyPreferredPos(keyName)
                 }
             }

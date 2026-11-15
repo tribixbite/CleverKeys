@@ -316,7 +316,9 @@ class BigramStore internal constructor(
             val tick = ++data.clock
 
             // Increment word1 total frequency (non-null Int values → `?: 0` == getOrDefault).
-            val word1Freq = (data.word1Frequencies[normalizedWord1] ?: 0) + 1
+            // Saturating (follow-up review 2026-11-15): a total an older import or load left at
+            // Int.MAX_VALUE must not wrap negative on the next observation.
+            val word1Freq = saturatingAdd(data.word1Frequencies[normalizedWord1] ?: 0, 1)
             data.word1Frequencies[normalizedWord1] = word1Freq
 
             // Find or create bigram entry
@@ -328,7 +330,7 @@ class BigramStore internal constructor(
             val touched = if (existingEntry != null) {
                 entries.remove(existingEntry)
                 existingEntry.copy(
-                    frequency = existingEntry.frequency + 1, lastSeen = word1Freq, globalSeen = tick
+                    frequency = saturatingAdd(existingEntry.frequency, 1), lastSeen = word1Freq, globalSeen = tick
                 )
             } else {
                 BigramEntry(
@@ -906,7 +908,9 @@ class BigramStore internal constructor(
                 // Sum of survivors — the v1 denominator, and the floor for the v2 one
                 // (non-null Int values → `?: 0` == getOrDefault).
                 val currentFreq = data.word1Frequencies[entry.word1] ?: 0
-                data.word1Frequencies[entry.word1] = currentFreq + entry.frequency
+                // Saturating, like the import: a store an older import overflowed must not re-wrap
+                // on every start (follow-up review 2026-11-15).
+                data.word1Frequencies[entry.word1] = saturatingAdd(currentFreq, entry.frequency)
             }
 
             if (persistedTotals != null) {

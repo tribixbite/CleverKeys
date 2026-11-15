@@ -37,6 +37,12 @@ enum class IoFailureReason(@StringRes val messageRes: Int) {
     /** An encrypted backup was opened with no backup password available. */
     NO_BACKUP_PASSWORD(R.string.io_error_no_backup_password),
 
+    /**
+     * A backup password is set but cannot be unwrapped (Android Keystore key gone, or the stored
+     * value was restored onto another device): exports fail closed instead of writing plaintext.
+     */
+    BACKUP_PASSWORD_UNREADABLE(R.string.io_error_backup_password_unreadable),
+
     /** An encrypted backup of a different kind than this import button accepts. */
     WRONG_BACKUP_KIND(R.string.io_error_wrong_backup_kind),
 

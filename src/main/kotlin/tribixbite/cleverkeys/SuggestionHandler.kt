@@ -1039,6 +1039,16 @@ class SuggestionHandler(
             return
         }
 
+        // Dictation owns the field and the bar: its provisional text is the editor's composing
+        // span, which a committed swipe word would replace. Before M10 such a swipe was dropped
+        // only because the bar refused the slate and answered null; drop it on purpose
+        // (follow-up review 2026-11-15). The user stops dictation (bar Cancel) to swipe.
+        if (suggestionBar?.isInVoiceMode() == true) {
+            sendDebugLog("SWIPE dropped: dictation is running\n")
+            inputCoordinator.resetSwipeData()
+            return
+        }
+
         // D2: password-field guard. Detect from the tracked mode OR the live editor (the latter holds
         // in tests / before onStartInputView sets the mode). Suppress the swipe unless the user opted in.
         val passwordField = isPasswordMode || SuggestionBar.isPasswordField(editorInfo)

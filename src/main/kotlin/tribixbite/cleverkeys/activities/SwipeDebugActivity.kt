@@ -311,7 +311,7 @@ class SwipeDebugActivity : Activity() {
 
     private fun writeLogsToUri(uri: Uri) {
         try {
-            contentResolver.openOutputStream(uri)?.use { outputStream ->
+            SafOutput.open("the debug log file") { mode -> contentResolver.openOutputStream(uri, mode) }.use { outputStream ->
                 OutputStreamWriter(outputStream).use { writer ->
                     writer.write(logBuffer.toString())
                 }

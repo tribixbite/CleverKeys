@@ -2,6 +2,8 @@ package tribixbite.cleverkeys.backup
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import tribixbite.cleverkeys.ClassifiedIoException
+import tribixbite.cleverkeys.IoFailureReason
 import tribixbite.cleverkeys.SwipePriority
 
 /**
@@ -27,6 +29,14 @@ object DictImportPlanBuilder {
      */
     private const val DEFAULT_USER_WORD_FREQ = 100
 
+    /**
+     * Most custom words, and most disabled words, one language may import (review 2026-11-14,
+     * low). The read is byte-capped, but a file within that cap can still carry around a million
+     * words, which the apply step writes into one preference value. The same ceiling as a
+     * language pack's dictionary (`CkdtDictionaryReader.MAX_WORD_COUNT`); typing produces far fewer.
+     */
+    const val MAX_WORDS_PER_LANGUAGE = 100_000
+
     fun fromJson(
         jsonString: String,
         currentCustomByLang: Map<String, Map<String, Int>>,
@@ -38,6 +48,8 @@ object DictImportPlanBuilder {
 
         val mergedCustom = mergeCustomWords(root)
         val mergedDisabled = mergeDisabledWords(root)
+        for ((lang, words) in mergedCustom) requireWithinCap(lang, "custom", words.size)
+        for ((lang, words) in mergedDisabled) requireWithinCap(lang, "disabled", words.size)
         val learnedData = parseLearnedData(root)
         val swipePriorities = parseSwipePriorities(root)
 
@@ -71,6 +83,15 @@ object DictImportPlanBuilder {
             learnedData = learnedData,
             mergedSwipePrioritiesByLang = swipePriorities,
         )
+    }
+
+    private fun requireWithinCap(lang: String, kind: String, count: Int) {
+        if (count > MAX_WORDS_PER_LANGUAGE) {
+            throw ClassifiedIoException(
+                IoFailureReason.TOO_LARGE,
+                "$count $kind words for '$lang' exceed the import limit of $MAX_WORDS_PER_LANGUAGE",
+            )
+        }
     }
 
     /**

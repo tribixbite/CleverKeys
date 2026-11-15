@@ -229,10 +229,7 @@ class MaterialThemeManager(private val context: Context) {
             useDynamicColor = prefs.getBoolean(KEY_DYNAMIC_COLOR, true),
             keyBorderRadius = prefs.getFloat(KEY_KEY_BORDER_RADIUS, DEFAULT_KEY_BORDER_RADIUS),
             enableAnimations = prefs.getBoolean(KEY_ENABLE_ANIMATIONS, DEFAULT_ENABLE_ANIMATIONS),
-            themeVariant = ThemeVariant.valueOf(
-                prefs.getString(KEY_THEME_VARIANT, ThemeVariant.DEFAULT.name)
-                    ?: ThemeVariant.DEFAULT.name
-            )
+            themeVariant = ThemeVariant.fromStored(prefs.getString(KEY_THEME_VARIANT, null))
         )
     }
 
@@ -366,7 +363,17 @@ enum class ThemeVariant {
     DEFAULT,        // CleverKeys branded colors
     HIGH_CONTRAST,  // Enhanced contrast for accessibility
     COLORFUL,       // More vibrant colors
-    MINIMAL         // Monochrome minimal theme
+    MINIMAL;        // Monochrome minimal theme
+
+    companion object {
+        /**
+         * The variant named [stored], or [DEFAULT] for null or a name this build does not know (a
+         * newer build's variant, a hand-edited file). `valueOf` threw there, from the manager's
+         * constructor, so every Settings screen composing the theme crashed (follow-up review
+         * 2026-11-15).
+         */
+        fun fromStored(stored: String?): ThemeVariant = entries.firstOrNull { it.name == stored } ?: DEFAULT
+    }
 }
 
 /**

@@ -404,6 +404,13 @@ object BinaryDictionaryLoader {
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to load binary dictionary: $filename", e)
                 return null
+            } catch (e: RuntimeException) {
+                // A header-valid file with a corrupt body throws unchecked exceptions (buffer
+                // underflow, an index out of range): the same failed load as a read error, not a
+                // throw into the loader (review 2026-11-14). A cancelled load still propagates.
+                if (e is java.util.concurrent.CancellationException) throw e
+                Log.e(TAG, "Failed to load binary dictionary: $filename", e)
+                return null
             }
         } finally {
             android.os.Trace.endSection()
@@ -539,6 +546,13 @@ object BinaryDictionaryLoader {
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to load binary dictionary with prefix index: $filename", e)
                 return false
+            } catch (e: RuntimeException) {
+                // A header-valid file with a corrupt body throws unchecked exceptions (buffer
+                // underflow, an index out of range): the same failed load as a read error, not a
+                // throw into the loader (review 2026-11-14). A cancelled load still propagates.
+                if (e is java.util.concurrent.CancellationException) throw e
+                Log.e(TAG, "Failed to load binary dictionary with prefix index: $filename", e)
+                return false
             }
         } finally {
             android.os.Trace.endSection()
@@ -585,6 +599,13 @@ object BinaryDictionaryLoader {
 
                 return true
             } catch (e: IOException) {
+                Log.e(TAG, "Failed to load dictionary from language pack: ${file.absolutePath}", e)
+                return false
+            } catch (e: RuntimeException) {
+                // A header-valid file with a corrupt body throws unchecked exceptions (buffer
+                // underflow, an index out of range): the same failed load as a read error, not a
+                // throw into the loader (review 2026-11-14). A cancelled load still propagates.
+                if (e is java.util.concurrent.CancellationException) throw e
                 Log.e(TAG, "Failed to load dictionary from language pack: ${file.absolutePath}", e)
                 return false
             }
@@ -678,6 +699,13 @@ object BinaryDictionaryLoader {
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to load dictionary into NormalizedPrefixIndex: $filename", e)
                 return false
+            } catch (e: RuntimeException) {
+                // A header-valid file with a corrupt body throws unchecked exceptions (buffer
+                // underflow, an index out of range): the same failed load as a read error, not a
+                // throw into the loader (review 2026-11-14). A cancelled load still propagates.
+                if (e is java.util.concurrent.CancellationException) throw e
+                Log.e(TAG, "Failed to load dictionary into NormalizedPrefixIndex: $filename", e)
+                return false
             }
         } finally {
             android.os.Trace.endSection()
@@ -728,6 +756,13 @@ object BinaryDictionaryLoader {
                 Log.i(TAG, "Loaded ${outIndex.size()} entries from ${file.name} in ${elapsed}ms")
                 return true
             } catch (e: IOException) {
+                Log.e(TAG, "Failed to load dictionary from file: ${file.absolutePath}", e)
+                return false
+            } catch (e: RuntimeException) {
+                // A header-valid file with a corrupt body throws unchecked exceptions (buffer
+                // underflow, an index out of range): the same failed load as a read error, not a
+                // throw into the loader (review 2026-11-14). A cancelled load still propagates.
+                if (e is java.util.concurrent.CancellationException) throw e
                 Log.e(TAG, "Failed to load dictionary from file: ${file.absolutePath}", e)
                 return false
             }

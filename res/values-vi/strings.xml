@@ -864,12 +864,6 @@
     <string name="ctc_settings_threads_desc">Số luồng CPU cho suy luận XNNPACK trong phiên ONNX Runtime chạy bộ mã hóa CTC. Áp dụng khi phiên được dựng lại (khởi động lại bàn phím).</string>
     <string name="ctc_settings_threads_title">Luồng ONNX</string>
     <string name="ctc_settings_title">Cài đặt bộ máy CTC</string>
-    <string name="custom_theme_create">Tạo</string>
-    <string name="custom_theme_name_label">Tên chủ đề</string>
-    <string name="custom_theme_name_placeholder">Chủ đề của tôi</string>
-    <string name="custom_theme_palette">Bảng màu</string>
-    <string name="custom_theme_preview">Xem trước</string>
-    <string name="custom_theme_title">Tạo chủ đề tùy chỉnh</string>
     <string name="geo_settings_decoding_section">Giải mã</string>
     <string name="geo_settings_endpoint_desc">Mức dung sai cho điểm đầu/cuối vuốt bị lệch, tính theo bề rộng phím. Cao hơn = dễ tính hơn; quá cao có thể cho chữ cái đầu/cuối sai.</string>
     <string name="geo_settings_endpoint_title">Dung sai điểm đầu cuối</string>
@@ -1153,11 +1147,7 @@
     <string name="swipe_full_ctc_settings">Toàn bộ cài đặt CTC</string>
     <string name="swipe_full_geometric_settings">Toàn bộ cài đặt hình học</string>
     <string name="theme_select_attribute">Chọn %1$s</string>
-    <string name="theme_selector_create_desc">Tạo</string>
     <string name="theme_selector_custom">Tùy chỉnh</string>
-    <string name="theme_selector_more_options_desc">Tùy chọn khác</string>
-    <string name="theme_selector_selected_desc">Đã chọn</string>
-    <string name="theme_selector_title">Chủ đề bàn phím</string>
     <plurals name="layout_manager_hint"><item quantity="other">Kéo để sắp xếp lại • Nhấn để chỉnh sửa • %1$d bố cục</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1486,7 +1476,6 @@
     <string name="privacy_error_loading_data">Lỗi khi tải dữ liệu: %1$s</string>
     <string name="privacy_error_loading_stats">Lỗi khi tải thống kê: %1$s</string>
     <string name="privacy_perf_stats_exported">Đã xuất thống kê hiệu năng</string>
-    <string name="privacy_export_open_failed">Không mở được tệp để ghi</string>
     <string name="backup_headless_init_failed">Lỗi khởi tạo: %1$s</string>
     <string name="backup_headless_no_password">Hãy đặt mật khẩu sao lưu trong Cài đặt → Sao lưu &amp; Khôi phục trước</string>
     <string name="backup_headless_throttled">Thao tác sao lưu bị giới hạn — hãy thử lại sau giây lát</string>
@@ -1834,12 +1823,6 @@
     <string name="theme_category_modern">Hiện đại</string>
     <string name="theme_custom_created_today">Chủ đề tùy chỉnh tạo hôm nay</string>
     <string name="theme_custom_created_yesterday">Chủ đề tùy chỉnh tạo hôm qua</string>
-    <string name="theme_palette_dark_blue">Xanh đậm</string>
-    <string name="theme_palette_purple">Tím</string>
-    <string name="theme_palette_teal">Xanh mòng két</string>
-    <string name="theme_palette_burgundy">Đỏ rượu vang</string>
-    <string name="theme_palette_olive">Xanh ô liu</string>
-    <string name="theme_palette_navy">Xanh navy</string>
     <string name="extra_key_title_voice">Giọng nói</string>
     <string name="extra_key_title_clipboard">Bảng tạm</string>
     <string name="extra_key_title_switch_ime">Đổi bàn phím</string>
@@ -1956,6 +1939,7 @@
     <string name="io_error_too_large">Tệp lớn hơn mức CleverKeys có thể nhập một cách an toàn.</string>
     <string name="io_error_wrong_password_or_corrupt">Sai mật khẩu sao lưu, hoặc tệp bị hỏng hay đã bị thay đổi.</string>
     <string name="io_error_no_backup_password">Bản sao lưu này được mã hóa và không có mật khẩu sao lưu nào.</string>
+    <string name="io_error_backup_password_unreadable">Không thể đọc mật khẩu sao lưu đã lưu trên thiết bị này nữa. Hãy đặt lại trong Cài đặt → Sao lưu &amp; Khôi phục.</string>
     <string name="io_error_wrong_backup_kind">Bản sao lưu này không chứa loại dữ liệu mà lần nhập này cần.</string>
     <string name="io_error_no_file_picker">Không có ứng dụng nào để chọn tệp.</string>
     <string name="io_error_read_write">Không thể đọc hoặc ghi tệp.</string>

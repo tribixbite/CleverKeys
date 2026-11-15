@@ -1536,18 +1536,8 @@
     <string name="launcher_footer">An uncompromising open source keyboard.</string>
     <string name="launcher_step_completed_desc">Completed</string>
 
-    <!-- ThemeSelector.kt / CustomThemeDialog.kt -->
-    <string name="theme_selector_title">Keyboard Themes</string>
-    <string name="theme_selector_create_desc">Create</string>
+    <!-- ThemeSettingsActivity.kt / PredefinedThemes.kt -->
     <string name="theme_selector_custom">Custom</string>
-    <string name="theme_selector_more_options_desc">More options</string>
-    <string name="theme_selector_selected_desc">Selected</string>
-    <string name="custom_theme_title">Create Custom Theme</string>
-    <string name="custom_theme_name_label">Theme Name</string>
-    <string name="custom_theme_name_placeholder">My Theme</string>
-    <string name="custom_theme_palette">Color Palette</string>
-    <string name="custom_theme_preview">Preview</string>
-    <string name="custom_theme_create">Create</string>
     <!-- %1$s = the theme attribute being edited (e.g. "Key background") -->
     <string name="theme_select_attribute">Select %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1888,7 +1878,6 @@
     <string name="privacy_error_loading_data">Error loading data: %1$s</string>
     <string name="privacy_error_loading_stats">Error loading stats: %1$s</string>
     <string name="privacy_perf_stats_exported">Performance stats exported</string>
-    <string name="privacy_export_open_failed">Could not open file for writing</string>
     <string name="backup_headless_init_failed">Error initializing: %1$s</string>
     <string name="backup_headless_no_password">Set a backup password in Settings → Backup &amp; Restore first</string>
     <string name="backup_headless_throttled">Backup action throttled — try again in a moment</string>
@@ -2265,12 +2254,6 @@
     <string name="theme_category_modern">Modern</string>
     <string name="theme_custom_created_today">Custom theme created today</string>
     <string name="theme_custom_created_yesterday">Custom theme created yesterday</string>
-    <string name="theme_palette_dark_blue">Dark Blue</string>
-    <string name="theme_palette_purple">Purple</string>
-    <string name="theme_palette_teal">Teal</string>
-    <string name="theme_palette_burgundy">Burgundy</string>
-    <string name="theme_palette_olive">Olive</string>
-    <string name="theme_palette_navy">Navy</string>
     <string name="extra_key_title_voice">Voice</string>
     <string name="extra_key_title_clipboard">Clipboard</string>
     <string name="extra_key_title_switch_ime">Switch IME</string>
@@ -2394,6 +2377,7 @@
     <string name="io_error_too_large">The file is larger than CleverKeys can safely import.</string>
     <string name="io_error_wrong_password_or_corrupt">Wrong backup password, or the file is damaged or was altered.</string>
     <string name="io_error_no_backup_password">This backup is encrypted and no backup password is available.</string>
+    <string name="io_error_backup_password_unreadable">The saved backup password can no longer be read on this device. Set it again in Settings → Backup &amp; Restore.</string>
     <string name="io_error_wrong_backup_kind">This backup does not contain the kind of data this import expects.</string>
     <string name="io_error_no_file_picker">No app is available to choose files.</string>
     <string name="io_error_read_write">The file could not be read or written.</string>

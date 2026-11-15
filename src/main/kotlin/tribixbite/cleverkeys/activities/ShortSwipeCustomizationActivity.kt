@@ -892,12 +892,10 @@ internal fun shortSwipeActionDescription(context: Context, type: ActionType, val
             if (value.length > ACTION_TEXT_PREVIEW_CHARS) value.take(ACTION_TEXT_PREVIEW_CHARS) + "…" else value
         )
         ActionType.KEY_EVENT -> context.getString(R.string.short_swipe_action_desc_key_event, value)
-        ActionType.INTENT -> try {
-            val def = com.google.gson.Gson().fromJson(value, IntentDefinition::class.java)
-            context.getString(R.string.short_swipe_action_desc_intent, def.name)
-        } catch (e: Exception) {
-            context.getString(R.string.short_swipe_action_desc_intent_invalid)
-        }
+        // parseFromGson, not a raw Gson read: Gson leaves an absent `name` null (the row read "null").
+        ActionType.INTENT -> IntentDefinition.parseFromGson(value)
+            ?.let { context.getString(R.string.short_swipe_action_desc_intent, it.name) }
+            ?: context.getString(R.string.short_swipe_action_desc_intent_invalid)
         ActionType.TEMPLATE -> context.getString(R.string.command_palette_template_title)
         ActionType.TIMESTAMP -> context.getString(R.string.short_swipe_action_desc_timestamp, value)
     }

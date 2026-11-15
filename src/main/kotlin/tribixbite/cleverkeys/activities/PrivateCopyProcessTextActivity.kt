@@ -96,6 +96,7 @@ class PrivateCopyProcessTextActivity : Activity() {
         // the standalone-activity precedent (SwipeCalibrationActivity:124-126).
         if (Config.globalConfigOrNull() == null) {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
+            Config.ensureThemeAvailability(this)
             Config.initGlobalConfig(prefs, resources, null, false)
         }
 

@@ -1133,17 +1133,7 @@
     <string name="launcher_test_field_label">Subukan dito ang iyong bagong keyboard</string>
     <string name="launcher_footer">Isang walang-kompromisong open source na keyboard.</string>
     <string name="launcher_step_completed_desc">Tapos na</string>
-    <string name="theme_selector_title">Mga Tema ng Keyboard</string>
-    <string name="theme_selector_create_desc">Gumawa</string>
     <string name="theme_selector_custom">Custom</string>
-    <string name="theme_selector_more_options_desc">Higit pang opsyon</string>
-    <string name="theme_selector_selected_desc">Napili</string>
-    <string name="custom_theme_title">Gumawa ng Custom na Tema</string>
-    <string name="custom_theme_name_label">Pangalan ng Tema</string>
-    <string name="custom_theme_name_placeholder">Aking Tema</string>
-    <string name="custom_theme_palette">Paleta ng Kulay</string>
-    <string name="custom_theme_preview">Preview</string>
-    <string name="custom_theme_create">Gumawa</string>
     <string name="theme_select_attribute">Pumili ng %1$s</string>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
          and the localized collected-data delete dialog. Added 2026-09-09. -->
@@ -1483,7 +1473,6 @@
     <string name="privacy_error_loading_data">Error sa pag-load ng data: %1$s</string>
     <string name="privacy_error_loading_stats">Error sa pag-load ng stats: %1$s</string>
     <string name="privacy_perf_stats_exported">Na-export ang performance stats</string>
-    <string name="privacy_export_open_failed">Hindi mabuksan ang file para sulatan</string>
     <string name="backup_headless_init_failed">Error sa pag-initialize: %1$s</string>
     <string name="backup_headless_no_password">Magtakda muna ng password ng backup sa Mga Setting → Backup at Restore</string>
     <string name="backup_headless_throttled">Nilimitahan ang backup action — subukan ulit mamaya</string>
@@ -1856,12 +1845,6 @@
     <string name="theme_category_modern">Moderno</string>
     <string name="theme_custom_created_today">Custom na tema na ginawa ngayong araw</string>
     <string name="theme_custom_created_yesterday">Custom na tema na ginawa kahapon</string>
-    <string name="theme_palette_dark_blue">Madilim na Asul</string>
-    <string name="theme_palette_purple">Lila</string>
-    <string name="theme_palette_teal">Teal</string>
-    <string name="theme_palette_burgundy">Burgundy</string>
-    <string name="theme_palette_olive">Oliba</string>
-    <string name="theme_palette_navy">Navy</string>
     <string name="extra_key_title_voice">Boses</string>
     <string name="extra_key_title_clipboard">Clipboard</string>
     <string name="extra_key_title_switch_ime">Palitan ang Keyboard</string>
@@ -1985,6 +1968,7 @@
     <string name="io_error_too_large">Mas malaki ang file kaysa sa kayang ligtas na i-import ng CleverKeys.</string>
     <string name="io_error_wrong_password_or_corrupt">Maling password ng backup, o sira o binago ang file.</string>
     <string name="io_error_no_backup_password">Naka-encrypt ang backup na ito at walang available na password ng backup.</string>
+    <string name="io_error_backup_password_unreadable">Hindi na mabasa sa device na ito ang naka-save na password ng backup. Itakda itong muli sa Mga Setting → Backup at Restore.</string>
     <string name="io_error_wrong_backup_kind">Hindi naglalaman ang backup na ito ng uri ng data na inaasahan ng import na ito.</string>
     <string name="io_error_no_file_picker">Walang available na app para pumili ng mga file.</string>
     <string name="io_error_read_write">Hindi mabasa o maisulat ang file.</string>

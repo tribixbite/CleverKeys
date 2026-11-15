@@ -60,8 +60,12 @@ object KeyModifier {
         invalidateModifyMemo()
     }
 
-    /** Drops every memoized [modify] result. See [modifyMemo]. */
-    private fun invalidateModifyMemo() {
+    /**
+     * Drops every memoized [modify] result. See [modifyMemo]. Also called by `Config.refresh`
+     * (review 2026-11-14, low): some results read Config (`applyFnEvent`), and a preview view
+     * never calls [setModmap], so a config change left it drawing a stale result.
+     */
+    internal fun invalidateModifyMemo() {
         modifyMemo.clear()
         modifyMemoEntries = 0
     }

@@ -378,7 +378,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         clipboardEmbedEnrichEnabled = prefs.getSafeBoolean("clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
         clipboardCustomRulesEnabled = prefs.getSafeBoolean("clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
         clipboardSanitizeSystemClipboard = prefs.getSafeBoolean("clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
-        clipboardCustomRulesUri = prefs.getString("clipboard_custom_rules_uri", null)
+        clipboardCustomRulesUri = Config.safeGetString(prefs, "clipboard_custom_rules_uri", "").takeIf { it.isNotEmpty() }
         // Status text reflects the on-disk copy of custom.substitutions.json (computed lazily).
         recomputeCustomRulesStatus()
 

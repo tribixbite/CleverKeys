@@ -559,7 +559,6 @@ class CleverKeysService : InputMethodService(),
 
         // Initialize debug logging manager (v1.32.384)
         _debugLoggingManager = DebugLoggingManager(this, packageName)
-        _debugLoggingManager.initializeLogWriter()
 
         // Connect debug logger to input coordinator for prediction handling logging
         // This enables prediction selection/insertion logs to appear in SwipeDebugActivity
@@ -598,6 +597,7 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+        Utils.dismiss_ime_dialogs()
         _voiceInput?.release()
         _voiceInput = null
         // Tile: stop the deferred-show loop so no callback outlives the service.
@@ -1291,6 +1291,9 @@ class CleverKeysService : InputMethodService(),
         _voiceInput?.cancel()
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
+        // Dialogs shown over the keyboard (clipboard filter, private-exposure confirm, …) go with
+        // it; left open they reappear with the keyboard in the next app.
+        Utils.dismiss_ime_dialogs()
         super.onFinishInputView(finishingInput)
         // gh #175: a minimized keyboard comes back full size the next time it is shown.
         _minimizer.reset()

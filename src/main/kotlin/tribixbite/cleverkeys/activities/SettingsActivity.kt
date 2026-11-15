@@ -835,6 +835,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                 config = Config.globalConfig()
             } catch (e: Exception) {
                 // Config not initialized yet (NullPointerException or IllegalStateException), initialize it
+                Config.ensureThemeAvailability(this)
                 Config.initGlobalConfig(prefs, resources, null, null)
                 config = Config.globalConfig()
             }

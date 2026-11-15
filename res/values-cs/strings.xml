@@ -1124,17 +1124,7 @@
     <string name="launcher_test_field_label">Vyzkoušejte zde svou novou klávesnici</string>
     <string name="launcher_footer">Nekompromisní open source klávesnice.</string>
     <string name="launcher_step_completed_desc">Dokončeno</string>
-    <string name="theme_selector_title">Motivy klávesnice</string>
-    <string name="theme_selector_create_desc">Vytvořit</string>
     <string name="theme_selector_custom">Vlastní</string>
-    <string name="theme_selector_more_options_desc">Další možnosti</string>
-    <string name="theme_selector_selected_desc">Vybráno</string>
-    <string name="custom_theme_title">Vytvořit vlastní motiv</string>
-    <string name="custom_theme_name_label">Název motivu</string>
-    <string name="custom_theme_name_placeholder">Můj motiv</string>
-    <string name="custom_theme_palette">Barevná paleta</string>
-    <string name="custom_theme_preview">Náhled</string>
-    <string name="custom_theme_create">Vytvořit</string>
     <string name="theme_select_attribute">Vybrat %1$s</string>
     <plurals name="layout_manager_hint"><item quantity="one">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="few">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="many">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item><item quantity="other">Přetažením změníte pořadí • Klepnutím upravíte • %1$d rozložení</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1497,7 +1487,6 @@
     <string name="privacy_error_loading_data">Chyba při načítání dat: %1$s</string>
     <string name="privacy_error_loading_stats">Chyba při načítání statistik: %1$s</string>
     <string name="privacy_perf_stats_exported">Statistiky výkonu exportovány</string>
-    <string name="privacy_export_open_failed">Soubor se nepodařilo otevřít pro zápis</string>
     <string name="backup_headless_init_failed">Chyba při inicializaci: %1$s</string>
     <string name="backup_headless_no_password">Nejprve nastavte heslo zálohy v Nastavení → Záloha &amp; obnovení</string>
     <string name="backup_headless_throttled">Akce zálohy omezena — zkuste to za chvíli znovu</string>
@@ -1920,12 +1909,6 @@
     <string name="theme_category_modern">Moderní</string>
     <string name="theme_custom_created_today">Vlastní motiv vytvořený dnes</string>
     <string name="theme_custom_created_yesterday">Vlastní motiv vytvořený včera</string>
-    <string name="theme_palette_dark_blue">Tmavě modrá</string>
-    <string name="theme_palette_purple">Fialová</string>
-    <string name="theme_palette_teal">Modrozelená</string>
-    <string name="theme_palette_burgundy">Bordó</string>
-    <string name="theme_palette_olive">Olivová</string>
-    <string name="theme_palette_navy">Námořnická</string>
     <string name="extra_key_title_voice">Hlas</string>
     <string name="extra_key_title_clipboard">Schránka</string>
     <string name="extra_key_title_switch_ime">Přepnout klávesnici</string>
@@ -2063,6 +2046,7 @@
     <string name="io_error_too_large">Soubor je větší, než může CleverKeys bezpečně importovat.</string>
     <string name="io_error_wrong_password_or_corrupt">Nesprávné heslo zálohy, nebo je soubor poškozený či pozměněný.</string>
     <string name="io_error_no_backup_password">Tato záloha je šifrovaná a není k dispozici žádné heslo zálohy.</string>
+    <string name="io_error_backup_password_unreadable">Uložené heslo zálohy už na tomto zařízení nelze přečíst. Nastavte ho znovu v Nastavení → Záloha &amp; obnovení.</string>
     <string name="io_error_wrong_backup_kind">Tato záloha neobsahuje data, která tento import očekává.</string>
     <string name="io_error_no_file_picker">Není k dispozici žádná aplikace pro výběr souborů.</string>
     <string name="io_error_read_write">Soubor se nepodařilo přečíst ani zapsat.</string>

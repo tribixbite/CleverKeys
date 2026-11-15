@@ -373,7 +373,7 @@ fun ThemeSettingsScreen(
         pendingThemeXml = null
         if (uri != null && content != null) {
             try {
-                LayoutXmlTransfer.write({ context.contentResolver.openOutputStream(uri) }, content)
+                LayoutXmlTransfer.write({ SafOutput.open("the theme XML file") { mode -> context.contentResolver.openOutputStream(uri, mode) } }, content)
             } catch (e: Exception) {
                 android.util.Log.w(LayoutXmlTransfer.TAG, "Theme XML export failed", e)
                 android.widget.Toast.makeText(

@@ -1246,6 +1246,8 @@ class Config private constructor(
 
     fun refresh(res: Resources, foldableUnfolded: Boolean?) {
         version++
+        // Memoized key modifications read Config; drop them with the old values.
+        KeyModifier.invalidateModifyMemo()
         val dm = res.displayMetrics
         orientation_landscape = res.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
         this.foldable_unfolded = foldableUnfolded ?: false
@@ -1785,11 +1787,13 @@ class Config private constructor(
      *  rebuild from the stale startup value and appear to do nothing until a keyboard restart.
      *  [refresh] calls this too, so the Chunk-3 keys and defaults have one read site. */
     fun reloadSanitizationSettings() {
-        clipboard_sanitize_links_enabled = _prefs.getBoolean("clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
-        clipboard_embed_enrich_enabled = _prefs.getBoolean("clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
-        clipboard_custom_rules_enabled = _prefs.getBoolean("clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
-        clipboard_custom_rules_uri = _prefs.getString("clipboard_custom_rules_uri", null)
-        clipboard_sanitize_system_clipboard = _prefs.getBoolean("clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
+        // Safe getters, like the rest of refresh(): a mistyped value here crashed every keyboard
+        // start (follow-up review 2026-11-15 of H4). An empty stored URI means "none", as before.
+        clipboard_sanitize_links_enabled = safeGetBoolean(_prefs, "clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
+        clipboard_embed_enrich_enabled = safeGetBoolean(_prefs, "clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
+        clipboard_custom_rules_enabled = safeGetBoolean(_prefs, "clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
+        clipboard_custom_rules_uri = safeGetString(_prefs, "clipboard_custom_rules_uri", "").takeIf { it.isNotEmpty() }
+        clipboard_sanitize_system_clipboard = safeGetBoolean(_prefs, "clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
     }
 
     fun set_gif_enabled(enabled: Boolean) {
@@ -1890,11 +1894,24 @@ class Config private constructor(
          * Whether a theme id exists on this device (`ThemeProvider.isAvailable`), consulted when a
          * layout's theme binding is resolved. Installed by `CleverKeysService.onCreate` before
          * [initGlobalConfig]; Config has no Context, and custom themes live in another prefs file.
-         * Null (not installed, e.g. a Settings-only process) treats every well-formed id as
-         * available — ThemeProvider still renders a total fallback for a dangling one.
+         * Null (not installed) treats every well-formed id as available — ThemeProvider still
+         * renders a total fallback for a dangling one. Processes that start without the IME
+         * (Settings, the theme preview, process-text) install it via [ensureThemeAvailability].
          */
         @Volatile
         var themeAvailability: ((String) -> Boolean)? = null
+
+        /**
+         * Install [themeAvailability] from [context]'s ThemeProvider unless something already has
+         * (review 2026-11-14, low). Without it a Settings-first process resolved a layout bound to
+         * a deleted `custom_<uuid>` as bound: Settings showed it as bound, and the previews
+         * inflated the generic fallback instead of the global theme. Call before [initGlobalConfig].
+         */
+        fun ensureThemeAvailability(context: android.content.Context) {
+            if (themeAvailability == null) {
+                themeAvailability = tribixbite.cleverkeys.theme.ThemeProvider.getInstance(context)::isAvailable
+            }
+        }
 
         /**
          * The display size keyboard sizing is measured against ([ScreenSize.of] over the IME

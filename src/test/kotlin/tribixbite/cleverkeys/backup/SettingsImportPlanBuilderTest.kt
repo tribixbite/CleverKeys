@@ -183,6 +183,29 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun wrongTypedValuesForKeysWithoutADefaultAreSkippedToo() {
+        // Follow-up review 2026-11-15: keys with no SETTINGS_DEFAULTS entry were not type-checked.
+        // The exporter writes them (prefs.all), so a hand edit reaches Config.refresh's readers.
+        val json = """{"preferences":{
+            "clipboard_custom_rules_uri": true,
+            "extra_key_switch_clipboard": 1,
+            "keyboard_height_unfolded": "40"
+        }}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val keys = listOf("clipboard_custom_rules_uri", "extra_key_switch_clipboard", "keyboard_height_unfolded")
+        assertThat(plan.changes.map { it.key }).containsNoneIn(keys)
+        assertThat(plan.parseSkippedKeys.map { it.key }).containsAtLeastElementsIn(keys)
+
+        val right = SettingsImportPlanBuilder.fromJson(
+            """{"preferences":{"clipboard_custom_rules_uri":"content://x/rules.json","extra_key_switch_clipboard":true}}""",
+            emptyMap(), screen,
+        )
+        assertThat(right.changes.map { it.key })
+            .containsAtLeast("clipboard_custom_rules_uri", "extra_key_switch_clipboard")
+    }
+
+    @Test
     fun rightTypedValuesForTheSameKeysStillImport() {
         val json = """{"preferences":{"look_backdrop_motion": false, "custom_border_radius": 12}}"""
         val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)

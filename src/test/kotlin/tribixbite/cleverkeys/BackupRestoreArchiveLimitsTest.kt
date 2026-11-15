@@ -446,6 +446,8 @@ class BackupRestoreArchiveLimitsTest {
 
         assertFalse(result.success)
         assertTrue(result.errorMessage.orEmpty().contains("missing manifest"))
+        // Review 2026-11-14 (low): reported as an unknown error; it is a damaged / wrong file.
+        assertEquals(IoFailureReason.INVALID_FORMAT, result.errorReason)
         assertEquals("original", live.readText())
     }
 
@@ -476,6 +478,46 @@ class BackupRestoreArchiveLimitsTest {
             assertEquals("original", firstLive.readText())
             verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
         }
+    }
+
+    // ── Review 2026-11-14: a member must name a FILE below clipboard_media ────
+
+    @Test
+    fun importClipboardHistoryZip_dotMemberNamingTheMediaRootIsRefused_andTheRootSurvives() {
+        // `clipboard_media/.` is not a ZIP directory entry (no trailing slash), so it reached
+        // staging, resolved to the media directory itself and was committed over it: an empty
+        // root became a FILE, and every later media save failed.
+        val root = File(testRoot, "files/clipboard_media").apply { mkdirs() }
+        val zipBytes = buildZip(listOf(
+            "clipboard_data.json" to emptyClipboardJsonBytes(),
+            "clipboard_media/." to "not a directory".toByteArray(),
+        ))
+
+        try {
+            newManager().importClipboardHistoryZip(fakeUriForInput(zipBytes))
+            fail("an archive member that names the media root must be refused")
+        } catch (_: Exception) {
+            // expected
+        }
+        assertTrue("the media root must still be a directory", root.isDirectory)
+        verify(exactly = 0) { clipboardDb.importFromJSON(any()) }
+    }
+
+    @Test
+    fun importFullBackup_fileMemberNamingALivePartitionDirectoryIsRefused() {
+        val partition = File(testRoot, "files/clipboard_media/3f").apply { mkdirs() }
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to fullBackupManifestBytes(),
+            "clipboard_media/3f" to "not a directory".toByteArray(),
+        ))
+
+        val result = runCatching { newManager().importFullBackup(fakeUriForInput(zipBytes), prefs) }
+
+        assertTrue(
+            "the import must fail: ${result.getOrNull()?.errorMessage}",
+            result.isFailure || result.getOrNull()?.success == false,
+        )
+        assertTrue("the live partition directory must survive", partition.isDirectory)
     }
 
     // ── ARC-091: traversal is rejected through the real importer ──────────────

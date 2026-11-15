@@ -238,7 +238,8 @@ class TrigramStore internal constructor(
             mutationVersion++
             // Language-wide position of this observation (cross-prefix recency, global cap).
             val tick = ++data.clock
-            val prefixFreq = (data.prefixFrequencies[key] ?: 0) + 1
+            // Saturating, as in BigramStore (follow-up review 2026-11-15).
+            val prefixFreq = BigramStore.saturatingAdd(data.prefixFrequencies[key] ?: 0, 1)
             data.prefixFrequencies[key] = prefixFreq
 
             val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
@@ -246,7 +247,7 @@ class TrigramStore internal constructor(
             // lastSeen = prefixFreq: this observation's position in the prefix's history.
             val touched = if (existing != null) {
                 entries.remove(existing)
-                existing.copy(frequency = existing.frequency + 1, lastSeen = prefixFreq, globalSeen = tick)
+                existing.copy(frequency = BigramStore.saturatingAdd(existing.frequency, 1), lastSeen = prefixFreq, globalSeen = tick)
             } else {
                 TrigramEntry(
                     word1 = w1, word2 = w2, word3 = w3,
@@ -734,7 +735,7 @@ class TrigramStore internal constructor(
                 val key = prefixKey(entry.word1, entry.word2)
                 data.trigramMap.getOrPut(key) { mutableListOf() }.add(entry)
                 // Sum of survivors — the v1 denominator, and the floor for the v2 one.
-                data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + entry.frequency
+                data.prefixFrequencies[key] = BigramStore.saturatingAdd(data.prefixFrequencies[key] ?: 0, entry.frequency)
             }
 
             if (persistedTotals != null) {

@@ -1117,17 +1117,7 @@
     <string name="launcher_test_field_label">ここで新しいキーボードを試してください</string>
     <string name="launcher_footer">妥協のないオープンソースキーボード。</string>
     <string name="launcher_step_completed_desc">完了</string>
-    <string name="theme_selector_title">キーボードテーマ</string>
-    <string name="theme_selector_create_desc">作成</string>
     <string name="theme_selector_custom">カスタム</string>
-    <string name="theme_selector_more_options_desc">その他のオプション</string>
-    <string name="theme_selector_selected_desc">選択中</string>
-    <string name="custom_theme_title">カスタムテーマを作成</string>
-    <string name="custom_theme_name_label">テーマ名</string>
-    <string name="custom_theme_name_placeholder">マイテーマ</string>
-    <string name="custom_theme_palette">カラーパレット</string>
-    <string name="custom_theme_preview">プレビュー</string>
-    <string name="custom_theme_create">作成</string>
     <string name="theme_select_attribute">%1$s を選択</string>
     <plurals name="layout_manager_hint"><item quantity="other">ドラッグして並べ替え • タップして編集 • %1$d 個のレイアウト</item></plurals>
     <!-- Privacy & Data: learned-context surface (bigram/trigram/vocabulary counts)
@@ -1457,7 +1447,6 @@
     <string name="privacy_error_loading_data">データの読み込みエラー: %1$s</string>
     <string name="privacy_error_loading_stats">統計の読み込みエラー: %1$s</string>
     <string name="privacy_perf_stats_exported">パフォーマンス統計をエクスポートしました</string>
-    <string name="privacy_export_open_failed">書き込み用にファイルを開けませんでした</string>
     <string name="backup_headless_init_failed">初期化エラー: %1$s</string>
     <string name="backup_headless_no_password">先に 設定 → バックアップと復元 でバックアップパスワードを設定してください</string>
     <string name="backup_headless_throttled">バックアップ操作が制限されました — しばらくしてからもう一度お試しください</string>
@@ -1805,12 +1794,6 @@
     <string name="theme_category_modern">モダン</string>
     <string name="theme_custom_created_today">今日作成したカスタムテーマ</string>
     <string name="theme_custom_created_yesterday">昨日作成したカスタムテーマ</string>
-    <string name="theme_palette_dark_blue">ダークブルー</string>
-    <string name="theme_palette_purple">パープル</string>
-    <string name="theme_palette_teal">ティール</string>
-    <string name="theme_palette_burgundy">バーガンディ</string>
-    <string name="theme_palette_olive">オリーブ</string>
-    <string name="theme_palette_navy">ネイビー</string>
     <string name="extra_key_title_voice">音声入力</string>
     <string name="extra_key_title_clipboard">クリップボード</string>
     <string name="extra_key_title_switch_ime">キーボード切替</string>
@@ -1927,6 +1910,7 @@
     <string name="io_error_too_large">ファイルが大きすぎるため、CleverKeys で安全にインポートできません。</string>
     <string name="io_error_wrong_password_or_corrupt">バックアップパスワードが違うか、ファイルが破損または改ざんされています。</string>
     <string name="io_error_no_backup_password">このバックアップは暗号化されていますが、使用できるバックアップパスワードがありません。</string>
+    <string name="io_error_backup_password_unreadable">保存されたバックアップパスワードをこの端末で読み取れなくなりました。設定 → バックアップと復元 で設定し直してください。</string>
     <string name="io_error_wrong_backup_kind">このバックアップには、このインポートで想定している種類のデータが含まれていません。</string>
     <string name="io_error_no_file_picker">ファイルを選択できるアプリがありません。</string>
     <string name="io_error_read_write">ファイルを読み書きできませんでした。</string>
