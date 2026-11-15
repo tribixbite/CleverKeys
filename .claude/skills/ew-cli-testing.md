@@ -550,3 +550,11 @@ checks after the over-install and 36 after the round trip, 0 failures on each AP
 not failed: Config's own `version` pref goes 3 → 5 and 2.0 adds `on_device_learning_enabled`
 and `subkey_popover_enabled`; the 64×48 image keeps its missing thumbnail after the update
 (2.0 does not backfill) and gets one after the backup round trip (import regenerates).
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+## Instrumented tests on API 36+ (2026-10-17)
+
+Espresso < 3.7.0 dies on Android 16+ (`InputManager.getInstance` removed). The emulator.wtf
+36/37 images report a hardware keyboard with `show_ime_with_hard_keyboard=0`, so the IME
+input view never shows: tests that need it on screen use `ShowImeWithHardKeyboardRule`.
+A bare `EditorInfo()` is `TYPE_NULL`, i.e. a blind REMOTE field — set an input type.

@@ -58,7 +58,10 @@ committed coordination over working-tree edits.
 | "swipe-to-delete", "Undo" (clipboard rows) | `.claude/skills/clipboard-panel-architecture.md` § Swipe to delete a row |
 | "Persian", "half-space", "ZWNJ", "U+200C", "ArabicScriptFold", "WordChars" | `.claude/skills/dictionary-pipeline.md` § Arabic-script lookup fold, `ime-key-routing.md`, `contraction-system.md`; spec `docs/specs/dictionary-and-language-system.md` |
 | "voice input", "speech", "dictation", "STT", "voice pack", "Moonshine", "microphone" | `docs/specs/voice-input.md` (engine-neutral `stt/`, only `stt/moonshine/` knows the engine — `SttArchitectureDriftTest`); research `docs/research/2026-10-28-stt-engine-deep-dive.md` |
-| "translations", "strings audit", "locale", `formatted="false"`, escaped quotes | this file § "String resources and translations" + `docs/audit/2026-10-22-translation-audit.md` (tool matrix) + `TranslationFormatParityTest` |
+| "translations", "strings audit", "locale", `formatted="false"`, escaped quotes | `.claude/skills/translations.md` + `docs/audit/2026-10-22-translation-audit.md` (tool matrix) + `TranslationFormatParityTest` |
+| "scene", "aurora", "animated backdrop", "Animated scenes", "frame cost", "gfxinfo", "power rails", "Perfetto", "SurfaceControl" | `.claude/skills/scene-backdrops-and-power.md`; spec `docs/specs/scene-backdrops-and-power.md` |
+| "ORT arena", "XNNPACK", "STT harness", `moonshine_stream_ort.py`, voice engine memory | `.claude/skills/voice-input-engine.md` |
+| "static LM", "cklm", `build_static_lm.py`, "FLOOR_ONE", "short-word CTC", `ad`/`wet`, swipe ranking experiment | `.claude/skills/language-model-and-swipe-evals.md` |
 
 **Release-specific reminder**: When user says any release-related word, READ `.claude/skills/release-process.md` FIRST. It documents the fastlane changelog model (`fastlane/metadata/android/en-US/changelogs/{baseCode}{abi}.txt`), the F-Droid API queries for current state, and the version-code math. Do NOT confuse `metadata/fdroid/tribixbite.cleverkeys.yml` (build recipe) with the fastlane changelogs (release notes).
 
@@ -92,17 +95,7 @@ After such a commit the SHARED index still holds the old blobs (`git status` sho
 on your paths), so the next session's plain `git commit` would revert you: run
 `git restore --staged <your paths>` right after committing (2026-11-04).
 
-## STT research harness vs the app (2026-11-05)
-
-`scripts/research/stt/moonshine_stream_ort.py` must mirror the app's guards, or it measures failures the
-app never has. Use `--tokens-per-s 6.5` (the app's per-pass decode cap; without it one loop cost
-20 s) and `--max-segment 20` for long clips. Moonshine's frontend rejects chunks < 80 samples;
-both sides pad them. ORT's CPU EP with the arena off ran the official decoder 2–2.5× slower;
-compare latencies only within one series, with the EP and arena recorded.
-The app now runs the arena ON; never XNNPACK for the voice engine: ORT 1.21's XNNPACK allocator
-is ONE process-wide BFC arena (`GetStoredAllocator`), deaf to `setCPUArenaAllocator(false)` and
-never freed, so closing the engine left 274–540 MB in the process. Check leaks with
-`Debug.getNativeHeapAllocatedSize()` after close, not RSS (RSS swings ±50 MB with freed pages).
+- **STT research harness vs the app (2026-11-05)** → `.claude/skills/voice-input-engine.md` (moved 2026-11-14).
 
 ## Blind fields and EditorInfo fixtures (2026-10-13)
 
@@ -115,70 +108,9 @@ so test fixtures modelling an ordinary editor must set `TYPE_CLASS_TEXT` (11 moc
 Normalize relative HTML hrefs against each page URL before checking targets; an absolute-only
 checker missed 29 broken engineering-note links. Run after the site build finishes (2026-10-06).
 
-## Multi-step IME edits and selection callbacks (2026-11-09)
+- **Multi-step IME edits and selection callbacks (2026-11-09)** → `.claude/skills/ime-key-routing.md` (moved 2026-11-14).
 
-A delete followed by a commit makes the editor report a selection callback for EACH step, after
-the code has already stamped its post-commit state. A stamp invalidated "on any other cursor
-position" must own the intermediate position too (`markAutoSpacePending(stamp, transit)`); the
-ellipsis chain broke on Chrome while mock tests (no callbacks) passed. Mock such paths with the
-real tracker and queued callbacks. Clear a ranking change on a WHOLE human corpus: 400 of 2,291
-azerty traces showed 0 regressions where all of them showed 6.
-
-## Animated keyboard backdrop and frame-cost measurement (2026-11-10)
-
-A background drawable's `invalidateSelf()` re-runs `Keyboard2View.onDraw` (all keys). The moving
-aurora therefore caches the keys in a RenderNode with a compositing layer (`drawKeysCached`;
-every non-background `invalidate` marks it stale) and its stars in recorded group nodes; what is
-left per frame is the window's fixed cost, so frame rate is the only lever. Measuring:
-`dumpsys gfxinfo <pkg>` prints "Total frames rendered" twice (process + window), so summing
-the lines doubles the count; per-thread CPU from `/proc/<pid>/task/*/stat`, never with a
-Settings screen of the same process open. `am force-stop tribixbite.cleverkeys` on the Pixel
-makes Android fall back to Gboard as default IME: re-run `ime set` afterwards.
-Power: the Pixel's energy rails need no root through Perfetto (`android.power` data source,
-`collect_power_rails: true`; sysfs `iio:device*/energy_value` and the power-stats HAL dump are
-denied to shell, and batterystats does not accumulate on AC). A `--background` trace stays a
-0-byte file until its `duration_ms` ends: pull after that. Type with ONE `monkey -f` script
-(Tap/UserWait); an `input tap` per key starts a JVM each time and swamps the measurement.
-A setting read only in `onDraw` never reaches a re-shown keyboard whose display list is unchanged
-(the "Animated scenes" toggle did nothing until a reload): apply it in `setKeyboard` (every pref
-change) and `onWindowVisibilityChanged`. Never cross-fade two positions of sharp content (grass
-"pulsed to blurry"): move it as a layer through `drawBitmapMesh` (`SceneMotion`), and preview a
-scene off-device with kotlinc on `SceneRaster.kt` + `SceneMotion.kt` before a 20-minute build.
-A RenderNode you keep and replay (`drawRenderNode`) loses its display list when the IME window
-hides (app switch): it then draws nothing, silently, while frames keep coming. Check
-`hasDisplayList()` before replaying and record again (the rain vanished after one app switch,
-2026-11-10). A pixel diff of two screenshots, not a frame count, is what proves motion.
-Per-frame cost: `dumpsys gfxinfo <pkg> reset`, then `framestats` (columns HandleInputStart …
-SyncQueued = main thread, IssueDrawCommandsStart → SwapBuffers = RenderThread); measure the IME
-in another app's field, never with CleverKeys Settings in front (its Compose screen costs more
-than the keyboard). Aurora on the Pixel 8 Pro: ~1.4 ms main + ~2.8 ms issue per frame at 10 fps,
-the window's fixed cost; batching stars and baking the glow did not move it.
-Scripted typing for measurements (2026-11-10): NEVER type into a settings screen — the Wi-Fi
-Add-network dialog closed mid-run and the remaining blind taps joined the Saga to another Wi-Fi
-network (it vanished from adb). Type in a Chrome page holding only a text box, in ~30 s monkey
-chunks, and check focus + `mInputShown=true` before every chunk (`session5.sh` pattern). A phone
-with `animator_duration_scale` 0 never animates scenes (`systemAllowsMotion`): check it first,
-or on/off runs measure the same thing. Older Chrome refuses `data:` VIEW intents; serve the page
-over the LAN instead.
-A Paint's alpha multiplies its shader: setting `color` to a low-alpha shadow and then a gradient
-`shader` on the same Paint draws the gradient faint (the rain crowns were ghosts on device while
-the off-device preview looked right). Reset the colour to opaque before the shader draw.
-Kotlin evaluates arguments left to right: `gate.changed(buffer, fill())` passes the OLD
-`buffer` when `fill()` grows it, so the first motion tick crashed the IME with an
-ArrayIndexOutOfBounds (Note10+, 2026-11-11) while the pure tests of the gate passed. Call the
-filler first. Turn motion ON in a device check: a phone left with Animated scenes off from an
-"off" run never runs the frame loop, and a crash there takes the keyboard down every time it shows.
-Price a scene's motion with the keyboard up and UNTOUCHED (raise "Keep Moving For" to outlast
-the run): typing doubles the compute baseline and drowns the delta. Every scene costs ~9.5 mJ
-of compute per frame (Pixel, 2026-11-11), so frame rate is the lever, not draw work. Pinning
-`peak/min_refresh_rate` hides the display share: the panel's kernel idle timer is 80 ms
-(`ro.surface_flinger.set_idle_timer_ms`), so 10 fps keeps it near full refresh (+57 mW
-unpinned). Report the trace per rail (`VSYS_PWR_DISPLAY` vs the CPUCL/G3D/MIF/MEM rails), not
-only the total: the display rail swings by hundreds of mW between runs and hides a 100 mW delta.
-The Pixel 8 Pro's display draws on THREE rails, not one: `VSYS_PWR_DISPLAY`, `L22M_DISP` and
-`S6M_LLDO1` (subsystem "LDO", r = 0.997 with the display rail). Read every rail descriptor's name
-and subsystem (field 3) from the trace; a parser that kept only VDD/PWR names printed two of them
-as bare ids and the display cost looked like an unknown 80 mW (2026-11-11).
+- **Animated keyboard backdrop and frame-cost measurement (2026-11-10)** → `.claude/skills/scene-backdrops-and-power.md` (moved 2026-11-14).
 
 ## Kotlin compiler execution on Termux
 
@@ -229,32 +161,7 @@ before its parent in the same frame (e.g. an edit mode that opens the label step
 ends up hidden UNDER the parent and taps look like no-ops. Compose sub-dialogs after the
 parent `Dialog` (CommandPaletteDialog, Saga 2026-10-07).
 
-## SurfaceControl layers on a rotated screen (2026-11-12)
-
-App-made `SurfaceControl` layers with portrait-native buffers are composited by the GPU in
-landscape (`dumpsys SurfaceFlinger` HWC table: CLIENT, ROT_90), while the window stays DEVICE.
-Draw each buffer turned by `AttachedSurfaceControl.bufferTransformHint` (the display's own
-rotation) and declare the INVERSE with `setBufferTransform`: declaring the hint itself shows
-upright too but leaves a net ROT_180. Landscape 90° ↔ 270° keeps the view size, so rebuild on
-`addOnBufferTransformHintChangedListener`, not on bounds. Check the Comp Type column, not the picture.
-A size change renders the painting async: whatever releases layers on its arrival must ask for
-them again itself (a `wake()` that returns early while already ticking left the first spell after
-every rotation on the window path, 2026-11-12). Fewer planes is not always cheaper elsewhere: a
-Galaxy Tab S11 put four extra layers AND the keyboard window on the GPU at 120 Hz.
-Power vs frame rate on the Pixel is a step, not a line: 5, 7 and 8 fps all cost ~180 mW (round 17),
-10 / 12 / 15 fps 357 / 364 / 390 (round 19: display a flat +250, only compute grows). Lock
-portrait (`accelerometer_rotation 0`) before a uiautomator-driven run: with auto-rotate on and the
-phone on its side, CK Settings opens in landscape, its controls sit below the fold, and every
-toggle silently read "?" (eight 0-frame "motion" runs, 2026-11-14). Bound smoothness with absolute per-frame ceilings sampled densely; bounds scaled by the
-frame interval loosen as the rate falls and hid a visible beach wrap.
-Motion's cost does not depend on brightness (round 18: display share +77 / +84 / +89 mW at 12 /
-102 / 255); only the still picture does. At brightness 255 the Pixel dims the panel itself once the
-battery is ~33 °C, with thermal status still 0: check the display rail of every run. On a Galaxy
-Tab S11 the first `scheduleSelf` tick after a show never ran when CK Settings had been open (a
-Choreographer callback with no frame to run it); the first tick now goes through the main Handler
-(confirmed on the tablet 2026-11-13). A frame counter that stays flat while the keyboard is up is
-the symptom; a key press "fixes" it. That tablet's gfxinfo "Total frames rendered" counts each
-frame twice: take rates from the framestats rows (IntendedVsync gaps), not the total.
+- **SurfaceControl layers on a rotated screen (2026-11-12)** → `.claude/skills/scene-backdrops-and-power.md` (moved 2026-11-14).
 
 ## Compose produceState and CI lint (2026-11-12)
 
@@ -276,28 +183,11 @@ With the current source size, `compileDebugKotlin` can OOM the heap at the 1 GiB
 `GRADLE_GUARD_XMX=1536m GRADLE_GUARD_METASPACE=384m` for test runs; check the log for the
 real error before blaming code (a red build may never have reached the tests).
 
-## Tap predictor vs swipe lexicon frequency scales
+- **Tap predictor vs swipe lexicon frequency scales** → `.claude/skills/dictionary-pipeline.md` (moved 2026-11-14).
 
-The tap predictor (autocorrect, suggestion bar) loads `en_enhanced.bin` (rank 0..255, full
-spread); the CTC swipe lexicon uses `en_enhanced.json` (compressed 134..255). They are NOT
-`byte = 255 − rank`: 98,139/98,140 words differ (help 180 vs 218). Autocorrect harnesses that
-read the JSON measured the wrong dictionary; DD-M's M=32 failed on the Pixel (2026-10-12).
+- **Instrumented tests on API 36+ (2026-10-17)** → `.claude/skills/ew-cli-testing.md` (moved 2026-11-14).
 
-## Instrumented tests on API 36+ (2026-10-17)
-
-Espresso < 3.7.0 dies on Android 16+ (`InputManager.getInstance` removed). The emulator.wtf
-36/37 images report a hardware keyboard with `show_ime_with_hard_keyboard=0`, so the IME
-input view never shows: tests that need it on screen use `ShowImeWithHardKeyboardRule`.
-A bare `EditorInfo()` is `TYPE_NULL`, i.e. a blind REMOTE field — set an input type.
-
-## Autocorrect tuning and long evals (2026-10-18)
-
-Every autocorrect weight lives in `autocorrect/AutocorrectTuning.kt` (`Keys` = key, default and
-range for prefs, validation, backup and UI); `Config.autocorrect_tuning` is null on an Objenesis
-test Config, which means DEFAULT. The sweep's gates pass about 200 candidates per input (length
-difference 2), so a weight grid needs a bound-based pre-filter (`ChannelRankingEval`). Run a
-multi-hour eval from a separate `git worktree`: another session's half-finished edits in the
-shared tree broke the eval's compile.
+- **Autocorrect tuning and long evals (2026-10-18)** → `.claude/skills/settings-preferences.md` (moved 2026-11-14).
 
 ## Compose slider steps (2026-10-20)
 
@@ -311,16 +201,7 @@ Mutating calls (`performContextMenuAction`, `performEditorAction`, `commitText`,
 connection return the IPC's success (AOSP `IRemoteInputConnectionInvoker`), never the editor's
 answer. A mock IC that returns false models nothing real; feedback built on it never fired.
 
-## Large commits and batch edits (2026-10-25)
-
-One `commitText` crosses binder as UTF-8 in a ONE-WAY transaction limited to half of the ~1 MB
-buffer, so a 524,000-char paste failed with FAILED BINDER TRANSACTION and returned false,
-silently. `LargeTextCommit` sends chunks of 192 KiB WIRE BYTES (not chars) in one batch edit.
-Chrome never answers `getTextBeforeCursor` inside a batch edit (each call hit the 2 s timeout):
-never read back between chunks; retry a refused chunk in place and report an incomplete paste.
-Paste time is Chrome's, not IPC (2026-10-26): every `\n` becomes its own edit (13,100 lines ≈
-340 s at any chunk size) and each commit re-lays out the field, so fewer chunks help only
-newline-free text. Time pastes by `input` events over CDP, never by eye.
+- **Large commits and batch edits (2026-10-25)** → `.claude/skills/clipboard-panel-architecture.md` (moved 2026-11-14).
 
 ## Self-defined permissions and authorities (2026-10-26)
 
@@ -549,20 +430,13 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 ### Local wiki build (2026-09-27)
 - `cd site && bun run build:termux` keeps Astro 7 and its native bindings under Bun; the entry is `astro/bin/astro.mjs`, not the removed `astro/astro.js`. Verified 84 pages. Legacy wiki HTML paths are generated redirects in deployment, not copies of their old bodies.
 
-### Static LM language guard (2026-09-27)
-- `build_static_lm.py --lang` accepts only languages with a `LangConfig` in `CONFIGS` (en es de fr it pt sv). A config is NOT a ship decision: each language ships only if it passes ITS OWN pre-registered S1 gate (maintainer rule, 2026-09-29). Shipped: en, de, fr, it (`4775300e`) and, after a pre-registered retry with new corpora, pt and sv (`807c56bd`; `src/main/assets/lm/{en,de,fr,it,pt,sv}.cklm` at HEAD); es failed twice (+4.96 vs +5) — do not retry without a new stated reason (`docs/eval/2026-09-29-static-lm-multilingual.md`). Build candidates with `--out-dir` outside `src/main/assets/lm` and evaluate with `STATIC_LM_MODEL_DIR=<dir>`, so no unevaluated model is ever packaged from the shared tree; a shipped language also needs its `scripts/data/tatoeba-contributors-<lang>.txt` (or Tatoeba weight 0) and a NOTICE line naming its Leipzig corpus — `StaticLmAssetDriftTest` enforces both. The `en` config keeps `nfc=False`/`exclude_eval_overlap=False` only to stay byte-identical — verify `en.cklm` sha256 after any builder change.
-- The model names contractions by DISPLAY form (`don't`, `c'est`) while tap candidates are apostrophe-free keys: every lookup must go through a model built with `withReplaceAliases(<REPLACE bucket>)` (BigramModel does this at load; tests use `StaticLmLanguageData.replaceAliases`). A raw `StaticContextLm.parse` scores `dont` by backoff — the 2026-09-29 bug.
+- **Static LM language guard (2026-09-27)** → `.claude/skills/language-model-and-swipe-evals.md` (moved 2026-11-14).
 
 ### Test-rename and mock-test traps (2026-09-30)
 - `docs/RELEASE_RECORD.md` anchors TEST METHOD NAMES (`File.kt#method`) and released sections are hash-pinned (`ReleaseRecordDriftTest.historyIsImmutable`): renaming an anchored test breaks the anchor, and editing the old row breaks the hash. Keep the old method name (note why in its KDoc) or add a superseding row in the current release. `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test.
 - Adding `android.util.Log` to a handler path breaks `runMockTests` classes that drive it (`RuntimeException: Stub!`): mock it next to Toast (`mockkStatic(android.util.Log::class)`).
 
-### String resources and translations (2026-09-30, extended 2026-10-22)
-- A translation containing a literal `%` (e.g. "as % of the key width") must carry `formatted="false"` in EVERY locale — the attribute is not inherited from the default file: CI `lintDebug` fails `StringFormatInvalid` when the following characters read as a conversion (vi "% chiều"). A string WITH arguments writes a literal percent as `%%`.
-- aapt2 silently REMOVES an unescaped `"` inside a value (`"%1$s" wurde hinzugefügt` rendered without its quotes in 16 locales, `0a8fc939`): write `\"` or typographic quotes; an unescaped `'` outside a quoted region is a compile error.
-- `TranslationFormatParityTest` (pure, `runPureTests`, 2026-10-22) now pins all four mechanical rules for every resource in the 21 locales — coverage and element kind, format-argument multiset (plural `other` items too), the literal-`%` rule and quote escaping — and runs each rule on an inline fixture with one deliberate defect, so a dead rule fails loudly. `lintDebug` (≈45 min on Termux) is still the only check for MissingTranslation wording-class lint; CI runs it.
-- Tool matrix, commands and the native-review leads: `docs/audit/2026-10-22-translation-audit.md`; review sheets `scripts/export_translation_review.py`; glossary `docs/i18n/glossary.json` (`TranslationGlossaryTest`).
-- Settings search scroll targets are recorded by `onGloballyPositioned`, which also fires mid expand-animation with in-flight offsets. Scroll only once a position is registered AND unchanged across polls (`expandAndScrollTo`), and record positions relative to the scroll viewport (`contentYOf`), never raw `positionInRoot`.
+- **String resources and translations (2026-09-30, extended 2026-10-22)** → `.claude/skills/translations.md` (moved 2026-11-14).
 
 ### Release APK raw-layout verification (2026-10-02)
 - Minified release APKs shorten raw XML paths (e.g. res/-0.xml), so looking for res/raw/numeric.xml falsely suggests the layout is absent. Verify packaged layouts by matching source-byte SHA-256 against archive entries; do not rely on resource filenames.
@@ -577,11 +451,11 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 
 - **Custom apostrophe routing (2026-10-05):** single ASCII/curly apostrophe TEXT flicks must use `KeyEventHandler` to preserve owned auto-space, inline search and bookkeeping; literal multi-character macros do not acquire suffix semantics. Possessive commands need an explicit verified-word transaction and suffix-only undo (roadmap §2.1).
 
-- **Short-word CTC experiments (2026-10-05):** wet/wt have identical collinear geometric templates, so endpoint/path-only penalties cannot resolve them. Equal-duration letter timing fits the canonical generator by construction; synthetic 19/19 plus one human trace is not shipping evidence. Validate on separate human writers/sessions before changing shared ranking/model behavior.
+- **Short-word CTC experiments (2026-10-05)** → `.claude/skills/language-model-and-swipe-evals.md` (moved 2026-11-14).
 
-- **Human screen of synthetic ranking fixes (2026-10-05):** frozen geometry/timing weights reduced 93/100 correct to 83/100 and 61/100 on 100 real traces (92 words); reject both despite synthetic success. Keep distinct trace/word counts and do not retune against the screening set. Evidence in the October 5 roadmap and ignored probe logs.
+- **Human screen of synthetic ranking fixes (2026-10-05)** → `.claude/skills/language-model-and-swipe-evals.md` (moved 2026-11-14).
 
-- **Short-word root cause, re-measured (2026-10-07):** `ad`→`as`/`wet`→`we` is the encoder's learned word prior at the trace END (last frame reads a stroke ending on `d`/`t` as an overshooting `as`/`we`; training has `we` 562× vs `wet` 4×) plus no emission for collinear pass-through letters. λ 4 is the dev optimum and endpoint rescoring is neutral on 4,000 held-out traces. Separately, the app featurizes the recognizer's SMOOTHED path with dwell samples dropped: raw input is +0.37 pt held-out top-1 (p 0.029). `docs/eval/2026-10-07-short-word-ctc.md`, `scripts/short_word_ctc_eval.py`.
+- **Short-word root cause, re-measured (2026-10-07)** → `.claude/skills/language-model-and-swipe-evals.md` (moved 2026-11-14).
 
 ## Native editor and dialog test lessons (2026-10-06)
 

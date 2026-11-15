@@ -263,3 +263,11 @@ add-to-dictionary offers:
   learning; `WordChars.isSpelledWithLetters` is the fuzzy-search / dropped-double "all letters"
   gate (identical to `all { isLetter() }` outside Indic marks and Bengali ZWJ).
   Details: `docs/specs/dictionary-and-language-system.md` § Indic spelling marks.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+## Tap predictor vs swipe lexicon frequency scales
+
+The tap predictor (autocorrect, suggestion bar) loads `en_enhanced.bin` (rank 0..255, full
+spread); the CTC swipe lexicon uses `en_enhanced.json` (compressed 134..255). They are NOT
+`byte = 255 − rank`: 98,139/98,140 words differ (help 180 vs 218). Autocorrect harnesses that
+read the JSON measured the wrong dictionary; DD-M's M=32 failed on the Pixel (2026-10-12).

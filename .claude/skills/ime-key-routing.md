@@ -551,3 +551,13 @@ composing span, no read); else TEXT (composing tail + `commitText` of stable wor
 `stt.VoiceTextPlanner` decides the ops (spacing/case from the text before the caret, read once;
 cancel = ClearComposing only). `onStartInputView`/`onFinishInputView`/`onWindowHidden` cancel.
 Dictation does not learn (it never enters `sendText`). Spec: `docs/specs/voice-input.md`.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+## Multi-step IME edits and selection callbacks (2026-11-09)
+
+A delete followed by a commit makes the editor report a selection callback for EACH step, after
+the code has already stamped its post-commit state. A stamp invalidated "on any other cursor
+position" must own the intermediate position too (`markAutoSpacePending(stamp, transit)`); the
+ellipsis chain broke on Chrome while mock tests (no callbacks) passed. Mock such paths with the
+real tracker and queued callbacks. Clear a ranking change on a WHOLE human corpus: 400 of 2,291
+azerty traces showed 0 regressions where all of them showed 6.

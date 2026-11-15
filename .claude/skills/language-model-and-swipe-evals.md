@@ -1,0 +1,19 @@
+# Language Model and Swipe Eval Skill
+
+Use this skill for the static next-word LM (`build_static_lm.py`, `*.cklm`, pre-registered
+ship gates) and for short-word CTC / swipe-ranking experiments: what counts as evidence and
+which rules a change must clear before it ships.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+### Static LM language guard (2026-09-27)
+- `build_static_lm.py --lang` accepts only languages with a `LangConfig` in `CONFIGS` (en es de fr it pt sv). A config is NOT a ship decision: each language ships only if it passes ITS OWN pre-registered S1 gate (maintainer rule, 2026-09-29). Shipped: en, de, fr, it (`4775300e`) and, after a pre-registered retry with new corpora, pt and sv (`807c56bd`; `src/main/assets/lm/{en,de,fr,it,pt,sv}.cklm` at HEAD); es failed twice (+4.96 vs +5) — do not retry without a new stated reason (`docs/eval/2026-09-29-static-lm-multilingual.md`). Build candidates with `--out-dir` outside `src/main/assets/lm` and evaluate with `STATIC_LM_MODEL_DIR=<dir>`, so no unevaluated model is ever packaged from the shared tree; a shipped language also needs its `scripts/data/tatoeba-contributors-<lang>.txt` (or Tatoeba weight 0) and a NOTICE line naming its Leipzig corpus — `StaticLmAssetDriftTest` enforces both. The `en` config keeps `nfc=False`/`exclude_eval_overlap=False` only to stay byte-identical — verify `en.cklm` sha256 after any builder change.
+- The model names contractions by DISPLAY form (`don't`, `c'est`) while tap candidates are apostrophe-free keys: every lookup must go through a model built with `withReplaceAliases(<REPLACE bucket>)` (BigramModel does this at load; tests use `StaticLmLanguageData.replaceAliases`). A raw `StaticContextLm.parse` scores `dont` by backoff — the 2026-09-29 bug.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+- **Short-word CTC experiments (2026-10-05):** wet/wt have identical collinear geometric templates, so endpoint/path-only penalties cannot resolve them. Equal-duration letter timing fits the canonical generator by construction; synthetic 19/19 plus one human trace is not shipping evidence. Validate on separate human writers/sessions before changing shared ranking/model behavior.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+- **Human screen of synthetic ranking fixes (2026-10-05):** frozen geometry/timing weights reduced 93/100 correct to 83/100 and 61/100 on 100 real traces (92 words); reject both despite synthetic success. Keep distinct trace/word counts and do not retune against the screening set. Evidence in the October 5 roadmap and ignored probe logs.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+- **Short-word root cause, re-measured (2026-10-07):** `ad`→`as`/`wet`→`we` is the encoder's learned word prior at the trace END (last frame reads a stroke ending on `d`/`t` as an overshooting `as`/`we`; training has `we` 562× vs `wet` 4×) plus no emission for collinear pass-through letters. λ 4 is the dev optimum and endpoint rescoring is neutral on 4,000 held-out traces. Separately, the app featurizes the recognizer's SMOOTHED path with dwell samples dropped: raw input is +0.37 pt held-out top-1 (p 0.029). `docs/eval/2026-10-07-short-word-ctc.md`, `scripts/short_word_ctc_eval.py`.

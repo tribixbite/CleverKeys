@@ -290,3 +290,17 @@ Do not add prefs or `SettingsDefaults` entries for it. Spec: `docs/specs/layout-
   only against the `.bin`, never the CTC JSON (see `dictionary-pipeline.md`).
 - `autocorrect_prefix_length` > 0 interacts with DD-M unmeasured (todo "Open now"): at prefix
   length 1, `very`/`from` fail the prefix check, so `bery`/`grom` are not corrected.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+## Autocorrect tuning and long evals (2026-10-18)
+
+Every autocorrect weight lives in `autocorrect/AutocorrectTuning.kt` (`Keys` = key, default and
+range for prefs, validation, backup and UI); `Config.autocorrect_tuning` is null on an Objenesis
+test Config, which means DEFAULT. The sweep's gates pass about 200 candidates per input (length
+difference 2), so a weight grid needs a bound-based pre-filter (`ChannelRankingEval`). Run a
+multi-hour eval from a separate `git worktree`: another session's half-finished edits in the
+shared tree broke the eval's compile.
+
+<!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
+### Settings search scroll targets (from CLAUDE.md § String resources and translations)
+- Settings search scroll targets are recorded by `onGloballyPositioned`, which also fires mid expand-animation with in-flight offsets. Scroll only once a position is registered AND unchanged across polls (`expandAndScrollTo`), and record positions relative to the scroll viewport (`contentYOf`), never raw `positionInRoot`.
