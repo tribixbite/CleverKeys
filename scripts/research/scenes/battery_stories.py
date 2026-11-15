@@ -77,13 +77,27 @@ WINDOW_FLAT_MW = (150.0, 180.0, 200.0)   # low, central, high, for frame interva
 WINDOW_FLAT_MIN_FRAME_MS = 111.0          # 9 fps, the fastest rate measured on the flat
 
 
+# Window path from 10 to 15 fps: MEASURED (round 19, mirrored pairs, brightness 12, 2026-11-14):
+# +357 / +364 / +390 at 10 / 12 / 15 fps (rounds 13/14: +340-374 at 10). The display rails are a
+# flat +249-251 at all three (frames under the 80-ms idle timer keep the panel at full refresh);
+# only compute grows, ~5 mW per fps. Replaces the round-13 two-point fit, which gave 444 / 493 at
+# 12 / 15 fps.
+WINDOW_STEP_MW = {10.0: 357.0, 12.0: 364.0, 15.0: 390.0}   # fps -> mW
+WINDOW_STEP_COMPUTE_MW_PER_FPS = 5.0   # (109 - 84) / 5, round 19; slope used above 15 fps (MODEL)
+
+
 def window_path_refresh_free_mw(frame_ms: float) -> float:
-    """Spec §4.1 two-point fit of round 13 (5 fps -> 81 mW display, 10 fps -> 257) plus
-    ~8 mJ of compute per frame. MODEL, used only above 9 fps (10 fps measured +340-374;
-    12 and 15 fps unmeasured); 5-9 fps use WINDOW_FLAT_MW."""
+    """Spec §4.1, faster than 9 fps: linear in fps between the round-19 points. Between 9 and
+    10 fps the step's position is unknown (9 fps is on the flat, 10 above it), so that range
+    takes the 10-fps value; above 15 fps the compute slope extends the last point (MODEL)."""
     fps = 1000.0 / frame_ms
-    idle_share = max(0.0, frame_ms - PANEL_IDLE_TIMER_MS) / frame_ms
-    return 8.0 * fps + 373.0 * (1.0 - idle_share) ** 1.67
+    pts = sorted(WINDOW_STEP_MW.items())
+    if fps <= pts[0][0]:
+        return pts[0][1]
+    for (f0, p0), (f1, p1) in zip(pts, pts[1:]):
+        if fps <= f1:
+            return p0 + (p1 - p0) * (fps - f0) / (f1 - f0)
+    return pts[-1][1] + WINDOW_STEP_COMPUTE_MW_PER_FPS * (fps - pts[-1][0])
 
 
 def pinned_or_arr_mw(frame_ms: float) -> float:
@@ -96,9 +110,9 @@ def pinned_or_arr_mw(frame_ms: float) -> float:
 # r13/r14/r16); "flat with frame rate" between 5 and 10. Above 10 fps unmeasured.
 AURORA_LAYERS_MW = (150.0, 170.0, 190.0)   # low, central, high
 
-# Window-path model band: measured anchors sit -5 % (115 vs 121 at 5 fps) to +11 % (374 vs 337
-# at 10 fps) from the model, so carry +-10 % as the band.
-WINDOW_BAND = 0.10
+# Window-path band above 9 fps: the three 10-fps measurements (340 / 357 / 374, rounds 13, 19,
+# 14) sit within +-5 % of the round-19 value, so carry +-5 %.
+WINDOW_BAND = 0.05
 
 
 @dataclass(frozen=True)

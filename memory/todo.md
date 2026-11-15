@@ -1529,6 +1529,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     not restart it, so set the long timeout before the unlock. Restored: auto brightness, 30 s
     timeout, Keep Moving For 20 s. Left: the run's Chrome data: tabs (needs an unlock). Byproduct: screen-off doze drain 100 → 94 % in 9.5 h
     (charge counter −504 mAh ≈ 53 mA ≈ 230 mW average; idle readings 27–47 mA).
+    Nineteenth round (2026-11-14, the 12/15 fps window-path gap in spec §4.1/§4.2). Pixel, Aurora,
+    untouched in Chrome, refresh free, blend off, Keep Moving For 600 s, brightness 12, portrait,
+    8 × 5 min mirrored (off / 10 / 12 / 15 fps): **+357 / +364 / +390 mW**; display rails a flat
+    +249–251 at all three, compute +84 / +90 / +109 (~5 mW per fps). The old fit said 444 / 493.
+    Day model (`battery_stories.py`) now interpolates the measured points above 9 fps (band ±5 %):
+    the tuner (60 s, 12 fps) fell from 6.4–7.4 to 5.3–6.3 %/day; the defaults (≤ 9 fps) are
+    unchanged. Third attempt: the first lost the LAN during the quiet step (radios restored by
+    hand), the second ran all eight arms in LANDSCAPE (auto-rotate on, phone on its side), where
+    the CK Settings controls sit below the fold, so motion never turned on (0 frames every arm;
+    nothing changed). The harness now locks portrait for the run and aborts on any toggle that
+    does not read back or a motion arm with 0 frames. Restored: auto-rotate (1 / 0), radios,
+    brightness 12, Cyberpunk, Animated scenes off, Frame Rate default, blend on, Keep Moving 20 s.
 35. [ ] device: French/Italian accented elisions (2026-11-07, maintainer: "can't get d'être to
     swipe"). FIXED in data: `extract_apostrophe_words.py` re-keys accented keys to their a–z
     spelling (+7,602 fr / +1,032 it REPLACE, +16 / +11 PAIRED; hyphenated compounds excluded); pure pins in

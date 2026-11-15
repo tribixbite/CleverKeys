@@ -16,7 +16,7 @@ constant in the script is tagged MEASURED or MODEL.
 | Battery | 19.5 Wh; 1 % = 702 J; 195 mW ≈ 1 %/h | spec §4.1 |
 | Any scene moving at its default rate (5–8 fps; 9 fps too), window path, refresh free, any brightness | **~180 mW** (150–200) | measured, rounds 17 and 18 (153 / 199 / 180 at brightness 12 / 102 / 255); round 13's 115 is the outlier |
 | Aurora on display-hardware layers (Frame Rate 10+ only since round 17) | 150–190 mW | measured, rounds 13, 14, 16, 17 |
-| Window path at 10 fps / 12 fps | 340–374 / ~444 mW | measured / old fit |
+| Window path at 10 / 12 / 15 fps | 340–374 / 364 / 390 mW | measured (12 and 15: round 19, 2026-11-14; the old fit said 444 / 493) |
 | Refresh pinned or an ARR panel | 12.3 mJ per frame | measured pinned (round 12); ARR assumed |
 | Still-picture light | 153 mW per unit of mean linear light at brightness 102, a quarter at 12, ~233 at 255 | model from one measured pair (spec §4.3); checked at 255 (Meadow +84 mW measured and predicted, round 18) |
 | Cross-device | Note10+ and Saga paid 0.53–0.58× the Pixel in round 9 (typing, 10 fps) | measured, other meters |
@@ -74,7 +74,7 @@ battery per day, central (low–high, the measurement spread, not the usage unce
 | Writer | 0.47 | 0.52 | 0.57 | 0.56 | 0.66 | 0.88 | 0.79 |
 | Keyboard up while reading | 0.28 | 0.33 | 0.36 | 0.36 | 0.45 | 0.64 | 0.57 |
 | Real phone's user (§3.1) | 0.63 (0.53–0.70) | 0.69 | 0.74 | 0.73 | 0.84 | 1.07 | 0.98 |
-| Tuner (60 s, 12 fps) | 6.4 (layers: 2.6) | 6.6 | 6.7 | 6.7 | 6.9 | 7.4 | 7.2 |
+| Tuner (60 s, 12 fps) | 5.3 (layers: 2.6) | 5.4 | 5.5 | 5.5 | 5.7 | 6.3 | 6.1 |
 
 By brightness (aurora / Meadow; only the still picture changes, the motion does not):
 
@@ -89,7 +89,7 @@ For the real phone's user at maximum brightness, Meadow's still picture costs as
 motion (0.134 vs 0.120 Wh a day); for the aurora the picture is 4 %.
 
 In screen-on minutes (at 2.0 W): light user about 1–1.5 min a day, heavy chatter 8–12 min,
-writer 3–5 min, reader 2–4 min, tuner 15–43 min. The themes differ mainly by the light of their
+writer 3–5 min, reader 2–4 min, tuner 15–37 min. The themes differ mainly by the light of their
 still picture (Meadow and Beach are bright); their moving cost is the same.
 
 ## 5. On the day's discharge curve
@@ -125,7 +125,8 @@ Animated scenes off (tables in `tables.md`).
    102 / 255; its display share +77 / +84 / +89. Only the still picture scales with brightness,
    and the model's prediction for it at 255 matched one measurement (+84 mW).
 3. **The 5-fps window point** now has six measurements at 153–199 (rounds 17–18) against round
-   13's single 115; the band is 150–200. 12 and 15 fps are unmeasured (old fit).
+   13's single 115; the band is 150–200. 12 and 15 fps: measured +364 / +390 (round 19); the tuner fell from
+   6.4–7.4 to 5.3–6.3 %/day when they replaced the old fit's 444.
 4. **Other phones.** A fixed-60 Hz panel has no idle to lose: the pinned column applies (heavy
    chatter 0.5–1.4 %/day). An ARR panel should land near it; none measured. The real phone of
    §3.1 is a Galaxy S25 Ultra (LTPO, adaptive refresh): its own motion cost is not measured (it is

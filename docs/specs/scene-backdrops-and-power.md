@@ -1,7 +1,7 @@
 # Scene Backdrops: Architecture, Power and Frames
 
-> **Status (2026-11-12):** as built, through round 18 (5–9 fps cost the same on the window path,
-> at every brightness; hardware layers only at 10 fps and above; the snow at 8 fps; the first
+> **Status (2026-11-14):** as built, through round 19 (5–9 fps cost the same on the window path,
+> at every brightness; 10–15 fps nearly the same as each other; hardware layers only at 10 fps and above; the snow at 8 fps; the first
 > spell after a rotation now gets its layers; a tablet check and a tablet show-path fix). Every number here was
 > measured on a Pixel 8 Pro (Tensor G3, LTPO OLED with 60/120 Hz modes only, no ARR) unless the
 > row says otherwise; "estimate" marks every number that was not measured. The measurement log
@@ -25,7 +25,7 @@ all of them (§3.2.2). Brightness does not change it either: the motion's displa
 panel kept refreshing, +77 / +84 / +89 mW at brightness 12 / 102 / 255 (§3.2.9). Between themes
 the moving cost is the same; the still picture differs by its light, up to ~45 mW at brightness
 102 and ~84 mW at 255 (Meadow, Beach), under 1 mW for the aurora, which True Black removes (§4.3). Before round 16 the defaults were 8–12 fps: ~340 mW for the 10-fps
-scenes, ~445 for the 12-fps ones.
+scenes, ~364 for the 12-fps ones (round 19).
 
 **Over a day** (model `scripts/research/scenes/battery_stories.py`, usage assumed, brightness
 102, details in `docs/eval/2026-11-12-scene-battery-day.md`): a light user (30 keyboard opens a
@@ -34,7 +34,7 @@ day) pays 0.16–0.25 % of the battery a day, about a minute of screen-on time; 
 writer 0.5–0.9 %. A user modelled on a real phone's app time (85 min a day in chat apps with the
 keyboard always up, 36 searches a day elsewhere) pays ~0.6 % with the aurora at any brightness and
 0.7–1.3 % with Meadow (brightness 12–255; 0.76 % at 255 with True Black). Only raising both Keep
-Moving For and the frame rate reaches a cost the battery graph shows (6–7 %/day at 60 s and 12 fps).
+Moving For and the frame rate reaches a cost the battery graph shows (5–6 %/day at 60 s and 12 fps).
 
 ## 1. What the backdrops are
 
@@ -185,7 +185,11 @@ Per-frame time (round 8, Aurora): ~1.4 ms main thread + ~2.8 ms RenderThread iss
    run-to-run spread (±15 mW). Power is **not** linear in frame rate: flat from 5 to 8, then a
    jump of ~160 mW by 10. 9 fps (111 ms) is still on the flat: +187 (round 18), so the step lies
    between 9 and 10 fps. The §4.1 curve that interpolated 5 → 10 fps (121 / 198 / 241 mW at 5 /
-   7 / 8) was wrong between its anchors.
+   7 / 8) was wrong between its anchors. Above the step it is flat again (round 19, mirrored
+   pairs, brightness 12): +357 / +364 / +390 mW at 10 / 12 / 15 fps, of which the display rails
+   are +249 / +250 / +251 at all three and compute +84 / +90 / +109, so a frame above the step
+   costs ~5 mW per fps of compute and nothing more on the display. The old fit predicted 444 and
+   493 at 12 and 15.
 3. **Hardware layers halve it at 10 fps** (+152–197 vs +340–374): no window redraw, and the
    layers keep the panel at 60 Hz. Below 10 fps they gain little or nothing (+150 and +163 at
    5 fps vs the window path's +115 and +183), and on a phone whose display hardware has fewer
@@ -251,9 +255,9 @@ while typing within Pause After Typing):
 - **Refresh free, window path, 5–9 fps** (every default): **~180 mW**, measured flat (rounds 17
   and 18: 153–199 at 5–9 fps and brightness 12–255; round 13's single pair: 115 at 5 fps). Neither
   frame rate nor brightness matters in this range.
-- **Refresh free, window path, 10 fps:** measured +340–374 mW (rounds 13, 14). 12 and 15 fps
-  are unmeasured; the old two-point fit `8 mJ × fps + 373 mW × (1 − i)^1.67`, with
-  `i = max(0, gap − 80 ms) / gap`, gives 444 and 493 there and is wrong below 10 fps.
+- **Refresh free, window path, 10–15 fps:** **~360–390 mW**, measured (round 19: +357 / +364 /
+  +390 at 10 / 12 / 15; rounds 13 and 14: +340–374 at 10). The display part is a flat +250; only
+  compute grows, ~5 mW per fps.
 - **Refresh free, hardware layers (aurora, Frame Rate 10+):** `P ≈ 150–200 mW`.
 - **Refresh pinned, or an ARR panel (estimate for ARR):** `P ≈ 12.3 mJ × fps`
   (fit of round 12; the three scenes lie within ±5 %).
@@ -271,16 +275,16 @@ in mW; measured in bold, otherwise estimate.
 | 7 fps | **178** | 86 | Stream, Meadow, Forest |
 | 8 fps | **187** | 98 (**92** Stream at 7.6) | Snow, Beach |
 | 9 fps | **187** | 111 | — |
-| 10 fps | **340–374** | **123–130** | — (Aurora layers: **152–197**) |
-| 12 fps | ~444 (old fit) | **142–148** | — |
-| 15 fps | ~493 (old fit) | 184 | — |
+| 10 fps | **340–374** (round 19: **357**) | **123–130** | — (Aurora layers: **152–197**) |
+| 12 fps | **364** | **142–148** | — |
+| 15 fps | **390** | 184 | — |
 
 **Duty cycle.** These are costs per second of motion. With the defaults the scene moves for
 20 s after the keyboard shows or after the last touch and is held still while typing, so a
 session of steady typing costs almost nothing (round 10: below noise), and one tap followed by
 a minute of reading moves ~20 s of it (round 10: 2,198 frames in that minute). Example: any
 scene, a 10-minute session with ten 20-second idle spells ≈ 200 s × 180 mW ≈ 36 J ≈ 0.05 % of
-the battery (0.13 % for the 12-fps scenes before round 16). Over a whole day see §0 and
+the battery (0.10 % for the 12-fps scenes before round 16). Over a whole day see §0 and
 `docs/eval/2026-11-12-scene-battery-day.md`.
 
 ### 4.3 What the picture costs while still (True Black)
@@ -323,9 +327,8 @@ brightness.
 
 Ideas not built: hardware layers for the other cross-fade scenes (needs the mesh/FLOW layers
 and drifting particles composited elsewhere); a shorter default Keep Moving For or a longer
-Pause After Typing (`docs/eval/2026-11-12-scene-battery-day.md` §8); measuring on an ARR phone;
-tablet power (needs a rooted tablet or battery-current sampling unplugged; round 18's proxy runs
-measured the show-path stall instead, §3.2.8).
+Pause After Typing (`docs/eval/2026-11-12-scene-battery-day.md` §8); measuring on an ARR phone.
+Tablet power was measured on battery on 2026-11-14 (§3.2.8: inside its noise).
 
 **Smoothness at the default rates** (absolute per-frame ceilings, round 17 review; the earlier
 bounds scaled with the frame interval and so loosened as the rate fell): every layer point

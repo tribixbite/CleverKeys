@@ -242,7 +242,10 @@ them again itself (a `wake()` that returns early while already ticking left the 
 every rotation on the window path, 2026-11-12). Fewer planes is not always cheaper elsewhere: a
 Galaxy Tab S11 put four extra layers AND the keyboard window on the GPU at 120 Hz.
 Power vs frame rate on the Pixel is a step, not a line: 5, 7 and 8 fps all cost ~180 mW (round 17),
-10 fps ~350. Bound smoothness with absolute per-frame ceilings sampled densely; bounds scaled by the
+10 / 12 / 15 fps 357 / 364 / 390 (round 19: display a flat +250, only compute grows). Lock
+portrait (`accelerometer_rotation 0`) before a uiautomator-driven run: with auto-rotate on and the
+phone on its side, CK Settings opens in landscape, its controls sit below the fold, and every
+toggle silently read "?" (eight 0-frame "motion" runs, 2026-11-14). Bound smoothness with absolute per-frame ceilings sampled densely; bounds scaled by the
 frame interval loosen as the rate falls and hid a visible beach wrap.
 Motion's cost does not depend on brightness (round 18: display share +77 / +84 / +89 mW at 12 /
 102 / 255); only the still picture does. At brightness 255 the Pixel dims the panel itself once the
