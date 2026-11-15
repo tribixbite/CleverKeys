@@ -170,42 +170,6 @@ class SwipeMLDataStoreTest {
     }
 
     // =========================================================================
-    // Batch store tests
-    // =========================================================================
-
-    @Test
-    fun testStoreSwipeDataBatch() {
-        val batch = listOf(
-            createTestSwipeData("alpha"),
-            createTestSwipeData("beta"),
-            createTestSwipeData("gamma")
-        )
-        store.storeSwipeDataBatch(batch)
-        Thread.sleep(asyncSettleMs)
-
-        val loaded = store.loadAllData()
-        assertEquals("Batch should store all entries", 3, loaded.size)
-    }
-
-    @Test
-    fun testStoreSwipeDataBatchSkipsInvalid() {
-        try {
-            val invalid = SwipeMLData("bad", "calibration", 1080, 1920, 480)
-            val batch = listOf(
-                createTestSwipeData("good"),
-                invalid
-            )
-            store.storeSwipeDataBatch(batch)
-            Thread.sleep(asyncSettleMs)
-
-            val loaded = store.loadAllData()
-            assertEquals("Batch should skip invalid entries", 1, loaded.size)
-        } catch (e: OutOfMemoryError) {
-            // Skip — heap pressure from previous test classes on 200MB emulator
-        }
-    }
-
-    // =========================================================================
     // Load by source tests
     // =========================================================================
 
@@ -360,28 +324,6 @@ class SwipeMLDataStoreTest {
         val str = stats.toString()
         assertNotNull(str)
         assertTrue("Should contain 'Total:'", str.contains("Total:"))
-    }
-
-    // =========================================================================
-    // Delete tests
-    // =========================================================================
-
-    @Test
-    fun testDeleteEntry() {
-        val data = createTestSwipeData("deleteme")
-        store.storeSwipeData(data)
-        Thread.sleep(asyncSettleMs)
-
-        assertEquals(1, store.loadAllData().size)
-
-        store.deleteEntry(data)
-        assertEquals("Entry should be deleted", 0, store.loadAllData().size)
-    }
-
-    @Test
-    fun testDeleteEntryNull() {
-        // Should not crash
-        store.deleteEntry(null)
     }
 
     @Test

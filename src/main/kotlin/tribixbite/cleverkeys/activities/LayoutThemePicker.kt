@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import tribixbite.cleverkeys.prefs.LayoutsPreference
 import tribixbite.cleverkeys.theme.CustomTheme
+import tribixbite.cleverkeys.theme.KeyboardColorScheme
 import tribixbite.cleverkeys.theme.KeyboardLooks
 import tribixbite.cleverkeys.theme.ThemeCategory
 import tribixbite.cleverkeys.theme.getAllPredefinedThemes
@@ -63,7 +64,17 @@ data class LayoutThemeChoice(
  * default look first; Monet only on Android 12+, as there), Custom, then the decorative
  * categories — with the ids Theme Manager stores in `theme`.
  */
-fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<LayoutThemeChoice> {
+fun layoutThemeChoices(
+    res: Resources,
+    customThemes: List<CustomTheme>,
+    /**
+     * A custom theme's colours for the current system mode. Theme Manager flattens a version-2
+     * theme's light/dark variants through [tribixbite.cleverkeys.theme.ThemeProvider.getColorScheme];
+     * the base [CustomTheme.colors] alone made this picker's swatch differ from Theme Manager's
+     * card for the same theme (review 2026-11-14, cosmetic). Callers pass that lookup.
+     */
+    customScheme: (CustomTheme) -> KeyboardColorScheme = { it.colors },
+): List<LayoutThemeChoice> {
     val builtInSection = res.getString(R.string.theme_section_builtin)
     val systemLight = Config.isSystemLight(res)
     /** A look entry in [section], drawn with its palette for the current system mode. */
@@ -97,13 +108,14 @@ fun layoutThemeChoices(res: Resources, customThemes: List<CustomTheme>): List<La
     val scenes = ThemeSettingsActivity.SCENE_THEMES.mapNotNull { lookChoice(it, scenesSection) }
     val customSection = res.getString(R.string.theme_section_custom)
     val custom = customThemes.map {
+        val scheme = customScheme(it)
         LayoutThemeChoice(
             id = "custom_${it.id}",
             name = it.name,
             section = customSection,
-            background = it.colors.keyboardBackground,
-            key = it.colors.keyDefault,
-            label = it.colors.keyLabel,
+            background = scheme.keyboardBackground,
+            key = scheme.keyDefault,
+            label = scheme.keyLabel,
         )
     }
     val predefined = getAllPredefinedThemes()

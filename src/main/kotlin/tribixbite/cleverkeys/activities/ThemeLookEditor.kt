@@ -144,22 +144,27 @@ internal fun ThemeLookEditor(
                 label = { stringResource(hintsLabel(it)) },
                 onSelect = { onChange(extension.copy(legends = it)) },
             )
-            OptionalSlider(
+            // Size and weight are ONE style (LookHintStyle has no per-field unset; null means the
+            // keyboard's own sublabel sizing, not DEFAULT). So "Use keyboard setting" covers the
+            // pair: with a checkbox per slider, unticking one silently dropped the other's value
+            // (review 2026-11-14).
+            val hints = extension.hintStyle
+            val shownHints = hints ?: LookHintStyle.DEFAULT
+            UseSettingRow(hints == null) { follow ->
+                onChange(extension.copy(hintStyle = if (follow) null else shownHints))
+            }
+            PlainSlider(
                 label = stringResource(R.string.theme_hint_size),
-                value = extension.hintStyle?.sizeFraction,
-                range = 0.2f..0.6f, step = 0.01f, neutral = LookHintStyle.DEFAULT.sizeFraction,
-            ) { v ->
-                onChange(extension.copy(hintStyle = v?.let { LookHintStyle(it, extension.hintStyle?.weight ?: LookHintStyle.DEFAULT.weight) }))
-            }
-            OptionalSlider(
+                value = shownHints.sizeFraction,
+                range = 0.2f..0.6f, step = 0.01f,
+                enabled = hints != null,
+            ) { v -> onChange(extension.copy(hintStyle = shownHints.copy(sizeFraction = v))) }
+            PlainSlider(
                 label = stringResource(R.string.theme_hint_weight),
-                value = extension.hintStyle?.weight?.toFloat(),
-                range = 100f..900f, step = 100f, neutral = LookHintStyle.DEFAULT.weight.toFloat(),
-            ) { v ->
-                onChange(extension.copy(hintStyle = v?.let {
-                    LookHintStyle(extension.hintStyle?.sizeFraction ?: LookHintStyle.DEFAULT.sizeFraction, it.toInt())
-                }))
-            }
+                value = shownHints.weight.toFloat(),
+                range = 100f..900f, step = 100f,
+                enabled = hints != null,
+            ) { v -> onChange(extension.copy(hintStyle = shownHints.copy(weight = v.toInt()))) }
 
             SectionTitle(R.string.theme_section_key_preview)
             ChoiceChips(
@@ -391,16 +396,28 @@ private fun OptionalSlider(
 }
 
 @Composable
-private fun PlainSlider(label: String, value: Float, range: ClosedFloatingPointRange<Float>, step: Float, onChange: (Float) -> Unit) {
+private fun PlainSlider(
+    label: String,
+    value: Float,
+    range: ClosedFloatingPointRange<Float>,
+    step: Float,
+    enabled: Boolean = true,
+    onChange: (Float) -> Unit,
+) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-        Text(tribixbite.cleverkeys.theme.ThemeValues.formatFloat(value), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            tribixbite.cleverkeys.theme.ThemeValues.formatFloat(value),
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
     Slider(
         value = value.coerceIn(range),
         onValueChange = { onChange(snapTo(it, range, step)) },
         valueRange = range,
         steps = sliderSteps(range, step),
+        enabled = enabled,
     )
 }
 

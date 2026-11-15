@@ -2,9 +2,12 @@ package tribixbite.cleverkeys.ui.settings.io
 
 import android.Manifest
 import android.net.Uri
+import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,11 +40,70 @@ private enum class PendingMicPurpose { ENABLE, AFTER_IMPORT }
 
 private var pendingMicPurpose: PendingMicPurpose? = null
 
+/** Saved-state keys for the two request flags below (they must survive process death). */
+private const val STATE_MIC_PURPOSE = "voice_pending_mic_purpose"
+private const val STATE_WAITING_FOR_APP_SETTINGS = "voice_waiting_after_app_settings"
+
 /**
  * The user was turning voice input on when the blocked explanation sent them to App info: back in
  * Settings, a granted permission finishes the job (MicPermissionGate.turnOnAfterAppSettings).
  */
 private var waitingToEnableAfterAppSettings = false
+
+/**
+ * Keep what the open microphone request (or the App info round trip) is for across process death
+ * (review 2026-11-14, low). Both live in process globals, which a rotation keeps but a process
+ * death does not: Android can kill Settings while its permission prompt or App info is in front,
+ * and the recreated activity then got the result with no purpose and left voice input off
+ * although the user had just granted the microphone.
+ */
+internal fun saveVoicePermissionState(outState: Bundle) {
+    outState.putString(STATE_MIC_PURPOSE, pendingMicPurpose?.name)
+    outState.putBoolean(STATE_WAITING_FOR_APP_SETTINGS, waitingToEnableAfterAppSettings)
+}
+
+/** Called from onCreate with a non-null saved state, before any result is delivered (onStart). */
+internal fun restoreVoicePermissionState(savedState: Bundle) {
+    pendingMicPurpose = savedState.getString(STATE_MIC_PURPOSE)
+        ?.let { name -> PendingMicPurpose.entries.firstOrNull { it.name == name } }
+    waitingToEnableAfterAppSettings = savedState.getBoolean(STATE_WAITING_FOR_APP_SETTINGS, false)
+}
+
+/**
+ * Mirror the process-wide voice-pack import ([VoicePackImportTracker]) into this activity while
+ * it is started, and make the opt-in microphone request a successful import calls for — once,
+ * from whichever Settings activity is in front when the import ends.
+ */
+internal fun observeVoicePackImport(activity: SettingsActivity) {
+    with(activity) {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                VoicePackImportTracker.shared.state.collect { state ->
+                    voiceImportInProgress = state.inProgress
+                    voiceImportStatus = state.status
+                    if (state.micRequestPending && VoicePackImportTracker.shared.consumeMicRequest()) {
+                        refreshVoiceInputState(this@with)
+                        askForMicAfterImport(this@with)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The PACK_IMPORTED opt-in moment: enable at once, or ask for the microphone first. */
+private fun askForMicAfterImport(activity: SettingsActivity) {
+    with(activity) {
+        val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this)
+        when (MicPermissionGate.decide(MicPermissionGate.Trigger.PACK_IMPORTED, VoicePacks.facts(this, prefs))) {
+            MicPermissionGate.Decision.PROCEED -> setVoiceEnabled(this, true)
+            else -> {
+                pendingMicPurpose = PendingMicPurpose.AFTER_IMPORT
+                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+}
 
 /** App info for CleverKeys (Permissions → Microphone), the only place left once Android stops asking. */
 internal fun openMicAppSettings(activity: SettingsActivity, toEnable: Boolean) {
@@ -145,43 +207,38 @@ private fun setVoiceEnabled(activity: SettingsActivity, on: Boolean) {
     }
 }
 
-/** SAF result: import the pack off the main thread, then (opt-in moment) ask for the mic. */
+/**
+ * SAF result: import the pack off the main thread, then (opt-in moment) ask for the mic.
+ *
+ * Runs in [VoicePackImportTracker], not this activity's scope, so a rotation mid-import keeps the
+ * status and the follow-up request ([observeVoicePackImport]). The work holds the application
+ * context and this activity's Resources (for the message language), never the activity.
+ */
 internal fun performVoicePackImport(activity: SettingsActivity, uri: Uri) {
-    with(activity) {
-        voiceImportInProgress = true
-        voiceImportStatus = VoiceImportStatus.Ok(getString(R.string.voice_importing))
-        lifecycleScope.launch {
-            val result = withContext(Dispatchers.IO) {
-                try {
-                    val input = contentResolver.openInputStream(uri)
-                        ?: return@withContext VoicePackManager.ImportResult.Error(
-                            VoicePackImportFailure.Io(tribixbite.cleverkeys.IoFailureReason.FILE_NOT_FOUND, "Cannot open $uri")
-                        )
-                    VoicePacks.manager(this@with).import(input)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Voice pack import failed", e)
-                    VoicePackManager.ImportResult.Error(VoicePackImportFailure.fromException(e))
-                }
-            }
-            voiceImportInProgress = false
-            when (result) {
-                is VoicePackManager.ImportResult.Success -> {
-                    voiceImportStatus = VoiceImportStatus.Ok(getString(R.string.voice_import_success, result.manifest.name))
-                    refreshVoiceInputState(this@with)
-                    val prefs = tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(this@with)
-                    when (MicPermissionGate.decide(MicPermissionGate.Trigger.PACK_IMPORTED, VoicePacks.facts(this@with, prefs))) {
-                        MicPermissionGate.Decision.PROCEED -> setVoiceEnabled(this@with, true)
-                        else -> {
-                            pendingMicPurpose = PendingMicPurpose.AFTER_IMPORT
-                            micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        }
-                    }
-                }
-                is VoicePackManager.ImportResult.Error -> {
-                    Log.w(TAG, "Voice pack import refused: ${result.failure.logMessage}")
-                    val reason = result.failure.render(ResourcesResultText(resources))
-                    voiceImportStatus = VoiceImportStatus.Failed(getString(R.string.voice_import_failed, reason))
-                }
+    val appContext = activity.applicationContext
+    val res = activity.resources
+    VoicePackImportTracker.shared.start(res.getString(R.string.voice_importing)) {
+        val result = try {
+            val input = appContext.contentResolver.openInputStream(uri)
+                ?: return@start VoiceImportStatus.Failed(
+                    res.getString(
+                        R.string.voice_import_failed,
+                        VoicePackImportFailure.Io(tribixbite.cleverkeys.IoFailureReason.FILE_NOT_FOUND, "Cannot open $uri")
+                            .render(ResourcesResultText(res)),
+                    )
+                ) to false
+            VoicePacks.manager(appContext).import(input)
+        } catch (e: Exception) {
+            Log.e(TAG, "Voice pack import failed", e)
+            VoicePackManager.ImportResult.Error(VoicePackImportFailure.fromException(e))
+        }
+        when (result) {
+            is VoicePackManager.ImportResult.Success ->
+                VoiceImportStatus.Ok(res.getString(R.string.voice_import_success, result.manifest.name)) to true
+            is VoicePackManager.ImportResult.Error -> {
+                Log.w(TAG, "Voice pack import refused: ${result.failure.logMessage}")
+                val reason = result.failure.render(ResourcesResultText(res))
+                VoiceImportStatus.Failed(res.getString(R.string.voice_import_failed, reason)) to false
             }
         }
     }
@@ -192,7 +249,7 @@ internal fun removeVoicePack(activity: SettingsActivity, id: String) {
     with(activity) {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) { VoicePacks.manager(this@with).remove(id) }
-            voiceImportStatus = null
+            VoicePackImportTracker.shared.clearStatus()
             refreshVoiceInputState(this@with)
         }
     }

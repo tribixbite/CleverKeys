@@ -93,7 +93,7 @@ class LearningWiringDriftTest {
         // the coordinator's own live Config directly (no global fallback needed).
         val coordinator = readSource("PredictionCoordinator.kt")
         val init = coordinator.substringAfter("private fun initializeWordPredictor()")
-            .substringBefore("fun ensureInitialized()")
+            .substringBefore("fun setConfig(")
         assertThat(init).contains("wordPredictor = WordPredictor().apply {")
         assertThat(init).contains("setConfig(config)")
         // A config swap must reach it too, or the gates go stale after a settings change.

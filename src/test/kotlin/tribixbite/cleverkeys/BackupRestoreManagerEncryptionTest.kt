@@ -536,4 +536,31 @@ class BackupRestoreManagerEncryptionTest {
         // The whole document must be the new JSON: a kept tail makes it unparseable.
         org.json.JSONObject(text)
     }
+
+    /**
+     * Review 2026-11-14 (low): a settings export copied every stored preference, so the
+     * personal dictionary (`custom_words_<lang>`), disabled words and swipe priorities went into
+     * a file people share as "my settings". Settings import already drops those keys (they belong
+     * to the dictionary import, and a full backup carries them in its own dictionaries file).
+     */
+    @Test
+    fun settingsExport_leavesOutThePersonalDictionaryKeys() {
+        every { prefs.all } returns mapOf(
+            "custom_words_en" to """{"zorblax":120}""",
+            "disabled_words_en" to setOf("secretname"),
+            "swipe_priority_en" to """{"zorblax":"HIGH"}""",
+            "keyboard_height" to 35,
+        )
+        val sink = ByteArrayOutputStream()
+        val mgr = newManager()
+        mgr.encryptionPolicy = BackupRestoreManager.EncryptionPolicy.UI_PLAINTEXT_OPTOUT
+
+        mgr.exportConfig(uriForOutput(sink), prefs)
+
+        val preferences = org.json.JSONObject(String(sink.toByteArray(), Charsets.UTF_8)).getJSONObject("preferences")
+        for (key in listOf("custom_words_en", "disabled_words_en", "swipe_priority_en")) {
+            assertTrue("$key must not be in a settings export", !preferences.has(key))
+        }
+        assertEquals("ordinary settings are still exported", 35, preferences.getInt("keyboard_height"))
+    }
 }

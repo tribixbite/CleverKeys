@@ -130,6 +130,29 @@ class LanguageAvailabilityCacheTest {
         assertThat(LanguageAvailability.isAvailable(context, "uk")).isFalse()
     }
 
+    /**
+     * Review 2026-11-14 (direct boot): the keyboard can run before the first unlock, when the
+     * credential-encrypted packs directory cannot be listed and the scan sees no packs. That scan
+     * was cached for the process, so after unlocking, Settings listed no installed pack and warned
+     * "no dictionary" for a bound pack language until a restart. An unreadable directory (mode
+     * 000 here, as the locked CE dir behaves) must not be cached.
+     */
+    @Test
+    fun aScanTakenWhilePackStorageIsLockedIsNotCached() {
+        installPack("ru")
+        check(langpacks.setReadable(false, false) && langpacks.setExecutable(false, false))
+        try {
+            check(langpacks.listFiles() == null) { "the test needs an unlistable directory" }
+            assertThat(LanguageAvailability.availableLanguages(context)).containsExactly("en", "fr").inOrder()
+        } finally {
+            langpacks.setReadable(true, false)
+            langpacks.setExecutable(true, false)
+        }
+
+        assertThat(LanguageAvailability.availableLanguages(context)).containsExactly("en", "fr", "ru").inOrder()
+        assertThat(LanguageAvailability.isAvailable(context, "ru")).isTrue()
+    }
+
     @Test
     fun aFailedScanIsNotCachedAndReportsAvailable() {
         every { assets.list("dictionaries") } throws java.io.IOException("boom")

@@ -1647,6 +1647,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.SubtypeLayoutFollowTest',
     // Review 2026-11-14 M14: the English base never drops or overwrites the primary's elisions.
     'tribixbite.cleverkeys.ContractionEnglishBaseMergeTest',
+    // Review 2026-11-14 (direct boot): typing contractions reload once at the first unlock.
+    'tribixbite.cleverkeys.ContractionUnlockResyncTest',
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',
@@ -1683,6 +1685,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',
     'tribixbite.cleverkeys.backup.ShortSwipeImporterSnapshotTest',
     'tribixbite.cleverkeys.WordPredictorReloadFoldTest',
+    // Review 2026-11-14 lows: the next-word read filter counts the secondary lexicon, and the
+    // typo purge waits for the configured secondary on a language-bound layout.
+    'tribixbite.cleverkeys.WordPredictorSecondaryLexiconTest',
+    'tribixbite.cleverkeys.TypoPurgeBoundLayoutTest',
     'tribixbite.cleverkeys.ImeDialogDismissTest',
     'tribixbite.cleverkeys.BinaryDictionaryCorruptBodyTest',
     // Private copy/paste (#156)
@@ -1753,6 +1759,14 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.InlineSwipeRoutingTest',
     // 2026-10-17: new editor commands against a fake editor (readback, refusals, inline routing).
     'tribixbite.cleverkeys.EditorTextCommandsTest',
+    // Review 2026-11-14 (low): editor-command reads are bounded on API 31+ (no whole-document copy).
+    'tribixbite.cleverkeys.EditorBoundedReadTest',
+    // Review 2026-11-14 Settings lows: Short Swipe Reset All's Undo and the voice-pack import
+    // survive a rotation; the microphone request's purpose survives process death.
+    'tribixbite.cleverkeys.customization.ShortSwipeResetUndoCodecTest',
+    'tribixbite.cleverkeys.ui.settings.io.VoicePackImportTrackerTest',
+    'tribixbite.cleverkeys.ui.settings.io.VoicePermissionStateTest',
+    'tribixbite.cleverkeys.LayoutThemePickerSchemeTest',
     // 2026-10-17: swipe/autocorrect commits carry their alternatives as a SuggestionSpan.
     'tribixbite.cleverkeys.SuggestionSpanCommitTest',
     // Review 2026-10-07: late own-write selection callbacks (suffix ledger lifetime, two-write

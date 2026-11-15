@@ -900,6 +900,14 @@ class WordPredictor : Predictor {
         if (dictionary.get().containsKey(lowerWord)) {
             return true
         }
+        // The secondary (bilingual) lexicon, as the Predictor contract states and as the
+        // learning write gate ([learnableWordPolicy]) already counts it. Without this the
+        // next-word filter dropped every learned continuation in the secondary language until
+        // it had been seen three times, and never showed it with personalization off
+        // (review 2026-11-14). The index matches accent-insensitively, the way it is keyed.
+        if (secondaryIndex?.let { it.contains(it.normalizeKey(word)) } == true) {
+            return true
+        }
         // Check if user has typed it frequently (adaptation manager) — gated
         // (H3): with the master off, learned selection history must not
         // suppress add-to-dictionary prompts; nor may it widen anything in an
@@ -1434,9 +1442,11 @@ class WordPredictor : Predictor {
      * lexicon still loading (or failed to load)"; the latter defers the purge.
      */
     private fun configuredSecondaryLanguage(): String? {
-        // GH #186/#61: the ACTIVE secondary, which is what PredictionCoordinator loads — null
-        // while a layout with a language binding is current, even with Multi-Language on.
-        config?.let { return it.active_secondary_language }
+        // The CONFIGURED secondary, not the active one: on a bound layout the active secondary
+        // is null and the second lexicon is unloaded (GH #186/#61), but the primary store still
+        // holds what was learned while bilingual. Reporting the configured one keeps the purge
+        // deferred until that lexicon is published again (review 2026-11-14).
+        config?.let { return it.configuredSecondaryLanguage() }
         // No config yet: fall back to the preferences the active value is resolved from.
         val ctx = context ?: return null
         return try {

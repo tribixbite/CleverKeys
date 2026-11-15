@@ -153,6 +153,41 @@ class PlaygroundRecordingScopeTest {
         verify(exactly = 0) { store.storeSwipeData(any()) }
     }
 
+    /**
+     * Review 2026-11-14 (low): the daily retention sweep and the 10,000-row cap were scheduled
+     * only by the GLOBAL collection's write path, so with global collection off the
+     * playground's rows were never bounded. The playground write schedules the same sweep.
+     */
+    @Test
+    fun aPlaygroundWriteRunsTheDueRetentionSweep() {
+        val privacy = mockk<tribixbite.cleverkeys.PrivacyManager>(relaxed = true)
+        every { privacy.shouldPerformCleanup() } returns true
+        every { privacy.getDataRetentionCutoff() } returns 1_234L
+        mockkObject(tribixbite.cleverkeys.PrivacyManager.Companion)
+        every { tribixbite.cleverkeys.PrivacyManager.getInstance(any()) } returns privacy
+
+        PlaygroundTraceRecorder.recordAndBroadcast(
+            imeContext(ownPackage), capturedSwipe(), "hello", engineWordCount = 3, storedGlobally = false
+        )
+
+        verify(exactly = 1) { store.performRetentionCleanup(1_234L, tribixbite.cleverkeys.MLDataCollector.MAX_STORED_ROWS) }
+        verify(exactly = 1) { privacy.recordCleanupPerformed() }
+    }
+
+    @Test
+    fun aPlaygroundWriteSkipsTheSweepWhenNoneIsDue() {
+        val privacy = mockk<tribixbite.cleverkeys.PrivacyManager>(relaxed = true)
+        every { privacy.shouldPerformCleanup() } returns false
+        mockkObject(tribixbite.cleverkeys.PrivacyManager.Companion)
+        every { tribixbite.cleverkeys.PrivacyManager.getInstance(any()) } returns privacy
+
+        PlaygroundTraceRecorder.recordAndBroadcast(
+            imeContext(ownPackage), capturedSwipe(), "hello", engineWordCount = 3, storedGlobally = false
+        )
+
+        verify(exactly = 0) { store.performRetentionCleanup(any(), any()) }
+    }
+
     // --------------------------------------- I-1: the activity's visibility binding
 
     private val activitySource: String by lazy {

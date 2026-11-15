@@ -865,6 +865,12 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // The launch intent is handled once: a recreation (rotation) restores the activity with
         // the same intent, and re-running it re-imported a shared GIF pack (low, review
         // 2026-11-14) and scrolled away from where the user was.
+        if (savedInstanceState != null) {
+            tribixbite.cleverkeys.ui.settings.io.restoreVoicePermissionState(savedInstanceState)
+        }
+        // The voice-pack import outlives a rotation; show its state here (review 2026-11-14).
+        tribixbite.cleverkeys.ui.settings.io.observeVoicePackImport(this)
+
         if (savedInstanceState == null) {
             // Handle share intent for GIF pack ZIP import
             handleGifPackShareIntent(intent)
@@ -961,10 +967,17 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         DirectBootAwarePreferences.copy_preferences_to_protected_storage(this, prefs)
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        tribixbite.cleverkeys.ui.settings.io.saveVoicePermissionState(outState)
+    }
+
     override fun onDestroy() {
         // Balanced with onCreate (review 2026-11-14 M24). onCreate can bail out before `prefs`
         // is set (fallbackEncrypted), and then it registered nothing.
         if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(this)
+        // Leaving Settings for good: the last import's message is not news next time.
+        if (isFinishing) tribixbite.cleverkeys.ui.settings.io.VoicePackImportTracker.shared.clearStatus()
         super.onDestroy()
     }
 

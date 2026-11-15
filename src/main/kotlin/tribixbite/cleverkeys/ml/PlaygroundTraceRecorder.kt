@@ -78,8 +78,13 @@ object PlaygroundTraceRecorder {
                 // only known now. copyWith carries points/keys/provenance/enrichment over.
                 val row = swipeData.copyWith(committedWord, SOURCE_PLAYGROUND)
                 if (row.isValid()) {
-                    SwipeMLDataStore.getInstance(context).storeSwipeData(row)
+                    val store = SwipeMLDataStore.getInstance(context)
+                    store.storeSwipeData(row)
                     storedAs = PlaygroundPayload.STORED_PLAYGROUND
+                    // The same daily retention sweep and row cap as the global collection.
+                    tribixbite.cleverkeys.MLDataCollector.maybePerformRetentionCleanup(
+                        tribixbite.cleverkeys.PrivacyManager.getInstance(context), store
+                    )
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to persist playground trace", e)

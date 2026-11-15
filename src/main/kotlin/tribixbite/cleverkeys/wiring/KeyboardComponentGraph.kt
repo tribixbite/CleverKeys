@@ -99,6 +99,8 @@ class KeyboardComponentGraph(
         // same pair ActiveLanguageSync reloads with on every later language change.
         val contractionManager = ContractionManager(service)
         contractionManager.loadTypingMappings(config.primary_language, config.active_secondary_language)
+        // Before the first unlock the pack directory is unreadable; reload once it is.
+        contractionManager.reloadAfterFirstUnlock(DirectBootManager.getInstance(service)) { config.activeLanguages() }
         MemoryProbe.mark("init.contractionManager", settle = true) {
             "known=${contractionManager.getTotalKnownCount()}"
         }

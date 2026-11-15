@@ -42,6 +42,31 @@ class MLDataCollector(private val context: Context) {
          * Oldest rows beyond the cap are deleted by the same daily cleanup.
          */
         const val MAX_STORED_ROWS = 10_000
+
+        /**
+         * I-2: delete expired rows and enforce the row cap when a cleanup is due — after EVERY
+         * write into the store, whichever path made it.
+         *
+         * `shouldPerformCleanup()` is true at most once per day and only while auto-delete
+         * is enabled (its default). The timestamp is recorded BEFORE the store call so a
+         * failing cleanup cannot re-trigger on every subsequent swipe; the store runs the
+         * actual deletes on its own single-threaded executor, off this thread.
+         *
+         * Shared with the Swipe Playground's recorder (review 2026-11-14, low): it was called
+         * only from [collectAndStoreSwipeData], so with global collection off the playground's
+         * rows were never bounded by the cap or the retention window.
+         */
+        fun maybePerformRetentionCleanup(privacyManager: PrivacyManager, mlDataStore: SwipeMLDataStore) {
+            try {
+                if (!privacyManager.shouldPerformCleanup()) return
+                privacyManager.recordCleanupPerformed()
+                mlDataStore.performRetentionCleanup(
+                    privacyManager.getDataRetentionCutoff(), MAX_STORED_ROWS
+                )
+            } catch (e: Exception) {
+                Log.e("MLDataCollector", "Retention cleanup scheduling failed", e)
+            }
+        }
     }
 
     private val privacyManager = PrivacyManager.getInstance(context)
@@ -106,31 +131,11 @@ class MLDataCollector(private val context: Context) {
 
             // I-2: retention enforcement — the only write path into the store is the
             // right place to keep the DB bounded. Daily-throttled via PrivacyManager.
-            maybePerformRetentionCleanup(mlDataStore)
+            maybePerformRetentionCleanup(privacyManager, mlDataStore)
             true
         } catch (e: Exception) {
             Log.e("MLDataCollector", "Error collecting ML data", e)
             false
-        }
-    }
-
-    /**
-     * I-2: delete expired rows and enforce the row cap when a cleanup is due.
-     *
-     * `shouldPerformCleanup()` is true at most once per day and only while auto-delete
-     * is enabled (its default). The timestamp is recorded BEFORE the store call so a
-     * failing cleanup cannot re-trigger on every subsequent swipe; the store runs the
-     * actual deletes on its own single-threaded executor, off this thread.
-     */
-    private fun maybePerformRetentionCleanup(mlDataStore: SwipeMLDataStore) {
-        try {
-            if (!privacyManager.shouldPerformCleanup()) return
-            privacyManager.recordCleanupPerformed()
-            mlDataStore.performRetentionCleanup(
-                privacyManager.getDataRetentionCutoff(), MAX_STORED_ROWS
-            )
-        } catch (e: Exception) {
-            Log.e("MLDataCollector", "Retention cleanup scheduling failed", e)
         }
     }
 }

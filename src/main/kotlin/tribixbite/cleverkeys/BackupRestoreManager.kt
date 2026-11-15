@@ -859,13 +859,18 @@ open class BackupRestoreManager(
 
         // First add all defaults
         for ((key, value) in allDefaults) {
-            if (!isInternalPreference(key)) {
+            if (!isInternalPreference(key) && !SettingsValidation.isDictionaryPreference(key)) {
                 preferences.add(key, gson.toJsonTree(value))
             }
         }
 
         // Then override with stored preferences (these take precedence)
         for ((key, value) in storedPrefs) {
+            // The personal dictionary (custom/disabled words, swipe priorities) is not a setting:
+            // it has its own export, a full backup carries it in its dictionaries file, and
+            // settings import drops these keys anyway. Exporting them put private words into a
+            // file people share as "my settings" (review 2026-11-14).
+            if (SettingsValidation.isDictionaryPreference(key)) continue
             // Preserve JSON-string preferences (layouts, extra_keys, custom_extra_keys)
             // These are already stored as JSON strings and should be preserved as-is
             when {

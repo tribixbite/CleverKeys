@@ -49,11 +49,16 @@ object LanguageAvailability {
         cached?.let { return it }
         val manager = LanguagePackManager.getInstance(context)
         val packs = manager.getInstalledPacks().map { it.code }.toSet()
-        return Snapshot(
+        val snapshot = Snapshot(
             bundled = bundledLanguages(context),
             packs = packs,
             packsWithDictionary = packs.filterTo(mutableSetOf()) { manager.isInstalled(it) },
-        ).also { cached = it }
+        )
+        // Before the first unlock the packs directory cannot be listed and the scan sees none.
+        // Caching that kept the empty list for the whole process (review 2026-11-14): a false
+        // "no dictionary" warning and pickers without the installed packs until a restart.
+        if (manager.isPackStorageReadable()) cached = snapshot
+        return snapshot
     }
 
     /** Sorted language codes with a bundled dictionary or an installed pack. */

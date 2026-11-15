@@ -43,9 +43,12 @@ the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
-unfixed code (or, for new API, not compiling). Still open: the low list in §2a's last row; native
-review of `io_error_backup_password_unreadable` and five Settings strings (item 10); device checks
-in §4 (lock-screen worst case, tablet landscape scene memory, aurora first tick, Settings rotation).
+unfixed code (or, for new API, not compiling). The remaining lows were fixed on 2026-11-15 (§2a
+"Remaining lows" row; one closed without change, with the reason). Still open: native review of
+`io_error_backup_password_unreadable` and five Settings strings (item 10); device checks in §4
+(lock-screen worst case, tablet landscape scene memory, aurora first tick, Settings rotation — now
+also: rotate during a voice-pack import and during Short Swipe's Undo snackbar, and the Look
+editor's single hint toggle).
 
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
@@ -134,7 +137,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 13c. [ ] agent → device: code-quality audit 2026-10-20 — every HIGH/MED/LOW row fixed or moot. Left:
     the last batch was "not run on instrumented or a device" at the time; border-radius readout not
     device-checked (needs Borders on); `ThemeProvider.getBuiltInColorScheme("monet")` still the dark
-    approximation; KeyboardPreviewView's unreachable "jewel" fallback left as is (TODO in class). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-13c)
+    approximation. (KeyboardPreviewView and its "jewel" fallback were deleted 2026-11-15: no caller.) [history](../docs/history/todo-open-now-items-2026-11-14.md#item-13c)
 14. [ ] agent drafts every close comment / PR review into a file; maintainer approves per item before anything is posted (2026-10-25). GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
     Drafts done (`docs/audit/2026-10-25-github-drafts.md`, 48 items). DECIDED 2026-10-26: hold every

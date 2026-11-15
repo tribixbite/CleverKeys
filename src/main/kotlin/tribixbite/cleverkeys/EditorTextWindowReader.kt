@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 
 /**
@@ -18,22 +17,18 @@ internal object EditorTextWindowReader {
     const val MAX_SELECTION = 65_536
 
     fun capture(ic: InputConnection, reach: Int): EditorTextWindow? = runCatching {
-        val extracted = ic.getExtractedText(ExtractedTextRequest().apply { hintMaxChars = 0 }, 0) ?: return null
-        if (extracted.startOffset < 0 || extracted.selectionStart < 0 || extracted.selectionEnd < 0) return null
-        val start = Math.addExact(extracted.startOffset, extracted.selectionStart)
-        val end = Math.addExact(extracted.startOffset, extracted.selectionEnd)
-        val length = kotlin.math.abs(start.toLong() - end.toLong())
-        if (length > MAX_SELECTION) return null
-        val selected = if (start == end) "" else ic.getSelectedText(0)?.toString() ?: return null
-        if (selected.length.toLong() != length) return null
-        val before = ic.getTextBeforeCursor(reach, 0)?.toString() ?: return null
-        val after = ic.getTextAfterCursor(reach, 0)?.toString() ?: return null
-        if (before.length > reach || after.length > reach || before.length > minOf(start, end)) return null
+        // Bounded on API 31+ for a caret; see EditorSelectionReader (review 2026-11-14).
+        val read = EditorSelectionReader.read(ic, reach, reach, MAX_SELECTION.toLong()) ?: return null
+        val start = read.start
+        val end = read.end
+        val before = read.before
+        val after = read.after
+        if (before.length > minOf(start, end)) return null
         EditorTextWindow(
             selStart = start,
             selEnd = end,
             before = before,
-            selected = selected,
+            selected = read.selected,
             after = after,
             beforeComplete = before.length < reach || before.length == minOf(start, end),
             afterComplete = after.length < reach,

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -189,6 +190,27 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
     var showResetConfirm by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val res = context.resources
+    // What the last Reset All removed, while its Undo is offered. Saveable (as text) so a
+    // rotation re-offers it: the snackbar and the removed list used to live only in the
+    // coroutine showing it, which the rotation cancelled (review 2026-11-14). Cleared when the
+    // snackbar is dismissed, times out or is acted on.
+    var pendingUndo by rememberSaveable(stateSaver = Saver<String?, String>(
+        save = { value -> ShortSwipeResetUndo.saveable(value) },
+        restore = { saved -> saved },
+    )) { mutableStateOf<String?>(null) }
+    LaunchedEffect(pendingUndo) {
+        val encoded = pendingUndo ?: return@LaunchedEffect
+        val removed = ShortSwipeResetUndo.decode(encoded)
+        val result = snackbarHostState.showSnackbar(
+            message = res.getQuantityString(R.plurals.short_swipe_reset_all_done, removed.size, removed.size),
+            actionLabel = res.getString(R.string.short_swipe_reset_all_undo),
+            withDismissAction = true,
+            duration = SnackbarDuration.Long,
+        )
+        // Reached only when the snackbar ends here, not when a rotation cancels this effect.
+        pendingUndo = null
+        if (result == SnackbarResult.ActionPerformed) manager.restoreAfterReset(removed)
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -336,13 +358,7 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
                         showResetConfirm = false
                         scope.launch {
                             val removed = manager.resetAll()
-                            val result = snackbarHostState.showSnackbar(
-                                message = res.getQuantityString(R.plurals.short_swipe_reset_all_done, removed.size, removed.size),
-                                actionLabel = res.getString(R.string.short_swipe_reset_all_undo),
-                                withDismissAction = true,
-                                duration = SnackbarDuration.Long,
-                            )
-                            if (result == SnackbarResult.ActionPerformed) manager.restoreAfterReset(removed)
+                            pendingUndo = ShortSwipeResetUndo.encode(removed)
                         }
                     }) {
                         Text(stringResource(R.string.short_swipe_reset_all_confirm), color = MaterialTheme.colorScheme.error)

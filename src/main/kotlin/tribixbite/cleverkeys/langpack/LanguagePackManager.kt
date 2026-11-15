@@ -174,6 +174,16 @@ class LanguagePackManager(
     }
 
     /**
+     * True once the packs directory could be listed. False before the first unlock (the
+     * credential-encrypted files dir is unreadable), when every query reports no packs: a caller
+     * that caches a result must not cache that one.
+     */
+    fun isPackStorageReadable(): Boolean {
+        packsRoot()
+        return recovered
+    }
+
+    /**
      * Import a language pack from a ZIP file URI.
      *
      * @param uri URI to the ZIP file (from file picker)

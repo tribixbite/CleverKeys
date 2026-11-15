@@ -261,6 +261,25 @@ class ContractionManager(private val context: Context) {
     }
 
     /**
+     * Reload the typing mappings once, at the first unlock, if the device is still locked now.
+     *
+     * The IME is directBootAware, so it can be created before the first unlock. Language packs
+     * live in credential-encrypted storage, which is unreadable until then: [loadLanguageContractions]
+     * finds no pack file, so a pack-only language loads no contractions and a bundled one loads
+     * the bundled file instead of the pack's (review 2026-11-14). Nothing else reloads them,
+     * because [ActiveLanguageSync] only reacts to a language CHANGE. [languages] is read at unlock
+     * time, so a layout or language switch made on the lock screen is honoured.
+     */
+    fun reloadAfterFirstUnlock(directBoot: DirectBootManager, languages: () -> ActiveLanguages) {
+        if (directBoot.isUserUnlocked) return
+        directBoot.registerUnlockCallback {
+            val active = languages()
+            Log.i(TAG, "First unlock: reloading typing contractions from language packs")
+            loadTypingMappings(active.primary, active.secondary)
+        }
+    }
+
+    /**
      * Merged `key -> colliding languages` tables for every ACTIVE language.
      *
      * Only the active languages' sidecars are read: a key can only be demoted if it came from a

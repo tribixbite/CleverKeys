@@ -221,7 +221,11 @@ fun LayoutManagerScreen(onBack: () -> Unit) {
     // the same store ThemeProvider renders from), and which ids exist on this device.
     val themeProvider = remember { ThemeProvider.getInstance(context) }
     val customThemes by themeProvider.customThemeManager.customThemes.collectAsState()
-    val themeChoices = remember(customThemes) { layoutThemeChoices(context.resources, customThemes) }
+    val themeChoices = remember(customThemes) {
+        layoutThemeChoices(context.resources, customThemes) { theme ->
+            themeProvider.getColorScheme("custom_${theme.id}") ?: theme.colors
+        }
+    }
     fun themeName(id: String): String = layoutThemeDisplayName(id, context.resources, customThemes)
     val globalThemeName = themeName(prefs.getString("theme", null) ?: Defaults.THEME)
 

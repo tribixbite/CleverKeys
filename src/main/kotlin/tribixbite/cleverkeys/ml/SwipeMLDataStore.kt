@@ -103,46 +103,11 @@ class SwipeMLDataStore private constructor(context: Context) :
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                         Log.d(TAG, "Stored swipe data: ${data.targetWord} (${data.collectionSource})")
                     }
-                    updateStatistics(data.collectionSource)
                 } else {
                     Log.e(TAG, "Failed to store swipe data")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error storing swipe data", e)
-            }
-        }
-    }
-
-    /**
-     * Store multiple swipe data entries (batch operation)
-     */
-    fun storeSwipeDataBatch(dataList: List<SwipeMLData>) {
-        _executor.execute {
-            val db = writableDatabase
-            db.beginTransaction()
-            try {
-                for (data in dataList) {
-                    if (!data.isValid()) continue
-
-                    val values = ContentValues().apply {
-                        put(COL_TRACE_ID, data.traceId)
-                        put(COL_TARGET_WORD, data.targetWord)
-                        put(COL_TIMESTAMP, data.timestampUtc)
-                        put(COL_SOURCE, data.collectionSource)
-                        put(COL_JSON_DATA, data.toJSON().toString())
-                        put(COL_IS_EXPORTED, 0)
-                    }
-
-                    db.insertWithOnConflict(TABLE_SWIPES, null, values, SQLiteDatabase.CONFLICT_IGNORE)
-                }
-                db.setTransactionSuccessful()
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    Log.d(TAG, "Stored batch of ${dataList.size} swipe entries")
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error storing batch data", e)
-            } finally {
-                db.endTransaction()
             }
         }
     }
@@ -264,33 +229,6 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
-     * Delete a specific swipe entry from the database
-     */
-    fun deleteEntry(data: SwipeMLData?) {
-        if (data == null) return
-
-        val db = writableDatabase
-
-        // Delete by matching the word and approximate timestamp
-        val word = data.targetWord
-        val timestamp = data.timestampUtc
-
-        // Allow 1 second tolerance for timestamp matching
-        val minTime = timestamp - 1000
-        val maxTime = timestamp + 1000
-
-        val deleted = db.delete(
-            TABLE_SWIPES,
-            "$COL_TARGET_WORD=? AND $COL_TIMESTAMP BETWEEN ? AND ?",
-            arrayOf(word, minTime.toString(), maxTime.toString())
-        )
-
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-            Log.d(TAG, "Deleted $deleted entries for word: $word")
-        }
-    }
-
-    /**
      * Export all data to a JSON file (the Swipe Playground's Export button).
      *
      * I-5 (comprehensive audit 2026-09-06): delegates to the streaming
@@ -356,11 +294,14 @@ class SwipeMLDataStore private constructor(context: Context) :
             writer.write("\n  ],\n")
             writer.write("  \"total_samples\": $count,\n")
 
-            val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            // Counted from the table, like total_samples (review 2026-11-14, low): these were
+            // lifetime counters that deleting by source, retention and relabelling never
+            // adjusted, so total_swipes disagreed with the rows exported beside it.
+            val stats = getStatistics()
             writer.write("  \"statistics\": {\n")
-            writer.write("    \"total_swipes\": ${prefs.getInt(PREF_TOTAL_COUNT, 0)},\n")
-            writer.write("    \"calibration_swipes\": ${prefs.getInt(PREF_CALIBRATION_COUNT, 0)},\n")
-            writer.write("    \"user_swipes\": ${prefs.getInt(PREF_USER_COUNT, 0)}\n")
+            writer.write("    \"total_swipes\": ${stats.totalCount},\n")
+            writer.write("    \"calibration_swipes\": ${stats.calibrationCount},\n")
+            writer.write("    \"user_swipes\": ${stats.userSelectionCount}\n")
             writer.write("  }\n")
             writer.write("}\n")
         }
@@ -544,33 +485,6 @@ class SwipeMLDataStore private constructor(context: Context) :
     }
 
     /**
-     * Update statistics
-     */
-    private fun updateStatistics(source: String) {
-        val prefs = _context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val editor = prefs.edit()
-
-        // Increment total count
-        val total = prefs.getInt(PREF_TOTAL_COUNT, 0)
-        editor.putInt(PREF_TOTAL_COUNT, total + 1)
-
-        // Increment source-specific count
-        // Note: "neural_calibration" is the source used by SwipeCalibrationActivity
-        when (source) {
-            "calibration", "neural_calibration" -> {
-                val count = prefs.getInt(PREF_CALIBRATION_COUNT, 0)
-                editor.putInt(PREF_CALIBRATION_COUNT, count + 1)
-            }
-            "user_selection" -> {
-                val count = prefs.getInt(PREF_USER_COUNT, 0)
-                editor.putInt(PREF_USER_COUNT, count + 1)
-            }
-        }
-
-        editor.apply()
-    }
-
-    /**
      * Statistics class
      */
     data class DataStatistics(
@@ -663,10 +577,8 @@ class SwipeMLDataStore private constructor(context: Context) :
         private const val COL_IS_EXPORTED = "is_exported"
 
         // Statistics tracking
+        /** Lifetime counters older versions kept; [clearAllData] still deletes them. */
         private const val PREF_NAME = "swipe_ml_stats"
-        private const val PREF_TOTAL_COUNT = "total_swipes"
-        private const val PREF_CALIBRATION_COUNT = "calibration_swipes"
-        private const val PREF_USER_COUNT = "user_swipes"
 
         // Process-lifetime singleton holding only the applicationContext (see getInstance),
         // so it never leaks an Activity/Service. The reference lives as long as the process.

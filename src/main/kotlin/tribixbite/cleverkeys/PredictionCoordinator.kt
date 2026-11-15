@@ -165,20 +165,6 @@ class PredictionCoordinator(
     }
 
     /**
-     * Ensures word predictor is initialized (lazy initialization).
-     * Called when predictions are first requested.
-     *
-     * Note: If device is still locked, PII components won't be available
-     * and predictions will be limited.
-     */
-    fun ensureInitialized() {
-        // Only initialize PII components if user is unlocked
-        if (wordPredictor == null && isUserUnlocked()) {
-            initializePiiComponents()
-        }
-    }
-
-    /**
      * Updates configuration and propagates to engines.
      *
      * @param newConfig Updated configuration
