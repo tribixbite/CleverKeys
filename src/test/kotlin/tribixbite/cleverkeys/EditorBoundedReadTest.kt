@@ -19,19 +19,19 @@ import org.junit.Test
  *
  * Modelled here as an editor whose `getExtractedText` throws (what the binder does with a
  * too-large reply) but which answers `getSurroundingText` — a bounded window with an absolute
- * offset, as TextView's BaseInputConnection gives on API 31+. `SDK_INT` is forced the way
- * ClipboardLockedStartupTest does; under the android.jar stubs it reads 0.
+ * offset, as TextView's BaseInputConnection gives on API 31+ (the reader's platform-level seam
+ * says 34).
  */
 class EditorBoundedReadTest {
 
-    private var savedSdk = 0
-
     private val realRequest = EditorSelectionReader.newExtractedTextRequest
+    private val realSdk = EditorSelectionReader.platformSdk
 
     @Before
     fun setUp() {
-        savedSdk = android.os.Build.VERSION.SDK_INT
-        setSdkInt(34)
+        // The reader's own seam, not a write to Build.VERSION.SDK_INT: late in the full suite
+        // the JIT has folded that static final into the compiled reader and ignores the write.
+        EditorSelectionReader.platformSdk = { 34 }
         // android.jar's ExtractedTextRequest() throws "Stub!"; the fallback read needs one.
         EditorSelectionReader.newExtractedTextRequest = { mockk(relaxed = true) }
     }
@@ -39,7 +39,7 @@ class EditorBoundedReadTest {
     @After
     fun tearDown() {
         EditorSelectionReader.newExtractedTextRequest = realRequest
-        setSdkInt(savedSdk)
+        EditorSelectionReader.platformSdk = realSdk
     }
 
     /** Caret at absolute offset 600,010 in a huge document: "hello world" around it. */
@@ -117,22 +117,5 @@ class EditorBoundedReadTest {
 
         assertThat(read!!.selStart).isEqualTo(5)
         assertThat(read.before).isEqualTo("hello")
-    }
-
-    private fun setSdkInt(sdkInt: Int) {
-        Class.forName("android.os.Build\$VERSION", true, javaClass.classLoader)
-        val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-        unsafeField.isAccessible = true
-        val unsafe = unsafeField.get(null)
-        val unsafeClass = unsafe.javaClass
-        val field = android.os.Build.VERSION::class.java.getField("SDK_INT")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field) as Long
-        unsafeClass.getMethod(
-            "putInt", Object::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType
-        ).invoke(unsafe, base, offset, sdkInt)
-        assertWithMessage("SDK_INT must actually be forced").that(android.os.Build.VERSION.SDK_INT).isEqualTo(sdkInt)
     }
 }

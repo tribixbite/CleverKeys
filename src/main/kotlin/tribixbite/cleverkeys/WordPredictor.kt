@@ -893,6 +893,15 @@ class WordPredictor : Predictor {
      * @param fieldAllowsPersonalizedLearning false when the active editor set
      *   `IME_FLAG_NO_PERSONALIZED_LEARNING` (see [LearningGate.fieldAllowsPersonalizedLearning])
      */
+    /** [word] is one of the secondary lexicon's spellings (case-insensitive, fa/ckb folded). */
+    private fun isInSecondaryLexiconExactly(word: String): Boolean {
+        val index = secondaryIndex ?: return false
+        val language = secondaryLanguageCode
+        val wanted = ArabicScriptFold.fold(word.lowercase(), language)
+        return index.lookup(index.normalizeKey(word))?.canonicals
+            ?.any { ArabicScriptFold.fold(it.lowercase(), language) == wanted } == true
+    }
+
     override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean {
         if (word.isEmpty()) return false
         val lowerWord = lookupKey(word)
@@ -904,8 +913,10 @@ class WordPredictor : Predictor {
         // learning write gate ([learnableWordPolicy]) already counts it. Without this the
         // next-word filter dropped every learned continuation in the secondary language until
         // it had been seen three times, and never showed it with personalization off
-        // (review 2026-11-14). The index matches accent-insensitively, the way it is keyed.
-        if (secondaryIndex?.let { it.contains(it.normalizeKey(word)) } == true) {
+        // (review 2026-11-14). Exact, like the primary check: the index is keyed accent-free, so
+        // the word must equal one of the canonical spellings filed under its key — `ecole` is not
+        // `école`, and stays offered for Add to dictionary / ExactAdd (follow-up review).
+        if (isInSecondaryLexiconExactly(word)) {
             return true
         }
         // Check if user has typed it frequently (adaptation manager) — gated
@@ -1428,7 +1439,7 @@ class WordPredictor : Predictor {
             language = language,
             lexicon = dictionary.get(),
             userWords = customAndUserWords,
-            configuredSecondary = configuredSecondaryLanguage(),
+            configuredSecondary = configuredSecondaryLanguage(language),
             publishedSecondary = if (secondary != null) secondaryLanguageCode else null,
             secondaryContains = secondary?.let { idx -> { w: String -> idx.contains(idx.normalizeKey(w)) } },
             observationCount = { w -> engine?.getWordUsage(w)?.usageCount ?: 0 }
@@ -1441,12 +1452,10 @@ class WordPredictor : Predictor {
      * Compared against the published index to tell "not bilingual" from "bilingual, secondary
      * lexicon still loading (or failed to load)"; the latter defers the purge.
      */
-    private fun configuredSecondaryLanguage(): String? {
-        // The CONFIGURED secondary, not the active one: on a bound layout the active secondary
-        // is null and the second lexicon is unloaded (GH #186/#61), but the primary store still
-        // holds what was learned while bilingual. Reporting the configured one keeps the purge
-        // deferred until that lexicon is published again (review 2026-11-14).
-        config?.let { return it.configuredSecondaryLanguage() }
+    private fun configuredSecondaryLanguage(language: String): String? {
+        // On a bound layout this is the CONFIGURED secondary when [language] is the user's
+        // primary store, which holds bilingual learning ([Config.purgeSecondaryFor]).
+        config?.let { return it.purgeSecondaryFor(language) }
         // No config yet: fall back to the preferences the active value is resolved from.
         val ctx = context ?: return null
         return try {

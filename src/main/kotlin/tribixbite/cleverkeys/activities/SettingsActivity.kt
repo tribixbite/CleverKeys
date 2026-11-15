@@ -976,8 +976,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Balanced with onCreate (review 2026-11-14 M24). onCreate can bail out before `prefs`
         // is set (fallbackEncrypted), and then it registered nothing.
         if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(this)
-        // Leaving Settings for good: the last import's message is not news next time.
-        if (isFinishing) tribixbite.cleverkeys.ui.settings.io.VoicePackImportTracker.shared.clearStatus()
+        // Leaving Settings for good: the last import's message and an unmade microphone request
+        // are not news next time.
+        if (isFinishing) tribixbite.cleverkeys.ui.settings.io.VoicePackImportTracker.shared.leave()
         super.onDestroy()
     }
 

@@ -44,6 +44,15 @@ internal object EditorSelectionReader {
     internal var newExtractedTextRequest: () -> ExtractedTextRequest = { ExtractedTextRequest() }
 
     /**
+     * The platform level [read] branches on. A seam because host tests cannot force
+     * `Build.VERSION.SDK_INT` reliably here: once the JIT has compiled [read], it treats the
+     * static final as a constant and ignores a later write (a full-suite-only failure,
+     * 2026-11-15). Production never replaces it.
+     */
+    @Volatile
+    internal var platformSdk: () -> Int = { Build.VERSION.SDK_INT }
+
+    /**
      * @param beforeLength / [afterLength] how much text to read on each side
      * @param maxSelection selections longer than this are refused, not read
      * @param sdk the platform level, injectable for tests
@@ -54,7 +63,7 @@ internal object EditorSelectionReader {
         beforeLength: Int,
         afterLength: Int,
         maxSelection: Long,
-        sdk: Int = Build.VERSION.SDK_INT,
+        sdk: Int = platformSdk(),
     ): EditorSelectionRead? {
         if (sdk >= Build.VERSION_CODES.S) {
             val surrounding = ic.getSurroundingText(beforeLength, afterLength, 0)

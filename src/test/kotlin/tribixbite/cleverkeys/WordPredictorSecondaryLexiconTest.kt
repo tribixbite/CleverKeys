@@ -45,6 +45,7 @@ class WordPredictorSecondaryLexiconTest {
         predictor.setField("currentLanguage", "en")
         val spanish = NormalizedPrefixIndex("es").apply { buildFromList(listOf("días" to 180, "buenos" to 170)) }
         predictor.setField("secondaryIndex", spanish)
+        predictor.setField("secondaryLanguageCode", "es")
         return predictor
     }
 
@@ -61,6 +62,18 @@ class WordPredictorSecondaryLexiconTest {
         val predictor = bilingualPredictor()
         assertFalse(predictor.isInDictionary("zqxv", fieldAllowsPersonalizedLearning = false))
         assertTrue("the primary map still answers", predictor.isInDictionary("hello", false))
+    }
+
+    /**
+     * Follow-up review 2026-11-15: matched through the accent-free key, `dias` counted as known,
+     * so typing it no longer offered "Add to dictionary" or the ExactAdd chip. The primary check
+     * is exact; the secondary now is too (case still folds).
+     */
+    @Test
+    fun anAccentlessSpellingIsNotTheSecondaryWord() {
+        val predictor = bilingualPredictor()
+        assertFalse(predictor.isInDictionary("dias", fieldAllowsPersonalizedLearning = false))
+        assertTrue(predictor.isInDictionary("Días", fieldAllowsPersonalizedLearning = false))
     }
 
     @Test

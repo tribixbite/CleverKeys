@@ -296,6 +296,13 @@ CleverKeys is a **complete Kotlin rewrite** of `Julow/Unexpected-Keyboard` featu
 - Host tests can leave `Build.VERSION.SDK_INT` nonzero after another class; do not
   assume android.jar’s initial zero in routing assertions. Test both injected platform
   branches explicitly and assert the actual SDK branch for end-to-end routing.
+- Forcing `SDK_INT` with Unsafe is unreliable late in the full mock run: once the JIT compiled
+  the code under test it folds the static final and ignores the write (passes alone, fails in
+  the suite). Give the code a platform-level seam instead (`EditorSelectionReader.platformSdk`).
+- `uiautomator dump` lists app nodes that the IME window covers (Short Swipe's Undo snackbar sat
+  under the real keyboard yet "was there"): confirm visibility with a screenshot. Guard scripted
+  tap chains on the ACTIVITY, not the package — one Back too many lands later taps on Settings
+  home (Saga, 2026-11-15).
 - Host `-PtestClass` is relative to `tribixbite.cleverkeys` (the runner always prepends it):
   use `-PtestClass=clipboard.ClipboardHistoryViewStateGuardsTest`, not a fully qualified name.
 

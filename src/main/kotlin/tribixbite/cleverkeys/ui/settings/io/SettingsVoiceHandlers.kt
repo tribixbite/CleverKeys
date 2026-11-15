@@ -75,6 +75,7 @@ internal fun restoreVoicePermissionState(savedState: Bundle) {
  * from whichever Settings activity is in front when the import ends.
  */
 internal fun observeVoicePackImport(activity: SettingsActivity) {
+    VoicePackImportTracker.shared.attach()
     with(activity) {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

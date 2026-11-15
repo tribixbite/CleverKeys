@@ -78,7 +78,10 @@ class DirectBootManager private constructor(private val context: Context) {
      * When false, only Device Encrypted (DE) storage is available.
      */
     val isUserUnlocked: Boolean
-        get() = _isUserUnlocked
+        // Re-asked while false: [cleanup] drops the receiver that flips the flag, so an IME
+        // recreated after an unlock it did not hear would otherwise read "locked" for the rest of
+        // the process and wait for a broadcast that was already sent (follow-up review 2026-11-15).
+        get() = _isUserUnlocked || checkUserUnlocked().also { if (it) _isUserUnlocked = true }
 
     /**
      * Whether the device screen is currently locked (keyguard showing).
@@ -138,7 +141,7 @@ class DirectBootManager private constructor(private val context: Context) {
      * @param callback Function to call when device is unlocked
      */
     fun registerUnlockCallback(callback: () -> Unit) {
-        if (_isUserUnlocked) {
+        if (isUserUnlocked) {
             // Already unlocked, invoke immediately
             Log.d(TAG, "User already unlocked, invoking callback immediately")
             callback()

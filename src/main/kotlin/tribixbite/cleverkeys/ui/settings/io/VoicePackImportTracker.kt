@@ -39,6 +39,12 @@ internal class VoicePackImportTracker(
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state.asStateFlow()
 
+    /** Guards [abandoned] together with the import's completion. */
+    private val lock = Any()
+
+    /** Settings was left for good while an import ran: its result is not news on a later visit. */
+    private var abandoned = false
+
     /**
      * Start an import. [import] runs on the tracker's dispatcher and returns the status to show
      * and whether it succeeded (a success asks for the microphone next). Ignored while another
@@ -55,7 +61,13 @@ internal class VoicePackImportTracker(
         scope.launch {
             try {
                 val (status, succeeded) = import()
-                _state.value = State(inProgress = false, status = status, micRequestPending = succeeded)
+                synchronized(lock) {
+                    // Abandoned: no message and no microphone request out of context later; the
+                    // installed pack still shows in the list.
+                    _state.value = if (abandoned) State()
+                    else State(inProgress = false, status = status, micRequestPending = succeeded)
+                    abandoned = false
+                }
             } finally {
                 // [import] reports failures as a status; anything it lets escape (an Error) must
                 // still release the import button, or it stays disabled for the process.
@@ -75,9 +87,25 @@ internal class VoicePackImportTracker(
         return pending
     }
 
-    /** Drop the shown message (a pack was removed, or Settings closed for good). */
+    /** Drop the shown message (a pack was removed). */
     fun clearStatus() {
         _state.update { if (it.inProgress) it else it.copy(status = null) }
+    }
+
+    /**
+     * Settings closed for good (follow-up review 2026-11-15): forget the message and an unmade
+     * microphone request, or mark a running import so its result is dropped. Otherwise the next
+     * visit, maybe days later, showed "Imported…" and asked for the microphone out of context.
+     */
+    fun leave() {
+        synchronized(lock) {
+            if (_state.value.inProgress) abandoned = true else _state.value = State()
+        }
+    }
+
+    /** A Settings activity is showing the import again: a running import's result is wanted. */
+    fun attach() {
+        synchronized(lock) { abandoned = false }
     }
 
     companion object {

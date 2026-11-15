@@ -47,8 +47,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.toArgb
 import tribixbite.cleverkeys.a11y.KeyLabels
 import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import tribixbite.cleverkeys.customization.*
 import tribixbite.cleverkeys.theme.CleverKeysTheme
 import android.graphics.Typeface
@@ -207,9 +209,14 @@ fun ShortSwipeCustomizationScreenV4(onBack: () -> Unit) {
             withDismissAction = true,
             duration = SnackbarDuration.Long,
         )
+        // Restore BEFORE clearing the key: clearing it cancels this effect, and a cancelled
+        // restore could update the in-memory mappings without writing them (follow-up review
+        // 2026-11-15). NonCancellable so a rotation mid-write cannot cut it short either.
+        if (result == SnackbarResult.ActionPerformed) {
+            withContext(NonCancellable) { manager.restoreAfterReset(removed) }
+        }
         // Reached only when the snackbar ends here, not when a rotation cancels this effect.
         pendingUndo = null
-        if (result == SnackbarResult.ActionPerformed) manager.restoreAfterReset(removed)
     }
 
     Scaffold(

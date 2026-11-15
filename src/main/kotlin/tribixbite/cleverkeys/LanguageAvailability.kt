@@ -48,6 +48,9 @@ object LanguageAvailability {
     private fun snapshot(context: Context): Snapshot {
         cached?.let { return it }
         val manager = LanguagePackManager.getInstance(context)
+        // Asked BEFORE the scan: asked after it, an unlock landing in between would cache the
+        // empty pre-unlock scan as readable (follow-up review 2026-11-15).
+        val readable = manager.isPackStorageReadable()
         val packs = manager.getInstalledPacks().map { it.code }.toSet()
         val snapshot = Snapshot(
             bundled = bundledLanguages(context),
@@ -57,7 +60,7 @@ object LanguageAvailability {
         // Before the first unlock the packs directory cannot be listed and the scan sees none.
         // Caching that kept the empty list for the whole process (review 2026-11-14): a false
         // "no dictionary" warning and pickers without the installed packs until a restart.
-        if (manager.isPackStorageReadable()) cached = snapshot
+        if (readable) cached = snapshot
         return snapshot
     }
 

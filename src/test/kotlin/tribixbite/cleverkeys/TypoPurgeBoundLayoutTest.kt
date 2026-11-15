@@ -51,10 +51,13 @@ class TypoPurgeBoundLayoutTest {
         config.primary_language = boundTo ?: "en"
         config.active_secondary_language = if (boundTo == null) "es" else null
         config.layout_bound_language = boundTo
+        // Objenesis skips field initialisers; production starts these as empty lists.
+        config.layouts = emptyList()
+        config.layout_languages = emptyList()
         return config
     }
 
-    private fun lexiconState(config: Config, secondaryLoaded: Boolean): LearnedTypoPurgeScheduler.LexiconState {
+    private fun lexiconState(config: Config, secondaryLoaded: Boolean, store: String = "en"): LearnedTypoPurgeScheduler.LexiconState {
         val predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
         predictor.set("dictionary", AtomicReference(mutableMapOf("hello" to 200)))
             .set("customAndUserWords", emptySet<String>())
@@ -65,7 +68,7 @@ class TypoPurgeBoundLayoutTest {
         }
         val method = WordPredictor::class.java.getDeclaredMethod("lexiconState", String::class.java)
         method.isAccessible = true
-        return method.invoke(predictor, "en") as LearnedTypoPurgeScheduler.LexiconState
+        return method.invoke(predictor, store) as LearnedTypoPurgeScheduler.LexiconState
     }
 
     @Test
@@ -79,6 +82,39 @@ class TypoPurgeBoundLayoutTest {
     @Test
     fun onAnUnboundLayoutWithTheSpanishLexiconLoadedThePurgeMayRun() {
         val state = lexiconState(config(boundTo = null), secondaryLoaded = true)
+        assertFalse(state.secondaryPending)
+    }
+
+    /**
+     * Follow-up review 2026-11-15: with EVERY layout bound (the GH #61 en QWERTY + de QWERTZ
+     * setup) the secondary is never loaded, so waiting for it stopped the purge for good.
+     */
+    @Test
+    fun withEveryLayoutBoundThePurgeRuns() {
+        val config = config(boundTo = "en")
+        config.layouts = listOf(null, null)
+        config.layout_languages = listOf("en", "de")
+        val state = lexiconState(config, secondaryLoaded = false)
+        assertFalse("nothing can ever publish the Spanish lexicon", state.secondaryPending)
+
+        var purged = 0
+        val scheduler = LearnedTypoPurgeScheduler(
+            executor = { it.run() },
+            isDue = { true },
+            runPurge = { _, _ -> purged++; 0 },
+        )
+        scheduler.onPrimaryPublished(state)
+        assertEquals(1, purged)
+    }
+
+    /** Another bound language's store never held bilingual learning: it does not wait either. */
+    @Test
+    fun aStoreOfAnotherBoundLanguageDoesNotWait() {
+        val config = config(boundTo = "fr")
+        config.layouts = listOf(null, null)
+        config.layout_languages = listOf(null, "fr")
+        val state = lexiconState(config, secondaryLoaded = false, store = "fr")
+        assertNull(state.configuredSecondary)
         assertFalse(state.secondaryPending)
     }
 

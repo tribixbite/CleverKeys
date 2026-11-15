@@ -113,6 +113,26 @@ class DirectBootManagerTest {
         assertThat(manager.isUserUnlocked).isFalse()
     }
 
+    /**
+     * Follow-up review 2026-11-15: the flag was flipped only by the unlock receiver, which
+     * cleanup() (IME destroy) unregisters. An IME recreated after an unlock it did not hear then
+     * read "locked" for the rest of the process and waited for a broadcast already sent.
+     */
+    @Test
+    fun `isUserUnlocked notices an unlock that came without a broadcast`() {
+        every { mockUserManager.isUserUnlocked } returns false
+        val manager = DirectBootManager.getInstance(mockContext)
+        assertThat(manager.isUserUnlocked).isFalse()
+
+        manager.cleanup()                               // the IME was destroyed while locked
+        every { mockUserManager.isUserUnlocked } returns true  // the user unlocks meanwhile
+
+        assertThat(manager.isUserUnlocked).isTrue()
+        var ran = false
+        manager.registerUnlockCallback { ran = true }
+        assertThat(ran).isTrue()
+    }
+
     @Test
     fun `isUserUnlocked returns true when UserManager is null`() {
         // If getSystemService returns null, checkUserUnlocked defaults to true

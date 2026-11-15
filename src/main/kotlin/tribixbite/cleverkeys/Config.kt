@@ -1687,20 +1687,31 @@ class Config private constructor(
         ActiveLanguages(primary_language, active_secondary_language, layout_bound_language)
 
     /**
-     * The secondary language the user configured for UNBOUND layouts (Multi-Language on and a
-     * language chosen), whatever the current layout's binding; null when monolingual. Unlike
-     * [active_secondary_language] it stays set on a bound layout. The typo purge judges the
-     * primary store against it: that store holds n-grams learned while bilingual, and judging it
-     * while a bound layout has unloaded the second lexicon deleted them (review 2026-11-14).
+     * The secondary lexicon the typo purge of [storeLanguage]'s learned store must wait for, or
+     * null when it need not wait.
+     *
+     * Unbound layout: the active secondary, which is what gets loaded. Bound layout (GH #61): the
+     * active secondary is null and the second lexicon is unloaded, but the user's PRIMARY store
+     * still holds n-grams learned while bilingual — judging it now deleted them (review
+     * 2026-11-14) — so that store waits for the secondary configured for unbound layouts. It
+     * never waits for a lexicon that cannot load (follow-up review 2026-11-15): another bound
+     * language's store never held bilingual learning, and with every layout bound the secondary
+     * is never published, which would have stopped the purge for good.
      */
-    fun configuredSecondaryLanguage(): String? =
-        LayoutLanguageBinding.resolve(
+    fun purgeSecondaryFor(storeLanguage: String): String? {
+        if (layout_bound_language == null) return active_secondary_language
+        val configured = LayoutLanguageBinding.resolve(
             bindings = emptyList(),
             currentIndex = 0,
             userPrimary = user_primary_language,
             multilangEnabled = enable_multilang,
             userSecondary = user_secondary_language,
-        ).secondary
+        ).secondary ?: return null
+        fun base(code: String) = code.substringBefore('-').substringBefore('_').lowercase(java.util.Locale.ROOT)
+        if (base(storeLanguage) != base(user_primary_language)) return null
+        val someLayoutUnbound = layouts.isEmpty() || layouts.indices.any { layout_languages.getOrNull(it) == null }
+        return configured.takeIf { someLayoutUnbound }
+    }
 
     /**
      * Re-resolve the active languages from the current layout's binding and the user's

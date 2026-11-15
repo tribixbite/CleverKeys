@@ -88,4 +88,47 @@ class VoicePackImportTrackerTest {
         tracker.clearStatus()
         assertThat(tracker.state.value.status).isNull()
     }
+
+    /**
+     * Follow-up review 2026-11-15: leaving Settings for good kept an unmade microphone request
+     * (and a running import's result) for the next visit, maybe days later.
+     */
+    @Test
+    fun leavingSettingsDropsAFinishedImportsMessageAndRequest() = runBlocking {
+        val tracker = tracker()
+        tracker.start("Importing…") { VoiceImportStatus.Ok("ok") to true }
+        withTimeout(5_000) { tracker.state.first { !it.inProgress } }
+
+        tracker.leave()
+
+        assertThat(tracker.state.value.status).isNull()
+        assertThat(tracker.consumeMicRequest()).isFalse()
+    }
+
+    @Test
+    fun anImportRunningWhenSettingsIsLeftEndsSilently() = runBlocking {
+        val tracker = tracker()
+        val gate = CompletableDeferred<Unit>()
+        tracker.start("Importing…") { gate.await(); VoiceImportStatus.Ok("ok") to true }
+        tracker.leave()
+        gate.complete(Unit)
+        val done = withTimeout(5_000) { tracker.state.first { !it.inProgress } }
+
+        assertThat(done.status).isNull()
+        assertThat(tracker.consumeMicRequest()).isFalse()
+    }
+
+    @Test
+    fun comingBackDuringTheImportWantsItsResultAgain() = runBlocking {
+        val tracker = tracker()
+        val gate = CompletableDeferred<Unit>()
+        tracker.start("Importing…") { gate.await(); VoiceImportStatus.Ok("ok") to true }
+        tracker.leave()
+        tracker.attach()  // Settings opened again before the import ended
+        gate.complete(Unit)
+        val done = withTimeout(5_000) { tracker.state.first { !it.inProgress } }
+
+        assertThat(done.status).isEqualTo(VoiceImportStatus.Ok("ok"))
+        assertThat(tracker.consumeMicRequest()).isTrue()
+    }
 }

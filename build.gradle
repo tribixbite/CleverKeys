@@ -1767,6 +1767,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.ui.settings.io.VoicePackImportTrackerTest',
     'tribixbite.cleverkeys.ui.settings.io.VoicePermissionStateTest',
     'tribixbite.cleverkeys.LayoutThemePickerSchemeTest',
+    // Follow-up review 2026-11-15: the readability check precedes the pack scan.
+    'tribixbite.cleverkeys.LanguageAvailabilityUnlockRaceTest',
     // 2026-10-17: swipe/autocorrect commits carry their alternatives as a SuggestionSpan.
     'tribixbite.cleverkeys.SuggestionSpanCommitTest',
     // Review 2026-10-07: late own-write selection callbacks (suffix ledger lifetime, two-write
