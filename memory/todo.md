@@ -48,10 +48,8 @@ unfixed code (or, for new API, not compiling). The remaining lows were fixed on 
 `io_error_backup_password_unreadable` and five Settings strings (item 10); device checks in §4
 (lock-screen worst case, tablet landscape scene memory, aurora first tick, Settings rotation — now
 also: rotate during a voice-pack import). Done on the Saga 2026-11-15 (release `d82bd309`): Undo
-re-offered after a rotation, Look editor's single hint toggle. Still to check on the `a20209c8`
-build: tapping Undo brings the mapping back, and the snackbar now sits above the keyboard
-(adjustResize). The Saga `192.168.1.130` is still checked OUT in its `/sdcard/agent-sharing.md`
-with the `d82bd309` release installed; rotation and focus were restored.
+re-offered after a rotation, Look editor's single hint toggle; and on `a20209c8`: the snackbar sits
+above the keyboard and Undo brings the mapping back (1 → 0 → 1). Saga checked back IN.
 
 Owners: **device** = needs a test phone · **maintainer** = the maintainer's hands or decision ·
 **agent** = doable from this box · **RTX** = needs the ML training box.
