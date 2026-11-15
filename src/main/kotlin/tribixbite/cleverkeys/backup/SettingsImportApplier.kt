@@ -47,6 +47,11 @@ object SettingsImportApplier {
         val nowBeforeCommit: Map<String, Any?> = prefs.all
         var driftCount = 0
 
+        // The DIY themes are written before the settings commit (rule 5); keep what was stored
+        // so a failed commit can put it back (review 2026-11-14 M7).
+        val themesBefore = if (customThemeMode != ShortSwipeImportMode.SKIP) {
+            customThemeStore?.exportThemesJson()
+        } else null
         val activeThemeRemoved = applyCustomThemes(
             plan, excludedKeys, customThemeMode, customThemeStore, nowBeforeCommit, result,
         )
@@ -87,18 +92,28 @@ object SettingsImportApplier {
             editor.putInt(CustomThemePrefPolicy.SWIPE_TRAIL_PREF_KEY, CustomThemePrefPolicy.FALLBACK_SWIPE_TRAIL_COLOR)
         }
 
-        if (shortSwipeMode != ShortSwipeImportMode.SKIP && plan.shortSwipeImportRawJson != null) {
-            val merge = (shortSwipeMode == ShortSwipeImportMode.MERGE)
-            val ssCount = shortSwipeImporter.importFromJson(plan.shortSwipeImportRawJson, merge = merge)
-            result.shortSwipeCustomizationsImported = ssCount
-        }
-
         result.skippedCount = plan.parseSkippedKeys.size
         plan.parseSkippedKeys.forEach { result.skippedKeys.add(it.key) }
         result.driftCount = driftCount
 
         if (!editor.commit()) {
+            // Nothing was written: report a failure instead of "Applied: N" (review 2026-11-14
+            // M7), and put back the DIY themes written above so the store matches the settings.
             Log.w(TAG, "editor.commit() returned false — disk full or IPC failure")
+            if (themesBefore != null && result.customThemesImported > 0) {
+                runCatching { customThemeStore?.replaceAll(themesBefore) }
+                    .onFailure { Log.e(TAG, "DIY theme rollback after a failed commit failed", it) }
+            }
+            throw tribixbite.cleverkeys.ClassifiedIoException(
+                tribixbite.cleverkeys.IoFailureReason.READ_WRITE, "settings commit failed"
+            )
+        }
+
+        // Short swipes live outside prefs: applied only once the settings are stored.
+        if (shortSwipeMode != ShortSwipeImportMode.SKIP && plan.shortSwipeImportRawJson != null) {
+            val merge = (shortSwipeMode == ShortSwipeImportMode.MERGE)
+            val ssCount = shortSwipeImporter.importFromJson(plan.shortSwipeImportRawJson, merge = merge)
+            result.shortSwipeCustomizationsImported = ssCount
         }
         if (driftCount > 0) {
             Log.i(TAG, "BackupRestore: $driftCount keys drifted between preview and apply")

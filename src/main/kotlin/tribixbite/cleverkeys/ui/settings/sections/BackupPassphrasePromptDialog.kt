@@ -31,13 +31,16 @@ import tribixbite.cleverkeys.R
 /**
  * Stage B: prompts for a backup passphrase when an encrypted import cannot be decrypted
  * with the stored passphrase (design §9). Rendered whenever
- * [BackupRestoreViewModel.passphrasePromptRetry] is non-null; invoking the retry lambda
+ * [BackupRestoreViewModel.pendingPassphraseImport] is non-null; [onRetry] (the live Activity)
  * re-runs the specific import that triggered the prompt. Cancel aborts the import,
  * touching nothing (the decrypt threw before any parse/apply).
  */
 @Composable
-internal fun BackupPassphrasePromptDialog(vm: BackupRestoreViewModel) {
-    val retry = vm.passphrasePromptRetry ?: return
+internal fun BackupPassphrasePromptDialog(
+    vm: BackupRestoreViewModel,
+    onRetry: (tribixbite.cleverkeys.PendingPassphraseImport, CharArray) -> Unit,
+) {
+    val pending = vm.pendingPassphraseImport ?: return
     var pass by remember { mutableStateOf("") }
     var show by remember { mutableStateOf(false) }
 
@@ -75,7 +78,10 @@ internal fun BackupPassphrasePromptDialog(vm: BackupRestoreViewModel) {
         confirmButton = {
             TextButton(
                 enabled = pass.isNotEmpty(),
-                onClick = { retry(pass.toCharArray()) },
+                onClick = {
+                    vm.dismissPassphrasePrompt()
+                    onRetry(pending, pass.toCharArray())
+                },
             ) { Text(stringResource(R.string.backup_passphrase_prompt_decrypt)) }
         },
         dismissButton = {

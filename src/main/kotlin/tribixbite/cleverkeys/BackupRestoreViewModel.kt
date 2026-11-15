@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -23,16 +24,25 @@ class BackupRestoreViewModel : ViewModel() {
     /**
      * Stage B (backup encryption): when non-null, a passphrase-prompt dialog is shown
      * for an encrypted import that could not be decrypted with the stored passphrase
-     * (or none was stored). The lambda is invoked with the entered passphrase to retry
-     * the specific import that triggered it. [passphrasePromptError] carries the
-     * "wrong password" message on a failed retry (null on first prompt).
+     * (or none was stored); the entered passphrase retries that import. [passphrasePromptError]
+     * carries the "wrong password" message on a failed retry (null on first prompt).
+     *
+     * DATA, not a callback (review 2026-11-14 M9): this VM outlives the Activity across a
+     * rotation, and a stored lambda captured the destroyed one — the retry then ran against its
+     * dead lifecycleScope and nothing happened. The live Activity turns it into a call.
      */
-    var passphrasePromptRetry by mutableStateOf<((CharArray) -> Unit)?>(null)
+    var pendingPassphraseImport by mutableStateOf<PendingPassphraseImport?>(null)
     var passphrasePromptError by mutableStateOf<String?>(null)
 
     /** Dismiss the passphrase prompt (user cancelled — import aborted, nothing touched). */
     fun dismissPassphrasePrompt() {
-        passphrasePromptRetry = null
+        pendingPassphraseImport = null
         passphrasePromptError = null
     }
 }
+
+/** Which encrypted import asked for a passphrase. */
+enum class EncryptedImportKind { SETTINGS, FULL_BACKUP, CLIPBOARD, CLIPBOARD_ZIP, DICTIONARY }
+
+/** The import a passphrase prompt retries: what it was and which file. */
+data class PendingPassphraseImport(val kind: EncryptedImportKind, val uri: Uri)

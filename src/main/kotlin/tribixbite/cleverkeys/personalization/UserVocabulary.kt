@@ -400,14 +400,26 @@ class UserVocabulary internal constructor(
     }
 
     /**
-     * Import vocabulary from JSON string (replaces current vocabulary).
+     * Import vocabulary from JSON string (replaces current vocabulary with the VALID rows).
      *
-     * @return number of words imported (0 on parse failure)
+     * The payload is a backup section passed through verbatim, so every row is checked before
+     * anything changes (review 2026-11-14 M5): Gson builds a row without `"word"` with
+     * `word == null` despite the non-null type, and the old clear-then-insert threw on it with
+     * the table already emptied — the next flush then saved the empty table over the user's
+     * vocabulary. A row needs a non-blank word, a usage count ≥ 1 and non-negative timestamps;
+     * other rows are skipped. A payload with no valid row leaves the vocabulary untouched.
+     *
+     * @return number of words imported (0 on parse failure or when no row is valid)
      */
     fun importFromJson(json: String): Int {
         return try {
-            val type = object : TypeToken<List<UserWordUsage>>() {}.type
-            val imported: List<UserWordUsage> = gson.fromJson(json, type)
+            val type = object : TypeToken<List<UserWordUsage?>>() {}.type
+            val imported: List<UserWordUsage?> = gson.fromJson(json, type) ?: emptyList()
+            val valid = imported.mapNotNull { row -> row?.takeIf(::isValidImportRow) }
+            if (valid.isEmpty()) {
+                log("Vocabulary import has no valid row (${imported.size} rows); keeping the current vocabulary", null)
+                return 0
+            }
 
             synchronized(this) {
                 mutationVersion++
@@ -417,7 +429,7 @@ class UserVocabulary internal constructor(
                 // first-N cut keeps the highest-value words when the payload
                 // exceeds the configured cap.
                 val cap = currentCap()
-                imported.forEach { usage ->
+                valid.forEach { usage ->
                     if (vocabulary.size < cap) {
                         vocabulary[usage.word] = usage
                     }
@@ -432,6 +444,14 @@ class UserVocabulary internal constructor(
             log("Failed to import vocabulary from JSON", e)
             0
         }
+    }
+
+    /** A backup row the store can hold: Gson may hand over a null `word` (see [importFromJson]). */
+    private fun isValidImportRow(row: UserWordUsage): Boolean {
+        @Suppress("SENSELESS_COMPARISON") // Gson bypasses Kotlin's null checks.
+        val word: String? = row.word
+        return word != null && word.isNotBlank() && row.usageCount >= 1 &&
+            row.lastUsed >= 0 && row.firstUsed >= 0
     }
 
     /** @return true if there are unflushed in-RAM changes. */

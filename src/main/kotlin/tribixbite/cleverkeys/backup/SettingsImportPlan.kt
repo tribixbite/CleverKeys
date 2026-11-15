@@ -90,4 +90,13 @@ data class SettingsImportPlan(
      * per-theme diff; null when the runtime could not read them (count and radio only).
      */
     val currentCustomThemesRawJson: String? = null,
-)
+) {
+    /**
+     * True when applying the plan would change nothing: no setting, no skipped key to report,
+     * no short swipes and no DIY themes. The DIY-theme term was missing, so a themes-only file
+     * showed "No changes" and could not be imported (review 2026-11-14 M8).
+     */
+    val hasNothingToImport: Boolean
+        get() = changes.isEmpty() && parseSkippedKeys.isEmpty() &&
+            shortSwipeImportSize == 0 && customThemesImportSize == 0
+}

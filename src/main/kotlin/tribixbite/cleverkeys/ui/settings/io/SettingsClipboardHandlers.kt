@@ -215,10 +215,8 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: 
             promptForPassphrase(
                 e, retryPassphrase,
                 R.string.clipboard_backup_import_failed_title, R.string.clipboard_backup_import_failed,
-            ) { entered ->
-                backupRestoreManager.setImportPassphraseOverride(entered)
-                performClipboardImport(uri, entered)
-            }
+                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.CLIPBOARD, uri),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard import failed", e)
             showIoFailure(
@@ -305,10 +303,8 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             promptForPassphrase(
                 e, retryPassphrase,
                 R.string.clipboard_backup_zip_import_failed_title, R.string.clipboard_backup_zip_import_failed,
-            ) { entered ->
-                backupRestoreManager.setImportPassphraseOverride(entered)
-                performClipboardZipImport(uri, entered)
-            }
+                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.CLIPBOARD_ZIP, uri),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Clipboard ZIP import failed", e)
             showIoFailure(

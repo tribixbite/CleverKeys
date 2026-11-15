@@ -155,6 +155,16 @@ class SettingsImportPlanBuilderTest {
      * app's data is cleared.
      */
     @Test
+    fun aFileCarryingOnlyDiyThemesIsNotNothingToImport() {
+        // Review 2026-11-14 M8: the handler's "No changes" short-circuit ignored the DIY-theme
+        // section, so a themes-only settings file could never be imported.
+        val empty = SettingsImportPlanBuilder.fromJson("""{"preferences":{}}""", emptyMap(), screen)
+        assertThat(empty.hasNothingToImport).isTrue()
+        assertThat(empty.copy(customThemesImportSize = 2).hasNothingToImport).isFalse()
+        assertThat(empty.copy(shortSwipeImportSize = 1).hasNothingToImport).isFalse()
+    }
+
+    @Test
     fun wrongTypedValuesForKnownKeysAreSkipped() {
         val json = """{"preferences":{
             "look_backdrop_motion": 1,

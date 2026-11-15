@@ -39,6 +39,32 @@ class UserVocabularyPersistenceTest {
         assertTrue("condition not met within ${timeoutMs}ms", condition())
     }
 
+    // Review 2026-11-14 M5: Backup & Restore hands the user_vocabulary section through verbatim,
+    // and Gson builds a row without "word" with word == null. The import cleared the table first,
+    // threw on that row, and the next flush saved the emptied table over the user's vocabulary.
+
+    @Test
+    fun `an import skips malformed rows and keeps the valid ones`() {
+        val vocab = newVocab(InMemoryLearnedStorage())
+        val json = """[{"word":"kotlin","usageCount":3,"lastUsed":1000},
+            {"usageCount":2,"lastUsed":1000},
+            {"word":"   ","usageCount":2,"lastUsed":1000},
+            {"word":"gradle","usageCount":0,"lastUsed":1000},
+            {"word":"termux","usageCount":4,"lastUsed":-5}]"""
+
+        assertEquals(1, vocab.importFromJson(json))
+        assertEquals(listOf("kotlin"), vocab.getAllWords().map { it.word })
+    }
+
+    @Test
+    fun `an import with no valid row leaves the vocabulary untouched`() {
+        val vocab = newVocab(InMemoryLearnedStorage())
+        requireNotNull(vocab.recordWordUsageWithReceipt("kotlin", 3000))
+
+        assertEquals(0, vocab.importFromJson("""[{"usageCount":2,"lastUsed":1000}]"""))
+        assertEquals(listOf("kotlin"), vocab.getAllWords().map { it.word })
+    }
+
     @Test
     fun `receipt reverses only its normalized increment once`() {
         val vocab = newVocab(InMemoryLearnedStorage())

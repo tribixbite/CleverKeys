@@ -2142,6 +2142,15 @@ open class BackupRestoreManager(
             // The DIY themes are a second store the config apply writes; snapshot them too, so a
             // failed import cannot leave the file's themes behind (null: nothing readable to keep).
             val customThemesSnapshot: String? = readCurrentCustomThemes()
+            // Short swipes are REPLACEd by the settings section and live outside prefs; keep them
+            // so a later section's failure can put them back (review 2026-11-14 M6).
+            val shortSwipeSnapshot: String? = runCatching { runBlocking { shortSwipeImporter.snapshot() } }
+                .onFailure { Log.w(TAG, "Short-swipe snapshot failed; a rollback cannot restore them", it) }
+                .getOrNull()
+            var shortSwipesReplaced = false
+            // Learned data (n-grams, vocabulary) has no rollback: it is applied last, once every
+            // section that can still fail has succeeded (review 2026-11-14 M6).
+            var learnedDataJson: String? = null
             try {
                 // Apply config.json — funnel through SettingsImportPlanBuilder + Applier
                 // so screen-mismatch + drift handling stay consistent with single-file import.
@@ -2164,6 +2173,7 @@ open class BackupRestoreManager(
                     }
                     configKeysApplied = result.importedCount
                     customThemesImported = result.customThemesImported
+                    shortSwipesReplaced = plan.shortSwipeImportRawJson != null
                     configImported = true
                     // #156 F5: full-backup restore also writes clipboard_private_copy_toolbar_enabled;
                     // reconcile the component from the imported value (covers the headless path — the
@@ -2186,9 +2196,9 @@ open class BackupRestoreManager(
                     // Learned data (context-LM bigrams + trigrams + user vocabulary) rides the
                     // dictionaries payload since 2026-08-06 (backup blind-spot fix; trigrams
                     // added by ARC-022).
-                    // TODO(CK-150-020): learned n-grams/vocabulary land outside `prefs`, so the
-                    // snapshot restore below cannot undo them; they need their own reversal.
-                    learnedDataIncomplete = importLearnedDataFromJson(dictString).incomplete
+                    // They land outside `prefs`, so the snapshot restore below cannot undo them:
+                    // applied at the end of this block instead (review 2026-11-14 M6).
+                    learnedDataJson = dictString
                 }
 
                 // Apply clipboard_history.json. CK-150-019: importFromJSON now throws on a DB
@@ -2204,6 +2214,9 @@ open class BackupRestoreManager(
                         Log.w(TAG, "Full-backup clipboard import truncated ${importResult[4]} entries at the per-array cap")
                     }
                 }
+
+                // Last: every section that could fail has succeeded.
+                learnedDataJson?.let { learnedDataIncomplete = importLearnedDataFromJson(it).incomplete }
             } catch (e: Exception) {
                 // Undo the prefs half of a partially-applied import. The rethrow reaches the
                 // outer catch, which rolls the media commit back and reports success = false.
@@ -2213,6 +2226,10 @@ open class BackupRestoreManager(
                 if (customThemesImported > 0 && customThemesSnapshot != null) {
                     runCatching { customThemeStore.replaceAll(customThemesSnapshot) }
                         .onFailure { Log.e(TAG, "DIY theme rollback failed after a failed import", it) }
+                }
+                if (shortSwipesReplaced && shortSwipeSnapshot != null) {
+                    runCatching { runBlocking { shortSwipeImporter.restore(shortSwipeSnapshot) } }
+                        .onFailure { Log.e(TAG, "Short-swipe rollback failed after a failed import", it) }
                 }
                 customThemesImported = 0
                 configImported = false

@@ -262,6 +262,48 @@ class BackupRestoreDbFailureTest {
         assertEquals(0, result.configKeysApplied)
     }
 
+    // ── Review 2026-11-14 M6: a later failure leaves no learned data / short swipes behind ─
+
+    @Test
+    fun fullBackupImport_laterFailure_neverAppliesLearnedData() {
+        // Learned data (vocabulary REPLACE, n-grams) lives outside prefs and has no rollback,
+        // so it is applied only after every section that can still fail (the clipboard).
+        val vocabulary = mockk<tribixbite.cleverkeys.personalization.UserVocabulary>(relaxed = true)
+        mockkObject(tribixbite.cleverkeys.personalization.UserVocabulary.Companion)
+        every { tribixbite.cleverkeys.personalization.UserVocabulary.getInstance(any()) } returns vocabulary
+        val dictionaries = """{"custom_words_by_language":{"en":{"gamma":120}},
+            "user_vocabulary":[{"word":"kotlin","usageCount":3,"lastUsed":1000}]}"""
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to manifestBytes(),
+            BackupRestoreManager.ENTRY_DICTIONARIES to dictionaries.toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CLIPBOARD_JSON to clipboardJsonBytes(),
+        ))
+        dbFailure()
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        verify(exactly = 0) { vocabulary.importFromJson(any()) }
+    }
+
+    @Test
+    fun fullBackupImport_laterFailure_restoresTheShortSwipeSnapshot() {
+        coEvery { shortSwipeImporter.snapshot() } returns """{"version":2,"mappings":{}}"""
+        val config = """{"preferences":{"${PrivateCopyProcessTextActivity.PREF_TOOLBAR_ENABLED}":true},
+            "short_swipe_customizations":{"version":2,"mappings":{"a":{}}}}"""
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to manifestBytes(),
+            BackupRestoreManager.ENTRY_CONFIG to config.toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CLIPBOARD_JSON to clipboardJsonBytes(),
+        ))
+        dbFailure()
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertFalse(result.success)
+        coVerify(exactly = 1) { shortSwipeImporter.restore("""{"version":2,"mappings":{}}""") }
+    }
+
     // ── CK-150-020: a later section failure undoes the earlier sections' prefs ─
 
     @Test

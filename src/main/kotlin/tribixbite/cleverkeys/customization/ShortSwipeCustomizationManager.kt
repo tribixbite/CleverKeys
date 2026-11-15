@@ -350,6 +350,16 @@ class ShortSwipeCustomizationManager private constructor(private val context: Co
     }
 
     /**
+     * Put back an [exportToJson] snapshot exactly — unlike [importFromJson], an EMPTY snapshot
+     * clears the mappings, because the snapshot is the user's own earlier state (a full restore
+     * rolling back after a later section failed; review 2026-11-14 M6).
+     */
+    suspend fun restoreFromJson(json: String) {
+        val customizations = gson.fromJson(json, ShortSwipeCustomizations::class.java)
+        importFromMappings(customizations?.toMappingList().orEmpty(), merge = false)
+    }
+
+    /**
      * Import mappings from a list of ShortSwipeMapping objects.
      *
      * @param mappings The list of mappings to import

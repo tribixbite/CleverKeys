@@ -126,11 +126,10 @@ class DictImportPlanApplyTest {
     }
 
     @Test
-    fun apply_commitFails_returnsCountsButLogsWarning() {
-        // Symmetric to SettingsImportPlanApplyTest.apply_commitFails_*: when
-        // commit() returns false, the applier still returns the would-be
-        // counts (caller surfaces them in the result dialog) and emits a
-        // single Log.w warning. No throw.
+    fun apply_commitFails_throwsAReadWriteFailure() {
+        // Symmetric to SettingsImportPlanApplyTest.apply_commitFails_*: commit() returning
+        // false wrote nothing, so reporting the would-be counts claimed words that were not
+        // stored (review 2026-11-14 M7). It is a classified failure now.
         every { editor.commit() } returns false
         val plan = DictImportPlan(
             sourceVersion = "1.4.0",
@@ -139,16 +138,12 @@ class DictImportPlanApplyTest {
             mergedDisabledWordsByLang = emptyMap(),
         )
 
-        val (customApplied, _) = DictImportApplier.apply(
-            plan, emptySet(), emptySet(), prefs
-        )
+        val thrown = runCatching { DictImportApplier.apply(plan, emptySet(), emptySet(), prefs) }
+            .exceptionOrNull()
 
-        assertThat(customApplied).isEqualTo(1)
-        verify {
-            Log.w("DictImportApplier", match<String> {
-                it.contains("editor.commit() returned false")
-            })
-        }
+        assertThat(thrown).isInstanceOf(tribixbite.cleverkeys.ClassifiedIoException::class.java)
+        assertThat((thrown as tribixbite.cleverkeys.ClassifiedIoException).reason)
+            .isEqualTo(tribixbite.cleverkeys.IoFailureReason.READ_WRITE)
     }
 
     // ── user swipe priority (2026-10-08) ─────────────────────────────────────────

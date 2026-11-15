@@ -97,7 +97,11 @@ object DictImportApplier {
         }
 
         if (!editor.commit()) {
+            // Nothing was written: a failure, not would-be counts (review 2026-11-14 M7).
             Log.w(TAG, "editor.commit() returned false — disk full or IPC failure")
+            throw tribixbite.cleverkeys.ClassifiedIoException(
+                tribixbite.cleverkeys.IoFailureReason.READ_WRITE, "dictionary commit failed"
+            )
         }
         return customApplied to disabledApplied
     }

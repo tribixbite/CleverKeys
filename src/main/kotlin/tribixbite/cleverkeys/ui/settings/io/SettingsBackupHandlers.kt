@@ -198,10 +198,7 @@ internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: Cha
             val plan = withContext(Dispatchers.IO) {
                 backupRestoreManager.buildSettingsImportPlan(uri, prefs)
             }
-            val nothingToImport = plan.changes.isEmpty() &&
-                plan.parseSkippedKeys.isEmpty() &&
-                plan.shortSwipeImportSize == 0
-            if (nothingToImport) {
+            if (plan.hasNothingToImport) {
                 showIoResult(
                     getString(R.string.backup_result_no_changes_title),
                     getString(R.string.backup_result_settings_no_changes),
@@ -213,10 +210,8 @@ internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: Cha
             promptForPassphrase(
                 e, retryPassphrase,
                 R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed,
-            ) { entered ->
-                backupRestoreManager.setImportPassphraseOverride(entered)
-                performConfigImport(uri, entered)
-            }
+                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.SETTINGS, uri),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build settings plan failed", e)
             showIoFailure(
@@ -243,7 +238,7 @@ internal fun SettingsActivity.promptForPassphrase(
     retryPassphrase: CharArray?,
     @StringRes failedTitleRes: Int,
     @StringRes failedBodyRes: Int,
-    onEntered: (CharArray) -> Unit,
+    retry: tribixbite.cleverkeys.PendingPassphraseImport,
 ) {
     if (e.reason != IoFailureReason.NO_BACKUP_PASSWORD && e.reason != IoFailureReason.WRONG_PASSWORD_OR_CORRUPT) {
         android.util.Log.w(SettingsActivity.TAG, "Encrypted import refused: ${e.message}", e)
@@ -254,9 +249,21 @@ internal fun SettingsActivity.promptForPassphrase(
     backupRestoreViewModel.passphrasePromptError =
         if (retryPassphrase != null) getString(IoFailureReason.WRONG_PASSWORD_OR_CORRUPT.messageRes) else null
     android.util.Log.i(SettingsActivity.TAG, "Prompting for backup passphrase: ${e.message}")
-    backupRestoreViewModel.passphrasePromptRetry = { entered ->
-        backupRestoreViewModel.dismissPassphrasePrompt()
-        onEntered(entered)
+    backupRestoreViewModel.pendingPassphraseImport = retry
+}
+
+/**
+ * Re-run the import a passphrase prompt was shown for, with the entered passphrase — on the
+ * CURRENT Activity (the prompt survives rotation as data, review 2026-11-14 M9).
+ */
+internal fun SettingsActivity.retryEncryptedImport(pending: tribixbite.cleverkeys.PendingPassphraseImport, entered: CharArray) {
+    backupRestoreManager.setImportPassphraseOverride(entered)
+    when (pending.kind) {
+        tribixbite.cleverkeys.EncryptedImportKind.SETTINGS -> performConfigImport(pending.uri, entered)
+        tribixbite.cleverkeys.EncryptedImportKind.FULL_BACKUP -> performFullBackupImport(pending.uri, entered)
+        tribixbite.cleverkeys.EncryptedImportKind.CLIPBOARD -> performClipboardImport(pending.uri, entered)
+        tribixbite.cleverkeys.EncryptedImportKind.CLIPBOARD_ZIP -> performClipboardZipImport(pending.uri, entered)
+        tribixbite.cleverkeys.EncryptedImportKind.DICTIONARY -> performDictionaryImport(pending.uri, entered)
     }
 }
 
@@ -416,10 +423,8 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase:
             promptForPassphrase(
                 e, retryPassphrase,
                 R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed,
-            ) { entered ->
-                backupRestoreManager.setImportPassphraseOverride(entered)
-                performFullBackupImport(uri, entered)
-            }
+                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.FULL_BACKUP, uri),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Full backup import failed", e)
             showIoFailure(

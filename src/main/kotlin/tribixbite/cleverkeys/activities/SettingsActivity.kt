@@ -38,6 +38,7 @@ import tribixbite.cleverkeys.ui.settings.io.applyPlannedDictionaries
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedSettings
 import tribixbite.cleverkeys.ui.settings.io.handleCustomRulesPicked
 import tribixbite.cleverkeys.ui.settings.io.handleGifPackShareIntent
+import tribixbite.cleverkeys.ui.settings.io.retryEncryptedImport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardExport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardImport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardZipExport
@@ -928,7 +929,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     // Stage B: passphrase prompt for an encrypted import that couldn't be
                     // decrypted with the stored passphrase (design §9).
                     tribixbite.cleverkeys.ui.settings.sections.BackupPassphrasePromptDialog(
-                        backupRestoreViewModel
+                        backupRestoreViewModel,
+                        onRetry = { pending, entered -> retryEncryptedImport(pending, entered) },
                     )
                     if (backupRestoreViewModel.isProcessing) {
                         Box(

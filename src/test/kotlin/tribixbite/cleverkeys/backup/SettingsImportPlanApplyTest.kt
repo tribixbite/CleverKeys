@@ -245,27 +245,25 @@ class SettingsImportPlanApplyTest {
     }
 
     @Test
-    fun apply_commitFails_returnsResultButLogsWarning() {
-        // commit() returning false is rare (disk full / IPC failure) but
-        // must not crash — the result is still returned so the caller can
-        // surface the import counts; a Log.w warning is the only side effect.
+    fun apply_commitFails_throwsAReadWriteFailureAndAppliesNoShortSwipes() {
+        // Review 2026-11-14 M7: commit() returning false (disk full / IPC failure) wrote
+        // nothing, yet the dialog said "Applied: N". It is now a classified failure, and the
+        // short swipes (applied after the commit) are never imported.
         every { editor.commit() } returns false
         val plan = planWith(
             SettingsChange("k", PrefValue.Unset, PrefValue.IntV(1), ChangeType.ADDED)
-        )
+        ).copy(shortSwipeImportRawJson = """{"version":2,"mappings":{"a":{}}}""", shortSwipeImportSize = 1)
 
-        val result = runBlocking {
-            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
-        }
+        val thrown = runCatching {
+            runBlocking {
+                SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.REPLACE, prefs, ssImporter)
+            }
+        }.exceptionOrNull()
 
-        // The result still reports "applied" because commit was attempted.
-        assertThat(result.importedCount).isEqualTo(1)
-        // And the warning was emitted.
-        verify {
-            Log.w("SettingsImportApplier", match<String> {
-                it.contains("editor.commit() returned false")
-            })
-        }
+        assertThat(thrown).isInstanceOf(tribixbite.cleverkeys.ClassifiedIoException::class.java)
+        assertThat((thrown as tribixbite.cleverkeys.ClassifiedIoException).reason)
+            .isEqualTo(tribixbite.cleverkeys.IoFailureReason.READ_WRITE)
+        coVerify(exactly = 0) { ssImporter.importFromJson(any(), any()) }
     }
 
     @Test

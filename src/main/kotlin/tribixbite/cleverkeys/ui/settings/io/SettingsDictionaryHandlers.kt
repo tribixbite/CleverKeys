@@ -88,10 +88,8 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
             promptForPassphrase(
                 e, retryPassphrase,
                 R.string.backup_result_import_failed_title, R.string.dictionary_backup_read_failed,
-            ) { entered ->
-                backupRestoreManager.setImportPassphraseOverride(entered)
-                performDictionaryImport(uri, entered)
-            }
+                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.DICTIONARY, uri),
+            )
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "Build dictionary plan failed", e)
             showIoFailure(
