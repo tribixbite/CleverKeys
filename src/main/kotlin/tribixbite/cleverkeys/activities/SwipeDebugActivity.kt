@@ -109,10 +109,6 @@ class SwipeDebugActivity : Activity() {
         }
     }
 
-    // Context.RECEIVER_NOT_EXPORTED is a compile-time-inlined int constant (public API 33).
-    // The flag value is honored by registerReceiver from API 26 onward, which is why it's
-    // used inside the SDK_INT >= O guard below; on API 24-25 the 3-arg form is used.
-    @SuppressLint("InlinedApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.swipe_debug_activity)
@@ -234,30 +230,14 @@ class SwipeDebugActivity : Activity() {
 
     /**
      * Register broadcast receivers: raw pipeline log lines + per-swipe result payloads.
-     * RECEIVER_NOT_EXPORTED (4-arg registerReceiver) requires API 26. On API 24-25 a
-     * dynamic receiver without it is reachable by ANY app (I-8), so the pre-26 branch
-     * registers behind the app's signature-protected permission — the IME (this app)
-     * holds it via `<uses-permission>`, third parties cannot inject log/panel content.
-     *
-     * UnspecifiedRegisterReceiverFlag: lint flags the pre-26 permission-form calls, but
-     * no flag-accepting overload exists below API 26 and that branch can never execute
-     * on the API 33+ devices the check protects; the permission IS the protection.
+     * A dynamic receiver without protection is reachable by ANY app (I-8), so both are
+     * app-private through [PrivateReceivers]: the not-exported flag on API 33+, the app's
+     * signature permission below (the flag is ignored on 26–32; review 2026-11-14 M3). The
+     * IME (this app) holds the permission, third parties cannot inject log/panel content.
      */
-    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     private fun registerPlaygroundReceivers() {
-        val filter = IntentFilter(ACTION_DEBUG_LOG)
-        val resultFilter = IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-            registerReceiver(swipeResultReceiver, resultFilter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(
-                logReceiver, filter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
-            )
-            registerReceiver(
-                swipeResultReceiver, resultFilter, DebugLoggingManager.PERMISSION_SET_DEBUG_MODE, null
-            )
-        }
+        PrivateReceivers.register(this, logReceiver, IntentFilter(ACTION_DEBUG_LOG))
+        PrivateReceivers.register(this, swipeResultReceiver, IntentFilter(PlaygroundTraceRecorder.ACTION_SWIPE_RESULT))
     }
 
     // SetTextI18n: this is the Swipe Debug Log viewer — raw diagnostic log text,
@@ -284,6 +264,11 @@ class SwipeDebugActivity : Activity() {
     private fun copyLogsToClipboard() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText("Swipe Debug Logs", logBuffer.toString())
+        // The log quotes typed text: mark it sensitive so clipboard histories (CleverKeys' own
+        // included) skip it and Android 13+ hides the preview (review 2026-11-14 M4).
+        clip.description.extras = android.os.PersistableBundle().apply {
+            putBoolean("android.content.extra.IS_SENSITIVE", true)
+        }
         clipboard.setPrimaryClip(clip)
         Toast.makeText(this, R.string.common_copied_to_clipboard, Toast.LENGTH_SHORT).show()
     }

@@ -182,15 +182,34 @@ class DebugLoggingManagerTest {
     }
 
     @Test
-    fun `pre-26 debug mode receiver is registered behind the signature permission`() {
+    fun `the debug mode receiver is registered app-private on every API level`() {
+        // Review 2026-11-14 M3: the not-exported flag is honoured only from API 33, so below it
+        // the receiver must sit behind the signature permission — PrivateReceivers decides
+        // (PrivateReceiversTest pins each level).
         val body = managerSource.substringAfter("fun registerDebugModeReceiver(")
             .substringBefore("fun unregisterDebugModeReceiver(")
         assertThat(body).isNotEmpty()
-        // The 4-arg (receiver, filter, broadcastPermission, scheduler) form on the else
-        // branch — the sender must hold the permission for delivery.
-        assertThat(body).contains("registerReceiver(debugModeReceiver, filter, PERMISSION_SET_DEBUG_MODE, null)")
+        assertThat(body).contains("PrivateReceivers.register(context, receiver, filter)")
         // And the unguarded 3-arg form must be gone entirely.
         assertThat(body).doesNotContain("registerReceiver(debugModeReceiver, filter)")
+    }
+
+    @Test
+    fun `debug log lines are forwarded only while a CleverKeys field is being edited`() {
+        // Review 2026-11-14 M4: in split-screen the debug screen stays started while the user
+        // types in ANOTHER app, and cursor-sync lines carry the text around the cursor.
+        assertThat(DebugLoggingManager.forwardsLogsFor("tribixbite.cleverkeys", "tribixbite.cleverkeys")).isTrue()
+        assertThat(DebugLoggingManager.forwardsLogsFor("com.android.chrome", "tribixbite.cleverkeys")).isFalse()
+        assertThat(DebugLoggingManager.forwardsLogsFor(null, "tribixbite.cleverkeys")).isFalse()
+        val send = managerSource.substringAfter("fun sendDebugLog(").substringBefore("\n    }\n")
+        assertThat(send).contains("forwardsLogsFor(")
+    }
+
+    @Test
+    fun `copied debug logs are marked sensitive so no clipboard history keeps them`() {
+        val activity = java.io.File("src/main/kotlin/tribixbite/cleverkeys/activities/SwipeDebugActivity.kt").readText()
+        val copy = activity.substringAfter("private fun copyLogsToClipboard(").substringBefore("private fun ")
+        assertThat(copy).contains("android.content.extra.IS_SENSITIVE")
     }
 
     @Test

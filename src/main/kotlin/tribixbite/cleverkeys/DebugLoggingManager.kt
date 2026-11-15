@@ -1,6 +1,5 @@
 package tribixbite.cleverkeys
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -47,6 +46,10 @@ class DebugLoggingManager(
     private val packageName: String
 ) {
     companion object {
+        /** Debug log lines leave the IME only while [editorPackage] is CleverKeys itself ([ownPackage]). */
+        @JvmStatic
+        fun forwardsLogsFor(editorPackage: String?, ownPackage: String): Boolean = editorPackage == ownPackage
+
         private const val DEBUG_MODE_ACTION = "tribixbite.cleverkeys.SET_DEBUG_MODE"
         private const val EXTRA_DEBUG_ENABLED = "debug_enabled"
         private const val LOG_FILE_NAME = "swipe_log.txt"
@@ -120,17 +123,13 @@ class DebugLoggingManager(
      *
      * @param context Application context for receiver registration
      */
-    // Context.RECEIVER_NOT_EXPORTED is a compile-time-inlined int constant (public API 33).
-    // The flag value (0x4) is honored by registerReceiver from API 26 onward, which is why
-    // it's used inside the SDK_INT >= O guard here; on API 24-25 the 3-arg form is used.
-    // UnspecifiedRegisterReceiverFlag: lint flags the pre-26 permission-form call, but no
-    // flag-accepting overload exists below API 26 and that branch can never execute on the
-    // API 33+ devices the check protects; the signature permission IS the I-8 protection.
-    @SuppressLint("InlinedApi", "UnspecifiedRegisterReceiverFlag")
+    // App-private on every API level through PrivateReceivers: the not-exported flag is
+    // honoured only from API 33, so below it the signature permission is the I-8 protection
+    // (review 2026-11-14 M3 — the old O guard left API 26-32 exported).
     fun registerDebugModeReceiver(context: Context) {
         if (debugModeReceiver != null) return // Already registered
 
-        debugModeReceiver = object : BroadcastReceiver() {
+        val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (DEBUG_MODE_ACTION == intent.action) {
                     val newDebugMode = intent.getBooleanExtra(EXTRA_DEBUG_ENABLED, false)
@@ -139,20 +138,14 @@ class DebugLoggingManager(
             }
         }
 
+        debugModeReceiver = receiver
         val filter = IntentFilter(DEBUG_MODE_ACTION)
-        // RECEIVER_NOT_EXPORTED (and the flagged registerReceiver) require API 26. On API
-        // 24-25, a DYNAMIC receiver registered without it receives matching implicit
-        // broadcasts from ANY installed app ("exported=false protects only manifest
-        // components" — I-8), so the pre-26 branch registers behind the app's own
-        // signature-protected permission instead: delivery then requires the SENDER to
-        // hold [PERMISSION_SET_DEBUG_MODE], which only same-signature apps can. Note
-        // this means the documented `adb shell am broadcast` toggle works pre-26 only
-        // via the in-app playground, mirroring the NOT_EXPORTED posture on 26+.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.registerReceiver(debugModeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            context.registerReceiver(debugModeReceiver, filter, PERMISSION_SET_DEBUG_MODE, null)
-        }
+        // A dynamic receiver without protection receives matching implicit broadcasts from ANY
+        // installed app ("exported=false protects only manifest components" — I-8). Below API
+        // 33 delivery then requires the SENDER to hold [PERMISSION_SET_DEBUG_MODE], which only
+        // same-signature apps can, so the `adb shell am broadcast` toggle works there only via
+        // the in-app playground, mirroring the NOT_EXPORTED posture on 33+.
+        PrivateReceivers.register(context, receiver, filter)
     }
 
     /**
@@ -217,6 +210,12 @@ class DebugLoggingManager(
      */
     fun sendDebugLog(message: String) {
         if (!debugMode) return
+        // Only while CleverKeys' own field (the debug playground) is being edited: in split-screen
+        // the debug screen stays started while the user types in ANOTHER app, and cursor-sync
+        // lines carry the text around the cursor (review 2026-11-14 M4).
+        val editorPackage = (context as? android.inputmethodservice.InputMethodService)
+            ?.currentInputEditorInfo?.packageName
+        if (!forwardsLogsFor(editorPackage, packageName)) return
 
         try {
             val intent = Intent(SwipeDebugActivity.ACTION_DEBUG_LOG)

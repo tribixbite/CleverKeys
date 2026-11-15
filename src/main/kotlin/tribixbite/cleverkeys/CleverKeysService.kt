@@ -490,7 +490,7 @@ class CleverKeysService : InputMethodService(),
         prefs.registerOnSharedPreferenceChangeListener(this)
 
         // Register theme change broadcast receiver (for immediate theme updates from ThemeSettingsActivity)
-        _themeChangeReceiver = object : BroadcastReceiver() {
+        val themeChangeReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 if (intent?.action == ACTION_THEME_CHANGED) {
                     // 1. Refresh config to pick up new values (colors, etc.)
@@ -510,13 +510,10 @@ class CleverKeysService : InputMethodService(),
                 }
             }
         }
-        val filter = IntentFilter(ACTION_THEME_CHANGED)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(_themeChangeReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            @Suppress("UnspecifiedRegisterReceiverFlag")
-            registerReceiver(_themeChangeReceiver, filter)
-        }
+        // App-private on every API level (review 2026-11-14 M3: the plain form was exported
+        // below API 33; the sender, ThemeSettingsActivity, is this app).
+        _themeChangeReceiver = themeChangeReceiver
+        PrivateReceivers.register(this, themeChangeReceiver, IntentFilter(ACTION_THEME_CHANGED))
 
         // The default-keyboard reminder (I-7) is NOT checked here: Android creates this service
         // only while CleverKeys is becoming the selected keyboard, so the check could only misfire
