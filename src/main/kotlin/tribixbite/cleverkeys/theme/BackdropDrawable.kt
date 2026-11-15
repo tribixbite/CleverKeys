@@ -539,23 +539,36 @@ class BackdropDrawable(
             return
         }
         starLayers = SceneOverlayPlan.starLayers(tuning.twinkle)
-        val images = listOf(rendered.base, alt) + starLayerImages()
-        val built = try {
-            SceneOverlay.create(host, images, { x, y -> overlayFrame(x, y, images.size - 2) }, 1000f / frameMs)
-        } catch (e: SceneOverlay.NotReady) {
+        val starImages = starLayerCount()
+        // The star images are drawn one at a time as each layer is built, and recycled once copied
+        // to the GPU (review 2026-11-14 M18: all of them, view-sized, used to exist at once). They
+        // are not kept across wakes: that would hold two view-sized bitmaps for the drawable's
+        // life to save a draw of a few hundred particles per wake.
+        val result = SceneOverlayPlan.attemptBuild({ it is SceneOverlay.NotReady }) {
+            SceneOverlay.create(
+                host, 2 + starImages,
+                image = { i -> when (i) { 0 -> rendered.base; 1 -> alt; else -> starLayerImage(i - 2) } },
+                owned = { i -> i >= 2 },
+                initial = { x, y -> overlayFrame(x, y, starImages) },
+                frameRate = 1000f / frameMs,
+            )
+        }
+        val built = when (result) {
+            is OverlayBuild.Built -> result.overlay
             // The anchor is still getting its surface: the next tick or wake tries again.
-            overlayPending = true
-            for (i in 2 until images.size) images[i].recycle()
-            return
-        } catch (e: Exception) {
-            overlayPending = false
-            overlayRefused = true
-            for (i in 2 until images.size) images[i].recycle()
-            return
+            OverlayBuild.Waiting -> {
+                overlayPending = true
+                return
+            }
+            // The platform refused the layers, or memory ran out building them (an Error, which
+            // the old catch (Exception) let through to kill the IME: review 2026-11-14 M18).
+            is OverlayBuild.Refused -> {
+                overlayPending = false
+                overlayRefused = true
+                return
+            }
         }
         overlayPending = false
-        // The star images were copied to the GPU; their software copies are not needed.
-        for (i in 2 until images.size) images[i].recycle()
         built.onMoved = { applyOverlayFrame(onDraw = true) }
         // Turned the other way round: the buffers' pre-rotation no longer fits; build them again.
         built.onRotated = {
@@ -596,26 +609,24 @@ class BackdropDrawable(
         return out
     }
 
-    private fun starLayerCount(): Int = if (stars.isEmpty()) 0 else starLayers
+    private fun starLayerCount(): Int = if (stars.isEmpty() || bounds.isEmpty) 0 else starLayers
 
     /**
-     * The stars as [starLayers] transparent images of the view's size, at full
-     * resolution (a star scaled up from the half-resolution curtains would blur), each holding
-     * its twinkle groups at their full brightness: the layer's alpha does the twinkling.
+     * Star layer [k] of [starLayers]: a transparent image of the view's size, at full resolution
+     * (a star scaled up from the half-resolution curtains would blur), holding its twinkle groups
+     * at their full brightness: the layer's alpha does the twinkling. Only asked for while there
+     * are stars ([starLayerCount]).
      */
-    private fun starLayerImages(): List<Bitmap> {
-        val field = backdrop.stars ?: return emptyList()
-        if (stars.isEmpty() || bounds.isEmpty) return emptyList()
-        return List(starLayers) { k ->
-            val image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
-            val c = Canvas(image)
-            for (i in stars.indices) {
-                if (!SceneOverlayPlan.groupOnLayer(i % AuroraMotion.STAR_GROUPS, k, starLayers)) continue
-                val s = stars[i]
-                drawParticle(c, field, s, s.x, s.y, s.alpha)
-            }
-            image
+    private fun starLayerImage(k: Int): Bitmap {
+        val field = checkNotNull(backdrop.stars) { "star layer without a star field" }
+        val image = Bitmap.createBitmap(bounds.width(), bounds.height(), Bitmap.Config.ARGB_8888)
+        val c = Canvas(image)
+        for (i in stars.indices) {
+            if (!SceneOverlayPlan.groupOnLayer(i % AuroraMotion.STAR_GROUPS, k, starLayers)) continue
+            val s = stars[i]
+            drawParticle(c, field, s, s.x, s.y, s.alpha)
         }
+        return image
     }
 
     /**

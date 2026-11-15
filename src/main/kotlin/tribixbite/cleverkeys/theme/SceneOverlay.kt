@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.hardware.DataSpace
 import android.hardware.HardwareBuffer
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.AttachedSurfaceControl
 import android.view.Surface
@@ -181,6 +183,90 @@ object SceneOverlayPlan {
      * curtains covered the keys).
      */
     fun zOrder(index: Int): Int = index + 1
+
+    /**
+     * Runs one build of the layers ([build]) and says what came of it: the layers, a wait (the
+     * window or its anchor has no surface yet: [isNotReady]), or a refusal for good. Review
+     * 2026-11-14 M18: the build copies view-sized bitmaps to the GPU on the main thread, and an
+     * [OutOfMemoryError] there is an Error, not an Exception: it went past the old
+     * `catch (e: Exception)` and took the keyboard down. Any Throwable now refuses the layers
+     * (the backdrop is then painted in the window, as on a device without them).
+     */
+    fun <O> attemptBuild(isNotReady: (Throwable) -> Boolean, build: () -> O): OverlayBuild<O> =
+        try {
+            OverlayBuild.Built(build())
+        } catch (e: Throwable) {
+            if (isNotReady(e)) OverlayBuild.Waiting else OverlayBuild.Refused(e)
+        }
+
+    /**
+     * Builds [count] parts in order with [make] (a layer: its image drawn, copied to the GPU, its
+     * SurfaceControl made), so only one part's software image exists at a time. When any part
+     * fails, those already built are freed with [free] (each on its own: one failing free does not
+     * keep the rest) and the failure is rethrown. Review 2026-11-14 M18: the old cleanup sat in a
+     * `catch (e: Exception)`, so an [OutOfMemoryError] skipped it and leaked every buffer built.
+     */
+    fun <T> buildEach(count: Int, make: (Int) -> T, free: (T) -> Unit): List<T> {
+        val built = ArrayList<T>(count)
+        try {
+            for (i in 0 until count) built += make(i)
+        } catch (e: Throwable) {
+            for (part in built) runCatching { free(part) }
+            throw e
+        }
+        return built
+    }
+}
+
+/** What came of one attempt to build the layers ([SceneOverlayPlan.attemptBuild]). */
+sealed class OverlayBuild<out O> {
+    /** The layers are up. */
+    class Built<O>(val overlay: O) : OverlayBuild<O>()
+    /** The window or its anchor has no surface yet: try again on a later tick. */
+    object Waiting : OverlayBuild<Nothing>()
+    /** The platform refused the layers, or memory ran out: paint in the window from now on. */
+    class Refused(val cause: Throwable) : OverlayBuild<Nothing>()
+}
+
+/**
+ * Frees a released overlay's layers once, after the transaction that takes them off the window
+ * has been queued on the window's next frame (pure; `SceneOverlayPlanTest`): on that
+ * transaction's commit ([committed]) or, when the window never draws again (it hid before its
+ * next frame), after [FALLBACK_MS] ([queued] arms it; review 2026-11-14 M20: four SurfaceControls
+ * and their hardware buffers stayed alive behind a commit that never came). [free] gets whether
+ * the fallback fired: the queued transaction never applied, so the layers are still attached and
+ * must be taken off directly. Main thread only; [postDelayed] and [cancel] are the main Handler's.
+ */
+internal class QueuedFree(
+    private val postDelayed: (Runnable, Long) -> Unit,
+    private val cancel: (Runnable) -> Unit,
+    private val free: (timedOut: Boolean) -> Unit,
+) {
+    private var done = false
+    private val fallback = Runnable { finish(timedOut = true) }
+
+    /** The release transaction went to the window's next frame: free on its commit or after [FALLBACK_MS]. */
+    fun queued() {
+        if (!done) postDelayed(fallback, FALLBACK_MS)
+    }
+
+    /** The release transaction committed: free now (once). */
+    fun committed() = finish(timedOut = false)
+
+    private fun finish(timedOut: Boolean) {
+        if (done) return
+        done = true
+        cancel(fallback)
+        free(timedOut)
+    }
+
+    companion object {
+        /**
+         * How long a queued release waits for the window's frame: ~15 frames at 60 Hz. A shown
+         * keyboard draws its next frame within one or two; one that has not drawn by then is hiding.
+         */
+        const val FALLBACK_MS = 250L
+    }
 }
 
 /**
@@ -207,6 +293,17 @@ internal class AnchorOwners<A : Any, O : Any> {
 
     /** Whether any overlay owns [anchor] (an unowned one is a leftover that may be removed). */
     fun isOwned(anchor: A): Boolean = owners[anchor] != null
+
+    /**
+     * A build on [anchor] failed: drops [owner]'s claim if the build got as far as making one
+     * (null: it did not), and says whether the anchor may go. Review 2026-11-14 (low): the failure
+     * path removed the anchor unconditionally, under a predecessor whose release was still
+     * queued on it; like [release], only an anchor nobody owns may be removed.
+     */
+    fun abandon(anchor: A, owner: O?): Boolean {
+        if (owner != null) release(anchor, owner)
+        return !isOwned(anchor)
+    }
 }
 
 /**
@@ -271,6 +368,12 @@ internal class SceneOverlay private constructor(
         owners.claim(anchor, this)
     }
 
+    /** Stops listening to the host's layout and the window's rotation (release, or a failed build). */
+    private fun detachListeners() {
+        if (host.viewTreeObserver.isAlive) host.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
+        root.removeOnBufferTransformHintChangedListener(hintListener)
+    }
+
     private val anchorLocation = IntArray(2)
 
     /**
@@ -323,26 +426,42 @@ internal class SceneOverlay private constructor(
     /**
      * Removes the layers from the window and frees their buffers. Idempotent. [onDraw]: with the
      * window's next frame, the one in which the keyboard view paints the backdrop again, so
-     * neither both nor neither show; the buffers are freed once that transaction has committed.
-     * Otherwise (the window is hiding) at once.
+     * neither both nor neither show; the buffers are freed once that transaction has committed,
+     * or after [QueuedFree.FALLBACK_MS] when the window never draws that frame (it hid first:
+     * review 2026-11-14 M20). Otherwise (the window is hiding) at once.
      */
     fun release(onDraw: Boolean) {
         if (released) return
         released = true
-        if (host.viewTreeObserver.isAlive) host.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
-        root.removeOnBufferTransformHintChangedListener(hintListener)
+        detachListeners()
         val t = SurfaceControl.Transaction()
         for (sc in layers) t.reparent(sc, null)
+        val pending = QueuedFree({ r, ms -> mainHandler.postDelayed(r, ms) }, { r -> mainHandler.removeCallbacks(r) }) { timedOut ->
+            // The queued transaction never applied: the layers are still on the anchor.
+            if (timedOut) detachNow()
+            free()
+        }
         val queued = onDraw && runCatching {
-            t.addTransactionCommittedListener(host.context.mainExecutor) { free() }
+            t.addTransactionCommittedListener(host.context.mainExecutor) { pending.committed() }
             root.applyTransactionOnDraw(t)
         }.getOrDefault(false)
         if (queued) {
+            pending.queued()
             host.invalidate()
         } else {
             runCatching { t.apply() }
             t.close()
             free()
+        }
+    }
+
+    /** Takes the layers off the anchor at once (a queued release whose frame never came). */
+    private fun detachNow() {
+        runCatching {
+            SurfaceControl.Transaction().use { t ->
+                for (sc in layers) if (sc.isValid) t.reparent(sc, null)
+                t.apply()
+            }
         }
     }
 
@@ -366,6 +485,9 @@ internal class SceneOverlay private constructor(
 
         /** Each anchor's current overlay (main thread only; weak, so a dropped anchor is not kept). */
         private val owners = AnchorOwners<SurfaceView, SceneOverlay>()
+
+        /** Runs a queued release's fallback free ([QueuedFree]); a detached view's own queue may never run. */
+        private val mainHandler by lazy { Handler(Looper.getMainLooper()) }
 
         /**
          * Whether [host]'s anchor has its surface, adding the anchor the first time (it gets its
@@ -419,46 +541,105 @@ internal class SceneOverlay private constructor(
         private const val ANCHOR = "CleverKeysSceneOverlayAnchor"
 
         /**
-         * Builds the layers for [images] (curtain A, curtain B, then the star layers; software
-         * bitmaps, copied to the GPU here) under [host]'s window and places them at [initial] (given
-         * the view's origin relative to the anchor, as every later frame is placed) with
-         * the window's next frame, each voting [frameRate] (frames per second) to the display's refresh
-         * rate choice. Throws [NotReady] while the window has no surface, and any
-         * other exception when the platform refuses the layers (the caller then paints the
-         * backdrop in the window for good).
+         * Builds [count] layers (curtain A, curtain B, then the star layers) under [host]'s window
+         * from [image] (software bitmaps, asked for one at a time and copied to the GPU here; those
+         * [owned] are recycled once copied) and places them at [initial] (given the view's origin
+         * relative to the anchor, as every later frame is placed) with the window's next frame,
+         * each voting [frameRate] (frames per second) to the display's refresh rate choice. Throws
+         * [NotReady] while the window has no surface, and any other Throwable (an
+         * OutOfMemoryError included) when the layers cannot be made, after freeing whatever was
+         * built (the caller then paints the backdrop in the window for good).
          */
-        fun create(host: View, images: List<Bitmap>, initial: (originX: Int, originY: Int) -> List<OverlayPlacement>, frameRate: Float): SceneOverlay {
+        fun create(
+            host: View,
+            count: Int,
+            image: (index: Int) -> Bitmap,
+            owned: (index: Int) -> Boolean,
+            initial: (originX: Int, originY: Int) -> List<OverlayPlacement>,
+            frameRate: Float,
+        ): SceneOverlay {
             val root = host.rootSurfaceControl ?: throw NotReady()
             val anchor = anchorOf(host) ?: throw NotReady()
             val parent = anchor.surfaceControl
-            val bitmaps = ArrayList<Bitmap>(images.size)
-            val buffers = ArrayList<HardwareBuffer>(images.size)
-            val layers = ArrayList<SurfaceControl>(images.size)
             val t = SurfaceControl.Transaction()
             // Each buffer drawn pre-rotated for the screen's orientation (preRotationDegrees).
             val hint = root.bufferTransformHint
             val degrees = SceneOverlayPlan.preRotationDegrees(hint)
+            var parts: List<Part> = emptyList()
+            var overlay: SceneOverlay? = null
             try {
-                for ((i, image) in images.withIndex()) {
-                    val upright = if (degrees == 0) image else Bitmap.createBitmap(
-                        image, 0, 0, image.width, image.height, Matrix().apply { setRotate(degrees.toFloat()) }, false,
-                    )
-                    val hw = upright.copy(Bitmap.Config.HARDWARE, false)
-                    if (upright !== image) upright.recycle()
-                    hw ?: error("no hardware copy of layer $i")
-                    bitmaps += hw
-                    val buffer = hw.hardwareBuffer
-                    buffers += buffer
-                    val sc = SurfaceControl.Builder()
-                        .setName("CleverKeysBackdrop$i")
-                        .setBufferSize(hw.width, hw.height)
-                        // The curtains are fully painted; the star layers are transparent between stars.
-                        .setOpaque(i < 2)
-                        .setHidden(false)
-                        .setParent(parent)
-                        .build()
-                    layers += sc
-                    t.setBuffer(sc, buffer)
+                // One layer at a time: its image (a star layer is drawn on demand and recycled once
+                // copied), its rotated copy and its hardware copy are all that exist at once.
+                parts = SceneOverlayPlan.buildEach(count, { i ->
+                    buildPart(i, image, owned, degrees, hint, parent, frameRate, t)
+                }, Part::free)
+                val built = SceneOverlay(host, root, anchor, parts.map { it.layer }, parts.map { it.bitmap }, parts.map { it.buffer }, hint)
+                overlay = built
+                built.hostMoved()
+                val origin = built.hostOrigin()
+                built.write(t, initial(origin[0], origin[1]))
+                if (!root.applyTransactionOnDraw(t)) t.apply()
+                host.invalidate()
+                return built
+            } catch (e: Throwable) {
+                // Any Throwable (review 2026-11-14 M18): an OutOfMemoryError copying a view-sized
+                // bitmap to the GPU skipped the old catch (Exception), and this cleanup with it.
+                runCatching { Log.w(TAG, "hardware backdrop unavailable; drawing it in the window", e) }
+                overlay?.detachListeners()
+                // A predecessor whose release is still queued may own the anchor: it removes it then.
+                if (owners.abandon(anchor, overlay)) removeAnchor(anchor)
+                runCatching { t.close() }
+                for (part in parts) runCatching { part.free() }
+                throw e
+            }
+        }
+
+        /** One built layer: its hardware bitmap, that bitmap's buffer and its SurfaceControl. */
+        private class Part(val bitmap: Bitmap, val buffer: HardwareBuffer, val layer: SurfaceControl) {
+            fun free() {
+                layer.release()
+                buffer.close()
+                bitmap.recycle()
+            }
+        }
+
+        /**
+         * Layer [i]: [image] turned by [degrees], copied to the GPU and set on a new SurfaceControl
+         * under [parent] in [t]. The software image is recycled here when [owned] (a star layer);
+         * on a failure whatever this step made is freed before it is rethrown.
+         */
+        private fun buildPart(
+            i: Int, image: (Int) -> Bitmap, owned: (Int) -> Boolean, degrees: Int, hint: Int,
+            parent: SurfaceControl, frameRate: Float, t: SurfaceControl.Transaction,
+        ): Part {
+            val src = image(i)
+            val copied = try {
+                val upright = if (degrees == 0) src else Bitmap.createBitmap(
+                    src, 0, 0, src.width, src.height, Matrix().apply { setRotate(degrees.toFloat()) }, false,
+                )
+                try {
+                    upright.copy(Bitmap.Config.HARDWARE, false)
+                } finally {
+                    if (upright !== src) upright.recycle()
+                }
+            } finally {
+                if (owned(i)) src.recycle()
+            }
+            val hw = copied ?: error("no hardware copy of layer $i")
+            var buffer: HardwareBuffer? = null
+            try {
+                val hb = hw.hardwareBuffer
+                buffer = hb
+                val sc = SurfaceControl.Builder()
+                    .setName("CleverKeysBackdrop$i")
+                    .setBufferSize(hw.width, hw.height)
+                    // The curtains are fully painted; the star layers are transparent between stars.
+                    .setOpaque(i < 2)
+                    .setHidden(false)
+                    .setParent(parent)
+                    .build()
+                try {
+                    t.setBuffer(sc, hb)
                     t.setDataSpace(sc, DataSpace.DATASPACE_SRGB)
                     // The placements scale the upright content (the buffer once this is applied).
                     t.setBufferTransform(sc, SceneOverlayPlan.bufferTransformFor(hint))
@@ -467,23 +648,14 @@ internal class SceneOverlay private constructor(
                     // its 120 Hz for "smooth" content, as the window path's low vote asks for.
                     t.setFrameRate(sc, frameRate, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT, Surface.CHANGE_FRAME_RATE_ONLY_IF_SEAMLESS)
                     t.setVisibility(sc, true)
+                } catch (e: Throwable) {
+                    runCatching { sc.release() }
+                    throw e
                 }
-                val overlay = SceneOverlay(host, root, anchor, layers, bitmaps, buffers, hint)
-                overlay.hostMoved()
-                val origin = overlay.hostOrigin()
-                overlay.write(t, initial(origin[0], origin[1]))
-                if (!root.applyTransactionOnDraw(t)) t.apply()
-                host.invalidate()
-                return overlay
-            } catch (e: Exception) {
-                if (e !is NotReady) {
-                    Log.w(TAG, "hardware backdrop unavailable; drawing it in the window", e)
-                    removeAnchor(anchor)
-                }
-                t.close()
-                for (sc in layers) sc.release()
-                for (b in buffers) b.close()
-                for (b in bitmaps) b.recycle()
+                return Part(hw, hb, sc)
+            } catch (e: Throwable) {
+                runCatching { buffer?.close() }
+                runCatching { hw.recycle() }
                 throw e
             }
         }

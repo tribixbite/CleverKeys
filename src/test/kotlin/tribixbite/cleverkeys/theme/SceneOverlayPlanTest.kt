@@ -166,6 +166,113 @@ class SceneOverlayPlanTest {
         }
     }
 
+    /**
+     * Review 2026-11-14 M18: building the layers copies view-sized bitmaps on the main thread, and
+     * running out of memory there throws an Error. It must refuse the layers (the window paints
+     * the backdrop), not escape and kill the keyboard; a missing surface still only waits. Covers
+     * the policy BackdropDrawable.createOverlay runs the build through, not the Android build itself.
+     */
+    @Test
+    fun runningOutOfMemoryBuildingTheLayersRefusesThemInsteadOfCrashing() {
+        class NotReady : Exception()
+        val oom = OutOfMemoryError("Failed to allocate a 8294400 byte allocation")
+        val refused = SceneOverlayPlan.attemptBuild({ it is NotReady }) { throw oom }
+        assertThat(refused).isInstanceOf(OverlayBuild.Refused::class.java)
+        assertThat((refused as OverlayBuild.Refused).cause).isSameInstanceAs(oom)
+        assertThat(SceneOverlayPlan.attemptBuild({ it is NotReady }) { throw NotReady() }).isSameInstanceAs(OverlayBuild.Waiting)
+        assertThat(SceneOverlayPlan.attemptBuild({ it is NotReady }) { throw IllegalStateException("driver") })
+            .isInstanceOf(OverlayBuild.Refused::class.java)
+        val built = SceneOverlayPlan.attemptBuild({ it is NotReady }) { "layers" }
+        assertThat((built as OverlayBuild.Built).overlay).isEqualTo("layers")
+    }
+
+    /**
+     * Review 2026-11-14 M18: the layers are built one at a time; when one fails, even with an
+     * Error, every layer already built is freed (its buffer and SurfaceControl), and the failure
+     * still reaches the caller. Fakes stand in for the layers: the Android calls are not run.
+     */
+    @Test
+    fun aFailedLayerFreesTheLayersBuiltBeforeIt() {
+        val freed = mutableListOf<Int>()
+        val made = mutableListOf<Int>()
+        val thrown = runCatching {
+            SceneOverlayPlan.buildEach(4, { i ->
+                if (i == 2) throw OutOfMemoryError("hardware copy of layer 2")
+                made += i
+                i
+            }, { freed += it })
+        }.exceptionOrNull()
+        assertThat(thrown).isInstanceOf(OutOfMemoryError::class.java)
+        assertWithMessage("layers 0 and 1 were built").that(made).containsExactly(0, 1).inOrder()
+        assertWithMessage("and freed").that(freed).containsExactly(0, 1)
+        // A failing free does not keep the others.
+        val freed2 = mutableListOf<Int>()
+        runCatching {
+            SceneOverlayPlan.buildEach(3, { i -> if (i == 2) error("refused") else i }, { if (it == 0) error("bad free") else freed2 += it })
+        }
+        assertThat(freed2).containsExactly(1)
+        assertThat(SceneOverlayPlan.buildEach(3, { it * 10 }, { error("not freed when all are built") })).containsExactly(0, 10, 20).inOrder()
+    }
+
+    /**
+     * Review 2026-11-14 (low): a build that fails while a predecessor's release is still queued
+     * on the anchor must leave the anchor to that predecessor; a build that had claimed it drops
+     * its claim, and an anchor nobody owns may go.
+     */
+    @Test
+    fun aFailedBuildRemovesTheAnchorOnlyWhenNobodyOwnsIt() {
+        val owners = AnchorOwners<Any, Any>()
+        val anchor = Any()
+        val predecessor = Any()
+        owners.claim(anchor, predecessor)
+        assertWithMessage("failed before claiming, the predecessor still owns it").that(owners.abandon(anchor, null)).isFalse()
+        assertThat(owners.isOwned(anchor)).isTrue()
+        assertWithMessage("the predecessor frees: it removes the anchor").that(owners.release(anchor, predecessor)).isTrue()
+
+        val failed = Any()
+        owners.claim(anchor, failed)
+        assertWithMessage("failed after claiming: claim dropped, nobody else owns it").that(owners.abandon(anchor, failed)).isTrue()
+        assertThat(owners.isOwned(anchor)).isFalse()
+        assertWithMessage("an anchor nobody owned").that(owners.abandon(Any(), null)).isTrue()
+    }
+
+    /**
+     * Review 2026-11-14 M20: a release queued on the window's next frame frees the layers when
+     * that frame's transaction commits; when no frame comes (the window hid first) a fallback
+     * frees them after [QueuedFree.FALLBACK_MS], and takes them off directly. Whichever comes
+     * first frees once. A fake main-thread queue stands in for the Handler; the transaction and
+     * its commit callback themselves are not modelled.
+     */
+    @Test
+    fun aQueuedReleaseIsFreedEvenWhenTheWindowNeverDrawsAgain() {
+        class FakeQueue {
+            val due = mutableListOf<Pair<Runnable, Long>>()
+            fun post(r: Runnable, ms: Long) { due += r to ms }
+            fun cancel(r: Runnable) { due.removeAll { it.first === r } }
+            fun runAll() { val now = due.toList(); due.clear(); now.forEach { it.first.run() } }
+        }
+        // No commit ever comes.
+        val q = FakeQueue()
+        val frees = mutableListOf<Boolean>()
+        val stranded = QueuedFree(q::post, q::cancel) { frees += it }
+        stranded.queued()
+        assertWithMessage("a fallback is armed").that(q.due.map { it.second }).containsExactly(QueuedFree.FALLBACK_MS)
+        q.runAll()
+        assertWithMessage("freed by the fallback, taken off directly").that(frees).containsExactly(true)
+        stranded.committed()
+        assertWithMessage("a late commit frees nothing more").that(frees).hasSize(1)
+
+        // The commit comes first: freed once, the fallback cancelled.
+        val q2 = FakeQueue()
+        val frees2 = mutableListOf<Boolean>()
+        val normal = QueuedFree(q2::post, q2::cancel) { frees2 += it }
+        normal.queued()
+        normal.committed()
+        assertThat(frees2).containsExactly(false)
+        assertWithMessage("the fallback was cancelled").that(q2.due).isEmpty()
+        assertThat(QueuedFree.FALLBACK_MS).isAtMost(500L)
+    }
+
     /** Curtain A at the bottom, then curtain B, then the stars; all above the anchor's own (empty) buffer. */
     @Test
     fun theLayersStackCurtainsFirstAboveTheAnchor() {
