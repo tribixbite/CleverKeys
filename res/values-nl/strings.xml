@@ -1731,6 +1731,8 @@
     <string name="theme_look_cleverkeys_desc">Moderne afgeronde toetsen; licht of donker volgt het systeem (standaard)</string>
     <string name="theme_toast_applying">Thema toepassen: %1$s</string>
     <string name="theme_default_custom_name">Mijn thema</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Sessie veegtestomgeving gestart ===\nVeeg in het tekstveld hierboven. Elke veeg toont de rangschikking van kandidaten\nen wordt vastgelegd (punten + toetsgeometrie + rangschikking + ingevoerd woord).</string>
     <string name="swipe_debug_log_cleared_banner">Logs gewist. Wachten op veeginvoer...</string>
     <string name="swipe_debug_toast_logs_cleared">Logs gewist</string>

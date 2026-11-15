@@ -1707,6 +1707,8 @@
     <string name="theme_look_cleverkeys_desc">Tombol bulat modern; terang atau gelap mengikuti sistem (default)</string>
     <string name="theme_toast_applying">Menerapkan tema: %1$s</string>
     <string name="theme_default_custom_name">Tema Saya</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Sesi Swipe Playground Dimulai ===\nGeser di kolom teks di atas. Setiap geseran menampilkan peringkat kandidatnya\ndan direkam (titik + geometri tombol + peringkat + kata yang dimasukkan).</string>
     <string name="swipe_debug_log_cleared_banner">Log dihapus. Menunggu input geser...</string>
     <string name="swipe_debug_toast_logs_cleared">Log dihapus</string>

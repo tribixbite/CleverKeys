@@ -1737,6 +1737,8 @@
     <string name="theme_look_cleverkeys_desc">Modern, lekerekített billentyűk; a világos vagy sötét mód a rendszert követi (alapértelmezett)</string>
     <string name="theme_toast_applying">Téma alkalmazása: %1$s</string>
     <string name="theme_default_custom_name">Saját téma</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground munkamenet elindult ===\nCsúsztasson a fenti szövegmezőben. Minden csúsztatás megmutatja a jelöltek rangsorát,\nés rögzítésre kerül (pontok + billentyűgeometria + rangsor + véglegesített szó).</string>
     <string name="swipe_debug_log_cleared_banner">Naplók törölve. Várakozás csúsztatási bevitelre...</string>
     <string name="swipe_debug_toast_logs_cleared">Naplók törölve</string>

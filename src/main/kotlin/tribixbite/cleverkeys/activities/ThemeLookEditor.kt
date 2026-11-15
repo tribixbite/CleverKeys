@@ -33,7 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,8 +70,10 @@ internal fun ThemeLookEditor(
     baseColors: Map<ThemeColorRole, Int>,
     onChange: (ThemeSpec) -> Unit,
 ) {
-    var editing by remember { mutableStateOf<Pair<ThemeSpecEdits.Mode, ThemeColorRole>?>(null) }
-    var variant by remember { mutableStateOf(ThemeSpecEdits.Mode.LIGHT) }
+    // Review 2026-11-14 M22: kept across a rotation with the rest of the draft (a Pair of two
+    // enums is Serializable, so the default saver takes it).
+    var editing by rememberSaveable { mutableStateOf<Pair<ThemeSpecEdits.Mode, ThemeColorRole>?>(null) }
+    var variant by rememberSaveable { mutableStateOf(ThemeSpecEdits.Mode.LIGHT) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),

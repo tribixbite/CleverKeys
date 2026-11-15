@@ -1767,6 +1767,8 @@
     <string name="theme_look_cleverkeys_desc">Teclas arredondadas modernas; claro ou escuro segue o sistema (padrão)</string>
     <string name="theme_toast_applying">Aplicando tema: %1$s</string>
     <string name="theme_default_custom_name">Meu tema</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Sessão da área de testes de deslize iniciada ===\nDeslize no campo de texto acima. Cada deslize mostra sua classificação de candidatas\ne é registrado (pontos + geometria das teclas + classificação + palavra confirmada).</string>
     <string name="swipe_debug_log_cleared_banner">Logs limpos. Aguardando deslizes...</string>
     <string name="swipe_debug_toast_logs_cleared">Logs limpos</string>

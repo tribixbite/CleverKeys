@@ -1693,6 +1693,8 @@
     <string name="theme_look_cleverkeys_desc">现代圆角按键；浅色或深色跟随系统（默认）</string>
     <string name="theme_toast_applying">正在应用主题：%1$s</string>
     <string name="theme_default_custom_name">我的主题</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== 滑动练习场会话已开始 ===\n在上方文本框中滑动。每次滑动都会显示候选排名\n并被记录（轨迹点 + 按键几何 + 排名 + 提交的单词）。</string>
     <string name="swipe_debug_log_cleared_banner">日志已清除。等待滑动输入…</string>
     <string name="swipe_debug_toast_logs_cleared">日志已清除</string>

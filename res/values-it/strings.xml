@@ -1807,6 +1807,8 @@
     <string name="theme_look_cleverkeys_desc">Tasti arrotondati moderni; chiaro o scuro segue il sistema (predefinito)</string>
     <string name="theme_toast_applying">Applicazione del tema: %1$s</string>
     <string name="theme_default_custom_name">Il mio tema</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Sessione Area di prova scorrimento avviata ===\nScorri nel campo di testo qui sopra. Ogni scorrimento mostra la classifica dei candidati\ne viene registrato (punti + geometria dei tasti + classifica + parola inserita).</string>
     <string name="swipe_debug_log_cleared_banner">Log cancellati. In attesa di uno scorrimento...</string>
     <string name="swipe_debug_toast_logs_cleared">Log cancellati</string>

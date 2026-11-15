@@ -2,7 +2,9 @@ package tribixbite.cleverkeys.theme
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.toArgb
+import tribixbite.cleverkeys.R
 
 /**
  * Pref-coherence policy for custom-theme mutations (audit 2026-09-06, H-2 + H-4).
@@ -70,11 +72,19 @@ object CustomThemePrefPolicy {
     }
 
     /**
+     * What [saveCustomTheme] did (review 2026-11-14 M21). A single Boolean ("saved AND active")
+     * made "saved, not active" and "not saved" look the same, so the Theme Creator closed on a
+     * failed save (the 50-theme limit, or a store write that threw) and the theme was lost.
+     *
+     * @property saved the store kept the theme.
+     * @property activeTrailSynced it is the active theme and `swipe_trail_color` was re-synced.
+     */
+    data class SaveResult(val saved: Boolean, val activeTrailSynced: Boolean)
+
+    /**
      * H-4: save [theme]; when it is the ACTIVE theme, re-sync `swipe_trail_color` from
      * its (possibly just-edited) scheme — otherwise the one wired scheme field goes
      * stale until the theme is re-selected.
-     *
-     * @return true when the save succeeded AND the trail pref was re-synced (active edit).
      */
     @SuppressLint("ApplySharedPref")
     fun saveCustomTheme(
@@ -82,7 +92,7 @@ object CustomThemePrefPolicy {
         defaultPrefs: SharedPreferences?,
         themeManager: CustomThemeManager,
         theme: CustomTheme,
-    ): Boolean {
+    ): SaveResult {
         val saved = themeManager.saveCustomTheme(theme)
         val isActive = prefs.getString(THEME_PREF_KEY, null) == themePrefId(theme.id)
         if (saved && isActive) {
@@ -90,8 +100,27 @@ object CustomThemePrefPolicy {
             prefs.edit().putInt(SWIPE_TRAIL_PREF_KEY, trail).commit()
             defaultPrefs?.edit()?.putInt(SWIPE_TRAIL_PREF_KEY, trail)?.commit()
         }
-        return saved && isActive
+        return SaveResult(saved = saved, activeTrailSynced = saved && isActive)
     }
+
+    /** Review 2026-11-14 M21: Theme Manager offers "+" only while the store can take another theme. */
+    fun canCreate(customThemeCount: Int): Boolean = customThemeCount < CustomThemeManager.MAX_CUSTOM_THEMES
+
+    /**
+     * The message for a save the store refused (review 2026-11-14 M21): a NEW theme at the limit
+     * names the limit; anything else (an edit replaces its own entry, so it never hits the limit)
+     * is a failed write.
+     */
+    @StringRes
+    fun saveFailureMessage(isNew: Boolean, customThemeCount: Int): Int =
+        if (isNew && !canCreate(customThemeCount)) R.string.theme_limit_reached else R.string.theme_save_failed
+
+    /**
+     * The name a Theme Creator draft is saved under: trimmed, or null when blank (low, review
+     * 2026-11-14: a blank name was stored and showed as a card with no title). Save is disabled
+     * while this is null.
+     */
+    fun normalizedName(raw: String): String? = raw.trim().takeIf { it.isNotEmpty() }
 
     @SuppressLint("ApplySharedPref")
     private fun resetToFallback(prefs: SharedPreferences) {

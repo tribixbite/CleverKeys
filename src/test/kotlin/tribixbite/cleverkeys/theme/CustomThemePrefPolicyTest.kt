@@ -68,6 +68,33 @@ class CustomThemePrefPolicyTest {
         ).that(src.contains("themeManager.saveCustomTheme(")).isFalse()
     }
 
+    /**
+     * Review 2026-11-14 M21 wiring (source scan; the dialogs' lambdas cannot be driven on the
+     * JVM). Before the fix the create path closed the dialog whatever the store answered and the
+     * edit path ignored the result. Covers: both paths look up a failure message, "+" is gated on
+     * [CustomThemePrefPolicy.canCreate], Save on the normalized name. Does NOT cover that the
+     * toast actually shows or that the dialog stays composed — that needs a device.
+     */
+    @Test
+    fun bothSavePaths_reportAFailureAndKeepTheDialog() {
+        val src = activitySource.readText()
+        assertWithMessage("create AND edit must each show CustomThemePrefPolicy.saveFailureMessage on failure")
+            .that(Regex(Regex.escape("CustomThemePrefPolicy.saveFailureMessage(")).findAll(src).count())
+            .isEqualTo(2)
+        assertWithMessage("the create (+) button must be disabled at the custom-theme limit")
+            .that(src.contains("enabled = CustomThemePrefPolicy.canCreate(customThemes.size)")).isTrue()
+        assertWithMessage("the creator's Save must use the normalized (non-blank, trimmed) name")
+            .that(src.contains("CustomThemePrefPolicy.normalizedName(themeName)")).isTrue()
+    }
+
+    /** Low (review 2026-11-14): the decorative cards' toast passed the English `name`. */
+    @Test
+    fun decorativeThemeToast_usesTheLocalizedName() {
+        val src = activitySource.readText()
+        assertWithMessage("onThemeSelected for a decorative theme must pass displayName(resources), not the English name")
+            .that(src.contains("onThemeSelected(decorativeId, themeInfo.name)")).isFalse()
+    }
+
     // ------------------------------------------------------------------ fixtures
 
     /** A recording SharedPreferences whose editor chains onto itself. */
@@ -141,9 +168,10 @@ class CustomThemePrefPolicyTest {
         val fx = PrefsFixture("custom_abc")
         val manager = mockk<CustomThemeManager> { every { saveCustomTheme(theme) } returns true }
 
-        val synced = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
+        val result = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
 
-        assertThat(synced).isTrue()
+        assertThat(result.saved).isTrue()
+        assertThat(result.activeTrailSynced).isTrue()
         verify { fx.editor.putInt("swipe_trail_color", theme.colors.swipeTrail.toArgb()) }
         verify { fx.editor.commit() }
     }
@@ -154,9 +182,11 @@ class CustomThemePrefPolicyTest {
         val fx = PrefsFixture("custom_other")
         val manager = mockk<CustomThemeManager> { every { saveCustomTheme(theme) } returns true }
 
-        val synced = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
+        val result = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
 
-        assertThat(synced).isFalse()
+        // Review 2026-11-14 M21: "saved, not active" must read differently from "not saved".
+        assertThat(result.saved).isTrue()
+        assertThat(result.activeTrailSynced).isFalse()
         verify(exactly = 0) { fx.prefs.edit() }
         verify(exactly = 1) { manager.saveCustomTheme(theme) }
     }
@@ -167,10 +197,50 @@ class CustomThemePrefPolicyTest {
         val fx = PrefsFixture("custom_abc")
         val manager = mockk<CustomThemeManager> { every { saveCustomTheme(theme) } returns false }
 
-        val synced = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
+        val result = CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme)
 
-        assertThat(synced).isFalse()
+        assertThat(result.saved).isFalse()
+        assertThat(result.activeTrailSynced).isFalse()
         verify(exactly = 0) { fx.prefs.edit() }
+    }
+
+    // ------------------------------------------------------------------ review 2026-11-14 M21
+
+    /** A failed save of an INACTIVE theme used to read like a successful one (both `false`). */
+    @Test
+    fun aFailedSaveOfAnInactiveTheme_reportsNotSaved() {
+        val theme = customTheme("abc")
+        val fx = PrefsFixture("custom_other")
+        val manager = mockk<CustomThemeManager> { every { saveCustomTheme(theme) } returns false }
+
+        assertThat(CustomThemePrefPolicy.saveCustomTheme(fx.prefs, null, manager, theme).saved).isFalse()
+    }
+
+    @Test
+    fun createIsOfferedOnlyBelowTheStoreLimit() {
+        assertThat(CustomThemePrefPolicy.canCreate(0)).isTrue()
+        assertThat(CustomThemePrefPolicy.canCreate(CustomThemeManager.MAX_CUSTOM_THEMES - 1)).isTrue()
+        assertThat(CustomThemePrefPolicy.canCreate(CustomThemeManager.MAX_CUSTOM_THEMES)).isFalse()
+    }
+
+    @Test
+    fun failureMessage_namesTheLimitOnlyForANewThemeAtTheLimit() {
+        val max = CustomThemeManager.MAX_CUSTOM_THEMES
+        assertThat(CustomThemePrefPolicy.saveFailureMessage(isNew = true, customThemeCount = max))
+            .isEqualTo(tribixbite.cleverkeys.R.string.theme_limit_reached)
+        assertThat(CustomThemePrefPolicy.saveFailureMessage(isNew = true, customThemeCount = max - 1))
+            .isEqualTo(tribixbite.cleverkeys.R.string.theme_save_failed)
+        // An edit replaces its own entry: the limit never applies to it.
+        assertThat(CustomThemePrefPolicy.saveFailureMessage(isNew = false, customThemeCount = max))
+            .isEqualTo(tribixbite.cleverkeys.R.string.theme_save_failed)
+    }
+
+    /** Low (review 2026-11-14): a blank name was stored as a nameless card. */
+    @Test
+    fun blankNamesAreNotSaveable_otherNamesAreTrimmed() {
+        assertThat(CustomThemePrefPolicy.normalizedName("")).isNull()
+        assertThat(CustomThemePrefPolicy.normalizedName("   ")).isNull()
+        assertThat(CustomThemePrefPolicy.normalizedName("  Ocean ")).isEqualTo("Ocean")
     }
 
     // ------------------------------------------------------------------ drift pin

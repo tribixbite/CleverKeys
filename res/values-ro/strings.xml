@@ -1794,6 +1794,8 @@
     <string name="theme_look_cleverkeys_desc">Taste rotunjite moderne; luminos sau întunecat urmează sistemul (implicit)</string>
     <string name="theme_toast_applying">Se aplică tema: %1$s</string>
     <string name="theme_default_custom_name">Tema mea</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Sesiune de test al glisării pornită ===\nGlisați în câmpul de text de mai sus. Fiecare glisare își afișează clasamentul candidaților\nși este înregistrată (puncte + geometria tastelor + clasament + cuvântul confirmat).</string>
     <string name="swipe_debug_log_cleared_banner">Jurnale golite. Se așteaptă o glisare...</string>
     <string name="swipe_debug_toast_logs_cleared">Jurnale golite</string>

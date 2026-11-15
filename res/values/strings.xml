@@ -2150,6 +2150,8 @@
     <string name="theme_look_cleverkeys_desc">Modern rounded keys; light or dark follows the system (default)</string>
     <string name="theme_toast_applying">Applying theme: %1$s</string>
     <string name="theme_default_custom_name">My Theme</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground Session Started ===\nSwipe in the text field above. Each swipe shows its candidate ranking\nand is recorded (points + key geometry + ranking + committed word).</string>
     <string name="swipe_debug_log_cleared_banner">Logs cleared. Waiting for swipe input...</string>
     <string name="swipe_debug_toast_logs_cleared">Logs cleared</string>

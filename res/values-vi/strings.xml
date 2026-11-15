@@ -1723,6 +1723,8 @@
     <string name="theme_look_cleverkeys_desc">Phím bo tròn hiện đại; sáng hoặc tối theo hệ thống (mặc định)</string>
     <string name="theme_toast_applying">Đang áp dụng chủ đề: %1$s</string>
     <string name="theme_default_custom_name">Chủ đề của tôi</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Đã bắt đầu phiên Sân thử vuốt ===\nVuốt trong ô văn bản ở trên. Mỗi lần vuốt hiển thị thứ hạng ứng viên\nvà được ghi lại (điểm + hình học phím + thứ hạng + từ đã nhập).</string>
     <string name="swipe_debug_log_cleared_banner">Đã xóa nhật ký. Đang chờ thao tác vuốt...</string>
     <string name="swipe_debug_toast_logs_cleared">Đã xóa nhật ký</string>

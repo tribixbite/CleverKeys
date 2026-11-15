@@ -1778,6 +1778,8 @@
     <string name="theme_look_cleverkeys_desc">Mūsdienīgi noapaļoti taustiņi; gaišais vai tumšais režīms seko sistēmai (noklusējums)</string>
     <string name="theme_toast_applying">Lieto tēmu: %1$s</string>
     <string name="theme_default_custom_name">Mana tēma</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground sesija sākta ===\nVelciet teksta laukā augstāk. Katrs vilkums parāda savu kandidātu rangu\nun tiek ierakstīts (punkti + taustiņu ģeometrija + rangs + apstiprinātais vārds).</string>
     <string name="swipe_debug_log_cleared_banner">Žurnāli notīrīti. Gaida vilkumu...</string>
     <string name="swipe_debug_toast_logs_cleared">Žurnāli notīrīti</string>

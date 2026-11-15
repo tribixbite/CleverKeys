@@ -1814,6 +1814,8 @@
     <string name="theme_look_cleverkeys_desc">Сучасні заокруглені клавіші; світла чи темна — як у системі (типово)</string>
     <string name="theme_toast_applying">Застосування теми: %1$s</string>
     <string name="theme_default_custom_name">Моя тема</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Сеанс Swipe Playground розпочато ===\nПроводьте свайпи в текстовому полі вище. Для кожного свайпу показується ранжування кандидатів,\nі він записується (точки + геометрія клавіш + ранжування + введене слово).</string>
     <string name="swipe_debug_log_cleared_banner">Журнал очищено. Очікування свайпу...</string>
     <string name="swipe_debug_toast_logs_cleared">Журнал очищено</string>

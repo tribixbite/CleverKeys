@@ -1803,6 +1803,8 @@
     <string name="theme_look_cleverkeys_desc">Moderní zaoblené klávesy; světlý nebo tmavý režim podle systému (výchozí)</string>
     <string name="theme_toast_applying">Použije se motiv: %1$s</string>
     <string name="theme_default_custom_name">Můj motiv</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Relace testovacího hřiště tahů zahájena ===\nTáhněte v textovém poli výše. Každý tah zobrazí pořadí kandidátů\na zaznamená se (body + geometrie kláves + pořadí + potvrzené slovo).</string>
     <string name="swipe_debug_log_cleared_banner">Protokoly vymazány. Čeká se na vstup tahem...</string>
     <string name="swipe_debug_toast_logs_cleared">Protokoly vymazány</string>

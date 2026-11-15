@@ -1708,6 +1708,9 @@ tasks.register('runMockTests', JavaExec) {
     // custom theme resets the theme pref BEFORE the store delete; saving the ACTIVE theme
     // re-syncs swipe_trail_color (previously synced only at select time).
     'tribixbite.cleverkeys.theme.CustomThemePrefPolicyTest',
+    // Review 2026-11-14 M22: the Theme Creator draft's Savers round-trip over the JSON codecs
+    // (mock classpath: compose runtime-saveable is not on the pure one).
+    'tribixbite.cleverkeys.theme.ThemeEditorSaversTest',
     // Saga 2026-10-25: the real DIY-theme store behind the backup section.
     'tribixbite.cleverkeys.theme.CustomThemeBackupFormatTest',
     // Audit 2026-09-06 W7 (H-1 + H-7): onCustomShortSwipe dispatch is exclusive —

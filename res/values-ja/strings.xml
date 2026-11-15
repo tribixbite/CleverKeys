@@ -1694,6 +1694,8 @@
     <string name="theme_look_cleverkeys_desc">モダンな角丸キー。ライト/ダークはシステムに従います(デフォルト)</string>
     <string name="theme_toast_applying">テーマを適用中: %1$s</string>
     <string name="theme_default_custom_name">マイテーマ</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== スワイププレイグラウンドのセッション開始 ===\n上のテキスト欄でスワイプしてください。各スワイプの候補ランキングが表示され、\n記録されます(座標点 + キー配置 + ランキング + 確定した単語)。</string>
     <string name="swipe_debug_log_cleared_banner">ログを消去しました。スワイプ入力を待っています...</string>
     <string name="swipe_debug_toast_logs_cleared">ログを消去しました</string>

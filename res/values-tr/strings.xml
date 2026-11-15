@@ -1742,6 +1742,8 @@
     <string name="theme_look_cleverkeys_desc">Modern yuvarlak tuşlar; açık veya koyu mod sistemi izler (varsayılan)</string>
     <string name="theme_toast_applying">Tema uygulanıyor: %1$s</string>
     <string name="theme_default_custom_name">Temam</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Kaydırma Deneme Alanı Oturumu Başladı ===\nYukarıdaki metin alanında kaydırın. Her kaydırma aday sıralamasını gösterir\nve kaydedilir (noktalar + tuş geometrisi + sıralama + onaylanan kelime).</string>
     <string name="swipe_debug_log_cleared_banner">Günlükler temizlendi. Kaydırma girişi bekleniyor...</string>
     <string name="swipe_debug_toast_logs_cleared">Günlükler temizlendi</string>

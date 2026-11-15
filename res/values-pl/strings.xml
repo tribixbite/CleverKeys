@@ -1813,6 +1813,8 @@
     <string name="theme_look_cleverkeys_desc">Nowoczesne zaokrąglone klawisze; jasny lub ciemny zgodnie z systemem (domyślny)</string>
     <string name="theme_toast_applying">Stosowanie motywu: %1$s</string>
     <string name="theme_default_custom_name">Mój motyw</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Rozpoczęto sesję placu testowego gestów ===\nWykonuj gesty w polu tekstowym powyżej. Każdy gest pokazuje ranking kandydatów\ni jest zapisywany (punkty + geometria klawiszy + ranking + zatwierdzone słowo).</string>
     <string name="swipe_debug_log_cleared_banner">Wyczyszczono logi. Oczekiwanie na gest...</string>
     <string name="swipe_debug_toast_logs_cleared">Wyczyszczono logi</string>

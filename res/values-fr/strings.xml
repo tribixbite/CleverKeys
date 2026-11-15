@@ -1777,6 +1777,8 @@
     <string name="theme_look_cleverkeys_desc">Touches arrondies modernes ; clair ou sombre selon le système (par défaut)</string>
     <string name="theme_toast_applying">Application du thème : %1$s</string>
     <string name="theme_default_custom_name">Mon thème</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== Session du bac à sable de glissé démarrée ===\nFaites un glissé dans le champ de texte ci-dessus. Chaque glissé affiche son classement de candidats\net est enregistré (points + géométrie des touches + classement + mot validé).</string>
     <string name="swipe_debug_log_cleared_banner">Journaux effacés. En attente d\'un glissé...</string>
     <string name="swipe_debug_toast_logs_cleared">Journaux effacés</string>

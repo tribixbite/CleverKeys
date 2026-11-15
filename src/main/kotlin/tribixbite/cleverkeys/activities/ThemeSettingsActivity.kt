@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -334,6 +335,21 @@ fun ThemeSettingsScreen(
     // True Black Scenes (Appearance, also switched here and by the toggle_true_black key): the
     // scene cards show their backdrop as the keyboard will.
     var sceneTrueBlack by remember { mutableStateOf(prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)) }
+    // Review 2026-11-14 M24: the keyboard's theme_next / toggle_true_black keys write these prefs
+    // while this screen sits behind it; read once, the cards and switch showed the old state.
+    // Listen for as long as the screen is composed (create → destroy, like Layout Manager).
+    DisposableEffect(prefs) {
+        val listener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { p, key ->
+            when (key) {
+                CustomThemePrefPolicy.THEME_PREF_KEY ->
+                    currentThemeId = p.getString(CustomThemePrefPolicy.THEME_PREF_KEY, Defaults.THEME) ?: Defaults.THEME
+                "look_scene_true_black" ->
+                    sceneTrueBlack = p.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)
+            }
+        }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        onDispose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }
     // Audit H-4: mutate the SAME store instance ThemeProvider renders from — a private
     // CustomThemeManager here wrote the same prefs file but left the provider's
     // in-memory theme list stale, so active-theme edits didn't reach the keyboard
@@ -341,12 +357,15 @@ fun ThemeSettingsScreen(
     val themeManager = remember { ThemeProvider.getInstance(context).customThemeManager }
     val customThemes by themeManager.customThemes.collectAsState()
 
-    var showCreateDialog by remember { mutableStateOf(false) }
-    var editingTheme by remember { mutableStateOf<CustomTheme?>(null) }
+    // Review 2026-11-14 M22: no configChanges here, so a rotation recreates the activity; the open
+    // dialogs, the theme being edited and a pending export survive it in the saved state.
+    var showCreateDialog by rememberSaveable { mutableStateOf(false) }
+    var editingTheme by rememberSaveable(stateSaver = ThemeEditorSavers.EditedTheme) { mutableStateOf<CustomTheme?>(null) }
 
     // "Export as layout XML": a custom theme or look as a <theme> element (LayoutThemeTransfer),
-    // ready to paste into a layout, written through the Storage Access Framework.
-    var pendingThemeXml by remember { mutableStateOf<String?>(null) }
+    // ready to paste into a layout, written through the Storage Access Framework. Saveable: the
+    // picker can return after a rotation, and without the content it left a 0-byte file (M22).
+    var pendingThemeXml by rememberSaveable { mutableStateOf<String?>(null) }
     val exportThemeLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.CreateDocument("text/xml")
     ) { uri ->
@@ -372,7 +391,7 @@ fun ThemeSettingsScreen(
         val fileName = name.replace(Regex("[^A-Za-z0-9._-]+"), "_").trim('_').ifEmpty { "theme" }
         exportThemeLauncher.launch("$fileName-theme.xml")
     }
-    var showDeleteConfirm by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirm by rememberSaveable { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -392,7 +411,12 @@ fun ThemeSettingsScreen(
                     }) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.theme_restart_keyboard))
                     }
-                    IconButton(onClick = { showCreateDialog = true }) {
+                    // Review 2026-11-14 M21: the store keeps at most MAX_CUSTOM_THEMES; at the
+                    // limit a new theme cannot be saved, so it cannot be started either.
+                    IconButton(
+                        onClick = { showCreateDialog = true },
+                        enabled = CustomThemePrefPolicy.canCreate(customThemes.size),
+                    ) {
                         Icon(Icons.Default.Add, contentDescription = stringResource(R.string.theme_create))
                     }
                 },
@@ -606,15 +630,17 @@ fun ThemeSettingsScreen(
                     }
                     items(themesInCategory) { themeInfo ->
                         val decorativeId = "decorative_${themeInfo.id}"
+                        val decorativeName = themeInfo.displayName(context.resources)
                         ThemeCard(
-                            name = themeInfo.displayName(context.resources),
+                            name = decorativeName,
                             colorScheme = themeInfo.colorScheme,
                             description = themeInfo.displayDescription(context.resources),
                             isCustom = false,
                             isSelected = currentThemeId == decorativeId,
                             onSelect = {
                                 currentThemeId = decorativeId
-                                onThemeSelected(decorativeId, themeInfo.name)
+                                // Low (review 2026-11-14): the toast named the English id.
+                                onThemeSelected(decorativeId, decorativeName)
                             }
                         )
                     }
@@ -640,14 +666,25 @@ fun ThemeSettingsScreen(
             onSave = { theme ->
                 // Audit H-4: route through the policy so saving the ACTIVE theme re-syncs
                 // swipe_trail_color (a fresh creation is never active — the sync no-ops).
-                val savedActive = CustomThemePrefPolicy.saveCustomTheme(
+                val result = CustomThemePrefPolicy.saveCustomTheme(
                     prefs,
                     PreferenceManager.getDefaultSharedPreferences(context),
                     themeManager,
                     theme
                 )
-                if (savedActive) notifyKeyboardThemeChanged(context)
-                showCreateDialog = false
+                if (result.saved) {
+                    val savedActive = result.activeTrailSynced
+                    if (savedActive) notifyKeyboardThemeChanged(context)
+                    showCreateDialog = false
+                } else {
+                    // Review 2026-11-14 M21: the store refused it (the theme limit, or a failed
+                    // write). Closing here lost the user's work: say why and keep the draft open.
+                    Toast.makeText(
+                        context,
+                        CustomThemePrefPolicy.saveFailureMessage(isNew = true, customThemeCount = customThemes.size),
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
             }
         )
     }
@@ -666,14 +703,23 @@ fun ThemeSettingsScreen(
                 // the theme may be bound to the current layout (e237fa95), which the policy's
                 // global-pref check cannot see. The keyboard compares the displayed colours
                 // and rebuilds only when they changed (KeyboardViewThemeTracker).
-                CustomThemePrefPolicy.saveCustomTheme(
+                val result = CustomThemePrefPolicy.saveCustomTheme(
                     prefs,
                     PreferenceManager.getDefaultSharedPreferences(context),
                     themeManager,
                     updatedTheme
                 )
-                notifyKeyboardThemeChanged(context)
-                editingTheme = null
+                if (result.saved) {
+                    notifyKeyboardThemeChanged(context)
+                    editingTheme = null
+                } else {
+                    // Review 2026-11-14 M21: the result was ignored and the edit closed as if saved.
+                    Toast.makeText(
+                        context,
+                        CustomThemePrefPolicy.saveFailureMessage(isNew = false, customThemeCount = customThemes.size),
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
             }
         )
     }
@@ -1036,12 +1082,20 @@ fun ThemeCreatorDialog(
 ) {
     // Default name for a NEW theme only; it is the user's to edit and is stored as typed.
     val defaultThemeName = stringResource(R.string.theme_default_custom_name)
-    var themeName by remember { mutableStateOf(initialTheme?.name ?: defaultThemeName) }
+    // Review 2026-11-14 M22: the draft lives in the saved state (over the theme store's own JSON
+    // codecs, ThemeEditorSavers): a rotation recreated the activity and the edit was gone.
+    var themeName by rememberSaveable { mutableStateOf(initialTheme?.name ?: defaultThemeName) }
     // Use priority: initialTheme colors > defaultColors > darkKeyboardColorScheme
-    var colors by remember { mutableStateOf(initialTheme?.colors ?: defaultColors ?: darkKeyboardColorScheme()) }
+    var colors by rememberSaveable(stateSaver = ThemeEditorSavers.ColorScheme) {
+        mutableStateOf(initialTheme?.colors ?: defaultColors ?: darkKeyboardColorScheme())
+    }
     // The version-2 "Keyboard look" part (geometry, hints, variants…); empty = a version-1 theme.
-    var extension by remember { mutableStateOf(initialTheme?.extension ?: tribixbite.cleverkeys.theme.ThemeSpec()) }
-    var selectedColorAttribute by remember { mutableStateOf<ColorAttribute?>(null) }
+    var extension by rememberSaveable(stateSaver = ThemeEditorSavers.Spec) {
+        mutableStateOf(initialTheme?.extension ?: tribixbite.cleverkeys.theme.ThemeSpec())
+    }
+    var selectedColorAttribute by rememberSaveable { mutableStateOf<ColorAttribute?>(null) }
+    // Low (review 2026-11-14): a blank name was saved as a card with no title.
+    val savedName = CustomThemePrefPolicy.normalizedName(themeName)
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1061,10 +1115,12 @@ fun ThemeCreatorDialog(
                     },
                     actions = {
                         TextButton(
+                            enabled = savedName != null,
                             onClick = {
+                                val name = savedName ?: return@TextButton
                                 val theme = CustomTheme(
                                     id = initialTheme?.id ?: java.util.UUID.randomUUID().toString(),
-                                    name = themeName,
+                                    name = name,
                                     colors = colors,
                                     createdAt = initialTheme?.createdAt ?: System.currentTimeMillis(),
                                     // Saving keeps the look part (a theme saved from a layout keeps

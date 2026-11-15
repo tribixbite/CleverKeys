@@ -1769,6 +1769,8 @@
     <string name="theme_look_cleverkeys_desc">کلیدهای گرد مدرن؛ روشن یا تیره مطابق سیستم (پیش‌فرض)</string>
     <string name="theme_toast_applying">در حال اعمال تم: %1$s</string>
     <string name="theme_default_custom_name">تم من</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== جلسهٔ زمین بازی کشیدن آغاز شد ===\nدر کادر متن بالا بکشید. هر کشیدن رتبه‌بندی نامزدهای خود را نشان می‌دهد\nو ضبط می‌شود (نقاط + هندسهٔ کلیدها + رتبه‌بندی + واژهٔ ثبت‌شده).</string>
     <string name="swipe_debug_log_cleared_banner">گزارش‌ها پاک شد. در انتظار ورودی کشیدن...</string>
     <string name="swipe_debug_toast_logs_cleared">گزارش‌ها پاک شد</string>

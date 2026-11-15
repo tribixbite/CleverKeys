@@ -1695,6 +1695,8 @@
     <string name="theme_look_cleverkeys_desc">모던한 둥근 키, 라이트/다크는 시스템을 따름(기본값)</string>
     <string name="theme_toast_applying">테마 적용 중: %1$s</string>
     <string name="theme_default_custom_name">내 테마</string>
+    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
+    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
     <string name="swipe_debug_session_intro">=== 스와이프 플레이그라운드 세션 시작 ===\n위의 텍스트 필드에서 스와이프하세요. 각 스와이프의 후보 순위가 표시되며\n기록됩니다(좌표 + 키 배치 + 순위 + 확정된 단어).</string>
     <string name="swipe_debug_log_cleared_banner">로그를 지웠습니다. 스와이프 입력을 기다리는 중...</string>
     <string name="swipe_debug_toast_logs_cleared">로그를 지웠습니다</string>
