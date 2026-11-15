@@ -112,6 +112,35 @@ class ImeDefaultDetectionTest {
             .that(IMEStatusHelper.isDefaultIME(context, PACKAGE, SERVICE)).isTrue()
     }
 
+    /**
+     * Review 2026-11-14 M2: Android stores `DEFAULT_INPUT_METHOD` as the SHORT component form
+     * (`ComponentName.flattenToShortString`): the Pixel 8 Pro holds
+     * `tribixbite.cleverkeys/.CleverKeysService`. A full-form-only comparison never matched, so
+     * every user who had chosen CleverKeys still got the "set as default" reminder.
+     */
+    @Test
+    fun `isDefaultIME is true for the short component form Android stores`() {
+        systemDefaultIme("$PACKAGE/.CleverKeysService")
+        assertWithMessage("the short form names the same component")
+            .that(IMEStatusHelper.isDefaultIME(context, PACKAGE, SERVICE)).isTrue()
+    }
+
+    @Test
+    fun `no prompt when we are the default in the short form`() {
+        systemDefaultIme("$PACKAGE/.CleverKeysService")
+
+        IMEStatusHelper.checkAndPromptDefaultIME(context, handler, prefs, PACKAGE, SERVICE)
+
+        verify(exactly = 0) { handler.postDelayed(any(), any()) }
+    }
+
+    @Test
+    fun `a short form naming another class of our package is not us`() {
+        systemDefaultIme("$PACKAGE/.SomeOtherService")
+        assertWithMessage("same package, different service")
+            .that(IMEStatusHelper.isDefaultIME(context, PACKAGE, SERVICE)).isFalse()
+    }
+
     @Test
     fun `isDefaultIME is false for another keyboard`() {
         systemDefaultIme("com.example.other/com.example.other.OtherService")

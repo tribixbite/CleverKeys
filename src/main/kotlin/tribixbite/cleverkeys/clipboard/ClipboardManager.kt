@@ -762,7 +762,8 @@ class ClipboardManager(
 
         // Lock UI controls to prevent conflicting actions while tagging
         setTagModeLockUI(true)
-        Log.d(TAG, "showTagPanel: active for '${entry.content.take(20)}' tab=$tab")
+        // Never the clip's text: release builds keep Log.d (review 2026-11-14 M1).
+        Log.d(TAG, "showTagPanel: active (len=${entry.content.length}) tab=$tab")
     }
 
     /**

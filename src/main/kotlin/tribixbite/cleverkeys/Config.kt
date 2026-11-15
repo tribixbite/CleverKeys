@@ -1273,7 +1273,7 @@ class Config private constructor(
         layout_key_geometry = loaded.keyGeometry
         layout_embedded_themes = loaded.embeddedThemes
         inverse_numpad = safeGetString(_prefs, "numpad_layout", Defaults.NUMPAD_LAYOUT) == "low_first"
-        scale_numpad_height = _prefs.getBoolean("scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
+        scale_numpad_height = safeGetBoolean(_prefs, "scale_numpad_height", Defaults.SCALE_NUMPAD_HEIGHT)
 
         val number_row = safeGetString(_prefs, "number_row", Defaults.NUMBER_ROW)
         add_number_row = number_row != "no_number_row"
@@ -1293,21 +1293,21 @@ class Config private constructor(
             ) / 100f
         slide_step_px = slider_sensitivity * swipe_scaling
 
-        vibrate_custom = _prefs.getBoolean("vibrate_custom", Defaults.VIBRATE_CUSTOM)
+        vibrate_custom = safeGetBoolean(_prefs, "vibrate_custom", Defaults.VIBRATE_CUSTOM)
         vibrate_duration = safeGetInt(_prefs, "vibrate_duration", Defaults.VIBRATE_DURATION).toLong()
         // Master haptic toggle - "vibration_enabled" key from Settings UI
-        haptic_enabled = _prefs.getBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
+        haptic_enabled = safeGetBoolean(_prefs, "vibration_enabled", Defaults.HAPTIC_ENABLED)
         // Per-event haptic feedback toggles (only matter if haptic_enabled is true)
-        haptic_key_press = _prefs.getBoolean("haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
-        haptic_prediction_tap = _prefs.getBoolean("haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)
-        haptic_trackpoint_activate = _prefs.getBoolean("haptic_trackpoint_activate", Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
-        haptic_long_press = _prefs.getBoolean("haptic_long_press", Defaults.HAPTIC_LONG_PRESS)
-        haptic_swipe_complete = _prefs.getBoolean("haptic_swipe_complete", Defaults.HAPTIC_SWIPE_COMPLETE)
+        haptic_key_press = safeGetBoolean(_prefs, "haptic_key_press", Defaults.HAPTIC_KEY_PRESS)
+        haptic_prediction_tap = safeGetBoolean(_prefs, "haptic_prediction_tap", Defaults.HAPTIC_PREDICTION_TAP)
+        haptic_trackpoint_activate = safeGetBoolean(_prefs, "haptic_trackpoint_activate", Defaults.HAPTIC_TRACKPOINT_ACTIVATE)
+        haptic_long_press = safeGetBoolean(_prefs, "haptic_long_press", Defaults.HAPTIC_LONG_PRESS)
+        haptic_swipe_complete = safeGetBoolean(_prefs, "haptic_swipe_complete", Defaults.HAPTIC_SWIPE_COMPLETE)
         longPressTimeout = safeGetInt(_prefs, "longpress_timeout", Defaults.LONGPRESS_TIMEOUT).toLong()
         longPressInterval = safeGetInt(_prefs, "longpress_interval", Defaults.LONGPRESS_INTERVAL)
             .coerceIn(SettingsRanges.LONGPRESS_INTERVAL.first, SettingsRanges.LONGPRESS_INTERVAL.last).toLong()
-        keyrepeat_enabled = _prefs.getBoolean("keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
-        keyrepeat_backspace_only = _prefs.getBoolean("keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
+        keyrepeat_enabled = safeGetBoolean(_prefs, "keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED)
+        keyrepeat_backspace_only = safeGetBoolean(_prefs, "keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY)
 
         // Screen dimensions for percentage calculations: the stable display size (ScreenSize),
         // not dm, whose height changes meaning after the IME's first configuration change on
@@ -1343,34 +1343,34 @@ class Config private constructor(
         keyActivatedOpacity = safeGetInt(_prefs, "key_activated_opacity", Defaults.KEY_ACTIVATED_OPACITY) * 255 / 100
         keyBorderOpacity = safeGetInt(_prefs, KeyBorderOpacityMigration.PREF_KEY, Defaults.KEY_BORDER_OPACITY) * 255 / 100
 
-        borderConfig = _prefs.getBoolean("border_config", Defaults.BORDER_CONFIG)
-        look_show_hints = _prefs.getBoolean("look_show_hints", Defaults.LOOK_SHOW_HINTS)
-        look_key_preview = _prefs.getBoolean("look_key_preview", Defaults.LOOK_KEY_PREVIEW)
-        look_space_language = _prefs.getBoolean("look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
-        look_backdrop_motion = _prefs.getBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
+        borderConfig = safeGetBoolean(_prefs, "border_config", Defaults.BORDER_CONFIG)
+        look_show_hints = safeGetBoolean(_prefs, "look_show_hints", Defaults.LOOK_SHOW_HINTS)
+        look_key_preview = safeGetBoolean(_prefs, "look_key_preview", Defaults.LOOK_KEY_PREVIEW)
+        look_space_language = safeGetBoolean(_prefs, "look_space_language", Defaults.LOOK_SPACE_LANGUAGE)
+        look_backdrop_motion = safeGetBoolean(_prefs, "look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
         // fromPercent clamps each to SettingsRanges.LOOK_MOTION_* (the same ranges).
         look_motion_tuning = tribixbite.cleverkeys.theme.SceneMotionTuning.fromPercent(
             speed = safeGetInt(_prefs, "look_motion_speed", Defaults.LOOK_MOTION_SPEED),
             intensity = safeGetInt(_prefs, "look_motion_intensity", Defaults.LOOK_MOTION_INTENSITY),
             twinkle = safeGetInt(_prefs, "look_motion_twinkle", Defaults.LOOK_MOTION_TWINKLE),
-            crisp = _prefs.getBoolean("look_scene_crisp", Defaults.LOOK_SCENE_CRISP),
+            crisp = safeGetBoolean(_prefs, "look_scene_crisp", Defaults.LOOK_SCENE_CRISP),
             resumeMs = safeGetInt(_prefs, "look_motion_resume_ms", Defaults.LOOK_MOTION_RESUME_MS),
             idleSeconds = safeGetInt(_prefs, "look_motion_idle_s", Defaults.LOOK_MOTION_IDLE_S),
             fps = safeGetInt(_prefs, "look_motion_fps", Defaults.LOOK_MOTION_FPS),
-            overlay = _prefs.getBoolean("look_scene_overlay", Defaults.LOOK_SCENE_OVERLAY),
-            trueBlack = _prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK),
+            overlay = safeGetBoolean(_prefs, "look_scene_overlay", Defaults.LOOK_SCENE_OVERLAY),
+            trueBlack = safeGetBoolean(_prefs, "look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK),
         )
-        customBorderRadius = _prefs.getInt("custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
+        customBorderRadius = safeGetInt(_prefs, "custom_border_radius", Defaults.CUSTOM_BORDER_RADIUS) / 100f
         customBorderLineWidth = get_dip_pref(dm, "custom_border_line_width", Defaults.CUSTOM_BORDER_LINE_WIDTH.toFloat())
-        double_tap_lock_shift = _prefs.getBoolean("lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
+        double_tap_lock_shift = safeGetBoolean(_prefs, "lock_double_tap", Defaults.DOUBLE_TAP_LOCK_SHIFT)
         characterSize = safeGetFloat(_prefs, "character_size", Defaults.CHARACTER_SIZE)
             .coerceIn(SettingsRanges.CHARACTER_SIZE.start, SettingsRanges.CHARACTER_SIZE.endInclusive) * characterSizeScale
         secondary_label_size_scale = safeGetFloat(_prefs, "secondary_label_size_scale", Defaults.SECONDARY_LABEL_SIZE_SCALE)
         // The global theme preference. The EFFECTIVE theme (themeName/theme) is resolved at the
         // end of refresh, once the layouts, the selection and wide_screen are known.
         user_theme_name = safeGetString(_prefs, "theme", Defaults.THEME)
-        autocapitalisation = _prefs.getBoolean("autocapitalisation", Defaults.AUTOCAPITALISATION)
-        switch_input_immediate = _prefs.getBoolean("switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
+        autocapitalisation = safeGetBoolean(_prefs, "autocapitalisation", Defaults.AUTOCAPITALISATION)
+        switch_input_immediate = safeGetBoolean(_prefs, "switch_input_immediate", Defaults.SWITCH_INPUT_IMMEDIATE)
         enter_always_newline = safeGetBoolean(_prefs, "enter_always_newline", Defaults.ENTER_ALWAYS_NEWLINE)
         extra_keys_param = ExtraKeysPreference.get_extra_keys(_prefs) ?: emptyMap()
         extra_keys_custom = CustomExtraKeysPreference.get(_prefs) ?: emptyMap()
@@ -1378,7 +1378,7 @@ class Config private constructor(
         current_layout_narrow = safeGetInt(_prefs, "current_layout_portrait", 0)
         current_layout_wide = safeGetInt(_prefs, "current_layout_landscape", 0)
         circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
-        clipboard_history_enabled = _prefs.getBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
+        clipboard_history_enabled = safeGetBoolean(_prefs, "clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
 
         // G-5: read-site clamp — pre-fix imports could have written out-of-range
         // (or negative) values that the string-form validator used to accept.
@@ -1398,18 +1398,18 @@ class Config private constructor(
 
         clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
 
-        clipboard_exclude_password_managers = _prefs.getBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+        clipboard_exclude_password_managers = safeGetBoolean(_prefs, "clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
 
         clipboard_history_duration = safeGetString(_prefs, "clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
 
-        clipboard_respect_sensitive_flag = _prefs.getBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+        clipboard_respect_sensitive_flag = safeGetBoolean(_prefs, "clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
 
         // v4: Clipboard feature toggles
-        clipboard_text_only = _prefs.getBoolean("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
-        clipboard_pinned_enabled = _prefs.getBoolean("clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
-        clipboard_todo_enabled = _prefs.getBoolean("clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
-        clipboard_swipe_delete_enabled = _prefs.getBoolean("clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
-        clipboard_media_enabled = _prefs.getBoolean("clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
+        clipboard_text_only = safeGetBoolean(_prefs, "clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
+        clipboard_pinned_enabled = safeGetBoolean(_prefs, "clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
+        clipboard_todo_enabled = safeGetBoolean(_prefs, "clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
+        clipboard_swipe_delete_enabled = safeGetBoolean(_prefs, "clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
+        clipboard_media_enabled = safeGetBoolean(_prefs, "clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
         // F-8: clamp through the shared range (slider + validator + this read site agree)
         clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
@@ -1419,55 +1419,55 @@ class Config private constructor(
         reloadSanitizationSettings()
 
         // GIF Panel
-        gif_enabled = _prefs.getBoolean("gif_enabled", Defaults.GIF_ENABLED)
+        gif_enabled = safeGetBoolean(_prefs, "gif_enabled", Defaults.GIF_ENABLED)
         voice_input_enabled = safeGetBoolean(_prefs, "voice_input_enabled", Defaults.VOICE_INPUT_ENABLED)
         gif_thumbnail_columns = safeGetInt(_prefs, "gif_thumbnail_columns", Defaults.GIF_THUMBNAIL_COLUMNS)
             .coerceIn(SettingsRanges.GIF_THUMBNAIL_COLUMNS)
 
         continuous_swipe_enabled = safeGetBoolean(_prefs, "continuous_swipe_enabled", Defaults.CONTINUOUS_SWIPE_ENABLED)
-        swipe_typing_enabled = _prefs.getBoolean("swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
-        swipe_on_password_fields = _prefs.getBoolean("swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
-        swipe_show_debug_scores = _prefs.getBoolean("swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
-        suggestion_provenance_markers = _prefs.getBoolean("suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
-        show_exact_typed_word = _prefs.getBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
-        word_prediction_enabled = _prefs.getBoolean("word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
+        swipe_typing_enabled = safeGetBoolean(_prefs, "swipe_typing_enabled", Defaults.SWIPE_TYPING_ENABLED)
+        swipe_on_password_fields = safeGetBoolean(_prefs, "swipe_on_password_fields", Defaults.SWIPE_ON_PASSWORD_FIELDS)
+        swipe_show_debug_scores = safeGetBoolean(_prefs, "swipe_show_debug_scores", Defaults.SWIPE_SHOW_DEBUG_SCORES)
+        suggestion_provenance_markers = safeGetBoolean(_prefs, "suggestion_provenance_markers", Defaults.SUGGESTION_PROVENANCE_MARKERS)
+        show_exact_typed_word = safeGetBoolean(_prefs, "show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
+        word_prediction_enabled = safeGetBoolean(_prefs, "word_prediction_enabled", Defaults.WORD_PREDICTION_ENABLED)
         suggestion_bar_opacity = safeGetInt(_prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
 
         prediction_context_boost = safeGetFloat(_prefs, "prediction_context_boost", Defaults.PREDICTION_CONTEXT_BOOST)
         prediction_frequency_scale = safeGetFloat(_prefs, "prediction_frequency_scale", Defaults.PREDICTION_FREQUENCY_SCALE)
-        context_aware_predictions_enabled = _prefs.getBoolean("context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
-        personalized_learning_enabled = _prefs.getBoolean("personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
-        on_device_learning_enabled = _prefs.getBoolean("on_device_learning_enabled", Defaults.ON_DEVICE_LEARNING_ENABLED)
-        next_word_prediction_enabled = _prefs.getBoolean("next_word_prediction_enabled", Defaults.NEXT_WORD_PREDICTION_ENABLED)
+        context_aware_predictions_enabled = safeGetBoolean(_prefs, "context_aware_predictions_enabled", Defaults.CONTEXT_AWARE_PREDICTIONS_ENABLED)
+        personalized_learning_enabled = safeGetBoolean(_prefs, "personalized_learning_enabled", Defaults.PERSONALIZED_LEARNING_ENABLED)
+        on_device_learning_enabled = safeGetBoolean(_prefs, "on_device_learning_enabled", Defaults.ON_DEVICE_LEARNING_ENABLED)
+        next_word_prediction_enabled = safeGetBoolean(_prefs, "next_word_prediction_enabled", Defaults.NEXT_WORD_PREDICTION_ENABLED)
         context_source = safeGetString(_prefs, "context_source", Defaults.CONTEXT_SOURCE)
         personalization_weight = safeGetFloat(_prefs, "personalization_weight", Defaults.PERSONALIZATION_WEIGHT)
         personalization_max_words = safeGetInt(_prefs, "personalization_max_words", Defaults.PERSONALIZATION_MAX_WORDS)
         learning_aggression = safeGetString(_prefs, "learning_aggression", Defaults.LEARNING_AGGRESSION)
 
         // Multi-language settings (Phase 8.3 & 8.4)
-        enable_multilang = _prefs.getBoolean(LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
+        enable_multilang = safeGetBoolean(_prefs, LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
         // The user's language choices; the ACTIVE languages are resolved against the current
         // layout's binding at the end of refresh (recomputeActiveLanguages).
         user_primary_language = safeGetString(_prefs, LanguagePrefs.PRIMARY, Defaults.PRIMARY_LANGUAGE)
         user_secondary_language = safeGetString(_prefs, LanguagePrefs.SECONDARY, Defaults.SECONDARY_LANGUAGE)
-        auto_detect_language = _prefs.getBoolean("pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
+        auto_detect_language = safeGetBoolean(_prefs, "pref_auto_detect_language", Defaults.AUTO_DETECT_LANGUAGE)
         // SlideBarPreference stores as Float (0.4-0.9), not Int
         language_detection_sensitivity = safeGetFloat(_prefs, "pref_language_detection_sensitivity", Defaults.LANGUAGE_DETECTION_SENSITIVITY)
         // v1.1.94: Secondary prediction weight (0.5-1.5)
         secondary_prediction_weight = safeGetFloat(_prefs, "pref_secondary_prediction_weight", Defaults.SECONDARY_PREDICTION_WEIGHT)
 
-        autocorrect_enabled = _prefs.getBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
+        autocorrect_enabled = safeGetBoolean(_prefs, "autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         autocorrect_min_word_length = safeGetInt(_prefs, "autocorrect_min_word_length", Defaults.AUTOCORRECT_MIN_WORD_LENGTH)
         autocorrect_char_match_threshold = safeGetFloat(_prefs, "autocorrect_char_match_threshold", Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD)
         autocorrect_confidence_min_frequency = safeGetInt(_prefs, "autocorrect_confidence_min_frequency", Defaults.AUTOCORRECT_MIN_FREQUENCY)
         // Issue #72: Auto-capitalize "I" words
-        autocapitalize_i_words = _prefs.getBoolean("autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
+        autocapitalize_i_words = safeGetBoolean(_prefs, "autocapitalize_i_words", Defaults.AUTOCAPITALIZE_I_WORDS)
 
         autocorrect_max_length_diff = safeGetInt(_prefs, "autocorrect_max_length_diff", Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
         autocorrect_prefix_length = safeGetInt(_prefs, "autocorrect_prefix_length", Defaults.AUTOCORRECT_PREFIX_LENGTH)
         autocorrect_tuning = AutocorrectTuning.fromPrefs(_prefs)
 
-        swipe_final_autocorrect_enabled = _prefs.getBoolean("swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
+        swipe_final_autocorrect_enabled = safeGetBoolean(_prefs, "swipe_final_autocorrect_enabled", Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
 
         // finger_occlusion_offset: percent of ONE KEY ROW to shift raw touch Y before the
         // decoders normalise it. Restored 2026-08-19 after the neural removal deprecated it as
@@ -1483,7 +1483,7 @@ class Config private constructor(
         finger_occlusion_offset = safeGetInt(_prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
             .coerceIn(SettingsRanges.FINGER_OCCLUSION_OFFSET)
 
-        short_gestures_enabled = _prefs.getBoolean("short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
+        short_gestures_enabled = safeGetBoolean(_prefs, "short_gestures_enabled", Defaults.SHORT_GESTURES_ENABLED)
         short_gesture_min_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_min_distance", Defaults.SHORT_GESTURE_MIN_DISTANCE))
         short_gesture_max_distance = PercentOfKey(safeGetInt(_prefs, "short_gesture_max_distance", Defaults.SHORT_GESTURE_MAX_DISTANCE))
         // GH #147/#87: read after BOTH inputs above. The mode overrides word swipes rather
@@ -1493,7 +1493,7 @@ class Config private constructor(
             safeGetBoolean(_prefs, "short_swipes_only", Defaults.SHORT_SWIPES_ONLY)
         if (short_swipes_only) swipe_typing_enabled = false
 
-        subkey_popover_enabled = _prefs.getBoolean("subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
+        subkey_popover_enabled = safeGetBoolean(_prefs, "subkey_popover_enabled", Defaults.SUBKEY_POPOVER_ENABLED)
         subkey_popover_neutral_width = safeGetInt(_prefs, "subkey_popover_neutral_width", Defaults.SUBKEY_POPOVER_NEUTRAL_WIDTH)
             .coerceIn(Defaults.SUBKEY_POPOVER_NEUTRAL_MIN, Defaults.SUBKEY_POPOVER_NEUTRAL_MAX)
         subkey_popover_neutral_height = safeGetInt(_prefs, "subkey_popover_neutral_height", Defaults.SUBKEY_POPOVER_NEUTRAL_HEIGHT)
@@ -1511,10 +1511,10 @@ class Config private constructor(
 
         // Gesture timing configuration
         tap_duration_threshold = safeGetInt(_prefs, "tap_duration_threshold", Defaults.TAP_DURATION_THRESHOLD).toLong()
-        double_space_to_period = _prefs.getBoolean("double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
+        double_space_to_period = safeGetBoolean(_prefs, "double_space_to_period", Defaults.DOUBLE_SPACE_TO_PERIOD)
         double_space_threshold = safeGetInt(_prefs, "double_space_threshold", Defaults.DOUBLE_SPACE_THRESHOLD).toLong()
-        smart_punctuation = _prefs.getBoolean("smart_punctuation", Defaults.SMART_PUNCTUATION)
-        space_before_opening_punctuation = _prefs.getBoolean(
+        smart_punctuation = safeGetBoolean(_prefs, "smart_punctuation", Defaults.SMART_PUNCTUATION)
+        space_before_opening_punctuation = safeGetBoolean(_prefs,
             "space_before_opening_punctuation", Defaults.SPACE_BEFORE_OPENING_PUNCTUATION,
         )
         swipe_min_dwell_time = safeGetInt(_prefs, "swipe_min_dwell_time", Defaults.SWIPE_MIN_DWELL_TIME).toLong()
@@ -1528,20 +1528,20 @@ class Config private constructor(
         slider_speed_max = safeGetFloat(_prefs, "slider_speed_max", Defaults.SLIDER_SPEED_MAX)
 
         // Swipe trail appearance
-        swipe_trail_enabled = _prefs.getBoolean("swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
+        swipe_trail_enabled = safeGetBoolean(_prefs, "swipe_trail_enabled", Defaults.SWIPE_TRAIL_ENABLED)
         swipe_trail_effect = safeGetString(_prefs, "swipe_trail_effect", Defaults.SWIPE_TRAIL_EFFECT)
-        swipe_trail_color = _prefs.getInt("swipe_trail_color", Defaults.SWIPE_TRAIL_COLOR)
+        swipe_trail_color = safeGetInt(_prefs, "swipe_trail_color", Defaults.SWIPE_TRAIL_COLOR)
         swipe_trail_width = safeGetFloat(_prefs, "swipe_trail_width", Defaults.SWIPE_TRAIL_WIDTH)
         swipe_trail_glow_radius = safeGetFloat(_prefs, "swipe_trail_glow_radius", Defaults.SWIPE_TRAIL_GLOW_RADIUS)
 
         custom_terminal_packages = (TerminalUtils.parseCustomPackages(
             safeGetString(_prefs, "custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)
         ) as? TerminalUtils.PackageListResult.Valid)?.packages ?: emptySet()
-        auto_space_after_suggestion = _prefs.getBoolean("auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
-        auto_space_before_suggestion = _prefs.getBoolean("auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
-        backspace_undo_swipe = _prefs.getBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
-        backspace_undo_autocorrect = _prefs.getBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
-        swipe_debug_detailed_logging = _prefs.getBoolean("swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
+        auto_space_after_suggestion = safeGetBoolean(_prefs, "auto_space_after_suggestion", Defaults.AUTO_SPACE_AFTER_SUGGESTION)
+        auto_space_before_suggestion = safeGetBoolean(_prefs, "auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
+        backspace_undo_swipe = safeGetBoolean(_prefs, "backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
+        backspace_undo_autocorrect = safeGetBoolean(_prefs, "backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
+        swipe_debug_detailed_logging = safeGetBoolean(_prefs, "swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         // L1: canonicalize case at read — an imported/hand-edited "CTC" must drive the
         // router, provenance tagging, and the settings UI exactly like "ctc".
         swipe_engine_mode = safeGetString(_prefs, SwipeEngineRouter.Mode.PREF_KEY, Defaults.SWIPE_ENGINE_MODE)
@@ -1551,7 +1551,7 @@ class Config private constructor(
         geo_endpoint_inset_kw = safeGetFloat(_prefs, "geo_endpoint_inset_kw", Defaults.GEO_ENDPOINT_INSET_KW)
         ctc_beam_width = safeGetInt(_prefs, "ctc_beam_width", Defaults.CTC_BEAM_WIDTH)
             .coerceIn(SettingsRanges.CTC_BEAM_WIDTH)
-        swipe_context_rescoring = _prefs.getBoolean(
+        swipe_context_rescoring = safeGetBoolean(_prefs,
             "swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING
         )
 

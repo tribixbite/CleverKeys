@@ -1154,7 +1154,7 @@ class CleverKeysService : InputMethodService(),
      */
     fun toggleSceneMotion() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val on = !prefs.getBoolean("look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
+        val on = !Config.safeGetBoolean(prefs, "look_backdrop_motion", Defaults.LOOK_BACKDROP_MOTION)
         prefs.edit().putBoolean("look_backdrop_motion", on).apply()
         showSuggestionBarMessage(getString(if (on) R.string.scene_motion_on_message else R.string.scene_motion_off_message))
     }
@@ -1166,7 +1166,7 @@ class CleverKeysService : InputMethodService(),
      */
     fun toggleTrueBlack() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
-        val on = !prefs.getBoolean("look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)
+        val on = !Config.safeGetBoolean(prefs, "look_scene_true_black", Defaults.LOOK_SCENE_TRUE_BLACK)
         prefs.edit().putBoolean("look_scene_true_black", on).apply()
         showSuggestionBarMessage(getString(if (on) R.string.scene_true_black_on_message else R.string.scene_true_black_off_message))
     }

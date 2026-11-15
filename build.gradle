@@ -789,6 +789,8 @@ tasks.register('runPureTests', JavaExec) {
     // toggle voided by a developer debug flag at the capture site, and the absent
     // context/bigram/trigram surface in the section that can already erase them.
     'tribixbite.cleverkeys.PrivacyDataSurfaceDriftTest',
+    // Review 2026-11-14 H4: Config.refresh never throws on a mistyped stored pref.
+    'tribixbite.cleverkeys.ConfigMistypedPrefDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     // Settings search in the UI language; scroll targets keyed by stable setting ids.
     'tribixbite.cleverkeys.SettingsSearchLocalizationTest',
@@ -1630,6 +1632,8 @@ tasks.register('runMockTests', JavaExec) {
     // the stamp−1 cursor signature, owed-space repair on the next alphanumeric keystroke).
     'tribixbite.cleverkeys.SuggestionTrailingSpaceRepairTest',
     'tribixbite.cleverkeys.ClipboardMediaManagerZipSlipTest',
+    // Review 2026-11-14 H3: deleteMedia stays inside clipboard_media/ for imported paths.
+    'tribixbite.cleverkeys.ClipboardMediaDeleteContainmentTest',
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback
     'tribixbite.cleverkeys.BackupRestoreDbFailureTest',
@@ -1788,9 +1792,10 @@ tasks.register('runMockTests', JavaExec) {
     "${buildDir}/tmp/kotlin-classes/debug",
   ) + configurations.debugUnitTestRuntimeClasspath + androidDependencyClasses + files(androidJar)
 
+  // Allow single test via -PtestClass=ClassName (or several: -PtestClass=A,sub.B)
   if (project.hasProperty('testClass')) {
     def cls = project.property('testClass')
-    args = ["tribixbite.cleverkeys.${cls}"]
+    args = cls.toString().split(',').collect { "tribixbite.cleverkeys.${it.trim()}" }
   } else {
     args = mockTestClasses
   }

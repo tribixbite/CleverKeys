@@ -108,7 +108,10 @@ class SuggestionBridge(
         // A tap while an inline panel field owns typing commits into that field: nothing about
         // it is captured (the inline routes learn nothing — see InlineSwipeInput.kt).
         val inlineFieldActive = suggestionHandler?.hasActiveInlineField() == true
+        // Nor in a field that asks for no personalized learning (private tabs; review
+        // 2026-11-14 H2). No handler means no field state: capture nothing.
         if (isSwipeAutoInsert && currentSwipeData != null && !inPasswordField && !inlineFieldActive &&
+            suggestionHandler?.allowsPersonalizedLearning() == true &&
             predictionCoordinator?.getMlDataStore() != null) {
             mlDataCollector.collectAndStoreSwipeData(
                 word,

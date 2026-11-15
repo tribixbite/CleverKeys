@@ -64,8 +64,11 @@ class NextWordStaticTierTest {
     private lateinit var resources: Resources
     private lateinit var handler: SuggestionHandler
 
-    /** The fake editor's content; the cursor is always at the end. */
+    /** The fake editor's text before the cursor; commits and deletions act at its end. */
     private val editor = StringBuilder()
+
+    /** The fake editor's text after the cursor (empty unless a test parks the caret mid-text). */
+    private val editorAfter = StringBuilder()
     private lateinit var ic: InputConnection
 
     /** Words (and metas) the handler last pushed to the bar. */
@@ -153,14 +156,24 @@ class NextWordStaticTierTest {
         resources = mockk(relaxed = true)
 
         editor.setLength(0)
+        editorAfter.setLength(0)
         ic = mockk(relaxed = true)
         every { ic.getTextBeforeCursor(any(), any()) } answers {
             val n = firstArg<Int>()
             editor.substring(maxOf(0, editor.length - n))
         }
-        every { ic.getTextAfterCursor(any(), any()) } returns ""
+        every { ic.getTextAfterCursor(any(), any()) } answers {
+            editorAfter.substring(0, minOf(firstArg<Int>(), editorAfter.length))
+        }
         every { ic.commitText(any(), any()) } answers {
             editor.append(firstArg<CharSequence>())
+            true
+        }
+        // Deletions really remove text, so a wrong deletion count shows in the result.
+        every { ic.deleteSurroundingText(any(), any()) } answers {
+            val before = minOf(firstArg<Int>(), editor.length)
+            editor.setLength(editor.length - before)
+            editorAfter.delete(0, minOf(secondArg<Int>(), editorAfter.length))
             true
         }
         every { ic.getCursorCapsMode(any()) } returns 0
@@ -431,6 +444,76 @@ class NextWordStaticTierTest {
         assertWithMessage("n-gram store untouched").that(bigramStore.isDirty()).isFalse()
         verify(exactly = 0) { adaptation.recordSelection(any()) }
         verify(exactly = 0) { personalization.recordWordTyped(any(), any()) }
+    }
+
+    // ============================================================ the word before survives
+    //
+    // Review 2026-11-14 H1: a next-word tap re-synced from the editor and read the committed
+    // word next to the caret as a partial to replace whenever no space separated them.
+
+    @Test
+    fun nextWordTapMidSentenceKeepsTheWordItFollows() {
+        // `I wan| to go`: the bar tap completes "want" with no trailing space (text follows).
+        editor.append("I wan")
+        editorAfter.append(" to go")
+
+        tap("want")
+        assertWithMessage("the completion replaced the partial")
+            .that(editor.toString()).isEqualTo("I want")
+        val next = barWords.firstOrNull()
+        assertWithMessage("next-word candidates after the completion").that(next).isNotNull()
+
+        tap(next!!)
+
+        assertWithMessage("the next-word tap must append after 'want', not replace it")
+            .that(editor.toString()).startsWith("I want ")
+        assertWithMessage("the next-word itself was inserted")
+            .that(editor.toString()).contains(next)
+    }
+
+    @Test
+    fun nextWordTapWithAutoSpaceOffKeepsTheWordItFollows() {
+        // Issue #82 posture: no space after a suggestion, so the caret touches the word.
+        config.auto_space_after_suggestion = false
+
+        tap("want")
+        assertWithMessage("committed without a trailing space").that(editor.toString()).isEqualTo("want")
+        val next = barWords.firstOrNull()
+        assertWithMessage("next-word candidates after 'want'").that(next).isNotNull()
+
+        tap(next!!)
+
+        assertWithMessage("the next-word tap must keep 'want'")
+            .that(editor.toString()).startsWith("want")
+        assertWithMessage("and add the next word after a separator")
+            .that(editor.toString()).isEqualTo("want $next")
+    }
+
+    @Test
+    fun nextWordTapGetsASeparatorEvenWithLeadingSpaceOff() {
+        // "Space before suggestion" off governs completions of a partial; a next-word is a new
+        // word after a committed one and must not glue onto it.
+        config.auto_space_after_suggestion = false
+        config.auto_space_before_suggestion = false
+
+        tap("want")
+        val next = barWords.firstOrNull()
+        assertWithMessage("next-word candidates after 'want'").that(next).isNotNull()
+
+        tap(next!!)
+
+        assertWithMessage("separated, not glued").that(editor.toString()).isEqualTo("want $next")
+    }
+
+    @Test
+    fun aCompletionTapStillReplacesTheTypedPartial() {
+        // Control: the fix is scoped to next-word entries. An ordinary completion of a typed
+        // partial still deletes the partial first.
+        editor.append("I wan")
+
+        tap("want")
+
+        assertWithMessage("completion replaces the partial").that(editor.toString()).isEqualTo("I want ")
     }
 
     // ------------------------------------------------------------------ reflection

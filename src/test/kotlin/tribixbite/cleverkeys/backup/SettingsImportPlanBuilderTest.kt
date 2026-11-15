@@ -148,6 +148,49 @@ class SettingsImportPlanBuilderTest {
         assertThat(same.changes).isEmpty()
     }
 
+    /**
+     * Review 2026-11-14 H4: a value whose type differs from the key's default must be skipped.
+     * `Config` reads these keys with raw `getBoolean`/`getInt`, so a stored Int under a Bool key
+     * throws ClassCastException in the IME's `onCreate` on every bind: a crash loop until the
+     * app's data is cleared.
+     */
+    @Test
+    fun wrongTypedValuesForKnownKeysAreSkipped() {
+        val json = """{"preferences":{
+            "look_backdrop_motion": 1,
+            "border_config": "true",
+            "custom_border_radius": true,
+            "swipe_trail_color": "#ff0000"
+        }}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.changes.map { it.key }).containsNoneOf(
+            "look_backdrop_motion", "border_config", "custom_border_radius", "swipe_trail_color",
+        )
+        assertThat(plan.parseSkippedKeys.map { it.key }).containsAtLeast(
+            "look_backdrop_motion", "border_config", "custom_border_radius", "swipe_trail_color",
+        )
+    }
+
+    @Test
+    fun rightTypedValuesForTheSameKeysStillImport() {
+        val json = """{"preferences":{"look_backdrop_motion": false, "custom_border_radius": 12}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        assertThat(plan.changes.map { it.key }).containsAtLeast("look_backdrop_motion", "custom_border_radius")
+        assertThat(plan.parseSkippedKeys.map { it.key })
+            .containsNoneOf("look_backdrop_motion", "custom_border_radius")
+    }
+
+    @Test
+    fun everyFloatDefaultIsReadAsAFloatPreference() {
+        // A JSON `5` for a Float key must stay a Float (`isFloatPreference` decides the parse);
+        // the hand list missed keys added after it was written.
+        val missing = SETTINGS_DEFAULTS.filterValues { it is PrefValue.FloatV }.keys
+            .filterNot { SettingsValidation.isFloatPreference(it) }
+        assertThat(missing).isEmpty()
+    }
+
     @Test
     fun legacyHorizontalMargin_synthesizesNewKeysAndQueuesRemove() {
         val json = """{"preferences":{"horizontal_margin_portrait":24}}"""

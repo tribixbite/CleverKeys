@@ -722,6 +722,39 @@ class SwipeCorrectionOfferTest {
     }
 
     @Test
+    fun anIncognitoFieldCapturesNoSwipeTrace() {
+        // Review 2026-11-14 H2: IME_FLAG_NO_PERSONALIZED_LEARNING (private tabs) forbids storing
+        // the swipe trace and its word, whatever the collection toggle says — as for every
+        // other learning path.
+        val capture = SwipeMLData("", "swipe_capture", 1080, 2400, 900, "qwerty", "ctc")
+        every { inputCoordinator.getCurrentSwipeData() } returns capture
+        val collector = mockk<MLDataCollector>(relaxed = true)
+        every { collector.collectAndStoreSwipeData(any(), any(), any(), any(), any()) } returns true
+        handler.setField("mlDataCollector", collector)
+        handler.setField("fieldAllowsPersonalizedLearning", false)
+
+        swipe("git", "got")
+        type("now ")
+
+        verify(exactly = 0) { collector.collectAndStoreSwipeData(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun anOrdinaryFieldStillCapturesTheSwipeTrace() {
+        // Control for the test above: the same swipe in an ordinary field is captured.
+        val capture = SwipeMLData("", "swipe_capture", 1080, 2400, 900, "qwerty", "ctc")
+        every { inputCoordinator.getCurrentSwipeData() } returns capture
+        val collector = mockk<MLDataCollector>(relaxed = true)
+        every { collector.collectAndStoreSwipeData(any(), any(), any(), any(), any()) } returns true
+        handler.setField("mlDataCollector", collector)
+
+        swipe("git", "got")
+        type("now ")
+
+        verify(exactly = 1) { collector.collectAndStoreSwipeData(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     fun anUncorrectedSwipesRowIsLeftAlone() {
         val capture = SwipeMLData("", "swipe_capture", 1080, 2400, 900, "qwerty", "ctc")
         every { inputCoordinator.getCurrentSwipeData() } returns capture

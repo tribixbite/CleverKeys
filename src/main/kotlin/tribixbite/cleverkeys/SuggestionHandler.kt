@@ -653,6 +653,9 @@ class SuggestionHandler(
         if (!allowed) vlog { "Field requests no personalized learning (incognito)" }
     }
 
+    /** Whether the current field allows personalized learning (see [setFieldPersonalizedLearningAllowed]). */
+    fun allowsPersonalizedLearning(): Boolean = fieldAllowsPersonalizedLearning
+
     /**
      * Updates configuration.
      *
@@ -1258,9 +1261,13 @@ class SuggestionHandler(
                 // never captured, whatever the collection consent says.
                 // Feature B (swipe-correction resolution): keep the stored row's trace id so a
                 // later correction of this swipe relabels exactly that row.
+                // Review 2026-11-14 H2: nor in a field that asks for no personalized learning
+                // (IME_FLAG_NO_PERSONALIZED_LEARNING: private tabs), like every learning path.
                 var storedTraceId: String? = null
                 val storedGlobally =
-                    if (wasSwipeAutoInsert && swipeData != null && !passwordField) {
+                    if (wasSwipeAutoInsert && swipeData != null && !passwordField &&
+                        fieldAllowsPersonalizedLearning
+                    ) {
                         mlDataCollector.collectAndStoreSwipeData(
                             committedWord,
                             swipeData,
@@ -1860,7 +1867,7 @@ class SuggestionHandler(
                                 return null
                             }
                         }
-                    } else {
+                    } else if (!wasNextWordSelection) {
                         contextTracker.synchronizeWithCursor(
                             inputConnection,
                             config.primary_language,
@@ -1868,7 +1875,14 @@ class SuggestionHandler(
                         )
                     }
 
-                    var (prefixDelete, suffixDelete) = if (inTermuxApp) {
+                    // A next-word candidate follows the word before the caret; it never replaces
+                    // it. Next-word entries exist only while no new word has been started (a
+                    // typed letter clears them), so whatever word touches the caret is a
+                    // COMMITTED word: a sync here read it as a partial and deleted it whenever
+                    // no space separated it from the caret (`I wan| to go` → tap "want" → tap
+                    // next-word "to" → `I to`; or auto-space off; review 2026-11-14 H1). Nothing
+                    // is deleted; the leading-space rule below supplies the separator.
+                    var (prefixDelete, suffixDelete) = if (inTermuxApp || wasNextWordSelection) {
                         0 to 0
                     } else {
                         contextTracker.getCharsToDeleteForPrediction()
@@ -1887,7 +1901,7 @@ class SuggestionHandler(
                     // the word, and a blind field's readback is not the user's text — RustDesk's
                     // hidden field starts as 1024 '1' characters, so the scan would read a
                     // 64-char "word" and send 64 Backspaces to the remote (2026-10-13).
-                    if (prefixDelete == 0 && suffixDelete == 0 && !inTermuxApp &&
+                    if (prefixDelete == 0 && suffixDelete == 0 && !inTermuxApp && !wasNextWordSelection &&
                         (contextTracker.getCurrentWordLength() == 0 || syncSuppressedField)) {
                         try {
                             val before = inputConnection.getTextBeforeCursor(64, 0)?.toString() ?: ""
@@ -1939,8 +1953,11 @@ class SuggestionHandler(
                     // included — independent of the tapped-suggestion setting and of readback
                     // (a blind field's readback still shows the swiped word).
                     replacedLeadingSpace == true
-                } else if (!isSwipeAutoInsert && !config.auto_space_before_suggestion) {
-                    false  // User disabled leading space before tapped suggestions
+                } else if (!isSwipeAutoInsert && !wasNextWordSelection && !config.auto_space_before_suggestion) {
+                    // User disabled leading space before tapped suggestions. Not for a next-word
+                    // candidate: it is a NEW word after a committed one, and without a separator
+                    // it would glue onto it ("wantto").
+                    false
                 } else if (terminalAppendsToTypedWord) {
                     // The remainder continues the typed letters on the line (a blind field's
                     // readback — RustDesk's '1' placeholders — must not decide this).

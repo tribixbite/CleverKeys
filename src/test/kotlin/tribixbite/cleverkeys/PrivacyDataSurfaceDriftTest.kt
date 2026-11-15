@@ -106,6 +106,49 @@ class PrivacyDataSurfaceDriftTest {
         ).that(offenders).isEmpty()
     }
 
+    /**
+     * Review 2026-11-14 H2: both capture sites must honour the field's
+     * IME_FLAG_NO_PERSONALIZED_LEARNING (private tabs), like every other learning path. The
+     * SuggestionHandler site is pinned by behaviour (SwipeCorrectionOfferTest); the bridge
+     * site has no behavioural harness, so its guard is pinned here.
+     */
+    @Test
+    fun everySwipeMlCaptureSiteHonoursTheFieldsLearningFlag() {
+        val sites = mapOf(
+            "SuggestionHandler.kt" to read("SuggestionHandler.kt"),
+            "wiring/SuggestionBridge.kt" to read("wiring/SuggestionBridge.kt"),
+        )
+        val offenders = sites.mapNotNull { (where, text) ->
+            val guard = guardBefore(text, "mlDataCollector.collectAndStoreSwipeData(", where)
+            if ("llowsPersonalizedLearning" in guard) null else "$where: $guard"
+        }
+        assertWithMessage(
+            "A swipe-ML capture site that ignores the field's no-personalized-learning flag " +
+                "stores private-tab swipes"
+        ).that(offenders).isEmpty()
+    }
+
+    /**
+     * Review 2026-11-14 M1: release builds keep `Log.d` (no `-assumenosideeffects` for Log),
+     * so a log line that interpolates clip text puts passwords and one-time codes in logcat.
+     * Clipboard logs carry lengths and ids only; text may appear only behind
+     * `BuildConfig.ENABLE_VERBOSE_LOGGING`.
+     */
+    @Test
+    fun clipboardLogsNeverCarryClipText() {
+        val textInterpolation = Regex("""\$\{[^}]*\b(content|text|contentKey|clip)\b(?![^}]*\.(length|size))[^}]*\}""")
+        val offenders = File(srcRoot, "clipboard").walkTopDown().filter { it.extension == "kt" }
+            .flatMap { file ->
+                val lines = file.readLines()
+                lines.withIndex().filter { (i, line) ->
+                    "Log." in line && textInterpolation.containsMatchIn(line) &&
+                        lines.subList(maxOf(0, i - 3), i).none { "ENABLE_VERBOSE_LOGGING" in it }
+                }.map { (i, line) -> "${file.name}:${i + 1}: ${line.trim()}" }
+            }.toList()
+        assertWithMessage("clipboard log lines that print clip text in release builds")
+            .that(offenders).isEmpty()
+    }
+
     // ── P-2: the section must SHOW the context-learning stores it can erase ─────
 
     /**

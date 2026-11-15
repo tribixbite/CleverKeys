@@ -266,8 +266,36 @@ object SettingsValidation {
             -> true
             // Autocorrect tuning floats: a JSON `10` for the inflection cost must stay a Float.
             in TUNING_FLOATS -> true
-            else -> false
+            // Every key whose declared default is a Float (the hand list above missed five
+            // added later, e.g. personalization_weight; review 2026-11-14 H4).
+            else -> lookupDefault(key) is PrefValue.FloatV
         }
+    }
+
+    /**
+     * Returns an error when [value] — the CANONICAL form that will be written — has a different
+     * storage type than [key]'s declared default, else null. Config reads most keys with raw
+     * getBoolean/getInt, so an Int stored under a Boolean key throws ClassCastException in the
+     * IME's onCreate on every bind: a crash loop until the app's data is cleared (review
+     * 2026-11-14 H4). Unknown keys stay version-tolerant. Call it after canonicalisation: the
+     * string-but-numeric keys arrive as JSON numbers and are stored as Strings.
+     */
+    fun storageTypeError(key: String, value: PrefValue): String? {
+        val declared = lookupDefault(key)?.let(::storageFamily) ?: return null
+        val proposed = storageFamily(value) ?: return null
+        return if (declared == proposed) null else "expected $declared, got $proposed"
+    }
+
+    /**
+     * The storage family of a value: what `SharedPreferences.get*` reads it with. A JSON blob is
+     * a String on disk, so the two share one family.
+     */
+    private fun storageFamily(value: PrefValue): String? = when (value) {
+        is PrefValue.Bool -> "Boolean"
+        is PrefValue.IntV -> "Int"
+        is PrefValue.FloatV -> "Float"
+        is PrefValue.Str, is PrefValue.JsonBlob -> "String"
+        is PrefValue.Unset -> null
     }
 
     /**

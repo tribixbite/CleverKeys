@@ -203,12 +203,28 @@ class ClipboardMediaManager(private val context: Context) {
         }
     }
 
-    /** Delete the media file at the given relative path */
+    /**
+     * Delete the media file at the given relative path.
+     *
+     * [mediaPath] can come from an imported backup JSON, stored verbatim (review 2026-11-14 H3):
+     * the expiry sweep, prune and delete paths call this with it, so the target must be a file
+     * strictly inside `clipboard_media/` — never the directory itself, never a `..` escape
+     * (`../databases/clipboard_history.db` would delete the database).
+     */
     fun deleteMedia(mediaPath: String) {
         if (!isDeviceUnlocked()) return
         try {
-            val file = File(context.filesDir, mediaPath)
-            if (file.exists()) {
+            val file = try {
+                getMediaFile(mediaPath)
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Refusing to delete a media path outside clipboard_media")
+                return
+            }
+            if (file.path == File(context.filesDir, MEDIA_DIR).canonicalPath) {
+                Log.w(TAG, "Refusing to delete the clipboard_media directory itself")
+                return
+            }
+            if (file.isFile) {
                 val parentDir = file.parentFile
                 file.delete()
                 // Clean up empty partition directory

@@ -140,6 +140,11 @@ object SettingsImportPlanBuilder {
             // pure type-flip doesn't surface as a value change.
             val current = canonicalize(key, rawCurrent)
             val proposed = canonicalize(key, rawProposed)
+            val typeError = SettingsValidation.storageTypeError(key, proposed)
+            if (typeError != null) {
+                skipped += SkippedKey(key, typeError, SkipKind.INVALID_VALUE)
+                continue
+            }
 
             // Effective state: what the user reads from prefs RIGHT NOW. When
             // the key is present, that's the stored value; when absent, it's

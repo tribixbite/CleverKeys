@@ -46,6 +46,23 @@ import kotlin.math.abs
 object IMEStatusHelper {
 
     private const val TAG = "IMEStatusHelper"
+
+    /**
+     * Does [defaultIme] (`Settings.Secure.DEFAULT_INPUT_METHOD`) name our service? Android stores
+     * the SHORT component form (`ComponentName.flattenToShortString`): a class inside the
+     * package is written `pkg/.Cls`, as the Pixel 8 Pro holds `tribixbite.cleverkeys/.CleverKeysService`.
+     * Both forms are accepted; anything else (another package, another class, a substring) is
+     * not us. Parsed by hand: `ComponentName` is a stub in the host tests (review 2026-11-14 M2).
+     */
+    internal fun namesOurIme(defaultIme: String?, packageName: String, serviceClassName: String): Boolean {
+        val slash = defaultIme?.indexOf('/') ?: return false
+        if (slash <= 0) return false
+        val pkg = defaultIme.substring(0, slash)
+        val cls = defaultIme.substring(slash + 1)
+        val fullClass = if (cls.startsWith(".")) pkg + cls else cls
+        return pkg == packageName && fullClass == serviceClassName
+    }
+
     /** I-7: the "don't ask again" pref, written by the Settings reminder switch. */
     private const val PREF_KEY_PROMPT_ENABLED = "ime_default_prompt_enabled"
     /** I-7: boot instant of the boot the prompt last fired in. 0 = never prompted. */
@@ -108,12 +125,9 @@ object IMEStatusHelper {
                 Settings.Secure.DEFAULT_INPUT_METHOD
             )
 
-            // Construct our IME identifier
-            val ourIme = "$packageName/$serviceClassName"
-
             // Check if we're the default
             Log.i(TAG, "reminder: default IME is ${defaultIme ?: "unset"}")
-            if (ourIme != defaultIme) {
+            if (!namesOurIme(defaultIme, packageName, serviceClassName)) {
                 // I-7 (comprehensive audit 2026-09-06): the message names THIS app via
                 // its app_name resource — the old hardcoded constant said "Unexpected
                 // Keyboard" in an app named CleverKeys. It also points at the permanent
@@ -179,8 +193,7 @@ object IMEStatusHelper {
                 context.contentResolver,
                 Settings.Secure.DEFAULT_INPUT_METHOD
             )
-            val ourIme = "$packageName/$serviceClassName"
-            ourIme == defaultIme
+            namesOurIme(defaultIme, packageName, serviceClassName)
         } catch (e: Exception) {
             Log.e(TAG, "Error checking if default IME", e)
             false
