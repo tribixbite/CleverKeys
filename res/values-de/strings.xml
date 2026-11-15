@@ -275,6 +275,9 @@
     <string name="extra_keys_search_hint">Zusatztasten suchen…</string>
     <string name="extra_keys_info">Ausgewählte Tasten werden je nach bevorzugter Position auf der Tastatur angezeigt</string>
     <string name="extra_keys_reset">Auf Standard zurücksetzen</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Wischgesten-Anpassung -->
     <string name="short_swipe_title">Kurze Wischgesten anpassen</string>

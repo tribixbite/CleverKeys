@@ -293,6 +293,9 @@
     <string name="extra_keys_search_hint">Tìm kiếm phím bổ sung…</string>
     <string name="extra_keys_info">Các phím được chọn sẽ xuất hiện trên bàn phím theo vị trí ưu tiên của chúng</string>
     <string name="extra_keys_reset">Đặt lại về mặc định</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
     <string name="short_swipe_title">Tùy chỉnh vuốt ngắn</string>
     <string name="short_swipe_show_keyboard">Hiển thị bàn phím</string>
     <string name="short_swipe_reset_all">Đặt lại tất cả</string>

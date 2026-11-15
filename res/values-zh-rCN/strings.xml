@@ -263,6 +263,9 @@
     <string name="extra_keys_search_hint">搜索额外按键…</string>
     <string name="extra_keys_info">所选按键将根据其首选位置显示在键盘上</string>
     <string name="extra_keys_reset">重置为默认值</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
     <string name="short_swipe_title">短滑动自定义</string>
     <string name="short_swipe_show_keyboard">显示键盘</string>
     <string name="short_swipe_reset_all">全部重置</string>

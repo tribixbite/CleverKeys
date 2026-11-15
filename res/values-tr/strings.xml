@@ -265,6 +265,9 @@
     <string name="extra_keys_search_hint">Ek tuş ara…</string>
     <string name="extra_keys_info">Seçilen tuşlar tercih edilen konumlarına göre klavyede görünür</string>
     <string name="extra_keys_reset">Varsayılanlara Sıfırla</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Kısa kaydırma özelleştirme / Short Swipe Customization -->
     <string name="short_swipe_title">Kısa Kaydırma Özelleştirmesi</string>

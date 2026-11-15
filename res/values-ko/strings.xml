@@ -265,6 +265,9 @@
     <string name="extra_keys_search_hint">추가 키 검색…</string>
     <string name="extra_keys_info">선택한 키는 기본 위치에 따라 키보드에 표시됩니다</string>
     <string name="extra_keys_reset">기본값으로 초기화</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
     <string name="short_swipe_title">짧은 스와이프 사용자 지정</string>
     <string name="short_swipe_show_keyboard">키보드 표시</string>
     <string name="short_swipe_reset_all">모두 초기화</string>

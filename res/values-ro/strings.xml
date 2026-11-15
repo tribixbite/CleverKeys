@@ -291,6 +291,9 @@
     <string name="extra_keys_search_hint">Caută taste suplimentare…</string>
     <string name="extra_keys_info">Tastele selectate vor apărea pe tastatură în funcție de pozițiile lor preferate</string>
     <string name="extra_keys_reset">Resetare la valorile implicite</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
     <string name="short_swipe_title">Personalizare glisare scurtă</string>
     <string name="short_swipe_show_keyboard">Afișează tastatura</string>
     <string name="short_swipe_reset_all">Resetează tot</string>

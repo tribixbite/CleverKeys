@@ -391,6 +391,9 @@
     <string name="extra_keys_search_hint">Search extra keys…</string>
     <string name="extra_keys_info">Selected keys will appear on the keyboard based on their preferred positions</string>
     <string name="extra_keys_reset">Reset to Defaults</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- ShortSwipeCustomizationActivity -->
     <string name="short_swipe_title">Short Swipe Customization</string>

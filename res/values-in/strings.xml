@@ -265,6 +265,9 @@
     <string name="extra_keys_search_hint">Cari tombol tambahan…</string>
     <string name="extra_keys_info">Tombol yang dipilih akan muncul di keyboard berdasarkan posisi yang diinginkan</string>
     <string name="extra_keys_reset">Setel Ulang ke Default</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Kustomisasi geser pendek / Short Swipe Customization -->
     <string name="short_swipe_title">Kustomisasi Geser Pendek</string>

@@ -262,6 +262,9 @@
     <string name="extra_keys_search_hint">Extra billentyű keresése…</string>
     <string name="extra_keys_info">A kiválasztott billentyűk az előnyben részesített pozíciójuknak megfelelően jelennek meg a billentyűzeten</string>
     <string name="extra_keys_reset">Visszaállítás alapértelmezettre</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Rövid csúsztatás testreszabása / Short Swipe Customization -->
     <string name="short_swipe_title">Rövid csúsztatás testreszabása</string>

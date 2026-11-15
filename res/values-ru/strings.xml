@@ -260,6 +260,9 @@
     <string name="extra_keys_search_hint">Поиск дополнительных клавиш…</string>
     <string name="extra_keys_info">Выбранные клавиши появятся на клавиатуре в соответствии с предпочтительными позициями</string>
     <string name="extra_keys_reset">Сбросить к настройкам по умолчанию</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Настройка коротких свайпов</string>

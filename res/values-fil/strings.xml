@@ -265,6 +265,9 @@
     <string name="extra_keys_search_hint">Maghanap ng karagdagang key…</string>
     <string name="extra_keys_info">Ang mga napiling key ay lilitaw sa keyboard batay sa kanilang mga ginustong posisyon</string>
     <string name="extra_keys_reset">I-reset sa Default</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Pag-customize ng maikling swipe / Short Swipe Customization -->
     <string name="short_swipe_title">Pag-customize ng Maikling Swipe</string>

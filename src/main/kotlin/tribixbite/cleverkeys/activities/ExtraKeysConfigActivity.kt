@@ -20,7 +20,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.prefs.ExtraKeysPreference
+import tribixbite.cleverkeys.prefs.ExtraKeysReset
 import tribixbite.cleverkeys.theme.CleverKeysTheme
 
 /**
@@ -91,7 +93,53 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
         ExtraKeysPreference.categorizedKeys(filteredKeys)
     }
 
+    // Review 2026-11-14 M25: "Reset to defaults" wrote all ~131 keys with one apply() each (a
+    // Config rebuild per key on a fresh install), asked nothing and could not be undone. Now:
+    // the keys that would change, a confirmation naming how many, one write, Undo in a snackbar
+    // (the pattern of Short Swipe Customization's Reset All).
+    val resetPlan = ExtraKeysReset.plan(
+        enabledKeys, ExtraKeysPreference.extraKeys, { ExtraKeysPreference.defaultChecked(it) },
+    )
+    var showResetConfirm by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    fun applyKeys(values: Map<String, Boolean>) {
+        values.forEach { (keyName, enabled) -> enabledKeys[keyName] = enabled }
+        ExtraKeysReset.write(prefs, values) { ExtraKeysPreference.prefKeyOfKeyName(it) }
+    }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text(stringResource(R.string.extra_keys_reset_title)) },
+            text = { Text(stringResource(R.string.extra_keys_reset_message, resetPlan.reset.size)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showResetConfirm = false
+                    val plan = resetPlan
+                    applyKeys(plan.reset)
+                    scope.launch {
+                        val result = snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.extra_keys_reset_done),
+                            actionLabel = context.getString(R.string.short_swipe_reset_all_undo),
+                            withDismissAction = true,
+                            duration = SnackbarDuration.Long,
+                        )
+                        if (result == SnackbarResult.ActionPerformed) applyKeys(plan.undo)
+                    }
+                }) {
+                    Text(stringResource(R.string.extra_keys_reset), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) { Text(stringResource(R.string.common_cancel)) }
+            },
+        )
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.extra_keys_title)) },
@@ -167,15 +215,11 @@ fun ExtraKeysConfigScreen(onBack: () -> Unit) {
                 }
             }
             item(key = "header:reset") {
-                // Reset to defaults button
+                // Reset to defaults button: asks first (review 2026-11-14 M25); disabled when
+                // every key already has its default.
                 OutlinedButton(
-                    onClick = {
-                        ExtraKeysPreference.extraKeys.forEach { keyName ->
-                            enabledKeys[keyName] = ExtraKeysPreference.defaultChecked(keyName)
-                            val prefKey = ExtraKeysPreference.prefKeyOfKeyName(keyName)
-                            prefs.edit().putBoolean(prefKey, enabledKeys[keyName] ?: false).apply()
-                        }
-                    },
+                    onClick = { showResetConfirm = true },
+                    enabled = resetPlan.reset.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)

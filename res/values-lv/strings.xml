@@ -269,6 +269,9 @@
     <string name="extra_keys_search_hint">Meklēt papildu taustiņus…</string>
     <string name="extra_keys_info">Atlasītie taustiņi parādīsies uz tastatūras atbilstoši vēlamajai pozīcijai</string>
     <string name="extra_keys_reset">Atiestatīt uz noklusējumu</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Īso vilkumu pielāgošana</string>

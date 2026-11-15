@@ -291,6 +291,9 @@
     <string name="extra_keys_search_hint">جستجوی کلیدهای اضافی…</string>
     <string name="extra_keys_info">کلیدهای انتخاب‌شده بر اساس موقعیت ترجیحی روی صفحه‌کلید نمایش داده می‌شوند</string>
     <string name="extra_keys_reset">بازگشت به پیش‌فرض</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- سفارشی‌سازی کشیدن کوتاه / Short Swipe Customization -->
     <string name="short_swipe_title">سفارشی‌سازی کشیدن کوتاه</string>

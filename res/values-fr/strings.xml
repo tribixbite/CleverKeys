@@ -263,6 +263,9 @@
     <string name="extra_keys_search_hint">Rechercher des touches supplémentaires…</string>
     <string name="extra_keys_info">Les touches sélectionnées apparaîtront sur le clavier en fonction de leurs positions préférées</string>
     <string name="extra_keys_reset">Rétablir les valeurs par défaut</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
 
     <!-- Personnalisation des glissés courts -->
     <string name="short_swipe_title">Personnalisation des glissés courts</string>

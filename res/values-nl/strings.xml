@@ -267,6 +267,9 @@
     <string name="extra_keys_search_hint">Extra toetsen zoeken…</string>
     <string name="extra_keys_info">Geselecteerde toetsen verschijnen op het toetsenbord op basis van hun voorkeursposities</string>
     <string name="extra_keys_reset">Standaardinstellingen herstellen</string>
+    <string name="extra_keys_reset_title">Reset extra keys?</string>
+    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
+    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
     <string name="short_swipe_title">Korte veegaanpassing</string>
     <string name="short_swipe_show_keyboard">Toetsenbord tonen</string>
     <string name="short_swipe_reset_all">Alles resetten</string>
