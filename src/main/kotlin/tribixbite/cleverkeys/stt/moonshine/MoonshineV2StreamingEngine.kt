@@ -17,6 +17,8 @@ import tribixbite.cleverkeys.stt.SpeechSession
 import java.io.File
 import java.nio.FloatBuffer
 import java.nio.LongBuffer
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -73,19 +75,51 @@ class MoonshineV2StreamingEngine private constructor(
 
     override fun memoryReport(): SpeechMemoryReport = report
 
+    /**
+     * Set first by [close]: a pass in flight sees it at its next check and stops early, and no
+     * new pass starts.
+     */
     @Volatile
     private var closed = false
 
+    /**
+     * Review 2026-11-14: the keyboard service can be destroyed mid-dictation, and
+     * `VoiceInputController.release()` then closes the engine on its worker thread while the
+     * capture thread is still inside an ORT `run()`. Every session pass ([Session.accept],
+     * [Session.finish]) holds the READ lock for its whole duration (its results and tensors are
+     * session-owned native memory too); [close] takes the WRITE lock, so the sessions and weight
+     * tensors are freed only once no pass is running. Never call [close] from a thread inside a
+     * pass: a read lock cannot be upgraded.
+     */
+    private val runLock = ReentrantReadWriteLock()
+    private val released = AtomicBoolean(false)
+
     override fun close() {
-        if (closed) return
         closed = true
-        frontendWeights.values.forEach { it.close() }
-        for (s in listOf(frontend, encoder, adapter, crossKv, decoder)) {
-            try {
-                s.close()
-            } catch (_: OrtException) {
-                // Already closed; nothing to release.
+        runLock.writeLock().lock()
+        try {
+            if (!released.compareAndSet(false, true)) return
+            frontendWeights.values.forEach { it.close() }
+            for (s in listOf(frontend, encoder, adapter, crossKv, decoder)) {
+                try {
+                    s.close()
+                } catch (_: OrtException) {
+                    // Already closed; nothing to release.
+                }
             }
+        } finally {
+            runLock.writeLock().unlock()
+        }
+    }
+
+    /** Run [pass] unless the engine is closed ([ifClosed] then), holding off [close] meanwhile. */
+    private inline fun <T> guarded(ifClosed: T, pass: () -> T): T {
+        val lock = runLock.readLock()
+        lock.lock()
+        try {
+            return if (closed) ifClosed else pass()
+        } finally {
+            lock.unlock()
         }
     }
 
@@ -165,6 +199,9 @@ class MoonshineV2StreamingEngine private constructor(
         private var cancelled = false
         override val isCancelled: Boolean get() = cancelled
 
+        /** Cancelled, or the engine is closing: a pass in flight stops at its next check. */
+        private val stopped: Boolean get() = cancelled || closed
+
         private var finished = false
 
         /** Decoder passes run so far (the expensive step); read by the engine test. */
@@ -184,8 +221,10 @@ class MoonshineV2StreamingEngine private constructor(
          * caller that fell behind real time hands over its backlog in one call and catches up;
          * decoding it chunk by chunk would only grow the backlog (Saga 2026-10-29).
          */
-        override fun accept(pcm: FloatArray): SpeechHypothesis? {
-            if (cancelled || finished || closed) return null
+        override fun accept(pcm: FloatArray): SpeechHypothesis? = guarded(null) { acceptGuarded(pcm) }
+
+        private fun acceptGuarded(pcm: FloatArray): SpeechHypothesis? {
+            if (stopped || finished) return null
             var offset = 0
             var fed = false
             while (offset < pcm.size) {
@@ -202,8 +241,11 @@ class MoonshineV2StreamingEngine private constructor(
             return if (fed) decodePass(final = false) else null
         }
 
-        override fun finish(): SpeechHypothesis {
-            if (cancelled || closed) return SpeechHypothesis("", 0, isFinal = true)
+        override fun finish(): SpeechHypothesis =
+            guarded(SpeechHypothesis("", 0, isFinal = true)) { finishGuarded() }
+
+        private fun finishGuarded(): SpeechHypothesis {
+            if (stopped) return SpeechHypothesis("", 0, isFinal = true)
             if (finished) return stabilizer.update("", isFinal = true)
             finished = true
             val tail = pending.copyOf(pendingLen)
@@ -227,12 +269,12 @@ class MoonshineV2StreamingEngine private constructor(
         private fun feed(chunk: FloatArray, final: Boolean): Boolean {
             try {
                 runFrontend(chunk)
-                if (cancelled) return false
+                if (stopped) return false
                 encodeStable(final)
             } catch (e: OrtException) {
                 throw SpeechEngineException("Moonshine inference failed: ${e.message}", e)
             }
-            return !cancelled
+            return !stopped
         }
 
         /** Decode the memory so far and fold it into the stabilizer. Null when cancelled. */
@@ -242,7 +284,7 @@ class MoonshineV2StreamingEngine private constructor(
             } catch (e: OrtException) {
                 throw SpeechEngineException("Moonshine inference failed: ${e.message}", e)
             }
-            if (cancelled) return null
+            if (stopped) return null
             return stabilizer.update(tokenizer.decode(tokens), isFinal = final)
         }
 
@@ -314,6 +356,7 @@ class MoonshineV2StreamingEngine private constructor(
             val window = FloatBuffer.wrap(features, from, windowFrames * featureDim).slice()
             OnnxTensor.createTensor(env, window, longArrayOf(1, windowFrames.toLong(), featureDim.toLong())).use { input ->
                 encoder.run(mapOf("features" to input)).use { encOut ->
+                    if (stopped) return // review 2026-11-14: no adapter run for a stopped pass
                     val encoded = (encOut.get(0) as OnnxTensor).floatBuffer
                     val startIdx = emitted - windowStart
                     val piece = FloatArray(newFrames * config.encoderDim)
@@ -355,7 +398,7 @@ class MoonshineV2StreamingEngine private constructor(
 
         /** Greedy decode over the current memory with the previous tokens as a speculative prefix. */
         private fun decode(): IntArray {
-            if (memoryLen == 0) return IntArray(0)
+            if (memoryLen == 0 || stopped) return tokens
             decodePasses++
             val maxTokens = min(ceil(memoryLen * FRAME_SECONDS * TOKENS_PER_SECOND).toInt(), config.maxSeqLen)
             val memTensor = OnnxTensor.createTensor(
@@ -399,7 +442,7 @@ class MoonshineV2StreamingEngine private constructor(
                         next = argmaxAt(logits, 0)
                     }
                     var current = next
-                    while (current != config.eosId && result.size < maxTokens && !cancelled) {
+                    while (current != config.eosId && result.size < maxTokens && !stopped) {
                         result += current
                         val logits = step(intArrayOf(current), fresh = false)
                         current = argmaxAt(logits, 0)
@@ -486,6 +529,7 @@ class MoonshineV2StreamingEngine private constructor(
             }
             val env = OrtEnvironment.getEnvironment()
             val opened = ArrayList<OrtSession>(6)
+            var weightTensors: Map<String, OnnxTensor> = emptyMap()
             try {
                 OrtSession.SessionOptions().use { so ->
                     so.setIntraOpNumThreads(options.threads.coerceIn(1, 8))
@@ -514,17 +558,15 @@ class MoonshineV2StreamingEngine private constructor(
                     // The split frontend keeps its float weights in a separate no-input graph so
                     // they survive ORT-format conversion; its outputs are fed back as inputs on
                     // every frontend call. Copied into engine-owned tensors, then the graph closes.
-                    val weightTensors = HashMap<String, OnnxTensor>()
-                    weights.run(emptyMap<String, OnnxTensor>()).use { out ->
-                        for (name in weights.outputNames) {
+                    weightTensors = weights.run(emptyMap<String, OnnxTensor>()).use { out ->
+                        createEach(weights.outputNames) { name ->
                             val t = out.get(name).get() as OnnxTensor
-                            weightTensors[name] = OnnxTensor.createTensor(env, t.floatBuffer, t.info.shape)
+                            OnnxTensor.createTensor(env, t.floatBuffer, t.info.shape)
                         }
                     }
                     weights.close()
                     opened.remove(weights)
                     if (!frontend.inputNames.containsAll(weightTensors.keys)) {
-                        weightTensors.values.forEach { it.close() }
                         throw SpeechEngineException("frontend weights do not match the frontend graph")
                     }
                     val bytes = REQUIRED_FILES.sumOf { File(packDir, it).length() }
@@ -541,6 +583,7 @@ class MoonshineV2StreamingEngine private constructor(
                     )
                 }
             } catch (e: Exception) {
+                weightTensors.values.forEach { runCatching { it.close() } }
                 opened.forEach { runCatching { it.close() } }
                 if (e is SpeechEngineException) throw e
                 throw SpeechEngineException("Could not load the Moonshine graphs: ${e.message}", e)
@@ -565,6 +608,22 @@ class MoonshineV2StreamingEngine private constructor(
     }
 
     companion object {
+        /**
+         * One [create] per name, in order. If one throws, everything created so far is closed
+         * before the failure propagates (review 2026-11-14: the k−1 weight tensors copied before
+         * a failing k-th leaked their native buffers).
+         */
+        internal fun <T : AutoCloseable> createEach(names: Iterable<String>, create: (String) -> T): HashMap<String, T> {
+            val made = HashMap<String, T>()
+            try {
+                for (name in names) made[name] = create(name)
+            } catch (e: Throwable) {
+                made.values.forEach { runCatching { it.close() } }
+                throw e
+            }
+            return made
+        }
+
         const val ENGINE_ID = "moonshine-v2-streaming"
 
         /** [SpeechEngineOptions.engineHints] key: "off" disables ORT's CPU memory arena (default on). */

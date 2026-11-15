@@ -525,6 +525,84 @@ class MoonshineV2StreamingEngineTest {
             (System.nanoTime() - t0) / 1_000_000)
     }
 
+    /**
+     * Review 2026-11-14 (Voice, low): the keyboard service can be destroyed mid-dictation, and
+     * `VoiceInputController.release()` then closes the engine on its worker thread while the
+     * capture thread is still inside an ORT `run()`. `close()` used to free the sessions and the
+     * weight tensors at once — native memory an in-flight run was still using. It now waits for
+     * the in-flight pass (which sees the engine closing and stops early), so when `close()`
+     * returns no run is left, and the interrupted `accept` returns normally.
+     */
+    @Test(timeout = 120_000)
+    fun closeWaitsForAnInFlightPassOnAnotherThread() {
+        assumeTrue("voice pack not built ($pack)", pack.isFile)
+        val scratch = kotlin.io.path.createTempDirectory("ck-voice-close").toFile()
+        try {
+            val manager = VoicePackManager(File(scratch, "voicepacks"), File(scratch, "cache").apply { mkdirs() }, Int.MAX_VALUE)
+            assertThat(manager.import(pack.inputStream())).isInstanceOf(VoicePackManager.ImportResult.Success::class.java)
+            val installed = manager.activePack("en")!!
+            val resolution = SpeechEngineRegistry.DEFAULT.resolve(installed.manifest) as SpeechEngineRegistry.Resolution.Supported
+            val engine = resolution.factory.load(installed.dir, SpeechEngineOptions(threads = 2))
+            val session = engine.newSession()
+            // 20 s of low noise in ONE accept: twenty frontend+encoder runs and a decode.
+            val rng = java.util.Random(7)
+            val audio = FloatArray(16_000 * MoonshineV2StreamingEngine.MAX_SEGMENT_SECONDS) { (rng.nextGaussian() * 0.05).toFloat() }
+            val entered = java.util.concurrent.CountDownLatch(1)
+            val acceptReturned = java.util.concurrent.atomic.AtomicBoolean(false)
+            val failure = java.util.concurrent.atomic.AtomicReference<Throwable?>(null)
+            val capture = Thread {
+                entered.countDown()
+                try {
+                    session.accept(audio)
+                } catch (t: Throwable) {
+                    failure.set(t)
+                } finally {
+                    acceptReturned.set(true)
+                }
+            }
+            capture.start()
+            entered.await()
+            Thread.sleep(150) // well inside the pass
+            val t0 = System.nanoTime()
+            engine.close()
+            val closeMillis = (System.nanoTime() - t0) / 1_000_000
+            val inFlightWhenCloseReturned = !acceptReturned.get()
+            capture.join(60_000)
+            println("close() took $closeMillis ms; accept in flight when it returned: $inFlightWhenCloseReturned; " +
+                "capture thread alive after 60 s: ${capture.isAlive}")
+            assertWithMessage("close() returned while a pass was still running on the capture thread")
+                .that(inFlightWhenCloseReturned).isFalse()
+            assertWithMessage("the interrupted accept must not throw").that(failure.get()).isNull()
+            assertWithMessage("a closed engine accepts nothing more").that(session.accept(audio.copyOf(16_000))).isNull()
+        } finally {
+            scratch.deleteRecursively()
+        }
+    }
+
+    /**
+     * Review 2026-11-14 (Voice, low): loading copies each frontend weight into an engine-owned
+     * tensor; when the k-th copy threw (out of native memory, a damaged graph), the k−1 copies
+     * already made were never closed and their native buffers leaked. The copies made so far are
+     * closed before the failure propagates. Pure (no pack): fake closeables stand in for tensors.
+     */
+    @Test
+    fun aFailedWeightCopyClosesTheCopiesAlreadyMade() {
+        class Copy(val name: String) : AutoCloseable {
+            var closed = false
+            override fun close() { closed = true }
+        }
+        val made = ArrayList<Copy>()
+        val thrown = runCatching {
+            MoonshineV2StreamingEngine.createEach(listOf("w0", "w1", "w2", "w3")) { name ->
+                if (name == "w2") throw IllegalStateException("createTensor failed")
+                Copy(name).also { made += it }
+            }
+        }.exceptionOrNull()
+        assertThat(thrown).isInstanceOf(IllegalStateException::class.java)
+        assertWithMessage("copies made before the failure").that(made.map { it.name }).containsExactly("w0", "w1")
+        assertWithMessage("every one of them is closed").that(made.all { it.closed }).isTrue()
+    }
+
     @Test
     fun loadingAPackWithAMissingFileFailsWithASpeechEngineException() {
         val dir = kotlin.io.path.createTempDirectory("ck-voice-missing").toFile()
