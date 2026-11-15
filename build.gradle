@@ -726,6 +726,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ModmapTest',
     'tribixbite.cleverkeys.ComposeKeyPureTest',
     'tribixbite.cleverkeys.KeyValueParserTest',
+    // Review 2026-11-14 (low): KeyValue payload equals/hashCode agree with compareTo.
+    'tribixbite.cleverkeys.KeyValuePayloadEqualityTest',
     // Review 2026-10-07: own-write selection callbacks expire by consumption/time bound.
     'tribixbite.cleverkeys.OwnedSelectionLedgerTest',
     // Review 2026-10-07: continuous-swipe segmentation, serialized queue and selection gate
@@ -791,6 +793,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.PrivacyDataSurfaceDriftTest',
     // Review 2026-11-14 H4: Config.refresh never throws on a mistyped stored pref.
     'tribixbite.cleverkeys.ConfigMistypedPrefDriftTest',
+    // Review 2026-11-14 M3: app-private receivers are not exported on API 26–32.
+    'tribixbite.cleverkeys.PrivateReceiverDriftTest',
+    // Review 2026-11-14 M9: ViewModels hold data, never Activity-capturing callbacks.
+    'tribixbite.cleverkeys.ViewModelHoldsNoCallbacksDriftTest',
     'tribixbite.cleverkeys.SettingsSearchCoverageTest',
     // Settings search in the UI language; scroll targets keyed by stable setting ids.
     'tribixbite.cleverkeys.SettingsSearchLocalizationTest',
@@ -1525,6 +1531,10 @@ tasks.register('runMockTests', JavaExec) {
     // ExtraKeysPreference (androidx.preference supertype).
     'tribixbite.cleverkeys.NumericPaneGreekmathRemovalTest',
     'tribixbite.cleverkeys.ImeDefaultDetectionTest',
+    // Review 2026-11-14 M3: PrivateReceivers.register per API level.
+    'tribixbite.cleverkeys.PrivateReceiversTest',
+    // Review 2026-11-14 (low): GIF pack extraction stays inside its dir and is size-capped.
+    'tribixbite.cleverkeys.gif.GifPackExtractTest',
     'tribixbite.cleverkeys.KeyboardTileServiceTest',
     'tribixbite.cleverkeys.SwipeDataExportSafTest',
     'tribixbite.cleverkeys.SwipeDebugActionsTest',
@@ -1606,6 +1616,8 @@ tasks.register('runMockTests', JavaExec) {
     // layouts-pref shadowing fix in LayoutManager.setLocaleTextLayout, the identity-first
     // subtype match, and the changedTo threading from onCurrentInputMethodSubtypeChanged.
     'tribixbite.cleverkeys.SubtypeLayoutFollowTest',
+    // Review 2026-11-14 M14: the English base never drops or overwrites the primary's elisions.
+    'tribixbite.cleverkeys.ContractionEnglishBaseMergeTest',
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',

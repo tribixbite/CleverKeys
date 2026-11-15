@@ -199,6 +199,11 @@ class KeyValue private constructor(
             }
             return _symbol.compareTo(other._symbol)
         }
+
+        // equals/hashCode agree with compareTo: KeyValue.hashCode uses the payload's, so equal
+        // keys parsed separately must hash alike (review 2026-11-14).
+        override fun equals(other: Any?): Boolean = other is Macro && compareTo(other) == 0
+        override fun hashCode(): Int = keys.contentHashCode() * 31 + _symbol.hashCode()
     }
 
     /**
@@ -217,11 +222,16 @@ class KeyValue private constructor(
             if (d != 0) return d
             return _symbol.compareTo(other._symbol)
         }
+
+        override fun equals(other: Any?): Boolean = other is TimestampFormat && compareTo(other) == 0
+        override fun hashCode(): Int = pattern.hashCode() * 31 + _symbol.hashCode()
     }
 
     class TemplateFormat(val template: String, private val symbol: String) : Comparable<TemplateFormat> {
         override fun toString(): String = symbol
         override fun compareTo(other: TemplateFormat): Int = compareValuesBy(this, other, { it.template }, { it.symbol })
+        override fun equals(other: Any?): Boolean = other is TemplateFormat && compareTo(other) == 0
+        override fun hashCode(): Int = template.hashCode() * 31 + symbol.hashCode()
     }
 
     // Accessors - methods that work from both Kotlin and Java

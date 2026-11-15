@@ -28,6 +28,31 @@ class ActiveLanguageSyncTest {
     private val enFa = ActiveLanguages(primary = "en", secondary = "fa", boundLayoutLanguage = null)
 
     @Test
+    fun aSinkThatThrowsLeavesTheOldStateSoTheNextApplyRetries() {
+        // Review 2026-11-14 (low): `applied` was set before the sinks ran, so a reload that threw
+        // left the new language recorded as served and every later apply() a no-op.
+        var failNext = true
+        val sink = object : ActiveLanguageSync.Sink {
+            val calls = mutableListOf<String>()
+            override fun reloadPrimary(language: String) {
+                if (failNext) { failNext = false; throw IllegalStateException("dictionary not ready") }
+                calls += "primary:$language"
+            }
+            override fun reloadSecondary(language: String?) {}
+            override fun reloadContractions(primary: String, secondary: String?) {}
+            override fun rewarmSwipe() {}
+            override fun announce(active: ActiveLanguages) {}
+        }
+        val sync = ActiveLanguageSync(enFa, sink)
+        val fa = ActiveLanguages("fa", null, "fa")
+
+        runCatching { sync.apply(fa) }
+        assertThat(sync.applied).isEqualTo(enFa)
+        assertThat(sync.apply(fa)).isTrue()
+        assertThat(sink.calls).containsExactly("primary:fa")
+    }
+
+    @Test
     fun switchingToALayoutBoundToFaMakesFaTheServingLanguage() {
         val sink = RecordingSink()
         val sync = ActiveLanguageSync(enFa, sink)

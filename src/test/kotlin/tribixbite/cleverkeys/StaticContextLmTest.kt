@@ -28,6 +28,19 @@ class StaticContextLmTest {
     private val lm = StaticContextLm.parse(StaticContextLmFixtures.encode(unigrams, table))
 
     @Test
+    fun `a header claiming more words than the file can hold fails as a parse error`() {
+        // Review 2026-11-14 (low): IntArray(vocabSize + 1) was allocated before vocabSize was
+        // bounded, so a corrupt header threw OutOfMemoryError / NegativeArraySizeException on
+        // the loader thread, which BigramModel.loadStaticLm (catching IllegalArgumentException)
+        // did not handle.
+        val bytes = StaticContextLmFixtures.encode(unigrams, table)
+        val huge = Int.MAX_VALUE - 1   // IntArray(huge + 1) cannot be allocated
+        for (i in 0 until 4) bytes[12 + i] = (huge ushr (8 * i)).toByte()
+        val thrown = runCatching { StaticContextLm.parse(bytes) }.exceptionOrNull()
+        assertThat(thrown).isInstanceOf(IllegalArgumentException::class.java)
+    }
+
+    @Test
     fun `header counts are read back`() {
         assertThat(lm.language).isEqualTo("en")
         assertThat(lm.vocabSize).isEqualTo(unigrams.size)

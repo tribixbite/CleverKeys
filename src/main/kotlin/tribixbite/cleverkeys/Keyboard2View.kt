@@ -2596,7 +2596,7 @@ class Keyboard2View @JvmOverloads constructor(
         // Limit the label of string keys to 3 characters
         if (label_len > 3 && modifiedKv.getKind() == KeyValue.Kind.String)
             label_len = 3
-        p.textSize = SubLabelSizing.fitToWidth(
+        p.textSize = SubLabelSizing.fitToBudget(
             textSize, p.measureText(label, 0, label_len), SubLabelSizing.maxWidth(keyW, subPadding, sub_index, mainLabelW))
         _subLabelText = label
         _subLabelLen = label_len

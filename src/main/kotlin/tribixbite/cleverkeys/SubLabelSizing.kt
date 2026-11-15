@@ -145,6 +145,14 @@ object SubLabelSizing {
         return scale
     }
 
+    /**
+     * [fitToWidth] against a slot BUDGET ([maxWidth]'s result): a budget of 0 means no room, so
+     * the label gets size 0 and is not drawn. [fitToWidth] reads 0 as "no limit", which drew a
+     * W/E sublabel at full size over the main label on a narrow key (review 2026-11-14).
+     */
+    fun fitToBudget(size: Float, measuredWidth: Float, budget: Float): Float =
+        if (budget <= 0f) 0f else fitToWidth(size, measuredWidth, budget)
+
     /** [size], shrunk proportionally when text measuring [measuredWidth] at it exceeds [maxWidth]. */
     fun fitToWidth(size: Float, measuredWidth: Float, maxWidth: Float): Float =
         if (measuredWidth <= maxWidth || measuredWidth <= 0f || maxWidth <= 0f) size

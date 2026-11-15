@@ -64,7 +64,6 @@ class ActiveLanguageSync(initial: ActiveLanguages, private val sink: Sink) {
     fun apply(target: ActiveLanguages): Boolean {
         val previous = applied
         if (target == previous) return false
-        applied = target
 
         val primaryChanged = target.primary != previous.primary
         val secondaryChanged = target.secondary != previous.secondary
@@ -78,6 +77,9 @@ class ActiveLanguageSync(initial: ActiveLanguages, private val sink: Sink) {
         // Only a binding that actually changed the serving language is announced; switching
         // between unbound layouts stays silent exactly as before.
         if (primaryChanged && target.boundLayoutLanguage != null) sink.announce(target)
+        // Recorded only once every sink ran: a sink that throws leaves [applied] at the old state,
+        // so the next apply() retries instead of treating the language as served (review 2026-11-14).
+        applied = target
         return true
     }
 }

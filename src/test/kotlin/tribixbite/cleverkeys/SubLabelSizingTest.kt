@@ -167,6 +167,9 @@ class SubLabelSizingTest {
         // Nothing measured or no budget: leave the size alone instead of collapsing it.
         assertThat(SubLabelSizing.fitToWidth(20f, 0f, 30f)).isEqualTo(20f)
         assertThat(SubLabelSizing.fitToWidth(20f, 10f, 0f)).isEqualTo(20f)
+        // A slot budget of 0 is "no room", not "no limit" (review 2026-11-14): not drawn.
+        assertThat(SubLabelSizing.fitToBudget(20f, 10f, 0f)).isEqualTo(0f)
+        assertThat(SubLabelSizing.fitToBudget(20f, 60f, 30f)).isEqualTo(10f)
     }
 
     // ----------------------------------------------------------------- legacy saved labels

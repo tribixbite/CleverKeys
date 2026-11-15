@@ -43,6 +43,14 @@ class LargeTextCommitTest {
     } as InputConnection
 
     @Test
+    fun emptyTextSendsNothing() {
+        // Review 2026-11-14 (low): commitText("") replaces an active composing span with nothing,
+        // deleting the word in progress.
+        assertTrue(LargeTextCommit.commit(conn, ""))
+        assertEquals(emptyList<String>(), calls)
+    }
+
+    @Test
     fun shortTextIsOneCommitInOneBatchEdit() {
         assertTrue(LargeTextCommit.commit(conn, "hello"))
         assertEquals(listOf("beginBatchEdit", "commitText", "endBatchEdit"), calls)

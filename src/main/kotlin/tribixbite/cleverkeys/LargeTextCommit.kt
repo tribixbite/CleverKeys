@@ -105,6 +105,9 @@ internal object LargeTextCommit {
         retryPausesMs: List<Long> = RETRY_PAUSES_MS,
         pause: (Long) -> Unit = Thread::sleep,
     ): Boolean {
+        // Nothing to send: an empty commitText would REPLACE an active composing span with
+        // nothing, deleting the word in progress (review 2026-11-14).
+        if (text.isEmpty()) return true
         conn.beginBatchEdit()
         try {
             var start = 0

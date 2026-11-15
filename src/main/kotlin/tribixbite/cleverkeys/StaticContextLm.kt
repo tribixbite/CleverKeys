@@ -483,6 +483,12 @@ class StaticContextLm private constructor(
             require(vocabSize > 0 && prevCount in 1..vocabSize && pairCount >= prevCount) {
                 "CKLM: implausible counts vocab=$vocabSize prevs=$prevCount pairs=$pairCount"
             }
+            // Every vocabulary word takes at least 2 bytes before prevIndexOffset; bound the
+            // count before IntArray(vocabSize + 1) so a corrupt header fails as a parse error, not
+            // NegativeArraySize/OOM on the loader thread (review 2026-11-14).
+            require(vocabSize.toLong() * 2 <= prevIndexOffset.toLong() - HEADER_BYTES) {
+                "CKLM: vocabulary count $vocabSize does not fit before offset $prevIndexOffset"
+            }
             require(prevIndexOffset in HEADER_BYTES..bytes.size &&
                 contsOffset.toLong() == prevIndexOffset.toLong() + prevCount.toLong() * PREV_ENTRY_BYTES &&
                 contsOffset <= bytes.size) {
