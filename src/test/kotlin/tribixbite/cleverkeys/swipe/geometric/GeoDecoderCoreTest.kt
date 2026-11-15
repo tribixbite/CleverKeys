@@ -859,6 +859,31 @@ class GeoDecoderCoreTest {
         }
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): case-variant duplicates (`to`/`To`/`TO` — the merged
+     * dictionary can hold a user word beside its base form) used to take separate top-K
+     * slots; the ranker then folded them into one, so the slate came back SHORTER than
+     * `maxResults` even though other plausible words had been scored. The fold must happen
+     * before the top-K cut.
+     */
+    @Test
+    fun caseVariantDuplicates_doNotShortenTheSlate() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val dict = ArrayBackedDictionary(
+            "en", 1L, arrayOf("to", "To", "TO", "tp", "yo", "ti", "go", "too"),
+        )
+        val engine = GeometricSwipeEngine(config.copy(maxResults = 3))
+        engine.warmUp(layout, dict)
+        val trace = requireNotNull(idealTrace("to", layout))
+
+        val result = engine.decode(request(trace, layout, dict))
+
+        assertWithMessage("slate ${result.words}: one case-folded 'to' plus two other words")
+            .that(result.words).hasSize(3)
+        assertThat(result.words.map { it.lowercase() }.toSet()).hasSize(3)
+        assertThat(result.words.first()).isEqualTo("to")
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
 
     /** Arc-length resample a short interleaved polyline to [target] via the preprocessor. */

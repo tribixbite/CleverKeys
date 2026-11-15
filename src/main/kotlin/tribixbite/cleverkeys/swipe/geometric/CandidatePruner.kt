@@ -15,7 +15,8 @@ import kotlin.math.ln
  *     sensitivity / 99.5% specificity on QWERTY), WIDENED to 3×3 on dense layouts
  *     (`kw < denseLayoutKwThreshold`) where noisy endpoints are the real recall risk.
  *  2. **Length ratio** — keep candidates with `gesturePathLenKw / templatePathLenKw`
- *     ∈ `[lengthRatioMin, lengthRatioMax]`. No corner-count filter (corners are
+ *     ∈ `[lengthRatioMin, lengthRatioMax]` for the plain OR the loop variant of a
+ *     doubled-letter word (review 2026-11-14 M17). No corner-count filter (corners are
  *     soft-only; collinear words have zero corners).
  *  3. **bbox overlap** + a deterministic **best-`maxCandidatesScored` cap** by
  *     `|ln ratio|` ascending, ties broken by lower ordinal rank — NEVER "first 800 in
@@ -90,15 +91,22 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
         val survivorKeys = FloatArray(candidates.size)
         var m = 0
         for (ordinal in candidates) {
-            val tLen = index.idealPathLenKwOf(ordinal)
-            if (tLen <= 0f) continue // defensive: a template always has positive length
-            val ratio = gLen / tLen
-            if (ratio < config.lengthRatioMin || ratio > config.lengthRatioMax) continue // stage 2
+            // Stage 2 over EVERY template variant the scorer will consider (review 2026-11-14
+            // M17): the plain length, and the loop length of a doubled-letter word. The scorer
+            // takes the better variant, so the prune must keep a word whenever EITHER ratio is
+            // in the window — testing the plain length alone dropped `see` swiped with a
+            // natural (larger than template-sized) loop before its loop variant was scored.
+            // The cap key is the better (smaller) |ln ratio| of the passing variants.
+            val key = minOf(
+                lengthKey(gLen, index.idealPathLenKwOf(ordinal)),
+                lengthKey(gLen, index.loopPathLenKwOf(ordinal)),
+            )
+            if (key == Float.POSITIVE_INFINITY) continue // stage 2: no variant in the window
             // Stage 3a: bbox overlap (axis-aligned; reject disjoint boxes).
             if (index.bboxMaxU(ordinal) < gMinU || index.bboxMinU(ordinal) > gMaxU) continue
             if (index.bboxMaxV(ordinal) < gMinV || index.bboxMinV(ordinal) > gMaxV) continue
             survivorOrdinals[m] = ordinal
-            survivorKeys[m] = abs(ln(ratio.toDouble())).toFloat()
+            survivorKeys[m] = key
             m++
         }
         if (m == 0) return IntArray(0)
@@ -128,6 +136,17 @@ class CandidatePruner(private val config: GeometricEngineConfig) {
         val out = IntArray(outSize)
         for (i in 0 until outSize) out[i] = ordinals[perm[i]]
         return out
+    }
+
+    /**
+     * `|ln(gLen / tLen)|` when the ratio lies in `[lengthRatioMin, lengthRatioMax]`, else
+     * +∞. A non-positive [tLen] (no such variant — the index stores 0 for "no loop") is +∞.
+     */
+    private fun lengthKey(gLen: Float, tLen: Float): Float {
+        if (tLen <= 0f) return Float.POSITIVE_INFINITY
+        val ratio = gLen / tLen
+        if (ratio < config.lengthRatioMin || ratio > config.lengthRatioMax) return Float.POSITIVE_INFINITY
+        return abs(ln(ratio.toDouble())).toFloat()
     }
 
     /** First [k] ids of [arr] (or all of them if shorter). */

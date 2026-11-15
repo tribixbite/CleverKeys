@@ -7,8 +7,9 @@ package tribixbite.cleverkeys.swipe.geometric
  * `(layoutFingerprint, languageCode, dictVersion)`. The fingerprint is
  * geometry-only, so dictionary identity lives entirely in the language/version key
  * fields; a fingerprint miss (edited custom layout, locale-toggled `loc` keys) OR a
- * dictVersion miss (custom word added/disabled) rebuilds cold automatically. Ceiling
- * = `config.indexCacheCapacity` indices.
+ * dictVersion miss (custom word added/disabled) rebuilds cold automatically, and the new
+ * version replaces the superseded one for that `(fingerprint, language)` ([installLocked]).
+ * Ceiling = `config.indexCacheCapacity` indices.
  *
  * **Tier B** — per-index lazy full-template memo ([WordTemplate]): only pruning
  * survivors are ever materialized, memoized in an LRU of `config.templateMemoCapacity`
@@ -122,7 +123,7 @@ class TemplateCache(private val config: GeometricEngineConfig) {
         synchronized(lock) {
             // Re-check: another thread may have built the same key meanwhile.
             indices[key]?.let { return it }
-            indices[key] = built
+            installLocked(key, built)
         }
         return built
     }
@@ -156,7 +157,7 @@ class TemplateCache(private val config: GeometricEngineConfig) {
                     deadLayout = idxExisting.deadLayout,
                 )
             }
-            indices[key] = built
+            installLocked(key, built)
         }
         val idx = built.index
         return WarmUpResult(
@@ -165,6 +166,30 @@ class TemplateCache(private val config: GeometricEngineConfig) {
             buildMillis = elapsed,
             deadLayout = idx.deadLayout,
         )
+    }
+
+    /**
+     * Inserts [built] under [key] after dropping every OTHER version cached for the same
+     * `(fingerprint, language)`. Caller holds [lock].
+     *
+     * Review 2026-11-14 M15: a new dictionary version (a personal-dictionary word added,
+     * disabled or re-prioritised) SUPERSEDES the old one — the adapter only ever hands the
+     * engine its newest merged dictionary, so no decode asks for the old version again. Left
+     * in place, each superseded index (and, through [CachedIndex.dictionary], its whole merged
+     * word array) stayed pinned until LRU capacity pushed it out: three edits held up to three
+     * dead dictionaries (~15-20 MB) and evicted the indices of the layouts and languages the
+     * user really switches between. A decode already holding an evicted [CachedIndex] keeps
+     * its own reference, so evicting here never tears a running decode.
+     */
+    private fun installLocked(key: IndexKey, built: CachedIndex) {
+        val it = indices.entries.iterator()
+        while (it.hasNext()) {
+            val k = it.next().key
+            if (k.fingerprint == key.fingerprint && k.language == key.language && k.version != key.version) {
+                it.remove()
+            }
+        }
+        indices[key] = built
     }
 
     /** Evict all cached indices for `(fingerprint, language)` regardless of version. */

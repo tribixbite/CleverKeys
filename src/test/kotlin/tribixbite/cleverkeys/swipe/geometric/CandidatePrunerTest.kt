@@ -402,8 +402,43 @@ class CandidatePrunerTest {
             .that(cache.contains(portrait.fingerprint(), "en", bumped.version)).isFalse()
         cache.warmUp(portrait, bumped)
         assertThat(cache.contains(portrait.fingerprint(), "en", 2L)).isTrue()
-        // The old v1 index is still present (distinct key) unless evicted by capacity.
-        assertThat(cache.contains(portrait.fingerprint(), "en", 1L)).isTrue()
+        // Review 2026-11-14 M15: v2 SUPERSEDES v1 for this (fingerprint, language), so the v1
+        // index is evicted on insert (see cache_newDictionaryVersion_evictsSupersededVersions).
+        assertThat(cache.contains(portrait.fingerprint(), "en", 1L)).isFalse()
+        // The landscape index is a different fingerprint: a portrait build does not supersede it.
+        assertThat(cache.contains(landscape.fingerprint(), "en", 1L)).isTrue()
+    }
+
+    /**
+     * Review 2026-11-14 M15. Every personal-dictionary edit bumps the dictionary version, and
+     * the version is part of the cache key, so before the fix each edit left the previous,
+     * now-unreachable index in the LRU until capacity pushed it out: three edits pinned up to
+     * three superseded indices (with their full dictionaries, ~15-20 MB) and evicted the
+     * indices of the other layouts/languages the user really switches between. A new version
+     * of the same (fingerprint, language) must replace the old one.
+     */
+    @Test
+    fun cache_newDictionaryVersion_evictsSupersededVersions() {
+        val cache = TemplateCache(config.copy(indexCacheCapacity = 3))
+        val qwerty = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val azerty = GeoLayoutFixtures.loadShipped("latn_azerty_fr")
+        val en = GeoTestFixtures.englishCkdt()
+        val fr = GeoTestFixtures.frenchCkdt()
+
+        cache.warmUp(azerty, fr)
+        cache.warmUp(qwerty, en)
+        // Two personal-dictionary edits on English: v2 via warmUp, v3 via the synchronous
+        // decode-time build (both insert paths must evict).
+        cache.warmUp(qwerty, bumpVersion(en, 2L))
+        cache.getOrBuild(qwerty, bumpVersion(en, 3L))
+
+        assertWithMessage("only the newest English version may stay cached")
+            .that(cache.contains(qwerty.fingerprint(), "en", en.version)).isFalse()
+        assertThat(cache.contains(qwerty.fingerprint(), "en", 2L)).isFalse()
+        assertThat(cache.contains(qwerty.fingerprint(), "en", 3L)).isTrue()
+        assertWithMessage("the other language's index must survive the English edits")
+            .that(cache.contains(azerty.fingerprint(), "fr", fr.version)).isTrue()
+        assertThat(cache.indexCount()).isEqualTo(2)
     }
 
     @Test
@@ -564,6 +599,83 @@ class CandidatePrunerTest {
     }
 
     /** A version-bumped view of [base] (models a custom-word mutation → new cache key). */
+    // ── Doubled letters: the loop variant must pass the length prune on its own ─────
+
+    /**
+     * Review 2026-11-14 M17. A doubled-letter word has two templates — plain (variant 0) and
+     * a square loop of side `doubleLetterLoopRadius` (0.25 kw) at the doubled key — and the
+     * scorer takes the better one. The length prune used to compare the gesture against the
+     * PLAIN length only, so a short doubled word swiped with a natural loop was pruned before
+     * its loop variant could be scored: on `see` the plain template is ~1 kw, and a human
+     * loop adds 2-3 kw, which puts the gesture/plain ratio far above `lengthRatioMax`.
+     *
+     * The loop drawn here is a circle of radius [humanLoopRadiusKw] (diameter 0.6 kw), more
+     * than twice the template loop's side. [GeoTraceSynthesizer]'s LOOP mode draws the loop
+     * at exactly the template's size, which is why the existing doubled-letter suite could
+     * never see this. The preconditions below pin that the fixture really is the failing
+     * case: pruned on the plain ratio, inside the window on the loop ratio.
+     */
+    @Test
+    fun prune_keepsDoubledLetterWord_swipedWithAHumanSizedLoop() {
+        val layout = GeoLayoutFixtures.loadShipped("latn_qwerty_us")
+        val dict = GeoTestFixtures.englishCkdt()
+        val see = GeoIdealTrace.ordinalOf("see", dict)
+        assertWithMessage("'see' must be in the English dictionary").that(see).isAtLeast(0)
+        val index = TemplateIndex.build(layout, dict, config, gen)
+
+        val trace = humanLoopTrace(layout, from = "s", loopOn = "e", humanLoopRadiusKw = 0.3f)
+        val gesture = GesturePreprocessor(config)
+            .process(trace, GeoIdealTrace.WIDTH_PX, GeoIdealTrace.HEIGHT_PX, layout)
+
+        val template = requireNotNull(gen.generate("see", see, layout))
+        assertWithMessage("'see' has a plain and a loop variant").that(template.variantCount).isEqualTo(2)
+        val plainRatio = gesture.pathLengthKw / template.pathLengthsKw[0]
+        val loopRatio = gesture.pathLengthKw / template.pathLengthsKw[1]
+        assertWithMessage("precondition: the human loop puts the PLAIN ratio above the window")
+            .that(plainRatio).isGreaterThan(config.lengthRatioMax)
+        assertWithMessage("precondition: the LOOP variant's ratio is inside the window")
+            .that(loopRatio).isIn(com.google.common.collect.Range.closed(config.lengthRatioMin, config.lengthRatioMax))
+
+        val survivors = pruner.prune(gesture, index, layout)
+        assertWithMessage(
+            "'see' swiped with a natural loop (gesture ${gesture.pathLengthKw} kw, plain " +
+                "${template.pathLengthsKw[0]} kw, loop ${template.pathLengthsKw[1]} kw) must survive the prune"
+        ).that(survivors.toList()).contains(see)
+    }
+
+    /**
+     * A raw trace (key-area px) from key [from] straight to key [loopOn], then one circle of
+     * radius [humanLoopRadiusKw] key widths centred on [loopOn], ending back on its centre —
+     * how a person swipes a doubled final letter. The circle is isotropic in physical key
+     * widths (the vertical extent is scaled by the layout aspect, as `dKw` measures it).
+     */
+    private fun humanLoopTrace(
+        layout: LayoutGeometry,
+        from: String,
+        loopOn: String,
+        humanLoopRadiusKw: Float,
+    ): List<TracePoint> {
+        val a = layout.keys.first { it.label == from }
+        val b = layout.keys.first { it.label == loopOn }
+        val pts = ArrayList<Pair<Float, Float>>()
+        val straight = 12
+        for (k in 0..straight) {
+            val f = k.toFloat() / straight
+            pts.add((a.cx + (b.cx - a.cx) * f) to (a.cy + (b.cy - a.cy) * f))
+        }
+        val ru = humanLoopRadiusKw * layout.meanKeyWidth
+        val rv = ru * layout.aspect
+        val around = 32
+        for (k in 0..around) {
+            val theta = 2.0 * Math.PI * k / around
+            pts.add((b.cx + ru * kotlin.math.cos(theta).toFloat()) to (b.cy + rv * kotlin.math.sin(theta).toFloat()))
+        }
+        pts.add(b.cx to b.cy)
+        return pts.mapIndexed { t, (u, v) ->
+            TracePoint(u * GeoIdealTrace.WIDTH_PX, v * GeoIdealTrace.HEIGHT_PX, t * 8L)
+        }
+    }
+
     private fun bumpVersion(base: GeometricDictionary, newVersion: Long): GeometricDictionary =
         object : GeometricDictionary {
             override val language: String get() = base.language

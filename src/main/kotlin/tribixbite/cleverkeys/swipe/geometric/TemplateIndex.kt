@@ -25,6 +25,10 @@ package tribixbite.cleverkeys.swipe.geometric
  *    `[0, PATH_LEN_QUANT_MAX]`. The quantization granularity
  *    (`PATH_LEN_QUANT_MAX / 65535` ≈ 0.002 kw) is three orders of magnitude below
  *    the length-ratio prune window `[0.55, 1.9]`, so it cannot alias that prune.
+ *  - [loopPathLenQ] (u16): the LOOP-variant path length of a doubled-letter word on the
+ *    same quantization, `0` when the word has no loop variant (review 2026-11-14 M17: the
+ *    length prune must accept a word when EITHER variant's ratio is in the window, or a
+ *    short doubled word swiped with a natural loop is pruned before its loop is scored).
  *  - [bboxQ] (4 × u8 per word): the template's axis-aligned bounding box
  *    `[minU, minV, maxU, maxV]` quantized over `[0,1]`, used by the bbox-overlap
  *    prune. Single-key (loop-primary) words get a NON-degenerate bbox expanded by
@@ -61,6 +65,7 @@ class TemplateIndex private constructor(
     private val lastKeyId: ByteArray,
     private val collapsedLen: ByteArray,
     private val idealPathLenQ: ShortArray,
+    private val loopPathLenQ: ShortArray, // 0 = no loop variant
     private val bboxQ: ByteArray, // 4 bytes/word: minU, minV, maxU, maxV
     // CSR extremity buckets.
     private val bucketOffsets: IntArray,
@@ -80,6 +85,13 @@ class TemplateIndex private constructor(
 
     /** Plain-variant path length (kw) of word [i], dequantized. */
     fun idealPathLenKwOf(i: Int): Float = dequantLen(idealPathLenQ[i])
+
+    /**
+     * Loop-variant path length (kw) of word [i], dequantized; `0f` when the word has no
+     * loop variant (no doubled letter, or a single-key word whose only template is already
+     * the loop-primary one held by [idealPathLenKwOf]).
+     */
+    fun loopPathLenKwOf(i: Int): Float = dequantLen(loopPathLenQ[i])
 
     /** Template bbox minU of word [i] (normalized [0,1]). */
     fun bboxMinU(i: Int): Float = dequantUnit(bboxQ[i * 4])
@@ -119,7 +131,8 @@ class TemplateIndex private constructor(
         total += hdr + lastKeyId.size            // 1 B/word
         total += hdr + collapsedLen.size         // 1 B/word
         total += hdr + idealPathLenQ.size.toLong() * 2 // 2 B/word
-        total += hdr + bboxQ.size                // 4 B/word
+        total += hdr + loopPathLenQ.size.toLong() * 2  // 2 B/word
+        total += hdr + bboxQ.size               // 4 B/word
         total += hdr + bucketOffsets.size.toLong() * 4 // (keyCount²+1) ints
         total += hdr + bucketEntries.size.toLong() * 4 // typeableCount ints
         return total
@@ -194,6 +207,7 @@ class TemplateIndex private constructor(
             val lastKeyId = ByteArray(n)
             val collapsedLen = ByteArray(n)
             val idealPathLenQ = ShortArray(n)
+            val loopPathLenQ = ShortArray(n)
             val bboxQ = ByteArray(n * 4)
 
             // Half-key bbox-overlap margin (normalized units). Horizontal = half a mean
@@ -258,6 +272,13 @@ class TemplateIndex private constructor(
                     continue
                 }
                 idealPathLenQ[i] = quantLen(plainLen)
+                // The loop variant of a doubled-letter word (review 2026-11-14 M17), from
+                // the same template. A loop beyond the quant range (only on a very dense
+                // layout) is simply not offered to the prune: 0 means "no loop variant".
+                if (template.variantCount == 2) {
+                    val loopLen = template.pathLengthsKw[1]
+                    if (loopLen <= PATH_LEN_QUANT_MAX) loopPathLenQ[i] = quantLen(loopLen)
+                }
 
                 val first = pre[0]
                 val last = prevId // last collapsed key id (cLen >= 1 ⇒ prevId is set)
@@ -308,6 +329,7 @@ class TemplateIndex private constructor(
                 lastKeyId = lastKeyId,
                 collapsedLen = collapsedLen,
                 idealPathLenQ = idealPathLenQ,
+                loopPathLenQ = loopPathLenQ,
                 bboxQ = bboxQ,
                 bucketOffsets = bucketOffsets,
                 bucketEntries = bucketEntries,

@@ -119,15 +119,34 @@ class GeometricSwipeEngine(
      * tied at the current worst-admitted score (so a tie never silently drops a word
      * the ranker would have preferred by ordinal). Capacity is a soft floor: ties at
      * the boundary can transiently exceed it; the ranker re-caps to `maxResults`.
+     *
+     * Case variants share ONE slot (review 2026-11-14): the ranker folds `to`/`To`/`TO` into
+     * one word by lowercase, so letting each take its own slot here returned a slate shorter
+     * than `maxResults` while other scored words had been dropped for lack of room. The
+     * collector keeps only the variant the ranker would keep — higher score, then lower
+     * ordinal — using the ranker's own fold ([String.lowercase]).
      */
     private class TopKScored(private val capacity: Int) {
         private val items = ArrayList<CandidateRanker.Scored>(capacity + 4)
+        // Lowercase fold of items[i].word, kept index-aligned with [items].
+        private val keys = ArrayList<String>(capacity + 4)
         // The K-th best score once we are at/over capacity; below it we never admit.
         private var worstAdmitted = Float.NEGATIVE_INFINITY
 
         fun offer(ordinal: Int, word: String, score: Float) {
             if (items.size >= capacity && score < worstAdmitted) return // fail-fast reject
+            val key = word.lowercase()
+            val held = keys.indexOf(key)
+            if (held >= 0) {
+                val existing = items[held]
+                val keepExisting = existing.score > score ||
+                    (existing.score == score && existing.ordinal < ordinal)
+                if (keepExisting) return
+                // The newcomer wins the slot; the add below restores the size at once.
+                items.removeAt(held); keys.removeAt(held)
+            }
             items.add(CandidateRanker.Scored(ordinal, word, score))
+            keys.add(key)
             // Recompute the worst-admitted threshold as the K-th largest score. This
             // sorts a fresh copy — O(size·log size) per admitted offer — but only runs
             // when we are at/over capacity, and `size` is bounded by capacity + the
@@ -153,10 +172,10 @@ class GeometricSwipeEngine(
             var w = 0
             for (r in items.indices) {
                 if (items[r].score >= threshold) {
-                    items[w] = items[r]; w++
+                    items[w] = items[r]; keys[w] = keys[r]; w++
                 }
             }
-            while (items.size > w) items.removeAt(items.size - 1)
+            while (items.size > w) { items.removeAt(items.size - 1); keys.removeAt(keys.size - 1) }
         }
 
         fun toList(): List<CandidateRanker.Scored> = items
