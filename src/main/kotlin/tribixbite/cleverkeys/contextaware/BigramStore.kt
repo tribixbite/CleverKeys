@@ -136,6 +136,16 @@ class BigramStore internal constructor(
             }
         }
 
+        /**
+         * Largest frequency one imported n-gram entry may carry (review 2026-11-14). Far beyond
+         * what typing produces; a backup claiming more is clamped, so a context total of many
+         * such entries stays meaningful instead of overflowing.
+         */
+        internal const val MAX_IMPORTED_FREQUENCY = 1_000_000
+
+        /** [a] + [b] clamped to `Int.MAX_VALUE`: n-gram totals never wrap negative. */
+        internal fun saturatingAdd(a: Int, b: Int): Int = (a.toLong() + b).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
         /** Normalize a language code for keying ("" → "en", case-insensitive). */
         internal fun normalizeLanguage(language: String): String {
             val trimmed = language.trim().lowercase()
@@ -1027,7 +1037,8 @@ class BigramStore internal constructor(
             val (word1, word2, frequency) = parsed
             if (word1.isEmpty() || word2.isEmpty() || frequency <= 0) continue
             if (word1 == word2) continue
-            accepted += parsed
+            // Clamp a huge count (review 2026-11-14: Int.MAX_VALUE entries summed negative).
+            accepted += Triple(word1, word2, frequency.coerceAtMost(MAX_IMPORTED_FREQUENCY))
         }
         if (accepted.isEmpty()) return 0
         val data = forLanguage(lang)
@@ -1035,7 +1046,7 @@ class BigramStore internal constructor(
         synchronized(this) {
             mutationVersion++
             for ((word1, word2, frequency) in accepted) {
-                data.word1Frequencies[word1] = (data.word1Frequencies[word1] ?: 0) + frequency
+                data.word1Frequencies[word1] = saturatingAdd(data.word1Frequencies[word1] ?: 0, frequency)
 
                 val entries = data.bigramMap.getOrPut(word1) { mutableListOf() }
                 val existing = entries.find { it.word2 == word2 }
@@ -1046,7 +1057,7 @@ class BigramStore internal constructor(
                     entries.remove(existing)
                     entries.add(
                         existing.copy(
-                            frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
+                            frequency = saturatingAdd(existing.frequency, frequency), lastSeen = seen, globalSeen = data.clock
                         )
                     )
                 } else {

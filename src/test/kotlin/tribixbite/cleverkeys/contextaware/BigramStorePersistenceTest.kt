@@ -287,6 +287,32 @@ class BigramStorePersistenceTest {
         assertEquals(1.0f, store.getProbability("en", "i", "am"), 1e-6f)
     }
 
+    /**
+     * Review 2026-11-14 (Stores, low): a backup carrying huge per-entry frequencies used to
+     * overflow the Int context total (two entries of Int.MAX_VALUE summed to -2), so every
+     * conditional probability of that context came out negative or zero. Frequencies are capped
+     * per entry and totals saturate, so the imported context keeps sane probabilities.
+     */
+    @Test
+    fun `huge imported frequencies never overflow the context total`() {
+        val store = newStore(InMemoryLearnedStorage())
+        store.recordBigram("en", "i", "am")
+        val max = Int.MAX_VALUE
+        store.importFromJson(
+            "en",
+            """[{"word1":"i","word2":"am","frequency":$max},{"word1":"i","word2":"was","frequency":$max}]"""
+        )
+        val entries = store.getAllBigrams("en", "i")
+        assertEquals(2, entries.size)
+        for (e in entries) {
+            assertTrue("frequency of ${e.word2} must stay positive: ${e.frequency}", e.frequency > 0)
+            val p = store.getProbability("en", "i", e.word2)
+            assertTrue("P(${e.word2}|i) must be in (0, 1]: $p", p > 0f && p <= 1f)
+        }
+        // Both pairs were imported at the same capped size, so they are equally likely.
+        assertEquals(store.getProbability("en", "i", "am"), store.getProbability("en", "i", "was"), 0.01f)
+    }
+
     @Test
     fun `invalid import JSON is ignored`() {
         val storage = InMemoryLearnedStorage()

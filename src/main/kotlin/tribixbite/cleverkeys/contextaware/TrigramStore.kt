@@ -861,7 +861,8 @@ class TrigramStore internal constructor(
             val (w1, w2, w3) = words
             if (w1.isEmpty() || w2.isEmpty() || w3.isEmpty() || frequency <= 0) continue
             if (w2 == w3) continue // Same guard recordTrigram applies
-            accepted += parsed
+            // Clamp a huge count (review 2026-11-14: Int.MAX_VALUE entries summed negative).
+            accepted += words to frequency.coerceAtMost(BigramStore.MAX_IMPORTED_FREQUENCY)
         }
         if (accepted.isEmpty()) return 0
         val data = forLanguage(lang)
@@ -871,7 +872,7 @@ class TrigramStore internal constructor(
             for ((words, frequency) in accepted) {
                 val (w1, w2, w3) = words
                 val key = prefixKey(w1, w2)
-                data.prefixFrequencies[key] = (data.prefixFrequencies[key] ?: 0) + frequency
+                data.prefixFrequencies[key] = BigramStore.saturatingAdd(data.prefixFrequencies[key] ?: 0, frequency)
 
                 val entries = data.trigramMap.getOrPut(key) { mutableListOf() }
                 val existing = entries.find { it.word3 == w3 }
@@ -882,7 +883,7 @@ class TrigramStore internal constructor(
                     entries.remove(existing)
                     entries.add(
                         existing.copy(
-                            frequency = existing.frequency + frequency, lastSeen = seen, globalSeen = data.clock
+                            frequency = BigramStore.saturatingAdd(existing.frequency, frequency), lastSeen = seen, globalSeen = data.clock
                         )
                     )
                 } else {

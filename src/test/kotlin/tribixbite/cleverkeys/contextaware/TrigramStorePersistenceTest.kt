@@ -436,4 +436,28 @@ class TrigramStorePersistenceTest {
 
         assertEquals(threads * perThread, store.getTotalTrigramCount("sv"))
     }
+
+    /**
+     * Review 2026-11-14 (Stores, low): huge per-entry frequencies in a backup overflowed the
+     * Int prefix total negative, zeroing or negating every probability of that prefix.
+     */
+    @Test
+    fun `huge imported frequencies never overflow the prefix total`() {
+        record(1, "en", "i", "want", "to")
+        val max = Int.MAX_VALUE
+        store.importFromJson(
+            "en",
+            """[{"word1":"i","word2":"want","word3":"to","frequency":$max},""" +
+                """{"word1":"i","word2":"want","word3":"food","frequency":$max}]"""
+        )
+        for (w3 in listOf("to", "food")) {
+            val p = store.getProbability("en", "i", "want", w3)
+            assertTrue("P($w3|i want) must be in (0, 1]: $p", p > 0f && p <= 1f)
+        }
+        assertEquals(
+            store.getProbability("en", "i", "want", "to"),
+            store.getProbability("en", "i", "want", "food"),
+            0.01f,
+        )
+    }
 }
