@@ -225,6 +225,31 @@ class PredictionTaskRunnerTest {
         runner.shutdown()
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): `ExecutorService.submit` stores whatever a task throws
+     * in its Future, and nothing ever reads these Futures — so an Error thrown by a decode or
+     * a prewarm vanished without a log line. The runner must hand every throwable a task lets
+     * escape to its error sink (the adapters log it), for both slots.
+     */
+    @Test
+    fun aThrowableEscapingATaskReachesTheErrorSink() {
+        val reported = java.util.concurrent.LinkedBlockingQueue<Throwable>()
+        val runner = PredictionTaskRunner(onTaskError = { reported.add(it) })
+        val error = StackOverflowError("decode recursion")
+        val failure = IllegalStateException("prewarm failed")
+
+        runner.cancelAndSubmit { throw error }
+        assertThat(reported.poll(2, TimeUnit.SECONDS)).isSameInstanceAs(error)
+        runner.submitBackground { throw failure }
+        assertThat(reported.poll(2, TimeUnit.SECONDS)).isSameInstanceAs(failure)
+
+        // The worker survives: the next task still runs.
+        val ran = CountDownLatch(1)
+        runner.cancelAndSubmit { ran.countDown() }
+        assertThat(ran.await(2, TimeUnit.SECONDS)).isTrue()
+        runner.shutdown()
+    }
+
     @Test
     fun submitAfterShutdownIsSilentlyDropped() {
         val runner = PredictionTaskRunner()

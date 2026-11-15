@@ -117,6 +117,23 @@ class CtcCkdtLexiconTest {
         assertThat(pairs.map { it.second }).containsExactly(55.0, 255.0).inOrder()
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): a CKDT pack whose header says 0 words is a valid file
+     * to the reader, so the adapter used to build a trie holding nothing but injected
+     * contraction aliases. Every swipe in that language then decoded to an empty slate, which
+     * the shared pipeline renders as "no candidates", so the bar cleared on every swipe with
+     * nothing logged. A base with no words is no lexicon: [CtcCkdtLexicon.frequencyPairs]
+     * refuses it, the adapter's load catch reports the language as having no lexicon, and the
+     * decode raises DecodeInputsUnavailable, which hands the swipe to the geometric engine.
+     */
+    @Test
+    fun `a zero-word CKDT base is refused rather than built into an empty trie`() {
+        val refused = runCatching { CtcCkdtLexicon.frequencyPairs(emptyList()) }.exceptionOrNull()
+
+        assertWithMessage("an empty CKDT base must not become a lexicon")
+            .that(refused).isInstanceOf(CtcCkdtLexicon.EmptyLexiconException::class.java)
+    }
+
     // ── Real bundled dictionaries ──────────────────────────────────────────────────
 
     @Test

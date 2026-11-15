@@ -185,6 +185,74 @@ class InputCoordinatorEngineInputTest {
         }
     }
 
+    /**
+     * Review 2026-11-14 M16. Each engine adapter drops a superseded decode by its OWN
+     * generation counter, and the two counters know nothing of each other. So when swipe 1's
+     * CTC decode failed and was handed to the geometric engine (a cold Tier-A build can take
+     * hundreds of ms), a fast swipe 2 decoded by CTC committed first, and swipe 1's geometric
+     * result then committed AFTER it — the two words in the wrong order. Within one engine
+     * swipe 2 would have superseded swipe 1; across engines the coordinator has to say so.
+     */
+    @Test
+    fun `a geometric fallback result is dropped once a newer swipe has started`() {
+        route(SwipeEngineRouter.Engine.CTC)
+        val handler = mockk<SuggestionHandler>(relaxed = true)
+        setField(coordinator, "swipeResultDelegate", handler)
+        val ic = mockk<android.view.inputmethod.InputConnection>(relaxed = true)
+
+        val ctcFailures = mutableListOf<() -> Unit>()
+        val ctcResults = mutableListOf<(PredictionResult) -> Unit>()
+        every {
+            ctc.decodeAsync(any(), any(), any(), any(), any(), any(), any(), any(), capture(ctcFailures), capture(ctcResults))
+        } returns Unit
+        val geoResults = mutableListOf<(PredictionResult) -> Unit>()
+        every {
+            geometric.decodeAsync(any(), any(), any(), any(), any(), any(), any(), capture(geoResults))
+        } returns Unit
+
+        fun swipeInto() = coordinator.handleSwipeTyping(
+            swipedKeys = emptyList(), swipePath = smoothed, timestamps = smoothedTimes,
+            ic = ic, editorInfo = null, resources = resources, ctcTrace = raw,
+        )
+
+        swipeInto()                       // swipe 1 → CTC
+        ctcFailures.single().invoke()     // CTC fails → swipe 1 re-dispatched to geometric
+        assertThat(geoResults).hasSize(1)
+        swipeInto()                       // swipe 2 → CTC, decodes fast
+        ctcResults[1](PredictionResult(listOf("two"), listOf(900)))
+        geoResults.single()(PredictionResult(listOf("one"), listOf(900)))   // swipe 1 lands late
+
+        verify(exactly = 1) {
+            handler.handleSwipePredictionResults(listOf("two"), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+        verify(exactly = 0) {
+            handler.handleSwipePredictionResults(listOf("one"), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())
+        }
+    }
+
+    /** The same supersession applies to a CTC failure reported after a newer swipe began. */
+    @Test
+    fun `a CTC failure for a superseded swipe does not start a geometric decode`() {
+        route(SwipeEngineRouter.Engine.CTC)
+        val ic = mockk<android.view.inputmethod.InputConnection>(relaxed = true)
+        val ctcFailures = mutableListOf<() -> Unit>()
+        every {
+            ctc.decodeAsync(any(), any(), any(), any(), any(), any(), any(), any(), capture(ctcFailures), any())
+        } returns Unit
+
+        repeat(2) {
+            coordinator.handleSwipeTyping(
+                swipedKeys = emptyList(), swipePath = smoothed, timestamps = smoothedTimes,
+                ic = ic, editorInfo = null, resources = resources, ctcTrace = raw,
+            )
+        }
+        // Swipe 1's failure arrives after swipe 2 was dispatched: re-decoding swipe 1 on the
+        // geometric engine would race (and on a geometric-routed swipe 2, cancel) the newer one.
+        ctcFailures[0].invoke()
+
+        verify(exactly = 0) { geometric.decodeAsync(any(), any(), any(), any(), any(), any(), any(), any()) }
+    }
+
     // ------------------------------------------------------------------ harness
 
     private fun unsafe(): Any {

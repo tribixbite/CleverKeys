@@ -104,9 +104,15 @@ object CtcDecodeDelivery {
      * failure — converting it into one would re-decode the same swipe geometrically on top of a
      * slate that was already delivered. It propagates, exactly as it did before this seam existed.
      *
-     * Catches [Exception], not [Throwable]: an [Error] (OOM, `StackOverflowError`) still
-     * propagates to the executor untouched, because handing such a swipe to the geometric
-     * engine — which allocates a template index — is not a recovery.
+     * Catches [Throwable], [Error]s included (review 2026-11-14). This used to catch only
+     * [Exception], on the theory that an OOM or `StackOverflowError` handed to the geometric
+     * engine is no recovery. But an Error that escapes here lands in the executor's Future,
+     * which nothing reads: no callback fired, nothing was logged, and a continuous phrase
+     * waiting for this word's acknowledgement never completed. Routed to [onFallback] the
+     * failure is logged by the adapter and the dispatcher answers the swipe — with a geometric
+     * slate when that engine can still decode it, and otherwise with the empty result the
+     * geometric adapter delivers for its own failures. A cancelled decode that throws an Error
+     * is still a cancellation.
      *
      * @param interrupted reads the decode thread's interrupt flag; injectable so the
      *   cancellation rule is testable without actually interrupting a thread. Non-clearing by
@@ -122,7 +128,7 @@ object CtcDecodeDelivery {
         val value: T
         try {
             value = decode()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             when (dispositionOf(e, interrupted())) {
                 Disposition.DROP -> onCancelled(e)
                 // DELIVER is unreachable for a non-null error; treat anything that is not a

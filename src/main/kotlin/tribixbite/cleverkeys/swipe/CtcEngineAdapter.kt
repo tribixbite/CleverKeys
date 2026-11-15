@@ -246,7 +246,9 @@ class CtcEngineAdapter(
         private const val SHUTDOWN_AWAIT_MS = 250L
     }
 
-    private val tasks = PredictionTaskRunner()
+    // Anything a task lets escape is logged rather than lost in an unread Future (review
+    // 2026-11-14); a decode Error is answered by CtcDecodeDelivery's fallback route.
+    private val tasks = PredictionTaskRunner(onTaskError = { Log.e(TAG, "CTC task failed", it) })
     private val mainHandler = Handler(Looper.getMainLooper())
     private val ortEnvironment = OrtEnvironment.getEnvironment()
 
@@ -369,6 +371,14 @@ class CtcEngineAdapter(
             // back to; the Latin encoder is an asset and pins nothing, so it never takes the
             // first branch. Verified BYTES (not a path) go to ORT — see CtcPackModel.
             val packModel = CtcPackModel.verifiedPackModel(context.filesDir, language)
+            if (packModel == null) {
+                // A pinned language has no APK asset to fall back to; say what is wrong with
+                // its PACK file instead of letting the asset open fail and blame a file that
+                // was removed on purpose (review 2026-11-14). Counted as a load attempt.
+                CtcPackModel.refusalFor(context.filesDir, language)?.let { reason ->
+                    throw IllegalStateException("CTC encoder for '$language' unavailable: $reason")
+                }
+            }
             val loader = ModelLoader(context, ortEnvironment)
             val loaded = if (packModel != null) {
                 loader.loadModel(packModel, "CtcEncoder", true, threads)
@@ -1072,7 +1082,11 @@ class CtcEngineAdapter(
         onDecodeFailure: () -> Unit = {},
         onResult: (PredictionResult) -> Unit,
     ) {
-        if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty() ||
+        // A trace whose timestamps do not cover every point is degenerate too (review
+        // 2026-11-14): zero-filled stamps would feed the featurizer a velocity profile the
+        // user never drew.
+        if (frameWidthPx <= 0f || frameHeightPx <= 0f ||
+            !SwipeTraceInput.isDecodable(swipePath.size, timestamps.size) ||
             !supportsLanguage(language)
         ) {
             // Still claim a generation: this degenerate swipe is the newest one, so an
@@ -1088,7 +1102,7 @@ class CtcEngineAdapter(
         for (i in 0 until n) {
             rawX[i] = swipePath[i].x
             rawY[i] = swipePath[i].y
-            rawT[i] = timestamps.getOrElse(i) { 0L }
+            rawT[i] = timestamps[i] // sizes equal: checked above
         }
         // Claim a generation BEFORE submitting: whichever decode holds the newest
         // generation when the work finishes is the only one allowed to post.

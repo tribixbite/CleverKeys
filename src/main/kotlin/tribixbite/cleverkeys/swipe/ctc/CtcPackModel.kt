@@ -84,6 +84,38 @@ object CtcPackModel {
     fun verifiedPackModel(filesDir: File, language: String?): ByteArray? =
         verifiedBytes(packModelFile(filesDir, language), CtcScriptSupport.expectedModelSha256(language))
 
+    /**
+     * Why [language]'s pinned pack model cannot be used, naming the pack file — or null when
+     * there is nothing to refuse (the language pins no model, or the model verifies).
+     *
+     * Review 2026-11-14: when [verifiedPackModel] returned null for a pinned language, the
+     * adapter fell through to loading the APK asset, and the log reported that asset as
+     * missing — an asset removed on purpose when the script models moved into the packs, so
+     * the log pointed at the wrong cause. The adapter now fails the load with this message
+     * instead. Diagnostic only, and only on the failure path: it re-reads the file to say
+     * WHICH check failed, and its bytes are never handed to ORT.
+     */
+    fun refusalFor(filesDir: File, language: String?): String? {
+        val expected = CtcScriptSupport.expectedModelSha256(language) ?: return null
+        val file = packModelFile(filesDir, language) ?: return null
+        val code = CtcLanguageSupport.normalize(language)
+        if (!file.isFile) {
+            return "pack model ${file.path} is absent (import the '$code' language pack with its $PACK_MODEL_FILE)"
+        }
+        if (!file.canRead()) return "pack model ${file.path} is not readable"
+        val length = file.length()
+        if (length <= 0L || length > MAX_PACK_MODEL_BYTES) {
+            return "pack model ${file.path} is $length bytes, outside 1..$MAX_PACK_MODEL_BYTES"
+        }
+        val actual = try {
+            sha256Hex(file.readBytes())
+        } catch (e: Exception) {
+            return "pack model ${file.path} could not be read: ${e.javaClass.simpleName}"
+        }
+        if (actual.equals(expected, ignoreCase = true)) return null
+        return "pack model ${file.path} failed sha256 verification (expected $expected, found $actual)"
+    }
+
     /** Lowercase hex sha256 of [bytes]. */
     fun sha256Hex(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes)

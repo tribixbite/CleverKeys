@@ -113,7 +113,9 @@ class GeometricEngineAdapter(
         private const val LAST_CORNER_SLOT = 8
     }
 
-    private val tasks = PredictionTaskRunner()
+    // Anything a task lets escape is logged rather than lost in an unread Future (review
+    // 2026-11-14); decodeAsync's own catch already answers the swipe for a decode Error.
+    private val tasks = PredictionTaskRunner(onTaskError = { Log.e(TAG, "Geometric task failed", it) })
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
@@ -332,7 +334,11 @@ class GeometricEngineAdapter(
         language: String,
         onResult: (PredictionResult) -> Unit,
     ) {
-        if (frameWidthPx <= 0f || frameHeightPx <= 0f || swipePath.isEmpty()) {
+        // A trace whose timestamps do not cover every point is degenerate too (review
+        // 2026-11-14): the snapshot below would stamp the tail at t = 0.
+        if (frameWidthPx <= 0f || frameHeightPx <= 0f ||
+            !SwipeTraceInput.isDecodable(swipePath.size, timestamps.size)
+        ) {
             // Still claim a generation: this degenerate swipe is the newest one, so an older
             // decode already in flight must not land on the bar after our empty result.
             decodeGeneration.incrementAndGet()
@@ -343,7 +349,7 @@ class GeometricEngineAdapter(
         val points = ArrayList<TracePoint>(swipePath.size)
         for (i in swipePath.indices) {
             val p = swipePath[i]
-            points.add(TracePoint(p.x, p.y, timestamps.getOrElse(i) { 0L }))
+            points.add(TracePoint(p.x, p.y, timestamps[i])) // sizes equal: checked above
         }
         // Claim a generation BEFORE submitting: whichever decode holds the newest generation
         // when the work finishes is the only one allowed to post. Independent of the worker's
@@ -387,7 +393,11 @@ class GeometricEngineAdapter(
                 postIfNewest(generation, result, onResult)
             } catch (e: InterruptedException) {
                 // Cancelled by a newer swipe — drop silently.
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
+                // Errors included (review 2026-11-14): a StackOverflowError/OOM escaping this
+                // task vanished into the executor's unread Future, so the swipe was never
+                // answered and a continuous phrase waiting for it stalled. This is the last
+                // engine in the chain; an empty slate is its answer to any failure.
                 Log.e(TAG, "Geometric decode failed", e)
                 postIfNewest(generation, PredictionResult(emptyList(), emptyList()), onResult)
             }
@@ -663,6 +673,12 @@ class GeometricEngineAdapter(
                 context.assets.open("dictionaries/${lang}_enhanced.bin")
                     .use { CkdtDictionaryReader.read(it, lang, version) }
             }
+        } catch (e: InterruptedException) {
+            // A cancellation (the CKDT reader checks the worker's interrupt flag), not a
+            // missing dictionary: rethrow, as CtcEngineAdapter.lexiconFor does (review
+            // 2026-11-14). Caught below, it was logged as "no dictionary source" and dropped
+            // this language's memo slot, so the next swipe re-read the whole file.
+            throw e
         } catch (e: Exception) {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "No geometric dictionary source for '$lang': ${e.javaClass.simpleName}")

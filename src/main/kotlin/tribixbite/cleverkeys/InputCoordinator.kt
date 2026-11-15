@@ -45,7 +45,15 @@ import java.util.concurrent.RejectedExecutionException
  * lifecycle where predictions can be requested while the IME is tearing down.
  */
 class PredictionTaskRunner(
-    private val executor: ExecutorService = Executors.newSingleThreadExecutor()
+    private val executor: ExecutorService = Executors.newSingleThreadExecutor(),
+    /**
+     * Receives anything a task lets escape (review 2026-11-14). `ExecutorService.submit` keeps
+     * a task's throwable inside its Future and nothing here ever reads those Futures, so before
+     * this sink an Error from a decode or a prewarm vanished without a trace. Called on the
+     * worker thread; the swipe adapters log it. The default does nothing, for callers (and
+     * tests) with nowhere to report to.
+     */
+    private val onTaskError: (Throwable) -> Unit = {},
 ) {
     @Volatile
     private var currentTask: Future<*>? = null
@@ -97,7 +105,13 @@ class PredictionTaskRunner(
             // cancelled while still queued never runs at all, and a cancel landing after this
             // point sets the flag again.
             Thread.interrupted()
-            task.run()
+            try {
+                task.run()
+            } catch (t: Throwable) {
+                // Report, then rethrow so the Future still records the failure as before.
+                onTaskError(t)
+                throw t
+            }
         }
     } catch (e: RejectedExecutionException) {
         null
@@ -558,6 +572,11 @@ class InputCoordinator(
         ctcTrace: RawSwipeTrace? = null,
     ) {
         if (closed || control?.isCurrent() == false) { control?.complete(null); return }
+        // Review 2026-11-14 M16: claim this swipe's place in the cross-engine order. Each
+        // adapter drops a superseded decode by its own generation counter, and neither knows
+        // the other's — so a swipe whose CTC decode failed over to geometric could commit
+        // AFTER a newer swipe that CTC decoded fast. Every engine callback re-checks this.
+        val sequence = ++swipeSequence
         // v1.32.926: Store shift state for capitalize first letter in onSuggestionSelected
         wasShiftActiveAtSwipeStart = wasShiftActive
         // v1.33.8: Store caps lock state for ALL CAPS transformation in onSuggestionSelected
@@ -589,14 +608,28 @@ class InputCoordinator(
         )) {
             SwipeEngineRouter.Engine.GEOMETRIC -> performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace, sequence = sequence
             )
             SwipeEngineRouter.Engine.CTC -> performCtcSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control, ctcTrace
+                wasShiftActive, wasShiftLocked, control, ctcTrace, sequence
             )
         }
     }
+
+    /**
+     * Cross-engine swipe order (review 2026-11-14 M16): incremented on the main thread by
+     * [handleSwipeTyping] for every swipe it accepts; an engine callback may act only while
+     * its swipe still holds the newest value. Within one engine this matches what the
+     * adapter's generation guard already did (a newer swipe supersedes an older decode); the
+     * coordinator-level counter extends it across the CTC → geometric hand-off. A continuous
+     * phrase dispatches its next segment only after the previous one completed, so its
+     * segments never supersede one another.
+     */
+    private var swipeSequence = 0L
+
+    /** True while the swipe that claimed [sequence] is still the newest one (main thread). */
+    private fun isNewestSwipe(sequence: Long): Boolean = sequence == swipeSequence
 
     /**
      * Marks swipe state + prepares the ML trace capture shared by BOTH engines (WP9 step 8):
@@ -713,6 +746,8 @@ class InputCoordinator(
         control: SwipeCommitControl? = null,
         // ML capture only: the geometric engine always decodes the smoothed swipePath.
         rawTrace: RawSwipeTrace? = null,
+        // The [swipeSequence] value this swipe claimed in handleSwipeTyping (review 2026-11-14 M16).
+        sequence: Long,
     ) {
         if (swipePath.isNullOrEmpty() || timestamps == null) { control?.complete(null); return }
         val keyboard = keyboardView.getKeyboard() ?: run { control?.complete(null); return }
@@ -732,6 +767,14 @@ class InputCoordinator(
             keyboard, params, frameW, frameH, swipePath, timestamps, language
         ) { result ->
             if (control?.isCurrent() == false) { control.complete(null); return@decodeAsync }
+            // M16: a newer swipe started while this one decoded (typically this is a CTC
+            // failure re-decoded here, and the newer swipe already went through CTC). Its
+            // word must not be committed after the newer one's.
+            if (!isNewestSwipe(sequence)) {
+                control?.complete(null)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(TAG, "Dropping geometric decode: superseded by a newer swipe")
+                return@decodeAsync
+            }
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold Tier-A build takes
             // 150-400 ms, and a same-field restart or an app switch replaces both handles),
@@ -803,6 +846,8 @@ class InputCoordinator(
         wasShiftLocked: Boolean,
         control: SwipeCommitControl? = null,
         ctcTrace: RawSwipeTrace? = null,
+        // The [swipeSequence] value this swipe claimed in handleSwipeTyping (review 2026-11-14 M16).
+        sequence: Long,
     ) {
         val language = predictionCoordinator.getDictionaryManager()?.getCurrentLanguage()
             ?: config.primary_language
@@ -821,7 +866,7 @@ class InputCoordinator(
             // it must never return without dispatching.
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace, sequence = sequence
             )
             return
         }
@@ -859,7 +904,7 @@ class InputCoordinator(
         ) {
             performGeometricSwipeTyping(
                 swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
+                wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace, sequence = sequence
             )
             return
         }
@@ -889,10 +934,17 @@ class InputCoordinator(
                 // Terminal: the geometric path never routes back here, so a failure costs at
                 // most one extra decode per swipe, and a geometric failure falls through to its
                 // own empty result — the final fallback.
-                if (control?.isCurrent() != false && isReplayInputStillCurrent(ic, editorInfo)) {
+                //
+                // M16 (review 2026-11-14): only while this is still the newest swipe. A newer
+                // swipe already owns the bar; re-decoding this one would let its word commit
+                // after the newer one, or (on a geometric-routed newer swipe) cancel it.
+                if (!isNewestSwipe(sequence)) {
+                    control?.complete(null)
+                    if (BuildConfig.ENABLE_VERBOSE_LOGGING) android.util.Log.d(TAG, "Dropping CTC geometric fallback: superseded by a newer swipe")
+                } else if (control?.isCurrent() != false && isReplayInputStillCurrent(ic, editorInfo)) {
                     performGeometricSwipeTyping(
                         swipedKeys, swipePath, timestamps, ic, editorInfo, resources,
-                        wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace
+                        wasShiftActive, wasShiftLocked, control, rawTrace = ctcTrace, sequence = sequence
                     )
                 } else {
                     control?.complete(null)
@@ -901,6 +953,9 @@ class InputCoordinator(
             },
         ) { result ->
             if (control?.isCurrent() == false) { control.complete(null); return@decodeAsync }
+            // M16: superseded by a newer swipe routed to the OTHER engine (the CTC adapter's
+            // own generation guard covers a newer CTC swipe).
+            if (!isNewestSwipe(sequence)) { control?.complete(null); return@decodeAsync }
             // The decode callback replays the InputConnection/EditorInfo captured at swipe
             // time. A decode can land after the field changed (cold path builds the ONNX
             // session + 98k-word trie, and a same-field restart or an app switch replaces

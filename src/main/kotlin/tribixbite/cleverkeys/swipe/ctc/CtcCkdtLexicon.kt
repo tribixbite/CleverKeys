@@ -32,7 +32,25 @@ object CtcCkdtLexicon {
      * CKDT entries → `(canonical word, frequency)` pairs in the reader's order
      * (rank ascending, file order as the tie-break), ready for
      * [CtcLexiconMerge.merge] and then [CtcAzProjection.projectLexicon].
+     *
+     * @throws EmptyLexiconException when [entries] is empty — see [EmptyLexiconException].
      */
-    fun frequencyPairs(entries: List<CkdtDictionaryReader.Entry>): List<Pair<String, Double>> =
-        entries.map { it.word to freqForRank(it.rank) }
+    fun frequencyPairs(entries: List<CkdtDictionaryReader.Entry>): List<Pair<String, Double>> {
+        if (entries.isEmpty()) {
+            throw EmptyLexiconException("CKDT dictionary holds 0 words")
+        }
+        return entries.map { it.word to freqForRank(it.rank) }
+    }
+
+    /**
+     * A CKDT base with no words (review 2026-11-14). The format allows `wordCount = 0`, so
+     * an imported pack can carry one, and the adapter used to build it into a trie holding
+     * only the injected contraction aliases: every swipe in that language decoded to an empty
+     * slate, which the shared pipeline renders as "no candidates", so the bar cleared on
+     * every swipe with nothing logged. Thrown inside `CtcEngineAdapter.lexiconFor`'s load
+     * guard, it is logged and reported as "no lexicon", and the decode's
+     * `DecodeInputsUnavailable` then hands each swipe to the geometric engine, which still
+     * decodes the user's own words for that language.
+     */
+    class EmptyLexiconException(message: String) : IllegalArgumentException(message)
 }

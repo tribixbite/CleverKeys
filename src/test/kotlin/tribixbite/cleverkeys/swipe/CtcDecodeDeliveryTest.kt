@@ -76,6 +76,37 @@ class CtcDecodeDeliveryTest {
         assertThat(spy.cancelled).isNull()
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): an [Error] thrown by the decode (a StackOverflowError in
+     * a pathological trace, an OOM building the trie) used to escape [CtcDecodeDelivery.deliver]
+     * into the executor, whose Future swallowed it: no callback fired, nothing was logged, and
+     * a continuous phrase waiting for this word's acknowledgement stalled for good. It must
+     * reach the failure callback like any other decode failure, which hands the swipe to the
+     * dispatcher (and through it, completes the phrase).
+     */
+    @Test
+    fun `an Error thrown by the decode reaches the failure callback`() {
+        val spy = Spy()
+        val error = StackOverflowError("deep trace")
+
+        val escaped = runCatching { spy.run { throw error } }.exceptionOrNull()
+
+        assertThat(escaped).isNull()
+        assertThat(spy.fellBack).isSameInstanceAs(error)
+        assertThat(spy.delivered).isNull()
+        assertThat(spy.cancelled).isNull()
+    }
+
+    @Test
+    fun `an Error on an interrupted thread is still a cancellation`() {
+        val spy = Spy()
+
+        spy.run(interrupted = true) { throw OutOfMemoryError("superseded mid-allocation") }
+
+        assertThat(spy.cancelled).isInstanceOf(OutOfMemoryError::class.java)
+        assertThat(spy.fellBack).isNull()
+    }
+
     // ── Cancellation is NOT a failure ───────────────────────────────────────────────────
 
     @Test

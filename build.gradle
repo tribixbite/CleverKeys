@@ -1008,6 +1008,8 @@ tasks.register('runPureTests', JavaExec) {
     // ARC-083 (2026-08-29): the CTC decode/dispatch seam. A TRANSIENT decode failure must
     // reach the geometric engine; only a SUPERSEDED decode is silent, and neither latches.
     'tribixbite.cleverkeys.swipe.CtcDecodeDeliveryTest',
+    // Review 2026-11-14 (swipe low): a timestamp/point length mismatch is a degenerate swipe.
+    'tribixbite.cleverkeys.swipe.SwipeTraceInputTest',
     // ARC-081/082 (2026-08-29): the platform UserDictionary provider must reach BOTH swipe
     // engines (it previously reached only tap), must be in the lexicon memo fingerprint, and a
     // dictionary mutation must re-warm in the background instead of stalling the next swipe.
@@ -1398,6 +1400,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.SwipeCtcRawTraceTest',
     // Behavioural engine-input routing + ML raw-trace capture (audit 2026-10-08).
     'tribixbite.cleverkeys.InputCoordinatorEngineInputTest',
+    // Review 2026-11-14 (swipe low): adapter edges — Error answers the swipe, degenerate
+    // timestamp traces, dictionaryFor rethrows a cancellation.
+    'tribixbite.cleverkeys.swipe.SwipeAdapterEdgeCaseTest',
     // Release-record burn-down (2026-09-03): claims pinned by waves UA-UD
     'tribixbite.cleverkeys.ReleaseClaimGestureModesTest',
     // GH #190 (2026-10-20): backspace swipe+hold "Follow finger" selection — proportional

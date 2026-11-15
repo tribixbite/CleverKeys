@@ -215,6 +215,36 @@ class CtcPackModelTest {
         ).that(CtcPackModel.verifiedPackModel(filesDir, "ru")).isNull()
     }
 
+    /**
+     * Review 2026-11-14 (swipe, low): when a pinned language's pack model was absent or failed
+     * its hash, the adapter fell through to `loader.loadModel(<APK asset>)`, and the log said
+     * the APK asset `models/<lang>_…onnx` could not be opened — an asset that was removed on
+     * purpose, which sends anyone reading the log after the wrong cause. The refusal has to
+     * name the pack file and what is wrong with it; a Latin language (no pin) and a verified
+     * model have nothing to refuse.
+     */
+    @Test
+    fun aRefusedPackModelIsReportedByItsPackFile() {
+        val filesDir = temp.newFolder("files")
+        val packFile = File(filesDir, "langpacks/ru/model.onnx").path
+
+        val absent = CtcPackModel.refusalFor(filesDir, "ru")
+        assertWithMessage("absent pack model").that(absent).contains(packFile)
+        assertThat(absent).contains("absent")
+
+        val tampered = shippedScriptModelBytes("ru").copyOf()
+        tampered[tampered.size / 2] = (tampered[tampered.size / 2] + 1).toByte()
+        writePackModel(filesDir, "ru", tampered)
+        val mismatch = CtcPackModel.refusalFor(filesDir, "ru")
+        assertWithMessage("tampered pack model").that(mismatch).contains(packFile)
+        assertThat(mismatch).contains("sha256")
+
+        writePackModel(filesDir, "ru", shippedScriptModelBytes("ru"))
+        assertWithMessage("a verified model is not refused").that(CtcPackModel.refusalFor(filesDir, "ru")).isNull()
+        assertWithMessage("a Latin language pins nothing, so nothing is refused")
+            .that(CtcPackModel.refusalFor(filesDir, "en")).isNull()
+    }
+
     @Test
     fun theResolvedPathIsTheOneTheImporterWritesTo() {
         val filesDir = temp.newFolder("files")
