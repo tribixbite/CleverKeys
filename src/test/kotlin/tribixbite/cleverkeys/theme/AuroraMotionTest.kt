@@ -105,6 +105,27 @@ class AuroraMotionTest {
         assertThat(rest.starAlpha.toList()).containsExactlyElementsIn(List(AuroraMotion.STAR_GROUPS) { 1f })
     }
 
+    /**
+     * Review 2026-11-14 (low): with Animated scenes on, a backdrop that has not moved yet (motion
+     * time 0: just shown, or held by battery saver) showed the frame at 0, two thirds of the
+     * way into the second image, rather than the still picture the same theme shows with motion
+     * off. The motion now starts from the still picture, at every tuning and style, and leaves it
+     * smoothly (the per-frame ceilings above hold from 0).
+     */
+    @Test
+    fun theMotionStartsFromTheStillPicture() {
+        val rest = AuroraMotionFrame.REST
+        for (style in listOf(MotionStyle.GENTLE, MotionStyle.AURORA, MotionStyle.forScene(SceneKind.SNOW))) {
+            for (tuning in listOf(SceneMotionTuning.DEFAULT, SceneMotionTuning(intensity = 2f, twinkle = 1f), SceneMotionTuning(intensity = 0.3f))) {
+                val f = AuroraMotion.frame(0.0, style, tuning)
+                assertWithMessage("cross-fade at 0").that(f.crossfade).isWithin(1e-6f).of(rest.crossfade)
+                assertWithMessage("drift A at 0").that(f.driftADp).isWithin(1e-6f).of(rest.driftADp)
+                assertWithMessage("drift B at 0").that(f.driftBDp).isWithin(1e-6f).of(rest.driftBDp)
+                for (a in f.starAlpha) assertWithMessage("stars at 0").that(a).isWithin(1e-6f).of(1f)
+            }
+        }
+    }
+
     /** The second image: other rays, folds moved along, more light (the cross-fade shimmers). */
     @Test
     fun theSecondImageHasOtherRaysAndMoreLight() {

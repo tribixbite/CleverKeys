@@ -123,23 +123,30 @@ object AuroraMotion {
      * [SceneMotionTuning.intensity] scales the drift and the cross-fade, [SceneMotionTuning.twinkle]
      * how far the stars dim; its speed is the clock's). Periods are unrelated, so the pattern
      * never visibly repeats.
+     *
+     * Every wave is phased so that time 0 is [AuroraMotionFrame.REST], the picture shown with
+     * motion off: a backdrop that has not moved yet (just shown, or held still by battery saver)
+     * shows the still picture, and its first motion leaves it smoothly as the clock eases in.
+     * Review 2026-11-14 (low): the cross-fade started two thirds of the way into the second image.
      */
     fun frame(seconds: Double, style: MotionStyle = MotionStyle.GENTLE, tuning: SceneMotionTuning = SceneMotionTuning.DEFAULT): AuroraMotionFrame {
         fun wave(period: Double, phase: Double) = sin(2 * PI * seconds / period + phase)
-        // Two cycles summed keep the cross-fade from beating at one obvious rhythm. Below full
-        // intensity it sweeps less of the way to the second image (none at 0: the still picture).
-        val crossfade = ((0.5 + 0.5 * (0.6 * wave(style.fadePeriodS, 0.0) + 0.4 * wave(style.fadePeriodS * 1.44, 1.3)))
+        // Two cycles summed keep the cross-fade from beating at one obvious rhythm; both start at
+        // their trough, so the sum is 0 at time 0. Below full intensity it sweeps less of the way
+        // to the second image (none at 0: the still picture).
+        val crossfade = ((0.5 + 0.5 * (0.6 * wave(style.fadePeriodS, -PI / 2) + 0.4 * wave(style.fadePeriodS * 1.44, -PI / 2)))
             .toFloat() * tuning.intensity.coerceAtMost(1f)).coerceIn(0f, 1f)
         val low = 1f - tuning.twinkle
+        // Each group starts at full brightness and drifts apart from the others at its own period.
         val stars = FloatArray(STAR_GROUPS) { i ->
-            val lift = 0.5 + 0.5 * wave(STAR_PERIODS_S[i % STAR_PERIODS_S.size], i * 2.1)
+            val lift = 0.5 + 0.5 * wave(STAR_PERIODS_S[i % STAR_PERIODS_S.size], PI / 2)
             (low + (1f - low) * lift.toFloat()).coerceIn(low, 1f)
         }
         val drift = style.driftDp * tuning.intensity
         return AuroraMotionFrame(
             crossfade = crossfade,
             driftADp = (drift * wave(style.driftPeriodS, 0.0)).toFloat(),
-            driftBDp = (-0.8f * drift * wave(style.driftPeriodS * 1.42, 0.7)).toFloat(),
+            driftBDp = (-0.8f * drift * wave(style.driftPeriodS * 1.42, 0.0)).toFloat(),
             starAlpha = stars,
         )
     }
