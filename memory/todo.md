@@ -50,8 +50,8 @@ unfixed code (or, for new API, not compiling). The remaining lows were fixed on 
 2026-11-15 on the Tab S11, release `a20209c8`, Aurora, Frame Rate 10: PSS 246 MB still / 291 MB
 peak moving, 4 backdrop layers while shown, 0 after each of 20 mid-spell hides, native heap back to
 52 MB after 30 s idle, no deaths; the tablet's lock is a PATTERN, so its lock screen never uses an
-IME — the reboot there (maintainer OK, 16:46) checks first-unlock behaviour only, and its logs are
-unread until wireless debugging is re-enabled; now
+IME — the reboot there (maintainer OK) PASSED for first unlock: contraction reload ran, no deaths,
+Aurora drew and moved; the password-bouncer half still needs a device with a password; now
 also: rotate during a voice-pack import). Done on the Saga 2026-11-15 (release `d82bd309`): Undo
 re-offered after a rotation, Look editor's single hint toggle; and on `a20209c8`: the snackbar sits
 above the keyboard and Undo brings the mapping back (1 → 0 → 1). Saga checked back IN.
