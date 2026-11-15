@@ -7,6 +7,7 @@ import tribixbite.cleverkeys.langpack.PackFiles
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.util.concurrent.atomic.AtomicLong
 import java.util.zip.ZipInputStream
 
 /**
@@ -70,12 +71,34 @@ class VoicePackManager(
     @Volatile
     private var recovered = false
 
-    /** [root], after repairing anything an interrupted install or removal left (once). */
+    /**
+     * The last [scan], served until this manager imports or removes a pack (review 2026-11-14:
+     * every voice-key press scanned the directory and parsed each manifest on the main thread).
+     * Only this manager writes [root], so its own mutations are the only invalidation needed.
+     */
+    @Volatile
+    private var cachedScan: List<InstalledPack>? = null
+
+    /** Bumped by every import/removal; a scan that overlapped one is not cached. */
+    private val scanGeneration = AtomicLong()
+
+    /**
+     * [root], after repairing anything an interrupted install or removal left (once).
+     *
+     * Recovery counts as done only when [root] could be listed: the IME is directBootAware and
+     * can run before the first unlock, when the credential-encrypted files dir is unreadable and
+     * recovery would see nothing (review 2026-11-14: it was latched anyway, so a pack an
+     * interrupted replace had left as its backup stayed hidden for the whole process).
+     */
     private fun packsRoot(): File {
         if (!recovered) {
             synchronized(lock) {
                 if (!recovered) {
                     root.mkdirs()
+                    if (root.listFiles() == null) {
+                        log("Voice pack directory not readable yet (locked storage?); recovery deferred")
+                        return root
+                    }
                     try {
                         swap.recover().forEach { log("Voice pack recovery: $it") }
                     } catch (e: Exception) {
@@ -86,6 +109,15 @@ class VoicePackManager(
             }
         }
         return root
+    }
+
+    /** Drop the cached listing; called after every mutation of [root] by this manager. */
+    private fun invalidateScan() {
+        // Same monitor as the scan's check-and-store, so a store can never land after this.
+        synchronized(scanGeneration) {
+            scanGeneration.incrementAndGet()
+            cachedScan = null
+        }
     }
 
     /** Import a voice pack ZIP from [input] (closed here). */
@@ -159,7 +191,12 @@ class VoicePackManager(
             log("Ignoring undeclared voice pack member $it")
         }
 
-        return synchronized(lock) { stageAndSwap(manifest, temp) }
+        return try {
+            synchronized(lock) { stageAndSwap(manifest, temp) }
+        } finally {
+            // Even a refused or failed swap may have moved directories (and run recovery).
+            invalidateScan()
+        }
     }
 
     /** Copy declared files + notices into staging (manifest last) and swap it in. Holds [lock]. */
@@ -219,14 +256,24 @@ class VoicePackManager(
     fun unsupportedPacks(): List<InstalledPack> = scan().filter { registry.resolve(it.manifest) is SpeechEngineRegistry.Resolution.Unsupported }
 
     private fun scan(): List<InstalledPack> {
-        val dirs = packsRoot().listFiles().orEmpty().filter { it.isDirectory && !it.name.startsWith(".") }
-        return dirs.mapNotNull { dir ->
+        cachedScan?.let { return it }
+        val generation = scanGeneration.get()
+        // Unlistable (locked storage before the first unlock): nothing installed for now, and
+        // nothing cached, so the packs appear once the directory can be read.
+        val listed = packsRoot().listFiles() ?: return emptyList()
+        val dirs = listed.filter { it.isDirectory && !it.name.startsWith(".") }
+        val packs = dirs.mapNotNull { dir ->
             val text = PackFiles.readTextCapped(File(dir, VoicePackManifest.MANIFEST_FILE), MAX_NOTICE_CHARS) ?: return@mapNotNull null
             when (val parsed = VoicePackManifest.parse(text, Int.MAX_VALUE)) {
                 is VoicePackManifest.Result.Valid -> InstalledPack(parsed.manifest, dir)
                 is VoicePackManifest.Result.Invalid -> null
             }
         }.sortedBy { it.manifest.name }
+        // Cache only when no import/removal ran meanwhile, or a pre-change listing could stick.
+        synchronized(scanGeneration) {
+            if (scanGeneration.get() == generation) cachedScan = packs
+        }
+        return packs
     }
 
     /**
@@ -243,7 +290,11 @@ class VoicePackManager(
     /** Remove pack [id]. True when it no longer exists under its own name. */
     fun remove(id: String): Boolean {
         if (!LanguagePackSwap.VALID_PACK_CODE.matches(id)) return false
-        return synchronized(lock) { swap.remove(id, System.currentTimeMillis()) }
+        return try {
+            synchronized(lock) { swap.remove(id, System.currentTimeMillis()) }
+        } finally {
+            invalidateScan()
+        }
     }
 
     /** The pack's NOTICE.txt (capped), or null. */

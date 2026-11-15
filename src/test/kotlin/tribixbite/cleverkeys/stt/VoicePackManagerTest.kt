@@ -209,4 +209,48 @@ class VoicePackManagerTest {
         assertThat(m.activePack("de-DE")?.manifest?.id).isEqualTo("de-fake")
         assertThat(m.activePack("en_US")?.manifest?.id).isEqualTo("en-fake")
     }
+
+    /**
+     * Review 2026-11-14 (Voice, low): the IME is directBootAware and can run before the first
+     * unlock, when the credential-encrypted files dir is not readable. Crash recovery then saw
+     * an empty listing and was latched as done anyway, so a pack an interrupted replace had
+     * left as its backup stayed invisible for the whole process. Recovery now counts as done
+     * only once the root could be listed.
+     */
+    @Test
+    fun recoveryRunsAgainWhenTheRootWasNotListable() {
+        import(validPack())
+        // An interrupted replace: the installed copy was renamed to its backup and the process died.
+        assertThat(File(root, "en-fake").renameTo(File(root, ".backup-en-fake"))).isTrue()
+        val m = manager()
+        check(root.setReadable(false)) { "cannot make the test root unreadable" }
+        try {
+            assertWithMessage("locked storage lists nothing").that(m.installedPacks()).isEmpty()
+        } finally {
+            root.setReadable(true)
+        }
+        assertWithMessage("after unlock the backup is restored and listed")
+            .that(m.installedPacks().map { it.manifest.id }).containsExactly("en-fake")
+    }
+
+    /**
+     * Review 2026-11-14 (Voice, low): every voice-key press scanned the pack directory and parsed
+     * each manifest on the main thread. The installed list is cached by the manager and only
+     * rebuilt after its own import or removal; the second call here must not re-read the disk
+     * (a manifest damaged behind the manager's back proves it was not re-read).
+     */
+    @Test
+    fun theInstalledListIsCachedUntilAnImportOrARemoval() {
+        val m = manager()
+        assertThat(import(validPack(), m)).isInstanceOf(VoicePackManager.ImportResult.Success::class.java)
+        assertThat(m.installedPacks().map { it.manifest.id }).containsExactly("en-fake")
+        File(root, "en-fake/manifest.json").writeText("{ damaged")
+        assertWithMessage("the second press reads no manifest")
+            .that(m.installedPacks().map { it.manifest.id }).containsExactly("en-fake")
+        assertThat(m.remove("en-fake")).isTrue()
+        assertWithMessage("a removal invalidates the list").that(m.installedPacks()).isEmpty()
+        assertThat(import(validPack(), m)).isInstanceOf(VoicePackManager.ImportResult.Success::class.java)
+        assertWithMessage("an import invalidates the list")
+            .that(m.installedPacks().map { it.manifest.id }).containsExactly("en-fake")
+    }
 }

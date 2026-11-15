@@ -1227,6 +1227,30 @@ class LanguagePackImportTest {
     }
 
     /**
+     * Review 2026-11-14 (Voice, low; same latch as the voice-pack manager): the IME is
+     * directBootAware, so a manager can be created before the first unlock, when the
+     * credential-encrypted files dir cannot be listed. Recovery then saw nothing and was latched
+     * as done, and a pack an interrupted update had left as its backup stayed hidden until the
+     * process restarted. Recovery now counts as done only once the root was listable.
+     */
+    @Test
+    fun recoveryRunsAgainWhenTheRootWasNotListable() {
+        assertThat(importWith(LanguagePackManager(context), greekV1())).isInstanceOf(ImportResult.Success::class.java)
+        val langpacks = File(filesDir, "langpacks")
+        // An interrupted update: the installed copy was renamed to its backup and the process died.
+        assertThat(File(langpacks, "el").renameTo(File(langpacks, ".backup-el"))).isTrue()
+        val early = LanguagePackManager(context)
+        check(langpacks.setReadable(false)) { "cannot make the test root unreadable" }
+        try {
+            assertWithMessage("locked storage lists nothing").that(early.getInstalledPacks()).isEmpty()
+        } finally {
+            langpacks.setReadable(true)
+        }
+        assertWithMessage("after unlock the backup is restored and listed")
+            .that(early.getInstalledPacks().map { it.code }).containsExactly("el")
+    }
+
+    /**
      * Process death at every point of a pack UPDATE, then a fresh manager on the same storage
      * (what the next app start sees). Whatever step the process died at, the next start must
      * find exactly one complete pack — v1 or v2, with manifest and dictionary from the same

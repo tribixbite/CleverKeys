@@ -145,11 +145,20 @@ class LanguagePackManager(
      * [getInstance] singleton — before any pack is listed, resolved or installed, so no reader
      * going through this class can observe a half-swapped pack. Normally a single directory
      * listing; it renames or deletes only after an interruption.
+     *
+     * Counts as done only when the directory could be listed: the IME is directBootAware, so a
+     * manager can exist before the first unlock, when the credential-encrypted files dir is
+     * unreadable and recovery sees nothing (review 2026-11-14: it was latched anyway, hiding a
+     * pack an interrupted update had left as its backup until the process restarted).
      */
     private fun packsRoot(): File {
         if (!recovered) {
             synchronized(installLock) {
                 if (!recovered) {
+                    if (langpacksDir.listFiles() == null) {
+                        Log.w(TAG, "Language pack directory not readable yet (locked storage?); recovery deferred")
+                        return langpacksDir
+                    }
                     try {
                         swap.recover().forEach { Log.w(TAG, "Pack recovery: $it") }
                     } catch (e: Exception) {
