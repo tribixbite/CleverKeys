@@ -50,7 +50,10 @@ internal class VoiceInputBridge(
 
     override fun textBefore(kind: VoiceFieldKind): String? = when (kind) {
         VoiceFieldKind.INLINE -> inlineTarget()?.state()?.let { it.text.substring(0, it.lo) }
-        VoiceFieldKind.TEXT -> inputConnection()?.getTextBeforeCursor(TEXT_BEFORE_CHARS, 0)?.toString() ?: ""
+        // Null when the editor does not answer (busy, timed out, connection gone): the context is
+        // UNKNOWN, not an empty field, so the planner keeps the engine's casing instead of
+        // treating it as a sentence start (review 2026-11-14).
+        VoiceFieldKind.TEXT -> inputConnection()?.getTextBeforeCursor(TEXT_BEFORE_CHARS, 0)?.toString()
         // Never read a blind field: RustDesk's hidden field reads placeholder text.
         VoiceFieldKind.BLIND, VoiceFieldKind.PASSWORD -> null
     }

@@ -47,8 +47,9 @@ sealed interface VoiceTextOp {
  * hypothesis through [onHypothesis].
  *
  * Conventions applied, all read from the text before the cursor captured when listening
- * started ([textBefore]; null for BLIND fields, which are never read) followed by everything
- * this planner committed since (the keyboard knows its own text, even in a blind field):
+ * started ([textBefore]; null when unknown: BLIND fields, which are never read, and editors
+ * that did not answer the read) followed by everything this planner committed since (the
+ * keyboard knows its own text, even in a blind field):
  *  - **Spacing**: a leading space when the dictation would otherwise fuse with the preceding
  *    character; words of one segment are joined by single spaces; [trailingSpace] (the user's
  *    "auto space after a suggestion") adds one after each segment's final text in TEXT fields,

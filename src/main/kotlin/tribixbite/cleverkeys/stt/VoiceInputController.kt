@@ -23,7 +23,10 @@ interface VoiceHost {
     /** How the focused field takes dictation right now. */
     fun fieldKind(): VoiceFieldKind
 
-    /** The field's text before the caret (bounded), or null for BLIND fields (never read). */
+    /**
+     * The field's text before the caret (bounded), or null when it is unknown: BLIND fields
+     * (never read) and editors that did not answer the read.
+     */
     fun textBefore(kind: VoiceFieldKind): String?
 
     /** "Auto space after a suggestion" — the trailing-space convention. */
