@@ -1383,6 +1383,15 @@ tasks.register('runMockTests', JavaExec) {
   jvmArgs '-XX:+EnableDynamicAgentLoading'
 
   def mockTestClasses = [
+    // Review 2026-11-14 (low): a SecurityException from the recorder reaches the controller;
+    // an unanswered getTextBeforeCursor is unknown context; a failed user-dictionary read is
+    // never cached; the dictionary key fold ignores the device locale; an unknown stored
+    // learning aggression falls back to the default.
+    'tribixbite.cleverkeys.stt.MicrophoneCaptureStartTest',
+    'tribixbite.cleverkeys.VoiceInputBridgeTextBeforeTest',
+    'tribixbite.cleverkeys.UserDictionaryWordsFailureTest',
+    'tribixbite.cleverkeys.WordPredictorCaseFoldTest',
+    'tribixbite.cleverkeys.personalization.PersonalizationEngineAggressionTest',
     // 2026-10-31: the licenses screen reads its texts through AssetManager (mocked over the
     // generated assets); a missing asset is reported, not thrown.
     'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetReadTest',
