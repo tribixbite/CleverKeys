@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.IntentFilter
@@ -21,7 +22,13 @@ import android.os.Build
  */
 object PrivateReceivers {
 
-    /** Register [receiver] for [filter], reachable only by this app. [sdk] is injectable for tests. */
+    /**
+     * Register [receiver] for [filter], reachable only by this app. [sdk] is injectable for tests.
+     *
+     * NewApi is suppressed because lint only recognises `Build.VERSION.SDK_INT` as a version guard:
+     * the three-argument overload (API 26) runs only when [sdk] >= 33, and [sdk] defaults to it.
+     */
+    @SuppressLint("NewApi")
     fun register(
         context: Context,
         receiver: BroadcastReceiver,
