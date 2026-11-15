@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.stt
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -233,6 +234,39 @@ class BufferedPcmSourceTest {
         }
         live.close()
         assertThat(got).isEqualTo(60_000)
+    }
+
+    /**
+     * Review 2026-11-14 (Voice, low): when the reader gave up by itself (backlog bound, session
+     * cap, end of the device stream) it only stopped reading — the recorder stayed open, and the
+     * microphone (and its privacy indicator) stayed on until the stalled recogniser had drained
+     * up to 70 s of backlog and closed the source. The reader now closes the recorder as it
+     * leaves, while the queued audio is still delivered.
+     */
+    @Test(timeout = 20_000)
+    fun theRecorderStopsAsSoonAsTheReaderGivesUp() {
+        val closed = java.util.concurrent.CountDownLatch(1)
+        val mic = object : PcmSource {
+            override fun start() = Unit
+            override fun read(buffer: FloatArray): Int {
+                Thread.sleep(1)
+                buffer.fill(0.1f)
+                return buffer.size
+            }
+            override fun close() = closed.countDown()
+        }
+        // A stalled consumer: nothing is read until the reader has given up on the backlog.
+        val source = BufferedPcmSource(mic, maxSamples = 10_000_000, maxQueuedSamples = 20_000, blockSamples = 1_000)
+        source.start()
+        try {
+            assertWithMessage("the recorder was closed without waiting for the consumer")
+                .that(closed.await(3, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+            // The audio queued before the reader gave up is still there.
+            val buf = FloatArray(100_000)
+            assertThat(source.read(buf)).isGreaterThan(0)
+        } finally {
+            source.close()
+        }
     }
 
     @Test(timeout = 20_000)

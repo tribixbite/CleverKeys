@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * A source of mono float PCM for a [SpeechSession]. The microphone in production
@@ -32,9 +33,18 @@ class MicUnavailableException(message: String) : Exception(message)
  * The internal buffer holds [BUFFER_SECONDS] of audio so a slow recognition pass (the decoder
  * re-decodes the utterance once per second) never overruns the recorder.
  */
-class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
+class MicrophoneCapture(
+    private val sampleRate: Int,
+    /** Creates the recorder for a buffer of the given bytes; replaceable so tests can refuse. */
+    private val openRecorder: (sampleRate: Int, bufferBytes: Int) -> AudioRecord = { rate, bytes -> voiceRecognitionRecorder(rate, bytes) },
+) : PcmSource {
 
-    private var record: AudioRecord? = null
+    /**
+     * The open recorder. Atomic because [BufferedPcmSource]'s reader thread closes it when it
+     * gives up by itself while the consumer may close it too (review 2026-11-14): exactly one
+     * of them releases it.
+     */
+    private val record = AtomicReference<AudioRecord?>(null)
     private var shorts = ShortArray(0)
 
     @SuppressLint("MissingPermission") // MicPermissionGate checked RECORD_AUDIO before any start()
@@ -43,7 +53,11 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
         if (min <= 0) throw MicUnavailableException("getMinBufferSize=$min")
         val bytes = maxOf(min, sampleRate * 2 * BUFFER_SECONDS)
         val r = try {
-            AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bytes)
+            openRecorder(sampleRate, bytes)
+        } catch (e: SecurityException) {
+            // The permission was revoked since the gate checked it: the controller reports that
+            // as "permission missing", not as a busy microphone (review 2026-11-14).
+            throw e
         } catch (e: Exception) {
             throw MicUnavailableException("AudioRecord: ${e.message}")
         }
@@ -61,11 +75,11 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
             r.release()
             throw MicUnavailableException("recorder did not start (microphone busy?)")
         }
-        record = r
+        record.set(r)
     }
 
     override fun read(buffer: FloatArray): Int {
-        val r = record ?: return -1
+        val r = record.get() ?: return -1
         if (shorts.size < buffer.size) shorts = ShortArray(buffer.size)
         val n = r.read(shorts, 0, buffer.size)
         if (n < 0) return -1
@@ -74,7 +88,7 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
     }
 
     override fun close() {
-        record?.let {
+        record.getAndSet(null)?.let {
             try {
                 it.stop()
             } catch (_: IllegalStateException) {
@@ -82,11 +96,14 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
             }
             it.release()
         }
-        record = null
     }
 
     companion object {
         const val BUFFER_SECONDS = 4
+
+        @SuppressLint("MissingPermission") // MicPermissionGate checked RECORD_AUDIO before any start()
+        private fun voiceRecognitionRecorder(sampleRate: Int, bufferBytes: Int): AudioRecord =
+            AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferBytes)
     }
 }
 
@@ -106,7 +123,9 @@ class MicrophoneCapture(private val sampleRate: Int) : PcmSource {
  * had (the listening period's own limit is shorter). Memory is bounded by [maxQueuedSamples]:
  * a recogniser that has that much audio unread is not catching up, and the source ends the same
  * way (2026-10-31: endpointing lets a period run for minutes, so the total is no longer a memory
- * bound). Audio stays in memory only.
+ * bound). Audio stays in memory only. Whenever the reader stops by itself it closes [inner] at
+ * once (the microphone goes off even while the backlog is still being recognised), and [close]
+ * closes it again, so [inner]'s `close()` must be idempotent and thread-safe.
  *
  * [read] keeps returning queued audio after [close], then 0 — the caller drains what was
  * spoken before stop was pressed. A device error ends the stream with -1 after the audio
@@ -164,6 +183,17 @@ class BufferedPcmSource(
             // unless we were closing anyway.
             failed = running
         } finally {
+            // Leaving by itself (backlog bound, session cap, end or error of the device stream):
+            // release the recorder NOW, so the microphone and its privacy indicator go off while
+            // the consumer is still draining the backlog (review 2026-11-14: it stayed open for
+            // up to MAX_BACKLOG_SECONDS). When close() stopped us it releases the recorder itself.
+            if (running) {
+                try {
+                    inner.close()
+                } catch (_: Exception) {
+                    // Already failed or released; the stream ends either way.
+                }
+            }
             queue.put(if (failed) ERROR else END)
         }
     }
