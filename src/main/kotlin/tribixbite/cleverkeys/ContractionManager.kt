@@ -85,6 +85,13 @@ class ContractionManager(private val context: Context) {
      */
     private fun loadEnglishBase() {
         try {
+            // The primary (and secondary) language's REPLACE entries already loaded. The English
+            // base must neither overwrite their display forms (fr `detre → d'être` became
+            // `d'etre`) nor reclassify them away below (fr `men → m'en` vanished because English
+            // pairs `men → men's`): those cross-language collisions are ContractionCollisionDemotion's
+            // job, which needs the entries still present (review 2026-11-14 M14).
+            val earlierLanguages = HashMap(nonPairedContractions)
+
             // Try binary format first (fastest)
             if (loadBinaryContractions()) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -111,7 +118,9 @@ class ContractionManager(private val context: Context) {
             // REPLACE those real words in the suggestion bar (typing "wer" showed "we're"
             // and no "were"). Paired bases belong ONLY in pairedContractions, where
             // consumers inject the variant ALONGSIDE the base instead of replacing it.
-            val pairedBases = pairedContractions.keys.intersect(nonPairedContractions.keys)
+            // Earlier languages win their own keys (the documented precedence).
+            nonPairedContractions.putAll(earlierLanguages)
+            val pairedBases = pairedContractions.keys.intersect(nonPairedContractions.keys) - earlierLanguages.keys
             if (pairedBases.isNotEmpty()) {
                 pairedBases.forEach { nonPairedContractions.remove(it) }
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {

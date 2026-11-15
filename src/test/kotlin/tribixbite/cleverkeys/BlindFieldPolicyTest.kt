@@ -103,6 +103,10 @@ class BlindFieldPolicyTest {
         }
         every { predictor.isInDictionary(any()) } returns true
         every { predictor.isInDictionary(any(), any()) } returns true
+        // The real predictor returns the slate itself when no user casing applies; a relaxed
+        // mock would return an EMPTY list and empty the swipe slate (the auto-insert reads the
+        // slate's top word since review 2026-11-14 M10, not the bar's).
+        every { predictor.applyUserWordCaseToList(any()) } answers { firstArg() }
         val coordinator = mockk<PredictionCoordinator>(relaxed = true)
         every { coordinator.getWordPredictor() } returns predictor
 

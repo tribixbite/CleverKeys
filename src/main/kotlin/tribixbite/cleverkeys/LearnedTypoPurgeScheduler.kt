@@ -121,7 +121,12 @@ class LearnedTypoPurgeScheduler(
         val secondary = state.secondaryContains
         val policy = LearnableWordPolicy(
             lexiconReady = { true },
-            isKnownWord = { w -> w in lexicon || w in userWords || secondary?.invoke(w) == true },
+            // The lexicon and user words are keyed through ArabicScriptFold for fa/ckb; fold the
+            // word the same way (review 2026-11-14 M11). The secondary check folds its own.
+            isKnownWord = { w ->
+                val key = ArabicScriptFold.fold(w, language)
+                key in lexicon || key in userWords || secondary?.invoke(w) == true
+            },
             observationCount = state.observationCount
         )
         executor.execute {

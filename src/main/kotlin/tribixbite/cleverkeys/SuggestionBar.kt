@@ -936,6 +936,24 @@ class SuggestionBar : LinearLayout {
         return true
     }
 
+    /**
+     * Drop ANY temporary message — a plain [showTemporaryMessage] or an undoable confirmation,
+     * without undoing it — because new content replaces it now (a swipe's slate). Unlike the
+     * timeout, nothing saved is restored: the caller sets the bar next. Without this a swipe
+     * during a 3-s "already in dictionary" message was refused by [setSuggestionsWithScores]
+     * and its alternates never showed (review 2026-11-14 M10).
+     *
+     * @return true when a message was showing
+     */
+    fun dismissTemporaryMessage(): Boolean {
+        if (!isShowingTemporaryMessage) return false
+        mainHandler.removeCallbacks(restoreRunnable)
+        activeUndoable?.finish()
+        activeUndoable = null
+        isShowingTemporaryMessage = false
+        return true
+    }
+
     /** A tap on the undoable message's view: arm, or undo. */
     private fun onUndoableMessageTapped(view: TextView) {
         val undoable = activeUndoable ?: return

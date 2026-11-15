@@ -132,6 +132,42 @@ class SubtypeLayoutFollowTest {
     }
 
     @Test
+    fun theGraphsFallbackLayoutNeverMovesTheSelection() {
+        // Review 2026-11-14 M13: when subtype resolution fails (a null current subtype, an empty
+        // enabled list) the graph substitutes latn_qwerty_us. Handing that over as a real locale
+        // change PERSISTED a re-point to QWERTY (US) for a user on JCUKEN.
+        val qwertyUs = layout("QWERTY (US)")
+        val jcukenRu = layout("ЙЦУКЕН (Русский)")
+        val lm = layoutManager(locale = jcukenRu, layouts = listOf(jcukenRu, qwertyUs))
+
+        lm.setLocaleTextLayout(qwertyUs, followSelection = false)
+
+        verify(exactly = 0) { config.set_current_layout(any()) }
+        assertThat(lm.current_layout_unmodified()).isSameInstanceAs(jcukenRu)
+    }
+
+    @Test
+    fun theGraphMarksItsFallbackAsNotASubtypeChange() {
+        val graph = java.io.File("src/main/kotlin/tribixbite/cleverkeys/wiring/KeyboardComponentGraph.kt").readText()
+        assertThat(graph).contains("followSelection = resolved != null")
+    }
+
+    @Test
+    fun anOutOfRangeSelectionFollowsLikeTheLayoutItResolvesTo() {
+        // Review 2026-11-14 (low): after layouts were deleted the stored index can point past
+        // the list; current_layout_unmodified resolves it to entry 0, so the follow must too
+        // instead of silently doing nothing.
+        val qwertyUs = layout("QWERTY (US)")
+        val jcukenRu = layout("ЙЦУКЕН (Русский)")
+        val lm = layoutManager(locale = qwertyUs, layouts = listOf(qwertyUs, null))
+        currentLayoutIndex = 5
+
+        lm.setLocaleTextLayout(jcukenRu)
+
+        assertThat(lm.current_layout_unmodified()).isSameInstanceAs(jcukenRu)
+    }
+
+    @Test
     fun withNeitherAMatchingEntryNorASystemEntryThePrefSelectionWins() {
         val qwertyUs = layout("QWERTY (US)")
         val azerty = layout("AZERTY (Français)")

@@ -1024,9 +1024,10 @@ class SuggestionHandler(
         commitGuard: EditorCommitGuard? = null
     ) {
         // Swipe results replace whatever the bar shows — any next-word display state ends here,
-        // and so does an undoable "Added …" confirmation (the user moved on).
+        // and so does any temporary message, undoable or plain (the user moved on; a plain one
+        // would make the bar refuse the slate below, review 2026-11-14 M10).
         nextWordSuggestionsActive = false
-        suggestionBar?.dismissUndoableMessage()
+        suggestionBar?.dismissTemporaryMessage()
 
         // An inline field (clipboard entry editor, tag entry, clipboard / emoji / GIF search)
         // owns typing: the swiped word goes THERE and nothing below — app reads, app commits,
@@ -1144,8 +1145,11 @@ class SuggestionHandler(
 
             // Auto-insert the top (highest-scoring) prediction through THE single commit engine
             // (step 6): haptic + manual-typing termination + tracking clear were absorbed verbatim
-            // from the deleted InputCoordinator.autoInsertTopSuggestion.
-            bar.getTopSuggestion()?.takeIf { it.isNotEmpty() }?.let autoInsert@ { topPrediction ->
+            // from the deleted InputCoordinator.autoInsertTopSuggestion. The slate's top word,
+            // not the bar's: a bar that refused the update (a message still showing) answers
+            // with stale or no content, and the swiped word was lost (review 2026-11-14 M10;
+            // the inline path below does the same).
+            barWords.firstOrNull()?.takeIf { it.isNotEmpty() }?.let autoInsert@ { topPrediction ->
                 if (ic == null) {
                     clearRejectedCommitState()
                     inputCoordinator.resetSwipeData()

@@ -419,7 +419,10 @@ object NextWordPredictor {
             current.setLength(0)
         }
         for (i in segmentStart until textBeforeCursor.length) {
-            val c = textBeforeCursor[i]
+            // A typographic apostrophe (’, or ‘ as an opening quote) reads as the ASCII one, as in
+            // the typing tracker and LearnableWordPolicy: `don’t` stays one word and keys like
+            // `don't` (review 2026-11-14 M12).
+            val c = when (textBeforeCursor[i]) { '\u2019', '\u2018' -> '\''; else -> textBeforeCursor[i] }
             // A Persian half-space between Arabic-script letters stays inside the token
             // (`کتاب‌ها` is one word, WordChars); any other U+200C splits as before. An Indic
             // vowel sign or virama on its letter stays inside it too (`আমি`, `ক্ষমা`, `किताब`), and

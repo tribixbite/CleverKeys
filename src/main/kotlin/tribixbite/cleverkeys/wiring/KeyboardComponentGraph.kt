@@ -341,8 +341,8 @@ class KeyboardComponentGraph(
         // Refresh subtype and get default layout. gh #160: when this refresh is driven by
         // onCurrentInputMethodSubtypeChanged the delivered subtype is passed through and wins
         // over the IMM re-derivation (stale/aliased answers) — see SubtypeManager.refreshSubtype.
-        val defaultLayout = subtypeManager.refreshSubtype(config, resources, changedTo)
-            ?: KeyboardData.load(resources, R.raw.latn_qwerty_us)
+        val resolved = subtypeManager.refreshSubtype(config, resources, changedTo)
+        val defaultLayout = resolved ?: KeyboardData.load(resources, R.raw.latn_qwerty_us)
 
         // Update or create LayoutManager
         val layoutManager: LayoutManager?
@@ -350,7 +350,9 @@ class KeyboardComponentGraph(
 
         if (existingLayoutManager != null && defaultLayout != null) {
             // Update existing LayoutManager with locale layout
-            existingLayoutManager.setLocaleTextLayout(defaultLayout)
+            // A fallback (resolution failed) is not a subtype change: it must not move the user's
+            // selection (review 2026-11-14 M13).
+            existingLayoutManager.setLocaleTextLayout(defaultLayout, followSelection = resolved != null)
             layoutManager = existingLayoutManager
             layoutBridge = null // Don't recreate bridge
         } else if (defaultLayout != null) {

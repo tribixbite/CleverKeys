@@ -411,6 +411,22 @@ class NextWordPredictorTest {
     }
 
     @Test
+    fun `a typographic apostrophe stays inside the word and keys like the ASCII one`() {
+        // Review 2026-11-14 M12: the typing tracker, LearnableWordPolicy and the contraction
+        // chooser treat ’ as word-internal; the editor reader split `don’t` into don + t, so a
+        // parked cursor after "I don’t " predicted from "t". The stores key the ASCII form.
+        assertEquals(
+            listOf("i", "don't"),
+            NextWordPredictor.contextFromEditorText("I don’t ")
+        )
+        // ‘quoted’ with typographic quotes trims like 'quoted'.
+        assertEquals(
+            listOf("say", "hello"),
+            NextWordPredictor.contextFromEditorText("say ‘hello’ ")
+        )
+    }
+
+    @Test
     fun `editor context normalizes case and keeps word-internal apostrophes and hyphens`() {
         assertEquals(
             listOf("can't", "stop"),

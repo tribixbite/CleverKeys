@@ -454,7 +454,13 @@ class WordPredictor : Predictor {
         // otherwise see a null field. The lambdas read live state, so one instance suffices.
         get() = learnableWordPolicyCache ?: LearnableWordPolicy(
             lexiconReady = { liveLexicon().isNotEmpty() },
-            isKnownWord = { w -> isInLexicon(w, liveLexicon(), liveUserWords(), secondaryIndex) },
+            // Folded like every other lookup: fa/ckb lexicons are keyed through
+            // ArabicScriptFold, so the Arabic-keyboard spelling of a real word was "unknown"
+            // here (review 2026-11-14 M11). The secondary index normalizes its own keys.
+            isKnownWord = { w ->
+                isInLexicon(lookupKey(w), liveLexicon(), liveUserWords(), null) ||
+                    secondaryIndex?.let { it.contains(it.normalizeKey(w)) } == true
+            },
             observationCount = { w -> personalizationEngine?.getWordUsage(w)?.usageCount ?: 0 }
         ).also { learnableWordPolicyCache = it }
 

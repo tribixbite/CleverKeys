@@ -69,14 +69,22 @@ class LayoutManager(
      * Pinned by SubtypeLayoutFollowTest.
      *
      * @param layout Locale-specific text layout resolved from the current subtype
+     * @param followSelection false when [layout] is only the graph's fallback for a FAILED
+     *   subtype resolution (null current subtype, empty enabled list): it becomes the locale
+     *   layout, but the user's stored selection is never re-pointed to it — doing so persisted a
+     *   switch to QWERTY (US) for a user on another layout (review 2026-11-14 M13).
      */
-    fun setLocaleTextLayout(layout: KeyboardData) {
+    fun setLocaleTextLayout(layout: KeyboardData, followSelection: Boolean = true) {
         val previous = localeTextLayout
         localeTextLayout = layout
+        if (!followSelection) return
         if (layout.name != null && layout.name == previous.name) return // nothing changed
         val layouts = config.layouts
+        // An index past the list resolves to entry 0, as in current_layout_unmodified (layouts
+        // were deleted); the follow must judge the layout actually shown, not give up.
+        val index = config.get_current_layout().let { if (it >= layouts.size) 0 else it }
         // System entry selected — already resolves to localeTextLayout.
-        val current = layouts.getOrNull(config.get_current_layout()) ?: return
+        val current = layouts.getOrNull(index) ?: return
         if (current.name != null && current.name == layout.name) return // already showing it
         val target = layouts.indexOfFirst { it != null && it.name != null && it.name == layout.name }
             .takeIf { it >= 0 }

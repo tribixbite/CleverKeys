@@ -169,6 +169,27 @@ class LearnedTypoPurgeSchedulerTest {
         assertEquals(NOW, bigramStore.getTypoPurgeStamp("en"))
     }
 
+    @Test
+    fun `persian - a word typed in the Arabic-keyboard spelling counts as its folded lexicon word`() {
+        // Review 2026-11-14 M11: fa/ckb dictionaries are re-keyed through ArabicScriptFold
+        // (ك → ک, ي → ی), and every lookup folds; the purge's known-word check did not, so a
+        // real word typed with arab_pc's ك was "unknown" and its pairs were deleted.
+        val arabicKaf = "\u0643\u062a\u0627\u0628"   // كتاب, Arabic kaf
+        val persianKaf = "\u06a9\u062a\u0627\u0628"  // کتاب, the folded lexicon key
+        val good = "\u062e\u0648\u0628"               // خوب
+        bigramStore.recordBigram("fa", arabicKaf, good)
+        bigramStore.recordBigram("fa", good, "zzqx")     // a genuine unknown word, still purged
+        purgeScheduler.onPrimaryPublished(
+            state(lexicon = mapOf(persianKaf to 200, good to 200), language = "fa")
+        )
+        drainPersistenceThread()
+
+        assertTrue("the folded spelling is known: kept",
+            bigramStore.getAllBigrams("fa", arabicKaf).any { it.word2 == good })
+        assertTrue("an unknown word is still purged",
+            bigramStore.getAllBigrams("fa", good).none { it.word2 == "zzqx" })
+    }
+
     // ------------------------------------------------------------ 2. frozen snapshot
 
     @Test

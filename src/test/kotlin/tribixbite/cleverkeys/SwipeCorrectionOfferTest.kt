@@ -722,6 +722,26 @@ class SwipeCorrectionOfferTest {
     }
 
     @Test
+    fun aSwipeDuringAPlainBarMessageStillCommitsItsWord() {
+        // Review 2026-11-14 M10: SuggestionBar refuses setSuggestionsWithScores while a
+        // temporary message shows ("already in dictionary", 3 s) and has cleared its content,
+        // so the auto-insert's getTopSuggestion() answered null and the swiped word was lost.
+        // Model the real bar: updates are refused while the message shows.
+        var messageShowing = true
+        every { bar.setSuggestionsWithScores(any(), any(), any(), any()) } answers {
+            if (!messageShowing) barWords = firstArg<List<String>>().toList()
+        }
+        every { bar.isShowingMessage() } answers { messageShowing }
+        barWords = emptyList()
+        editor.append("fix ")
+
+        swipe("git", "got")
+
+        assertWithMessage("the swiped word is committed even though a message was showing")
+            .that(editor.toString()).isEqualTo("fix git ")
+    }
+
+    @Test
     fun anIncognitoFieldCapturesNoSwipeTrace() {
         // Review 2026-11-14 H2: IME_FLAG_NO_PERSONALIZED_LEARNING (private tabs) forbids storing
         // the swipe trace and its word, whatever the collection toggle says — as for every
