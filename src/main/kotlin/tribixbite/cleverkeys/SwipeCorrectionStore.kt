@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import tribixbite.cleverkeys.persist.LearnedDataStorage
@@ -177,30 +178,53 @@ class SwipeCorrectionStore(
         return root.toString()
     }
 
-    /** Lenient parse: a malformed value (hand-edited, truncated) degrades to empty, never throws. */
+    /**
+     * Lenient parse: a malformed value (hand-edited, truncated) degrades to empty, never throws.
+     *
+     * Each entry is read on its own (review 2026-11-14): a wrongly typed primitive used to throw
+     * out of the whole parse, so ONE bad entry replaced the language's record with an empty one
+     * that the next save then wrote back. Now a bad count drops its word, a bad from-count drops
+     * that pair, a bad timestamp reads as 0 and a bad declined item is skipped.
+     */
     private fun parse(json: String): LanguageRecord? = try {
         val root = JsonParser.parseString(json).asJsonObject
         val record = LanguageRecord()
-        val words = root.getAsJsonObject(FIELD_WORDS)
+        val words = root.get(FIELD_WORDS)?.takeIf { it.isJsonObject }?.asJsonObject
         if (words != null) {
             // Stored oldest → newest; keep that order for eviction.
-            val entries = words.entrySet().mapNotNull { (word, value) ->
-                val obj = value.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
-                val count = obj.get(FIELD_COUNT)?.takeIf { it.isJsonPrimitive }?.asInt ?: return@mapNotNull null
-                if (count <= 0) return@mapNotNull null
-                val lastMs = obj.get(FIELD_LAST)?.takeIf { it.isJsonPrimitive }?.asLong ?: 0L
-                val from = LinkedHashMap<String, Int>()
-                obj.getAsJsonObject(FIELD_FROM)?.entrySet()?.forEach { (x, n) ->
-                    if (n.isJsonPrimitive) from[x] = n.asInt
-                }
-                word to WordRecord(count, lastMs, from)
-            }
+            val entries = words.entrySet().mapNotNull { (word, value) -> parseWord(value)?.let { word to it } }
             for ((word, entry) in entries.sortedBy { it.second.lastMs }) record.words[word] = entry
         }
-        root.getAsJsonArray(FIELD_DECLINED)?.forEach { if (it.isJsonPrimitive) record.declined.add(it.asString) }
+        root.get(FIELD_DECLINED)?.takeIf { it.isJsonArray }?.asJsonArray?.forEach { item ->
+            primitiveOrNull(item) { it.asString }?.let { record.declined.add(it) }
+        }
         record
     } catch (e: Exception) {
         null
+    }
+
+    /** One stored word, or null when its count is missing, non-positive or not a number. */
+    private fun parseWord(value: JsonElement): WordRecord? {
+        val obj = value.takeIf { it.isJsonObject }?.asJsonObject ?: return null
+        val count = primitiveOrNull(obj.get(FIELD_COUNT)) { it.asInt } ?: return null
+        if (count <= 0) return null
+        val lastMs = primitiveOrNull(obj.get(FIELD_LAST)) { it.asLong } ?: 0L
+        val from = LinkedHashMap<String, Int>()
+        obj.get(FIELD_FROM)?.takeIf { it.isJsonObject }?.asJsonObject?.entrySet()?.forEach { (x, n) ->
+            primitiveOrNull(n) { it.asInt }?.let { from[x] = it }
+        }
+        return WordRecord(count, lastMs, from)
+    }
+
+    /** [read] of a JSON primitive, or null when [element] is absent, not a primitive or of the wrong type. */
+    private inline fun <T> primitiveOrNull(element: JsonElement?, read: (JsonElement) -> T): T? {
+        if (element == null || !element.isJsonPrimitive) return null
+        return try {
+            read(element)
+        } catch (e: RuntimeException) {
+            // NumberFormatException / UnsupportedOperationException from Gson's typed getters.
+            null
+        }
     }
 
     companion object {

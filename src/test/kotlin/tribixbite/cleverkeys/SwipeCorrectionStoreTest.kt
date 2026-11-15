@@ -108,6 +108,34 @@ class SwipeCorrectionStoreTest {
         assertThat(fresh.recordCorrection("en", "git", listOf("got"))).isEqualTo(1)
     }
 
+    /**
+     * Review 2026-11-14 (Stores, low): one entry with a wrongly typed primitive (a hand-edited
+     * or foreign `"c":"x"`, a `from` count of `"many"`) threw out of the whole parse, so the
+     * language's record came back EMPTY and the next save overwrote every good entry with it.
+     * Each entry is now read on its own: the bad parts are skipped, everything else survives.
+     */
+    @Test
+    fun oneBadlyTypedEntryDropsOnlyItself() {
+        storage.seed(
+            SwipeCorrectionStore.KEY_PREFIX + "en",
+            """{"words":{""" +
+                """"git":{"c":3,"t":5,"from":{"got":2,"gut":"many"}},""" +
+                """"son":{"c":"x","t":6,"from":{}},""" +
+                """"the":{"c":2,"t":"late","from":{"tge":1}}""" +
+                """},"declined":["teh",{"w":1}]}""",
+        )
+        val fresh = SwipeCorrectionStore(storage)
+        assertWithMessage("a good entry survives a bad sibling").that(fresh.correctionCount("en", "git")).isEqualTo(3)
+        assertThat(fresh.pairCount("en", "got", "git")).isEqualTo(2)
+        assertWithMessage("only the bad from-count is dropped").that(fresh.pairCount("en", "gut", "git")).isEqualTo(0)
+        assertWithMessage("the bad entry itself is dropped").that(fresh.correctionCount("en", "son")).isEqualTo(0)
+        assertWithMessage("a bad timestamp keeps the counts").that(fresh.correctionCount("en", "the")).isEqualTo(2)
+        assertThat(fresh.isDeclined("en", "teh")).isTrue()
+        // And a save after the load keeps the good data.
+        fresh.recordCorrection("en", "lol", listOf("lok"))
+        assertThat(SwipeCorrectionStore(storage).correctionCount("en", "git")).isEqualTo(3)
+    }
+
     /** Privacy's "forget learned data" (and the master-off prompt) must erase this store too. */
     @Test
     fun privacyForgetLearnedDataClearsTheStore() {
