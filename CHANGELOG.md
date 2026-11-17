@@ -591,6 +591,9 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A settings export no longer contains your personal dictionary: custom words, disabled words and
+  swipe priorities were copied in with every stored preference. The dictionary export and a full
+  backup still carry them.
 - The suggestion bar opens at its start for each new word. After you scrolled it to read a
   long list, the next word's list opened scrolled too, with the best word off-screen.
 - The default-keyboard reminder never appeared: only the keyboard itself checked, and Android runs

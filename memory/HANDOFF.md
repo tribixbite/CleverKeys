@@ -1,4 +1,14 @@
-# HANDOFF — updated 2026-10-31 (body last reconciled 2026-09-01; pruned 2026-10-23)
+# HANDOFF — updated 2026-11-17 (body last reconciled 2026-09-01; pruned 2026-10-23)
+
+**2026-11-17 pointer.** origin/main carries everything (read `git status -sb`). Since 11-09: the
+scene work and the post-v1.5 review — all findings fixed with fail-first tests, two follow-up
+audits, device checks done on the Saga `192.168.1.130` and the Tab S11 (DHCP, `192.168.0.201` on
+11-17; wireless-debugging port rotates; family device, check out in its `/sdcard/agent-sharing.md`;
+its lock credential is the maintainer's — never store it). Status table:
+`docs/audit/2026-11-14-post-v1.5-review.md` §2a; what is left before the tag and the known issues:
+`docs/audit/2026-10-31-v2.0-release-readiness.md` "Status 2026-11-17". Last code commit
+`a20209c8` (pure 3,890 / mock 1,842 green); the instrumented run at the tag commit is still owed.
+Agent worktrees under `.claude/worktrees/` were removed 2026-11-17 (branches kept).
 
 **2026-10-31 pointer.** origin/main is `e3487b41` (everything through it pushed; the Persian
 work the 10-23 pointer below calls unpushed went out long ago). v2.0.0 is code-complete, not

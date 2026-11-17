@@ -1,6 +1,6 @@
 # Current work queue
 
-Updated: 2026-11-09. Push state: read `git status -sb` (a hash written here went stale twice).
+Updated: 2026-11-17. Push state: read `git status -sb` (a hash written here went stale twice).
 Pushes to origin/main are authorized (2026-10-07) and in use; tag, version
 bump, release, publish and GitHub posts still need explicit authorization. Reference state and
 rules: [HANDOFF.md](HANDOFF.md). Release readiness, item by item:
@@ -40,6 +40,11 @@ then the tag sequence (M4) with the full suites and an instrumented run at the t
 item 33: choose the dictionary / voice pack per language), item 20's unowned roadmap,
 the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
+**Status 2026-11-17 (agent).** Before the tag: the instrumented run at the tag commit (A2; pure 3,890
+/ mock 1,842 already green at `a20209c8`, the last code commit), then the maintainer's M1 soak, M2
+strings and M4 tag sequence. Known issues and the full list: release-readiness audit "Status
+2026-11-17". Review §4 device checks are all done.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
@@ -51,7 +56,8 @@ unfixed code (or, for new API, not compiling). The remaining lows were fixed on 
 peak moving, 4 backdrop layers while shown, 0 after each of 20 mid-spell hides, native heap back to
 52 MB after 30 s idle, no deaths; the tablet's lock is a PATTERN, so its lock screen never uses an
 IME — the reboot there (maintainer OK) PASSED for first unlock: contraction reload ran, no deaths,
-Aurora drew and moved; the password-bouncer half still needs a device with a password; now
+Aurora drew and moved; password bouncer DONE too (maintainer set a password: CK is the bouncer
+IME, survives `am crash` as the only enabled IME, unlocks; review §4 item 2); now
 also: rotate during a voice-pack import). Done on the Saga 2026-11-15 (release `d82bd309`): Undo
 re-offered after a rotation, Look editor's single hint toggle; and on `a20209c8`: the snackbar sits
 above the keyboard and Undo brings the mapping back (1 → 0 → 1). Saga checked back IN.
