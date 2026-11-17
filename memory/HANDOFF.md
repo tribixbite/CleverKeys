@@ -7,7 +7,7 @@ audits, device checks done on the Saga `192.168.1.130` and the Tab S11 (DHCP, `1
 its lock credential is the maintainer's — never store it). Status table:
 `docs/audit/2026-11-14-post-v1.5-review.md` §2a; what is left before the tag and the known issues:
 `docs/audit/2026-10-31-v2.0-release-readiness.md` "Status 2026-11-17". Last code commit
-`a20209c8` (pure 3,890 / mock 1,842 green); the instrumented run at the tag commit is still owed.
+`a20209c8` (pure 3,890 / mock 1,842 / instrumented 1,653 on API 34–37 green, 2026-11-17).
 Agent worktrees under `.claude/worktrees/` were removed 2026-11-17 (branches kept).
 
 **2026-10-31 pointer.** origin/main is `e3487b41` (everything through it pushed; the Persian

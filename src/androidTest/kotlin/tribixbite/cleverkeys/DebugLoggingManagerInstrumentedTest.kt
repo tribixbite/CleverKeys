@@ -154,21 +154,31 @@ class DebugLoggingManagerInstrumentedTest {
         assertFalse(manager.isDebugMode())
     }
 
-    @Test
-    fun sendDebugLogBroadcastsWhenDebugModeOn() {
-        manager.registerDebugModeReceiver(context)
+    /**
+     * The keyboard, as the debug fence sees it (review 2026-11-14 M4): an InputMethodService whose
+     * bound editor belongs to [editorPackage]. Log lines leave the IME only while that editor is
+     * CleverKeys' own field (the debug playground); in split screen the debug screen stays started
+     * while the user types in another app, and cursor-sync lines carry the text around the cursor.
+     */
+    private class FakeIme(base: Context, private val editorPackage: String?) :
+        android.inputmethodservice.InputMethodService() {
+        init { attachBaseContext(base) }
+        override fun getCurrentInputEditorInfo() =
+            android.view.inputmethod.EditorInfo().apply { packageName = editorPackage }
+    }
 
-        // Enable debug mode via broadcast
+    /** Enable debug mode on [logger], then report whether one log line reached a receiver. */
+    private fun logLineIsBroadcast(logger: DebugLoggingManager): Boolean {
+        logger.registerDebugModeReceiver(context)
         val enableIntent = Intent("tribixbite.cleverkeys.SET_DEBUG_MODE")
         enableIntent.setPackage(context.packageName)
         enableIntent.putExtra("debug_enabled", true)
         context.sendBroadcast(enableIntent)
         Thread.sleep(500)
+        assertTrue("debug mode must be on for this check", logger.isDebugMode())
 
-        // Register a receiver to catch the debug log broadcast
         val latch = CountDownLatch(1)
         var receivedMessage: String? = null
-
         val logReceiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context, intent: Intent) {
                 if (SwipeDebugActivity.ACTION_DEBUG_LOG == intent.action) {
@@ -177,20 +187,40 @@ class DebugLoggingManagerInstrumentedTest {
                 }
             }
         }
-        val filter = IntentFilter(SwipeDebugActivity.ACTION_DEBUG_LOG)
-        context.registerReceiver(logReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-
+        context.registerReceiver(logReceiver, IntentFilter(SwipeDebugActivity.ACTION_DEBUG_LOG), Context.RECEIVER_NOT_EXPORTED)
         try {
-            // Send debug log
-            manager.sendDebugLog("test_log_message")
-
-            // Wait for broadcast
+            logger.sendDebugLog("test_log_message")
             val received = latch.await(2, TimeUnit.SECONDS)
-            assertTrue("Debug log broadcast should be received", received)
-            assertEquals("test_log_message", receivedMessage)
+            if (received) assertEquals("test_log_message", receivedMessage)
+            return received
         } finally {
             context.unregisterReceiver(logReceiver)
+            logger.unregisterDebugModeReceiver(context)
         }
+    }
+
+    private fun imeLogger(editorPackage: String?): DebugLoggingManager {
+        var ime: FakeIme? = null
+        // A Service is constructed on the main thread, as the system does.
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { ime = FakeIme(context, editorPackage) }
+        return DebugLoggingManager(ime!!, context.packageName)
+    }
+
+    @Test
+    fun sendDebugLogBroadcastsWhenDebugModeOn() {
+        // Kept name (pre-M4 test); now: the IME editing CleverKeys' own field forwards the line.
+        assertTrue("Debug log broadcast should be received", logLineIsBroadcast(imeLogger(context.packageName)))
+    }
+
+    @Test
+    fun aLineTypedInAnotherAppsFieldIsNeverBroadcast() {
+        assertFalse(logLineIsBroadcast(imeLogger("com.example.messenger")))
+    }
+
+    @Test
+    fun aLoggerThatIsNotTheKeyboardBroadcastsNothing() {
+        // No bound editor can be confirmed, so the fence stays closed.
+        assertFalse(logLineIsBroadcast(manager))
     }
 
     @Test

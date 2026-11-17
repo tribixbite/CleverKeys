@@ -40,9 +40,9 @@ then the tag sequence (M4) with the full suites and an instrumented run at the t
 item 33: choose the dictionary / voice pack per language), item 20's unowned roadmap,
 the RTX items 17–19, and CHANGELOG `[Unreleased]`.
 
-**Status 2026-11-17 (agent).** Before the tag: the instrumented run at the tag commit (A2; pure 3,890
-/ mock 1,842 already green at `a20209c8`, the last code commit), then the maintainer's M1 soak, M2
-strings and M4 tag sequence. Known issues and the full list: release-readiness audit "Status
+**Status 2026-11-17 (agent).** A2 DONE: pure 3,890 / mock 1,842 / instrumented 1,653 (API 34–37,
+after two stale tests were fixed) green on the current code (`a20209c8`). Before the tag: only the
+maintainer's M1 soak, M2 strings and M4 tag sequence. Known issues and the full list: release-readiness audit "Status
 2026-11-17". Review §4 device checks are all done.
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`

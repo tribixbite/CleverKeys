@@ -93,7 +93,10 @@ class ThemeSettingsActivityComposeTest {
     @Test
     fun colorPicker_hasOpacitySlider() {
         openColorPicker()
-        composeTestRule.onNodeWithText("Opacity", substring = true).assertIsDisplayed()
+        // Exact text: the Creator behind the picker now also has "Key Fill Opacity" and "Key Border
+        // Opacity" sliders (8b4c85c9), so a substring match found three nodes. The picker's own
+        // label is exactly `theme_color_opacity` ("Opacity"), used nowhere else.
+        composeTestRule.onNodeWithText("Opacity").assertIsDisplayed()
     }
 
     @Test
