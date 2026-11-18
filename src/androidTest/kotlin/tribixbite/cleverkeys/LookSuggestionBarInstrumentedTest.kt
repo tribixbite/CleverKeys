@@ -191,6 +191,27 @@ class LookSuggestionBarInstrumentedTest {
         }
     }
 
+    /**
+     * The plain (non-look) bar emphasises only what space commits. Space types none of the
+     * next-word predictions, so none is drawn highlighted (todo 25; the look bar already did this).
+     */
+    @Test
+    fun plainBarHighlightsNoNextWordPrediction() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val plain = ThemeProvider.getInstance(context).getTheme("cleverkeysdark")
+            val (scroll, bar) = barIn(plain, 1080)
+            val nextWord = listOf("morning", "afternoon", "I")
+            bar.setSuggestionsWithScores(nextWord, listOf(3, 2, 1), nextWord.map { SuggestionMeta(SuggestionOrigin.NEXT_WORD) })
+            layout(scroll, 1080, dp(40))
+            assertEquals(listOf("morning", "afternoon", "I"), slots(bar).map { it.text.toString() })
+            assertTrue("next-word: nothing bold", slots(bar).none { it.typeface?.isBold == true })
+            // A typed word's correction is still the highlighted commit.
+            bar.setSuggestionsWithScores(words, scores, null, 0, "tomorr")
+            layout(scroll, 1080, dp(40))
+            assertEquals("the commit is bold", true, slots(bar)[0].typeface?.isBold)
+        }
+    }
+
     /** Showcase PNGs: each look's bar over its own familiar-style layout, light and dark. */
     @Test
     fun rendersTheShowcase() {

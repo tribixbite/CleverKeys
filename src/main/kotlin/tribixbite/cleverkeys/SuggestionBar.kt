@@ -313,10 +313,11 @@ class SuggestionBar : LinearLayout {
 
         // Build the desired ordered child sequence from the pools.
         val desired = ArrayList<View>(count + dividerCount)
+        val commit = commitHighlightIndex()
         for (i in 0 until count) {
             val suggestion = parsed[i]
             val isCenteredPrompt = suggestion is Suggestion.AddToDictionary && count == 1
-            bindSuggestionView(suggestionViews[i], i, suggestion, isCenteredPrompt)
+            bindSuggestionView(suggestionViews[i], i, suggestion, isCenteredPrompt, commit = i == commit)
             if (i > 0) desired.add(dividerViews[i - 1])
             desired.add(suggestionViews[i])
         }
@@ -330,9 +331,7 @@ class SuggestionBar : LinearLayout {
      */
     private fun rebindSlots(parsed: List<Suggestion>, slots: List<BarSlot>) {
         slotMode = true
-        // Next-word predictions: space commits none of them, so no slot is emphasised as the commit.
-        val nextWordOnly = currentMetas.isNotEmpty() && currentMetas.all { it.origin == SuggestionOrigin.NEXT_WORD }
-        val commit = LookBarArrangement.commitIndex(currentHighlightIndex, nextWordOnly)
+        val commit = commitHighlightIndex()
         while (suggestionViews.size < parsed.size) {
             suggestionViews.add(createSuggestionView(context, suggestionViews.size))
         }
@@ -351,7 +350,7 @@ class SuggestionBar : LinearLayout {
             } else {
                 bindSuggestionView(
                     suggestionViews[entry], entry, parsed[entry], isCenteredPrompt = false, slot = slot,
-                    slotCommit = entry == commit,
+                    commit = entry == commit,
                 )
                 desired.add(suggestionViews[entry])
             }
@@ -360,6 +359,15 @@ class SuggestionBar : LinearLayout {
     }
 
     /** An empty slot of a look's bar: takes its share of the width, not focusable or announced. */
+    /**
+     * The entry drawn as what space commits, or null. Next-word predictions: space commits none
+     * of them, so none is emphasised — on a look's bar and on the plain bar alike (todo 25).
+     */
+    private fun commitHighlightIndex(): Int? {
+        val nextWordOnly = currentMetas.isNotEmpty() && currentMetas.all { it.origin == SuggestionOrigin.NEXT_WORD }
+        return LookBarArrangement.commitIndex(currentHighlightIndex, nextWordOnly)
+    }
+
     private fun createSpacer(context: Context): View = View(context).apply {
         layoutParams = slotLayoutParams()
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -412,8 +420,8 @@ class SuggestionBar : LinearLayout {
         isCenteredPrompt: Boolean,
         /** The look-bar slot showing this entry, or null on the plain scrolling bar. */
         slot: BarSlot? = null,
-        /** On a look's bar: whether this entry is what space commits (drawn emphasised). */
-        slotCommit: Boolean = false,
+        /** Whether this entry is what space commits (drawn emphasised; [commitHighlightIndex]). */
+        commit: Boolean = false,
     ) {
         // Display text derived from the typed suggestion. A look's slot shows the plain word, the
         // "+word" tap-to-add chip included (the real products show an unknown typed word as an
@@ -527,7 +535,7 @@ class SuggestionBar : LinearLayout {
             slot != null -> {
                 view.layoutParams = slotLayoutParams()
                 view.gravity = Gravity.CENTER
-                val paint = LookBarArrangement.paint(lookBar ?: LookBar(), slot.centre, slotCommit)
+                val paint = LookBarArrangement.paint(lookBar ?: LookBar(), slot.centre, commit)
                 view.setTypeface(
                     if (paint.bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT,
                     if (paint.bold) Typeface.BOLD else Typeface.NORMAL,
@@ -553,8 +561,8 @@ class SuggestionBar : LinearLayout {
             // Highlight the commit item with the high-confidence colour (audit H-4:
             // the Theme-Creator's "High Confidence"; XML themes default it to the old
             // activated colour). The first entry unless the caller chose another or none
-            // (tap typing: the word space commits — 2026-10-11).
-            index == currentHighlightIndex -> {
+            // (tap typing: the word space commits — 2026-10-11); never a next-word prediction.
+            commit -> {
                 view.layoutParams = defaultSuggestionLayoutParams()
                 view.gravity = Gravity.CENTER
                 view.setTypeface(Typeface.DEFAULT_BOLD, Typeface.NORMAL)

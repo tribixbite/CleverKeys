@@ -195,8 +195,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 25. [ ] agent: keyboard looks (spec `docs/specs/layout-system.md` "Keyboard looks"); rounds 1–9 built
     and device-checked through 2026-10-31. Open/structural: no toolbar row (2.1), system font,
     SwiftKey's low-set comma/period glyph; key legends have no Creator control; Samsung light palette
-    and go/send/next/done icons unchecked (no reference); a look shows only 3 bar entries; the plain
-    bar highlights the first next-word chip though space types none. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-25)
+    and go/send/next/done icons unchecked (no reference); a look shows only 3 bar entries. FIXED
+    2026-11-18: the plain bar no longer highlights the first next-word chip (space types none;
+    `LookSuggestionBarInstrumentedTest.plainBarHighlightsNoNextWordPrediction`, red then green, ew API 34). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-25)
 26. [x] agent: per-layout key geometry (spec `docs/specs/layout-system.md` "Per-layout key geometry")
     — CLOSED 2026-11-18: built; Saga 144 device passes 2026-10-27/28 incl. border OFF and the
     density fix `32c8c4bb`; Add Layout landscape fixed; no check left. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-26)
