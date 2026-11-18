@@ -194,6 +194,7 @@
     <string name="dict_delete">Verwijderen</string>
     <string name="dict_no_words">Geen woorden gevonden</string>
     <string name="dict_error_loading">Fout bij het laden van woorden: %1$s</string>
+    <string name="dict_error_out_of_memory">Niet genoeg geheugen om dit woordenboek te laden. Sluit Woordenboekbeheer en open het opnieuw.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Datumfilter inschakelen</string>

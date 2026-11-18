@@ -196,6 +196,7 @@
     <string name="dict_delete">Usuń</string>
     <string name="dict_no_words">Nie znaleziono słów</string>
     <string name="dict_error_loading">Błąd wczytywania słów: %1$s</string>
+    <string name="dict_error_out_of_memory">Za mało pamięci, aby wczytać ten słownik. Zamknij Menedżera słownika i otwórz go ponownie.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Włącz filtr daty</string>

@@ -218,6 +218,7 @@
     <string name="dict_delete">حذف</string>
     <string name="dict_no_words">واژه‌ای یافت نشد</string>
     <string name="dict_error_loading">خطا در بارگذاری واژه‌ها: %1$s</string>
+    <string name="dict_error_out_of_memory">حافظهٔ کافی برای بارگذاری این واژه‌نامه نیست. مدیریت واژه‌نامه را ببندید و دوباره باز کنید.</string>
 
     <!-- Clipboard filter -->
     <string name="clipboard_filter_date_enable">فعال‌سازی صافی تاریخ</string>

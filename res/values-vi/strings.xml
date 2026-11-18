@@ -220,6 +220,7 @@
     <string name="dict_delete">Xóa</string>
     <string name="dict_no_words">Không tìm thấy từ nào</string>
     <string name="dict_error_loading">Lỗi khi tải từ: %1$s</string>
+    <string name="dict_error_out_of_memory">Không đủ bộ nhớ để tải từ điển này. Hãy đóng Trình quản lý từ điển rồi mở lại.</string>
 
     <!-- Clipboard filters -->
     <string name="clipboard_filter_date_enable">Bật bộ lọc theo ngày</string>

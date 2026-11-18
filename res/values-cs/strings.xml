@@ -198,6 +198,7 @@
     <string name="dict_delete">Smazat</string>
     <string name="dict_no_words">Nenalezena žádná slova</string>
     <string name="dict_error_loading">Chyba při načítání slov: %1$s</string>
+    <string name="dict_error_out_of_memory">Na načtení tohoto slovníku není dost paměti. Zavřete Správce slovníku a otevřete ho znovu.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Zapnout filtr podle data</string>

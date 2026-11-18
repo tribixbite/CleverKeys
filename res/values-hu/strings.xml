@@ -187,6 +187,7 @@
     <string name="dict_delete">Törlés</string>
     <string name="dict_no_words">Nem található szó</string>
     <string name="dict_error_loading">Hiba a szavak betöltésekor: %1$s</string>
+    <string name="dict_error_out_of_memory">Nincs elég memória a szótár betöltéséhez. Zárja be a Szótárkezelőt, majd nyissa meg újra.</string>
 
     <!-- Clipboard filters -->
     <string name="clipboard_filter_date_enable">Dátumszűrő engedélyezése</string>

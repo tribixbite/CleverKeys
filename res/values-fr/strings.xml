@@ -187,6 +187,7 @@
     <string name="dict_delete">Supprimer</string>
     <string name="dict_no_words">Aucun mot trouvé</string>
     <string name="dict_error_loading">Erreur lors du chargement des mots : %1$s</string>
+    <string name="dict_error_out_of_memory">Mémoire insuffisante pour charger ce dictionnaire. Fermez le Gestionnaire de dictionnaire et rouvrez-le.</string>
 
     <!-- Clipboard filter -->
     <string name="clipboard_filter_date_enable">Activer le filtre par date</string>

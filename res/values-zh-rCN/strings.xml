@@ -190,6 +190,7 @@
     <string name="dict_delete">删除</string>
     <string name="dict_no_words">未找到单词</string>
     <string name="dict_error_loading">加载单词出错：%1$s</string>
+    <string name="dict_error_out_of_memory">内存不足，无法加载此词典。请关闭词典管理器后重新打开。</string>
 
     <!-- Clipboard filters -->
     <string name="clipboard_filter_date_enable">启用日期筛选</string>

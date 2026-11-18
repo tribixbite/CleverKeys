@@ -192,6 +192,7 @@
     <string name="dict_delete">Sil</string>
     <string name="dict_no_words">Kelime bulunamadı</string>
     <string name="dict_error_loading">Kelimeler yüklenirken hata: %1$s</string>
+    <string name="dict_error_out_of_memory">Bu sözlüğü yüklemek için yeterli bellek yok. Sözlük Yöneticisini kapatıp yeniden açın.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Tarih Filtresini Etkinleştir</string>

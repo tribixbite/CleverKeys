@@ -264,6 +264,7 @@
     <string name="dict_no_words">No words found</string>
     <!-- %1$s = error message from the failed dictionary load -->
     <string name="dict_error_loading">Error loading words: %1$s</string>
+    <string name="dict_error_out_of_memory">Not enough memory to load this dictionary. Close the Dictionary Manager and open it again.</string>
 
     <!-- ══════════════════════════════════════════════════════════════════
          Clipboard filter dialog (clipboard_filter_dialog)

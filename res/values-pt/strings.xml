@@ -196,6 +196,7 @@
     <string name="dict_delete">Excluir</string>
     <string name="dict_no_words">Nenhuma palavra encontrada</string>
     <string name="dict_error_loading">Erro ao carregar palavras: %1$s</string>
+    <string name="dict_error_out_of_memory">Memória insuficiente para carregar este dicionário. Feche o Gerenciador de dicionário e abra-o novamente.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Ativar filtro de data</string>

@@ -192,6 +192,7 @@
     <string name="dict_delete">Tanggalin</string>
     <string name="dict_no_words">Walang nahanap na salita</string>
     <string name="dict_error_loading">Error sa pag-load ng mga salita: %1$s</string>
+    <string name="dict_error_out_of_memory">Kulang ang memory para i-load ang diksiyonaryong ito. Isara ang Dictionary Manager at buksan itong muli.</string>
 
     <!-- Clipboard filter -->
     <string name="clipboard_filter_date_enable">I-enable ang Date Filter</string>

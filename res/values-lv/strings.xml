@@ -194,6 +194,7 @@
     <string name="dict_delete">Dzēst</string>
     <string name="dict_no_words">Vārdi nav atrasti</string>
     <string name="dict_error_loading">Kļūda, ielādējot vārdus: %1$s</string>
+    <string name="dict_error_out_of_memory">Nepietiek atmiņas, lai ielādētu šo vārdnīcu. Aizveriet vārdnīcas pārvaldnieku un atveriet to vēlreiz.</string>
 
     <!-- Clipboard Filter -->
     <string name="clipboard_filter_date_enable">Iespējot datuma filtru</string>

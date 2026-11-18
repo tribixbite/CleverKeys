@@ -190,6 +190,7 @@
     <string name="dict_delete">Hapus</string>
     <string name="dict_no_words">Tidak ada kata ditemukan</string>
     <string name="dict_error_loading">Kesalahan memuat kata: %1$s</string>
+    <string name="dict_error_out_of_memory">Memori tidak cukup untuk memuat kamus ini. Tutup Pengelola Kamus lalu buka lagi.</string>
 
     <!-- Clipboard filters -->
     <string name="clipboard_filter_date_enable">Aktifkan Filter Tanggal</string>

@@ -196,6 +196,7 @@
     <string name="dict_delete">Видалити</string>
     <string name="dict_no_words">Слів не знайдено</string>
     <string name="dict_error_loading">Помилка завантаження слів: %1$s</string>
+    <string name="dict_error_out_of_memory">Недостатньо пам’яті для завантаження цього словника. Закрийте менеджер словника і відкрийте його знову.</string>
 
     <!-- Clipboard filters -->
     <string name="clipboard_filter_date_enable">Увімкнути фільтр за датою</string>

@@ -197,6 +197,7 @@
     <string name="dict_delete">Löschen</string>
     <string name="dict_no_words">Keine Wörter gefunden</string>
     <string name="dict_error_loading">Fehler beim Laden der Wörter: %1$s</string>
+    <string name="dict_error_out_of_memory">Nicht genug Speicher, um dieses Wörterbuch zu laden. Schließen Sie den Wörterbuch-Manager und öffnen Sie ihn erneut.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Datumsfilter aktivieren</string>

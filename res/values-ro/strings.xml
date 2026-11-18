@@ -220,6 +220,7 @@
     <string name="dict_delete">Șterge</string>
     <string name="dict_no_words">Niciun cuvânt găsit</string>
     <string name="dict_error_loading">Eroare la încărcarea cuvintelor: %1$s</string>
+    <string name="dict_error_out_of_memory">Memorie insuficientă pentru a încărca acest dicționar. Închideți Managerul de dicționar și deschideți-l din nou.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Activează filtrul de dată</string>

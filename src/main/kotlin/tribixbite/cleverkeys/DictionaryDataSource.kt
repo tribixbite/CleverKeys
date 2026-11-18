@@ -13,6 +13,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
+ * A dictionary could not be loaded; [message] is user-facing (the word list shows it in its
+ * "Error loading words" line).
+ */
+class DictionaryLoadException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
  * Interface for dictionary data sources
  */
 interface DictionaryDataSource {
@@ -99,7 +105,7 @@ class MainDictionarySource(
                     return@withLock cached.words
                 }
             }
-            loadUncached()
+            loadWithMemoryRetry()
         }
     }
 
@@ -128,8 +134,7 @@ class MainDictionarySource(
                         if (loaded) {
                             Log.d(TAG, "Loaded ${words.size} words from language pack: $languageCode")
                             val sorted = words.sorted()
-                            cachedWords = sorted
-                            buildPrefixIndex(sorted)
+                            publish(sorted)
                             return sorted
                         }
                     }
@@ -144,8 +149,7 @@ class MainDictionarySource(
                     if (loaded) {
                         Log.d(TAG, "Loaded ${words.size} words from bundled binary dictionary: $binFilename")
                         val sorted = words.sorted()
-                        cachedWords = sorted
-                        buildPrefixIndex(sorted)
+                        publish(sorted)
                         return sorted
                     }
                 } catch (e: Exception) {
@@ -186,22 +190,43 @@ class MainDictionarySource(
             }
 
             val sorted = words.sorted()
-            cachedWords = sorted
-
-            // Build prefix index for fast search
-            buildPrefixIndex(sorted)
-
+            publish(sorted)
             return sorted
         } catch (e: Exception) {
             Log.e(TAG, "Error loading main dictionary", e)
             return emptyList()
-        } catch (e: OutOfMemoryError) {
-            // The Dictionary Manager shares the keyboard's process and heap: a failed list is
-            // better than killing the keyboard (seen 2026-11-18 on an 18-hour-old process).
-            // Nothing is cached, so reopening retries; the partial lists are garbage now.
-            Log.e(TAG, "Out of memory loading the $languageCode dictionary", e)
-            return emptyList()
         }
+    }
+
+    /**
+     * [loadUncached], surviving one OutOfMemoryError. The Dictionary Manager shares the
+     * keyboard's process and heap (OOM seen 2026-11-18 on an 18-hour-old process): the failed
+     * attempt's partial lists are garbage once it unwinds, so one retry after a collection
+     * usually fits. A second failure throws [DictionaryLoadException], which the word list
+     * shows as its loading error instead of an empty "No words found" list. Nothing is cached
+     * by a failed attempt, so reopening the tab tries again.
+     */
+    private fun loadWithMemoryRetry(): List<DictionaryWord> = try {
+        loadUncached()
+    } catch (e: OutOfMemoryError) {
+        Log.w(TAG, "Out of memory loading the $languageCode dictionary; retrying once", e)
+        System.gc()
+        try {
+            loadUncached()
+        } catch (again: OutOfMemoryError) {
+            Log.e(TAG, "Out of memory again loading the $languageCode dictionary", again)
+            throw DictionaryLoadException(context.getString(R.string.dict_error_out_of_memory), again)
+        }
+    }
+
+    /**
+     * Cache [sorted] for this instance and every later one. The prefix index is built FIRST:
+     * if building it runs out of memory, [cachedWords] stays unset, so the instance fast path
+     * cannot hand out words whose search index is missing (search would find nothing).
+     */
+    private fun publish(sorted: List<DictionaryWord>) {
+        buildPrefixIndex(sorted)
+        cachedWords = sorted
     }
 
     /**

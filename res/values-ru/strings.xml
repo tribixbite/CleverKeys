@@ -187,6 +187,7 @@
     <string name="dict_delete">Удалить</string>
     <string name="dict_no_words">Слова не найдены</string>
     <string name="dict_error_loading">Ошибка загрузки слов: %1$s</string>
+    <string name="dict_error_out_of_memory">Недостаточно памяти для загрузки этого словаря. Закройте менеджер словаря и откройте его снова.</string>
 
     <!-- Clipboard filter dialog -->
     <string name="clipboard_filter_date_enable">Включить фильтр по дате</string>
