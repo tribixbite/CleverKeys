@@ -266,9 +266,9 @@
     <string name="extra_keys_search_hint">Maghanap ng karagdagang key…</string>
     <string name="extra_keys_info">Ang mga napiling key ay lilitaw sa keyboard batay sa kanilang mga ginustong posisyon</string>
     <string name="extra_keys_reset">I-reset sa Default</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">I-reset ang mga extra key?</string>
+    <string name="extra_keys_reset_message">Babalik ang bawat extra key sa default nitong setting na on o off. Mga key na magbabago: %1$d</string>
+    <string name="extra_keys_reset_done">Na-reset sa default ang mga extra key</string>
 
     <!-- Pag-customize ng maikling swipe / Short Swipe Customization -->
     <string name="short_swipe_title">Pag-customize ng Maikling Swipe</string>
@@ -1736,8 +1736,8 @@
     <string name="theme_look_cleverkeys_desc">Modernong bilugang mga key; sumusunod sa system ang maliwanag o madilim (default)</string>
     <string name="theme_toast_applying">Inilalapat ang tema: %1$s</string>
     <string name="theme_default_custom_name">Aking Tema</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Hindi ma-save ang tema. Bukas pa rin ang iyong mga pagbabago.</string>
+    <string name="theme_limit_reached">Naabot mo na ang pinakamaraming custom na tema na itinatabi ng CleverKeys. Mag-delete ng isa para makapag-save ng bagong tema.</string>
     <string name="swipe_debug_session_intro">=== Nagsimula ang Swipe Playground Session ===\nMag-swipe sa text field sa itaas. Bawat swipe ay nagpapakita ng ranking ng mga kandidato nito\nat nire-record (mga point + geometry ng key + ranking + na-commit na salita).</string>
     <string name="swipe_debug_log_cleared_banner">Na-clear ang mga log. Naghihintay ng swipe input...</string>
     <string name="swipe_debug_toast_logs_cleared">Na-clear ang mga log</string>
@@ -2548,7 +2548,7 @@
     <string name="clipboard_merge_action">Pagsamahin</string>
     <string name="clipboard_merge_too_few">Pumili ng hindi bababa sa dalawang text clipping na pagsasamahin.</string>
     <string name="clipboard_merge_too_large">Magiging %1$s ang pinagsamang clipping; %2$s ang limitasyon. Pumili ng mas kaunting clipping.</string>
-    <string name="clipboard_clean_message">Inaalis ang mga space sa dulo ng linya at pinagdudugtong ang mga linyang naputol sa loob ng isang talata; muling pinagdudugtong ang salitang hinati ng gitling sa dulo ng linya. Pinananatili ng mga blangkong linya, listahan, maiikling linya, link at code ang kanilang mga line break. Ang mga kopya lang sa %1$s ang magbabago; hindi ito maa-undo.</string>
+    <string name="clipboard_clean_message">Inaalis ang sobrang space at blangkong linya at pinagdudugtong ang mga linyang naputol sa gitna ng pangungusap; muling pinagdudugtong ang salitang hinati ng gitling sa dulo ng linya. Pinananatili ng mga paragraph break, listahan, link at code ang kanilang mga line break. Ang mga kopya lang sa %1$s ang magbabago; hindi ito maa-undo.</string>
     <string name="clipboard_clean_action">Linisin</string>
     <string name="clipboard_clean_nothing">Walang lilinisin.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Naidagdag ang %1$d clipping sa Naka-pin.</item><item quantity="other">Naidagdag ang %1$d clipping sa Naka-pin.</item></plurals>

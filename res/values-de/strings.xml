@@ -276,9 +276,9 @@
     <string name="extra_keys_search_hint">Zusatztasten suchen…</string>
     <string name="extra_keys_info">Ausgewählte Tasten werden je nach bevorzugter Position auf der Tastatur angezeigt</string>
     <string name="extra_keys_reset">Auf Standard zurücksetzen</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Zusatztasten zurücksetzen?</string>
+    <string name="extra_keys_reset_message">Jede Zusatztaste erhält wieder ihre Standardeinstellung (ein oder aus). Geänderte Tasten: %1$d</string>
+    <string name="extra_keys_reset_done">Zusatztasten auf Standard zurückgesetzt</string>
 
     <!-- Wischgesten-Anpassung -->
     <string name="short_swipe_title">Kurze Wischgesten anpassen</string>
@@ -1744,8 +1744,8 @@
     <string name="theme_look_cleverkeys_desc">Moderne abgerundete Tasten; hell oder dunkel folgt dem System (Standard)</string>
     <string name="theme_toast_applying">Theme wird angewendet: %1$s</string>
     <string name="theme_default_custom_name">Mein Theme</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Das Theme konnte nicht gespeichert werden. Ihre Änderungen bleiben geöffnet.</string>
+    <string name="theme_limit_reached">Sie haben bereits die Höchstzahl benutzerdefinierter Themes, die CleverKeys speichert. Löschen Sie eines, um ein neues Theme zu speichern.</string>
     <string name="swipe_debug_session_intro">=== Sitzung der Wisch-Testumgebung gestartet ===\nWischen Sie im Textfeld oben. Jede Wischgeste zeigt ihre Kandidatenrangfolge\nund wird aufgezeichnet (Punkte + Tastengeometrie + Rangfolge + übernommenes Wort).</string>
     <string name="swipe_debug_log_cleared_banner">Protokolle geleert. Warte auf Wischeingabe...</string>
     <string name="swipe_debug_toast_logs_cleared">Protokolle geleert</string>
@@ -2556,7 +2556,7 @@
     <string name="clipboard_merge_action">Zusammenführen</string>
     <string name="clipboard_merge_too_few">Wählen Sie mindestens zwei Text-Clips zum Zusammenführen aus.</string>
     <string name="clipboard_merge_too_large">Der zusammengeführte Clip wäre %1$s groß; die Grenze ist %2$s. Wählen Sie weniger Clips aus.</string>
-    <string name="clipboard_clean_message">Entfernt Leerzeichen am Zeilenende und verbindet Zeilen, die innerhalb eines Absatzes umbrochen wurden; ein am Zeilenende getrenntes Wort wird wieder zusammengefügt. Leerzeilen, Listen, kurze Zeilen, Links und Code behalten ihre Zeilenumbrüche. Nur die Kopien in %1$s werden geändert; dies kann nicht rückgängig gemacht werden.</string>
+    <string name="clipboard_clean_message">Entfernt überflüssige Leerzeichen und Leerzeilen und verbindet Zeilen, die mitten im Satz umbrochen wurden; ein am Zeilenende getrenntes Wort wird wieder zusammengefügt. Absatzumbrüche, Listen, Links und Code behalten ihre Zeilenumbrüche. Nur die Kopien in %1$s werden geändert; dies kann nicht rückgängig gemacht werden.</string>
     <string name="clipboard_clean_action">Bereinigen</string>
     <string name="clipboard_clean_nothing">Nichts zu bereinigen.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d Clip zu Angehefteten hinzugefügt.</item><item quantity="other">%1$d Clips zu Angehefteten hinzugefügt.</item></plurals>

@@ -263,9 +263,9 @@
     <string name="extra_keys_search_hint">Extra billentyű keresése…</string>
     <string name="extra_keys_info">A kiválasztott billentyűk az előnyben részesített pozíciójuknak megfelelően jelennek meg a billentyűzeten</string>
     <string name="extra_keys_reset">Visszaállítás alapértelmezettre</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Visszaállítja az extra billentyűket?</string>
+    <string name="extra_keys_reset_message">Minden extra billentyű visszakapja az alapértelmezett be- vagy kikapcsolt állapotát. Változó billentyűk: %1$d</string>
+    <string name="extra_keys_reset_done">Az extra billentyűk visszaállítva alapértelmezettre</string>
 
     <!-- Rövid csúsztatás testreszabása / Short Swipe Customization -->
     <string name="short_swipe_title">Rövid csúsztatás testreszabása</string>
@@ -1730,8 +1730,8 @@
     <string name="theme_look_cleverkeys_desc">Modern, lekerekített billentyűk; a világos vagy sötét mód a rendszert követi (alapértelmezett)</string>
     <string name="theme_toast_applying">Téma alkalmazása: %1$s</string>
     <string name="theme_default_custom_name">Saját téma</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">A témát nem sikerült menteni. A módosításai továbbra is nyitva vannak.</string>
+    <string name="theme_limit_reached">Elérte a CleverKeys által megőrzött egyéni témák legnagyobb számát. Új téma mentéséhez töröljön egyet.</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground munkamenet elindult ===\nCsúsztasson a fenti szövegmezőben. Minden csúsztatás megmutatja a jelöltek rangsorát,\nés rögzítésre kerül (pontok + billentyűgeometria + rangsor + véglegesített szó).</string>
     <string name="swipe_debug_log_cleared_banner">Naplók törölve. Várakozás csúsztatási bevitelre...</string>
     <string name="swipe_debug_toast_logs_cleared">Naplók törölve</string>
@@ -2542,7 +2542,7 @@
     <string name="clipboard_merge_action">Egyesítés</string>
     <string name="clipboard_merge_too_few">Az egyesítéshez jelöljön ki legalább két szöveges kivágást.</string>
     <string name="clipboard_merge_too_large">Az egyesített kivágás mérete %1$s lenne; a korlát %2$s. Jelöljön ki kevesebb kivágást.</string>
-    <string name="clipboard_clean_message">Eltávolítja a sorvégi szóközöket, és összefűzi a bekezdésen belül megtört sorokat; a sor végén kötőjellel elválasztott szót újra egyesíti. Az üres sorok, listák, rövid sorok, hivatkozások és kód megtartják a sortöréseiket. Csak a(z) %1$s másolatai változnak; ez nem vonható vissza.</string>
+    <string name="clipboard_clean_message">Eltávolítja a felesleges szóközöket és üres sorokat, és összefűzi a mondat közepén megtört sorokat; a sor végén kötőjellel elválasztott szót újra egyesíti. A bekezdéshatárok, listák, hivatkozások és kód megtartják a sortöréseiket. Csak a(z) %1$s másolatai változnak; ez nem vonható vissza.</string>
     <string name="clipboard_clean_action">Rendbetétel</string>
     <string name="clipboard_clean_nothing">Nincs mit rendbe tenni.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d kivágás hozzáadva a rögzítettekhez.</item><item quantity="other">%1$d kivágás hozzáadva a rögzítettekhez.</item></plurals>

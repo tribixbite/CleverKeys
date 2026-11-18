@@ -292,9 +292,9 @@
     <string name="extra_keys_search_hint">جستجوی کلیدهای اضافی…</string>
     <string name="extra_keys_info">کلیدهای انتخاب‌شده بر اساس موقعیت ترجیحی روی صفحه‌کلید نمایش داده می‌شوند</string>
     <string name="extra_keys_reset">بازگشت به پیش‌فرض</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">کلیدهای اضافی به پیش‌فرض بازگردند؟</string>
+    <string name="extra_keys_reset_message">هر کلید اضافی به حالت پیش‌فرض روشن یا خاموش خود برمی‌گردد. کلیدهایی که تغییر می‌کنند: %1$d</string>
+    <string name="extra_keys_reset_done">کلیدهای اضافی به پیش‌فرض بازگشتند</string>
 
     <!-- سفارشی‌سازی کشیدن کوتاه / Short Swipe Customization -->
     <string name="short_swipe_title">سفارشی‌سازی کشیدن کوتاه</string>
@@ -1762,8 +1762,8 @@
     <string name="theme_look_cleverkeys_desc">کلیدهای گرد مدرن؛ روشن یا تیره مطابق سیستم (پیش‌فرض)</string>
     <string name="theme_toast_applying">در حال اعمال تم: %1$s</string>
     <string name="theme_default_custom_name">تم من</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">تم ذخیره نشد. تغییرات شما همچنان باز است.</string>
+    <string name="theme_limit_reached">به بیشترین تعداد تم سفارشی که CleverKeys نگه می‌دارد رسیده‌اید. برای ذخیرهٔ تم جدید، یکی را حذف کنید.</string>
     <string name="swipe_debug_session_intro">=== جلسهٔ زمین بازی کشیدن آغاز شد ===\nدر کادر متن بالا بکشید. هر کشیدن رتبه‌بندی نامزدهای خود را نشان می‌دهد\nو ضبط می‌شود (نقاط + هندسهٔ کلیدها + رتبه‌بندی + واژهٔ ثبت‌شده).</string>
     <string name="swipe_debug_log_cleared_banner">گزارش‌ها پاک شد. در انتظار ورودی کشیدن...</string>
     <string name="swipe_debug_toast_logs_cleared">گزارش‌ها پاک شد</string>
@@ -2574,7 +2574,7 @@
     <string name="clipboard_merge_action">ادغام</string>
     <string name="clipboard_merge_too_few">برای ادغام دست‌کم دو بریده متنی انتخاب کنید.</string>
     <string name="clipboard_merge_too_large">حجم بریده ادغام‌شده %1$s می‌شد؛ حد مجاز %2$s است. بریده‌های کمتری انتخاب کنید.</string>
-    <string name="clipboard_clean_message">فاصله‌های انتهای خط را حذف می‌کند و خط‌هایی را که درون یک بند شکسته شده‌اند به هم وصل می‌کند؛ واژه‌ای که در انتهای خط با خط تیره جدا شده دوباره وصل می‌شود. خط‌های خالی، فهرست‌ها، خط‌های کوتاه، پیوندها و کد شکست خط خود را حفظ می‌کنند. فقط نسخه‌های موجود در %1$s تغییر می‌کنند؛ این کار برگشت‌پذیر نیست.</string>
+    <string name="clipboard_clean_message">فاصله‌ها و خط‌های خالی اضافی را حذف می‌کند و خط‌هایی را که در میانهٔ جمله شکسته شده‌اند به هم وصل می‌کند؛ واژه‌ای که در انتهای خط با خط تیره جدا شده دوباره وصل می‌شود. مرز میان بندها حفظ می‌شود و فهرست‌ها، پیوندها و کد شکست خط خود را نگه می‌دارند. فقط نسخه‌های موجود در %1$s تغییر می‌کنند؛ این کار برگشت‌پذیر نیست.</string>
     <string name="clipboard_clean_action">پاک‌سازی</string>
     <string name="clipboard_clean_nothing">چیزی برای پاک‌سازی نیست.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d بریده به سنجاق‌شده‌ها افزوده شد.</item><item quantity="other">%1$d بریده به سنجاق‌شده‌ها افزوده شد.</item></plurals>

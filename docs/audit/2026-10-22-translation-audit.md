@@ -504,3 +504,97 @@ hyphen-split verb prefixes such as *Nilo-*/*Nagre-*).
 - Style: de ellipsis spacing (5) and sentence-start repetition (2), fr PLACE_ADJ (1), pt/ro
   sentence-start repetition (2/2), ro cacophony *Eticheta tastei* (5), zh quantifier scope in
   `licenses_intro` (1), fil ligature rules on *maging bahagi* and *isa sa* (2, both correct).
+
+## 9. Missing and stale translations, and a LanguageTool pass since §8 (2026-11-18)
+
+Base: `ef203c87`, the commit that recorded §8 (no English string changed between `8335bd02`,
+the end of §8's scope, and it). Between that commit and `e33bfffa`, 70 resources were added to
+`res/values/strings.xml` and 6 changed their English text: the scene backdrops and motion
+settings, the Quick Settings tile toggle, theme next/previous and the motion / True Black
+commands, the Extra Keys reset dialog, the Theme Manager save errors, the backup-password and
+dictionary out-of-memory errors, and the new Clean rules. Same public API, approval and rate
+limits as §7 (`scripts/lt_check.py --since ef203c87`, one request at least every 17 s, at most
+12 KB per request): 14 requests and 1 recheck.
+
+**Written in all 21 locales** (machine translations, each locale's own term for extra keys,
+theme and clipboard copies, and the register its file already uses: German *Sie*, Spanish *tú*,
+French *vous* …):
+
+- Still English in every locale (todo item 10): `extra_keys_reset_title`,
+  `extra_keys_reset_message`, `extra_keys_reset_done`, `theme_save_failed`,
+  `theme_limit_reached`.
+- Stale: `clipboard_clean_message`. Its English was rewritten in `4ddb25d9` (Clean now removes
+  extra spaces and blank lines and joins lines broken in the middle of a sentence; paragraph
+  breaks, lists, links and code keep their line breaks), but all 21 translations still described
+  the old rules (spaces at line ends, lines broken inside a paragraph, short lines kept). The
+  new text in each locale keeps that locale's existing last sentence.
+
+The other 71 new or changed resources already had translations in all 21 locales. A scan of
+every locale for values identical to English found only these five plus legitimate cases:
+brand and key names (Alt, F1, ISO 8601, Rosé Pine), format-only strings (`%1$s → %2$s`), units
+(`%1$d fps`, `%1$s s`), Hebrew and Arabic diacritic names, and the deliberate Taglish English
+of fil (*Short Swipe Calibration*, *Zero width joiner* …, unchanged).
+
+**LanguageTool** (76 entries per locale, 14 locales; not supported and so not checked: cs, hu,
+in, ko, lv, tr, vi):
+
+| locale | matches | speller | other rules | fixed |
+|---|---|---|---|---|
+| de | 8 | 6 | 2 | 0 |
+| es | 12 | 8 | 4 | 0 |
+| fa | 2 | 0 | 2 | 0 |
+| fil | 200 | 194 | 6 | 0 |
+| fr | 17 | 7 | 10 | 0 |
+| it | 4 | 2 | 2 | 0 |
+| ja | 0 | 0 | 0 | 0 |
+| nl | 14 | 11 | 3 | 0 |
+| pl | 10 | 1 | 9 | 0 |
+| pt | 11 | 7 | 4 | 0 |
+| ro | 6 | 3 | 3 | 0 |
+| ru | 4 | 1 | 3 | 0 |
+| uk | 13 | 5 | 8 | 1 |
+| zh-rCN | 1 | 0 | 1 | 0 |
+| **total** | **302** | **245** | **57** | **1** |
+
+Fixed: uk `theme_look_snow_desc` *із зорями й падаючим снігом* → *із зорями й снігопадом*
+(UK_SIMPLE_REPLACE: the active participle *падаючий* is not normative); the recheck returned 0
+matches. No match fell on the six strings written in this pass except speller hits on
+*CleverKeys*, de *umbrochen* (the correct participle of *umbrechen*, also in the old text), ro
+*resetate* (the file's own verb, *Resetare la valorile implicite*), fil ligature hints on
+*naputol sa gitna* (correct) and the uk soft suggestion *перенесення* for *переноси* (kept: the
+old text and the file use *переноси*).
+
+False positives and style, by category:
+
+- Speller hits on brands (CleverKeys, Gboard, SwiftKey, iOS, Aurora), abbreviations (es/it
+  *fps*, pt *desl.*, uk *увімк./вимк.*), project terms (ru/uk *свайп*, ro *clipboard*) and valid
+  compounds the dictionaries lack (nl *Woordenboekbeheer*, *Scènetempo*,
+  *Noorderlichtgordijnen*, *scèneachtergronden*, *scène-thema’s*); pl brand casing (6); fil
+  English words of the Taglish copy (194).
+- `input_space_before_opening_punctuation_desc` in every locale: the list of opening characters
+  `( " ' $ @` read as unpaired brackets and quotes with stray spaces (de, es, fa, fil, fr, it,
+  nl, pl, pt, ro, ru, uk).
+- Agreement read wrongly: es *queda quieta una escena* (agrees with *escena*), uk *рухомі тла*
+  (nominative/accusative plural of *тло*), uk *Справжній чорний увімкнено* (impersonal form;
+  the same construction as the file's other on/off toasts), zh 轻柔**地**运动 (adverbial 地 is
+  right).
+- Missing full stop on descriptions that, like every Settings description in the file, have
+  none (fr `appearance_look_scene_overlay_desc`, `input_space_before_opening_punctuation_desc`);
+  pt capital after a semicolon on the Settings path *Aparência → Cenas animadas*; pt *animadas
+  sim/não* read as a phrase needing commas.
+- Style: fr *pendant* → *durant* (5) and two repetition hints in `theme_scenes_desc`, pt
+  *Depois de* → *Após*, ro cacophony *cu curentul*, uk *енергозбереження* (LanguageTool prefers
+  *енергоощадження*; kept, because Android's own Ukrainian UI names the mode *Режим
+  енергозбереження*).
+
+Tests: the first run of `TranslationGlossaryTest` and `TranslationLengthTest` on the new text
+failed twice: zh-rCN `theme_save_failed` used 您 (the file's register is 你) and fr
+`extra_keys_reset_title` *Rétablir les touches supplémentaires par défaut ?* was 49 characters
+against a 34-character limit (now *Rétablir les touches par défaut ?*, the screen names the extra
+keys). es `extra_keys_reset_done` was shortened to *Teclas adicionales restablecidas* for its
+snackbar. All three were rechecked with LanguageTool (0 matches) and the tests rerun:
+`TranslationFormatParityTest`, `TranslationGlossaryTest`, `TranslationLengthTest` and `TranslationCoverageDriftTest` OK (19 tests), 2026-11-18 18:16.
+
+Back-translation: the six strings were read back into English by the same model after writing
+(a sanity read, not a blind review); no meaning drift was found. They remain machine
+translations for the native-speaker review in todo item 10.

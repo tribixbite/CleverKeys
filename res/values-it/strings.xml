@@ -298,9 +298,9 @@
     <string name="extra_keys_search_hint">Cerca tasti aggiuntivi…</string>
     <string name="extra_keys_info">I tasti selezionati verranno visualizzati sulla tastiera in base alle posizioni preferite</string>
     <string name="extra_keys_reset">Ripristina predefiniti</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Ripristinare i tasti aggiuntivi?</string>
+    <string name="extra_keys_reset_message">Ogni tasto aggiuntivo torna alla sua impostazione predefinita, attivo o disattivo. Tasti che cambiano: %1$d</string>
+    <string name="extra_keys_reset_done">Tasti aggiuntivi ripristinati ai predefiniti</string>
 
     <!-- Personalizzazione scorrimenti brevi -->
     <string name="short_swipe_title">Personalizzazione scorrimenti brevi</string>
@@ -1800,8 +1800,8 @@
     <string name="theme_look_cleverkeys_desc">Tasti arrotondati moderni; chiaro o scuro segue il sistema (predefinito)</string>
     <string name="theme_toast_applying">Applicazione del tema: %1$s</string>
     <string name="theme_default_custom_name">Il mio tema</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Impossibile salvare il tema. Le modifiche restano aperte.</string>
+    <string name="theme_limit_reached">Hai già il numero massimo di temi personalizzati che CleverKeys conserva. Eliminane uno per salvare un nuovo tema.</string>
     <string name="swipe_debug_session_intro">=== Sessione Area di prova scorrimento avviata ===\nScorri nel campo di testo qui sopra. Ogni scorrimento mostra la classifica dei candidati\ne viene registrato (punti + geometria dei tasti + classifica + parola inserita).</string>
     <string name="swipe_debug_log_cleared_banner">Log cancellati. In attesa di uno scorrimento...</string>
     <string name="swipe_debug_toast_logs_cleared">Log cancellati</string>
@@ -2621,7 +2621,7 @@
     <string name="clipboard_merge_action">Unisci</string>
     <string name="clipboard_merge_too_few">Seleziona almeno due ritagli di testo da unire.</string>
     <string name="clipboard_merge_too_large">Il ritaglio unito occuperebbe %1$s; il limite è %2$s. Seleziona meno ritagli.</string>
-    <string name="clipboard_clean_message">Rimuove gli spazi a fine riga e unisce le righe spezzate all\'interno di un paragrafo; una parola divisa da un trattino a fine riga viene ricomposta. Righe vuote, elenchi, righe brevi, link e codice mantengono gli a capo. Cambiano solo le copie in %1$s; l\'operazione non può essere annullata.</string>
+    <string name="clipboard_clean_message">Rimuove spazi e righe vuote in eccesso e unisce le righe spezzate a metà frase; una parola divisa da un trattino a fine riga viene ricomposta. Interruzioni di paragrafo, elenchi, link e codice mantengono gli a capo. Cambiano solo le copie in %1$s; l\'operazione non può essere annullata.</string>
     <string name="clipboard_clean_action">Pulisci</string>
     <string name="clipboard_clean_nothing">Niente da pulire.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d ritaglio aggiunto ai fissati.</item><item quantity="many">%1$d ritagli aggiunti ai fissati.</item><item quantity="other">%1$d ritagli aggiunti ai fissati.</item></plurals>

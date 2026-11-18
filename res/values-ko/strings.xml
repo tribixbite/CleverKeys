@@ -266,9 +266,9 @@
     <string name="extra_keys_search_hint">추가 키 검색…</string>
     <string name="extra_keys_info">선택한 키는 기본 위치에 따라 키보드에 표시됩니다</string>
     <string name="extra_keys_reset">기본값으로 초기화</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">추가 키를 초기화하시겠습니까?</string>
+    <string name="extra_keys_reset_message">모든 추가 키가 기본 켜짐 또는 꺼짐 설정으로 돌아갑니다. 변경되는 키: %1$d개</string>
+    <string name="extra_keys_reset_done">추가 키를 기본값으로 초기화했습니다</string>
     <string name="short_swipe_title">짧은 스와이프 사용자 지정</string>
     <string name="short_swipe_show_keyboard">키보드 표시</string>
     <string name="short_swipe_reset_all">모두 초기화</string>
@@ -1688,8 +1688,8 @@
     <string name="theme_look_cleverkeys_desc">모던한 둥근 키, 라이트/다크는 시스템을 따름(기본값)</string>
     <string name="theme_toast_applying">테마 적용 중: %1$s</string>
     <string name="theme_default_custom_name">내 테마</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">테마를 저장할 수 없습니다. 변경 사항은 그대로 열려 있습니다.</string>
+    <string name="theme_limit_reached">CleverKeys에서 보관하는 사용자 지정 테마 수가 최대입니다. 새 테마를 저장하려면 하나를 삭제하세요.</string>
     <string name="swipe_debug_session_intro">=== 스와이프 플레이그라운드 세션 시작 ===\n위의 텍스트 필드에서 스와이프하세요. 각 스와이프의 후보 순위가 표시되며\n기록됩니다(좌표 + 키 배치 + 순위 + 확정된 단어).</string>
     <string name="swipe_debug_log_cleared_banner">로그를 지웠습니다. 스와이프 입력을 기다리는 중...</string>
     <string name="swipe_debug_toast_logs_cleared">로그를 지웠습니다</string>
@@ -2491,7 +2491,7 @@
     <string name="clipboard_merge_action">병합</string>
     <string name="clipboard_merge_too_few">병합하려면 텍스트 클립을 두 개 이상 선택하세요.</string>
     <string name="clipboard_merge_too_large">병합된 클립은 %1$s입니다. 한도는 %2$s입니다. 더 적은 클립을 선택하세요.</string>
-    <string name="clipboard_clean_message">줄 끝의 공백을 제거하고 문단 안에서 끊긴 줄을 이어 붙입니다. 줄 끝에서 하이픈으로 나뉜 단어는 다시 합칩니다. 빈 줄, 목록, 짧은 줄, 링크, 코드는 줄바꿈을 유지합니다. %1$s의 사본만 변경되며 이 작업은 취소할 수 없습니다.</string>
+    <string name="clipboard_clean_message">불필요한 공백과 빈 줄을 제거하고 문장 중간에서 끊긴 줄을 이어 붙입니다. 줄 끝에서 하이픈으로 나뉜 단어는 다시 합칩니다. 문단 구분, 목록, 링크, 코드는 줄바꿈을 유지합니다. %1$s의 사본만 변경되며 이 작업은 취소할 수 없습니다.</string>
     <string name="clipboard_clean_action">정리</string>
     <string name="clipboard_clean_nothing">정리할 내용이 없습니다.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="other">클립 %1$d개를 고정 항목에 추가했습니다.</item></plurals>

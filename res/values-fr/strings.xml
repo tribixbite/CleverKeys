@@ -264,9 +264,9 @@
     <string name="extra_keys_search_hint">Rechercher des touches supplémentaires…</string>
     <string name="extra_keys_info">Les touches sélectionnées apparaîtront sur le clavier en fonction de leurs positions préférées</string>
     <string name="extra_keys_reset">Rétablir les valeurs par défaut</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Rétablir les touches par défaut ?</string>
+    <string name="extra_keys_reset_message">Chaque touche supplémentaire revient à son réglage par défaut, activée ou désactivée. Touches modifiées : %1$d</string>
+    <string name="extra_keys_reset_done">Touches supplémentaires rétablies par défaut</string>
 
     <!-- Personnalisation des glissés courts -->
     <string name="short_swipe_title">Personnalisation des glissés courts</string>
@@ -1770,8 +1770,8 @@
     <string name="theme_look_cleverkeys_desc">Touches arrondies modernes ; clair ou sombre selon le système (par défaut)</string>
     <string name="theme_toast_applying">Application du thème : %1$s</string>
     <string name="theme_default_custom_name">Mon thème</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Impossible d\'enregistrer le thème. Vos modifications restent ouvertes.</string>
+    <string name="theme_limit_reached">Vous avez atteint le nombre maximal de thèmes personnalisés que CleverKeys conserve. Supprimez-en un pour enregistrer un nouveau thème.</string>
     <string name="swipe_debug_session_intro">=== Session du bac à sable de glissé démarrée ===\nFaites un glissé dans le champ de texte ci-dessus. Chaque glissé affiche son classement de candidats\net est enregistré (points + géométrie des touches + classement + mot validé).</string>
     <string name="swipe_debug_log_cleared_banner">Journaux effacés. En attente d\'un glissé...</string>
     <string name="swipe_debug_toast_logs_cleared">Journaux effacés</string>
@@ -2591,7 +2591,7 @@
     <string name="clipboard_merge_action">Fusionner</string>
     <string name="clipboard_merge_too_few">Sélectionnez au moins deux éléments texte à fusionner.</string>
     <string name="clipboard_merge_too_large">L\'élément fusionné ferait %1$s ; la limite est de %2$s. Sélectionnez moins d\'éléments.</string>
-    <string name="clipboard_clean_message">Supprime les espaces en fin de ligne et rejoint les lignes coupées au milieu d\'un paragraphe ; un mot coupé par un trait d\'union en fin de ligne est recollé. Les lignes vides, les listes, les lignes courtes, les liens et le code gardent leurs retours à la ligne. Seules les copies dans %1$s sont modifiées ; cette action est irréversible.</string>
+    <string name="clipboard_clean_message">Supprime les espaces et les lignes vides en trop et rejoint les lignes coupées au milieu d\'une phrase ; un mot coupé par un trait d\'union en fin de ligne est recollé. Les changements de paragraphe, les listes, les liens et le code gardent leurs retours à la ligne. Seules les copies dans %1$s sont modifiées ; cette action est irréversible.</string>
     <string name="clipboard_clean_action">Nettoyer</string>
     <string name="clipboard_clean_nothing">Rien à nettoyer.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d élément ajouté aux épinglés.</item><item quantity="many">%1$d éléments ajoutés aux épinglés.</item><item quantity="other">%1$d éléments ajoutés aux épinglés.</item></plurals>

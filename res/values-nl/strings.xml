@@ -268,9 +268,9 @@
     <string name="extra_keys_search_hint">Extra toetsen zoeken…</string>
     <string name="extra_keys_info">Geselecteerde toetsen verschijnen op het toetsenbord op basis van hun voorkeursposities</string>
     <string name="extra_keys_reset">Standaardinstellingen herstellen</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Extra toetsen herstellen?</string>
+    <string name="extra_keys_reset_message">Elke extra toets gaat terug naar zijn standaardinstelling, aan of uit. Toetsen die veranderen: %1$d</string>
+    <string name="extra_keys_reset_done">Extra toetsen hersteld naar standaard</string>
     <string name="short_swipe_title">Korte veegaanpassing</string>
     <string name="short_swipe_show_keyboard">Toetsenbord tonen</string>
     <string name="short_swipe_reset_all">Alles resetten</string>
@@ -1724,8 +1724,8 @@
     <string name="theme_look_cleverkeys_desc">Moderne afgeronde toetsen; licht of donker volgt het systeem (standaard)</string>
     <string name="theme_toast_applying">Thema toepassen: %1$s</string>
     <string name="theme_default_custom_name">Mijn thema</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Het thema kan niet worden opgeslagen. Je wijzigingen staan nog open.</string>
+    <string name="theme_limit_reached">Je hebt het maximale aantal aangepaste thema\'s dat CleverKeys bewaart. Verwijder er één om een nieuw thema op te slaan.</string>
     <string name="swipe_debug_session_intro">=== Sessie veegtestomgeving gestart ===\nVeeg in het tekstveld hierboven. Elke veeg toont de rangschikking van kandidaten\nen wordt vastgelegd (punten + toetsgeometrie + rangschikking + ingevoerd woord).</string>
     <string name="swipe_debug_log_cleared_banner">Logs gewist. Wachten op veeginvoer...</string>
     <string name="swipe_debug_toast_logs_cleared">Logs gewist</string>
@@ -2536,7 +2536,7 @@
     <string name="clipboard_merge_action">Samenvoegen</string>
     <string name="clipboard_merge_too_few">Selecteer minstens twee tekstfragmenten om samen te voegen.</string>
     <string name="clipboard_merge_too_large">Het samengevoegde fragment zou %1$s zijn; de limiet is %2$s. Selecteer minder fragmenten.</string>
-    <string name="clipboard_clean_message">Verwijdert spaties aan het einde van regels en voegt regels samen die binnen een alinea zijn afgebroken; een woord dat aan het einde van een regel met een koppelteken is afgebroken, wordt weer samengevoegd. Lege regels, lijsten, korte regels, links en code behouden hun regeleinden. Alleen de kopieën in %1$s veranderen; dit kan niet ongedaan worden gemaakt.</string>
+    <string name="clipboard_clean_message">Verwijdert overbodige spaties en lege regels en voegt regels samen die midden in een zin zijn afgebroken; een woord dat aan het einde van een regel met een koppelteken is afgebroken, wordt weer samengevoegd. Alineagrenzen, lijsten, links en code behouden hun regeleinden. Alleen de kopieën in %1$s veranderen; dit kan niet ongedaan worden gemaakt.</string>
     <string name="clipboard_clean_action">Opschonen</string>
     <string name="clipboard_clean_nothing">Niets op te schonen.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d fragment toegevoegd aan vastgezet.</item><item quantity="other">%1$d fragmenten toegevoegd aan vastgezet.</item></plurals>

@@ -292,9 +292,9 @@
     <string name="extra_keys_search_hint">Caută taste suplimentare…</string>
     <string name="extra_keys_info">Tastele selectate vor apărea pe tastatură în funcție de pozițiile lor preferate</string>
     <string name="extra_keys_reset">Resetare la valorile implicite</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Resetați tastele suplimentare?</string>
+    <string name="extra_keys_reset_message">Fiecare tastă suplimentară revine la setarea sa implicită, activată sau dezactivată. Taste care se schimbă: %1$d</string>
+    <string name="extra_keys_reset_done">Tastele suplimentare au fost resetate la valorile implicite</string>
     <string name="short_swipe_title">Personalizare glisare scurtă</string>
     <string name="short_swipe_show_keyboard">Afișează tastatura</string>
     <string name="short_swipe_reset_all">Resetează tot</string>
@@ -1787,8 +1787,8 @@
     <string name="theme_look_cleverkeys_desc">Taste rotunjite moderne; luminos sau întunecat urmează sistemul (implicit)</string>
     <string name="theme_toast_applying">Se aplică tema: %1$s</string>
     <string name="theme_default_custom_name">Tema mea</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Tema nu a putut fi salvată. Modificările dumneavoastră sunt încă deschise.</string>
+    <string name="theme_limit_reached">Aveți deja numărul maxim de teme personalizate pe care îl păstrează CleverKeys. Ștergeți una pentru a salva o temă nouă.</string>
     <string name="swipe_debug_session_intro">=== Sesiune de test al glisării pornită ===\nGlisați în câmpul de text de mai sus. Fiecare glisare își afișează clasamentul candidaților\nși este înregistrată (puncte + geometria tastelor + clasament + cuvântul confirmat).</string>
     <string name="swipe_debug_log_cleared_banner">Jurnale golite. Se așteaptă o glisare...</string>
     <string name="swipe_debug_toast_logs_cleared">Jurnale golite</string>
@@ -2608,7 +2608,7 @@
     <string name="clipboard_merge_action">Îmbină</string>
     <string name="clipboard_merge_too_few">Selectați cel puțin două decupaje text pentru îmbinare.</string>
     <string name="clipboard_merge_too_large">Decupajul îmbinat ar avea %1$s; limita este %2$s. Selectați mai puține decupaje.</string>
-    <string name="clipboard_clean_message">Elimină spațiile de la sfârșitul rândurilor și unește rândurile rupte în interiorul unui paragraf; un cuvânt despărțit cu cratimă la sfârșit de rând este reunit. Rândurile goale, listele, rândurile scurte, linkurile și codul își păstrează întreruperile de rând. Se modifică doar copiile din %1$s; acțiunea nu poate fi anulată.</string>
+    <string name="clipboard_clean_message">Elimină spațiile și rândurile goale în plus și unește rândurile rupte în mijlocul unei propoziții; un cuvânt despărțit cu cratimă la sfârșit de rând este reunit. Separările dintre paragrafe, listele, linkurile și codul își păstrează întreruperile de rând. Se modifică doar copiile din %1$s; acțiunea nu poate fi anulată.</string>
     <string name="clipboard_clean_action">Curăță</string>
     <string name="clipboard_clean_nothing">Nimic de curățat.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">S-a adăugat %1$d decupaj la fixate.</item><item quantity="few">S-au adăugat %1$d decupaje la fixate.</item><item quantity="other">S-au adăugat %1$d de decupaje la fixate.</item></plurals>

@@ -294,9 +294,9 @@
     <string name="extra_keys_search_hint">Tìm kiếm phím bổ sung…</string>
     <string name="extra_keys_info">Các phím được chọn sẽ xuất hiện trên bàn phím theo vị trí ưu tiên của chúng</string>
     <string name="extra_keys_reset">Đặt lại về mặc định</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Đặt lại phím bổ sung?</string>
+    <string name="extra_keys_reset_message">Mỗi phím bổ sung trở về cài đặt bật hoặc tắt mặc định. Số phím thay đổi: %1$d</string>
+    <string name="extra_keys_reset_done">Đã đặt lại phím bổ sung về mặc định</string>
     <string name="short_swipe_title">Tùy chỉnh vuốt ngắn</string>
     <string name="short_swipe_show_keyboard">Hiển thị bàn phím</string>
     <string name="short_swipe_reset_all">Đặt lại tất cả</string>
@@ -1716,8 +1716,8 @@
     <string name="theme_look_cleverkeys_desc">Phím bo tròn hiện đại; sáng hoặc tối theo hệ thống (mặc định)</string>
     <string name="theme_toast_applying">Đang áp dụng chủ đề: %1$s</string>
     <string name="theme_default_custom_name">Chủ đề của tôi</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Không thể lưu chủ đề. Các thay đổi của bạn vẫn đang mở.</string>
+    <string name="theme_limit_reached">Bạn đã có số chủ đề tùy chỉnh tối đa mà CleverKeys lưu giữ. Hãy xóa một chủ đề để lưu chủ đề mới.</string>
     <string name="swipe_debug_session_intro">=== Đã bắt đầu phiên Sân thử vuốt ===\nVuốt trong ô văn bản ở trên. Mỗi lần vuốt hiển thị thứ hạng ứng viên\nvà được ghi lại (điểm + hình học phím + thứ hạng + từ đã nhập).</string>
     <string name="swipe_debug_log_cleared_banner">Đã xóa nhật ký. Đang chờ thao tác vuốt...</string>
     <string name="swipe_debug_toast_logs_cleared">Đã xóa nhật ký</string>
@@ -2519,7 +2519,7 @@
     <string name="clipboard_merge_action">Gộp</string>
     <string name="clipboard_merge_too_few">Hãy chọn ít nhất hai đoạn cắt văn bản để gộp.</string>
     <string name="clipboard_merge_too_large">Đoạn cắt sau khi gộp sẽ có kích thước %1$s; giới hạn là %2$s. Hãy chọn ít đoạn cắt hơn.</string>
-    <string name="clipboard_clean_message">Xóa khoảng trắng ở cuối dòng và nối các dòng bị ngắt giữa đoạn văn; từ bị tách bằng dấu gạch nối ở cuối dòng sẽ được nối lại. Dòng trống, danh sách, dòng ngắn, liên kết và mã vẫn giữ nguyên ngắt dòng. Chỉ các bản sao trong %1$s thay đổi; không thể hoàn tác.</string>
+    <string name="clipboard_clean_message">Xóa khoảng trắng và dòng trống thừa, nối các dòng bị ngắt giữa câu; từ bị tách bằng dấu gạch nối ở cuối dòng sẽ được nối lại. Chỗ ngắt đoạn, danh sách, liên kết và mã vẫn giữ nguyên ngắt dòng. Chỉ các bản sao trong %1$s thay đổi; không thể hoàn tác.</string>
     <string name="clipboard_clean_action">Dọn</string>
     <string name="clipboard_clean_nothing">Không có gì để dọn.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="other">Đã thêm %1$d đoạn cắt vào mục đã ghim.</item></plurals>

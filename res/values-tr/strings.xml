@@ -266,9 +266,9 @@
     <string name="extra_keys_search_hint">Ek tuş ara…</string>
     <string name="extra_keys_info">Seçilen tuşlar tercih edilen konumlarına göre klavyede görünür</string>
     <string name="extra_keys_reset">Varsayılanlara Sıfırla</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Ek tuşlar sıfırlansın mı?</string>
+    <string name="extra_keys_reset_message">Her ek tuş varsayılan açık veya kapalı ayarına döner. Değişecek tuş sayısı: %1$d</string>
+    <string name="extra_keys_reset_done">Ek tuşlar varsayılanlara sıfırlandı</string>
 
     <!-- Kısa kaydırma özelleştirme / Short Swipe Customization -->
     <string name="short_swipe_title">Kısa Kaydırma Özelleştirmesi</string>
@@ -1735,8 +1735,8 @@
     <string name="theme_look_cleverkeys_desc">Modern yuvarlak tuşlar; açık veya koyu mod sistemi izler (varsayılan)</string>
     <string name="theme_toast_applying">Tema uygulanıyor: %1$s</string>
     <string name="theme_default_custom_name">Temam</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Tema kaydedilemedi. Değişiklikleriniz hâlâ açık.</string>
+    <string name="theme_limit_reached">CleverKeys\'in sakladığı en fazla özel tema sayısına ulaştınız. Yeni bir tema kaydetmek için birini silin.</string>
     <string name="swipe_debug_session_intro">=== Kaydırma Deneme Alanı Oturumu Başladı ===\nYukarıdaki metin alanında kaydırın. Her kaydırma aday sıralamasını gösterir\nve kaydedilir (noktalar + tuş geometrisi + sıralama + onaylanan kelime).</string>
     <string name="swipe_debug_log_cleared_banner">Günlükler temizlendi. Kaydırma girişi bekleniyor...</string>
     <string name="swipe_debug_toast_logs_cleared">Günlükler temizlendi</string>
@@ -2547,7 +2547,7 @@
     <string name="clipboard_merge_action">Birleştir</string>
     <string name="clipboard_merge_too_few">Birleştirmek için en az iki metin kırpması seçin.</string>
     <string name="clipboard_merge_too_large">Birleştirilmiş kırpma %1$s olurdu; sınır %2$s. Daha az kırpma seçin.</string>
-    <string name="clipboard_clean_message">Satır sonlarındaki boşlukları kaldırır ve paragraf içinde bölünmüş satırları birleştirir; satır sonunda kısa çizgiyle bölünmüş bir sözcük yeniden birleştirilir. Boş satırlar, listeler, kısa satırlar, bağlantılar ve kod satır sonlarını korur. Yalnızca %1$s içindeki kopyalar değişir; bu işlem geri alınamaz.</string>
+    <string name="clipboard_clean_message">Fazla boşlukları ve boş satırları kaldırır, cümle ortasında bölünmüş satırları birleştirir; satır sonunda kısa çizgiyle bölünmüş bir sözcük yeniden birleştirilir. Paragraf araları, listeler, bağlantılar ve kod satır sonlarını korur. Yalnızca %1$s içindeki kopyalar değişir; bu işlem geri alınamaz.</string>
     <string name="clipboard_clean_action">Temizle</string>
     <string name="clipboard_clean_nothing">Temizlenecek bir şey yok.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d kırpma sabitlenenlere eklendi.</item><item quantity="other">%1$d kırpma sabitlenenlere eklendi.</item></plurals>

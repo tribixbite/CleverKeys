@@ -265,9 +265,9 @@
     <string name="extra_keys_search_hint">追加キーを検索…</string>
     <string name="extra_keys_info">選択したキーは、優先位置に基づいてキーボードに表示されます</string>
     <string name="extra_keys_reset">デフォルトにリセット</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">追加キーをリセットしますか？</string>
+    <string name="extra_keys_reset_message">すべての追加キーが、オンまたはオフのデフォルト設定に戻ります。変更されるキー: %1$d</string>
+    <string name="extra_keys_reset_done">追加キーをデフォルトにリセットしました</string>
     <string name="short_swipe_title">ショートスワイプのカスタマイズ</string>
     <string name="short_swipe_show_keyboard">キーボードを表示</string>
     <string name="short_swipe_reset_all">すべてリセット</string>
@@ -1687,8 +1687,8 @@
     <string name="theme_look_cleverkeys_desc">モダンな角丸キー。ライト/ダークはシステムに従います(デフォルト)</string>
     <string name="theme_toast_applying">テーマを適用中: %1$s</string>
     <string name="theme_default_custom_name">マイテーマ</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">テーマを保存できませんでした。変更内容は開いたままです。</string>
+    <string name="theme_limit_reached">CleverKeys が保持するカスタムテーマの上限に達しています。新しいテーマを保存するには、いずれかを削除してください。</string>
     <string name="swipe_debug_session_intro">=== スワイププレイグラウンドのセッション開始 ===\n上のテキスト欄でスワイプしてください。各スワイプの候補ランキングが表示され、\n記録されます(座標点 + キー配置 + ランキング + 確定した単語)。</string>
     <string name="swipe_debug_log_cleared_banner">ログを消去しました。スワイプ入力を待っています...</string>
     <string name="swipe_debug_toast_logs_cleared">ログを消去しました</string>
@@ -2490,7 +2490,7 @@
     <string name="clipboard_merge_action">結合</string>
     <string name="clipboard_merge_too_few">結合するには、テキストのクリップを 2 つ以上選択してください。</string>
     <string name="clipboard_merge_too_large">結合後のクリップは %1$s になります。上限は %2$s です。選択するクリップを減らしてください。</string>
-    <string name="clipboard_clean_message">行末の空白を削除し、段落の途中で折り返された行をつなげます。行末でハイフンで分割された単語は元に戻します。空行、リスト、短い行、リンク、コードの改行はそのまま残ります。変更されるのは %1$s のコピーのみです。この操作は取り消せません。</string>
+    <string name="clipboard_clean_message">余分な空白と空行を削除し、文の途中で折り返された行をつなげます。行末でハイフンで分割された単語は元に戻します。段落の区切り、リスト、リンク、コードの改行はそのまま残ります。変更されるのは %1$s のコピーのみです。この操作は取り消せません。</string>
     <string name="clipboard_clean_action">整理</string>
     <string name="clipboard_clean_nothing">整理するものはありません。</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="other">%1$d 件のクリップをピン留めに追加しました。</item></plurals>

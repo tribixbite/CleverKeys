@@ -270,9 +270,9 @@
     <string name="extra_keys_search_hint">Meklēt papildu taustiņus…</string>
     <string name="extra_keys_info">Atlasītie taustiņi parādīsies uz tastatūras atbilstoši vēlamajai pozīcijai</string>
     <string name="extra_keys_reset">Atiestatīt uz noklusējumu</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Atiestatīt papildu taustiņus?</string>
+    <string name="extra_keys_reset_message">Katrs papildu taustiņš atgriežas pie sava noklusējuma iestatījuma — ieslēgts vai izslēgts. Taustiņi, kas mainās: %1$d</string>
+    <string name="extra_keys_reset_done">Papildu taustiņi atiestatīti uz noklusējumu</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Īso vilkumu pielāgošana</string>
@@ -1771,8 +1771,8 @@
     <string name="theme_look_cleverkeys_desc">Mūsdienīgi noapaļoti taustiņi; gaišais vai tumšais režīms seko sistēmai (noklusējums)</string>
     <string name="theme_toast_applying">Lieto tēmu: %1$s</string>
     <string name="theme_default_custom_name">Mana tēma</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Neizdevās saglabāt tēmu. Jūsu izmaiņas joprojām ir atvērtas.</string>
+    <string name="theme_limit_reached">Jums jau ir lielākais pielāgoto tēmu skaits, ko CleverKeys glabā. Izdzēsiet vienu, lai saglabātu jaunu tēmu.</string>
     <string name="swipe_debug_session_intro">=== Swipe Playground sesija sākta ===\nVelciet teksta laukā augstāk. Katrs vilkums parāda savu kandidātu rangu\nun tiek ierakstīts (punkti + taustiņu ģeometrija + rangs + apstiprinātais vārds).</string>
     <string name="swipe_debug_log_cleared_banner">Žurnāli notīrīti. Gaida vilkumu...</string>
     <string name="swipe_debug_toast_logs_cleared">Žurnāli notīrīti</string>
@@ -2592,7 +2592,7 @@
     <string name="clipboard_merge_action">Apvienot</string>
     <string name="clipboard_merge_too_few">Lai apvienotu, atlasiet vismaz divus teksta klipus.</string>
     <string name="clipboard_merge_too_large">Apvienotais klips būtu %1$s; ierobežojums ir %2$s. Atlasiet mazāk klipu.</string>
-    <string name="clipboard_clean_message">Noņem atstarpes rindiņu beigās un savieno rindiņas, kas pārtrauktas rindkopas vidū; vārds, kas rindiņas beigās pārnests ar defisi, tiek savienots. Tukšās rindiņas, saraksti, īsas rindiņas, saites un kods saglabā rindiņu pārtraukumus. Mainās tikai kopijas no %1$s; to nevar atsaukt.</string>
+    <string name="clipboard_clean_message">Noņem liekās atstarpes un tukšās rindiņas un savieno rindiņas, kas pārtrauktas teikuma vidū; vārds, kas rindiņas beigās pārnests ar defisi, tiek savienots. Rindkopu robežas, saraksti, saites un kods saglabā rindiņu pārtraukumus. Mainās tikai kopijas no %1$s; to nevar atsaukt.</string>
     <string name="clipboard_clean_action">Notīrīt</string>
     <string name="clipboard_clean_nothing">Nav ko notīrīt.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="zero">Piespraustajiem pievienoti %1$d klipi.</item><item quantity="one">Piespraustajiem pievienots %1$d klips.</item><item quantity="other">Piespraustajiem pievienoti %1$d klipi.</item></plurals>

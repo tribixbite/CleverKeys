@@ -272,9 +272,9 @@
     <string name="extra_keys_search_hint">Hledat extra klávesy…</string>
     <string name="extra_keys_info">Vybrané klávesy se zobrazí na klávesnici podle jejich preferovaných pozic</string>
     <string name="extra_keys_reset">Obnovit výchozí nastavení</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Obnovit výchozí extra klávesy?</string>
+    <string name="extra_keys_reset_message">Každá extra klávesa se vrátí ke svému výchozímu nastavení zapnuto nebo vypnuto. Počet kláves, které se změní: %1$d</string>
+    <string name="extra_keys_reset_done">Extra klávesy obnoveny na výchozí</string>
     <string name="short_swipe_title">Přizpůsobení krátkého tahu</string>
     <string name="short_swipe_show_keyboard">Zobrazit klávesnici</string>
     <string name="short_swipe_reset_all">Obnovit vše</string>
@@ -1796,8 +1796,8 @@
     <string name="theme_look_cleverkeys_desc">Moderní zaoblené klávesy; světlý nebo tmavý režim podle systému (výchozí)</string>
     <string name="theme_toast_applying">Použije se motiv: %1$s</string>
     <string name="theme_default_custom_name">Můj motiv</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Motiv se nepodařilo uložit. Vaše změny zůstávají otevřené.</string>
+    <string name="theme_limit_reached">Máte nejvyšší počet vlastních motivů, který CleverKeys uchovává. Chcete-li uložit nový motiv, jeden smažte.</string>
     <string name="swipe_debug_session_intro">=== Relace testovacího hřiště tahů zahájena ===\nTáhněte v textovém poli výše. Každý tah zobrazí pořadí kandidátů\na zaznamená se (body + geometrie kláves + pořadí + potvrzené slovo).</string>
     <string name="swipe_debug_log_cleared_banner">Protokoly vymazány. Čeká se na vstup tahem...</string>
     <string name="swipe_debug_toast_logs_cleared">Protokoly vymazány</string>
@@ -2626,7 +2626,7 @@
     <string name="clipboard_merge_action">Sloučit</string>
     <string name="clipboard_merge_too_few">Ke sloučení vyberte alespoň dva textové výstřižky.</string>
     <string name="clipboard_merge_too_large">Sloučený výstřižek by měl %1$s; limit je %2$s. Vyberte méně výstřižků.</string>
-    <string name="clipboard_clean_message">Odstraní mezery na koncích řádků a spojí řádky zalomené uvnitř odstavce; slovo rozdělené spojovníkem na konci řádku se opět spojí. Prázdné řádky, seznamy, krátké řádky, odkazy a kód si zalomení ponechají. Změní se pouze kopie v %1$s; akci nelze vrátit zpět.</string>
+    <string name="clipboard_clean_message">Odstraní nadbytečné mezery a prázdné řádky a spojí řádky zalomené uprostřed věty; slovo rozdělené spojovníkem na konci řádku se opět spojí. Předěly mezi odstavci, seznamy, odkazy a kód si zalomení řádků ponechají. Změní se pouze kopie v %1$s; akci nelze vrátit zpět.</string>
     <string name="clipboard_clean_action">Vyčistit</string>
     <string name="clipboard_clean_nothing">Není co čistit.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Do připnutých přidán %1$d výstřižek.</item><item quantity="few">Do připnutých přidány %1$d výstřižky.</item><item quantity="many">Do připnutých přidáno %1$d výstřižku.</item><item quantity="other">Do připnutých přidáno %1$d výstřižků.</item></plurals>

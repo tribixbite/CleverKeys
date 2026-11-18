@@ -272,9 +272,9 @@
     <string name="extra_keys_search_hint">Szukaj dodatkowych klawiszy…</string>
     <string name="extra_keys_info">Wybrane klawisze pojawią się na klawiaturze w preferowanych pozycjach</string>
     <string name="extra_keys_reset">Przywróć domyślne</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Przywrócić domyślne dodatkowe klawisze?</string>
+    <string name="extra_keys_reset_message">Każdy dodatkowy klawisz wraca do domyślnego ustawienia: włączony lub wyłączony. Zmieniane klawisze: %1$d</string>
+    <string name="extra_keys_reset_done">Przywrócono domyślne dodatkowe klawisze</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Dostosowanie krótkich gestów</string>
@@ -1806,8 +1806,8 @@
     <string name="theme_look_cleverkeys_desc">Nowoczesne zaokrąglone klawisze; jasny lub ciemny zgodnie z systemem (domyślny)</string>
     <string name="theme_toast_applying">Stosowanie motywu: %1$s</string>
     <string name="theme_default_custom_name">Mój motyw</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Nie udało się zapisać motywu. Twoje zmiany są nadal otwarte.</string>
+    <string name="theme_limit_reached">Masz już maksymalną liczbę własnych motywów, jaką przechowuje CleverKeys. Usuń jeden, aby zapisać nowy motyw.</string>
     <string name="swipe_debug_session_intro">=== Rozpoczęto sesję placu testowego gestów ===\nWykonuj gesty w polu tekstowym powyżej. Każdy gest pokazuje ranking kandydatów\ni jest zapisywany (punkty + geometria klawiszy + ranking + zatwierdzone słowo).</string>
     <string name="swipe_debug_log_cleared_banner">Wyczyszczono logi. Oczekiwanie na gest...</string>
     <string name="swipe_debug_toast_logs_cleared">Wyczyszczono logi</string>
@@ -2636,7 +2636,7 @@
     <string name="clipboard_merge_action">Scal</string>
     <string name="clipboard_merge_too_few">Zaznacz co najmniej dwa wycinki tekstowe, aby je scalić.</string>
     <string name="clipboard_merge_too_large">Scalony wycinek miałby %1$s; limit to %2$s. Zaznacz mniej wycinków.</string>
-    <string name="clipboard_clean_message">Usuwa spacje na końcach wierszy i łączy wiersze podzielone wewnątrz akapitu; słowo przeniesione z dywizem na końcu wiersza zostaje połączone. Puste wiersze, listy, krótkie wiersze, linki i kod zachowują podziały wierszy. Zmieniają się tylko kopie w %1$s; tej operacji nie można cofnąć.</string>
+    <string name="clipboard_clean_message">Usuwa zbędne spacje i puste wiersze oraz łączy wiersze podzielone w środku zdania; słowo przeniesione z dywizem na końcu wiersza zostaje połączone. Granice akapitów, listy, linki i kod zachowują podziały wierszy. Zmieniają się tylko kopie w %1$s; tej operacji nie można cofnąć.</string>
     <string name="clipboard_clean_action">Wyczyść</string>
     <string name="clipboard_clean_nothing">Nie ma czego czyścić.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Dodano %1$d wycinek do przypiętych.</item><item quantity="few">Dodano %1$d wycinki do przypiętych.</item><item quantity="many">Dodano %1$d wycinków do przypiętych.</item><item quantity="other">Dodano %1$d wycinka do przypiętych.</item></plurals>

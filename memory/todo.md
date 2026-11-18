@@ -130,12 +130,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `1-translate.csv` 626 rows, `2-check.csv` 332, `3-read-through.csv` 33,163 optional; README
     there. Re-import: `python3 scripts/export_translation_review.py --import <locale>/*.csv
     [--dry-run]`. Leads: `docs/audit/2026-10-22-translation-audit.md`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-10)
-    Added 2026-11-15, NOT yet in the sheets (re-export first): `io_error_backup_password_unreadable`
-    (agent translations in all 21), and `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`,
-    `extra_keys_reset_message`, `extra_keys_reset_done` (English in every locale). Changed
-    2026-11-18: `clipboard_clean_message` (Clean's rules changed; the 21 translations still
-    describe the old ones). Added 2026-11-18: `dict_error_out_of_memory` (agent translations in
-    all 21, using each locale's Dictionary Manager title).
+    Added 2026-11-15, NOT yet in the sheets (re-export first): `io_error_backup_password_unreadable`,
+    `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
+    `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
+    `dict_error_out_of_memory`. 2026-11-18: the five that were English and the stale Clean message
+    now have machine translations in all 21 locales, and every string added or changed since the
+    last LanguageTool run (76, `ef203c87`..`e33bfffa`) went through LanguageTool in its 14 locales
+    (audit §9; 1 fix, cs hu in ko lv tr vi unchecked). All still await this native review.
 11. [x] maintainer decisions (2026-10-25 questionnaire) — CLOSED 2026-11-18, every part DONE: es LM stays
     unshipped (pre-registered retry failed; only UD Spanish-PUD unused), FLOOR_ONE ships for
     de/fr/it/pt/sv (en keeps RAW), `finger_occlusion_offset` stays 0, the first Saga keeps CleverKeys

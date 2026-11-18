@@ -261,9 +261,9 @@
     <string name="extra_keys_search_hint">Поиск дополнительных клавиш…</string>
     <string name="extra_keys_info">Выбранные клавиши появятся на клавиатуре в соответствии с предпочтительными позициями</string>
     <string name="extra_keys_reset">Сбросить к настройкам по умолчанию</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Сбросить дополнительные клавиши?</string>
+    <string name="extra_keys_reset_message">Каждая дополнительная клавиша вернётся к своему значению по умолчанию — включена или выключена. Изменится клавиш: %1$d</string>
+    <string name="extra_keys_reset_done">Дополнительные клавиши сброшены к настройкам по умолчанию</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Настройка коротких свайпов</string>
@@ -1801,8 +1801,8 @@
     <string name="theme_look_cleverkeys_desc">Современные скруглённые клавиши; светлая или тёмная — как в системе (по умолчанию)</string>
     <string name="theme_toast_applying">Применение темы: %1$s</string>
     <string name="theme_default_custom_name">Моя тема</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Не удалось сохранить тему. Ваши изменения по-прежнему открыты.</string>
+    <string name="theme_limit_reached">У вас уже максимальное число пользовательских тем, которое хранит CleverKeys. Удалите одну, чтобы сохранить новую тему.</string>
     <string name="swipe_debug_session_intro">=== Сеанс Swipe Playground начат ===\nПроводите свайпы в текстовом поле выше. Для каждого свайпа показывается ранжирование кандидатов,\nи он записывается (точки + геометрия клавиш + ранжирование + введённое слово).</string>
     <string name="swipe_debug_log_cleared_banner">Журнал очищен. Ожидание свайпа...</string>
     <string name="swipe_debug_toast_logs_cleared">Журнал очищен</string>
@@ -2631,7 +2631,7 @@
     <string name="clipboard_merge_action">Объединить</string>
     <string name="clipboard_merge_too_few">Выберите хотя бы два текстовых фрагмента для объединения.</string>
     <string name="clipboard_merge_too_large">Объединённый фрагмент занял бы %1$s; ограничение — %2$s. Выберите меньше фрагментов.</string>
-    <string name="clipboard_clean_message">Удаляет пробелы в конце строк и соединяет строки, разорванные внутри абзаца; слово, перенесённое через дефис в конце строки, соединяется. Пустые строки, списки, короткие строки, ссылки и код сохраняют переносы. Изменяются только копии в %1$s; это нельзя отменить.</string>
+    <string name="clipboard_clean_message">Удаляет лишние пробелы и пустые строки, соединяет строки, разорванные посреди предложения; слово, перенесённое через дефис в конце строки, соединяется. Границы абзацев, списки, ссылки и код сохраняют переносы строк. Изменяются только копии в %1$s; это нельзя отменить.</string>
     <string name="clipboard_clean_action">Очистить</string>
     <string name="clipboard_clean_nothing">Нечего очищать.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d фрагмент добавлен в закреплённые.</item><item quantity="few">%1$d фрагмента добавлены в закреплённые.</item><item quantity="many">%1$d фрагментов добавлено в закреплённые.</item><item quantity="other">%1$d фрагмента добавлено в закреплённые.</item></plurals>

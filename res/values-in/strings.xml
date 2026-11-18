@@ -266,9 +266,9 @@
     <string name="extra_keys_search_hint">Cari tombol tambahan…</string>
     <string name="extra_keys_info">Tombol yang dipilih akan muncul di keyboard berdasarkan posisi yang diinginkan</string>
     <string name="extra_keys_reset">Setel Ulang ke Default</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Setel ulang tombol tambahan?</string>
+    <string name="extra_keys_reset_message">Setiap tombol tambahan kembali ke setelan default-nya, aktif atau nonaktif. Tombol yang berubah: %1$d</string>
+    <string name="extra_keys_reset_done">Tombol tambahan disetel ulang ke default</string>
 
     <!-- Kustomisasi geser pendek / Short Swipe Customization -->
     <string name="short_swipe_title">Kustomisasi Geser Pendek</string>
@@ -1700,8 +1700,8 @@
     <string name="theme_look_cleverkeys_desc">Tombol bulat modern; terang atau gelap mengikuti sistem (default)</string>
     <string name="theme_toast_applying">Menerapkan tema: %1$s</string>
     <string name="theme_default_custom_name">Tema Saya</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Tidak dapat menyimpan tema. Perubahan Anda masih terbuka.</string>
+    <string name="theme_limit_reached">Anda sudah memiliki jumlah maksimum tema kustom yang disimpan CleverKeys. Hapus salah satu untuk menyimpan tema baru.</string>
     <string name="swipe_debug_session_intro">=== Sesi Swipe Playground Dimulai ===\nGeser di kolom teks di atas. Setiap geseran menampilkan peringkat kandidatnya\ndan direkam (titik + geometri tombol + peringkat + kata yang dimasukkan).</string>
     <string name="swipe_debug_log_cleared_banner">Log dihapus. Menunggu input geser...</string>
     <string name="swipe_debug_toast_logs_cleared">Log dihapus</string>
@@ -2503,7 +2503,7 @@
     <string name="clipboard_merge_action">Gabungkan</string>
     <string name="clipboard_merge_too_few">Pilih setidaknya dua klip teks untuk digabungkan.</string>
     <string name="clipboard_merge_too_large">Klip gabungan akan berukuran %1$s; batasnya %2$s. Pilih lebih sedikit klip.</string>
-    <string name="clipboard_clean_message">Menghapus spasi di akhir baris dan menyambung baris yang terputus di tengah paragraf; kata yang dipenggal dengan tanda hubung di akhir baris disambung kembali. Baris kosong, daftar, baris pendek, tautan, dan kode tetap mempertahankan baris barunya. Hanya salinan di %1$s yang berubah; tindakan ini tidak dapat diurungkan.</string>
+    <string name="clipboard_clean_message">Menghapus spasi dan baris kosong yang berlebih serta menyambung baris yang terputus di tengah kalimat; kata yang dipenggal dengan tanda hubung di akhir baris disambung kembali. Pemisah paragraf, daftar, tautan, dan kode tetap mempertahankan baris barunya. Hanya salinan di %1$s yang berubah; tindakan ini tidak dapat diurungkan.</string>
     <string name="clipboard_clean_action">Rapikan</string>
     <string name="clipboard_clean_nothing">Tidak ada yang perlu dirapikan.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="other">%1$d klip ditambahkan ke yang disematkan.</item></plurals>

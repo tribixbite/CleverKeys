@@ -272,9 +272,9 @@
     <string name="extra_keys_search_hint">Пошук додаткових клавіш…</string>
     <string name="extra_keys_info">Вибрані клавіші з\'являться на клавіатурі відповідно до бажаних позицій</string>
     <string name="extra_keys_reset">Скинути до стандартних</string>
-    <string name="extra_keys_reset_title">Reset extra keys?</string>
-    <string name="extra_keys_reset_message">Every extra key goes back to its default on or off setting. Keys that change: %1$d</string>
-    <string name="extra_keys_reset_done">Extra keys reset to defaults</string>
+    <string name="extra_keys_reset_title">Скинути додаткові клавіші?</string>
+    <string name="extra_keys_reset_message">Кожна додаткова клавіша повернеться до свого стандартного стану — увімкнена чи вимкнена. Зміниться клавіш: %1$d</string>
+    <string name="extra_keys_reset_done">Додаткові клавіші скинуто до стандартних</string>
 
     <!-- Short Swipe Customization (wp8 batch) -->
     <string name="short_swipe_title">Налаштування коротких свайпів</string>
@@ -1796,7 +1796,7 @@
     <string name="theme_look_forest_name">Ліс</string>
     <string name="theme_look_forest_desc">Сонячний ліс у ранковому тумані, з гойдливим листям і папоротями</string>
     <string name="theme_look_snow_name">Сніг</string>
-    <string name="theme_look_snow_desc">Засніжені пагорби під північним сяйвом, із зорями й падаючим снігом</string>
+    <string name="theme_look_snow_desc">Засніжені пагорби під північним сяйвом, із зорями й снігопадом</string>
     <string name="theme_look_beach_name">Пляж</string>
     <string name="theme_look_beach_desc">Хвилі, що набігають на світлий піщаний пляж</string>
     <string name="theme_look_ios_name">У стилі iOS</string>
@@ -1807,8 +1807,8 @@
     <string name="theme_look_cleverkeys_desc">Сучасні заокруглені клавіші; світла чи темна — як у системі (типово)</string>
     <string name="theme_toast_applying">Застосування теми: %1$s</string>
     <string name="theme_default_custom_name">Моя тема</string>
-    <string name="theme_save_failed">Could not save the theme. Your changes are still open.</string>
-    <string name="theme_limit_reached">You have the most custom themes CleverKeys keeps. Delete one to save a new theme.</string>
+    <string name="theme_save_failed">Не вдалося зберегти тему. Ваші зміни досі відкриті.</string>
+    <string name="theme_limit_reached">У вас уже максимальна кількість власних тем, яку зберігає CleverKeys. Видаліть одну, щоб зберегти нову тему.</string>
     <string name="swipe_debug_session_intro">=== Сеанс Swipe Playground розпочато ===\nПроводьте свайпи в текстовому полі вище. Для кожного свайпу показується ранжування кандидатів,\nі він записується (точки + геометрія клавіш + ранжування + введене слово).</string>
     <string name="swipe_debug_log_cleared_banner">Журнал очищено. Очікування свайпу...</string>
     <string name="swipe_debug_toast_logs_cleared">Журнал очищено</string>
@@ -2637,7 +2637,7 @@
     <string name="clipboard_merge_action">Об’єднати</string>
     <string name="clipboard_merge_too_few">Виберіть щонайменше два текстові фрагменти для об’єднання.</string>
     <string name="clipboard_merge_too_large">Об’єднаний фрагмент мав би %1$s; обмеження — %2$s. Виберіть менше фрагментів.</string>
-    <string name="clipboard_clean_message">Видаляє пробіли в кінці рядків і з’єднує рядки, розірвані всередині абзацу; слово, перенесене через дефіс у кінці рядка, з’єднується. Порожні рядки, списки, короткі рядки, посилання й код зберігають переноси. Змінюються лише копії в %1$s; цю дію не можна скасувати.</string>
+    <string name="clipboard_clean_message">Видаляє зайві пробіли й порожні рядки, з’єднує рядки, розірвані посеред речення; слово, перенесене через дефіс у кінці рядка, з’єднується. Межі абзаців, списки, посилання й код зберігають переноси рядків. Змінюються лише копії в %1$s; цю дію не можна скасувати.</string>
     <string name="clipboard_clean_action">Очистити</string>
     <string name="clipboard_clean_nothing">Нічого очищати.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d фрагмент додано до закріплених.</item><item quantity="few">%1$d фрагменти додано до закріплених.</item><item quantity="many">%1$d фрагментів додано до закріплених.</item><item quantity="other">%1$d фрагмента додано до закріплених.</item></plurals>
