@@ -134,7 +134,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (agent translations in all 21), and `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`,
     `extra_keys_reset_message`, `extra_keys_reset_done` (English in every locale). Changed
     2026-11-18: `clipboard_clean_message` (Clean's rules changed; the 21 translations still
-    describe the old ones).
+    describe the old ones). Added 2026-11-18: `dict_error_out_of_memory` (agent translations in
+    all 21, using each locale's Dictionary Manager title).
 11. [x] maintainer decisions (2026-10-25 questionnaire) — CLOSED 2026-11-18, every part DONE: es LM stays
     unshipped (pre-registered retry failed; only UD Spanish-PUD unused), FLOOR_ONE ships for
     de/fr/it/pt/sv (en keeps RAW), `finger_occlusion_offset` stays 0, the first Saga keeps CleverKeys
