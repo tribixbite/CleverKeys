@@ -200,10 +200,6 @@ object UserJoinerPreference {
             if (existing != null) collisions++
             if (existing == null || freq > existing) projected.freqs[surface] = freq
         }
-        // Joiner user words never become alternates either: like the display slot, their form
-        // is shown by the [build] overlay, so the alternates stay those of the non-joiner words.
-        return CtcAzProjection.Projected(
-            projected.freqs, projected.display, merged.size, untypeable, collisions, projected.alternates
-        )
+        return CtcAzProjection.Projected(projected.freqs, projected.display, merged.size, untypeable, collisions)
     }
 }

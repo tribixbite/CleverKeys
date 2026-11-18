@@ -118,10 +118,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 8. [ ] maintainer soak: running every release as generated. Bugs (a) `they've`, (b) long to-do entry
    editing, (c) bépo `été`: fixed or maintainer PASS 2026-10-26. Left: the soak → ARC-063 narrow the
    blanket R8 keeps → tag decision; a few real traces of a hard pronoun contraction would decide a
-   ranking change (`they're`/`you're` lose to `there`/`your`); FIXED 2026-11-18: `ß`/`æ`/`œ` keys
-   have a CTC slot and `schön`/`schon`-type collisions offer both forms (spec "Collisions": real
-   FUTO traces t1 unchanged, t3 +0.1…+1.3 pt in de/es/fr; ß/æ boards synthetic pins only, no
-   corpus — a device check on Neo 2/Danish is open); `yo` is nearly impossible to
+   ranking change (`they're`/`you're` lose to `there`/`your`); `ß`/`æ`/`œ` keys have no CTC slot;
+   `schön`/`schon`-type collisions keep only the more frequent form; `yo` is nearly impossible to
    swipe (always `to`; maintainer 2026-11-18) — the item-17 short-word family, see there. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-8)
 9. [ ] agent (objective) + maintainer (feel): pre-tag checks. #90, #168, #145, both minimize styles
    PASS 2026-10-25 (Pixel). Full checklist 2026-11-09 (Pixel): 43 pass / 5 fail / 3 partial / 12 not

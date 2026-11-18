@@ -92,8 +92,7 @@ class OnnxCtcEmissionModel(
                         val full = FloatArray(frames * headWidth)
                         out.floatBuffer.get(full)
                         return CtcEmissions.sliceFromHead(
-                            full, frames, CtcFeaturizer.MAX_KEYS, numLetters, layout.aliasTargets,
-                            layout.aliasSecondTargets,
+                            full, frames, CtcFeaturizer.MAX_KEYS, numLetters, layout.aliasTargets
                         )
                     }
                 }

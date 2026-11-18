@@ -262,17 +262,7 @@ path, geometric always gets the smoothed path, the ML capture records both).
    bépo's `é` read as `b`/`p`/`u` (`été` → `tp`) and a path over QWERTZ `ü` was clipped to the
    a–z box edge. Real FUTO German traces: top-1 81.46 → 83.75 %, umlaut words 53.6 → 77.0 %
    (`docs/eval/2026-10-25-ctc-accent-keys.md`). Latin family only; a board without such keys
-   builds the identical a–z layout and frame.
-   **Two-letter keys (2026-11-18).** A centre key the lexicon spells with two letters is an alias
-   too: `ß` (`ss`; Neo 2, Bone) folds into `s` alone — the beam's advance move takes the second
-   `s` from a later frame of the same column — and `æ` (`ae`; Danish, Icelandic) / `œ` (`oe`)
-   fold into BOTH letters (`CtcLayout.aliasSecondTargets`, a second log-sum-exp fold in
-   `sliceFromHead`; such a row sums above 1, but a path scores one column per frame). Before,
-   these keys had no slot and a path over them read the nearest a–z keys (Neo 2 `straße` →
-   `strafe`). No real corpus exists for these boards; the evidence is synthetic pins in
-   `CtcAccentKeyLayoutReplayTest` (Danish/Icelandic decode against the Swedish lexicon plus five
-   Danish words, since no Danish dictionary ships). A key with more than two distinct letters,
-   or none (`ı`, `þ`), stays slotless.
+   builds the identical a–z layout and frame. `ß`/`æ`/`œ` keys (several letters) stay slotless.
 2. **Lexicon, per language** (`CtcLanguageSupport` is the table; see "Per-language
    enablement" for the λ/source matrix). **en** reads the bundled
    `dictionaries/en_enhanced.json` ({word: freq}, frequencies already on the AOSP-like
@@ -575,33 +565,9 @@ form has to survive somewhere. `CtcAzProjection`:
   keys are a–z aliases, so they must see the a–z surface of anything the accent map did not
   rewrite.
 - **Collisions**: several canonical words can share one a–z surface (`côte`/`cote`/`coté`).
-  The HIGHEST-frequency canonical wins both the trie frequency and the display slot; ties keep
-  insertion order (custom words first, then rank ascending). Every other form is kept in
-  `Projected.alternates` (surface → forms, most frequent first; one entry per collision — 2,042
-  fr, 406 de, 2,045 es), and since 2026-11-18 `CtcSurfaceForms.expand` offers them: each
-  alternate of a decoded surface is a candidate scored `final − λ·(node logFreq − its logFreq)`,
-  i.e. as if it were its own trie word on the same path; the slate is re-sorted and cut to 8. The
-  winner keeps its score and place, so top-1 never changes. Until then only the winner was
-  reachable (`schön` under `schon`, `à` under `a`). The expansion runs on the beam's candidates
-  inside `applyCanonicalDisplay`, BEFORE the softmax and the fuzzy rescue (the rescue now
-  excludes beam surfaces and shows its matches through the display map), because a bare-surface
-  alternate (`ware` under `wäre`) is indistinguishable from the winner's surface afterwards.
-  The en JSON source has no projection and so no alternates. Joiner user words stay out of the
-  alternates (the `UserJoinerPreference` overlay shows them). Replay on real FUTO swipe-5 traces
-  (shipped encoder + CKDT preset, display-form targets; `scripts/ctc_collision_alternates_eval.py`):
-
-  | corpus | rows | t1 before → after | t3 before → after | t8 before → after | targets that were unreachable losers: t3 after |
-  |---|---:|---|---|---|---|
-  | german (de) | 2,199 | 83.72 → 83.72 | 93.68 → 93.86 | 96.18 → 96.41 | 6 of 8 |
-  | qwertz (de) | 1,187 | 84.92 → 84.92 | 94.10 → 94.19 | 96.97 → 97.05 | 2 of 2 |
-  | spanish (es) | 1,757 | 89.19 → 89.19 | 94.99 → 95.96 | 96.70 → 97.84 | 21 of 22 |
-  | azerty (fr) | 2,053 | 84.36 → 84.36 | 94.06 → 95.32 | 96.44 → 98.20 | 33 of 39 |
-
-  Top-3 traces fixed/broken: de 6/2, qwertz 2/1, es 21/4, fr 33/7. The broken ones are winners
-  pushed from slot 3 to 4 by an alternate of a higher candidate (`altar` behind `älter`). One
-  pass, no held-out split, nothing tuned.
-  Heap: the alternates map retains ~363 KiB for fr, ~74 KiB for de, ~369 KiB for es (HotSpot,
-  used-heap delta after GC with the map dropped; the trie itself is ~19 MB).
+  The HIGHEST-frequency canonical wins both the frequency and the display slot; ties keep
+  insertion order (custom words first, then rank ascending). Known limitation: only that
+  form is reachable by swipe — French `à` cannot be produced when `a` outranks it.
 - Measured on the shipped dictionaries (pinned by `CtcCkdtLexiconTest`, matching the sweep
   harness's numbers). The pinned rows are the three that had a sweep; `it`/`pt`/`sv` read
   the same projection through the same code path but have no pinned counts:

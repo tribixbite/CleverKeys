@@ -77,9 +77,6 @@ class CtcEmissions(
          * @param aliasTargets alias key slots `numLetters + j` (see `CtcLayout.aliasTargets`):
          *   each is folded into column `aliasTargets[j]` by log-sum-exp, so the kept columns
          *   stay one normalized distribution over the alphabet + blank.
-         * @param aliasSecondTargets per alias slot, a second column the same slot ALSO folds into
-         *   (two-letter keys `æ`→`a`+`e`, `œ`→`o`+`e`; see `CtcLayout`), or -1; empty = none. A
-         *   second fold adds the slot's mass to a second column, so such a row sums above 1.
          */
         fun sliceFromHead(
             fullHead: FloatArray,
@@ -87,20 +84,12 @@ class CtcEmissions(
             maxKeys: Int,
             numLetters: Int,
             aliasTargets: IntArray = IntArray(0),
-            aliasSecondTargets: IntArray = IntArray(0),
         ): CtcEmissions {
             require(numLetters in 1..maxKeys) { "numLetters $numLetters out of range 1..$maxKeys" }
             require(numLetters + aliasTargets.size <= maxKeys) {
                 "numLetters $numLetters + ${aliasTargets.size} aliases exceed $maxKeys"
             }
             require(aliasTargets.all { it in 0 until numLetters }) { "alias target outside the alphabet" }
-            require(aliasSecondTargets.isEmpty() || aliasSecondTargets.size == aliasTargets.size) {
-                "alias second targets length ${aliasSecondTargets.size} != ${aliasTargets.size}"
-            }
-            require(aliasSecondTargets.all { it == -1 || it in 0 until numLetters }) {
-                "alias second target outside the alphabet"
-            }
-            val hasSecond = aliasSecondTargets.any { it >= 0 }
             val headWidth = maxKeys + 1
             require(fullHead.size == frames * headWidth) {
                 "fullHead length ${fullHead.size} != frames*(maxKeys+1) (${frames * headWidth})"
@@ -113,13 +102,8 @@ class CtcEmissions(
                 System.arraycopy(fullHead, srcBase, out, dstBase, numLetters)
                 out[dstBase + numLetters] = fullHead[srcBase + maxKeys] // blank column
                 for (j in aliasTargets.indices) {
-                    val slot = fullHead[srcBase + numLetters + j]
                     val c = dstBase + aliasTargets[j]
-                    out[c] = logAddExp(out[c], slot)
-                    if (hasSecond && aliasSecondTargets[j] >= 0) {
-                        val c2 = dstBase + aliasSecondTargets[j]
-                        out[c2] = logAddExp(out[c2], slot)
-                    }
+                    out[c] = logAddExp(out[c], fullHead[srcBase + numLetters + j])
                 }
             }
             return CtcEmissions(out, frames, outWidth)

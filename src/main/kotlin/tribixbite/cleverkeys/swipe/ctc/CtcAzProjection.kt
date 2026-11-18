@@ -79,11 +79,7 @@ object CtcAzProjection {
      * @property untypeable entries dropped because [project] returned null.
      * @property collisions entries that landed on an already-occupied surface
      *   (`records − untypeable − freqs.size`); the HIGHEST-frequency canonical form wins
-     *   both the frequency and the display slot.
-     * @property alternates surface → every OTHER canonical form of it, most frequent first
-     *   (ties in input order), ONLY for surfaces with a collision. The beam reaches the surface
-     *   once; [CtcSurfaceForms.expand] offers these forms beside the winner (2026-11-18 — before
-     *   that only the winner was reachable by swipe). About 2,000 entries for fr/es, 400 for de.
+     *   both the frequency and the display slot, so only that form is reachable by swipe.
      */
     class Projected(
         val freqs: LinkedHashMap<String, Double>,
@@ -91,7 +87,6 @@ object CtcAzProjection {
         val records: Int,
         val untypeable: Int,
         val collisions: Int,
-        val alternates: Map<String, Array<CtcAlternateForm>> = emptyMap(),
     )
 
     /**
