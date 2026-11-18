@@ -17,8 +17,8 @@ class ClipboardTextCleanerTest {
     fun trailingSpacesAndTabsAreRemovedFromLinesAndTheEnd() {
         assertThat(clean("Hello  \nWorld\t \n\n\n")).isEqualTo("Hello\nWorld")
         assertThat(clean("one line with trailing tab\t")).isEqualTo("one line with trailing tab")
-        // Leading whitespace of the text is not "trailing" and is kept.
-        assertThat(clean("  indented start")).isEqualTo("  indented start")
+        // Leading whitespace is extra white space too (maintainer 2026-11-18).
+        assertThat(clean("  indented start")).isEqualTo("indented start")
     }
 
     @Test
@@ -32,7 +32,7 @@ class ClipboardTextCleanerTest {
 
     @Test
     fun unicodeSpacesAtLineEndsAreTrailingWhitespace() {
-        assertThat(clean("Bonjour  \nmonde　 ﻿")).isEqualTo("Bonjour\nmonde")
+        assertThat(clean("Bonjour  \nmonde　 ﻿")).isEqualTo("Bonjour monde")  // mid-sentence, so the break goes too
         // Inside a line they are content, not trailing whitespace.
         assertThat(clean("10 km")).isEqualTo("10 km")
     }
@@ -82,9 +82,57 @@ class ClipboardTextCleanerTest {
     }
 
     @Test
-    fun shortLinesLikeAddressesAndPoemsKeepTheirBreaks() {
+    fun shortLinesLikeAddressesAndGreetingsKeepTheirBreaks() {
         assertThat(clean("John Smith\n12 Main Street\nSpringfield")).isEqualTo("John Smith\n12 Main Street\nSpringfield")
-        assertThat(clean("Roses are red,\nviolets are blue")).isEqualTo("Roses are red,\nviolets are blue")
+        assertThat(clean("Dear Sam,\nThanks for the photos.")).isEqualTo("Dear Sam,\nThanks for the photos.")
+        assertThat(clean("Sincerely\nAlex")).isEqualTo("Sincerely\nAlex")
+    }
+
+    /**
+     * Maintainer 2026-11-18: "it should find any line breaks that are mid-sentence and remove
+     * them". A break the line before does not end a sentence at, followed by a lowercase
+     * letter, is mid-sentence however short the line is (a narrow phone screen or terminal
+     * wraps well under the old 20-character floor).
+     */
+    @Test
+    fun aShortLineBrokenMidSentenceIsJoined() {
+        assertThat(clean("Hello world\nhow are you today")).isEqualTo("Hello world how are you today")
+        assertThat(clean("Roses are red,\nviolets are blue")).isEqualTo("Roses are red, violets are blue")
+        assertThat(clean("We tried it\ntwice and then\nit worked.")).isEqualTo("We tried it twice and then it worked.")
+        // A sentence end before an uppercase start is a deliberate line: kept.
+        assertThat(clean("It worked.\nThen we left.")).isEqualTo("It worked.\nThen we left.")
+    }
+
+    /** A prose line ending in a semicolon or colon is not code; the rest of the clip is cleaned. */
+    @Test
+    fun aSemicolonOrColonAtALineEndDoesNotStopCleaning() {
+        assertThat(clean("We tried it twice;\nthe second time it worked.\nNext   time  we  know."))
+            .isEqualTo("We tried it twice; the second time it worked.\nNext time we know.")
+        assertThat(clean("The answer is simple:\nwe stay home tonight."))
+            .isEqualTo("The answer is simple: we stay home tonight.")
+    }
+
+    /**
+     * A clip copied from a terminal or chat app where EVERY line, the first too, carries the
+     * same indent: the shared indent goes and the wrapped prose is joined (it used to read as
+     * code, "Nothing to clean").
+     */
+    @Test
+    fun aClipWhoseEveryLineIsIndentedIsCleaned() {
+        val clip = "  The tag is blocked only on your\n" +
+            "  three items. The code itself is\n" +
+            "  green, and the suites pass."
+        assertThat(clean(clip)).isEqualTo("The tag is blocked only on your three items. The code itself is green, and the suites pass.")
+        // A short line before an indented continuation is still a wrap when it is mid-sentence.
+        assertThat(clean("Short line here\n   continues on the next")).isEqualTo("Short line here continues on the next")
+    }
+
+    /** Extra white space: blank lines at the ends go, runs of blank lines become one, tabs become a space. */
+    @Test
+    fun extraBlankLinesAndInnerTabsAreRemoved() {
+        assertThat(clean("\n\n  First paragraph.\n\n\n\nSecond paragraph.  \n\n"))
+            .isEqualTo("First paragraph.\n\nSecond paragraph.")
+        assertThat(clean("Name:\tSam  \t Lee")).isEqualTo("Name: Sam Lee")
     }
 
     @Test
@@ -127,8 +175,11 @@ class ClipboardTextCleanerTest {
     }
 
     @Test
-    fun aLongListItemIsNotJoinedToTheFollowingLine() {
-        val text = "- a very long list item that goes on and on and wraps\naround onto the next line here"
+    fun aListItemWrappedMidSentenceIsJoined() {
+        assertThat(clean("- a very long list item that goes on and on and wraps\naround onto the next line here"))
+            .isEqualTo("- a very long list item that goes on and on and wraps around onto the next line here")
+        // A new sentence after a finished item is not part of it.
+        val text = "- apples and pears.\nBread is on the other list."
         assertThat(clean(text)).isEqualTo(text)
     }
 
@@ -182,10 +233,11 @@ class ClipboardTextCleanerTest {
         val item = "  - Frames: the on run still drew about twice as many frames as\n" +
             "    the off runs, because the script pauses between bursts.\n" +
             "  - Idle: the scene moves for about twenty seconds of a minute."
+        // The indent every line shares is extra white space and goes.
         assertThat(clean(item)).isEqualTo(
-            "  - Frames: the on run still drew about twice as many frames as the off runs, because " +
+            "- Frames: the on run still drew about twice as many frames as the off runs, because " +
                 "the script pauses between bursts.\n" +
-                "  - Idle: the scene moves for about twenty seconds of a minute."
+                "- Idle: the scene moves for about twenty seconds of a minute."
         )
     }
 
@@ -263,6 +315,9 @@ class ClipboardTextCleanerTest {
             "Hello\r\n\r\nWorld \r\n",
             "Typing: the motion-on run used less power than both off\n   runs. The remaining cost is below\n   noise.",
             "One sentence.  Two  words.",
+            "my friend\nand I went to see\nBob",
+            "  Hello world\n  how are you\n\n\n\nFine.",
+            "Roses are red,\nviolets are blue",
         )
         for (text in samples) {
             val once = clean(text)
@@ -278,6 +333,11 @@ class ClipboardTextCleanerTest {
         assertThat(ClipboardTextCleaner.isStructural("e.g. not a list")).isFalse()
         assertThat(ClipboardTextCleaner.isPreformatted(listOf("plain", "prose"))).isFalse()
         assertThat(ClipboardTextCleaner.isPreformatted(listOf("x = 1;"))).isTrue()
-        assertThat(ClipboardTextCleaner.isPreformatted(listOf("text", "  indented"))).isTrue()
+        assertThat(ClipboardTextCleaner.isPreformatted(listOf("Text.", "  Indented"))).isTrue()
+        // An indented lowercase continuation of an unfinished line is a wrap, not code.
+        assertThat(ClipboardTextCleaner.isPreformatted(listOf("text", "  indented"))).isFalse()
+        // One prose line ending in a semicolon is not code; two are.
+        assertThat(ClipboardTextCleaner.isPreformatted(listOf("we tried;", "it worked"))).isFalse()
+        assertThat(ClipboardTextCleaner.isPreformatted(listOf("a();", "b();"))).isTrue()
     }
 }

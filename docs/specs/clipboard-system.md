@@ -526,32 +526,36 @@ of the first change; with nothing to change only a message is shown (selection k
 
 The transform (`ClipboardTextCleaner`, Android-free, `ClipboardTextCleanerTest`):
 
+Reworked 2026-11-18 to the maintainer's "find any line breaks that are mid-sentence and
+remove them as well as remove extra spaces and white space" (the earlier length-only rules left
+most phone and terminal clips "Nothing to clean"):
+
 1. CRLF, lone CR, NEL and U+2028 become `\n`; U+2029 becomes a blank line.
 2. Trailing whitespace is removed from every line and the end of the text: spaces, tabs,
    no-break and other Unicode spaces (U+00A0, U+2000–U+200A, U+202F, U+205F, U+3000) and
-   U+FEFF. Leading whitespace is never touched.
-3. Preformatted text keeps every line break: a line indented by a tab, a code fence, a
-   line ending in `{`, `;` or `\` or starting with `}`, `//`, a block-comment opener, `#!`,
-   `#include`, `<?`, `$ `, `>>> ` or a markup tag, a space-aligned table (two lines with a
-   gap of 2+ spaces, not after sentence punctuation, ending at the same column), a text
-   whose first line is space-indented, and any space-indented line that is not a
-   hanging-indent wrap (rule 4).
+   U+FEFF. Blank lines at the start and end go.
+3. Preformatted text keeps every line break and its indentation: a line indented by a tab, a
+   code fence, a line ending in `{` or `\` or starting with `}`, `//`, a block-comment opener,
+   `#!`, `#include`, `<?`, `$ `, `>>> ` or a markup tag, two or more lines ending in `;`, an
+   assignment (`name = value`), a space-aligned table (two lines with a gap of 2+ spaces, not
+   after sentence punctuation, ending at the same column), and any space-indented line that is
+   not a wrap (rule 4). The indent every line shares is ignored for this test.
 4. A space-indented line is a hanging-indent wrap — terminal output and Markdown renderers
-   indent the continuation of a wrapped line (maintainer report 2026-11-11: a clip copied
-   from a terminal was "nothing to clean") — when the line before it is long (as in 5),
-   does not end in `:`, `{`, `[`, `(` or `\`, and is indented no deeper than it; after a
-   list item it must be indented deeper than the marker. Code fails this somewhere (a
-   block opens after a colon or brace, or a short line comes before an indented one).
-5. Otherwise a single line break is "inserted" — and replaced — only when neither
-   neighbour is blank (blank lines are paragraph breaks), neither line is structural
-   (bullet, numbered/lettered/roman item, checkbox, Markdown heading, quote, table row,
-   horizontal rule) — except that a list item joins its own indented continuation — the
-   line before is long (≥ 20 characters and ≥ 60% of the longest prose line, so
-   addresses, poems, greetings and paragraph-final lines keep their break) and no URL
-   touches the break.
-6. In prose a run of spaces inside a line becomes one space; a kept line's indentation
-   stays.
-7. A replaced break becomes one space (the next line's leading whitespace is dropped, so
+   indent the continuation of a wrapped line (maintainer report 2026-11-11) — when the line
+   before it does not end in `:`, `{`, `[`, `(` or `\`, is indented no deeper than it (after a
+   list item: deeper than the marker), and the break is mid-sentence (rule 5).
+5. A line break is removed when it is mid-sentence: neither neighbour is blank, the next line
+   is not structural (bullet, numbered/lettered/roman item, checkbox, Markdown heading, quote,
+   table row, horizontal rule), no URL touches the break, the line before does not end a
+   sentence (`.` `!` `?` `…` or CJK `。！？`, before closing quotes or brackets), and either the
+   next line starts with a lowercase letter or the line before — as joined so far — is long
+   (≥ 20 characters and ≥ 60% of the longest prose line) and does not end in a colon. So
+   `Hello world\nhow are you` joins, while addresses, `Dear Sam,\nThanks…` and a break after a
+   finished sentence stay. A list item joins a mid-sentence continuation; headings, quotes,
+   table rows and rules never join the next line.
+6. In prose leading white space goes (a list item keeps its indent beyond the shared one), a
+   run of blank lines becomes one, and a tab or run of spaces inside a line becomes one space.
+7. A removed break becomes one space (the next line's leading whitespace is dropped, so
    no double spaces), except: letter + hyphen at the line end followed by a lowercase
    letter is a word hyphenated by the line break and is rejoined without the hyphen
    (`exam-\nple` → `example`); the hyphen is kept, with no space, when the token already

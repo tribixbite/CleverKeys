@@ -163,12 +163,17 @@ class ClipboardManager(
 
     /**
      * The last bulk-action result line, kept here (not only in [bulkFeedback]) because a
-     * confirmed action finishes asynchronously: when the pane is rebuilt meanwhile (theme
-     * change, keyboard hide/show — [invalidatePane]/[cleanup] drop the views) the result would
-     * otherwise land on no view and be lost. [getClipboardPane] re-renders it; it is cleared by
-     * the same events that used to hide the line (tab switch, a new selection).
+     * confirmed action finishes asynchronously: when the pane is rebuilt meanwhile (a theme
+     * change — [invalidatePane]/[cleanup] drop the views) the result would otherwise land on no
+     * view and be lost. [getClipboardPane] re-renders it. It describes one opening of the pane
+     * only (maintainer 2026-11-18: "Nothing to clean. 1 needs no cleaning" came back on later
+     * openings): closing the pane, leaving selection mode, a tab switch and a new selection
+     * clear it, and a result that arrives after a close is dropped ([feedbackSink]).
      */
     private var lastBulkFeedback: CharSequence? = null
+
+    /** Counts pane closes ([resetSearchOnHide]); a [feedbackSink] from before a close is spent. */
+    private var closeGeneration = 0
     private var bulkDialog: android.app.AlertDialog? = null
 
     // Selection mode (2026-10-07). The selection itself lives in this service-scoped holder so
@@ -614,6 +619,10 @@ class ClipboardManager(
         dismissPendingDialog()
         // A swiped row is deleted now: its undo offer cannot outlive the pane that showed it.
         commitPendingDeletion(ClipboardPendingDeletion.CommitReason.PANE_HIDDEN)
+        // A bulk result belongs to this opening of the pane: it is not shown on the next one,
+        // and an action still finishing reports to nobody ([feedbackSink]).
+        closeGeneration++
+        clearBulkFeedback()
         searchMode = false
         clipboardSearchBox?.apply {
             text = ""
@@ -920,6 +929,8 @@ class ClipboardManager(
     /** End selection mode (explicit Exit, or a tab disabled in Settings); dismisses a pending dialog. */
     fun exitSelectionMode() {
         dismissPendingDialog()
+        // The result line reports on the selection being left; it goes with it.
+        clearBulkFeedback()
         clipboardHistoryView?.endSelection()
     }
 
@@ -988,6 +999,16 @@ class ClipboardManager(
                 }
             }.create()
         showSelectionDialog(dialog, anchor)
+    }
+
+    /**
+     * Where a confirmed action's asynchronous result goes: [showBulkFeedback] while the pane
+     * is still the opening the action started in, nowhere after it closed. A theme rebuild is
+     * not a close, so the rebuilt pane still shows the result.
+     */
+    private fun feedbackSink(): (CharSequence) -> Unit {
+        val generation = closeGeneration
+        return { text -> if (generation == closeGeneration) showBulkFeedback(text) }
     }
 
     /** Polite live-region feedback in the result row (TalkBack announces it). */
@@ -1096,8 +1117,9 @@ class ClipboardManager(
             context.getString(R.string.clipboard_delete_selected_message, tabName(snapshot.tab),
                 Formatter.formatShortFileSize(context, snapshot.totalBytes)),
             R.string.clipboard_delete_confirm_action) {
+            val report = feedbackSink()
             historyView.deleteSnapshot(snapshot) { result ->
-                showBulkFeedback(result.fold(
+                report(result.fold(
                     { context.resources.getQuantityString(R.plurals.clipboard_delete_selected_result, total, it, total) },
                     { context.getString(R.string.clipboard_delete_error) }))
             }
@@ -1146,18 +1168,19 @@ class ClipboardManager(
      */
     private fun copySelection(target: ClipboardTab, snapshot: ClipboardDeleteSnapshot) {
         val historyView = clipboardHistoryView ?: return
+        val report = feedbackSink()
         historyView.copySelectionTo(target, snapshot) { result ->
             result.onSuccess { counts ->
                 val added = if (target == ClipboardTab.PINNED) R.plurals.clipboard_added_to_pinned_result
                     else R.plurals.clipboard_added_to_todos_result
-                showBulkFeedback(sentences(
+                report(sentences(
                     plural(added, counts.added),
                     counts.alreadyPresent.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_already_present, it) },
                     counts.failed.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_failed, it) }))
                 val icon = if (target == ClipboardTab.PINNED) tabPinned else tabTodos
                 // Posted: the icon is hidden until the finished selection's chrome refreshes.
                 icon?.post { pulseTabIcon(icon, if (counts.added > 0) 1 else 3) }
-            }.onFailure { showBulkFeedback(context.getString(R.string.clipboard_bulk_action_error)) }
+            }.onFailure { report(context.getString(R.string.clipboard_bulk_action_error)) }
         }
     }
 
@@ -1185,9 +1208,11 @@ class ClipboardManager(
                     if (plan.isPrivate) context.getString(R.string.clipboard_merge_private_note) else null,
                 ) + "\n\n" + context.getString(R.string.clipboard_bulk_preview, ClipboardBulkPlans.preview(plan.text))
                 confirm(anchor, plural(R.plurals.clipboard_merge_title, plan.sources), message, R.string.clipboard_merge_action) {
+                    val report = feedbackSink()
                     historyView.mergeSelection(plan) { result ->
+                        // The clipboard gets the merged text even when the pane closed meanwhile.
                         if (result.isSuccess) historyView.placeMergedOnSystemClipboard(plan.text, plan.isPrivate)
-                        showBulkFeedback(result.fold(
+                        report(result.fold(
                             { sentences(plural(R.plurals.clipboard_merge_result, plan.sources),
                                 if (plan.isPrivate) null else context.getString(R.string.clipboard_merge_copied),
                                 mediaNote(plan.skippedMedia)) },
@@ -1217,8 +1242,9 @@ class ClipboardManager(
             *counts(plan.unchanged, plan.skippedMedia)) +
             "\n\n" + context.getString(R.string.clipboard_bulk_preview, ClipboardBulkPlans.preview(plan.edits.first().second))
         confirm(anchor, plural(R.plurals.clipboard_clean_title, plan.edits.size), message, R.string.clipboard_clean_action) {
+            val report = feedbackSink()
             historyView.cleanSelection(snapshot.tab, plan) { result ->
-                showBulkFeedback(result.fold({ done ->
+                report(result.fold({ done ->
                     sentences(plural(R.plurals.clipboard_clean_result, done.cleaned),
                         *counts(done.unchanged, done.skippedMedia),
                         done.failed.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_failed, it) })

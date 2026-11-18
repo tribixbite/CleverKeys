@@ -239,6 +239,56 @@ class ClipboardTabsAndPaneCloseTest {
         verify(exactly = 1) { listView.endSelection() }
     }
 
+    /**
+     * Maintainer 2026-11-18: "the outcome text for cleaning and merging eg 'Nothing to clean.
+     * 1 needs no cleaning' persists to future clipboard openings. it should clear on clipboard
+     * close or if multiselect is exited."
+     */
+    @Test
+    fun closingThePaneClearsTheBulkResultLine() {
+        val mgr = manager()
+        val line = mockk<TextView>(relaxed = true)
+        mgr.setField("bulkFeedback", line)
+        mgr.setField("lastBulkFeedback", "Nothing to clean. 1 needs no cleaning.")
+
+        mgr.resetSearchOnHide()
+
+        assertWithMessage("the next opening must not render it").that(mgr.bulkFeedbackText()).isNull()
+        verify { line.visibility = View.GONE }
+    }
+
+    @Test
+    fun exitingSelectionClearsTheBulkResultLine() {
+        val mgr = manager()
+        val line = mockk<TextView>(relaxed = true)
+        mgr.setField("bulkFeedback", line)
+        mgr.setField("lastBulkFeedback", "Merged 2 clippings into a new History clipping.")
+
+        mgr.exitSelectionMode()
+
+        assertThat(mgr.bulkFeedbackText()).isNull()
+        verify { line.visibility = View.GONE }
+    }
+
+    /** A confirmed action that finishes after the pane closed reports to nobody. */
+    @Test
+    fun aResultArrivingAfterTheCloseIsDropped() {
+        val mgr = manager()
+        val sinkMethod = ClipboardManager::class.java.getDeclaredMethod("feedbackSink").apply { isAccessible = true }
+        @Suppress("UNCHECKED_CAST")
+        val before = sinkMethod.invoke(mgr) as (CharSequence) -> Unit
+
+        mgr.resetSearchOnHide()
+        before("Cleaned 1 clipping.")
+        assertWithMessage("a result from a closed opening").that(mgr.bulkFeedbackText()).isNull()
+
+        // An action started in the new opening still reports.
+        @Suppress("UNCHECKED_CAST")
+        val after = sinkMethod.invoke(mgr) as (CharSequence) -> Unit
+        after("Cleaned 2 clippings.")
+        assertThat(mgr.bulkFeedbackText()?.toString()).isEqualTo("Cleaned 2 clippings.")
+    }
+
     @Test
     fun reopeningThePaneReturnsToTheSelectionsTab() {
         // The pane normally reopens on History; with a selection alive it must reopen on the

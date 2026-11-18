@@ -389,9 +389,9 @@ class ClipboardFilterDialogTest {
 
     /**
      * 2026-10-08 audit: the bulk-action result line is written when the action finishes, which
-     * is asynchronous. A pane rebuilt meanwhile (keyboard hide + theme rebuild run cleanup())
-     * used to drop it. The manager keeps it and the next pane renders it; starting a new
-     * selection clears it.
+     * is asynchronous. A pane rebuilt meanwhile (a theme rebuild runs cleanup()) used to drop
+     * it. The manager keeps it and the next pane renders it. Closing the pane clears it
+     * (maintainer 2026-11-18: the line must not come back on later openings).
      */
     @Test
     fun bulkResultLineSurvivesAPaneRebuildMidAction() {
@@ -432,7 +432,6 @@ class ClipboardFilterDialogTest {
                         items.adapter.getItem(it).toString() == context.getString(R.string.clipboard_action_add_to_pinned)
                     }
                     items.performItemClick(null, position, position.toLong())
-                    manager!!.resetSearchOnHide()
                     manager!!.cleanup()
                 }
                 val expected = context.resources.getQuantityString(R.plurals.clipboard_added_to_pinned_result, 2, 2)
@@ -443,8 +442,8 @@ class ClipboardFilterDialogTest {
                 assertEquals(View.VISIBLE, onMain { line.visibility })
                 assertEquals(expected, onMain { line.text.toString() })
 
-                // A new selection describes a new batch: the kept line is cleared.
-                onMain { pane.findViewById<View>(R.id.clipboard_select).performClick() }
+                // Closing the pane ends this opening: the line is not shown on the next one.
+                onMain { manager!!.resetSearchOnHide() }
                 assertEquals(View.GONE, onMain { line.visibility })
                 assertNull(onMain { manager!!.bulkFeedbackText() })
                 onMain { manager!!.cleanup() }

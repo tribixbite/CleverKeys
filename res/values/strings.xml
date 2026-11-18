@@ -2971,7 +2971,7 @@
     <!-- %1$s = merged size, %2$s = per-clipping size limit -->
     <string name="clipboard_merge_too_large">The merged clipping would be %1$s; the limit is %2$s. Select fewer clippings.</string>
     <!-- %1$s = tab name -->
-    <string name="clipboard_clean_message">Removes spaces at line ends and joins lines broken inside a paragraph; a word split by a hyphen at a line end is rejoined. Blank lines, lists, short lines, links and code keep their line breaks. Only the copies in %1$s change; this cannot be undone.</string>
+    <string name="clipboard_clean_message">Removes extra spaces and blank lines and joins lines broken in the middle of a sentence; a word split by a hyphen at a line end is rejoined. Paragraph breaks, lists, links and code keep their line breaks. Only the copies in %1$s change; this cannot be undone.</string>
     <string name="clipboard_clean_action">Clean</string>
     <string name="clipboard_clean_nothing">Nothing to clean.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">Added %1$d clipping to Pinned.</item><item quantity="other">Added %1$d clippings to Pinned.</item></plurals>

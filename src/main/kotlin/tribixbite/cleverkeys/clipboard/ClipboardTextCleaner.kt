@@ -1,38 +1,46 @@
 package tribixbite.cleverkeys.clipboard
 
 /**
- * The "Clean" bulk action's text transform: removes trailing whitespace and the line breaks a
- * source inserted inside paragraphs (PDF columns, e-mail wrapping, terminal output), while
+ * The "Clean" bulk action's text transform: removes extra white space and the line breaks that
+ * fall mid-sentence (PDF columns, e-mail wrapping, terminal output, a narrow phone screen), while
  * keeping every break a reader would consider deliberate. Pure Kotlin, no Android types.
  *
- * Rules, applied in order (documented for users in docs/specs/clipboard-system.md):
+ * Rules, applied in order (documented for users in docs/specs/clipboard-system.md; reworked to
+ * the maintainer's "find any line breaks that are mid-sentence and remove them as well as
+ * remove extra spaces and white space", 2026-11-18):
  *
  *  1. Line endings: CRLF, lone CR, NEL (U+0085) and LINE SEPARATOR (U+2028) become `\n`;
  *     PARAGRAPH SEPARATOR (U+2029) becomes a blank line.
  *  2. Trailing whitespace is removed from every line and from the end of the text: spaces,
  *     tabs, no-break and other Unicode spaces (U+00A0, U+2000–U+200A, U+202F, U+205F, U+3000),
- *     and a zero-width no-break space (U+FEFF). Leading whitespace is never touched.
- *  3. Preformatted text keeps ALL its line breaks (conservative): any line indented by a tab, a
- *     code fence (```/~~~), a line ending in `{`, `;` or `\` or starting with `}`, `//`,
- *     slash-star (a block comment), `#!`, `#include`, `<?`, `$ `, `>>> ` or a markup tag, a
- *     space-aligned table (two lines with a gap of 2+ spaces, not after sentence punctuation, ending at the same column), and
- *     any space-indented line that is not a hanging-indent wrap (see 4).
+ *     and a zero-width no-break space (U+FEFF). Blank lines at the start and end go.
+ *  3. Preformatted text keeps ALL its line breaks and its indentation (only rule 2 applies):
+ *     any line indented by a tab, a code fence (```/~~~), a line ending in `{` or `\` or
+ *     starting with `}`, `//`, slash-star (a block comment), `#!`, `#include`, `<?`, `$ `,
+ *     `>>> ` or a markup tag, two or more lines ending in `;`, an assignment (`name = value`),
+ *     a space-aligned table (two lines with a gap of 2+ spaces, not after sentence punctuation,
+ *     ending at the same column), and any space-indented line that is not a wrap (see 4). The
+ *     indent EVERY line shares is ignored for this test (a clip copied from an indented
+ *     terminal or chat block is not code for that).
  *  4. A space-indented line is a hanging-indent wrap — terminal output, e-mail quoting tools
  *     and Markdown renderers indent the continuation of a wrapped line — when the line before
- *     it is long (as in 5), does not end in `:`, `{`, `[`, `(` or `\`, and is indented no
- *     deeper than it (a list item's continuation must be indented deeper than its marker).
- *     Code always fails this somewhere (a block opens after a colon or brace, or a short
- *     line precedes an indented one), so it stays preformatted.
- *  5. Otherwise a single line break is "inserted" — and is replaced — only when all hold:
- *     neither neighbouring line is blank (a blank line is a paragraph break); neither line is
- *     structural (bullet, numbered/lettered item, checkbox, Markdown heading, quote, table row
- *     or horizontal rule), except that an indented continuation of a list item joins it; the
- *     line before is long — at least [MIN_WRAP_CHARS] characters and [WRAP_RATIO] of the
- *     longest prose line, so short lines (addresses, poems, greetings, last lines of
- *     paragraphs) keep their break; and no URL touches the break.
- *  6. In prose (not preformatted) a run of spaces inside a line becomes one space; the
- *     indentation at the start of a line that keeps its break is left alone.
- *  7. A replaced break becomes one space, except: a line ending in letter + hyphen followed by a
+ *     it does not end in `:`, `{`, `[`, `(` or `\`, is indented no deeper than it (a list
+ *     item's continuation must be indented deeper than its marker), and the break between them
+ *     is mid-sentence (as in 5).
+ *  5. Otherwise a line break is removed when it is mid-sentence: neither neighbouring line is
+ *     blank (a blank line is a paragraph break), the next line is not structural (bullet,
+ *     numbered/lettered item, checkbox, Markdown heading, quote, table row or horizontal rule),
+ *     no URL touches the break, the line before does not end a sentence (`.`, `!`, `?`, `…`
+ *     or their CJK forms, before any closing quote or bracket), and either the next line starts
+ *     with a lowercase letter or the line before (as joined so far) is long — at least
+ *     [MIN_WRAP_CHARS] characters and [WRAP_RATIO] of the longest prose line — and does not end
+ *     in a colon. So addresses, greetings and a sentence-final line keep their break. A list
+ *     item joins a mid-sentence continuation; another structural line (heading, quote, table
+ *     row, rule) never joins the next line.
+ *  6. In prose: leading white space goes (a list item keeps its indent beyond the shared one,
+ *     for nesting), a run of blank lines becomes one blank line, and a tab or run of spaces
+ *     inside a line becomes one space.
+ *  7. A removed break becomes one space, except: a line ending in letter + hyphen followed by a
  *     lowercase letter is a word hyphenated at the line end and is rejoined without the hyphen
  *     ("exam-\nple" → "example"); if the hyphenated token already contains a hyphen, or the next
  *     line starts with an uppercase letter or digit, the hyphen is a real one and is kept
@@ -42,7 +50,8 @@ package tribixbite.cleverkeys.clipboard
  *
  * Known limit: a compound that happens to break at its own hyphen before a lowercase word
  * ("well-\nknown") loses that hyphen — typeset text hyphenates this way far more often.
- * The transform is idempotent: cleaning a cleaned text changes nothing.
+ * Cleaning a cleaned text normally changes nothing; a break kept by rule 5's length test can
+ * still join on a second pass once an earlier join made the line before it long.
  */
 object ClipboardTextCleaner {
 
@@ -62,6 +71,13 @@ object ClipboardTextCleaner {
     private val RULE = Regex("""^([-*_])(\s*\1){2,}$""")
     private val MARKUP_TAG = Regex("""^</?[A-Za-z][^>]*>""")
     private val INNER_GAP = Regex(" {2,}")
+    /** A tab, or two or more spaces of any width, inside a prose line (rule 6). */
+    private val INNER_WHITESPACE = Regex("""\t[\t \u00A0\u2000-\u200A\u202F\u205F\u3000]*|[ \u00A0\u2000-\u200A\u202F\u205F\u3000]{2,}[\t \u00A0\u2000-\u200A\u202F\u205F\u3000]*""")
+    /** `name = value`, `a.b[i] += 1`: an assignment is code, not prose (rule 3). */
+    private val ASSIGNMENT = Regex("""^[A-Za-z_][\w.\[\]]*\s*(?:[-+*/%|&^]|<<|>>)?=(?!=)\s*\S""")
+    /** Ends a sentence when it is a line's last character before closing quotes and brackets. */
+    private val SENTENCE_TERMINALS = charArrayOf('.', '!', '?', '…', '。', '！', '？')
+    private val CLOSERS = charArrayOf('"', '\'', ')', ']', '}', '»', '”', '’', '」', '』', '）')
     private val SENTENCE_END = charArrayOf('.', '!', '?', ':', ';', ',')
     private val BLOCK_OPENERS = charArrayOf(':', '{', '[', '(', '\\')
     private val URL = Regex("""^(?:[A-Za-z][A-Za-z0-9+.-]*://|www\.)\S+$""")
@@ -69,27 +85,44 @@ object ClipboardTextCleaner {
 
     /** Clean [text]; returns it unchanged (equal) when no rule applies. */
     fun clean(text: String): String {
-        val lines = normalizeLineBreaks(text).split('\n').map(::trimEndWhitespace).toMutableList()
-        while (lines.size > 1 && lines.last().isEmpty()) lines.removeAt(lines.lastIndex)
-        if (isPreformatted(lines)) return lines.joinToString("\n")
-        for (i in lines.indices) lines[i] = collapseInnerSpaces(lines[i])
+        val raw = normalizeLineBreaks(text).split('\n').map(::trimEndWhitespace).toMutableList()
+        while (raw.size > 1 && raw.last().isEmpty()) raw.removeAt(raw.lastIndex)
+        while (raw.size > 1 && raw.first().isEmpty()) raw.removeAt(0)
+        val lines = dedent(raw)
+        // Code keeps its own layout, indentation included: only the trailing white space goes.
+        if (isPreformattedDedented(lines)) return raw.joinToString("\n")
+        // Rule 6. A structural line keeps its indent (list nesting); any other prose line's
+        // leading white space is extra (a kept indented continuation makes the text preformatted).
+        for (i in lines.indices) {
+            lines[i] = collapseInnerWhitespace(if (isStructural(lines[i])) lines[i] else lines[i].trimStart())
+        }
         if (lines.size == 1) return lines[0]
 
         val minimum = minimumWrapLength(lines)
         val out = StringBuilder(text.length)
         out.append(lines[0])
+        // Code points of the output line built so far: rule 5's length test is on the line as
+        // joined, so a line two short wraps made long is judged like one long wrapped line.
+        var joinedLength = length(lines[0])
         for (i in 1 until lines.size) {
             val previous = lines[i - 1]
             val line = lines[i]
-            when (joinOf(previous, line, minimum)) {
-                Join.KEEP -> out.append('\n').append(line)
-                Join.SPACE -> out.append(' ').append(line.trimStart())
-                Join.TIGHT -> out.append(line.trimStart())
+            // Rule 6: a run of blank lines is one paragraph break.
+            if (line.isEmpty() && previous.isEmpty()) continue
+            val join = joinOf(previous, line, minimum, joinedLength)
+            val appended = when (join) {
+                Join.KEEP -> { out.append('\n'); line }
+                Join.SPACE -> { out.append(' '); line.trimStart() }
+                Join.TIGHT -> line.trimStart()
                 Join.DEHYPHENATE -> {
                     out.setLength(out.length - 1)  // the line-end hyphen (or soft hyphen)
-                    out.append(line.trimStart())
+                    joinedLength--
+                    line.trimStart()
                 }
             }
+            out.append(appended)
+            joinedLength = if (join == Join.KEEP) length(appended)
+                else joinedLength + length(appended) + (if (join == Join.SPACE) 1 else 0)
         }
         return out.toString()
     }
@@ -107,12 +140,17 @@ object ClipboardTextCleaner {
      * preformatted text whose breaks must all stay: code markers, a tab indent, a space-aligned
      * table, or a space-indented line that is not a hanging-indent wrap.
      */
-    fun isPreformatted(lines: List<String>): Boolean {
+    fun isPreformatted(lines: List<String>): Boolean = isPreformattedDedented(dedent(lines))
+
+    /** [isPreformatted] for [lines] whose shared indent is already removed. */
+    private fun isPreformattedDedented(lines: List<String>): Boolean {
+        if (lines.any { it.startsWith("\t") }) return true
+        var semicolons = 0
         val codeLike = lines.any { line ->
-            if (line.startsWith("\t")) return@any true
             val t = line.trim()
-            t.isNotEmpty() && (t.endsWith("{") || t.endsWith(";") || t.endsWith("\\") ||
-                CODE_PREFIXES.any(t::startsWith) || MARKUP_TAG.containsMatchIn(t))
+            if (t.endsWith(";")) semicolons++
+            t.isNotEmpty() && (t.endsWith("{") || t.endsWith("\\") || semicolons >= 2 ||
+                CODE_PREFIXES.any(t::startsWith) || MARKUP_TAG.containsMatchIn(t) || ASSIGNMENT.containsMatchIn(t))
         }
         if (codeLike || isSpaceAligned(lines)) return true
         val minimum = minimumWrapLength(lines)
@@ -120,18 +158,40 @@ object ClipboardTextCleaner {
             val line = lines[i]
             indentOf(line) > 0 && line.isNotBlank() && !isStructural(line) && lines[i - 1].isNotEmpty() &&
                 !isHangingWrap(lines[i - 1], line, minimum)
-        } || (lines.firstOrNull()?.let { indentOf(it) > 0 && lines.size > 1 && !isStructural(it) } ?: false)
+        }
     }
 
     /**
-     * Whether indented [line] continues [previous] as a hanging-indent wrap: [previous] is long,
-     * does not open a block, and [line] is indented no less than it (deeper than a list marker).
+     * Whether indented [line] continues [previous] as a hanging-indent wrap: [previous] does not
+     * open a block, [line] is indented no less than it (deeper than a list marker), and the break
+     * is mid-sentence (rule 5).
      */
     private fun isHangingWrap(previous: String, line: String, minimum: Int): Boolean {
-        if (length(previous) < minimum || previous.last() in BLOCK_OPENERS) return false
+        if (previous.last() in BLOCK_OPENERS) return false
         val p = indentOf(previous)
         val l = indentOf(line)
-        return if (isStructural(previous)) isListItem(previous) && l > p else l >= p
+        val indented = if (isStructural(previous)) isListItem(previous) && l > p else l >= p
+        return indented && isMidSentence(previous, line.trimStart(), minimum, length(previous))
+    }
+
+    /**
+     * Rule 5's sentence test: [previous] (whose output line is [joinedLength] code points so far)
+     * does not end a sentence, and either [next] starts lowercase or the line is a long wrap
+     * that does not end in a colon.
+     */
+    private fun isMidSentence(previous: String, next: String, minimum: Int, joinedLength: Int): Boolean {
+        val end = previous.trimEnd(*CLOSERS)
+        if (end.isEmpty() || end.last() in SENTENCE_TERMINALS) return false
+        val first = next.firstOrNull() ?: return false
+        if (first.isLowerCase()) return true
+        return joinedLength >= minimum && previous.last() != ':'
+    }
+
+    /** [lines] without the indent every non-blank line shares (spaces only). */
+    private fun dedent(lines: List<String>): MutableList<String> {
+        val shared = lines.filter { it.isNotBlank() }.minOfOrNull(::indentOf) ?: 0
+        return if (shared == 0) lines.toMutableList()
+            else lines.map { if (it.isBlank()) "" else it.substring(shared) }.toMutableList()
     }
 
     /** The wrap width rule: a joinable line is at least this long (code points). */
@@ -152,10 +212,10 @@ object ClipboardTextCleaner {
         return false
     }
 
-    /** Runs of spaces inside [line] become one; its leading indentation is kept. */
-    private fun collapseInnerSpaces(line: String): String {
+    /** A tab or run of spaces inside [line] becomes one space; its leading indentation is kept. */
+    private fun collapseInnerWhitespace(line: String): String {
         val indent = indentOf(line)
-        return line.substring(0, indent) + INNER_GAP.replace(line.substring(indent), " ")
+        return line.substring(0, indent) + INNER_WHITESPACE.replace(line.substring(indent), " ")
     }
 
     private fun indentOf(line: String): Int = line.length - line.trimStart(' ').length
@@ -168,15 +228,15 @@ object ClipboardTextCleaner {
 
     private enum class Join { KEEP, SPACE, TIGHT, DEHYPHENATE }
 
-    private fun joinOf(previous: String, line: String, minimum: Int): Join {
+    private fun joinOf(previous: String, line: String, minimum: Int, joinedLength: Int): Join {
         if (previous.isEmpty() || line.isEmpty()) return Join.KEEP
         if (isStructural(line)) return Join.KEEP
-        // A list item joins only its own indented continuation (a hanging-indent wrap).
-        if (isStructural(previous) && !(isListItem(previous) && indentOf(line) > indentOf(previous))) return Join.KEEP
-        if (length(previous) < minimum) return Join.KEEP
+        // Of the structural lines only a list item continues onto the next line.
+        if (isStructural(previous) && !isListItem(previous)) return Join.KEEP
         val last = previous.substringAfterLast(' ')
         val first = line.trimStart().substringBefore(' ')
         if (URL.matches(last) || URL.matches(first)) return Join.KEEP
+        if (!isMidSentence(previous, line.trimStart(), minimum, joinedLength)) return Join.KEEP
         val next = line.trimStart().first()
         if (previous.last() == SOFT_HYPHEN) return Join.DEHYPHENATE
         if (previous.length >= 2 && previous.last() in HYPHENS && previous[previous.length - 2].isLetter()) {

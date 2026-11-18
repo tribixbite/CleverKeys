@@ -297,12 +297,15 @@ per line. Media entries are skipped, the originals stay, and the result must fit
 maximum clipping size. The confirmation shows a preview. If any selected entry is private,
 the merged entry is private too.
 
-**Clean** tidies the selected text entries in place: it removes spaces and tabs at line
-ends and joins lines that were broken inside a paragraph (as text copied from a PDF or
-an e-mail often is), rejoining a word split by a hyphen at the line end. Blank lines,
-lists, short lines (such as addresses), links and code keep their line breaks. Only the
-entries in the current tab change, never their copies in other tabs. The confirmation
-shows how many will change and a preview; entries that need no cleaning are left alone.
+**Clean** tidies the selected text entries in place. It joins lines that were broken in
+the middle of a sentence, as text copied from a PDF, an e-mail, a terminal or a narrow
+screen often is, and rejoins a word split by a hyphen at the line end. It also removes extra
+white space: spaces and tabs at line ends, indentation, doubled spaces inside a line, and
+extra blank lines. Paragraph breaks, a line that ends a sentence, lists, addresses, links and
+code keep their line breaks. Only the entries in the current tab change, never their copies
+in other tabs. The confirmation shows how many will change and a preview; entries that need
+no cleaning are left alone. The result line under the list is cleared when you close the
+clipboard or leave selection mode.
 
 Size describes clipping payload bytes, rather than guaranteed disk space recovered.
 SQLite allocation and shared media can make the recovered space smaller. To clear
