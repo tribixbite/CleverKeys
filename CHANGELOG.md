@@ -591,6 +591,9 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Italian offers `l'attività`, not the unaccented `l'attivita`. The Italian next-word model was
+  rebuilt from the corrected list of elisions; it now also knows `l'università`, `cos'è`, `dov'è`
+  and 55 other accented elisions it was missing.
 - Swiping now offers both words when two differ only by accents: `schön` beside `schon`, `là`
   beside `la`, `él` beside `el`. Only the more frequent one could be swiped before. The second
   word is placed by its own frequency, so the first suggestion does not change.

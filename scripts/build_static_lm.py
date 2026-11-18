@@ -360,6 +360,19 @@ CONFIGS: dict[str, LangConfig] = {
             ood_test=_ud("UD_Italian-PUD", "71d932aa096368331ba2fd9bc906ec8dd853da8e", "it_pud", "test",
                          "ad5d302bdfd05194155d9ad43dc54c3cb915076d66b3eb6ef33eca9a11f1372a", "CC BY-SA 3.0"),
             ood_label="UD Italian-TWITTIRO",
+            # Rebuilt 2026-11-18 (todo 35), same pinned corpora and code, from the CURRENT contraction
+            # tables: the 2026-09-29 model was built while contractions_it.json still mapped
+            # `lattivita` to the ASK list's unaccented `l'attivita`, so it named that spelling and
+            # none of the accented elisions added since (`l'attività`, `l'università`, `cos'è`).
+            # Pre-registered gate (written before the candidate was built; the Sep-29 inputs first
+            # reproduced the shipped file byte-for-byte, sha256 3d6cfb2c…): G1 names `l'attività`,
+            # not `l'attivita`; G2 size <= 1.10 x 475,337 B and the drift-test budget; G3 OOD-test
+            # next-word top1/top3 >= shipped - 0.10 pt (9.98 / 17.03); G4 StaticLmTapEvalTest it,
+            # every lm_static cell (OOD + in-domain) >= shipped - 0.10 pt; G5 the other languages'
+            # models byte-identical; G6 drift/contraction tests green.
+            # Result: all six pass. 476,958 B (+0.3%), vocab 17,488 -> 17,548 (+59 accented elisions,
+            # +2 lexicon words, -1 `l'attivita`), OOD-test next-word 9.98 / 17.04; worst lm_static
+            # tap-eval cell -0.01 pt (OOD prefix-1 top-3 40.28 -> 40.27).
             lexicon="it_enhanced.bin",
             contraction_files=("contractions_it.json", "contraction_pairs_it.json"),
             wordfreq_lang="it",

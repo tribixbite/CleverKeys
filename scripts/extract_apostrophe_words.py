@@ -301,10 +301,14 @@ FORCED_APPEND = {
 # anglicism (`l'email`, `d'email`); `émail` is enamel.
 RESPELL_KEEP = {
     "fr": frozenset({"email"}),
-    # TODO: drop once it.cklm is rebuilt — the shipped Italian static LM names `l'attivita`
-    # (an unaccented corpus spelling), and StaticLmAssetDriftTest requires every word it names
-    # to stay showable. Rebuilding a shipped LM needs its own pre-registered gate.
-    "it": frozenset({"attivita"}),
+    # No "it" row: `attivita` was kept here until 2026-11-18 only because the first it.cklm
+    # (built 2026-09-29 from the table of the day) named the ASK list's unaccented `l'attivita`,
+    # and StaticLmAssetDriftTest requires every word a model names to stay showable. The fix
+    # chosen was a REBUILD of it.cklm from the corrected table, not an alias at LM load: the
+    # builder reproduces the shipped model byte-for-byte from its inputs, the corpora are on the
+    # dev box, and a rebuild also gives the model the accented elisions (`l'attività`,
+    # `dell'università`, ...) that were missing from its vocabulary. The pre-registered gate and
+    # its result are recorded with the Italian config in scripts/build_static_lm.py.
 }
 
 FORCED_REPLACE = {

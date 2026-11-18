@@ -2,11 +2,11 @@
   "format": "CKLM",
   "version": 1,
   "language": "it",
-  "vocab": 17488,
-  "prevs": 16023,
-  "pairs": 74532,
-  "bytes": 475337,
-  "sha256": "3d6cfb2c31298e4f9a22150c03ca8e117d6d7122a7f69f08d7d4e70bc6603355",
+  "vocab": 17548,
+  "prevs": 16078,
+  "pairs": 74732,
+  "bytes": 476958,
+  "sha256": "0b5528a4a7634e05f008eab5970a941e27fe880950cac6887d69d1b20a8f9d5f",
   "model": {
     "order": 2,
     "minCount": 3.0,
@@ -44,48 +44,48 @@
         "top1": 7.263,
         "top3": 12.667,
         "n": 1721,
-        "pairs": 72540,
-        "bytes": 464285
+        "pairs": 72724,
+        "bytes": 465964
       },
       {
         "weight": 0.05,
         "top1": 7.147,
         "top3": 12.725,
         "n": 1721,
-        "pairs": 73231,
-        "bytes": 468025
+        "pairs": 73422,
+        "bytes": 469625
       },
       {
         "weight": 0.1,
         "top1": 7.263,
         "top3": 13.132,
         "n": 1721,
-        "pairs": 74532,
-        "bytes": 475337
+        "pairs": 74732,
+        "bytes": 476958
       },
       {
         "weight": 0.25,
         "top1": 7.438,
         "top3": 12.899,
         "n": 1721,
-        "pairs": 79646,
-        "bytes": 502367
+        "pairs": 79871,
+        "bytes": 504060
       },
       {
         "weight": 0.5,
         "top1": 7.205,
-        "top3": 12.958,
+        "top3": 12.899,
         "n": 1721,
-        "pairs": 90027,
-        "bytes": 555919
+        "pairs": 90300,
+        "bytes": 557875
       },
       {
         "weight": 1.0,
         "top1": 7.263,
         "top3": 13.364,
         "n": 1721,
-        "pairs": 113038,
-        "bytes": 672169
+        "pairs": 113387,
+        "bytes": 674797
       }
     ],
     "weightRule": "max OOD-dev (UD Italian-TWITTIRO dev) next-word top-3 of the pruned model among weights whose model fits the 524288-byte cap; ties -> lower weight",

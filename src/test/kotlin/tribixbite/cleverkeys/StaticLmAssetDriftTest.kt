@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
+import org.json.JSONObject
 import org.junit.Test
 import java.io.File
 import java.security.MessageDigest
@@ -78,6 +79,25 @@ class StaticLmAssetDriftTest {
             lmOf(lang).forEachWord { w, _ -> if (w !in allowed) outside.add(w) }
             assertWithMessage("$lang: words outside lexicon ∪ contraction forms").that(outside).isEmpty()
         }
+    }
+
+    /**
+     * Italian spells the elision `l'attività`. The first it.cklm (2026-09-29) was built while the
+     * contraction table still carried the unaccented web spelling `l'attivita` from the ASK list,
+     * so the model named that form and the generator had to keep it (RESPELL_KEEP) for the test
+     * above to stay green. it.cklm was rebuilt from the corrected table on 2026-11-18 (gate in
+     * scripts/build_static_lm.py's Italian config): neither the table nor the model may offer
+     * the unaccented spelling again.
+     */
+    @Test
+    fun `italian offers l'attività, never the corpus spelling l'attivita`() {
+        val table = JSONObject(File(StaticLmLanguageData.DICT_DIR, "contractions_it.json").readText())
+        assertWithMessage("contractions_it.json lattivita").that(table.optString("lattivita")).isEqualTo("l'attività")
+        val lm = lmOf("it")
+        assertWithMessage("it.cklm names the unaccented l'attivita").that(lm.contains("l'attivita")).isFalse()
+        assertWithMessage("it.cklm names l'attività").that(lm.contains("l'attività")).isTrue()
+        assertWithMessage("installed it model scores the tap key lattivita as l'attività")
+            .that(installedOf("it").unigram("lattivita")).isEqualTo(lm.unigram("l'attività"))
     }
 
     /**

@@ -245,7 +245,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `l'école`/`c'est`/`l'été` and it `C'è` PASS on device. **Maintainer decision**: rank elisions by
     their own Leipzig frequency (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +
     relaxing `CoreImeHygieneDriftTest`; `docs/eval/2026-11-09-elision-base-frequency.md`); a human
-    `d'être` swipe; it `l'attivita` until it.cklm is rebuilt (TODO in the generator). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
+    `d'être` swipe. it `l'attivita` FIXED 2026-11-18: it.cklm rebuilt from the corrected table under a
+    pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
 36. [ ] device: "Space before opening punctuation" (default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Ellipsis chain fixed; the
     checklist's "Punctuation and elisions" passes on Saga .144 except `d'être` (item 35). Open: a
