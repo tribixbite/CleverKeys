@@ -26,12 +26,24 @@ package tribixbite.cleverkeys.swipe.ctc
  * `e`, and the lexicon's display map restores `été`. The encoder is slot-invariant (its key
  * embedding is a function of the centre only), which is what makes the extra slots meaningful.
  *
+ * ## Two-letter alias keys (2026-11-18)
+ *
+ * A key whose letter the lexicon spells with TWO different letters — Danish/Icelandic `æ`
+ * (`ae`), `œ` (`oe`) — folds into both: [aliasSecondTargets] names the second column. A path
+ * over `æ` then reads as `a` on one frame and `e` on the next, which is exactly the trie path
+ * of the lexicon's `ae` spelling (`æble` is stored as `aeble`). `ß` (`ss`) needs no second
+ * column: the beam's advance move reaches the second `s` from a later frame of the same
+ * column. Folding one slot into two columns makes the row sum exceed 1; the beam only ever
+ * scores one column per frame per path, so no path is scored twice for one frame.
+ *
  * @property alphabet active keys in emission-column order (length K).
  * @property keyCentersX per-key center x in [0,1] (length K, aligned to [alphabet]).
  * @property keyCentersY per-key center y in [0,1] (length K, aligned to [alphabet]).
  * @property aliasTargets per alias key, the [alphabet] index its emission folds into (length A).
  * @property aliasCentersX per alias key, center x in the same [0,1] frame (length A).
  * @property aliasCentersY per alias key, center y in the same [0,1] frame (length A).
+ * @property aliasSecondTargets per alias key, a second [alphabet] index its emission ALSO folds
+ *   into, or -1 for none (length A); empty means none for every alias key.
  */
 class CtcLayout(
     val alphabet: CharArray,
@@ -40,6 +52,7 @@ class CtcLayout(
     val aliasTargets: IntArray = IntArray(0),
     val aliasCentersX: FloatArray = FloatArray(0),
     val aliasCentersY: FloatArray = FloatArray(0),
+    val aliasSecondTargets: IntArray = IntArray(0),
 ) {
     init {
         require(alphabet.isNotEmpty()) { "layout alphabet must be non-empty" }
@@ -53,6 +66,13 @@ class CtcLayout(
             "alias targets/centers length mismatch: ${aliasTargets.size}/${aliasCentersX.size}/${aliasCentersY.size}"
         }
         require(aliasTargets.all { it in alphabet.indices }) { "alias target outside the alphabet" }
+        require(aliasSecondTargets.isEmpty() || aliasSecondTargets.size == aliasTargets.size) {
+            "alias second targets length ${aliasSecondTargets.size} != ${aliasTargets.size} aliases"
+        }
+        require(aliasSecondTargets.indices.all {
+            aliasSecondTargets[it] == -1 ||
+                (aliasSecondTargets[it] in alphabet.indices && aliasSecondTargets[it] != aliasTargets[it])
+        }) { "alias second target outside the alphabet or equal to the first target" }
     }
 
     companion object {

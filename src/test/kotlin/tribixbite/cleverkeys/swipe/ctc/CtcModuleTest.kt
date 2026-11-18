@@ -86,6 +86,44 @@ class CtcModuleTest {
         assertThat(total).isWithin(1e-6).of(1.0)
     }
 
+    /**
+     * Two-letter alias keys (`æ`→`a`+`e`, 2026-11-18): the slot is folded into BOTH columns, each
+     * by log-sum-exp; a slot without a second target (-1) folds into one column as before.
+     */
+    @Test
+    fun emissions_sliceFromHead_foldsATwoLetterAliasIntoBothColumns() {
+        val maxKeys = 6
+        val numLetters = 3
+        // One frame: a=0.1 b=0.2 c=0.1 alias(→a,c)=0.3 alias(→b only)=0.1 pad=0 blank=0.2.
+        val p = floatArrayOf(0.1f, 0.2f, 0.1f, 0.3f, 0.1f, 0f, 0.2f)
+        val head = FloatArray(p.size) { if (p[it] == 0f) Float.NEGATIVE_INFINITY else Math.log(p[it].toDouble()).toFloat() }
+        val sliced = CtcEmissions.sliceFromHead(head, 1, maxKeys, numLetters, intArrayOf(0, 1), intArrayOf(2, -1))
+        assertThat(Math.exp(sliced.at(0, 0).toDouble())).isWithin(1e-6).of(0.4)
+        assertThat(Math.exp(sliced.at(0, 1).toDouble())).isWithin(1e-6).of(0.3)
+        assertThat(Math.exp(sliced.at(0, 2).toDouble())).isWithin(1e-6).of(0.4)
+        assertThat(Math.exp(sliced.at(0, 3).toDouble())).isWithin(1e-6).of(0.2)
+    }
+
+    /** A second target equal to the first, or outside the alphabet, is a wiring error. */
+    @Test
+    fun layout_rejectsABadSecondAliasTarget() {
+        fun layout(second: Int) = CtcLayout(
+            charArrayOf('a', 'e'), floatArrayOf(0.1f, 0.5f), floatArrayOf(0.2f, 0.2f),
+            aliasTargets = intArrayOf(0), aliasCentersX = floatArrayOf(0.3f), aliasCentersY = floatArrayOf(0.1f),
+            aliasSecondTargets = intArrayOf(second),
+        )
+        assertThat(layout(1).aliasSecondTargets.toList()).containsExactly(1)
+        assertThat(layout(-1).aliasSecondTargets.toList()).containsExactly(-1)
+        for (bad in listOf(0, 2)) {
+            try {
+                layout(bad)
+                assertWithMessage("expected IllegalArgumentException for second target $bad").fail()
+            } catch (e: IllegalArgumentException) {
+                // expected
+            }
+        }
+    }
+
     /** The padded layout carries alias slots after the alphabet, masked, with their targets. */
     @Test
     fun featurizer_buildPaddedLayout_appendsAliasSlots() {
@@ -96,6 +134,7 @@ class CtcModuleTest {
         val padded = CtcFeaturizer.buildPaddedLayout(layout)
         assertThat(padded.numLetters).isEqualTo(2)
         assertThat(padded.aliasTargets.toList()).containsExactly(1)
+        assertThat(padded.aliasSecondTargets.toList()).isEmpty()
         assertThat(padded.mask.count { it }).isEqualTo(3)
         assertThat(padded.keys[4]).isEqualTo(0.3f)
         assertThat(padded.keys[5]).isEqualTo(0.1f)
