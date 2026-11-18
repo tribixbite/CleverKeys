@@ -192,7 +192,8 @@ object CtcFeaturizer {
      * slots `[0..K)` as `(cx, cy)` (rest `(0,0)`), and a boolean mask true for the K real
      * keys (`engine.cpp::build_padded_layout_inputs`). Both are padded to [MAX_KEYS].
      *
-     * Alias keys ([CtcLayout.aliasTargets]) follow in slots `[K..K+A)`, also masked true.
+     * Alias keys ([CtcLayout.aliasTargets]) follow in slots `[K..K+A)`, also masked true; their
+     * fold columns ([CtcLayout.aliasTargets], [CtcLayout.aliasSecondTargets]) travel with them.
      *
      * @return [PaddedLayout] with `keys` (length `MAX_KEYS*2`, interleaved cx,cy) and
      *   `mask` (length `MAX_KEYS`).
@@ -213,7 +214,9 @@ object CtcFeaturizer {
             keys[(k + j) * 2 + 1] = layout.aliasCentersY[j]
             mask[k + j] = true
         }
-        return PaddedLayout(keys, mask, k, layout.aliasTargets.copyOf())
+        return PaddedLayout(
+            keys, mask, k, layout.aliasTargets.copyOf(), layout.aliasSecondTargets.copyOf()
+        )
     }
 
     /**
@@ -221,11 +224,14 @@ object CtcFeaturizer {
      *
      * @property numLetters the alphabet's K slots; the emission slice keeps these columns.
      * @property aliasTargets for alias slot `K + j`, the column its emission folds into.
+     * @property aliasSecondTargets for alias slot `K + j`, a second fold column or -1; empty
+     *   means none for every alias slot ([CtcLayout.aliasSecondTargets]).
      */
     class PaddedLayout(
         val keys: FloatArray,
         val mask: BooleanArray,
         val numLetters: Int = mask.count { it },
         val aliasTargets: IntArray = IntArray(0),
+        val aliasSecondTargets: IntArray = IntArray(0),
     )
 }

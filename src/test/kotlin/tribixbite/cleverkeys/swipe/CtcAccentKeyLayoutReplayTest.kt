@@ -4,6 +4,7 @@ import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import com.google.common.truth.Truth.assertWithMessage
 import java.io.File
+import kotlin.math.abs
 import org.junit.AfterClass
 import org.junit.Assume
 import org.junit.BeforeClass
@@ -13,7 +14,9 @@ import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
+import tribixbite.cleverkeys.swipe.ctc.CtcAlternateForm
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
+import tribixbite.cleverkeys.swipe.ctc.CtcSurfaceForms
 import tribixbite.cleverkeys.swipe.ctc.CtcSwipeDecoder
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeoIdealTrace
@@ -43,7 +46,11 @@ import tribixbite.cleverkeys.swipe.geometric.GeoTestFixtures
  */
 class CtcAccentKeyLayoutReplayTest {
 
-    private class Lexicon(val trie: CtcLexiconTrie, val display: Map<String, String>)
+    private class Lexicon(
+        val trie: CtcLexiconTrie,
+        val display: Map<String, String>,
+        val alternates: Map<String, Array<CtcAlternateForm>>,
+    )
 
     private companion object {
         val AZ = CharArray(26) { 'a' + it }
@@ -53,6 +60,9 @@ class CtcAccentKeyLayoutReplayTest {
         var env: OrtEnvironment? = null
         var session: OrtSession? = null
         val lexicons = HashMap<String, Lexicon>()
+
+        /** Common Danish words with `æ`, at mid custom-word frequency (see [danishSwipesOverTheAeKey]). */
+        val DANISH_AE = listOf("være" to 200, "næste" to 180, "læse" to 160, "æble" to 140, "hæld" to 120)
 
         @BeforeClass
         @JvmStatic
@@ -72,12 +82,19 @@ class CtcAccentKeyLayoutReplayTest {
         }
 
         /** The CKDT branch of `CtcEngineAdapter.lexiconFor`, without user words. */
-        fun lexicon(lang: String): Lexicon = lexicons.getOrPut(lang) {
+        fun lexicon(lang: String): Lexicon = lexicons.getOrPut(lang) { lexiconOf(lang, emptyList()) }
+
+        /**
+         * [lexicon] with [extra] words merged in the way custom words are (calibrated onto the
+         * base scale). Used to give the Swedish base a handful of Danish `æ` words: no Danish
+         * dictionary ships, so that board has no real lexicon to decode against.
+         */
+        fun lexiconOf(lang: String, extra: List<Pair<String, Int>>): Lexicon {
             val entries = File("src/main/assets/dictionaries/${lang}_enhanced.bin").inputStream()
                 .use { CkdtDictionaryReader.readEntries(it) }
-            val merged = CtcLexiconMerge.merge(CtcCkdtLexicon.frequencyPairs(entries), emptyList(), emptySet())
+            val merged = CtcLexiconMerge.merge(CtcCkdtLexicon.frequencyPairs(entries), extra, emptySet())
             val projected = CtcAzProjection.projectLexicon(merged)
-            Lexicon(CtcLexiconTrie.loadFromFrequencyMap(AZ, projected.freqs), projected.display)
+            return Lexicon(CtcLexiconTrie.loadFromFrequencyMap(AZ, projected.freqs), projected.display, projected.alternates)
         }
     }
 
@@ -118,15 +135,18 @@ class CtcAccentKeyLayoutReplayTest {
         return Triple(xs.toDoubleArray(), ys.toDoubleArray(), ts.toDoubleArray())
     }
 
-    /** Decoded slate in DISPLAY form (the canonical accented word the user sees). */
-    private fun slate(word: String, board: Board, lang: String): List<String> {
-        val lex = lexicon(lang)
-        val decoder = CtcSwipeDecoder(
-            OnnxCtcEmissionModel(env!!, session!!), board.built.layout, lex.trie,
-            CtcScoringParams.presetFor(lang, topK = 8),
-        )
+    /**
+     * Decoded slate in DISPLAY form (the canonical accented word the user sees), through the
+     * shipped [CtcSurfaceForms.expand] — every canonical form of a decoded surface, as
+     * `CtcEngineAdapter.decodeAsync` builds it (the fuzzy rescue, which only fills spare slots,
+     * is left out).
+     */
+    private fun slate(word: String, board: Board, lang: String, lex: Lexicon = lexicon(lang)): List<String> {
+        val params = CtcScoringParams.presetFor(lang, topK = 8)
+        val decoder = CtcSwipeDecoder(OnnxCtcEmissionModel(env!!, session!!), board.built.layout, lex.trie, params)
         val (x, y, t) = trace(word, board)
-        return decoder.decode(x, y, t).map { lex.display[it.word] ?: it.word }
+        return CtcSurfaceForms.expand(decoder.decode(x, y, t), lex.display, lex.alternates, params.lambda, 8)
+            .map { it.word }
     }
 
     /**
@@ -155,19 +175,28 @@ class CtcAccentKeyLayoutReplayTest {
      * bépo it reads `était` as `état` first (both pass over the same keys), a ranking question
      * this fix does not touch.
      */
-    private fun assertDecodes(layoutFile: String, lang: String, words: List<String>, rankOne: Set<String>) {
+    private fun assertDecodes(
+        layoutFile: String,
+        lang: String,
+        words: List<String>,
+        rankOne: Set<String>,
+        lex: Lexicon? = null,
+        expected: (String) -> String = { it },
+        within: Int = 3,
+    ) {
         Assume.assumeTrue("ONNX natives absent — run via gradle runPureTests", session != null)
         val board = board(layoutFile)
         val failures = ArrayList<String>()
         for (w in words) {
-            val got = slate(w, board, lang)
+            val got = if (lex == null) slate(w, board, lang) else slate(w, board, lang, lex)
+            val want = expected(w)
             println("[accent-keys] $layoutFile/$lang '$w' → CTC $got | geometric ${geometricSlate(w, layoutFile, lang)}")
-            val rank = got.indexOf(w)
-            if (rank !in 0..2 || (w in rankOne && rank != 0)) failures += "'$w' → $got"
+            val rank = got.indexOf(want)
+            if (rank !in 0 until within || (w in rankOne && rank != 0)) failures += "'$w' (want '$want') → $got"
         }
         assertWithMessage(
             "$layoutFile ($lang): a swipe over the accented KEY must decode the accented word " +
-                "(top 3; rank 1 for $rankOne)"
+                "(top $within; rank 1 for $rankOne)"
         ).that(failures).isEmpty()
     }
 
@@ -178,15 +207,72 @@ class CtcAccentKeyLayoutReplayTest {
         rankOne = setOf("été", "bonjour"),
     )
 
-    /**
-     * Not `schön`: it projects to the same a–z surface as `schon`, and the projection keeps the
-     * more frequent form for that surface (`CtcAzProjection.projectLexicon`), so CTC can never
-     * return `schön` on any board — a lexicon-collision limit, not a key-geometry one.
-     */
     @Test
     fun qwertzGermanSwipesOverTheUmlautKeys() = assertDecodes(
         "latn_qwertz_de.xml", "de", listOf("für", "über", "können", "müssen", "hören", "danke"),
         rankOne = setOf("danke"),
+    )
+
+    /**
+     * Surface collisions (known issue fixed 2026-11-18): `schön` projects to the same a–z
+     * surface as the more frequent `schon` (`würde`/`wurde`, `hätte`/`hatte`, `wäre`/`ware` the
+     * same), so the trie holds that surface once. [CtcSurfaceForms.expand] offers the less
+     * frequent form beside the winner; before, only the winner could ever be swiped. Swiped
+     * over the umlaut key or over the base letter, the path is the same surface.
+     */
+    @Test
+    fun qwertzGermanOffersBothFormsOfACollidingSurface() = assertDecodes(
+        "latn_qwertz_de.xml", "de", listOf("schön", "würde", "hätte", "schon", "wurde", "hatte"),
+        // The more frequent form of each pair keeps rank 1.
+        rankOne = setOf("schon", "wurde", "hatte"),
+    )
+
+    /**
+     * `ß` as a CENTRE key (Neo 2, Bone): one key, spelled `ss` by the lexicon (the shipped
+     * German dictionary is casefolded — `strasse`, `grosse`, `weiss`), so the key is an alias of
+     * `s` and the beam takes the second `s` from a later frame over the same key. Before
+     * 2026-11-18 the key had no slot at all and a path over it read the nearest a–z keys.
+     */
+    @Test
+    fun neo2SwipesOverTheSharpSKey() = assertDecodes(
+        "latn_neo2.xml", "de", listOf("straße", "große", "weiß", "heißen"),
+        rankOne = emptySet(),
+        expected = { CtcAzProjection.project(it)!! },
+    )
+
+    @Test
+    fun boneSwipesOverTheSharpSKey() = assertDecodes(
+        "latn_bone.xml", "de", listOf("straße", "große", "weiß", "heißen"),
+        rankOne = emptySet(),
+        expected = { CtcAzProjection.project(it)!! },
+    )
+
+    /**
+     * Danish `æ` as a centre key: the lexicon spells it `ae`, so the key folds into BOTH `a` and
+     * `e` ([CtcLayout.aliasSecondTargets]). No Danish dictionary ships, so the words are merged
+     * into the Swedish one as custom words, and common Swedish words (`var`, `vår`, `hos`) outrank
+     * them — so this asserts the 8-word slate, not the bar: a pin of the key mapping, not ranking
+     * evidence. Before the fix none of these words reached the slate at all.
+     *
+     * Not `æble`: on this straight synthetic line the path leaves the word-initial `æ` key at
+     * once, and `ae` needs two frames on that key (one per letter); it decodes `anar`/`annat`
+     * before and after. A real swipe starts with a short dwell; unmeasured, no corpus.
+     */
+    @Test
+    fun danishSwipesOverTheAeKey() = assertDecodes(
+        "latn_qwerty_da.xml", "sv", DANISH_AE.map { it.first }.filter { it != "æble" },
+        rankOne = emptySet(),
+        lex = lexiconOf("sv", DANISH_AE),
+        within = 8,
+    )
+
+    /** The same `æ` words on the Icelandic board, whose `æ` key is written `c="æ"`. */
+    @Test
+    fun icelandicSwipesOverTheAeKey() = assertDecodes(
+        "latn_qwerty_is.xml", "sv", DANISH_AE.map { it.first }.filter { it != "æble" },
+        rankOne = emptySet(),
+        lex = lexiconOf("sv", DANISH_AE),
+        within = 8,
     )
 
     @Test
@@ -206,6 +292,32 @@ class CtcAccentKeyLayoutReplayTest {
         "latn_qwertz_fr_ch.xml", "fr", listOf("été", "déjà", "très", "bonjour"),
         rankOne = setOf("été", "bonjour"),
     )
+
+    /**
+     * Two-letter and doubled-letter keys get an alias slot (2026-11-18): `æ` folds into `a` and
+     * `e`, `ß` into `s` only (its two letters are the same). Pure — no model needed.
+     */
+    @Test
+    fun twoLetterKeysGetAliasSlotsFoldedIntoEachLetter() {
+        /** The letters [letter]'s alias slot folds into, or null when the key has no slot. */
+        fun folds(layoutFile: String, letter: Char): List<Char>? {
+            val rects = KeyboardGeometry.computeKeyRects(LayoutXmlRows.parse(File("src/main/layouts/$layoutFile")), PARAMS)
+            val built = CtcMappedLayoutBuilder.build(rects, AZ, CtcAzProjection::project)!!
+            val layout = built.layout
+            val rect = rects.first { KeyLetter.centreLetterOf(it.kv) == letter }
+            val x = ((rect.bounds.left + rect.bounds.right) / 2f - built.originX) * built.invW
+            val y = ((rect.bounds.top + rect.bounds.bottom) / 2f - built.originY) * built.invH
+            val j = layout.aliasTargets.indices.firstOrNull {
+                abs(layout.aliasCentersX[it] - x) < 1e-5f && abs(layout.aliasCentersY[it] - y) < 1e-5f
+            } ?: return null
+            val second = layout.aliasSecondTargets.getOrElse(j) { -1 }
+            return listOfNotNull(layout.alphabet[layout.aliasTargets[j]], layout.alphabet.getOrNull(second))
+        }
+        assertWithMessage("Danish æ").that(folds("latn_qwerty_da.xml", 'æ')).isEqualTo(listOf('a', 'e'))
+        assertWithMessage("Icelandic æ").that(folds("latn_qwerty_is.xml", 'æ')).isEqualTo(listOf('a', 'e'))
+        assertWithMessage("Neo 2 ß").that(folds("latn_neo2.xml", 'ß')).isEqualTo(listOf('s'))
+        assertWithMessage("Bone ß").that(folds("latn_bone.xml", 'ß')).isEqualTo(listOf('s'))
+    }
 
     /** A board without accented centre keys keeps exactly the a–z layout it had before. */
     @Test

@@ -3,13 +3,15 @@ package tribixbite.cleverkeys.swipe.ctc
 import tribixbite.cleverkeys.WordChars
 import java.text.Normalizer
 import java.util.Locale
+import kotlin.math.ln
 
 /**
  * Projects a canonical lexicon onto the emission alphabet of a NON-LATIN script, and owns the
  * one collision-resolving lexicon loop both projections share.
  *
  * The Latin twin is [CtcAzProjection]; it delegates its lexicon loop here so there is exactly one
- * implementation of "highest frequency wins, canonical form kept for display".
+ * implementation of "highest frequency wins, canonical form kept for display, every other form
+ * kept as an alternate".
  *
  * ## Why the rules are per script and not one clever normalizer
  *
@@ -144,6 +146,12 @@ object CtcScriptProjection {
      * base) is the deterministic tie-break. The winner owns both the frequency and the display
      * form — an unaccented winner clears any earlier accented display entry, so the map can never
      * disagree with the frequency it was chosen for.
+     *
+     * Every LOSING form — a later entry at or below the winner's frequency, or an earlier winner
+     * a later entry displaced — is kept in [CtcAzProjection.Projected.alternates], most frequent
+     * first (ties in input order), so [CtcSurfaceForms.expand] can offer it beside the winner.
+     * The trie still gets one node per surface; the alternates cost one small object per
+     * collision (about 2,000 for fr/es), nothing per non-colliding word.
      */
     fun projectLexicon(
         canonical: Map<String, Double>,
@@ -153,6 +161,8 @@ object CtcScriptProjection {
         val display = HashMap<String, String>()
         var untypeable = 0
         var collisions = 0
+        // surface → (form, frequency) of every losing form, in the order it lost.
+        val losers = HashMap<String, ArrayList<Pair<String, Double>>>()
         for ((word, freq) in canonical) {
             val surface = project(word)
             if (surface == null) {
@@ -162,11 +172,25 @@ object CtcScriptProjection {
             val existing = freqs[surface]
             if (existing != null) {
                 collisions++
-                if (freq <= existing) continue
+                val lost = losers.getOrPut(surface) { ArrayList(2) }
+                if (freq <= existing) {
+                    lost.add(word to freq)
+                    continue
+                }
+                // The previous winner is displaced: its form is the display entry, or the bare
+                // surface when it had none.
+                lost.add((display[surface] ?: surface) to existing)
             }
             freqs[surface] = freq
             if (word == surface) display.remove(surface) else display[surface] = word
         }
-        return CtcAzProjection.Projected(freqs, display, canonical.size, untypeable, collisions)
+        val alternates = HashMap<String, Array<CtcAlternateForm>>(losers.size * 2)
+        for ((surface, lost) in losers) {
+            // sortedByDescending is stable, so equal frequencies keep the order they lost in.
+            alternates[surface] = lost.sortedByDescending { it.second }
+                .map { CtcAlternateForm(it.first, ln(it.second + 1e-10)) }
+                .toTypedArray()
+        }
+        return CtcAzProjection.Projected(freqs, display, canonical.size, untypeable, collisions, alternates)
     }
 }

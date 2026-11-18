@@ -118,13 +118,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 8. [ ] maintainer soak: running every release as generated. Bugs (a) `they've`, (b) long to-do entry
    editing, (c) bépo `été`: fixed or maintainer PASS 2026-10-26. Left: the soak → ARC-063 narrow the
    blanket R8 keeps → tag decision; a few real traces of a hard pronoun contraction would decide a
-   ranking change (`they're`/`you're` lose to `there`/`your`); `ß`/`æ`/`œ` keys have no CTC slot;
-   `schön`/`schon`-type collisions keep only the more frequent form; `yo` is nearly impossible to
+   ranking change (`they're`/`you're` lose to `there`/`your`); FIXED 2026-11-18: `ß`/`æ`/`œ` keys
+   have a CTC slot and `schön`/`schon`-type collisions offer both forms (spec "Collisions": real
+   FUTO traces t1 unchanged, t3 +0.1…+1.3 pt in de/es/fr; ß/æ boards synthetic pins only, no
+   corpus — a device check on Neo 2/Danish is open); `yo` is nearly impossible to
    swipe (always `to`; maintainer 2026-11-18) — the item-17 short-word family, see there. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-8)
 9. [ ] agent (objective) + maintainer (feel): pre-tag checks. #90, #168, #145, both minimize styles
    PASS 2026-10-25 (Pixel). Full checklist 2026-11-09 (Pixel): 43 pass / 5 fail / 3 partial / 12 not
-   run. Open: `d'être` (item 35), the spoken TalkBack pass, the emoji panel by hand, voice/GIF items
-   (no packs on the phone), autofill inline; maintainer: suffix/template/continuous feel. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
+   run. Open: `d'être` (item 35), the spoken TalkBack pass, voice items, a GIF tap into an editor
+   that accepts content, autofill inline (needs a test autofill service on a test phone); maintainer:
+   suffix/template/continuous feel. 2026-11-18 Saga `.82` (checklist rows): emoji panel by hand and
+   GIF import/browse/search/Replace/remove PASS; FAIL text emoticons invisible on a light runtime
+   look; FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales
     (later items fold their strings in here). Sheets: `docs/i18n/review/2026-11/<locale>/` —
     `1-translate.csv` 626 rows, `2-check.csv` 332, `3-read-through.csv` 33,163 optional; README

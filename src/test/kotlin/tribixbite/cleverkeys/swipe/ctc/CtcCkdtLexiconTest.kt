@@ -269,6 +269,84 @@ class CtcCkdtLexiconTest {
         assertThat(p.display).isEmpty()
     }
 
+    // ── Every canonical form of a surface stays reachable (2026-11-18) ──────────────
+
+    @Test
+    fun `collisions keep every other canonical form as an alternate`() {
+        val merged = CtcLexiconMerge.merge(
+            listOf("côte" to 200.0, "cote" to 120.0, "coté" to 90.0),
+            emptyList(), emptySet()
+        )
+        val p = CtcAzProjection.projectLexicon(merged)
+        val alts = p.alternates.getValue("cote")
+        assertThat(alts.map { it.word }).containsExactly("cote", "coté").inOrder()
+        assertThat(alts[0].logFreq).isWithin(1e-9).of(Math.log(120.0 + 1e-10))
+        // A displaced winner becomes an alternate too, whatever the input order.
+        val reversed = CtcAzProjection.projectLexicon(
+            CtcLexiconMerge.merge(listOf("coté" to 90.0, "cote" to 120.0, "côte" to 200.0), emptyList(), emptySet())
+        )
+        assertThat(reversed.display["cote"]).isEqualTo("côte")
+        assertThat(reversed.alternates.getValue("cote").map { it.word }).containsExactly("cote", "coté").inOrder()
+        assertThat(p.alternates).doesNotContainKey("café")
+    }
+
+    @Test
+    fun `the shipped dictionaries keep one alternate per collision`() {
+        for ((lang, p) in projected) {
+            assertWithMessage("$lang: alternates must account for every collision")
+                .that(p.alternates.values.sumOf { it.size }).isEqualTo(p.collisions)
+        }
+        assertThat(projected.getValue("de").alternates.getValue("schon").map { it.word }).contains("schön")
+        assertThat(projected.getValue("de").display["ware"]).isEqualTo("wäre")
+        assertThat(projected.getValue("de").alternates.getValue("ware").map { it.word }).contains("ware")
+        assertThat(projected.getValue("fr").alternates.getValue("la").map { it.word }).contains("là")
+        assertThat(projected.getValue("es").alternates.getValue("el").map { it.word }).contains("él")
+    }
+
+    private fun candidate(word: String, score: Double, freq: Double) =
+        CtcCandidate(word, score, ctcScore = -5.0, length = word.length, logFreq = Math.log(freq + 1e-10))
+
+    @Test
+    fun `expand offers each alternate at its own frequency and keeps the winner in place`() {
+        val display = mapOf("ware" to "wäre")
+        val alternates = mapOf(
+            "schon" to arrayOf(CtcAlternateForm("schön", Math.log(178.0 + 1e-10))),
+            "ware" to arrayOf(CtcAlternateForm("ware", Math.log(130.0 + 1e-10))),
+        )
+        val beam = listOf(
+            candidate("schon", 10.0, 211.0),
+            candidate("schnell", 9.5, 200.0),
+            candidate("ware", 9.0, 190.0),
+        )
+        val out = CtcSurfaceForms.expand(beam, display, alternates, lambda = 2.0, topK = 8)
+        // schön: 10 − 2·ln(211/178) = 9.660 → between schon and schnell.
+        assertThat(out.map { it.word }).containsExactly("schon", "schön", "schnell", "wäre", "ware").inOrder()
+        assertThat(out[1].finalScore).isWithin(1e-9).of(10.0 - 2.0 * Math.log(211.0 / 178.0))
+        assertThat(out[1].logFreq).isWithin(1e-9).of(Math.log(178.0 + 1e-10))
+        // topK cuts after the expansion.
+        assertThat(CtcSurfaceForms.expand(beam, display, alternates, 2.0, 2).map { it.word })
+            .containsExactly("schon", "schön").inOrder()
+    }
+
+    @Test
+    fun `expand without alternates is the display rewrite alone`() {
+        val beam = listOf(candidate("cafe", 3.0, 100.0), candidate("cage", 2.0, 100.0))
+        val out = CtcSurfaceForms.expand(beam, mapOf("cafe" to "café"), emptyMap(), 2.0, 8)
+        assertThat(out.map { it.word }).containsExactly("café", "cage").inOrder()
+        assertThat(out.map { it.finalScore }).containsExactly(3.0, 2.0).inOrder()
+        assertThat(CtcSurfaceForms.expand(beam, emptyMap(), emptyMap(), 2.0, 8)).isEqualTo(beam)
+    }
+
+    @Test
+    fun `an alternate tying a beam word sorts after it`() {
+        val alternates = mapOf("la" to arrayOf(CtcAlternateForm("là", Math.log(100.0 + 1e-10))))
+        // là's score: 5 − 2·ln(200/100) = 3.6137…; le is given exactly that score.
+        val tie = 5.0 - 2.0 * (Math.log(200.0 + 1e-10) - Math.log(100.0 + 1e-10))
+        val beam = listOf(candidate("la", 5.0, 200.0), candidate("le", tie, 150.0))
+        assertThat(CtcSurfaceForms.expand(beam, emptyMap(), alternates, 2.0, 8).map { it.word })
+            .containsExactly("la", "le", "là").inOrder()
+    }
+
     // ── The trie the beam actually walks ───────────────────────────────────────────
 
     @Test

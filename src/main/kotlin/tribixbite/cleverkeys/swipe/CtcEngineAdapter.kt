@@ -23,6 +23,7 @@ import tribixbite.cleverkeys.SwipePriority
 import tribixbite.cleverkeys.UserDictionaryWords
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.onnx.ModelLoader
+import tribixbite.cleverkeys.swipe.ctc.CtcAlternateForm
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
@@ -41,6 +42,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
+import tribixbite.cleverkeys.swipe.ctc.CtcSurfaceForms
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.lang.ref.WeakReference
 import java.util.Locale
@@ -581,6 +583,8 @@ class CtcEngineAdapter(
         val trie: CtcLexiconTrie,
         val ordinals: HashMap<String, Int>,
         val display: Map<String, String>,
+        /** Surface → its other canonical forms ([CtcSurfaceForms]); empty for the en JSON source. */
+        val alternates: Map<String, Array<CtcAlternateForm>>,
         val fuzzyRescue: CtcFuzzyRescue,
         val version: Long,
         val pairingBaseFrequencies: Map<String, Int>,
@@ -756,6 +760,7 @@ class CtcEngineAdapter(
         val trie: CtcLexiconTrie
         val priority: CtcPriorityBonus
         val display: Map<String, String>
+        val alternates: Map<String, Array<CtcAlternateForm>>
         // Joiner user words ([UserJoinerPreference]) — keyed on the surface the overlay sees,
         // which is branch-specific (raw a–z strip for en, the accent-display form for CKDT).
         val userPreferences: Map<String, UserJoinerPreference.Preference>
@@ -776,6 +781,9 @@ class CtcEngineAdapter(
                 // en contractions are restored by the ContractionOverlay instead.
                 trie = CtcLexiconTrie.loadStrippingNonAlphabet(alphabet, merged)
                 display = emptyMap()
+                // No projection, so no surface collisions: apostrophe forms are the contraction
+                // overlay's job, accented forms are kept as distinct (unreachable) surfaces.
+                alternates = emptyMap()
                 // The trie files a joiner user word under its stripped surface (raising it);
                 // WHAT that surface shows is the user's form, via the overlay.
                 val alphabetSet = alphabet.toHashSet()
@@ -811,6 +819,7 @@ class CtcEngineAdapter(
                 )
                 trie = CtcLexiconTrie.loadFromFrequencyMap(alphabet, projected.freqs)
                 display = projected.display
+                alternates = projected.alternates
                 userPreferences = UserJoinerPreference.build(
                     userWordPairs,
                     { w -> project(w)?.let { projected.display[it] ?: it } },
@@ -824,7 +833,8 @@ class CtcEngineAdapter(
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "CTC '$lang' projection: ${projected.records} records, " +
                         "${projected.untypeable} untypeable, ${projected.collisions} " +
-                        "surface collisions, ${display.size} display forms")
+                        "surface collisions, ${display.size} display forms, " +
+                        "${alternates.size} surfaces with alternates")
                 }
             }
         }
@@ -868,7 +878,7 @@ class CtcEngineAdapter(
                 "injectedAliases=$injected display=${display.size}"
         }
         val built = TrieMemo(
-            lang, trie, ordinals, display,
+            lang, trie, ordinals, display, alternates,
             // Alphabet-scoped: on a a–z-only index a Cyrillic lexicon would filter to nothing
             // and rescue would be silently inert. See [CtcFuzzyRescue]'s class KDoc.
             CtcFuzzyRescue.fromFrequencies(rescueFrequencies, alphabet.toHashSet()),
@@ -973,18 +983,21 @@ class CtcEngineAdapter(
     }
 
     /**
-     * Rewrites a-z surfaces to their canonical accented forms (`cafe` → `café`) using the
-     * lexicon's stripped→canonical map. A no-op for the en JSON source (empty map) and for
-     * any surface whose canonical form is already un-accented.
+     * Rewrites the beam's a-z surfaces to their canonical forms (`cafe` → `café`) and offers every
+     * other canonical form of a decoded surface (`schon` → also `schön`, ranked by its own
+     * frequency) — [CtcSurfaceForms.expand]. A no-op for the en JSON source (both maps empty).
+     *
+     * Runs on the beam's CANDIDATES, before the softmax and the fuzzy rescue (until 2026-11-18 it
+     * ran on the finished slate): an alternate is scored from its winner's raw final score, and
+     * once it is in the slate a bare-surface alternate (`ware` under `wäre`) cannot be told apart
+     * from the winner's surface any more.
      */
     private fun applyCanonicalDisplay(
-        result: PredictionResult,
-        display: Map<String, String>,
-    ): PredictionResult {
-        if (display.isEmpty() || result.words.isEmpty()) return result
-        if (result.words.none { display.containsKey(it) }) return result
-        return PredictionResult(result.words.map { display[it] ?: it }, result.scores)
-    }
+        candidates: List<CtcCandidate>,
+        lexicon: TrieMemo,
+        lambda: Double,
+    ): List<CtcCandidate> =
+        CtcSurfaceForms.expand(candidates, lexicon.display, lexicon.alternates, lambda, TOP_K)
 
     /**
      * Applies [ContractionOverlay] with [language]'s mappings + merged-lexicon ordinals, and
@@ -1012,10 +1025,23 @@ class CtcEngineAdapter(
         return PredictionResult(words, scores)
     }
 
-    /** Both display overlays, in the order documented above. */
-    private fun applyDisplay(result: PredictionResult, lexicon: TrieMemo): PredictionResult =
+    /**
+     * Both display overlays, in the order documented above, with the bounded fuzzy rescue
+     * between them: canonical forms → softmax scores → rescue into spare slots → contractions.
+     */
+    private fun applyDisplay(
+        candidates: List<CtcCandidate>,
+        greedy: String,
+        lexicon: TrieMemo,
+        lambda: Double,
+    ): PredictionResult =
         applyContractionDisplay(
-            applyCanonicalDisplay(result, lexicon.display),
+            applyFuzzyRescue(
+                toPredictionResult(applyCanonicalDisplay(candidates, lexicon, lambda)),
+                greedy,
+                candidates,
+                lexicon,
+            ),
             lexicon.language,
             lexicon.ordinals,
             lexicon.pairingBaseFrequencies,
@@ -1029,13 +1055,19 @@ class CtcEngineAdapter(
      * the pure-JVM replay engine. Rescued words are APPENDED BELOW the real beam into spare
      * [TOP_K] slots; they never displace or outrank a real beam word (CK-150-025). Empty beam
      * slates are still populated directly.
+     *
+     * [result] is already in display form, so the rescue excludes the beam's SURFACES
+     * ([candidates]) and its matches are shown through the same display map.
      */
     private fun applyFuzzyRescue(
         result: PredictionResult,
         greedy: String,
+        candidates: List<CtcCandidate>,
         lexicon: TrieMemo,
     ): PredictionResult {
-        val rescued = lexicon.fuzzyRescue.find(greedy, result.words.toHashSet())
+        val surfaces = HashSet<String>(candidates.size * 2)
+        for (c in candidates) surfaces.add(c.word)
+        val rescued = lexicon.fuzzyRescue.find(greedy, surfaces).map { lexicon.display[it] ?: it }
         if (rescued.isEmpty()) return result
         val (words, scores) =
             CtcFuzzyRescue.mergeIntoBeam(result.words, result.scores, rescued, TOP_K)
@@ -1164,18 +1196,16 @@ class CtcEngineAdapter(
                     val emissions = model.emit(features, mapped.padded)
                     val greedy = CtcBeamDecoder.greedy(emissions, mapped.layout.alphabet)
                     fun decodeLexicon(lexicon: TrieMemo): PredictionResult {
+                        val params = CtcScoringParams.presetFor(
+                            lexicon.language, beamWidth = beamWidth, topK = TOP_K
+                        )
                         val candidates = CtcBeamDecoder.decode(
                             emissions,
                             lexicon.trie,
-                            CtcScoringParams.presetFor(
-                                lexicon.language, beamWidth = beamWidth, topK = TOP_K
-                            ),
+                            params,
                             priority = lexicon.priority,
                         )
-                        return applyDisplay(
-                            applyFuzzyRescue(toPredictionResult(candidates), greedy, lexicon),
-                            lexicon,
-                        )
+                        return applyDisplay(candidates, greedy, lexicon, params.lambda)
                     }
 
                     val primaryResult = decodeLexicon(primaryLexicon)

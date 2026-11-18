@@ -591,6 +591,12 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Swiping now offers both words when two differ only by accents: `schön` beside `schon`, `là`
+  beside `la`, `él` beside `el`. Only the more frequent one could be swiped before. The second
+  word is placed by its own frequency, so the first suggestion does not change.
+- Swiping over a `ß` key (Neo 2, Bone) or an `æ` key (Danish, Icelandic) reads that key, as `ss`
+  or `ae`. Before, the swipe read the keys next to it: Neo 2 `straße` gave `strafe`; it now gives
+  `strasse`, the spelling the bundled German dictionary uses.
 - The PIN Entry Layout fills the keyboard: its keys left the left fifth empty.
 - The plain suggestion bar no longer highlights the first next-word prediction: space types
   none of them, and the highlight marks what space types (keyboard looks already did this).
