@@ -301,8 +301,9 @@ the merged entry is private too.
 the middle of a sentence, as text copied from a PDF, an e-mail, a terminal or a narrow
 screen often is, and rejoins a word split by a hyphen at the line end. It also removes extra
 white space: spaces and tabs at line ends, indentation, doubled spaces inside a line, and
-extra blank lines. Paragraph breaks, a line that ends a sentence, lists, addresses, links and
-code keep their line breaks. Only the entries in the current tab change, never their copies
+extra blank lines. Paragraph breaks, a line that ends a sentence, chat messages (a line
+starting with a time, `Name:` or `<nick>`), greetings, lists, addresses, links and code keep
+their line breaks. Only the entries in the current tab change, never their copies
 in other tabs. The confirmation shows how many will change and a preview; entries that need
 no cleaning are left alone. The result line under the list is cleared when you close the
 clipboard or leave selection mode.

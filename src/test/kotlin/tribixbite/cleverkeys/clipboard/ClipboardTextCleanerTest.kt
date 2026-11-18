@@ -184,6 +184,78 @@ class ClipboardTextCleanerTest {
     }
 
     @Test
+    fun chatAndLogMessagesKeepTheirBreaks() {
+        // Audit 2026-11-18: a message without final punctuation was joined to the next one.
+        for (text in listOf(
+            "[10:31] Alice: are you free later this\n[10:32] Bob: sure",
+            "18/11/2026, 10:31 - Alice: are you free later this\n18/11/2026, 10:32 - Bob: sure",
+            "<alice> hey did you see the new release notes they posted\n<bob> yes it looks good",
+            "Alice: are you free later this evening for a coffee\nBob: sure what time works",
+        )) assertWithMessage(text).that(clean(text)).isEqualTo(text)
+        // A message that wraps still joins its own continuation.
+        assertThat(clean("[10:31] Alice: are you free later this\nevening for a coffee\n[10:32] Bob: sure"))
+            .isEqualTo("[10:31] Alice: are you free later this evening for a coffee\n[10:32] Bob: sure")
+    }
+
+    @Test
+    fun oneCodeLikeLineDoesNotStopCleaningProse() {
+        // Audit 2026-11-18: any one of these used to mark the whole clip as code.
+        assertThat(clean("Total = five apples and two pears which is more than\nwe needed  for the pie"))
+            .isEqualTo("Total = five apples and two pears which is more than we needed for the pie")
+        assertThat(clean("$ 5 off your next order if you sign up today and use\nthe code at checkout"))
+            .isEqualTo("$ 5 off your next order if you sign up today and use the code at checkout")
+        assertThat(clean("Bring water;\nsnacks;\nand a hat")).isEqualTo("Bring water; snacks; and a hat")
+        assertThat(clean("<alice> hey did you see the new release notes they\nposted  yesterday"))
+            .isEqualTo("<alice> hey did you see the new release notes they posted yesterday")
+        // Real code is still code.
+        for (code in listOf("$ ls -la\ntotal 12", "x = 1\ny = 2", "foo();\nbar();", "<p>Hello\nthere</p>")) {
+            assertWithMessage(code).that(clean(code)).isEqualTo(code)
+        }
+    }
+
+    @Test
+    fun aClipWhoseEveryLineIsTabIndentedIsCleaned() {
+        // Audit 2026-11-18: the shared indent was removed only when it was spaces.
+        assertThat(clean("\tthis whole message was indented with a tab by the\n\tmail client and should be joined"))
+            .isEqualTo("this whole message was indented with a tab by the mail client and should be joined")
+        // Deeper tabs inside a tab-indented clip are still code.
+        val nested = "\tif (ready)\n\t\tstart()"
+        assertThat(clean(nested)).isEqualTo(nested)
+    }
+
+    @Test
+    fun shortLinesBrokenMidSentenceAreJoined() {
+        // Audit 2026-11-18: these kept their breaks because the next line starts uppercase or a digit.
+        assertThat(clean("We visited New\nYork last week")).isEqualTo("We visited New York last week")
+        assertThat(clean("Please call Mike\nJohnson when you\nget this")).isEqualTo("Please call Mike Johnson when you get this")
+        assertThat(clean("the total came to\n42 dollars")).isEqualTo("the total came to 42 dollars")
+        assertThat(clean("We met on March 3,\n2026 at noon")).isEqualTo("We met on March 3, 2026 at noon")
+        assertThat(clean("I sent it to the\nOffice yesterday")).isEqualTo("I sent it to the Office yesterday")
+        // Deliberate breaks stay: greetings, addresses, unpunctuated lists, names.
+        for (text in listOf(
+            "Dear John,\nThanks for the update.",
+            "John Smith\n123 Main St\nSpringfield, IL",
+            "Buy milk today\nCall the bank\nPick up kids",
+            "Hello\nWorld",
+        )) assertWithMessage(text).that(clean(text)).isEqualTo(text)
+    }
+
+    @Test
+    fun aHardWrappedParagraphJoinsAtSentenceEndsToo() {
+        val wrapped = "This is a long paragraph that was hard wrapped at seventy two chars.\n" +
+            "Then it continues with another sentence that also wraps at the end of\n" +
+            "the line and finishes here."
+        assertThat(clean(wrapped)).isEqualTo(
+            "This is a long paragraph that was hard wrapped at seventy two chars. Then it continues " +
+                "with another sentence that also wraps at the end of the line and finishes here."
+        )
+        // Separate full-length messages that each end a sentence are not a wrapped paragraph.
+        val messages = "I will be there around eight tonight if the traffic is okay.\n" +
+            "Please save me a seat near the front of the room if you can."
+        assertThat(clean(messages)).isEqualTo(messages)
+    }
+
+    @Test
     fun markdownHeadingsQuotesTablesAndRulesKeepTheirBreaks() {
         val text = "# Title of the document that is long enough\n" +
             "Body text that follows the heading line here.\n" +
@@ -318,6 +390,9 @@ class ClipboardTextCleanerTest {
             "my friend\nand I went to see\nBob",
             "  Hello world\n  how are you\n\n\n\nFine.",
             "Roses are red,\nviolets are blue",
+            "[10:31] Alice: are you free later this\nevening\n[10:32] Bob: sure",
+            "We visited New\nYork last week",
+            "\tthis whole message was indented with a tab by the\n\tmail client",
         )
         for (text in samples) {
             val once = clean(text)

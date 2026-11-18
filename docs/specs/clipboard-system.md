@@ -534,25 +534,39 @@ most phone and terminal clips "Nothing to clean"):
 2. Trailing whitespace is removed from every line and the end of the text: spaces, tabs,
    no-break and other Unicode spaces (U+00A0, U+2000–U+200A, U+202F, U+205F, U+3000) and
    U+FEFF. Blank lines at the start and end go.
-3. Preformatted text keeps every line break and its indentation: a line indented by a tab, a
-   code fence, a line ending in `{` or `\` or starting with `}`, `//`, a block-comment opener,
-   `#!`, `#include`, `<?`, `$ `, `>>> ` or a markup tag, two or more lines ending in `;`, an
-   assignment (`name = value`), a space-aligned table (two lines with a gap of 2+ spaces, not
-   after sentence punctuation, ending at the same column), and any space-indented line that is
-   not a wrap (rule 4). The indent every line shares is ignored for this test.
+3. Preformatted text keeps every line break and its indentation. One line is enough for a
+   strong signal: a tab indent, a code fence, a line ending in `{` or `\` or starting with
+   `}`, `//`, a block-comment opener, `#!`, `#include`, `<?`, `>>> ` or a `$ ` prompt before a
+   command, real markup (closing or self-closing tag, tag with a quoted attribute, `<!`), or
+   an assignment ending in `;`. Weak signals — an assignment (`name = value`), a call
+   (`foo(x)`), a line opening with a statement keyword (`return`, `def`, `import`, …), a `;` line holding `=` or `(…)`, a `$ ` line, and other `;` line ends when one
+   of these is present — must cover two lines and half the clip (audit 2026-11-18: one
+   `Total = five apples`, `$ 5 off`, `<alice>` or `Bring water;` line used to stop all
+   cleaning). A space-aligned table (two lines with a gap of 2+ spaces, not after sentence
+   punctuation, ending at the same column) and any space-indented line that is not a wrap
+   (rule 4) are preformatted too. The indent every line shares — spaces or tabs — is ignored
+   for this test.
 4. A space-indented line is a hanging-indent wrap — terminal output and Markdown renderers
    indent the continuation of a wrapped line (maintainer report 2026-11-11) — when the line
    before it does not end in `:`, `{`, `[`, `(` or `\`, is indented no deeper than it (after a
    list item: deeper than the marker), and the break is mid-sentence (rule 5).
 5. A line break is removed when it is mid-sentence: neither neighbour is blank, the next line
    is not structural (bullet, numbered/lettered/roman item, checkbox, Markdown heading, quote,
-   table row, horizontal rule), no URL touches the break, the line before does not end a
-   sentence (`.` `!` `?` `…` or CJK `。！？`, before closing quotes or brackets), and either the
-   next line starts with a lowercase letter or the line before — as joined so far — is long
-   (≥ 20 characters and ≥ 60% of the longest prose line) and does not end in a colon. So
-   `Hello world\nhow are you` joins, while addresses, `Dear Sam,\nThanks…` and a break after a
-   finished sentence stay. A list item joins a mid-sentence continuation; headings, quotes,
-   table rows and rules never join the next line.
+   table row, horizontal rule) and does not start a chat or log message (`[10:31]`, `10:31`,
+   a date, `<nick> `, `Name: `), no URL touches the break, the line before does not end a
+   sentence (`.` `!` `?` `…` or CJK `。！？`, before closing quotes or brackets), and one of:
+   the next line starts with a lowercase letter; the line before — as joined so far — is long
+   (≥ 20 characters and ≥ 60% of the longest prose line) and does not end in a colon; it ends
+   on an English connector word (`to`, `the`, `and`, …); the next line starts with a digit
+   after a comma or a lowercase word (`came to\n42`); or a capitalised name is split across the
+   break in a line holding a lowercase word (`We visited New\nYork`). In a hard-wrapped
+   paragraph (two or more lines at ≥ 85% of the longest, ≥ 40 characters, more of them ending
+   mid-sentence than at a sentence end) a full line's sentence end is a wrap too. So
+   `Hello world\nhow are you` joins, while addresses, `Dear Sam,\nThanks…`, `Hello\nWorld`,
+   unpunctuated lists, separate one-line messages and a break after a finished sentence stay.
+   A list item joins a mid-sentence continuation; headings, quotes, table rows and rules never
+   join the next line. Known limit: `Meeting with Bob\nBring laptop` reads as a split name
+   and joins.
 6. In prose leading white space goes (a list item keeps its indent beyond the shared one), a
    run of blank lines becomes one, and a tab or run of spaces inside a line becomes one space.
 7. A removed break becomes one space (the next line's leading whitespace is dropped, so
