@@ -184,6 +184,26 @@ class ClipboardTextCleanerTest {
     }
 
     @Test
+    fun anIndentedListAfterAnUnindentedLeadLineIsCleaned() {
+        // Device report 2026-11-18: an answer copied from a chat app as an unindented lead line
+        // and a list whose markers and continuations all carry the same 6-space indent read as
+        // code, so Clean said "Nothing to clean".
+        val text = "Why this plan works well for the trip:\n" +
+            "      1. The ferry leaves at nine, which gives us a\n" +
+            "      full morning on the island before the rain.\n" +
+            "      2. Under the new timetable the last boat back\n" +
+            "      (the 18:40 from the north pier) is guaranteed."
+        assertThat(clean(text)).isEqualTo(
+            "Why this plan works well for the trip:\n" +
+                "1. The ferry leaves at nine, which gives us a full morning on the island before the rain.\n" +
+                "2. Under the new timetable the last boat back (the 18:40 from the north pier) is guaranteed."
+        )
+        // Nesting below the list's own indent survives.
+        assertThat(clean("Packing:\n    - bags for the long weekend trip to\n    the lake\n      - snacks"))
+            .isEqualTo("Packing:\n- bags for the long weekend trip to the lake\n  - snacks")
+    }
+
+    @Test
     fun chatAndLogMessagesKeepTheirBreaks() {
         // Audit 2026-11-18: a message without final punctuation was joined to the next one.
         for (text in listOf(

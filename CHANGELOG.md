@@ -594,7 +594,8 @@ editor that used to be listed here already ship in 2.0.)
 - The PIN Entry Layout fills the keyboard: its keys left the left fifth empty.
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
-  an e-mail, a terminal or chat (space- or tab-indented), and removes extra spaces, tabs,
+  an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied
+  from a chat answer with an indent on every line but the first), and removes extra spaces, tabs,
   indentation and blank lines. It used to leave most such clips unchanged ("Nothing to
   clean"), and one line that merely looked like code (`Total = 5`, `$ 5 off`) stopped it
   for the whole clip. Chat and log messages (`[10:31]`, `Alice:`, `<nick>`), greetings,

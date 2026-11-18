@@ -549,7 +549,8 @@ most phone and terminal clips "Nothing to clean"):
 4. A space-indented line is a hanging-indent wrap — terminal output and Markdown renderers
    indent the continuation of a wrapped line (maintainer report 2026-11-11) — when the line
    before it does not end in `:`, `{`, `[`, `(` or `\`, is indented no deeper than it (after a
-   list item: deeper than the marker), and the break is mid-sentence (rule 5).
+   list item: at the marker's indent or deeper, as copied chat answers lay it out), and the
+   break is mid-sentence (rule 5).
 5. A line break is removed when it is mid-sentence: neither neighbour is blank, the next line
    is not structural (bullet, numbered/lettered/roman item, checkbox, Markdown heading, quote,
    table row, horizontal rule) and does not start a chat or log message (`[10:31]`, `10:31`,

@@ -30,8 +30,8 @@ package tribixbite.cleverkeys.clipboard
  *  4. A space-indented line is a hanging-indent wrap — terminal output, e-mail quoting tools
  *     and Markdown renderers indent the continuation of a wrapped line — when the line before
  *     it does not end in `:`, `{`, `[`, `(` or `\`, is indented no deeper than it (a list
- *     item's continuation must be indented deeper than its marker), and the break between them
- *     is mid-sentence (as in 5).
+ *     item's continuation may sit at its marker's indent, as an unindented one does, or deeper),
+ *     and the break between them is mid-sentence (as in 5).
  *  5. Otherwise a line break is removed when it is mid-sentence: neither neighbouring line is
  *     blank (a blank line is a paragraph break), the next line is not structural (bullet,
  *     numbered/lettered item, checkbox, Markdown heading, quote, table row or horizontal rule)
@@ -48,8 +48,8 @@ package tribixbite.cleverkeys.clipboard
  *     So addresses, greetings ("Dear John,"), unpunctuated lists, separate one-line messages
  *     and a sentence-final line keep their break. A list item joins a mid-sentence
  *     continuation; another structural line (heading, quote, table row, rule) never joins.
- *  6. In prose: leading white space goes (a list item keeps its indent beyond the shared one,
- *     for nesting), a run of blank lines becomes one blank line, and a tab or run of spaces
+ *  6. In prose: leading white space goes (a list item keeps its indent beyond the shallowest
+ *     structural line's, for nesting), a run of blank lines becomes one blank line, and a tab or run of spaces
  *     inside a line becomes one space.
  *  7. A removed break becomes one space, except: a line ending in letter + hyphen followed by a
  *     lowercase letter is a word hyphenated at the line end and is rejoined without the hyphen
@@ -145,10 +145,13 @@ object ClipboardTextCleaner {
         val lines = dedent(raw)
         // Code keeps its own layout, indentation included: only the trailing white space goes.
         if (isPreformattedDedented(lines)) return raw.joinToString("\n")
-        // Rule 6. A structural line keeps its indent (list nesting); any other prose line's
-        // leading white space is extra (a kept indented continuation makes the text preformatted).
+        // Rule 6. A structural line keeps its indent beyond the shallowest structural line's (list
+        // nesting); any other prose line's leading white space is extra (a kept indented
+        // continuation makes the text preformatted). The base matters when the lead line is
+        // unindented and the list is not, so dedent found no shared indent (device, 2026-11-18).
+        val listBase = lines.filter(::isStructural).minOfOrNull(::indentOf) ?: 0
         for (i in lines.indices) {
-            lines[i] = collapseInnerWhitespace(if (isStructural(lines[i])) lines[i] else lines[i].trimStart())
+            lines[i] = collapseInnerWhitespace(if (isStructural(lines[i])) lines[i].substring(listBase) else lines[i].trimStart())
         }
         if (lines.size == 1) return lines[0]
 
@@ -236,14 +239,16 @@ object ClipboardTextCleaner {
 
     /**
      * Whether indented [line] continues [previous] as a hanging-indent wrap: [previous] does not
-     * open a block, [line] is indented no less than it (deeper than a list marker), and the break
-     * is mid-sentence (rule 5).
+     * open a block, [line] is indented no less than it (a list item's continuation too: copied
+     * chat answers put it at the marker's indent, device 2026-11-18), and the break is
+     * mid-sentence (rule 5).
      */
     private fun isHangingWrap(previous: String, line: String, minimum: Int): Boolean {
         if (previous.last() in BLOCK_OPENERS) return false
         val p = indentOf(previous)
         val l = indentOf(line)
-        val indented = if (isStructural(previous)) isListItem(previous) && l > p else l >= p
+        // A heading, quote or table row does not continue onto an indented line; a list item does.
+        val indented = l >= p && (!isStructural(previous) || isListItem(previous))
         return indented && isMidSentence(previous, line.trimStart(), minimum, length(previous))
     }
 
