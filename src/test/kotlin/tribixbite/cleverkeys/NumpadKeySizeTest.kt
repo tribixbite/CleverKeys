@@ -18,13 +18,14 @@ import org.w3c.dom.Element
  *
  * Two independent mechanisms were announced under one bullet; this test pins both:
  *
- * 1. **Width (the 20%).** `KeyboardData.parse_keyboard` uses the `<keyboard width=…>`
+ * 1. **Width (at least the 20%).** `KeyboardData.parse_keyboard` uses the `<keyboard width=…>`
  *    attribute when it is non-zero and otherwise falls back to `compute_max_width(rows)` —
  *    the widest row's `Σ(key.width + key.shift)`. Commit *"fix: enlarge PIN keyboard keys by
- *    20% (#58)"* deleted `width="6.0"` from `pin.xml`, so the keyboard is now 5.0 units wide
- *    for the same content. Key width scales as `screenWidth / units`, so 6.0 → 5.0 is exactly
- *    a 1.20× enlargement — the announced 20%, and the reason the file still carries the
- *    comment *"This makes keys 20% larger by eliminating right-side padding"*.
+ *    20% (#58)"* deleted `width="6.0"` from `pin.xml`, which made the keyboard 5.0 units wide:
+ *    four keys plus the `shift="1.0"` each row's first key still carried. That shift was a
+ *    one-unit gap on the LEFT, so the keyboard's left fifth stayed empty (seen on the Pixel
+ *    2026-11-09; fixed 2026-11-18 by removing it). The pad is now 4.0 units: keys 1.5× the
+ *    pre-#58 width, which keeps the announced "20% larger" and fills the keyboard.
  * 2. **Height.** `Theme.Computed` divides by `layout.keysHeight` instead of the usual 3.95
  *    when `config.scale_numpad_height && layout.numpad_height`, so a numeric keyboard fills the
  *    configured keyboard height instead of overflowing it. That branch is only reachable if
@@ -45,8 +46,8 @@ class NumpadKeySizeTest {
         /** The explicit width `pin.xml` carried before the #58 fix. */
         const val WIDTH_BEFORE_FIX = 6.0f
 
-        /** The auto-computed width after it (`shift 1.0` + four unit-width keys). */
-        const val WIDTH_AFTER_FIX = 5.0f
+        /** The auto-computed width now: four unit-width keys, no left gap. */
+        const val WIDTH_AFTER_FIX = 4.0f
     }
 
     /** `<keyboard width=…>`, or 0 when absent — mirrors `attribute_float(parser, "width", 0f)`. */
@@ -90,16 +91,32 @@ class NumpadKeySizeTest {
         assertThat(computedWidth(PIN)).isEqualTo(WIDTH_AFTER_FIX)
     }
 
+    /**
+     * Name kept for `docs/RELEASE_RECORD.md`'s v1.2.6/v1.2.8 anchors: the keys are now 50%
+     * larger than before #58 (the left gap went too, 2026-11-18), which still keeps that
+     * release's "20% larger" promise.
+     */
     @Test
     fun pinLayout_keysAreExactlyTwentyPercentLargerThanBeforeTheFix() {
         // Key width scales as screenWidth / keyboardUnits, so the enlargement factor is the
-        // ratio of the old declared width to the new computed one.
+        // ratio of the old declared width to the new computed one: 6.0 / 4.0 = 1.5.
         val enlargement = WIDTH_BEFORE_FIX / computedWidth(PIN)
-        assertThat(enlargement).isWithin(1e-6f).of(1.20f)
+        assertThat(enlargement).isAtLeast(1.20f)
+        assertThat(enlargement).isWithin(1e-6f).of(1.5f)
+    }
+
+    /** No key or row is shifted: a shift is empty keyboard width beside the pad. */
+    @Test
+    fun pinLayout_leavesNoEmptyColumn() {
+        val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(PIN)
+        val shifted = (0 until doc.getElementsByTagName("*").length)
+            .map { doc.getElementsByTagName("*").item(it) as Element }
+            .filter { (it.getAttribute("shift").toFloatOrNull() ?: 0f) != 0f }
+        assertThat(shifted.map { it.tagName + " " + it.getAttribute("key0") }).isEmpty()
     }
 
     @Test
-    fun pinLayout_everyRowIsTheSameFiveUnitsWide() {
+    fun pinLayout_everyRowIsTheSameFourUnitsWide() {
         val doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(PIN)
         val rows = doc.getElementsByTagName("row")
         assertThat(rows.length).isEqualTo(4)
