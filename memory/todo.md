@@ -105,8 +105,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    settings search. NOT RUN: continuous swipe with auto-space OFF and interrupted phrases (JVM tests
    only), narrow split-screen clipboard pane, media-only clip, font-scale entries, fa/hu pane page
    arrows. Finding: a font-scale change reaches an inflated pane only after an IME restart. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-4)
-5. [ ] device: undo/redo leftovers — every listed check PASS (Pixel 10-17, Compose and Termux 10-21,
-   private-entry Ctrl+C 10-22); the item's own text ends "Item can close" (box not ticked). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-5)
+5. [x] device: undo/redo leftovers — CLOSED 2026-11-18: every listed check PASS (Pixel 10-17,
+   Compose and Termux 10-21, private-entry Ctrl+C 10-22). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-5)
 6. [ ] device + maintainer: RustDesk / blind-field checks. MAINTAINER PASS 2026-10-26: paste and
    suggestion taps; `teh`+space and Ctrl+Backspace PASS 10-25. The swipe-correction tap fix
    `691aa8cf` (GH #192) was device-checked in Termux only, not in a RustDesk session. Not reported:
@@ -119,7 +119,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    editing, (c) bépo `été`: fixed or maintainer PASS 2026-10-26. Left: the soak → ARC-063 narrow the
    blanket R8 keeps → tag decision; a few real traces of a hard pronoun contraction would decide a
    ranking change (`they're`/`you're` lose to `there`/`your`); `ß`/`æ`/`œ` keys have no CTC slot;
-   `schön`/`schon`-type collisions keep only the more frequent form. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-8)
+   `schön`/`schon`-type collisions keep only the more frequent form; `yo` is nearly impossible to
+   swipe (always `to`; maintainer 2026-11-18) — the item-17 short-word family, see there. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-8)
 9. [ ] agent (objective) + maintainer (feel): pre-tag checks. #90, #168, #145, both minimize styles
    PASS 2026-10-25 (Pixel). Full checklist 2026-11-09 (Pixel): 43 pass / 5 fail / 3 partial / 12 not
    run. Open: `d'être` (item 35), the spoken TalkBack pass, the emoji panel by hand, voice/GIF items
@@ -131,11 +132,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     [--dry-run]`. Leads: `docs/audit/2026-10-22-translation-audit.md`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-10)
     Added 2026-11-15, NOT yet in the sheets (re-export first): `io_error_backup_password_unreadable`
     (agent translations in all 21), and `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`,
-    `extra_keys_reset_message`, `extra_keys_reset_done` (English in every locale).
-11. [ ] maintainer decisions (2026-10-25 questionnaire) — every part reads DONE or CLOSED: es LM stays
+    `extra_keys_reset_message`, `extra_keys_reset_done` (English in every locale). Changed
+    2026-11-18: `clipboard_clean_message` (Clean's rules changed; the 21 translations still
+    describe the old ones).
+11. [x] maintainer decisions (2026-10-25 questionnaire) — CLOSED 2026-11-18, every part DONE: es LM stays
     unshipped (pre-registered retry failed; only UD Spanish-PUD unused), FLOOR_ONE ships for
     de/fr/it/pt/sv (en keeps RAW), `finger_occlusion_offset` stays 0, the first Saga keeps CleverKeys
-    default, Text Assist keeps Android's chooser. Box not ticked. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-11)
+    default, Text Assist keeps Android's chooser. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-11)
 12. [ ] DECIDED 2026-10-25: stay at targetSdk 34 for 2.0; bump in a later release (instrumented suite
     green on API 35/36/37). Bump prerequisites: edge-to-edge insets in 13 of 15 activities and
     `values-id` beside `values-in` (35), a predictive-back device pass of every Compose
@@ -161,7 +164,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (not drivable over adb, item 3); strings → item 10. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-15)
 16. [x] agent: `autocorrect_prefix_length` — measured 2026-10-21; default 0 stays. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-16)
 17. [ ] RTX: short-word CTC — word-balanced fine-tune on the raw-path input contract so dwell-less
-    `ad`/`wet` decode. Kit `ml/rtx-kits/17-short-word-ctc/` (gate: FUTO swipe-1 VALIDATION,
+    `ad`/`wet` decode. Same family (maintainer 2026-11-18): `yo` → `to` — y→o is the tail of the
+    t→y→u→i→o line and the encoder's prior favours `to`; never measured. Until then: `yo` as a custom
+    word at swipe priority High/Highest (not measured for this pair). Kit `ml/rtx-kits/17-short-word-ctc/` (gate: FUTO swipe-1 VALIDATION,
     session-disjoint); prep check 2026-11-05 all PASS. Next: run it on the RTX box. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-17)
 18. [x] agent: apostrophe context chooser — round 3 PASSED, shipped, device check 2026-11-05. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-18)
 19. [ ] RTX: Bangla spelling-preserving dictionary + mark/conjunct geometry, then a validated
@@ -191,9 +196,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     SwiftKey's low-set comma/period glyph; key legends have no Creator control; Samsung light palette
     and go/send/next/done icons unchecked (no reference); a look shows only 3 bar entries; the plain
     bar highlights the first next-word chip though space types none. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-25)
-26. [ ] agent: per-layout key geometry (spec `docs/specs/layout-system.md` "Per-layout key geometry")
-    — built; Saga 144 device passes 2026-10-27/28 incl. border OFF and the density fix `32c8c4bb`;
-    Add Layout landscape fixed. The item names no remaining check. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-26)
+26. [x] agent: per-layout key geometry (spec `docs/specs/layout-system.md` "Per-layout key geometry")
+    — CLOSED 2026-11-18: built; Saga 144 device passes 2026-10-27/28 incl. border OFF and the
+    density fix `32c8c4bb`; Add Layout landscape fixed; no check left. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-26)
 27. [ ] agent: layout `<theme>`, per-key/row styling, custom themes v2, theme ↔ layout export (spec
     "Layout themes and per-key styling"). Device 2026-10-27 (Saga 202): checks 1–4 PASS after fixes.
     Open: a Theme Creator pass of every new control (sliders, chips, variant rows); hint/preview
@@ -225,7 +230,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     summary + cost model: `docs/specs/scene-backdrops-and-power.md`). Open: maintainer verdict on look,
     aurora, scenes, motion; device: fresh install / upgrade-keeps-theme / custom-theme-delete /
     per-layout gap / picker / key-press-preview items, theme commands, QS tile shade-hidden path +
-    minimized + 8 s field tap, layers after rotation; restores owed: Note10+, tablet tabs. [log](../docs/history/todo-item-34-scene-rounds.md#item-34)
+    minimized + 8 s field tap, layers after rotation; left on shared devices: only test Chrome tabs (Note10+:
+    checked 2026-11-18 — CleverKeys uninstalled, Samsung Keyboard, brightness auto; tablet: needs an
+    unlock). Both in the owners' hands; not worth a UI session. [log](../docs/history/todo-item-34-scene-rounds.md#item-34)
 35. [ ] device + maintainer: French/Italian accented elisions. Data fixed, replay 0 regressions;
     `l'école`/`c'est`/`l'été` and it `C'è` PASS on device. **Maintainer decision**: rank elisions by
     their own Leipzig frequency (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +

@@ -591,6 +591,15 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- The PIN Entry Layout fills the keyboard: its keys left the left fifth empty.
+- Clipboard Clean removes line breaks that fall mid-sentence, also on short lines and on text
+  copied from an indented terminal or chat, and removes extra spaces, tabs, indentation and
+  blank lines. It used to leave most such clips unchanged ("Nothing to clean").
+- A clipboard selection's result line ("Nothing to clean.", "Merged 2 clippings…") is cleared
+  when you close the clipboard or leave selection mode, instead of coming back on later openings.
+- Opening the Dictionary Manager could crash the keyboard (out of memory) when it had been in use
+  for many hours: every language's dictionary was parsed at once. They now load one at a time
+  and with less memory, and a load that still runs out of memory leaves the list empty instead.
 - A settings export no longer contains your personal dictionary: custom words, disabled words and
   swipe priorities were copied in with every stored preference. The dictionary export and a full
   backup still carry them.
