@@ -980,6 +980,8 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-10-07: the selection's Clean action — trailing whitespace and inserted line
     // breaks removed; lists, blank lines, short lines, URLs and code keep their breaks.
     'tribixbite.cleverkeys.clipboard.ClipboardTextCleanerTest',
+    // 2026-11-18 Dictionary Manager OOM: the canonical-only index it lists words from.
+    'tribixbite.cleverkeys.NormalizedPrefixIndexLeanTest',
     // GH #175(2), 2026-10-21: swipe-to-delete on clipboard rows — the gesture policy
     // (slop, 2:1 ratio, 35 % / fling commit) and the deferred-delete state machine.
     'tribixbite.cleverkeys.clipboard.ClipboardSwipePolicyTest',

@@ -8,6 +8,8 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -85,6 +87,27 @@ class MainDictionarySource(
             }
         }
 
+        // One language parses at a time (2026-11-18 OOM): every language tab is created at once
+        // and used to parse its dictionary in parallel, so the peak was the sum of all of them,
+        // on top of the keyboard's own heap in the same process. A tab that waited here for the
+        // same language finds it cached.
+        loadLock.withLock {
+            synchronized(Companion) {
+                sharedCache[languageCode]?.let { cached ->
+                    cachedWords = cached.words
+                    prefixIndex = cached.prefixIndex
+                    return@withLock cached.words
+                }
+            }
+            loadUncached()
+        }
+    }
+
+    /**
+     * Parse this language's dictionary (pack, bundled binary or JSON) and cache it. Runs under
+     * [loadLock]: one language at a time.
+     */
+    private fun loadUncached(): List<DictionaryWord> {
         try {
             val disabled = disabledSource.getDisabledWords()
             val words = mutableListOf<DictionaryWord>()
@@ -107,7 +130,7 @@ class MainDictionarySource(
                             val sorted = words.sorted()
                             cachedWords = sorted
                             buildPrefixIndex(sorted)
-                            return@withContext sorted
+                            return sorted
                         }
                     }
                 } catch (e: Exception) {
@@ -123,7 +146,7 @@ class MainDictionarySource(
                         val sorted = words.sorted()
                         cachedWords = sorted
                         buildPrefixIndex(sorted)
-                        return@withContext sorted
+                        return sorted
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Binary dictionary not found for $languageCode, trying JSON/TXT fallback")
@@ -159,7 +182,7 @@ class MainDictionarySource(
                 // ever shipped, so it always threw into the outer handler. Preserve that
                 // outcome (no cache, empty result) explicitly so a later retry can still load.
                 Log.w(TAG, "No bundled dictionary (bin/json) for $languageCode", e)
-                return@withContext emptyList()
+                return emptyList()
             }
 
             val sorted = words.sorted()
@@ -168,10 +191,16 @@ class MainDictionarySource(
             // Build prefix index for fast search
             buildPrefixIndex(sorted)
 
-            sorted
+            return sorted
         } catch (e: Exception) {
             Log.e(TAG, "Error loading main dictionary", e)
-            emptyList()
+            return emptyList()
+        } catch (e: OutOfMemoryError) {
+            // The Dictionary Manager shares the keyboard's process and heap: a failed list is
+            // better than killing the keyboard (seen 2026-11-18 on an 18-hour-old process).
+            // Nothing is cached, so reopening retries; the partial lists are garbage now.
+            Log.e(TAG, "Out of memory loading the $languageCode dictionary", e)
+            return emptyList()
         }
     }
 
@@ -278,7 +307,7 @@ class MainDictionarySource(
         disabled: Set<String>
     ): Boolean {
         return try {
-            val index = NormalizedPrefixIndex()
+            val index = NormalizedPrefixIndex(indexPrefixes = false)  // only canonicals are read
             val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(file, index)
             if (loaded) {
                 extractWordsFromIndex(index, words, disabled)
@@ -302,7 +331,7 @@ class MainDictionarySource(
         disabled: Set<String>
     ): Boolean {
         return try {
-            val index = NormalizedPrefixIndex()
+            val index = NormalizedPrefixIndex(indexPrefixes = false)  // only canonicals are read
             val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
             if (loaded) {
                 extractWordsFromIndex(index, words, disabled)
@@ -325,11 +354,10 @@ class MainDictionarySource(
         words: MutableList<DictionaryWord>,
         disabled: Set<String>
     ) {
-        val normalizedWords = index.getAllNormalizedWords()
-        for (word in normalizedWords) {
-            // Get canonical form (with accents) and frequency rank
-            val results = index.getWordsWithPrefix(word)
-            val match = results.find { it.normalized == word }
+        for (word in index.normalizedWords()) {
+            // Canonical form (with accents) and frequency rank. A direct lookup: this used to ask
+            // for every word sharing the prefix and pick this one out, a list per word.
+            val match = index.lookup(word)
             val canonical = match?.bestCanonical ?: word
             // Convert rank (0-255, 0=most common) to display frequency (1-10000)
             // rank 0 → 10000, rank 255 → 1
@@ -360,6 +388,9 @@ class MainDictionarySource(
             val prefixIndex: Map<String, List<DictionaryWord>>
         )
         private val sharedCache = mutableMapOf<String, LanguageCache>()
+
+        /** Serializes dictionary parsing across instances and languages ([getAllWords]). */
+        private val loadLock = Mutex()
 
         /** Invalidate shared cache for all languages. */
         fun invalidateCache() {

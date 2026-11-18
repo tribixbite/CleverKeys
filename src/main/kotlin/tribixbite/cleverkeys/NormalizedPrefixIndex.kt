@@ -27,6 +27,13 @@ class NormalizedPrefixIndex(
      * [normalizeKey]; null (and any language without a table) = accent stripping only.
      */
     private val language: String? = null,
+    /**
+     * Whether [addWord] fills the prefix buckets ([getWordsWithPrefix], [wordsWithIndexedPrefix],
+     * [indexedAlphabet]). A reader that only needs [lookup] and [normalizedWords] — the
+     * Dictionary Manager's word list — passes false and skips about three set entries per word
+     * (2026-11-18: that screen ran the keyboard's process out of memory).
+     */
+    private val indexPrefixes: Boolean = true,
 ) {
 
     /**
@@ -90,10 +97,12 @@ class NormalizedPrefixIndex(
         canonicalMap.getOrPut(normalized) { mutableListOf() }.add(entry)
 
         // Add to prefix index (prefixes of length 1 to PREFIX_MAX_LENGTH)
-        val maxLen = minOf(PREFIX_MAX_LENGTH, normalized.length)
-        for (len in 1..maxLen) {
-            val prefix = normalized.substring(0, len)
-            prefixIndex.getOrPut(prefix) { mutableSetOf() }.add(normalized)
+        if (indexPrefixes) {
+            val maxLen = minOf(PREFIX_MAX_LENGTH, normalized.length)
+            for (len in 1..maxLen) {
+                val prefix = normalized.substring(0, len)
+                prefixIndex.getOrPut(prefix) { mutableSetOf() }.add(normalized)
+            }
         }
 
         wordCount++
@@ -305,6 +314,9 @@ class NormalizedPrefixIndex(
      */
     fun getAllNormalizedWords(): Set<String> = canonicalMap.keys.toSet()
 
+    /** The normalized words as a read-only live view (no copy); do not add words while iterating. */
+    fun normalizedWords(): Collection<String> = java.util.Collections.unmodifiableSet(canonicalMap.keys)
+
     /**
      * Get top N normalized words by frequency rank.
      * Used to limit beam trie insertions for large dictionaries.
@@ -347,7 +359,7 @@ class NormalizedPrefixIndex(
             }
 
             // Add to prefix index if new
-            if (!prefixIndex.values.any { it.contains(normalized) }) {
+            if (indexPrefixes && !prefixIndex.values.any { it.contains(normalized) }) {
                 val maxLen = minOf(PREFIX_MAX_LENGTH, normalized.length)
                 for (len in 1..maxLen) {
                     val prefix = normalized.substring(0, len)

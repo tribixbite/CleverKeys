@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import org.junit.Assert.*
 import org.junit.After
 import org.junit.Before
@@ -244,6 +246,46 @@ class DictionaryDataSourceTest {
             "Warm load (${warmTime/1000}µs) should be much faster than cold (${coldTime/1000}µs)",
             warmTime < coldTime / 2
         )
+    }
+
+    /**
+     * 2026-11-18 OOM: each language tab parsed its dictionary in parallel, and tabs for the same
+     * language each parsed their own copy. Loads now take turns; a tab that waited for the same
+     * language gets the cached list — one parse, one list.
+     */
+    @Test
+    fun concurrentLoadsOfOneLanguageParseItOnce() {
+        val disabledSource = DisabledDictionarySource(prefs, "en")
+        val lists = kotlinx.coroutines.runBlocking {
+            (1..4).map {
+                async(kotlinx.coroutines.Dispatchers.IO) { MainDictionarySource(context, disabledSource, "en").getAllWords() }
+            }.awaitAll()
+        }
+        assertTrue("a dictionary loaded", lists.first().isNotEmpty())
+        for (list in lists) assertSame("one parse shared by every concurrent tab", lists.first(), list)
+    }
+
+    /**
+     * The Dictionary Manager reads the dictionary through a canonical-only index and a direct
+     * lookup per word (2026-11-18); each listed word must still be the index's best accented
+     * form with its rank's frequency, exactly as the full prefix index reports it.
+     */
+    @Test
+    fun theListedWordsMatchTheFullIndex() {
+        // French: accented canonical forms are the case the lookup has to get right.
+        val language = "fr"
+        val full = NormalizedPrefixIndex()
+        assertTrue(BinaryDictionaryLoader.loadIntoNormalizedIndex(context, "dictionaries/fr_enhanced.bin", full))
+        MainDictionarySource.invalidateCache(language)
+        val listed = kotlinx.coroutines.runBlocking {
+            MainDictionarySource(context, DisabledDictionarySource(prefs, language), language).getAllWords()
+        }
+        assertEquals(full.normalizedCount(), listed.size)
+        val expected = full.getAllNormalizedWords().map { normalized ->
+            val best = full.getWordsWithPrefix(normalized).first { it.normalized == normalized }
+            best.bestCanonical to (10000 - best.bestFrequencyRank * 39).coerceIn(1, 10000)
+        }.toSet()
+        assertEquals(expected, listed.map { it.word to it.frequency }.toSet())
     }
 
     @Test
