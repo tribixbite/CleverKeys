@@ -264,38 +264,17 @@ class KeyboardReceiver(
             android.util.Log.w(TAG, "Runtime theme unavailable for pane repaint: ${e.message}")
             return
         }
-        val bg = theme.colorKeyboardBackground
-        val key = theme.colorKey
-        val label = theme.labelColor
-        val sub = theme.subLabelColor
-
-        if (bg != 0) {
-            pane.setBackgroundColor(bg)
-            pane.findViewById<View?>(gridId)?.setBackgroundColor(bg)
-            pane.findViewById<View?>(noResultsId)?.setBackgroundColor(bg)
-        }
-        if (key != 0) {
-            pane.findViewById<View?>(searchBarId)?.setBackgroundColor(key)
-            pane.findViewById<View?>(groupBarId)?.setBackgroundColor(key)
-            paginationBarId?.let { pane.findViewById<View?>(it)?.setBackgroundColor(key) }
-        }
-        if (label != 0) {
-            for (id in labelViewIds) {
-                when (val v = pane.findViewById<View?>(id)) {
-                    is ImageButton -> v.setColorFilter(label, android.graphics.PorterDuff.Mode.SRC_IN)
-                    is TextView -> v.setTextColor(label)
-                    else -> {}
-                }
-            }
-            (pane.findViewById<View?>(searchInputId) as? TextView)?.setTextColor(label)
-        }
-        if (sub != 0) {
-            (pane.findViewById<View?>(searchInputId) as? TextView)?.setHintTextColor(sub)
-            (pane.findViewById<View?>(noResultsId) as? TextView)?.setTextColor(sub)
-            for (id in subLabelViewIds) {
-                (pane.findViewById<View?>(id) as? TextView)?.setTextColor(sub)
-            }
-        }
+        PaneRuntimeTheme.paint(
+            pane,
+            PaneRuntimeTheme.Colors(
+                background = theme.colorKeyboardBackground,
+                key = theme.colorKey,
+                label = theme.labelColor,
+                subLabel = theme.subLabelColor,
+            ),
+            searchBarId, groupBarId, searchInputId, gridId, noResultsId,
+            labelViewIds, paginationBarId, subLabelViewIds,
+        )
     }
 
     override fun handle_event_key(ev: KeyValue.Event) {
@@ -1146,5 +1125,67 @@ class KeyboardReceiver(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
                 height
             )
+    }
+}
+
+/**
+ * The view-painting half of [KeyboardReceiver.applyRuntimeThemeToPane] (audit H-3), split out so
+ * an instrumented test can paint a really inflated pane with known colours. The receiver resolves
+ * the runtime theme; this only writes colours onto views. A colour of 0 means "the theme does
+ * not define it" and leaves the XML base colour in place.
+ */
+internal object PaneRuntimeTheme {
+
+    /** The four runtime-theme colours a content pane uses. */
+    data class Colors(val background: Int, val key: Int, val label: Int, val subLabel: Int)
+
+    @JvmStatic
+    fun paint(
+        pane: ViewGroup,
+        colors: Colors,
+        searchBarId: Int,
+        groupBarId: Int,
+        searchInputId: Int,
+        gridId: Int,
+        noResultsId: Int,
+        labelViewIds: IntArray,
+        paginationBarId: Int? = null,
+        subLabelViewIds: IntArray = intArrayOf(),
+    ) {
+        val bg = colors.background
+        val key = colors.key
+        val label = colors.label
+        val sub = colors.subLabel
+
+        if (bg != 0) {
+            pane.setBackgroundColor(bg)
+            pane.findViewById<View?>(gridId)?.setBackgroundColor(bg)
+            pane.findViewById<View?>(noResultsId)?.setBackgroundColor(bg)
+        }
+        if (key != 0) {
+            pane.findViewById<View?>(searchBarId)?.setBackgroundColor(key)
+            pane.findViewById<View?>(groupBarId)?.setBackgroundColor(key)
+            paginationBarId?.let { pane.findViewById<View?>(it)?.setBackgroundColor(key) }
+        }
+        if (label != 0) {
+            for (id in labelViewIds) {
+                when (val v = pane.findViewById<View?>(id)) {
+                    is ImageButton -> v.setColorFilter(label, android.graphics.PorterDuff.Mode.SRC_IN)
+                    is TextView -> v.setTextColor(label)
+                    else -> {}
+                }
+            }
+            (pane.findViewById<View?>(searchInputId) as? TextView)?.setTextColor(label)
+            // The emoji grid's cells (text faces like `:)` show this colour) take it too, now
+            // and when they are created later; the GIF grid has no text cells.
+            (pane.findViewById<View?>(gridId) as? EmojiGridView)?.setCellTextColor(label)
+        }
+        if (sub != 0) {
+            (pane.findViewById<View?>(searchInputId) as? TextView)?.setHintTextColor(sub)
+            (pane.findViewById<View?>(noResultsId) as? TextView)?.setTextColor(sub)
+            for (id in subLabelViewIds) {
+                (pane.findViewById<View?>(id) as? TextView)?.setTextColor(sub)
+            }
+        }
     }
 }

@@ -129,7 +129,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    that accepts content, autofill inline (needs a test autofill service on a test phone); maintainer:
    suffix/template/continuous feel. 2026-11-18 Saga `.82` (checklist rows): emoji panel by hand and
    GIF import/browse/search/Replace/remove PASS; FAIL text emoticons invisible on a light runtime
-   look; FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
+   look (FIXED 2026-11-18, `EmojiPaneRuntimeThemeTest`; with it the per-cell AppCompat log spam,
+   the stale GIF "Imported:" line after removal, GIF search spell-check, launcher rotation); FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales
     (later items fold their strings in here). Sheets: `docs/i18n/review/2026-11/<locale>/` —
     `1-translate.csv` 626 rows, `2-check.csv` 332, `3-read-through.csv` 33,163 optional; README

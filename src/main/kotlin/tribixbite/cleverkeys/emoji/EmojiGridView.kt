@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.emoji2.text.EmojiCompat
 
@@ -29,6 +30,13 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         Emoji.getEmojisByGroup(Emoji.getNumGroups() - 1).toHashSet()
     }
     private var saveScheduled = false  // Debounce flag for saveLastUsed
+
+    /**
+     * The runtime theme's cell text colour, or null for the XML theme's `emoji_color`.
+     * Runtime themes inflate on a fixed base style (dark), so without this a light runtime
+     * theme drew the text faces white on a light pane (device pass 2026-11-18).
+     */
+    private var cellTextColor: Int? = null
 
     // #41 v8: Reference to search manager for bypassing search routing on emoji selection
     private var searchManager: EmojiSearchManager? = null
@@ -97,6 +105,16 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         super.onDetachedFromWindow()
     }
 
+    /**
+     * Draw every cell, the ones shown now and every one created later (a category switch, a
+     * search, a recycled cell), in [color]. Called by the pane's runtime-theme repaint.
+     */
+    fun setCellTextColor(color: Int) {
+        cellTextColor = color
+        for (i in 0 until childCount) (getChildAt(i) as? TextView)?.setTextColor(color)
+        (adapter as? EmojiViewAdapter)?.notifyDataSetChanged()
+    }
+
     fun setEmojiGroup(group: Int) {
         shownGroup = group
         shownQuery = null
@@ -108,7 +126,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
             Emoji.getEmojisByGroup(group)
         }
         emojiArray = emojiArray.filter(::isRenderable)
-        adapter = EmojiViewAdapter(context, emojiArray)
+        adapter = EmojiViewAdapter(context, emojiArray) { cellTextColor }
     }
 
     /**
@@ -124,7 +142,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
             Emoji.searchByName(query)
         }
         emojiArray = emojiArray.filter(::isRenderable)
-        adapter = EmojiViewAdapter(context, emojiArray)
+        adapter = EmojiViewAdapter(context, emojiArray) { cellTextColor }
         return emojiArray.size
     }
 
@@ -339,7 +357,9 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
     class EmojiViewAdapter(
         context: Context,
-        private val emojiArray: List<Emoji>?
+        private val emojiArray: List<Emoji>?,
+        /** The grid's runtime-theme cell colour, read per cell; null keeps the XML colour. */
+        private val textColor: () -> Int? = { null },
     ) : BaseAdapter() {
 
         private val buttonContext = ContextThemeWrapper(context, R.style.emojiGridButton)
@@ -357,6 +377,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         override fun getView(pos: Int, convertView: View?, parent: ViewGroup): View {
             val view = (convertView as? EmojiView) ?: EmojiView(buttonContext)
             emojiArray?.get(pos)?.let { view.setEmoji(it) }
+            textColor()?.let(view::setTextColor)
             return view
         }
     }
