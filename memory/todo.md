@@ -133,10 +133,16 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    the stale GIF "Imported:" line after removal, GIF search spell-check, launcher rotation); FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales
     (later items fold their strings in here). Sheets: `docs/i18n/review/2026-11/<locale>/` —
-    `1-translate.csv` 626 rows, `2-check.csv` 332, `3-read-through.csv` 33,163 optional; README
-    there. Re-import: `python3 scripts/export_translation_review.py --import <locale>/*.csv
+    `1-translate.csv` 636 rows, `2-check.csv` 345, `3-read-through.csv` 34,378 optional; README
+    there. RE-EXPORTED 2026-11-19 at `301c3c43` (no reviewer cells had been filled, so nothing
+    was merged): the sheets now hold all 76 translatable English strings added or changed since
+    the 2026-11-03 export `ba5b0c93` (70 added incl. the scene/motion, Look, theme-cycle,
+    tile-toggle and border-opacity strings and the eight listed below; 6 changed:
+    `clipboard_clean_message`, `appearance_key_opacity_*`, `appearance_look_key_preview_*`,
+    `theme_builtin_cleverkeysdark_desc`), checked present in all 21 locales; 23 removed keys left
+    the sheets. Re-import: `python3 scripts/export_translation_review.py --import <locale>/*.csv
     [--dry-run]`. Leads: `docs/audit/2026-10-22-translation-audit.md`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-10)
-    Added 2026-11-15, NOT yet in the sheets (re-export first): `io_error_backup_password_unreadable`,
+    Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
     `dict_error_out_of_memory`. 2026-11-18: the five that were English and the stale Clean message
