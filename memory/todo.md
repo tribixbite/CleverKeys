@@ -260,11 +260,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     their own Leipzig frequency (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +
     relaxing `CoreImeHygieneDriftTest`; `docs/eval/2026-11-09-elision-base-frequency.md`); a human
     `d'être` swipe. it `l'attivita` FIXED 2026-11-18: it.cklm rebuilt from the corrected table under a
-    pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). it accent
-    misspellings FIXED 2026-11-19: 78 dropped from it_enhanced.bin (`perche`, `piu`, `perchè`, `pò`;
-    `it_blocklist.txt`), `qual'è`/`qual'era` + 4 bad `un'` elisions dropped (`MISSPELLED_DISPLAY`),
-    it.cklm rebuilt under a new gate; `docs/eval/2026-11-19-italian-accent-spellings.md`. Open: the it
-    lexicon has NO single-letter words (`e`, `è`, `a`, `o`); no table offers `po'`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
+    pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
 36. [ ] device: "Space before opening punctuation" (default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Ellipsis chain fixed; the
     checklist's "Punctuation and elisions" passes on Saga .144 except `d'être` (item 35). Open: a
