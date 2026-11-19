@@ -531,18 +531,24 @@ object SuggestionBarPane {
         return (screenHeight * heightPercent) / 100
     }
 
+    // [sdk] guards the API 30 call: it is SDK_INT in production and a seam in tests (the mock
+    // tier folds SDK_INT to 0), which lint's NewApi check cannot follow.
+    @android.annotation.SuppressLint("NewApi")
     private fun windowHeightPx(context: Context, sdk: Int): Int {
         if (sdk >= android.os.Build.VERSION_CODES.R) {
-            val height = try {
-                context.getSystemService(android.view.WindowManager::class.java)
-                    ?.maximumWindowMetrics?.bounds?.height() ?: 0
-            } catch (e: RuntimeException) {
-                // A context without a window manager (never the IME service): fall back.
-                0
-            }
+            val height = maximumWindowHeightPx(context)
             if (height > 0) return height
         }
         return context.resources.displayMetrics.heightPixels
+    }
+
+    @androidx.annotation.RequiresApi(android.os.Build.VERSION_CODES.R)
+    private fun maximumWindowHeightPx(context: Context): Int = try {
+        context.getSystemService(android.view.WindowManager::class.java)
+            ?.maximumWindowMetrics?.bounds?.height() ?: 0
+    } catch (e: RuntimeException) {
+        // A context without a window manager (never the IME service): fall back.
+        0
     }
 
     /**
