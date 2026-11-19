@@ -1632,6 +1632,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.PersianHalfSpaceTypingTest',
     // Typing Bangla: vowel signs and hasanta continue the composing word (2026-11-04).
     'tribixbite.cleverkeys.BanglaSpellingMarkTypingTest',
+    // Emojis are not word characters for cursor sync (device pass 2026-11-18).
+    'tribixbite.cleverkeys.EmojiWordBoundaryTest',
     // Audit remediation (2026-07-17) — new MockK tests
     'tribixbite.cleverkeys.InputCoordinatorReplayGuardTest',
     'tribixbite.cleverkeys.CleanupHandlerTeardownTest',

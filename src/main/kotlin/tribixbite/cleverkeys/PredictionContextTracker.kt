@@ -61,6 +61,14 @@ class PredictionContextTracker {
         )
 
         // Word boundary characters (not including apostrophe, which is context-dependent)
+        /** Unicode symbol categories (emoji, ☺ ★, math, currency, modifier symbols): never a word. */
+        private val SYMBOL_TYPES = setOf(
+            Character.OTHER_SYMBOL, Character.MATH_SYMBOL, Character.CURRENCY_SYMBOL, Character.MODIFIER_SYMBOL,
+        )
+
+        /** U+FE00–U+FE0F: the text/emoji presentation selectors after a symbol (`❤️`). */
+        private val VARIATION_SELECTORS = '︀'..'️'
+
         private val WORD_BOUNDARIES = setOf(
             ' ', '\t', '\n', '\r',           // Whitespace
             '.', ',', ';', ':', '!', '?',    // Sentence punctuation
@@ -913,8 +921,27 @@ class PredictionContextTracker {
             return before?.isLetter() == true && after?.isLetter() == true
         }
 
+        // Emojis and other symbols are never part of a word (device pass 2026-11-18: after two
+        // emojis the bar offered `+😂🍕` and a typed letter made the word `😂🍕a`). A surrogate
+        // pair is judged by its whole code point, so a letter outside the Basic Plane still counts.
+        if (Character.isSurrogate(char)) {
+            val cp = if (Character.isHighSurrogate(char)) Character.codePointAt(text, pos)
+                else Character.codePointBefore(text, pos + 1)
+            return Character.isLetter(cp) || isMarkType(Character.getType(cp))
+        }
+        // ZWJ joins a word only inside a script that composes with it (Bengali ra-phala); the
+        // ZWJ of an emoji sequence (`👩‍💻`) ends the word like the emoji around it.
+        if (char == WordChars.ZWJ) {
+            return WordChars.isComposingZwj(WordChars.baseCharBefore(text, pos), text.getOrNull(pos + 1))
+        }
+        if (char in VARIATION_SELECTORS || Character.getType(char).toByte() in SYMBOL_TYPES) return false
+
         // Check against explicit word boundaries
         return char !in WORD_BOUNDARIES && !char.isWhitespace()
+    }
+
+    private fun isMarkType(type: Int): Boolean = type.toByte().let {
+        it == Character.NON_SPACING_MARK || it == Character.COMBINING_SPACING_MARK || it == Character.ENCLOSING_MARK
     }
 
     /**

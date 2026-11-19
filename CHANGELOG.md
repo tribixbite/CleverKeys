@@ -603,6 +603,8 @@ editor that used to be listed here already ship in 2.0.)
 - The PIN Entry Layout fills the keyboard: its keys left the left fifth empty.
 - The plain suggestion bar no longer highlights the first next-word prediction: space types
   none of them, and the highlight marks what space types (keyboard looks already did this).
+- An emoji is no longer read as part of the word being typed: after inserting emojis the bar
+  offered them as a word to add, and the next letter joined them (`😂🍕a`).
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
   an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied
