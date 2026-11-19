@@ -32,8 +32,11 @@ sealed interface GifImportStatus {
     /** The text shown to the user, rendered verbatim — no prefix protocol, no re-parsing. */
     val message: String
 
-    /** An import that is running, finished, or was a no-op. Rendered in the primary colour. */
-    data class Ok(override val message: String) : GifImportStatus
+    /**
+     * An import that is running, finished, or was a no-op. Rendered in the primary colour.
+     * [packId] is the pack the message names ("Imported: X"), null for progress text.
+     */
+    data class Ok(override val message: String, val packId: String? = null) : GifImportStatus
 
     /** An import that failed. Rendered in the error colour, in any language. */
     data class Failed(override val message: String) : GifImportStatus
@@ -49,10 +52,23 @@ sealed interface GifImportStatus {
          */
         internal fun forImportResult(result: GifPackImportResult, text: ResultText): GifImportStatus = when (result) {
             is GifPackImportResult.Success ->
-                Ok(text.plural(R.plurals.gif_import_status_imported, result.gifCount, result.name, result.gifCount))
+                Ok(
+                    text.plural(R.plurals.gif_import_status_imported, result.gifCount, result.name, result.gifCount),
+                    packId = result.packId,
+                )
             is GifPackImportResult.AlreadyInstalled ->
-                Ok(text.string(R.string.gif_import_status_already_installed, result.name))
+                Ok(text.string(R.string.gif_import_status_already_installed, result.name), packId = result.packId)
             is GifPackImportResult.Error -> Failed(result.failure.render(text))
+        }
+
+        /**
+         * The status to show once a removal left [installedPackIds] installed: a line that names
+         * a pack no longer installed ("Imported: Discord Community 01" after that pack was
+         * removed, device pass 2026-11-18) goes away; any other status stays as it was.
+         */
+        fun afterRemoval(status: GifImportStatus?, installedPackIds: Set<String>): GifImportStatus? {
+            val named = (status as? Ok)?.packId ?: return status
+            return if (named in installedPackIds) status else null
         }
     }
 }
@@ -135,6 +151,9 @@ internal fun SettingsActivity.performGifRemovePack(packId: String) {
             val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
             manager.removePack(packId)
             refreshInstalledGifPacks()
+            gifImportStatus = GifImportStatus.afterRemoval(
+                gifImportStatus, installedGifPacks.mapTo(HashSet()) { it.packId }
+            )
             Toast.makeText(_self, R.string.gif_toast_pack_removed, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
             android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)

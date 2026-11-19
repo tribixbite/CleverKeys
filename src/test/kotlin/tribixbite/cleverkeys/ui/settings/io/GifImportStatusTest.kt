@@ -156,4 +156,49 @@ class GifImportStatusTest {
         assertWithMessage("the failure paths must construct the failure variant explicitly")
             .that(handlers).contains("GifImportStatus.Failed(")
     }
+
+    // ── a removed pack takes its import line with it (device pass 2026-11-18) ────────
+
+    /**
+     * After the user removed the only pack, the section still read "Imported: Discord
+     * Community 01 (…)": the import status is kept in the view model across recompositions and
+     * the removal path never touched it. Removing a pack must re-derive the status from the
+     * packs that remain.
+     */
+    @Test
+    fun `removing a pack re-derives the import status from the remaining packs`() {
+        val handlers = source("tribixbite/cleverkeys/ui/settings/io/SettingsGifHandlers.kt")
+        val remove = Regex("""fun SettingsActivity\.performGifRemovePack\([\s\S]*?\n}""")
+            .find(handlers)?.value
+        assertWithMessage("performGifRemovePack must exist").that(remove).isNotNull()
+        assertWithMessage(
+            "the removal path must update gifImportStatus from what is still installed; " +
+                "otherwise the line for the removed pack stays on screen"
+        ).that(remove).contains("gifImportStatus = GifImportStatus.afterRemoval(")
+    }
+
+    @Test
+    fun `a removed pack's import line is cleared and every other status kept`() {
+        val imported = GifImportStatus.forImportResult(
+            tribixbite.cleverkeys.gif.GifPackImportResult.Success("discord-01", "Discord Community 01", 40),
+            EnglishResourceText,
+        )
+        assertWithMessage("the only pack was removed: no line about it")
+            .that(GifImportStatus.afterRemoval(imported, emptySet())).isNull()
+        assertWithMessage("another pack was removed: the line is still true")
+            .that(GifImportStatus.afterRemoval(imported, setOf("discord-01", "cats"))).isEqualTo(imported)
+
+        val already = GifImportStatus.forImportResult(
+            tribixbite.cleverkeys.gif.GifPackImportResult.AlreadyInstalled("cats", "Cats"),
+            EnglishResourceText,
+        )
+        assertThat(GifImportStatus.afterRemoval(already, setOf("discord-01"))).isNull()
+
+        val failed = GifImportStatus.Failed("The file could not be found or opened.")
+        assertWithMessage("a failure names no pack and is not about the removal")
+            .that(GifImportStatus.afterRemoval(failed, emptySet())).isEqualTo(failed)
+        val progress = GifImportStatus.Ok("Importing…")
+        assertThat(GifImportStatus.afterRemoval(progress, emptySet())).isEqualTo(progress)
+        assertThat(GifImportStatus.afterRemoval(null, emptySet())).isNull()
+    }
 }
