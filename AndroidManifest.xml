@@ -85,7 +85,9 @@
       </intent-filter>
     </activity>
 
-    <activity android:name="tribixbite.cleverkeys.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/launcherTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24" android:windowSoftInputMode="adjustResize">
+    <!-- A single Compose screen that sizes itself from LocalConfiguration: it handles a rotation
+         in place, so the test field keeps its focus, its text and the keyboard (2026-11-18). -->
+    <activity android:name="tribixbite.cleverkeys.LauncherActivity" android:icon="@mipmap/ic_launcher" android:theme="@style/launcherTheme" android:exported="true" android:directBootAware="true" tools:targetApi="24" android:windowSoftInputMode="adjustResize" android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
         <category android:name="android.intent.category.LAUNCHER"/>

@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -304,7 +305,9 @@ fun LauncherScreen(
 ) {
     val context = LocalContext.current
     val colors = launcherColors() // ARC-111: system day/night palette
-    var testText by remember { mutableStateOf("") }
+    // Saveable: the changes the activity does not handle in place (night mode, locale) still
+    // recreate it, and the test text should survive those too.
+    var testText by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
 
     // Track keyboard visibility using WindowInsets IME bottom inset
     val density = LocalDensity.current
@@ -749,6 +752,9 @@ fun SparkleMagicBackground(
     val configuration = androidx.compose.ui.platform.LocalConfiguration.current
     val screenWidth = with(density) { configuration.screenWidthDp.dp.toPx() }
     val screenHeight = with(density) { configuration.screenHeightDp.dp.toPx() }
+    // The activity handles rotation in place (manifest configChanges), so the long-running
+    // frame loop below must read the size of NOW, not the size it was launched with.
+    val screenSize by rememberUpdatedState(Size(screenWidth, screenHeight))
 
     // State
     val spells = remember { mutableStateListOf<MagicSpell>() }
@@ -778,7 +784,7 @@ fun SparkleMagicBackground(
                     // 1. Spawn new spells (Gestures)
                     // Less frequent but more impactful
                     if (currentTime - lastSpawnTime > Random.nextLong(600, 1200) && spells.size < 6) {
-                        spells.add(generateMagicSpell(baseColors, currentTime, screenWidth, screenHeight))
+                        spells.add(generateMagicSpell(baseColors, currentTime, screenSize.width, screenSize.height))
                         lastSpawnTime = currentTime
                     }
 

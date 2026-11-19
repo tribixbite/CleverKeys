@@ -155,4 +155,34 @@ class LauncherSetupFlowTest {
         assertWithMessage("the third step's title must name calibration")
             .that(title!!.lowercase()).contains("calibrate")
     }
+
+    // =========================================================================
+    // Device pass 2026-11-18 — rotation keeps the test field and its keyboard
+    // =========================================================================
+
+    /**
+     * Rotating the launcher recreated it, so the test field lost focus and text and the
+     * keyboard went away. The launcher is one Compose screen that reads its size from
+     * `LocalConfiguration`, so it declares the size/orientation changes it handles in place.
+     * The instrumented half is `LauncherRotationTest`.
+     */
+    @Test
+    fun launcherHandlesRotationWithoutBeingRecreated() {
+        val manifest = read("AndroidManifest.xml")
+        val element = Regex("""<activity android:name="tribixbite\.cleverkeys\.LauncherActivity"[^>]*>""")
+            .find(manifest)?.value
+        assertWithMessage("LauncherActivity must be declared").that(element).isNotNull()
+        val changes = Regex("""android:configChanges="([^"]*)"""").find(element!!)?.groupValues?.get(1)
+        assertWithMessage("LauncherActivity must declare the configuration changes it handles")
+            .that(changes).isNotNull()
+        val handled = changes!!.split('|').map { it.trim() }.toSet()
+        for (change in listOf("orientation", "screenSize", "screenLayout", "smallestScreenSize")) {
+            assertWithMessage("a rotation changes '$change'; without it the launcher is recreated")
+                .that(handled).contains(change)
+        }
+
+        // Handling the change in place means the frame loop must see the NEW size.
+        assertWithMessage("the sparkle loop must read the current screen size, not the size at launch")
+            .that(launcher).contains("rememberUpdatedState(Size(screenWidth, screenHeight))")
+    }
 }

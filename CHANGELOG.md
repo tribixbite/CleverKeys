@@ -613,6 +613,8 @@ editor that used to be listed here already ship in 2.0.)
   (about 150 per session).
 - GIF settings no longer show "Imported: …" for a pack after that pack is removed.
 - The GIF and emoji search fields no longer underline the query as misspelt.
+- Rotating CleverKeys' own start screen keeps the test field focused, its text and the
+  keyboard; the screen used to restart and close the keyboard.
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
   an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied
