@@ -229,7 +229,13 @@ class ContentPaneGapTest {
 
     @Test
     fun theContentPaneHeightIsTheConfiguredPercentageOfTheScreen() {
-        val screenHeight = context.resources.displayMetrics.heightPixels
+        // API 30+: the window's full height (displayMetrics drifts after a configuration
+        // change, Pixel 2026-11-18); older releases: displayMetrics.
+        val screenHeight = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            context.getSystemService(android.view.WindowManager::class.java).maximumWindowMetrics.bounds.height()
+        } else {
+            context.resources.displayMetrics.heightPixels
+        }
 
         assertEquals(
             "30% is the shipped clipboard_pane_height_percent default",

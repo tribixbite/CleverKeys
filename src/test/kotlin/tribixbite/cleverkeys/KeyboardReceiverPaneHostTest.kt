@@ -387,4 +387,75 @@ class KeyboardReceiverPaneHostTest {
         receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
         verify(exactly = 2) { container.addView(clipboardPane) }
     }
+
+    // ── 5. Rotation with a pane open: the pane takes the new orientation's height ─
+    //
+    // Maintainer report 2026-11-18 (reproduced on the Pixel 8 Pro): a clipboard pane opened
+    // in portrait kept its 673 px portrait height after a rotation to landscape (1008 px
+    // screen), pushing the keyboard's bottom row off screen; one opened in landscape stayed
+    // 302 px tall back in portrait ("smaller than normal"). A rotation restarts the input
+    // view (InputMethodService.resetStateForNewConfiguration -> onStartInputView) without
+    // onFinishInputView, so the pane stays open and setViewReferences hands the receiver the
+    // new orientation's height. The open pane must be resized to it.
+
+    @Test
+    fun openPaneIsResizedWhenTheContentPaneHeightChanges() {
+        val (emojiPane, container, topPane) = wireContainer()
+        every { container.childCount } returns 1
+        every { container.getChildAt(0) } returns clipboardPane
+        receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
+
+        // The rotation's onStartInputView re-propagates the view references with the
+        // landscape height.
+        receiver.setViewReferences(emojiPane, container, topPane, mockk(relaxed = true), 0, 250)
+
+        verify(exactly = 1) {
+            SuggestionBarPane.switchToContentPaneMode(topPane, container, any(), 250)
+        }
+        verify(atLeast = 1) { KeyboardReceiver.paneLayoutParams(250) }
+    }
+
+    @Test
+    fun unchangedHeightOrClosedPaneIsNotResized() {
+        val (emojiPane, container, topPane) = wireContainer()
+        // Pane closed: a new height is only stored for the next open.
+        receiver.setViewReferences(emojiPane, container, topPane, mockk(relaxed = true), 0, 250)
+        verify(exactly = 0) { SuggestionBarPane.switchToContentPaneMode(any(), any(), any(), any()) }
+
+        receiver.handle_event_key(KeyValue.Event.SWITCH_CLIPBOARD)
+        verify(exactly = 1) { SuggestionBarPane.switchToContentPaneMode(topPane, container, any(), 250) }
+
+        // Same height again (every field focus re-propagates): no extra layout pass.
+        receiver.setViewReferences(emojiPane, container, topPane, mockk(relaxed = true), 0, 250)
+        verify(exactly = 1) { SuggestionBarPane.switchToContentPaneMode(any(), any(), any(), any()) }
+    }
+
+    // ── 6. The pane height's base is the window's full height, stable across rotations ─
+    //
+    // Pixel 8 Pro 2026-11-18: a fresh process measured the portrait pane from
+    // displayMetrics.heightPixels = 2244 (673 px at 30 %), but after any configuration change
+    // the service's displayMetrics reported 2020 in portrait (606 px), so every portrait pane
+    // after a rotation was ~10 % shorter than before it. maximumWindowMetrics is the full
+    // window for the current rotation on API 30+ and does not drift.
+
+    @Test
+    fun contentPaneHeightUsesTheMaximumWindowHeightNotTheDriftingDisplayMetrics() {
+        val ctx = mockk<Context>(relaxed = true)
+        val res = mockk<android.content.res.Resources>(relaxed = true)
+        val dm = org.objenesis.ObjenesisStd().newInstance(android.util.DisplayMetrics::class.java)
+        dm.heightPixels = 2020
+        every { ctx.resources } returns res
+        every { res.displayMetrics } returns dm
+        val bounds = mockk<android.graphics.Rect>(relaxed = true)
+        every { bounds.height() } returns 2244
+        val metrics = mockk<android.view.WindowMetrics>(relaxed = true)
+        every { metrics.bounds } returns bounds
+        val wm = mockk<android.view.WindowManager>(relaxed = true)
+        every { wm.maximumWindowMetrics } returns metrics
+        every { ctx.getSystemService(android.view.WindowManager::class.java) } returns wm
+
+        org.junit.Assert.assertEquals(673, SuggestionBarPane.calculateContentPaneHeight(ctx, 30, sdk = 34))
+        // Below API 30 there is no WindowMetrics: displayMetrics is the only source.
+        org.junit.Assert.assertEquals(606, SuggestionBarPane.calculateContentPaneHeight(ctx, 30, sdk = 29))
+    }
 }

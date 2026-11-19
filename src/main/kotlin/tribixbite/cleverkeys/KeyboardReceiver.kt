@@ -122,12 +122,36 @@ class KeyboardReceiver(
         this.topPane = topPane
         this.scrollView = scrollView
         this.suggestionBarHeight = suggestionBarHeight
+        val previousPaneHeight = this.contentPaneHeight
         this.contentPaneHeight = contentPaneHeight
+        // A rotation restarts the input view (InputMethodService.resetStateForNewConfiguration
+        // -> onStartInputView) WITHOUT onFinishInputView, so an open pane stays open and this
+        // call brings the new orientation's height. Without the resize a pane opened in
+        // portrait kept its portrait height in landscape (the keyboard's bottom row pushed
+        // off screen) and one opened in landscape stayed short in portrait (maintainer
+        // report, Pixel 8 Pro repro 2026-11-18).
+        if (isContentPaneShowing && contentPaneHeight > 0 && contentPaneHeight != previousPaneHeight) {
+            resizeOpenPane(contentPaneHeight)
+        }
 
         // Set up clipboard close button callback to trigger SWITCH_BACK_CLIPBOARD event
         clipboardManager.setOnCloseCallback {
             handle_event_key(KeyValue.Event.SWITCH_BACK_CLIPBOARD)
         }
+    }
+
+    /**
+     * Give the open pane (every child of [contentPaneContainer], each sized with an explicit
+     * height by its opener) and [topPane] the new [height].
+     */
+    private fun resizeOpenPane(height: Int) {
+        val top = topPane ?: return
+        val content = contentPaneContainer ?: return
+        val scroll = scrollView ?: return
+        for (i in 0 until content.childCount) {
+            content.getChildAt(i)?.layoutParams = paneLayoutParams(height)
+        }
+        SuggestionBarPane.switchToContentPaneMode(top, content, scroll, height)
     }
 
     /**

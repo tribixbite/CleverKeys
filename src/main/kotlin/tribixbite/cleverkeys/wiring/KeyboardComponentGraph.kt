@@ -515,12 +515,34 @@ object SuggestionBarPane {
     }
 
     /**
-     * Calculate content pane height in pixels.
+     * Calculate content pane height in pixels: [heightPercent] of the window's full height in
+     * the current rotation.
+     *
+     * API 30+ reads [android.view.WindowManager.getMaximumWindowMetrics]. The service's
+     * `displayMetrics.heightPixels` drifts: on the Pixel 8 Pro (2026-11-18) it was 2244 in a
+     * fresh process but 2020 in portrait after any configuration change, so every portrait
+     * pane after a rotation came out ~10 % shorter. Older releases have only displayMetrics.
+     * [sdk] is a test seam (SDK_INT is a folded constant under the mock tier).
      */
     @JvmStatic
-    fun calculateContentPaneHeight(context: Context, heightPercent: Int): Int {
-        val screenHeight = context.resources.displayMetrics.heightPixels
+    @JvmOverloads
+    fun calculateContentPaneHeight(context: Context, heightPercent: Int, sdk: Int = android.os.Build.VERSION.SDK_INT): Int {
+        val screenHeight = windowHeightPx(context, sdk)
         return (screenHeight * heightPercent) / 100
+    }
+
+    private fun windowHeightPx(context: Context, sdk: Int): Int {
+        if (sdk >= android.os.Build.VERSION_CODES.R) {
+            val height = try {
+                context.getSystemService(android.view.WindowManager::class.java)
+                    ?.maximumWindowMetrics?.bounds?.height() ?: 0
+            } catch (e: RuntimeException) {
+                // A context without a window manager (never the IME service): fall back.
+                0
+            }
+            if (height > 0) return height
+        }
+        return context.resources.displayMetrics.heightPixels
     }
 
     /**
