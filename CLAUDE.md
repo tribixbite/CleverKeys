@@ -170,6 +170,13 @@ returns early, and still did after it assigned `value` in one expression on ever
 runs). Use `remember(key) { mutableStateOf(cached) }` + `LaunchedEffect(key)` instead; lint is
 too slow to run here (~45 min), so this check only shows up in CI.
 
+## SDK test seams and CI lint (2026-11-18)
+
+A `sdk: Int = SDK_INT` parameter guarding an API 30 call hides the guard from lint's NewApi
+check, and CI's lint went red on every commit after `7add2860`. Adding a real `SDK_INT` check
+breaks the seam (the mock tier folds SDK_INT to 0). Put the call in a `@RequiresApi` helper and
+give the guarded caller a targeted `@SuppressLint("NewApi")` with the reason (`d572b508`).
+
 ## Compose "Recording currently in progress" crashes
 
 A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;
