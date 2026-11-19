@@ -1348,6 +1348,10 @@ class CleverKeysService : InputMethodService(),
 
         val inlineSuggestions = response.inlineSuggestions
         if (inlineSuggestions.isEmpty()) {
+            // The platform sends an empty response to remove the chips it sent before (AOSP
+            // InlineSuggestionSession skips one only after another empty response): clear them,
+            // or chips for a field that no longer matches stay in the bar.
+            _suggestionBar?.setInlineAutofillView(null)
             return false
         }
 
