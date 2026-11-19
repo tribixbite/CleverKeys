@@ -104,7 +104,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    after lift, templates (textarea / password / pane search), font scale 2.0 pane header, fa/hu
    settings search. NOT RUN: continuous swipe with auto-space OFF and interrupted phrases (JVM tests
    only), narrow split-screen clipboard pane, media-only clip, font-scale entries, fa/hu pane page
-   arrows. Finding: a font-scale change reaches an inflated pane only after an IME restart. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-4)
+   arrows. Finding: a font-scale change reaches an inflated pane only after an IME restart —
+   FIXED 2026-11-19 `356a1b84`: only the CLIPBOARD pane is cached (emoji/GIF inflate on every
+   open); its rebuild signature now carries font scale, densityDpi and locales, so the
+   `onConfigurationChanged` → `refresh_config` → `setConfig` path drops it
+   (`ClipboardPaneThemeInvalidationTest`, red on the old code). Saga `.82` PASS (release
+   `356a1b84`, sha256 5f216bf1…): system font size 1.0 → 2.0 → 1.0, the pane reopened at each
+   size with the same IME pid; `build/nov19-saga82-fontscale/`. Suites at `356a1b84`: pure 3,934 /
+   mock 1,856 green. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-4)
 5. [x] device: undo/redo leftovers — CLOSED 2026-11-18: every listed check PASS (Pixel 10-17,
    Compose and Termux 10-21, private-entry Ctrl+C 10-22). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-5)
 6. [ ] device + maintainer: RustDesk / blind-field checks. MAINTAINER PASS 2026-10-26: paste and
@@ -253,7 +260,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     their own Leipzig frequency (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +
     relaxing `CoreImeHygieneDriftTest`; `docs/eval/2026-11-09-elision-base-frequency.md`); a human
     `d'être` swipe. it `l'attivita` FIXED 2026-11-18: it.cklm rebuilt from the corrected table under a
-    pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
+    pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). it accent
+    misspellings FIXED 2026-11-19: 78 dropped from it_enhanced.bin (`perche`, `piu`, `perchè`, `pò`;
+    `it_blocklist.txt`), `qual'è`/`qual'era` + 4 bad `un'` elisions dropped (`MISSPELLED_DISPLAY`),
+    it.cklm rebuilt under a new gate; `docs/eval/2026-11-19-italian-accent-spellings.md`. Open: the it
+    lexicon has NO single-letter words (`e`, `è`, `a`, `o`); no table offers `po'`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
 36. [ ] device: "Space before opening punctuation" (default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Ellipsis chain fixed; the
     checklist's "Punctuation and elisions" passes on Saga .144 except `d'être` (item 35). Open: a
