@@ -300,15 +300,16 @@ class BundledContractionDataTest {
 
         // 2026-11-07: +1,032 replace / +11 pairs, the same accent re-keying (`dov'è`, `com'è`).
         // 2026-11-19: -5 replace / -1 pair, misspelled display forms dropped by the generator's
-        // MISSPELLED_DISPLAY (`qual'era`, masculine `un'altrettanto`; the pair `quale` → `qual'è`).
-        assertThat(files.getValue("it")).hasSize(22_241)
+        // MISSPELLED_DISPLAY (`qual'era`, masculine `un'altrettanto`; the pair `quale` → `qual'è`);
+        // then -3 replace / -7 pairs, forms that are not Italian (`dell's`, `a'i`, `l'une`, `fin'ora`).
+        assertThat(files.getValue("it")).hasSize(22_238)
         // 2026-11-09: +3 curated pairs `ce`/`se`/`ne` → `c'è`/`s'è`/`n'è`, whose own keys
         // (`cè`, …) the CTC beam can never spell (their projection loses to the real word).
-        assertThat(pairFiles.getValue("it")).hasSize(161)
+        assertThat(pairFiles.getValue("it")).hasSize(154)
         assertThat(pairFiles.getValue("it")["ce"]).containsExactly("c'è")
         val it = coverageOf("it")
         assertWithMessage("dead Italian mappings: ${deadKeysOf("it")}").that(it.dead).isEqualTo(0)
-        assertThat(it.entries).isEqualTo(22_402)
+        assertThat(it.entries).isEqualTo(22_392)
     }
 
     @Test
@@ -859,10 +860,10 @@ class BundledContractionDataTest {
             "alloro" to "all'oro",         // the laurel
             "nera" to "n'era",             // black (fem.)
             "cera" to "c'era",             // the wax
-            // Modern Italian writes both of these SOLID (Treccani) — the apostrophe form is
-            // the variant, so replacing the solid spelling destroyed the standard one.
+            // Modern Italian writes this SOLID (Treccani) — the apostrophe form is the less
+            // common variant, so replacing the solid spelling destroyed the standard one.
+            // (`finora` has no pair since 2026-11-19: `fin'ora` is a misspelling, `fino` truncates.)
             "tuttora" to "tutt'ora",
-            "finora" to "fin'ora",
         )) {
             assertWithMessage("it: '$word' must be APPEND-mode, not a replaced alias")
                 .that(pairs[word]).containsExactly(elision)

@@ -113,12 +113,111 @@ No Italian human swipe traces exist on the dev box (the FUTO corpora are azerty,
 spanish, dvorak), so there is no Italian swipe replay. The swipe change is pinned by
 `ItalianAccentSpellingDriftTest` (`perche` projects to `perché` alone).
 
+## Follow-up (same day): elision audit, one-letter words, the Italian pack
+
+### Elision audit
+
+Every Italian PAIRED value (161) and the REPLACE value of every Italian collision key (105) was
+checked with hunspell it_IT on the elided word, then by hand (proper nouns and acronyms are normal
+after `l'`/`d'`: `l'Aida`, `d'Este`, `l'Eni`, `l'UCI`). Dropped through `MISSPELLED_DISPLAY`:
+
+| key | form | why |
+|---|---|---|
+| `ai` | `a'i` | not an Italian form |
+| `finora` | `fin'ora` | `fino` truncates: `finora` / `fin ora`, no apostrophe (as `qual è`) |
+| `del` | `d'el` | `el` is Spanish |
+| `lel` | `l'el` | same |
+| `allo` | `all'o` | no reading |
+| `dici` | `d'ici` | French |
+| `lune` | `l'une` | French |
+| `dune` | `d'une` | French |
+| `dells` | `dell's` | English possessive |
+| `dalles` | `dall'es` | no reading |
+
+Kept on purpose: `tutt'ora` (Treccani: the less common variant of `tuttora`), `ventiquattr'ore`,
+`mezz'ora`, `bell'e`, `ch'io`, `m'è`/`t'è`/`v'è` (literary). Reported, not changed: `l'è`
+(Tuscan for `è`, offered beside every `le`), `l'uni`, `l'ari`, `l'udi`, `l'air`, `d'or`, `d'eu`,
+`l'ice` (foreign or acronym readings; plausible as proper nouns in Italian text). Result:
+22,238 REPLACE (-3), 154 PAIRED (-7), 102 collisions (-3); `lel` also left the lexicon (it was
+kept only as that contraction key), so `contraction_collisions_fr.json` drops `it` from `lel`.
+
+French (report only; no change): of 471 PAIRED values, 37 elided words fail hunspell fr_FR.
+Most are proper nouns (`d'Alton`, `d'Angers`, `d'Ivan`, `l'Isle`); with no French reading:
+`l'aps`, `l'ard`, `d'ard`, `l'ance`, `l'ena`, `l'ens`, `l'is`, `l'ob`, `l'ol`, `l'ong`, `l'oua`,
+`l'uc`, `l'uit`, `d'ur`, `d'ise`, `d'oum`. Of 283 collision keys, the REPLACE values with no French
+reading include `d'dc`, `d'el`, `l'el`, `l'ess`, `l'ined`, `qu'ali`, `l'east`, `d'old`. None is a
+misspelling of a French word, so they were left for a French-specific pass.
+
+### One-letter Italian words
+
+The Italian dictionary held no one-letter word: `build_wordlist.py` keeps a one-letter word only
+when the shipped dictionary already had it, a carry-over written for English (whose list always
+had `a`/`i`). No bundled non-English dictionary has one (fr, de, es, pt, sv, nor the nl/ru/tr
+packs). What an Italian user saw (mock-tier probe through the real `WordPredictor` and the shipped
+`it_enhanced.bin`):
+
+- typed `è` (the Italian layout has the key): empty suggestion bar;
+- typed `e`: `essere, era, ed, erano, ecco` (no `e`); typed `a`: `al, anche, alla, ad, anni`;
+- autocorrect never touched them (its minimum length is 2), so nothing was rewritten;
+- the next-word model could neither predict them nor use them as the previous word.
+
+Attempted fix (NOT shipped): `it_allowlist.txt` force-keeps `e`, `è`, `a`, `i`, `o` (they rank 5,
+18, 14, 25, 42; the size cap then cuts 4 tail words). With that, the same probe shows the typed
+letter first (`e` → `e, essere, era`; `è` → `è`), and autocorrect still leaves them alone.
+
+it.cklm: with the five words as ordinary vocabulary no Tatoeba weight fits the 512 KiB cap
+(526,097 B at weight 0; they join nearly every row's top 20). As CONTEXT-ONLY rows (the mechanism
+es was given; a builder change so a lexicon word can be one) the model is 476,740 B and OOD-test
+next-word 10.28 / 17.78 (shipped 9.98 / 17.03). The pre-registered gate then FAILED G4, end to end:
+
+| cell (lm_static, %) | shipped pair | candidate A | Δ | A model vs shipped model, both on A's lexicon |
+|---|---|---|---|---|
+| OOD next-word top-1 / top-3 | 9.86 / 16.83 | 9.52 / 16.42 | -0.34 / -0.41 | +0.28 / +0.66 |
+| OOD prefix-1 | 24.04 / 40.27 | 23.15 / 40.46 | -0.89 / +0.19 | +0.21 / +0.58 |
+| OOD prefix-2 | 17.61 / 38.88 | 18.39 / 39.36 | +0.78 / +0.48 | +0.78 / +0.48 |
+| OOD prefix-3 | 28.28 / 49.00 | 28.90 / 49.16 | +0.62 / +0.16 | +0.62 / +0.16 |
+| in-domain next-word | 10.08 / 17.56 | 9.79 / 17.11 | -0.29 / -0.45 | +0.42 / +0.77 |
+| in-domain prefix-1 | 26.33 / 42.19 | 25.96 / 42.45 | -0.37 / +0.26 | +0.73 / +0.75 |
+| in-domain prefix-2 | 20.75 / 41.42 | 22.09 / 41.92 | +1.34 / +0.50 | +1.34 / +0.50 |
+| in-domain prefix-3 | 30.42 / 51.69 | 31.19 / 51.79 | +0.77 / +0.10 | +0.77 / +0.10 |
+
+The model is better on every cell; the losses come from the lexicon. After one typed letter the bare
+letter takes slot 1 (`none` prefix-1 top-1 falls 3.35 pt), and the next-word population grows by 902
+OOD / 2,926 in-domain positions whose targets (`e`, `è`, ...) a context-only word can never be, so
+those rates fall although the hit COUNTS rise (OOD next-word top-3: 2,233 → 2,327 hits). Under the
+gate as written this is a fail, so it did not ship. The trade-off (the letter itself in slot 1, the
+bar no longer empty for `è`) is for the maintainer. Parked as
+`docs/eval/2026-11-19-italian-one-letter-words.patch` (`git apply` it): the 5 allowlist lines, the
+builder's `vocab -= context_only`, `context_only=("a", "e", "i", "o", "è")` for it, and the fail-first
+mock test `ItalianShortWordTest` (add it to `mockTestClasses`). Then regenerate as in "Changes",
+including the contraction generator, until a pass changes nothing, and rebuild it.cklm.
+
+Shipped instead (candidate B, gate pre-registered before it was built): the elision drops above at
+the generators' fixed point. The lexicon differs from the 6559e110 one by two rare words (`lel` out:
+it was kept only as the key of `l'el`; `pubblicarono` in under the size cap), and the rebuilt it.cklm
+is byte-identical to the shipped model (sha256 `3f5a5c4c…`; it never named the 10 dropped forms), so
+G1-G5 hold trivially; tap eval below.
+
+Tap eval (`-PgeoFull=true`, it), candidate B vs the 6559e110 pair: every lm_static cell identical
+(largest |Δ| 0.00 pt); one in-domain next-word position fewer (39,165 → 39,164).
+
+### The Italian pack
+
+`scripts/dictionaries/langpack-it.zip` rebuilt with `build_all_languages.py --lang it` (the
+project's pack pipeline: classifier, unigrams, pack). Its `dictionary.bin` is byte-identical to the
+bundled `it_enhanced.bin`; `contractions.json` is the current `contractions_it.json` (the old pack
+carried a 761 KB table from before the re-keying); `prefix_boost.bin` is gone (no consumer since
+ADR-011, and the orchestrator no longer builds one).
+
+Running the full pipeline exposed a loop: the classifier reads the contraction keys as evidence and
+the contraction generator reads the lexicon. Once `l'el` was dropped, the next classifier pass dropped
+`lel` (it had been rescued only as that key) and the size cap admitted `pubblicarono`; a further pass
+of all three generators changed nothing, so the shipped files are that fixed point.
+
 ## Found, not fixed
 
-- The Italian lexicon has no single-letter words at all (`e`, `è`, `a`, `o`, `i`): the classifier
-  keeps a 1-letter word only when it was already shipped, and none ever was.
 - No elision table offers `po'`; the key `po` shows `po`.
-- `contraction_pairs_it.json` pairs `ai` with `a'i`, which is not an Italian form.
+- The same one-letter gap in fr/es/pt/sv (above).
 
 ## Full table
 

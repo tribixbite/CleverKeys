@@ -84,6 +84,7 @@ EN-only elements (documented omissions elsewhere): BRITISH_RULES, NLTK,
 VALID_SEED_KEEP, held-out eval, flat-JSON asset fallback.
 Case forms: UPPER−Cap−lower = true initialisms (raw UPPER acceptance leaks
 every proper noun); `plain` languages use Cap−lower as name-rescue evidence.
+One-letter words survive only by carryover (`len(w)==1` keeps a word only if already shipped), so no non-en dictionary has any (it `è`, fr `à`, es `y`); adding them is a maintainer decision (it attempt failed the tap gate, `docs/eval/2026-11-19-italian-accent-spellings.md`). Curation files accept accented Latin since 2026-11-19 and refuse a malformed line (they used to skip it silently).
 Curation: `scripts/dictionaries/<lang>/<lang>_allowlist.txt` (force-keep,
 delete-to-exclude) and `<lang>_blocklist.txt` (force-drop; en's includes the
 AutocorrectTest inputs tge/broight/questin/… which must NEVER become dict

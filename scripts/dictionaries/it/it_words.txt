@@ -20276,7 +20276,6 @@ leibniz
 leicester
 leigh
 leila
-lel
 lele
 lelio
 lella
@@ -28473,6 +28472,7 @@ pubblicando
 pubblicano
 pubblicare
 pubblicarlo
+pubblicarono
 pubblicata
 pubblicate
 pubblicati

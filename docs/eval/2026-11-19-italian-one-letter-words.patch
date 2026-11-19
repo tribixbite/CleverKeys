@@ -1,0 +1,189 @@
+diff --git a/scripts/build_static_lm.py b/scripts/build_static_lm.py
+index 3e31b75..53488c0 100644
+--- a/scripts/build_static_lm.py
++++ b/scripts/build_static_lm.py
+@@ -411,6 +411,7 @@ CONFIGS: dict[str, LangConfig] = {
+             lexicon="it_enhanced.bin",
+             contraction_files=("contractions_it.json", "contraction_pairs_it.json"),
+             wordfreq_lang="it",
++            context_only=("a", "e", "i", "o", "è"),
+         ),
+         LangConfig(
+             code="pt",
+@@ -1068,8 +1069,10 @@ def main() -> int:
+     lexicon, forms = load_vocab(REPO / "src/main/assets/dictionaries", cfg)
+     vocab = lexicon | forms
+     print(f"[vocab] {cfg.lexicon}: lexicon {len(lexicon)} + contraction forms {len(forms)} -> {len(vocab)}")
+-    if context_only & vocab:
+-        raise SystemExit(f"context-only words already in the vocabulary: {sorted(context_only & vocab)}")
++    # A context-only word the lexicon DOES hold (it e/è/a/o/i) leaves the continuation vocabulary:
++    # it still gets its row, it is just never predicted. As continuations the five most frequent
++    # Italian words join nearly every row's top-K and no Tatoeba weight fits SIZE_CAP_BYTES.
++    vocab -= context_only
+     if context_only:
+         print(f"[vocab] context-only previous words: {' '.join(sorted(context_only))}")
+ 
+diff --git a/scripts/dictionaries/it/it_allowlist.txt b/scripts/dictionaries/it/it_allowlist.txt
+index cf32b2b..f5f3fd5 100644
+--- a/scripts/dictionaries/it/it_allowlist.txt
++++ b/scripts/dictionaries/it/it_allowlist.txt
+@@ -2,3 +2,12 @@
+ # One word per line; "#" starts a comment. Words here are kept unconditionally
+ # (blocklist still overrides). Add words rescued from the review artifacts
+ # (cleverkeys-dictgen-it-drops-review.txt) and re-run build_wordlist.py --lang it.
++
++# One-letter words. build_wordlist.py keeps a one-letter word only when the shipped dictionary
++# already had it (a carry-over rule from English, whose list always held a/i), so Italian never
++# gained one: typed `è` leaves the bar empty and the next-word model cannot condition on them.
++e               # and (zipf 7.46, the most common Italian word)
++è               # is (7.10)
++a               # to (7.21)
++i               # the, masc. pl. (6.94)
++o               # or (6.48)
+diff --git a/src/test/kotlin/tribixbite/cleverkeys/ItalianShortWordTest.kt b/src/test/kotlin/tribixbite/cleverkeys/ItalianShortWordTest.kt
+new file mode 100644
+index 0000000..986363e
+--- /dev/null
++++ b/src/test/kotlin/tribixbite/cleverkeys/ItalianShortWordTest.kt
+@@ -0,0 +1,141 @@
++package tribixbite.cleverkeys
++
++import android.os.Trace
++import android.util.Log
++import com.google.common.truth.Truth.assertThat
++import com.google.common.truth.Truth.assertWithMessage
++import io.mockk.every
++import io.mockk.just
++import io.mockk.mockkStatic
++import io.mockk.runs
++import io.mockk.unmockkStatic
++import org.junit.AfterClass
++import org.junit.Before
++import org.junit.BeforeClass
++import org.junit.Test
++import tribixbite.cleverkeys.autocorrect.FrequencyFloor
++import tribixbite.cleverkeys.autocorrect.KeyAdjacency
++import java.io.File
++import java.nio.ByteBuffer
++import java.nio.ByteOrder
++import java.util.concurrent.ConcurrentHashMap
++import java.util.concurrent.atomic.AtomicReference
++
++/**
++ * The one-letter Italian words — `e` (and), `è` (is), `a` (to), `o` (or), `i` (the) — are in the
++ * Italian dictionary and the next-word model (2026-11-19).
++ *
++ * `build_wordlist.py` keeps a one-letter word only when the shipped dictionary already held it
++ * (a carry-over rule written for English, whose list had always carried `a`/`i`), so no other
++ * language's dictionary ever gained one: `è` (zipf 7.10, the 2nd most common Italian word) and
++ * `e` (7.46, the 1st) were missing. Autocorrect never touches a one-letter word (its minimum
++ * length is 2), so nothing was mangled; what the user lost is that the bar never offered `è`,
++ * and that the static next-word model could neither predict these words nor use them as the
++ * previous word (`e` → `poi`, `è` → `stato`). They are now `it_allowlist.txt` force-keeps.
++ *
++ * Mock tier (the predictor touches `Log`/`Trace`); harnessed like [WordPredictorHalfSpaceTest],
++ * with the shipped `it_enhanced.bin` parsed by the production [BinaryDictionaryParser].
++ */
++class ItalianShortWordTest {
++
++    companion object {
++        private val WORDS = listOf("e", "è", "a", "o", "i")
++        private lateinit var predictor: WordPredictor
++        private lateinit var config: Config
++        private lateinit var dict: HashMap<String, Int>
++        private lateinit var index: HashMap<String, MutableSet<String>>
++
++        @JvmStatic
++        @BeforeClass
++        fun setUpClass() {
++            mockkStatic(Log::class)
++            every { Log.d(any(), any()) } returns 0
++            every { Log.d(any(), any(), any()) } returns 0
++            every { Log.i(any(), any()) } returns 0
++            every { Log.w(any(), any<String>()) } returns 0
++            every { Log.e(any(), any()) } returns 0
++            every { Log.e(any(), any(), any()) } returns 0
++            mockkStatic(Trace::class)
++            every { Trace.beginSection(any()) } just runs
++            every { Trace.endSection() } just runs
++            KeyAdjacency.resetLayout()
++            dict = HashMap(80_000)
++            index = HashMap()
++            val bytes = File("src/main/assets/dictionaries/it_enhanced.bin").readBytes()
++            val parsed = BinaryDictionaryParser.parseWithPrefixIndex(
++                ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN), dict, index)
++            check(parsed is BinaryDictionaryParser.Result.Loaded) { "it_enhanced.bin did not parse: $parsed" }
++            config = org.objenesis.ObjenesisStd().newInstance(Config::class.java)
++            predictor = org.objenesis.ObjenesisStd().newInstance(WordPredictor::class.java)
++            setField("dictionary", AtomicReference<MutableMap<String, Int>>(dict))
++            setField("prefixIndex", AtomicReference<MutableMap<String, MutableSet<String>>>(index))
++            setField("contractionAliases", emptyMap<String, String>())
++            setField("customAndUserWords", emptySet<String>())
++            setField("disabledWords", mutableSetOf<String>())
++            setField("userWordOriginalCase", ConcurrentHashMap<String, String>())
++            setField("config", config)
++            setField("cachedMaxFreqForSize", -1)
++            setField("secondaryIndex", null)
++            setField("secondaryLanguageCode", "none")
++            setField("currentLanguage", "it")
++        }
++
++        @JvmStatic
++        @AfterClass
++        fun tearDownClass() {
++            unmockkStatic(Log::class)
++            unmockkStatic(Trace::class)
++        }
++
++        private fun setField(name: String, value: Any?) {
++            val field = WordPredictor::class.java.getDeclaredField(name)
++            field.isAccessible = true
++            field.set(predictor, value)
++        }
++    }
++
++    @Before
++    fun resetConfig() {
++        config.prediction_frequency_scale = Defaults.PREDICTION_FREQUENCY_SCALE
++        config.prediction_context_boost = Defaults.PREDICTION_CONTEXT_BOOST
++        config.context_source = Defaults.CONTEXT_SOURCE
++        config.personalization_weight = Defaults.PERSONALIZATION_WEIGHT
++        config.secondary_prediction_weight = Defaults.SECONDARY_PREDICTION_WEIGHT
++        config.autocorrect_enabled = true
++        config.autocorrect_min_word_length = Defaults.AUTOCORRECT_MIN_WORD_LENGTH
++        config.autocorrect_char_match_threshold = 0.65f
++        config.autocorrect_max_length_diff = 2
++        config.autocorrect_confidence_min_frequency = FrequencyFloor.SLIDER_MIN
++        config.autocorrect_prefix_length = 0
++        config.swipe_debug_detailed_logging = false
++    }
++
++    @Test
++    fun `the italian dictionary holds e, è, a, o and i`() {
++        assertWithMessage("one-letter words missing from it_enhanced.bin")
++            .that(WORDS.filter { it !in dict }).isEmpty()
++        // Ranked as the most common words they are (CKDT ranks 5-42), not as tail entries.
++        val top50 = BinaryDictionaryParser.frequencyForRank(50)
++        for (w in WORDS) assertWithMessage("frequency of $w").that(dict.getValue(w)).isAtLeast(top50)
++    }
++
++    @Test
++    fun `a typed one-letter word is never autocorrected`() {
++        for (w in WORDS) assertWithMessage("autocorrect of '$w'").that(predictor.autoCorrect(w)).isEqualTo(w)
++    }
++
++    @Test
++    fun `a typed one-letter word is the first suggestion`() {
++        // Before: `è` left the bar empty and `e` showed only longer words (essere, era, ed).
++        for (w in WORDS) {
++            assertWithMessage("bar for '$w'")
++                .that(predictor.predictWordsWithContext(w, emptyList()).words.firstOrNull()).isEqualTo(w)
++        }
++    }
++
++    @Test
++    fun `the italian next-word model names the one-letter words`() {
++        val lm = StaticContextLm.parse(StaticLmLanguageData.asset("it").readBytes())
++        assertWithMessage("it.cklm lacks one-letter words").that(WORDS.filter { !lm.contains(it) }).isEmpty()
++    }
++}

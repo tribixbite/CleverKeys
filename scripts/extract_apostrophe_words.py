@@ -328,6 +328,20 @@ MISSPELLED_DISPLAY = {
         # Misspelt bases: un'importante / un'insegnante are the words (both already mapped).
         "un'importate",
         "un'insegnate",
+        # `fino` truncates (`fin ora`, solid `finora`): no apostrophe, the `qual è` rule.
+        "fin'ora",
+        # Not Italian forms (2026-11-19 audit of every PAIRED value and every colliding REPLACE
+        # value with hunspell it_IT): `a'i`, `d'el`/`l'el` (`el` is Spanish), `all'o`, the
+        # French `d'ici`/`l'une`/`d'une`, and the English possessive `dell's`, `dall'es`.
+        "a'i",
+        "d'el",
+        "l'el",
+        "all'o",
+        "d'ici",
+        "l'une",
+        "d'une",
+        "dell's",
+        "dall'es",
     }),
 }
 

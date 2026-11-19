@@ -39,9 +39,15 @@ class ItalianAccentSpellingDriftTest {
         private val BLOCKLIST = File("scripts/dictionaries/it/it_blocklist.txt")
         private val GENERATOR = File("scripts/extract_apostrophe_words.py")
 
-        /** The six misspelled elisions `MISSPELLED_DISPLAY["it"]` removes. */
+        /**
+         * The elisions `MISSPELLED_DISPLAY["it"]` removes: six misspellings (2026-11-19, first
+         * pass), then `fin'ora` and nine forms that are not Italian at all (`a'i`, Spanish `d'el`,
+         * French `l'une`/`d'une`/`d'ici`, the English possessive `dell's`), found by auditing every
+         * PAIRED value and every colliding REPLACE value with hunspell it_IT.
+         */
         val MISSPELLED_ELISIONS = listOf(
             "qual'è", "qual'era", "un'altrettanto", "un'appassionato", "un'importate", "un'insegnate",
+            "fin'ora", "a'i", "d'el", "l'el", "all'o", "d'ici", "l'une", "d'une", "dell's", "dall'es",
         )
 
         /**
@@ -161,6 +167,12 @@ class ItalianAccentSpellingDriftTest {
             .that(MISSPELLED_ELISIONS.filter { it in values }).isEmpty()
         assertWithMessage("`quale` is a word: no PAIRED entry offers qual'è beside it")
             .that(pairs.has("quale")).isFalse()
+        // The words whose PAIRED variant was bogus stay words, offered alone.
+        for (word in listOf("ai", "finora", "allo", "del", "dici", "lune", "dune")) {
+            assertWithMessage("PAIRED entry for $word").that(pairs.has(word)).isFalse()
+        }
+        // `tuttora` keeps `tutt'ora`: Treccani records it as the less common variant.
+        assertThat(pairs.getJSONArray("tuttora").getString(0)).isEqualTo("tutt'ora")
         // The correct neighbours stay.
         for ((key, form) in listOf(
             "unaltra" to "un'altra", "unaltrettanta" to "un'altrettanta",

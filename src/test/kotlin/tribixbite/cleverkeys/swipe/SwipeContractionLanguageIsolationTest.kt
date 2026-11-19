@@ -523,10 +523,10 @@ class SwipeContractionLanguageIsolationTest {
             "lira" to "l'ira",
             "signora" to "s'ignora",
             "duomo" to "d'uomo",
-            // Modern Italian writes these solid (Treccani); the apostrophe form is the
-            // variant, so replacing them destroyed the STANDARD spelling.
+            // Modern Italian writes this solid (Treccani); the apostrophe form is the
+            // variant, so replacing it destroyed the STANDARD spelling. (`fin'ora` was dropped
+            // 2026-11-19 as a misspelling; `finora` is offered alone — ItalianAccentSpellingDriftTest.)
             "tuttora" to "tutt'ora",
-            "finora" to "fin'ora",
         )) {
             assertWithMessage("it: '$word' must survive its own elision")
                 .that(overlay("it", Policy.SHIPPED, listOf(word)))

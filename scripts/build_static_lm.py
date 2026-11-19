@@ -392,6 +392,24 @@ CONFIGS: dict[str, LangConfig] = {
             # end: worst lm_static cell +0.00 pt, best +0.14 (in-domain prefix-3 top-1); G4a worst
             # -0.01 pt (in-domain prefix-2). Other models untouched. Doc:
             # docs/eval/2026-11-19-italian-accent-spellings.md.
+            # Rebuilt a third time 2026-11-19 (same day, the 6559e110 model sha256 3f5a5c4c…
+            # reproduced first). Candidate A added the one-letter words e, è, a, o, i to the lexicon
+            # (as continuations no weight fit SIZE_CAP_BYTES; as context-only rows 476,740 B, OOD
+            # next-word 10.28 / 17.78) and FAILED the pre-registered G4: OOD prefix-1 top-1 -0.89 pt,
+            # OOD next-word top-3 -0.41, in-domain next-word top-3 -0.45 end to end (the bare letter
+            # now takes the first slot after one typed letter, and 902 OOD next-word targets became
+            # scorable but are never predicted), although the model itself gained +0.10..+1.34 under
+            # the new lexicon. Not shipped; numbers and the parked patch in
+            # docs/eval/2026-11-19-italian-accent-spellings.md, for the maintainer.
+            # Candidate B, shipped: only the 10 non-Italian elisions dropped (`a'i`, `fin'ora`,
+            # `l'une`, `dell's`; MISSPELLED_DISPLAY) and the lexicon at its generator fixed point
+            # (`lel` leaves, kept only as that key). Gate written before B was built: G1 names none of
+            # the 16 dropped elisions or 78 dropped spellings; G2 <= 1.10 x 476,420 B; G3 OOD-test
+            # next-word >= 9.88 / 16.93; G4 StaticLmTapEvalTest it end to end vs the 6559e110 pair,
+            # every lm_static cell >= -0.10 pt; G4a the same under the new lexicon vs 3f5a5c4c;
+            # G5 other models byte-identical; G6 tests green.
+            # Result: B is byte-identical to 3f5a5c4c (it never named the dropped forms); tap eval
+            # unchanged on every cell. it.cklm and it.json are therefore not touched.
             lexicon="it_enhanced.bin",
             contraction_files=("contractions_it.json", "contraction_pairs_it.json"),
             wordfreq_lang="it",

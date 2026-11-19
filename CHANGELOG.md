@@ -594,7 +594,8 @@ editor that used to be listed here already ship in 2.0.)
 - Italian no longer offers accent misspellings: `perche`, `piu`, `citta`, `perchè`, `pò` and 73
   others left the dictionary and the next-word model, so a swipe or a typed `perche` offers only
   `perché`. Words that are real in both spellings stay (`si`/`sì`, `pero`/`però`, the name `Sara`),
-  and the misspelled elisions `qual'è` and `qual'era` are gone (the spelling is `qual è`).
+  and the misspelled elisions `qual'è` and `qual'era` are gone (the spelling is `qual è`), as are
+  forms that are not Italian (`fin'ora`, `a'i`, `l'une`, `dell's`).
 - Italian offers `l'attività`, not the unaccented `l'attivita`. The Italian next-word model was
   rebuilt from the corrected list of elisions; it now also knows `l'università`, `cos'è`, `dov'è`
   and 55 other accented elisions it was missing.

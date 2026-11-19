@@ -267,8 +267,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). it accent
     misspellings FIXED 2026-11-19: 78 dropped from it_enhanced.bin (`perche`, `piu`, `perchè`, `pò`;
     `it_blocklist.txt`), `qual'è`/`qual'era` + 4 bad `un'` elisions dropped (`MISSPELLED_DISPLAY`),
-    it.cklm rebuilt under a new gate; `docs/eval/2026-11-19-italian-accent-spellings.md`. Open: the it
-    lexicon has NO single-letter words (`e`, `è`, `a`, `o`); no table offers `po'`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
+    it.cklm rebuilt under a new gate; `docs/eval/2026-11-19-italian-accent-spellings.md`. Follow-up:
+    10 non-Italian elisions dropped (`a'i`, `fin'ora`, `l'une`), langpack-it.zip rebuilt. **Maintainer
+    decision**: the it lexicon has NO one-letter word (typed `è` → empty bar); adding `e è a o i`
+    failed the pre-registered tap gate (OOD prefix-1 top-1 -0.89 pt: the letter takes slot 1) though
+    the model gained; parked patch + numbers in the eval doc. Open: no table offers `po'`; fr/es/pt/sv
+    lack one-letter words too. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-35)
 36. [ ] device: "Space before opening punctuation" (default on; spec
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Ellipsis chain fixed; the
     checklist's "Punctuation and elisions" passes on Saga .144 except `d'être` (item 35). Open: a
