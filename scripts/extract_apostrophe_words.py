@@ -311,6 +311,26 @@ RESPELL_KEEP = {
     # its result are recorded with the Italian config in scripts/build_static_lm.py.
 }
 
+# Display forms that are MISSPELLINGS, dropped from every source (the ASK extraction AND the
+# shipped files this generator reads back), so a regeneration cannot bring them back. The ASK
+# wordlists are web-derived and carry common errors as words; each row names the standard form.
+# Pinned by src/test/kotlin/tribixbite/cleverkeys/ItalianAccentSpellingDriftTest.kt.
+MISSPELLED_DISPLAY = {
+    "it": frozenset({
+        # `qual` is a truncation (apocope), not an elision: `qual è`, `qual era`, never with an
+        # apostrophe (Treccani, "qual è"). `quale` stays a word; only its PAIRED variant goes.
+        "qual'è",
+        "qual'era",
+        # `un'` is the elided FEMININE article: masculine words take `un` (un altrettanto,
+        # un appassionato). The feminine forms un'altrettanta and un'appassionata are unaffected.
+        "un'altrettanto",
+        "un'appassionato",
+        # Misspelt bases: un'importante / un'insegnante are the words (both already mapped).
+        "un'importate",
+        "un'insegnate",
+    }),
+}
+
 FORCED_REPLACE = {
     # German capitalises its nouns, so the attestation probe has to try the
     # capitalised form too - which makes "Ichs" (plural of the noun "das Ich")
@@ -896,6 +916,15 @@ def build_language(lang: str, dict_path: Path) -> dict:
         # Curated entries WIN: they were verified against the app's own dictionary,
         # while the extraction cannot see it (see CURATED_CONTRACTIONS' comment).
         contractions.update(curated)
+
+    # Misspelled display forms go before reachability and classification, whichever source
+    # carried them (see MISSPELLED_DISPLAY).
+    misspelled = MISSPELLED_DISPLAY.get(lang, frozenset())
+    if misspelled:
+        clash = misspelled & set(curated.values())
+        if clash:
+            raise SystemExit(f"{lang}: curated values listed as misspellings: {sorted(clash)}")
+        contractions = {k: v for k, v in contractions.items() if v not in misspelled}
 
     dead = 0
     injected = 0

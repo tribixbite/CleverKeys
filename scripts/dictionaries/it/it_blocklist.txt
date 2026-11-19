@@ -1,2 +1,104 @@
 # CleverKeys it force-drop blocklist (overrides everything, incl. the allowlist).
 # One word per line; "#" starts a comment.
+#
+# ── Accent misspellings (2026-11-19, maintainer: "fix the Italian unaccented words") ──────────
+# Every entry below is a spelling of a word whose standard accented form is ALSO in the list
+# (più, perché, città, ...). wordfreq counts the web's unaccented typing as its own token, so
+# the classifier kept both, and the keyboard then offered the misspelling: a swipe showed
+# `perche` beside `perché`, and a typed `perche` was a dictionary word that nothing corrected.
+# Rule for a drop: hunspell it_IT (LibreOffice, the oracle extract_apostrophe_words.py uses)
+# rejects the bare lowercase form AND accepts the accented twin, and the bare form is not a name
+# whose Capitalised form hunspell accepts. Real words that collide stay (si/sì, la/là, ne/né,
+# se/sé, da/dà, di/dì, te/tè, li/lì, papa/papà, pero/però, cosi/così, meta/metà, unita/unità,
+# lascio/lasciò and every other -o/-ò, -i/-ì verb pair hunspell accepts), and so do two names:
+# `sara` (Sara: 69 mid-sentence capitalised uses vs 85 lowercase in the Leipzig it-2019 corpus)
+# and `fara` (Fara, a place: 9 vs 8). The dictionary is lowercase-only and autocorrect keeps the
+# typed capital, so dropping them would turn "Sara" into "Sarà". Foreign names typed without
+# their accents (garcia, jose, lopez, pokemon, elite) are not Italian accent errors and stay.
+# Full table with frequencies: docs/eval/2026-11-19-italian-accent-spellings.md.
+# Pinned by src/test/kotlin/tribixbite/cleverkeys/ItalianAccentSpellingDriftTest.kt.
+
+# Bare (unaccented) final vowel — 59 words. Accented twin in brackets.
+andra           # andrà
+attivita        # attività
+autorita        # autorità
+avra            # avrà
+avro            # avrò
+bensi           # bensì
+caffe           # caffè
+chissa          # chissà
+cio             # ciò
+cioe            # cioè
+citta           # città
+comunita        # comunità
+curiosita       # curiosità
+dara            # darà
+difficolta      # difficoltà
+dignita         # dignità
+dovra           # dovrà
+facolta         # facoltà
+finche          # finché
+gesu            # gesù (the name is spelled Gesù)
+gia             # già
+giovedi         # giovedì
+giu             # giù
+identita        # identità
+liberta         # libertà
+lunedi          # lunedì
+martedi         # martedì
+mercoledi       # mercoledì
+modalita        # modalità
+nonche          # nonché
+novita          # novità
+opportunita     # opportunità
+percio          # perciò
+perche          # perché
+personalita     # personalità
+piu             # più
+poiche          # poiché
+possibilita     # possibilità
+potra           # potrà
+potro           # potrò
+proprieta       # proprietà
+pubblicita      # pubblicità
+puo             # può
+qualita         # qualità
+quantita        # quantità
+realta          # realtà
+responsabilita  # responsabilità
+sanita          # sanità
+saro            # sarò
+schiavitu       # schiavitù
+societa         # società
+solidarieta     # solidarietà
+umanita         # umanità
+universita      # università
+vabbe           # vabbè (hunspell has neither; vabbè is the dictionary spelling, Treccani)
+velocita        # velocità
+venerdi         # venerdì
+verita          # verità
+volonta         # volontà
+
+# Wrong accent — 19 words. The standard form in brackets is in the list. Kept on purpose:
+# acute í/ú (piú, cosí, sí, lí: an older but legitimate typographic convention), dò (accepted
+# variant of do), thè (variant of tè), and cè/sè/nè/chè, which are the keys of the c'è, s'è,
+# n'è, ch'è elision entries (contractions_it.json, CURATED_CONTRACTIONS it) and would orphan them.
+bè              # be' (apocope: apostrophe, not accent)
+cafè            # caffè
+caffé           # caffè (open e: grave)
+cioé            # cioè
+finchè          # finché (closed e: acute)
+fà              # fa (monosyllable, no accent; imperative fa')
+giá             # già
+nonchè          # nonché
+perchè          # perché
+peró            # però
+poichè          # poiché
+pò              # po' (apocope of poco: apostrophe, not accent)
+puó             # può
+quì             # qui (monosyllable, no accent)
+sará            # sarà
+sò              # so (monosyllable, no accent)
+stà             # sta (monosyllable, no accent)
+vabbé           # vabbè
+và              # va (monosyllable, no accent; imperative va')

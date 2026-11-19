@@ -39,11 +39,11 @@ file an entry lives in*.
 The rank guard still exists as defence in depth for **imported language packs**, which ship only
 an uncurated `contractions.json`.
 
-### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01; fr/it re-keyed 2026-11-07)
+### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01; fr/it re-keyed 2026-11-07; it misspellings dropped 2026-11-19)
 
 ```
-contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   282
-contractions_it.json     22,246   contraction_pairs_it.json   159   collisions_it   105
+contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   283
+contractions_it.json     22,241   contraction_pairs_it.json   161   collisions_it   105
 contractions_de.json         21   (no pairs file)                   collisions_de     7
 contractions_en.json        119   contraction_pairings.json 1,744   collisions_en    10
 contractions_nl.json        118   (import-only pack language)
@@ -533,7 +533,11 @@ guard.
    held value when hunspell rejects its elided word, EXCEPT a 1990-reform spelling (`reform_fold`:
    `l'ile`, `d'oeil`, `entrainement`, `s'avèrera` — hunspell rejects them, but they are valid and
    the static LM names them, so `StaticLmAssetDriftTest` fails if they go) and `RESPELL_KEEP`
-   (fr `email`; it `attivita` until it.cklm is rebuilt, a TODO). Net change: 4 fr + 3 it values.
+   (fr `email`; the it `attivita` row went 2026-11-18 when it.cklm was rebuilt). Net change: 4 fr + 3 it values.
+   Misspelled DISPLAY forms the ASK lists carry (it `qual'è`, `qual'era`, masculine `un'altrettanto`,
+   `un'appassionato`, typo bases `un'importate`/`un'insegnate`) are dropped by `MISSPELLED_DISPLAY`
+   (2026-11-19) before reachability, from the extraction AND the shipped files read back — deleting
+   them from the JSON alone would not survive a regeneration. `ItalianAccentSpellingDriftTest` pins it.
 6. **Verify a source pin by breaking it.** Both `CoreImeHygieneDriftTest` contraction pins were
    validated by injecting a violation and confirming the failure message, then reverting. A source
    guard that cannot fail reads as coverage while providing none.

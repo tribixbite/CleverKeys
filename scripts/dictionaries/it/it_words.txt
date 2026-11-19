@@ -1843,7 +1843,6 @@ ande
 andersen
 anderson
 andiamo
-andra
 andrai
 andranno
 andre
@@ -3301,7 +3300,6 @@ attivi
 attivismo
 attivista
 attivisti
-attivita
 attività
 attivo
 atto
@@ -3519,7 +3517,6 @@ autorevole
 autorevolezza
 autorevoli
 autori
-autorita
 autoritari
 autoritaria
 autoritario
@@ -3628,7 +3625,6 @@ avocado
 avola
 avon
 avorio
-avra
 avrai
 avranno
 avrebbe
@@ -3640,7 +3636,6 @@ avreste
 avresti
 avrete
 avril
-avro
 avrà
 avrò
 avuta
@@ -4388,7 +4383,6 @@ bennet
 bennett
 benny
 benone
-bensi
 benson
 bensì
 bentivoglio
@@ -5331,7 +5325,6 @@ by
 bye
 byron
 byte
-bè
 ca
 cab
 cabala
@@ -5394,15 +5387,12 @@ caesar
 caetani
 caf
 cafe
-caffe
 caffeina
 caffetteria
 caffettiera
 caffè
-caffé
 cafone
 cafoni
-cafè
 caga
 cagando
 cagano
@@ -6923,7 +6913,6 @@ chirurgici
 chirurgico
 chirurgo
 chisciotte
-chissa
 chissene
 chissenefrega
 chissà
@@ -7107,20 +7096,17 @@ cinto
 cintura
 cinture
 cinzia
-cio
 ciocca
 ciocche
 cioccolata
 cioccolatini
 cioccolato
-cioe
 ciondolo
 ciononostante
 ciotola
 ciotti
 ciottoli
 cioè
-cioé
 cip
 cipolla
 cipolle
@@ -7198,7 +7184,6 @@ cito
 citofono
 citroen
 citroën
-citta
 cittadella
 cittadina
 cittadinanza
@@ -8125,7 +8110,6 @@ comunismo
 comunista
 comuniste
 comunisti
-comunita
 comunitari
 comunitaria
 comunitarie
@@ -9975,7 +9959,6 @@ curiosamente
 curiosare
 curiose
 curiosi
-curiosita
 curiosità
 curioso
 curo
@@ -10115,7 +10098,6 @@ daphne
 dappertutto
 dapprima
 dar
-dara
 darai
 daranno
 darci
@@ -11006,7 +10988,6 @@ difficili
 difficilissima
 difficilissimo
 difficilmente
-difficolta
 difficoltosa
 difficoltoso
 difficoltà
@@ -11043,7 +11024,6 @@ digitare
 digiuno
 digli
 diglielo
-dignita
 dignitari
 dignitosa
 dignitoso
@@ -12078,7 +12058,6 @@ dovevano
 dovevate
 dovevi
 dovevo
-dovra
 dovrai
 dovranno
 dovrebbe
@@ -13732,7 +13711,6 @@ facilitare
 facilitato
 facilità
 facilmente
-facolta
 facoltativa
 facoltativo
 facoltosi
@@ -14466,8 +14444,6 @@ finanziere
 finanzieri
 fincantieri
 finch
-finche
-finchè
 finché
 fine
 finemente
@@ -15400,7 +15376,6 @@ futuro
 fvg
 fw
 fx
-fà
 félix
 führer
 ga
@@ -15812,7 +15787,6 @@ gestiva
 gesto
 gestore
 gestori
-gesu
 gesualdo
 gesuita
 gesuiti
@@ -15860,7 +15834,6 @@ ghisa
 ghost
 ghz
 gi
-gia
 giacarta
 giacca
 giacche
@@ -16044,7 +16017,6 @@ giovannino
 giovanotti
 giovanotto
 giove
-giovedi
 giovedì
 gioventù
 gioverebbe
@@ -16081,7 +16053,6 @@ girò
 gita
 gite
 gittata
-giu
 giubbotti
 giubbotto
 giubileo
@@ -16192,7 +16163,6 @@ giustiziere
 giusto
 giusy
 già
-giá
 giò
 giù
 gl
@@ -17063,7 +17033,6 @@ identificativo
 identificato
 identificazione
 identikit
-identita
 identitaria
 identità
 ideologia
@@ -20472,7 +20441,6 @@ liberiamo
 liberismo
 liberista
 libero
-liberta
 libertario
 libertas
 liberty
@@ -20579,6 +20547,7 @@ limpido
 lin
 lina
 linate
+lince
 lincei
 linciaggio
 lincoln
@@ -20686,6 +20655,7 @@ lividi
 livido
 living
 livio
+livore
 livornese
 livorno
 livrea
@@ -20880,6 +20850,7 @@ lucera
 lucerna
 lucertola
 lucertole
+luchino
 luci
 lucia
 luciana
@@ -20934,7 +20905,6 @@ lunare
 lunari
 lunario
 lune
-lunedi
 lunedì
 lunetta
 lunga
@@ -20953,6 +20923,7 @@ lungimiranza
 lungo
 lungomare
 lungometraggio
+luni
 lunigiana
 luoghi
 luogo
@@ -21018,6 +20989,7 @@ macelleria
 macello
 macerata
 macerie
+mach
 machete
 machiavelli
 machine
@@ -21152,6 +21124,7 @@ magri
 magro
 mah
 mahmood
+mahmoud
 mai
 maia
 maiala
@@ -21658,7 +21631,6 @@ marsupio
 mart
 marta
 marte
-martedi
 martedì
 martelli
 martello
@@ -21833,6 +21805,7 @@ mattoni
 mattutina
 mattutino
 matura
+maturando
 maturare
 maturata
 maturate
@@ -21879,6 +21852,7 @@ mbps
 mc
 mccain
 mccarthy
+mccartney
 mcdonald
 mcdonalds
 mckay
@@ -21951,6 +21925,7 @@ mediolanum
 mediorientale
 mediorientali
 medita
+meditando
 meditare
 meditazione
 meditazioni
@@ -22098,7 +22073,6 @@ mercenario
 mercer
 merchandising
 merci
-mercoledi
 mercoledì
 mercurio
 mercury
@@ -22312,6 +22286,7 @@ mica
 micah
 michael
 michaela
+michaels
 michail
 michel
 michela
@@ -22569,6 +22544,7 @@ mis
 misano
 miscela
 miscele
+miscellanea
 mischia
 mischiare
 mischiato
@@ -22593,6 +22569,7 @@ misogino
 miss
 missile
 missili
+missilistico
 mission
 missionari
 missionaria
@@ -22685,7 +22662,6 @@ mobilità
 moby
 mod
 moda
-modalita
 modalità
 mode
 model
@@ -22844,6 +22820,7 @@ mondana
 mondani
 mondano
 monde
+mondello
 mondi
 mondiale
 mondiali
@@ -23057,6 +23034,7 @@ mosche
 moschea
 moschee
 moschettieri
+mosconi
 moscovita
 moser
 moses
@@ -23259,6 +23237,7 @@ murarie
 murat
 murata
 murate
+murato
 muratore
 muratori
 muratura
@@ -23286,6 +23265,7 @@ museale
 museali
 musei
 museo
+museruola
 museum
 musi
 music
@@ -23373,6 +23353,7 @@ nannini
 nano
 nantes
 naomi
+nap
 napalm
 napoleone
 napoleonica
@@ -23420,6 +23401,7 @@ nasca
 nasce
 nascendo
 nascente
+nascenti
 nascere
 nascerà
 nascesse
@@ -23680,8 +23662,10 @@ neurale
 neurali
 neuro
 neurologia
+neurologici
 neurologico
 neurologo
+neurone
 neuroni
 neuroscienze
 neutra
@@ -23725,6 +23709,7 @@ nice
 nichel
 nichilismo
 nicholas
+nichols
 nicholson
 nick
 nicki
@@ -23783,6 +23768,7 @@ nitrato
 nitro
 nixon
 nizza
+nk
 nl
 nm
 nn
@@ -23792,6 +23778,7 @@ nobel
 nobile
 nobili
 nobiliare
+nobiliari
 nobiltà
 nocciola
 nocciole
@@ -23847,8 +23834,6 @@ nomino
 nominò
 non
 nona
-nonche
-nonchè
 nonché
 noncuranza
 nondimeno
@@ -23874,10 +23859,12 @@ nordica
 nordici
 nordico
 nordovest
+norfolk
 norimberga
 norma
 normale
 normali
+normalissima
 normalissimo
 normalità
 normalizzazione
@@ -23974,7 +23961,6 @@ novembre
 novero
 novgorod
 novi
-novita
 novità
 novo
 now
@@ -24043,7 +24029,9 @@ nuovissima
 nuovissimo
 nuovo
 nutella
+nuti
 nutre
+nutriente
 nutrienti
 nutrimento
 nutrire
@@ -24052,6 +24040,7 @@ nutrita
 nutriti
 nutrito
 nutriva
+nutrizionale
 nutrizionali
 nutrizione
 nutrizionista
@@ -24073,6 +24062,7 @@ oasi
 oasis
 ob
 obama
+obbediente
 obbedienza
 obbedire
 obbedisce
@@ -24097,6 +24087,7 @@ obbligazione
 obbligazioni
 obblighi
 obbligo
+obbligò
 obelisco
 obesi
 obesità
@@ -24128,6 +24119,7 @@ occhi
 occhiaie
 occhiali
 occhiata
+occhiate
 occhio
 occhiolino
 occhioni
@@ -24143,6 +24135,7 @@ occorrono
 occorso
 occulta
 occultamento
+occultare
 occulti
 occulto
 occupa
@@ -24184,6 +24177,7 @@ ocse
 octavia
 oculare
 oculari
+oculista
 od
 oda
 oddio
@@ -24320,6 +24314,7 @@ olocausto
 olona
 olsen
 oltraggio
+oltraggioso
 oltralpe
 oltranza
 oltre
@@ -24375,6 +24370,7 @@ omogenee
 omogenei
 omogeneità
 omogeneo
+omologato
 omologazione
 omologhi
 omologo
@@ -24477,6 +24473,7 @@ opinionista
 opinionisti
 oppio
 oppone
+opponendosi
 opponeva
 opponevano
 opponga
@@ -24490,7 +24487,6 @@ opportuni
 opportunismo
 opportunista
 opportunisti
-opportunita
 opportunità
 opportuno
 oppose
@@ -24751,6 +24747,7 @@ oscenità
 osceno
 oscilla
 oscillano
+oscillante
 oscillare
 oscillazione
 oscillazioni
@@ -24794,6 +24791,7 @@ ospizio
 oss
 ossa
 ossea
+ossee
 osseo
 ossequio
 osserva
@@ -24845,12 +24843,14 @@ ostaggio
 oste
 ostelli
 ostello
+ostentare
 ostentazione
 osteria
 osterie
 ostetrica
 ostetricia
 ostia
+ostico
 ostiense
 ostile
 ostili
@@ -24875,6 +24875,7 @@ ott
 ottanta
 ottava
 ottavi
+ottavia
 ottaviano
 ottavio
 ottavo
@@ -24926,6 +24927,7 @@ ottobre
 ottocentesca
 ottocentesco
 ottocento
+ottomana
 ottomani
 ottomano
 ottomila
@@ -25174,6 +25176,7 @@ pancrazio
 pancreas
 panda
 pandemia
+pandolfo
 pandora
 pane
 panetteria
@@ -25223,6 +25226,7 @@ papale
 papali
 paparazzi
 papato
+papaveri
 papavero
 paper
 papera
@@ -25256,6 +25260,7 @@ paradossalmente
 paradossi
 paradosso
 parafrasando
+parafrasi
 paraggi
 paragona
 paragonabile
@@ -25282,6 +25287,7 @@ paralleli
 parallelismo
 parallelo
 paramedico
+paramenti
 parametri
 parametro
 paramilitari
@@ -25343,6 +25349,7 @@ parigina
 parigini
 parigino
 parimenti
+parini
 parioli
 paris
 parisi
@@ -25413,10 +25420,12 @@ parolacce
 parolaccia
 parole
 parquet
+parra
 parrebbe
 parrocchia
 parrocchiale
 parrocchiali
+parrocchiani
 parrocchie
 parroci
 parroco
@@ -25458,6 +25467,7 @@ partecipò
 partenariato
 partendo
 partenopea
+partenopeo
 partenza
 partenze
 partes
@@ -25481,6 +25491,7 @@ partire
 partirono
 partirà
 partirò
+partisse
 partita
 partite
 partiti
@@ -25572,6 +25583,7 @@ passiamo
 passibile
 passino
 passionale
+passionali
 passione
 passioni
 passiva
@@ -25812,6 +25824,7 @@ pelose
 pelosi
 peloso
 peluche
+peluria
 pen
 pena
 penale
@@ -25839,6 +25852,7 @@ penelope
 penetra
 penetrante
 penetrare
+penetrato
 penetrazione
 peng
 peni
@@ -25957,10 +25971,7 @@ percepito
 percepiva
 percezione
 percezioni
-perche
-perchè
 perché
-percio
 perciò
 percorre
 percorrendo
@@ -26187,7 +26198,6 @@ personaggio
 personal
 personale
 personali
-personalita
 personalità
 personalizzare
 personalizzata
@@ -26229,7 +26239,6 @@ perverso
 pervertiti
 pervertito
 però
-peró
 perù
 pes
 pesa
@@ -26252,6 +26261,7 @@ pesce
 pesche
 pescherecci
 peschereccio
+pescheria
 peschiera
 pesci
 pescia
@@ -26337,6 +26347,7 @@ phone
 photo
 photoshop
 php
+phyllis
 pi
 pia
 piaccia
@@ -26447,6 +26458,7 @@ picchiare
 picchiata
 picchiati
 picchiato
+picchiava
 picchio
 piccina
 piccini
@@ -26596,6 +26608,7 @@ pioveva
 piovono
 piovosa
 piovoso
+piovra
 piovuto
 pipa
 pipe
@@ -26662,7 +26675,6 @@ pittrice
 pittsburgh
 pittura
 pitture
-piu
 piuma
 piume
 piumino
@@ -26729,6 +26741,7 @@ please
 plebe
 plebei
 plebiscito
+plein
 plenaria
 plesso
 pletora
@@ -26790,8 +26803,6 @@ poggiare
 poggibonsi
 poggio
 poi
-poiche
-poichè
 poiché
 point
 pois
@@ -26801,6 +26812,7 @@ pokémon
 pol
 pola
 polacca
+polacche
 polacchi
 polacco
 polare
@@ -26813,6 +26825,7 @@ polemica
 polemiche
 polemici
 polemico
+polemizzare
 polenta
 polesine
 poletti
@@ -26824,6 +26837,7 @@ poligoni
 poligono
 polimeri
 polinesia
+poliomielite
 polis
 polisportiva
 politecnico
@@ -26943,6 +26957,7 @@ popolazioni
 popoli
 popolo
 popolosa
+popoloso
 poppa
 popper
 populismo
@@ -27055,6 +27070,7 @@ portiere
 portieri
 portino
 portland
+portman
 porto
 portofino
 portogallo
@@ -27110,6 +27126,7 @@ posseduta
 possedute
 posseduti
 posseduto
+posseggo
 posseggono
 possente
 possenti
@@ -27121,7 +27138,6 @@ possiamo
 possiate
 possibile
 possibili
-possibilita
 possibilità
 possibilmente
 possieda
@@ -27154,6 +27170,7 @@ posteriormente
 posti
 posticino
 posticipare
+posticipata
 posticipato
 postino
 posto
@@ -27207,7 +27224,6 @@ potevano
 potevate
 potevi
 potevo
-potra
 potrai
 potranno
 potrebbe
@@ -27218,7 +27234,6 @@ potremo
 potreste
 potresti
 potrete
-potro
 potrà
 potrò
 potter
@@ -27318,6 +27333,7 @@ precetto
 precettore
 precipita
 precipitando
+precipitano
 precipitare
 precipitata
 precipitati
@@ -27398,6 +27414,7 @@ preferite
 preferiti
 preferito
 preferiva
+preferivano
 preferivo
 preferì
 prefetti
@@ -27453,6 +27470,7 @@ prematuramente
 prematuro
 preme
 premeditato
+premeditazione
 premendo
 premere
 premessa
@@ -27461,6 +27479,7 @@ premesso
 premetto
 premi
 premia
+premiano
 premiare
 premiata
 premiate
@@ -27585,6 +27604,7 @@ preposto
 prepotente
 prepotenti
 prepotenza
+prepuzio
 prequel
 prerogativa
 prerogative
@@ -27596,6 +27616,7 @@ presbiterio
 prescelta
 prescelti
 prescelto
+prescinde
 prescindere
 prescritta
 prescritte
@@ -27872,6 +27893,7 @@ probabile
 probabili
 probabilità
 probabilmente
+probatorio
 problem
 problema
 problematica
@@ -27933,6 +27955,7 @@ procurò
 prod
 prodi
 prodigio
+prodigiosa
 prodigioso
 prodigo
 prodotta
@@ -28159,6 +28182,7 @@ proponendo
 proponente
 proponeva
 proponevano
+proponga
 propongo
 propongono
 proponi
@@ -28187,7 +28211,6 @@ propri
 propria
 propriamente
 proprie
-proprieta
 proprietari
 proprietaria
 proprietarie
@@ -28269,6 +28292,7 @@ protesta
 protestando
 protestano
 protestante
+protestantesimo
 protestanti
 protestare
 protestato
@@ -28373,6 +28397,7 @@ provvedere
 provvederà
 provvedimenti
 provvedimento
+provveditore
 provvedono
 provveduto
 provvide
@@ -28412,6 +28437,7 @@ psichiatra
 psichiatri
 psichiatria
 psichiatrica
+psichiatriche
 psichiatrici
 psichiatrico
 psichica
@@ -28461,7 +28487,6 @@ pubblichi
 pubblichiamo
 pubblici
 pubblicista
-pubblicita
 pubblicitari
 pubblicitaria
 pubblicitarie
@@ -28565,7 +28590,6 @@ puntualità
 puntualmente
 puntura
 punture
-puo
 puoi
 pupa
 pupazzi
@@ -28605,14 +28629,12 @@ puzzle
 puzzo
 puzzolente
 può
-puó
 pv
 pvc
 pyongyang
 python
 pz
 pérez
-pò
 qaeda
 qatar
 qi
@@ -28662,7 +28684,6 @@ qualificato
 qualificazione
 qualificazioni
 qualifiche
-qualita
 qualitativa
 qualitativamente
 qualitativi
@@ -28682,7 +28703,6 @@ quanti
 quantico
 quantificare
 quantistica
-quantita
 quantitativa
 quantitative
 quantitativi
@@ -28802,7 +28822,6 @@ quotidianità
 quotidiano
 quoto
 quoziente
-quì
 ra
 rabat
 rabbia
@@ -29277,7 +29296,6 @@ realizzi
 realizzo
 realizzò
 realmente
-realta
 realtà
 reame
 reati
@@ -29740,7 +29758,6 @@ respiriamo
 respiro
 responsabile
 responsabili
-responsabilita
 responsabilità
 responsabilmente
 responso
@@ -31962,7 +31979,6 @@ sanguinosi
 sanguinoso
 sanguisughe
 sani
-sanita
 sanitari
 sanitaria
 sanitarie
@@ -32085,7 +32101,6 @@ sarete
 sari
 sarkozy
 sarno
-saro
 saronno
 sarri
 sarta
@@ -32096,7 +32111,6 @@ sartoria
 sartre
 sarzana
 sarà
-sará
 sarò
 sas
 sasha
@@ -32495,7 +32509,6 @@ schiave
 schiavi
 schiavismo
 schiavisti
-schiavitu
 schiavitù
 schiavo
 schiavone
@@ -34081,7 +34094,6 @@ socialità
 socializzare
 socializzazione
 socialmente
-societa
 societari
 societaria
 societarie
@@ -34217,7 +34229,6 @@ solid
 solida
 solidale
 solidali
-solidarieta
 solidarietà
 solide
 solidi
@@ -35771,7 +35782,6 @@ stupro
 stura
 stuttgart
 style
-stà
 su
 sua
 suarez
@@ -36222,7 +36232,6 @@ sè
 sé
 sì
 sí
-sò
 ta
 tab
 tabacchi
@@ -38120,7 +38129,6 @@ umanistica
 umanistiche
 umanistici
 umanistico
-umanita
 umanitari
 umanitaria
 umanitarie
@@ -38238,7 +38246,6 @@ universali
 universalmente
 universe
 universi
-universita
 universitari
 universitaria
 universitarie
@@ -38433,10 +38440,8 @@ uve
 uvetta
 uzbekistan
 va
-vabbe
 vabbeh
 vabbè
-vabbé
 vabè
 vacante
 vacanti
@@ -38771,7 +38776,6 @@ velocemente
 veloci
 velocissima
 velocissimo
-velocita
 velocità
 velocizzare
 veltroni
@@ -38822,7 +38826,6 @@ veneranda
 venerata
 venerato
 venerazione
-venerdi
 venerdì
 venere
 veneree
@@ -38962,7 +38965,6 @@ verificherà
 verifichi
 verificò
 verissimo
-verita
 veritas
 veritiera
 veritiere
@@ -39558,7 +39560,6 @@ vollero
 volley
 volleyball
 volo
-volonta
 volontari
 volontaria
 volontariamente
@@ -39662,7 +39663,6 @@ vuoti
 vuoto
 vv
 vw
-và
 wa
 wade
 wagner

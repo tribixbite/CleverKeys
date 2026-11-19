@@ -373,6 +373,25 @@ CONFIGS: dict[str, LangConfig] = {
             # Result: all six pass. 476,958 B (+0.3%), vocab 17,488 -> 17,548 (+59 accented elisions,
             # +2 lexicon words, -1 `l'attivita`), OOD-test next-word 9.98 / 17.04; worst lm_static
             # tap-eval cell -0.01 pt (OOD prefix-1 top-3 40.28 -> 40.27).
+            # Rebuilt again 2026-11-19 (maintainer: "fix the Italian unaccented words"), same corpora
+            # and code: it_enhanced.bin no longer holds 78 accent misspellings (`perche`, `piu`,
+            # `citta`, `pò`, `perchè`; scripts/dictionaries/it/it_blocklist.txt) and the elision
+            # tables lost 6 misspelled forms (`qual'è`, `qual'era`, `un'altrettanto`, ...;
+            # MISSPELLED_DISPLAY in extract_apostrophe_words.py). The 2026-11-18 inputs first
+            # reproduced the shipped file byte-for-byte (sha256 0b5528a4…). Pre-registered gate,
+            # written before the candidate was built: G1 the model names none of the 78 dropped
+            # spellings nor the 6 dropped elisions, and every accented twin the shipped model names
+            # it still names; G2 size <= 1.10 x 476,958 B and the drift-test budget; G3 OOD-test
+            # next-word top1/top3 >= shipped - 0.10 pt (9.98 / 17.04); G4 StaticLmTapEvalTest it end
+            # to end (new lexicon + new model vs the shipped pair), every lm_static cell (OOD +
+            # in-domain) >= shipped - 0.10 pt; G4a the same cells, new vs shipped model under the
+            # NEW lexicon (attribution), same bar; G5 the other languages' models byte-identical;
+            # G6 drift/contraction tests green.
+            # Result: all pass. 476,420 B (-0.1%), vocab 17,548 -> 17,526 (-29 misspellings, -1
+            # `qual'è`, +8 words the size cap let in), OOD-test next-word 9.98 / 17.03; tap eval end to
+            # end: worst lm_static cell +0.00 pt, best +0.14 (in-domain prefix-3 top-1); G4a worst
+            # -0.01 pt (in-domain prefix-2). Other models untouched. Doc:
+            # docs/eval/2026-11-19-italian-accent-spellings.md.
             lexicon="it_enhanced.bin",
             contraction_files=("contractions_it.json", "contraction_pairs_it.json"),
             wordfreq_lang="it",

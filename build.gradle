@@ -1334,6 +1334,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.BigramModelStaticLmTest',
     'tribixbite.cleverkeys.StaticLmAssetDriftTest',
     'tribixbite.cleverkeys.StaticLmTapEvalTest',
+    // 2026-11-19: Italian accent misspellings (`perche`, `pò`, `qual'è`) stay out of
+    // it_enhanced.bin, the elision tables and it.cklm; real collisions (`sara`, `pero`) stay.
+    'tribixbite.cleverkeys.ItalianAccentSpellingDriftTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

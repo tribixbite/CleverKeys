@@ -101,9 +101,15 @@ except ImportError:
 
 ASCII_LOWER = "abcdefghijklmnopqrstuvwxyz"
 
+# Lowercase Latin letters a curation file may use: a-z plus Latin-1 Supplement (ß-ö, ø-ÿ; not
+# the ÷ sign) and Latin Extended-A. Accented letters were not accepted before 2026-11-19, so an
+# Italian `pò` or `perchè` in it_blocklist.txt failed the pattern and was IGNORED without a word;
+# read_list_file now refuses such a line instead of dropping it.
+_LATIN_LOWER = "a-zß-öø-ÿĀ-ſ"
+
 # Curation-file word patterns per script (allow/blocklist parsing).
 WORD_RE_BY_SCRIPT = {
-    "latin": re.compile(r"[a-z][a-z'-]*"),
+    "latin": re.compile(f"[{_LATIN_LOWER}][{_LATIN_LOWER}'-]*"),
     "greek": re.compile(r"[Ͱ-Ͽἀ-῿][Ͱ-Ͽἀ-῿'-]*"),
     "cyrillic": re.compile(r"[Ѐ-ӿ][Ѐ-ӿ'-]*"),
     "hebrew": re.compile(r"[֐-׿][֐-׿'-]*"),
@@ -390,16 +396,28 @@ def _is_wordlike(word: str, script: str) -> bool:
     return word.isalpha()
 
 
-def read_list_file(path: Path, script: str = "latin") -> "set[str]":
-    """Load a '#'-commented one-word-per-line curation file."""
+def read_list_file(path: Path, script: str = "latin", strict: bool = False) -> "set[str]":
+    """Load a '#'-commented one-word-per-line curation file.
+
+    `strict` (the allow/blocklists): a non-comment entry that is not a word of `script` is a
+    HARD failure, because silently skipping it (the pre-2026-11-19 behaviour) let a curated drop
+    or keep vanish with no trace. The held-out eval file stays lenient: it is raw exported
+    vocabulary, and the en report must stay identical (G1 parity).
+    """
     out: "set[str]" = set()
     if not path.exists():
         return out
     word_re = WORD_RE_BY_SCRIPT[script]
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
         w = line.split("#", 1)[0].strip().lower()
-        if w and word_re.fullmatch(w):
-            out.add(w)
+        if not w:
+            continue
+        if not word_re.fullmatch(w):
+            if not strict:
+                continue
+            sys.exit(f"{path}:{n}: {w!r} is not a {script} word — fix the entry "
+                     f"(a skipped curation line is a silent no-op)")
+        out.add(w)
     return out
 
 
@@ -615,8 +633,8 @@ def main() -> None:
           f"case={cfg.case_policy} script={script}")
 
     # ---------------- Stage A: resources ----------------
-    allow = read_list_file(lang_dir / f"{lang}_allowlist.txt", script)
-    block = read_list_file(lang_dir / f"{lang}_blocklist.txt", script)
+    allow = read_list_file(lang_dir / f"{lang}_allowlist.txt", script, strict=True)
+    block = read_list_file(lang_dir / f"{lang}_blocklist.txt", script, strict=True)
     eval_set = read_list_file(args.eval, script) if args.eval and args.eval.exists() else set()
     if args.eval_blind:
         contaminated = allow & eval_set
