@@ -609,6 +609,8 @@ editor that used to be listed here already ship in 2.0.)
   used to stay until the next suggestion.
 - Text emoticons (`:)`, `^_^`) in the emoji panel are drawn in the look's label colour: under
   a light custom look they were white on the light panel, nearly invisible.
+- The emoji panel no longer writes an error line to the system log for each emoji shown
+  (about 150 per session).
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
   an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied

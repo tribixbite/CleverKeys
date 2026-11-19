@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.graphics.Color
+import android.os.Process
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
@@ -121,5 +122,32 @@ class EmojiPaneRuntimeThemeTest {
             grid.setEmojiGroup(textFaceGroup)
             assertEquals("Light's emoji_color is black", hex(Color.BLACK), hex(cell(grid, 0).currentTextColor))
         }
+    }
+
+    /** Lines in this process's logcat that are the AppCompat theme check's error. */
+    private fun appCompatThemeErrors(): Int {
+        val proc = Runtime.getRuntime().exec(
+            arrayOf("logcat", "-d", "-v", "brief", "--pid=${Process.myPid()}", "ThemeUtils:E", "*:S")
+        )
+        val lines = proc.inputStream.bufferedReader().use { it.readLines() }
+        proc.waitFor()
+        return lines.count { it.contains("Theme.AppCompat theme") }
+    }
+
+    @Test
+    fun emojiCellsInTheImeContextLogNoAppCompatThemeError() {
+        val before = appCompatThemeErrors()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val pane = inflatePane(R.style.CleverKeysDark)
+            val grid = pane.findViewById<EmojiGridView>(R.id.emoji_grid)
+            grid.setEmojiGroup(0)
+            val n = minOf(20, grid.adapter.count)
+            assertTrue("the first category must have cells", n > 0)
+            for (pos in 0 until n) cell(grid, pos)
+        }
+        Thread.sleep(500) // let logd deliver what the cells wrote
+        val after = appCompatThemeErrors()
+        assertEquals("emoji cells must not log the AppCompat theme error (one line per cell before)",
+            0, after - before)
     }
 }

@@ -6,7 +6,8 @@ import android.view.ContextThemeWrapper
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.AppCompatButton
+import android.annotation.SuppressLint
+import android.widget.Button
 import android.widget.LinearLayout
 
 /**
@@ -53,15 +54,21 @@ class EmojiGroupButtonsBar(context: Context, attrs: AttributeSet) : LinearLayout
         }
     }
 
+    /**
+     * A category tab. A plain [Button], not `AppCompatButton`: the IME's theme is never a
+     * Theme.AppCompat, so each AppCompat tab logged a `ThemeUtils` error. Its emoji goes
+     * through EmojiCompat explicitly, as the grid's cells do.
+     */
+    @SuppressLint("AppCompatCustomView") // AppCompat cannot work in the IME's theme
     inner class EmojiGroupButton(
         context: Context,
         private val groupId: Int,
         symbol: String
-    ) : AppCompatButton(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
+    ) : Button(ContextThemeWrapper(context, R.style.emojiTypeButton), null, 0),
         View.OnTouchListener {
 
         init {
-            text = symbol
+            text = EmojiCompatGlyphs.process(symbol)
             setOnTouchListener(this)
         }
 

@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.util.AttributeSet
 import android.view.ContextThemeWrapper
@@ -10,7 +11,6 @@ import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.GridView
 import android.widget.TextView
-import androidx.appcompat.widget.AppCompatTextView
 import androidx.emoji2.text.EmojiCompat
 
 class EmojiGridView(context: Context, attrs: AttributeSet?) :
@@ -147,10 +147,10 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
     }
 
     /**
-     * #181: hide an emoji only when nothing can draw it. The emoji cells are AppCompatTextViews,
-     * which render through EmojiCompat when it is loaded (its downloadable font can be newer
-     * than the system font), so a sequence it supports counts as drawable even when the system
-     * font lacks it. Without EmojiCompat (e.g. no font provider), the system font decides.
+     * #181: hide an emoji only when nothing can draw it. The emoji cells render through
+     * EmojiCompat when it is loaded ([EmojiCompatGlyphs.process]; its downloadable font can be
+     * newer than the system font), so a sequence it supports counts as drawable even when the
+     * system font lacks it. Without EmojiCompat (e.g. no font provider), the system font decides.
      */
     private fun isRenderable(emoji: Emoji): Boolean {
         glyphSupport[emoji]?.let { return it }
@@ -280,7 +280,14 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         return context.getSharedPreferences("emoji_last_use", Context.MODE_PRIVATE)
     }
 
-    class EmojiView(context: Context) : AppCompatTextView(context) {
+    /**
+     * One grid cell. A plain [TextView], not `AppCompatTextView`: the IME's theme is never a
+     * Theme.AppCompat, so every AppCompat cell logged a `ThemeUtils` error from its constructor
+     * (~149 per session). The only AppCompat feature the cells used, EmojiCompat rendering, is
+     * applied explicitly in [setEmoji].
+     */
+    @SuppressLint("AppCompatCustomView") // see above: AppCompat cannot work in the IME's theme
+    class EmojiView(context: Context) : TextView(context) {
         private var defaultTextSize: Float = 0f
         private val density = context.resources.displayMetrics.density
 
@@ -303,7 +310,7 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
 
         fun setEmoji(emoji: Emoji) {
             val emojiStr = emoji.kv().getString()
-            text = emojiStr
+            text = EmojiCompatGlyphs.process(emojiStr)
 
             // Detect text emoticons (multi-character, ASCII-based like kaomoji)
             // Regular emojis: short strings mostly made of surrogate pairs or high codepoints
@@ -400,6 +407,22 @@ internal object EmojiCompatGlyphs {
         if (compat.loadState != EmojiCompat.LOAD_STATE_SUCCEEDED) return false
         // Int.MAX_VALUE: any emoji version EmojiCompat's metadata knows is acceptable.
         return compat.getEmojiMatch(text, Int.MAX_VALUE) == EmojiCompat.EMOJI_SUPPORTED
+    }
+
+    /**
+     * [text] with EmojiCompat's spans where its font draws what the system font cannot, as an
+     * AppCompat text view would show it; [text] unchanged while EmojiCompat is absent or still
+     * loading (the grid re-filters, and so re-processes, once it finishes).
+     */
+    fun process(text: String): CharSequence {
+        if (!EmojiCompat.isConfigured()) return text
+        val compat = EmojiCompat.get()
+        if (compat.loadState != EmojiCompat.LOAD_STATE_SUCCEEDED) return text
+        return try {
+            compat.process(text) ?: text
+        } catch (e: IllegalStateException) {
+            text
+        }
     }
 }
 
