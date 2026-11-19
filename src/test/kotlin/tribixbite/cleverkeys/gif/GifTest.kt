@@ -438,4 +438,31 @@ class GifTest {
     fun `FULL_DIR constant is correct`() {
         assertThat(Gif.FULL_DIR).isEqualTo("gifs/full")
     }
+
+    // =========================================================================
+    // The pane search fields (device pass 2026-11-18)
+    // =========================================================================
+
+    /**
+     * The GIF search field drew spell-check underlines under the query: an `EditText` with
+     * `inputType="text"` gets the platform spell checker as soon as it holds focus, and the GIF
+     * pane focuses its field. A search query is not prose. Both pane search fields (GIF and
+     * emoji; the clipboard's is a plain TextView) must be text fields without suggestions.
+     */
+    @Test
+    fun `the GIF and emoji search fields are text fields without suggestions`() {
+        for ((layout, id) in listOf(
+            "res/layout/gif_pane.xml" to "gif_search_input",
+            "res/layout/emoji_pane.xml" to "emoji_search_input",
+        )) {
+            val xml = java.io.File(layout).readText()
+            val element = Regex("""<EditText[^>]*android:id="@\+id/$id"[^>]*/>""").find(xml)?.value
+            assertThat(element).isNotNull()
+            val inputType = Regex("""android:inputType="([^"]*)"""").find(element!!)?.groupValues?.get(1)
+            assertThat(inputType).isNotNull()
+            val flags = inputType!!.split('|').map { it.trim() }
+            assertThat(flags).contains("text")
+            assertThat(flags).contains("textNoSuggestions")
+        }
+    }
 }

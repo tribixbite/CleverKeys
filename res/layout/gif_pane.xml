@@ -27,7 +27,7 @@
         android:textColor="?attr/colorLabel"
         android:textColorHint="?attr/colorSubLabel"
         android:background="@android:color/transparent"
-        android:inputType="text"
+        android:inputType="text|textNoSuggestions"
         android:imeOptions="actionSearch|flagNoExtractUi"
         android:maxLines="1"
         android:singleLine="true"
