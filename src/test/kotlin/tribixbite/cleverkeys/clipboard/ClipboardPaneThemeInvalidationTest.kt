@@ -59,10 +59,29 @@ class ClipboardPaneThemeInvalidationTest {
         return cfg
     }
 
+    /**
+     * The service's resource configuration. `fontScale` and `densityDpi` are public FIELDS, so
+     * on a relaxed mock they are ordinary storage a test can change in place, the way the
+     * platform updates the resources before it calls `onConfigurationChanged` (the android.jar
+     * constructor throws "Stub!" in runMockTests; getters such as `locales` return relaxed mocks).
+     */
+    private val resourceConfig = mockk<android.content.res.Configuration>(relaxed = true).apply {
+        fontScale = 1.0f
+        densityDpi = 420
+    }
+
+    /** Context whose resources serve [resourceConfig]. */
+    private fun contextServingResourceConfig(): android.content.Context = mockk(relaxed = true) {
+        every { resources } returns mockk(relaxed = true) {
+            every { configuration } returns resourceConfig
+        }
+    }
+
     /** Manager with a cached (already-inflated) pane, as after a first clipboard open. */
     private fun managerWithCachedPane(themeName: String): Pair<ClipboardManager, ViewGroup> {
         val pane = mockk<ViewGroup>(relaxed = true)
         val mgr = objenesis.newInstance(ClipboardManager::class.java)
+        mgr.setField("context", contextServingResourceConfig())
         mgr.setField("clipboardPane", pane)
         mgr.setField("tabPinned", mockk<ImageView>(relaxed = true))
         mgr.setField("tabTodos", mockk<ImageView>(relaxed = true))
@@ -90,10 +109,7 @@ class ClipboardPaneThemeInvalidationTest {
     fun unchangedThemeKeepsTheCachedPane() {
         val (mgr, pane) = managerWithCachedPane("dark")
         // Signature recorded at pane-build time for an XML-style theme.
-        mgr.setField(
-            "appliedThemeSignature",
-            ClipboardPaneThemePolicy.ThemeSignature("dark", 0, null)
-        )
+        recordSignatureAsAtInflation(mgr)
 
         // Any unrelated pref change re-propagates the config with the same theme.
         mgr.setConfig(configWith("dark"))
@@ -104,15 +120,75 @@ class ClipboardPaneThemeInvalidationTest {
         ).that(mgr.getField("clipboardPane")).isSameInstanceAs(pane)
     }
 
+    /**
+     * Records the signature the pane would get at inflation time: the same private reader
+     * [ClipboardManager.setConfig] compares against, so the test needs no knowledge of which
+     * fields the signature holds.
+     */
+    private fun recordSignatureAsAtInflation(mgr: ClipboardManager) {
+        val read = ClipboardManager::class.java.getDeclaredMethod("currentThemeSignature")
+        read.isAccessible = true
+        mgr.setField("appliedThemeSignature", read.invoke(mgr))
+    }
+
+    /**
+     * Item 4 finding (Saga, 2026-10-28): after the user changed the system font size, the
+     * clipboard pane kept the old text size until the IME process restarted. The pane is
+     * inflated once and its sp sizes are resolved to pixels at that moment; the theme-only
+     * signature never changed, so `setConfig` (which `onConfigurationChanged` reaches through
+     * `refresh_config`) kept the stale pane.
+     */
+    @Test
+    fun aFontScaleChangeWhileAPaneIsCachedDropsTheCachedPane() {
+        val (mgr, _) = managerWithCachedPane("dark")
+        recordSignatureAsAtInflation(mgr)
+
+        resourceConfig.fontScale = 2.0f  // Settings > Display > Font size, the IME stays alive
+        mgr.setConfig(configWith("dark"))
+
+        assertWithMessage(
+            "a font-scale change must drop the cached clipboard pane so the next open " +
+                "re-inflates at the new text size (it stayed 1.0-sized until an IME restart)"
+        ).that(mgr.getField("clipboardPane")).isNull()
+    }
+
+    /** Display size (Settings > Display > Display size) changes densityDpi: same staleness. */
+    @Test
+    fun aDisplaySizeChangeWhileAPaneIsCachedDropsTheCachedPane() {
+        val (mgr, _) = managerWithCachedPane("dark")
+        recordSignatureAsAtInflation(mgr)
+
+        resourceConfig.densityDpi = 480
+        mgr.setConfig(configWith("dark"))
+
+        assertWithMessage("a density change must drop the cached clipboard pane")
+            .that(mgr.getField("clipboardPane")).isNull()
+    }
+
+    /** The guard on the other side: an unchanged scale costs no re-inflation. */
+    @Test
+    fun unchangedFontScaleKeepsTheCachedPane() {
+        val (mgr, pane) = managerWithCachedPane("dark")
+        recordSignatureAsAtInflation(mgr)
+
+        mgr.setConfig(configWith("dark"))
+
+        assertWithMessage("an unchanged theme and resource configuration must keep the pane")
+            .that(mgr.getField("clipboardPane")).isSameInstanceAs(pane)
+    }
+
     @Test
     fun editingTheActiveCustomThemesColorsDropsThePaneEvenThoughTheNameIsUnchanged() {
         val (mgr, _) = managerWithCachedPane("custom_abc")
-        mgr.setField("context", mockk<android.content.Context>(relaxed = true))
+        // Same resource configuration as now: only the colors may differ in this test.
+        val inflation = ClipboardManager::class.java.getDeclaredMethod("currentInflationConfig")
+            .apply { isAccessible = true }.invoke(mgr) as ClipboardPaneThemePolicy.InflationConfig
         mgr.setField(
             "appliedThemeSignature",
             ClipboardPaneThemePolicy.ThemeSignature(
                 "custom_abc", 0,
-                ClipboardPaneThemePolicy.RuntimeColors(0xFF102030.toInt(), 1, 2, 3, 4)
+                ClipboardPaneThemePolicy.RuntimeColors(0xFF102030.toInt(), 1, 2, 3, 4),
+                inflation,
             )
         )
         // The user edited the theme's colors; ThemeProvider now serves different values.

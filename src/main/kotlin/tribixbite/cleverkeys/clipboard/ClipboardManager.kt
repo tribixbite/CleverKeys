@@ -1579,8 +1579,9 @@ class ClipboardManager(
     private fun applyRuntimeThemeColors() {
         if (!config.isRuntimeTheme()) {
             runtimeTheme = null
-            appliedThemeSignature =
-                ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, null)
+            appliedThemeSignature = ClipboardPaneThemePolicy.ThemeSignature(
+                config.themeName, config.theme, null, currentInflationConfig()
+            )
             return
         }
         val pane = clipboardPane ?: return
@@ -1593,8 +1594,9 @@ class ClipboardManager(
         val colors = ClipboardPaneThemePolicy.RuntimeColors(
             bg, key, label, sub, theme.activatedColor
         )
-        appliedThemeSignature =
-            ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, colors)
+        appliedThemeSignature = ClipboardPaneThemePolicy.ThemeSignature(
+            config.themeName, config.theme, colors, currentInflationConfig()
+        )
         // #130: the entry rows resolve their colors themselves (adapter-inflated under the
         // base XML style) — hand them the runtime colors so rows match the pane chrome.
         pane.findViewById<ClipboardHistoryView?>(R.id.clipboard_history_view)
@@ -1670,7 +1672,9 @@ class ClipboardManager(
         // #130: a cached pane was inflated + painted under the previous theme signature.
         // If the theme identity — or, for runtime themes, its color values — changed,
         // drop the pane so the next open re-inflates under the new theme. Without this
-        // the pane keeps the old colors until the keyboard process restarts.
+        // the pane keeps the old colors until the keyboard process restarts. The signature
+        // also carries the font scale, density and locales (todo item 4): those reach here
+        // through onConfigurationChanged -> refresh_config.
         if (clipboardPane != null &&
             ClipboardPaneThemePolicy.needsRebuild(appliedThemeSignature, currentThemeSignature())
         ) {
@@ -1691,7 +1695,26 @@ class ClipboardManager(
                 t.colorKeyboardBackground, t.colorKey, t.labelColor, t.subLabelColor, t.activatedColor
             )
         } else null
-        return ClipboardPaneThemePolicy.ThemeSignature(config.themeName, config.theme, colors)
+        return ClipboardPaneThemePolicy.ThemeSignature(
+            config.themeName, config.theme, colors, currentInflationConfig()
+        )
+    }
+
+    /**
+     * The resource configuration a pane inflated now would bake in. [getClipboardPane]
+     * inflates through a ContextThemeWrapper over [context], which shares its resources, so
+     * this is exactly what the cached views were sized and worded with. The platform updates
+     * those resources before `onConfigurationChanged`, whose `refresh_config` reaches
+     * [setConfig]: a font-size, display-size or language change therefore drops the cached
+     * pane there, and the next open re-inflates (the stale views are released with it).
+     */
+    private fun currentInflationConfig(): ClipboardPaneThemePolicy.InflationConfig {
+        val res = context.resources.configuration
+        return ClipboardPaneThemePolicy.InflationConfig(
+            fontScale = res.fontScale,
+            densityDpi = res.densityDpi,
+            localeTags = res.locales?.toLanguageTags().orEmpty(),
+        )
     }
 
     /**

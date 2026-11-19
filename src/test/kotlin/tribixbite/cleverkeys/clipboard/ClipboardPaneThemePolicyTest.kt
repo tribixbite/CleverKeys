@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.ClipboardPaneThemePolicy
+import tribixbite.cleverkeys.ClipboardPaneThemePolicy.InflationConfig
 import tribixbite.cleverkeys.ClipboardPaneThemePolicy.RuntimeColors
 import tribixbite.cleverkeys.ClipboardPaneThemePolicy.ThemeSignature
 
@@ -23,6 +24,9 @@ class ClipboardPaneThemePolicyTest {
     private val purple = 0xFF6650A4.toInt() // the CleverKeysDark base — the report's "purple"
     private val userBg = 0xFF102030.toInt()
     private val userLabel = 0xFFEEDDCC.toInt()
+
+    /** The resource configuration a pane is usually inflated under (font scale 1.0). */
+    private val scale1 = InflationConfig(fontScale = 1.0f, densityDpi = 420, localeTags = "en-US")
 
     private fun colors(bg: Int = userBg, label: Int = userLabel) =
         RuntimeColors(keyboardBackground = bg, key = 0xFF223344.toInt(), label = label,
@@ -75,23 +79,23 @@ class ClipboardPaneThemePolicyTest {
 
     @Test
     fun unchangedSignatureKeepsTheCachedPane() {
-        val sig = ThemeSignature("custom_abc", 0, colors())
+        val sig = ThemeSignature("custom_abc", 0, colors(), scale1)
         assertWithMessage("re-propagating an unchanged config must not cost a re-inflation")
             .that(ClipboardPaneThemePolicy.needsRebuild(sig.copy(), sig)).isFalse()
     }
 
     @Test
     fun switchingThemesRebuilds() {
-        val custom = ThemeSignature("custom_abc", 0, colors())
-        val dark = ThemeSignature("dark", 2131099999, null)
+        val custom = ThemeSignature("custom_abc", 0, colors(), scale1)
+        val dark = ThemeSignature("dark", 2131099999, null, scale1)
         assertThat(ClipboardPaneThemePolicy.needsRebuild(custom, dark)).isTrue()
         assertThat(ClipboardPaneThemePolicy.needsRebuild(dark, custom)).isTrue()
     }
 
     @Test
     fun editingTheActiveCustomThemesColorsRebuildsEvenThoughTheNameIsUnchanged() {
-        val before = ThemeSignature("custom_abc", 0, colors(bg = userBg))
-        val after = ThemeSignature("custom_abc", 0, colors(bg = 0xFF000000.toInt()))
+        val before = ThemeSignature("custom_abc", 0, colors(bg = userBg), scale1)
+        val after = ThemeSignature("custom_abc", 0, colors(bg = 0xFF000000.toInt()), scale1)
         assertWithMessage(
             "editing the active custom theme keeps its name — only the color values " +
                 "change, and that must still drop the cached pane"
@@ -100,9 +104,35 @@ class ClipboardPaneThemePolicyTest {
 
     @Test
     fun switchingBetweenTwoBuiltInStylesRebuilds() {
-        val dark = ThemeSignature("dark", 100, null)
-        val light = ThemeSignature("light", 101, null)
+        val dark = ThemeSignature("dark", 100, null, scale1)
+        val light = ThemeSignature("light", 101, null, scale1)
         assertThat(ClipboardPaneThemePolicy.needsRebuild(dark, light)).isTrue()
+    }
+
+    // ------------------------------------------- needsRebuild: resource configuration
+
+    @Test
+    fun fontScaleChangeRebuilds() {
+        val before = ThemeSignature("dark", 100, null, scale1)
+        val after = before.copy(inflation = scale1.copy(fontScale = 2.0f))
+        assertWithMessage(
+            "todo item 4: sp sizes are fixed at inflation — a new font scale must rebuild"
+        ).that(ClipboardPaneThemePolicy.needsRebuild(before, after)).isTrue()
+    }
+
+    @Test
+    fun densityChangeRebuilds() {
+        val before = ThemeSignature("dark", 100, null, scale1)
+        val after = before.copy(inflation = scale1.copy(densityDpi = 480))
+        assertThat(ClipboardPaneThemePolicy.needsRebuild(before, after)).isTrue()
+    }
+
+    @Test
+    fun localeChangeRebuilds() {
+        val before = ThemeSignature("dark", 100, null, scale1)
+        val after = before.copy(inflation = scale1.copy(localeTags = "de-DE"))
+        assertWithMessage("the pane's strings are resolved at inflation")
+            .that(ClipboardPaneThemePolicy.needsRebuild(before, after)).isTrue()
     }
 
     @Test
@@ -110,7 +140,7 @@ class ClipboardPaneThemePolicyTest {
         // A pane exists but nothing recorded what painted it: wrongly keeping it shows
         // wrong colors; wrongly dropping it costs one re-inflation. Drop it.
         assertThat(
-            ClipboardPaneThemePolicy.needsRebuild(null, ThemeSignature("dark", 100, null))
+            ClipboardPaneThemePolicy.needsRebuild(null, ThemeSignature("dark", 100, null, scale1))
         ).isTrue()
     }
 }

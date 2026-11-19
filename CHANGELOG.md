@@ -778,6 +778,8 @@ editor that used to be listed here already ship in 2.0.)
   a time (see Added).
 - Copying an image while the clipboard pane was open left the pane on "Loading results…" until
   it was reopened. The pane now updates and lists the new image.
+- The clipboard pane follows a change to Android's font size, display size or language the next
+  time it opens. It kept the old text size and wording until the keyboard was restarted.
 - Clipboard images of 80 px or less get a thumbnail again instead of a file icon, and images
   that small copied under 1.x get theirs after the update: 1.x never stored one for them, and
   missing thumbnails are now rebuilt from the saved image when the keyboard starts.

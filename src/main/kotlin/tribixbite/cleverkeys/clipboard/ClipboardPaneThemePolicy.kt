@@ -12,7 +12,8 @@ package tribixbite.cleverkeys
  *     resolves to the CleverKeysDark base — the "purple" of the report).
  *  2. [needsRebuild] — whether a cached pane, inflated + painted under a previous theme
  *     signature, must be dropped so the next open re-inflates under the current one.
- *     Without this the pane keeps the old theme until keyboard restart.
+ *     Without this the pane keeps the old theme, or the old font scale / display size /
+ *     language ([InflationConfig]), until keyboard restart.
  *
  * Pure JVM on purpose: `ClipboardManager` is Android-bound (View inflation), so the
  * decision half lives here where `ClipboardPaneThemePolicyTest` can execute it — the
@@ -33,15 +34,33 @@ object ClipboardPaneThemePolicy {
     )
 
     /**
-     * Everything that affects an inflated pane's colors: the theme's name, the XML style
-     * resource the pane was inflated under, and — for runtime themes — the actual color
-     * values (so editing the active custom theme's colors changes the signature even
-     * though the name stays the same). [runtimeColors] is null for XML-style themes.
+     * The parts of the service's resource configuration that inflation bakes into the pane's
+     * views: `sp` text sizes become pixels from [fontScale] and `dp` sizes from [densityDpi]
+     * at inflate time, and the strings and layout direction come from [localeTags]. None of
+     * them is re-read by an existing view, so a pane inflated before the user changed the
+     * system font size, display size or language kept the old values until the IME process
+     * restarted (todo item 4 finding, Saga 2026-10-28). Orientation and screen size are left
+     * out on purpose: a rotation resizes the open pane in place (KeyboardReceiver.resizeOpenPane)
+     * and must not cost its scroll and search state.
+     */
+    data class InflationConfig(
+        val fontScale: Float,
+        val densityDpi: Int,
+        val localeTags: String,
+    )
+
+    /**
+     * Everything that affects an inflated pane's look: the theme's name, the XML style
+     * resource the pane was inflated under, for runtime themes the actual color values (so
+     * editing the active custom theme's colors changes the signature even though the name
+     * stays the same; [runtimeColors] is null for XML-style themes), and the resource
+     * configuration it was inflated under ([inflation]).
      */
     data class ThemeSignature(
         val themeName: String,
         val themeResId: Int,
         val runtimeColors: RuntimeColors?,
+        val inflation: InflationConfig,
     )
 
     /**
