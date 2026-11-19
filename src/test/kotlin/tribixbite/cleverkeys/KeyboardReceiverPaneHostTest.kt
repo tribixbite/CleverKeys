@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
+import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -182,6 +184,20 @@ class KeyboardReceiverPaneHostTest {
 
         verify(exactly = 1) { container.addView(inflatedPane) }
         verify(exactly = 0) { keyboard2.setInputView(any()) }
+    }
+
+    // ── 1a. The open pane, as the rotation guard reopens it (2026-11-19) ──────────
+
+    @Test
+    fun openPaneEventNamesTheOpenPaneAndNothingOnceTheHideResetsIt() {
+        wireContainer()
+        assertThat(receiver.openPaneEvent()).isNull()
+        for (event in listOf(KeyValue.Event.SWITCH_CLIPBOARD, KeyValue.Event.SWITCH_EMOJI, KeyValue.Event.SWITCH_GIF)) {
+            receiver.handle_event_key(event)
+            assertWithMessage("after $event").that(receiver.openPaneEvent()).isEqualTo(event)
+            receiver.resetContentPaneState()
+            assertWithMessage("after the hide's reset ($event)").that(receiver.openPaneEvent()).isNull()
+        }
     }
 
     // ── 1b. Side insets (display cutout): pane controls must stay touchable ───────

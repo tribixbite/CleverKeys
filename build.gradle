@@ -1226,6 +1226,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.minimize.KeyboardMinimizerTest',
     // Quick Settings tile toggles show/minimize/restore instead of only the picker (2026-10-20).
     'tribixbite.cleverkeys.KeyboardTileActionTest',
+    // The keyboard stays up across a rotation the app's relaunch would hide (2026-11-19).
+    'tribixbite.cleverkeys.RotationShowGuardTest',
     // Subkey popover assign request <-> intent extras round trip (audit 2026-10-08).
     'tribixbite.cleverkeys.popover.SubkeyAssignExtrasTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',

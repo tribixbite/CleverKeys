@@ -177,6 +177,15 @@ check, and CI's lint went red on every commit after `7add2860`. Adding a real `S
 breaks the seam (the mock tier folds SDK_INT to 0). Put the call in a `@RequiresApi` helper and
 give the guarded caller a targeted `@SuppressLint("NewApi")` with the reason (`d572b508`).
 
+## Keyboard hidden on rotation: compare IMEs before blaming the app (2026-11-19)
+
+An app that recreates its activity on rotation (the Google app) needs the system's
+`SHOW_RESTORE_IME_VISIBILITY`, which misses when the IME re-shows too early. The result was
+CleverKeys 0/8, Gboard 3/8, SwiftKey 8/8 (Pixel 8 Pro). A single Gboard run "also hides" is not
+evidence: run several trials per IME. `dumpsys input_method` mStartInputHistory (new target
+window per rotation) and mSoftInputShowHideHistory show who hid it. Fixed by `RotationShowGuard`.
+An app that keeps its window and calls `hide(ime())` itself (Discord) hides every IME.
+
 ## Compose "Recording currently in progress" crashes
 
 A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;

@@ -440,6 +440,7 @@ class CleverKeysService : InputMethodService(),
 
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         _handler = Handler(mainLooper)
+        _lastOrientation = resources.configuration.orientation
 
         // Create bridge for KeyEventHandler to KeyboardReceiver delegation (v1.32.390)
         // Receiver will be initialized later and set on the bridge
@@ -602,7 +603,11 @@ class CleverKeysService : InputMethodService(),
         _voiceInput = null
         // Tile: stop the deferred-show loop so no callback outlives the service.
         _tileShow.cancel()
-        if (::_handler.isInitialized) _handler.removeCallbacks(_tileShowTick)
+        _rotationGuard.cancel()
+        if (::_handler.isInitialized) {
+            _handler.removeCallbacks(_tileShowTick)
+            _handler.removeCallbacks(_rotationShowTick)
+        }
         ProcessTextReturn.onResultReady = null
 
         // Clear static instance reference
@@ -832,6 +837,7 @@ class CleverKeysService : InputMethodService(),
         // Tile: a deferred show armed for another app's editor must not land here.
         if (_tileShow.hasPending) tileLog { "onStartInput ${attribute?.packageName} while a deferred show is armed" }
         _tileShow.onStartInput(attribute?.packageName)
+        _rotationGuard.onStartInput(attribute?.packageName, restarting)
         if (ProcessTextReturn.hasResult() && attribute != null && attribute.packageName != packageName) {
             _handler.post { if (::_keyeventhandler.isInitialized) _keyeventhandler.deliverProcessTextResult() }
         }
@@ -909,6 +915,9 @@ class CleverKeysService : InputMethodService(),
         // The manual post() call here was causing redundant "key positions set" logs and layout updates
 
         _config?.let { Logs.debug_startup_input_view(info, it) }
+        // A rotation's new window finishes the old input view (closing the pane) even when the
+        // system restores the keyboard itself, with no hide in between.
+        reopenRotationPane()
     }
 
     /**
@@ -996,6 +1005,39 @@ class CleverKeysService : InputMethodService(),
     /** Tile bookkeeping: the hide time and editor, whose hide it was, and a deferred show. */
     private val _tileShow = TileShowSession()
 
+    /** Asks the keyboard back when an app's relaunch hides it on rotation; see [RotationShowGuard]. */
+    private val _rotationGuard = RotationShowGuard()
+
+    /** The orientation of the last configuration seen, so [onConfigurationChanged] can tell a rotation. */
+    private var _lastOrientation = android.content.res.Configuration.ORIENTATION_UNDEFINED
+
+    /**
+     * The content pane open when [_rotationGuard] armed (its opening event), reopened when the
+     * guard brings the keyboard back: the hide in between closes it (resetContentPaneState).
+     */
+    private var _rotationPane: KeyValue.Event? = null
+
+    /**
+     * Reopens [_rotationPane] once the keyboard is back after a rotation and the pane is closed:
+     * the rotated app's new window finishes the old input view (resetContentPaneState), whether
+     * the system restores the keyboard itself or [_rotationGuard] asks for it. Posted, so the
+     * input view being started is in place; a no-op once the guard's window has passed.
+     */
+    private fun reopenRotationPane() {
+        val pane = _rotationPane ?: return
+        if (!_rotationGuard.isArmed) {
+            _rotationPane = null
+            return
+        }
+        _handler.post {
+            if (_rotationPane != pane || !_rotationGuard.isArmed || !isTileWindowVisible()) return@post
+            if (_receiver?.openPaneEvent() != null) return@post
+            _rotationPane = null
+            _receiver?.handle_event_key(pane)
+            tileLog { "rotation: reopened pane $pane" }
+        }
+    }
+
     /**
      * Whether the IME window is on screen, from onWindowShown / onWindowHidden. Read through
      * [isTileWindowVisible], which also requires `isInputViewShown()`.
@@ -1041,7 +1083,7 @@ class CleverKeysService : InputMethodService(),
             when (_tileShow.tick(android.os.SystemClock.uptimeMillis(), visible)) {
                 TileShowSession.Tick.REQUEST_SHOW -> {
                     _tileShowAttempts++
-                    requestShowFromTile()
+                    requestShowSelfCompat()
                     tileLog {
                         "retry #$_tileShowAttempts: requestShowSelf sent " +
                             "(started=$currentInputStarted editor=${currentEditorRef()})"
@@ -1052,6 +1094,24 @@ class CleverKeysService : InputMethodService(),
                     tileLog { "deferred show expired after $_tileShowAttempts attempts, never shown" }
                 TileShowSession.Tick.IDLE ->
                     tileLog { "retry loop stopped (visible=$visible pending=${_tileShow.hasPending})" }
+            }
+        }
+    }
+
+    /** [RotationShowGuard]'s loop; posted on [_handler] after a hide, removed in onDestroy. */
+    private val _rotationShowTick = object : Runnable {
+        override fun run() {
+            val visible = isTileWindowVisible()
+            val current = currentEditorRef()
+            when (_rotationGuard.check(android.os.SystemClock.uptimeMillis(), visible, current)) {
+                RotationShowGuard.Check.REQUEST_SHOW -> {
+                    requestShowSelfCompat()
+                    tileLog { "rotation: requestShowSelf sent (editor=$current)" }
+                    _handler.postDelayed(this, RotationShowGuard.SHOW_SETTLE_MS)
+                }
+                RotationShowGuard.Check.WAIT -> _handler.postDelayed(this, RotationShowGuard.RETRY_INTERVAL_MS)
+                RotationShowGuard.Check.DONE ->
+                    tileLog { "rotation: loop done (visible=$visible armed=${_rotationGuard.isArmed})" }
             }
         }
     }
@@ -1106,10 +1166,11 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
-     * Ask the system to show this IME. API 28+ has [requestShowSelf]; older releases take the
-     * IME window token. The system ignores either while no client is focused.
+     * Ask the system to show this IME (the tile's deferred show and [RotationShowGuard]). API 28+
+     * has [requestShowSelf]; older releases take the IME window token. The system ignores either
+     * while no client is focused.
      */
-    private fun requestShowFromTile() {
+    private fun requestShowSelfCompat() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             requestShowSelf(0)
         } else {
@@ -1176,14 +1237,22 @@ class CleverKeysService : InputMethodService(),
         tileLog { "onWindowShown: editor=$_viewEditor tileShow=$requested after $_tileShowAttempts attempts" }
         // The tile's show is the full keyboard (a minimized one is reset on hide already).
         if (requested) _minimizer.expand()
+        // Back after a rotation: reopen the pane the new window's input start closed.
+        reopenRotationPane()
     }
 
     override fun onWindowHidden() {
         super.onWindowHidden()
         _voiceInput?.cancel()
         _windowVisible = false
-        _tileShow.onWindowHidden(_viewEditor, android.os.SystemClock.uptimeMillis())
+        val now = android.os.SystemClock.uptimeMillis()
+        _tileShow.onWindowHidden(_viewEditor, now)
         tileLog { "onWindowHidden: editor=$_viewEditor byUser=${_tileShow.dismissedByUser}" }
+        // A hide right after a rotation that the user did not make: the app's relaunch.
+        if (_rotationGuard.onWindowHidden(_tileShow.dismissedByUser, now)) {
+            _handler.removeCallbacks(_rotationShowTick)
+            _handler.postDelayed(_rotationShowTick, RotationShowGuard.RETRY_INTERVAL_MS)
+        }
     }
 
     /**
@@ -1194,6 +1263,7 @@ class CleverKeysService : InputMethodService(),
         if (keyCode == android.view.KeyEvent.KEYCODE_BACK && isTileWindowVisible()) _tileShow.noteUserDismiss()
         if (_tileShow.hasPending) tileLog { "deferred show cancelled by key $keyCode" }
         _tileShow.onUserInput()
+        _rotationGuard.onUserInput()
         return super.onKeyDown(keyCode, event)
     }
 
@@ -1249,6 +1319,18 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        // Before super: its RESET_NEW_CONFIGURATION re-show comes next, and the guard needs the
+        // window and editor as they were before the rotation.
+        if (newConfig.orientation != _lastOrientation &&
+            _lastOrientation != android.content.res.Configuration.ORIENTATION_UNDEFINED
+        ) {
+            _rotationGuard.onOrientationChanged(
+                isTileWindowVisible(), currentEditorRef(), android.os.SystemClock.uptimeMillis()
+            )
+            _rotationPane = if (_rotationGuard.isArmed) _receiver?.openPaneEvent() else null
+            tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed}" }
+        }
+        _lastOrientation = newConfig.orientation
         super.onConfigurationChanged(newConfig)
         // CRITICAL: Refresh config when orientation changes to update landscape/portrait margins
         // Without this, landscape margins are never applied because Config.orientation_landscape

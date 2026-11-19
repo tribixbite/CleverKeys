@@ -188,6 +188,21 @@ class KeyboardReceiver(
     }
 
     /**
+     * The event that opens the content pane showing now, or null when none is. The service
+     * keeps it across a rotation the app's relaunch hides ([RotationShowGuard]): the hide runs
+     * [resetContentPaneState], so the pane is reopened with this when the keyboard comes back.
+     */
+    fun openPaneEvent(): KeyValue.Event? {
+        if (!isContentPaneShowing) return null
+        return when (currentPaneType) {
+            PaneType.EMOJI -> KeyValue.Event.SWITCH_EMOJI
+            PaneType.CLIPBOARD -> KeyValue.Event.SWITCH_CLIPBOARD
+            PaneType.GIF -> KeyValue.Event.SWITCH_GIF
+            PaneType.NONE -> null
+        }
+    }
+
+    /**
      * Reset content pane state when keyboard hides (e.g., app switch).
      * Call this from CleverKeysService.onFinishInputView().
      */
