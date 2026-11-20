@@ -145,6 +145,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    with and without the clipboard, except the very first try; not reproduced on the Pixel (first
    rotation of a fresh process, 3,215-entry clipboard open: kept, pane back). Its log had already
    rotated; the hide now logs its delay after the rotation (`CleverKeys/Tile`) for the next miss.
+   Maintainer 2026-11-20 00:13-00:15 (S25U, Discord chat box, captured): every miss is Discord's own
+   `HIDE_SOFT_INPUT_BY_INSETS_API` 140-345 ms after the rotation, window kept, so the guard leaves it
+   (by design); pane closed 5/5 kept, pane open 2 of 7 hidden. Pixel, same Discord 356.3, chat box of
+   another channel: the first rotation hid it (496 ms) and Discord returned to its channel list over
+   the chat, while the IME stayed bound to the chat box. The IME cannot tell the two apart; open: does
+   the S25U show the chat or the channel list after the hide (maintainer).
    Password bar (maintainer 2026-11-19): a new password field showed the previous field's
    password — FIXED, `SuggestionBar.setPasswordMode` resets per field (ew-cli red→green). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales
