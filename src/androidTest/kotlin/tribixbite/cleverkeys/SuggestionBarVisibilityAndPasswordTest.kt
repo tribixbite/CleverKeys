@@ -216,6 +216,55 @@ class SuggestionBarVisibilityAndPasswordTest {
         }
     }
 
+    /**
+     * Maintainer report 2026-11-19: after a failed login the site reloaded, and its new, empty
+     * password field showed the password typed into the old one. The service calls
+     * `setPasswordMode(true)` for every password field it starts; going from one password field
+     * straight to another used to be a no-op, so the old text (and an open eye) carried over.
+     */
+    @Test
+    fun aNewPasswordFieldNeverShowsThePreviousFieldsPassword() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            fieldText = "hunter2"
+            bar.setInputConnectionProvider(fakeField())
+            bar.setPasswordMode(true)
+            bar.syncPasswordWithField()
+            eyeToggle().performClick()
+            assertEquals("hunter2", passwordTextView().text.toString())
+
+            // The page reloads: a new, empty password field starts.
+            fieldText = ""
+            bar.setPasswordMode(true)
+            assertEquals("nothing of the old field may show", "", passwordTextView().text.toString())
+
+            // Typing in the new field starts masked again, whatever the old field's eye showed.
+            fieldText = "ab"
+            bar.syncPasswordWithField()
+            assertEquals("●●", passwordTextView().text.toString())
+        }
+    }
+
+    /** Leaving a field (the service's onFinishInputView) forgets the password and masks the bar. */
+    @Test
+    fun clearingThePasswordTextForgetsItAndMasksTheBar() {
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            fieldText = "secret"
+            bar.setInputConnectionProvider(fakeField())
+            bar.setPasswordMode(true)
+            bar.syncPasswordWithField()
+            eyeToggle().performClick()
+            val revealedIcon = eyeToggle().drawable.constantState
+
+            bar.clearPasswordText()
+            assertEquals("", passwordTextView().text.toString())
+            assertNotEquals("the eye shows the hidden state again", revealedIcon, eyeToggle().drawable.constantState)
+
+            fieldText = "xyz"
+            bar.syncPasswordWithField()
+            assertEquals("●●●", passwordTextView().text.toString())
+        }
+    }
+
     @Test
     fun anEmptyPasswordRendersAsEmptyRatherThanAStrayBullet() {
         InstrumentationRegistry.getInstrumentation().runOnMainSync {

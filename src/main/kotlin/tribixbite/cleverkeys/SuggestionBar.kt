@@ -1440,7 +1440,13 @@ class SuggestionBar : LinearLayout {
      * In password mode, predictions are hidden and an eye toggle is shown.
      */
     fun setPasswordMode(enabled: Boolean) {
-        if (isPasswordMode == enabled) return
+        if (isPasswordMode == enabled) {
+            // The service calls this for every field it starts. A password field straight after
+            // another (a login page reloaded after a failed attempt) is a new field: nothing of
+            // the previous one may show in it, and it starts masked (maintainer report 2026-11-19).
+            if (enabled) clearPasswordText()
+            return
+        }
 
         isPasswordMode = enabled
         isPasswordVisible = false
@@ -1522,11 +1528,27 @@ class SuggestionBar : LinearLayout {
     }
 
     /**
-     * Clear the password text (e.g., when field is cleared or focus changes).
+     * Forget the password text and mask the bar again: a new password field starts, or the
+     * field is left (the service's onFinishInputView). The next sync re-reads the field.
      */
     fun clearPasswordText() {
         currentPasswordText.clear()
+        isPasswordVisible = false
+        applyEyeState()
         updatePasswordDisplay()
+    }
+
+    /** The eye's icon and colour for [isPasswordVisible]: open and accented, or crossed out. */
+    private fun applyEyeState() {
+        eyeToggleView?.apply {
+            setImageDrawable(getVisibilityDrawable(isPasswordVisible))
+            val color = if (isPasswordVisible) {
+                theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN
+            } else {
+                theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.GRAY
+            }
+            setColorFilter(color)
+        }
     }
 
     /**
@@ -1701,17 +1723,7 @@ class SuggestionBar : LinearLayout {
         refreshPasswordFromField()
 
         updatePasswordDisplay()
-
-        // Update eye icon drawable and color
-        eyeToggleView?.apply {
-            setImageDrawable(getVisibilityDrawable(isPasswordVisible))
-            val color = if (isPasswordVisible) {
-                theme?.suggestionHighConfidenceColor?.takeIf { it != 0 } ?: Color.CYAN
-            } else {
-                theme?.suggestionSecondaryTextColor?.takeIf { it != 0 } ?: Color.GRAY
-            }
-            setColorFilter(color)
-        }
+        applyEyeState()
 
         Log.d(TAG, "Password visibility toggled: ${if (isPasswordVisible) "visible" else "hidden"}, ${currentPasswordText.length} chars")
     }

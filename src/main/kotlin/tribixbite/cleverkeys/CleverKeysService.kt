@@ -1017,6 +1017,9 @@ class CleverKeysService : InputMethodService(),
      */
     private var _rotationPane: KeyValue.Event? = null
 
+    /** Uptime of the last orientation change, for the rotation diagnostics in [onWindowHidden]. */
+    private var _rotationAtMs = 0L
+
     /**
      * Reopens [_rotationPane] once the keyboard is back after a rotation and the pane is closed:
      * the rotated app's new window finishes the old input view (resetContentPaneState), whether
@@ -1249,7 +1252,10 @@ class CleverKeysService : InputMethodService(),
         _tileShow.onWindowHidden(_viewEditor, now)
         tileLog { "onWindowHidden: editor=$_viewEditor byUser=${_tileShow.dismissedByUser}" }
         // A hide right after a rotation that the user did not make: the app's relaunch.
-        if (_rotationGuard.onWindowHidden(_tileShow.dismissedByUser, now)) {
+        val guarded = _rotationGuard.isArmed
+        val restore = _rotationGuard.onWindowHidden(_tileShow.dismissedByUser, now)
+        if (guarded) tileLog { "rotation: hidden ${now - _rotationAtMs} ms after it, restore=$restore" }
+        if (restore) {
             _handler.removeCallbacks(_rotationShowTick)
             _handler.postDelayed(_rotationShowTick, RotationShowGuard.RETRY_INTERVAL_MS)
         }
@@ -1324,9 +1330,8 @@ class CleverKeysService : InputMethodService(),
         if (newConfig.orientation != _lastOrientation &&
             _lastOrientation != android.content.res.Configuration.ORIENTATION_UNDEFINED
         ) {
-            _rotationGuard.onOrientationChanged(
-                isTileWindowVisible(), currentEditorRef(), android.os.SystemClock.uptimeMillis()
-            )
+            _rotationAtMs = android.os.SystemClock.uptimeMillis()
+            _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs)
             _rotationPane = if (_rotationGuard.isArmed) _receiver?.openPaneEvent() else null
             tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed}" }
         }
@@ -1383,6 +1388,8 @@ class CleverKeysService : InputMethodService(),
 
         // Clear suggestions to prevent stale state/crashes on app switch
         _suggestionBar?.clearSuggestions()
+        // clearSuggestions leaves the password UI alone; the field's password must not outlive it.
+        _suggestionBar?.clearPasswordText()
 
         // v1.2.6: Cancel any pending cursor sync
         _inputCoordinator.cancelPendingCursorSync()

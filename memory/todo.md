@@ -141,7 +141,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    FIXED 2026-11-19 `RotationShowGuard` — Google app 8/8 kept (was 0/8; Gboard 3/8, SwiftKey 8/8),
    the open pane comes back (4/4); Discord on the Pixel hides EVERY keyboard itself (its own
    `hide(ime())`, window kept) and still does: the maintainer's Discord-with-clipboard case on the
-   S25U is unreproduced on the Pixel — retest there. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
+   S25U is unreproduced on the Pixel — retest there. Maintainer retest 2026-11-19 (S25U): works
+   with and without the clipboard, except the very first try; not reproduced on the Pixel (first
+   rotation of a fresh process, 3,215-entry clipboard open: kept, pane back). Its log had already
+   rotated; the hide now logs its delay after the rotation (`CleverKeys/Tile`) for the next miss.
+   Password bar (maintainer 2026-11-19): a new password field showed the previous field's
+   password — FIXED, `SuggestionBar.setPasswordMode` resets per field (ew-cli red→green). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales
     (later items fold their strings in here). Sheets: `docs/i18n/review/2026-11/<locale>/` —
     `1-translate.csv` 636 rows, `2-check.csv` 345, `3-read-through.csv` 34,378 optional; README

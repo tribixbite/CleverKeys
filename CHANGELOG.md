@@ -624,6 +624,10 @@ editor that used to be listed here already ship in 2.0.)
   rotation, such as the Google app's search box, where it closed every time, and an open
   clipboard, emoji or GIF pane comes back with it. A keyboard you closed yourself stays closed,
   and an app that hides the keyboard itself on rotation (Discord) keeps it hidden.
+- A password field no longer shows the password typed into the previous one. After a failed
+  login reloaded the page, the suggestion bar over the new, empty field still held the old
+  password (in plain text if its eye was open); it now starts empty and masked, and the
+  password is forgotten as soon as you leave the field.
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
   an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied
