@@ -622,8 +622,9 @@ editor that used to be listed here already ship in 2.0.)
   keyboard; the screen used to restart and close the keyboard.
 - The keyboard stays up when you rotate the phone in apps that restart their screen on
   rotation, such as the Google app's search box, where it closed every time, and an open
-  clipboard, emoji or GIF pane comes back with it. A keyboard you closed yourself stays closed,
-  and an app that hides the keyboard itself on rotation (Discord) keeps it hidden.
+  clipboard, emoji or GIF pane comes back with it. In Discord, which closed the keyboard over
+  the chat when you rotated with a pane open, it now comes back with the pane. A keyboard you
+  closed yourself stays closed, and so does one Discord closes on rotation without a pane open.
 - A password field no longer shows the password typed into the previous one. After a failed
   login reloaded the page, the suggestion bar over the new, empty field still held the old
   password (in plain text if its eye was open); it now starts empty and masked, and the

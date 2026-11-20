@@ -184,7 +184,11 @@ An app that recreates its activity on rotation (the Google app) needs the system
 CleverKeys 0/8, Gboard 3/8, SwiftKey 8/8 (Pixel 8 Pro). A single Gboard run "also hides" is not
 evidence: run several trials per IME. `dumpsys input_method` mStartInputHistory (new target
 window per rotation) and mSoftInputShowHideHistory show who hid it. Fixed by `RotationShowGuard`.
-An app that keeps its window and calls `hide(ime())` itself (Discord) hides every IME.
+An app that keeps its window and calls `hide(ime())` itself (Discord) is the app's choice, with one
+exception (2026-11-20): Discord also hid it over a chat still on screen when a content pane made
+the keyboard taller than the new screen AT the rotation (0/20 without a pane, 0/5 with it closed
+just before). Its layout depends on dp width: reproduce a phone's case with `wm size` + `wm density`
+(then `reset`), and measure hide rates over 10+ trials with an old-build control; rates swung 0-9/10.
 
 ## Compose "Recording currently in progress" crashes
 

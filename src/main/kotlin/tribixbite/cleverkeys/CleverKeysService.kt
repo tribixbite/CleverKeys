@@ -1331,8 +1331,9 @@ class CleverKeysService : InputMethodService(),
             _lastOrientation != android.content.res.Configuration.ORIENTATION_UNDEFINED
         ) {
             _rotationAtMs = android.os.SystemClock.uptimeMillis()
-            _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs)
-            _rotationPane = if (_rotationGuard.isArmed) _receiver?.openPaneEvent() else null
+            val pane = _receiver?.openPaneEvent()
+            _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs, pane != null)
+            _rotationPane = if (_rotationGuard.isArmed) pane else null
             tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed}" }
         }
         _lastOrientation = newConfig.orientation

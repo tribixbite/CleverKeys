@@ -150,7 +150,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    (by design); pane closed 5/5 kept, pane open 2 of 7 hidden. Pixel, same Discord 356.3, chat box of
    another channel: the first rotation hid it (496 ms) and Discord returned to its channel list over
    the chat, while the IME stayed bound to the chat box. The IME cannot tell the two apart; open: does
-   the S25U show the chat or the channel list after the hide (maintainer).
+   the S25U show the chat or the channel list after the hide (maintainer): the chat. FIXED 2026-11-20:
+   the hide comes from the keyboard being taller than the new screen at the rotation (a pane open; the
+   pane closed just before kept it 5/5), so with a pane open the guard undoes it with one request and
+   the pane comes back (Pixel at S25U geometry: 3 hides in 50 rotations, all undone, 0 left closed;
+   previous build 7/10 closed). Stowing the pane during the re-show did nothing (9/10). Not yet seen on
+   the Pixel: the one-request build in the wide layout (OTA reboot left it locked); maintainer retest.
    Password bar (maintainer 2026-11-19): a new password field showed the previous field's
    password — FIXED, `SuggestionBar.setPasswordMode` resets per field (ew-cli red→green). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales

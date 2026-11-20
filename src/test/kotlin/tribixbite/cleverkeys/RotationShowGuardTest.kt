@@ -156,4 +156,29 @@ class RotationShowGuardTest {
         guard.onUserInput()
         assertThat(guard.onWindowHidden(byUser = false, nowMs = 100)).isFalse()
     }
+
+    @Test
+    fun anAppThatKeepsItsWindowHasItsHideUndoneWhenAPaneWasOpen() {
+        // Discord at the S25U's 1080x2340 / 420 dpi (Pixel, 2026-11-20): with a pane open the
+        // keyboard was taller than the landscape screen at the rotation, and Discord hid it over
+        // its chat (9/10 rotations to landscape; 0/20 without a pane, 0/5 with the pane closed
+        // just before). Its window is kept, the chat box stays bound.
+        val chat = EditorRef("com.discord", fieldId = 2131362052, typeNull = false)
+        val guard = RotationShowGuard()
+        guard.onOrientationChanged(windowVisible = true, editor = chat, nowMs = 0, paneOpen = true)
+        guard.onStartInput("com.discord", restarting = true)
+        assertThat(guard.onWindowHidden(byUser = false, nowMs = 480)).isTrue()
+        assertThat(guard.check(580, windowVisible = false, current = chat)).isEqualTo(Check.REQUEST_SHOW)
+        // Discord's wide layout (the Pixel at 360 dpi) leaves the chat box on rotation and hides
+        // the keyboard again at once (three hides in 600 ms): one request only, its next hide
+        // stands, so the keyboard comes up at most once there.
+        assertWithMessage("a second hide in a kept window stands")
+            .that(guard.onWindowHidden(byUser = false, nowMs = 640)).isFalse()
+        assertWithMessage("never over the fallback connection of a screen without the chat box")
+            .that(RotationShowGuard().apply {
+                onOrientationChanged(windowVisible = true, editor = chat, nowMs = 0, paneOpen = true)
+                onWindowHidden(byUser = false, nowMs = 480)
+            }.check(580, windowVisible = false, current = EditorRef("com.discord", fieldId = 0, typeNull = true)))
+            .isEqualTo(Check.WAIT)
+    }
 }

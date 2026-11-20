@@ -19,18 +19,24 @@ package tribixbite.cleverkeys
  *   made (Back, the hide_keyboard key, the tile).
  * - [onStartInput] records that the app started input afresh (`restarting == false`): its window
  *   was recreated, the case the platform's restore misses. Nothing is shown without it. Discord,
- *   which keeps its window on rotation and hides the keyboard itself (`hide(ime())`, every
- *   keyboard alike, and with its channel list slid over the chat in portrait), starts no input
- *   then, so its hide stands.
+ *   which keeps its window on rotation and hides the keyboard itself (`hide(ime())`), starts no
+ *   input then, so its hide stands: on a wide layout (the Pixel at 360 dpi) it hides every
+ *   keyboard and slides its channel list over the still-bound chat box in portrait. The one
+ *   exception is a rotation with a pane open ([onOrientationChanged]'s `paneOpen`): at the S25U's
+ *   1080x2340 / 420 dpi Discord kept its chat on screen and hid the keyboard only when it was
+ *   taller than the new screen at the rotation (a pane open: 9 of 10 rotations to landscape;
+ *   none of 20 without one, none of 5 with the pane closed just before; maintainer report
+ *   2026-11-20). The IME learns of the rotation with the app, too late to be shorter, so that
+ *   hide is undone like a relaunch's.
  * - [check] then runs every [RETRY_INTERVAL_MS] ([SHOW_SETTLE_MS] after a request) until it
  *   returns [Check.DONE]: it waits until the same app has an editor bound again and asks for a
  *   show at most [MAX_RESTORES] times.
  *
  * Never fighting the user or the app: the guard lives [WINDOW_MS] from the rotation, a user hide
  * or input ([onUserInput]) disarms it, input in another app cancels it, an app that kept its
- * window keeps its own hide, and it never shows the keyboard over the platform's fallback
- * connection (a window without an editor) unless the keyboard was over a TYPE_NULL view to
- * begin with (a terminal).
+ * window keeps its own hide (unless a pane was open), and it never shows the keyboard over the
+ * platform's fallback connection (a window without an editor) unless the keyboard was over a
+ * TYPE_NULL view to begin with (a terminal).
  */
 class RotationShowGuard {
 
@@ -46,7 +52,13 @@ class RotationShowGuard {
         DONE,
     }
 
-    private class Armed(val editor: EditorRef, val deadlineMs: Long, var restoresLeft: Int) {
+    /** [paneOpen]: a content pane was open at the rotation (see the class comment). */
+    private class Armed(
+        val editor: EditorRef,
+        val deadlineMs: Long,
+        var restoresLeft: Int,
+        val paneOpen: Boolean,
+    ) {
         /** The app started input afresh since the rotation: its window was recreated. */
         var windowRecreated = false
     }
@@ -59,10 +71,15 @@ class RotationShowGuard {
     /**
      * The orientation changed at [nowMs]. Arms the guard when the keyboard was on screen
      * ([windowVisible]) over [editor]; otherwise any earlier guard is dropped, so a rotation
-     * with the keyboard hidden never brings it up.
+     * with the keyboard hidden never brings it up. [paneOpen] is true when a content pane was
+     * open on the keyboard.
      */
-    fun onOrientationChanged(windowVisible: Boolean, editor: EditorRef?, nowMs: Long) {
-        armed = if (windowVisible && editor != null) Armed(editor, nowMs + WINDOW_MS, MAX_RESTORES) else null
+    fun onOrientationChanged(windowVisible: Boolean, editor: EditorRef?, nowMs: Long, paneOpen: Boolean = false) {
+        armed = if (windowVisible && editor != null) {
+            Armed(editor, nowMs + WINDOW_MS, MAX_RESTORES, paneOpen)
+        } else {
+            null
+        }
     }
 
     /**
@@ -114,11 +131,14 @@ class RotationShowGuard {
         // The platform's fallback connection is not the app's editor yet (or the app moved to
         // a screen without one): wait, and give up at the deadline.
         if (current.typeNull && !a.editor.typeNull) return Check.WAIT
-        // The app kept its window: its hide is its own (see the class comment). Wait in case the
-        // fresh start is still on its way, and give up at the deadline.
-        if (!a.windowRecreated) return Check.WAIT
+        // The app kept its window: its hide is its own (see the class comment), unless a pane
+        // made the keyboard too tall for the new screen. Wait in case the fresh start is still on
+        // its way, and give up at the deadline.
+        if (!a.windowRecreated && !a.paneOpen) return Check.WAIT
         if (a.restoresLeft <= 0) return Check.DONE
-        a.restoresLeft--
+        // In a kept window one request only: on Discord's wide layout (the Pixel at 360 dpi) the
+        // app leaves the chat box and hides again at once, and that hide must stand.
+        a.restoresLeft = if (a.windowRecreated) a.restoresLeft - 1 else 0
         return Check.REQUEST_SHOW
     }
 
