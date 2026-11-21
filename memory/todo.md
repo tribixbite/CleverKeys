@@ -193,9 +193,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     TODO pending an Arabic eval. (The block also logs 10-20 Saga PASSes of the QS tile, #147, #190,
     #139, #154, #187.) [history](../docs/history/todo-open-now-items-2026-11-14.md#item-13b)
 13c. [ ] agent → device: code-quality audit 2026-10-20 — every HIGH/MED/LOW row fixed or moot. Left:
-    the last batch was "not run on instrumented or a device" at the time; border-radius readout not
-    device-checked (needs Borders on); `ThemeProvider.getBuiltInColorScheme("monet")` still the dark
-    approximation. (KeyboardPreviewView and its "jewel" fallback were deleted 2026-11-15: no caller.) [history](../docs/history/todo-open-now-items-2026-11-14.md#item-13c)
+    the last batch was "not run on instrumented or a device" at the time (covered since by the full
+    instrumented runs of 11-01 and 11-17); border-radius readout Pixel PASS 2026-11-20 (Custom Border
+    Config on: "Border Radius 0%", "as % of the key width"; switched back off);
+    Monet seed FIXED 2026-11-20: `MonetSeedScheme` reads the system palette `MonetLight`/`MonetDark`
+    draw (a theme created while Monet is selected, and the trail choosing Monet sets), Light/Dark
+    below API 31 (`MonetSeedSchemeTest` 5, compile-red first; mock 1,862 / pure 3,945 green). (KeyboardPreviewView and its "jewel" fallback were deleted 2026-11-15: no caller.) [history](../docs/history/todo-open-now-items-2026-11-14.md#item-13c)
 14. [ ] agent drafts every close comment / PR review into a file; maintainer approves per item before anything is posted (2026-10-25). GitHub — 38 DONE/FIXED close candidates + 2 NOT-REPRO/BY-DESIGN, PRs
     #189/#183/#182 review and #164 close as superseded (`docs/audit/gh-issue-resolution.md`).
     Drafts done (`docs/audit/2026-10-25-github-drafts.md`, 48 items). DECIDED 2026-10-26: hold every

@@ -1748,6 +1748,9 @@ tasks.register('runMockTests', JavaExec) {
     // Review 2026-11-14 M22: the Theme Creator draft's Savers round-trip over the JSON codecs
     // (mock classpath: compose runtime-saveable is not on the pure one).
     'tribixbite.cleverkeys.theme.ThemeEditorSaversTest',
+    // 2026-11-20 (todo 13c): the Theme Creator seeds Monet with the system colours it draws
+    // (compose Color: mock tier, the pure classpath has no compose graphics).
+    'tribixbite.cleverkeys.theme.MonetSeedSchemeTest',
     // Saga 2026-10-25: the real DIY-theme store behind the backup section.
     'tribixbite.cleverkeys.theme.CustomThemeBackupFormatTest',
     // Audit 2026-09-06 W7 (H-1 + H-7): onCustomShortSwipe dispatch is exclusive —

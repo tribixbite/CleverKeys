@@ -195,22 +195,7 @@ class ThemeProvider(
                 keyLabel = androidx.compose.ui.graphics.Color(0xFF5C6A72),
                 swipeTrail = androidx.compose.ui.graphics.Color(0xFF828812)
             )
-            "monet", "monetdark" -> darkKeyboardColorScheme(
-                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
-            ).copy(
-                keyDefault = androidx.compose.ui.graphics.Color(0xFF333333),
-                keyboardBackground = androidx.compose.ui.graphics.Color(0xFF1B1B1B),
-                keyLabel = androidx.compose.ui.graphics.Color(0xFFFFFFFF),
-                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
-            )
-            "monetlight" -> lightKeyboardColorScheme(
-                primary = androidx.compose.ui.graphics.Color(0xFF9B59B6)
-            ).copy(
-                keyDefault = androidx.compose.ui.graphics.Color(0xFFCCCCCC),
-                keyboardBackground = androidx.compose.ui.graphics.Color(0xFFE3E3E3),
-                keyLabel = androidx.compose.ui.graphics.Color(0xFF000000),
-                swipeTrail = androidx.compose.ui.graphics.Color(0xFF9B59B6)
-            )
+            in MonetSeedScheme.THEME_NAMES -> monetSeedScheme(MonetSeedScheme.isLight(themeId, systemLight()))
             else -> darkKeyboardColorScheme() // Fallback
         }
     }
@@ -306,6 +291,22 @@ class ThemeProvider(
     }
 
     private fun systemLight(): Boolean = Config.isSystemLight(context.resources)
+
+    /**
+     * The colours a Monet theme draws in its [light] or dark variant: the system's wallpaper
+     * colours from Android 12 ([MonetSeedScheme.dynamic]); below that, or on a ROM without the
+     * system palette, the plain Light / Dark theme Config draws Monet with instead.
+     */
+    private fun monetSeedScheme(light: Boolean): KeyboardColorScheme {
+        val plain = getBuiltInColorScheme(MonetSeedScheme.fallbackThemeName(light))
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.S) return plain
+        return try {
+            MonetSeedScheme.dynamic(light) { context.getColor(it) }
+        } catch (e: android.content.res.Resources.NotFoundException) {
+            android.util.Log.w(TAG, "System dynamic colours unavailable — seeding Monet with the plain theme", e)
+            plain
+        }
+    }
 
     /** [flat] rendered, with wallpaper colours applied when it asks for them ([dynamicPalette]). */
     private fun renderedFor(flat: ThemeSpec): RenderedThemeSpec {
@@ -647,5 +648,50 @@ class ThemeProvider(
                 ).also { instance = it }
             }
         }
+    }
+}
+
+/**
+ * The Theme Creator's starting colours for a Monet theme: the colours `MonetLight` /
+ * `MonetDark` (`res/values/themes.xml`) draw, read from the same system palette entries, so a
+ * theme created while Monet is selected starts from the wallpaper colours the keyboard shows,
+ * and choosing Monet sets the swipe trail to the accent (`ThemeSettingsActivity.applyTheme`).
+ * Both were a fixed purple/grey approximation until 2026-11-20. Pure: [dynamic]'s `color` resolves an
+ * `android.R.color` id (`Context.getColor` in [ThemeProvider]).
+ */
+internal object MonetSeedScheme {
+
+    /** The built-in theme names drawn with the Monet styles (Config's style map). */
+    val THEME_NAMES = setOf("monet", "monetlight", "monetdark")
+
+    /** Whether [themeId] draws the light variant: Monet (Auto) follows the system mode. */
+    fun isLight(themeId: String, systemLight: Boolean): Boolean = when (themeId) {
+        "monetlight" -> true
+        "monetdark" -> false
+        else -> systemLight
+    }
+
+    /** The theme Config draws a Monet theme with when the system palette is missing (API < 31). */
+    fun fallbackThemeName(light: Boolean): String = if (light) "light" else "dark"
+
+    /**
+     * The scheme of `MonetLight` ([light]) or `MonetDark`: keyboard, key, label and sub-label
+     * from the neutral palette, the activated key = the keyboard colour (`?colorKeyboard`), and
+     * the accent (`colorLabelActivated`) as primary and swipe trail.
+     */
+    @android.annotation.TargetApi(android.os.Build.VERSION_CODES.S)
+    fun dynamic(light: Boolean, color: (Int) -> Int): KeyboardColorScheme {
+        fun c(id: Int) = androidx.compose.ui.graphics.Color(color(id))
+        val accent = c(android.R.color.system_accent1_400)
+        val keyboard = c(if (light) android.R.color.system_neutral1_100 else android.R.color.system_neutral1_900)
+        val base = if (light) lightKeyboardColorScheme(primary = accent) else darkKeyboardColorScheme(primary = accent)
+        return base.copy(
+            keyDefault = c(if (light) android.R.color.system_neutral1_50 else android.R.color.system_neutral1_800),
+            keyActivated = keyboard,
+            keyLabel = c(if (light) android.R.color.system_neutral1_800 else android.R.color.system_neutral1_0),
+            keySubLabel = c(if (light) android.R.color.system_neutral1_500 else android.R.color.system_neutral1_400),
+            swipeTrail = accent,
+            keyboardBackground = keyboard,
+        )
     }
 }

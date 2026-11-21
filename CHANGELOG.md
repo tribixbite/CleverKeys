@@ -629,6 +629,10 @@ editor that used to be listed here already ship in 2.0.)
   login reloaded the page, the suggestion bar over the new, empty field still held the old
   password (in plain text if its eye was open); it now starts empty and masked, and the
   password is forgotten as soon as you leave the field.
+- With a Monet theme selected, a new theme in the Theme Manager starts from the wallpaper
+  colours the keyboard shows (the light or dark variant it shows, for Monet (Auto)), and choosing
+  Monet sets the swipe trail to the wallpaper's accent colour; both used a fixed purple and grey.
+  Below Android 12 they follow the Light or Dark theme that Monet falls back to there.
 - Clipboard Clean removes line breaks that fall mid-sentence — including short lines, a name
   split across lines and a hard-wrapped paragraph's sentence ends — on text copied from a PDF,
   an e-mail, a terminal or chat (space- or tab-indented, including a numbered list copied
