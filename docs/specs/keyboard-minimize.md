@@ -156,6 +156,25 @@ and a Saga (Android 14) run on 2026-10-22 (CleverKeys 2.0.0 verbose build, tile 
   shade paragraphs above now say Chrome hides its own keyboard and only a button that outlives
   the IME window needs the overlay.
 
+## Keeping the keyboard up across a rotation (2026-11-19/20)
+
+The keyboard on screen before a rotation stays on screen, and an open clipboard, emoji or GIF
+pane comes back with it. `RotationShowGuard` (pure) decides; the service drives it from
+`onConfigurationChanged`, `onStartInput`, `onWindowHidden` and a main-thread retry tick
+(`_rotationShowTick`), and reopens the pane (`reopenRotationPane`).
+
+| Case | Result | Evidence |
+|---|---|---|
+| App recreates its window (Google app); the platform's `SHOW_RESTORE_IME_VISIBILITY` misses because the IME re-shows 4 ms after the rotation | hide undone, at most 2 requests | Pixel 8 Pro: 8/8 kept, was 0/8 (Gboard 3/8, SwiftKey 8/8) |
+| App keeps its window and hides the keyboard itself (Discord, `HIDE_SOFT_INPUT_BY_INSETS_API`), no pane open | the app's hide stands | Discord's wide layout returns to its channel list over the bound chat box |
+| Same, a pane open at the rotation (the keyboard was taller than the new screen) | 1 request; a second hide stands | Pixel at the S25U's 1080x2340/420 dpi: old build 7/10 closed, new build 0/50 left closed; maintainer retest PASS 2026-11-20 (build `0b453fbe`) |
+| User hide (Back, `hide_keyboard`, the tile), a hardware key, input in another app, the TYPE_NULL fallback of a screen without an editor, or a hide later than 2 s | nothing shown | `RotationShowGuardTest` |
+
+Not possible: shrinking the keyboard before the app measures the new screen. The IME learns of
+the rotation at the same moment as the app (stowing the pane during the rotation: still 9/10
+closed). Diagnosis recipe and log lines: `.claude/skills/keyboard-tile-and-minimize.md`
+"Keyboard kept up across a rotation".
+
 ## Architecture
 
 - `minimize/KeyboardMinimizer<V>` (pure, generic over the view type):

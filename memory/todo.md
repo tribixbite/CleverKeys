@@ -137,7 +137,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    suffix/template/continuous feel. 2026-11-18 Saga `.82` (checklist rows): emoji panel by hand and
    GIF import/browse/search/Replace/remove PASS; FAIL text emoticons invisible on a light runtime
    look (FIXED 2026-11-18, `EmojiPaneRuntimeThemeTest`; with it the per-cell AppCompat log spam,
-   the stale GIF "Imported:" line after removal, GIF search spell-check, launcher rotation); FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`). Rotation (maintainer 2026-11-19: Google app always, Discord with the clipboard open):
+   the stale GIF "Imported:" line after removal, GIF search spell-check, launcher rotation); FAIL inserted emojis count as part of the typed word (`+😂🍕`, then `😂🍕a`) — FIXED 2026-11-18
+   `ef4a2519` (`EmojiWordBoundaryTest`); Pixel PASS 2026-11-20 (release built at `e505d449`, launcher
+   test field: two emojis leave the bar empty, then `a` offers at/all/are). Rotation (maintainer 2026-11-19: Google app always, Discord with the clipboard open):
    FIXED 2026-11-19 `RotationShowGuard` — Google app 8/8 kept (was 0/8; Gboard 3/8, SwiftKey 8/8),
    the open pane comes back (4/4); Discord on the Pixel hides EVERY keyboard itself (its own
    `hide(ime())`, window kept) and still does: the maintainer's Discord-with-clipboard case on the
@@ -155,7 +157,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    pane closed just before kept it 5/5), so with a pane open the guard undoes it with one request and
    the pane comes back (Pixel at S25U geometry: 3 hides in 50 rotations, all undone, 0 left closed;
    previous build 7/10 closed). Stowing the pane during the re-show did nothing (9/10). Maintainer
-   retest 2026-11-20 on the Pixel with build 0b453fbe: fixed. CLOSED.
+   retest 2026-11-20 (build 0b453fbe, installed on the S25U and the Pixel): fixed. CLOSED.
    Password bar (maintainer 2026-11-19): a new password field showed the previous field's
    password — FIXED, `SuggestionBar.setPasswordMode` resets per field (ew-cli red→green). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-9)
 10. [ ] maintainer: ONE native-speaker review of every string added since 2026-09-29 in 21 locales

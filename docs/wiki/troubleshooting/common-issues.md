@@ -51,6 +51,23 @@ Solutions for the most frequently encountered problems with CleverKeys.
    - Temporarily disable other keyboards
    - Disable accessibility services one by one
 
+### Issue: Keyboard closes when I rotate the phone
+
+If the keyboard was on screen when you rotated, CleverKeys keeps it there:
+
+- **Apps that rebuild their screen on rotation** (the Google app's search box, for example):
+  if Android closes the keyboard for the rebuilt screen, CleverKeys brings it back.
+- **An open clipboard, emoji or GIF panel** comes back with the keyboard.
+- **Apps that close the keyboard themselves** on rotation are left alone, because that is the
+  app's choice. Discord does this on wide screens, where it switches to its channel list.
+  The exception: if a panel was open, the panel can make the keyboard taller than the turned
+  screen, and that is why Discord closed it. In that case the keyboard comes back once, with
+  the panel.
+- **A keyboard you closed yourself** (Back, or the hide key) stays closed.
+
+If it still closes, note the app and whether a panel was open, and report it on the
+[issue tracker](https://github.com/tribixbite/CleverKeys/issues).
+
 ## Typing Issues
 
 ### Issue: Wrong characters appear

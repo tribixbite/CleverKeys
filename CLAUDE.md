@@ -52,7 +52,7 @@ committed coordination over working-tree edits.
 | "emoji panel" | `.claude/skills/emoji-panel.md` |
 | "content pane layout", "GIF pane", "topPane" | `.claude/skills/content-pane-layout.md` |
 | "theme", "Monet", "Material You", "DIY theme", "Theme Manager", "per-layout theme", "magnifier colours" | `.claude/skills/theme-system.md` |
-| "Quick Settings tile", "minimize", "floating button", "FAB", "summon", "hide_keyboard", "overlay permission" | `.claude/skills/keyboard-tile-and-minimize.md` |
+| "Quick Settings tile", "minimize", "floating button", "FAB", "summon", "hide_keyboard", "overlay permission", "rotation hides the keyboard", "RotationShowGuard" | `.claude/skills/keyboard-tile-and-minimize.md` |
 | "autocorrect ranking", "channel ranking", "κ"/"kappa", "δ"/"delta", "Ranking & Tuning", "AutocorrectTuning" | `.claude/skills/settings-preferences.md` § Autocorrect Knobs + `autocorrect/AutocorrectTuning.kt` + `docs/eval/2026-10-18-channel-autocorrect-ranking.md` |
 | "editor commands", "RustDesk", "blind field", "terminal", "TYPE_NULL", "process-text", "inline field" | `.claude/skills/ime-key-routing.md` |
 | "swipe-to-delete", "Undo" (clipboard rows) | `.claude/skills/clipboard-panel-architecture.md` § Swipe to delete a row |
@@ -460,7 +460,7 @@ measurement run if unnoticed, because the symptom is *absence of log output*, no
 - **Static LM language guard (2026-09-27)** → `.claude/skills/language-model-and-swipe-evals.md` (moved 2026-11-14).
 
 ### Test-rename and mock-test traps (2026-09-30)
-- `docs/RELEASE_RECORD.md` anchors TEST METHOD NAMES (`File.kt#method`) and released sections are hash-pinned (`ReleaseRecordDriftTest.historyIsImmutable`): renaming an anchored test breaks the anchor, and editing the old row breaks the hash. Keep the old method name (note why in its KDoc) or add a superseding row in the current release. `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test.
+- `docs/RELEASE_RECORD.md` anchors TEST METHOD NAMES (`File.kt#method`) and released sections are hash-pinned (`ReleaseRecordDriftTest.historyIsImmutable`): renaming an anchored test breaks the anchor, and editing the old row breaks the hash. Keep the old method name (note why in its KDoc) or add a superseding row in the current release. `rg -n '<method>' docs/RELEASE_RECORD.md` before renaming any test. Never `sed` a pattern across the whole file: the same anchor recurs in released sections (an `EmojiGridView.kt#EmojiGridView` edit hit two pinned v1.2 rows, 2026-11-20); edit only the current section's lines and check `git diff` shows additions only.
 - Adding `android.util.Log` to a handler path breaks `runMockTests` classes that drive it (`RuntimeException: Stub!`): mock it next to Toast (`mockkStatic(android.util.Log::class)`).
 
 - **String resources and translations (2026-09-30, extended 2026-10-22)** → `.claude/skills/translations.md` (moved 2026-11-14).

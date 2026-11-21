@@ -149,7 +149,9 @@ The clipboard pane has four mutually exclusive modes. Only one can be active at 
   service-lifetime `ClipboardManager` and attached to every inflated view
   (`attachSelectionHolder`). The view's `selection` is a getter onto it. NEVER put selection
   state back on the view: views are recreated on theme change, and the pane closes on
-  rotation / keyboard hide / app switch, yet the selection must survive all of them.
+  rotation / keyboard hide / app switch, yet the selection must survive all of them. (After a
+  rotation the service reopens the pane it closed, `reopenRotationPane`, so a rotation reads as
+  close + reopen: `resetSearchOnHide` then `resetSearchOnShow`.)
 - **Enter**: result-row **Select** button → `ClipboardManager.enterSelectionMode()` →
   `startSelection()` (refused during edit or while a bulk action runs). Long-press is NOT the
   entry gesture (it copies to the OS clipboard in normal mode; in selection mode it toggles).

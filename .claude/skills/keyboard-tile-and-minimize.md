@@ -109,6 +109,33 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
   button, and do not describe summon-after-hide as "needs the overlay permission" (older rows in
   `docs/audit/gh-issue-resolution.md` #175 and todo item 15 said so before this check).
 
+## Keyboard kept up across a rotation (`af256e7d`, `e505d449`; 2026-11-19/20)
+
+- `RotationShowGuard` (pure, `RotationShowGuardTest`) + the service's `_rotationGuard`,
+  `_rotationShowTick`, `_rotationPane` / `reopenRotationPane`. Armed in `onConfigurationChanged`
+  when the orientation changes with the window visible over an editor (`currentEditorRef()`);
+  a non-user hide within `WINDOW_MS` (2 s) starts the tick, which calls `requestShowSelfCompat()`
+  once the same app's editor is bound again. A user hide (`_tileShow.dismissedByUser`), a hardware
+  key (`onKeyDown` → `onUserInput`), input in another app or the TYPE_NULL fallback connection
+  (unless the editor was TYPE_NULL, a terminal) never get a show.
+- Two cases, told apart by `onStartInput(restarting = false)` after the rotation:
+  - **Window recreated** (the Google app): the platform's `SHOW_RESTORE_IME_VISIBILITY` misses
+    because CleverKeys' `RESET_NEW_CONFIGURATION` re-show comes 4 ms after the rotation
+    (SwiftKey's 115 ms). Up to `MAX_RESTORES` = 2 requests.
+  - **Window kept, the app hides the keyboard itself** (Discord, `HIDE_SOFT_INPUT_BY_INSETS_API`
+    from the app's uid): its choice, so it stands, unless a content pane was open at the rotation
+    (`paneOpen`). With a pane open, the keyboard was taller than the new screen at the moment of
+    the rotation, and Discord hid it over its chat. In that case there is ONE request: Discord's
+    wide layout (the Pixel at 360 dpi) leaves the chat and hides again, and that second hide stands.
+- The open pane (`KeyboardReceiver.openPaneEvent()`) is closed by the new window's input start
+  even when the system restores the keyboard; `reopenRotationPane` reopens it inside the window.
+- Evidence and logs: `CleverKeys/Tile` lines `rotation: A -> B armed=`, `hidden N ms after it,
+  restore=`, `requestShowSelf sent`, `loop done`; `dumpsys input_method` mImeTrackerService#History
+  and mSoftInputShowHideHistory name who hid it. Reproduce another phone's case with `wm size` +
+  `wm density` (then `reset`); Discord's layout follows dp width. Measure 10+ rotations per case
+  with an old-build control: hide rates swung 0–9/10 between sessions. Stowing the pane during the
+  rotation did NOT help (9/10 still hidden) — the IME learns of the rotation with the app.
+
 ## Traps
 
 - `KeyboardTileService`'s lifecycle callbacks all begin with a `super` call into an
