@@ -1,2 +1,14 @@
 # CleverKeys de force-drop blocklist (overrides everything, incl. the allowlist).
 # One word per line; "#" starts a comment.
+#
+# ── Accent misspellings (2026-11-20; the Italian method of 2026-11-19) ─────────────────────────
+# Spellings of a word whose umlaut form is ALSO in the list, typed without the umlaut. Candidates:
+# scripts/accent_twin_audit.py with hunspell de_DE_frami (LibreOffice): no form of the word is
+# accepted, lowercase or Capitalised, while a twin is (64 candidates). Kept on review (see
+# docs/eval/2026-11-20-accent-spellings.md): surnames, brands and English words (blatter, bose,
+# citroën, burger, store), colloquial forms (hä, wär, schäm, kämpf) and the Swiss mässig. These
+# four are the misspellings.
+fur  # für
+munchen  # münchen
+ol  # öl
+uber  # über

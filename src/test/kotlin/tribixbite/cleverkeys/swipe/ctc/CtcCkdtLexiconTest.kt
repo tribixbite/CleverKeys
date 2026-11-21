@@ -141,8 +141,8 @@ class CtcCkdtLexiconTest {
         val p = projected.getValue("fr")
         assertThat(p.records).isEqualTo(40_000)
         assertThat(p.untypeable).isEqualTo(0)
-        assertThat(p.freqs.size).isEqualTo(37_958)
-        assertThat(p.collisions).isEqualTo(2_042)
+        assertThat(p.freqs.size).isEqualTo(38_255)
+        assertThat(p.collisions).isEqualTo(1_745)
     }
 
     @Test
@@ -150,8 +150,8 @@ class CtcCkdtLexiconTest {
         val p = projected.getValue("de")
         assertThat(p.records).isEqualTo(40_000)
         assertThat(p.untypeable).isEqualTo(0)
-        assertThat(p.freqs.size).isEqualTo(39_594)
-        assertThat(p.collisions).isEqualTo(406)
+        assertThat(p.freqs.size).isEqualTo(39_598)
+        assertThat(p.collisions).isEqualTo(402)
     }
 
     @Test
@@ -159,8 +159,8 @@ class CtcCkdtLexiconTest {
         val p = projected.getValue("es")
         assertThat(p.records).isEqualTo(50_000)
         assertThat(p.untypeable).isEqualTo(0)
-        assertThat(p.freqs.size).isEqualTo(47_955)
-        assertThat(p.collisions).isEqualTo(2_045)
+        assertThat(p.freqs.size).isEqualTo(48_605)
+        assertThat(p.collisions).isEqualTo(1_395)
     }
 
     @Test

@@ -243,6 +243,39 @@ add-to-dictionary offers:
 4. **Prefix boosts are DEAD — do not regenerate them.** Their only consumer (the neural beam search) was deleted with the neural engine on 2026-08-18 (ADR-011); `src/main/assets/prefix_boosts/` no longer exists, and every `boost` flag in `build_all_languages.py` is `False` (2026-09-03) so a bulk rebuild cannot resurrect the tree. `LanguagePackManager` still ACCEPTS a pack-side `prefix_boost.bin` and copies it on import (so old packs install cleanly) but nothing reads it back.
 5. **`build_all_languages.py` refuses to regenerate en in bulk runs** — the English dict is frozen at 98,140 words; rebuild it only deliberately via `build_wordlist.py --lang en --write`.
 
+## Accent misspellings: audit every accented Latin lexicon after a rebuild (2026-11-19/20)
+
+wordfreq counts unaccented web typing (`francais`, `tambien`, `nao`, `perche`) as words, and the
+classifier can keep them beside the accented form. Since the CTC collision alternates (2026-11-18)
+a swipe offers every form of a surface, so such a spelling shows up in the slate. it, fr, es, pt and
+de were cleaned (`docs/eval/2026-11-19-italian-accent-spellings.md`,
+`docs/eval/2026-11-20-accent-spellings.md`); **sv is measured, not fixed** (89 candidates).
+
+- Find candidates: `python3 scripts/accent_twin_audit.py --words scripts/dictionaries/<l>/<l>_words.txt
+  --oracle <hunspell dict path> [--oracle ...] --out <tsv>`. Rejected lowercase AND Capitalised
+  while a group twin is accepted (keeps names and German nouns out). Review by hand; the reviewed
+  drops go to `<l>_blocklist.txt` as `word  # twin[/twin]`; pinned by `AccentSpellingDriftTest`.
+- Oracles that worked: fr = Grammalecte **"toutes variantes"** (Debian `hunspell-fr-comprehensive`;
+  Termux's `fr_FR` is "classique" and rejects the 1990 reform `apparaitre`/`aout`); es = es_ES +
+  es_MX + **es_AR** (voseo); pt = pt_BR + pt_PT; de = de_DE_frami (LibreOffice
+  `raw.githubusercontent.com/LibreOffice/dictionaries/master/<dir>/…`; sv under `sv_SE/dictionaries/`).
+  The script exits non-zero when hunspell accepts nothing (a 404 page saved as `.dic`).
+- Kept on review, every language: real colliding words (the oracle accepts them), English words the
+  text uses as they are, abbreviations, compound fragments, names spelled their owner's way, and
+  spellings that were standard before a reform (fr 1990, es pre-2010 `guión`, pt pre-2009 `idéia`).
+- Build in a scratch copy (`git archive HEAD scripts src/main/assets/dictionaries src/main/assets/lm`),
+  never the shared tree. `build_wordlist.py` needs the AOSP snapshot, removed from the tree for
+  F-Droid: fetch `…/LatinIME/+/refs/heads/main/dictionaries/<code>_wordlist.combined.gz?format=TEXT`,
+  base64 → gunzip → `word\tflags` rows SORTED, `gzip.compress(body, 9, mtime=0)`; it must match
+  PROVENANCE.md's sha256. Traps: fr marks entries `not_a_word=true` (no `flags=`) → flag `nonword`;
+  pt = pt_BR ∪ pt_PT with **BR flags winning**. Reproduce the shipped bin from HEAD inputs first; a
+  difference is input drift (fr: contraction keys added after the last build) to explain, not ignore.
+- Then re-run the audit on the rebuilt list (the size cap admits new words), regenerate elisions
+  (`extract_apostrophe_words.py --lang`) and `build_contraction_collisions.py`, rebuild
+  `langpack-<l>.zip` (`build_all_languages.py --lang <l>`), and rebuild `<l>.cklm` only if it names a
+  dropped spelling, under a gate pre-registered in its `LangConfig` (the Italian G1–G6). Lexicon
+  shapes are pinned in `CtcCkdtLexiconTest` and `CtcMultiLanguageInstrumentedTest.SHAPES`.
+
 ## Arabic-script lookup fold and the Persian half-space (2026-10-23)
 
 - `ArabicScriptFold` folds LOOKUP KEYS only (dictionary keys at load, the typed word at

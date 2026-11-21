@@ -298,3 +298,12 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `docs/wiki/specs/typing/smart-punctuation-spec.md` Feature C). Ellipsis chain fixed; the
     checklist's "Punctuation and elisions" passes on Saga .144 except `d'être` (item 35). Open: a
     human run; the setting's translations (item 10). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-36)
+37. [ ] agent → maintainer: accent misspellings in the other Latin lexicons (2026-11-20; found by the
+    full instrumented run: `francais` in a French swipe slate, all four APIs). FIXED fr/es/pt/de the
+    Italian way: 313 / 668 / 160 / 4 spellings dropped (`francais`, `tambien`, `nao`, `munchen`),
+    reviewed keeps listed per language, fr.cklm and pt.cklm rebuilt under pre-registered gates (all
+    pass; de.cklm names none of its four), packs rebuilt; `scripts/accent_twin_audit.py`,
+    `AccentSpellingDriftTest`, `docs/eval/2026-11-20-accent-spellings.md`. The instrumented slate
+    check now allows a bare word that is its own canonical form (`wahrend` is real German). Open:
+    Swedish (89 candidates, dialect forms need a Swedish speaker; sv.cklm gate); a native review of
+    the keep/drop calls (maintainer); not device-checked.

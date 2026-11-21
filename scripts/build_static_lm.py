@@ -340,6 +340,26 @@ CONFIGS: dict[str, LangConfig] = {
             ood_test=_ud("UD_French-GSD", "94d5b68e185fc22a9ef292040e84f476d36d9b0e", "fr_gsd", "test",
                          "eee5a599b429658b6ee8582fae9993eb07161247fc64bad57d16b2050ed4eb1a"),
             ood_label="UD French-GSD",
+            # Rebuilt 2026-11-20, same pinned corpora and code: fr_enhanced.bin no longer holds 313
+            # accent misspellings (`francais`, `deja`, `etre`, `trés`, `montreal`;
+            # scripts/dictionaries/fr/fr_blocklist.txt, docs/eval/2026-11-20-accent-spellings.md),
+            # and the model is built from the CURRENT elision tables, which gained the accented
+            # elisions (`l'école`, `d'être`) on 2026-11-07/09 after the 2026-09-29 model. The
+            # 2026-09-29 inputs (4775300e) first reproduced the shipped file byte-for-byte
+            # (sha256 5ced1c6f…; 458,180 B, OOD-test next-word 11.73 / 19.55). Pre-registered gate,
+            # written before the candidate was built: G1 the model names none of the 313 dropped
+            # spellings, and every accented twin the shipped model names it still names; G2 size
+            # <= 1.10 x 458,180 B and the drift-test budget; G3 OOD-test next-word top1/top3 >=
+            # 11.63 / 19.45 (shipped - 0.10 pt); G4 StaticLmTapEvalTest fr end to end (new lexicon +
+            # new model vs the shipped pair), every lm_static cell (OOD + in-domain) >= shipped -
+            # 0.10 pt; G4a the same cells, new vs shipped model under the NEW lexicon (attribution),
+            # same bar; G5 the other languages' models byte-identical; G6 drift/contraction tests
+            # green.
+            # Result: all pass. 470,952 B (+2.8%), vocab 16,964 -> 17,417 (+485 accented elisions,
+            # -67 misspellings the shipped model named, every twin kept), OOD-test next-word
+            # 11.85 / 19.75; tap eval end to end: worst lm_static cell -0.01 pt (OOD prefix-3
+            # top-3), best +0.41 (OOD next-word top-3); G4a worst +0.02. Tatoeba weight 0.05 again
+            # chosen on OOD dev.
             lexicon="fr_enhanced.bin",
             # REPLACE (c'est, j'ai, aujourd'hui …) + PAIRED (l'une, est-elle …) display forms.
             contraction_files=("contractions_fr.json", "contraction_pairs_fr.json"),
@@ -428,6 +448,24 @@ CONFIGS: dict[str, LangConfig] = {
             ood_test=_ud("UD_Portuguese-Bosque", "884288537f7e8e02e50f125791cf279d905d1043", "pt_bosque", "test",
                          "9a824650b7a02cf411f6e09b39e8fb423c85e1a5fb3a55b87e7f4c0c2ea5b3bb"),
             ood_label="UD Portuguese-Bosque",
+            # Rebuilt 2026-11-20, same pinned corpora and code: pt_enhanced.bin no longer holds 160
+            # accent misspellings (`nao`, `voce`, `tambem`, `entao`; the shipped model named 22 of
+            # them; scripts/dictionaries/pt/pt_blocklist.txt, docs/eval/2026-11-20-accent-spellings.md).
+            # The 2026-09-29 inputs (807c56bd) first reproduced the shipped file byte-for-byte
+            # (sha256 1ff51269…; 351,738 B, OOD-test next-word 9.69 / 16.96). Pre-registered gate,
+            # written before the candidate was built: G1 the model names none of the 160 dropped
+            # spellings, and every accented twin the shipped model names it still names; G2 size
+            # <= 1.10 x 351,738 B and the drift-test budget; G3 OOD-test next-word top1/top3 >=
+            # 9.59 / 16.86 (shipped - 0.10 pt); G4 StaticLmTapEvalTest pt end to end (new lexicon +
+            # new model vs the shipped pair), every lm_static cell (OOD + in-domain) >= shipped -
+            # 0.10 pt; G4a the same cells, new vs shipped model under the NEW lexicon, same bar;
+            # G5 the other languages' models byte-identical (de.cklm names none of the 4 German
+            # drops and is not rebuilt); G6 drift/contraction tests green.
+            # Result: all pass. 350,521 B (-0.3%), vocab 13,022 -> 13,006 (-22 misspellings, +7
+            # words the size cap let in, -1 `monde`), OOD-test next-word 9.69 / 16.95; tap eval end
+            # to end: worst lm_static cell -0.01 pt (OOD next-word top-3), best +1.05 (in-domain
+            # prefix-2 top-1: a prefix no longer spends a slot on `nao` beside `não`); G4a worst
+            # -0.01 pt.
             lexicon="pt_enhanced.bin",
             contraction_files=("contractions_pt.json",),
             wordfreq_lang="pt",

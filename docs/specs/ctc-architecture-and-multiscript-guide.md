@@ -28,9 +28,10 @@ languages, the neural engine deleted, and the 2026-08-20 remediation wave landed
 >   for non-Latin lexicons (see the 2026-08-25 wiring plan §A6).
 > - Secondary-language dual decode exists: one encoder pass, per-language beam decode,
 >   rank-only merge (`swipe/ctc/CtcRankMerger`), a two-slot language-keyed trie LRU.
-> - `CtcAzProjection` gained deterministic expansions `ß→ss, œ→oe, æ→ae, ø→o`; the fr shape is
->   now 40,000 records / 0 untypeable / 37,958 surfaces / 2,042 collisions (the §2/§3 counts
->   below predate this).
+> - `CtcAzProjection` gained deterministic expansions `ß→ss, œ→oe, æ→ae, ø→o`; the fr shape was
+>   40,000 records / 0 untypeable / 37,958 surfaces / 2,042 collisions (the §2/§3 counts
+>   below predate this); since the 2026-11-20 accent-misspelling drops it is 38,255 surfaces /
+>   1,745 collisions (`docs/specs/ctc-swipe-engine.md` has the current table).
 > - Version metadata is 1.6.0 with drift tests pinning `CtcLanguageSupport.SUPPORTED` =
 >   en/fr/de/es/it/pt/sv — adding a script language will trip `ReleaseMetadataDriftTest` by
 >   design.

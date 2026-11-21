@@ -12709,7 +12709,6 @@ funktionär
 funktionäre
 funktionären
 funky
-fur
 furcht
 furchtbar
 furchtbare
@@ -23567,7 +23566,6 @@ mum
 mumbai
 mumie
 mumm
-munchen
 mund
 mundart
 munde
@@ -25039,7 +25037,6 @@ oklahoma
 okt
 oktober
 oktoberfest
-ol
 olaf
 old
 oldenburg
@@ -33956,7 +33953,6 @@ tüv
 ua
 ub
 ubahn
-uber
 ubisoft
 ubs
 ubuntu
@@ -36274,6 +36270,7 @@ verwendet
 verwendete
 verwendeten
 verwendung
+verwendungen
 verwendungszweck
 verwerfen
 verwerflich
@@ -36331,6 +36328,7 @@ verzeihung
 verzerrt
 verzerrte
 verzerrung
+verzerrungen
 verzicht
 verzichte
 verzichten
@@ -36358,6 +36356,7 @@ verzögerte
 verzögerung
 verzögerungen
 verächtlich
+verändere
 verändern
 verändert
 veränderte
@@ -36515,6 +36514,7 @@ virtuell
 virtuelle
 virtuellen
 virtueller
+virtuelles
 virus
 visa
 visier

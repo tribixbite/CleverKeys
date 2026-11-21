@@ -629,6 +629,14 @@ editor that used to be listed here already ship in 2.0.)
   login reloaded the page, the suggestion bar over the new, empty field still held the old
   password (in plain text if its eye was open); it now starts empty and masked, and the
   password is forgotten as soon as you leave the field.
+- French, Spanish, Portuguese and German no longer offer misspellings typed without their
+  accents beside the right word: a swipe showed `francais` beside `français`, `tambien` beside
+  `también`, `nao` beside `não`, and a typed `francais` was taken as a word and never corrected.
+  1,145 such spellings left the four dictionaries (313 French, 668 Spanish, 160 Portuguese,
+  4 German), as Italian's did on 2026-11-19; the French and Portuguese next-word models were
+  rebuilt without them. Real words that differ only by an accent stay (`la`/`là`, `esta`/`está`,
+  `schon`/`schön`), and so do the 1990 French and pre-2009 Portuguese spellings, voseo, names
+  and English words written as they are.
 - With a Monet theme selected, a new theme in the Theme Manager starts from the wallpaper
   colours the keyboard shows (the light or dark variant it shows, for Monet (Auto)), and choosing
   Monet sets the swipe trail to the wallpaper's accent colour; both used a fixed purple and grey.

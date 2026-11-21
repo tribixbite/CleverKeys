@@ -23,6 +23,7 @@ import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.PredictionResult
 import tribixbite.cleverkeys.TestConfigHelper
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
+import tribixbite.cleverkeys.swipe.ctc.CtcAlternateForm
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
@@ -122,9 +123,9 @@ class CtcMultiLanguageInstrumentedTest {
          * these — which is the point.
          */
         val SHAPES = mapOf(
-            "fr" to LexiconShape(records = 40_000, untypeable = 0, words = 37_958, collisions = 2_042),
-            "de" to LexiconShape(records = 40_000, untypeable = 0, words = 39_594, collisions = 406),
-            "es" to LexiconShape(records = 50_000, untypeable = 0, words = 47_955, collisions = 2_045),
+            "fr" to LexiconShape(records = 40_000, untypeable = 0, words = 38_255, collisions = 1_745),
+            "de" to LexiconShape(records = 40_000, untypeable = 0, words = 39_598, collisions = 402),
+            "es" to LexiconShape(records = 50_000, untypeable = 0, words = 48_605, collisions = 1_395),
         )
 
         /**
@@ -308,7 +309,12 @@ class CtcMultiLanguageInstrumentedTest {
     /**
      * Every word the adapter hands the pipeline must trace back to the lexicon — its a–z
      * projection has to be a path in [trie] — and none of them may be a BARE surface whose
-     * canonical form carries an accent (that is the display overlay silently not running).
+     * canonical form carries an accent (that is the display overlay silently not running),
+     * unless that bare form is itself a canonical word of the surface ([alternates]): since
+     * 2026-11-18 a collision offers every canonical form (`schon` beside `schön`,
+     * `CtcSurfaceForms`), so a real bare word may follow its accented winner. Whether a bare
+     * form is a real word or a misspelling is the dictionary's question, pinned by the
+     * per-language accent-spelling drift tests, not the overlay's.
      *
      * For a NON-ENGLISH language the lexicon check is unconditional, apostrophes included.
      * It briefly was not: the adapters used to load the bundled ENGLISH contraction base for
@@ -332,6 +338,7 @@ class CtcMultiLanguageInstrumentedTest {
         result: PredictionResult,
         trie: CtcLexiconTrie,
         display: Map<String, String>,
+        alternates: Map<String, Array<CtcAlternateForm>> = emptyMap(),
     ) {
         val englishPossessiveExemption = language == "en"
         assertEquals(
@@ -366,11 +373,14 @@ class CtcMultiLanguageInstrumentedTest {
                     trie.contains(surface!!)
                 )
             }
-            assertNull(
-                "$language: '$word' was presented as a bare a–z surface; its canonical form " +
-                    "is '${display[word]}' — CtcEngineAdapter.applyCanonicalDisplay did not run",
-                display[word]
-            )
+            val ownCanonicalForm = alternates[word]?.any { it.word == word } == true
+            if (!ownCanonicalForm) {
+                assertNull(
+                    "$language: '$word' was presented as a bare a–z surface; its canonical form " +
+                        "is '${display[word]}' — CtcEngineAdapter.applyCanonicalDisplay did not run",
+                    display[word]
+                )
+            }
         }
     }
 
@@ -574,7 +584,7 @@ class CtcMultiLanguageInstrumentedTest {
                         "the layout mapping or the bundled lexicon regressed",
                     result.words.isNotEmpty()
                 )
-                assertSlateIsCanonical(language, result, trie!!, projected.display)
+                assertSlateIsCanonical(language, result, trie!!, projected.display, projected.alternates)
                 assertNoForeignContractions(language, result)
                 assertTrue(
                     "$language: expected '${target.canonical}' in the slate for a " +
@@ -1103,7 +1113,7 @@ class CtcMultiLanguageInstrumentedTest {
                 result.words.any { it.lowercase() == "franco's" }
             )
             assertNoForeignContractions("fr", result)
-            assertSlateIsCanonical("fr", result, trie, projectionFor("fr").display)
+            projectionFor("fr").let { assertSlateIsCanonical("fr", result, trie, it.display, it.alternates) }
         } finally {
             adapter.shutdown()
         }

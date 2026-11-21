@@ -1339,6 +1339,8 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-11-19: Italian accent misspellings (`perche`, `pò`, `qual'è`) stay out of
     // it_enhanced.bin, the elision tables and it.cklm; real collisions (`sara`, `pero`) stay.
     'tribixbite.cleverkeys.ItalianAccentSpellingDriftTest',
+    // 2026-11-20: accent misspellings out of the fr/es/pt/de dictionaries and models (same method).
+    'tribixbite.cleverkeys.AccentSpellingDriftTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
