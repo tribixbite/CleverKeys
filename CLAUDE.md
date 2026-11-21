@@ -190,6 +190,14 @@ the keyboard taller than the new screen AT the rotation (0/20 without a pane, 0/
 just before). Its layout depends on dp width: reproduce a phone's case with `wm size` + `wm density`
 (then `reset`), and measure hide rates over 10+ trials with an old-build control; rates swung 0-9/10.
 
+## Swipe-engine changes surface dictionary data (2026-11-20)
+
+The CTC collision alternates (`ebef6234`, verified by pure tests and a FUTO replay) offer every form of a
+surface, so the dictionaries' unaccented web spellings (`francais`) reached the slate; only the full
+instrumented run (`CtcMultiLanguageInstrumentedTest`, real assets) caught it, two days later. After an
+engine change that widens what a swipe offers, run that class and audit the data it newly exposes
+(`scripts/accent_twin_audit.py`, `.claude/skills/dictionary-pipeline.md`).
+
 ## Compose "Recording currently in progress" crashes
 
 A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;

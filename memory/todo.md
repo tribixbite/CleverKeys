@@ -45,6 +45,11 @@ after two stale tests were fixed) green on the current code (`a20209c8`). Before
 maintainer's M1 soak, M2 strings and M4 tag sequence. Known issues and the full list: release-readiness audit "Status
 2026-11-17". Review §4 device checks are all done.
 
+**Status 2026-11-21 (agent).** A2 re-run on the code since: the first try (`e505d449`) found the
+French swipe offering `francais` (item 37, fixed `a0f3958d`); at `c8f8eb6d` pure 3,950 / mock 1,862 /
+instrumented 1,665 (API 34–37, 0 failed, 2 expected skips) green, CI green. Release `a82f9da2`
+installed on the S25U and the Pixel. Audit "Status 2026-11-21".
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
