@@ -12,7 +12,8 @@ import java.io.File
 /**
  * Accent misspellings stay out of the shipped dictionaries and next-word models of the languages
  * after Italian (2026-11-20; Italian has its own [ItalianAccentSpellingDriftTest], the method's
- * first run). Languages: fr, es, pt, de; Swedish was measured separately (see the eval note).
+ * first run). Languages: fr, es, pt, de (2026-11-20) and sv (2026-11-22,
+ * `docs/eval/2026-11-22-swedish-accent-spellings.md`).
  *
  * wordfreq counts the web's unaccented typing (`francais`, `deja`, `etre`) as words of their
  * own, so the word-list classifier kept them beside `français`, `déjà`, `être`. Since the CTC
@@ -22,7 +23,8 @@ import java.io.File
  *
  * Source of truth: `scripts/dictionaries/<lang>/<lang>_blocklist.txt`, each entry followed by
  * `#` and its accepted spelling(s), found by `scripts/accent_twin_audit.py` and reviewed (the
- * keep decisions and their reasons: `docs/eval/2026-11-20-accent-spellings.md`). This test reads
+ * keep decisions and their reasons: `docs/eval/2026-11-20-accent-spellings.md`, and the Swedish
+ * note for sv). This test reads
  * the blocklist itself, so an entry added there and not regenerated into the assets fails here,
  * and it pins words that collide and are real, so an over-eager blocklist fails too.
  *
@@ -136,6 +138,32 @@ class AccentSpellingDriftTest {
             singleForm = mapOf("fur" to "für", "munchen" to "münchen", "uber" to "über"),
             bothForms = mapOf("schon" to listOf("schon", "schön"), "hatte" to listOf("hatte", "hätte")),
             modelNames = listOf("für", "über", "schön", "während"),
+        ),
+        // 2026-11-22 (docs/eval/2026-11-22-swedish-accent-spellings.md).
+        Lang(
+            code = "sv",
+            blockedCount = 33,
+            misspellings = listOf(
+                "ocksa", "maste", "aven", "tva", "pa", "over", "fran", "gar", "goteborg", "malmo",
+                "endå", "löfvén", "muséet", "kvalite", "entre",
+            ),
+            kept = listOf(
+                // Real words that collide.
+                "har", "här", "hår", "for", "för", "hall", "håll", "las", "läs", "lås",
+                // Kept on review: English words Swedish text uses as they are, abbreviations and
+                // agency names, names spelled their owner's way, colloquial and dialect forms,
+                // and the common supine `hållt`.
+                "are", "on", "at", "lost", "save", "stand", "popular", "brå", "öb", "nas", "aka", "mar",
+                "francois", "jose", "kruger", "ramón", "sånna", "äre", "åsså", "dä", "hä", "jå", "mä",
+                "gö", "pöjk", "ba", "hållt",
+            ),
+            singleForm = mapOf(
+                "ocksa" to "också", "maste" to "måste", "tva" to "två", "over" to "över", "malmo" to "malmö",
+            ),
+            bothForms = mapOf(
+                "har" to listOf("har", "här", "hår"), "for" to listOf("for", "för"), "on" to listOf("on", "ön"),
+            ),
+            modelNames = listOf("också", "måste", "även", "två", "på", "över", "från", "går"),
         ),
     )
 

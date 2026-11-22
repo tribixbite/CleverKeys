@@ -279,7 +279,6 @@ akademiskt
 akalla
 akb
 akbar
-aker
 aki
 akilles
 akilov
@@ -1608,7 +1607,6 @@ asylskäl
 asylsökande
 asylsökare
 at
-ata
 atalanta
 ateism
 ateist
@@ -1616,7 +1614,6 @@ ateister
 ateljé
 ateljén
 aten
-ater
 athen
 athena
 athletic
@@ -1776,7 +1773,6 @@ avdraget
 ave
 avec
 avel
-aven
 avengers
 avenue
 avenyn
@@ -5582,7 +5578,6 @@ cynthia
 cypern
 cyril
 cyrus
-da
 dab
 daddy
 dadlar
@@ -7429,7 +7424,6 @@ ende
 endel
 endera
 endorfiner
-endå
 ene
 energi
 energidryck
@@ -7539,7 +7533,6 @@ enstaka
 enström
 enterprise
 entertainment
-entre
 entreprenad
 entreprenör
 entreprenören
@@ -7973,7 +7966,6 @@ eye
 eyeliner
 eyes
 ezra
-fa
 faaan
 faan
 fab
@@ -9341,7 +9333,6 @@ framväxt
 framväxten
 framåt
 framöver
-fran
 franc
 france
 frances
@@ -11051,7 +11042,6 @@ fötter
 fötterna
 fötts
 für
-ga
 gabriel
 gabriella
 gabrielle
@@ -11130,7 +11120,6 @@ gammelmedia
 gan
 gandalf
 gandhi
-gang
 gangster
 gangsters
 ganska
@@ -11139,7 +11128,6 @@ gap
 gapa
 gapar
 gapet
-gar
 garage
 garaget
 garant
@@ -11763,7 +11751,6 @@ gosse
 gossen
 gossip
 got
-goteborg
 goth
 gotham
 gothenburg
@@ -12994,6 +12981,8 @@ hembakat
 hembesök
 hembiträde
 hembränt
+hemby
+hembygd
 hembygdsförening
 hemfosa
 hemfärd
@@ -13189,6 +13178,7 @@ hilma
 hilton
 himalaya
 himla
+himlar
 himlavalvet
 himlen
 himlens
@@ -13293,6 +13283,7 @@ hjälmen
 hjälp
 hjälpa
 hjälpande
+hjälpare
 hjälpas
 hjälpen
 hjälper
@@ -13494,6 +13485,7 @@ hornet
 hornsgatan
 hornstull
 horor
+hororna
 horoskop
 horribel
 horribelt
@@ -13708,6 +13700,7 @@ huvuden
 huvudentrén
 huvudet
 huvudgatan
+huvudingången
 huvudkontor
 huvudkontoret
 huvudman
@@ -13715,7 +13708,9 @@ huvudmannen
 huvudmän
 huvudperson
 huvudpersonen
+huvudpersoner
 huvudpersonerna
+huvudregeln
 huvudroll
 huvudrollen
 huvudrollerna
@@ -13726,6 +13721,7 @@ huvudsaklig
 huvudsakliga
 huvudsakligen
 huvudsponsor
+huvudsta
 huvudstad
 huvudstaden
 huvudstadens
@@ -13910,6 +13906,7 @@ händelsen
 händelser
 händelserik
 händelserna
+händelsernas
 händer
 händerna
 händig
@@ -14008,6 +14005,7 @@ hästarna
 hästen
 hästens
 hästkrafter
+hästkött
 hästlängder
 hästryggen
 häva
@@ -14093,6 +14091,7 @@ hårstrån
 hårt
 hårvård
 håva
+håvar
 hö
 höft
 höften
@@ -14174,6 +14173,7 @@ högtid
 högtiden
 högtider
 högtidliga
+högtidligt
 högtryck
 högutbildad
 högutbildade
@@ -14319,7 +14319,6 @@ ideologin
 ideologisk
 ideologiska
 ideologiskt
-ideér
 idg
 idiot
 idioten
@@ -14495,6 +14494,7 @@ implementera
 implementeras
 implementerat
 implementering
+implicerar
 implicit
 imponera
 imponerad
@@ -14518,6 +14518,7 @@ improviserade
 impuls
 impulsen
 impulser
+impulskontroll
 in
 ina
 inaktiv
@@ -14643,6 +14644,7 @@ infanteri
 infanteriet
 infart
 infarten
+infektera
 infekterad
 infekterade
 infekterat
@@ -14696,6 +14698,7 @@ informerade
 informerar
 informeras
 informerat
+informerats
 infraröd
 infraröda
 infrastruktur
@@ -14742,6 +14745,7 @@ ingetdera
 ingick
 ingmar
 ingrediens
+ingrediensen
 ingredienser
 ingredienserna
 ingrep
@@ -14788,6 +14792,7 @@ initiativtagare
 initiera
 initierad
 initierade
+initierar
 initierat
 injektion
 injicera
@@ -14972,6 +14977,7 @@ insistera
 insisterade
 insisterar
 insjuknade
+insjuknar
 inskriven
 inskrivet
 inskrivna
@@ -15321,6 +15327,7 @@ ipcc
 iphone
 iphonen
 iphones
+ipo
 ipod
 ipred
 ipren
@@ -15393,6 +15400,7 @@ isf
 ish
 ishall
 ishallen
+ishavet
 ishockey
 ishockeyförbundet
 ishockeyn
@@ -15495,6 +15503,7 @@ jack
 jacka
 jackan
 jacket
+jackets
 jackie
 jackor
 jackpot
@@ -15963,6 +15972,7 @@ jämlik
 jämlika
 jämlikar
 jämlikhet
+jämlikheten
 jämlikt
 jämn
 jämna
@@ -16004,6 +16014,7 @@ järva
 järvafältet
 järvsö
 jäsa
+jäser
 jäst
 jättar
 jättarna
@@ -16062,6 +16073,7 @@ jävlarna
 jävlas
 jävlig
 jävliga
+jävligaste
 jävligt
 jå
 jönköping
@@ -16214,6 +16226,7 @@ kane
 kanel
 kanelbullar
 kanelbulle
+kanhända
 kanin
 kaninen
 kaniner
@@ -16311,6 +16324,7 @@ kari
 karibien
 karibiska
 karikatyr
+karikatyrer
 karim
 karin
 karins
@@ -16318,6 +16332,7 @@ karisma
 karismatisk
 karl
 karla
+karlaplan
 karlar
 karlavägen
 karlberg
@@ -16340,6 +16355,7 @@ karolina
 karolinska
 kaross
 karossen
+karp
 karriär
 karriären
 karriärens
@@ -16378,6 +16394,7 @@ kasse
 kasselstrand
 kassen
 kassett
+kassettband
 kassler
 kassor
 kasst
@@ -16599,6 +16616,7 @@ kilometer
 kilometers
 kilon
 kilos
+kilot
 kim
 kina
 kinamat
@@ -16620,6 +16638,7 @@ kingdom
 kings
 kingsley
 kingston
+kinkig
 kinky
 kinna
 kinshasa
@@ -18286,8 +18305,6 @@ kvalifikationer
 kvalitativ
 kvalitativa
 kvalitativt
-kvalite
-kvaliten
 kvalitet
 kvaliteten
 kvaliteter
@@ -18801,7 +18818,6 @@ landa
 landade
 landar
 landat
-lander
 landet
 landets
 landgren
@@ -19809,7 +19825,6 @@ lukten
 lukter
 luktsinne
 lule
-lulea
 luleå
 luleås
 lulu
@@ -20285,7 +20300,6 @@ löften
 löftet
 löfven
 löfvens
-löfvén
 lögn
 lögnaktig
 lögnaktiga
@@ -20560,7 +20574,6 @@ mallorca
 malm
 malmberg
 malmen
-malmo
 malmqvist
 malmsten
 malmström
@@ -20891,7 +20904,6 @@ massorna
 massvis
 massör
 mast
-maste
 masten
 master
 mastercard
@@ -22314,7 +22326,6 @@ mustang
 mustasch
 mustaschen
 musten
-muséet
 muta
 mutant
 mutar
@@ -22794,7 +22805,6 @@ nassar
 nassau
 nasse
 nasser
-nat
 natalia
 natalie
 natasha
@@ -23120,7 +23130,6 @@ nitar
 nittio
 nittiotalet
 nitton
-niva
 nivå
 nivåer
 nivåerna
@@ -23808,7 +23817,6 @@ och
 ock
 ockelbo
 ocker
-ocksa
 också
 ockupation
 ockupationen
@@ -24027,7 +24035,6 @@ okände
 okänslig
 okänsligt
 okänt
-ol
 ola
 olaf
 olaga
@@ -24441,7 +24448,6 @@ ordvitsar
 orealistisk
 orealistiska
 orealistiskt
-orebro
 oreda
 oregano
 oregelbunden
@@ -24732,7 +24738,6 @@ ovansidan
 ovanstående
 ovant
 ove
-over
 overall
 overkill
 overkligt
@@ -24787,7 +24792,6 @@ oärligt
 oönskad
 oönskade
 oönskat
-pa
 pablo
 pac
 pacific
@@ -30797,7 +30801,6 @@ slöt
 slöts
 slött
 sm
-sma
 smack
 smak
 smaka
@@ -35529,7 +35532,6 @@ tuttarna
 tutti
 tuva
 tv
-tva
 tveka
 tvekade
 tvekan
@@ -35815,7 +35817,6 @@ tårta
 tårtan
 tårtor
 tårögd
-té
 töm
 tömd
 tömde
@@ -35896,7 +35897,6 @@ ultraljud
 ultras
 ulvaeus
 um
-umea
 umeå
 umeås
 umgicks

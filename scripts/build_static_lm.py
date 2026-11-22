@@ -494,6 +494,24 @@ CONFIGS: dict[str, LangConfig] = {
             ood_test=_ud("UD_Swedish-Talbanken", "c434778d9511be5c35a6a11531f0107a960fb5d6", "sv_talbanken", "test",
                          "f7bc84ce37cd6a71e95b8d8684801da0bb6d2be4e419ba2e865eb109d6cd1bc6"),
             ood_label="UD Swedish-Talbanken",
+            # Rebuilt 2026-11-22, same pinned corpora and code: sv_enhanced.bin no longer holds 33
+            # accent misspellings (`ocksa`, `maste`, `over`, `pa`; the shipped model named 4 of them:
+            # `da`, `lander`, `niva`, `over`; scripts/dictionaries/sv/sv_blocklist.txt,
+            # docs/eval/2026-11-22-swedish-accent-spellings.md). The 2026-09-29 inputs (HEAD
+            # 45b81b3f) first reproduced the shipped file byte-for-byte (sha256 6c42ee51…; 443,229 B,
+            # OOD-test next-word 10.32 / 17.42). Pre-registered gate, written before the candidate
+            # was built: G1 the model names none of the 33 dropped spellings, and every accented
+            # twin the shipped model names it still names; G2 size <= 1.10 x 443,229 B and the
+            # drift-test budget; G3 OOD-test next-word top1/top3 >= 10.22 / 17.32 (shipped - 0.10
+            # pt); G4 StaticLmTapEvalTest sv end to end (new lexicon + new model vs the shipped
+            # pair), every lm_static cell (OOD + in-domain) >= shipped - 0.10 pt; G4a the same
+            # cells, new vs shipped model under the NEW lexicon, same bar; G5 the other languages'
+            # models byte-identical; G6 drift/contraction tests green.
+            # Result: all pass. 443,229 B (unchanged), vocab 16,669 -> 16,668 (-4 misspellings, and
+            # `leonardo`/`vinci`, whose only link was `da`; +5 words the size cap let in), every
+            # twin kept, OOD-test next-word 10.32 / 17.42; tap eval end to end: worst lm_static
+            # cell -0.01 pt (OOD prefix-1 top-3), best +0.36 (OOD prefix-2 top-1: a prefix no longer
+            # spends a slot on `pa` beside `på`); G4a every cell +0.00.
             lexicon="sv_enhanced.bin",
             contraction_files=("contractions_sv.json",),
             wordfreq_lang="sv",

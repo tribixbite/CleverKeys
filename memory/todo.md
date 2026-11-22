@@ -309,9 +309,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     reviewed keeps listed per language, fr.cklm and pt.cklm rebuilt under pre-registered gates (all
     pass; de.cklm names none of its four), packs rebuilt; `scripts/accent_twin_audit.py`,
     `AccentSpellingDriftTest`, `docs/eval/2026-11-20-accent-spellings.md`. The instrumented slate
-    check now allows a bare word that is its own canonical form (`wahrend` is real German). Open:
-    Swedish (89 candidates, dialect forms need a Swedish speaker; sv.cklm gate); a native review of
-    the keep/drop calls (maintainer); not device-checked.
+    check now allows a bare word that is its own canonical form (`wahrend` is real German). Swedish
+    FIXED 2026-11-22: 33 dropped (`ocksa`, `maste`, `over`, `goteborg`), 56 kept (English words
+    Swedish text uses as they are, `Brå`/`ÖB`, names, colloquial `sånna`/`äre`/`gö`, looked up),
+    sv.cklm rebuilt under its pre-registered gate (all pass; G4a flat), pack rebuilt;
+    `docs/eval/2026-11-22-swedish-accent-spellings.md`. Open: a native review of the keep/drop calls
+    (maintainer; for sv the colloquial keeps `assa`, `sä`, `ör`, `na`, `ma`, `ra` and `at`); not
+    device-checked.
 38. [x] agent: Delete word in a link removes one `key=value` pair (maintainer request 2026-11-22,
     "would help to clean up long links"). `UrlQueryDelete` (pure) for the Delete Word key, the
     backspace swipe (`delete_last_word`, which cut a 50-character slice before) and the inline

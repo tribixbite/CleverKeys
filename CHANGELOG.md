@@ -643,6 +643,11 @@ editor that used to be listed here already ship in 2.0.)
   rebuilt without them. Real words that differ only by an accent stay (`la`/`là`, `esta`/`está`,
   `schon`/`schön`), and so do the 1990 French and pre-2009 Portuguese spellings, voseo, names
   and English words written as they are.
+- Swedish no longer offers misspellings typed without å, ä or ö: `ocksa`, `maste`, `over`, `pa`,
+  `goteborg` and 28 others left the dictionary, so a swipe or a typed `ocksa` offers only
+  `också`, and the Swedish next-word model was rebuilt without them. Real pairs (`har`/`här`,
+  `for`/`för`), English words Swedish text uses as they are (`are`, `lost`, `save`),
+  abbreviations (`Brå`, `ÖB`), names and colloquial forms (`sånna`, `äre`, `åsså`) stay.
 - With a Monet theme selected, a new theme in the Theme Manager starts from the wallpaper
   colours the keyboard shows (the light or dark variant it shows, for Monet (Auto)), and choosing
   Monet sets the swipe trail to the wallpaper's accent colour; both used a fixed purple and grey.

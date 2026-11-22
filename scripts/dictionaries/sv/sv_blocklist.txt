@@ -1,2 +1,47 @@
 # CleverKeys sv force-drop blocklist (overrides everything, incl. the allowlist).
 # One word per line; "#" starts a comment.
+#
+# ── Accent misspellings (2026-11-22; the method of docs/eval/2026-11-20-accent-spellings.md) ────
+# Spellings of a word whose å/ä/ö/é form is ALSO in the list, typed without (or with a wrong) mark.
+# Candidates: scripts/accent_twin_audit.py with hunspell sv_SE (LibreOffice): no form of the word
+# is accepted, lowercase or Capitalised, while a twin is (89 candidates). A form is dropped when
+# ASCII typing of its twin explains at least a tenth of its Swedish frequency (wordfreq), even if
+# it is an English word too (over, gang), and when it is a Swedish place name or an é loanword
+# typed without its accent. Kept on review (docs/eval/2026-11-22-swedish-accent-spellings.md):
+# English words Swedish text uses as they are (are, on, lost, save, stand, popular), abbreviations
+# and agency names (Brå, ÖB, NAS, aka, mar), names spelled their owner's way (francois, jose,
+# kruger, ramón), colloquial and dialect forms (sånna, äre, åsså, dä, hä, jå, mä, ba) and the
+# common supine hållt.
+aker  # åker
+ata  # äta/åta
+ater  # äter/åter
+aven  # även
+da  # då
+endå  # ändå
+entre  # entré
+fa  # få
+fran  # från
+ga  # gå
+gang  # gäng/gång
+gar  # går
+goteborg  # göteborg
+ideér  # idéer
+kvalite  # kvalité
+kvaliten  # kvalitén
+lander  # länder
+löfvén  # löfven
+lulea  # luleå
+malmo  # malmö
+maste  # måste
+muséet  # museet
+nat  # nät/nåt
+niva  # nivå
+ocksa  # också
+ol  # öl
+orebro  # örebro
+over  # över
+pa  # på
+sma  # små
+tva  # två
+té  # te
+umea  # umeå

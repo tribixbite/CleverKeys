@@ -127,6 +127,9 @@ Some are plain ASCII typing (`ocksa`, `maste`, `aven`, `tva`, `niva`, `goteborg`
 dialect or colloquial forms (`asså`, `åsså`, `sånna`, `jå`, `mä`, `pöjk`) that need a Swedish
 speaker's judgement; sv.cklm would need its own gated rebuild. Left for a Swedish pass.
 
+**Done 2026-11-22**: 33 dropped, 56 kept, sv.cklm rebuilt under its own gate
+(`docs/eval/2026-11-22-swedish-accent-spellings.md`).
+
 ## Found, not fixed
 
 - One-letter words are still absent from fr/es/pt/sv (`à`, `a`, `y`, `é`); see the Italian note.

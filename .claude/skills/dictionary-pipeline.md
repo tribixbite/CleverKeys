@@ -249,7 +249,8 @@ wordfreq counts unaccented web typing (`francais`, `tambien`, `nao`, `perche`) a
 classifier can keep them beside the accented form. Since the CTC collision alternates (2026-11-18)
 a swipe offers every form of a surface, so such a spelling shows up in the slate. it, fr, es, pt and
 de were cleaned (`docs/eval/2026-11-19-italian-accent-spellings.md`,
-`docs/eval/2026-11-20-accent-spellings.md`); **sv is measured, not fixed** (89 candidates).
+`docs/eval/2026-11-20-accent-spellings.md`), sv on 2026-11-22
+(`docs/eval/2026-11-22-swedish-accent-spellings.md`: 89 candidates, 33 dropped).
 
 - Find candidates: `python3 scripts/accent_twin_audit.py --words scripts/dictionaries/<l>/<l>_words.txt
   --oracle <hunspell dict path> [--oracle ...] --out <tsv>`. Rejected lowercase AND Capitalised
@@ -263,6 +264,13 @@ de were cleaned (`docs/eval/2026-11-19-italian-accent-spellings.md`,
 - Kept on review, every language: real colliding words (the oracle accepts them), English words the
   text uses as they are, abbreviations, compound fragments, names spelled their owner's way, and
   spellings that were standard before a reform (fr 1990, es pre-2010 `guión`, pt pre-2009 `idéia`).
+- When a candidate is also an English word, measure instead of guessing (sv 2026-11-22): with
+  wordfreq, estimate the share of its frequency that is the twin typed in ASCII (twin zipf minus the
+  language's median gap for plain misspellings, sv −2.55) and the share that is English (en zipf
+  minus the median en→target gap, sv −2.33 for function words, −1.26 for content words). Drop at
+  ≥ 10% ASCII share (sv `over` 35%), keep when English dominates and the ASCII share is ~0
+  (`are`, `lost`). Look up colloquial forms before keeping them (sv `äre`, `pöjk`, `gö`), and
+  remember agency names and acronyms (sv `Brå` explains a zipf-4 `brå`).
 - Build in a scratch copy (`git archive HEAD scripts src/main/assets/dictionaries src/main/assets/lm`),
   never the shared tree. `build_wordlist.py` needs the AOSP snapshot, removed from the tree for
   F-Droid: fetch `…/LatinIME/+/refs/heads/main/dictionaries/<code>_wordlist.combined.gz?format=TEXT`,
@@ -275,6 +283,9 @@ de were cleaned (`docs/eval/2026-11-19-italian-accent-spellings.md`,
   `langpack-<l>.zip` (`build_all_languages.py --lang <l>`), and rebuild `<l>.cklm` only if it names a
   dropped spelling, under a gate pre-registered in its `LangConfig` (the Italian G1–G6). Lexicon
   shapes are pinned in `CtcCkdtLexiconTest` and `CtcMultiLanguageInstrumentedTest.SHAPES`.
+- G4a (`STATIC_LM_MODEL_DIR=<dir> STATIC_LM_EVAL_LANGS=<l> … StaticLmTapEvalTest -PgeoFull=true`):
+  the dir needs the shipped `<l>.json` sidecar beside `<l>.cklm` (`git show HEAD:src/main/assets/lm/<l>.json`),
+  or the test dies with FileNotFoundException in `StaticLmLanguageData.sidecar`.
 
 ## Arabic-script lookup fold and the Persian half-space (2026-10-23)
 
