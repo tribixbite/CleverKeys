@@ -100,7 +100,7 @@ The tooltip appears above the pressed emoji and auto-dismisses after 2 seconds.
 - **Context search**: Type the word, then open emoji - instant results
 - **Recents**: Check recents first for frequently used emoji
 - **Scroll**: Swipe left/right to see more in each category
-- **Return to letters**: Tap the close button or ABC key
+- **Return to letters**: Tap the close button, or swipe southwest on Fn again
 - **Multiple emoji**: Stay on emoji keyboard to insert several
 
 > [!TIP]

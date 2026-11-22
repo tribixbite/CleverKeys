@@ -47,11 +47,11 @@ class PointersAccessibilityShortSwipeTest {
     private lateinit var config: Config
     private lateinit var tmpDir: File
 
-    /** The bottom-row Ctrl key (res/xml/bottom_row.xml): sw = switch_clipboard, se = switch_numeric. */
+    /** The bottom-row Ctrl key (res/xml/bottom_row.xml): sw = switch_clipboard, n = switch_numeric. */
     private val keyCtrl = KeyboardData.Key.EMPTY
         .withKeyValue(0, KeyValue.getKeyByName("ctrl"))
         .withKeyValue(3, KeyValue.getKeyByName("switch_clipboard"))
-        .withKeyValue(4, KeyValue.getKeyByName("switch_numeric"))
+        .withKeyValue(7, KeyValue.getKeyByName("switch_numeric"))
 
     /** `q` with nw (index 1) = "~" and ne (index 2) = "the". */
     private val keyQ = KeyboardData.Key.EMPTY

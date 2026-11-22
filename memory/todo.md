@@ -54,7 +54,8 @@ installed on the S25U and the Pixel. Audit "Status 2026-11-21".
 `a3245ff2`, device PASS on the Pixel); Swedish accent misspellings out (item 37, `931f5669`, sv.cklm
 gate all pass). Follow-ups the same day: any `&key=value` text behind a default-on setting
 (`b5de2e22`), word delete at Backspace NW on every layout as an icon (`45ef127a`, item 39), toggled
-modifiers readable on every theme (`34fefdd9`, item 40); pure 3,978 / mock 1,873 green, CI green,
+modifiers readable on every theme (`34fefdd9`, item 40), 123+ on Ctrl's swipe-up edge in place of
+"ABC" (item 41); pure 3,978 / mock 1,876 green, CI green,
 device checks PASS on the Pixel; the 19 rendering/look/theme/subkey/layout-export/settings/a11y
 instrumented classes 185/185 on API 34 and 37 (`~/ew-output/toggles-layouts-2026-11-22/`).
 Release 5007948e installed on the S25U and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
@@ -363,3 +364,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (Pixel, its neon theme, release 5007948e): latched Shift and Ctrl opaque magenta `#BA08C2`
     with white labels and corners, locked Ctrl `#FF00FF` with black labels. Open: the CleverKeys
     look and the Black theme on a phone (release installed on the S25U for the maintainer).
+41. [x] agent: 123+ on Ctrl's swipe-up edge (maintainer 2026-11-22: "for any letter layout,
+    shouldnt the '123+' numpad toggle display for the North subkey of Ctrl instead of 'ABC'?").
+    `switch_numeric` moves from Ctrl SE to N on `res/xml/bottom_row.xml` and the three layouts
+    with their own bottom row (arab_pc_ir, arab_pc_ckb_fa, latn_neo2); `switch_back_clipboard`
+    ("ABC", closes an open pane, a no-op otherwise) leaves Ctrl, since every pane closes with its
+    close button or its opener key. Ctrl SE is now empty. `CtrlNumericSwitchLayoutTest` (mock);
+    the a11y fixtures that copy the Ctrl key follow it. The QWERTY Samsung/Gboard/iOS/SwiftKey
+    styles keep their own 123 key and are unchanged.

@@ -36,13 +36,13 @@ class ShortSwipeAccessibilityActionsTest {
     private val res: (Int) -> String = { id -> english[id] ?: "str#$id" }
     private fun s(id: Int) = "str#$id"
 
-    /** Slots of the bottom-row Ctrl key: `key3="loc switch_clipboard"` (SW), `key4="switch_numeric"` (SE). */
+    /** Slots of the bottom-row Ctrl key: `key3="loc switch_clipboard"` (SW), `key7="switch_numeric"` (N). */
     private fun ctrlSlots(custom: Map<SwipeDirection, ShortSwipeMapping> = emptyMap()) =
         SubkeyPopoverSlots.resolve(
             defaultAt = { dir ->
                 when (dir) {
                     SwipeDirection.SW -> KeyValue.getKeyByName("switch_clipboard")
-                    SwipeDirection.SE -> KeyValue.getKeyByName("switch_numeric")
+                    SwipeDirection.N -> KeyValue.getKeyByName("switch_numeric")
                     else -> null
                 }
             },
@@ -55,7 +55,7 @@ class ShortSwipeAccessibilityActionsTest {
 
         assertThat(actions).containsExactly(
             ShortSwipeAccessibilityActions.Action(
-                SwipeDirection.SE, "${s(R.string.key_descr_switch_numeric)} (Southeast)"
+                SwipeDirection.N, "${s(R.string.key_descr_switch_numeric)} (North)"
             ),
             ShortSwipeAccessibilityActions.Action(
                 SwipeDirection.SW, "${s(R.string.key_descr_clipboard)} (Southwest)"
@@ -70,7 +70,7 @@ class ShortSwipeAccessibilityActionsTest {
             ctrlSlots(mapOf(SwipeDirection.SW to removed)), res
         )
         // The removal blanks the clipboard slot exactly as it does for a real swipe (no-op).
-        assertThat(actions.map { it.direction }).containsExactly(SwipeDirection.SE)
+        assertThat(actions.map { it.direction }).containsExactly(SwipeDirection.N)
     }
 
     @Test

@@ -10,6 +10,7 @@ Frequently asked questions about using CleverKeys keyboard.
 
 A: Use **short swipes** (subkeys) on letter keys. Each key has up to 8 subkeys mapped to the cardinal directions N, NE, E, SE, S, SW, W, NW:
 - **Swipe NORTHEAST** on `Q` for `1` (hint: start in the SW corner)
+- **Swipe up on Ctrl** for the number pane (123+); tap ABC there to return to the letters
 - Each direction on each key can trigger a different character or action
 - Directions are determined by the angle of your swipe
 
@@ -142,6 +143,7 @@ A: Swiping adds a trailing space automatically, and smart punctuation removes th
 | **Long swipe across keys** | Swipe typing (glide input) |
 | **SW on Fn** | Open emoji picker |
 | **SW on Ctrl** | Open clipboard |
+| **Swipe up on Ctrl** | Open the number pane (123+) |
 
 ---
 

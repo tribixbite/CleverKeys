@@ -568,6 +568,10 @@ editor that used to be listed here already ship in 2.0.)
   swipe left reaches it too), drawn as the word-delete icon instead of the English text `word`;
   8 of the 87 had it before. On Colemak and Bone, forward delete moves from that corner to the
   top-right one, where the other layouts have it.
+- Swipe up on Ctrl opens the number pane (123+) on every letter layout. It was on Ctrl's
+  bottom-right corner, and the swipe-up edge showed "ABC", which only closed an open clipboard,
+  emoji or GIF pane and did nothing otherwise; each pane still closes with its own close button
+  or the key that opened it.
 
 ### Removed
 

@@ -77,6 +77,10 @@ On QWERTY layout, numbers are on the NORTHEAST (up-right) direction:
 - **Short swipe + hold**: Selection delete mode
 - **Hold still**: Repeat backspace
 
+### Ctrl
+- **North** (swipe up): Open the number pane (123+)
+- **Southwest**: Open the clipboard
+
 > [!NOTE]
 > Subkey assignments vary by layout. Check Per-Key Customization to see and modify your layout's subkeys.
 

@@ -44,8 +44,8 @@ clipboard actions:
 
 | Direction | Key | What it does |
 |-----------|-----|--------------|
+| **North** (swipe up) | `switch_numeric` | Opens the number pane (123+) |
 | **Southwest** | `switch_clipboard` | Opens the [clipboard panel](clipboard-history.md) |
-| **Southeast** | `switch_numeric` | Numbers and symbols |
 | **Northwest** | `switch_greekmath` | Greek and math symbols |
 | **Northeast** | `meta` | Meta modifier |
 
