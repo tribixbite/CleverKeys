@@ -574,6 +574,8 @@
     <string name="input_auto_space_before_desc">Insérer un espace avant une suggestion sélectionnée (le glissé ajoute toujours un espace)</string>
     <string name="input_backspace_undo_swipe_title">Retour arrière annule le glissé</string>
     <string name="input_backspace_undo_swipe_desc">Appuyer sur Retour arrière immédiatement après un mot saisi par glissé supprime l\'intégralité du mot</string>
+    <string name="input_delete_word_url_pairs_title">Effacer une paire clé=valeur à la fois</string>
+    <string name="input_delete_word_url_pairs_desc">Dans un lien ou un autre texte aux paires clé=valeur reliées par &amp; (?a=1&amp;b=2), Effacer un mot efface une paire par appui</string>
     <string name="input_show_exact_typed_title">Afficher le mot exact saisi</string>
     <string name="input_show_exact_typed_desc">Proposer les lettres réellement saisies comme suggestion ; touchez-la pour l\'ajouter au dictionnaire</string>
     <string name="input_context_aware_title">Prédictions contextuelles</string>

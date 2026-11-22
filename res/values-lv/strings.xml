@@ -580,6 +580,8 @@
     <string name="input_auto_space_before_desc">Ievietot priekšējo atstarpi pirms piesista ieteikuma (vilkums vienmēr pievieno atstarpi)</string>
     <string name="input_backspace_undo_swipe_title">Backspace atsauc vilkumu</string>
     <string name="input_backspace_undo_swipe_desc">Nospiežot Backspace uzreiz pēc vilkuma vārda, tiek dzēsts viss vārds</string>
+    <string name="input_delete_word_url_pairs_title">Dzēst pa vienam atslēgas=vērtības pārim</string>
+    <string name="input_delete_word_url_pairs_desc">Saitē vai citā tekstā ar atslēgas=vērtības pāriem, kas savienoti ar &amp; (?a=1&amp;b=2), Dzēst vārdu ar katru spiedienu izdzēš vienu pāri</string>
     <string name="input_show_exact_typed_title">Rādīt tieši ievadīto vārdu</string>
     <string name="input_show_exact_typed_desc">Piedāvāt tieši ievadītos burtus kā ieteikumu; pieskarieties, lai pievienotu vārdnīcai</string>
     <string name="input_context_aware_title">Kontekstuālas prognozes</string>

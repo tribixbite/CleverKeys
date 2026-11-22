@@ -1000,7 +1000,10 @@ class KeyEventHandler(
      */
     private fun deleteInlineWord(forward: Boolean) {
         val target = activeInlineTarget() ?: return
-        InlineWordDelete.delete(target, forward)
+        InlineWordDelete.delete(
+            target, forward,
+            keyValuePairs = Config.globalConfigOrNull()?.delete_word_url_pairs ?: Defaults.DELETE_WORD_URL_PAIRS,
+        )
     }
 
     /**
@@ -1127,11 +1130,13 @@ class KeyEventHandler(
             // alternatives) for the word at the cursor (maintainer decision 2026-10-13).
             KeyValue.Editing.REPLACE_MENU -> sendReplacePopup()
             KeyValue.Editing.AUTOFILL -> sendContextMenuAction(android.R.id.autofill)
-            // In a URL's query one key/value pair goes ([UrlQueryDelete], 2026-11-22); anywhere
-            // else the editor's own Ctrl+Backspace decides the word. A terminal is never read.
+            // In text with key=value pairs one pair goes ([UrlQueryDelete], 2026-11-22; Settings →
+            // Input Behavior can turn it off); anywhere else the editor's own Ctrl+Backspace
+            // decides the word. A terminal is never read.
             KeyValue.Editing.DELETE_WORD -> {
                 val conn = recv.getCurrentInputConnection()
-                if (conn == null || isTerminalStyleEditor() || !EditorUrlQueryDelete.apply(conn)) {
+                val pairs = Config.globalConfigOrNull()?.delete_word_url_pairs ?: Defaults.DELETE_WORD_URL_PAIRS
+                if (conn == null || !pairs || isTerminalStyleEditor() || !EditorUrlQueryDelete.apply(conn)) {
                     send_key_down_up(
                         KeyEvent.KEYCODE_DEL,
                         KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON

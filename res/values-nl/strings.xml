@@ -567,6 +567,8 @@
     <string name="input_auto_space_before_desc">Spatie invoegen vóór een getikt voorstel (vegen voegt altijd een spatie toe)</string>
     <string name="input_backspace_undo_swipe_title">Backspace maakt veegwoord ongedaan</string>
     <string name="input_backspace_undo_swipe_desc">Backspace direct na een veegwoord verwijdert het volledige woord</string>
+    <string name="input_delete_word_url_pairs_title">Eén sleutel=waarde-paar per keer verwijderen</string>
+    <string name="input_delete_word_url_pairs_desc">In een link of andere tekst met sleutel=waarde-paren verbonden door &amp; (?a=1&amp;b=2) verwijdert Een woord verwijderen één paar per druk</string>
     <string name="input_show_exact_typed_title">Exact getypt woord tonen</string>
     <string name="input_show_exact_typed_desc">De letters die je daadwerkelijk typte als suggestie aanbieden; tik om ze aan het woordenboek toe te voegen</string>
     <string name="input_context_aware_title">Contextbewuste voorspellingen</string>

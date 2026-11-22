@@ -593,6 +593,8 @@
     <string name="input_auto_space_before_desc">Chèn khoảng trắng đầu trước gợi ý được chạm (vuốt luôn thêm khoảng trắng)</string>
     <string name="input_backspace_undo_swipe_title">Xóa lùi hoàn tác vuốt</string>
     <string name="input_backspace_undo_swipe_desc">Nhấn xóa lùi ngay sau từ được vuốt sẽ xóa toàn bộ từ</string>
+    <string name="input_delete_word_url_pairs_title">Xóa từng cặp khóa=giá trị</string>
+    <string name="input_delete_word_url_pairs_desc">Trong liên kết hoặc văn bản khác có các cặp khóa=giá trị nối bằng &amp; (?a=1&amp;b=2), Xóa một từ xóa một cặp mỗi lần nhấn</string>
     <string name="input_show_exact_typed_title">Hiện từ đã gõ chính xác</string>
     <string name="input_show_exact_typed_desc">Đề xuất đúng các chữ cái bạn đã gõ; chạm để thêm vào từ điển</string>
     <string name="input_context_aware_title">Dự đoán theo ngữ cảnh</string>

@@ -236,6 +236,7 @@ validator (`backup/SettingsValidation.kt`) accepts a wider band, both are shown.
 | **Auto-Space Before Suggestion** | `auto_space_before_suggestion` | true | bool |
 | **Show Exact Typed Word** | `show_exact_typed_word` | true | bool — appends the exact typed string (2+ chars, not already a prediction/dictionary/user word) as a tap-to-add `ExactAdd` suggestion (`SuggestionHandler.kt:2345`; switch added 2026-09-08, F-8/#42) |
 | **Backspace Undoes Swipe** | `backspace_undo_swipe` | true | bool — shown only when swipe typing is on (#110) |
+| **Delete One key=value Pair at a Time** | `delete_word_url_pairs` | true | bool — `delete_word`, `delete_last_word` and an inline-field word delete remove one `key=value` pair in a link or any run with `?key=` / `&key=` (`UrlQueryDelete`, 2026-11-22); off = the plain word delete |
 
 ### Touch thresholds
 

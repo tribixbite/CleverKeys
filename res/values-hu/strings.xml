@@ -572,6 +572,8 @@
     <string name="input_auto_space_before_desc">Vezető szóköz beillesztése érintett javaslat elé (csúsztatás mindig szóközt ad)</string>
     <string name="input_backspace_undo_swipe_title">Csúsztatás visszavonása törléssel</string>
     <string name="input_backspace_undo_swipe_desc">A törlőbillentyű megnyomása egy csúsztatott szó után azonnal törli az egész szót</string>
+    <string name="input_delete_word_url_pairs_title">Kulcs=érték párok törlése egyenként</string>
+    <string name="input_delete_word_url_pairs_desc">Linkben vagy más, &amp; jellel összefűzött kulcs=érték párokat tartalmazó szövegben (?a=1&amp;b=2) a Szó törlése nyomásonként egy párt töröl</string>
     <string name="input_show_exact_typed_title">Pontosan begépelt szó mutatása</string>
     <string name="input_show_exact_typed_desc">A ténylegesen begépelt betűk felajánlása javaslatként; koppintással a szótárba kerül</string>
     <string name="input_context_aware_title">Kontextusérzékeny előrejelzések</string>

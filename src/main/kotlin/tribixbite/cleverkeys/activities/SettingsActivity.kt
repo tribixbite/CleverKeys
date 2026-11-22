@@ -371,6 +371,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var showExactTypedWord by mutableStateOf(Defaults.SHOW_EXACT_TYPED_WORD)  // F-8 / #42: exact-typed-word suggestion
     internal var backspaceUndoSwipe by mutableStateOf(Defaults.BACKSPACE_UNDO_SWIPE)  // #110: Backspace after swipe deletes entire swiped word
     internal var backspaceUndoAutocorrect by mutableStateOf(Defaults.BACKSPACE_UNDO_AUTOCORRECT)  // #110: Backspace after autocorrect reverts to original word
+    internal var deleteWordUrlPairs by mutableStateOf(Defaults.DELETE_WORD_URL_PAIRS)  // 2026-11-22: Delete word removes one key=value pair
     internal var suggestionBarOpacity by mutableIntStateOf(Defaults.SUGGESTION_BAR_OPACITY)
     internal var autoCorrectEnabled by mutableStateOf(Defaults.AUTOCORRECT_ENABLED)
     internal var customTerminalPackages by mutableStateOf(Defaults.CUSTOM_TERMINAL_PACKAGES)

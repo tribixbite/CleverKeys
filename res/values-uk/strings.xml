@@ -582,6 +582,8 @@
     <string name="input_auto_space_before_desc">Вставляти пробіл перед натиснутою підказкою (свайп завжди додає пробіл)</string>
     <string name="input_backspace_undo_swipe_title">Backspace скасовує свайп</string>
     <string name="input_backspace_undo_swipe_desc">Натискання Backspace одразу після свайп-слова видаляє все слово</string>
+    <string name="input_delete_word_url_pairs_title">Видаляти по одній парі ключ=значення</string>
+    <string name="input_delete_word_url_pairs_desc">У посиланні чи іншому тексті з парами ключ=значення, з’єднаними &amp; (?a=1&amp;b=2), «Видалити слово» прибирає одну пару за натискання</string>
     <string name="input_show_exact_typed_title">Показувати точно введене слово</string>
     <string name="input_show_exact_typed_desc">Пропонувати фактично введені літери як підказку; торкніться, щоб додати до словника</string>
     <string name="input_context_aware_title">Контекстні передбачення</string>

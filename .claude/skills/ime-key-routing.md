@@ -507,8 +507,12 @@ backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() →
   is) → `InlineTextTarget.replace(range, "")` — one `InlineEditHistory` step in the editor;
   append-only fields delete backward only. They used to be swallowed (`else -> {}`).
 - **Word deletion in a URL** (2026-11-22, maintainer: "delete exactly one key/value pair (&
-  as delimiter) when used on a URL"): a backward word delete whose caret is in a link's query
-  removes ONE `key=value` pair (`UrlQueryDelete`, pure). App side: `delete_word` tries
+  as delimiter) when used on a URL", then "any text strings containing &key=value instead of
+  requiring https or www", as a default-on setting `delete_word_url_pairs`, Input Behavior):
+  a backward word delete whose caret is in a link or in any run holding `?key=` / `&key=`
+  removes ONE `key=value` pair (`UrlQueryDelete`, pure; without a `?` the run's first segment is
+  a pair only if it holds `=`, so `example.com/path&x=1` keeps its path). Callers check the
+  setting (`Config.delete_word_url_pairs`; `InlineWordDelete(..., keyValuePairs)`). App side: `delete_word` tries
   `EditorUrlQueryDelete.apply` before Ctrl+Backspace (never in a terminal-style editor);
   `delete_last_word` tries it at the top of `handleDeleteLastWord`'s generic fallback (after the
   terminal branches and the swipe-undo of an auto-inserted word); inline fields through

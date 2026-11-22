@@ -448,6 +448,20 @@ internal fun SettingsActivity.InputBehaviorSection() {
                     )
                 }
 
+                // 2026-11-22 (maintainer): Delete word in text with key=value pairs (a link's query
+                // or not) removes one pair per press (UrlQueryDelete); off = the plain word delete.
+                SettingsSwitch(
+                    title = stringResource(R.string.input_delete_word_url_pairs_title),
+                    description = stringResource(R.string.input_delete_word_url_pairs_desc),
+                    checked = deleteWordUrlPairs,
+                    highlightId = "delete_word_url_pairs",
+                    onCheckedChange = {
+                        deleteWordUrlPairs = it
+                        saveSetting("delete_word_url_pairs", it)
+                        Config.globalConfig()?.delete_word_url_pairs = it
+                    }
+                )
+
                 SettingsSwitch(
                     title = stringResource(R.string.input_double_tap_shift_title),
                     description = stringResource(R.string.input_double_tap_shift_desc),

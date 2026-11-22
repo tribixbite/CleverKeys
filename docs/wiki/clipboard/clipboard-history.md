@@ -54,9 +54,9 @@ You can assign clipboard access to any key's short swipe:
 
 Tap the **✏️ edit button** on a text entry to edit it in place, in the panel. Type with the
 keyboard as usual (swiped words, Delete word and the undo key work inside the editor), then
-save or cancel with the editor's buttons. In a link, Delete word removes one `key=value` pair of
-its query at a time, which makes it quick to strip tracking parameters (`&utm_source=…`) from a
-copied link before pasting it. An edit that would duplicate another entry, or empty
+save or cancel with the editor's buttons. In a link or other text with `key=value` pairs, Delete
+word removes one pair at a time, which makes it quick to strip tracking parameters
+(`&utm_source=…`) from a copied link before pasting it. An edit that would duplicate another entry, or empty
 it, is refused with a message.
 
 **Very long entries are edited a page at a time.** An entry longer than 20,000 characters or

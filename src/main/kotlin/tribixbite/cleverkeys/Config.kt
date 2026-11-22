@@ -525,6 +525,9 @@ object Defaults {
     const val AUTO_SPACE_BEFORE_SUGGESTION = true  // Add leading space before tapped suggestion
     const val BACKSPACE_UNDO_SWIPE = true  // Backspace after swipe deletes entire swiped word
     const val BACKSPACE_UNDO_AUTOCORRECT = true  // #110: Backspace after autocorrect reverts to original word
+    // 2026-11-22 (maintainer): in text with `&key=value` pairs (a link's query or not), Delete
+    // word removes one pair per press (UrlQueryDelete).
+    const val DELETE_WORD_URL_PAIRS = true
 
     // Privacy
     const val PRIVACY_COLLECT_SWIPE = false
@@ -1189,6 +1192,8 @@ class Config private constructor(
     @JvmField var auto_space_before_suggestion = Defaults.AUTO_SPACE_BEFORE_SUGGESTION  // Add leading space before tapped suggestion
     @JvmField var backspace_undo_swipe = Defaults.BACKSPACE_UNDO_SWIPE  // Backspace after swipe deletes entire swiped word
     @JvmField var backspace_undo_autocorrect = Defaults.BACKSPACE_UNDO_AUTOCORRECT  // #110: Backspace after autocorrect reverts to original word
+    /** Delete word removes one `key=value` pair in text that has them (`delete_word_url_pairs`). */
+    @JvmField var delete_word_url_pairs = Defaults.DELETE_WORD_URL_PAIRS
 
     // Beam search tuning
     @JvmField var swipe_smoothing_window = Defaults.SWIPE_SMOOTHING_WINDOW
@@ -1543,6 +1548,7 @@ class Config private constructor(
         auto_space_before_suggestion = safeGetBoolean(_prefs, "auto_space_before_suggestion", Defaults.AUTO_SPACE_BEFORE_SUGGESTION)
         backspace_undo_swipe = safeGetBoolean(_prefs, "backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspace_undo_autocorrect = safeGetBoolean(_prefs, "backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
+        delete_word_url_pairs = safeGetBoolean(_prefs, "delete_word_url_pairs", Defaults.DELETE_WORD_URL_PAIRS)
         swipe_debug_detailed_logging = safeGetBoolean(_prefs, "swipe_debug_detailed_logging", Defaults.SWIPE_DEBUG_DETAILED_LOGGING)
         // L1: canonicalize case at read — an imported/hand-edited "CTC" must drive the
         // router, provenance tagging, and the settings UI exactly like "ctc".

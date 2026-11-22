@@ -66,6 +66,8 @@ class UrlQueryDeleteRoutingTest {
         mockkObject(Config.Companion)
         config = mockk(relaxed = true)
         config.custom_terminal_packages = emptySet()
+        // A relaxed mock's JVM fields are not initialised: set the setting's default explicitly.
+        config.delete_word_url_pairs = true
         every { Config.globalConfig() } returns config
         every { Config.globalConfigOrNull() } returns config
 
@@ -190,8 +192,8 @@ class UrlQueryDeleteRoutingTest {
 
     @Test
     fun deleteWordKeyOutsideAUrlQueryStillSendsCtrlBackspace() {
-        // Ordinary text, a link's path, and key=value text that is not a link.
-        for (text in listOf("hello world", "https://shop.example/item", "a=1&b=2")) {
+        // Ordinary text, a link's path, and an ampersand without a key=value pair.
+        for (text in listOf("hello world", "https://shop.example/item", "Tom&Jerry")) {
             type(text)
             keysSent.clear()
             pressDeleteWord()
@@ -220,6 +222,34 @@ class UrlQueryDeleteRoutingTest {
 
         assertThat(keysSent).containsExactly(ctrlBackspace)
         assertThat(doc.toString()).isEqualTo(link)
+    }
+
+    /** Maintainer 2026-11-22: any text with `&key=value`, not only `https://` / `www.` links. */
+    @Test
+    fun keyValueTextWithoutALinkLosesOnePairPerPress() {
+        type("filter: size=m&color=red&sort=price")
+
+        pressDeleteWord()
+        assertThat(doc.toString()).isEqualTo("filter: size=m&color=red")
+        suggestionHandler().handleDeleteLastWord(ic, editor())
+        assertThat(doc.toString()).isEqualTo("filter: size=m")
+        assertThat(keysSent).isEmpty()
+    }
+
+    /** Settings → Input Behavior → "Delete one key=value pair at a time" off: the old word delete. */
+    @Test
+    fun withTheSettingOffBothDeletesWorkAsBefore() {
+        config.delete_word_url_pairs = false
+        type(link)
+        pressDeleteWord()
+        assertThat(keysSent).containsExactly(ctrlBackspace)
+        assertThat(doc.toString()).isEqualTo(link)
+        io.mockk.verify(exactly = 0) { ic.getSurroundingText(any(), any(), any()) }
+
+        type("Look: $link ")
+        suggestionHandler().handleDeleteLastWord(ic, editor())
+        // The generic word delete, capped at 50 characters.
+        assertThat(doc.toString()).isEqualTo("Look: https://shop.ex")
     }
 
     // ------------------------------------------------------------------ delete_last_word

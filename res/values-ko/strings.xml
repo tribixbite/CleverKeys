@@ -565,6 +565,8 @@
     <string name="input_auto_space_before_desc">탭한 추천어 앞에 공백을 삽입합니다（스와이프는 항상 공백 추가）</string>
     <string name="input_backspace_undo_swipe_title">백스페이스로 스와이프 취소</string>
     <string name="input_backspace_undo_swipe_desc">스와이프 입력 직후 백스페이스를 탭하면 전체 단어가 삭제됩니다</string>
+    <string name="input_delete_word_url_pairs_title">키=값 쌍을 하나씩 삭제</string>
+    <string name="input_delete_word_url_pairs_desc">&amp;로 연결된 키=값 쌍이 있는 링크 등의 텍스트(?a=1&amp;b=2)에서 단어 삭제가 한 번에 한 쌍을 지웁니다</string>
     <string name="input_show_exact_typed_title">정확히 입력한 단어 표시</string>
     <string name="input_show_exact_typed_desc">실제로 입력한 글자를 제안으로 표시하며, 탭하면 사전에 추가됩니다</string>
     <string name="input_context_aware_title">문맥 인식 예측</string>

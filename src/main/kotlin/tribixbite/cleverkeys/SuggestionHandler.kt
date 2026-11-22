@@ -4181,9 +4181,9 @@ class SuggestionHandler(
             vlog { "DELETE_LAST_WORD: Auto-inserted word verification failed, using generic delete" }
         }
 
-        // A URL's query loses exactly one key/value pair ([UrlQueryDelete], maintainer request
-        // 2026-11-22), not a 50-character slice of the link.
-        if (EditorUrlQueryDelete.apply(ic)) {
+        // Text with key=value pairs (a link's query or not) loses exactly one pair
+        // ([UrlQueryDelete], maintainer requests 2026-11-22), not a 50-character slice of a link.
+        if (config.delete_word_url_pairs && EditorUrlQueryDelete.apply(ic)) {
             vlog { "DELETE_LAST_WORD: removed one URL query pair" }
             contextTracker.clearLastAutoInsertedWord()
             contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)

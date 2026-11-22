@@ -411,13 +411,21 @@ class InlineSwipeSessionTest {
 
     @Test
     fun anAppendOnlyFieldDeletesTheLastUrlPair() {
+        // No scheme and no `www.` needed (maintainer 2026-11-22): key=value pairs are enough.
         val f = FakeField(InlineField.CLIPBOARD_SEARCH, "example.com/?q=red&page=2")
-        // No scheme and no `www.`: not recognised as a link, so the ordinary word rule runs.
         assertTrue(InlineWordDelete.delete(f, forward = false))
-        assertEquals("example.com/?q=red&page=", f.text)
+        assertEquals("example.com/?q=red", f.text)
         val g = FakeField(InlineField.CLIPBOARD_SEARCH, "www.example.com/?q=red&page=2")
         assertTrue(InlineWordDelete.delete(g, forward = false))
         assertEquals("www.example.com/?q=red", g.text)
+    }
+
+    @Test
+    fun withKeyValuePairDeletionOffTheWordRuleRuns() {
+        // Settings → Input Behavior → "Delete one key=value pair at a time" off.
+        val f = editor("https://shop.example/item?id=42&utm_medium=email")
+        assertTrue(InlineWordDelete.delete(f, forward = false, keyValuePairs = false))
+        assertEquals("https://shop.example/item?id=42&utm_medium=", f.text)
     }
 
     @Test

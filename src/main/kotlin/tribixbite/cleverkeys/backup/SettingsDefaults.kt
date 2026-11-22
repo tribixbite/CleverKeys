@@ -178,6 +178,7 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
     "auto_space_before_suggestion" to PrefValue.Bool(Defaults.AUTO_SPACE_BEFORE_SUGGESTION),
     "backspace_undo_swipe" to PrefValue.Bool(Defaults.BACKSPACE_UNDO_SWIPE),
     "backspace_undo_autocorrect" to PrefValue.Bool(Defaults.BACKSPACE_UNDO_AUTOCORRECT),
+    "delete_word_url_pairs" to PrefValue.Bool(Defaults.DELETE_WORD_URL_PAIRS),
 
     // ── Autocorrect ──────────────────────────────────────────────────
     "autocorrect_enabled" to PrefValue.Bool(Defaults.AUTOCORRECT_ENABLED),

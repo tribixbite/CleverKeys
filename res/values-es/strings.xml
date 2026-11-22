@@ -586,6 +586,8 @@
     <string name="input_auto_space_before_desc">Inserta un espacio inicial antes de una sugerencia tocada (el deslizamiento siempre añade espacio)</string>
     <string name="input_backspace_undo_swipe_title">Retroceso deshace el deslizamiento</string>
     <string name="input_backspace_undo_swipe_desc">Tocar retroceso inmediatamente después de una palabra escrita por deslizamiento elimina la palabra completa</string>
+    <string name="input_delete_word_url_pairs_title">Borrar un par clave=valor cada vez</string>
+    <string name="input_delete_word_url_pairs_desc">En un enlace u otro texto con pares clave=valor unidos por &amp; (?a=1&amp;b=2), Borrar una palabra quita un par por pulsación</string>
     <string name="input_show_exact_typed_title">Mostrar palabra exacta escrita</string>
     <string name="input_show_exact_typed_desc">Ofrecer las letras que realmente escribiste como sugerencia; tócala para añadirla al diccionario</string>
     <string name="input_context_aware_title">Predicciones contextuales</string>

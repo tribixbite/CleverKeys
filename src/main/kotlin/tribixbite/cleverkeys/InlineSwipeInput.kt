@@ -123,27 +123,30 @@ object InlineWordPlanner {
  * Boundaries are [EditorTextNavigation]'s (the inline editor's word_left/word_right rules):
  * backward skips the separators before the caret, then the word; forward skips separators after
  * it, then the word. A selection is deleted as it is, the way Ctrl+Backspace treats one in a
- * text field. Append-only fields (caret always at the end) can only delete backward. In a URL's
- * query a backward delete removes one key/value pair instead ([UrlQueryDelete], 2026-11-22), as
- * it does in an app.
+ * text field. Append-only fields (caret always at the end) can only delete backward. In text with
+ * key=value pairs a backward delete removes one pair instead ([UrlQueryDelete], 2026-11-22), as it
+ * does in an app, unless the setting is off.
  */
 object InlineWordDelete {
 
-    /** The range [start, end) a word deletion removes from [state], or null when nothing would go. */
-    fun range(state: InlineFieldState, forward: Boolean): IntRange? {
+    /**
+     * The range [start, end) a word deletion removes from [state], or null when nothing would go.
+     * [keyValuePairs]: Settings → Input Behavior → "Delete one key=value pair at a time".
+     */
+    fun range(state: InlineFieldState, forward: Boolean, keyValuePairs: Boolean = true): IntRange? {
         val lo = state.lo
         val hi = state.hi
         if (lo != hi) return lo until hi
-        if (!forward) UrlQueryDelete.range(state.text, lo)?.let { return it }
+        if (!forward && keyValuePairs) UrlQueryDelete.range(state.text, lo)?.let { return it }
         val start = if (forward) lo else EditorTextNavigation.previousWordStart(state.text, lo)
         val end = if (forward) EditorTextNavigation.nextWordEnd(state.text, hi) else hi
         return if (start < end) start until end else null
     }
 
     /** Delete one word at [target]'s caret (see [range]). False when nothing was deleted. */
-    fun delete(target: InlineTextTarget, forward: Boolean): Boolean {
+    fun delete(target: InlineTextTarget, forward: Boolean, keyValuePairs: Boolean = true): Boolean {
         val state = target.state() ?: return false
-        val range = range(state, forward) ?: return false
+        val range = range(state, forward, keyValuePairs) ?: return false
         return target.replace(range.first, range.last + 1, "")
     }
 }

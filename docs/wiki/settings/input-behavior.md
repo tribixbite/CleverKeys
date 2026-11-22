@@ -128,6 +128,15 @@ Repeat rate when holding a key that repeats (25–200 ms, default 25 ms):
 > Which keys repeat depends on **Key Repeat Enabled** and **Backspace Only Repeat** (on by
 > default: only Backspace and navigation keys repeat). With the Subkey Popover on, holding a
 > character key opens the popover instead of repeating it, whatever these settings say.
+> Holding Backspace still repeats (after the Long Press Timeout, every Long Press Interval).
+
+### Delete One key=value Pair at a Time
+
+On by default. In a link or any other text with `key=value` pairs joined by `&`
+(`?id=42&utm_source=news`, `size=m&color=red`), **Delete word** (swipe left or up-left on
+Backspace, or a Delete Word key) removes one pair per press, so tracking parameters come off a
+long link one at a time and the link stays valid. Turn it off to delete those characters as an
+ordinary word instead. See the [FAQ](../FAQ.md).
 
 ### Double Tap Shift for Caps Lock
 

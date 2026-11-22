@@ -806,6 +806,8 @@
     <string name="input_auto_space_before_desc">Insert leading space before a tapped suggestion (swipe always adds space)</string>
     <string name="input_backspace_undo_swipe_title">Backspace Undo Swipe</string>
     <string name="input_backspace_undo_swipe_desc">Tapping backspace immediately after a swiped word deletes the entire word</string>
+    <string name="input_delete_word_url_pairs_title">Delete one key=value pair at a time</string>
+    <string name="input_delete_word_url_pairs_desc">In a link or other text with key=value pairs joined by &amp; (?a=1&amp;b=2), Delete word removes one pair per press</string>
     <string name="input_show_exact_typed_title">Show exact typed word</string>
     <string name="input_show_exact_typed_desc">Offer the letters you actually typed as a suggestion you can tap to add to the dictionary</string>
     <string name="input_context_aware_title">Context-Aware Predictions</string>

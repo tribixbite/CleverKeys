@@ -129,14 +129,39 @@ class UrlQueryDeleteTest {
         )
     }
 
+    /**
+     * Maintainer 2026-11-22: "any text strings containing &key=value instead of requiring https or
+     * www." A run of text holding `&key=` or `?key=` is cleaned the same way, link or not.
+     */
     @Test
-    fun outsideAUrlQueryTheOrdinaryWordRuleApplies() {
+    fun anyTextWithKeyValuePairsLosesOnePairPerPress() {
+        assertEquals("a=1|", press("a=1&b=2|"))
+        assertEquals("token=abc&x=1|", press("token=abc&x=1&y=2|"))
+        assertEquals("example.com/?q=red|", press("example.com/?q=red&page=2|"))
+        assertEquals("example.com/|", press("example.com/?q=red|"))
+        assertEquals("mailto:me@x.example?subject=hi|", press("mailto:me@x.example?subject=hi&body=yo|"))
+        // Without a '?' the first pair starts the run; it goes with the '&' after it.
+        assertEquals("|b=2&c=3", press("a=|1&b=2&c=3"))
+        assertEquals("(a=1|)", press("(a=1&b=2|)"))
+        assertEquals("send a=1| now", press("send a=1&b=2| now"))
+    }
+
+    @Test
+    fun theTextBeforeTheFirstPairIsNotAPair() {
+        // `&x=1` is a pair; `example.com/path` before it is not, so a caret there deletes a word.
+        assertEquals("example.com/path|", press("example.com/path&x=1|"))
+        assertNull(press("example.com/pa|th&x=1"))
+        assertNull(press("https://x.example/a/b|&x=1"))
+    }
+
+    @Test
+    fun outsideKeyValueTextTheOrdinaryWordRuleApplies() {
         assertNull("plain words", press("hello world|"))
         assertNull("a path, no query", press("https://x.example/a/b/c|"))
         assertNull("caret in the path before the query", press("https://x.example/a/b|?x=1"))
-        assertNull("key=value text that is not a link", press("a=1&b=2|"))
-        assertNull("no scheme and no www.", press("example.com/?q=red&page=2|"))
-        assertNull("a scheme without '//'", press("mailto:me@x.example?subject=hi&body=yo|"))
+        assertNull("an ampersand without a key=value", press("Tom&Jerry|"))
+        assertNull("R&D", press("R&D|"))
+        assertNull("an equals sign without a delimiter", press("x=1|"))
         assertNull("caret before the link", press("|https://x.example/p?a=1"))
         assertNull("only spaces", press("   |"))
         assertNull("empty", press("|"))

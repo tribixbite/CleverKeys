@@ -564,6 +564,8 @@
     <string name="input_auto_space_before_desc">タップした候補の前にスペースを挿入します（スワイプは常にスペースを追加）</string>
     <string name="input_backspace_undo_swipe_title">バックスペースでスワイプを元に戻す</string>
     <string name="input_backspace_undo_swipe_desc">スワイプ入力直後にバックスペースをタップすると、単語全体が削除されます</string>
+    <string name="input_delete_word_url_pairs_title">キー=値のペアを1つずつ削除</string>
+    <string name="input_delete_word_url_pairs_desc">&amp; でつながれたキー=値のペアを含むリンクなどのテキスト（?a=1&amp;b=2）では、単語を削除で1回に1ペアずつ削除します</string>
     <string name="input_show_exact_typed_title">入力した文字列をそのまま表示</string>
     <string name="input_show_exact_typed_desc">実際に入力した文字を候補として表示します。タップすると辞書に追加されます</string>
     <string name="input_context_aware_title">コンテキスト対応予測</string>

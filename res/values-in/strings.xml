@@ -576,6 +576,8 @@
     <string name="input_auto_space_before_desc">Sisipkan spasi di depan sebelum saran yang diketuk (geser selalu menambah spasi)</string>
     <string name="input_backspace_undo_swipe_title">Batalkan Geser dengan Backspace</string>
     <string name="input_backspace_undo_swipe_desc">Mengetuk backspace segera setelah kata geser menghapus seluruh kata</string>
+    <string name="input_delete_word_url_pairs_title">Hapus satu pasangan kunci=nilai sekali tekan</string>
+    <string name="input_delete_word_url_pairs_desc">Di tautan atau teks lain dengan pasangan kunci=nilai yang digabung dengan &amp; (?a=1&amp;b=2), Hapus satu kata menghapus satu pasangan setiap tekan</string>
     <string name="input_show_exact_typed_title">Tampilkan kata persis yang diketik</string>
     <string name="input_show_exact_typed_desc">Tawarkan huruf yang benar-benar Anda ketik sebagai saran; ketuk untuk menambahkannya ke kamus</string>
     <string name="input_context_aware_title">Prediksi Kontekstual</string>

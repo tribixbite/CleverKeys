@@ -336,3 +336,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `delete_word` key itself was not pressed on a device (no default binding; same applier).
     Found on the way: the backspace round-trip gesture that the docs said produced `delete_word`
     no longer exists (nothing sets `Modifier.GESTURE`; TODO left in `KeyModifier.applyGesture`).
+    Follow-up the same day (maintainer): any text with `&key=value` (or `?key=`) qualifies, link
+    or not, behind a default-on setting (Input Behavior → "Delete one key=value pair at a time",
+    `delete_word_url_pairs`, 21 locales translated by the agent, native review pending with
+    item 10).

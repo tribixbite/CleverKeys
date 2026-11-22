@@ -575,6 +575,8 @@
     <string name="input_auto_space_before_desc">Dokunulan öneriden önce baştaki boşluğu ekle (kaydırma her zaman boşluk ekler)</string>
     <string name="input_backspace_undo_swipe_title">Geri Silme ile Kaydırmayı Geri Al</string>
     <string name="input_backspace_undo_swipe_desc">Kaydırılan sözcüğün hemen ardından geri silme tuşuna basmak sözcüğün tamamını siler</string>
+    <string name="input_delete_word_url_pairs_title">Anahtar=değer çiftlerini tek tek silme</string>
+    <string name="input_delete_word_url_pairs_desc">&amp; ile birleştirilmiş anahtar=değer çiftleri içeren bir bağlantıda veya başka metinde (?a=1&amp;b=2), Bir sözcüğü sil her basışta bir çift siler</string>
     <string name="input_show_exact_typed_title">Tam yazılan sözcüğü göster</string>
     <string name="input_show_exact_typed_desc">Gerçekten yazdığınız harfleri öneri olarak sunar; sözlüğe eklemek için dokunun</string>
     <string name="input_context_aware_title">Bağlama Duyarlı Tahminler</string>

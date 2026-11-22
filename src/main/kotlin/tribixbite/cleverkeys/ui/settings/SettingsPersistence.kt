@@ -440,6 +440,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         showExactTypedWord = prefs.getSafeBoolean("show_exact_typed_word", Defaults.SHOW_EXACT_TYPED_WORD)
         backspaceUndoSwipe = prefs.getSafeBoolean("backspace_undo_swipe", Defaults.BACKSPACE_UNDO_SWIPE)
         backspaceUndoAutocorrect = prefs.getSafeBoolean("backspace_undo_autocorrect", Defaults.BACKSPACE_UNDO_AUTOCORRECT)
+        deleteWordUrlPairs = prefs.getSafeBoolean("delete_word_url_pairs", Defaults.DELETE_WORD_URL_PAIRS)
         suggestionBarOpacity = Config.safeGetInt(prefs, "suggestion_bar_opacity", Defaults.SUGGESTION_BAR_OPACITY)
         autoCorrectEnabled = prefs.getSafeBoolean("autocorrect_enabled", Defaults.AUTOCORRECT_ENABLED)
         customTerminalPackages = prefs.getSafeString("custom_terminal_packages", Defaults.CUSTOM_TERMINAL_PACKAGES)

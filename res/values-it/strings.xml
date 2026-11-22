@@ -607,6 +607,8 @@
     <string name="input_auto_space_before_desc">Inserisce uno spazio prima di un suggerimento toccato (lo scorrimento aggiunge sempre lo spazio)</string>
     <string name="input_backspace_undo_swipe_title">Backspace annulla scorrimento</string>
     <string name="input_backspace_undo_swipe_desc">Premere Backspace subito dopo una parola digitata a scorrimento elimina l\'intera parola</string>
+    <string name="input_delete_word_url_pairs_title">Elimina una coppia chiave=valore alla volta</string>
+    <string name="input_delete_word_url_pairs_desc">In un link o in altro testo con coppie chiave=valore unite da &amp; (?a=1&amp;b=2), Elimina una parola rimuove una coppia per pressione</string>
     <string name="input_show_exact_typed_title">Mostra parola digitata esatta</string>
     <string name="input_show_exact_typed_desc">Propone le lettere effettivamente digitate come suggerimento; tocca per aggiungerle al dizionario</string>
     <string name="input_context_aware_title">Previsioni contestuali</string>
