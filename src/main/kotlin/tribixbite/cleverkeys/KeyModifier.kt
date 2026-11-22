@@ -467,6 +467,8 @@ object KeyModifier {
     }
 
     /** Modify a key affected by a round-trip or a clockwise circle gesture. */
+    // TODO: dead since the curved gestures were removed (Pointers: apply_gesture() is gone and
+    //  nothing sets Modifier.GESTURE, checked 2026-11-22); remove with the GESTURE modifier.
     private fun applyGesture(k: KeyValue): KeyValue {
         var modified = applyShift(k)
         if (modified != k) return modified

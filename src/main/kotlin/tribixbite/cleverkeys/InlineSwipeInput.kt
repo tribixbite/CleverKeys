@@ -115,7 +115,7 @@ object InlineWordPlanner {
 /**
  * Word deletion in an inline field (maintainer report 2026-10-28: "swipe to delete word doesn't
  * work while editing a clipboard clipping"). The delete-word commands — `delete_last_word` (the
- * Backspace NW flick), `delete_word` (Backspace round-trip gesture, palette, Ctrl+Backspace),
+ * Backspace NW flick), `delete_word` (an extra key, the palette, a custom mapping, Ctrl+Backspace),
  * `forward_delete_word` (Ctrl+Delete) — reach an app as a Ctrl+Del key event or an
  * InputConnection rewrite, neither of which the IME's own fields receive, so they were
  * swallowed there. This plans the same edit over the FIELD's text. Pure.

@@ -499,7 +499,8 @@ backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() →
   word (no trail), the typed text starts with a letter/digit and `auto_space_after_suggestion`
   is on; else "" (punctuation attaches: `word.`).
 - **Word deletion** (2026-10-28): `delete_last_word` (Backspace NW flick), `delete_word`
-  (round-trip gesture, palette) and `forward_delete_word` in `handleEditingKey`, plus
+  (extra key, palette, custom mapping; the backspace round-trip gesture that also produced it is
+  gone with the curved gestures, nothing sets `Modifier.GESTURE`) and `forward_delete_word` in `handleEditingKey`, plus
   Ctrl+Backspace / Ctrl+Delete in `key_up` (checked BEFORE the inline backspace branches; they
   arrive as KEYCODE_DEL/FORWARD_DEL with Ctrl meta), go to `KeyEventHandler.deleteInlineWord` →
   `InlineWordDelete` (pure; `EditorTextNavigation` word boundaries, a selection is deleted as

@@ -50,6 +50,13 @@ French swipe offering `francais` (item 37, fixed `a0f3958d`); at `c8f8eb6d` pure
 instrumented 1,665 (API 34–37, 0 failed, 2 expected skips) green, CI green. Release `a82f9da2`
 installed on the S25U and the Pixel. Audit "Status 2026-11-21".
 
+**Status 2026-11-22 (agent).** Delete word in a link removes one `key=value` pair (item 38,
+`a3245ff2`, device PASS on the Pixel); Swedish accent misspellings out (item 37, `931f5669`, sv.cklm
+gate all pass). Pure 3,967 / mock 1,869 green, CI green. Release bb618b60 installed on the S25U
+and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
+auto-space, subkeys, clipboard editor, multi-language CTC, language detection) 253/253 on API 34
+and 37 (`~/ew-output/url-sv-2026-11-22/`); the full A2 suite was not re-run.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
@@ -321,4 +328,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     backspace swipe (`delete_last_word`, which cut a 50-character slice before) and the inline
     fields; the link stays valid after each press; terminals untouched. Tests seen failing first
     (`UrlQueryDeleteTest`, `UrlQueryDeleteRoutingTest`, `InlineSwipeSessionTest`); wiki FAQ,
-    per-key actions, advanced settings, clipboard editor; skill `ime-key-routing.md`.
+    per-key actions, advanced settings, clipboard editor; skill `ime-key-routing.md`. Device PASS
+    2026-11-22 on the Pixel (release bb618b60): the backspace NW flick took
+    `…/item?id=42&utm_source=news&utm_medium=email` to `…?id=42&utm_source=news`, `…?id=42`,
+    `…/item` in the CleverKeys launcher field (Compose) and in Settings search (EditText); a caret
+    inside `utm=yz` removed that pair and its `&`; `later` after the link went as a word. The
+    `delete_word` key itself was not pressed on a device (no default binding; same applier).
+    Found on the way: the backspace round-trip gesture that the docs said produced `delete_word`
+    no longer exists (nothing sets `Modifier.GESTURE`; TODO left in `KeyModifier.applyGesture`).

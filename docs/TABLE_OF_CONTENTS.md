@@ -102,7 +102,7 @@ review counts are not a current full-tree audit.
 | `voice-input.md` | On-device voice input: engine-neutral `stt/`, voice pack format (manifest v1), Moonshine v2 pack, microphone opt-in; ships in 2.0.0 | ✅ Implemented 2026-10-29 |
 | `architectural-decisions.md` | Architectural Decision Records | ✅ Active |
 
-### `/docs/eval/` Decoder and typing evaluations (2026-07 → 10)
+### `/docs/eval/` Decoder and typing evaluations (2026-07 → 11)
 *CTC / geometric / FUTO-reference head-to-head evidence base, then the pre-registered
 autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule stays off.*
 
@@ -137,6 +137,11 @@ autocorrect / swipe-ranking measurements. "Not shipped" means the measured rule 
 | `2026-10-23-fa-wordlist.md` | Persian (`fa`) word list: Leipzig + wordfreq blend, Lilak oracle, half-space handling, coverage | ✅ Complete |
 | `2026-10-25-ctc-accent-keys.md` | CTC alias slots for accented top-level keys (bépo `é`, QWERTZ `ü ö ä`, `å`, `ñ`): real German traces 81.46 → 83.75 % | ✅ Shipped |
 | `2026-10-26-large-paste-chunk-size.md` | Large clipboard paste into Chrome: chunk size vs Chrome's own cost (newlines ≈ 350 s at any size; space-separated text 2× faster with 192 KiB wire-byte chunks) | ✅ Shipped |
+| `2026-11-09-elision-base-frequency.md` (+ `.patch`) | Ranking a French/Italian elision by its base word (`d'être`): every margin costs real words; patch kept out of the tree, maintainer decision (todo item 35) | ⛔ Not shipped |
+| `2026-11-12-scene-battery-day.md` | What an animated keyboard scene costs over a day on the Pixel 8 Pro (model from measured rounds 6–18) | ✅ Complete |
+| `2026-11-19-italian-accent-spellings.md` | Italian accent misspellings (`perche`, `piu`) out of the dictionary and the next-word model | ✅ Shipped |
+| `2026-11-20-accent-spellings.md` | The same for French, Spanish, Portuguese and German (1,145 spellings; fr/pt models rebuilt under gates) | ✅ Shipped |
+| `2026-11-22-swedish-accent-spellings.md` | Swedish pass: 33 dropped, 56 kept by measured English/ASCII shares; sv.cklm rebuilt under its gate | ✅ Shipped |
 
 ### `/docs/research/` Research notes
 
