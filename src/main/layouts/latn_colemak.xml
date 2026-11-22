@@ -35,7 +35,7 @@
     <key key0="b"         key1="("    key2=")"/>
     <key key0="k"         key1=";"    key2=":"/>
     <key key0="m"         key1="!"    key2="\?" />
-    <key key0="backspace" key1="delete" shift="0.25" width="1.25"/>
+    <key key0="backspace" key1="delete_last_word" key2="delete" shift="0.25" width="1.25"/>
 
   </row>
 </keyboard>

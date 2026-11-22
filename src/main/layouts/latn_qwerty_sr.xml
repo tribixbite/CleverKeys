@@ -41,6 +41,6 @@
     <key key0="b" nw="!" ne="\?" sw="/"/>
     <key key0="n" ne=";" sw=","/>
     <key key0="m" ne=":" sw="."/>    
-    <key width="1.5" key0="backspace" ne="delete"/>
+    <key width="1.5" key0="backspace" key1="delete_last_word" ne="delete"/>
   </row>
 </keyboard>

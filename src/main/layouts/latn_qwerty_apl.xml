@@ -45,6 +45,6 @@
     <key c="b" nw="⊥" ne="⍎" sw="⌿" se="⍀"/>
     <key c="n" nw="⊤" ne="⍕"                  sw="/" se="\\"/>
     <key c="m" nw="≡" ne="≢" sw="∥" se="⍠"/>
-    <key width="2" c="backspace" e="delete"/>
+    <key width="2" c="backspace" nw="delete_last_word" e="delete"/>
   </row>
 </keyboard>

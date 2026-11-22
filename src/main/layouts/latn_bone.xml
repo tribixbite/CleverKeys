@@ -126,6 +126,6 @@
 		<key key0="z" sw="," nw="&quot;"/>
 		<key key0="k" sw="." nw="&apos;"/>
 		<key width="1.5" key0="backspace"
-		              sw=";" nw="delete"/>
+		              sw=";" nw="delete_last_word" ne="delete"/>
 	</row>
 </keyboard>

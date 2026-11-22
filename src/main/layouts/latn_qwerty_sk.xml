@@ -32,6 +32,6 @@
     <key key0="b" key1="&lt;" key2="&gt;" key3=";" key4=":"/>
     <key key0="n" key3="_" key4="ň"/>
     <key key0="m" key1="!" key2="\?" key3="," key4="."/>
-    <key width="1.5" key0="backspace" key3="delete"/>
+    <key width="1.5" key0="backspace" key1="delete_last_word" key3="delete"/>
   </row>
 </keyboard>

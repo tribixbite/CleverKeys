@@ -70,8 +70,12 @@ On QWERTY layout, numbers are on the NORTHEAST (up-right) direction:
 - **Southeast**: Escape (on Q)
 
 ### Backspace
-- **West**: Delete entire word
+- **Northwest** (or a swipe left, which reaches it): Delete the word before the cursor, drawn
+  as the word-delete icon (a backspace outline with a W) on every layout with a Backspace key. In text with
+  `key=value` pairs, such as a link, it removes one pair instead.
+- **Northeast**: Delete forward
 - **Short swipe + hold**: Selection delete mode
+- **Hold still**: Repeat backspace
 
 > [!NOTE]
 > Subkey assignments vary by layout. Check Per-Key Customization to see and modify your layout's subkeys.

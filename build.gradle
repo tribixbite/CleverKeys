@@ -646,6 +646,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.EditorTextNavigationTest',
     // 2026-11-22: a word delete in a URL's query removes exactly one key/value pair.
     'tribixbite.cleverkeys.UrlQueryDeleteTest',
+    // 2026-11-22: every language layout has word delete at Backspace NW, drawn as an icon.
+    'tribixbite.cleverkeys.BackspaceWordDeleteLayoutTest',
     // 2026-10-23 Persian half-space (U+200C): one shared word-character rule (WordChars) at every
     // word-boundary call site, the fa/ckb lookup fold and the half-space spelling index.
     'tribixbite.cleverkeys.PersianHalfSpaceBoundaryTest',

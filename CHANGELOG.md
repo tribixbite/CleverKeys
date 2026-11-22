@@ -564,6 +564,10 @@ editor that used to be listed here already ship in 2.0.)
   key=value pair at a time** (on by default) turns it off. Before, the backspace swipe cut an
   arbitrary 50-character slice off a long link, and the Delete Word key left the boundary to the
   app (a text field removed `email`, then `=`, then `utm_medium`).
+- Every language layout with a Backspace key has word delete in that key's top-left corner (a
+  swipe left reaches it too), drawn as the word-delete icon instead of the English text `word`;
+  8 of the 87 had it before. On Colemak and Bone, forward delete moves from that corner to the
+  top-right one, where the other layouts have it.
 
 ### Removed
 

@@ -61,7 +61,9 @@ class SubLabelSizingTest {
 
     @Test
     fun smallerFontTextCommandsGetTheSmallerFactorAsMappingsToo() {
-        for (command in listOf("ctrl", "meta", "delete_last_word", "clear", "replaceText", "replaceTextMenu", "tab")) {
+        // `delete_last_word` left this list on 2026-11-22: it draws the key font's word-delete icon
+        // now, not the text "word" (BackspaceWordDeleteLayoutTest).
+        for (command in listOf("ctrl", "meta", "clear", "replaceText", "replaceTextMenu", "tab")) {
             val kv = KeyValue.getKeyByName(command)
             assertWithMessage("'$command' carries FLAG_SMALLER_FONT")
                 .that(kv.hasFlagsAny(KeyValue.FLAG_SMALLER_FONT)).isTrue()

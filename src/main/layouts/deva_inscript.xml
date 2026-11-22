@@ -32,6 +32,6 @@
     <key key0="व" key2="ढ़" key3=";" key4="."/>
     <key key0="ल" key1="ळ" key2="फ़" key3="!" key4=","/>
     <key key0="स" key1="श" key2="ष" key3="\?"/>
-    <key shift="0.1" width="1.4" key0="backspace" key2="delete"/>
+    <key shift="0.1" width="1.4" key0="backspace" key1="delete_last_word" key2="delete"/>
   </row>
 </keyboard>

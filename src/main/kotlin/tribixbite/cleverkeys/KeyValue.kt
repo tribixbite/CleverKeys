@@ -833,7 +833,9 @@ class KeyValue private constructor(
             "delete_word" -> editingKey(0xE01B, Editing.DELETE_WORD)
             "forward_delete_word" -> editingKey(0xE01C, Editing.FORWARD_DELETE_WORD)
             "clear" -> editingKey("clr", Editing.CLEAR, FLAG_SMALLER_FONT)
-            "delete_last_word" -> editingKey("word", Editing.DELETE_LAST_WORD)
+            // The key font's word-delete icon, as delete_word: a text label ("word") would be English
+            // on every layout, and Backspace NW carries it on every language layout (2026-11-22).
+            "delete_last_word" -> editingKey(0xE01B, Editing.DELETE_LAST_WORD)
             "cursor_left" -> sliderKey(Slider.Cursor_left, 1)
             "cursor_right" -> sliderKey(Slider.Cursor_right, 1)
             "cursor_up" -> sliderKey(Slider.Cursor_up, 1)

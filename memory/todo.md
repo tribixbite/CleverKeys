@@ -340,3 +340,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     or not, behind a default-on setting (Input Behavior → "Delete one key=value pair at a time",
     `delete_word_url_pairs`, 21 locales translated by the agent, native review pending with
     item 10).
+39. [x] agent: word delete at Backspace NW on every language layout with a Backspace key (maintainer
+    2026-11-22: "preferably using a symbol"); 8 of 87 had it, 79 gained it (Colemak and Bone moved
+    forward delete NW → NE); `delete_last_word` draws the key font's word-delete icon (U+E01B) in
+    place of the English `word`. `BackspaceWordDeleteLayoutTest`. Not covered: ckb_fa, tj and os put
+    Backspace in a letter key's corner (no Backspace key). Backspace hold-to-repeat was already on
+    by default (Key Repeat on, Backspace Only Repeat on; 600 ms then every 25 ms) and the subkey
+    popover never claims Backspace.

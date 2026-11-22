@@ -38,6 +38,6 @@
     <key c="m" ne="&quot;" sw="'"/>
     <key c="accent_aigu" ne="accent_trema" nw="accent_grave" sw="accent_circonflexe" se="accent_ring"/>
     <key c="þ"/>
-    <key c="backspace" ne="delete"/>
+    <key c="backspace" nw="delete_last_word" ne="delete"/>
   </row>
 </keyboard>

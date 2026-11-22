@@ -36,7 +36,7 @@
     <key c="n" ne=":" sw=";"/>
     <key c="m" ne="&quot;" sw="'"/>
     <key c="ċ"/>
-    <key width="1.5" c="backspace" ne="delete"/>
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete"/>
   </row>
 </keyboard>
 

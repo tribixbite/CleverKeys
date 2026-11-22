@@ -36,7 +36,7 @@ Based on XKB Sinhala (phonetic) layout.
     <key nw="\?" c="බ" sw="/" ne="භ" />
     <key nw=":" c="න" sw=";" ne="ණ" />
     <key nw="&quot;" c="ම" sw="'" se="zwj" ne="ඹ" />
-    <key width="1.5" c="backspace" ne="delete" />
+    <key width="1.5" c="backspace" nw="delete_last_word" ne="delete" />
   </row>
   <modmap>
     <shift a="ඍ" b="&#x0DD8;" />

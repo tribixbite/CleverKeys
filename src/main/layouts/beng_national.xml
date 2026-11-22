@@ -32,6 +32,6 @@
     <key key0="ন" key1="৳" key2="ণ" key3=";" key4="."/>
     <key key0="স" key1="&quot;" key2="ষ" key3="!" key4=","/>
     <key key0="ম" key1="'" key2="শ" key3="\?" key4="।"/>
-    <key shift="0.1" width="1.4" key0="backspace" key2="delete"/>
+    <key shift="0.1" width="1.4" key0="backspace" key1="delete_last_word" key2="delete"/>
   </row>
 </keyboard>

@@ -34,6 +34,6 @@
     <key key0="v" key3=";" key4="."/>
     <key key0="b" key3=":" key4="/"/>
     <key key0="n" key1="loc accent_tilde" key2="§" key4="!"/>
-    <key width="2.0" key0="backspace" key2="delete"/>
+    <key width="2.0" key0="backspace" key1="delete_last_word" key2="delete"/>
   </row>
 </keyboard>
