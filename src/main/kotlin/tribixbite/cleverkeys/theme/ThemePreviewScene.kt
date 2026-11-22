@@ -5,8 +5,9 @@ package tribixbite.cleverkeys.theme
  *
  * The preview renders the REAL keyboard ([tribixbite.cleverkeys.Keyboard2View]) and
  * suggestion bar; this object only decides what representative state they show:
- *  - which modifiers are put in which state (Shift latched → the ACTIVATED key frame,
- *    a second modifier locked → the LOCKED frame; modifiers/action keys at rest show the
+ *  - which modifiers are put in which state (Shift latched → the TOGGLED key frame, a
+ *    look's LATCHED one, since 2026-11-22; a second modifier locked → the LOCKED frame;
+ *    modifiers/action keys at rest show the
  *    MODIFIER/SPECIAL frames on their own),
  *  - the static sample swipe trail through the sample word's letter keys,
  *  - the trail effect used when the user's own trail setting would hide the trail.
@@ -20,7 +21,7 @@ object ThemePreviewScene {
     /**
      * Modifier names tried, in order, for the LOCKED sample key. The default bottom row
      * carries `ctrl`; custom layouts may only carry one of the others. Shift is excluded:
-     * it is the ACTIVATED (latched) sample.
+     * it is the latched sample (TOGGLED frame).
      */
     val LOCKED_MODIFIER_CANDIDATES: List<String> = listOf("ctrl", "fn", "alt", "meta")
 

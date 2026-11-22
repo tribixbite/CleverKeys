@@ -294,6 +294,20 @@ key-magnifier or suggestion-bar colours. As built at HEAD, 2026-10-27.
    brightness × size batches (`drawStarBatch`), kept RenderNodes are re-recorded when
    `!hasDisplayList()`, the window hiding stops motion and frees the keys layer, and
    `CleverKeysService.onTrimMemory` trims the painting cache to the last one used.
+22. **Toggled modifiers must read on every theme** (2026-11-22, maintainer S25U screenshot).
+   A latched modifier at rest → `KeyRole.TOGGLED` (`key_toggled`), locked → `LOCKED`
+   (`key_locked`); both OPAQUE (`Key(opaqueFill = true)`): a toggle is a state, not a press, so
+   the user's "pressed key opacity" (`key_activated_opacity`, default 80 %, can be 0) must not
+   fade it. Before, the CleverKeys look's light Caps Lock fill vanished under a low pressed opacity
+   and left its dark `#2E0F45` label on a dark key; Black's toggle was `#333333` on black plus a
+   blue label; a look's latched Ctrl kept the at-rest fill (the LATCHED frame is Shift's design:
+   `isRestingLatch(..., key)` is now Shift only). Colours come from `Theme.toggledColors`
+   (`ToggledKeyPalette`, pure): the theme's own fill/label when fill vs key-at-rest ≥ 2:1 and
+   label vs fill ≥ 4.5:1, else XML accents (`colorLabelActivated` / `colorLabelLocked`;
+   `labelsAreAccents = true`) or for looks/custom a 70 % step toward the Caps Lock fill, else a
+   tone of the key; label falls back to black/white. The frame's `toggledLabelColor` also colours
+   the corner labels. A momentary press (held, not latched) keeps ACTIVATED and its opacity.
+   Pinned: `ToggledKeyPaletteTest` (every XML theme), `KeyboardLookRenderTest`.
 
 ## Traps
 

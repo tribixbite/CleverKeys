@@ -347,3 +347,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Backspace in a letter key's corner (no Backspace key). Backspace hold-to-repeat was already on
     by default (Key Repeat on, Backspace Only Repeat on; 600 ms then every 25 ms) and the subkey
     popover never claims Backspace.
+40. [x] agent: toggled modifiers readable on every theme (maintainer S25U screenshot 2026-11-22: a
+    toggled Ctrl on the true black themes had only a label tint; on the CleverKeys theme a toggled
+    Shift/Ctrl drew `#2E0F45` on a near-background fill, measured `#151219`, because the look's
+    light Caps Lock fill is drawn at the Activated Key Opacity setting). New TOGGLED frame for a
+    latched modifier, LOCKED for a locked one, both opaque, colours from `ToggledKeyPalette`
+    (contrast floors 2:1 fill, 4.5:1 label); a look's latched Shift keeps its glyph frame.
+    `ToggledKeyPaletteTest` (every XML theme), `KeyboardLookRenderTest`. Open: the user's own
+    look on the S25U (the Pixel check used its current theme only).

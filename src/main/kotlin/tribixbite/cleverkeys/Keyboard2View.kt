@@ -2091,9 +2091,13 @@ class Keyboard2View @JvmOverloads constructor(
                 // Keyboard looks: Enter, the editor-action key and a look's function characters
                 // (Gboard's comma/period) get their own frames; a latched Shift at rest draws the
                 // look's latched fill (Gboard, Samsung: the function-key fill, Samsung's blue icon).
+                // Any other latched modifier draws the toggled frame: an opaque fill that stands
+                // apart from the key at rest (2026-11-22, Theme.toggledColors).
+                val restingLatch = Theme.Computed.isRestingLatch(kv0Flags, _theme.colorKeyLatched != 0, kv0)
                 val baseRole = Theme.Computed.roleOf(
                     kv0, isKeyDown, isLocked, _theme.functionChars, _theme.lookLetterKeys,
-                    Theme.Computed.isRestingLatch(kv0Flags, _theme.colorKeyLatched != 0),
+                    restingLatch,
+                    toggled = !restingLatch && Theme.Computed.isToggledLatch(kv0Flags),
                 )
                 // A look's editor-action key takes the Enter key's colours for the actions its
                 // product does not highlight (Gboard, SwiftKey: all; iOS: Next / Previous).
@@ -2347,6 +2351,15 @@ class Keyboard2View @JvmOverloads constructor(
         }
     }
 
+    /**
+     * A corner label's colour on frame [tc]: [base], except on a toggle frame (a latched or locked
+     * modifier, Theme.toggledColors), whose fill may be an accent the theme's sub-label colour does not
+     * read on: there it is the frame's readable label colour. Built-in and custom-mapping corner
+     * labels both pass through here (2026-11-22).
+     */
+    private fun cornerLabelColor(tc: Theme.Computed.Key, base: Int): Int =
+        if (tc.toggledLabelColor != 0) tc.toggledLabelColor else base
+
     private fun labelColor(k: KeyValue, isKeyDown: Boolean, sublabel: Boolean): Int {
         if (isKeyDown) {
             val flags = _pointers.getKeyFlags(k)
@@ -2372,8 +2385,10 @@ class Keyboard2View @JvmOverloads constructor(
         // pressed, locked, secondary and greyed labels keep their usual colours.
         val p = tc.label_paint(
             modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT),
-            // A per-key style's pressed label colour (KeyStyle) wins while the key is down.
+            // A per-key style's pressed label colour (KeyStyle) wins while the key is down; a
+            // toggle frame's label is the one that reads on its fill (Theme.toggledColors).
             if (isKeyDown && tc.pressedLabelColorOverride != 0) tc.pressedLabelColorOverride
+            else if (tc.toggledLabelColor != 0) tc.toggledLabelColor
             else Theme.Computed.frameLabelColor(labelColor(modifiedKv, isKeyDown, false), tc.labelColorOverride, _theme),
             textSize,
         )
@@ -2586,7 +2601,7 @@ class Keyboard2View @JvmOverloads constructor(
         // SubLabelSizing is shared with drawCustomSubLabel, KeyMagnifierView and the popover:
         // FLAG_SMALLER_FONT / colour-emoji scale, then shrink-to-fit the slot's width.
         val textSize = _subLabelSize * SubLabelSizing.scaleFor(modifiedKv)
-        val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), labelColor(modifiedKv, isKeyDown, true), textSize, a)
+        val p = tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), cornerLabelColor(tc, labelColor(modifiedKv, isKeyDown, true)), textSize, a)
         val isCorner = v != Vertical.CENTER && a != Paint.Align.CENTER
         val subPadding = if (hintStyle != null && isCorner)
             tribixbite.cleverkeys.theme.LookHintLayout.cornerInset(snap.keyPadding, radius)
@@ -2741,7 +2756,7 @@ class Keyboard2View @JvmOverloads constructor(
         val textSize = _subLabelSize * sizeScale
 
         // Use the theme's sublabel_paint for consistent font selection
-        val paint = tc_key.sublabel_paint(useKeyFont, color, textSize, a)
+        val paint = tc_key.sublabel_paint(useKeyFont, cornerLabelColor(tc_key, color), textSize, a)
 
         val subPadding = snap.keyPadding
         // Limit label length for display, then keep it inside its slot (never over the main label)

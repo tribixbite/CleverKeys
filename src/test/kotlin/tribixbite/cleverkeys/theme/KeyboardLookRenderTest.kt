@@ -23,7 +23,9 @@ import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.Pointers
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SuggestionBarPalette
 import tribixbite.cleverkeys.Theme
+import tribixbite.cleverkeys.ToggledKeyPalette
 
 /**
  * Keyboard looks reach the renderer (2026-10-27): a look's geometry, role fills, role labels and
@@ -254,6 +256,53 @@ class KeyboardLookRenderTest {
         assertWithMessage("non-look themes draw no key-press preview").that(plain.lookPreview).isNull()
         assertThat(plain.lookPopupColors).isNull()
         assertThat(plain.lookHintStyle).isNull()
+    }
+
+    /**
+     * Maintainer 2026-11-22 (S25U screenshot, CleverKeys theme): a toggled Shift and Ctrl drew a
+     * dark label on a dark key. The look's light Caps Lock fill was painted at the "pressed key
+     * opacity" (sampled #151219 under a #2E0F45 glyph), and a one-shot Ctrl kept the at-rest fill.
+     * A toggle frame is now opaque, stands apart from the key at rest and carries a readable label;
+     * a momentary press keeps the pressed-key opacity.
+     */
+    @Test
+    fun aToggledModifierDrawsAnOpaqueFillThatStandsApartWithAReadableLabel() {
+        val dark = KeyboardLooks.cleverkeysLook.dark
+        val theme = Theme(
+            context, KeyboardLookSchemes.colorScheme(dark), density = 2f,
+            lookPalette = dark, lookGeometry = look, lookShiftFilled = true,
+        )
+        val tc = Theme.Computed(theme, config().apply { keyActivatedOpacity = 0 }, 100f, layout())
+        val resting = tc.key_modifier.bg_paint.color or 0xFF000000.toInt()
+        for ((name, frame) in listOf("locked" to tc.key_locked, "toggled" to tc.key_toggled)) {
+            assertWithMessage("$name fill is opaque").that(frame.bg_paint.alpha).isEqualTo(255)
+            val fill = frame.bg_paint.color or 0xFF000000.toInt()
+            assertWithMessage("$name fill stands apart from the key at rest")
+                .that(SuggestionBarPalette.contrastRatio(fill, resting)).isAtLeast(ToggledKeyPalette.MIN_FILL_CONTRAST)
+            assertWithMessage("$name label reads on its fill")
+                .that(SuggestionBarPalette.contrastRatio(frame.toggledLabelColor, fill))
+                .isAtLeast(ToggledKeyPalette.MIN_LABEL_CONTRAST)
+        }
+        assertWithMessage("Caps Lock keeps the look's own fill").that(near(tc.key_locked.bg_paint.color or 0xFF000000.toInt(), dark.keyLocked)).isTrue()
+        assertWithMessage("a momentary press keeps the pressed-key opacity").that(tc.key_activated.bg_paint.alpha).isEqualTo(0)
+
+        val latched = Pointers.FLAG_P_LATCHABLE or Pointers.FLAG_P_LATCHED
+        val ctrl = KeyValue.getKeyByName("ctrl")
+        val shift = KeyValue.getKeyByName("shift")
+        assertWithMessage("a look's latched Shift keeps its glyph-led frame")
+            .that(Theme.Computed.isRestingLatch(latched, hasLatchedFill = true, key = shift)).isTrue()
+        assertWithMessage("a latched Ctrl has no glyph to change: the toggled frame")
+            .that(Theme.Computed.isRestingLatch(latched, hasLatchedFill = true, key = ctrl)).isFalse()
+        assertThat(Theme.Computed.isToggledLatch(latched)).isTrue()
+        assertThat(Theme.Computed.isToggledLatch(latched or Pointers.FLAG_P_LOCKED)).isFalse()
+        assertThat(Theme.Computed.isToggledLatch(Pointers.FLAG_P_LATCHABLE)).isFalse()
+        assertThat(Theme.Computed.roleOf(ctrl, true, false, "", emptySet(), restingLatch = false, toggled = true))
+            .isEqualTo(Theme.Computed.KeyRole.TOGGLED)
+        assertThat(tc.keyForRole(Theme.Computed.KeyRole.TOGGLED)).isSameInstanceAs(tc.key_toggled)
+        assertWithMessage("locked wins").that(Theme.Computed.roleOf(ctrl, true, true, "", emptySet(), toggled = true))
+            .isEqualTo(Theme.Computed.KeyRole.LOCKED)
+        assertWithMessage("held, not latched: the pressed frame")
+            .that(Theme.Computed.roleOf(ctrl, true, false)).isEqualTo(Theme.Computed.KeyRole.ACTIVATED)
     }
 
     /**

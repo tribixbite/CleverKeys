@@ -196,6 +196,24 @@ class Theme {
     @JvmField
     val latchedLabelColor: Int
 
+    /**
+     * Whether [activatedColor] / [lockedColor] are designed state accents ([ToggledKeyPalette]):
+     * true for XML themes, false for a look's or a custom theme's (label colours there).
+     */
+    private val toggledLabelsAreAccents: Boolean
+
+    /**
+     * Fill and label of a toggled modifier (latched or locked at rest, 2026-11-22): the theme's
+     * own toggle colours when they stand apart from the key at rest and read, else readable ones
+     * ([ToggledKeyPalette]). Drawn opaque by the TOGGLED and LOCKED frames; [Computed] resolves it
+     * once. A function, not a lazy property: tests allocate Themes without a constructor.
+     */
+    fun toggledColors(): ToggledKeyPalette.Toggled = ToggledKeyPalette.forTheme(
+        restingFill = colorKeyModifier, pressedFill = colorKeyActivated, lockedFill = colorKeyLocked,
+        activatedLabel = activatedColor, lockedLabel = lockedColor, label = labelColor,
+        labelsAreAccents = toggledLabelsAreAccents,
+    )
+
     /** How a look draws corner labels (size, weight); null for every non-look theme. */
     @JvmField
     val lookHintStyle: LookHintStyle?
@@ -338,6 +356,7 @@ class Theme {
         lookBackdrop = null
         colorKeyLatched = 0
         latchedLabelColor = 0
+        toggledLabelsAreAccents = true
         keyShadowColor = 0
         suggestionSeparatorColor = defaultSeparator(subLabelColor)
         swipeTrailColor = 0
@@ -477,6 +496,7 @@ class Theme {
         lookBackdrop = lookPalette?.backdrop
         colorKeyLatched = lookPalette?.latchedKey ?: 0
         latchedLabelColor = if (colorKeyLatched != 0) lookPalette?.latchedLabel ?: 0 else 0
+        toggledLabelsAreAccents = false
         keyShadowColor = lookPalette?.keyShadow ?: 0
         suggestionSeparatorColor = lookPalette?.barSeparator ?: defaultSeparator(subLabelColor)
         swipeTrailColor = lookPalette?.swipeTrail ?: 0
@@ -542,6 +562,9 @@ class Theme {
 
         @JvmField
         val key: Key
+        /** [Theme.toggledColors], resolved once for these frames (declared before init uses it). */
+        private val toggled: ToggledKeyPalette.Toggled = theme.toggledColors()
+
         @JvmField
         val key_activated: Key
         // H-4: per-role key frames so the Theme-Creator's Key Locked / Key Modifier /
@@ -549,6 +572,12 @@ class Theme {
         // (see Theme's XML constructor), so these draw identically to key/key_activated.
         @JvmField
         val key_locked: Key
+        /**
+         * A latched (one-shot) modifier at rest, other than a look's Shift ([key_latched]): an
+         * opaque fill that stands apart from the key at rest (Theme.toggledColors, 2026-11-22).
+         */
+        @JvmField
+        val key_toggled: Key
         @JvmField
         val key_modifier: Key
         @JvmField
@@ -617,7 +646,16 @@ class Theme {
             key_activated = Key(theme, config, keyWidth, true, geometry = geometry)
             // Locked keys keep the activated border/width treatment (they ARE held down),
             // only the fill colour differs; modifier/special/action are at-rest variants.
-            key_locked = Key(theme, config, keyWidth, true, theme.colorKeyLocked, geometry)
+            // A toggle (Caps Lock, a latched Ctrl) is a state, not a press: its fill is opaque
+            // whatever the "pressed key opacity", and its colours always read (Theme.toggledColors).
+            key_locked = Key(
+                theme, config, keyWidth, true, toggled.lockedFill, geometry,
+                toggledLabelColor = toggled.lockedLabel, opaqueFill = true,
+            )
+            key_toggled = Key(
+                theme, config, keyWidth, true, toggled.latchedFill, geometry,
+                toggledLabelColor = toggled.latchedLabel, opaqueFill = true,
+            )
             key_modifier = Key(theme, config, keyWidth, false, theme.colorKeyModifier, geometry, theme.modifierLabelColor)
             key_special = Key(theme, config, keyWidth, false, theme.colorKeySpecial, geometry, theme.modifierLabelColor)
             key_enter = Key(theme, config, keyWidth, false, theme.colorKeyEnter, geometry, theme.enterLabelColor)
@@ -681,7 +719,8 @@ class Theme {
             val byRole = styledFrames.getOrPut(style) { arrayOfNulls(KeyRole.entries.size) }
             byRole[role.ordinal]?.let { return it }
             val g = if (style.geometry.isEmpty()) geometry else geometryFor(layoutOverrides + style.geometry)
-            val activated = role == KeyRole.ACTIVATED || role == KeyRole.LOCKED
+            val toggle = role == KeyRole.LOCKED || role == KeyRole.TOGGLED
+            val activated = role == KeyRole.ACTIVATED || toggle
             val fill = (if (activated) style.backgroundPressed else style.background) ?: roleFill(role)
             val frame = StyledFrame(
                 key = Key(
@@ -689,6 +728,11 @@ class Theme {
                     labelColorOverride = style.labelColor ?: roleLabelColor(role),
                     borderColorOverride = style.borderColor ?: 0,
                     pressedLabelColorOverride = style.labelColorPressed ?: 0,
+                    // A style's own pressed colours win; otherwise a toggle's readable label.
+                    toggledLabelColor = if (toggle && style.labelColorPressed == null && style.backgroundPressed == null) {
+                        if (role == KeyRole.LOCKED) toggled.lockedLabel else toggled.latchedLabel
+                    } else 0,
+                    opaqueFill = toggle,
                 ),
                 horizontalMargin = g.horizontalMargin,
                 verticalMargin = g.verticalMargin,
@@ -701,7 +745,8 @@ class Theme {
         private fun roleFill(role: KeyRole): Int = when (role) {
             KeyRole.NORMAL, KeyRole.LETTER -> theme.colorKey
             KeyRole.ACTIVATED -> theme.colorKeyActivated
-            KeyRole.LOCKED -> theme.colorKeyLocked
+            KeyRole.LOCKED -> toggled.lockedFill
+            KeyRole.TOGGLED -> toggled.latchedFill
             KeyRole.MODIFIER -> theme.colorKeyModifier
             KeyRole.SPECIAL -> theme.colorKeySpecial
             KeyRole.ENTER -> theme.colorKeyEnter
@@ -723,7 +768,7 @@ class Theme {
          * H-4: which computed key frame a key renders with — pure so the mapping is
          * pinnable off-device (the draw loop feeds it kind + pointer state).
          */
-        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER, LATCHED }
+        enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER, LATCHED, TOGGLED }
 
         /** The computed frame for [role] (see [roleOf]). */
         fun keyForRole(role: KeyRole): Key = when (role) {
@@ -736,6 +781,7 @@ class Theme {
             KeyRole.ACTION -> key_action
             KeyRole.LETTER -> key_letter
             KeyRole.LATCHED -> key_latched
+            KeyRole.TOGGLED -> key_toggled
         }
 
         class Key(
@@ -760,6 +806,13 @@ class Theme {
             borderColorOverride: Int = 0,
             /** Main label colour while the key is pressed (per-key style); 0 = the theme's. */
             @JvmField val pressedLabelColorOverride: Int = 0,
+            /**
+             * A toggle frame's label colour (Theme.toggledColors), for the main label and the corner
+             * labels alike so they read on the toggle's fill; 0 = not a toggle frame.
+             */
+            @JvmField val toggledLabelColor: Int = 0,
+            /** Draw the fill opaque, whatever the pressed / key opacity: a toggle is a state, not a press. */
+            opaqueFill: Boolean = false,
         ) {
             @JvmField
             val bg_paint = Paint()
@@ -803,7 +856,8 @@ class Theme {
                 // down to none: CleverKeys Aurora draws keys by their outline alone). A pressed key
                 // keeps its whole fill so the press still shows on an outline-only key.
                 val fillShare = if (activated) 1f else geometry?.fillOpacity ?: 1f
-                val fillAlpha = (if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare
+                val fillAlpha = if (opaqueFill) 255f
+                    else (if (activated) config.keyActivatedOpacity else config.keyOpacity) * fillShare
                 shadow_dy = geometry?.shadowDy ?: 0f
                 shadow_paint = if (shadow_dy > 0f && theme.keyShadowColor != 0) {
                     Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -889,8 +943,14 @@ class Theme {
                 letterKeys: Set<LookLetterKey> = emptySet(),
                 /** [isRestingLatch]: draw a latched key with the [KeyRole.LATCHED] frame (locked still wins). */
                 restingLatch: Boolean = false,
+                /**
+                 * [isToggledLatch]: a latched modifier at rest draws the [KeyRole.TOGGLED] frame
+                 * (2026-11-22; a look's latched Shift keeps [restingLatch], locked still wins).
+                 */
+                toggled: Boolean = false,
             ): KeyRole {
                 if (restingLatch && isKeyDown && !isLocked) return KeyRole.LATCHED
+                if (toggled && isKeyDown && !isLocked) return KeyRole.TOGGLED
                 val role = roleOf(kv?.getKind(), isKeyDown, isLocked)
                 if (kv == null) return role
                 return when {
@@ -913,9 +973,20 @@ class Theme {
              * The real Gboard keeps Shift's function-key fill then (Pixel 2026-10-27).
              */
             @JvmStatic
-            fun isRestingLatch(flags: Int, hasLatchedFill: Boolean): Boolean =
-                hasLatchedFill && flags != -1 &&
-                    (flags and Pointers.FLAG_P_LATCHED) != 0 && (flags and Pointers.FLAG_P_LOCKED) == 0
+            @JvmOverloads
+            fun isRestingLatch(flags: Int, hasLatchedFill: Boolean, key: KeyValue? = null): Boolean =
+                hasLatchedFill && isToggledLatch(flags) &&
+                    // The look's design is Shift's (its glyph says one-shot); a Ctrl has no
+                    // glyph to change, so it takes the toggled frame (2026-11-22).
+                    (key == null || (key.getKind() == KeyValue.Kind.Modifier && key.getModifier() == KeyValue.Modifier.SHIFT))
+
+            /**
+             * True when a key's pointer [flags] say it is latched (one-shot) and not locked: a
+             * toggled modifier at rest, auto-capitalisation's Shift included (2026-11-22).
+             */
+            @JvmStatic
+            fun isToggledLatch(flags: Int): Boolean =
+                flags != -1 && (flags and Pointers.FLAG_P_LATCHED) != 0 && (flags and Pointers.FLAG_P_LOCKED) == 0
 
             /**
              * The main-label colour of a key drawn with a frame whose look label colour is
@@ -1013,11 +1084,99 @@ object SuggestionBarPalette {
         return (maxOf(la, lb) + 0.05) / (minOf(la, lb) + 0.05)
     }
 
-    private fun relativeLuminance(color: Int): Double {
+    internal fun relativeLuminance(color: Int): Double {
         fun channel(shift: Int): Double {
             val c = ((color ushr shift) and 0xFF) / 255.0
             return if (c <= 0.03928) c / 12.92 else Math.pow((c + 0.055) / 1.055, 2.4)
         }
         return 0.2126 * channel(16) + 0.7152 * channel(8) + 0.0722 * channel(0)
     }
+}
+
+/**
+ * Colours of a TOGGLED modifier: a latched (one-shot) or locked Shift, Ctrl, Alt or Fn at rest
+ * (maintainer 2026-11-22, S25U screenshot). Before, a toggle drew the theme's pressed fill at the
+ * user's "pressed key opacity" with the theme's activated / locked label colour: on the true black
+ * themes that is #333333 on black keys plus a blue label ("no obvious visual indicator"), and on
+ * the CleverKeys look the light Caps Lock fill faded away under a low pressed opacity, leaving its
+ * dark label on a dark key.
+ *
+ * A toggle now draws an opaque fill that stands apart from the key at rest
+ * ([MIN_FILL_CONTRAST]) and a label readable on it ([MIN_LABEL_CONTRAST]). Each colour keeps the
+ * theme's own design when that already does the job (the CleverKeys look's Caps Lock, Cobalt,
+ * Jungle, Jewel), so only the weak toggles change. Pure: [ToggledKeyPaletteTest].
+ */
+object ToggledKeyPalette {
+    /** A toggle's fill against the same key at rest: a clear step, more than a pressed tint. */
+    const val MIN_FILL_CONTRAST = 2.0
+
+    /** Its label against that fill (WCAG 1.4.3 normal text). */
+    const val MIN_LABEL_CONTRAST = 4.5
+
+    /** How far a look's latched fill moves from the key at rest toward its locked fill. */
+    const val LATCHED_TOWARD_LOCKED = 0.7f
+
+    /** The resolved toggle colours, all opaque. */
+    data class Toggled(val latchedFill: Int, val latchedLabel: Int, val lockedFill: Int, val lockedLabel: Int)
+
+    private const val BLACK = 0xFF000000.toInt()
+    private const val WHITE = 0xFFFFFFFF.toInt()
+
+    /**
+     * @param restingFill the modifier key's fill at rest.
+     * @param pressedFill the theme's pressed fill, its latched design.
+     * @param lockedFill the theme's Caps Lock fill (XML themes: the pressed fill).
+     * @param activatedLabel / [lockedLabel] the theme's latched / locked label colours.
+     * @param label the theme's ordinary label colour.
+     * @param labelsAreAccents XML themes design their activated / locked label colours as state
+     *   accents (Black's blue and green, ePaper's black), usable as a fill. A look's or a custom
+     *   theme's are label colours (the plain label, or the on-accent colour of its locked fill),
+     *   so the latched fill there is a step from the key at rest toward the locked fill instead.
+     */
+    fun forTheme(
+        restingFill: Int, pressedFill: Int, lockedFill: Int,
+        activatedLabel: Int, lockedLabel: Int, label: Int, labelsAreAccents: Boolean,
+    ): Toggled {
+        val latchedAccents = if (labelsAreAccents) listOf(activatedLabel, lockedLabel)
+        else listOf(mix(lockedFill, restingFill, LATCHED_TOWARD_LOCKED), lockedFill)
+        val lockedAccents = if (labelsAreAccents) listOf(lockedLabel, activatedLabel) else emptyList()
+        val latched = fill(pressedFill, latchedAccents, restingFill)
+        val locked = fill(lockedFill, lockedAccents, restingFill)
+        // A look's locked label is the on-accent colour of its locked fill: it suits a step toward it too.
+        val extraLabels = if (labelsAreAccents) emptyList() else listOf(lockedLabel)
+        return Toggled(
+            latchedFill = latched,
+            latchedLabel = readableLabel(latched, listOf(activatedLabel, label) + extraLabels),
+            lockedFill = locked,
+            lockedLabel = readableLabel(locked, listOf(lockedLabel, label) + extraLabels),
+        )
+    }
+
+    /** [designed] when it stands apart from [resting], else the first accent that does, else a tone of [resting]. */
+    private fun fill(designed: Int, accents: List<Int>, resting: Int): Int =
+        (listOf(designed) + accents).map(::opaque).firstOrNull { contrast(it, resting) >= MIN_FILL_CONTRAST }
+            ?: tone(opaque(resting))
+
+    /** The first of [candidates] readable on [fill], else black or white, whichever reads better. */
+    private fun readableLabel(fill: Int, candidates: List<Int>): Int =
+        candidates.map(::opaque).firstOrNull { contrast(it, fill) >= MIN_LABEL_CONTRAST }
+            ?: if (contrast(BLACK, fill) >= contrast(WHITE, fill)) BLACK else WHITE
+
+    /** A dark key lightened toward white, a light one darkened toward black: always a clear step. */
+    private fun tone(resting: Int): Int =
+        if (SuggestionBarPalette.relativeLuminance(resting) < 0.5) mix(WHITE, resting, 0.45f) else mix(BLACK, resting, 0.35f)
+
+    /** [a] over [b] at [share] of [a], per channel; opaque. */
+    private fun mix(a: Int, b: Int, share: Float): Int {
+        fun ch(shift: Int): Int {
+            val x = (a ushr shift) and 0xFF
+            val y = (b ushr shift) and 0xFF
+            return Math.round(x * share + y * (1 - share)).coerceIn(0, 255)
+        }
+        return BLACK or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
+    }
+
+    private fun opaque(color: Int): Int = color or BLACK
+
+    private fun contrast(a: Int, b: Int): Double = SuggestionBarPalette.contrastRatio(a, b)
 }

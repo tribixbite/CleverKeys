@@ -151,6 +151,13 @@ CleverKeys includes a powerful theme creator for custom colors. Every field in t
 | **Background** | Keyboard Background, Keyboard Surface (elevated panels) |
 | **Keyboard Look** (optional) | Look colors (Enter and action keys, function-key labels, Caps Lock label, key shadow, suggestion separator, pop-ups), separate Light Mode and Dark Mode colors, key shape (gaps, corner radius, outline, shadow, label size and weight), gesture hints, key-press preview and key roles (pill-shaped keys, emoji key like a letter, function characters, wallpaper colors). Anything left on **Use keyboard setting** / **Not set** follows your settings. |
 
+> [!NOTE]
+> A toggled Shift, Ctrl, Alt or Fn (tapped once, or locked) always fills its key, at full
+> opacity whatever **Activated Key Opacity** (Appearance) says; that setting now only affects a key
+> while you press it. The fill uses your theme's Key Activated or Key
+> Locked colour when it stands apart from the key at rest; otherwise CleverKeys picks one from the
+> theme's accent colours. The label switches to black or white if it would not read on that fill.
+
 ### Creating Custom Theme
 
 1. Open **Theme Manager**

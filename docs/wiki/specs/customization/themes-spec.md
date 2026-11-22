@@ -53,9 +53,17 @@ The theme system resolves a theme id (preference key `theme`) into a runtime `Th
 `Theme.Computed` (`Theme.kt:251`) precomputes a key frame (background + border paints) per `KeyRole`:
 
 ```kotlin
-// Theme.kt:325
-enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL }
+enum class KeyRole { NORMAL, ACTIVATED, LOCKED, MODIFIER, SPECIAL, ENTER, ACTION, LETTER, LATCHED, TOGGLED }
 ```
+
+- **Toggled modifiers (2026-11-22).** A latched (one-shot) modifier at rest draws the TOGGLED
+  frame and a locked one (Caps Lock, a locked Ctrl) the LOCKED frame. Both are drawn opaque,
+  whatever the "pressed key opacity", with `Theme.toggledColors` (`ToggledKeyPalette`): the theme's
+  own toggle colours when the fill stands apart from the key at rest (contrast ≥ 2:1) and the
+  label reads on it (≥ 4.5:1), else the theme's state accents (XML themes: `colorLabelActivated`
+  / `colorLabelLocked`; looks: a step from the key toward the Caps Lock fill), with a black or
+  white label. A look's latched Shift keeps its LATCHED frame (its glyph shows the state); any
+  other latched modifier takes TOGGLED. Corner labels on a toggle frame use its label colour.
 
 - `keyForRole(role)` (`Theme.kt:328`) returns the frame; the ACTIVATED frame's border paint takes `keyBorderColorActivated`.
 - `roleOf(kind, isKeyDown, isLocked)` (`Theme.kt:421`) is a pure mapping used by the draw loop (`Keyboard2View.kt:1583-1584`).
@@ -85,7 +93,7 @@ The creator dialog shows `ThemeKeyboardPreview(colors)` (`theme/ThemeEditorPrevi
 - **Renderer**: a `Keyboard2View` switched into preview mode with `enterThemePreviewMode()` — touch and per-key accessibility activation off, `Config.handler` callbacks suppressed (the settings activity runs in the IME's process), window insets and the `KeyAdjacency` layout push skipped — and a `SuggestionBar(context, theme)` stacked above it at the IME's 40dp bar height.
 - **Theme**: `ThemeEditorPreview.themeFor(context, scheme)` is the same `Theme(context, scheme)` runtime constructor `ThemeProvider` uses for applied custom themes; `applyPreviewTheme` swaps it in and evicts the cached `Theme.Computed` frames. The trail colour uses `ThemeEditorPreview.trailColorFor`, the same conversion `CustomThemePrefPolicy` syncs into `swipe_trail_color`.
 - **Layout and scale**: the user's first layout through `LayoutModifier.modify_layout` (bottom row, extra keys), laid out at the device width so key/label geometry, opacity and border settings match, then uniformly scaled to the dialog width and a height cap (40% of screen height, at most 260dp).
-- **States** (`ThemePreviewScene`, pure): Shift latched → ACTIVATED frame; the first of ctrl/fn/alt/meta locked → LOCKED frame; modifier and action keys at rest show MODIFIER/SPECIAL; a static trail through the first localized sample word's letter keys (left/middle/right fallback). A disabled or `none` trail is drawn `solid` so its colour stays judgeable.
+- **States** (`ThemePreviewScene`, pure): Shift latched → TOGGLED frame (a look's: LATCHED); the first of ctrl/fn/alt/meta locked → LOCKED frame; modifier and action keys at rest show MODIFIER/SPECIAL; a static trail through the first localized sample word's letter keys (left/middle/right fallback). A disabled or `none` trail is drawn `solid` so its colour stays judgeable.
 - **Not visible statically**: ripple (press feedback) and keyboard surface (provenance popup).
 - The compact `ThemePreview` sample remains on the theme-list cards.
 

@@ -124,11 +124,12 @@ class CustomSubLabelRenderingTest {
         val src = VIEW_SRC.readText()
         // Same factory == same typeface selection and the same label-alpha bits, so a custom
         // mapping can never drift into a different font or opacity than a built-in sublabel.
+        // Both also take the same corner colour rule (a toggle frame's label colour, 2026-11-22).
         assertThat(src).contains(
             "tc.sublabel_paint(modifiedKv.hasFlagsAny(KeyValue.FLAG_KEY_FONT), " +
-                "labelColor(modifiedKv, isKeyDown, true), textSize, a)"
+                "cornerLabelColor(tc, labelColor(modifiedKv, isKeyDown, true)), textSize, a)"
         )
-        assertThat(src).contains("tc_key.sublabel_paint(useKeyFont, color, textSize, a)")
+        assertThat(src).contains("tc_key.sublabel_paint(useKeyFont, cornerLabelColor(tc_key, color), textSize, a)")
     }
 
     // =========================================================================

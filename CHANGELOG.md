@@ -649,6 +649,11 @@ editor that used to be listed here already ship in 2.0.)
   rebuilt without them. Real words that differ only by an accent stay (`la`/`là`, `esta`/`está`,
   `schon`/`schön`), and so do the 1990 French and pre-2009 Portuguese spellings, voseo, names
   and English words written as they are.
+- A toggled Shift, Ctrl, Alt or Fn is easy to see on every theme: the key fills with a colour that
+  stands apart from it at rest, under a label that reads on that fill. On the true black themes a
+  toggled Ctrl only changed its label colour; on the CleverKeys theme a toggled Shift or Ctrl drew
+  a dark label on a dark key when the pressed-key opacity was low, and a one-shot Ctrl looked the
+  same as at rest.
 - Swedish no longer offers misspellings typed without å, ä or ö: `ocksa`, `maste`, `over`, `pa`,
   `goteborg` and 28 others left the dictionary, so a swipe or a typed `ocksa` offers only
   `också`, and the Swedish next-word model was rebuilt without them. Real pairs (`har`/`här`,

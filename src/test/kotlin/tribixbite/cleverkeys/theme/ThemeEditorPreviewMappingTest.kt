@@ -210,21 +210,42 @@ class ThemeEditorPreviewMappingTest {
         assertThat((ThemeEditorPreview.trailColorFor(scheme) ushr 24) and 0xFF).isEqualTo(0x80)
     }
 
+    /**
+     * The LOCKED frame draws the edited Key Locked colour when it stands apart from Key Modifier.
+     * The sentinel's own #070809 is near #0A0B0C on purpose (unique values per field), which is the
+     * invisible toggle ToggledKeyPalette replaces since 2026-11-22: this test edits Key Locked to a
+     * distinct sentinel, and [anIndistinctLockedColourIsReplacedByOneThatShows] pins the rest.
+     */
     @Test
     fun previewFramesUseTheEditedRoleColoursAndBorders() {
-        val theme = ThemeEditorPreview.themeFor(context, sentinelScheme())
+        val theme = ThemeEditorPreview.themeFor(context, sentinelScheme().copy(keyLocked = ComposeColor(0xFFC7C8C9)))
         val config = ObjenesisStd().newInstance(Config::class.java)
         val layout = ObjenesisStd().newInstance(KeyboardData::class.java)
         val tc = Theme.Computed(theme, config, 100f, layout)
         val rgb = { c: Int -> c and 0xFFFFFF }
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.NORMAL).bg_paint.color)).isEqualTo(0x010203)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.ACTIVATED).bg_paint.color)).isEqualTo(0x040506)
-        assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.LOCKED).bg_paint.color)).isEqualTo(0x070809)
+        assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.LOCKED).bg_paint.color)).isEqualTo(0xC7C8C9)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.MODIFIER).bg_paint.color)).isEqualTo(0x0A0B0C)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.SPECIAL).bg_paint.color)).isEqualTo(0x0D0E0F)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.NORMAL).border_paint.color)).isEqualTo(0x191A1B)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.ACTIVATED).border_paint.color)).isEqualTo(0x1C1D1E)
         assertThat(rgb(tc.keyForRole(Theme.Computed.KeyRole.LOCKED).border_paint.color)).isEqualTo(0x1C1D1E)
         assertThat(rgb(tc.indication_paint.color)).isEqualTo(0x131415)
+    }
+
+    @Test
+    fun anIndistinctLockedColourIsReplacedByOneThatShows() {
+        val theme = ThemeEditorPreview.themeFor(context, sentinelScheme())
+        val tc = Theme.Computed(
+            theme, ObjenesisStd().newInstance(Config::class.java), 100f,
+            ObjenesisStd().newInstance(KeyboardData::class.java),
+        )
+        val locked = tc.keyForRole(Theme.Computed.KeyRole.LOCKED).bg_paint.color or 0xFF000000.toInt()
+        val modifier = tc.keyForRole(Theme.Computed.KeyRole.MODIFIER).bg_paint.color or 0xFF000000.toInt()
+        assertWithMessage("Key Locked #070809 on Key Modifier #0A0B0C would not show")
+            .that(locked and 0xFFFFFF).isNotEqualTo(0x070809)
+        assertThat(tribixbite.cleverkeys.SuggestionBarPalette.contrastRatio(locked, modifier))
+            .isAtLeast(tribixbite.cleverkeys.ToggledKeyPalette.MIN_FILL_CONTRAST)
     }
 }

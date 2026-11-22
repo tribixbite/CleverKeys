@@ -162,6 +162,11 @@ frame, whose background alpha is `key_activated_opacity` (default 80%, deliberat
 colour shift — see the `KEY_ACTIVATED_OPACITY` comment at `Config.kt:29-32`). There is no
 scale/highlight animation setting and no key-preview popup above the key.
 
+A toggled modifier is a state, not a press (2026-11-22): a latched one draws the TOGGLED frame
+and a locked one the LOCKED frame, both opaque whatever `key_activated_opacity` says, with
+colours from `Theme.toggledColors` (see the themes spec, "Toggled modifiers"). A low activated opacity
+used to fade the CleverKeys look's Caps Lock fill away under its dark label.
+
 ### Opacity and label brightness
 
 The five 0-100 percentage preferences are converted to 0-255 alpha once, at read time:
