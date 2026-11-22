@@ -35,7 +35,7 @@ difference for **Delete last word**.
 | Behaviour | Ordinary apps | Terminal apps | Remote-desktop apps |
 |-----------|---------------|---------------|---------------------|
 | **Paste** and **Paste as plain text** (key, short swipe or popover slot) | Android paste action | Types the current clipboard text directly | Types the phone's clipboard text directly |
-| **Delete last word** | Deletes the word in the field | Sends Ctrl+W, so the shell deletes the word itself | Sends Ctrl+Backspace (Ctrl+W would close a remote window) |
+| **Delete last word** | Deletes the word in the field (in a link, one `key=value` pair) | Sends Ctrl+W, so the shell deletes the word itself | Sends Ctrl+Backspace (Ctrl+W would close a remote window) |
 | **Autocorrect while typing** | Follows your autocorrect settings | Never rewrites a word (`ls` stays `ls`) | Never rewrites a word |
 | **Capitalizing "i"** | Follows your setting | Never rewrites a word | Never rewrites a word |
 | **Autocorrect after a swipe** | Follows your settings | Skipped; the recognised word is inserted as is | Skipped |

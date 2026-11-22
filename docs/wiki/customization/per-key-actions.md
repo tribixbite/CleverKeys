@@ -116,7 +116,7 @@ subkey. See [Subkey Popover](../gestures/subkey-popover.md).
 | Action | Description |
 |--------|-------------|
 | **Characters** | Any Unicode character |
-| **Delete Word** | Delete previous word |
+| **Delete Word** | Delete previous word (in a link's query: one `key=value` pair) |
 | **Cursor Left/Right** | Move cursor |
 | **Home/End** | Jump to line start/end |
 | **Tab** | Insert tab character |

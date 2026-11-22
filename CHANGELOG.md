@@ -556,6 +556,12 @@ editor that used to be listed here already ship in 2.0.)
   message.
 - Language packs now carry their data attribution (NOTICE.txt + manifest licence keys); the
   English Norvig variant was withdrawn (no redistribution licence).
+- In a link, Delete word removes one `key=value` pair at a time, so a long tracking link is
+  cleaned press by press: `…/item?id=42&utm_source=news&utm_medium=email` becomes
+  `…/item?id=42&utm_source=news`, then `…/item?id=42`, then `…/item`, a valid link at every step.
+  This applies to the Delete Word key, the backspace swipe and the clipboard editor. Before, the
+  backspace swipe cut an arbitrary 50-character slice off a long link, and the Delete Word key
+  left the boundary to the app (a text field removed `email`, then `=`, then `utm_medium`).
 
 ### Removed
 

@@ -4181,6 +4181,15 @@ class SuggestionHandler(
             vlog { "DELETE_LAST_WORD: Auto-inserted word verification failed, using generic delete" }
         }
 
+        // A URL's query loses exactly one key/value pair ([UrlQueryDelete], maintainer request
+        // 2026-11-22), not a 50-character slice of the link.
+        if (EditorUrlQueryDelete.apply(ic)) {
+            vlog { "DELETE_LAST_WORD: removed one URL query pair" }
+            contextTracker.clearLastAutoInsertedWord()
+            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+            return
+        }
+
         // Fallback: Delete the last word before cursor (generic approach)
         val textBefore = ic.getTextBeforeCursor(100, 0)
         if (textBefore.isNullOrEmpty()) {

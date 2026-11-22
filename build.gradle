@@ -644,6 +644,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.InlineSwipeSessionTest',
     // 2026-10-17: word/line boundaries of the word_left … select_line and case-cycle commands.
     'tribixbite.cleverkeys.EditorTextNavigationTest',
+    // 2026-11-22: a word delete in a URL's query removes exactly one key/value pair.
+    'tribixbite.cleverkeys.UrlQueryDeleteTest',
     // 2026-10-23 Persian half-space (U+200C): one shared word-character rule (WordChars) at every
     // word-boundary call site, the fa/ckb lookup fold and the half-space spelling index.
     'tribixbite.cleverkeys.PersianHalfSpaceBoundaryTest',
@@ -1777,6 +1779,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.EditorTextCommandsTest',
     // Review 2026-11-14 (low): editor-command reads are bounded on API 31+ (no whole-document copy).
     'tribixbite.cleverkeys.EditorBoundedReadTest',
+    // 2026-11-22: delete_word and the backspace swipe remove exactly one URL query pair.
+    'tribixbite.cleverkeys.UrlQueryDeleteRoutingTest',
     // Review 2026-11-14 Settings lows: Short Swipe Reset All's Undo and the voice-pack import
     // survive a rotation; the microphone request's purpose survives process death.
     'tribixbite.cleverkeys.customization.ShortSwipeResetUndoCodecTest',

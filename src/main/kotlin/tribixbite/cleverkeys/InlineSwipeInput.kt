@@ -123,7 +123,9 @@ object InlineWordPlanner {
  * Boundaries are [EditorTextNavigation]'s (the inline editor's word_left/word_right rules):
  * backward skips the separators before the caret, then the word; forward skips separators after
  * it, then the word. A selection is deleted as it is, the way Ctrl+Backspace treats one in a
- * text field. Append-only fields (caret always at the end) can only delete backward.
+ * text field. Append-only fields (caret always at the end) can only delete backward. In a URL's
+ * query a backward delete removes one key/value pair instead ([UrlQueryDelete], 2026-11-22), as
+ * it does in an app.
  */
 object InlineWordDelete {
 
@@ -132,6 +134,7 @@ object InlineWordDelete {
         val lo = state.lo
         val hi = state.hi
         if (lo != hi) return lo until hi
+        if (!forward) UrlQueryDelete.range(state.text, lo)?.let { return it }
         val start = if (forward) lo else EditorTextNavigation.previousWordStart(state.text, lo)
         val end = if (forward) EditorTextNavigation.nextWordEnd(state.text, hi) else hi
         return if (start < end) start until end else null

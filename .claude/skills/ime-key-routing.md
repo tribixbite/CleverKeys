@@ -505,6 +505,23 @@ backspace → key_up: inline field active && LearningHooks.undoInlineSwipe() →
   `InlineWordDelete` (pure; `EditorTextNavigation` word boundaries, a selection is deleted as
   is) → `InlineTextTarget.replace(range, "")` — one `InlineEditHistory` step in the editor;
   append-only fields delete backward only. They used to be swallowed (`else -> {}`).
+- **Word deletion in a URL** (2026-11-22, maintainer: "delete exactly one key/value pair (&
+  as delimiter) when used on a URL"): a backward word delete whose caret is in a link's query
+  removes ONE `key=value` pair (`UrlQueryDelete`, pure). App side: `delete_word` tries
+  `EditorUrlQueryDelete.apply` before Ctrl+Backspace (never in a terminal-style editor);
+  `delete_last_word` tries it at the top of `handleDeleteLastWord`'s generic fallback (after the
+  terminal branches and the swipe-undo of an auto-inserted word); inline fields through
+  `InlineWordDelete.range`. A link = a non-space run holding `scheme://` or `www.`; query from
+  the first `?` to the first `#`. The pair holding the caret goes (text after the caret too),
+  or the one before it when the caret is right after a `&`; a pair with a later pair goes with
+  the `&` after it, the last pair with the `&`/`?` before it, so the link stays valid. A caret in
+  the fragment removes the fragment. Trailing `.,;:!` quotes and unbalanced `)]}>` are not the
+  link's. The app edit is read (`EditorTextWindowReader`, reach 4096), composition finished,
+  re-read unchanged, then ONE `deleteSurroundingText`; anything else (no link, a cut read, a
+  refused finish) falls back to the old word delete. Before this, Ctrl+Backspace removed
+  `email`, `=`, `utm_medium` … and `delete_last_word` a 50-character slice of the link.
+  Pinned by `UrlQueryDeleteTest` (pure), `UrlQueryDeleteRoutingTest` (mock),
+  `InlineSwipeSessionTest`.
 - **Ownership** (`InlineSwipeSession`, pure): valid only while field, session (editor:
   `editingSession`, bumped per `edit_entry`; others: the view's identity), whole text and
   collapsed caret are exactly what the swipe/tap left. Any typed char, backspace, caret move,

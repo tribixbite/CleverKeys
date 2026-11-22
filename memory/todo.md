@@ -312,3 +312,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     check now allows a bare word that is its own canonical form (`wahrend` is real German). Open:
     Swedish (89 candidates, dialect forms need a Swedish speaker; sv.cklm gate); a native review of
     the keep/drop calls (maintainer); not device-checked.
+38. [x] agent: Delete word in a link removes one `key=value` pair (maintainer request 2026-11-22,
+    "would help to clean up long links"). `UrlQueryDelete` (pure) for the Delete Word key, the
+    backspace swipe (`delete_last_word`, which cut a 50-character slice before) and the inline
+    fields; the link stays valid after each press; terminals untouched. Tests seen failing first
+    (`UrlQueryDeleteTest`, `UrlQueryDeleteRoutingTest`, `InlineSwipeSessionTest`); wiki FAQ,
+    per-key actions, advanced settings, clipboard editor; skill `ime-key-routing.md`.

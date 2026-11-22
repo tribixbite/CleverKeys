@@ -378,6 +378,48 @@ class InlineSwipeSessionTest {
         assertTrue(start.writes.isEmpty() && end.writes.isEmpty() && inactive.writes.isEmpty())
     }
 
+    /**
+     * Maintainer request 2026-11-22: in a URL's query a word delete removes exactly one key/value
+     * pair, so a long tracking link is cleaned pair by pair in the clipboard editor too
+     * ([UrlQueryDelete]). Before, it removed `email`, then `=`, then `utm_medium` … one run of
+     * letters or punctuation at a time.
+     */
+    @Test
+    fun aUrlQueryLosesOneKeyValuePairPerWordDelete() {
+        val f = editor("https://shop.example/item?id=42&utm_source=news&utm_medium=email")
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("https://shop.example/item?id=42&utm_source=news", f.text)
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("https://shop.example/item?id=42", f.text)
+        // The last pair takes its `?` with it: what is left is the bare link.
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("https://shop.example/item", f.text)
+    }
+
+    @Test
+    fun aUrlPairBeforeTheCaretGoesWholeAndTheLinkStaysValid() {
+        // Caret after the first pair: it goes with the `&` after it, so the next pair keeps the `?`.
+        val first = editor("https://x.example/p?a=1&b=2", at = "https://x.example/p?a=1".length)
+        assertTrue(InlineWordDelete.delete(first, forward = false))
+        assertEquals("https://x.example/p?b=2", first.text)
+        assertEquals("https://x.example/p?".length, first.selStart)
+        // Caret inside a pair: the whole pair goes, the text after the caret included.
+        val inside = editor("https://x.example/p?a=1&utm=xyz&b=2", at = "https://x.example/p?a=1&ut".length)
+        assertTrue(InlineWordDelete.delete(inside, forward = false))
+        assertEquals("https://x.example/p?a=1&b=2", inside.text)
+    }
+
+    @Test
+    fun anAppendOnlyFieldDeletesTheLastUrlPair() {
+        val f = FakeField(InlineField.CLIPBOARD_SEARCH, "example.com/?q=red&page=2")
+        // No scheme and no `www.`: not recognised as a link, so the ordinary word rule runs.
+        assertTrue(InlineWordDelete.delete(f, forward = false))
+        assertEquals("example.com/?q=red&page=", f.text)
+        val g = FakeField(InlineField.CLIPBOARD_SEARCH, "www.example.com/?q=red&page=2")
+        assertTrue(InlineWordDelete.delete(g, forward = false))
+        assertEquals("www.example.com/?q=red", g.text)
+    }
+
     @Test
     fun deletingAWordVoidsTheSwipeOwnership() {
         val f = editor("Meet at")

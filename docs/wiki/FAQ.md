@@ -49,6 +49,15 @@ A: For **Selection-Delete mode**:
 
 Swipe left on backspace deletes the word before cursor.
 
+**Q: How do I strip tracking parameters from a long link?**
+
+A: Put the cursor at the end of the link and use Delete word (swipe left on backspace, or a
+Delete Word key). Inside a link's query each press removes one `key=value` pair, so
+`…/item?id=42&utm_source=news&utm_medium=email` becomes `…/item?id=42&utm_source=news`, then
+`…/item?id=42`, then `…/item`. The link stays valid after every press. With the cursor inside
+a pair, that whole pair goes. It works in apps and in the clipboard editor; outside a link,
+Delete word deletes a word as before.
+
 ---
 
 ## Language & Input Options
