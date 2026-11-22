@@ -52,8 +52,12 @@ installed on the S25U and the Pixel. Audit "Status 2026-11-21".
 
 **Status 2026-11-22 (agent).** Delete word in a link removes one `key=value` pair (item 38,
 `a3245ff2`, device PASS on the Pixel); Swedish accent misspellings out (item 37, `931f5669`, sv.cklm
-gate all pass). Pure 3,967 / mock 1,869 green, CI green. Release bb618b60 installed on the S25U
-and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
+gate all pass). Follow-ups the same day: any `&key=value` text behind a default-on setting
+(`b5de2e22`), word delete at Backspace NW on every layout as an icon (`45ef127a`, item 39), toggled
+modifiers readable on every theme (`34fefdd9`, item 40); pure 3,978 / mock 1,873 green, CI green,
+device checks PASS on the Pixel; the 19 rendering/look/theme/subkey/layout-export/settings/a11y
+instrumented classes 185/185 on API 34 and 37 (`~/ew-output/toggles-layouts-2026-11-22/`).
+Release 5007948e installed on the S25U and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
 auto-space, subkeys, clipboard editor, multi-language CTC, language detection) 253/253 on API 34
 and 37 (`~/ew-output/url-sv-2026-11-22/`); the full A2 suite was not re-run.
 
@@ -339,19 +343,23 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     Follow-up the same day (maintainer): any text with `&key=value` (or `?key=`) qualifies, link
     or not, behind a default-on setting (Input Behavior → "Delete one key=value pair at a time",
     `delete_word_url_pairs`, 21 locales translated by the agent, native review pending with
-    item 10).
+    item 10). Device PASS 2026-11-22 (Pixel, 5007948e): `filter: size=m&color=red&sort=price` lost
+    one pair per NW flick; Settings search finds the toggle, on by default.
 39. [x] agent: word delete at Backspace NW on every language layout with a Backspace key (maintainer
     2026-11-22: "preferably using a symbol"); 8 of 87 had it, 79 gained it (Colemak and Bone moved
     forward delete NW → NE); `delete_last_word` draws the key font's word-delete icon (U+E01B) in
     place of the English `word`. `BackspaceWordDeleteLayoutTest`. Not covered: ckb_fa, tj and os put
     Backspace in a letter key's corner (no Backspace key). Backspace hold-to-repeat was already on
     by default (Key Repeat on, Backspace Only Repeat on; 600 ms then every 25 ms) and the subkey
-    popover never claims Backspace.
+    popover never claims Backspace. Device PASS 2026-11-22 (Pixel, release 5007948e): the NW
+    corner shows the icon; a 1.5 s Backspace hold deleted 36 characters.
 40. [x] agent: toggled modifiers readable on every theme (maintainer S25U screenshot 2026-11-22: a
     toggled Ctrl on the true black themes had only a label tint; on the CleverKeys theme a toggled
     Shift/Ctrl drew `#2E0F45` on a near-background fill, measured `#151219`, because the look's
     light Caps Lock fill is drawn at the Activated Key Opacity setting). New TOGGLED frame for a
     latched modifier, LOCKED for a locked one, both opaque, colours from `ToggledKeyPalette`
     (contrast floors 2:1 fill, 4.5:1 label); a look's latched Shift keeps its glyph frame.
-    `ToggledKeyPaletteTest` (every XML theme), `KeyboardLookRenderTest`. Open: the user's own
-    look on the S25U (the Pixel check used its current theme only).
+    `ToggledKeyPaletteTest` (every XML theme), `KeyboardLookRenderTest`. Device PASS 2026-11-22
+    (Pixel, its neon theme, release 5007948e): latched Shift and Ctrl opaque magenta `#BA08C2`
+    with white labels and corners, locked Ctrl `#FF00FF` with black labels. Open: the CleverKeys
+    look and the Black theme on a phone (release installed on the S25U for the maintainer).
