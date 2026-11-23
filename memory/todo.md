@@ -156,7 +156,10 @@ installs already past config v5 (2.0 dev builds and their GitHub pre-releases) k
 an OFF there may be the user's own (no marker was written). Also fixed: hold Shift, tap Ctrl, lift Shift
 dropped the one-shot Ctrl. Seen failing first: 3 mock tests. The maintainer's S25U settings as of its
 newest export (2026-10-24, `Download/cleverkeys-config (17).json`): 30 values differ from the defaults
-(popover ON, double-tap lock ON, both stored at their defaults), 41 stored keys are no longer read.
+(popover ON, double-tap lock ON, both stored at their defaults), 41 stored keys are no longer read. Committed `7ac2a3de`
+(CI green); pure 3,991 / mock 1,959; `ModifierStateAcrossResetsInstrumentedTest` 14/14 on API 34–37 at its
+app (`~/ew-output/mods-class-2026-11-23e/`). The modifier checks that need hands, TalkBack or a RustDesk
+session are in the manual checklist ("Modifiers"). Before the tag: only M1, M2, M4.
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
