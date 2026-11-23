@@ -651,6 +651,16 @@ editor that used to be listed here already ship in 2.0.)
   sentence, where the automatic capital had latched it, the long press turned Shift off, and
   caps lock took a second long press. The same goes for a Shift you tapped with "double tap for
   caps lock" off, and for Ctrl, Alt and Fn.
+- With Ctrl, Alt or Meta on together with Shift or caps lock, the letter keys show capitals; they
+  showed lowercase. The shortcut sent to the app is unchanged.
+- A double tap locks Ctrl, Alt, Fn and Meta as it locks Shift (📝 Input Behavior › Double Tap to
+  Lock Shift and Ctrl, on by default); the second tap used to release them. A third tap releases.
+- In RustDesk and other apps built with Flutter, Shift or Ctrl no longer stays held on the remote
+  machine after one use: the key's release still said it was held, and the app held the other
+  side's Shift or Ctrl for everything typed after.
+- Pasting with the paste short swipe (or the app's own Paste) after editing the newest clipping in
+  the clipboard pane gives the edited text; it gave the text as first copied. The edit replaces
+  Android's clip only when that clip is the one edited, and never for a private clipping.
 - The automatic capital at the start of a sentence comes back when you return from the number
   pane (123+, then ABC) or switch to another layout; the letters used to be lowercase. A digit
   typed on the number pane meanwhile is taken into account.

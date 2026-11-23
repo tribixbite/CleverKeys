@@ -576,10 +576,12 @@ class KeyValue private constructor(
             "\\@" -> makeStringKey("@")
             "\\\\" -> makeStringKey("\\")
 
-            /* Modifiers and dead-keys */
+            /* Modifiers and dead-keys. A double tap locks Shift, Ctrl, Alt, Fn and Meta when the
+               "lock_double_tap" setting is on (maintainer 2026-11-23: only Shift did, as upstream;
+               a second tap released Ctrl). */
             "shift" -> modifierKey(0xE00A, Modifier.SHIFT, FLAG_DOUBLE_TAP_LOCK)
-            "ctrl" -> modifierKey("Ctrl", Modifier.CTRL, 0)
-            "alt" -> modifierKey("Alt", Modifier.ALT, 0)
+            "ctrl" -> modifierKey("Ctrl", Modifier.CTRL, FLAG_DOUBLE_TAP_LOCK)
+            "alt" -> modifierKey("Alt", Modifier.ALT, FLAG_DOUBLE_TAP_LOCK)
             "accent_aigu" -> diacritic(0xE050, Modifier.AIGU)
             "accent_caron" -> diacritic(0xE051, Modifier.CARON)
             "accent_cedille" -> diacritic(0xE052, Modifier.CEDILLE)
@@ -610,8 +612,8 @@ class KeyValue private constructor(
             "ordinal" -> modifierKey("Ord", Modifier.ORDINAL, 0)
             "arrows" -> modifierKey("Arr", Modifier.ARROWS, 0)
             "box" -> modifierKey("Box", Modifier.BOX, 0)
-            "fn" -> modifierKey("Fn", Modifier.FN, 0)
-            "meta" -> modifierKey("Meta", Modifier.META, 0)
+            "fn" -> modifierKey("Fn", Modifier.FN, FLAG_DOUBLE_TAP_LOCK)
+            "meta" -> modifierKey("Meta", Modifier.META, FLAG_DOUBLE_TAP_LOCK)
 
             /* Combining diacritics */
             /* Glyphs is the corresponding dead-key + 0x0100. */

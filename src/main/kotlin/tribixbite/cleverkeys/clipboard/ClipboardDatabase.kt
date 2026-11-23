@@ -521,6 +521,23 @@ class ClipboardDatabase private constructor(context: Context) :
         }
     }
 
+    /**
+     * Whether the History row for [content] is private (#156), or null when there is none. Read
+     * before an edited row's text is put on Android's clipboard: a private row's never is.
+     */
+    fun historyEntryIsPrivate(content: String?): Boolean? {
+        if (content.isNullOrBlank()) return null
+        return try {
+            readableDatabase.rawQuery(
+                "SELECT $COLUMN_IS_PRIVATE FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT = ? LIMIT 1",
+                arrayOf(resolveContentKey(TABLE_CLIPBOARD, content))
+            ).use { cursor -> if (cursor.moveToFirst()) cursor.getInt(0) != 0 else null }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error reading a history entry's privacy: ${e.message}")
+            null
+        }
+    }
+
     fun removeClipboardEntry(content: String?): String? {
         if (content.isNullOrBlank()) return null
         val contentKey = resolveContentKey(TABLE_CLIPBOARD, content)

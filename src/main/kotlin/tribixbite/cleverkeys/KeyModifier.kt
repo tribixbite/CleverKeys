@@ -313,6 +313,14 @@ object KeyModifier {
                 val s = Utils.capitalize_string(ks)
                 if (s == ks) k else KeyValue.makeStringKey(s, k.getFlags())
             }
+            // Ctrl, Alt or Meta made this letter a key event before Shift came: the modifiers
+            // apply highest first, and only the lowercase letter has a key code. Only its LABEL
+            // changes; the key code stays, and the app gets Shift through the meta state
+            // (maintainer 2026-11-23: with Ctrl and caps lock the letters read lowercase).
+            KeyValue.Kind.Keyevent -> {
+                val label = k.getString()
+                if (label.length == 1 && label[0].isLowerCase()) k.withSymbol(label[0].uppercaseChar().toString()) else k
+            }
             else -> k
         }
     }

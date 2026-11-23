@@ -614,8 +614,8 @@
     <string name="input_key_repeat_desc">Atļaut taustiņiem atkārtoties ilgas nospiešanas laikā</string>
     <string name="input_backspace_only_repeat_title">Atkārtot tikai Backspace</string>
     <string name="input_backspace_only_repeat_desc">Atkārtot tikai Backspace/navigācijas taustiņus, nevis rakstzīmju taustiņus</string>
-    <string name="input_double_tap_shift_title">Dubultklikšķis Shift — CapsLock</string>
-    <string name="input_double_tap_shift_desc">Fiksēt Shift, ātri nospiežot divreiz</string>
+    <string name="input_double_tap_shift_title">Dubultklikšķis fiksē Shift un Ctrl</string>
+    <string name="input_double_tap_shift_desc">Divreiz nospiežot Shift, ieslēdzas burtslēgs; divreiz nospiežot Ctrl, Alt, Fn vai Meta, taustiņš paliek ieslēgts līdz nākamajai nospiešanai. Ilga nospiešana tos fiksē jebkurā gadījumā.</string>
     <string name="input_immediate_switching_title">Tūlītēja tastatūras pārslēgšana</string>
     <string name="input_immediate_switching_desc">Pārslēgt tastatūras nekavējoties, bez izvēlnes</string>
     <string name="input_enter_always_newline_title">Enter vienmēr ievieto jaunu rindu</string>

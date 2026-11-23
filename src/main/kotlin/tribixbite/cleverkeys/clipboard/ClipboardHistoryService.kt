@@ -25,6 +25,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardCatchUp
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardThumbnailRepair
+import tribixbite.cleverkeys.clipboard.EditedClipFollow
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import tribixbite.cleverkeys.clipboard.sanitize.systemClipboardRewrite
 import java.io.InputStreamReader
@@ -426,6 +427,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     ) {
         if (clip == null || clip.trim().isEmpty()) return
 
+        // Our own write after an edit ([followEditOnSystemClipboard]): the edited row already holds
+        // exactly this text, and storing it again could only add a trimmed copy beside it.
+        if (rewriteOsClipboard && clip == ownEditOnSystemClip) {
+            ownEditOnSystemClip = null
+            return
+        }
+
         // Null-safe Config reads: storeClip is reachable on a cold-start exported-activity path
         // (PROCESS_TEXT / editing-key) where the IME never ran, so the global Config may be
         // uninitialized. Fall back to the documented defaults rather than throwing (matches
@@ -792,8 +800,39 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         if (result is EditEntryResult.Success) {
             notifyHistoryChanged()
+            followEditOnSystemClipboard(tab, oldContent, newContent)
         }
         return result
+    }
+
+    /** What [followEditOnSystemClipboard] last put on Android's clipboard; its capture is skipped once. */
+    @Volatile
+    private var ownEditOnSystemClip: String? = null
+
+    /**
+     * The edited row was the clip on Android's clipboard: put the edited text there, so the paste
+     * key, the app's own Paste and RustDesk's paste give what the pane shows (maintainer
+     * 2026-11-23; [EditedClipFollow] decides). Inline edits and Clean both come through here.
+     */
+    private fun followEditOnSystemClipboard(tab: ClipboardTab, oldContent: String, newContent: String) {
+        if (tab != ClipboardTab.HISTORY) return
+        val systemClip = try {
+            _cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
+        } catch (e: Exception) {
+            null // SecurityException when this keyboard is not the focused one
+        }
+        val put = EditedClipFollow.textToPut(
+            tab, _database.historyEntryIsPrivate(newContent), systemClip, oldContent, newContent,
+        ) { _sanitizationConfig.sanitizer().process(it).trim() } ?: return
+        ownEditOnSystemClip = put
+        serviceScope.launch {
+            try {
+                _cm.setPrimaryClip(ClipData.newPlainText("CleverKeys", put))
+            } catch (e: Exception) {
+                ownEditOnSystemClip = null
+                android.util.Log.w("ClipboardHistory", "Edited clip not put on the system clipboard: " + e.message)
+            }
+        }
     }
 
     /** Get all pinned clipboard entries */

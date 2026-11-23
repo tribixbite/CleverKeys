@@ -270,6 +270,32 @@ class ModifierStateAcrossResetsInstrumentedTest {
         }
     }
 
+    // ------------------------------------------------------------------ double tap on Ctrl
+
+    /** The live keyboard's state bits for [kv] ([Pointers.getKeyFlags]; -1: not held). Main thread. */
+    private fun keyFlags(kv: KeyValue): Int {
+        val kb = keyboard() ?: return -1
+        val pointers = Keyboard2View::class.java.getDeclaredField("_pointers").apply { isAccessible = true }.get(kb) as Pointers
+        return pointers.getKeyFlags(kv)
+    }
+
+    @Test
+    fun doubleTappingCtrlLocksItAndATapReleasesIt() {
+        // Maintainer 2026-11-23: "what happened to ctrl lock (pressing control twice, similar to
+        // pressing shift twice = capslock)?" With the double-tap setting on (the default).
+        val ctrl = KeyValue.getKeyByName("ctrl")
+        ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+            waitFor("the keyboard") { shown() && onLetters() }
+            latchCtrlLikeAUser()
+            latchCtrlLikeAUser()
+            assertTrue("two taps on Ctrl must lock it: ${state()}", within(2_000L) {
+                has(KeyValue.Modifier.CTRL) && (keyFlags(ctrl) and Pointers.FLAG_P_LOCKED) != 0
+            })
+            latchCtrlLikeAUser()
+            assertTrue("a tap on the locked Ctrl must release it: ${state()}", within(2_000L) { !has(KeyValue.Modifier.CTRL) })
+        }
+    }
+
     // ------------------------------------------------------------------ long press on Shift
 
     @Test

@@ -948,6 +948,11 @@ class Config private constructor(
     @JvmField var keyActivatedOpacity = 0
     /** Key outline alpha, 0..255 (`key_border_opacity`); the fill's is [keyOpacity]. */
     @JvmField var keyBorderOpacity = 0
+    /**
+     * `lock_double_tap`: a second tap locks a latched modifier. Named for Shift, its first user;
+     * since 2026-11-23 it covers every key with [KeyValue.FLAG_DOUBLE_TAP_LOCK] (Shift, Ctrl, Alt,
+     * Fn, Meta).
+     */
     @JvmField var double_tap_lock_shift = Defaults.DOUBLE_TAP_LOCK_SHIFT
     @JvmField var characterSize = 0f
     /** Android style id of the EFFECTIVE theme ([themeName]); what the keyboard view inflates with. */

@@ -331,13 +331,23 @@ class KeyEventHandler(
         this.mods = mods
     }
 
+    /**
+     * A modifier's own key event, with the meta state a hardware keyboard gives it: the DOWN
+     * includes the modifier, the UP no longer does. The UP used to go out with the modifier's bit
+     * still set, and Flutter apps (RustDesk), which keep their modifier state in step with each
+     * event's meta state, then pressed the other side's key (Right-Ctrl, Right-Shift) themselves
+     * and kept it held for all later input (maintainer 2026-11-23; ModifierKeyEventMetaStateTest).
+     * Not an edit, so auto-capitalisation is not told ([postKeyEvent]): with the bit cleared, the
+     * Shift key's own UP would otherwise read as typing and latch its Shift again just after the
+     * user tapped it off.
+     */
     private fun sendMetaKey(eventCode: Int, metaFlags: Int, down: Boolean) {
         if (down) {
             metaState = metaState or metaFlags
-            sendKeyevent(KeyEvent.ACTION_DOWN, eventCode, metaState)
+            postKeyEvent(KeyEvent.ACTION_DOWN, eventCode, metaState)
         } else {
-            sendKeyevent(KeyEvent.ACTION_UP, eventCode, metaState)
             metaState = metaState and metaFlags.inv()
+            postKeyEvent(KeyEvent.ACTION_UP, eventCode, metaState)
         }
     }
 
@@ -383,7 +393,15 @@ class KeyEventHandler(
     }
 
     private fun sendKeyevent(eventAction: Int, eventCode: Int, metaState: Int) {
-        val conn = recv.getCurrentInputConnection() ?: return
+        if (!postKeyEvent(eventAction, eventCode, metaState)) return
+        if (eventAction == KeyEvent.ACTION_UP) {
+            autocap.event_sent(eventCode, metaState)
+        }
+    }
+
+    /** Sends one key event to the editor; false when there is no connection. */
+    private fun postKeyEvent(eventAction: Int, eventCode: Int, metaState: Int): Boolean {
+        val conn = recv.getCurrentInputConnection() ?: return false
         conn.sendKeyEvent(
             KeyEvent(
                 1, 1, eventAction, eventCode, 0,
@@ -391,9 +409,7 @@ class KeyEventHandler(
                 KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE
             )
         )
-        if (eventAction == KeyEvent.ACTION_UP) {
-            autocap.event_sent(eventCode, metaState)
-        }
+        return true
     }
 
     private fun sendText(text: CharSequence, isKeyRepeat: Boolean = false) {

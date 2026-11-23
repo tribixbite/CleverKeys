@@ -598,8 +598,8 @@
     <string name="input_key_repeat_desc">長押し中にキーをリピートします</string>
     <string name="input_backspace_only_repeat_title">バックスペースのみリピート</string>
     <string name="input_backspace_only_repeat_desc">バックスペース/ナビゲーションキーのみリピートし、文字キーはリピートしません</string>
-    <string name="input_double_tap_shift_title">シフトをダブルタップでCapsLock</string>
-    <string name="input_double_tap_shift_desc">シフトキーを素早く2回タップしてロックします</string>
+    <string name="input_double_tap_shift_title">ダブルタップでShiftとCtrlをロック</string>
+    <string name="input_double_tap_shift_desc">Shiftを2回タップするとCaps Lock、Ctrl・Alt・Fn・Metaを2回タップすると次にタップするまでオンのままになります。長押しでも常にロックできます。</string>
     <string name="input_immediate_switching_title">即時キーボード切り替え</string>
     <string name="input_immediate_switching_desc">メニューを表示せずにキーボードを即座に切り替えます</string>
     <string name="input_enter_always_newline_title">Enter で常に改行する</string>

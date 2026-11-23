@@ -249,7 +249,7 @@ validator (`backup/SettingsValidation.kt`) accepts a wider band, both are shown.
 | **Key-Repeat Interval** | `longpress_interval` | 25 | 25-200 ms (`SettingsRanges.LONGPRESS_INTERVAL`) |
 | **Key Repeat** | `keyrepeat_enabled` | true | bool |
 | **Backspace-Only Repeat** | `keyrepeat_backspace_only` | true | bool (#81) — shown only when key repeat is on |
-| **Double-Tap Shift Lock** | `lock_double_tap` | true | bool |
+| **Double-Tap Lock** | `lock_double_tap` | true | bool — a second tap locks a latched Shift, Ctrl, Alt, Fn or Meta (`KeyValue.FLAG_DOUBLE_TAP_LOCK`; Shift only before 2026-11-23) |
 | **Immediate Input Switching** | `switch_input_immediate` | false | bool |
 
 ### Layout selectors

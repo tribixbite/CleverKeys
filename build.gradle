@@ -1236,6 +1236,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.RotationShowGuardTest',
     // Shift, caps lock and Ctrl held at a rotation come back after its resets (2026-11-22).
     'tribixbite.cleverkeys.RotationModifierCarryTest',
+    // 2026-11-23: an edited clipping replaces Android's clip only when it is that clip.
+    'tribixbite.cleverkeys.clipboard.EditedClipFollowTest',
     // Subkey popover assign request <-> intent extras round trip (audit 2026-10-08).
     'tribixbite.cleverkeys.popover.SubkeyAssignExtrasTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
@@ -1852,6 +1854,10 @@ tasks.register('runMockTests', JavaExec) {
     // 2026-11-23: a long press on a latched Shift (auto-capitalisation's at a sentence start, or
     // a tapped one) or Ctrl locks it instead of releasing it.
     'tribixbite.cleverkeys.ModifierLongPressLockTest',
+    // 2026-11-23: Ctrl/Alt/Meta with Shift or caps lock show capital letters (key code unchanged).
+    'tribixbite.cleverkeys.CtrlShiftLabelTest',
+    // 2026-11-23: a modifier's UP carries the meta state after release (RustDesk, Flutter).
+    'tribixbite.cleverkeys.ModifierKeyEventMetaStateTest',
     // 2026-10-25: hamza letters on the Persian layouts and Persian PC's language="fa".
     'tribixbite.cleverkeys.PersianLayoutHamzaAndLanguageTest',
     // 2026-10-23: langpack-fa.zip through BinaryDictionaryLoader / CkdtDictionaryReader caps,

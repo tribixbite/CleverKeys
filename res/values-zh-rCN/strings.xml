@@ -597,8 +597,8 @@
     <string name="input_key_repeat_desc">允许长按时按键重复。</string>
     <string name="input_backspace_only_repeat_title">仅退格重复</string>
     <string name="input_backspace_only_repeat_desc">仅重复退格/导航键，不重复字符键。</string>
-    <string name="input_double_tap_shift_title">双击 Shift 锁定大写</string>
-    <string name="input_double_tap_shift_desc">快速连续双击 Shift 键以锁定。</string>
+    <string name="input_double_tap_shift_title">双击锁定 Shift 和 Ctrl</string>
+    <string name="input_double_tap_shift_desc">双击 Shift 锁定大写；双击 Ctrl、Alt、Fn 或 Meta 使其保持开启，直到下次点按。长按始终可以锁定它们。</string>
     <string name="input_immediate_switching_title">立即切换键盘</string>
     <string name="input_immediate_switching_desc">不显示菜单，立即切换键盘。</string>
     <string name="input_enter_always_newline_title">回车始终换行</string>

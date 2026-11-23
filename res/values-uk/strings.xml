@@ -616,8 +616,8 @@
     <string name="input_key_repeat_desc">Дозволити повторення клавіш при довгому натисканні</string>
     <string name="input_backspace_only_repeat_title">Повторювати лише Backspace</string>
     <string name="input_backspace_only_repeat_desc">Повторювати лише Backspace/навігаційні клавіші, а не символьні</string>
-    <string name="input_double_tap_shift_title">Подвійне натискання Shift для CapsLock</string>
-    <string name="input_double_tap_shift_desc">Фіксувати Shift подвійним швидким натисканням</string>
+    <string name="input_double_tap_shift_title">Подвійне натискання фіксує Shift і Ctrl</string>
+    <string name="input_double_tap_shift_desc">Подвійне натискання Shift вмикає CapsLock, а подвійне натискання Ctrl, Alt, Fn або Meta залишає клавішу ввімкненою до наступного натискання. Довге натискання фіксує їх у будь-якому разі.</string>
     <string name="input_immediate_switching_title">Миттєве перемикання клавіатури</string>
     <string name="input_immediate_switching_desc">Перемикати клавіатури негайно без меню</string>
     <string name="input_enter_always_newline_title">Enter завжди вставляє новий рядок</string>

@@ -26,7 +26,8 @@ import tribixbite.cleverkeys.prefs.ConfigSnapshot
  * has latched Shift, a long press on Shift released it instead of locking it, so caps lock took
  * two long presses. The hold locked the pressing finger's pointer; its release then found the
  * latched Shift ([Pointers.onTouchUp] "already latched") and took both away. With "double tap
- * for caps lock" off, a Shift the user had tapped went the same way.
+ * for caps lock" off, a Shift the user had tapped went the same way. The same day: a double tap
+ * locks Ctrl, Alt, Fn and Meta as it locks Shift (it used to release them).
  *
  * Driven through the real [Pointers.onTouchDown], [Pointers.handleMessage] with the pointer's
  * long-press `what` (as the Handler delivers it) and [Pointers.onTouchUp]. Harness as in
@@ -182,6 +183,49 @@ class ModifierLongPressLockTest {
         autocapLatchesShift()
         longPress(shiftKey)
         assertLockedByTheUser(shift)
+    }
+
+    // ------------------------------------------------------------------ double tap
+
+    // Maintainer 2026-11-23: "what happened to ctrl lock (pressing control twice, similar to
+    // pressing shift twice = capslock)?" Only Shift ever had the double-tap lock (as upstream);
+    // a second tap on Ctrl released it. Every lockable modifier now follows the same setting.
+
+    private fun keyFor(kv: KeyValue) = KeyboardData.Key.EMPTY.withKeyValue(0, kv)
+
+    @Test
+    fun doubleTappingCtrlLocksIt() {
+        tap(ctrlKey)
+        tap(ctrlKey)
+        assertLockedByTheUser(ctrl)
+    }
+
+    @Test
+    fun doubleTappingAltFnOrMetaLocksIt() {
+        for (name in listOf("alt", "fn", "meta")) {
+            ptrs.clear()
+            val kv = KeyValue.getKeyByName(name)
+            tap(keyFor(kv))
+            tap(keyFor(kv))
+            assertLockedByTheUser(kv)
+        }
+    }
+
+    @Test
+    fun aTapOnALockedCtrlReleasesIt() {
+        tap(ctrlKey)
+        tap(ctrlKey)
+        tap(ctrlKey)
+        assertThat(pointersFor(ctrl)).isEmpty()
+        assertThat(pointers.getModifiers().has(KeyValue.Modifier.CTRL)).isFalse()
+    }
+
+    @Test
+    fun withDoubleTapLockOffASecondTapReleasesCtrl() {
+        useSnapshot(snap(doubleTapLock = false))
+        tap(ctrlKey)
+        tap(ctrlKey)
+        assertThat(pointersFor(ctrl)).isEmpty()
     }
 
     // ------------------------------------------------------------------ unchanged

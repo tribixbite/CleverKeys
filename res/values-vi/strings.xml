@@ -627,8 +627,8 @@
     <string name="input_key_repeat_desc">Cho phép phím lặp khi nhấn giữ</string>
     <string name="input_backspace_only_repeat_title">Chỉ lặp phím xóa lùi</string>
     <string name="input_backspace_only_repeat_desc">Chỉ lặp phím xóa lùi/điều hướng, không lặp phím ký tự</string>
-    <string name="input_double_tap_shift_title">Nhấn kép Shift để CapsLock</string>
-    <string name="input_double_tap_shift_desc">Khóa phím shift bằng cách nhấn nhanh hai lần</string>
+    <string name="input_double_tap_shift_title">Nhấn kép để khóa Shift và Ctrl</string>
+    <string name="input_double_tap_shift_desc">Nhấn Shift hai lần để bật CapsLock, hoặc nhấn Ctrl, Alt, Fn hay Meta hai lần để giữ phím bật đến lần nhấn tiếp theo. Nhấn giữ luôn khóa các phím này.</string>
     <string name="input_immediate_switching_title">Chuyển đổi bàn phím ngay lập tức</string>
     <string name="input_immediate_switching_desc">Chuyển đổi bàn phím ngay thay vì hiển thị menu</string>
     <string name="input_enter_always_newline_title">Enter luôn chèn dòng mới</string>

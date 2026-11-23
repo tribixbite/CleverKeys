@@ -138,9 +138,11 @@ Backspace, or a Delete Word key) removes one pair per press, so tracking paramet
 long link one at a time and the link stays valid. Turn it off to delete those characters as an
 ordinary word instead. See the [FAQ](../FAQ.md).
 
-### Double Tap Shift for Caps Lock
+### Double Tap to Lock Shift and Ctrl
 
-Double-tap shift key to enable caps lock mode.
+On by default. Tap Shift twice for caps lock. Ctrl, Alt, Fn and Meta work the same way: tap one
+twice and it stays on for every key you type until you tap it again. With this off, the second
+tap releases the key instead. A long press locks any of them either way.
 
 ## Gesture Tuning Section
 

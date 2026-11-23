@@ -608,8 +608,8 @@
     <string name="input_key_repeat_desc">Permettre la répétition des touches lors d\'un appui long</string>
     <string name="input_backspace_only_repeat_title">Répéter uniquement Retour arrière</string>
     <string name="input_backspace_only_repeat_desc">Ne répéter que les touches Retour arrière/navigation, pas les touches de caractères</string>
-    <string name="input_double_tap_shift_title">Double appui sur Maj pour verrouillage des majuscules</string>
-    <string name="input_double_tap_shift_desc">Verrouiller la touche Maj en appuyant deux fois rapidement</string>
+    <string name="input_double_tap_shift_title">Double appui pour verrouiller Maj et Ctrl</string>
+    <string name="input_double_tap_shift_desc">Deux appuis sur Maj activent le verrouillage des majuscules ; deux appuis sur Ctrl, Alt, Fn ou Meta gardent la touche active jusqu\'au prochain appui. Un appui long les verrouille dans tous les cas.</string>
     <string name="input_immediate_switching_title">Changement de clavier immédiat</string>
     <string name="input_immediate_switching_desc">Changer de clavier immédiatement plutôt qu\'afficher un menu</string>
     <string name="input_enter_always_newline_title">Entrée insère toujours une nouvelle ligne</string>

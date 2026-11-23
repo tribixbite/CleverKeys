@@ -609,8 +609,8 @@
     <string name="input_key_repeat_desc">Uzun basıldığında tuşların tekrarlamasına izin ver</string>
     <string name="input_backspace_only_repeat_title">Yalnızca Geri Silme Tekrarı</string>
     <string name="input_backspace_only_repeat_desc">Yalnızca geri silme/gezinme tuşlarını tekrarla, karakter tuşlarını değil</string>
-    <string name="input_double_tap_shift_title">Caps Lock için Shift\'e Çift Dokun</string>
-    <string name="input_double_tap_shift_desc">Shift tuşunu hızlıca iki kez dokunarak kilitle</string>
+    <string name="input_double_tap_shift_title">Shift ve Ctrl Çift Dokunuşla Kilitlenir</string>
+    <string name="input_double_tap_shift_desc">Shift tuşuna iki kez dokunmak CapsLock\'u açar; Ctrl, Alt, Fn veya Meta tuşuna iki kez dokunmak tuşu bir sonraki dokunuşa kadar açık tutar. Uzun basma her durumda kilitler.</string>
     <string name="input_immediate_switching_title">Anında Klavye Geçişi</string>
     <string name="input_immediate_switching_desc">Menü göstermek yerine klavyeleri hemen değiştir</string>
     <string name="input_enter_always_newline_title">Enter Her Zaman Yeni Satır Ekler</string>
