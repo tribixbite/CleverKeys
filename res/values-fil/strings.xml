@@ -171,7 +171,7 @@
     <string name="dict_swipe_priority_normal">Normal</string>
     <string name="dict_swipe_priority_high">Mataas</string>
     <string name="dict_swipe_priority_highest">Pinakamataas</string>
-    <string name="dict_swipe_priority_help">Inihahanay ng dalas (1-255) ang salita mo laban sa diksiyonaryo; 255 na ang pinakamataas. Nagdadagdag pa ang priyoridad sa pag-swipe ng tiyak na kalamangan para sa salitang natatalo pa rin kapag sini-swipe mo: katamtaman ang Mataas, malakas ang Pinakamataas. Mananalo rin ang itinaas na salita sa ilang swipe ng magkakahawig na salita (halimbawa, \'ad\' sa halip na \'as\'). Hindi apektado ang mga mungkahi sa pag-type.</string>
+    <string name="dict_swipe_priority_help">Inihahanay ng dalas (1-255) ang salita mo laban sa diksyunaryo; 255 na ang pinakamataas. Nagdadagdag pa ang priyoridad sa pag-swipe ng tiyak na kalamangan para sa salitang natatalo pa rin kapag sini-swipe mo: katamtaman ang Mataas, malakas ang Pinakamataas. Mananalo rin ang itinaas na salita sa ilang swipe ng magkakahawig na salita (halimbawa, \'ad\' sa halip na \'as\'). Hindi apektado ang mga mungkahi sa pag-type.</string>
     <string name="dict_word_frequency_swipe_priority">Dalas: %1$d · Priyoridad sa pag-swipe: %2$s</string>
     <string name="dict_swipe_priority_frequency_raised">Itinaas ang dalas sa %1$d: babawasan ng mas mababang dalas ang bisa ng priyoridad sa pag-swipe.</string>
     <plurals name="dict_legacy_freq_notice">
@@ -192,7 +192,7 @@
     <string name="dict_delete">Tanggalin</string>
     <string name="dict_no_words">Walang nahanap na salita</string>
     <string name="dict_error_loading">Error sa pag-load ng mga salita: %1$s</string>
-    <string name="dict_error_out_of_memory">Kulang ang memory para i-load ang diksiyonaryong ito. Isara ang Dictionary Manager at buksan itong muli.</string>
+    <string name="dict_error_out_of_memory">Kulang ang memory para i-load ang diksyunaryong ito. Isara ang Dictionary Manager at buksan itong muli.</string>
 
     <!-- Clipboard filter -->
     <string name="clipboard_filter_date_enable">I-enable ang Date Filter</string>
@@ -595,7 +595,7 @@
     <string name="input_smart_punctuation_title">Matalinong Bantas</string>
     <string name="input_smart_punctuation_desc">Ilakip ang mga punctuation sa dulo ng mga salita (tinatanggal ang space bago ang . , ! ? atbp.)</string>
     <string name="input_space_before_opening_punctuation_title">Espasyo bago ang pambukas na bantas</string>
-    <string name="input_space_before_opening_punctuation_desc">Pagkatapos ng salitang sinwipe, maglagay ng espasyo bago ang ( \" \' $ @ at katulad; nakadikit pa rin ang mga pansarang bantas</string>
+    <string name="input_space_before_opening_punctuation_desc">Pagkatapos ng salitang na-swipe, maglagay ng espasyo bago ang ( \" \' $ @ at katulad; nakadikit pa rin ang mga pansarang bantas</string>
     <string name="input_swipe_distance_threshold_title">Threshold ng Distansya ng Swipe</string>
     <string name="input_swipe_distance_threshold_desc">Distansya (mga unit na naka-scale sa device) para i-activate ang slider/event subkey sa gitna ng swipe (hal. spacebar cursor slider). Nililimitahan din ang minimum ng maikling swipe sa malalawak na key tulad ng backspace.</string>
     <string name="input_circle_gesture_title">Sensitivity ng Circle Gesture</string>
@@ -694,7 +694,7 @@
     <string name="privacy_on_device_learning_desc">Bumubuo sa mismong device ng pribadong modelo ng mga parirala at paggamit ng salita mula sa tino-type mo. I-off para itigil ang lahat ng awtomatikong pagtatala ng gawi sa pag-type — habang naka-off, walang bagong iniimbak. Hiwalay ang datos na sadya mong ginagawa: ang istatistika ng performance ng hula at ang natutunang datos na ibinalik mula sa backup.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Naidagdag, ngunit masyadong mahaba para i-swipe</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item><item quantity="other">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nito.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nitong i-decode. Hindi ito iaalok sa pag-swipe.</item><item quantity="other">Naidagdag ang “%1$s” para sa pag-tap, ngunit kailangan ng CTC ng %2$d hakbang at %3$d hakbang lang ang kaya nitong i-decode. Hindi ito iaalok sa pag-swipe.</item></plurals>
     <string name="gesture_finger_occlusion_title">Pagwawasto ng touch offset</string>
     <string name="gesture_finger_occlusion_desc">Inililipat kung saan binabasa ang swipe kaugnay ng dulo ng daliri. Positibo kung nasa itaas ng mga key ang guhit, negatibo kung nasa ibaba. Naka-off bilang default.</string>
     <string name="gesture_touch_smoothing_title">Pagpapakinis ng touch</string>
@@ -1192,10 +1192,10 @@
     <string name="layout_language_follow_multilang">Sundin ang mga setting ng Multi-Wika</string>
     <string name="layout_language_from_xml">%1$s (default ng layout)</string>
     <string name="layout_language_dialog_desc">Habang aktibo ang layout na ito, ang napiling wika lamang ang gagamitin para sa mga mungkahi, autocorrect at swipe typing. Pinapanatili ng Sundin ang mga setting ng Multi-Wika ang iyong pangunahin at pangalawang wika.</string>
-    <string name="layout_language_not_installed">Walang naka-install na diksiyonaryo ng %1$s. Gumagana pa rin ang layout, pero mananatiling walang laman ang mga mungkahi at autocorrect hanggang i-import mo ang language pack nito.</string>
+    <string name="layout_language_not_installed">Walang naka-install na diksyunaryo ng %1$s. Gumagana pa rin ang layout, pero mananatiling walang laman ang mga mungkahi at autocorrect hanggang i-import mo ang language pack nito.</string>
     <string name="layout_language_xml_invalid">Ang attribute na language ay dapat isang language code gaya ng fa o pt_br</string>
     <string name="keyboard_lang_layout_active">Wika: %1$s</string>
-    <string name="keyboard_lang_layout_missing">Wika: %1$s (walang naka-install na diksiyonaryo)</string>
+    <string name="keyboard_lang_layout_missing">Wika: %1$s (walang naka-install na diksyunaryo)</string>
     <string name="keyboard_lang_bound_by_layout">Ang layout na ito ang nagtatakda ng wika: %1$s</string>
     <string name="multilang_layout_binding_hint">Maaaring may sariling wika ang bawat layout (Layout Manager). Habang aktibo ang ganitong layout, pinapalitan nito ang mga setting ng wikang ito.</string>
     <string name="multilang_layout_bound_note">Mga layout na may sariling wika: %1$s</string>
@@ -1252,7 +1252,7 @@
     <!-- Auto-Correction: Ranking and Tuning group (2026-10-18) -->
     <string name="autocorrect_tuning_header">Pagraranggo at pag-tune</string>
     <string name="autocorrect_ranking_title">Pagraranggo ng pagwawasto</string>
-    <string name="autocorrect_ranking_desc">Kung paano pumipili ang auto-correct sa ilang magkakahawig na salita sa diksiyonaryo. Ang mga timbang lang ng napiling paraan ang ipinapakita sa ibaba.</string>
+    <string name="autocorrect_ranking_desc">Kung paano pumipili ang auto-correct sa ilang magkakahawig na salita sa diksyunaryo. Ang mga timbang lang ng napiling paraan ang ipinapakita sa ibaba.</string>
     <string name="autocorrect_ranking_band">Band ng iskor, saka dalas</string>
     <string name="autocorrect_ranking_channel">Gastos ng edit at dalas</string>
     <string name="autocorrect_band_gap_title">Lapad ng band ng iskor</string>
@@ -1272,7 +1272,7 @@
     <string name="autocorrect_elongation_collapse_title">Alisin ang sobrang inulit na titik</string>
     <string name="autocorrect_elongation_collapse_desc">Itama ang aksidenteng sobrang kopya ng titik (gamees → games)</string>
     <string name="autocorrect_inflection_guard_title">Panatilihin ang di-kilalang anyo</string>
-    <string name="autocorrect_inflection_guard_desc">Huwag galawin ang salitang kilalang salita na may hulaping gaya ng -s, -ed o -ing, para hindi mabago ang mga anyong wala sa diksiyonaryo (immunizations)</string>
+    <string name="autocorrect_inflection_guard_desc">Huwag galawin ang salita kapag kilalang salita ito na may hulaping gaya ng -s, -ed o -ing, para hindi mabago ang mga anyong wala sa diksyunaryo (immunizations)</string>
     <string name="autocorrect_inflection_guard_min_stem_title">Minimum na kilalang ugat</string>
     <string name="autocorrect_inflection_guard_min_stem_desc">Pinakamaikling kilalang salita bago ang hulapi na nagpapanatili sa na-type na salita</string>
     <string name="autocorrect_channel_distance_cost_title">Gastos ng malayong key</string>
@@ -1290,7 +1290,7 @@
     <string name="autocorrect_channel_short_deletion_cost_title">Gastos sa Pagbura Tungo sa Maikling Salita</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Dagdag na gastos kapag nag-aalis ng mga titik ang pagwawasto para maging salitang may isa o dalawang titik, para hindi basta maalis ang maling unang titik. 0 = walang dagdag na gastos.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Pinakamalayong Pagwawasto</string>
-    <string name="autocorrect_channel_max_correction_cost_desc">Hindi ginagawa ang mga pagwawastong may mas mataas na gastos sa pag-edit, kaya hindi napapalitan ng ibang salita ang tamang salitang wala sa diksiyonaryo. Ang isang maling katabing key ay mga 1.3.</string>
+    <string name="autocorrect_channel_max_correction_cost_desc">Hindi ginagawa ang mga pagwawastong may mas mataas na gastos sa pag-edit kaysa rito, kaya hindi napapalitan ng ibang salita ang tamang salitang wala sa diksyunaryo. Mga 1.3 ang gastos ng isang maling katabing key.</string>
     <string name="autocorrect_channel_completion_cost_title">Gastos ng Hindi Tapos na Salita</string>
     <string name="autocorrect_channel_completion_cost_desc">Ang salitang hindi mo pa natatapos i-type (tomorr) ay mananatili gaya ng pagkaka-type sa halip na maging ibang salita (timor) kapag may karaniwang salita na nagsisimula rito. Ang mas mababa ay nagpapanatili ng mas maraming hindi tapos na salita; ang Naka-off ay hindi kailanman nagpapanatili.</string>
     <string name="autocorrect_unfinished_word_mode_title">Mga Hindi Tapos na Salita</string>
@@ -1607,7 +1607,7 @@
     <string name="launcher_step_calibrate_desc">I-configure ang hanggang 8 subkey action bawat key</string>
     <string name="dict_tab_active">Aktibo</string>
     <string name="dict_tab_active_lang">Aktibo [%1$s]</string>
-    <string name="dict_tab_disabled">Disabled</string>
+    <string name="dict_tab_disabled">Naka-disable</string>
     <string name="dict_tab_disabled_lang">Naka-disable [%1$s]</string>
     <string name="dict_tab_custom">Custom</string>
     <string name="dict_tab_custom_lang">Custom [%1$s]</string>
@@ -1716,7 +1716,7 @@
     <string name="theme_section_looks">Mga pamilyar na hitsura</string>
     <string name="theme_looks_desc">Mga kulay at hugis ng key ng mga kilalang keyboard ng telepono; sinusunod ng light o dark ang system. Hindi kaugnay ng Apple, Google, Microsoft o Samsung.</string>
     <string name="theme_section_scenes">Mga Eksena</string>
-    <string name="theme_scenes_desc">Mga key ng CleverKeys sa ibabaw ng ipinintang eksena na tanaw sa mga ito. Marahan itong gumagalaw; pinapatay ito ng Itsura → Gumagalaw na mga eksena.</string>
+    <string name="theme_scenes_desc">Mga key ng CleverKeys sa ibabaw ng ipinintang eksena na tanaw sa mga ito. Marahan itong gumagalaw; pinapatay ito ng Hitsura → Gumagalaw na mga eksena.</string>
     <string name="theme_look_aurora_desc">Mga kurtina ng aurora at kumikislap na bituin sa likod ng mga key na balangkas lang ang guhit</string>
     <string name="theme_look_meadow_name">Parang</string>
     <string name="theme_look_meadow_desc">Isang maaraw na parang sa ginintuang oras: umiindayog na damo, ligaw na bulaklak at lumulutang na polen</string>
@@ -1922,7 +1922,7 @@
     <string name="private_copy_stored">Nakopya nang private</string>
     <string name="private_copy_unavailable">Hindi available ang private na copy</string>
     <string name="suggestion_bar_toggle_password_visibility">Ipakita/itago ang password</string>
-    <string name="ime_default_prompt_toast">Itakda ang %1$s bilang default sa Settings → System → Mga wika at input → On-screen na keyboard (maaaring i-off ang paalalang ito sa mga setting ng %1$s)</string>
+    <string name="ime_default_prompt_toast">Itakda ang %1$s bilang default sa Mga Setting → System → Mga wika at input → On-screen na keyboard (maaaring i-off ang paalalang ito sa mga setting ng %1$s)</string>
     <string name="tile_descr_active">Aktibo ang %1$s. I-tap para magpalit ng keyboard.</string>
     <string name="tile_descr_inactive">I-tap para lumipat sa %1$s keyboard.</string>
     <string name="tile_subtitle_switch">Magpalit ng keyboard</string>
@@ -2319,7 +2319,7 @@
     <string name="cmd_bgt">Bidi Greater Than</string>
     <string name="cmd_bgt_desc">Bidirectional na greater than (lalabas na less than)</string>
     <string name="cmd_halfspace">Kalahating Espasyo</string>
-    <string name="cmd_halfspace_desc">Zero-width non-joiner (halfspace)</string>
+    <string name="cmd_halfspace_desc">Zero-width na non-joiner (kalahating espasyo)</string>
     <string name="cmd_removed">Tinanggal</string>
     <string name="cmd_removed_desc">Placeholder para sa tinanggal na key (walang aksyon)</string>
     <string name="cmd_autofill">Autofill</string>
@@ -2622,10 +2622,10 @@
     <string name="theme_section_look">Hitsura ng Keyboard</string>
     <string name="theme_section_look_desc">Opsyonal: hugis ng key, mga hint at dagdag na kulay. Ang hindi nakatakda ay sumusunod sa mga setting ng keyboard.</string>
     <string name="theme_section_look_colors">Mga Kulay ng Hitsura</string>
-    <string name="theme_section_variants">Light at Dark Mode</string>
+    <string name="theme_section_variants">Maliwanag at Madilim na Mode</string>
     <string name="theme_variants_desc">Mga kulay na papalit sa mga nasa itaas habang nasa mode na iyon ang system.</string>
-    <string name="theme_mode_light">Light Mode</string>
-    <string name="theme_mode_dark">Dark Mode</string>
+    <string name="theme_mode_light">Maliwanag na Mode</string>
+    <string name="theme_mode_dark">Madilim na Mode</string>
     <string name="theme_color_not_set">Hindi nakatakda</string>
     <string name="theme_color_clear">I-clear</string>
     <string name="theme_color_label_pressed">Label ng Pinindot na Key</string>

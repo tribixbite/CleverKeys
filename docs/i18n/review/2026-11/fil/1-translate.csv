@@ -1,5 +1,5 @@
 ﻿english,your_translation,hint,where,notes,section,key,code
-Zero-width non-joiner (halfspace),,,Command palette › Spaces: the command's description,"max ~66 characters (one palette row, ellipsized)",Persian and right-to-left text,cmd_halfspace_desc,CommandRegistry.kt command `halfspace`
+Zero-width non-joiner (halfspace),Zero-width na non-joiner (kalahating espasyo),,Command palette › Spaces: the command's description,"max ~66 characters (one palette row, ellipsized)",Persian and right-to-left text,cmd_halfspace_desc,CommandRegistry.kt command `halfspace`
 ZWNJ (Non-Joiner),,a key name: use what keyboards in your language call it,Settings › Extra Keys list,,Persian and right-to-left text,extra_key_title_zwnj,ExtraKeysPreference.kt:420 ExtraKeysPreference()
 Voice Typing,,,Command palette › Events: the command's name (also in the Short Swipes and Extra Keys pickers),"max ~40 characters (one palette row, ellipsized)",Voice input,cmd_voice_typing,CommandRegistry.kt command `voice_typing`
 Voice input,,a key name: use what keyboards in your language call it,TalkBack key description,,Voice input,key_descr_voice_input,KeyLabels.kt:123 KeyLabels()
@@ -12,8 +12,8 @@ Neon,,"a theme, category or colour name: translate it, or keep it if it reads as
 Pastel,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_pastel,PredefinedThemes.kt:31 ThemeCategory()
 "Action Key (Go, Search, Send)",,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_color_action_key,ThemeLookEditor.kt:478 roleLabel()
 Enter Key,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_color_enter_key,ThemeLookEditor.kt:476 roleLabel()
-Dark Mode,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_mode_dark,ThemeLookEditor.kt:116 ThemeLookEditor()
-Light Mode,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_mode_light,ThemeLookEditor.kt:111 ThemeLookEditor()
+Dark Mode,Madilim na Mode,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_mode_dark,ThemeLookEditor.kt:116 ThemeLookEditor()
+Light Mode,Maliwanag na Mode,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Creator › Keyboard Look editor,,Familiar looks and Theme Creator,theme_mode_light,ThemeLookEditor.kt:111 ThemeLookEditor()
 Aurora,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_predefined_modern_aurora,PredefinedThemes.kt:707
 Cyberpunk,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_predefined_neon_cyberpunk,PredefinedThemes.kt:271
 Electric Blue,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_predefined_neon_electric_blue,PredefinedThemes.kt:201
@@ -112,7 +112,7 @@ Error,,,Dictionary Manager › word list,max ~40 characters (title),"Dictionary,
 Normal,,,Dictionary Manager › word row,,"Dictionary, language packs and multilingual",dict_swipe_priority_normal,WordListAdapter.kt:179 swipePriorityLabelRes()
 Custom,,,Dictionary Manager screen,,"Dictionary, language packs and multilingual",dict_tab_custom,DictionaryManagerActivity.kt:284 tabTitle()
 Custom [%1$s],,,Dictionary Manager screen,keep %1$s (text); order may change,"Dictionary, language packs and multilingual",dict_tab_custom_lang,DictionaryManagerActivity.kt:293 tabTitle()
-Disabled,,,Dictionary Manager screen,,"Dictionary, language packs and multilingual",dict_tab_disabled,DictionaryManagerActivity.kt:282 tabTitle()
+Disabled,Naka-disable,,Dictionary Manager screen,,"Dictionary, language packs and multilingual",dict_tab_disabled,DictionaryManagerActivity.kt:282 tabTitle()
 Tab %1$d,,,Dictionary Manager screen,keep %1$d (number); order may change,"Dictionary, language packs and multilingual",dict_tab_fallback,DictionaryManagerActivity.kt:394 updateTabCounts()
 User Dict,,,Dictionary Manager screen,,"Dictionary, language packs and multilingual",dict_tab_user,DictionaryManagerActivity.kt:283 tabTitle()
 Top-1: %1$d%%,,,Settings › swipe statistics,keep %1$d (number); order may change,Swipe typing and gestures,perf_stats_top1_accuracy,SwipePerformanceStats.kt:210 formatSummary()
