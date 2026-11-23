@@ -425,14 +425,14 @@
     <string name="appearance_key_vertical_margin_desc">Vertikaler Abstand zwischen den Tasten</string>
     <string name="appearance_key_horizontal_margin_title">Horizontaler Tastenabstand</string>
     <string name="appearance_key_horizontal_margin_desc">Horizontaler Abstand zwischen den Tasten</string>
-    <string name="appearance_look_show_hints_title">Gesten-Hinweise bei bekannten Looks anzeigen</string>
+    <string name="appearance_look_show_hints_title">Gestenhinweise bei bekannten Looks anzeigen</string>
     <string name="appearance_look_show_hints_desc">Looks im Stil von iOS, Gboard, SwiftKey und Samsung blenden Eckhinweise wie diese Tastaturen aus; einschalten, um alle Hinweise anzuzeigen. Gesten funktionieren in beiden Fällen.</string>
     <string name="appearance_look_key_preview_title">Tastenvorschau</string>
     <string name="appearance_look_key_preview_desc">Der CleverKeys-Look und die Looks im Stil von iOS, Gboard, SwiftKey und Samsung zeigen das gedrückte Zeichen in einem Pop-up über der Taste.</string>
     <string name="appearance_look_space_language_title">Sprachname auf der Leertaste</string>
     <string name="appearance_look_space_language_desc">Der Samsung-Look zeigt die aktuelle Sprache auf der Leertaste, wie die Samsung-Tastatur.</string>
     <string name="appearance_look_backdrop_motion_title">Animierte Szenen</string>
-    <string name="appearance_look_backdrop_motion_desc">Die Szenen-Designs (CleverKeys Aurora, Wiese, Bach, Flusssteine, Wald, Schnee, Strand) bewegen sich sanft: Polarlicht und Wasser treiben, Gras und Blätter wiegen sich, Schnee und Regen fallen. Beim Tippen halten sie inne, nach 20 Sekunden ohne Eingabe ruhen sie; im Energiesparmodus, bei heißem Gerät oder schwachem Akku bleiben sie still. Braucht etwas mehr Akku, solange sie sich bewegen. Ab Android 10.</string>
+    <string name="appearance_look_backdrop_motion_desc">Die Szenen-Themes (CleverKeys Aurora, Wiese, Bach, Flusssteine, Wald, Schnee, Strand) bewegen sich sanft: Polarlicht und Wasser treiben, Gras und Blätter wiegen sich, Schnee und Regen fallen. Beim Tippen halten sie inne, nach 20 Sekunden ohne Eingabe ruhen sie; im Energiesparmodus, bei heißem Gerät oder schwachem Akku bleiben sie still. Braucht etwas mehr Akku, solange sie sich bewegen. Ab Android 10.</string>
     <string name="appearance_look_motion_speed_title">Szenentempo</string>
     <string name="appearance_look_motion_speed_desc">Wie schnell sich die Szenen bewegen</string>
     <string name="appearance_look_motion_intensity_title">Stärke der Szenenbewegung</string>
@@ -705,7 +705,7 @@
     <string name="privacy_on_device_learning_desc">Private Modelle für Wendungen und Wortnutzung direkt auf dem Gerät aus den eigenen Eingaben aufbauen. Ausschalten stoppt jede automatische Aufzeichnung des Tippverhaltens — im ausgeschalteten Zustand wird nichts Neues gespeichert. Ausdrücklich selbst erzeugte Daten sind davon getrennt: Statistiken zur Vorhersageleistung und aus einer Sicherung wiederhergestellte Lerndaten.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Hinzugefügt — aber zu lang zum Wischen</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren.</item><item quantity="other">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritt dekodieren. Beim Wischen wird es nicht angeboten.</item><item quantity="other">\"%1$s\" wurde für Tippeingaben hinzugefügt, aber CTC benötigt %2$d Schritte und kann nur %3$d Schritte dekodieren. Beim Wischen wird es nicht angeboten.</item></plurals>
     <string name="gesture_finger_occlusion_title">Berührungsversatz korrigieren</string>
     <string name="gesture_finger_occlusion_desc">Verschiebt die erfasste Wischposition relativ zur Fingerspitze. Positiv bei zu hohen, negativ bei zu niedrigen Spuren. Standardmäßig aus.</string>
     <string name="gesture_touch_smoothing_title">Berührungen glätten</string>
@@ -948,7 +948,7 @@
     <string name="subkey_dialog_layout_hint">Untertasten von %1$s und eigene kurze Wischgesten. Eine Richtung antippen, um sie zu ändern.</string>
     <string name="subkey_edit_layout_source">Eine Untertaste von %1$s.</string>
     <string name="subkey_layout_copy_title">Eine Untertaste des Layouts ändern?</string>
-    <string name="subkey_layout_copy_body">%1$s legt diese Untertaste fest. Das eingebaute Layout bleibt unverändert: Die Änderung wird in einer Kopie, %2$s, gespeichert, die es in der Layoutliste ersetzt. In der Layoutverwaltung lässt sich zum Original zurückkehren.</string>
+    <string name="subkey_layout_copy_body">%1$s legt diese Untertaste fest. Das eingebaute Layout bleibt unverändert: Die Änderung wird in einer Kopie, %2$s, gespeichert, die es in der Layoutliste ersetzt. Im Layout-Manager lässt sich zum Original zurückkehren.</string>
     <string name="subkey_layout_copy_confirm">Kopie erstellen</string>
     <string name="subkey_layout_copy_global">In allen Layouts ändern</string>
     <string name="subkey_layout_copy_name">%1$s (geändert)</string>
@@ -959,7 +959,7 @@
     <string name="layout_manager_badge_modified_copy">Geänderte Kopie von %1$s</string>
     <string name="layout_manager_revert">Original wiederherstellen</string>
     <string name="layout_manager_revert_title">Zum ursprünglichen Layout zurückkehren?</string>
-    <string name="layout_manager_revert_body">%1$s ersetzt diese geänderte Kopie. Die geänderten Untertasten werden verworfen; die Einstellungen für Sprache, Design und Tastenabstand bleiben erhalten.</string>
+    <string name="layout_manager_revert_body">%1$s ersetzt diese geänderte Kopie. Die geänderten Untertasten werden verworfen; die Einstellungen für Sprache, Theme und Tastenabstand bleiben erhalten.</string>
     <string name="gesture_selection_delete_header">Auswahl-Lösch-Modus</string>
     <string name="gesture_selection_delete_desc">Auf der Rücktaste kurz wischen + halten, um Text auszuwählen; Loslassen löscht ihn.</string>
     <string name="gesture_tap_typing_header">Tippen und Eingabe</string>
@@ -1072,7 +1072,7 @@
     <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d benutzerdefiniertes Theme in dieser Sicherung</item><item quantity="other">%1$d benutzerdefinierte Themes in dieser Sicherung</item></plurals>
     <string name="import_preview_custom_themes_merge">Zusammenführen — bei Konflikt gewinnt die Datei, andere Themes bleiben (empfohlen)</string>
     <string name="import_preview_custom_themes_replace">Ersetzen — Ihre benutzerdefinierten Themes löschen, Satz aus der Datei installieren</string>
-    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch das %1$d Theme der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch die %1$d Themes der Datei.</item></plurals>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch %1$d Theme aus der Datei.</item><item quantity="other">Dies ERSETZT alle Ihre benutzerdefinierten Themes durch die %1$d Themes der Datei.</item></plurals>
     <string name="import_preview_selected_count">%1$d von %2$d ausgewählt</string>
     <string name="import_preview_expand">Ausklappen</string>
     <string name="import_preview_hide">Ausblenden</string>
@@ -1199,7 +1199,7 @@
     <string name="layout_language_title">Layout-Sprache</string>
     <string name="layout_language_follow_multilang">Mehrsprachigkeits-Einstellungen folgen</string>
     <string name="layout_language_from_xml">%1$s (Layout-Standard)</string>
-    <string name="layout_language_dialog_desc">Solange dieses Layout aktiv ist, ist die gewählte Sprache die einzige Sprache für Vorschläge, Autokorrektur und Wischtippen. „Mehrsprachigkeits-Einstellungen folgen“ behält Ihre Primär- und Sekundärsprache bei.</string>
+    <string name="layout_language_dialog_desc">Solange dieses Layout aktiv ist, ist die gewählte Sprache die einzige Sprache für Vorschläge, Autokorrektur und Wischeingabe. „Mehrsprachigkeits-Einstellungen folgen“ behält Ihre Primär- und Sekundärsprache bei.</string>
     <string name="layout_language_not_installed">Für %1$s ist kein Wörterbuch installiert. Das Layout funktioniert, aber Vorschläge und Autokorrektur bleiben leer, bis Sie das Sprachpaket importieren.</string>
     <string name="layout_language_xml_invalid">Das Attribut language muss ein Sprachcode wie fa oder pt_br sein</string>
     <string name="keyboard_lang_layout_active">Sprache: %1$s</string>
@@ -2132,11 +2132,11 @@
     <string name="cmd_minimize_fab_desc">Tastatur zu einer schwebenden Schaltfläche einklappen, damit die App den ganzen Bildschirm hat; Tippen holt sie zurück</string>
     <string name="cmd_hide_keyboard">Tastatur ausblenden</string>
     <string name="cmd_hide_keyboard_desc">Schließt die Tastatur; Tippen in ein Textfeld holt sie zurück</string>
-    <string name="cmd_theme_next">Nächstes Design</string>
-    <string name="cmd_theme_next_desc">Das nächste Design in der Reihenfolge der Designverwaltung anwenden</string>
-    <string name="cmd_theme_previous">Vorheriges Design</string>
-    <string name="cmd_theme_previous_desc">Das vorherige Design in der Reihenfolge der Designverwaltung anwenden</string>
-    <string name="theme_cycle_message">Design: %1$s</string>
+    <string name="cmd_theme_next">Nächstes Theme</string>
+    <string name="cmd_theme_next_desc">Das nächste Theme in der Reihenfolge des Theme-Managers anwenden</string>
+    <string name="cmd_theme_previous">Vorheriges Theme</string>
+    <string name="cmd_theme_previous_desc">Das vorherige Theme in der Reihenfolge des Theme-Managers anwenden</string>
+    <string name="theme_cycle_message">Theme: %1$s</string>
     <string name="cmd_toggle_scene_motion">Animierte Szenen an/aus</string>
     <string name="cmd_toggle_scene_motion_desc">Die bewegten Szenenhintergründe ein- oder ausschalten</string>
     <string name="scene_motion_on_message">Animierte Szenen an</string>
@@ -2594,9 +2594,9 @@
     <string name="continuous_swipe_desc">Zwischen Wörtern kurz in der Mitte der Leertaste verweilen, ohne den Finger abzuheben. Ein schnelles Überqueren behält ein Wort bei.</string>
     <string name="continuous_swipe_stopped">Kontinuierliches Wischen angehalten; Text vor dem Fortfahren überprüfen.</string>
     <string name="cmd_append_possessive">\'s anfügen</string>
-    <string name="cmd_append_possessive_desc">\'s an das letzte verifizierte Wort anhängen; einmal Rückschritt löscht nur das Suffix</string>
+    <string name="cmd_append_possessive_desc">\'s an das letzte verifizierte Wort anhängen; einmal Rücktaste löscht nur das Suffix</string>
     <string name="cmd_append_apostrophe">Apostroph anfügen</string>
-    <string name="cmd_append_apostrophe_desc">Einen Apostroph an das letzte verifizierte Wort anhängen (parents\'); einmal Rückschritt löscht nur das Suffix</string>
+    <string name="cmd_append_apostrophe_desc">Einen Apostroph an das letzte verifizierte Wort anhängen (parents\'); einmal Rücktaste löscht nur das Suffix</string>
     <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
     <string name="layout_theme_chip">Theme: %1$s</string>
     <string name="layout_theme_title">Layout-Theme</string>

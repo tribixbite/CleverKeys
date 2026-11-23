@@ -468,7 +468,7 @@
     <string name="clipboard_limit_type_title">Soort limiet</string>
     <string name="clipboard_limit_type_desc">Hoe de klembordgeschiedenis te beperken</string>
     <string name="clipboard_history_limit_title">Geschiedenislimiet</string>
-    <string name="clipboard_history_limit_desc">Maximaal aantalklembordinvoeren (0 = onbeperkt)</string>
+    <string name="clipboard_history_limit_desc">Maximaal aantal klemborditems (0 = onbeperkt)</string>
     <string name="clipboard_entry_duration_title">Duur van invoer</string>
     <string name="clipboard_size_limit_title">Groottelimiet</string>
     <string name="clipboard_size_limit_desc">Maximale totale klembordopslag</string>
@@ -490,8 +490,8 @@
     <string name="clipboard_pinned_tab_desc">Vastgezet tabblad tonen voor het opslaan van belangrijke clips</string>
     <string name="clipboard_todo_tab_title">Takenlijst-tabblad</string>
     <string name="clipboard_todo_tab_desc">Takenlijst-tabblad tonen voor het markeren van clips als taken</string>
-    <string name="clipboard_swipe_delete_title">Vegen om klembordinvoeren te verwijderen</string>
-    <string name="clipboard_swipe_delete_desc">Veeg een invoer naar links of rechts om deze uit het huidige tabblad te verwijderen. Ongedaan maken kan gedurende %1$d seconden.</string>
+    <string name="clipboard_swipe_delete_title">Vegen om klemborditems te verwijderen</string>
+    <string name="clipboard_swipe_delete_desc">Veeg een item naar links of rechts om het uit het huidige tabblad te verwijderen. Ongedaan maken kan gedurende %1$d seconden.</string>
     <string name="clipboard_swipe_deleted">Verwijderd</string>
     <string name="clipboard_swipe_undo">Ongedaan maken</string>
     <string name="clipboard_reorder_handle_descr">Sleep om de volgorde te wijzigen</string>
@@ -517,7 +517,7 @@
     <string name="gesture_max_distance_title">Maximumafstand</string>
     <string name="gesture_max_distance_desc" formatted="false">De grens kort/lang (% van toetsdiagonaal): hieronder of gelijk = korte veeg, daarboven = veeggetypt woord. Lage waarden maken kleine overschrijdingen woorden; hoge waarden vereisen langere vegen voordat het woord typen begint.</string>
     <string name="gesture_short_swipes_only_title">Alleen korte vegen</string>
-    <string name="gesture_short_swipes_only_desc">Elke veeg van minstens de minimumafstand typt de subtoets in zijn richting, hoe lang hij ook is; een veeg naar een richting zonder subtoets typt niets. Vegen staat uit zolang dit aan staat. Vereist korte gebaren.</string>
+    <string name="gesture_short_swipes_only_desc">Elke veeg van minstens de minimumafstand typt de subtoets in zijn richting, hoe lang hij ook is; een veeg naar een richting zonder subtoets typt niets. Veegtypen staat uit zolang dit aan staat. Vereist korte gebaren.</string>
     <string name="swipe_enable_desc_short_swipes_only">Uit zolang Alleen korte vegen aan staat (Gebaarstemming).</string>
     <string name="gesture_max_distance_desc_short_swipes_only">Niet gebruikt zolang Alleen korte vegen aan staat: elke veeg vanaf de minimumafstand is een korte veeg.</string>
     <string name="gesture_vertical_threshold_title">Verticale drempelwaarde</string>
@@ -526,7 +526,7 @@
     <string name="gesture_vertical_speed_desc">Snelheidsvermenigvuldiger voor regelselectie (lager = langzamer). Tekenselectie blijft op volle snelheid.</string>
     <string name="gesture_selection_delete_mode_title">Selectiebeweging</string>
     <string name="gesture_selection_delete_mode_desc">Hoe de vingerbeweging de selectie verandert. ‘Vinger volgen’ selecteert één teken per bewegingsstap; terugbewegen verkleint de selectie.</string>
-    <string name="gesture_selection_delete_mode_speed">Snelheid op afstand</string>
+    <string name="gesture_selection_delete_mode_speed">Snelheid naar afstand</string>
     <string name="gesture_selection_delete_mode_follow">Vinger volgen</string>
     <string name="gesture_selection_delete_step_title">Stapgrootte</string>
     <string name="gesture_selection_delete_step_desc">Vingerbeweging die nodig is om één teken meer te selecteren in de modus ‘Vinger volgen’. Kleiner = sneller, groter = nauwkeuriger.</string>
@@ -568,7 +568,7 @@
     <string name="input_backspace_undo_swipe_title">Backspace maakt veegwoord ongedaan</string>
     <string name="input_backspace_undo_swipe_desc">Backspace direct na een veegwoord verwijdert het volledige woord</string>
     <string name="input_delete_word_url_pairs_title">Eén sleutel=waarde-paar per keer verwijderen</string>
-    <string name="input_delete_word_url_pairs_desc">In een link of andere tekst met sleutel=waarde-paren verbonden door &amp; (?a=1&amp;b=2) verwijdert Een woord verwijderen één paar per druk</string>
+    <string name="input_delete_word_url_pairs_desc">In een link of andere tekst met sleutel=waarde-paren verbonden door &amp; (?a=1&amp;b=2) verwijdert ‘Woord verwijderen’ één paar per druk</string>
     <string name="input_show_exact_typed_title">Exact getypt woord tonen</string>
     <string name="input_show_exact_typed_desc">De letters die je daadwerkelijk typte als suggestie aanbieden; tik om ze aan het woordenboek toe te voegen</string>
     <string name="input_context_aware_title">Contextbewuste voorspellingen</string>
@@ -582,7 +582,7 @@
     <string name="input_frequency_scale_title">Frequentieschaal</string>
     <string name="input_frequency_scale_desc">Balans tussen veelgebruikte en ongebruikelijke woorden (100–5000)</string>
     <string name="input_capitalize_i_title">Ik-woorden met hoofdletter</string>
-    <string name="input_capitalize_i_desc">\"Ik\" en samentrekkingen automatisch met hoofdletter schrijven (ik ben, ik zal enz.)</string>
+    <string name="input_capitalize_i_desc">Engelse \"I\" en samentrekkingen (I\'m, I\'ll, I\'d, I\'ve) automatisch met een hoofdletter schrijven</string>
     <string name="input_smart_punctuation_title">Slimme interpunctie</string>
     <string name="input_smart_punctuation_desc">Interpunctie aan het einde van woorden plaatsen (spatie vóór . , ! ? enz. verwijderen)</string>
     <string name="input_space_before_opening_punctuation_title">Spatie vóór openende leestekens</string>
@@ -606,7 +606,7 @@
     <string name="input_immediate_switching_title">Direct wisselen van toetsenbord</string>
     <string name="input_immediate_switching_desc">Direct wisselen van toetsenbord zonder menu te tonen</string>
     <string name="input_enter_always_newline_title">Enter voegt altijd een nieuwe regel in</string>
-    <string name="input_enter_always_newline_desc">In velden met meerdere regels voegt Enter een nieuwe regel toe, ook als de app Stuur of Zoek toont; veeg Enter naar rechtsboven voor de actie van de app. Velden met één regel, zoals zoekvelden, houden hun actie.</string>
+    <string name="input_enter_always_newline_desc">In velden met meerdere regels voegt Enter een nieuwe regel toe, ook als de app Verzenden of Zoeken toont; veeg Enter naar rechtsboven voor de actie van de app. Velden met één regel, zoals zoekvelden, houden hun actie.</string>
     <string name="input_number_row_title">Cijferrij</string>
     <string name="input_number_row_desc">Cijferrij bovenaan het toetsenbord tonen</string>
     <string name="input_show_numpad_title">Numeriek toetsenblok tonen</string>
@@ -679,15 +679,15 @@
     <string name="input_context_source_desc">Welk uitdrukkingsmodel de voorspellingen versterkt: ingebouwd, de geleerde patronen of beide</string>
     <string name="input_personalization_weight_title">Sterkte van personalisatie</string>
     <string name="input_personalization_weight_desc">Hoe sterk het eigen woordgebruik de voorspellingen versterkt (0 = uit, 2 = dubbel)</string>
-    <string name="input_personalization_max_words_title">Maximaal aantalgeleerde woorden</string>
+    <string name="input_personalization_max_words_title">Maximaal aantal geleerde woorden</string>
     <string name="input_personalization_max_words_desc">Limiet voor de geleerde woordenschat; de minst waardevolle woorden worden als eerste verwijderd (standaard 5000)</string>
     <string name="privacy_on_device_learning_title">Leren van mijn typen</string>
     <string name="privacy_on_device_learning_desc">Bouwt op het apparaat privémodellen van uitdrukkingen en woordgebruik op basis van wat er wordt getypt. Uitschakelen stopt elke automatische registratie van typgedrag — zolang het uit staat wordt er niets nieuws opgeslagen. Gegevens die je zelf uitdrukkelijk maakt staan hier los van: statistieken over de voorspellingsprestaties en geleerde gegevens die uit een back-up zijn hersteld.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Toegevoegd, maar te lang om te vegen</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stap decoderen.</item><item quantity="other">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stappen decoderen.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stap decoderen. Bij vegen wordt het niet aangeboden.</item><item quantity="other">\"%1$s\" is toegevoegd voor tiktypen, maar CTC heeft %2$d stappen nodig en kan slechts %3$d stappen decoderen. Bij vegen wordt het niet aangeboden.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correctie aanraakoffset</string>
-    <string name="gesture_finger_occlusion_desc">Verschuift waar veeggebaren worden gelezen ten opzichte van de vingertop. Positief bij te hoge en negatief bij te lage sporen. Standaard uit.</string>
+    <string name="gesture_finger_occlusion_desc">Verschuift waar veeggebaren worden gelezen ten opzichte van je vingertop, als percentage van één toetsenrij. Positief als je vegen boven de bedoelde toetsen landen, negatief als ze eronder landen. Standaard uit.</string>
     <string name="gesture_touch_smoothing_title">Aanraking vloeiender maken</string>
     <string name="gesture_touch_smoothing_desc">Punten voor het voortschrijdend gemiddelde van het veegpad. 1 = onbewerkt, 3 = aanbevolen. Geldt voor beide engines.</string>
     <string name="swipe_engine_fallback_title">Geometrische engine wordt gebruikt</string>
@@ -696,7 +696,7 @@
     <plurals name="collision_warning_body"><item quantity="one">%1$d snelkoppeling uit een geïmporteerd taalpakket zou een echt woord in de andere actieve taal (%2$s) vervangen. Het is nu een optionele suggestie.</item><item quantity="other">%1$d snelkoppelingen uit een geïmporteerd taalpakket zouden echte woorden in de andere actieve taal (%2$s) vervangen. Ze zijn nu optionele suggesties.</item></plurals>
     <string name="collision_warning_examples">Betrokken snelkoppelingen:</string>
     <string name="swipe_context_rescoring_title">Context gebruiken voor rangschikking</string>
-    <string name="swipe_context_rescoring_desc">Rangschikt veegvoorstellen opnieuw met woordparen die al op dit apparaat zijn getypt. Alleen bijna gelijke resultaten veranderen; een duidelijk veeggebaar blijft staan. Vereist lokaal leren.</string>
+    <string name="swipe_context_rescoring_desc">Rangschikt veegsuggesties opnieuw met de woordparen die je al op dit apparaat hebt getypt. Verandert alleen bijna gelijke uitkomsten; een duidelijk gedecodeerde veeg wordt nooit overschreven. Doet niets totdat het toetsenbord van je typen heeft geleerd, waarvoor leren op het apparaat aan moet staan.</string>
     <!-- ARC-067 batch (2026-09-01): machine translations pending native review -->
     <string name="swipe_engine_pack_not_typeable">Het geïmporteerde %1$s-taalpakket kan niet door CTC worden gedecodeerd: slechts %2$d%% van de woorden kan met de a–z-toetsen worden gespeld. Letters zoals ı, ł en đ hebben geen a–z-vorm, dus die woorden zouden helemaal niet geveegd kunnen worden. Geometrisch decodeert ze in plaats daarvan.</string>
     <string name="swipe_engine_pack_head_not_typeable">Het geïmporteerde %1$s-taalpakket kan niet door CTC worden gedecodeerd: te veel van de meest voorkomende woorden gebruiken letters zonder a–z-vorm, dus ze zouden helemaal niet geveegd kunnen worden. Geometrisch decodeert ze in plaats daarvan.</string>
@@ -928,7 +928,7 @@
     <string name="subkey_dialog_layout_hint">Subtoetsen van %1$s en aangepaste korte veeggebaren. Tik op een richting om die te wijzigen.</string>
     <string name="subkey_edit_layout_source">Een subtoets van %1$s.</string>
     <string name="subkey_layout_copy_title">Een subtoets van de indeling wijzigen?</string>
-    <string name="subkey_layout_copy_body">%1$s bepaalt deze subtoets. De ingebouwde indeling blijft ongewijzigd: de wijziging wordt opgeslagen in een kopie, %2$s, die de plaats ervan inneemt in de lijst met indelingen. In Indelingsbeheer kun je terug naar het origineel.</string>
+    <string name="subkey_layout_copy_body">%1$s bepaalt deze subtoets. De ingebouwde indeling blijft ongewijzigd: de wijziging wordt opgeslagen in een kopie, %2$s, die de plaats ervan inneemt in de lijst met indelingen. In Lay-outbeheer kun je terug naar het origineel.</string>
     <string name="subkey_layout_copy_confirm">Kopie maken</string>
     <string name="subkey_layout_copy_global">In alle indelingen wijzigen</string>
     <string name="subkey_layout_copy_name">%1$s (gewijzigd)</string>
@@ -1083,7 +1083,7 @@
     <string name="geo_settings_title">Geometrische engine-instellingen</string>
     <string name="geo_settings_intro">Stem de geometrische (vormvergelijkende) veegengine af, gebruikt op niet-QWERTY-indelingen in hybride modus of op alle indelingen in geometrische modus. Andere engineparameters zijn gekalibreerd op gemeten nauwkeurigheid en niet instelbaar.</string>
     <string name="geo_settings_decoding_section">Decoderen</string>
-    <string name="geo_settings_max_suggestions_title">Maximaal aantalsuggesties</string>
+    <string name="geo_settings_max_suggestions_title">Maximaal aantal suggesties</string>
     <string name="geo_settings_max_suggestions_desc">Gerangschikte kandidaten per veeg (de suggestiebalk toont de bovenste paar).</string>
     <string name="geo_settings_freq_weight_title">Frequentiegewicht</string>
     <string name="geo_settings_freq_weight_desc">Voorkeur voor veelvoorkomende woorden versus exacte vormgetrouwheid. Hoger = veelvoorkomende woorden winnen vaker; 0 = pure vormvergelijking.</string>
@@ -1274,7 +1274,7 @@
     <string name="autocorrect_channel_frequency_weight_title">Gewicht van woordfrequentie</string>
     <string name="autocorrect_channel_frequency_weight_desc">Hoeveel een zeldzamer woord kost per plaats in de frequentierangschikking. Hoger geeft meer voorkeur aan veelgebruikte woorden.</string>
     <string name="autocorrect_channel_alias_bonus_title">Voorkeur voor samentrekkingen</string>
-    <string name="autocorrect_channel_alias_bonus_desc">Kostenkorting voor een samentrekking zoals don\'t boven een even dichtbij gewoon woord (donr → don\'t in plaats van done). 0 = geen voorkeur.</string>
+    <string name="autocorrect_channel_alias_bonus_desc">Kostenkorting voor een samentrekking zoals don\'t boven een even dichtbij liggend gewoon woord (donr → don\'t in plaats van done). 0 = geen voorkeur.</string>
     <string name="autocorrect_channel_short_deletion_cost_title">Kosten van inkorten tot kort woord</string>
     <string name="autocorrect_channel_short_deletion_cost_desc">Extra kosten wanneer een correctie letters weglaat om een woord van één of twee letters te krijgen, zodat een verkeerd getypte eerste letter niet zomaar verdwijnt. 0 = geen extra kosten.</string>
     <string name="autocorrect_channel_max_correction_cost_title">Maximale correctieafstand</string>
@@ -1541,8 +1541,8 @@
         <item quantity="other">Geïmporteerd: %1$s (%2$d GIF\'s)</item>
     </plurals>
     <plurals name="privacy_swipe_data_exported">
-        <item quantity="one">%1$d veegitem geëxporteerd als %2$s</item>
-        <item quantity="other">%1$d veegitems geëxporteerd als %2$s</item>
+        <item quantity="one">%1$d veegitem geëxporteerd naar %2$s</item>
+        <item quantity="other">%1$d veegitems geëxporteerd naar %2$s</item>
     </plurals>
     <plurals name="backup_headless_settings_imported">
         <item quantity="one">%1$d instelling geïmporteerd</item>
@@ -1626,7 +1626,7 @@
     <string name="layout_manager_xml_empty_error">Lay-out-XML mag niet leeg zijn</string>
     <string name="layout_manager_import_failed">Kon lay-outbestand niet importeren:\n%1$s</string>
     <string name="layout_manager_export_failed">Kon lay-outbestand niet exporteren:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Sommige korte veeggebaren staan niet in het bestand: een indeling kan hun actie niet bevatten (zoals een vastgezette clip plakken). Op dit apparaat werken ze nog steeds.</string>
+    <string name="layout_manager_export_not_written">Sommige korte veeggebaren staan niet in het bestand: een indeling kan hun actie niet bevatten (zoals een vastgezet fragment plakken). Op dit apparaat werken ze nog steeds.</string>
     <string name="extra_keys_group_layout_switching">Lay-out wisselen</string>
     <string name="extra_keys_group_system">Systeem</string>
     <string name="extra_keys_group_navigation">Navigatie</string>
@@ -1705,7 +1705,7 @@
     <string name="theme_looks_desc">Kleuren en toetsvormen van bekende telefoontoetsenborden; licht of donker volgt het systeem. Niet verbonden aan Apple, Google, Microsoft of Samsung.</string>
     <string name="theme_section_scenes">Scènes</string>
     <string name="theme_scenes_desc">CleverKeys-toetsen boven een geschilderde scène die erdoorheen schijnt. Hij beweegt zacht; Weergave → Bewegende scènes zet dat uit.</string>
-    <string name="theme_look_aurora_desc">Noorderlichtgordijnen en fonkelende sterren achter toetsen die alleen hun omtrek tekent</string>
+    <string name="theme_look_aurora_desc">Noorderlichtgordijnen en fonkelende sterren achter toetsen die alleen als omtrek zijn getekend</string>
     <string name="theme_look_meadow_name">Weide</string>
     <string name="theme_look_meadow_desc">Een zonnige weide in het gouden uur: wuivend gras, wilde bloemen en zwevend stuifmeel</string>
     <string name="theme_look_stream_name">Beek</string>
@@ -1914,7 +1914,7 @@
     <string name="tile_descr_active">%1$s is actief. Tik om van toetsenbord te wisselen.</string>
     <string name="tile_descr_inactive">Tik om over te schakelen naar het %1$s-toetsenbord.</string>
     <string name="tile_subtitle_switch">Toetsenbord wisselen</string>
-    <string name="tile_subtitle_toggle">Wisselen</string>
+    <string name="tile_subtitle_toggle">Tonen/verbergen</string>
     <string name="tile_descr_toggle">Tik om %1$s te tonen of te verbergen.</string>
     <string name="swipe_engine_fallback_unnamed_layout">Naamloze lay-out</string>
     <string name="key_descr_keycode">Toets %1$d</string>
@@ -1922,7 +1922,7 @@
     <string name="clipboard_search_hint_typing">Typ op het toetsenbord…</string>
     <string name="clipboard_filter_dialog_title">Filters</string>
     <string name="clipboard_filter_match_all">Match: alle</string>
-    <string name="clipboard_filter_match_any">Match: één</string>
+    <string name="clipboard_filter_match_any">Match: minstens één</string>
     <string name="clipboard_paste_media_unsupported">Kan hier geen media plakken</string>
     <string name="clipboard_paste_incomplete">Plakken onvolledig: de app heeft niet het hele fragment geaccepteerd.</string>
     <string name="clipboard_paste_media_private_refused">Deze app accepteert geen media direct – privé-items worden nooit op het systeemklembord gezet</string>
@@ -2015,15 +2015,15 @@
     <string name="cmd_share_text">Delen</string>
     <string name="cmd_share_text_desc">Geselecteerde tekst delen</string>
     <string name="cmd_paste_pinned_1">Vastgezet #1 plakken</string>
-    <string name="cmd_paste_pinned_1_desc">1e vastgezet klemborditem invoegen</string>
+    <string name="cmd_paste_pinned_1_desc">1e vastgezette klemborditem invoegen</string>
     <string name="cmd_paste_pinned_2">Vastgezet #2 plakken</string>
-    <string name="cmd_paste_pinned_2_desc">2e vastgezet klemborditem invoegen</string>
+    <string name="cmd_paste_pinned_2_desc">2e vastgezette klemborditem invoegen</string>
     <string name="cmd_paste_pinned_3">Vastgezet #3 plakken</string>
-    <string name="cmd_paste_pinned_3_desc">3e vastgezet klemborditem invoegen</string>
+    <string name="cmd_paste_pinned_3_desc">3e vastgezette klemborditem invoegen</string>
     <string name="cmd_paste_pinned_4">Vastgezet #4 plakken</string>
-    <string name="cmd_paste_pinned_4_desc">4e vastgezet klemborditem invoegen</string>
+    <string name="cmd_paste_pinned_4_desc">4e vastgezette klemborditem invoegen</string>
     <string name="cmd_paste_pinned_5">Vastgezet #5 plakken</string>
-    <string name="cmd_paste_pinned_5_desc">5e vastgezet klemborditem invoegen</string>
+    <string name="cmd_paste_pinned_5_desc">5e vastgezette klemborditem invoegen</string>
     <string name="cmd_undo">Ongedaan maken</string>
     <string name="cmd_undo_desc">Laatste actie ongedaan maken</string>
     <string name="cmd_redo">Opnieuw</string>
@@ -2532,7 +2532,7 @@
     <string name="clipboard_action_clean">Spaties en regeleinden opschonen</string>
     <string name="clipboard_bulk_action_error">Kon niet worden voltooid. Je selectie blijft behouden.</string>
     <string name="clipboard_bulk_preview">Voorbeeld: %1$s</string>
-    <string name="clipboard_merge_message">Maakt één nieuw fragment in de geschiedenis van de geselecteerde tekst, oudste eerst, één per regel (%1$s). De originelen blijven behouden.</string>
+    <string name="clipboard_merge_message">Maakt van de geselecteerde tekst één nieuw fragment in de geschiedenis, oudste eerst, één per regel (%1$s). De originelen blijven behouden.</string>
     <string name="clipboard_merge_private_note">Het wordt privé, omdat een geselecteerd fragment privé is.</string>
     <string name="clipboard_merge_copied">Het staat op het klembord, klaar om te plakken.</string>
     <string name="clipboard_merge_action">Samenvoegen</string>
@@ -2566,10 +2566,10 @@
     <string name="advanced_custom_terminal_invalid">Ongeldige pakketnaam (maximaal %2$d tekens): %1$s</string>
     <string name="advanced_custom_terminal_limit">Gebruik maximaal %1$d unieke pakketnamen.</string>
     <string name="advanced_custom_terminal_input_limit">De lijst is te lang (maximaal %1$d tekens).</string>
-    <string name="command_palette_template_title">Dynamische sjabloon</string>
+    <string name="command_palette_template_title">Dynamisch sjabloon</string>
     <string name="command_palette_template_help">Vouw {clipboard}, {selection}, {uuid} en één {cursor} uit. Gebruik {{ en }} voor letterlijke accolades. Bestaande tekstacties blijven letterlijk.</string>
     <string name="dynamic_action_unavailable">Actie niet beschikbaar in deze editor of dit paneel</string>
-    <string name="dynamic_template_invalid">Ongeldige sjabloon: controleer tokens, accolades en cursormarkeringen.</string>
+    <string name="dynamic_template_invalid">Ongeldig sjabloon: controleer tokens, accolades en cursormarkeringen.</string>
     <string name="continuous_swipe_title">Continu vegen</string>
     <string name="continuous_swipe_desc">Houd tussen woorden kort het midden van de spatiebalk vast zonder op te tillen. Een snelle oversteek behoudt één woord.</string>
     <string name="continuous_swipe_stopped">Continu vegen gestopt; controleer de tekst voordat je doorgaat.</string>
@@ -2669,7 +2669,7 @@
     <string name="theme_bar_centre">Beste woord in het midden</string>
     <string name="theme_bar_quote_typed">Getypt woord tussen aanhalingstekens</string>
     <string name="theme_bar_emphasis_commit">Wachtende correctie vet</string>
-    <string name="theme_bar_emphasis_centre">Zijwoorden gedimd</string>
+    <string name="theme_bar_emphasis_centre">Buitenste woorden gedimd</string>
     <string name="theme_bar_separators">Scheidingslijnen tussen suggesties</string>
     <string name="theme_bar_separators_show">Tonen</string>
     <string name="theme_bar_separators_hide">Verbergen</string>

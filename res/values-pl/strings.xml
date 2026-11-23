@@ -306,7 +306,7 @@
     <string name="theme_trail_label">Ślad</string>
     <string name="theme_name_label">Nazwa motywu</string>
     <string name="theme_section_preview">Podgląd</string>
-    <string name="theme_keyboard_preview_desc">Podgląd klawiatury tylko do odczytu w edytowanych kolorach: aktywny Shift, zablokowany klawisz modyfikujący, przykładowe podpowiedzi i przykładowy ślad przesunięcia</string>
+    <string name="theme_keyboard_preview_desc">Podgląd klawiatury tylko do odczytu w edytowanych kolorach: aktywny Shift, zablokowany klawisz modyfikujący, przykładowe podpowiedzi i przykładowy ślad gestu</string>
     <string name="theme_preview_sample_words">kolor,kolory,kolorowy</string>
     <string name="theme_section_key_colors">Kolory klawiszy</string>
     <string name="theme_section_label_colors">Kolory etykiet</string>
@@ -435,7 +435,7 @@
     <string name="appearance_look_motion_twinkle_title">Migotanie</string>
     <string name="appearance_look_motion_twinkle_desc">Jak mocno migoczą gwiazdy, deszcz i inne cząstki</string>
     <string name="appearance_look_motion_resume_title">Pauza podczas pisania</string>
-    <string name="appearance_look_motion_resume_desc">Jak długo scena stoi po ostatnim naciśnięciu klawisza lub przesunięciu</string>
+    <string name="appearance_look_motion_resume_desc">Jak długo scena pozostaje nieruchoma po ostatnim naciśnięciu klawisza lub geście</string>
     <string name="appearance_look_motion_resume_none">Bez pauzy</string>
     <string name="appearance_look_motion_seconds">%1$s s</string>
     <string name="appearance_look_motion_idle_title">Ruch przez</string>
@@ -515,7 +515,7 @@
     <string name="clipboard_reorder_unavailable">Wyczyść wyszukiwanie i filtry, aby zmienić kolejność</string>
     <string name="clipboard_reorder_moved">Przeniesiono na pozycję %1$d z %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Prywatne kopiowanie w innych aplikacjach</string>
-    <string name="clipboard_private_copy_other_apps_desc">Dodaj \"Prywatna kopia\" do menu zaznaczania tekstu w innych aplikacjach. Kopiuje zaznaczony tekst tylko do CleverKeys — nigdy do systemowego schowka. Włączenie dodaje wpis aplikacji widoczny dla innych aplikacji.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Dodaj „Kopiowanie prywatne” do menu zaznaczania tekstu w innych aplikacjach. Kopiuje zaznaczony tekst tylko do CleverKeys — nigdy do schowka systemowego. Włączenie dodaje wpis aplikacji widoczny dla innych aplikacji.</string>
     <string name="clipboard_sanitize_links_title">Usuń parametry śledzenia</string>
     <string name="clipboard_sanitize_links_desc">Usuń utm_*, fbclid itp. z kopiowanych adresów URL. Obsługiwane przez ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Czyść też systemowy schowek</string>
@@ -529,7 +529,7 @@
     <string name="gesture_min_distance_title">Minimalna odległość</string>
     <string name="gesture_min_distance_desc" formatted="false">Minimalna odległość gestu do aktywacji (% przekątnej klawisza)</string>
     <string name="gesture_max_distance_title">Maksymalna odległość</string>
-    <string name="gesture_max_distance_desc" formatted="false">Granica krótki/długi (% przekątnej klawisza): poniżej lub równo = krótki gest, powyżej = słowo wpisane gestem. Niskie wartości zamieniają lekkie przesunięcia w słowa; wysokie wymagają dłuższych gestów przed rozpoczęciem pisania słów.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Granica krótki/długi (% przekątnej klawisza): poniżej lub równo = krótki gest, powyżej = słowo wpisane gestem. Niskie wartości zamieniają nieco za długie krótkie gesty w słowa; wysokie wymagają dłuższych gestów przed rozpoczęciem pisania słów.</string>
     <string name="gesture_short_swipes_only_title">Tylko krótkie gesty</string>
     <string name="gesture_short_swipes_only_desc">Każdy gest o długości co najmniej minimalnej odległości wpisuje podklawisz w swoim kierunku, niezależnie od długości; gest w kierunku bez podklawisza nic nie wpisuje. Pisanie gestem jest wyłączone, dopóki ta opcja jest włączona. Wymaga krótkich gestów.</string>
     <string name="swipe_enable_desc_short_swipes_only">Wyłączone, dopóki włączona jest opcja Tylko krótkie gesty (Dostrajanie gestów).</string>
@@ -553,7 +553,7 @@
     <string name="gesture_sensitivity_preset_title">Preset czułości</string>
     <string name="gesture_sensitivity_preset_desc">Szybkie presety rozpoznawania gestów. Własny wyświetla się, gdy wartości różnią się od presetów.</string>
     <string name="gesture_min_swipe_distance_title">Minimalna odległość gestu</string>
-    <string name="gesture_min_swipe_distance_desc">Minimalna długość śladu (px), zanim gest może być zakwalifikowany jako słowo wpisane gestem. Niższy pomaga rejestrować bardzo krótkie słowa; zwiększ, jeśli przypadkowe dotknięcia fałszywie aktywują słowa.</string>
+    <string name="gesture_min_swipe_distance_desc">Minimalna długość śladu (px), zanim gest może być zakwalifikowany jako słowo wpisane gestem. Niższa pomaga rejestrować bardzo krótkie słowa; zwiększ, jeśli przypadkowe dotknięcia fałszywie aktywują słowa. (O tym, czy gest jest krótki czy długi, decyduje Maksymalna odległość powyżej.)</string>
     <string name="gesture_min_key_distance_title">Minimalna odległość klawiszy</string>
     <string name="gesture_min_key_distance_desc">Odległość między klawiszami podczas gestu (px). Niższy rejestruje więcej klawiszy, ale może dodawać szum.</string>
     <string name="gesture_min_key_dwell_title">Minimalny czas przebywania na klawiszu</string>
@@ -596,11 +596,11 @@
     <string name="input_frequency_scale_title">Skala częstotliwości</string>
     <string name="input_frequency_scale_desc">Balans między popularnymi a rzadkimi słowami (100–5000)</string>
     <string name="input_capitalize_i_title">Wielka litera w słowach z „I”</string>
-    <string name="input_capitalize_i_desc">Automatycznie używaj wielkich liter dla „I” i skrótów (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_desc">Automatycznie używaj wielkich liter dla „I” i form ściągniętych (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Inteligentna interpunkcja</string>
     <string name="input_smart_punctuation_desc">Dołącz interpunkcję na końcu słów (usuwa spację przed . , ! ? itp.)</string>
     <string name="input_space_before_opening_punctuation_title">Spacja przed otwierającą interpunkcją</string>
-    <string name="input_space_before_opening_punctuation_desc">Po słowie wpisanym przesunięciem wstawia spację przed ( \" \' $ @ i podobnymi; znaki zamykające nadal dołączają do słowa</string>
+    <string name="input_space_before_opening_punctuation_desc">Po słowie wpisanym gestem wstawia spację przed ( \" \' $ @ i podobnymi; znaki zamykające nadal dołączają do słowa</string>
     <string name="input_swipe_distance_threshold_title">Próg odległości gestu</string>
     <string name="input_swipe_distance_threshold_desc">Odległość (jednostki skalowane urządzenia) do aktywacji suwaka/podklawiszy w trakcie gestu (np. suwak kursora na spacji). Ogranicza też minimum krótkiego gestu na szerokich klawiszach jak Backspace.</string>
     <string name="input_circle_gesture_title">Czułość gestu koła</string>
@@ -699,7 +699,7 @@
     <string name="privacy_on_device_learning_desc">Buduje bezpośrednio na urządzeniu prywatne modele zwrotów i użycia słów na podstawie wpisywanego tekstu. Wyłączenie zatrzymuje całe automatyczne rejestrowanie zachowań podczas pisania — gdy opcja jest wyłączona, nic nowego nie jest zapisywane. Dane tworzone celowo są osobne: statystyki skuteczności przewidywań oraz dane wyuczone przywrócone z kopii zapasowej.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Dodano, ale słowo jest za długie do gestu</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d krok.</item><item quantity="few">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroki.</item><item quantity="many">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroków.</item><item quantity="other">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroków.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d krok. Pisanie gestem go nie zaproponuje.</item><item quantity="few">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroki. Pisanie gestem go nie zaproponuje.</item><item quantity="many">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroków. Pisanie gestem go nie zaproponuje.</item><item quantity="other">„%1$s” dodano do pisania dotykiem, ale wymagana liczba kroków CTC to %2$d, a zdekodować może tylko %3$d kroków. Pisanie gestem go nie zaproponuje.</item></plurals>
     <string name="gesture_finger_occlusion_title">Korekta przesunięcia dotyku</string>
     <string name="gesture_finger_occlusion_desc">Przesuwa odczyt gestu względem opuszka palca. Wartość dodatnia dla śladów nad klawiszami, ujemna dla śladów pod nimi. Domyślnie wyłączone.</string>
     <string name="gesture_touch_smoothing_title">Wygładzanie dotyku</string>
@@ -1193,7 +1193,7 @@
     <string name="layout_language_title">Język układu</string>
     <string name="layout_language_follow_multilang">Zgodnie z ustawieniami Wiele języków</string>
     <string name="layout_language_from_xml">%1$s (domyślny dla układu)</string>
-    <string name="layout_language_dialog_desc">Gdy ten układ jest aktywny, wybrany język jest jedynym językiem podpowiedzi, autokorekty i pisania przesuwaniem. „Zgodnie z ustawieniami Wiele języków” zachowuje język główny i pomocniczy.</string>
+    <string name="layout_language_dialog_desc">Gdy ten układ jest aktywny, wybrany język jest jedynym językiem podpowiedzi, autokorekty i pisania gestem. „Zgodnie z ustawieniami Wiele języków” zachowuje język główny i pomocniczy.</string>
     <string name="layout_language_not_installed">Nie zainstalowano słownika dla języka %1$s. Układ działa, ale podpowiedzi i autokorekta pozostaną puste, dopóki nie zaimportujesz jego pakietu językowego.</string>
     <string name="layout_language_xml_invalid">Atrybut language musi być kodem języka, np. fa lub pt_br</string>
     <string name="keyboard_lang_layout_active">Język: %1$s</string>
@@ -1299,7 +1299,7 @@
     <string name="autocorrect_channel_completion_cost_desc">Słowo, którego nie dokończono (tomorr), zostaje tak, jak wpisano, zamiast zmienić się w inne słowo (timor), gdy zaczyna się od niego częste słowo. Niższa wartość zachowuje więcej niedokończonych słów; Wyłączone nie zachowuje żadnych.</string>
     <string name="autocorrect_unfinished_word_mode_title">Niedokończone słowa</string>
     <string name="autocorrect_unfinished_word_mode_desc">Co robi spacja po słowie, którego nie skończono pisać, np. tomorr.</string>
-    <string name="autocorrect_unfinished_word_mode_keep">Zostaw to, co wpisałem</string>
+    <string name="autocorrect_unfinished_word_mode_keep">Zostaw tak, jak wpisano</string>
     <string name="autocorrect_unfinished_word_mode_keep_desc">Spacja zostawia tomorr tak, jak wpisano, zamiast zmieniać je na inne słowo (timor). Pasek nadal proponuje tomorrow.</string>
     <string name="autocorrect_unfinished_word_mode_off_desc">Spacja traktuje tomorr jak każdą literówkę i może zmienić je na inne słowo (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Wyłączone</string>
@@ -2554,8 +2554,8 @@
     <string name="cmd_text_assist_desc">Przetwórz zaznaczony tekst w aplikacji (tłumacz, asystent AI). Jeśli aplikacja zwróci tekst, zastąpi on zaznaczenie</string>
     <string name="cmd_replace_text">Zastąp tekst</string>
     <string name="cmd_replace_text_desc">Zastąp zaznaczony tekst wynikiem z aplikacji (tłumaczenie, przeredagowanie)</string>
-    <string name="cmd_replace_text_menu">Propozycje zamiany (edytor)</string>
-    <string name="cmd_replace_text_menu_desc">Otwórz własne propozycje aplikacji dla słowa przy kursorze: poprawki pisowni i inne kandydaty przesunięcia. Tylko standardowe pola tekstowe Androida; inne aplikacje mogą nic nie zrobić</string>
+    <string name="cmd_replace_text_menu">Podpowiedzi zamiany (edytor)</string>
+    <string name="cmd_replace_text_menu_desc">Otwórz własne podpowiedzi aplikacji dla słowa przy kursorze: poprawki pisowni i inne kandydaty z pisania gestem. Tylko standardowe pola tekstowe Androida; inne aplikacje mogą nic nie zrobić</string>
     <string name="text_assist_menu_removed">Asystent tekstu (menu edytora) nie jest już obsługiwany. Przypisz inne polecenie</string>
     <string name="cmd_show_text_menu">Pokaż menu tekstu</string>
     <string name="cmd_show_text_menu_desc">Zaznacz słowo przy kursorze i pokaż pasek systemowy</string>
@@ -2670,9 +2670,9 @@
     <string name="command_palette_template_help">Rozwiń {clipboard}, {selection}, {uuid} oraz jeden {cursor}. Użyj {{ i }} dla dosłownych nawiasów klamrowych. Istniejące akcje tekstowe pozostaną bez zmian.</string>
     <string name="dynamic_action_unavailable">Akcja niedostępna w tym edytorze lub panelu</string>
     <string name="dynamic_template_invalid">Nieprawidłowy szablon: sprawdź tokeny, nawiasy klamrowe i znaczniki kursora.</string>
-    <string name="continuous_swipe_title">Ciągłe przeciąganie</string>
-    <string name="continuous_swipe_desc">Pomiędzy słowami przytrzymaj krótko środek spacji bez unoszenia palca. Szybkie przesunięcie zachowuje jedno słowo.</string>
-    <string name="continuous_swipe_stopped">Ciągłe przeciąganie zatrzymane; sprawdź tekst przed kontynuowaniem.</string>
+    <string name="continuous_swipe_title">Ciągły gest</string>
+    <string name="continuous_swipe_desc">Pomiędzy słowami przytrzymaj krótko środek spacji bez unoszenia palca. Szybkie przejście przez spację zachowuje jedno słowo.</string>
+    <string name="continuous_swipe_stopped">Ciągły gest zatrzymany; sprawdź tekst przed kontynuowaniem.</string>
     <string name="cmd_append_possessive">Dołącz \'s</string>
     <string name="cmd_append_possessive_desc">Dołącz \'s do ostatniego zweryfikowanego słowa; jedno naciśnięcie Backspace usuwa tylko sufiks</string>
     <string name="cmd_append_apostrophe">Dołącz apostrof</string>

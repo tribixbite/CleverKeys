@@ -185,7 +185,7 @@
     <string name="dict_legacy_freq_review">Zkontrolovat</string>
     <string name="dict_legacy_freq_dismiss">Skrýt</string>
     <string name="dict_legacy_freq_dialog_title">Zvýšit staré výchozí četnosti?</string>
-    <string name="dict_legacy_freq_dialog_message">Slova přidaná ve starších verzích byla uložena s četností %1$d, a proto se hůře píší tahem. Zvýšit změní jen slova níže, na %2$d; jejich priorita psaní tahem zůstane stejná. Pokud jste některé z nich nastavili na %1$d záměrně, můžete ho znovu snížit pomocí Upravit.</string>
+    <string name="dict_legacy_freq_dialog_message">Slova přidaná ve starších verzích byla uložena s četností %1$d, a proto se hůře píší tahem. Zvýšit změní jen slova níže, na %2$d; jejich priorita psaní tahem zůstane stejná. Pokud jste některé z nich nastavili na %1$d záměrně, můžete je znovu snížit pomocí Upravit.</string>
     <string name="dict_legacy_freq_raise">Zvýšit</string>
     <string name="dict_legacy_freq_not_now">Teď ne</string>
     <plurals name="dict_legacy_freq_raised">
@@ -689,7 +689,7 @@
     <string name="privacy_on_device_learning_desc">Vytváří přímo v zařízení soukromé modely spojení a používání slov z toho, co píšete. Vypnutím se zastaví veškeré automatické zaznamenávání chování při psaní — dokud je volba vypnutá, nic nového se neukládá. Data, která vytvoříte výslovně, jsou oddělená: statistiky výkonu předpovědí a naučená data obnovená ze zálohy.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Přidáno, ale pro tah je slovo příliš dlouhé</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a zvládne jen %3$d krok.</item><item quantity="few">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a zvládne jen %3$d kroky.</item><item quantity="many">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a zvládne jen %3$d kroku.</item><item quantity="other">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a zvládne jen %3$d kroků.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a dokáže dekódovat jen %3$d krok. Při psaní tahem se nebude nabízet.</item><item quantity="few">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a dokáže dekódovat jen %3$d kroky. Při psaní tahem se nebude nabízet.</item><item quantity="many">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a dokáže dekódovat jen %3$d kroku. Při psaní tahem se nebude nabízet.</item><item quantity="other">„%1$s“ bylo přidáno pro psaní klepáním, ale CTC potřebuje %2$d kroků a dokáže dekódovat jen %3$d kroků. Při psaní tahem se nebude nabízet.</item></plurals>
     <string name="gesture_finger_occlusion_title">Oprava posunu dotyku</string>
     <string name="gesture_finger_occlusion_desc">Posune čtení tahu vůči špičce prstu. Kladná hodnota pro tahy nad klávesami, záporná pro tahy pod nimi. Ve výchozím stavu vypnuto.</string>
     <string name="gesture_touch_smoothing_title">Vyhlazení dotyku</string>
@@ -781,7 +781,7 @@
     <string name="learning_data_word_row">"%1$s  (%2$d×)"</string>
     <string name="learning_data_search_words_hint">Hledat naučená slova…</string>
     <string name="learning_data_search_phrases_hint">Hledat naučené fráze…</string>
-    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d fráze</item><item quantity="few">%1$d fráze</item><item quantity="many">%1$d frází</item><item quantity="other">%1$d frází</item></plurals>
+    <plurals name="learning_data_phrase_count"><item quantity="one">%1$d fráze</item><item quantity="few">%1$d fráze</item><item quantity="many">%1$d fráze</item><item quantity="other">%1$d frází</item></plurals>
     <string name="learning_data_filtered_count">%1$d z %2$d</string>
     <string name="learning_data_no_matches">Žádné shody.</string>
     <string name="backup_password_title">Heslo zálohy</string>
@@ -929,7 +929,7 @@
     <string name="subkey_slot_nothing">Nic</string>
     <string name="subkey_slot_replaces">Nahrazuje %1$s</string>
     <string name="subkey_dialog_subkeys_header">Podklávesy</string>
-    <string name="subkey_dialog_layout_hint">Podklávesy rozložení %1$s a vlastní krátká tažení. Klepnutím na směr jej lze změnit.</string>
+    <string name="subkey_dialog_layout_hint">Podklávesy rozložení %1$s a vlastní krátké tahy. Klepnutím na směr jej lze změnit.</string>
     <string name="subkey_edit_layout_source">Podklávesa rozložení %1$s.</string>
     <string name="subkey_layout_copy_title">Změnit podklávesu rozložení?</string>
     <string name="subkey_layout_copy_body">Tuto podklávesu definuje rozložení %1$s. Vestavěné rozložení zůstane beze změny: změna se uloží do kopie %2$s, která ho nahradí v seznamu rozložení. Ve Správci rozložení lze přepnout zpět na původní.</string>
@@ -939,7 +939,7 @@
     <string name="subkey_layout_toast_copied">Vytvořeno: %1$s</string>
     <string name="subkey_layout_toast_saved">Uloženo v %1$s</string>
     <string name="subkey_layout_toast_failed">Rozložení nebylo změněno: %1$s</string>
-    <string name="subkey_layout_toast_not_layout">Tato akce nemůže být součástí rozložení, proto byla uložena jako vlastní krátké tažení.</string>
+    <string name="subkey_layout_toast_not_layout">Tato akce nemůže být součástí rozložení, proto byla uložena jako vlastní krátký tah.</string>
     <string name="layout_manager_badge_modified_copy">Upravená kopie %1$s</string>
     <string name="layout_manager_revert">Vrátit původní</string>
     <string name="layout_manager_revert_title">Vrátit původní rozložení?</string>
@@ -1293,7 +1293,7 @@
     <string name="autocorrect_unfinished_word_mode_keep_desc">Mezerník ponechá tomorr tak, jak bylo napsáno, místo aby ho změnil na jiné slovo (timor). Lišta dál nabízí tomorrow.</string>
     <string name="autocorrect_unfinished_word_mode_off_desc">Mezerník považuje tomorr za běžný překlep a může ho změnit na jiné slovo (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Vypnuto</string>
-    <string name="autocorrect_short_deletion_scope_title">Cena smazání platí pro</string>
+    <string name="autocorrect_short_deletion_scope_title">Cena smazání na krátké slovo platí pro</string>
     <string name="autocorrect_short_deletion_scope_desc">Hebrejské jednopísmenné předpony ji tam činí užitečnou; v angličtině je písmeno navíc u dvoupísmenného slova (tpo → to) skutečný překlep, proto je pro ostatní písma ve výchozím stavu vypnutá.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">Jen hebrejské písmo</string>
     <string name="autocorrect_short_deletion_scope_all">Všechny jazyky</string>
@@ -1698,7 +1698,7 @@
     <string name="layout_manager_xml_empty_error">XML rozložení nesmí být prázdné</string>
     <string name="layout_manager_import_failed">Soubor rozložení se nepodařilo importovat:\n%1$s</string>
     <string name="layout_manager_export_failed">Soubor rozložení se nepodařilo exportovat:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Některá krátká přejetí nejsou v souboru: rozložení jejich akci neumí uložit (například vložení připnutého výstřižku). Na tomto zařízení fungují dál.</string>
+    <string name="layout_manager_export_not_written">Některé krátké tahy nejsou v souboru: rozložení jejich akci neumí uložit (například vložení připnutého výstřižku). Na tomto zařízení fungují dál.</string>
     <string name="extra_keys_group_layout_switching">Přepínání rozložení</string>
     <string name="extra_keys_group_system">Systém</string>
     <string name="extra_keys_group_navigation">Navigace</string>
@@ -1905,8 +1905,8 @@
     <string name="theme_predefined_modern_aurora">Polární záře</string>
     <string name="theme_predefined_modern_aurora_desc">Chladné modré a zelené inspirované polární září</string>
     <string name="theme_category_gemstone">Drahokamy</string>
-    <string name="theme_category_neon">Neon</string>
-    <string name="theme_category_pastel">Pastel</string>
+    <string name="theme_category_neon">Neonové</string>
+    <string name="theme_category_pastel">Pastelové</string>
     <string name="theme_category_nature">Příroda</string>
     <string name="theme_category_utilitarian">Praktické</string>
     <string name="theme_category_modern">Moderní</string>
@@ -2605,7 +2605,7 @@
     <string name="clipboard_delete_selected">Smazat vybrané</string>
     <string name="clipboard_selection_exit">Ukončit výběr</string>
     <string name="clipboard_select_entry_descr">Vybrat výstřižek: %1$s</string>
-    <string name="clipboard_entry_preview_truncated">Zobrazeno prvních %1$s z %2$s znaků. Vložení a kopírování použije celý výstřižek; editor jej otevře po stranách.</string>
+    <string name="clipboard_entry_preview_truncated">Zobrazeno prvních %1$s z %2$s znaků. Vložení a kopírování použije celý výstřižek; editor jej otevře po jednotlivých stránkách.</string>
     <string name="clipboard_edit_page">Strana %1$d z %2$d</string>
     <string name="clipboard_edit_page_previous">Předchozí strana</string>
     <string name="clipboard_edit_page_next">Další strana</string>

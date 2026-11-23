@@ -1,7 +1,7 @@
 ﻿english,your_translation,hint,where,notes,section,key,code
 %1$d fps,,,Settings › Appearance section,keep %1$d (number); order may change,Familiar looks and Theme Creator,appearance_look_motion_fps_value,AppearanceSection.kt:441 AppearanceSection()
-Neon,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_neon,PredefinedThemes.kt:30 ThemeCategory()
-Pastel,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_pastel,PredefinedThemes.kt:31 ThemeCategory()
+Neon,Neonové,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_neon,PredefinedThemes.kt:30 ThemeCategory()
+Pastel,Pastelové,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_pastel,PredefinedThemes.kt:31 ThemeCategory()
 > Max,,,Short Swipe Calibration screen,,Short-swipe customization and calibration,calibration_legend_long_range,ShortSwipeCalibrationActivity.kt:275 TutorialSection()
 < Min,,,Short Swipe Calibration screen,,Short-swipe customization and calibration,calibration_legend_tap_range,ShortSwipeCalibrationActivity.kt:267 TutorialSection()
 Intent: %1$s,,,Short Swipe Customization screen,keep %1$s (text); order may change,Short-swipe customization and calibration,short_swipe_action_desc_intent,ShortSwipeCustomizationActivity.kt:920

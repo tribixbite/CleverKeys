@@ -158,7 +158,7 @@
     <string name="suggestion_prefer_when_swiping">Preferir \'%1$s\' ao deslizar?</string>
     <string name="suggestion_prefer_when_swiping_decline">Não perguntar</string>
     <string name="suggestion_prefer_when_swiping_added">Deslizar agora prefere \'%1$s\'</string>
-    <string name="suggestion_prefer_when_swiping_raised">Deslizar agora prefere fortemente \'%1$s\'</string>
+    <string name="suggestion_prefer_when_swiping_raised">Deslizar agora prefere fortemente “%1$s”</string>
     <string name="suggestion_added_to_dictionary">\'%1$s\' adicionada ao dicionário</string>
     <string name="suggestion_tap_again_to_undo">Toque novamente para desfazer</string>
     <string name="suggestion_removed_from_dictionary">\'%1$s\' removida do dicionário</string>
@@ -173,7 +173,7 @@
     <string name="dict_swipe_priority_normal">Normal</string>
     <string name="dict_swipe_priority_high">Alta</string>
     <string name="dict_swipe_priority_highest">Máxima</string>
-    <string name="dict_swipe_priority_help">A frequência (1-255) ordena a sua palavra em relação ao dicionário; 255 já é o máximo. A prioridade ao deslizar acrescenta uma vantagem fixa a uma palavra que continua a perder quando desliza: Alta é moderada, Máxima é forte. Uma palavra com prioridade também ganha alguns deslizes de palavras parecidas (por exemplo, \'ad\' em vez de \'as\'). As sugestões ao digitar não mudam.</string>
+    <string name="dict_swipe_priority_help">A frequência (1–255) ordena a sua palavra em relação ao dicionário; 255 já é o máximo. A prioridade ao deslizar acrescenta uma vantagem fixa a uma palavra que continua perdendo quando você a desliza: Alta é moderada, Máxima é forte. Uma palavra com prioridade também ganha alguns deslizes de palavras parecidas (por exemplo, “ad” em vez de “as”). As sugestões ao digitar não mudam.</string>
     <string name="dict_word_frequency_swipe_priority">Frequência: %1$d · Prioridade ao deslizar: %2$s</string>
     <string name="dict_swipe_priority_frequency_raised">Frequência aumentada para %1$d: uma frequência menor anularia parte da prioridade ao deslizar.</string>
     <plurals name="dict_legacy_freq_notice">
@@ -587,7 +587,7 @@
     <string name="input_smart_punctuation_title">Pontuação inteligente</string>
     <string name="input_smart_punctuation_desc">Anexar pontuação ao final das palavras (remove espaço antes de . , ! ? etc.)</string>
     <string name="input_space_before_opening_punctuation_title">Espaço antes da pontuação de abertura</string>
-    <string name="input_space_before_opening_punctuation_desc">Depois de uma palavra deslizada, coloca um espaço antes de ( \" \' $ @ e semelhantes; os sinais de fecho continuam colados</string>
+    <string name="input_space_before_opening_punctuation_desc">Depois de uma palavra deslizada, coloca um espaço antes de ( \" \' $ @ e semelhantes; os sinais de fechamento continuam colados</string>
     <string name="input_swipe_distance_threshold_title">Limiar de distância de deslize</string>
     <string name="input_swipe_distance_threshold_desc">Distância (unidades dimensionadas pelo dispositivo) para ativar controle deslizante/subteclas de evento durante o deslize (ex.: controle deslizante do cursor da barra de espaço). Também limita o mínimo de deslize curto em teclas largas como Backspace para manter os flicks fáceis.</string>
     <string name="input_circle_gesture_title">Sensibilidade do gesto circular</string>
@@ -687,7 +687,7 @@
     <string name="privacy_on_device_learning_desc">Criar no dispositivo modelos privados de frases e de uso de palavras a partir do que você digita. Desative para interromper todo o registo automático do comportamento de digitação — nada de novo é armazenado enquanto estiver desativado. Os dados que você cria explicitamente são separados: as estatísticas de desempenho das previsões e os dados aprendidos restaurados de uma cópia de segurança.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Adicionada, mas demasiado longa para deslizar</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passo.</item><item quantity="many">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item><item quantity="other">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue descodificar %3$d passos.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue decodificar %3$d passo. A digitação por deslize não a oferecerá.</item><item quantity="many">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue decodificar %3$d passos. A digitação por deslize não a oferecerá.</item><item quantity="other">\"%1$s\" foi adicionada para digitação por toque, mas o CTC precisa de %2$d passos e só consegue decodificar %3$d passos. A digitação por deslize não a oferecerá.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correção do desvio do toque</string>
     <string name="gesture_finger_occlusion_desc">Desloca a leitura do gesto em relação à ponta do dedo. Use positivo se os gestos ficam acima das teclas e negativo se ficam abaixo. Desativado por predefinição.</string>
     <string name="gesture_touch_smoothing_title">Suavização do toque</string>
@@ -894,7 +894,7 @@
     <string name="licenses_intro">O CleverKeys é software livre sob a GNU General Public License v3.0. Inclui os componentes e dados de terceiros listados abaixo; após os avisos segue o texto completo de cada licença que utilizam.</string>
     <string name="licenses_notices_header">Avisos</string>
     <string name="licenses_texts_header">Textos das licenças</string>
-    <string name="licenses_text_missing">Este texto falta no pacote da aplicação.</string>
+    <string name="licenses_text_missing">Este texto falta no pacote do aplicativo.</string>
     <string name="gesture_section_intro">Ajuste fino do comportamento de toque, deslize e controle deslizante para o seu estilo de digitação.</string>
     <string name="gesture_short_gestures_header">Gestos curtos</string>
     <string name="gesture_open_calibration">📐 Abrir ferramenta de calibração</string>
@@ -930,14 +930,14 @@
     <string name="subkey_dialog_layout_hint">Subteclas de %1$s e deslizes curtos personalizados. Toque numa direção para alterá-la.</string>
     <string name="subkey_edit_layout_source">Uma subtecla de %1$s.</string>
     <string name="subkey_layout_copy_title">Alterar uma subtecla do layout?</string>
-    <string name="subkey_layout_copy_body">%1$s define esta subtecla. O layout integrado não muda: a alteração é guardada numa cópia, %2$s, que o substitui na lista de layouts. O Gestor de layouts permite voltar ao original.</string>
+    <string name="subkey_layout_copy_body">%1$s define esta subtecla. O layout integrado não muda: a alteração é salva em uma cópia, %2$s, que o substitui na lista de layouts. O Gerenciador de layout permite voltar ao original.</string>
     <string name="subkey_layout_copy_confirm">Criar cópia</string>
     <string name="subkey_layout_copy_global">Alterar em todos os layouts</string>
     <string name="subkey_layout_copy_name">%1$s (modificado)</string>
     <string name="subkey_layout_toast_copied">%1$s criado</string>
-    <string name="subkey_layout_toast_saved">Guardado em %1$s</string>
+    <string name="subkey_layout_toast_saved">Salvo em %1$s</string>
     <string name="subkey_layout_toast_failed">O layout não foi alterado: %1$s</string>
-    <string name="subkey_layout_toast_not_layout">Esta ação não pode fazer parte de um layout, por isso foi guardada como deslize curto personalizado.</string>
+    <string name="subkey_layout_toast_not_layout">Esta ação não pode fazer parte de um layout, por isso foi salva como deslize curto personalizado.</string>
     <string name="layout_manager_badge_modified_copy">Cópia modificada de %1$s</string>
     <string name="layout_manager_revert">Voltar ao original</string>
     <string name="layout_manager_revert_title">Voltar ao layout original?</string>
@@ -1226,7 +1226,7 @@
     <string name="settings_faq_emoji_q">Como acesso os emojis?</string>
     <string name="settings_faq_emoji_a">Deslize para o SUDOESTE na tecla Fn para abrir o seletor de emojis. A pesquisa é preenchida automaticamente com o texto próximo. O seletor inclui categorias, recentes, pesquisa e 119 emoticons de texto (kaomoji). Você pode pesquisar por palavra-chave ou pelo nome do emoji.</string>
     <string name="settings_faq_clipboard_q">Como uso a área de transferência?</string>
-    <string name="settings_faq_clipboard_a">Deslize para o SUDOESTE na tecla Ctrl para abrir o histórico da área de transferência. O painel tem as abas Histórico, Fixados e Tarefas. Toque no conteúdo de um item para expandi-lo; use os botões de ícone para colar, mover para fixados ou copiar como tarefa. Observação: copiar de novo um texto que já está no histórico não o duplica nem o reordena (dica: use a pesquisa). Clipes de gerenciadores de senhas e os marcados como “sensíveis” ficam de fora por padrão.</string>
+    <string name="settings_faq_clipboard_a">Deslize para o SUDOESTE na tecla Ctrl para abrir o histórico da área de transferência. O painel tem as abas Histórico, Fixados e Tarefas. Toque no conteúdo de um item para expandi-lo; use os botões de ícone para colar, mover para fixados ou copiar como tarefa. Observação: copiar de novo um texto que já está no histórico não o duplica nem o reordena (dica: use a pesquisa). Recortes de gerenciadores de senhas e os marcados como “sensíveis” ficam de fora por padrão.</string>
     <string name="settings_faq_swipe_typing_q">Como funciona a digitação por deslize?</string>
     <string name="settings_faq_swipe_typing_a">Toque na primeira letra da palavra, deslize o dedo por cada letra sem levantá-lo e solte na última letra. Deslizar mais rápido pode dar resultados melhores. Para escolher o decodificador, acesse Configurações → Digitação por deslize → Motor de previsão: CTC para os idiomas e layouts que ele suporta, ou Geométrico, que funciona com qualquer layout.</string>
     <string name="settings_faq_other_languages_q">Posso digitar por deslize em outros idiomas?</string>
@@ -1287,7 +1287,7 @@
     <string name="autocorrect_unfinished_word_mode_title">Palavras inacabadas</string>
     <string name="autocorrect_unfinished_word_mode_desc">O que a barra de espaço faz depois de uma palavra que não terminou de digitar, como tomorr.</string>
     <string name="autocorrect_unfinished_word_mode_keep">Manter o que digitei</string>
-    <string name="autocorrect_unfinished_word_mode_keep_desc">A barra de espaço deixa tomorr como foi digitado em vez de o mudar para outra palavra (timor). A barra continua a oferecer tomorrow.</string>
+    <string name="autocorrect_unfinished_word_mode_keep_desc">A barra de espaço deixa tomorr como foi digitado em vez de mudá-lo para outra palavra (timor). A barra continua oferecendo tomorrow.</string>
     <string name="autocorrect_unfinished_word_mode_off_desc">A barra de espaço trata tomorr como qualquer erro de digitação e pode mudá-lo para outra palavra (timor).</string>
     <string name="autocorrect_max_correction_cost_off">Desativado</string>
     <string name="autocorrect_short_deletion_scope_title">O custo de apagar vale para</string>
@@ -1333,7 +1333,7 @@
     <string name="clipboard_url_handling_header">Tratamento de URLs</string>
     <string name="clipboard_custom_rules_browse">Procurar custom.substitutions.json</string>
     <string name="clipboard_custom_rules_replace">Substituir regras personalizadas</string>
-    <string name="clipboard_url_handling_note">Observação: a limpeza ocorre quando o CleverKeys salva um clipe no histórico, então o que você cola a partir do painel do CleverKeys é sempre limpo. Com “Também limpar a área de transferência do sistema” ativado, a área de transferência do sistema Android também é sobrescrita com a URL limpa, de modo que o que você cola em outros aplicativos também fica limpo (na medida do possível — somente enquanto o teclado tem acesso à área de transferência). Com essa opção desativada, os outros aplicativos continuam vendo a URL original.</string>
+    <string name="clipboard_url_handling_note">Observação: a limpeza ocorre quando o CleverKeys salva um recorte no histórico, então o que você cola a partir do painel do CleverKeys é sempre limpo. Com “Também limpar a área de transferência do sistema” ativado, a área de transferência do sistema Android também é sobrescrita com a URL limpa, de modo que o que você cola em outros aplicativos também fica limpo (na medida do possível — somente enquanto o teclado tem acesso à área de transferência). Com essa opção desativada, os outros aplicativos continuam vendo a URL original.</string>
     <string name="input_context_source_both">Integradas + aprendidas</string>
     <string name="input_context_source_learned_only">Somente aprendidas</string>
     <string name="input_context_source_static_only">Somente integradas</string>
@@ -2162,7 +2162,7 @@
     <string name="cmd_theme_previous">Tema anterior</string>
     <string name="cmd_theme_previous_desc">Aplica o tema anterior na ordem do Gerenciador de temas</string>
     <string name="theme_cycle_message">Tema: %1$s</string>
-    <string name="cmd_toggle_scene_motion">Cenas animadas sim/não</string>
+    <string name="cmd_toggle_scene_motion">Cenas animadas lig./desl.</string>
     <string name="cmd_toggle_scene_motion_desc">Ativa ou desativa os fundos de cena em movimento</string>
     <string name="scene_motion_on_message">Cenas animadas ativadas</string>
     <string name="scene_motion_off_message">Cenas animadas desativadas</string>
@@ -2400,7 +2400,7 @@
     <string name="cmd_explorer">Gerenciador de arquivos</string>
     <string name="cmd_explorer_desc">Abrir o gerenciador de arquivos</string>
     <string name="cmd_notification">Notificações</string>
-    <string name="cmd_notification_desc">Abrir a aba de notificações</string>
+    <string name="cmd_notification_desc">Abrir o painel de notificações</string>
     <string name="cmd_selection_mode">Modo de seleção</string>
     <string name="cmd_selection_mode_desc">Ativar ou desativar o modo de seleção de texto</string>
     <string name="cmd_combining_vertical_tilde">Til vertical</string>
@@ -2599,7 +2599,7 @@
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
     <string name="cmd_clear_clipboard">Limpar área de transferência do sistema</string>
-    <string name="cmd_clear_clipboard_desc">Limpa a área de transferência atual do Android; histórico salvo, itens fixados e itens To-do são mantidos.</string>
+    <string name="cmd_clear_clipboard_desc">Limpa a área de transferência atual do Android; histórico salvo, itens fixados e tarefas são mantidos.</string>
     <string name="system_clipboard_cleared">Área de transferência do sistema limpa</string>
     <string name="system_clipboard_clear_failed">Não foi possível limpar a área de transferência do sistema</string>
 
@@ -2637,7 +2637,7 @@
     <string name="layout_key_geometry_title">Espaçamento e bordas das teclas</string>
     <string name="layout_key_geometry_global">Configurações globais</string>
     <string name="layout_key_geometry_custom">Este layout</string>
-    <string name="layout_key_geometry_desc">Enquanto este layout estiver ativo, os valores definidos aqui substituem as configurações de Aparência e o espaçamento de um estilo familiar. As próprias configurações de Aparência não mudam.</string>
+    <string name="layout_key_geometry_desc">Enquanto este layout estiver ativo, os valores definidos aqui substituem as configurações de Aparência e o espaçamento de um visual conhecido. As próprias configurações de Aparência não mudam.</string>
     <string name="layout_key_geometry_use_global">Usar a configuração global</string>
     <string name="layout_key_geometry_xml_invalid">Atributo de espaçamento ou borda das teclas inválido: %1$s</string>
     <string name="import_preview_layout_geometry_change">%1$s: espaçamento e bordas das teclas %2$s → %3$s</string>
@@ -2645,15 +2645,15 @@
     <!-- Layouts that style themselves: embedded <theme>, save as custom theme, Theme Creator "Keyboard look" (2026-10-28) -->
     <string name="layout_theme_own">Tema próprio do layout</string>
     <string name="layout_theme_own_desc">O tema no XML deste layout; o que não define segue %1$s</string>
-    <string name="layout_theme_save_custom">Guardar tema como tema personalizado</string>
-    <string name="layout_theme_saved_custom">Guardado como tema personalizado «%1$s»</string>
-    <string name="layout_theme_save_full">Não foi possível guardar: atingido o limite de %1$d temas personalizados</string>
+    <string name="layout_theme_save_custom">Salvar tema como tema personalizado</string>
+    <string name="layout_theme_saved_custom">Salvo como tema personalizado “%1$s”</string>
+    <string name="layout_theme_save_full">Não foi possível salvar: o limite de %1$d temas personalizados foi atingido</string>
     <string name="layout_style_xml_invalid">Valores de tema ou de estilo de tecla inválidos: %1$s</string>
     <string name="layout_manager_export_include_theme">Incluir no arquivo o tema personalizado do layout</string>
     <string name="theme_export_xml">Exportar como XML de layout</string>
     <string name="theme_export_xml_failed">Não foi possível exportar o arquivo do tema:\n%1$s</string>
     <string name="theme_section_look">Aspecto do teclado</string>
-    <string name="theme_section_look_desc">Opcional: formas das teclas, dicas e cores adicionais. O que não for definido segue as definições do teclado.</string>
+    <string name="theme_section_look_desc">Opcional: formas das teclas, dicas e cores adicionais. O que não for definido segue as configurações do teclado.</string>
     <string name="theme_section_look_colors">Cores do aspecto</string>
     <string name="theme_section_variants">Modo claro e escuro</string>
     <string name="theme_variants_desc">Cores que substituem as de cima enquanto o sistema estiver nesse modo.</string>
@@ -2661,7 +2661,7 @@
     <string name="theme_mode_dark">Modo escuro</string>
     <string name="theme_color_not_set">Não definido</string>
     <string name="theme_color_clear">Limpar</string>
-    <string name="theme_color_label_pressed">Etiqueta de tecla premida</string>
+    <string name="theme_color_label_pressed">Etiqueta de tecla pressionada</string>
     <string name="theme_color_locked_label">Etiqueta de Caps Lock</string>
     <string name="theme_color_enter_key">Tecla Enter</string>
     <string name="theme_color_enter_label">Etiqueta da tecla Enter</string>
@@ -2677,7 +2677,7 @@
     <string name="theme_color_latched_key">Tecla Shift ativa</string>
     <string name="theme_color_latched_label">Etiqueta da tecla Shift ativa</string>
     <string name="theme_section_shape">Forma das teclas</string>
-    <string name="theme_use_keyboard_setting">Usar a definição do teclado</string>
+    <string name="theme_use_keyboard_setting">Usar a configuração do teclado</string>
     <string name="theme_shape_shadow">Deslocamento da sombra</string>
     <string name="theme_shape_label_scale">Tamanho da etiqueta</string>
     <string name="theme_shape_label_weight">Espessura da etiqueta</string>
@@ -2687,7 +2687,7 @@
     <string name="theme_hints_none">Nenhuma</string>
     <string name="theme_hint_size">Tamanho das dicas</string>
     <string name="theme_hint_weight">Espessura das dicas</string>
-    <string name="theme_section_key_preview">Pré-visualização ao premir</string>
+    <string name="theme_section_key_preview">Pré-visualização ao pressionar</string>
     <string name="theme_preview_none">Nenhuma</string>
     <string name="theme_preview_bubble">Bolha</string>
     <string name="theme_preview_balloon">Balão</string>

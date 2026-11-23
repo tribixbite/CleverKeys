@@ -264,7 +264,7 @@
     <string name="extra_keys_search_hint">Rechercher des touches supplémentaires…</string>
     <string name="extra_keys_info">Les touches sélectionnées apparaîtront sur le clavier en fonction de leurs positions préférées</string>
     <string name="extra_keys_reset">Rétablir les valeurs par défaut</string>
-    <string name="extra_keys_reset_title">Rétablir les touches par défaut ?</string>
+    <string name="extra_keys_reset_title">Rétablir les touches supplémentaires ?</string>
     <string name="extra_keys_reset_message">Chaque touche supplémentaire revient à son réglage par défaut, activée ou désactivée. Touches modifiées : %1$d</string>
     <string name="extra_keys_reset_done">Touches supplémentaires rétablies par défaut</string>
 
@@ -298,7 +298,7 @@
     <string name="theme_trail_label">Traînée</string>
     <string name="theme_name_label">Nom du thème</string>
     <string name="theme_section_preview">Aperçu</string>
-    <string name="theme_keyboard_preview_desc">Aperçu du clavier en lecture seule avec les couleurs modifiées : Maj active, une touche de modification verrouillée, des suggestions et un tracé de glissement d’exemple</string>
+    <string name="theme_keyboard_preview_desc">Aperçu du clavier en lecture seule avec les couleurs modifiées : Maj active, une touche de modification verrouillée, des suggestions et un tracé de glissé d’exemple</string>
     <string name="theme_preview_sample_words">couleur,couleurs,coloré</string>
     <string name="theme_section_key_colors">Couleurs des touches</string>
     <string name="theme_section_label_colors">Couleurs des étiquettes</string>
@@ -413,8 +413,8 @@
     <string name="appearance_key_vertical_margin_desc">Espacement vertical entre les touches</string>
     <string name="appearance_key_horizontal_margin_title">Marge horizontale des touches</string>
     <string name="appearance_key_horizontal_margin_desc">Espacement horizontal entre les touches</string>
-    <string name="appearance_look_show_hints_title">Afficher les indices de gestes sur les apparences familières</string>
-    <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indices d’angle comme ces claviers ; activer pour tous les afficher. Les gestes fonctionnent dans les deux cas.</string>
+    <string name="appearance_look_show_hints_title">Afficher les indications de gestes sur les apparences familières</string>
+    <string name="appearance_look_show_hints_desc">Les apparences style iOS, Gboard, SwiftKey et Samsung masquent les indications d’angle comme ces claviers ; activer pour toutes les afficher. Les gestes fonctionnent dans les deux cas.</string>
     <string name="appearance_look_key_preview_title">Aperçu de la touche</string>
     <string name="appearance_look_key_preview_desc">L’apparence CleverKeys et les apparences style iOS, Gboard, SwiftKey et Samsung affichent le caractère appuyé dans une bulle au-dessus de la touche.</string>
     <string name="appearance_look_space_language_title">Nom de la langue sur la barre d’espace</string>
@@ -428,7 +428,7 @@
     <string name="appearance_look_motion_twinkle_title">Scintillement</string>
     <string name="appearance_look_motion_twinkle_desc">À quel point les étoiles, la pluie et les autres particules scintillent</string>
     <string name="appearance_look_motion_resume_title">Pause pendant la saisie</string>
-    <string name="appearance_look_motion_resume_desc">Durée pendant laquelle une scène reste immobile après la dernière touche ou le dernier glissement</string>
+    <string name="appearance_look_motion_resume_desc">Durée pendant laquelle une scène reste immobile après la dernière touche ou le dernier glissé</string>
     <string name="appearance_look_motion_resume_none">Aucune pause</string>
     <string name="appearance_look_motion_seconds">%1$s s</string>
     <string name="appearance_look_motion_idle_title">Mouvement pendant</string>
@@ -438,7 +438,7 @@
     <string name="appearance_look_motion_fps_scene">Selon la scène</string>
     <string name="appearance_look_motion_fps_value">%1$d i/s</string>
     <string name="appearance_look_scene_overlay_title">Fondu par le matériel d\'affichage</string>
-    <string name="appearance_look_scene_overlay_desc">À partir de 10 images par seconde, le matériel d\'affichage anime l\'aurore au lieu de redessiner le clavier, ce qui économise la batterie ; désactivez si l\'aurore s\'affiche mal</string>
+    <string name="appearance_look_scene_overlay_desc">À partir de 10 images par seconde, le matériel d\'affichage anime l\'aurore au lieu que le clavier la redessine, ce qui économise la batterie ; désactivez si l\'aurore s\'affiche mal</string>
     <string name="appearance_look_scene_crisp_title">Scènes nettes</string>
     <string name="appearance_look_scene_crisp_desc">Dessiner l’aurore, le ruisseau et la neige en pleine résolution : rayons et ondulations plus fins, un peu plus de mémoire</string>
     <string name="appearance_look_scene_true_black_title">Scènes en noir pur</string>
@@ -693,9 +693,9 @@
     <string name="privacy_on_device_learning_desc">Construire sur l\'appareil des modèles privés d\'expressions et d\'usage des mots à partir de ce qui est saisi. Désactiver arrête tout enregistrement automatique du comportement de frappe — rien de nouveau n\'est stocké tant que l\'option est désactivée. Les données créées explicitement restent distinctes : les statistiques de performance des prédictions et les données apprises restaurées depuis une sauvegarde.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Ajouté, mais trop long pour le glissé</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item><item quantity="many">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item><item quantity="other">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d. Le glissé ne le proposera pas.</item><item quantity="many">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d. Le glissé ne le proposera pas.</item><item quantity="other">« %1$s » a été ajouté pour la frappe, mais CTC exige %2$d étapes et ne peut en décoder que %3$d. Le glissé ne le proposera pas.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correction du décalage tactile</string>
-    <string name="gesture_finger_occlusion_desc">Décale la lecture du glissé par rapport au doigt. Valeur positive si les tracés sont trop hauts, négative s\'ils sont trop bas. Désactivé par défaut.</string>
+    <string name="gesture_finger_occlusion_desc">Décale la lecture des glissés par rapport au bout du doigt, en pourcentage d\'une rangée de touches. Valeur positive si vos glissés arrivent au-dessus des touches visées, négative s\'ils arrivent en dessous. Désactivé par défaut.</string>
     <string name="gesture_touch_smoothing_title">Lissage tactile</string>
     <string name="gesture_touch_smoothing_desc">Nombre de points du lissage par moyenne mobile. 1 = tracé brut, 3 = recommandé. S\'applique aux deux moteurs.</string>
     <string name="swipe_engine_fallback_title">Le moteur géométrique sera utilisé</string>
@@ -933,17 +933,17 @@
     <string name="subkey_slot_nothing">Rien</string>
     <string name="subkey_slot_replaces">Remplace %1$s</string>
     <string name="subkey_dialog_subkeys_header">Sous-touches</string>
-    <string name="subkey_dialog_layout_hint">Sous-touches de %1$s et glissements courts personnalisés. Un appui sur une direction permet de la modifier.</string>
+    <string name="subkey_dialog_layout_hint">Sous-touches de %1$s et glissés courts personnalisés. Un appui sur une direction permet de la modifier.</string>
     <string name="subkey_edit_layout_source">Une sous-touche de %1$s.</string>
     <string name="subkey_layout_copy_title">Modifier une sous-touche de la disposition ?</string>
     <string name="subkey_layout_copy_body">%1$s définit cette sous-touche. La disposition intégrée reste inchangée : la modification est enregistrée dans une copie, %2$s, qui la remplace dans la liste des dispositions. Le gestionnaire de dispositions permet de revenir à l’original.</string>
     <string name="subkey_layout_copy_confirm">Créer une copie</string>
-    <string name="subkey_layout_copy_global">Modifier dans toutes</string>
+    <string name="subkey_layout_copy_global">Modifier dans toutes les dispositions</string>
     <string name="subkey_layout_copy_name">%1$s (modifiée)</string>
     <string name="subkey_layout_toast_copied">%1$s créée</string>
     <string name="subkey_layout_toast_saved">Enregistré dans %1$s</string>
     <string name="subkey_layout_toast_failed">La disposition n’a pas été modifiée : %1$s</string>
-    <string name="subkey_layout_toast_not_layout">Cette action ne peut pas faire partie d’une disposition ; elle a été enregistrée comme glissement court personnalisé.</string>
+    <string name="subkey_layout_toast_not_layout">Cette action ne peut pas faire partie d’une disposition ; elle a été enregistrée comme glissé court personnalisé.</string>
     <string name="layout_manager_badge_modified_copy">Copie modifiée de %1$s</string>
     <string name="layout_manager_revert">Revenir à l’original</string>
     <string name="layout_manager_revert_title">Revenir à la disposition d’origine ?</string>
@@ -1164,7 +1164,7 @@
 
     <!-- 2026-09-29 device finding: confirm before deleting an installed language pack (reviewer=model) -->
     <string name="multilang_pack_delete_title">Supprimer %1$s ?</string>
-    <string name="multilang_pack_delete_body">Le dictionnaire et les fichiers de glissement du pack seront supprimés de cet appareil. Les mots ajoutés et les données apprises sont conservés. Le pack pourra être importé de nouveau plus tard.</string>
+    <string name="multilang_pack_delete_body">Le dictionnaire et les fichiers de glissé du paquet seront supprimés de cet appareil. Les mots ajoutés et les données apprises sont conservés. Le paquet pourra être importé de nouveau plus tard.</string>
 
     <!-- 2026-09-29 hardcoded-UI sweep: shared status strings (reviewer=model). %1$s = the underlying error detail. -->
     <string name="common_file_picker_failed">Impossible d\'ouvrir le sélecteur de fichiers : %1$s</string>
@@ -1191,8 +1191,8 @@
     <string name="layout_language_title">Langue de la disposition</string>
     <string name="layout_language_follow_multilang">Suivre les réglages Multilangue</string>
     <string name="layout_language_from_xml">%1$s (par défaut de la disposition)</string>
-    <string name="layout_language_dialog_desc">Tant que cette disposition est active, la langue choisie est la seule utilisée pour les suggestions, la correction automatique et la saisie par glissement. « Suivre les réglages Multilangue » conserve vos langues principale et secondaire.</string>
-    <string name="layout_language_not_installed">Aucun dictionnaire %1$s n\'est installé. La disposition fonctionne, mais les suggestions et la correction automatique restent vides tant que vous n\'importez pas son pack de langue.</string>
+    <string name="layout_language_dialog_desc">Tant que cette disposition est active, la langue choisie est la seule utilisée pour les suggestions, la correction automatique et la saisie par glissé. « Suivre les réglages Multilangue » conserve vos langues principale et secondaire.</string>
+    <string name="layout_language_not_installed">Aucun dictionnaire %1$s n\'est installé. La disposition fonctionne, mais les suggestions et la correction automatique restent vides tant que vous n\'importez pas son paquet de langue.</string>
     <string name="layout_language_xml_invalid">L\'attribut language doit être un code de langue comme fa ou pt_br</string>
     <string name="keyboard_lang_layout_active">Langue : %1$s</string>
     <string name="keyboard_lang_layout_missing">Langue : %1$s (aucun dictionnaire installé)</string>
@@ -1672,7 +1672,7 @@
     <string name="layout_manager_xml_empty_error">Le XML de la disposition ne peut pas être vide</string>
     <string name="layout_manager_import_failed">Impossible d\'importer le fichier de disposition :\n%1$s</string>
     <string name="layout_manager_export_failed">Impossible d\'exporter le fichier de disposition :\n%1$s</string>
-    <string name="layout_manager_export_not_written">Certains glissements courts ne sont pas dans le fichier : une disposition ne peut pas contenir leur action (comme coller un extrait épinglé). Ils fonctionnent toujours sur cet appareil.</string>
+    <string name="layout_manager_export_not_written">Certains glissés courts ne sont pas dans le fichier : une disposition ne peut pas contenir leur action (comme coller un extrait épinglé). Ils fonctionnent toujours sur cet appareil.</string>
     <string name="extra_keys_group_layout_switching">Changement de disposition</string>
     <string name="extra_keys_group_system">Système</string>
     <string name="extra_keys_group_navigation">Navigation</string>
@@ -1835,7 +1835,7 @@
     <string name="intent_preset_wifi_settings">Paramètres Wi-Fi</string>
     <string name="intent_preset_bluetooth_settings">Paramètres Bluetooth</string>
     <string name="intent_preset_open_camera">Ouvrir l\'appareil photo</string>
-    <string name="intent_preset_open_maps">Ouvrir Plans</string>
+    <string name="intent_preset_open_maps">Ouvrir Maps</string>
     <string name="intent_preset_web_search">Recherche web</string>
     <string name="intent_preset_termux_background">Commande Termux (arrière-plan)</string>
     <string name="intent_preset_termux_visible">Onglet Termux (visible)</string>
@@ -2172,11 +2172,11 @@
     <string name="cmd_theme_previous">Thème précédent</string>
     <string name="cmd_theme_previous_desc">Applique le thème précédent dans l’ordre du gestionnaire de thèmes</string>
     <string name="theme_cycle_message">Thème : %1$s</string>
-    <string name="cmd_toggle_scene_motion">Scènes animées oui/non</string>
+    <string name="cmd_toggle_scene_motion">Activer/désactiver les scènes animées</string>
     <string name="cmd_toggle_scene_motion_desc">Active ou désactive les fonds de scène animés</string>
     <string name="scene_motion_on_message">Scènes animées activées</string>
     <string name="scene_motion_off_message">Scènes animées désactivées</string>
-    <string name="cmd_toggle_true_black">Noir pur oui/non</string>
+    <string name="cmd_toggle_true_black">Activer/désactiver le noir pur</string>
     <string name="cmd_toggle_true_black_desc">Active ou désactive les scènes en noir pur</string>
     <string name="scene_true_black_on_message">Noir pur activé</string>
     <string name="scene_true_black_off_message">Noir pur désactivé</string>
@@ -2510,7 +2510,7 @@
     <string name="cmd_replace_text">Remplacer le texte</string>
     <string name="cmd_replace_text_desc">Remplacer le texte sélectionné par le résultat d\'une application (traduire, reformuler)</string>
     <string name="cmd_replace_text_menu">Suggestions de remplacement (éditeur)</string>
-    <string name="cmd_replace_text_menu_desc">Ouvrir les suggestions de l\'application elle-même pour le mot au curseur : corrections orthographiques et autres candidats du balayage. Champs de texte Android standard uniquement ; d\'autres applications peuvent ne rien faire</string>
+    <string name="cmd_replace_text_menu_desc">Ouvrir les suggestions de l\'application elle-même pour le mot au curseur : corrections orthographiques et autres candidats de la saisie par glissé. Champs de texte Android standard uniquement ; d\'autres applications peuvent ne rien faire</string>
     <string name="text_assist_menu_removed">Assistance texte (menu de l\'éditeur) n\'est plus prise en charge. Attribuez une autre commande</string>
     <string name="cmd_show_text_menu">Afficher le menu texte</string>
     <string name="cmd_show_text_menu_desc">Sélectionner le mot au curseur et afficher la barre système</string>
@@ -2625,9 +2625,9 @@
     <string name="command_palette_template_help">Développez {clipboard}, {selection}, {uuid} et un {cursor}. Utilisez {{ et }} pour les accolades littérales. Les actions de texte existantes restent littérales.</string>
     <string name="dynamic_action_unavailable">Action non disponible dans cet éditeur ou panneau</string>
     <string name="dynamic_template_invalid">Modèle non valide : vérifiez les jetons, les accolades et les marqueurs de curseur.</string>
-    <string name="continuous_swipe_title">Glissement continu</string>
+    <string name="continuous_swipe_title">Glissé continu</string>
     <string name="continuous_swipe_desc">Maintenez brièvement au centre de la barre d\'espace entre les mots sans lever le doigt. Un passage rapide conserve un seul mot.</string>
-    <string name="continuous_swipe_stopped">Glissement continu arrêté ; vérifiez le texte avant de continuer.</string>
+    <string name="continuous_swipe_stopped">Glissé continu arrêté ; vérifiez le texte avant de continuer.</string>
     <string name="cmd_append_possessive">Ajouter \'s</string>
     <string name="cmd_append_possessive_desc">Attacher \'s au dernier mot vérifié ; un retour arrière supprime uniquement le suffixe</string>
     <string name="cmd_append_apostrophe">Ajouter une apostrophe</string>

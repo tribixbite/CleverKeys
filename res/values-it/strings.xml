@@ -471,7 +471,7 @@
     <string name="appearance_look_motion_fps_scene">Come la scena</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Fusione con l\'hardware dello schermo</string>
-    <string name="appearance_look_scene_overlay_desc">Da 10 fotogrammi al secondo in su, l\'hardware dello schermo muove l\'aurora invece di ridisegnare la tastiera, consumando meno batteria; disattiva se l\'aurora appare sbagliata</string>
+    <string name="appearance_look_scene_overlay_desc">Da 10 fotogrammi al secondo in su, l\'hardware dello schermo muove l\'aurora invece di farla ridisegnare alla tastiera, consumando meno batteria; disattiva se l\'aurora appare sbagliata</string>
     <string name="appearance_look_scene_crisp_title">Scene nitide</string>
     <string name="appearance_look_scene_crisp_desc">Disegna l’aurora, il ruscello e la neve a piena risoluzione: raggi e increspature più fini, un po’ più di memoria</string>
     <string name="appearance_look_scene_true_black_title">Scene in nero puro</string>
@@ -626,7 +626,7 @@
     <string name="input_smart_punctuation_title">Punteggiatura intelligente</string>
     <string name="input_smart_punctuation_desc">Attacca la punteggiatura alla fine delle parole (rimuove lo spazio prima di . , ! ? ecc.)</string>
     <string name="input_space_before_opening_punctuation_title">Spazio prima della punteggiatura di apertura</string>
-    <string name="input_space_before_opening_punctuation_desc">Dopo una parola tracciata, inserisce uno spazio prima di ( \" \' $ @ e simili; i segni di chiusura restano attaccati</string>
+    <string name="input_space_before_opening_punctuation_desc">Dopo una parola digitata a scorrimento, inserisce uno spazio prima di ( \" \' $ @ e simili; i segni di chiusura restano attaccati</string>
     <string name="input_swipe_distance_threshold_title">Soglia distanza scorrimento</string>
     <string name="input_swipe_distance_threshold_desc">Distanza (unità ridimensionate per il dispositivo) per attivare cursore/sottotasti evento a metà scorrimento (es. cursore spaziatrice). Limita anche il minimo di scorrimento breve sui tasti larghi come Backspace per mantenere i flick semplici.</string>
     <string name="input_circle_gesture_title">Sensibilità gesto circolare</string>
@@ -726,7 +726,7 @@
     <string name="privacy_on_device_learning_desc">Crea sul dispositivo modelli privati di frasi e di utilizzo delle parole a partire da ciò che digiti. Disattiva per interrompere ogni registrazione automatica del comportamento di digitazione: mentre è disattivato non viene memorizzato nulla di nuovo. I dati che crei esplicitamente restano separati: le statistiche sulle prestazioni delle previsioni e i dati appresi ripristinati da un backup.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Aggiunta, ma troppo lunga per lo scorrimento</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="many">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item><item quantity="other">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d. Lo scorrimento non la proporrà.</item><item quantity="many">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d. Lo scorrimento non la proporrà.</item><item quantity="other">\"%1$s\" è stata aggiunta per la digitazione, ma CTC richiede %2$d passaggi e può decodificarne solo %3$d. Lo scorrimento non la proporrà.</item></plurals>
     <string name="gesture_finger_occlusion_title">Correzione offset tocco</string>
     <string name="gesture_finger_occlusion_desc">Sposta la lettura del gesto rispetto al polpastrello. Positivo se i gesti risultano sopra i tasti, negativo se sotto. Disattivato per impostazione predefinita.</string>
     <string name="gesture_touch_smoothing_title">Smussamento del tocco</string>
@@ -970,7 +970,7 @@
     <string name="subkey_dialog_layout_hint">Sottotasti di %1$s e scorrimenti brevi personalizzati. Tocca una direzione per cambiarla.</string>
     <string name="subkey_edit_layout_source">Un sottotasto di %1$s.</string>
     <string name="subkey_layout_copy_title">Cambiare un sottotasto del layout?</string>
-    <string name="subkey_layout_copy_body">%1$s definisce questo sottotasto. Il layout integrato resta invariato: la modifica viene salvata in una copia, %2$s, che lo sostituisce nell’elenco dei layout. Il Gestore layout permette di tornare all’originale.</string>
+    <string name="subkey_layout_copy_body">%1$s definisce questo sottotasto. Il layout integrato resta invariato: la modifica viene salvata in una copia, %2$s, che lo sostituisce nell’elenco dei layout. Gestione layout permette di tornare all’originale.</string>
     <string name="subkey_layout_copy_confirm">Crea copia</string>
     <string name="subkey_layout_copy_global">Cambia in tutti i layout</string>
     <string name="subkey_layout_copy_name">%1$s (modificato)</string>
@@ -1530,7 +1530,7 @@
     <string name="backup_headless_reason_invalid_input">input non valido</string>
     <string name="backup_headless_reason_see_logcat">vedi logcat</string>
     <string name="backup_headless_result_with_path">%1$s: %2$s</string>
-    <string name="backup_headless_dict_exported">Dizionari esportati: %1$d personalizzate + %2$d disabilitate</string>
+    <string name="backup_headless_dict_exported">Dizionari esportati: %1$d parole personalizzate + %2$d disabilitate</string>
     <string name="backup_headless_dict_export_failed">Esportazione dizionario non riuscita: %1$s</string>
     <string name="backup_headless_dict_import_failed">Importazione dizionario non riuscita: %1$s</string>
     <string name="backup_headless_clipboard_exported">Appunti esportati</string>
@@ -2011,7 +2011,7 @@
     <string name="clipboard_time_just_now">Adesso</string>
     <string name="clipboard_time_yesterday">Ieri</string>
     <string name="clipboard_todo_prefix_done">[fatto]</string>
-    <string name="clipboard_todo_prefix_planned">[piano]</string>
+    <string name="clipboard_todo_prefix_planned">[pianificato]</string>
     <string name="perf_stats_empty">Nessuna statistica ancora disponibile.\nInizia a usare la digitazione a scorrimento per raccogliere dati!</string>
     <string name="perf_stats_header">Statistiche di previsione dello scorrimento</string>
     <string name="perf_stats_usage_heading">Utilizzo:</string>
@@ -2180,9 +2180,9 @@
     <string name="cmd_switch_greekmath">Greco/Matematica</string>
     <string name="cmd_switch_greekmath_desc">Passa ai simboli greci/matematici</string>
     <string name="cmd_change_method">Cambia tastiera</string>
-    <string name="cmd_change_method_desc">Mostra il selettore del metodo di inserimento</string>
+    <string name="cmd_change_method_desc">Mostra il selettore del metodo di immissione</string>
     <string name="cmd_change_method_prev">Tastiera precedente</string>
-    <string name="cmd_change_method_prev_desc">Passa al metodo di inserimento precedente</string>
+    <string name="cmd_change_method_prev_desc">Passa al metodo di immissione precedente</string>
     <string name="cmd_action">Azione</string>
     <string name="cmd_action_desc">Azione dell\'editor (Vai/Cerca/Invia)</string>
     <string name="cmd_capslock">Bloc Maiusc</string>
@@ -2449,10 +2449,10 @@
     <string name="cmd_combining_inverted_breve_desc">Aggiungi la breve rovesciata (◌̑)</string>
     <string name="cmd_combining_pokrytie">Pokrytie</string>
     <string name="cmd_combining_pokrytie_desc">Aggiungi il pokrytie (◌҇)</string>
-    <string name="cmd_combining_slavonic_psili">Psili slavo</string>
-    <string name="cmd_combining_slavonic_psili_desc">Aggiungi lo psili slavo (◌҆)</string>
-    <string name="cmd_combining_slavonic_dasia">Dasia slavo</string>
-    <string name="cmd_combining_slavonic_dasia_desc">Aggiungi il dasia slavo (◌҅)</string>
+    <string name="cmd_combining_slavonic_psili">Psili slava</string>
+    <string name="cmd_combining_slavonic_psili_desc">Aggiungi la psili slava (◌҆)</string>
+    <string name="cmd_combining_slavonic_dasia">Dasia slava</string>
+    <string name="cmd_combining_slavonic_dasia_desc">Aggiungi la dasia slava (◌҅)</string>
     <string name="cmd_combining_payerok">Payerok</string>
     <string name="cmd_combining_payerok_desc">Aggiungi il payerok (◌꙽)</string>
     <string name="cmd_combining_titlo">Titlo</string>
@@ -2619,7 +2619,7 @@
     <string name="clipboard_bulk_preview">Anteprima: %1$s</string>
     <string name="clipboard_merge_message">Crea un nuovo ritaglio nella cronologia con il testo selezionato, dal più vecchio, uno per riga (%1$s). Gli originali restano.</string>
     <string name="clipboard_merge_private_note">Sarà privato, perché un ritaglio selezionato è privato.</string>
-    <string name="clipboard_merge_copied">È negli appunti, pronta da incollare.</string>
+    <string name="clipboard_merge_copied">È negli appunti, pronto da incollare.</string>
     <string name="clipboard_merge_action">Unisci</string>
     <string name="clipboard_merge_too_few">Seleziona almeno due ritagli di testo da unire.</string>
     <string name="clipboard_merge_too_large">Il ritaglio unito occuperebbe %1$s; il limite è %2$s. Seleziona meno ritagli.</string>
@@ -2667,7 +2667,7 @@
     <string name="layout_theme_title">Tema del layout</string>
     <string name="layout_theme_follow_global">Segui il tema globale</string>
     <string name="layout_theme_follow_global_desc">Attualmente %1$s</string>
-    <string name="layout_theme_dialog_desc">Finché questo layout è attivo, la tastiera usa il tema scelto. Il tema globale nel gestore dei temi non cambia.</string>
+    <string name="layout_theme_dialog_desc">Finché questo layout è attivo, la tastiera usa il tema scelto. Il tema globale in Gestione temi non cambia.</string>
     <string name="layout_theme_missing">Il tema %1$s non è presente su questo dispositivo, quindi viene usato il tema globale.</string>
     <string name="layout_theme_xml_invalid">L\'attributo theme deve essere un ID di tema, ad esempio rosepine o decorative_neon_cyberpunk</string>
     <string name="layout_theme_search_hint">Cerca temi</string>
