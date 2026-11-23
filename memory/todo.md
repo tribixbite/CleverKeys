@@ -203,6 +203,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     locales and refreshes the `code` column's line numbers; now 636 / 346 / 34,419 rows. The
     maintainer plans an AGENT review of the sheets (2026-11-22); an agent review is recorded as
     such, not as the native-speaker review M2 names.
+    2026-11-23 independent GPT-6 review: all 35,401 sheet rows read in 21 locales; findings in
+    `docs/audit/2026-11-23-translation-independent-review.md` (parallel active reviewer owns
+    sheet imports). Includes missing app-visibility disclosure in lv/ru/uk, opacity wording
+    inverted in cs/hu, and overlay/Shift-state meaning errors. Reconcile before treating the AI
+    corrections as complete; native review and the M2 shipping decision remain open.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
