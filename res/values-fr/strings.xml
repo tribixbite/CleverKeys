@@ -2593,7 +2593,7 @@
     <string name="clipboard_merge_action">Fusionner</string>
     <string name="clipboard_merge_too_few">Sélectionnez au moins deux éléments texte à fusionner.</string>
     <string name="clipboard_merge_too_large">L\'élément fusionné ferait %1$s ; la limite est de %2$s. Sélectionnez moins d\'éléments.</string>
-    <string name="clipboard_clean_message">Supprime les espaces et les lignes vides en trop et rejoint les lignes coupées au milieu d\'une phrase ; un mot coupé par un trait d\'union en fin de ligne est recollé. Les changements de paragraphe, les listes, les liens et le code gardent leurs retours à la ligne. Seules les copies dans %1$s sont modifiées ; cette action est irréversible.</string>
+    <string name="clipboard_clean_message">Supprime les espaces et les lignes vides en trop et réunit les lignes coupées au milieu d\'une phrase ; un mot coupé par un trait d\'union en fin de ligne est recollé. Les changements de paragraphe, les listes, les liens et le code gardent leurs retours à la ligne. Seules les copies dans %1$s sont modifiées ; cette action est irréversible.</string>
     <string name="clipboard_clean_action">Nettoyer</string>
     <string name="clipboard_clean_nothing">Rien à nettoyer.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d élément ajouté aux épinglés.</item><item quantity="many">%1$d éléments ajoutés aux épinglés.</item><item quantity="other">%1$d éléments ajoutés aux épinglés.</item></plurals>

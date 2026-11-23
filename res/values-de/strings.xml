@@ -1308,7 +1308,7 @@
     <string name="autocorrect_unfinished_word_mode_off_desc">Die Leertaste behandelt tomorr wie jeden Tippfehler und kann es in ein anderes Wort (timor) ändern.</string>
     <string name="autocorrect_max_correction_cost_off">Aus</string>
     <string name="autocorrect_short_deletion_scope_title">Kürzungskosten gelten für</string>
-    <string name="autocorrect_short_deletion_scope_desc">Hebräische Ein-Buchstaben-Präfixe machen diese Kosten dort sinnvoll; im Englischen ist ein zusätzlicher Buchstabe neben einem Zwei-Buchstaben-Wort (tpo → to) ein echter Tippfehler, daher ist sie für andere Schriften standardmäßig aus.</string>
+    <string name="autocorrect_short_deletion_scope_desc">Hebräische Ein-Buchstaben-Präfixe machen diese Kosten dort sinnvoll; im Englischen ist ein zusätzlicher Buchstabe neben einem Zwei-Buchstaben-Wort (tpo → to) ein echter Tippfehler, daher sind sie für andere Schriften standardmäßig aus.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">Nur hebräische Schrift</string>
     <string name="autocorrect_short_deletion_scope_all">Alle Sprachen</string>
     <string name="autocorrect_frequency_ignored">Die Häufigkeit wird ignoriert; nur die Bearbeitungen entscheiden.</string>
@@ -2544,7 +2544,7 @@
     <string name="clipboard_edit_changed">Der Clip wurde nach Beginn der Bearbeitung geändert oder entfernt, daher wurde die Änderung nicht gespeichert.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">%1$d ausgewählten Clip löschen?</item><item quantity="other">%1$d ausgewählte Clips löschen?</item></plurals>
     <string name="clipboard_delete_selected_message">Nur die Kopien in %1$s werden gelöscht; Kopien in anderen Tabs bleiben erhalten. Gesamte Clipgröße: %2$s. Clips, die seit der Auswahl geändert oder entfernt wurden, werden übersprungen. Dies kann nicht rückgängig gemacht werden.</string>
-    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d von %2$d ausgewählten Clip gelöscht.</item><item quantity="other">%1$d von %2$d ausgewählten Clips gelöscht.</item></plurals>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">%1$d von %2$d ausgewähltem Clip gelöscht.</item><item quantity="other">%1$d von %2$d ausgewählten Clips gelöscht.</item></plurals>
     <string name="clipboard_selection_actions">Weitere Aktionen</string>
     <string name="clipboard_action_add_to_pinned">Zu Angehefteten hinzufügen</string>
     <string name="clipboard_action_add_to_todos">Zu Aufgaben hinzufügen</string>

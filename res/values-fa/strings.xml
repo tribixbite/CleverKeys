@@ -2535,7 +2535,7 @@
     <string name="pack_error_dictionary_too_large">این واژه‌نامه شامل %1$d واژه است؛ حد مجاز %2$d است. لطفاً بستهٔ کوچک‌تری را وارد کنید.</string>
     <string name="pack_error_member_too_large">%1$s از سقف %2$d کیبی‌بایت بزرگ‌تر است.</string>
     <string name="clipboard_filter_size">حجم بریده</string>
-    <string name="clipboard_filter_size_hint">متن UTF-8، تصاویر بندانگشتی و رسانه‌های ذخیره‌شده. فایل‌های هم‌رسانی‌شده در هر بریده شمارش می‌شوند؛ این فضا آزاد نمی‌شود.</string>
+    <string name="clipboard_filter_size_hint">متن UTF-8، تصاویر بندانگشتی و رسانه‌های ذخیره‌شده. فایل‌های مشترک در هر بریده شمارش می‌شوند؛ این مقدار، فضای آزادشده نیست.</string>
     <string name="clipboard_filter_size_min">حداقل اندازه</string>
     <string name="clipboard_filter_size_max">حداکثر اندازه</string>
     <string name="clipboard_filter_size_any">هر اندازه‌ای</string>
@@ -2633,7 +2633,7 @@
     <string name="layout_key_geometry_desc">تا وقتی این چیدمان فعال است، مقدارهای تعیین‌شده در اینجا جای تنظیمات ظاهر و فاصله‌های ظاهر آشنا را می‌گیرند. خود تنظیمات ظاهر تغییر نمی‌کنند.</string>
     <string name="layout_key_geometry_use_global">استفاده از تنظیم سراسری</string>
     <string name="layout_key_geometry_xml_invalid">ویژگی نامعتبر برای فاصله یا حاشیهٔ کلید: %1$s</string>
-    <string name="import_preview_layout_geometry_change">%1$s: فاصله و حاشیهٔ کلیدها %2$s → %3$s</string>
+    <string name="import_preview_layout_geometry_change">%1$s: فاصله و حاشیهٔ کلیدها ⁧⁨%2$s⁩ ← ⁨%3$s⁩⁩</string>
 
     <!-- Layouts that style themselves: embedded <theme>, save as custom theme, Theme Creator "Keyboard look" (2026-10-28) -->
     <string name="layout_theme_own">تم خودِ چیدمان</string>

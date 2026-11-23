@@ -577,7 +577,7 @@
     <string name="input_backspace_undo_swipe_title">Backspace Undo ng Swipe</string>
     <string name="input_backspace_undo_swipe_desc">Ang pagpindot ng backspace kaagad pagkatapos ng isang swiped na salita ay nagtatanggal ng buong salita</string>
     <string name="input_delete_word_url_pairs_title">Magtanggal ng isang pares na key=value bawat pindot</string>
-    <string name="input_delete_word_url_pairs_desc">Sa link o ibang teksto na may mga pares na key=value na pinagdugtong ng &amp; (?a=1&amp;b=2), nagtatanggal ang Magtanggal ng isang salita ng isang pares bawat pindot</string>
+    <string name="input_delete_word_url_pairs_desc">Sa link o ibang teksto na may mga pares na key=value na pinagdugtong ng &amp; (?a=1&amp;b=2), nagtatanggal ang \"I-delete ang Salita\" ng isang pares bawat pindot</string>
     <string name="input_show_exact_typed_title">Ipakita ang eksaktong na-type na salita</string>
     <string name="input_show_exact_typed_desc">Iminumungkahi ang mga titik na aktwal mong na-type; i-tap para idagdag sa diksyunaryo</string>
     <string name="input_context_aware_title">Context-Aware na Prediction</string>
@@ -1858,7 +1858,7 @@
     <string name="extra_key_title_paste_plain">Plain na Paste</string>
     <string name="extra_key_title_autofill">Autofill</string>
     <string name="extra_key_title_delete_word">I-delete ang Salita</string>
-    <string name="extra_key_title_forward_delete_word">I-delete Pasulong</string>
+    <string name="extra_key_title_forward_delete_word">I-delete ang Salita Pasulong</string>
     <string name="extra_key_title_greek_math">Greek/Math</string>
     <string name="extra_key_title_next_layout">Susunod na Layout</string>
     <string name="extra_key_title_previous_layout">Nakaraang Layout</string>
@@ -2044,7 +2044,7 @@
     <string name="cmd_clear_desc">Burahin ang buong field (piliin lahat + i-delete)</string>
     <string name="cmd_delete_word">I-delete ang Salita</string>
     <string name="cmd_delete_word_desc">I-delete ang salita bago ang cursor</string>
-    <string name="cmd_forward_delete_word">I-delete Pasulong</string>
+    <string name="cmd_forward_delete_word">I-delete ang Salita Pasulong</string>
     <string name="cmd_forward_delete_word_desc">I-delete ang salita pagkatapos ng cursor</string>
     <string name="cmd_delete_last_word">I-delete ang Huling Salita</string>
     <string name="cmd_delete_last_word_desc">Matalinong pag-delete ng huling na-insert o na-type na salita</string>
