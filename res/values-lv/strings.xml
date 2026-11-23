@@ -426,7 +426,7 @@
     <string name="appearance_look_space_language_title">Valodas nosaukums uz atstarpes taustiņa</string>
     <string name="appearance_look_space_language_desc">Samsung izskats rāda pašreizējo valodu uz atstarpes taustiņa, tāpat kā Samsung tastatūra.</string>
     <string name="appearance_look_backdrop_motion_title">Animētas ainas</string>
-    <string name="appearance_look_backdrop_motion_desc">Ainu motīvi (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle un lapas šūpojas, krīt sniegs un lietus. Rakstīšanas laikā tie apstājas uz brīdi, pēc 20 sekundēm bez rakstīšanas apstājas; enerģijas taupīšanas režīmā, sakarsušā tālrunī vai pie zema akumulatora līmeņa paliek nekustīgi. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
+    <string name="appearance_look_backdrop_motion_desc">Ainu tēmas (CleverKeys Aurora, Pļava, Strauts, Upes oļi, Mežs, Sniegs, Pludmale) maigi kustas: ziemeļblāzma un ūdens slīd, zāle un lapas šūpojas, krīt sniegs un lietus. Rakstīšanas laikā tās apstājas un pēc 20 sekundēm bez rakstīšanas norimst; enerģijas taupīšanas režīmā, sakarsušā tālrunī vai pie zema akumulatora līmeņa tās paliek nekustīgas. Kustoties patērē nedaudz vairāk akumulatora. Android 10 vai jaunāka versija.</string>
     <string name="appearance_look_motion_speed_title">Ainu ātrums</string>
     <string name="appearance_look_motion_speed_desc">Cik ātri ainas kustas</string>
     <string name="appearance_look_motion_intensity_title">Ainu kustības stiprums</string>
@@ -437,7 +437,7 @@
     <string name="appearance_look_motion_resume_desc">Cik ilgi aina stāv pēc pēdējā taustiņa nospiešanas vai vilkšanas</string>
     <string name="appearance_look_motion_resume_none">Bez pauzes</string>
     <string name="appearance_look_motion_seconds">%1$s s</string>
-    <string name="appearance_look_motion_idle_title">Kustēties</string>
+    <string name="appearance_look_motion_idle_title">Turpināt kustību</string>
     <string name="appearance_look_motion_idle_desc">Cik ilgi aina kustas pēc pēdējā tastatūras pieskāriena</string>
     <string name="appearance_look_motion_fps_title">Kadru ātrums</string>
     <string name="appearance_look_motion_fps_desc">Kadri sekundē, kamēr aina kustas; mazāk kadru patērē mazāk akumulatora</string>
@@ -514,7 +514,7 @@
     <string name="clipboard_reorder_unavailable">Lai pārkārtotu, notīriet meklēšanu un filtrus</string>
     <string name="clipboard_reorder_moved">Pārvietots uz %1$d. vietu no %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Privāta kopēšana citās lietotnēs</string>
-    <string name="clipboard_private_copy_other_apps_desc">Pievienot \"Privātā kopēšana\" citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Pievienot “Privāta kopēšana” citu lietotņu teksta atlases izvēlnēm. Kopē atlasīto tekstu tikai CleverKeys — nekad sistēmas starpliktuvē. Ieslēdzot tiek pievienots lietotnes ieraksts, ko var redzēt citas lietotnes.</string>
     <string name="clipboard_sanitize_links_title">Attīrīt izsekošanas parametrus</string>
     <string name="clipboard_sanitize_links_desc">Noņemt utm_*, fbclid u.c. no kopētajiem URL. Izmanto ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Attīrīt arī sistēmas starpliktuvi</string>
@@ -550,7 +550,7 @@
     <string name="gesture_double_space_timing_title">Dubultās atstarpes laiks</string>
     <string name="gesture_double_space_timing_desc">Maksimālais laiks starp atstarpēm, lai aktivizētu punktu (ms)</string>
     <string name="gesture_sensitivity_preset_title">Jutīguma priekšiestatījums</string>
-    <string name="gesture_sensitivity_preset_desc">Ātrie vilkuma atpazīšanas priekšiestatījumi. \"Pielāgots\" tiek rādīts, kad vērtības atšķiras no priekšiestatījumiem.</string>
+    <string name="gesture_sensitivity_preset_desc">Ātrie vilkuma atpazīšanas priekšiestatījumi. “Pielāgota” parādās, kad vērtības atšķiras no priekšiestatījumiem.</string>
     <string name="gesture_min_swipe_distance_title">Minimālais vilkuma attālums</string>
     <string name="gesture_min_swipe_distance_desc">Minimālais izsektais ceļš (px), lai žests varētu kvalificēties kā vārds ar vilkumu. Zemāk palīdz īsiem vārdiem; augstāk samazina nejaušas aktivizācijas.</string>
     <string name="gesture_min_key_distance_title">Minimālais attālums starp taustiņiem</string>
@@ -698,7 +698,7 @@
     <string name="privacy_on_device_learning_desc">Veido ierīcē privātus frāžu un vārdu lietojuma modeļus no ierakstītā teksta. Izslēdzot tiek pārtraukta visa automātiskā rakstīšanas uzvedības reģistrēšana — kamēr tas ir izslēgts, nekas jauns netiek saglabāts. Dati, ko izveidojat tieši paši, ir atsevišķi: prognožu veiktspējas statistika un no dublējuma atjaunotie apgūtie dati.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Pievienots, bet pārāk garš vilkšanai</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soli.</item><item quantity="zero">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soļus.</item><item quantity="other">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soļus.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soli. Rakstot ar vilkšanu, tas netiks piedāvāts.</item><item quantity="zero">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soļu. Rakstot ar vilkšanu, tas netiks piedāvāts.</item><item quantity="other">“%1$s” pievienots rakstīšanai ar pieskārienu, bet CTC vajag %2$d soļus un var atkodēt tikai %3$d soļus. Rakstot ar vilkšanu, tas netiks piedāvāts.</item></plurals>
     <string name="gesture_finger_occlusion_title">Pieskāriena nobīdes korekcija</string>
     <string name="gesture_finger_occlusion_desc">Nobīda vilkšanas nolasīšanu attiecībā pret pirksta galu. Pozitīva vērtība, ja trajektorija ir virs taustiņiem, negatīva, ja zem. Pēc noklusējuma izslēgts.</string>
     <string name="gesture_touch_smoothing_title">Pieskāriena izlīdzināšana</string>
@@ -938,7 +938,7 @@
     <string name="subkey_slot_nothing">Nekas</string>
     <string name="subkey_slot_replaces">Aizstāj %1$s</string>
     <string name="subkey_dialog_subkeys_header">Apakštaustiņi</string>
-    <string name="subkey_dialog_layout_hint">Izkārtojuma %1$s apakštaustiņi un pielāgotie īsie vilcieni. Pieskarieties virzienam, lai to mainītu.</string>
+    <string name="subkey_dialog_layout_hint">Izkārtojuma %1$s apakštaustiņi un pielāgotie īsie vilkumi. Pieskarieties virzienam, lai to mainītu.</string>
     <string name="subkey_edit_layout_source">Izkārtojuma %1$s apakštaustiņš.</string>
     <string name="subkey_layout_copy_title">Mainīt izkārtojuma apakštaustiņu?</string>
     <string name="subkey_layout_copy_body">Šo apakštaustiņu nosaka %1$s. Iebūvētais izkārtojums nemainās: izmaiņas tiek saglabātas kopijā %2$s, kas to aizstāj izkārtojumu sarakstā. Izkārtojumu pārvaldniekā var atgriezties pie oriģināla.</string>
@@ -948,11 +948,11 @@
     <string name="subkey_layout_toast_copied">Izveidots: %1$s</string>
     <string name="subkey_layout_toast_saved">Saglabāts: %1$s</string>
     <string name="subkey_layout_toast_failed">Izkārtojums netika mainīts: %1$s</string>
-    <string name="subkey_layout_toast_not_layout">Šī darbība nevar būt izkārtojuma daļa, tāpēc tā saglabāta kā pielāgots īsais vilciens.</string>
+    <string name="subkey_layout_toast_not_layout">Šī darbība nevar būt izkārtojuma daļa, tāpēc tā saglabāta kā pielāgots īsais vilkums.</string>
     <string name="layout_manager_badge_modified_copy">Mainīta %1$s kopija</string>
     <string name="layout_manager_revert">Atgriezt oriģinālu</string>
     <string name="layout_manager_revert_title">Atgriezties pie sākotnējā izkārtojuma?</string>
-    <string name="layout_manager_revert_body">Šīs mainītās kopijas vietā būs %1$s. Mainītie apakštaustiņi tiek atmesti; valodas, motīva un taustiņu atstarpju izvēles paliek.</string>
+    <string name="layout_manager_revert_body">Šīs mainītās kopijas vietā būs %1$s. Mainītie apakštaustiņi tiek atmesti; valodas, tēmas un taustiņu atstarpju izvēles paliek.</string>
     <string name="gesture_selection_delete_header">Atlases dzēšanas režīms</string>
     <string name="gesture_selection_delete_desc">Īss vilkums + turēšana uz Backspace atlasa tekstu; atlaižot tas tiek dzēsts.</string>
     <string name="gesture_tap_typing_header">Pieskārieni un rakstīšana</string>
@@ -1307,7 +1307,7 @@
     <string name="autocorrect_short_deletion_scope_all">Visas valodas</string>
     <string name="autocorrect_frequency_ignored">Biežums netiek ņemts vērā; izšķir tikai labojumi.</string>
     <string name="autocorrect_channel_inflection_cost_title">Vārda formas saglabāšanas izmaksas</string>
-    <string name="autocorrect_channel_inflection_cost_desc">Cik daudz labākam jābūt labojumam, lai aizstātu zināmu vārdu ar galotni. Augšējā pozīcijā šādi vārdi vienmēr tiek saglabāti.</string>
+    <string name="autocorrect_channel_inflection_cost_desc">Cik daudz labākam jābūt labojumam, lai aizstātu zināmu vārdu ar galotni. Pie maksimālās vērtības šādi vārdi vienmēr tiek saglabāti.</string>
     <string name="autocorrect_value_always_keep">Vienmēr saglabāt</string>
     <string name="autocorrect_tuning_reset">Atiestatīt ranžēšanu un regulēšanu</string>
     <string name="autocorrect_tuning_reset_body">Atjaunot noklusējuma vērtības visiem iestatījumiem sadaļā Ranžēšana un precīza regulēšana? Pārējie automātiskās labošanas iestatījumi netiek mainīti.</string>
@@ -1673,7 +1673,7 @@
     <string name="layout_manager_xml_empty_error">Izkārtojuma XML nevar būt tukšs</string>
     <string name="layout_manager_import_failed">Neizdevās importēt izkārtojuma failu:\n%1$s</string>
     <string name="layout_manager_export_failed">Neizdevās eksportēt izkārtojuma failu:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Daži īsie vilcieni nav failā: izkārtojums nevar saturēt to darbību (piemēram, piesprausta fragmenta ielīmēšanu). Šajā ierīcē tie joprojām darbojas.</string>
+    <string name="layout_manager_export_not_written">Daži īsie vilkumi nav failā: izkārtojums nevar saturēt to darbību (piemēram, piesprausta fragmenta ielīmēšanu). Šajā ierīcē tie joprojām darbojas.</string>
     <string name="extra_keys_group_layout_switching">Izkārtojuma pārslēgšana</string>
     <string name="extra_keys_group_system">Sistēma</string>
     <string name="extra_keys_group_navigation">Navigācija</string>
@@ -1888,7 +1888,7 @@
     <string name="extra_key_title_voice">Balss</string>
     <string name="extra_key_title_clipboard">Starpliktuve</string>
     <string name="extra_key_title_switch_ime">Mainīt tastatūru</string>
-    <string name="extra_key_title_caps_lock">Caps Lock</string>
+    <string name="extra_key_title_caps_lock">Burtslēgs</string>
     <string name="extra_key_title_private_copy">Privāta kopēšana</string>
     <string name="extra_key_title_select_all">Atlasīt visu</string>
     <string name="extra_key_title_share">Kopīgot</string>
@@ -1911,7 +1911,7 @@
     <string name="extra_key_accent_dot_above">Punkts augšā</string>
     <string name="extra_key_accent_circumflex">Cirkumflekss</string>
     <string name="extra_key_accent_tilde">Tilde</string>
-    <string name="extra_key_accent_cedilla">Cedilla</string>
+    <string name="extra_key_accent_cedilla">Sedijs</string>
     <string name="extra_key_accent_umlaut">Umlauts</string>
     <string name="extra_key_accent_ring">Aplītis</string>
     <string name="extra_key_accent_caron">Jumtiņš</string>
@@ -2059,7 +2059,7 @@
     <string name="cmd_copy">Kopēt</string>
     <string name="cmd_copy_desc">Kopēt atlasīto tekstu starpliktuvē</string>
     <string name="cmd_copy_private">Privāta kopēšana</string>
-    <string name="cmd_copy_private_desc">Kopēt tikai CleverKeys, nekad sistēmas starpliktuvē</string>
+    <string name="cmd_copy_private_desc">Kopēt atlasi tikai CleverKeys — nekad sistēmas starpliktuvē</string>
     <string name="cmd_paste">Ielīmēt</string>
     <string name="cmd_paste_desc">Ielīmēt no starpliktuves</string>
     <string name="cmd_cut">Izgriezt</string>
@@ -2168,11 +2168,11 @@
     <string name="cmd_minimize_fab_desc">Sakļauj tastatūru peldošā pogā, lai lietotnei būtu viss ekrāns; pieskarieties tai, lai atjaunotu tastatūru</string>
     <string name="cmd_hide_keyboard">Paslēpt tastatūru</string>
     <string name="cmd_hide_keyboard_desc">Aizver tastatūru; pieskarieties teksta laukam, lai to atjaunotu</string>
-    <string name="cmd_theme_next">Nākamais motīvs</string>
-    <string name="cmd_theme_next_desc">Lieto nākamo motīvu motīvu pārvaldnieka secībā</string>
-    <string name="cmd_theme_previous">Iepriekšējais motīvs</string>
-    <string name="cmd_theme_previous_desc">Lieto iepriekšējo motīvu motīvu pārvaldnieka secībā</string>
-    <string name="theme_cycle_message">Motīvs: %1$s</string>
+    <string name="cmd_theme_next">Nākamā tēma</string>
+    <string name="cmd_theme_next_desc">Lieto nākamo tēmu tēmu pārvaldnieka secībā</string>
+    <string name="cmd_theme_previous">Iepriekšējā tēma</string>
+    <string name="cmd_theme_previous_desc">Lieto iepriekšējo tēmu tēmu pārvaldnieka secībā</string>
+    <string name="theme_cycle_message">Tēma: %1$s</string>
     <string name="cmd_toggle_scene_motion">Animētas ainas ieslēgt/izslēgt</string>
     <string name="cmd_toggle_scene_motion_desc">Ieslēgt vai izslēgt kustīgos ainu fonus</string>
     <string name="scene_motion_on_message">Animētas ainas ieslēgtas</string>
@@ -2260,8 +2260,8 @@
     <string name="cmd_accent_tilde_desc">Klusais taustiņš tildei (ñ)</string>
     <string name="cmd_accent_trema">Umlauts</string>
     <string name="cmd_accent_trema_desc">Klusais taustiņš umlautam/trēmai (ë)</string>
-    <string name="cmd_accent_cedille">Cedilla</string>
-    <string name="cmd_accent_cedille_desc">Klusais taustiņš cedillai (ç)</string>
+    <string name="cmd_accent_cedille">Sedijs</string>
+    <string name="cmd_accent_cedille_desc">Klusais taustiņš sedijam (ç)</string>
     <string name="cmd_accent_caron">Jumtiņš</string>
     <string name="cmd_accent_caron_desc">Klusais taustiņš jumtiņam (č)</string>
     <string name="cmd_accent_macron">Garumzīme</string>
@@ -2314,8 +2314,8 @@
     <string name="cmd_combining_tilde_desc">Pievienot tildi iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_trema">Apvienojošs umlauts</string>
     <string name="cmd_combining_trema_desc">Pievienot umlautu iepriekšējai rakstzīmei</string>
-    <string name="cmd_combining_cedille">Apvienojoša cedilla</string>
-    <string name="cmd_combining_cedille_desc">Pievienot cedillu iepriekšējai rakstzīmei</string>
+    <string name="cmd_combining_cedille">Apvienojošs sedijs</string>
+    <string name="cmd_combining_cedille_desc">Pievienot sediju iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_caron">Apvienojošs jumtiņš</string>
     <string name="cmd_combining_caron_desc">Pievienot jumtiņu iepriekšējai rakstzīmei</string>
     <string name="cmd_combining_macron">Apvienojoša garumzīme</string>
@@ -2664,7 +2664,7 @@
     <string name="theme_export_xml">Eksportēt kā izkārtojuma XML</string>
     <string name="theme_export_xml_failed">Tēmas failu nevarēja eksportēt:\n%1$s</string>
     <string name="theme_section_look">Tastatūras izskats</string>
-    <string name="theme_section_look_desc">Neobligāti: taustiņu formas, mājieni un papildu krāsas. Kas nav iestatīts, seko tastatūras iestatījumiem.</string>
+    <string name="theme_section_look_desc">Neobligāti: taustiņu formas, norādes un papildu krāsas. Kas nav iestatīts, seko tastatūras iestatījumiem.</string>
     <string name="theme_section_look_colors">Izskata krāsas</string>
     <string name="theme_section_variants">Gaišais un tumšais režīms</string>
     <string name="theme_variants_desc">Krāsas, kas aizstāj iepriekšējās, kamēr sistēma ir šajā režīmā.</string>
@@ -2673,7 +2673,7 @@
     <string name="theme_color_not_set">Nav iestatīts</string>
     <string name="theme_color_clear">Notīrīt</string>
     <string name="theme_color_label_pressed">Nospiesta taustiņa uzraksts</string>
-    <string name="theme_color_locked_label">Caps Lock uzraksts</string>
+    <string name="theme_color_locked_label">Burtslēga uzraksts</string>
     <string name="theme_color_enter_key">Enter taustiņš</string>
     <string name="theme_color_enter_label">Enter taustiņa uzraksts</string>
     <string name="theme_color_action_key">Darbības taustiņš (Doties, Meklēt, Sūtīt)</string>
@@ -2692,12 +2692,12 @@
     <string name="theme_shape_shadow">Taustiņu ēnas nobīde</string>
     <string name="theme_shape_label_scale">Uzraksta izmērs</string>
     <string name="theme_shape_label_weight">Uzraksta biezums</string>
-    <string name="theme_section_hints">Žestu mājieni</string>
+    <string name="theme_section_hints">Žestu norādes</string>
     <string name="theme_hints_all">Visi</string>
     <string name="theme_hints_digits">Tikai cipari</string>
     <string name="theme_hints_none">Neviens</string>
-    <string name="theme_hint_size">Mājiena izmērs</string>
-    <string name="theme_hint_weight">Mājiena biezums</string>
+    <string name="theme_hint_size">Norādes izmērs</string>
+    <string name="theme_hint_weight">Norādes biezums</string>
     <string name="theme_section_key_preview">Taustiņa nospiešanas priekšskatījums</string>
     <string name="theme_preview_none">Nav</string>
     <string name="theme_preview_bubble">Burbulis</string>

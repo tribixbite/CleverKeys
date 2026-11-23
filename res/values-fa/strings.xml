@@ -441,8 +441,8 @@
     <string name="appearance_key_vertical_margin_desc">فاصله عمودی بین کلیدها</string>
     <string name="appearance_key_horizontal_margin_title">حاشیه افقی کلید</string>
     <string name="appearance_key_horizontal_margin_desc">فاصله افقی بین کلیدها</string>
-    <string name="appearance_look_show_hints_title">نمایش راهنمای حرکات در ظاهرهای آشنا</string>
-    <string name="appearance_look_show_hints_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung مانند همان صفحه‌کلیدها راهنماهای گوشه را پنهان می‌کنند؛ برای نمایش همه روشن کنید. حرکات در هر حالت کار می‌کنند.</string>
+    <string name="appearance_look_show_hints_title">نمایش راهنمای اشاره‌ها در ظاهرهای آشنا</string>
+    <string name="appearance_look_show_hints_desc">ظاهرهای سبک iOS، Gboard، SwiftKey و Samsung مانند همان صفحه‌کلیدها راهنماهای گوشه را پنهان می‌کنند؛ برای نمایش همه روشن کنید. اشاره‌ها در هر حالت کار می‌کنند.</string>
     <string name="appearance_look_key_preview_title">پیش‌نمایش کلید فشرده‌شده</string>
     <string name="appearance_look_key_preview_desc">ظاهر CleverKeys و ظاهرهای به سبک iOS، Gboard، SwiftKey و Samsung نویسهٔ فشرده‌شده را در حبابی بالای کلید نشان می‌دهند.</string>
     <string name="appearance_look_space_language_title">نام زبان روی کلید فاصله</string>
@@ -525,7 +525,7 @@
     <string name="clipboard_pinned_tab_desc">زبانهٔ سنجاق‌شده را برای ذخیره کلیپ‌های مهم نمایش دهید</string>
     <string name="clipboard_todo_tab_title">زبانهٔ کارها</string>
     <string name="clipboard_todo_tab_desc">زبانهٔ کارها را برای علامت‌گذاری کلیپ‌ها به‌عنوان وظایف نمایش دهید</string>
-    <string name="clipboard_swipe_delete_title">حذف ورودی‌های کلیپ‌بورد با کشیدن</string>
+    <string name="clipboard_swipe_delete_title">حذف ورودی‌های بریده‌دان با کشیدن</string>
     <string name="clipboard_swipe_delete_desc">یک ورودی را به چپ یا راست بکشید تا از زبانهٔ فعلی حذف شود. تا %1$d ثانیه می‌توانید آن را واگرد کنید.</string>
     <string name="clipboard_swipe_deleted">حذف شد</string>
     <string name="clipboard_swipe_undo">واگرد</string>
@@ -720,7 +720,7 @@
     <string name="privacy_on_device_learning_desc">از آنچه تایپ می‌کنید، مدل‌های خصوصی عبارت‌ها و کاربرد واژه‌ها را روی خود دستگاه می‌سازد. با خاموش کردن، همهٔ ضبط خودکار رفتار تایپ متوقف می‌شود — تا زمانی که خاموش است چیز تازه‌ای ذخیره نمی‌شود. داده‌هایی که آشکارا خودتان می‌سازید جدا هستند: آمار کارایی پیش‌بینی و داده‌های آموخته‌شده‌ای که از پشتیبان بازیابی شده‌اند.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">افزوده شد، اما برای کشیدن بیش از حد بلند است</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» برای تایپ ضربه‌ای افزوده شد، اما CTC به %2$d گام نیاز دارد و فقط %3$d گام را رمزگشایی می‌کند.</item><item quantity="other">«%1$s» برای تایپ ضربه‌ای افزوده شد، اما CTC به %2$d گام نیاز دارد و فقط %3$d گام را رمزگشایی می‌کند.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» برای تایپ ضربه‌ای افزوده شد، اما CTC به %2$d گام نیاز دارد و فقط می‌تواند %3$d گام را رمزگشایی کند. در تایپ کشیدنی پیشنهاد نخواهد شد.</item><item quantity="other">«%1$s» برای تایپ ضربه‌ای افزوده شد، اما CTC به %2$d گام نیاز دارد و فقط می‌تواند %3$d گام را رمزگشایی کند. در تایپ کشیدنی پیشنهاد نخواهد شد.</item></plurals>
     <string name="gesture_finger_occlusion_title">اصلاح جابه‌جایی لمس</string>
     <string name="gesture_finger_occlusion_desc">محل خواندن حرکت را نسبت به نوک انگشت جابه‌جا می‌کند. اگر رد حرکت بالاتر از کلیدهاست مقدار مثبت و اگر پایین‌تر است مقدار منفی بگذارید. پیش‌فرض خاموش است.</string>
     <string name="gesture_touch_smoothing_title">هموارسازی لمس</string>
@@ -974,7 +974,7 @@
     <string name="layout_manager_badge_modified_copy">رونوشت تغییریافته %1$s</string>
     <string name="layout_manager_revert">بازگشت به اصلی</string>
     <string name="layout_manager_revert_title">به چیدمان اصلی برگردد؟</string>
-    <string name="layout_manager_revert_body">%1$s جای این رونوشت تغییریافته را می‌گیرد. زیرکلیدهای تغییریافته کنار گذاشته می‌شوند؛ انتخاب‌های زبان، پوسته و فاصله کلیدها می‌مانند.</string>
+    <string name="layout_manager_revert_body">%1$s جای این رونوشت تغییریافته را می‌گیرد. زیرکلیدهای تغییریافته کنار گذاشته می‌شوند؛ انتخاب‌های زبان، تم و فاصلهٔ کلیدها می‌مانند.</string>
     <string name="gesture_selection_delete_header">حالت انتخاب و حذف</string>
     <string name="gesture_selection_delete_desc">کشیدن کوتاه + نگه داشتن روی پس‌بر برای انتخاب متن؛ سپس رها کنید تا حذف شود.</string>
     <string name="gesture_tap_typing_header">ضربه و تایپ</string>
@@ -1198,7 +1198,7 @@
     <string name="common_export_failed_detail">برون‌بری ناموفق بود: %1$s</string>
     <string name="common_delete_failed_detail">حذف ناموفق بود: %1$s</string>
     <string name="common_remove_failed_detail">برداشتن ناموفق بود: %1$s</string>
-    <string name="common_copied_to_clipboard">در بریده‌دان رونوشت شد</string>
+    <string name="common_copied_to_clipboard">در بریده‌دان کپی شد</string>
     <string name="common_none">هیچ‌کدام</string>
     <string name="common_unknown_error">خطای ناشناخته</string>
     <string name="common_file_name">فایل: %1$s</string>
@@ -1663,8 +1663,8 @@
     <string name="layout_manager_badge_custom_xml">XML سفارشی</string>
     <string name="layout_manager_xml_empty_error">XML چیدمان نمی‌تواند خالی باشد</string>
     <string name="layout_manager_import_failed">وارد کردن فایل چیدمان ناموفق بود:\n%1$s</string>
-    <string name="layout_manager_export_failed">صادر کردن فایل چیدمان ناموفق بود:\n%1$s</string>
-    <string name="layout_manager_export_not_written">برخی کشیدن‌های کوتاه در فایل نیستند: چیدمان نمی‌تواند عمل آن‌ها را نگه دارد (مانند چسباندن یک برش سنجاق‌شده). روی این دستگاه همچنان کار می‌کنند.</string>
+    <string name="layout_manager_export_failed">برون‌بری فایل چیدمان ناموفق بود:\n%1$s</string>
+    <string name="layout_manager_export_not_written">برخی کشیدن‌های کوتاه در فایل نیستند: چیدمان نمی‌تواند عمل آن‌ها را نگه دارد (مانند چسباندن یک بریدهٔ سنجاق‌شده). روی این دستگاه همچنان کار می‌کنند.</string>
     <string name="extra_keys_group_layout_switching">تغییر چیدمان</string>
     <string name="extra_keys_group_system">سامانه</string>
     <string name="extra_keys_group_navigation">ناوبری</string>
@@ -1877,7 +1877,7 @@
     <string name="extra_key_title_voice">صدا</string>
     <string name="extra_key_title_clipboard">بریده‌دان</string>
     <string name="extra_key_title_switch_ime">تغییر صفحه‌کلید</string>
-    <string name="extra_key_title_caps_lock">Caps Lock</string>
+    <string name="extra_key_title_caps_lock">قفل حروف بزرگ</string>
     <string name="extra_key_title_private_copy">کپی خصوصی</string>
     <string name="extra_key_title_select_all">انتخاب همه</string>
     <string name="extra_key_title_share">اشتراک‌گذاری</string>
@@ -2532,7 +2532,7 @@
     <string name="cmd_timestamp_iso_desc">درج برچسب زمانی ISO 8601 (YYYY-MM-DDTHH:mm:ss)</string>
     <!-- 2026-09-30 i18n: settings search result section line (reviewer=model) -->
     <string name="settings_search_in_section">در %1$s</string>
-    <string name="pack_error_dictionary_too_large">این لغت‌نامه شامل %1$d واژه است؛ حد مجاز %2$d است. لطفاً بستهٔ کوچک‌تری را وارد کنید.</string>
+    <string name="pack_error_dictionary_too_large">این واژه‌نامه شامل %1$d واژه است؛ حد مجاز %2$d است. لطفاً بستهٔ کوچک‌تری را وارد کنید.</string>
     <string name="pack_error_member_too_large">%1$s از سقف %2$d کیبی‌بایت بزرگ‌تر است.</string>
     <string name="clipboard_filter_size">حجم بریده</string>
     <string name="clipboard_filter_size_hint">متن UTF-8، تصاویر بندانگشتی و رسانه‌های ذخیره‌شده. فایل‌های هم‌رسانی‌شده در هر بریده شمارش می‌شوند؛ این فضا آزاد نمی‌شود.</string>
@@ -2591,10 +2591,10 @@
     <plurals name="clipboard_clean_result"><item quantity="one">%1$d بریده پاک‌سازی شد.</item><item quantity="other">%1$d بریده پاک‌سازی شد.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
-    <string name="cmd_clear_clipboard">پاک کردن کلیپ‌بورد سیستم</string>
-    <string name="cmd_clear_clipboard_desc">پاک کردن کلیپ‌بورد فعلی اندروید؛ تاریخچه ذخیره‌شده، موارد سنجاق‌شده و موارد کارها باقی می‌مانند.</string>
-    <string name="system_clipboard_cleared">کلیپ‌بورد سیستم پاک شد</string>
-    <string name="system_clipboard_clear_failed">پاک کردن کلیپ‌بورد سیستم انجام نشد</string>
+    <string name="cmd_clear_clipboard">پاک کردن بریده‌دان سامانه</string>
+    <string name="cmd_clear_clipboard_desc">پاک کردن بریده‌دان فعلی اندروید؛ تاریخچهٔ ذخیره‌شده، موارد سنجاق‌شده و کارها باقی می‌مانند.</string>
+    <string name="system_clipboard_cleared">بریده‌دان سامانه پاک شد</string>
+    <string name="system_clipboard_clear_failed">پاک کردن بریده‌دان سامانه انجام نشد</string>
 
     <!-- Custom terminal package configuration -->
     <string name="advanced_custom_terminal_title">بسته‌های سفارشی ترمینال</string>
@@ -2608,13 +2608,13 @@
     <string name="command_palette_template_help">گسترش {clipboard}، {selection}، {uuid} و یک {cursor}. از {{ و }} برای آکولادهای لفظی استفاده کنید. کنش‌های متنی موجود به‌صورت لفظی باقی می‌مانند.</string>
     <string name="dynamic_action_unavailable">عملیات در این ویرایشگر یا پانل در دسترس نیست</string>
     <string name="dynamic_template_invalid">الگوی نامعتبر: نشانه‌ها، آکولادها و نشانگرهای مکان‌نما را بررسی کنید.</string>
-    <string name="continuous_swipe_title">لغزش پیوسته</string>
+    <string name="continuous_swipe_title">کشیدن پیوسته</string>
     <string name="continuous_swipe_desc">بین کلمات بدون برداشتن انگشت، مکث کوتاهی در مرکز کلید فاصله داشته باشید. عبور سریع یک کلمه را حفظ می‌کند.</string>
-    <string name="continuous_swipe_stopped">لغزش پیوسته متوقف شد؛ لطفاً قبل از ادامه، متن را بررسی کنید.</string>
+    <string name="continuous_swipe_stopped">کشیدن پیوسته متوقف شد؛ لطفاً قبل از ادامه، متن را بررسی کنید.</string>
     <string name="cmd_append_possessive">الحاق \'s</string>
-    <string name="cmd_append_possessive_desc">پیوست \'s به آخرین کلمه تأییدشده؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
+    <string name="cmd_append_possessive_desc">پیوست \'s به آخرین واژهٔ تأییدشده؛ یک‌بار فشردن پس‌بر فقط پسوند را حذف می‌کند</string>
     <string name="cmd_append_apostrophe">الحاق آپوستروف</string>
-    <string name="cmd_append_apostrophe_desc">پیوست آپوستروف به آخرین کلمه تأییدشده (parents\')؛ یک‌بار فشردن backspace فقط پسوند را حذف می‌کند</string>
+    <string name="cmd_append_apostrophe_desc">پیوست آپوستروف به آخرین واژهٔ تأییدشده (parents\')؛ یک‌بار فشردن پس‌بر فقط پسوند را حذف می‌کند</string>
     <!-- Per-layout theme binding (Layout Manager theme row, picker, backup preview) -->
     <string name="layout_theme_chip">تم: %1$s</string>
     <string name="layout_theme_title">تم چیدمان</string>
