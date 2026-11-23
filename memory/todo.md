@@ -72,6 +72,19 @@ clipboard Clean/Merge and the rotation fix, in place of the learning/private-cop
 popover and minimize/terminal/macro lines (maintainer request 2026-11-22);
 `ReleaseMetadataDriftTest` and `ReleaseRecordDriftTest` green. Before the tag: only M1, M2, M4.
 
+**Status 2026-11-23 (agent).** Item 42 and the rotation report done (item 42 below): auto-capitalisation's
+Shift comes back after the number pane or a layout switch, and a latched or locked Shift, caps lock,
+Ctrl, Alt or Fn survives a rotation; pure 3,986 / mock 1,896; **A2 at the working tree over
+`43abdd2f`** (this fix plus the translation agent's commits): 1,668 on each of API 34–37, 0 failed, 2
+expected skips (app sha256 `82aaa8c6f429eab8…`, test `fe79375ec3fe1938…`, `~/ew-output/full-2026-11-23/`);
+device PASS on the Pixel, release d3e46f3b… installed there. The fastlane note was rewritten for
+users (maintainer 2026-11-22: "nobody knows what ctc means"): "New Swipe Engine", 89.3% first-guess
+accuracy in English (was 74.6%), 13 swipe languages on any layout (en/fr/de/es tested, rest beta, six
+via language packs), familiar looks instead of brand names, and private copy, encrypted backup,
+TalkBack actions, subkey popover, minimize and macros back in; 499 bytes / 485 chars;
+`ReleaseMetadataDriftTest` pins the same evidence tiers in that wording (count from the runtime
+table, no percentage but the benchmark's two). Before the tag: only M1, M2, M4.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
@@ -411,9 +424,27 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     17e8b8d4, neon theme): Ctrl shows 123+ on its top edge, the clipboard icon bottom-left, nothing
     bottom-right; a swipe up opened the number pane and its ABC key returned to the letters, with
     nothing typed into the field.
-42. [ ] agent (not a tag blocker; found during item 41's device check): in an empty field the
+42. [x] agent (not a tag blocker; found during item 41's device check): in an empty field the
     auto-capitalised Shift is gone after a trip to the number pane and back (123+ → ABC gives
     lowercase letters). `Keyboard2View.setKeyboard` → `reset()` clears every modifier, and
     `KeyboardReceiver`'s SWITCH_TEXT does not run auto-capitalisation again. Not caused by item 41
     (the same path ran from Ctrl SE before). Fix: re-run the autocap check after SWITCH_TEXT, with
     a test seen failing first; left for after the A2 run at 17e8b8d4 so that run stays valid.
+    **Done 2026-11-23**, with the maintainer's rotation report of 2026-11-22 ("shift/control state
+    persistence after rotation"), the same cause. (a) Letter layouts: `KeyboardReceiver.showTextLayout`
+    (ABC, next/previous layout) and a subtype change call `CleverKeysService.restoreAutoCapitalisation`
+    → `Autocapitalisation.refresh`, which asks the editor again (a digit typed on the number pane
+    keeps Shift off); the number, symbol and Greek/Math panes never latch it (the number pane's Shift
+    would turn its arrows into selection). (b) Rotation: `RotationModifierCarry` takes the latched and
+    locked modifiers (`Pointers.heldModifiers`) before the restart and `restoreHeldModifiers` puts them
+    back on the new layout's keys after each reset the rotation causes (onStartInputView and the
+    configuration refresh after it), for the same field within 3 s; a touch on the keyboard, input in
+    another app or a modifier with no key ends it; the refresh also re-runs auto-capitalisation (it
+    dropped autocap's Shift in apps that keep their window). Red: the new instrumented class failed
+    all 3 cases on the unfixed code (API 34, `~/ew-output/modstate-red-2026-11-22/`: Shift gone after
+    ABC; caps lock and Ctrl gone after a rotation, autocap's Shift too in a kept window); the 20 new
+    mock and 8 pure tests each fail with their fix undone (11 failures, mutation run). Green: pure
+    3,986 / mock 1,896; A2 1,668 on each of API 34–37, 0 failed, 2 expected skips (carried in
+    164–232 ms on the emulators). Device PASS (Pixel, release d3e46f3b…): ABC brings Shift back; caps
+    lock and Ctrl kept across portrait→landscape→portrait in the CleverKeys test field, Settings search
+    (both keep their window) and the Google app's search box (window recreated).

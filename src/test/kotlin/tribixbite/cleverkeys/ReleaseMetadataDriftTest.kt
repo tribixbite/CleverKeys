@@ -77,32 +77,45 @@ class ReleaseMetadataDriftTest {
             "RELEASE_NOTES.md and all three ABI changelogs must be byte-identical",
             1, texts.distinct().size
         )
+        // Maintainer 2026-11-22: "nobody knows what ctc means … 'provisional; else geometric
+        // fallback' sounds like a robot talking to a robot". The notes now speak to users — a new
+        // swipe engine, its measured English accuracy, every layout, the language count — and
+        // these assertions pin the SAME evidence tiers ARC-054 set, in that wording.
         for ((file, text) in releaseFiles.zip(texts)) {
-            assertTrue("${file.path} must say CTC is default", text.contains("CTC is the default"))
-            assertTrue("${file.path} must list validated languages", text.contains("en/fr/de/es validated"))
-            assertTrue("${file.path} must list provisional languages", text.contains("it/pt/sv") && text.contains("provisional"))
-            assertTrue("${file.path} must explain fallback", text.contains("geometric fallback"))
-            assertFalse("${file.path} must not call CTC opt-in", text.contains("CTC engine (opt-in)"))
-            // ARC-054 (2026-09-03, maintainer-approved): ru and el are announced — each at its
-            // HONEST evidence tier, and only as pack-gated features.
+            // The one accuracy figure CTC has on real held-out swipes: English, 2,400 swipes,
+            // against the removed engine (RELEASE_RECORD "English top-1 accuracy").
             assertTrue(
-                "${file.path} must announce Russian at its validation tier (val-only corpus)",
-                text.contains("Russian swipe (validation-tested)")
+                "${file.path} must quote the English benchmark as English, beside the old engine's figure",
+                text.contains("89.3% first-guess accuracy in English (was 74.6%)")
             )
+            // Any other percentage would be a number with no real-swipe benchmark behind it —
+            // above all Greek's 92.12, a synthesis-holdout level that may NEVER be quoted.
+            assertEquals(
+                "${file.path} may quote no percentage but the English benchmark's two",
+                setOf("89.3%", "74.6%"),
+                Regex("""\d+(?:\.\d+)?\s?%""").findAll(text).map { it.value.replace(" ", "") }.toSet()
+            )
+            assertFalse("${file.path} quotes the Greek synthesis-holdout number — forbidden, always", text.contains("92.12"))
+            // The language count is the runtime table's, not a hand-kept number.
             assertTrue(
-                "${file.path} must announce Greek as early support — it has NO measured accuracy",
-                text.contains("early Greek support")
+                "${file.path} must count the swipe languages the engine serves",
+                text.contains("Swipe in ${CtcLanguageSupport.SUPPORTED.size} languages")
             )
+            // Every layout swipes: the geometric engine takes the layouts and languages the
+            // learned engine does not (SwipeEngineRouter).
+            assertTrue("${file.path} must say swipe works on any layout", text.contains("on any layout"))
+            // Only the four validated languages may be called tested; everything else is beta.
             assertTrue(
-                "${file.path} must say ru/el need their language pack imported",
-                text.contains("via language packs")
+                "${file.path} must name the validated languages and call the rest beta",
+                text.contains("en/fr/de/es tested, rest beta")
             )
-            // Greek's 92.12 is a synthesis-holdout level, not accuracy; it may NEVER appear in
-            // release copy. Same for any percentage adjacent to the Greek claim.
-            assertFalse(
-                "${file.path} quotes the Greek synthesis-holdout number — forbidden, always",
-                text.contains("92.12")
+            assertFalse("${file.path} must not call a language validated beyond the four", text.contains("validated"))
+            // ARC-054: ru, el, uk, bg, mk and he are announced only as pack-gated.
+            assertTrue(
+                "${file.path} must say ru/el/uk/bg/mk/he need their language pack imported",
+                text.contains("ru/el/uk/bg/mk/he via language packs")
             )
+            assertFalse("${file.path} must not call the default engine opt-in", text.contains("engine (opt-in)"))
         }
         // The thirteen languages the notes above actually describe: the original seven,
         // ru + el (announced 2026-09-03, ARC-054), and uk/bg/mk/he — announced in the
