@@ -5,7 +5,7 @@ Neon,,"a theme, category or colour name: translate it, or keep it if it reads as
 Pastel,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_category_pastel,PredefinedThemes.kt:31 ThemeCategory()
 Aurora,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_predefined_modern_aurora,PredefinedThemes.kt:707
 Cyberpunk,,"a theme, category or colour name: translate it, or keep it if it reads as a name",Theme Manager › built-in theme name,,Familiar looks and Theme Creator,theme_predefined_neon_cyberpunk,PredefinedThemes.kt:271
-Key Event,,,Short Swipes › action type,,Short-swipe customization and calibration,action_type_key_event,ActionType.kt:42
+Key Event,Peristiwa Tombol,,Short Swipes › action type,,Short-swipe customization and calibration,action_type_key_event,ActionType.kt:42
 < Min,,,Short Swipe Calibration screen,,Short-swipe customization and calibration,calibration_legend_tap_range,ShortSwipeCalibrationActivity.kt:267 TutorialSection()
 Intent: %1$s,,,Short Swipe Customization screen,keep %1$s (text); order may change,Short-swipe customization and calibration,short_swipe_action_desc_intent,ShortSwipeCustomizationActivity.kt:920
 Clipboard,,,Command palette,"max ~40 characters (one palette row, ellipsized)",Clipboard,command_category_clipboard,CommandRegistry.kt:57 Category()

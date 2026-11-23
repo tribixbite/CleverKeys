@@ -180,7 +180,7 @@
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
     <string name="suggestion_prefer_when_swiping">Preferați „%1$s” la glisare?</string>
-    <string name="suggestion_prefer_when_swiping_decline">Nu mai întrebați</string>
+    <string name="suggestion_prefer_when_swiping_decline">Nu mai întreba</string>
     <string name="suggestion_prefer_when_swiping_added">Glisarea preferă acum „%1$s”</string>
     <string name="suggestion_prefer_when_swiping_raised">Glisarea preferă acum puternic „%1$s”</string>
     <string name="suggestion_added_to_dictionary">„%1$s” a fost adăugat în dicționar</string>
@@ -208,7 +208,7 @@
     <string name="dict_legacy_freq_review">Verifică</string>
     <string name="dict_legacy_freq_dismiss">Ascunde</string>
     <string name="dict_legacy_freq_dialog_title">Ridicați vechile frecvențe implicite?</string>
-    <string name="dict_legacy_freq_dialog_message">Cuvintele adăugate în versiunile mai vechi au fost salvate cu frecvența %1$d, așa că sunt mai greu de introdus prin glisare. Ridică modifică doar cuvintele de mai jos, la %2$d; prioritatea lor la glisare rămâne aceeași. Dacă ați setat intenționat unul dintre ele la %1$d, îl puteți coborî din nou cu Editează.</string>
+    <string name="dict_legacy_freq_dialog_message">Cuvintele adăugate în versiunile mai vechi au fost salvate cu frecvența %1$d, așa că sunt mai greu de introdus prin glisare. „Ridică” modifică doar cuvintele de mai jos, la %2$d; prioritatea lor la glisare rămâne aceeași. Dacă ați setat intenționat unul dintre ele la %1$d, îl puteți coborî din nou cu „Editează”.</string>
     <string name="dict_legacy_freq_raise">Ridică</string>
     <string name="dict_legacy_freq_not_now">Nu acum</string>
     <plurals name="dict_legacy_freq_raised">
@@ -299,7 +299,7 @@
     <string name="short_swipe_show_keyboard">Afișează tastatura</string>
     <string name="short_swipe_reset_all">Resetează tot</string>
     <string name="short_swipe_reset_all_title">Resetați toate glisările scurte?</string>
-    <plurals name="short_swipe_reset_all_message"><item quantity="one">Se elimină %1$d mapare personalizată de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item><item quantity="few">Se elimină %1$d mapări personalizate de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item><item quantity="other">Se elimină %1$d de mapări personalizate de pe toate tastele. Subtastele salvate într-un aspect și copiile modificate ale aspectelor rămân neschimbate.</item></plurals>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Se elimină %1$d mapare personalizată de pe toate tastele. Subtastele salvate într-un aranjament și copiile modificate ale aranjamentelor rămân neschimbate.</item><item quantity="few">Se elimină %1$d mapări personalizate de pe toate tastele. Subtastele salvate într-un aranjament și copiile modificate ale aranjamentelor rămân neschimbate.</item><item quantity="other">Se elimină %1$d de mapări personalizate de pe toate tastele. Subtastele salvate într-un aranjament și copiile modificate ale aranjamentelor rămân neschimbate.</item></plurals>
     <string name="short_swipe_reset_all_confirm">Resetează tot</string>
     <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d mapare eliminată</item><item quantity="few">%1$d mapări eliminate</item><item quantity="other">%1$d de mapări eliminate</item></plurals>
     <string name="short_swipe_reset_all_undo">Anulează</string>
@@ -525,7 +525,7 @@
     <string name="clipboard_reorder_unavailable">Ștergeți căutarea și filtrele pentru a reordona</string>
     <string name="clipboard_reorder_moved">Mutat pe poziția %1$d din %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Copiere privată în alte aplicații</string>
-    <string name="clipboard_private_copy_other_apps_desc">Adaugă „Copiere privată” la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Adaugă „Copie privată” la meniurile de selecție a textului ale altor aplicații. Copiază textul selectat doar în CleverKeys — niciodată în clipboard-ul sistemului. Activarea adaugă o intrare de aplicație pe care alte aplicații o pot vedea.</string>
     <string name="clipboard_sanitize_links_title">Sanitizează parametrii de urmărire</string>
     <string name="clipboard_sanitize_links_desc">Elimină utm_*, fbclid etc. din URL-urile copiate. Alimentat de ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Curăță și clipboard-ul sistemului</string>
@@ -606,7 +606,7 @@
     <string name="input_frequency_scale_title">Scală frecvență</string>
     <string name="input_frequency_scale_desc">Echilibrează cuvintele comune față de cele neobișnuite (100–5000)</string>
     <string name="input_capitalize_i_title">Majusculă pentru „I”</string>
-    <string name="input_capitalize_i_desc">Majusculizează automat „I” și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
+    <string name="input_capitalize_i_desc">Scrie automat cu majusculă „I” și contracțiile (I\'m, I\'ll, I\'d, I\'ve)</string>
     <string name="input_smart_punctuation_title">Punctuație inteligentă</string>
     <string name="input_smart_punctuation_desc">Atașează punctuația la sfârșitul cuvintelor (elimină spațiul înainte de . , ! ? etc.)</string>
     <string name="input_space_before_opening_punctuation_title">Spațiu înainte de punctuația de deschidere</string>
@@ -710,7 +710,7 @@
     <string name="privacy_on_device_learning_desc">Construiește pe dispozitiv modele private de expresii și de utilizare a cuvintelor pornind de la ceea ce tastați. Dezactivarea oprește orice înregistrare automată a comportamentului de tastare — cât timp este dezactivată, nu se stochează nimic nou. Datele create explicit de dumneavoastră sunt separate: statisticile de performanță a predicțiilor și datele învățate restaurate dintr-o copie de rezervă.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Adăugat, dar prea lung pentru glisare</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pas.</item><item quantity="few">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pași.</item><item quantity="other">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pași.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pas. Nu va fi oferit la glisare.</item><item quantity="few">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d pași. Nu va fi oferit la glisare.</item><item quantity="other">„%1$s” a fost adăugat pentru tastare, dar CTC necesită %2$d pași și poate decoda doar %3$d de pași. Nu va fi oferit la glisare.</item></plurals>
     <string name="gesture_finger_occlusion_title">Corectarea decalajului tactil</string>
     <string name="gesture_finger_occlusion_desc">Deplasează citirea glisării față de vârful degetului. Pozitiv dacă traseele sunt deasupra tastelor, negativ dacă sunt dedesubt. Dezactivat implicit.</string>
     <string name="gesture_touch_smoothing_title">Netezirea atingerii</string>
@@ -903,9 +903,9 @@
     <string name="multilang_pack_license">Licența pachetului: %1$s</string>
     <string name="multilang_pack_source_label">Sursă</string>
     <string name="multilang_pack_attribution_missing">Acest pachet nu include informații despre sursă sau licență. Importați versiunea actuală a pachetului pentru a le vedea.</string>
-    <string name="multilang_pack_view_notice">Vedeți notificarea completă</string>
-    <string name="multilang_pack_notice_title">Notificare: %1$s</string>
-    <string name="multilang_pack_notice_missing">Notificarea completă nu a fost păstrată la importarea acestui pachet. Importați din nou pachetul pentru a o salva.</string>
+    <string name="multilang_pack_view_notice">Vedeți mențiunile complete</string>
+    <string name="multilang_pack_notice_title">Mențiuni: %1$s</string>
+    <string name="multilang_pack_notice_missing">Mențiunile complete nu au fost păstrate la importarea acestui pachet. Importați din nou pachetul pentru a le salva.</string>
     <string name="input_manage_layouts">Gestionează aranjamentele tastaturii</string>
     <string name="input_configure_extra_keys">Configurează tastele suplimentare</string>
     <string name="input_advanced_prediction">Setări avansate de predicție</string>
@@ -914,8 +914,8 @@
     <string name="help_open_wiki">Deschide wiki-ul complet</string>
     <string name="help_third_party_data">Date de la terți: listele de cuvinte provin din wordfreq (CC BY-SA 4.0), OpenSubtitles prin FrequencyWords (CC BY-SA 4.0), AOSP LatinIME (Apache-2.0) și Swwiki (CC BY-SA 3.0); contextul cuvintelor în engleză, germană, franceză, italiană, portugheză și suedeză provine din Leipzig Corpora Collection (CC BY 4.0) și Tatoeba (CC BY 2.0 FR). Atribuirea completă se află în fișierul NOTICE din codul sursă.</string>
     <string name="licenses_title">Licențe open source</string>
-    <string name="licenses_intro">CleverKeys este software liber sub GNU General Public License v3.0. Include componentele și datele terțe enumerate mai jos; după notificări urmează textul complet al fiecărei licențe pe care o folosesc.</string>
-    <string name="licenses_notices_header">Notificări</string>
+    <string name="licenses_intro">CleverKeys este software liber sub GNU General Public License v3.0. Include componentele și datele terțe enumerate mai jos; după mențiuni urmează textul complet al fiecărei licențe pe care o folosesc.</string>
+    <string name="licenses_notices_header">Mențiuni</string>
     <string name="licenses_texts_header">Textele licențelor</string>
     <string name="licenses_text_missing">Acest text lipsește din pachetul aplicației.</string>
     <string name="gesture_section_intro">Reglați fin comportamentul atingerilor, glisărilor și cursoarelor pentru stilul dvs. de tastare.</string>
@@ -933,7 +933,7 @@
     <string name="subkey_assign_title">Tasta %1$s · %2$s</string>
     <string name="subkey_edit_current">În prezent: %1$s</string>
     <string name="subkey_assign_default_removed">Subtasta integrată a acestui loc a fost eliminată.</string>
-    <string name="subkey_edit_layout_default">Subtastă încorporată din aspectul tastaturii</string>
+    <string name="subkey_edit_layout_default">Subtastă încorporată din aranjamentul tastaturii</string>
     <string name="subkey_edit_reassign">Reatribuire</string>
     <string name="subkey_assign_choose">Alegeți o acțiune</string>
     <string name="subkey_edit_restore">Restaurare implicită</string>
@@ -964,7 +964,7 @@
     <string name="layout_manager_badge_modified_copy">Copie modificată a %1$s</string>
     <string name="layout_manager_revert">Revenire la original</string>
     <string name="layout_manager_revert_title">Reveniți la aranjamentul original?</string>
-    <string name="layout_manager_revert_body">%1$s ia locul acestei copii modificate. Subtastele modificate se renunță; opțiunile de limbă, temă și spațiere a tastelor se păstrează.</string>
+    <string name="layout_manager_revert_body">%1$s ia locul acestei copii modificate. Subtastele modificate se pierd; opțiunile de limbă, temă și spațiere a tastelor se păstrează.</string>
     <string name="gesture_selection_delete_header">Mod selecție-ștergere</string>
     <string name="gesture_selection_delete_desc">Glisare scurtă + menținere pe Backspace pentru a selecta text, apoi eliberați pentru a șterge.</string>
     <string name="gesture_tap_typing_header">Atingere și tastare</string>
@@ -1326,7 +1326,7 @@
     <string name="autocorrect_channel_inflection_cost_desc">Cu cât trebuie să fie mai bună o corectură pentru a înlocui un cuvânt cunoscut cu terminație. La maximum, astfel de cuvinte sunt mereu păstrate.</string>
     <string name="autocorrect_value_always_keep">Păstrează mereu</string>
     <string name="autocorrect_tuning_reset">Resetează clasarea și reglajul fin</string>
-    <string name="autocorrect_tuning_reset_body">Restabilești valorile implicite pentru toate setările din Clasare și reglaj fin? Celelalte setări de corectare automată nu se schimbă.</string>
+    <string name="autocorrect_tuning_reset_body">Restabiliți valorile implicite pentru toate setările din Clasare și reglaj fin? Celelalte setări de corectare automată nu se schimbă.</string>
     <plurals name="autocorrect_value_rank_steps">
         <item quantity="one">%1$d treaptă</item>
         <item quantity="few">%1$d trepte</item>
@@ -1461,7 +1461,7 @@
     <string name="backup_result_restart_keyboard_settings">Reporniți tastatura pentru ca modificările setărilor să aibă efect.</string>
     <string name="backup_result_full_import_failed_title">Importul backupului complet a eșuat</string>
     <string name="backup_result_full_import_failed">Importul backupului complet a eșuat:\n\n%1$s</string>
-    <string name="clipboard_rules_saved_malformed">Fișierul salvat este deformat: %1$s</string>
+    <string name="clipboard_rules_saved_malformed">Fișierul salvat are un format nevalid: %1$s</string>
     <string name="clipboard_rules_uri_no_copy">Locația fișierului a fost reținută, dar încă nu există o copie pe disc.</string>
     <string name="clipboard_rules_zero_providers">Fișierul a fost analizat, dar conținea 0 furnizori.</string>
     <string name="clipboard_rules_invalid_detail">Fișier de reguli invalid: %1$s</string>
@@ -1510,7 +1510,7 @@
     <string name="backup_headless_plaintext_rejected">Import eșuat: backupurile în text simplu nu sunt acceptate prin automatizare – folosiți butonul Import din aplicație</string>
     <string name="backup_headless_invalid_base64">Date base64 invalide: %1$s</string>
     <string name="backup_headless_failure_label">%1$s (%2$s)</string>
-    <string name="backup_headless_reason_malformed">date de backup deformate</string>
+    <string name="backup_headless_reason_malformed">date de backup cu format nevalid</string>
     <string name="backup_headless_reason_unreadable">fișier ilizibil</string>
     <string name="backup_headless_reason_access_denied">acces refuzat</string>
     <string name="backup_headless_reason_io">eroare I/O</string>
@@ -1689,7 +1689,7 @@
     <string name="layout_manager_xml_empty_error">XML-ul aranjamentului nu poate fi gol</string>
     <string name="layout_manager_import_failed">Importul fișierului de aranjament a eșuat:\n%1$s</string>
     <string name="layout_manager_export_failed">Exportul fișierului de aranjament a eșuat:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Unele glisări scurte nu sunt în fișier: un aspect nu poate conține acțiunea lor (de exemplu lipirea unui element fixat). Pe acest dispozitiv funcționează în continuare.</string>
+    <string name="layout_manager_export_not_written">Unele glisări scurte nu sunt în fișier: un aranjament nu poate conține acțiunea lor (de exemplu lipirea unui element fixat). Pe acest dispozitiv funcționează în continuare.</string>
     <string name="extra_keys_group_layout_switching">Comutare aranjament</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Navigare</string>
@@ -1979,7 +1979,7 @@
     <string name="private_copy_stored">Copiat privat</string>
     <string name="private_copy_unavailable">Copia privată indisponibilă</string>
     <string name="suggestion_bar_toggle_password_visibility">Comută vizibilitatea parolei</string>
-    <string name="ime_default_prompt_toast">Setați %1$s ca implicită în Setări → Sistem → Limbi și introducere → Tastatură pe ecran (mementoul poate fi dezactivat în setările %1$s)</string>
+    <string name="ime_default_prompt_toast">Setați %1$s ca implicită în Setări → Sistem → Limbi și introducerea textului → Tastatură pe ecran (mementoul poate fi dezactivat în setările %1$s)</string>
     <string name="tile_descr_active">%1$s este activă. Atingeți pentru a schimba tastatura.</string>
     <string name="tile_descr_inactive">Atingeți pentru a comuta la tastatura %1$s.</string>
     <string name="tile_subtitle_switch">Schimbare tastatură</string>
@@ -2179,11 +2179,11 @@
     <string name="cmd_voice_typing_chooser">Selector dictare vocală</string>
     <string name="cmd_voice_typing_chooser_desc">Alege metoda de introducere vocală</string>
     <string name="cmd_minimize_bar">Minimizează la bară</string>
-    <string name="cmd_minimize_bar_desc">Restrânge tastatura la o bară subțire; atinge-o pentru a readuce tastatura</string>
+    <string name="cmd_minimize_bar_desc">Restrânge tastatura la o bară subțire; atingeți-o pentru a readuce tastatura</string>
     <string name="cmd_minimize_fab">Minimizează la buton flotant</string>
-    <string name="cmd_minimize_fab_desc">Restrânge tastatura la un buton flotant, ca aplicația să aibă tot ecranul; atinge-l pentru a readuce tastatura</string>
+    <string name="cmd_minimize_fab_desc">Restrânge tastatura la un buton flotant, ca aplicația să aibă tot ecranul; atingeți-l pentru a readuce tastatura</string>
     <string name="cmd_hide_keyboard">Ascunde tastatura</string>
-    <string name="cmd_hide_keyboard_desc">Închide tastatura; atinge un câmp de text pentru a o readuce</string>
+    <string name="cmd_hide_keyboard_desc">Închide tastatura; atingeți un câmp de text pentru a o readuce</string>
     <string name="cmd_theme_next">Tema următoare</string>
     <string name="cmd_theme_next_desc">Aplică tema următoare în ordinea din Managerul de teme</string>
     <string name="cmd_theme_previous">Tema anterioară</string>
@@ -2663,8 +2663,8 @@
     <string name="layout_key_geometry_chip">Spațiere și chenare taste: %1$s</string>
     <string name="layout_key_geometry_title">Spațiere și chenare taste</string>
     <string name="layout_key_geometry_global">Setări globale</string>
-    <string name="layout_key_geometry_custom">Acest aspect</string>
-    <string name="layout_key_geometry_desc">Cât timp acest aspect este activ, valorile setate aici înlocuiesc setările de Aspect vizual și spațierea unui stil familiar. Setările de Aspect vizual nu se schimbă.</string>
+    <string name="layout_key_geometry_custom">Acest aranjament</string>
+    <string name="layout_key_geometry_desc">Cât timp acest aranjament este activ, valorile setate aici înlocuiesc setările de Aspect și spațierea unui aspect cunoscut. Setările de Aspect nu se schimbă.</string>
     <string name="layout_key_geometry_use_global">Folosește setarea globală</string>
     <string name="layout_key_geometry_xml_invalid">Atribut de spațiere sau chenar al tastelor nevalid: %1$s</string>
     <string name="import_preview_layout_geometry_change">%1$s: spațiere și chenare taste %2$s → %3$s</string>
@@ -2784,12 +2784,12 @@
     <string name="voice_pack_engine">Motor: %1$s (versiunea %2$d)</string>
     <string name="voice_pack_languages">Limbi: %1$s</string>
     <string name="voice_pack_license">Licență: %1$s</string>
-    <string name="voice_pack_notice">Licență și notificare</string>
+    <string name="voice_pack_notice">Licență și mențiuni</string>
     <string name="voice_pack_unsupported">%1$s necesită o versiune mai nouă de CleverKeys și nu poate fi folosit.</string>
     <string name="voice_permission_blocked_desc">Accesul la microfon este blocat pentru CleverKeys. Permiteți-l în setările sistemului pentru a folosi introducerea vocală.</string>
     <string name="voice_open_app_settings">Deschide setările aplicației</string>
     <string name="voice_permission_blocked_title">Accesul la microfon este blocat</string>
-    <string name="voice_permission_blocked_steps">Android nu mai afișează solicitarea de microfon pentru CleverKeys. În Informații despre aplicație, deschideți Permisiuni → Microfon și alegeți Permiteți. Introducerea vocală pornește când reveniți.</string>
+    <string name="voice_permission_blocked_steps">Android nu mai afișează solicitarea de microfon pentru CleverKeys. În Informații despre aplicație, deschideți Permisiuni → Microfon și alegeți Permite. Introducerea vocală pornește când reveniți.</string>
     <string name="voice_pack_error_not_voice_pack">Acest fișier nu este un pachet vocal.</string>
     <string name="voice_pack_error_invalid_manifest">Manifestul pachetului vocal este deteriorat sau nevalid.</string>
     <string name="voice_pack_error_invalid_id">Pachetul vocal declară un id nevalid: %1$s</string>

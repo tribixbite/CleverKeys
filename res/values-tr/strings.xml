@@ -353,7 +353,7 @@
     <string name="settings_section_privacy">🔒 Gizlilik &amp; Veri</string>
     <string name="settings_section_swipe_trail">✨ Kaydırma İzi</string>
     <string name="accessibility_system_vibration_title">Sistem Titreşimini Kullan</string>
-    <string name="accessibility_system_vibration_desc">Telefonunuzun yerleşik haptic düzenini kullanır (en düşük gecikme). Özel bir süre ayarlamak için kapatın.</string>
+    <string name="accessibility_system_vibration_desc">Telefonunuzun yerleşik dokunsal titreşim düzenini kullanır (en düşük gecikme). Özel bir süre ayarlamak için kapatın.</string>
     <string name="accessibility_custom_duration_title">Özel Süre (isteğe bağlı)</string>
     <string name="accessibility_custom_duration_desc">Sistem titreşimi kapalıyken kullanılan titreşim süresi.</string>
     <string name="accessibility_key_press_title">Tuşa Basma</string>
@@ -576,7 +576,7 @@
     <string name="input_backspace_undo_swipe_title">Geri Silme ile Kaydırmayı Geri Al</string>
     <string name="input_backspace_undo_swipe_desc">Kaydırılan sözcüğün hemen ardından geri silme tuşuna basmak sözcüğün tamamını siler</string>
     <string name="input_delete_word_url_pairs_title">Anahtar=değer çiftlerini tek tek silme</string>
-    <string name="input_delete_word_url_pairs_desc">&amp; ile birleştirilmiş anahtar=değer çiftleri içeren bir bağlantıda veya başka metinde (?a=1&amp;b=2), Bir sözcüğü sil her basışta bir çift siler</string>
+    <string name="input_delete_word_url_pairs_desc">&amp; ile birleştirilmiş anahtar=değer çiftleri içeren bir bağlantıda veya başka metinde (?a=1&amp;b=2), Kelime Sil her basışta bir çift siler</string>
     <string name="input_show_exact_typed_title">Tam yazılan sözcüğü göster</string>
     <string name="input_show_exact_typed_desc">Gerçekten yazdığınız harfleri öneri olarak sunar; sözlüğe eklemek için dokunun</string>
     <string name="input_context_aware_title">Bağlama Duyarlı Tahminler</string>
@@ -594,7 +594,7 @@
     <string name="input_smart_punctuation_title">Akıllı Noktalama</string>
     <string name="input_smart_punctuation_desc">Noktalamayı sözcüklerin sonuna ekle (. , ! ? vb.\'den önceki boşluğu kaldırır)</string>
     <string name="input_space_before_opening_punctuation_title">Açılış noktalamasından önce boşluk</string>
-    <string name="input_space_before_opening_punctuation_desc">Kaydırılarak yazılan sözcükten sonra ( \" \' $ @ ve benzerlerinin önüne boşluk koyar; kapanış işaretleri sözcüğe bitişik kalır</string>
+    <string name="input_space_before_opening_punctuation_desc">Kaydırılarak yazılan kelimeden sonra ( \" \' $ @ ve benzerlerinin önüne boşluk koyar; kapanış işaretleri kelimeye bitişik kalır</string>
     <string name="input_swipe_distance_threshold_title">Kaydırma Mesafesi Eşiği</string>
     <string name="input_swipe_distance_threshold_desc">Kaydırma ortasında kaydırıcı/etkinlik alt tuşlarını etkinleştirmek için mesafe (cihaz ölçekli birimler, örn. boşluk çubuğu imleç kaydırıcısı). Ayrıca geri silme gibi geniş tuşlarda kısa kaydırma minimumunu sınırlar.</string>
     <string name="input_circle_gesture_title">Daire Hareketi Duyarlılığı</string>
@@ -693,7 +693,7 @@
     <string name="privacy_on_device_learning_desc">Yazdıklarınızdan cihazda özel ifade ve kelime kullanım modelleri oluşturur. Kapatmak, yazma davranışının tüm otomatik kaydını durdurur — kapalıyken yeni hiçbir şey saklanmaz. Açıkça oluşturduğunuz veriler ayrıdır: tahmin performansı istatistikleri ve bir yedekten geri yüklenen öğrenilmiş veriler.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Eklendi, ancak kaydırma için çok uzun</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item><item quantity="other">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor. Kaydırarak yazarken bu kelime önerilmeyecek.</item><item quantity="other">“%1$s” dokunarak yazma için eklendi, ancak CTC %2$d adım gerektiriyor ve yalnızca %3$d adımı çözebiliyor. Kaydırarak yazarken bu kelime önerilmeyecek.</item></plurals>
     <string name="gesture_finger_occlusion_title">Dokunma kayması düzeltmesi</string>
     <string name="gesture_finger_occlusion_desc">Kaydırmanın parmak ucuna göre okunduğu yeri değiştirir. İzler tuşların üstündeyse pozitif, altındaysa negatif kullanın. Varsayılan olarak kapalıdır.</string>
     <string name="gesture_touch_smoothing_title">Dokunma yumuşatma</string>
@@ -936,7 +936,7 @@
     <string name="subkey_dialog_layout_hint">%1$s alt tuşları ve özel kısa kaydırmalar. Bir yöne dokunarak değiştirilebilir.</string>
     <string name="subkey_edit_layout_source">%1$s alt tuşu.</string>
     <string name="subkey_layout_copy_title">Düzenin bir alt tuşu değiştirilsin mi?</string>
-    <string name="subkey_layout_copy_body">Bu alt tuşu %1$s tanımlar. Yerleşik düzen değişmez: değişiklik, düzen listesinde onun yerini alan %2$s adlı bir kopyaya kaydedilir. Düzen Yöneticisi ile özgün düzene dönülebilir.</string>
+    <string name="subkey_layout_copy_body">Bu alt tuşu %1$s tanımlar. Yerleşik düzen değişmez: değişiklik, düzen listesinde onun yerini alan %2$s adlı bir kopyaya kaydedilir. Tuş Düzeni Yöneticisi ile özgün düzene dönülebilir.</string>
     <string name="subkey_layout_copy_confirm">Kopya oluştur</string>
     <string name="subkey_layout_copy_global">Tüm düzenlerde değiştir</string>
     <string name="subkey_layout_copy_name">%1$s (değiştirilmiş)</string>
@@ -1228,7 +1228,7 @@
     <string name="settings_faq_cursor_q">İmleci nasıl hareket ettiririm?</string>
     <string name="settings_faq_cursor_a">Boşluk çubuğunda kaydırın - imleç hareket hızı, ne kadar uzağa kaydırdığınızla orantılıdır. Hassas gezinme için gezinme tuşuna (boşluk çubuğu ile enter arasında) uzun basarak TrackPoint moduna geçin, ardından parmağınızı bir joystick gibi hareket ettirin.</string>
     <string name="settings_faq_select_delete_q">Metni nasıl seçer ve silerim?</string>
-    <string name="settings_faq_select_delete_a">Seçerek Silme Modu için: backspace üzerinde kısa kaydırın ve BASILI TUTUN - metin seçmek için parmağınızı bir joystick gibi hareket ettirin (karakterler için sol/sağ, satırlar için yukarı/aşağı). Seçili metni silmek için parmağınızı kaldırın. Backspace üzerinde sola kaydırmak, imleçten önceki kelimeyi siler.</string>
+    <string name="settings_faq_select_delete_a">Seçerek Silme Modu için: geri silme tuşunda kısa kaydırın ve BASILI TUTUN - metin seçmek için parmağınızı bir joystick gibi hareket ettirin (karakterler için sol/sağ, satırlar için yukarı/aşağı). Seçili metni silmek için parmağınızı kaldırın. Geri silme tuşunda sola kaydırmak, imleçten önceki kelimeyi siler.</string>
     <string name="settings_faq_switch_language_q">Diller arasında nasıl hızlıca geçiş yaparım?</string>
     <string name="settings_faq_switch_language_a">Birincil ve/veya ikincil dil geçiş alt tuşlarını ekleyin. Dillerinizi Ayarlar → Çoklu Dil (Birincil Dil ve İkincil Dil) bölümünden ayarlayın. Geçiş alt tuşları bu diller arasında geçiş yapar ve Çoklu Dil modu etkinken her iki dil de kaydırma tahminlerine katkıda bulunur.</string>
     <string name="settings_faq_emoji_q">Emojilere nasıl erişirim?</string>
@@ -1298,7 +1298,7 @@
     <string name="autocorrect_unfinished_word_mode_keep_desc">Boşluk tuşu tomorr kelimesini başka bir kelimeye (timor) çevirmek yerine yazıldığı gibi bırakır. Çubuk tomorrow önermeye devam eder.</string>
     <string name="autocorrect_unfinished_word_mode_off_desc">Boşluk tuşu tomorr kelimesini herhangi bir yazım hatası gibi ele alır ve başka bir kelimeye (timor) çevirebilir.</string>
     <string name="autocorrect_max_correction_cost_off">Kapalı</string>
-    <string name="autocorrect_short_deletion_scope_title">Silme Maliyetinin Kapsamı</string>
+    <string name="autocorrect_short_deletion_scope_title">Kısa Kelimeye Silme Maliyetinin Kapsamı</string>
     <string name="autocorrect_short_deletion_scope_desc">İbranicedeki tek harfli önekler bu maliyeti orada yararlı kılar; İngilizcede iki harfli bir kelimenin yanındaki fazla harf (tpo → to) gerçek bir yazım hatasıdır, bu yüzden diğer yazılarda varsayılan olarak kapalıdır.</string>
     <string name="autocorrect_short_deletion_scope_hebrew">Yalnızca İbrani yazısı</string>
     <string name="autocorrect_short_deletion_scope_all">Tüm diller</string>
@@ -2466,7 +2466,7 @@
     <string name="cmd_replace_text">Metni Değiştir</string>
     <string name="cmd_replace_text_desc">Seçili metni bir uygulamanın sonucuyla değiştir (çevir, yeniden yaz)</string>
     <string name="cmd_replace_text_menu">Değiştirme Önerileri (Düzenleyici)</string>
-    <string name="cmd_replace_text_menu_desc">İmleçteki sözcük için uygulamanın kendi önerilerini aç: yazım düzeltmeleri ve diğer kaydırma adayları. Yalnızca standart Android metin alanlarında; diğer uygulamalar hiçbir şey yapmayabilir</string>
+    <string name="cmd_replace_text_menu_desc">İmleçteki kelime için uygulamanın kendi önerilerini aç: yazım düzeltmeleri ve diğer kaydırma adayları. Yalnızca standart Android metin alanlarında; diğer uygulamalar hiçbir şey yapmayabilir</string>
     <string name="text_assist_menu_removed">Metin Yardımı (Düzenleyici Menüsü) artık desteklenmiyor. Başka bir komut atayın</string>
     <string name="cmd_show_text_menu">Metin Menüsünü Göster</string>
     <string name="cmd_show_text_menu_desc">İmleçteki kelimeyi seç, sistem araç çubuğunu göster</string>
@@ -2544,12 +2544,12 @@
     <string name="clipboard_bulk_action_error">Tamamlanamadı. Seçiminiz korunuyor.</string>
     <string name="clipboard_bulk_preview">Önizleme: %1$s</string>
     <string name="clipboard_merge_message">Seçili metinden geçmişte yeni bir kırpma oluşturur; en eskisi önce, her biri ayrı satırda (%1$s). Orijinaller kalır.</string>
-    <string name="clipboard_merge_private_note">Seçili kırpmalardan biri gizli olduğu için bu da gizli olacak.</string>
+    <string name="clipboard_merge_private_note">Seçili kırpmalardan biri özel olduğu için bu da özel olacak.</string>
     <string name="clipboard_merge_copied">Panoda, yapıştırmaya hazır.</string>
     <string name="clipboard_merge_action">Birleştir</string>
     <string name="clipboard_merge_too_few">Birleştirmek için en az iki metin kırpması seçin.</string>
     <string name="clipboard_merge_too_large">Birleştirilmiş kırpma %1$s olurdu; sınır %2$s. Daha az kırpma seçin.</string>
-    <string name="clipboard_clean_message">Fazla boşlukları ve boş satırları kaldırır, cümle ortasında bölünmüş satırları birleştirir; satır sonunda kısa çizgiyle bölünmüş bir sözcük yeniden birleştirilir. Paragraf araları, listeler, bağlantılar ve kod satır sonlarını korur. Yalnızca %1$s içindeki kopyalar değişir; bu işlem geri alınamaz.</string>
+    <string name="clipboard_clean_message">Fazla boşlukları ve boş satırları kaldırır, cümle ortasında bölünmüş satırları birleştirir; satır sonunda kısa çizgiyle bölünmüş bir kelime yeniden birleştirilir. Paragraf araları, listeler, bağlantılar ve kod satır sonlarını korur. Yalnızca %1$s içindeki kopyalar değişir; bu işlem geri alınamaz.</string>
     <string name="clipboard_clean_action">Temizle</string>
     <string name="clipboard_clean_nothing">Temizlenecek bir şey yok.</string>
     <plurals name="clipboard_added_to_pinned_result"><item quantity="one">%1$d kırpma sabitlenenlere eklendi.</item><item quantity="other">%1$d kırpma sabitlenenlere eklendi.</item></plurals>
