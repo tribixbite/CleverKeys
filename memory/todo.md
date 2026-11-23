@@ -220,6 +220,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     re-run once the concurrent keyboard session's `compileDebugUnitTestKotlin` is green again
     (its red-phase tests, not the strings). Still an AI review: the native-speaker review and
     the M2 decision remain OPEN.
+    2026-11-23 GPT-6 verification: reconciliation `50d538e5d` checked; all 441 cells imported,
+    0 refused. Gradle translation classes 24 passed; standard full suites 3,986 pure / 1,896
+    mock passed; post-reconciliation pure suite 3,986 passed (includes all translation classes).
+    Evidence and scope: both dated translation reports. Native review and M2 remain open.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:

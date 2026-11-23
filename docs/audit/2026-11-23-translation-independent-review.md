@@ -1,6 +1,7 @@
 # Independent translation AI review — 2026-11-23
 
 Reviewer: GPT-6. This is an AI review, not a native-speaker review or M2 sign-off.
+Primary report: [translation agent review](2026-11-23-translation-agent-review.md).
 
 ## Shared-checkout boundary
 
@@ -16,10 +17,12 @@ A text question about review ownership was sent to the maintainer; no answer was
 The other session's commits are evidence of their recorded fixes, not evidence that this
 session independently read every unchanged row. Coverage below describes only this review.
 
-## Findings requiring reconciliation with the active reviewer
+## Findings and reconciliation
 
-These findings refer to the inspected working-tree text. Recheck current cells and resources
-before applying: the active reviewer may have fixed a finding since it was recorded.
+The table preserves the findings as recorded during review. **The actionable corrections
+have since been reconciled by the active reviewer in `50d538e5d`** (41 cells in 15 locales,
+54 resource texts total). The remaining native questions are separate below. No additional
+translation patch from this session is needed. The final import dry-run and complete pure-suite recheck passed.
 
 | Priority | Locale | Key | Finding / action |
 |---|---|---|---|
@@ -33,10 +36,11 @@ before applying: the active reviewer may have fixed a finding since it was recor
 | Meaning | fr, nl, tr, zh-rCN | `theme_color_latched_key`, `theme_color_latched_label` | Locked wording conflates temporary, one-shot Shift activation with locked Shift/Caps Lock. Preserve that distinction; native terminology remains open. |
 | Missing meaning | fil | `dict_word_too_long_for_swipe_msg#one`, `#other` | Final sentence “Swiping will not offer it” remains absent. The same omissions found in ja/ko/vi/zh-rCN have since been restored by the active reviewer, as recorded below. |
 
-Beyond the scoped six opacity keys per locale, the same inversion also appears in older
-`appearance_keyboard_opacity_*`, `appearance_activated_key_opacity_*`, and
-`input_suggestion_bar_opacity_*` strings in cs/hu, plus cs `theme_color_opacity`.
-These are adjacent source findings, not additional scoped-sheet review rows.
+The reconciliation also corrects older `appearance_keyboard_opacity_*`,
+`appearance_activated_key_opacity_*`, and `input_suggestion_bar_opacity_title` strings in
+cs/hu, plus cs `theme_color_opacity`. `input_suggestion_bar_opacity_desc` correctly follows
+the English Transparency wording and remains unchanged: key names alone do not determine
+the displayed concept. These are adjacent source findings, not additional scoped-sheet rows.
 
 Source context: `theme/LookPopups.kt` explicitly defines BALLOON as the wide-head-and-neck
 preview shape. Literal translations of Balloon are naming questions, not established defects.
@@ -52,10 +56,17 @@ These are other-session changes, not fixes authored or imported by this session:
   glossary findings listed in the independent review now use the agreed 纠正/候选/滑动 terms.
 - Other observed review commits: `b0b955426`, `ff8eb91a2`, `f6d7aac7b`, `6ba71d91b`.
   Their filled-cell records and resources remain owned by the active reviewer.
+- `1ee52c20f` completed Filipino; `50d538e5d` explicitly reconciles this independent review.
+  I compared every CSV column between that commit and its parent: only reviewer cells changed,
+  with zero added/removed rows or resources. There are exactly **41 changed cells / 54 resource
+  texts**; **13 resource texts** are outside scoped sheets. The direct changes comprise the
+  older opacity strings above and the two ru/uk private-copy disclosure strings.
 
 ## Native-speaker questions
 
-These remain questions, not corrections justified by AI confidence alone.
+These are the independent questions still needing native judgement, not automatic corrections.
+The primary report §6 also contains the locale reviewers’ questions; its table’s 45 is their
+original question tally, not a deduplicated count including every later independent lead.
 
 - All 21 locales: `ime_default_prompt_toast` actual Android settings labels vary by version/OEM;
   verify the platform wording. `swipe_debug_session_intro`: confirm localized screen naming.
@@ -64,22 +75,16 @@ These remain questions, not corrections justified by AI confidence alone.
   between plural `diese Kosten` and singular `ist sie`. `clipboard_delete_selected_result#one`:
   verify dative agreement (`ausgewähltem Clip`). The call site selects the plural category
   by selected total `%2$d`, not the number actually deleted `%1$d`; see the source notes below.
-- fil: `theme_bar_emphasis_centre` uses `Malabo` (blurry) for dimmed suggestions; consider
-  `Padilimin ang mga salita sa gilid`. `licenses_intro`: does `libreng software` communicate
+- fil: `licenses_intro`: does `libreng software` communicate
   software freedom rather than only zero price? Consider `malayang software`. Cardinal hints
   `short_swipe_direction_*`: confirm compact native abbreviations. `diksiyonaryo`/`diksyunaryo`
   may be spelling variants; avoid glossary-driven restyling without a native decision.
 - in: `short_swipe_direction_*` compact direction abbreviations; Latin Home/End/Page Up/Page
   Down key names may be suitable borrowing. Confirm UI naturalness rather than translating
   technical keycaps automatically.
-- ja: `voice_pack_notice`, `multilang_pack_notice_missing`, `multilang_pack_notice_title`,
-  `multilang_pack_view_notice`: 通知 may suggest a system notification for legal NOTICE;
-  compare 告知/ライセンス表示.
 - ko: `theme_color_latched_key`/`_label`: does 고정된 convey temporary activation clearly?
-  `cmd_accent_caron`/`extra_key_accent_caron`: 카론 versus 캐론;
-  `cmd_accent_ogonek`/`extra_key_accent_ogonek`: 오고넥 versus 오고네크.
-- fa: `io_error_no_backup_password` uses گذرواژهٔ پشتیبانی against established گذرواژهٔ پشتیبان;
-  confirm whether this is a support/backup typo.
+- fa: `short_swipe_direction_short_*` abbreviations: especially ق for east, and ش shared
+  by north/east. A native reviewer should choose compact labels consistently with the FAQ.
 - hu: `extra_key_accent_bar` / `extra_key_accent_slash`: confirm specialist diacritic terms.
 - uk: `short_swipe_direction_short_{e,n,ne,nw,s,se,sw,w}`: confirm compact compass labels.
 - ru: `cmd_combining_kavyka`, `cmd_combining_payerok`, `cmd_combining_pokrytie`,
@@ -94,34 +99,28 @@ These remain questions, not corrections justified by AI confidence alone.
   `clipboard_bulk_media_skipped#zero`, `clipboard_clean_result#zero`,
   `clipboard_merge_result#zero`, `short_swipe_reset_all_done#zero`,
   `dict_legacy_freq_raised#zero`, `short_swipe_reset_all_message#zero`. `cmd_combining_cedille`/`_desc` use cedilla while sibling
-  accent labels use Sedijs; confirm the intended native term. `layout_manager_revert_body`
-  uses motīva against dominant tēma: native synonym or terminology drift?
-- fr: `clipboard_selection_clear` says Effacer la sélection; native wording should clearly
-  convey deselection rather than deleting selected text (`Désélectionner` is a candidate).
+  accent labels use Sedijs; confirm the intended native term.
 - it: `clipboard_delete_selected_result#one` verb/count agreement;
   `swipe_debug_trace_count#one/#many/#other` area di prova could count playgrounds rather than
   traces; `input_numpad_layout_high_first`/`_low_first` are elliptical but understandable.
-- nl: `import_preview_custom_themes_warning#one` het %1$d thema construction;
-  `clipboard_move_to_top` Naar boven versus `clipboard_move_up` Omhoog may not clearly
+- nl: `clipboard_move_to_top` Naar boven versus `clipboard_move_up` Omhoog may not clearly
   distinguish top from one-step movement; `swipe_debug_trace_count#one/#other` testomgeving
   wording may count environments rather than traces.
 - cs: native judgement for fractional-category morphology in
   `short_swipe_reset_all_message#many` and `import_preview_custom_themes_warning#many`;
   ordinary integer UI counts do not exercise these categories.
 - ro: `theme_color_latched_key`/`_label` fixată may need explicit temporary-state wording.
-  `theme_save_failed` translates “changes are still open” literally; verify that it conveys
-  that unsaved edits remain available, rather than that changes have been saved.
-- tr: `theme_color_latched_key`/`_label` Kilitli needs one-shot versus locked distinction.
-  `theme_save_failed` likewise uses a literal “changes still open” construction.
+  `input_space_before_opening_punctuation_desc` uses pune as a descriptive third-person
+  summary; do not automatically convert it to a formal imperative.
+  `clipboard_delete_selected_result#one`: check verb agreement with 0 or 1 deleted out of
+  one selected clipping.
+- tr: `multilang_pack_notice_missing`, `multilang_pack_notice_title`,
+  `multilang_pack_view_notice`: confirm bildirim conveys legal NOTICE rather than a
+  notification. ro/tr clipboard items decupaj / kırpma are established but need native
+  terminology confirmation.
 - vi: `theme_preview_balloon` Quả bóng is a native shape-naming question. Clipboard clips
   repeatedly use đoạn cắt; consider whether mục/đoạn sao chép better describes saved copies.
-  `cmd_theme_next`/`_desc`, `cmd_theme_previous`/`_desc`, `theme_cycle_message`,
-  `theme_scenes_desc` use Giao diện while the manager/layout UI says Chủ đề.
-  `cmd_clear_clipboard`/`_desc`, `system_clipboard_clear_failed`, `system_clipboard_cleared`
-  introduce khay nhớ tạm against established bộ nhớ tạm/bảng tạm.
-- zh-rCN: `input_numpad_layout_low_first` uses 小数 (decimal fractions) for low digits;
-  consider 小数字. `theme_save_failed` 你的更改仍保持打开 is a literal calque.
-  `cmd_accent_caron`, `cmd_accent_circonflexe`, `cmd_combining_caron`,
+- zh-rCN: `cmd_accent_caron`, `cmd_accent_circonflexe`, `cmd_combining_caron`,
   `cmd_combining_circonflexe`, `extra_key_accent_caron`, `extra_key_accent_circumflex`:
   retain the existing native question about 抑扬符 versus 扬抑符.
 - ko, zh-rCN: `theme_preview_balloon` 풍선/气球 names an explicitly balloon-shaped preview;
@@ -143,6 +142,12 @@ These remain questions, not corrections justified by AI confidence alone.
 - `swipe_debug_trace_count`: `SwipeDebugActivity` selects by total traces (`%2$d`) and passes
   playground trace count as `%1$d`. English “%1$d playground” is terse and can be clarified
   without implying that multiple playground screens are being counted.
+- Persian `io_error_no_backup_password` remains correct: پشتیبانی is پشتیبان plus the
+  indefinite ی after هیچ, rather than an established support/backup mistranslation.
+- The ja legal NOTICE labels, Korean Caron/Ogonek spelling pairs, Vietnamese theme/system
+  clipboard terminology and lv layout-theme wording were already corrected by the locale
+  pass; verified again against current resources. Vietnamese Giao diện in `theme_scenes_desc`
+  correctly names the Appearance screen, not the Theme selector.
 - German `cmd_case_cycle_desc` klein → Titel → GROSS can itself demonstrate title case;
   this is not sufficient evidence of a mistranslation.
 
@@ -158,34 +163,35 @@ This is not a claim of a full bilingual comparison of every unchanged row, or na
 The table records sheet sizes and filled cells observed in the shared tree, including
 other-session work. **This session translated/imported zero rows in every locale.**
 The final column counts rows still lacking native-speaker sign-off, not uncertain AI guesses.
-Specific unresolved questions are listed above. Filled-cell totals may change during the
-active review and are not evidence of import application or validation on a final commit.
+Specific unresolved questions are listed above. The final filled-cell count is **18 translations + 423 fixes = 441 cells**; a fresh import
+dry-run reports **0 would apply, 441 already imported, 0 refused**. Thirteen additional
+resource corrections are outside these sheets and are recorded above.
 
 | Locale | Translate rows | Check rows | Read-through rows | Filled translate / fixes (other session) | Still without native sign-off |
 |---|---:|---:|---:|---:|---:|
-| cs | 23 | 14 | 1,745 | 2 / 11 | 1,782 |
+| cs | 23 | 14 | 1,745 | 2 / 18 | 1,782 |
 | de | 30 | 7 | 1,613 | 0 / 15 | 1,650 |
-| es | 22 | 9 | 1,687 | 1 / 15 | 1,718 |
-| fa | 7 | 27 | 1,632 | 1 / 18 | 1,666 |
-| fil | 126 | 25 | 1,535 | 0 / 0 | 1,686 |
-| fr | 32 | 21 | 1,676 | 0 / 23 | 1,729 |
-| hu | 28 | 20 | 1,610 | 1 / 14 | 1,658 |
+| es | 22 | 9 | 1,687 | 1 / 17 | 1,718 |
+| fa | 7 | 27 | 1,632 | 1 / 19 | 1,666 |
+| fil | 126 | 25 | 1,535 | 4 / 16 | 1,686 |
+| fr | 32 | 21 | 1,676 | 0 / 28 | 1,729 |
+| hu | 28 | 20 | 1,610 | 1 / 21 | 1,658 |
 | in | 48 | 21 | 1,523 | 1 / 18 | 1,592 |
 | it | 28 | 28 | 1,660 | 0 / 16 | 1,716 |
-| ja | 15 | 9 | 1,561 | 0 / 21 | 1,585 |
-| ko | 7 | 7 | 1,570 | 3 / 16 | 1,584 |
+| ja | 15 | 9 | 1,561 | 0 / 22 | 1,585 |
+| ko | 7 | 7 | 1,570 | 3 / 17 | 1,584 |
 | lv | 19 | 14 | 1,684 | 3 / 26 | 1,717 |
-| nl | 46 | 9 | 1,610 | 0 / 31 | 1,665 |
-| pl | 30 | 20 | 1,738 | 0 / 18 | 1,788 |
+| nl | 46 | 9 | 1,610 | 0 / 34 | 1,665 |
+| pl | 30 | 20 | 1,738 | 0 / 19 | 1,788 |
 | pt | 42 | 10 | 1,666 | 0 / 24 | 1,718 |
-| ro | 50 | 14 | 1,688 | 0 / 29 | 1,752 |
-| ru | 16 | 18 | 1,746 | 0 / 12 | 1,780 |
-| tr | 23 | 13 | 1,617 | 0 / 11 | 1,653 |
-| uk | 16 | 21 | 1,747 | 0 / 13 | 1,784 |
-| vi | 22 | 17 | 1,546 | 0 / 10 | 1,585 |
-| zh-rCN | 6 | 22 | 1,565 | 2 / 18 | 1,593 |
+| ro | 50 | 14 | 1,688 | 0 / 30 | 1,752 |
+| ru | 16 | 18 | 1,746 | 0 / 13 | 1,780 |
+| tr | 23 | 13 | 1,617 | 0 / 14 | 1,653 |
+| uk | 16 | 21 | 1,747 | 0 / 14 | 1,784 |
+| vi | 22 | 17 | 1,546 | 0 / 17 | 1,585 |
+| zh-rCN | 6 | 22 | 1,565 | 2 / 25 | 1,593 |
 
-<!-- # TODO: Reconcile supplemental findings with current reviewer cells/resources; native review and M2 remain open. -->
+<!-- # TODO: Native-speaker questions and the maintainer M2 decision remain open. -->
 
 The existing Python import/export suite passed:
 `python3 -m unittest scripts.test_export_translation_review` — **14 tests, zero failures**.
@@ -197,8 +203,17 @@ suites were started through `scripts/gradle-guard.sh` with 1536m heap / 384m met
 another session's build. All five suites passed: **24 tests, zero failures**,
 `BUILD SUCCESSFUL` (6m 21s). Kotlin app/test compilation passed with existing warnings.
 
-The full `runPureTests runMockTests` batch is running through the same guard; result pending.
-Its local log is `build/translation-independent-full-tests.log`. All results describe the
+The full `runPureTests runMockTests` batch passed through the same guard: **3,986 pure +
+1,896 mock tests, zero failures; BUILD SUCCESSFUL in 14m 47s**. Standard optional geoFull
+corpus replays were disabled. The run began before `50d538e5d`; the concurrent validation
+session is now running a complete pure suite against the final resources. I cancelled only
+my duplicate queued five-class check (before it acquired the guard) to avoid duplicate work.
+Post-reconciliation pure-suite result: **3,986 tests passed**, including all five required
+translation classes (`build.gradle` pure runner entries verified), observed 2026-11-23 05:44 UTC
+at HEAD `4b98b41f0` with resource corrections from `50d538e5d`. Snapshot:
+`build/translation-independent-final-pure.log`. The concurrent broad build has moved on
+to its mock suite and APK tasks; those additional results are not claimed here.
+The completed independent full-run log is `build/translation-independent-full-tests.log`. All results describe the
 live shared checkout, including the other session's imports and unrelated uncommitted code;
 they are not a claim that a clean final translation commit has been tested.
 No push or CI run was initiated by this session.

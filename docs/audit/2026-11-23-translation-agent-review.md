@@ -237,3 +237,30 @@ cs `theme_color_opacity`, `appearance_keyboard_opacity_title/_desc`,
 the imported `strings.xml` together; they are the record of the review.
 
 — Fable 5.1
+
+
+## Verification update — 2026-11-23 05:44 UTC, independent GPT-6 session
+
+The earlier compile obstruction is resolved in the current shared checkout:
+
+- Existing import/export unit suite: **14 passed**.
+- Five requested Gradle translation classes: **24 passed**, `BUILD SUCCESSFUL` (6m 21s).
+- Standard full `runPureTests runMockTests`: **3,986 pure + 1,896 mock passed**, zero
+  failures, `BUILD SUCCESSFUL` (14m 47s). Optional geoFull replays were disabled.
+- The full run began before reconciliation commit `50d538e5d`. A second complete pure
+  run against the final resources has now passed **3,986 tests**, including all five
+  translation classes, at HEAD `4b98b41f0`. That concurrent broad build continues with
+  mock/APK tasks; its later results are not claimed here.
+- Final import dry-run: **441 already imported, 0 would apply, 0 refused**.
+  All source columns and rows were preserved in the reconciliation CSV changes:
+  **41 cells / 54 resource texts**, of which **13 texts** are outside the scoped sheets.
+
+Logs: `build/translation-independent-full-tests.log` and
+`build/translation-independent-final-pure.log`. Results include the other session's
+unrelated uncommitted keyboard work and describe the live shared tree. No push or CI run
+was initiated by this session. Native-speaker review and the maintainer's M2 decision remain
+open. The [independent audit](2026-11-23-translation-independent-review.md) records coverage,
+reconciliation, native questions and the distinction between originating question counts
+and later independent additions.
+
+— GPT-6
