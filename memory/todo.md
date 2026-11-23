@@ -104,6 +104,28 @@ the rest left to a native speaker (`docs/audit/2026-11-23-translation-review-of-
 Not changed: a long press on a Shift that is already LOCKED still unlocks it on release; with Ctrl
 and caps lock both on the letter keys still read lowercase. Before the tag: only M1, M2, M4.
 
+**Status 2026-11-23, afternoon (agent).** Maintainer: "fix the lowercase labels with ctrl + caps lock-
+and what happened to ctrl lock", the RustDesk report ("after using shift or control once it seems to
+bleed for all future input into the remote machine"), the paste report ("OS/system/unmodified
+clippings when i use the short swipe 'paste' … instead of the topmost clipping from ck clipboard") and
+"make it so holding ctrl and shift activate the subkey popup instead". Done (`b8cefeb7`, `a6f6172e`):
+capitals with Ctrl/Alt/Meta + caps lock (label only; key code unchanged); a double tap locks Ctrl,
+Alt, Fn, Meta like Shift (Ctrl double-tap lock had never existed: only Shift carried the flag, as
+upstream; setting text in 21 locales); a modifier's UP key event carries the meta state after release
+(Flutter apps such as RustDesk held Right-Ctrl/Shift otherwise; NOT verified in a RustDesk session —
+it would type into the maintainer's PC); editing the History row that is Android's clip puts the
+edit on Android's clipboard (never private rows or another app's clip); holding Shift or Ctrl opens
+their subkey popover when the popover and double-tap lock are on; a quick double tap at a sentence
+start (within 400 ms of releasing autocap's Shift) is caps lock. Seen failing first: 7 + 3 + 4 mock
+tests and `EditedClipPasteInstrumentedTest` on API 34 (pasted "ck paste original …"). After: pure
+3,991 / mock 1,935; A2 at `a6f6172e`'s app (`~/ew-output/full-2026-11-23c/`, app sha256
+`64de7d259a714a6f…`): 1,676 on each of API 34–37, 0 failed, 2 expected skips. Pixel, release
+`62fd71af…`: capital labels with Ctrl + caps lock, Ctrl double-tap lock, Shift popover on hold (the
+Pixel's own popover setting is OFF after the upgrade, so the hold locks there; turned on for the test
+and back off), quick double tap at a sentence start = caps lock. Not device-checked: the paste after
+an edit (it would change the phone's clipboard; emulator test on 4 APIs) and RustDesk. Open: Alt, Fn,
+Meta keep the locking hold (only Shift and Ctrl were asked for). Before the tag: only M1, M2, M4.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the

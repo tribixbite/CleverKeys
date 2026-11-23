@@ -202,6 +202,14 @@ window, compare the `mCurrentFocus` `Window{hash}` before and after: the Activit
 the same across a relaunch. Real rotation in instrumented tests: `settings put system
 accelerometer_rotation 0` then `user_rotation 1` rotates the emulator.wtf Pixel7 images (restore both).
 
+## Modifier key events and Flutter apps (2026-11-23)
+
+A modifier's own UP key event must carry the meta state AFTER release (a hardware keyboard's does).
+Ours carried the modifier's bit, and Flutter (RustDesk) keeps its modifier state in step with each
+event's meta state: it pressed Right-Ctrl/Shift itself and held it for all later input. Flutter's own
+virtual-keyboard exception (#185292) only landed 2026-04-29. Modifier events go through
+`KeyEventHandler.postKeyEvent`, not `sendKeyevent`, so auto-capitalisation does not read them as typing.
+
 ## Swipe-engine changes surface dictionary data (2026-11-20)
 
 The CTC collision alternates (`ebef6234`, verified by pure tests and a FUTO replay) offer every form of a
