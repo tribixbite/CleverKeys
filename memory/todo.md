@@ -61,10 +61,16 @@ instrumented classes 185/185 on API 34 and 37 (`~/ew-output/toggles-layouts-2026
 Release 5007948e installed on the S25U and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
 auto-space, subkeys, clipboard editor, multi-language CTC, language detection) 253/253 on API 34
 and 37 (`~/ew-output/url-sv-2026-11-22/`). Release 17e8b8d4 (item 41) installed on the S25U and
-the Pixel, device PASS. Full A2 instrumented run at 17e8b8d4 started 20:33
-(`~/ew-output/full-2026-11-22/`, API 34–37, 3 shards each). Release notes: the GitHub body draft
-(`docs/plans/v2.0.0-github-release-body.md`) now carries the features merged 11-01 … 11-22; the
-500-byte fastlane note is unchanged (maintainer's call what it names).
+the Pixel, device PASS. **A2 DONE at 17e8b8d4**: full instrumented run, 1,665 tests on each of
+API 34–37, 0 failed, 2 expected skips (`Issue181NoFontProviderTest`, `VoiceEngineDeviceBenchmark`;
+app sha256 `fb756657399b4a1c…`, test `40a1b3577e389dd6…`, `~/ew-output/full-2026-11-22/`); pure
+3,978 / mock 1,876; CI green. Release notes: the GitHub body draft
+(`docs/plans/v2.0.0-github-release-body.md`) carries the features merged 11-01 … 11-22 and these
+counts; the fastlane note (`RELEASE_NOTES.md` = the three ABI files, 500 bytes / 486 chars) now
+names the new look, animated themes and True Black, the familiar looks, next-word, autocorrect,
+clipboard Clean/Merge and the rotation fix, in place of the learning/private-copy/backup/TalkBack/
+popover and minimize/terminal/macro lines (maintainer request 2026-11-22);
+`ReleaseMetadataDriftTest` and `ReleaseRecordDriftTest` green. Before the tag: only M1, M2, M4.
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
@@ -192,6 +198,11 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     `theme_builtin_cleverkeysdark_desc`), checked present in all 21 locales; 23 removed keys left
     the sheets. Re-import: `python3 scripts/export_translation_review.py --import <locale>/*.csv
     [--dry-run]`. Leads: `docs/audit/2026-10-22-translation-audit.md`. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-10)
+    RE-EXPORTED 2026-11-22 at `17e8b8d4` (still no reviewer cells filled): adds
+    `input_delete_word_url_pairs_title` / `_desc` (machine-translated 2026-11-22) to all 21
+    locales and refreshes the `code` column's line numbers; now 636 / 346 / 34,419 rows. The
+    maintainer plans an AGENT review of the sheets (2026-11-22); an agent review is recorded as
+    such, not as the native-speaker review M2 names.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:

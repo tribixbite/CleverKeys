@@ -124,4 +124,4 @@ Haptic Feedback,,,Settings › Accessibility section,,Settings (other sections),
 GitHub Repository,,,Settings › information card,max ~40 characters (title),Settings (other sections),settings_github_repo_title,SettingsInfoCards.kt:118 GitHubInfoCard()
 Custom,,,Settings › reset presets,,Settings (other sections),settings_sensitivity_preset_custom,SettingsResetPresets.kt:20 SwipeSensitivityPreset()
 CleverKeys Keyboard,,,"Android system (app/activity label in launcher, settings or share menu)",,"Keyboard, tile, launcher and system",manifest_ime_service_label,AndroidManifest.xml:38
-Text Assist,,,Keyboard view,,"Keyboard, tile, launcher and system",text_action_assist_name,Keyboard2View.kt:2888 TextActionPolicy()
+Text Assist,,,Keyboard view,,"Keyboard, tile, launcher and system",text_action_assist_name,Keyboard2View.kt:2903 TextActionPolicy()

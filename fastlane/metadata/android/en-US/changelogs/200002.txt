@@ -2,9 +2,10 @@ v2.0.0 - Swipe Engines
 
 • CTC is the default: en/fr/de/es validated; it/pt/sv provisional; else geometric fallback
 • Russian swipe (validation-tested), early Greek support, uk/bg/mk/he provisional, via language packs
-• Offline voice input: opt-in pack, mic only when on
-• Learning, next-word, private copy, AES backup, TalkBack, popover
-• Minimize (#175); clear OS clip (#168); terminals; template/'s macros
+• New look, animated themes (Aurora, Snow, Beach…), True Black
+• iOS/Gboard/SwiftKey/Samsung-style looks
+• Offline voice input (opt-in, mic only when on)
+• Next-word, typo-aware autocorrect, clipboard Clean/Merge
 
-Fixes: 69-finding audit; user-word swipe; #90 #181 #184 #188
+Fixes #90 #181 #184 #188; rotation
 Requires Android 7+

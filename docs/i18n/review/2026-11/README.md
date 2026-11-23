@@ -29,27 +29,27 @@ writes your cells into the app and refuses any cell that would break a placehold
 
 | language | 1 translate | 2 check | 3 read-through |
 |---|---|---|---|
-| `cs` | [23](cs/1-translate.csv) | [14](cs/2-check.csv) | [1743](cs/3-read-through.csv) |
-| `de` | [30](de/1-translate.csv) | [7](de/2-check.csv) | [1611](de/3-read-through.csv) |
-| `es` | [22](es/1-translate.csv) | [9](es/2-check.csv) | [1685](es/3-read-through.csv) |
-| `fa` | [7](fa/1-translate.csv) | [27](fa/2-check.csv) | [1630](fa/3-read-through.csv) |
-| `fil` | [126](fil/1-translate.csv) | [25](fil/2-check.csv) | [1533](fil/3-read-through.csv) |
-| `fr` | [32](fr/1-translate.csv) | [21](fr/2-check.csv) | [1674](fr/3-read-through.csv) |
-| `hu` | [28](hu/1-translate.csv) | [20](hu/2-check.csv) | [1608](hu/3-read-through.csv) |
-| `in` | [48](in/1-translate.csv) | [21](in/2-check.csv) | [1521](in/3-read-through.csv) |
-| `it` | [28](it/1-translate.csv) | [28](it/2-check.csv) | [1658](it/3-read-through.csv) |
-| `ja` | [15](ja/1-translate.csv) | [9](ja/2-check.csv) | [1559](ja/3-read-through.csv) |
-| `ko` | [7](ko/1-translate.csv) | [7](ko/2-check.csv) | [1568](ko/3-read-through.csv) |
-| `lv` | [19](lv/1-translate.csv) | [14](lv/2-check.csv) | [1682](lv/3-read-through.csv) |
-| `nl` | [46](nl/1-translate.csv) | [9](nl/2-check.csv) | [1608](nl/3-read-through.csv) |
-| `pl` | [30](pl/1-translate.csv) | [20](pl/2-check.csv) | [1736](pl/3-read-through.csv) |
-| `pt` | [42](pt/1-translate.csv) | [10](pt/2-check.csv) | [1664](pt/3-read-through.csv) |
-| `ro` | [50](ro/1-translate.csv) | [14](ro/2-check.csv) | [1686](ro/3-read-through.csv) |
-| `ru` | [16](ru/1-translate.csv) | [18](ru/2-check.csv) | [1744](ru/3-read-through.csv) |
-| `tr` | [23](tr/1-translate.csv) | [12](tr/2-check.csv) | [1616](tr/3-read-through.csv) |
-| `uk` | [16](uk/1-translate.csv) | [21](uk/2-check.csv) | [1745](uk/3-read-through.csv) |
-| `vi` | [22](vi/1-translate.csv) | [17](vi/2-check.csv) | [1544](vi/3-read-through.csv) |
-| `zh-rCN` | [6](zh-rCN/1-translate.csv) | [22](zh-rCN/2-check.csv) | [1563](zh-rCN/3-read-through.csv) |
+| `cs` | [23](cs/1-translate.csv) | [14](cs/2-check.csv) | [1745](cs/3-read-through.csv) |
+| `de` | [30](de/1-translate.csv) | [7](de/2-check.csv) | [1613](de/3-read-through.csv) |
+| `es` | [22](es/1-translate.csv) | [9](es/2-check.csv) | [1687](es/3-read-through.csv) |
+| `fa` | [7](fa/1-translate.csv) | [27](fa/2-check.csv) | [1632](fa/3-read-through.csv) |
+| `fil` | [126](fil/1-translate.csv) | [25](fil/2-check.csv) | [1535](fil/3-read-through.csv) |
+| `fr` | [32](fr/1-translate.csv) | [21](fr/2-check.csv) | [1676](fr/3-read-through.csv) |
+| `hu` | [28](hu/1-translate.csv) | [20](hu/2-check.csv) | [1610](hu/3-read-through.csv) |
+| `in` | [48](in/1-translate.csv) | [21](in/2-check.csv) | [1523](in/3-read-through.csv) |
+| `it` | [28](it/1-translate.csv) | [28](it/2-check.csv) | [1660](it/3-read-through.csv) |
+| `ja` | [15](ja/1-translate.csv) | [9](ja/2-check.csv) | [1561](ja/3-read-through.csv) |
+| `ko` | [7](ko/1-translate.csv) | [7](ko/2-check.csv) | [1570](ko/3-read-through.csv) |
+| `lv` | [19](lv/1-translate.csv) | [14](lv/2-check.csv) | [1684](lv/3-read-through.csv) |
+| `nl` | [46](nl/1-translate.csv) | [9](nl/2-check.csv) | [1610](nl/3-read-through.csv) |
+| `pl` | [30](pl/1-translate.csv) | [20](pl/2-check.csv) | [1738](pl/3-read-through.csv) |
+| `pt` | [42](pt/1-translate.csv) | [10](pt/2-check.csv) | [1666](pt/3-read-through.csv) |
+| `ro` | [50](ro/1-translate.csv) | [14](ro/2-check.csv) | [1688](ro/3-read-through.csv) |
+| `ru` | [16](ru/1-translate.csv) | [18](ru/2-check.csv) | [1746](ru/3-read-through.csv) |
+| `tr` | [23](tr/1-translate.csv) | [13](tr/2-check.csv) | [1617](tr/3-read-through.csv) |
+| `uk` | [16](uk/1-translate.csv) | [21](uk/2-check.csv) | [1747](uk/3-read-through.csv) |
+| `vi` | [22](vi/1-translate.csv) | [17](vi/2-check.csv) | [1546](vi/3-read-through.csv) |
+| `zh-rCN` | [6](zh-rCN/1-translate.csv) | [22](zh-rCN/2-check.csv) | [1565](zh-rCN/3-read-through.csv) |
 
 Strings that are codes or brands in every language (ZWNJ, Ctrl, ISO 8601, Rosé Pine, …,
 `keepEnglish` in `docs/i18n/review-flags.json`) and the Latin names of Hebrew, Arabic and Church
