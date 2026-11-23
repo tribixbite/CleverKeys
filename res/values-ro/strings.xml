@@ -180,7 +180,7 @@
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Adăugați „%1$s” în dicționar?</string>
     <string name="suggestion_prefer_when_swiping">Preferați „%1$s” la glisare?</string>
-    <string name="suggestion_prefer_when_swiping_decline">Nu mai întreba</string>
+    <string name="suggestion_prefer_when_swiping_decline">Nu mai întrebați</string>
     <string name="suggestion_prefer_when_swiping_added">Glisarea preferă acum „%1$s”</string>
     <string name="suggestion_prefer_when_swiping_raised">Glisarea preferă acum puternic „%1$s”</string>
     <string name="suggestion_added_to_dictionary">„%1$s” a fost adăugat în dicționar</string>
@@ -1768,7 +1768,7 @@
     <string name="theme_looks_desc">Culori și forme de taste ale tastaturilor de telefon cunoscute; luminos sau întunecat urmează sistemul. Fără afiliere cu Apple, Google, Microsoft sau Samsung.</string>
     <string name="theme_section_scenes">Scene</string>
     <string name="theme_scenes_desc">Taste CleverKeys peste o scenă pictată care se vede prin ele. Se mișcă lin; Aspect → Scene animate dezactivează mișcarea.</string>
-    <string name="theme_look_aurora_desc">Perdele de auroră și stele sclipitoare în spatele tastelor desenate doar de contur</string>
+    <string name="theme_look_aurora_desc">Perdele de auroră și stele sclipitoare în spatele tastelor desenate doar prin contur</string>
     <string name="theme_look_meadow_name">Pajiște</string>
     <string name="theme_look_meadow_desc">O pajiște însorită la ora de aur: iarbă unduitoare, flori sălbatice și polen plutitor</string>
     <string name="theme_look_stream_name">Pârâu</string>
@@ -1977,7 +1977,7 @@
     <string name="gif_action_copy_keywords">Copiază cuvintele-cheie</string>
     <string name="private_copy_no_selection">Niciun text selectat</string>
     <string name="private_copy_stored">Copiat privat</string>
-    <string name="private_copy_unavailable">Copia privată indisponibilă</string>
+    <string name="private_copy_unavailable">Copie privată indisponibilă</string>
     <string name="suggestion_bar_toggle_password_visibility">Comută vizibilitatea parolei</string>
     <string name="ime_default_prompt_toast">Setați %1$s ca implicită în Setări → Sistem → Limbi și introducerea textului → Tastatură pe ecran (mementoul poate fi dezactivat în setările %1$s)</string>
     <string name="tile_descr_active">%1$s este activă. Atingeți pentru a schimba tastatura.</string>
@@ -2585,7 +2585,7 @@
     <string name="clipboard_deselect_all_matching">Deselectează toate rezultatele potrivite</string>
     <string name="clipboard_selection_clear">Golește selecția</string>
     <string name="clipboard_delete_selected">Șterge elementele selectate</string>
-    <string name="clipboard_selection_exit">Ieși din selecție</string>
+    <string name="clipboard_selection_exit">Ieșire din selecție</string>
     <string name="clipboard_select_entry_descr">Selectează decupajul: %1$s</string>
     <string name="clipboard_entry_preview_truncated">Se afișează primele %1$s din %2$s caractere. Lipirea și copierea folosesc tot decupajul; editorul îl deschide pagină cu pagină.</string>
     <string name="clipboard_edit_page">Pagina %1$d din %2$d</string>
@@ -2596,7 +2596,7 @@
     <string name="clipboard_edit_changed">Decupajul a fost modificat sau eliminat după începerea editării, așa că modificarea nu a fost salvată.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="one">Ștergeți %1$d decupaj selectat?</item><item quantity="few">Ștergeți %1$d decupaje selectate?</item><item quantity="other">Ștergeți %1$d de decupaje selectate?</item></plurals>
     <string name="clipboard_delete_selected_message">Se șterg doar copiile din %1$s; copiile din alte file rămân. Dimensiune combinată a decupajelor: %2$s. Decupajele modificate sau eliminate după selectare sunt ignorate. Această acțiune nu poate fi anulată.</string>
-    <plurals name="clipboard_delete_selected_result"><item quantity="one">S-au șters %1$d din %2$d decupaj selectat.</item><item quantity="few">S-au șters %1$d din %2$d decupaje selectate.</item><item quantity="other">S-au șters %1$d din %2$d de decupaje selectate.</item></plurals>
+    <plurals name="clipboard_delete_selected_result"><item quantity="one">S-a șters %1$d din %2$d decupaj selectat.</item><item quantity="few">S-au șters %1$d din %2$d decupaje selectate.</item><item quantity="other">S-au șters %1$d din %2$d de decupaje selectate.</item></plurals>
     <string name="clipboard_selection_actions">Mai multe acțiuni</string>
     <string name="clipboard_action_add_to_pinned">Adaugă la fixate</string>
     <string name="clipboard_action_add_to_todos">Adaugă la de făcut</string>

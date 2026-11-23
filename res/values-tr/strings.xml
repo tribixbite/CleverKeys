@@ -596,7 +596,7 @@
     <string name="input_space_before_opening_punctuation_title">Açılış noktalamasından önce boşluk</string>
     <string name="input_space_before_opening_punctuation_desc">Kaydırılarak yazılan kelimeden sonra ( \" \' $ @ ve benzerlerinin önüne boşluk koyar; kapanış işaretleri kelimeye bitişik kalır</string>
     <string name="input_swipe_distance_threshold_title">Kaydırma Mesafesi Eşiği</string>
-    <string name="input_swipe_distance_threshold_desc">Kaydırma ortasında kaydırıcı/etkinlik alt tuşlarını etkinleştirmek için mesafe (cihaz ölçekli birimler, örn. boşluk çubuğu imleç kaydırıcısı). Ayrıca geri silme gibi geniş tuşlarda kısa kaydırma minimumunu sınırlar.</string>
+    <string name="input_swipe_distance_threshold_desc">Kaydırma ortasında kaydırıcı/olay alt tuşlarını etkinleştirmek için mesafe (cihaz ölçekli birimler, örn. boşluk çubuğu imleç kaydırıcısı). Ayrıca geri silme gibi geniş tuşlarda kısa kaydırma minimumunu sınırlar; böylece hızlı kaydırmaları kolay kalır.</string>
     <string name="input_circle_gesture_title">Daire Hareketi Duyarlılığı</string>
     <string name="input_circle_gesture_desc">Döngü/daire hareketleri için duyarlılık</string>
     <string name="input_space_slider_title">Boşluk Çubuğu Kaydırıcı Duyarlılığı</string>
@@ -1339,7 +1339,7 @@
     <string name="clipboard_url_handling_header">URL işleme</string>
     <string name="clipboard_custom_rules_browse">custom.substitutions.json dosyasını seç</string>
     <string name="clipboard_custom_rules_replace">Özel kuralları değiştir</string>
-    <string name="clipboard_url_handling_note">Not: temizleme, CleverKeys bir klibi geçmişine kaydettiğinde çalışır; bu nedenle CleverKeys panelinden yapılan yapıştırmalar her zaman temizlenmiş olur. \"Sistem panosunu da temizle\" açıkken Android sistem panosunun üzerine de temizlenmiş URL yazılır, böylece diğer uygulamalardaki yapıştırmalar da temizlenir (en iyi çaba ile — yalnızca klavyenin pano erişimi varken). Kapalıyken diğer uygulamalar orijinal URL\'yi görmeye devam eder.</string>
+    <string name="clipboard_url_handling_note">Not: temizleme, CleverKeys bir kırpmayı geçmişine kaydettiğinde çalışır; bu nedenle CleverKeys panelinden yapılan yapıştırmalar her zaman temizlenmiş olur. \"Sistem panosunu da temizle\" açıkken Android sistem panosunun üzerine de temizlenmiş URL yazılır, böylece diğer uygulamalardaki yapıştırmalar da temizlenir (en iyi çaba ile — yalnızca klavyenin pano erişimi varken). Kapalıyken diğer uygulamalar orijinal URL\'yi görmeye devam eder.</string>
     <string name="input_context_source_both">Yerleşik + Öğrenilen</string>
     <string name="input_context_source_learned_only">Yalnızca Öğrenilen</string>
     <string name="input_context_source_static_only">Yalnızca Yerleşik</string>
@@ -1353,8 +1353,8 @@
     <string name="input_numpad_layout_low_first">Küçükten Büyüğe (1-2-3 üstte)</string>
     <string name="swipe_engine_mode_geometric">Geometrik</string>
     <plurals name="settings_swipe_data_summary">
-        <item quantity="one">%3$d kayıttan %2$d gösteriliyor • %1$d benzersiz kelime</item>
-        <item quantity="other">%3$d kayıttan %2$d gösteriliyor • %1$d benzersiz kelime</item>
+        <item quantity="one">%3$d kayıttan %2$d tanesi gösteriliyor • %1$d benzersiz kelime</item>
+        <item quantity="other">%3$d kayıttan %2$d tanesi gösteriliyor • %1$d benzersiz kelime</item>
     </plurals>
     <plurals name="settings_swipe_data_points">
         <item quantity="one">%1$d nokta</item>
@@ -1637,7 +1637,7 @@
     <string name="layout_manager_xml_empty_error">Düzen XML\'i boş olamaz</string>
     <string name="layout_manager_import_failed">Düzen dosyası içe aktarılamadı:\n%1$s</string>
     <string name="layout_manager_export_failed">Düzen dosyası dışa aktarılamadı:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Bazı kısa kaydırmalar dosyada yok: bir düzen bunların eylemini tutamaz (sabitlenmiş bir klibi yapıştırmak gibi). Bu cihazda çalışmaya devam ederler.</string>
+    <string name="layout_manager_export_not_written">Bazı kısa kaydırmalar dosyada yok: bir düzen bunların eylemini tutamaz (sabitlenmiş bir kırpmayı yapıştırmak gibi). Bu cihazda çalışmaya devam ederler.</string>
     <string name="extra_keys_group_layout_switching">Düzen Değiştirme</string>
     <string name="extra_keys_group_system">Sistem</string>
     <string name="extra_keys_group_navigation">Gezinme</string>
