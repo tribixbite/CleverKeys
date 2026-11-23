@@ -189,6 +189,12 @@ exception (2026-11-20): Discord also hid it over a chat still on screen when a c
 the keyboard taller than the new screen AT the rotation (0/20 without a pane, 0/5 with it closed
 just before). Its layout depends on dp width: reproduce a phone's case with `wm size` + `wm density`
 (then `reset`), and measure hide rates over 10+ trials with an old-build control; rates swung 0-9/10.
+A rotation resets the keyboard view 2-3 times (the IME restart, the `refresh_config` after it, and a
+recreated app's new input start), and each `Keyboard2View.reset` drops every modifier; held state
+goes through `RotationModifierCarry` (2026-11-23). To tell whether a rotation recreated an app's
+window, compare the `mCurrentFocus` `Window{hash}` before and after: the ActivityRecord id stays
+the same across a relaunch. Real rotation in instrumented tests: `settings put system
+accelerometer_rotation 0` then `user_rotation 1` rotates the emulator.wtf Pixel7 images (restore both).
 
 ## Swipe-engine changes surface dictionary data (2026-11-20)
 
