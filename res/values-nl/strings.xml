@@ -1711,7 +1711,7 @@
     <string name="theme_look_stream_name">Beek</string>
     <string name="theme_look_stream_desc">Een heldere beek over kiezels, licht dat met de stroom meegolft</string>
     <string name="theme_look_river_rocks_name">Rivierstenen</string>
-    <string name="theme_look_river_rocks_desc">Kleurrijke, versleten rivierstenen waarop regen spat</string>
+    <string name="theme_look_river_rocks_desc">Kleurrijke, verweerde rivierstenen waarop regen spat</string>
     <string name="theme_look_forest_name">Bos</string>
     <string name="theme_look_forest_desc">Zonnig bos in ochtendmist, met wuivende bladeren en varens</string>
     <string name="theme_look_snow_name">Sneeuw</string>
@@ -2567,7 +2567,7 @@
     <string name="advanced_custom_terminal_limit">Gebruik maximaal %1$d unieke pakketnamen.</string>
     <string name="advanced_custom_terminal_input_limit">De lijst is te lang (maximaal %1$d tekens).</string>
     <string name="command_palette_template_title">Dynamisch sjabloon</string>
-    <string name="command_palette_template_help">Vouw {clipboard}, {selection}, {uuid} en één {cursor} uit. Gebruik {{ en }} voor letterlijke accolades. Bestaande tekstacties blijven letterlijk.</string>
+    <string name="command_palette_template_help">Vervangt {clipboard}, {selection}, {uuid} en één {cursor}. Gebruik {{ en }} voor letterlijke accolades. Bestaande tekstacties blijven letterlijk.</string>
     <string name="dynamic_action_unavailable">Actie niet beschikbaar in deze editor of dit paneel</string>
     <string name="dynamic_template_invalid">Ongeldig sjabloon: controleer tokens, accolades en cursormarkeringen.</string>
     <string name="continuous_swipe_title">Continu vegen</string>

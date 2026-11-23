@@ -291,7 +291,7 @@ iOS 18-style,iOS 18風,,Theme Manager screen,,Familiar looks and Theme Creator,t
 iOS-style,iOS風,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_ios_name,ThemeSettingsActivity.kt:111 ThemeSettingsActivity()
 "A sunlit meadow at golden hour: swaying grass, wildflowers and drifting pollen",ゴールデンアワーの陽だまりの草原：揺れる草、野の花、漂う花粉,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_meadow_desc,ThemeSettingsActivity.kt:125 ThemeSettingsActivity()
 Meadow,草原,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_meadow_name,ThemeSettingsActivity.kt:125 ThemeSettingsActivity()
-"Colorful, weathered river stones with rain splashing on them",雨が跳ねる、色とりどりの使い込まれた川石,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_river_rocks_desc,ThemeSettingsActivity.kt:127 ThemeSettingsActivity()
+"Colorful, weathered river stones with rain splashing on them",雨が跳ねる、色とりどりの使い込まれた川石,雨が跳ねる、色とりどりの風化した川石,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_river_rocks_desc,ThemeSettingsActivity.kt:127 ThemeSettingsActivity()
 River rocks,川石,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_river_rocks_name,ThemeSettingsActivity.kt:127 ThemeSettingsActivity()
 Samsung-style,Samsung風,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_samsung_name,ThemeSettingsActivity.kt:114 ThemeSettingsActivity()
 "Snowy hills under the northern lights, with stars and falling snow",オーロラの下の雪の丘、星と降る雪,,Theme Manager screen,,Familiar looks and Theme Creator,theme_look_snow_desc,ThemeSettingsActivity.kt:129 ThemeSettingsActivity()

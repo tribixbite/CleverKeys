@@ -2303,7 +2303,7 @@
     <string name="cmd_accent_tilde">Tylda</string>
     <string name="cmd_accent_tilde_desc">Martwy klawisz tyldy (ñ)</string>
     <string name="cmd_accent_trema">Umlaut</string>
-    <string name="cmd_accent_trema_desc">Martwy klawisz umlautu/diarezy (ë)</string>
+    <string name="cmd_accent_trema_desc">Martwy klawisz umlautu/dierezy (ë)</string>
     <string name="cmd_accent_cedille">Cedylla</string>
     <string name="cmd_accent_cedille_desc">Martwy klawisz cedylli (ç)</string>
     <string name="cmd_accent_caron">Haczek</string>
@@ -2555,7 +2555,7 @@
     <string name="cmd_replace_text">Zastąp tekst</string>
     <string name="cmd_replace_text_desc">Zastąp zaznaczony tekst wynikiem z aplikacji (tłumaczenie, przeredagowanie)</string>
     <string name="cmd_replace_text_menu">Podpowiedzi zamiany (edytor)</string>
-    <string name="cmd_replace_text_menu_desc">Otwórz własne podpowiedzi aplikacji dla słowa przy kursorze: poprawki pisowni i inne kandydaty z pisania gestem. Tylko standardowe pola tekstowe Androida; inne aplikacje mogą nic nie zrobić</string>
+    <string name="cmd_replace_text_menu_desc">Otwórz własne podpowiedzi aplikacji dla słowa przy kursorze: poprawki pisowni i innych kandydatów z pisania gestem. Tylko standardowe pola tekstowe Androida; inne aplikacje mogą nic nie zrobić</string>
     <string name="text_assist_menu_removed">Asystent tekstu (menu edytora) nie jest już obsługiwany. Przypisz inne polecenie</string>
     <string name="cmd_show_text_menu">Pokaż menu tekstu</string>
     <string name="cmd_show_text_menu_desc">Zaznacz słowo przy kursorze i pokaż pasek systemowy</string>

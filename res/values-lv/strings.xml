@@ -186,7 +186,7 @@
     <string name="dict_legacy_freq_raise">Paaugstināt</string>
     <string name="dict_legacy_freq_not_now">Ne tagad</string>
     <plurals name="dict_legacy_freq_raised">
-        <item quantity="zero">%1$d vārdu paaugstināti līdz %2$d</item>
+        <item quantity="zero">%1$d vārdu paaugstināts līdz %2$d</item>
         <item quantity="one">%1$d vārds paaugstināts līdz %2$d</item>
         <item quantity="other">%1$d vārdi paaugstināti līdz %2$d</item>
     </plurals>
@@ -279,9 +279,9 @@
     <string name="short_swipe_show_keyboard">Rādīt tastatūru</string>
     <string name="short_swipe_reset_all">Atiestatīt visu</string>
     <string name="short_swipe_reset_all_title">Atiestatīt visus īsos vilkumus?</string>
-    <plurals name="short_swipe_reset_all_message"><item quantity="zero">Tiks noņemti %1$d pielāgotu piešķīrumu no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="one">Tiks noņemts %1$d pielāgots piešķīrums no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="other">Tiks noņemti %1$d pielāgoti piešķīrumi no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item></plurals>
+    <plurals name="short_swipe_reset_all_message"><item quantity="zero">Tiks noņemts %1$d pielāgotu piešķīrumu no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="one">Tiks noņemts %1$d pielāgots piešķīrums no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item><item quantity="other">Tiks noņemti %1$d pielāgoti piešķīrumi no visiem taustiņiem. Izkārtojumā saglabātie apakštaustiņi un mainītās izkārtojumu kopijas paliek nemainīgas.</item></plurals>
     <string name="short_swipe_reset_all_confirm">Atiestatīt visu</string>
-    <plurals name="short_swipe_reset_all_done"><item quantity="zero">Noņemti %1$d piešķīrumu</item><item quantity="one">Noņemts %1$d piešķīrums</item><item quantity="other">Noņemti %1$d piešķīrumi</item></plurals>
+    <plurals name="short_swipe_reset_all_done"><item quantity="zero">Noņemts %1$d piešķīrumu</item><item quantity="one">Noņemts %1$d piešķīrums</item><item quantity="other">Noņemti %1$d piešķīrumi</item></plurals>
     <string name="short_swipe_reset_all_undo">Atsaukt</string>
     <string name="short_swipe_tap_hint">Pieskarieties jebkuram taustiņam zemāk, lai pielāgotu īso vilkumu žestus</string>
     <string name="short_swipe_instruction_title">Pieskarieties jebkuram taustiņam, lai to pielāgotu</string>

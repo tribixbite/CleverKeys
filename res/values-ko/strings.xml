@@ -1214,7 +1214,7 @@
     <string name="settings_faq_cursor_q">커서는 어떻게 이동하나요?</string>
     <string name="settings_faq_cursor_a">스페이스바에서 스와이프하세요. 커서 이동 속도는 스와이프한 거리에 비례합니다. 정밀하게 이동하려면 탐색 키(스페이스바와 Enter 사이)를 길게 눌러 TrackPoint 모드로 전환한 다음, 손가락을 조이스틱처럼 움직이세요.</string>
     <string name="settings_faq_select_delete_q">텍스트는 어떻게 선택하고 삭제하나요?</string>
-    <string name="settings_faq_select_delete_a">선택 삭제 모드: 백스페이스에서 짧은 스와이프한 다음 \'누른 상태를 유지\'하고, 손가락을 조이스틱처럼 움직여 텍스트를 선택하세요(좌우는 문자 단위, 상하는 줄 단위). 손을 떼면 선택한 텍스트가 삭제됩니다. 백스페이스에서 왼쪽으로 스와이프하면 커서 앞의 단어가 삭제됩니다.</string>
+    <string name="settings_faq_select_delete_a">선택 삭제 모드: 백스페이스에서 짧게 스와이프한 다음 \'누른 상태를 유지\'하고, 손가락을 조이스틱처럼 움직여 텍스트를 선택하세요(좌우는 문자 단위, 상하는 줄 단위). 손을 떼면 선택한 텍스트가 삭제됩니다. 백스페이스에서 왼쪽으로 스와이프하면 커서 앞의 단어가 삭제됩니다.</string>
     <string name="settings_faq_switch_language_q">언어를 빠르게 전환하려면 어떻게 하나요?</string>
     <string name="settings_faq_switch_language_a">기본 언어 및/또는 보조 언어 전환 하위 키를 추가하세요. 언어는 설정 → 다국어(기본 언어 및 보조 언어)에서 지정합니다. 전환 하위 키로 두 언어를 번갈아 사용할 수 있으며, 다국어 모드가 켜져 있으면 두 언어 모두 스와이프 예측에 반영됩니다.</string>
     <string name="settings_faq_emoji_q">이모지는 어떻게 사용하나요?</string>
@@ -1340,7 +1340,7 @@
         <item quantity="other">%3$d개 중 %2$d개 표시 • 고유 단어 %1$d개</item>
     </plurals>
     <plurals name="settings_swipe_data_points">
-        <item quantity="other">%1$d점</item>
+        <item quantity="other">좌표 %1$d개</item>
     </plurals>
     <plurals name="settings_value_letters">
         <item quantity="other">%1$d글자</item>
@@ -1705,7 +1705,7 @@
     <string name="swipe_debug_clear_traces_title">기록된 트레이스 지우기</string>
     <string name="swipe_debug_clear_traces_playground">플레이그라운드만</string>
     <string name="swipe_debug_clear_traces_all">모든 스와이프 데이터</string>
-    <string name="swipe_debug_clear_traces_message">이 기기에서 기록된 스와이프 트레이스를 삭제하시겠습니까?\n\n“%1$s”는 이 화면에서 기록된 트레이스를 삭제하고, “%2$s”는 전역 ML 수집 데이터의 트레이스도 삭제합니다.</string>
+    <string name="swipe_debug_clear_traces_message">이 기기에서 기록된 스와이프 트레이스를 삭제하시겠습니까?\n\n“%1$s”은(는) 이 화면에서 기록된 트레이스를 삭제하고, “%2$s”은(는) 전역 ML 수집 데이터의 트레이스도 삭제합니다.</string>
     <string name="manifest_ime_service_label">CleverKeys 키보드</string>
     <string name="manifest_backup_restore_label">백업 및 복원</string>
     <plurals name="swipe_debug_toast_cleared_traces">
@@ -2554,7 +2554,7 @@
 
     <!-- Layouts that style themselves: embedded <theme>, save as custom theme, Theme Creator "Keyboard look" (2026-10-28) -->
     <string name="layout_theme_own">레이아웃 자체 테마</string>
-    <string name="layout_theme_own_desc">이 레이아웃의 XML에 있는 테마이며, 설정하지 않은 항목은 %1$s를 따릅니다</string>
+    <string name="layout_theme_own_desc">이 레이아웃의 XML에 있는 테마이며, 설정하지 않은 항목은 %1$s을(를) 따릅니다</string>
     <string name="layout_theme_save_custom">테마를 사용자 지정 테마로 저장</string>
     <string name="layout_theme_saved_custom">사용자 지정 테마 ‘%1$s’(으)로 저장됨</string>
     <string name="layout_theme_save_full">저장할 수 없음: 사용자 지정 테마 %1$d개 한도에 도달함</string>
