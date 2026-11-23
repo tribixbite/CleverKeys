@@ -682,7 +682,7 @@
     <string name="privacy_on_device_learning_desc">入力した内容から、フレーズと単語使用のプライベートなモデルを端末内で構築します。オフにすると入力動作の自動記録がすべて停止し、オフの間は新しいデータは保存されません。明示的に作成したデータは別扱いです: 予測性能の統計、バックアップから復元した学習データ。</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">追加済みですが、スワイプには長すぎます</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">「%1$s」はタップ入力用に追加されましたが、CTC には %2$d ステップ必要で、上限は %3$d ステップです。</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">「%1$s」はタップ入力用に追加されましたが、CTC には %2$d ステップ必要で、デコードできる上限は %3$d ステップです。スワイプ入力では候補に表示されません。</item></plurals>
     <string name="gesture_finger_occlusion_title">タッチ位置の補正</string>
     <string name="gesture_finger_occlusion_desc">指先に対するスワイプの読み取り位置をずらします。軌跡がキーより上なら正、下なら負にします。初期設定はオフです。</string>
     <string name="gesture_touch_smoothing_title">タッチの平滑化</string>
@@ -875,9 +875,9 @@
     <string name="multilang_pack_license">パックのライセンス: %1$s</string>
     <string name="multilang_pack_source_label">出典</string>
     <string name="multilang_pack_attribution_missing">このパックには出典やライセンスの情報が含まれていません。表示するには、パックの最新版をインポートしてください。</string>
-    <string name="multilang_pack_view_notice">通知全文を表示</string>
-    <string name="multilang_pack_notice_title">通知: %1$s</string>
-    <string name="multilang_pack_notice_missing">このパックのインポート時に通知全文は保存されませんでした。保存するには、パックを再度インポートしてください。</string>
+    <string name="multilang_pack_view_notice">告知の全文を表示</string>
+    <string name="multilang_pack_notice_title">告知: %1$s</string>
+    <string name="multilang_pack_notice_missing">このパックのインポート時に告知の全文は保存されませんでした。保存するには、パックを再度インポートしてください。</string>
     <string name="input_manage_layouts">キーボードレイアウトの管理</string>
     <string name="input_configure_extra_keys">追加キーの設定</string>
     <string name="input_advanced_prediction">高度な予測設定</string>
@@ -922,17 +922,17 @@
     <string name="subkey_slot_nothing">なし</string>
     <string name="subkey_slot_replaces">%1$s を置き換え</string>
     <string name="subkey_dialog_subkeys_header">サブキー</string>
-    <string name="subkey_dialog_layout_hint">%1$s のサブキーとカスタム短スワイプです。方向をタップすると変更できます。</string>
+    <string name="subkey_dialog_layout_hint">%1$s のサブキーとカスタムショートスワイプです。方向をタップすると変更できます。</string>
     <string name="subkey_edit_layout_source">%1$s のサブキーです。</string>
     <string name="subkey_layout_copy_title">レイアウトのサブキーを変更しますか？</string>
-    <string name="subkey_layout_copy_body">このサブキーは %1$s で定義されています。組み込みレイアウトは変更されません。変更はコピー「%2$s」に保存され、レイアウト一覧で元のレイアウトと置き換わります。レイアウト管理で元に戻せます。</string>
+    <string name="subkey_layout_copy_body">このサブキーは %1$s で定義されています。組み込みレイアウトは変更されません。変更はコピー「%2$s」に保存され、レイアウト一覧で元のレイアウトと置き換わります。レイアウトマネージャーで元に戻せます。</string>
     <string name="subkey_layout_copy_confirm">コピーを作成</string>
     <string name="subkey_layout_copy_global">すべてのレイアウトで変更</string>
     <string name="subkey_layout_copy_name">%1$s（変更済み）</string>
     <string name="subkey_layout_toast_copied">%1$s を作成しました</string>
     <string name="subkey_layout_toast_saved">%1$s に保存しました</string>
     <string name="subkey_layout_toast_failed">レイアウトは変更されませんでした: %1$s</string>
-    <string name="subkey_layout_toast_not_layout">この操作はレイアウトに含められないため、カスタム短スワイプとして保存しました。</string>
+    <string name="subkey_layout_toast_not_layout">この操作はレイアウトに含められないため、カスタムショートスワイプとして保存しました。</string>
     <string name="layout_manager_badge_modified_copy">%1$s の変更済みコピー</string>
     <string name="layout_manager_revert">元に戻す</string>
     <string name="layout_manager_revert_title">元のレイアウトに戻しますか？</string>
@@ -1589,7 +1589,7 @@
     <string name="layout_manager_xml_empty_error">レイアウト XML を空にすることはできません</string>
     <string name="layout_manager_import_failed">レイアウトファイルをインポートできませんでした:\n%1$s</string>
     <string name="layout_manager_export_failed">レイアウトファイルをエクスポートできませんでした:\n%1$s</string>
-    <string name="layout_manager_export_not_written">一部の短スワイプはファイルに含まれていません。レイアウトはその操作（固定したクリップの貼り付けなど）を保持できません。この端末では引き続き使えます。</string>
+    <string name="layout_manager_export_not_written">一部のショートスワイプはファイルに含まれていません。レイアウトはその操作（固定したクリップの貼り付けなど）を保持できません。この端末では引き続き使えます。</string>
     <string name="extra_keys_group_layout_switching">レイアウト切替</string>
     <string name="extra_keys_group_system">システム</string>
     <string name="extra_keys_group_navigation">ナビゲーション</string>
@@ -1820,7 +1820,7 @@
     <string name="extra_key_accent_acute">アキュート</string>
     <string name="extra_key_accent_grave">グレーブ</string>
     <string name="extra_key_accent_double_acute">ダブルアキュート</string>
-    <string name="extra_key_accent_dot_above">上点</string>
+    <string name="extra_key_accent_dot_above">上ドット</string>
     <string name="extra_key_accent_circumflex">サーカムフレックス</string>
     <string name="extra_key_accent_tilde">チルダ</string>
     <string name="extra_key_accent_cedilla">セディーユ</string>
@@ -1831,8 +1831,8 @@
     <string name="extra_key_accent_ogonek">オゴネク</string>
     <string name="extra_key_accent_breve">ブレーヴェ</string>
     <string name="extra_key_accent_slash">スラッシュ</string>
-    <string name="extra_key_accent_bar">バー</string>
-    <string name="extra_key_accent_dot_below">下点</string>
+    <string name="extra_key_accent_bar">横棒</string>
+    <string name="extra_key_accent_dot_below">下ドット</string>
     <string name="extra_key_accent_macron_below">下マクロン</string>
     <string name="extra_key_accent_ring_below">下リング</string>
     <string name="extra_key_accent_hook_above">上フック</string>
@@ -1969,15 +1969,15 @@
     <string name="cmd_share_text">共有</string>
     <string name="cmd_share_text_desc">選択したテキストを共有</string>
     <string name="cmd_paste_pinned_1">ピン #1 を貼り付け</string>
-    <string name="cmd_paste_pinned_1_desc">1 番目のピン留めした項目を挿入</string>
+    <string name="cmd_paste_pinned_1_desc">1 番目のピン留めしたクリップボード項目を挿入</string>
     <string name="cmd_paste_pinned_2">ピン #2 を貼り付け</string>
-    <string name="cmd_paste_pinned_2_desc">2 番目のピン留めした項目を挿入</string>
+    <string name="cmd_paste_pinned_2_desc">2 番目のピン留めしたクリップボード項目を挿入</string>
     <string name="cmd_paste_pinned_3">ピン #3 を貼り付け</string>
-    <string name="cmd_paste_pinned_3_desc">3 番目のピン留めした項目を挿入</string>
+    <string name="cmd_paste_pinned_3_desc">3 番目のピン留めしたクリップボード項目を挿入</string>
     <string name="cmd_paste_pinned_4">ピン #4 を貼り付け</string>
-    <string name="cmd_paste_pinned_4_desc">4 番目のピン留めした項目を挿入</string>
+    <string name="cmd_paste_pinned_4_desc">4 番目のピン留めしたクリップボード項目を挿入</string>
     <string name="cmd_paste_pinned_5">ピン #5 を貼り付け</string>
-    <string name="cmd_paste_pinned_5_desc">5 番目のピン留めした項目を挿入</string>
+    <string name="cmd_paste_pinned_5_desc">5 番目のピン留めしたクリップボード項目を挿入</string>
     <string name="cmd_undo">元に戻す</string>
     <string name="cmd_undo_desc">直前の操作を元に戻す</string>
     <string name="cmd_redo">やり直し</string>
@@ -2513,7 +2513,7 @@
     <string name="system_clipboard_clear_failed">システムのクリップボードを消去できませんでした</string>
 
     <!-- Custom terminal package configuration -->
-    <string name="advanced_custom_terminal_title">カスタム端末パッケージ</string>
+    <string name="advanced_custom_terminal_title">カスタムターミナルパッケージ</string>
     <string name="advanced_custom_terminal_desc">他のアプリでもターミナル入力処理を使用します。組み込みのターミナル検出は有効のまま維持されます。</string>
     <string name="advanced_custom_terminal_count">カスタムパッケージ: %1$d</string>
     <string name="advanced_custom_terminal_help">アプリの正確なパッケージ名を1行に1つまたはカンマ区切りで入力してください。ワイルドカードは使用できません。組み込み検出のみを使用する場合は空のままにしてください。</string>
@@ -2536,7 +2536,7 @@
     <string name="layout_theme_title">レイアウトのテーマ</string>
     <string name="layout_theme_follow_global">全体のテーマに従う</string>
     <string name="layout_theme_follow_global_desc">現在: %1$s</string>
-    <string name="layout_theme_dialog_desc">このレイアウトが有効な間、キーボードは選択したテーマを使います。テーマ管理で設定した全体のテーマは変わりません。</string>
+    <string name="layout_theme_dialog_desc">このレイアウトが有効な間、キーボードは選択したテーマを使います。テーママネージャーで設定した全体のテーマは変わりません。</string>
     <string name="layout_theme_missing">テーマ %1$s はこの端末にないため、全体のテーマを使用します。</string>
     <string name="layout_theme_xml_invalid">theme 属性には rosepine や decorative_neon_cyberpunk などのテーマ ID を指定してください</string>
     <string name="layout_theme_search_hint">テーマを検索</string>
@@ -2546,7 +2546,7 @@
     <string name="layout_key_geometry_title">キーの間隔と枠線</string>
     <string name="layout_key_geometry_global">全体の設定</string>
     <string name="layout_key_geometry_custom">このレイアウト</string>
-    <string name="layout_key_geometry_desc">このレイアウトが有効な間は、ここで設定した値が外観の設定と見慣れたスタイルの間隔に代わって使われます。外観の設定自体は変わりません。</string>
+    <string name="layout_key_geometry_desc">このレイアウトが有効な間は、ここで設定した値が外観の設定と「おなじみの外観」の間隔に代わって使われます。外観の設定自体は変わりません。</string>
     <string name="layout_key_geometry_use_global">全体の設定を使用</string>
     <string name="layout_key_geometry_xml_invalid">キーの間隔または枠線の属性が無効です: %1$s</string>
     <string name="import_preview_layout_geometry_change">%1$s: キーの間隔と枠線 %2$s → %3$s</string>
@@ -2600,7 +2600,7 @@
     <string name="theme_preview_none">なし</string>
     <string name="theme_preview_bubble">バブル</string>
     <string name="theme_preview_balloon">バルーン</string>
-    <string name="theme_preview_column">コラム</string>
+    <string name="theme_preview_column">カラム</string>
     <string name="theme_preview_plate">プレート</string>
     <string name="theme_preview_width">プレビューの幅</string>
     <string name="theme_preview_height">プレビューの高さ</string>
@@ -2666,7 +2666,7 @@
     <string name="voice_pack_engine">エンジン: %1$s(バージョン %2$d)</string>
     <string name="voice_pack_languages">言語: %1$s</string>
     <string name="voice_pack_license">ライセンス: %1$s</string>
-    <string name="voice_pack_notice">ライセンスと通知</string>
+    <string name="voice_pack_notice">ライセンスと告知</string>
     <string name="voice_pack_unsupported">%1$s には新しいバージョンの CleverKeys が必要なため、使用できません。</string>
     <string name="voice_permission_blocked_desc">CleverKeys のマイクへのアクセスがブロックされています。音声入力を使うには、システム設定で許可してください。</string>
     <string name="voice_open_app_settings">アプリの設定を開く</string>

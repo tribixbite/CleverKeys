@@ -437,7 +437,7 @@
     <string name="appearance_custom_border_title">사용자 정의 테두리 설정</string>
     <string name="appearance_custom_border_desc">키의 사용자 정의 테두리 스타일을 활성화합니다</string>
     <string name="appearance_border_radius_title">테두리 둥글기</string>
-    <string name="appearance_border_radius_desc" formatted="false">키의 모서리 반경（키 너비 대비 %）</string>
+    <string name="appearance_border_radius_desc" formatted="false">키의 모서리 반경(키 너비 대비 %)</string>
     <string name="appearance_border_line_width_title">테두리 두께</string>
     <string name="appearance_border_line_width_desc">키 테두리의 너비（dp）</string>
     <string name="autocorrect_enable_title">자동 수정 활성화</string>
@@ -683,7 +683,7 @@
     <string name="privacy_on_device_learning_desc">입력한 내용을 바탕으로 표현과 단어 사용에 대한 비공개 모델을 기기 내에서 만듭니다. 끄면 입력 습관의 자동 기록이 모두 중지되며, 꺼져 있는 동안에는 새로운 데이터가 저장되지 않습니다. 직접 만든 데이터는 별개입니다: 예측 성능 통계, 백업에서 복원한 학습 데이터.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">추가되었지만 스와이프하기에 너무 깁니다</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”이(가) 탭 입력용으로 추가되었지만 CTC에는 %2$d단계가 필요하며 최대 %3$d단계만 디코딩할 수 있습니다.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s”이(가) 탭 입력용으로 추가되었지만 CTC에는 %2$d단계가 필요하며 최대 %3$d단계만 디코딩할 수 있습니다. 스와이프 입력에서는 이 단어가 제공되지 않습니다.</item></plurals>
     <string name="gesture_finger_occlusion_title">터치 위치 보정</string>
     <string name="gesture_finger_occlusion_desc">손끝을 기준으로 스와이프를 읽는 위치를 이동합니다. 궤적이 키보다 위면 양수, 아래면 음수를 사용합니다. 기본값은 꺼짐입니다.</string>
     <string name="gesture_touch_smoothing_title">터치 부드럽게 하기</string>
@@ -930,7 +930,7 @@
     <string name="subkey_layout_copy_confirm">복사본 만들기</string>
     <string name="subkey_layout_copy_global">모든 레이아웃에서 변경</string>
     <string name="subkey_layout_copy_name">%1$s (수정됨)</string>
-    <string name="subkey_layout_toast_copied">%1$s 만들었습니다</string>
+    <string name="subkey_layout_toast_copied">%1$s을(를) 만들었습니다</string>
     <string name="subkey_layout_toast_saved">%1$s에 저장했습니다</string>
     <string name="subkey_layout_toast_failed">레이아웃이 변경되지 않았습니다: %1$s</string>
     <string name="subkey_layout_toast_not_layout">이 동작은 레이아웃에 포함될 수 없으므로 사용자 지정 짧은 스와이프로 저장했습니다.</string>
@@ -1222,9 +1222,9 @@
     <string name="settings_faq_clipboard_q">클립보드는 어떻게 사용하나요?</string>
     <string name="settings_faq_clipboard_a">Ctrl 키에서 \'남서\' 방향으로 스와이프하면 클립보드 기록이 열립니다. 패널에는 기록, 고정, 할 일 탭이 있습니다. 항목 내용을 탭하면 펼쳐지며, 아이콘 버튼으로 붙여넣기, 고정으로 이동, 할 일로 복사를 할 수 있습니다. 참고: 이미 기록에 있는 텍스트를 다시 복사해도 중복되거나 순서가 바뀌지 않습니다(팁: 대신 검색을 사용하세요). 비밀번호 관리자의 클립과 \'민감한 콘텐츠\'로 표시된 클립은 기본적으로 제외됩니다.</string>
     <string name="settings_faq_swipe_typing_q">스와이프 입력은 어떻게 작동하나요?</string>
-    <string name="settings_faq_swipe_typing_a">단어의 첫 글자를 터치하고, 손가락을 떼지 않은 채 각 글자를 지나도록 밀어서 마지막 글자에서 손을 떼세요. 빠르게 할수록 결과가 더 좋을 수 있습니다. 디코더를 선택하려면 설정 → 스와이프 입력 → 예측 엔진으로 이동하세요. CTC는 지원하는 언어와 레이아웃에서, 기하학은 모든 레이아웃에서 작동합니다.</string>
+    <string name="settings_faq_swipe_typing_a">단어의 첫 글자를 터치하고, 손가락을 떼지 않은 채 각 글자를 지나도록 밀어서 마지막 글자에서 손을 떼세요. 빠르게 할수록 결과가 더 좋을 수 있습니다. 디코더를 선택하려면 설정 → 스와이프 입력 → 예측 엔진으로 이동하세요. CTC는 지원하는 언어와 레이아웃에서, 기하 방식은 모든 레이아웃에서 작동합니다.</string>
     <string name="settings_faq_other_languages_q">다른 언어도 스와이프할 수 있나요?</string>
-    <string name="settings_faq_other_languages_a">네. 설정 → 다국어 → 언어 팩에서 언어 팩을 가져온 다음 기본 언어 또는 보조 언어로 선택하세요. CTC가 지원하지 않는 언어와 레이아웃은 기하학 엔진이 디코딩합니다. 현재 언어와 레이아웃에서 어떤 엔진을 사용하는지는 설정 → 스와이프 입력에서 확인할 수 있습니다.</string>
+    <string name="settings_faq_other_languages_a">네. 설정 → 다국어 → 언어 팩에서 언어 팩을 가져온 다음 기본 언어 또는 보조 언어로 선택하세요. CTC가 지원하지 않는 언어와 레이아웃은 기하 방식 엔진이 디코딩합니다. 현재 언어와 레이아웃에서 어떤 엔진을 사용하는지는 설정 → 스와이프 입력에서 확인할 수 있습니다.</string>
     <string name="settings_github_repo_title">GitHub 저장소</string>
     <string name="settings_github_repo_desc">탭하여 릴리스 보기 및 업데이트 다운로드</string>
     <string name="settings_version_unknown">알 수 없음</string>
@@ -1335,7 +1335,7 @@
     <string name="input_show_numpad_always">항상</string>
     <string name="input_numpad_layout_high_first">큰 수 먼저(7-8-9가 위)</string>
     <string name="input_numpad_layout_low_first">작은 수 먼저(1-2-3이 위)</string>
-    <string name="swipe_engine_mode_geometric">기하학</string>
+    <string name="swipe_engine_mode_geometric">기하 방식</string>
     <plurals name="settings_swipe_data_summary">
         <item quantity="other">%3$d개 중 %2$d개 표시 • 고유 단어 %1$d개</item>
     </plurals>
@@ -1813,7 +1813,7 @@
     <string name="extra_key_title_next_layout">다음 레이아웃</string>
     <string name="extra_key_title_previous_layout">이전 레이아웃</string>
     <string name="extra_key_title_menu">메뉴</string>
-    <string name="extra_key_title_scroll_lock">Scroll Lock</string>
+    <string name="extra_key_title_scroll_lock">스크롤 잠금</string>
     <string name="extra_key_title_zwj">ZWJ(결합자)</string>
     <string name="extra_key_title_zwnj">ZWNJ(비결합자)</string>
     <string name="extra_key_title_nbsp">NBSP(공백)</string>
@@ -1827,7 +1827,7 @@
     <string name="extra_key_accent_cedilla">세디유</string>
     <string name="extra_key_accent_umlaut">움라우트</string>
     <string name="extra_key_accent_ring">고리</string>
-    <string name="extra_key_accent_caron">캐론</string>
+    <string name="extra_key_accent_caron">카론</string>
     <string name="extra_key_accent_macron">장음 부호</string>
     <string name="extra_key_accent_ogonek">오고네크</string>
     <string name="extra_key_accent_breve">단음 부호</string>
@@ -2055,7 +2055,7 @@
     <string name="cmd_change_method_prev_desc">이전 입력 방법으로 전환</string>
     <string name="cmd_action">작업</string>
     <string name="cmd_action_desc">편집기 작업(이동/검색/보내기)</string>
-    <string name="cmd_capslock">Caps Lock</string>
+    <string name="cmd_capslock">대문자 잠금</string>
     <string name="cmd_capslock_desc">Caps Lock 켜기/끄기</string>
     <string name="cmd_voice_typing">음성 입력</string>
     <string name="cmd_voice_typing_desc">음성 입력 시작</string>
@@ -2125,7 +2125,7 @@
     <string name="cmd_menu_desc">컨텍스트 메뉴 키</string>
     <string name="cmd_insert">Insert</string>
     <string name="cmd_insert_desc">Insert 키(겹쳐쓰기 전환)</string>
-    <string name="cmd_scroll_lock">Scroll Lock</string>
+    <string name="cmd_scroll_lock">스크롤 잠금</string>
     <string name="cmd_scroll_lock_desc">Scroll Lock 키</string>
     <string name="cmd_compose">Compose</string>
     <string name="cmd_compose_desc">Compose 키(악센트 입력용)</string>
@@ -2167,8 +2167,8 @@
     <string name="cmd_accent_macron_desc">장음 부호(매크론) 데드 키(ā)</string>
     <string name="cmd_accent_ring">고리</string>
     <string name="cmd_accent_ring_desc">윗고리 데드 키(å)</string>
-    <string name="cmd_accent_ogonek">오고넥</string>
-    <string name="cmd_accent_ogonek_desc">오고넥 데드 키(ą)</string>
+    <string name="cmd_accent_ogonek">오고네크</string>
+    <string name="cmd_accent_ogonek_desc">오고네크 데드 키(ą)</string>
     <string name="cmd_accent_dot_above">윗점</string>
     <string name="cmd_accent_dot_above_desc">윗점 데드 키(ż)</string>
     <string name="cmd_accent_dot_below">아랫점</string>
@@ -2221,8 +2221,8 @@
     <string name="cmd_combining_macron_desc">앞 글자에 장음 부호 추가</string>
     <string name="cmd_combining_ring">조합용 고리</string>
     <string name="cmd_combining_ring_desc">앞 글자 위에 고리 추가</string>
-    <string name="cmd_combining_ogonek">조합용 오고넥</string>
-    <string name="cmd_combining_ogonek_desc">앞 글자에 오고넥 추가</string>
+    <string name="cmd_combining_ogonek">조합용 오고네크</string>
+    <string name="cmd_combining_ogonek_desc">앞 글자에 오고네크 추가</string>
     <string name="cmd_combining_dot_above">조합용 윗점</string>
     <string name="cmd_combining_dot_above_desc">앞 글자에 윗점 추가</string>
     <string name="cmd_combining_dot_below">조합용 아랫점</string>
@@ -2409,8 +2409,8 @@
     <string name="cmd_text_assist_desc">선택한 텍스트를 앱으로 처리(번역기, AI 도우미). 앱이 텍스트를 반환하면 선택 영역을 대체함</string>
     <string name="cmd_replace_text">텍스트 바꾸기</string>
     <string name="cmd_replace_text_desc">선택한 텍스트를 앱의 결과로 바꾸기(번역, 다시 쓰기)</string>
-    <string name="cmd_replace_text_menu">바꾸기 제안(편집기)</string>
-    <string name="cmd_replace_text_menu_desc">커서 위치 단어에 대한 앱 자체 제안(맞춤법 수정 및 다른 스와이프 후보)을 엽니다. 표준 Android 텍스트 필드에서만 작동하며 다른 앱에서는 아무 일도 일어나지 않을 수 있습니다</string>
+    <string name="cmd_replace_text_menu">대체 단어 추천(편집기)</string>
+    <string name="cmd_replace_text_menu_desc">커서 위치 단어에 대한 앱 자체 추천 항목(맞춤법 수정 및 다른 스와이프 후보)을 엽니다. 표준 Android 텍스트 필드에서만 작동하며 다른 앱에서는 아무 일도 일어나지 않을 수 있습니다</string>
     <string name="text_assist_menu_removed">텍스트 도우미(편집기 메뉴)는 더 이상 지원되지 않습니다. 다른 명령을 지정하세요</string>
     <string name="cmd_show_text_menu">텍스트 메뉴 표시</string>
     <string name="cmd_show_text_menu_desc">커서 위치의 단어를 선택하고 기본 도구 모음 표시</string>
@@ -2439,9 +2439,9 @@
     <string name="cmd_timestamp_datetime_desc">날짜와 시간 삽입(YYYY-MM-DD HH:mm)</string>
     <string name="cmd_timestamp_time_seconds">시간(초 포함)</string>
     <string name="cmd_timestamp_time_seconds_desc">초를 포함한 시간 삽입(HH:mm:ss)</string>
-    <string name="cmd_timestamp_date_short">날짜(짧게)</string>
+    <string name="cmd_timestamp_date_short">날짜(짧은 형식)</string>
     <string name="cmd_timestamp_date_short_desc">짧은 날짜 삽입(MM/dd/yy)</string>
-    <string name="cmd_timestamp_date_long">날짜(길게)</string>
+    <string name="cmd_timestamp_date_long">날짜(긴 형식)</string>
     <string name="cmd_timestamp_date_long_desc">긴 날짜 삽입(요일, 월 DD, YYYY)</string>
     <string name="cmd_timestamp_time_12h">시간(12시간)</string>
     <string name="cmd_timestamp_time_12h_desc">12시간제 시간 삽입(h:mm AM/PM)</string>
@@ -2611,7 +2611,7 @@
     <string name="theme_pill_enter">Enter를 알약 모양으로</string>
     <string name="theme_pill_action">작업 키를 알약 모양으로</string>
     <string name="theme_pill_numbers">123 키를 알약 모양으로</string>
-    <string name="theme_letter_emoji">이모티콘 키를 글자 키처럼 표시</string>
+    <string name="theme_letter_emoji">이모지 키를 글자 키처럼 표시</string>
     <string name="theme_function_chars">기능 키로 표시할 문자</string>
     <string name="theme_dynamic_color">배경화면 색상 따르기 (Android 12+)</string>
     <string name="theme_shape_function_label_scale">기능 키 글자 크기</string>
