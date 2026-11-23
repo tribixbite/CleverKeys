@@ -270,9 +270,9 @@
     <string name="short_swipe_show_keyboard">Показать клавиатуру</string>
     <string name="short_swipe_reset_all">Сбросить всё</string>
     <string name="short_swipe_reset_all_title">Сбросить все короткие свайпы?</string>
-    <plurals name="short_swipe_reset_all_message"><item quantity="one">Будет удалено %1$d назначение со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="few">Будут удалены %1$d назначения со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="many">Будет удалено %1$d назначений со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="other">Будет удалено %1$d назначений со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item></plurals>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Будет удалено %1$d назначение со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="few">Будут удалены %1$d назначения со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="many">Будет удалено %1$d назначений со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item><item quantity="other">Будет удалено %1$d назначения со всех клавиш. Подклавиши, сохранённые в раскладке, и изменённые копии раскладок останутся без изменений.</item></plurals>
     <string name="short_swipe_reset_all_confirm">Сбросить всё</string>
-    <plurals name="short_swipe_reset_all_done"><item quantity="one">Удалено %1$d назначение</item><item quantity="few">Удалено %1$d назначения</item><item quantity="many">Удалено %1$d назначений</item><item quantity="other">Удалено %1$d назначений</item></plurals>
+    <plurals name="short_swipe_reset_all_done"><item quantity="one">Удалено %1$d назначение</item><item quantity="few">Удалено %1$d назначения</item><item quantity="many">Удалено %1$d назначений</item><item quantity="other">Удалено %1$d назначения</item></plurals>
     <string name="short_swipe_reset_all_undo">Отменить</string>
     <string name="short_swipe_tap_hint">Нажмите на любую клавишу ниже, чтобы настроить жесты коротких свайпов</string>
     <string name="short_swipe_instruction_title">Нажмите любую клавишу для настройки</string>
@@ -590,7 +590,7 @@
     <string name="input_smart_punctuation_title">Умная пунктуация</string>
     <string name="input_smart_punctuation_desc">Присоединять знаки препинания к словам (убирать пробел перед . , ! ? и т.д.)</string>
     <string name="input_space_before_opening_punctuation_title">Пробел перед открывающими знаками</string>
-    <string name="input_space_before_opening_punctuation_desc">После слова, введённого жестом, ставит пробел перед ( \" \' $ @ и подобными; закрывающие знаки по-прежнему прилипают к слову</string>
+    <string name="input_space_before_opening_punctuation_desc">После слова, введённого свайпом, ставит пробел перед ( \" \' $ @ и подобными; закрывающие знаки по-прежнему прилипают к слову</string>
     <string name="input_swipe_distance_threshold_title">Порог расстояния свайпа</string>
     <string name="input_swipe_distance_threshold_desc">Расстояние (в единицах устройства) для активации слайдера/подклавиш в середине свайпа. Также ограничивает минимум коротких свайпов на широких клавишах.</string>
     <string name="input_circle_gesture_title">Чувствительность кругового жеста</string>
@@ -689,7 +689,7 @@
     <string name="privacy_on_device_learning_desc">Строить прямо на устройстве частные модели сочетаний и словоупотребления на основе набранного текста. Выключение останавливает всю автоматическую запись поведения при наборе — пока опция выключена, ничего нового не сохраняется. Данные, создаваемые вами явно, хранятся отдельно: статистика качества предсказаний и выученные данные, восстановленные из резервной копии.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Добавлено, но слово слишком длинное для свайпа</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступен только %3$d шаг. Свайп не будет его предлагать.</item><item quantity="few">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шага. Свайп не будет его предлагать.</item><item quantity="many">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шагов. Свайп не будет его предлагать.</item><item quantity="other">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шагов. Свайп не будет его предлагать.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступен только %3$d шаг. Свайп не будет его предлагать.</item><item quantity="few">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шага. Свайп не будет его предлагать.</item><item quantity="many">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шагов. Свайп не будет его предлагать.</item><item quantity="other">«%1$s» добавлено для обычного ввода, но CTC требуется шагов: %2$d, а доступно только %3$d шага. Свайп не будет его предлагать.</item></plurals>
     <string name="gesture_finger_occlusion_title">Коррекция смещения касания</string>
     <string name="gesture_finger_occlusion_desc">Смещает распознавание свайпа относительно кончика пальца. Положительное значение — если след выше клавиш, отрицательное — если ниже. По умолчанию выключено.</string>
     <string name="gesture_touch_smoothing_title">Сглаживание касаний</string>
@@ -1955,7 +1955,7 @@
     <string name="extra_key_accent_dot_below">Точка снизу</string>
     <string name="extra_key_accent_macron_below">Макрон снизу</string>
     <string name="extra_key_accent_ring_below">Кружок снизу</string>
-    <string name="extra_key_accent_hook_above">Хвостик сверху</string>
+    <string name="extra_key_accent_hook_above">Крючок сверху</string>
     <string name="extra_key_accent_horn">Рожок</string>
     <string name="extra_key_accent_double_grave">Двойной гравис</string>
     <string name="extra_key_title_accent">%1$s %2$s</string>
@@ -2327,8 +2327,8 @@
     <string name="cmd_accent_bar_desc">Немая клавиша для черты (đ)</string>
     <string name="cmd_accent_horn">Рожок</string>
     <string name="cmd_accent_horn_desc">Немая клавиша для рожка (ơ)</string>
-    <string name="cmd_accent_hook_above">Хвостик сверху</string>
-    <string name="cmd_accent_hook_above_desc">Немая клавиша для хвостика сверху (ả)</string>
+    <string name="cmd_accent_hook_above">Крючок сверху</string>
+    <string name="cmd_accent_hook_above_desc">Немая клавиша для крючка сверху (ả)</string>
     <string name="cmd_accent_double_grave">Двойной гравис</string>
     <string name="cmd_accent_double_grave_desc">Немая клавиша для двойного грависа (ȁ)</string>
     <string name="cmd_accent_arrow_right">Стрелка вправо</string>
@@ -2381,8 +2381,8 @@
     <string name="cmd_combining_bar_desc">Перечеркнуть предыдущий символ чертой</string>
     <string name="cmd_combining_horn">Комбинируемый рожок</string>
     <string name="cmd_combining_horn_desc">Добавить рожок к предыдущему символу</string>
-    <string name="cmd_combining_hook_above">Комбинируемый хвостик сверху</string>
-    <string name="cmd_combining_hook_above_desc">Добавить хвостик сверху к предыдущему символу</string>
+    <string name="cmd_combining_hook_above">Комбинируемый крючок сверху</string>
+    <string name="cmd_combining_hook_above_desc">Добавить крючок сверху к предыдущему символу</string>
     <string name="cmd_combining_arrow_right">Комбинируемая стрелка вправо</string>
     <string name="cmd_combining_arrow_right_desc">Добавить стрелку вправо к предыдущему символу</string>
     <string name="cmd_bidi_paren_open">Bidi: открывающая скобка</string>
@@ -2665,9 +2665,9 @@
     <string name="command_palette_template_help">Развернуть {clipboard}, {selection}, {uuid} и один {cursor}. Используйте {{ и }} для литеральных фигурных скобок. Существующие текстовые действия остаются без изменений.</string>
     <string name="dynamic_action_unavailable">Действие недоступно в этом редакторе или панели</string>
     <string name="dynamic_template_invalid">Недействительный шаблон: проверьте токены, фигурные скобки и маркеры курсора.</string>
-    <string name="continuous_swipe_title">Непрерывный ввод жестом</string>
+    <string name="continuous_swipe_title">Непрерывный свайп</string>
     <string name="continuous_swipe_desc">Между словами ненадолго задержите палец в центре пробела, не отрывая его. Быстрое пересечение оставляет одно слово.</string>
-    <string name="continuous_swipe_stopped">Непрерывный ввод жестом остановлен; проверьте текст перед продолжением.</string>
+    <string name="continuous_swipe_stopped">Непрерывный свайп остановлен; проверьте текст перед продолжением.</string>
     <string name="cmd_append_possessive">Добавить \'s в конец</string>
     <string name="cmd_append_possessive_desc">Прикрепить \'s к последнему проверенному слову; один backspace удаляет только суффикс</string>
     <string name="cmd_append_apostrophe">Добавить апостроф в конец</string>
@@ -2740,7 +2740,7 @@
     <string name="theme_section_key_preview">Просмотр нажатия клавиши</string>
     <string name="theme_preview_none">Нет</string>
     <string name="theme_preview_bubble">Пузырь</string>
-    <string name="theme_preview_balloon">Шар</string>
+    <string name="theme_preview_balloon">Выноска</string>
     <string name="theme_preview_column">Столбец</string>
     <string name="theme_preview_plate">Плашка</string>
     <string name="theme_preview_width">Ширина просмотра</string>

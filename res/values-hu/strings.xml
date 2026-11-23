@@ -148,7 +148,7 @@
 
     <!-- Suggestion bar: prompt shown after typing an unknown word + space -->
     <string name="suggestion_add_to_dictionary">Hozzáadja a(z) „%1$s” szót a szótárhoz?</string>
-    <string name="suggestion_prefer_when_swiping">Előnyben részesíti „%1$s” szót csúsztatáskor?</string>
+    <string name="suggestion_prefer_when_swiping">Csúsztatáskor „%1$s” legyen előnyben?</string>
     <string name="suggestion_prefer_when_swiping_decline">Ne kérdezze</string>
     <string name="suggestion_prefer_when_swiping_added">Csúsztatáskor mostantól „%1$s” élvez előnyt</string>
     <string name="suggestion_prefer_when_swiping_raised">Csúsztatáskor mostantól „%1$s” erős előnyt élvez</string>
@@ -272,7 +272,7 @@
     <string name="short_swipe_show_keyboard">Billentyűzet megjelenítése</string>
     <string name="short_swipe_reset_all">Összes visszaállítása</string>
     <string name="short_swipe_reset_all_title">Visszaállítja az összes rövid csúsztatást?</string>
-    <plurals name="short_swipe_reset_all_message"><item quantity="one">Ez %1$d egyéni leképezést eltávolít minden billentyűről. Az elrendezésben tárolt albillentyűk és a módosított elrendezésmásolatok nem változnak.</item><item quantity="other">Ez %1$d egyéni leképezést eltávolít minden billentyűről. Az elrendezésben tárolt albillentyűk és a módosított elrendezésmásolatok nem változnak.</item></plurals>
+    <plurals name="short_swipe_reset_all_message"><item quantity="one">Ez %1$d egyéni leképezést eltávolít minden billentyűről. A kiosztásban tárolt albillentyűk és a módosított kiosztásmásolatok nem változnak.</item><item quantity="other">Ez %1$d egyéni leképezést eltávolít minden billentyűről. A kiosztásban tárolt albillentyűk és a módosított kiosztásmásolatok nem változnak.</item></plurals>
     <string name="short_swipe_reset_all_confirm">Összes visszaállítása</string>
     <plurals name="short_swipe_reset_all_done"><item quantity="one">%1$d leképezés eltávolítva</item><item quantity="other">%1$d leképezés eltávolítva</item></plurals>
     <string name="short_swipe_reset_all_undo">Visszavonás</string>
@@ -411,8 +411,8 @@
     <string name="appearance_key_vertical_margin_desc">Függőleges távolság a billentyűk között</string>
     <string name="appearance_key_horizontal_margin_title">Billentyű vízszintes margója</string>
     <string name="appearance_key_horizontal_margin_desc">Vízszintes távolság a billentyűk között</string>
-    <string name="appearance_look_show_hints_title">Mozdulattippek megjelenítése ismerős megjelenéseknél</string>
-    <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A mozdulatok mindkét esetben működnek.</string>
+    <string name="appearance_look_show_hints_title">Gesztustippek megjelenítése ismerős megjelenéseknél</string>
+    <string name="appearance_look_show_hints_desc">Az iOS-, Gboard-, SwiftKey- és Samsung-stílusú megjelenések elrejtik a sarokjelöléseket, mint azok a billentyűzetek; kapcsolja be az összes megjelenítéséhez. A gesztusok mindkét esetben működnek.</string>
     <string name="appearance_look_key_preview_title">Billentyű előnézete</string>
     <string name="appearance_look_key_preview_desc">A CleverKeys megjelenés és az iOS, Gboard, SwiftKey és Samsung stílusú megjelenések buborékban mutatják a lenyomott karaktert a billentyű fölött.</string>
     <string name="appearance_look_space_language_title">Nyelv neve a szóköz billentyűn</string>
@@ -426,7 +426,7 @@
     <string name="appearance_look_motion_twinkle_title">Csillogás</string>
     <string name="appearance_look_motion_twinkle_desc">Mennyire csillognak a csillagok, az eső és más részecskék</string>
     <string name="appearance_look_motion_resume_title">Szünet gépelés közben</string>
-    <string name="appearance_look_motion_resume_desc">Mennyi ideig áll a jelenet az utolsó billentyűleütés vagy húzás után</string>
+    <string name="appearance_look_motion_resume_desc">Mennyi ideig áll a jelenet az utolsó billentyűleütés vagy csúsztatás után</string>
     <string name="appearance_look_motion_resume_none">Nincs szünet</string>
     <string name="appearance_look_motion_seconds">%1$s mp</string>
     <string name="appearance_look_motion_idle_title">Mozgás időtartama</string>
@@ -495,8 +495,8 @@
     <string name="clipboard_pinned_tab_desc">Rögzített lap megjelenítése fontos kivágások mentéséhez</string>
     <string name="clipboard_todo_tab_title">Teendők lap</string>
     <string name="clipboard_todo_tab_desc">Teendők lap megjelenítése kivágások feladatként való megjelöléséhez</string>
-    <string name="clipboard_swipe_delete_title">Vágólap-bejegyzések törlése húzással</string>
-    <string name="clipboard_swipe_delete_desc">Húzzon el egy bejegyzést balra vagy jobbra, hogy törölje az aktuális lapról. %1$d másodpercig visszavonható.</string>
+    <string name="clipboard_swipe_delete_title">Vágólap-bejegyzések törlése csúsztatással</string>
+    <string name="clipboard_swipe_delete_desc">Csúsztasson el egy bejegyzést balra vagy jobbra, hogy törölje az aktuális lapról. %1$d másodpercig visszavonható.</string>
     <string name="clipboard_swipe_deleted">Törölve</string>
     <string name="clipboard_swipe_undo">Visszavonás</string>
     <string name="clipboard_reorder_handle_descr">Húzza az átrendezéshez</string>
@@ -690,7 +690,7 @@
     <string name="privacy_on_device_learning_desc">Privát kifejezés- és szóhasználati modellek építése az eszközön a begépelt szövegből. Kikapcsolva minden automatikus gépelési rögzítés leáll — amíg ki van kapcsolva, semmi új nem tárolódik. A kifejezetten Ön által létrehozott adatok külön kezelendők: az előrejelzési teljesítmény statisztikái és a biztonsági mentésből visszaállított tanult adatok.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Hozzáadva, de csúsztatáshoz túl hosszú</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item><item quantity="other">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="one">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni. Csúsztatáskor nem lesz felajánlva.</item><item quantity="other">A(z) „%1$s” hozzáadva a koppintásos gépeléshez, de a CTC %2$d lépést igényel, és csak %3$d lépést tud dekódolni. Csúsztatáskor nem lesz felajánlva.</item></plurals>
     <string name="gesture_finger_occlusion_title">Érintési eltolás javítása</string>
     <string name="gesture_finger_occlusion_desc">A csúsztatás érzékelését az ujjbegyhez képest tolja el. Pozitív, ha a nyomvonal túl magas, negatív, ha túl alacsony. Alapból kikapcsolva.</string>
     <string name="gesture_touch_smoothing_title">Érintés simítása</string>
@@ -934,7 +934,7 @@
     <string name="subkey_dialog_layout_hint">A(z) %1$s albillentyűi és az egyéni rövid csúsztatások. Egy irányra koppintva módosítható.</string>
     <string name="subkey_edit_layout_source">A(z) %1$s egyik albillentyűje.</string>
     <string name="subkey_layout_copy_title">Módosítja a kiosztás albillentyűjét?</string>
-    <string name="subkey_layout_copy_body">Ezt az albillentyűt a(z) %1$s határozza meg. A beépített kiosztás nem változik: a módosítás egy másolatba kerül (%2$s), amely átveszi a helyét a kiosztások listájában. Az Elrendezéskezelőben vissza lehet váltani az eredetire.</string>
+    <string name="subkey_layout_copy_body">Ezt az albillentyűt a(z) %1$s határozza meg. A beépített kiosztás nem változik: a módosítás egy másolatba kerül (%2$s), amely átveszi a helyét a kiosztások listájában. A Kiosztáskezelőben vissza lehet váltani az eredetire.</string>
     <string name="subkey_layout_copy_confirm">Másolat készítése</string>
     <string name="subkey_layout_copy_global">Módosítás minden kiosztásban</string>
     <string name="subkey_layout_copy_name">%1$s (módosított)</string>
@@ -1186,7 +1186,7 @@
     <string name="layout_language_follow_multilang">A Többnyelvű beállítások követése</string>
     <string name="layout_language_from_xml">%1$s (a kiosztás alapértelmezése)</string>
     <string name="layout_language_dialog_desc">Amíg ez a kiosztás aktív, a kiválasztott nyelv az egyetlen nyelv a javaslatokhoz, az automatikus javításhoz és a csúsztatásos gépeléshez. „A Többnyelvű beállítások követése” megtartja az elsődleges és a másodlagos nyelvet.</string>
-    <string name="layout_language_not_installed">Nincs telepítve %1$s szótár. A kiosztás működik, de a javaslatok és az automatikus javítás üresek maradnak, amíg nem importálod a nyelvi csomagját.</string>
+    <string name="layout_language_not_installed">Nincs telepítve %1$s szótár. A kiosztás működik, de a javaslatok és az automatikus javítás üresek maradnak, amíg nem importálja a nyelvi csomagját.</string>
     <string name="layout_language_xml_invalid">A language attribútumnak nyelvkódnak kell lennie, például fa vagy pt_br</string>
     <string name="keyboard_lang_layout_active">Nyelv: %1$s</string>
     <string name="keyboard_lang_layout_missing">Nyelv: %1$s (nincs telepített szótár)</string>
@@ -1632,7 +1632,7 @@
     <string name="layout_manager_xml_empty_error">A kiosztás XML-je nem lehet üres</string>
     <string name="layout_manager_import_failed">Nem sikerült importálni a kiosztásfájlt:\n%1$s</string>
     <string name="layout_manager_export_failed">Nem sikerült exportálni a kiosztásfájlt:\n%1$s</string>
-    <string name="layout_manager_export_not_written">Néhány rövid húzás nincs a fájlban: egy kiosztás nem tudja tárolni a műveletüket (például egy kitűzött vágólapelem beillesztését). Ezen az eszközön továbbra is működnek.</string>
+    <string name="layout_manager_export_not_written">Néhány rövid csúsztatás nincs a fájlban: egy kiosztás nem tudja tárolni a műveletüket (például egy rögzített vágólapelem beillesztését). Ezen az eszközön továbbra is működnek.</string>
     <string name="extra_keys_group_layout_switching">Kiosztásváltás</string>
     <string name="extra_keys_group_system">Rendszer</string>
     <string name="extra_keys_group_navigation">Navigáció</string>
@@ -1845,7 +1845,7 @@
     <string name="extra_key_title_voice">Hang</string>
     <string name="extra_key_title_clipboard">Vágólap</string>
     <string name="extra_key_title_switch_ime">Billentyűzetváltás</string>
-    <string name="extra_key_title_caps_lock">Caps Lock</string>
+    <string name="extra_key_title_caps_lock">Nagybetűzár</string>
     <string name="extra_key_title_private_copy">Privát másolás</string>
     <string name="extra_key_title_select_all">Összes kijelölése</string>
     <string name="extra_key_title_share">Megosztás</string>
@@ -2642,7 +2642,7 @@
     <string name="theme_shape_shadow">Billentyűárnyék eltolása</string>
     <string name="theme_shape_label_scale">Felirat mérete</string>
     <string name="theme_shape_label_weight">Felirat vastagsága</string>
-    <string name="theme_section_hints">Kézmozdulat-tippek</string>
+    <string name="theme_section_hints">Gesztustippek</string>
     <string name="theme_hints_all">Mind</string>
     <string name="theme_hints_digits">Csak számjegyek</string>
     <string name="theme_hints_none">Nincs</string>
