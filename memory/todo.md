@@ -60,7 +60,11 @@ device checks PASS on the Pixel; the 19 rendering/look/theme/subkey/layout-expor
 instrumented classes 185/185 on API 34 and 37 (`~/ew-output/toggles-layouts-2026-11-22/`).
 Release 5007948e installed on the S25U and the Pixel. Instrumented: the 9 affected classes (deletion, short swipes, pipeline, key events,
 auto-space, subkeys, clipboard editor, multi-language CTC, language detection) 253/253 on API 34
-and 37 (`~/ew-output/url-sv-2026-11-22/`); the full A2 suite was not re-run.
+and 37 (`~/ew-output/url-sv-2026-11-22/`). Release 17e8b8d4 (item 41) installed on the S25U and
+the Pixel, device PASS. Full A2 instrumented run at 17e8b8d4 started 20:33
+(`~/ew-output/full-2026-11-22/`, API 34–37, 3 shards each). Release notes: the GitHub body draft
+(`docs/plans/v2.0.0-github-release-body.md`) now carries the features merged 11-01 … 11-22; the
+500-byte fastlane note is unchanged (maintainer's call what it names).
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
@@ -371,4 +375,13 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     ("ABC", closes an open pane, a no-op otherwise) leaves Ctrl, since every pane closes with its
     close button or its opener key. Ctrl SE is now empty. `CtrlNumericSwitchLayoutTest` (mock);
     the a11y fixtures that copy the Ctrl key follow it. The QWERTY Samsung/Gboard/iOS/SwiftKey
-    styles keep their own 123 key and are unchanged.
+    styles keep their own 123 key and are unchanged. Device PASS 2026-11-22 20:33 (Pixel, release
+    17e8b8d4, neon theme): Ctrl shows 123+ on its top edge, the clipboard icon bottom-left, nothing
+    bottom-right; a swipe up opened the number pane and its ABC key returned to the letters, with
+    nothing typed into the field.
+42. [ ] agent (not a tag blocker; found during item 41's device check): in an empty field the
+    auto-capitalised Shift is gone after a trip to the number pane and back (123+ → ABC gives
+    lowercase letters). `Keyboard2View.setKeyboard` → `reset()` clears every modifier, and
+    `KeyboardReceiver`'s SWITCH_TEXT does not run auto-capitalisation again. Not caused by item 41
+    (the same path ran from Ctrl SE before). Fix: re-run the autocap check after SWITCH_TEXT, with
+    a test seen failing first; left for after the A2 run at 17e8b8d4 so that run stays valid.

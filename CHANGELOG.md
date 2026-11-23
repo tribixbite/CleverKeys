@@ -22,9 +22,9 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; everything merged up to
-> 2026-10-31 (`e3487b41` plus the open-source licenses screen) is folded in, including
-> on-device voice input (moved here from the proposed 2.1.0 by maintainer decision on
-> 2026-10-29) and its pause-based endpointing (2026-10-31).
+> 2026-11-22 (`17e8b8d4`) is folded in, including on-device voice input (moved here from the
+> proposed 2.1.0 by maintainer decision on 2026-10-29) and its pause-based endpointing
+> (2026-10-31).
 
 > Note: this file has gaps — v1.2.1, v1.2.2, v1.2.5 and v1.2.6 were tagged and shipped
 > but never given entries here. They are not backfilled by this release.
