@@ -616,7 +616,7 @@
     <string name="input_backspace_only_repeat_title">Powtarzaj tylko Backspace</string>
     <string name="input_backspace_only_repeat_desc">Powtarzaj tylko Backspace/klawisze nawigacyjne, nie klawisze znaków</string>
     <string name="input_double_tap_shift_title">Podwójne naciśnięcie blokuje Shift i Ctrl</string>
-    <string name="input_double_tap_shift_desc">Naciśnij dwukrotnie Shift, aby włączyć Caps Lock, albo Ctrl, Alt, Fn lub Meta, aby klawisz pozostał włączony do następnego naciśnięcia. Długie naciśnięcie zawsze je blokuje.</string>
+    <string name="input_double_tap_shift_desc">Naciśnij dwukrotnie Shift, aby włączyć Caps Lock, albo Ctrl, Alt, Fn lub Meta, aby klawisz pozostał włączony do następnego naciśnięcia.</string>
     <string name="input_immediate_switching_title">Natychmiastowe przełączanie klawiatury</string>
     <string name="input_immediate_switching_desc">Przełączaj klawiaturę natychmiast bez wyświetlania menu</string>
     <string name="input_enter_always_newline_title">Enter zawsze wstawia nowy wiersz</string>

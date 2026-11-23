@@ -606,7 +606,7 @@
     <string name="input_backspace_only_repeat_title">Повторять только Backspace</string>
     <string name="input_backspace_only_repeat_desc">Повторять только Backspace/навигационные клавиши, не символьные</string>
     <string name="input_double_tap_shift_title">Двойное нажатие фиксирует Shift и Ctrl</string>
-    <string name="input_double_tap_shift_desc">Двойное нажатие Shift включает CapsLock, а двойное нажатие Ctrl, Alt, Fn или Meta оставляет клавишу включённой до следующего нажатия. Долгое нажатие фиксирует их в любом случае.</string>
+    <string name="input_double_tap_shift_desc">Двойное нажатие Shift включает CapsLock, а двойное нажатие Ctrl, Alt, Fn или Meta оставляет клавишу включённой до следующего нажатия.</string>
     <string name="input_immediate_switching_title">Мгновенное переключение клавиатуры</string>
     <string name="input_immediate_switching_desc">Переключать клавиатуры немедленно, без меню</string>
     <string name="input_enter_always_newline_title">Enter всегда вставляет новую строку</string>

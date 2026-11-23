@@ -603,7 +603,7 @@
     <string name="input_backspace_only_repeat_title">Repetir apenas Backspace</string>
     <string name="input_backspace_only_repeat_desc">Repetir apenas Backspace/teclas de navegação, não teclas de caractere</string>
     <string name="input_double_tap_shift_title">Toque duplo para travar Shift e Ctrl</string>
-    <string name="input_double_tap_shift_desc">Toque duas vezes em Shift para o Caps Lock, ou em Ctrl, Alt, Fn ou Meta para mantê-la ativa até o próximo toque. Uma pressão longa sempre as trava.</string>
+    <string name="input_double_tap_shift_desc">Toque duas vezes em Shift para o Caps Lock, ou em Ctrl, Alt, Fn ou Meta para mantê-la ativa até o próximo toque.</string>
     <string name="input_immediate_switching_title">Troca de teclado imediata</string>
     <string name="input_immediate_switching_desc">Trocar de teclado imediatamente em vez de mostrar menu</string>
     <string name="input_enter_always_newline_title">Enter sempre insere uma nova linha</string>

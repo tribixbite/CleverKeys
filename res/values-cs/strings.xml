@@ -606,7 +606,7 @@
     <string name="input_backspace_only_repeat_title">Opakovat pouze Backspace</string>
     <string name="input_backspace_only_repeat_desc">Opakovat pouze Backspace/navigační klávesy, nikoli znakové klávesy</string>
     <string name="input_double_tap_shift_title">Dvojitý stisk zamkne Shift a Ctrl</string>
-    <string name="input_double_tap_shift_desc">Dvojitý stisk Shiftu zapne Caps Lock; dvojitý stisk Ctrl, Alt, Fn nebo Meta je nechá zapnuté do dalšího stisku. Dlouhý stisk je zamkne vždy.</string>
+    <string name="input_double_tap_shift_desc">Dvojitý stisk Shiftu zapne Caps Lock; dvojitý stisk Ctrl, Alt, Fn nebo Meta je nechá zapnuté do dalšího stisku.</string>
     <string name="input_immediate_switching_title">Okamžité přepínání klávesnic</string>
     <string name="input_immediate_switching_desc">Přepínat klávesnice okamžitě bez zobrazení nabídky</string>
     <string name="input_enter_always_newline_title">Enter vždy vloží nový řádek</string>

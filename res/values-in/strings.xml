@@ -611,7 +611,7 @@
     <string name="input_backspace_only_repeat_title">Ulang Hanya Backspace</string>
     <string name="input_backspace_only_repeat_desc">Hanya ulangi backspace/tombol navigasi, bukan tombol karakter</string>
     <string name="input_double_tap_shift_title">Ketuk Dua Kali untuk Mengunci Shift dan Ctrl</string>
-    <string name="input_double_tap_shift_desc">Ketuk Shift dua kali untuk caps lock, atau Ctrl, Alt, Fn, atau Meta dua kali agar tetap aktif sampai ketukan berikutnya. Tekan lama selalu menguncinya.</string>
+    <string name="input_double_tap_shift_desc">Ketuk Shift dua kali untuk caps lock, atau Ctrl, Alt, Fn, atau Meta dua kali agar tetap aktif sampai ketukan berikutnya.</string>
     <string name="input_immediate_switching_title">Peralihan Keyboard Segera</string>
     <string name="input_immediate_switching_desc">Beralih keyboard langsung alih-alih menampilkan menu</string>
     <string name="input_enter_always_newline_title">Enter Selalu Menyisipkan Baris Baru</string>

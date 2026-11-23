@@ -142,7 +142,9 @@ ordinary word instead. See the [FAQ](../FAQ.md).
 
 On by default. Tap Shift twice for caps lock. Ctrl, Alt, Fn and Meta work the same way: tap one
 twice and it stays on for every key you type until you tap it again. With this off, the second
-tap releases the key instead. A long press locks any of them either way.
+tap releases the key instead. Holding Shift or Ctrl opens their subkeys while the
+[subkey popover](../gestures/subkey-popover.md) is on and this setting is on; holding Alt, Fn or
+Meta, or any of them with this setting off, locks it.
 
 ## Gesture Tuning Section
 

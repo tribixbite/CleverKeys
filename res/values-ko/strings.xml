@@ -600,7 +600,7 @@
     <string name="input_backspace_only_repeat_title">백스페이스만 반복</string>
     <string name="input_backspace_only_repeat_desc">문자 키는 반복하지 않고 백스페이스/탐색 키만 반복합니다</string>
     <string name="input_double_tap_shift_title">두 번 탭하여 Shift와 Ctrl 잠금</string>
-    <string name="input_double_tap_shift_desc">Shift를 두 번 탭하면 Caps Lock이 켜지고, Ctrl, Alt, Fn 또는 Meta를 두 번 탭하면 다음에 탭할 때까지 켜진 상태로 유지됩니다. 길게 누르면 언제든 잠깁니다.</string>
+    <string name="input_double_tap_shift_desc">Shift를 두 번 탭하면 Caps Lock이 켜지고, Ctrl, Alt, Fn 또는 Meta를 두 번 탭하면 다음에 탭할 때까지 켜진 상태로 유지됩니다.</string>
     <string name="input_immediate_switching_title">즉시 키보드 전환</string>
     <string name="input_immediate_switching_desc">메뉴를 표시하지 않고 키보드를 즉시 전환합니다</string>
     <string name="input_enter_always_newline_title">엔터로 항상 줄 바꿈</string>

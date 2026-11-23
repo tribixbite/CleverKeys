@@ -626,7 +626,7 @@
     <string name="input_backspace_only_repeat_title">Repetă doar Backspace</string>
     <string name="input_backspace_only_repeat_desc">Repetă doar Backspace/tastele de navigare, nu tastele de caractere</string>
     <string name="input_double_tap_shift_title">Atingere dublă pentru blocarea Shift și Ctrl</string>
-    <string name="input_double_tap_shift_desc">Două atingeri pe Shift activează Caps Lock, iar două atingeri pe Ctrl, Alt, Fn sau Meta țin tasta activă până la următoarea atingere. O apăsare lungă le blochează oricum.</string>
+    <string name="input_double_tap_shift_desc">Două atingeri pe Shift activează Caps Lock, iar două atingeri pe Ctrl, Alt, Fn sau Meta țin tasta activă până la următoarea atingere.</string>
     <string name="input_immediate_switching_title">Comutare imediată tastatură</string>
     <string name="input_immediate_switching_desc">Comută tastatura imediat în loc să afișeze un meniu</string>
     <string name="input_enter_always_newline_title">Enter inserează întotdeauna un rând nou</string>

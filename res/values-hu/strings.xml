@@ -607,7 +607,7 @@
     <string name="input_backspace_only_repeat_title">Csak törlőbillentyű ismétlése</string>
     <string name="input_backspace_only_repeat_desc">Csak a törlő/navigációs billentyűk ismétlése, a karakter billentyűké nem</string>
     <string name="input_double_tap_shift_title">Dupla érintés zárolja a Shiftet és a Ctrl-t</string>
-    <string name="input_double_tap_shift_desc">A Shift kétszeri érintése bekapcsolja a nagybetűzárat, a Ctrl, Alt, Fn vagy Meta kétszeri érintése pedig a következő érintésig bekapcsolva tartja a billentyűt. Hosszú lenyomással mindig zárolhatók.</string>
+    <string name="input_double_tap_shift_desc">A Shift kétszeri érintése bekapcsolja a nagybetűzárat, a Ctrl, Alt, Fn vagy Meta kétszeri érintése pedig a következő érintésig bekapcsolva tartja a billentyűt.</string>
     <string name="input_immediate_switching_title">Azonnali billentyűzetváltás</string>
     <string name="input_immediate_switching_desc">Billentyűzetek azonnali váltása menü megjelenítése helyett</string>
     <string name="input_enter_always_newline_title">Az Enter mindig új sort szúr be</string>

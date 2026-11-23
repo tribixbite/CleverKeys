@@ -73,12 +73,15 @@ Calibration > **Customize Per-Key Actions**, and the same ones short swipes use.
 
 ## Which Keys Open It
 
-The popover opens on keys that type text (letters, digits, punctuation). Keys that already
-do something when held keep that behaviour:
+The popover opens on keys that type text (letters, digits, punctuation), and on Shift and Ctrl:
+holding them shows their subkeys, and a double tap locks them (see **Double Tap to Lock Shift and
+Ctrl** under Input Behavior; with that setting off, holding Shift or Ctrl locks them as before).
+At the start of a sentence, where Shift is already on, a quick double tap turns on caps lock.
+Keys that already do something when held keep that behaviour:
 
 | Key | Holding it still |
 |-----|------------------|
-| Shift, Ctrl, Alt, Fn and other modifiers | Locks the modifier |
+| Alt, Fn and other modifiers | Locks the modifier |
 | Backspace | Repeats, or selects with a short swipe then hold ([Selection-Delete](selection-delete.md)) |
 | Space and other keys with arrow subkeys | [TrackPoint mode](trackpoint-mode.md) |
 | Keys with their own long-press action (for example voice input or keyboard switch) | That action |

@@ -849,7 +849,7 @@
     <string name="input_backspace_only_repeat_title">Backspace Only Repeat</string>
     <string name="input_backspace_only_repeat_desc">Only repeat backspace/navigation keys, not character keys</string>
     <string name="input_double_tap_shift_title">Double Tap to Lock Shift and Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tap Shift twice for caps lock, or Ctrl, Alt, Fn or Meta twice to keep it on until the next tap. A long press locks them either way.</string>
+    <string name="input_double_tap_shift_desc">Tap Shift twice for caps lock, or Ctrl, Alt, Fn or Meta twice to keep it on until the next tap.</string>
     <string name="input_immediate_switching_title">Immediate Keyboard Switching</string>
     <string name="input_immediate_switching_desc">Switch keyboards immediately instead of showing menu</string>
     <string name="input_enter_always_newline_title">Enter Always Inserts a New Line</string>

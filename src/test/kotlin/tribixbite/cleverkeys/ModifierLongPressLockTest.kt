@@ -17,7 +17,12 @@ import org.objenesis.ObjenesisStd
 import tribixbite.cleverkeys.Pointers.Companion.FLAG_P_FAKE
 import tribixbite.cleverkeys.Pointers.Companion.FLAG_P_LATCHED
 import tribixbite.cleverkeys.Pointers.Companion.FLAG_P_LOCKED
+import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
+import tribixbite.cleverkeys.popover.PopoverSlot
+import tribixbite.cleverkeys.popover.SubkeyPopoverMetrics
+import tribixbite.cleverkeys.popover.SubkeyPopoverState
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 
 /**
@@ -27,7 +32,10 @@ import tribixbite.cleverkeys.prefs.ConfigSnapshot
  * two long presses. The hold locked the pressing finger's pointer; its release then found the
  * latched Shift ([Pointers.onTouchUp] "already latched") and took both away. With "double tap
  * for caps lock" off, a Shift the user had tapped went the same way. The same day: a double tap
- * locks Ctrl, Alt, Fn and Meta as it locks Shift (it used to release them).
+ * locks Ctrl, Alt, Fn and Meta as it locks Shift (it used to release them); then, holding Shift or
+ * Ctrl opens their subkey popover instead of locking them (with the popover and the double-tap lock
+ * on), and a quick double tap at a sentence start, where the first tap releases
+ * auto-capitalisation's Shift, gives caps lock.
  *
  * Driven through the real [Pointers.onTouchDown], [Pointers.handleMessage] with the pointer's
  * long-press `what` (as the Handler delivers it) and [Pointers.onTouchUp]. Harness as in
@@ -51,11 +59,18 @@ class ModifierLongPressLockTest {
         doubleTapLock: Boolean = true,
         swipeTyping: Boolean = false,
         shortGestures: Boolean = false,
+        popover: Boolean = false,
     ): ConfigSnapshot = testConfigSnapshot(
         double_tap_lock_shift = doubleTapLock,
         swipe_typing_enabled = swipeTyping,
         short_gestures_enabled = shortGestures,
+        subkey_popover_enabled = popover,
+        subkey_popover_neutral_width = 60,
+        subkey_popover_neutral_height = 60,
     )
+
+    /** The test's clock for the double-tap window ([Pointers.clockForTest]). */
+    private var clockMs = 1_000L
 
     private fun useSnapshot(s: ConfigSnapshot) {
         every { config.snapshot } returns s
@@ -82,6 +97,13 @@ class ModifierLongPressLockTest {
         pointers.setField("_longpress_handler", mockk<Handler>(relaxed = true))
         pointers.setField("_swipeRecognizer", recognizer)
         pointers.setField("_gestureClassifier", GestureClassifier())
+        val swipeManager = mockk<ShortSwipeCustomizationManager>()
+        every { swipeManager.getMapping(any(), any()) } returns null
+        pointers.setField("_customSwipeManager", swipeManager)
+        // Absent before the double-tap window existed: the real clock then.
+        if (Pointers::class.java.declaredFields.any { it.name == "clockForTest" }) {
+            pointers.setField("clockForTest", { clockMs })
+        }
     }
 
     @After
@@ -228,6 +250,121 @@ class ModifierLongPressLockTest {
         assertThat(pointersFor(ctrl)).isEmpty()
     }
 
+    // ------------------------------------------------------------------ hold opens the popover
+
+    // Maintainer 2026-11-23: "make it so holding ctrl and shift activate the subkey popup instead".
+
+    private val menu = KeyValue.getKeyByName("menu")
+    private val shiftWithSubkeys = shiftKey.withKeyValue(SwipeDirection.SW.subLabelIndex, menu)
+    private val ctrlWithSubkeys = ctrlKey.withKeyValue(SwipeDirection.N.subLabelIndex, KeyValue.getKeyByName("home"))
+
+    private fun hold(key: KeyboardData.Key) {
+        press(key)
+        holdPastTheLongPress()
+    }
+
+    @Test
+    fun holdingShiftOpensItsSubkeysInsteadOfLocking() {
+        useSnapshot(snap(popover = true))
+        hold(shiftWithSubkeys)
+        val shown = handler.shown
+        assertWithMessage("the hold opens Shift's subkey popover").that(shown).isNotNull()
+        assertThat((shown!!.slot(SwipeDirection.SW) as PopoverSlot.Default).value).isEqualTo(menu)
+        assertWithMessage("and does not lock it").that(pointers.getKeyFlags(shift) and FLAG_P_LOCKED).isEqualTo(0)
+        release() // in the neutral zone: nothing
+        assertThat(pointersFor(shift)).isEmpty()
+        assertThat(pointers.getModifiers().has(KeyValue.Modifier.SHIFT)).isFalse()
+    }
+
+    @Test
+    fun holdingCtrlOpensItsSubkeysInsteadOfLocking() {
+        useSnapshot(snap(popover = true))
+        hold(ctrlWithSubkeys)
+        assertWithMessage("the hold opens Ctrl's subkey popover").that(handler.shown).isNotNull()
+        release()
+        assertThat(pointersFor(ctrl)).isEmpty()
+    }
+
+    @Test
+    fun holdingShiftOverAutoCapitalisationsShiftLeavesItsLatch() {
+        useSnapshot(snap(popover = true))
+        autocapLatchesShift()
+        hold(shiftWithSubkeys)
+        assertThat(handler.shown).isNotNull()
+        release()
+        val held = pointersFor(shift).single()
+        assertThat(held.flags and (FLAG_P_FAKE or FLAG_P_LATCHED or FLAG_P_LOCKED)).isEqualTo(FLAG_P_FAKE or FLAG_P_LATCHED)
+    }
+
+    @Test
+    fun withTheDoubleTapLockOffTheHoldStillLocks() {
+        // Locking must stay reachable: without the double tap, the hold is the way.
+        useSnapshot(snap(popover = true, doubleTapLock = false))
+        longPress(shiftWithSubkeys)
+        assertThat(handler.shown).isNull()
+        assertLockedByTheUser(shift)
+    }
+
+    @Test
+    fun altKeepsItsLockingHold() {
+        useSnapshot(snap(popover = true))
+        val alt = KeyValue.getKeyByName("alt")
+        longPress(keyFor(alt))
+        assertThat(handler.shown).isNull()
+        assertLockedByTheUser(alt)
+    }
+
+    @Test
+    fun underTalkBackTheHoldStillLocks() {
+        // The popover has no accessibility nodes (docs/specs/subkey-popover.md "Scope").
+        useSnapshot(snap(popover = true))
+        handler.touchExploration = true
+        longPress(shiftWithSubkeys)
+        assertThat(handler.shown).isNull()
+        assertLockedByTheUser(shift)
+    }
+
+    // ------------------------------------------------------------------ double tap at a sentence start
+
+    @Test
+    fun aQuickDoubleTapOnAutoCapitalisationsShiftIsCapsLock() {
+        autocapLatchesShift()
+        tap(shiftKey) // releases auto-capitalisation's Shift
+        clockMs += 150
+        tap(shiftKey)
+        assertLockedByTheUser(shift)
+    }
+
+    @Test
+    fun aSlowSecondTapAfterReleasingAutoCapitalisationsShiftIsOneShot() {
+        autocapLatchesShift()
+        tap(shiftKey)
+        clockMs += 1_500
+        tap(shiftKey)
+        val held = pointersFor(shift).single()
+        assertThat(held.flags and (FLAG_P_LATCHED or FLAG_P_LOCKED)).isEqualTo(FLAG_P_LATCHED)
+    }
+
+    @Test
+    fun aKeyTypedBetweenTheTapsMakesItOneShot() {
+        autocapLatchesShift()
+        tap(shiftKey)
+        tap(KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.makeCharKey('a')))
+        tap(shiftKey)
+        val held = pointersFor(shift).single()
+        assertThat(held.flags and (FLAG_P_LATCHED or FLAG_P_LOCKED)).isEqualTo(FLAG_P_LATCHED)
+    }
+
+    @Test
+    fun withTheDoubleTapLockOffTwoTapsOnAutoCapitalisationsShiftGiveOneShot() {
+        useSnapshot(snap(doubleTapLock = false))
+        autocapLatchesShift()
+        tap(shiftKey)
+        tap(shiftKey)
+        val held = pointersFor(shift).single()
+        assertThat(held.flags and (FLAG_P_LATCHED or FLAG_P_LOCKED)).isEqualTo(FLAG_P_LATCHED)
+    }
+
     // ------------------------------------------------------------------ unchanged
 
     @Test
@@ -275,6 +412,12 @@ class ModifierLongPressLockTest {
         override fun getKeyHypotenuse(key: KeyboardData.Key): Float = 180f
         override fun getKeyWidth(key: KeyboardData.Key): Float = 100f
         override fun onCustomShortSwipe(mapping: ShortSwipeMapping) {}
+
+        var shown: SubkeyPopoverState? = null
+        var touchExploration = false
+        override fun subkeyPopoverMetrics(key: KeyboardData.Key) = SubkeyPopoverMetrics(100f, 150f, 1000f, 600f)
+        override fun onSubkeyPopoverShow(state: SubkeyPopoverState) { shown = state }
+        override fun isTouchExplorationEnabled(): Boolean = touchExploration
     }
 
     /** A [Message] with only `what` set; android.jar's constructor is a stub, so allocate raw. */

@@ -296,40 +296,104 @@ class ModifierStateAcrossResetsInstrumentedTest {
         }
     }
 
-    // ------------------------------------------------------------------ long press on Shift
+    // ------------------------------------------------------------------ hold and double tap on Shift
 
-    @Test
-    fun holdingShiftAtASentenceStartLocksIt() {
+    /**
+     * Runs [body] with the subkey popover setting at [on] (`subkey_popover_enabled`; new installs
+     * default to on, and holding Shift then opens its popover instead of locking it), restored after.
+     */
+    private fun withSubkeyPopover(on: Boolean, body: () -> Unit) {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val saved = if (prefs.contains(POPOVER_KEY)) prefs.getBoolean(POPOVER_KEY, true) else null
+        try {
+            prefs.edit().putBoolean(POPOVER_KEY, on).commit()
+            instrumentation.waitForIdleSync()
+            body()
+        } finally {
+            if (saved != null) prefs.edit().putBoolean(POPOVER_KEY, saved).commit()
+            else prefs.edit().remove(POPOVER_KEY).commit()
+        }
+    }
+
+    private fun launchAtASentenceStart(body: () -> Unit) {
         ActivityScenario.launch(ImeFieldTestActivity::class.java).use {
             waitFor("the keyboard with auto-capitalisation's Shift in the empty field") {
                 shown() && onLetters() && has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == false
             }
-            var holdMs = 0L
-            instrumentation.runOnMainSync { holdMs = Config.globalConfig().snapshot.longPressTimeout }
-            // A real finger on the real key: down, held past the long press, up. A touch injected
-            // while the keyboard is still sliding in lands on the app below and never reaches the
-            // keys (API 37 emulator, 2026-11-23: no Pointers event at all); that is lifted and
-            // tried again, so this test fails on what Shift does, never on where the touch went.
-            Thread.sleep(SETTLE_MS)
-            var landed = false
-            for (attempt in 1..3) {
-                val (x, y) = shiftKeyCentreOnScreen()
-                val downTime = SystemClock.uptimeMillis()
-                touch(MotionEvent.ACTION_DOWN, downTime, x, y)
-                landed = within(500L) { fingerOnKeyboard() }
-                if (!landed) {
-                    touch(MotionEvent.ACTION_UP, downTime, x, y)
-                    Log.i(TAG, "long press attempt $attempt did not reach the keyboard at ($x, $y); ${state()}")
-                    Thread.sleep(SETTLE_MS)
-                    continue
-                }
-                Thread.sleep(holdMs + 400L)
+            body()
+        }
+    }
+
+    private fun longPressTimeout(): Long {
+        var ms = 0L
+        instrumentation.runOnMainSync { ms = Config.globalConfig().snapshot.longPressTimeout }
+        return ms
+    }
+
+    /**
+     * A real finger on the real Shift key: down, [whileDown] after [holdMs], up. A touch injected
+     * while the keyboard is still sliding in lands on the app below and never reaches the keys
+     * (API 37 emulator, 2026-11-23: no Pointers event at all); that is lifted and tried again, so
+     * a test fails on what Shift does, never on where the touch went.
+     */
+    private fun touchShift(holdMs: Long, whileDown: () -> Unit = {}) {
+        for (attempt in 1..3) {
+            val (x, y) = shiftKeyCentreOnScreen()
+            val downTime = SystemClock.uptimeMillis()
+            touch(MotionEvent.ACTION_DOWN, downTime, x, y)
+            if (!within(500L) { fingerOnKeyboard() }) {
                 touch(MotionEvent.ACTION_UP, downTime, x, y)
-                break
+                Log.i(TAG, "touch attempt $attempt did not reach the keyboard at ($x, $y); ${state()}")
+                Thread.sleep(SETTLE_MS)
+                continue
             }
-            assertTrue("no touch on Shift reached the keyboard in 3 attempts: ${state()}", landed)
+            if (holdMs > 0) Thread.sleep(holdMs)
+            whileDown()
+            touch(MotionEvent.ACTION_UP, downTime, x, y)
+            return
+        }
+        throw AssertionError("no touch on Shift reached the keyboard in 3 attempts: ${state()}")
+    }
+
+    /** Whether the subkey popover is open on the live keyboard (Keyboard2View `_subkeyPopover`). */
+    private fun popoverOpen(): Boolean {
+        val kb = keyboard() ?: return false
+        return Keyboard2View::class.java.getDeclaredField("_subkeyPopover").apply { isAccessible = true }.get(kb) != null
+    }
+
+    @Test
+    fun holdingShiftAtASentenceStartLocksIt() = withSubkeyPopover(on = false) {
+        // With the popover off the hold still locks (a latched Shift included, 2026-11-23).
+        launchAtASentenceStart {
+            Thread.sleep(SETTLE_MS)
+            touchShift(longPressTimeout() + 400L)
             val locked = within(2_000L) { has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == true }
             assertTrue("a long press on Shift at a sentence start must turn caps lock on: ${state()}", locked)
+        }
+    }
+
+    @Test
+    fun holdingShiftOpensItsSubkeyPopover() = withSubkeyPopover(on = true) {
+        // Maintainer 2026-11-23: "make it so holding ctrl and shift activate the subkey popup instead".
+        launchAtASentenceStart {
+            Thread.sleep(SETTLE_MS)
+            var openDuringHold = false
+            touchShift(longPressTimeout() + 400L) { openDuringHold = within(1_000L) { popoverOpen() } }
+            assertTrue("holding Shift must open its subkey popover: ${state()}", openDuringHold)
+            assertTrue("released in the middle: popover closed, nothing typed, the automatic Shift kept: ${state()}",
+                within(2_000L) { !popoverOpen() && has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == false })
+        }
+    }
+
+    @Test
+    fun aQuickDoubleTapOnShiftAtASentenceStartIsCapsLock() = withSubkeyPopover(on = true) {
+        launchAtASentenceStart {
+            Thread.sleep(SETTLE_MS)
+            touchShift(holdMs = 0) // releases auto-capitalisation's Shift
+            Thread.sleep(80L)
+            touchShift(holdMs = 0)
+            val locked = within(2_000L) { has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == true }
+            assertTrue("a quick double tap on the automatic Shift must turn caps lock on: ${state()}", locked)
         }
     }
 
@@ -399,6 +463,8 @@ class ModifierStateAcrossResetsInstrumentedTest {
         const val TAG = "ModifierStateTest"
         /** Written and removed by [ctrlAndCapsLockSurviveASettingsChange]; no setting reads it. */
         const val PROBE_KEY = "test_modifier_state_probe"
+        /** [Config]'s `subkey_popover_enabled`. */
+        const val POPOVER_KEY = "subkey_popover_enabled"
         /** Longer than the IME window's show animation (about 300 ms). */
         const val SETTLE_MS = 700L
     }

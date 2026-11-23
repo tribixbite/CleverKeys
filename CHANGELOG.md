@@ -647,10 +647,12 @@ editor that used to be listed here already ship in 2.0.)
 - They also stay on when a setting or the theme changes while you type (a command such as True
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.
-- A long press on Shift locks caps lock also when Shift is already on: at the start of a
-  sentence, where the automatic capital had latched it, the long press turned Shift off, and
-  caps lock took a second long press. The same goes for a Shift you tapped with "double tap for
-  caps lock" off, and for Ctrl, Alt and Fn.
+- Holding Shift or Ctrl opens their subkeys when the subkey popover is on, as on letter keys; a
+  double tap locks them (see below). At the start of a sentence, where the automatic capital has
+  already turned Shift on, a quick double tap turns on caps lock; it used to give one capital.
+  With the popover or the double tap off, holding Shift still locks it, also when it is already
+  on (that hold used to turn Shift off, so caps lock took a second hold), and so for Ctrl, Alt
+  and Fn.
 - With Ctrl, Alt or Meta on together with Shift or caps lock, the letter keys show capitals; they
   showed lowercase. The shortcut sent to the app is unchanged.
 - A double tap locks Ctrl, Alt, Fn and Meta as it locks Shift (📝 Input Behavior › Double Tap to

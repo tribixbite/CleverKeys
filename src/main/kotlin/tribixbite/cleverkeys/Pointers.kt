@@ -75,6 +75,19 @@ class Pointers(
     private val _customSwipeManager = ShortSwipeCustomizationManager.getInstance(context)
 
     /**
+     * Auto-capitalisation's Shift that a tap has just released, and when ([now]). A second tap on
+     * Shift within [DOUBLE_TAP_AFTER_AUTOCAP_MS] completes a double tap, so caps lock (onTouchUp),
+     * as at a sentence start in other keyboards; any other key pressed first ends it.
+     */
+    private var autocapShiftRelease: Pair<KeyValue, Long>? = null
+
+    /** Test seam for [now]; null (also when allocated without a constructor) is the real clock. */
+    @JvmField
+    internal var clockForTest: (() -> Long)? = null
+
+    private fun now(): Long = clockForTest?.invoke() ?: SubkeyPopoverState.now()
+
+    /**
      * Owned coroutine scope for this Pointers instance. A [SupervisorJob] child of
      * [Dispatchers.IO] so the one-shot startup load (below) can be cancelled when the
      * owning [Keyboard2View] is detached/recreated (theme change). Replaces the former
@@ -750,6 +763,11 @@ class Pointers(
                 lockPointer(latched)
             } else { // Otherwise, unlatch
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Path: Unlatching")
+                // A tap on auto-capitalisation's Shift releases it, and may be the first of a
+                // double tap for caps lock (completed in the branch below).
+                autocapShiftRelease = if ((latched.flags and FLAG_P_FAKE) != 0 && ptr_value != null &&
+                    ptr.hasFlagsAny(FLAG_P_DOUBLE_TAP_LOCK)
+                ) ptr_value to now() else null
                 removePtr(latched)
                 _handler.onPointerUp(ptr_value, ptr.modifiers)
             }
@@ -761,7 +779,19 @@ class Pointers(
             }
             ptr.flags = ptr.flags or FLAG_P_LATCHED
             ptr.pointerId = -1
-            _handler.onPointerFlagsChanged(null)
+            // The second tap of a double tap that began on auto-capitalisation's Shift: caps lock,
+            // as a double tap on a Shift the user latched gives. Since 2026-11-23 holding Shift opens
+            // its subkeys when the popover is on, so the double tap is how to lock it at a sentence
+            // start (maintainer); a slower second tap is an ordinary one-shot Shift.
+            val release = autocapShiftRelease
+            autocapShiftRelease = null
+            if (release != null && release.first == ptr_value && ptr.hasFlagsAny(FLAG_P_DOUBLE_TAP_LOCK) &&
+                now() - release.second <= DOUBLE_TAP_AFTER_AUTOCAP_MS
+            ) {
+                lockPointer(ptr)
+            } else {
+                _handler.onPointerFlagsChanged(null)
+            }
         } else {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
             clearLatched()
@@ -871,6 +901,8 @@ class Pointers(
         // The other key already "own" the latched modifiers and will clear them.
         val mods = getModifiers(isOtherPointerDown())
         val value = _handler.modifyKey(key.keys[0], mods)
+        // Any other key between the two taps ends a double tap begun on auto-capitalisation's Shift.
+        if (autocapShiftRelease?.first != value) autocapShiftRelease = null
         val ptr = make_pointer(pointerId, key, value, x, y, mods, snap)
         _ptrs.add(ptr)
 
@@ -1843,12 +1875,17 @@ class Pointers(
 
     /**
      * Whether holding [ptr]'s key may open the popover. Keys that already own the hold keep it:
-     * modifiers (latch/lock), backspace (repeat/selection), keys with navigation subkeys
-     * (TrackPoint), keys `modify_long_press` remaps (voice/IME switch), and anything that is not
-     * text (Char/String).
+     * Alt, Fn, Meta and the dead keys (latch/lock), backspace (repeat/selection), keys with
+     * navigation subkeys (TrackPoint), keys `modify_long_press` remaps (voice/IME switch), and
+     * anything else that is not text (Char/String). Shift and Ctrl open it ([isPopoverModifier]).
      */
     private fun isSubkeyPopoverKey(ptr: Pointer): Boolean {
         val value = ptr.value ?: return false
+        // Shift and Ctrl: holding them shows their subkeys (maintainer 2026-11-23: "make it so
+        // holding ctrl and shift activate the subkey popup instead"), while a double tap locks
+        // them. Only with the double-tap lock on, so locking stays reachable; Alt, Fn and Meta
+        // keep the locking hold.
+        if (isPopoverModifier(value)) return ptr.snap.double_tap_lock_shift && !ptr.hasFlagsAny(FLAG_P_LATCHED)
         if (ptr.hasFlagsAny(FLAG_P_LATCHABLE or FLAG_P_LATCHED)) return false
         if (value.hasFlagsAny(KeyValue.FLAG_SPECIAL)) return false
         if (value.getKind() != KeyValue.Kind.Char && value.getKind() != KeyValue.Kind.String) return false
@@ -1856,6 +1893,11 @@ class Pointers(
         if (isBackspaceKey(value) || hasNavigationSubkeys(ptr)) return false
         return KeyModifier.modify_long_press(value) == value
     }
+
+    /** Shift and Ctrl, whose hold opens the popover (2026-11-23) when the double-tap lock is on. */
+    private fun isPopoverModifier(value: KeyValue): Boolean =
+        value.getKind() == KeyValue.Kind.Modifier &&
+            (value.getModifier() == KeyValue.Modifier.SHIFT || value.getModifier() == KeyValue.Modifier.CTRL)
 
     /** Open the popover for [ptr] if it applies; false leaves the hold to the other behaviours. */
     private fun tryOpenSubkeyPopover(ptr: Pointer, snap: ConfigSnapshot): Boolean {
@@ -2566,6 +2608,9 @@ class Pointers(
 
         /** Movement (px) past which a hold is a swipe, not a hold — shared by repeat and popover. */
         private const val HOLD_STILLNESS_PX = 15f
+
+        /** A second tap on Shift this soon after one released auto-capitalisation's Shift is a double tap. */
+        internal const val DOUBLE_TAP_AFTER_AUTOCAP_MS = 400L
 
         /** Minimum movement (px) to trigger nav event in TrackPoint mode. */
         const val TRACKPOINT_MOVEMENT_THRESHOLD = 15f

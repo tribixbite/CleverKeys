@@ -33,9 +33,13 @@ subkey popover found in mainstream keyboards".
      literal macro.
    - On an empty slot: the popover closes and the **assign** screen opens for (key, direction).
 5. **Dwell to edit.** Resting on an assigned slot (default or custom) for 3 s closes the popover and opens the **edit** screen for that slot; the release that follows does nothing. From 0.8 s a progress border runs clockwise from the top centre around the **whole popover** (a faint full track, then the fill), so the user can see it coming and move away. It was first a ring around the selected cell, which sat under the finger (owner report 2026-10-01).
-6. **Scope.** Only keys whose main value is a Char or String and not special. Keys that already
-   own the hold keep their behaviour:
-   - modifiers latch or lock;
+6. **Scope.** Keys whose main value is a Char or String and not special, and Shift and Ctrl
+   (2026-11-23, maintainer: "make it so holding ctrl and shift activate the subkey popup
+   instead") while the double-tap lock (`lock_double_tap`) is on, since a double tap then locks
+   them; with it off, or under TalkBack, their hold still locks. A neutral release on Shift or
+   Ctrl does nothing (a latch already there stays). Keys that already own the hold keep their
+   behaviour:
+   - Alt, Fn, Meta and the dead keys latch or lock;
    - backspace repeats or selects;
    - keys with navigation subkeys (space) enter TrackPoint;
    - `modify_long_press` remaps (voice/IME switch).

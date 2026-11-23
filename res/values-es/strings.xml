@@ -621,7 +621,7 @@
     <string name="input_backspace_only_repeat_title">Solo repetir retroceso</string>
     <string name="input_backspace_only_repeat_desc">Solo repite las teclas de retroceso/navegación, no las teclas de caracteres</string>
     <string name="input_double_tap_shift_title">Doble toque para bloquear Mayús y Ctrl</string>
-    <string name="input_double_tap_shift_desc">Dos toques en Mayús activan el bloqueo de mayúsculas; dos toques en Ctrl, Alt, Fn o Meta mantienen esa tecla activa hasta el siguiente toque. Una pulsación larga las bloquea en cualquier caso.</string>
+    <string name="input_double_tap_shift_desc">Dos toques en Mayús activan el bloqueo de mayúsculas; dos toques en Ctrl, Alt, Fn o Meta mantienen esa tecla activa hasta el siguiente toque.</string>
     <string name="input_immediate_switching_title">Cambio de teclado inmediato</string>
     <string name="input_immediate_switching_desc">Cambia el teclado inmediatamente en lugar de mostrar un menú</string>
     <string name="input_enter_always_newline_title">Intro siempre inserta una nueva línea</string>

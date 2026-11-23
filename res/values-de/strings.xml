@@ -621,7 +621,7 @@
     <string name="input_backspace_only_repeat_title">Nur Rücktaste wiederholen</string>
     <string name="input_backspace_only_repeat_desc">Nur Rücktaste/Navigationstasten wiederholen, nicht Zeichentasten</string>
     <string name="input_double_tap_shift_title">Doppeltippen sperrt Umschalt und Strg</string>
-    <string name="input_double_tap_shift_desc">Zweimal auf Umschalt tippen schaltet die Feststelltaste ein, zweimal auf Strg, Alt, Fn oder Meta hält die Taste bis zum nächsten Tippen aktiv. Ein Langdruck sperrt sie in jedem Fall.</string>
+    <string name="input_double_tap_shift_desc">Zweimal auf Umschalt tippen schaltet die Feststelltaste ein, zweimal auf Strg, Alt, Fn oder Meta hält die Taste bis zum nächsten Tippen aktiv.</string>
     <string name="input_immediate_switching_title">Sofortiges Tastaturwechseln</string>
     <string name="input_immediate_switching_desc">Tastatur sofort wechseln, anstatt ein Menü anzuzeigen</string>
     <string name="input_enter_always_newline_title">Eingabetaste fügt immer eine neue Zeile ein</string>

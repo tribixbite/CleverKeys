@@ -642,7 +642,7 @@
     <string name="input_backspace_only_repeat_title">Ripeti solo Backspace</string>
     <string name="input_backspace_only_repeat_desc">Ripeti solo Backspace/tasti di navigazione, non i tasti carattere</string>
     <string name="input_double_tap_shift_title">Doppio tocco per bloccare Maiusc e Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tocca due volte Maiusc per il blocco maiuscole, oppure Ctrl, Alt, Fn o Meta per tenerlo attivo fino al tocco successivo. Una pressione prolungata li blocca in ogni caso.</string>
+    <string name="input_double_tap_shift_desc">Tocca due volte Maiusc per il blocco maiuscole, oppure Ctrl, Alt, Fn o Meta per tenerlo attivo fino al tocco successivo.</string>
     <string name="input_immediate_switching_title">Cambio tastiera immediato</string>
     <string name="input_immediate_switching_desc">Cambia tastiera immediatamente invece di mostrare un menu</string>
     <string name="input_enter_always_newline_title">Invio inserisce sempre una nuova riga</string>

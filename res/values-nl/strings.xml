@@ -602,7 +602,7 @@
     <string name="input_backspace_only_repeat_title">Alleen backspace herhalen</string>
     <string name="input_backspace_only_repeat_desc">Alleen backspace-/navigatietoetsen herhalen, geen tekentoetsen</string>
     <string name="input_double_tap_shift_title">Dubbel tikken vergrendelt Shift en Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tik twee keer op Shift voor caps lock, of twee keer op Ctrl, Alt, Fn of Meta om de toets aan te houden tot de volgende tik. Lang indrukken vergrendelt ze altijd.</string>
+    <string name="input_double_tap_shift_desc">Tik twee keer op Shift voor caps lock, of twee keer op Ctrl, Alt, Fn of Meta om de toets aan te houden tot de volgende tik.</string>
     <string name="input_immediate_switching_title">Direct wisselen van toetsenbord</string>
     <string name="input_immediate_switching_desc">Direct wisselen van toetsenbord zonder menu te tonen</string>
     <string name="input_enter_always_newline_title">Enter voegt altijd een nieuwe regel in</string>

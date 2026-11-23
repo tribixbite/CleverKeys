@@ -637,7 +637,7 @@
     <string name="input_backspace_only_repeat_title">تکرار فقط Backspace</string>
     <string name="input_backspace_only_repeat_desc">فقط کلیدهای Backspace/ناوبری را تکرار کنید، نه کلیدهای نویسه</string>
     <string name="input_double_tap_shift_title">دو ضربه برای قفل Shift و Ctrl</string>
-    <string name="input_double_tap_shift_desc">دو ضربه روی Shift حروف بزرگ را قفل می‌کند و دو ضربه روی Ctrl، Alt، Fn یا Meta آن کلید را تا ضربه بعدی فعال نگه می‌دارد. فشردن طولانی در هر صورت آن‌ها را قفل می‌کند.</string>
+    <string name="input_double_tap_shift_desc">دو ضربه روی Shift حروف بزرگ را قفل می‌کند و دو ضربه روی Ctrl، Alt، Fn یا Meta آن کلید را تا ضربه بعدی فعال نگه می‌دارد.</string>
     <string name="input_immediate_switching_title">تعویض فوری صفحه‌کلید</string>
     <string name="input_immediate_switching_desc">به جای نمایش منو، فوری صفحه‌کلید را تعویض کنید</string>
     <string name="input_enter_always_newline_title">Enter همیشه خط جدید درج می‌کند</string>
