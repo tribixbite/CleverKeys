@@ -237,6 +237,15 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     0 refused. Gradle translation classes 24 passed; standard full suites 3,986 pure / 1,896
     mock passed; post-reconciliation pure suite 3,986 passed (includes all translation classes).
     Evidence and scope: both dated translation reports. Native review and M2 remain open.
+    2026-11-23 third independent AI review (Gemini 4 Neon, one reviewer subagent per locale;
+    `docs/audit/2026-11-23-translation-agent-review-gemini.md`): all 35,401 sheet rows read
+    across 21 locales starting from `edf0a8605`; 39 additional real defects fixed across 17
+    locales (sheet 1: 0, sheet 2: 2, sheet 3: 37 — grammar/agreement/particles in cs/de/it/ko/lv/pl/ro/tr,
+    RTL bidi arrow & size-hint meaning in fa, omitted "Word"/command label in fil, false friends in fr/ja/nl/tr,
+    inverted "from clipboard" backup lines in ru/uk, formal-register slips in ro, compound orthography in hu,
+    broken syntax in in); 0 CSV–XML mismatches, 0 import refusals. Gradle: 5 translation classes 24/24,
+    full `runPureTests` 3,986 OK, `runMockTests` 1,896 OK. Still an AI review: native-speaker review and
+    the M2 decision remain OPEN.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
