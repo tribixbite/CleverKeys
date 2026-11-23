@@ -2892,10 +2892,11 @@ class Keyboard2View @JvmOverloads constructor(
         /**
          * Pointer id for accessibility ACTION_CLICK taps. `-2` is deliberately
          * distinct from real touch ids (>= 0) and the `-1` latched-pointer id
-         * Pointers assigns at Pointers.kt:607, so it never collides with the
-         * fake-pointer special-cases around Pointers.kt:506.
+         * Pointers assigns when it latches, so it never collides with the
+         * fake-pointer special cases. Pointers owns it: such a tap is no timed
+         * tap, so it counts as a double tap at any delay (2026-11-23).
          */
-        private const val A11Y_POINTER_ID = -2
+        private const val A11Y_POINTER_ID = Pointers.ACCESSIBILITY_POINTER_ID
 
         /** Horizontal and vertical position of the 9 indexes. */
         val LABEL_POSITION_H = arrayOf(

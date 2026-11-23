@@ -126,6 +126,21 @@ and back off), quick double tap at a sentence start = caps lock. Not device-chec
 an edit (it would change the phone's clipboard; emulator test on 4 APIs) and RustDesk. Open: Alt, Fn,
 Meta keep the locking hold (only Shift and Ctrl were asked for). Before the tag: only M1, M2, M4.
 
+**Status 2026-11-23, evening (agent).** Maintainer, on the batch proposed after "are these changes user
+friendly … shouldnt Fn key follow suit?": "do all but for d", and "dont overwrite the trackpoint style
+nav for holding the nav key (between space and return)". Done: (a) Fn, Alt and Meta hold like Shift and
+Ctrl (popover when they have subkeys; one with nothing to show still locks; keys with arrow subkeys keep
+TrackPoint); (b) a double tap locks only when the second press starts within 400 ms of the first release
+(`Pointers.DOUBLE_TAP_LOCK_MS`), a slower tap turns the modifier off; TalkBack and accessibility clicks
+(pointer id −2: Switch Access, Voice Access) lock on any second activation; (c) a modifier held while
+another finger types applies to those keys and ends with its finger (`joinHeldModifiersToChord`; the
+first key used to get nothing); (e) both settings' descriptions say how they change the hold (22 files,
+machine translated). Not done: (d) paste falling back to the newest CleverKeys clipping when Android has
+cleared its clipboard (maintainer: not wanted). Default layout has no Alt/Meta key: `loc` subkeys of Fn
+and Ctrl. Seen failing first: 11 mock tests; the accessibility/TalkBack exemptions by a mutant (2 failed).
+After: pure 3,991 / mock 1,953. A2, the Pixel check (incl. the paste after an edit) and CI: see the
+evidence commit that follows. Before the tag: only M1, M2, M4.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the

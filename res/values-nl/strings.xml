@@ -601,8 +601,8 @@
     <string name="input_key_repeat_desc">Toetsen laten herhalen bij lang ingedrukt houden</string>
     <string name="input_backspace_only_repeat_title">Alleen backspace herhalen</string>
     <string name="input_backspace_only_repeat_desc">Alleen backspace-/navigatietoetsen herhalen, geen tekentoetsen</string>
-    <string name="input_double_tap_shift_title">Dubbel tikken vergrendelt Shift en Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tik twee keer op Shift voor caps lock, of twee keer op Ctrl, Alt, Fn of Meta om de toets aan te houden tot de volgende tik.</string>
+    <string name="input_double_tap_shift_title">Dubbel tikken vergrendelt Shift, Ctrl en Fn</string>
+    <string name="input_double_tap_shift_desc">Tik snel twee keer op Shift voor caps lock, of snel twee keer op Ctrl, Fn, Alt of Meta om de toets aan te houden tot de volgende tik. Een tragere tweede tik zet hem uit. Staan deze instelling en Subtoetsen-pop-up bij vasthouden allebei aan, dan toont het vasthouden van een van deze toetsen zijn subtoetsen; anders vergrendelt vasthouden hem.</string>
     <string name="input_immediate_switching_title">Direct wisselen van toetsenbord</string>
     <string name="input_immediate_switching_desc">Direct wisselen van toetsenbord zonder menu te tonen</string>
     <string name="input_enter_always_newline_title">Enter voegt altijd een nieuwe regel in</string>
@@ -899,7 +899,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Vasthouden voor subtoetsen</string>
     <string name="gesture_subkey_popover_title">Subtoetsen-pop-up bij vasthouden</string>
-    <string name="gesture_subkey_popover_desc">Houd een toets vast om de subtoetsen rond je vinger te tonen. Beweeg je vinger naar een subtoets en laat los om die te typen, of laat los in het midden om te annuleren. Kies een lege plek om er iets aan toe te wijzen; blijf 3 seconden op een subtoets om die te bewerken. Vervangt toetsherhaling op lettertoetsen.</string>
+    <string name="gesture_subkey_popover_desc">Houd een toets vast om de subtoetsen rond je vinger te tonen. Beweeg je vinger naar een subtoets en laat los om die te typen, of laat los in het midden om te annuleren. Kies een lege plek om er iets aan toe te wijzen; blijf 3 seconden op een subtoets om die te bewerken. Vervangt toetsherhaling op lettertoetsen. Als vergrendelen met dubbel tikken aanstaat, tonen ook Shift, Ctrl, Fn, Alt en Meta bij vasthouden hun subtoetsen in plaats van te vergrendelen.</string>
     <string name="gesture_popover_neutral_width_title">Breedte neutrale zone</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Breedte van het middengebied waar loslaten niets doet, als % van de toetsbreedte</string>
     <string name="gesture_popover_neutral_height_title">Hoogte neutrale zone</string>

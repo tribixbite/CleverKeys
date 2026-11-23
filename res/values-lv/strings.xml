@@ -614,8 +614,8 @@
     <string name="input_key_repeat_desc">Atļaut taustiņiem atkārtoties ilgas nospiešanas laikā</string>
     <string name="input_backspace_only_repeat_title">Atkārtot tikai Backspace</string>
     <string name="input_backspace_only_repeat_desc">Atkārtot tikai Backspace/navigācijas taustiņus, nevis rakstzīmju taustiņus</string>
-    <string name="input_double_tap_shift_title">Dubultklikšķis fiksē Shift un Ctrl</string>
-    <string name="input_double_tap_shift_desc">Divreiz nospiežot Shift, ieslēdzas burtslēgs; divreiz nospiežot Ctrl, Alt, Fn vai Meta, taustiņš paliek ieslēgts līdz nākamajai nospiešanai.</string>
+    <string name="input_double_tap_shift_title">Dubultklikšķis fiksē Shift, Ctrl un Fn</string>
+    <string name="input_double_tap_shift_desc">Ātri divreiz nospiežot Shift, ieslēdzas burtslēgs; ātri divreiz nospiežot Ctrl, Fn, Alt vai Meta, taustiņš paliek ieslēgts līdz nākamajai nospiešanai. Lēnāka otrā nospiešana to izslēdz. Ja ir ieslēgts gan šis iestatījums, gan Apakštaustiņu logs, turot taustiņu, šo taustiņu turēšana parāda to apakštaustiņus; citādi turēšana tos fiksē.</string>
     <string name="input_immediate_switching_title">Tūlītēja tastatūras pārslēgšana</string>
     <string name="input_immediate_switching_desc">Pārslēgt tastatūras nekavējoties, bez izvēlnes</string>
     <string name="input_enter_always_newline_title">Enter vienmēr ievieto jaunu rindu</string>
@@ -912,7 +912,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Apakštaustiņi, turot taustiņu</string>
     <string name="gesture_subkey_popover_title">Apakštaustiņu logs, turot taustiņu</string>
-    <string name="gesture_subkey_popover_desc">Turiet taustiņu, lai ap pirkstu parādītu tā apakštaustiņus. Pārvietojiet pirkstu uz vienu no tiem un atlaidiet, lai to ievadītu, vai atlaidiet vidū, lai atceltu. Izvēlieties tukšu vietu, lai to piešķirtu; paturiet pirkstu uz apakštaustiņa 3 sekundes, lai to rediģētu. Burtu taustiņiem aizstāj taustiņu atkārtošanu.</string>
+    <string name="gesture_subkey_popover_desc">Turiet taustiņu, lai ap pirkstu parādītu tā apakštaustiņus. Pārvietojiet pirkstu uz vienu no tiem un atlaidiet, lai to ievadītu, vai atlaidiet vidū, lai atceltu. Izvēlieties tukšu vietu, lai to piešķirtu; paturiet pirkstu uz apakštaustiņa 3 sekundes, lai to rediģētu. Burtu taustiņiem aizstāj taustiņu atkārtošanu. Ja ir ieslēgta fiksēšana ar dubultklikšķi, arī Shift, Ctrl, Fn, Alt vai Meta turēšana parāda to apakštaustiņus, nevis tos fiksē.</string>
     <string name="gesture_popover_neutral_width_title">Neitrālās zonas platums</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Vidējā apgabala platums, kur atlaišana neko nedara, % no taustiņa platuma</string>
     <string name="gesture_popover_neutral_height_title">Neitrālās zonas augstums</string>

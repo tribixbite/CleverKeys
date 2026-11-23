@@ -615,8 +615,8 @@
     <string name="input_key_repeat_desc">Pozwól klawiszom powtarzać się przy długim naciśnięciu</string>
     <string name="input_backspace_only_repeat_title">Powtarzaj tylko Backspace</string>
     <string name="input_backspace_only_repeat_desc">Powtarzaj tylko Backspace/klawisze nawigacyjne, nie klawisze znaków</string>
-    <string name="input_double_tap_shift_title">Podwójne naciśnięcie blokuje Shift i Ctrl</string>
-    <string name="input_double_tap_shift_desc">Naciśnij dwukrotnie Shift, aby włączyć Caps Lock, albo Ctrl, Alt, Fn lub Meta, aby klawisz pozostał włączony do następnego naciśnięcia.</string>
+    <string name="input_double_tap_shift_title">Podwójne naciśnięcie blokuje Shift, Ctrl i Fn</string>
+    <string name="input_double_tap_shift_desc">Naciśnij szybko dwukrotnie Shift, aby włączyć Caps Lock, albo Ctrl, Fn, Alt lub Meta, aby klawisz pozostał włączony do następnego naciśnięcia. Wolniejsze drugie naciśnięcie go wyłącza. Gdy włączone są to ustawienie i Okienko podklawiszy po przytrzymaniu, przytrzymanie jednego z tych klawiszy pokazuje jego podklawisze; w przeciwnym razie przytrzymanie go blokuje.</string>
     <string name="input_immediate_switching_title">Natychmiastowe przełączanie klawiatury</string>
     <string name="input_immediate_switching_desc">Przełączaj klawiaturę natychmiast bez wyświetlania menu</string>
     <string name="input_enter_always_newline_title">Enter zawsze wstawia nowy wiersz</string>
@@ -913,7 +913,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Podklawisze po przytrzymaniu</string>
     <string name="gesture_subkey_popover_title">Okienko podklawiszy po przytrzymaniu</string>
-    <string name="gesture_subkey_popover_desc">Przytrzymaj klawisz, aby pokazać jego podklawisze wokół palca. Przenieś palec na jeden z nich i puść, aby go wpisać, albo puść na środku, aby anulować. Wybierz puste miejsce, aby je przypisać; przytrzymaj palec na podklawiszu przez 3 sekundy, aby go edytować. Zastępuje powtarzanie klawiszy na klawiszach liter.</string>
+    <string name="gesture_subkey_popover_desc">Przytrzymaj klawisz, aby pokazać jego podklawisze wokół palca. Przenieś palec na jeden z nich i puść, aby go wpisać, albo puść na środku, aby anulować. Wybierz puste miejsce, aby je przypisać; przytrzymaj palec na podklawiszu przez 3 sekundy, aby go edytować. Zastępuje powtarzanie klawiszy na klawiszach liter. Gdy włączone jest blokowanie podwójnym naciśnięciem, przytrzymanie Shift, Ctrl, Fn, Alt lub Meta również pokazuje ich podklawisze zamiast je blokować.</string>
     <string name="gesture_popover_neutral_width_title">Szerokość strefy neutralnej</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Szerokość środkowego obszaru, w którym puszczenie nic nie robi, jako % szerokości klawisza</string>
     <string name="gesture_popover_neutral_height_title">Wysokość strefy neutralnej</string>

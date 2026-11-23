@@ -620,8 +620,8 @@
     <string name="input_key_repeat_desc">Permite que las teclas se repitan al mantener pulsadas</string>
     <string name="input_backspace_only_repeat_title">Solo repetir retroceso</string>
     <string name="input_backspace_only_repeat_desc">Solo repite las teclas de retroceso/navegación, no las teclas de caracteres</string>
-    <string name="input_double_tap_shift_title">Doble toque para bloquear Mayús y Ctrl</string>
-    <string name="input_double_tap_shift_desc">Dos toques en Mayús activan el bloqueo de mayúsculas; dos toques en Ctrl, Alt, Fn o Meta mantienen esa tecla activa hasta el siguiente toque.</string>
+    <string name="input_double_tap_shift_title">Doble toque para bloquear Mayús, Ctrl y Fn</string>
+    <string name="input_double_tap_shift_desc">Dos toques rápidos en Mayús activan el bloqueo de mayúsculas; dos toques rápidos en Ctrl, Fn, Alt o Meta mantienen esa tecla activa hasta el siguiente toque. Un segundo toque más lento la desactiva. Con este ajuste y el Menú de subteclas al mantener activados, mantener pulsada una de estas teclas muestra sus subteclas; si no, mantenerla pulsada la bloquea.</string>
     <string name="input_immediate_switching_title">Cambio de teclado inmediato</string>
     <string name="input_immediate_switching_desc">Cambia el teclado inmediatamente en lugar de mostrar un menú</string>
     <string name="input_enter_always_newline_title">Intro siempre inserta una nueva línea</string>
@@ -919,7 +919,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Mantener para subteclas</string>
     <string name="gesture_subkey_popover_title">Menú de subteclas al mantener</string>
-    <string name="gesture_subkey_popover_desc">Mantén pulsada una tecla para mostrar sus subteclas alrededor del dedo. Mueve el dedo hasta una y suéltalo para escribirla, o suéltalo en el centro para cancelar. Elige una posición vacía para asignarla; deja el dedo 3 segundos sobre una subtecla para editarla. Sustituye la repetición de tecla en las teclas de letras.</string>
+    <string name="gesture_subkey_popover_desc">Mantén pulsada una tecla para mostrar sus subteclas alrededor del dedo. Mueve el dedo hasta una y suéltalo para escribirla, o suéltalo en el centro para cancelar. Elige una posición vacía para asignarla; deja el dedo 3 segundos sobre una subtecla para editarla. Sustituye la repetición de tecla en las teclas de letras. Con el bloqueo por doble toque activado, mantener pulsada Mayús, Ctrl, Fn, Alt o Meta también muestra sus subteclas en lugar de bloquearlas.</string>
     <string name="gesture_popover_neutral_width_title">Ancho de la zona neutral</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Ancho del área central donde soltar no hace nada, en % del ancho de la tecla</string>
     <string name="gesture_popover_neutral_height_title">Alto de la zona neutral</string>

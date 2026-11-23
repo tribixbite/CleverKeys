@@ -602,8 +602,8 @@
     <string name="input_key_repeat_desc">Permitir que teclas se repitam quando mantidas pressionadas</string>
     <string name="input_backspace_only_repeat_title">Repetir apenas Backspace</string>
     <string name="input_backspace_only_repeat_desc">Repetir apenas Backspace/teclas de navegação, não teclas de caractere</string>
-    <string name="input_double_tap_shift_title">Toque duplo para travar Shift e Ctrl</string>
-    <string name="input_double_tap_shift_desc">Toque duas vezes em Shift para o Caps Lock, ou em Ctrl, Alt, Fn ou Meta para mantê-la ativa até o próximo toque.</string>
+    <string name="input_double_tap_shift_title">Toque duplo para travar Shift, Ctrl e Fn</string>
+    <string name="input_double_tap_shift_desc">Toque duas vezes rapidamente em Shift para o Caps Lock, ou em Ctrl, Fn, Alt ou Meta para mantê-la ativa até o próximo toque. Um segundo toque mais lento a desativa. Com esta opção e o Popup de subteclas ao segurar ativados, segurar uma dessas teclas mostra as subteclas dela; caso contrário, segurá-la a trava.</string>
     <string name="input_immediate_switching_title">Troca de teclado imediata</string>
     <string name="input_immediate_switching_desc">Trocar de teclado imediatamente em vez de mostrar menu</string>
     <string name="input_enter_always_newline_title">Enter sempre insere uma nova linha</string>
@@ -901,7 +901,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Segurar para subteclas</string>
     <string name="gesture_subkey_popover_title">Popup de subteclas ao segurar</string>
-    <string name="gesture_subkey_popover_desc">Mantenha uma tecla pressionada para mostrar as subteclas dela ao redor do seu dedo. Mova o dedo até uma e solte para digitá-la, ou solte no centro para cancelar. Escolha um espaço vazio para atribuí-lo; mantenha o dedo 3 segundos sobre uma subtecla para editá-la. Substitui a repetição de tecla nas teclas de letras.</string>
+    <string name="gesture_subkey_popover_desc">Mantenha uma tecla pressionada para mostrar as subteclas dela ao redor do seu dedo. Mova o dedo até uma e solte para digitá-la, ou solte no centro para cancelar. Escolha um espaço vazio para atribuí-lo; mantenha o dedo 3 segundos sobre uma subtecla para editá-la. Substitui a repetição de tecla nas teclas de letras. Com o travamento por toque duplo ativado, segurar Shift, Ctrl, Fn, Alt ou Meta também mostra as subteclas delas em vez de travá-las.</string>
     <string name="gesture_popover_neutral_width_title">Largura da zona neutra</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Largura da área central onde soltar não faz nada, em % da largura da tecla</string>
     <string name="gesture_popover_neutral_height_title">Altura da zona neutra</string>

@@ -608,8 +608,8 @@
     <string name="input_key_repeat_desc">Permettre la répétition des touches lors d\'un appui long</string>
     <string name="input_backspace_only_repeat_title">Répéter uniquement Retour arrière</string>
     <string name="input_backspace_only_repeat_desc">Ne répéter que les touches Retour arrière/navigation, pas les touches de caractères</string>
-    <string name="input_double_tap_shift_title">Double appui pour verrouiller Maj et Ctrl</string>
-    <string name="input_double_tap_shift_desc">Deux appuis sur Maj activent le verrouillage des majuscules ; deux appuis sur Ctrl, Alt, Fn ou Meta gardent la touche active jusqu\'au prochain appui.</string>
+    <string name="input_double_tap_shift_title">Double appui pour verrouiller Maj, Ctrl et Fn</string>
+    <string name="input_double_tap_shift_desc">Deux appuis rapides sur Maj activent le verrouillage des majuscules ; deux appuis rapides sur Ctrl, Fn, Alt ou Meta gardent la touche active jusqu\'au prochain appui. Un second appui plus lent la désactive. Quand ce réglage et « Sous-touches au maintien » sont tous deux activés, maintenir l\'une de ces touches affiche ses sous-touches ; sinon, le maintien la verrouille.</string>
     <string name="input_immediate_switching_title">Changement de clavier immédiat</string>
     <string name="input_immediate_switching_desc">Changer de clavier immédiatement plutôt qu\'afficher un menu</string>
     <string name="input_enter_always_newline_title">Entrée insère toujours une nouvelle ligne</string>
@@ -907,7 +907,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Maintien pour sous-touches</string>
     <string name="gesture_subkey_popover_title">Sous-touches au maintien</string>
-    <string name="gesture_subkey_popover_desc">Maintenez une touche pour afficher ses sous-touches autour de votre doigt. Déplacez le doigt vers l\'une d\'elles et relâchez pour la saisir, ou relâchez au centre pour annuler. Choisissez un emplacement vide pour l\'attribuer ; restez 3 secondes sur une sous-touche pour la modifier. Remplace la répétition de touche sur les touches de lettres.</string>
+    <string name="gesture_subkey_popover_desc">Maintenez une touche pour afficher ses sous-touches autour de votre doigt. Déplacez le doigt vers l\'une d\'elles et relâchez pour la saisir, ou relâchez au centre pour annuler. Choisissez un emplacement vide pour l\'attribuer ; restez 3 secondes sur une sous-touche pour la modifier. Remplace la répétition de touche sur les touches de lettres. Quand le verrouillage par double appui est activé, maintenir Maj, Ctrl, Fn, Alt ou Meta affiche aussi leurs sous-touches au lieu de les verrouiller.</string>
     <string name="gesture_popover_neutral_width_title">Largeur de la zone neutre</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Largeur de la zone centrale où relâcher n\'a aucun effet, en % de la largeur de la touche</string>
     <string name="gesture_popover_neutral_height_title">Hauteur de la zone neutre</string>

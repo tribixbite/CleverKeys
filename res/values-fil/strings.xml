@@ -610,8 +610,8 @@
     <string name="input_key_repeat_desc">Payagan ang mga key na mag-ulit kapag matagal na pinindot</string>
     <string name="input_backspace_only_repeat_title">Backspace Lang ang Umuulit</string>
     <string name="input_backspace_only_repeat_desc">Ulitin lang ang backspace/navigation key, hindi mga character key</string>
-    <string name="input_double_tap_shift_title">Double Tap para I-lock ang Shift at Ctrl</string>
-    <string name="input_double_tap_shift_desc">I-double tap ang Shift para sa caps lock, o ang Ctrl, Alt, Fn o Meta para manatili itong naka-on hanggang sa susunod na tap.</string>
+    <string name="input_double_tap_shift_title">Double Tap para I-lock ang Shift, Ctrl at Fn</string>
+    <string name="input_double_tap_shift_desc">I-double tap nang mabilis ang Shift para sa caps lock, o ang Ctrl, Fn, Alt o Meta para manatili itong naka-on hanggang sa susunod na tap. Pinapatay ito ng mas mabagal na pangalawang tap. Kapag naka-on ito at ang Subkey popover kapag naka-hold, ipinapakita ng pag-hold sa isa sa mga key na ito ang mga subkey nito; kung hindi, nila-lock ito ng pag-hold.</string>
     <string name="input_immediate_switching_title">Agad na Pagpapalit ng Keyboard</string>
     <string name="input_immediate_switching_desc">Palitan ang keyboard kaagad sa halip na magpakita ng menu</string>
     <string name="input_enter_always_newline_title">Laging Nagdaragdag ng Bagong Linya ang Enter</string>
@@ -908,7 +908,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">I-hold para sa mga Subkey</string>
     <string name="gesture_subkey_popover_title">Subkey popover kapag naka-hold</string>
-    <string name="gesture_subkey_popover_desc">I-hold ang isang key para ipakita ang mga subkey nito sa paligid ng iyong daliri. I-slide papunta sa isa at bitawan para i-type ito, o bitawan sa gitna para kanselahin. Pumili ng bakanteng slot para i-assign ito; ipahinga ang daliri sa isang subkey nang 3 segundo para i-edit ito. Pinapalitan nito ang key repeat sa mga letter key.</string>
+    <string name="gesture_subkey_popover_desc">I-hold ang isang key para ipakita ang mga subkey nito sa paligid ng iyong daliri. I-slide papunta sa isa at bitawan para i-type ito, o bitawan sa gitna para kanselahin. Pumili ng bakanteng slot para i-assign ito; ipahinga ang daliri sa isang subkey nang 3 segundo para i-edit ito. Pinapalitan nito ang key repeat sa mga letter key. Habang naka-on ang pag-lock sa double tap, ipinapakita rin ng pag-hold sa Shift, Ctrl, Fn, Alt o Meta ang mga subkey nila sa halip na i-lock sila.</string>
     <string name="gesture_popover_neutral_width_title">Lapad ng neutral zone</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Lapad ng gitnang bahagi kung saan walang mangyayari kapag binitawan, bilang % ng lapad ng key</string>
     <string name="gesture_popover_neutral_height_title">Taas ng neutral zone</string>

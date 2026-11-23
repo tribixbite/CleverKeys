@@ -605,8 +605,8 @@
     <string name="input_key_repeat_desc">Umožnit opakování kláves při dlouhém stisku</string>
     <string name="input_backspace_only_repeat_title">Opakovat pouze Backspace</string>
     <string name="input_backspace_only_repeat_desc">Opakovat pouze Backspace/navigační klávesy, nikoli znakové klávesy</string>
-    <string name="input_double_tap_shift_title">Dvojitý stisk zamkne Shift a Ctrl</string>
-    <string name="input_double_tap_shift_desc">Dvojitý stisk Shiftu zapne Caps Lock; dvojitý stisk Ctrl, Alt, Fn nebo Meta je nechá zapnuté do dalšího stisku.</string>
+    <string name="input_double_tap_shift_title">Dvojitý stisk zamkne Shift, Ctrl a Fn</string>
+    <string name="input_double_tap_shift_desc">Rychlý dvojitý stisk Shiftu zapne Caps Lock; rychlý dvojitý stisk Ctrl, Fn, Alt nebo Meta je nechá zapnuté do dalšího stisku. Pomalejší druhý stisk klávesu vypne. Když je zapnuto toto nastavení i Nabídka podkláves při podržení, podržení některé z těchto kláves zobrazí její podklávesy; jinak ji podržení zamkne.</string>
     <string name="input_immediate_switching_title">Okamžité přepínání klávesnic</string>
     <string name="input_immediate_switching_desc">Přepínat klávesnice okamžitě bez zobrazení nabídky</string>
     <string name="input_enter_always_newline_title">Enter vždy vloží nový řádek</string>
@@ -903,7 +903,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Podklávesy podržením</string>
     <string name="gesture_subkey_popover_title">Nabídka podkláves při podržení</string>
-    <string name="gesture_subkey_popover_desc">Podržením klávesy zobrazíte kolem prstu její podklávesy. Přesuňte prst na jednu z nich a uvolněním ji napíšete; uvolněním uprostřed akci zrušíte. Výběrem prázdné pozice ji přiřadíte; podržením prstu na podklávese po dobu 3 sekund ji upravíte. U písmenných kláves nahrazuje opakování kláves.</string>
+    <string name="gesture_subkey_popover_desc">Podržením klávesy zobrazíte kolem prstu její podklávesy. Přesuňte prst na jednu z nich a uvolněním ji napíšete; uvolněním uprostřed akci zrušíte. Výběrem prázdné pozice ji přiřadíte; podržením prstu na podklávese po dobu 3 sekund ji upravíte. U písmenných kláves nahrazuje opakování kláves. Když je zapnuté zamykání dvojitým stiskem, podržení Shift, Ctrl, Fn, Alt nebo Meta také zobrazí jejich podklávesy místo jejich zamknutí.</string>
     <string name="gesture_popover_neutral_width_title">Šířka neutrální zóny</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Šířka prostřední oblasti, kde uvolnění prstu nic neudělá, v % šířky klávesy</string>
     <string name="gesture_popover_neutral_height_title">Výška neutrální zóny</string>

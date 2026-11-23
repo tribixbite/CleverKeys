@@ -606,8 +606,8 @@
     <string name="input_key_repeat_desc">Billentyűk ismétlésének engedélyezése hosszú lenyomáskor</string>
     <string name="input_backspace_only_repeat_title">Csak törlőbillentyű ismétlése</string>
     <string name="input_backspace_only_repeat_desc">Csak a törlő/navigációs billentyűk ismétlése, a karakter billentyűké nem</string>
-    <string name="input_double_tap_shift_title">Dupla érintés zárolja a Shiftet és a Ctrl-t</string>
-    <string name="input_double_tap_shift_desc">A Shift kétszeri érintése bekapcsolja a nagybetűzárat, a Ctrl, Alt, Fn vagy Meta kétszeri érintése pedig a következő érintésig bekapcsolva tartja a billentyűt.</string>
+    <string name="input_double_tap_shift_title">Dupla érintés zárolja a Shiftet, a Ctrl-t és az Fn-t</string>
+    <string name="input_double_tap_shift_desc">A Shift gyors kétszeri érintése bekapcsolja a nagybetűzárat, a Ctrl, Fn, Alt vagy Meta gyors kétszeri érintése pedig a következő érintésig bekapcsolva tartja a billentyűt. A lassabb második érintés kikapcsolja. Ha ez és az Albillentyű-felugró nyomva tartáskor is be van kapcsolva, e billentyűk nyomva tartása megjeleníti az albillentyűiket; különben a nyomva tartás zárolja őket.</string>
     <string name="input_immediate_switching_title">Azonnali billentyűzetváltás</string>
     <string name="input_immediate_switching_desc">Billentyűzetek azonnali váltása menü megjelenítése helyett</string>
     <string name="input_enter_always_newline_title">Az Enter mindig új sort szúr be</string>
@@ -905,7 +905,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Albillentyűk nyomva tartással</string>
     <string name="gesture_subkey_popover_title">Albillentyű-felugró nyomva tartáskor</string>
-    <string name="gesture_subkey_popover_desc">Tartson nyomva egy billentyűt, hogy az albillentyűi megjelenjenek az ujja körül. Vigye az ujját az egyikre, és engedje fel a beíráshoz, vagy engedje fel középen a megszakításhoz. Üres helyet választva hozzárendelhet egy műveletet; ha 3 másodpercig egy albillentyűn tartja az ujját, szerkesztheti. Betűbillentyűkön a billentyűismétlést váltja fel.</string>
+    <string name="gesture_subkey_popover_desc">Tartson nyomva egy billentyűt, hogy az albillentyűi megjelenjenek az ujja körül. Vigye az ujját az egyikre, és engedje fel a beíráshoz, vagy engedje fel középen a megszakításhoz. Üres helyet választva hozzárendelhet egy műveletet; ha 3 másodpercig egy albillentyűn tartja az ujját, szerkesztheti. Betűbillentyűkön a billentyűismétlést váltja fel. Ha a dupla érintéses zárolás be van kapcsolva, a Shift, Ctrl, Fn, Alt vagy Meta nyomva tartása is az albillentyűiket jeleníti meg zárolás helyett.</string>
     <string name="gesture_popover_neutral_width_title">Semleges zóna szélessége</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">A középső terület szélessége, ahol az elengedés nem csinál semmit, a billentyűszélesség %-ában</string>
     <string name="gesture_popover_neutral_height_title">Semleges zóna magassága</string>

@@ -627,8 +627,8 @@
     <string name="input_key_repeat_desc">Cho phép phím lặp khi nhấn giữ</string>
     <string name="input_backspace_only_repeat_title">Chỉ lặp phím xóa lùi</string>
     <string name="input_backspace_only_repeat_desc">Chỉ lặp phím xóa lùi/điều hướng, không lặp phím ký tự</string>
-    <string name="input_double_tap_shift_title">Nhấn kép để khóa Shift và Ctrl</string>
-    <string name="input_double_tap_shift_desc">Nhấn Shift hai lần để bật CapsLock, hoặc nhấn Ctrl, Alt, Fn hay Meta hai lần để giữ phím bật đến lần nhấn tiếp theo.</string>
+    <string name="input_double_tap_shift_title">Nhấn kép để khóa Shift, Ctrl và Fn</string>
+    <string name="input_double_tap_shift_desc">Nhấn nhanh Shift hai lần để bật CapsLock, hoặc nhấn nhanh Ctrl, Fn, Alt hay Meta hai lần để giữ phím bật đến lần nhấn tiếp theo. Lần nhấn thứ hai chậm hơn sẽ tắt phím. Khi bật cả tùy chọn này và Bảng phím phụ khi nhấn giữ, nhấn giữ một trong các phím này sẽ hiện các phím phụ của nó; nếu không, nhấn giữ sẽ khóa phím.</string>
     <string name="input_immediate_switching_title">Chuyển đổi bàn phím ngay lập tức</string>
     <string name="input_immediate_switching_desc">Chuyển đổi bàn phím ngay thay vì hiển thị menu</string>
     <string name="input_enter_always_newline_title">Enter luôn chèn dòng mới</string>
@@ -883,7 +883,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Giữ để hiện phím phụ</string>
     <string name="gesture_subkey_popover_title">Bảng phím phụ khi nhấn giữ</string>
-    <string name="gesture_subkey_popover_desc">Nhấn giữ một phím để hiện các phím phụ của nó quanh ngón tay bạn. Di chuyển ngón tay đến một phím phụ rồi thả ra để nhập, hoặc thả ra ở giữa để hủy. Chọn một ô trống để gán; giữ ngón tay trên một phím phụ trong 3 giây để chỉnh sửa. Thay thế tính năng lặp phím trên các phím chữ.</string>
+    <string name="gesture_subkey_popover_desc">Nhấn giữ một phím để hiện các phím phụ của nó quanh ngón tay bạn. Di chuyển ngón tay đến một phím phụ rồi thả ra để nhập, hoặc thả ra ở giữa để hủy. Chọn một ô trống để gán; giữ ngón tay trên một phím phụ trong 3 giây để chỉnh sửa. Thay thế tính năng lặp phím trên các phím chữ. Khi bật khóa bằng nhấn kép, nhấn giữ Shift, Ctrl, Fn, Alt hoặc Meta cũng hiện các phím phụ của chúng thay vì khóa chúng.</string>
     <string name="gesture_popover_neutral_width_title">Chiều rộng vùng trung tính</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Chiều rộng vùng giữa nơi thả tay không có tác dụng, tính theo % chiều rộng phím</string>
     <string name="gesture_popover_neutral_height_title">Chiều cao vùng trung tính</string>

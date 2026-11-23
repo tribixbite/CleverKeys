@@ -625,8 +625,8 @@
     <string name="input_key_repeat_desc">Permite tastelor să se repete la apăsare lungă</string>
     <string name="input_backspace_only_repeat_title">Repetă doar Backspace</string>
     <string name="input_backspace_only_repeat_desc">Repetă doar Backspace/tastele de navigare, nu tastele de caractere</string>
-    <string name="input_double_tap_shift_title">Atingere dublă pentru blocarea Shift și Ctrl</string>
-    <string name="input_double_tap_shift_desc">Două atingeri pe Shift activează Caps Lock, iar două atingeri pe Ctrl, Alt, Fn sau Meta țin tasta activă până la următoarea atingere.</string>
+    <string name="input_double_tap_shift_title">Atingere dublă pentru blocarea Shift, Ctrl și Fn</string>
+    <string name="input_double_tap_shift_desc">Două atingeri rapide pe Shift activează Caps Lock, iar două atingeri rapide pe Ctrl, Fn, Alt sau Meta țin tasta activă până la următoarea atingere. O a doua atingere mai lentă o dezactivează. Când această opțiune și Fereastră subtaste la menținere sunt ambele activate, menținerea uneia dintre aceste taste îi afișează subtastele; altfel, menținerea o blochează.</string>
     <string name="input_immediate_switching_title">Comutare imediată tastatură</string>
     <string name="input_immediate_switching_desc">Comută tastatura imediat în loc să afișeze un meniu</string>
     <string name="input_enter_always_newline_title">Enter inserează întotdeauna un rând nou</string>
@@ -924,7 +924,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Menținere pentru subtaste</string>
     <string name="gesture_subkey_popover_title">Fereastră subtaste la menținere</string>
-    <string name="gesture_subkey_popover_desc">Mențineți apăsată o tastă pentru a afișa subtastele sale în jurul degetului. Mutați degetul pe una dintre ele și eliberați pentru a o tasta sau eliberați în mijloc pentru a anula. Alegeți un loc gol pentru a-l atribui; țineți degetul 3 secunde pe o subtastă pentru a o edita. Înlocuiește repetarea tastei pe tastele cu litere.</string>
+    <string name="gesture_subkey_popover_desc">Mențineți apăsată o tastă pentru a afișa subtastele sale în jurul degetului. Mutați degetul pe una dintre ele și eliberați pentru a o tasta sau eliberați în mijloc pentru a anula. Alegeți un loc gol pentru a-l atribui; țineți degetul 3 secunde pe o subtastă pentru a o edita. Înlocuiește repetarea tastei pe tastele cu litere. Când blocarea prin atingere dublă este activată, menținerea Shift, Ctrl, Fn, Alt sau Meta afișează și subtastele lor în loc să le blocheze.</string>
     <string name="gesture_popover_neutral_width_title">Lățimea zonei neutre</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Lățimea zonei din mijloc unde eliberarea nu face nimic, ca % din lățimea tastei</string>
     <string name="gesture_popover_neutral_height_title">Înălțimea zonei neutre</string>

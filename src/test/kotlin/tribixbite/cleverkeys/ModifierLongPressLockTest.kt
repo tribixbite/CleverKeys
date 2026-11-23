@@ -35,7 +35,9 @@ import tribixbite.cleverkeys.prefs.ConfigSnapshot
  * locks Ctrl, Alt, Fn and Meta as it locks Shift (it used to release them); then, holding Shift or
  * Ctrl opens their subkey popover instead of locking them (with the popover and the double-tap lock
  * on), and a quick double tap at a sentence start, where the first tap releases
- * auto-capitalisation's Shift, gives caps lock.
+ * auto-capitalisation's Shift, gives caps lock. Later that day: every lockable modifier holds that
+ * way (one with nothing to show still locks), a double tap has to be quick (TalkBack and
+ * accessibility clicks excepted), and a modifier held while another finger types applies to it.
  *
  * Driven through the real [Pointers.onTouchDown], [Pointers.handleMessage] with the pointer's
  * long-press `what` (as the Handler delivers it) and [Pointers.onTouchUp]. Harness as in
@@ -365,6 +367,257 @@ class ModifierLongPressLockTest {
         assertThat(held.flags and (FLAG_P_LATCHED or FLAG_P_LOCKED)).isEqualTo(FLAG_P_LATCHED)
     }
 
+    // ------------------------------------------------------------------ one rule for every modifier
+
+    // Maintainer 2026-11-23, of the Shift/Ctrl popover: "shouldnt Fn key follow suit?" Every
+    // modifier a double tap locks now holds the same way: its subkeys when it has any to show;
+    // one with nothing to show (an Alt or Meta key added to a layout) keeps the locking hold.
+
+    private val fn = KeyValue.getKeyByName("fn")
+    private val fnWithSubkeys = keyFor(fn).withKeyValue(SwipeDirection.SW.subLabelIndex, KeyValue.getKeyByName("config"))
+
+    @Test
+    fun holdingFnOpensItsSubkeys() {
+        useSnapshot(snap(popover = true))
+        hold(fnWithSubkeys)
+        assertWithMessage("the hold opens Fn's subkey popover").that(handler.shown).isNotNull()
+        assertThat(pointers.getKeyFlags(fn) and FLAG_P_LOCKED).isEqualTo(0)
+        release()
+        assertThat(pointersFor(fn)).isEmpty()
+    }
+
+    @Test
+    fun holdingAltOrMetaWithSubkeysOpensThem() {
+        useSnapshot(snap(popover = true))
+        for (name in listOf("alt", "meta")) {
+            ptrs.clear()
+            handler.shown = null
+            val kv = KeyValue.getKeyByName(name)
+            hold(keyFor(kv).withKeyValue(SwipeDirection.N.subLabelIndex, KeyValue.getKeyByName("home")))
+            assertWithMessage("the hold opens $name's subkey popover").that(handler.shown).isNotNull()
+            release()
+            assertThat(pointersFor(kv)).isEmpty()
+        }
+    }
+
+    @Test
+    fun aModifierWithNothingToShowKeepsItsLockingHold() {
+        useSnapshot(snap(popover = true))
+        for (kv in listOf(shift, ctrl, fn)) {
+            ptrs.clear()
+            handler.shown = null
+            longPress(keyFor(kv))
+            assertWithMessage("no empty popover for $kv").that(handler.shown).isNull()
+            assertLockedByTheUser(kv)
+        }
+    }
+
+    /**
+     * Maintainer 2026-11-23: "dont overwrite the trackpoint style nav for holding the nav key
+     * (between space and return)". That key (Compose, with the arrows and page keys as subkeys,
+     * res/xml/bottom_row.xml) keeps TrackPoint with the popover on.
+     */
+    @Test
+    fun holdingTheNavKeyStillStartsTrackPoint() {
+        loadComposeData()
+        useSnapshot(testConfigSnapshot(keyrepeat_enabled = true, double_tap_lock_shift = true, subkey_popover_enabled = true))
+        var nav = keyFor(KeyValue.getKeyByName("compose"))
+        for ((index, name) in listOf(7 to "up", 6 to "right", 5 to "left", 8 to "down", 1 to "doc_home", 3 to "doc_end")) {
+            nav = nav.withKeyValue(index, KeyValue.getKeyByName(name))
+        }
+        hold(nav)
+        assertWithMessage("no popover on the nav key").that(handler.shown).isNull()
+        assertWithMessage("its hold is TrackPoint")
+            .that(ptrs.single { it.pointerId == FINGER }.flags and Pointers.FLAG_P_TRACKPOINT_MODE)
+            .isEqualTo(Pointers.FLAG_P_TRACKPOINT_MODE)
+    }
+
+    // ------------------------------------------------------------------ a double tap is quick
+
+    // A second tap counts as a double tap only when it starts within DOUBLE_TAP_LOCK_MS of the
+    // first tap's release, as in other keyboards; a slower one releases the modifier (it used to
+    // lock it at any delay, so cancelling a mistaken Ctrl took a third tap). TalkBack, where
+    // every activation is its own double tap, keeps the old rule.
+
+    @Test
+    fun aSlowSecondTapReleasesTheModifier() {
+        for (kv in listOf(shift, ctrl, KeyValue.getKeyByName("alt"), fn, KeyValue.getKeyByName("meta"))) {
+            ptrs.clear()
+            tap(keyFor(kv))
+            clockMs += 1_500
+            tap(keyFor(kv))
+            assertWithMessage("a slow second tap on $kv turns it off").that(pointersFor(kv)).isEmpty()
+            assertThat(pointers.getModifiers().has(kv.getModifier())).isFalse()
+        }
+    }
+
+    @Test
+    fun theWindowRunsFromTheFirstReleaseToTheSecondPress() {
+        tap(ctrlKey)
+        clockMs += 350
+        press(ctrlKey)
+        clockMs += 300 // a slow finger: the press, not the release, has to be in time
+        release()
+        assertLockedByTheUser(ctrl)
+    }
+
+    @Test
+    fun atASentenceStartTheWindowAlsoEndsAtTheSecondPress() {
+        autocapLatchesShift()
+        tap(shiftKey)
+        clockMs += 350
+        press(shiftKey)
+        clockMs += 300
+        release()
+        assertLockedByTheUser(shift)
+    }
+
+    @Test
+    fun underTalkBackASlowSecondTapStillLocks() {
+        handler.touchExploration = true
+        tap(ctrlKey)
+        clockMs += 1_500
+        tap(ctrlKey)
+        assertLockedByTheUser(ctrl)
+    }
+
+    /** A key activated through accessibility (Keyboard2View.activateKeyForAccessibility). */
+    private fun clickForAccessibility(key: KeyboardData.Key) {
+        pointers.onTouchDown(50f, 50f, Pointers.ACCESSIBILITY_POINTER_ID, key)
+        pointers.onTouchUp(Pointers.ACCESSIBILITY_POINTER_ID)
+    }
+
+    @Test
+    fun anAccessibilityClickIsADoubleTapAtAnyDelay() {
+        // Switch Access (no touch exploration) cannot activate a key twice within the window.
+        clickForAccessibility(ctrlKey)
+        clockMs += 1_500
+        clickForAccessibility(ctrlKey)
+        assertLockedByTheUser(ctrl)
+    }
+
+    // ------------------------------------------------------------------ a held modifier applies
+
+    // Holding a modifier while another finger types applies it to what is typed, as on a hardware
+    // keyboard (Ctrl+C, Shift+letter), and it ends with the finger. It used to skip the first key
+    // (a pressed modifier only counted once latched), apply to later ones, and leave the hold to
+    // lock the modifier or open its popover.
+
+    private val letterA = keyFor(KeyValue.makeCharKey('a'))
+    private val letterB = keyFor(KeyValue.makeCharKey('b'))
+
+    private fun pressWith(finger: Int, key: KeyboardData.Key) = pointers.onTouchDown(50f, 50f, finger, key)
+    private fun releaseFinger(finger: Int) = pointers.onTouchUp(finger)
+
+    private fun tapWith(finger: Int, key: KeyboardData.Key) {
+        pressWith(finger, key)
+        releaseFinger(finger)
+    }
+
+    /** The modifiers that the release of the [n]th typed [kv] carried to the IME. */
+    private fun modsOfUp(kv: KeyValue, n: Int = 0) = handler.ups.filter { it.first == kv }[n].second
+
+    @Test
+    fun aModifierHeldWhileAKeyIsTappedAppliesToIt() {
+        for (kv in listOf(shift, ctrl, KeyValue.getKeyByName("alt"), fn, KeyValue.getKeyByName("meta"))) {
+            ptrs.clear()
+            handler.ups.clear()
+            pressWith(FINGER, keyFor(kv))
+            tapWith(OTHER_FINGER, letterA)
+            assertWithMessage("$kv held while a is tapped").that(modsOfUp(letterA.keys[0]!!).has(kv.getModifier())).isTrue()
+            releaseFinger(FINGER)
+            assertWithMessage("$kv ends with its finger").that(pointersFor(kv)).isEmpty()
+            assertThat(pointers.getModifiers().has(kv.getModifier())).isFalse()
+        }
+    }
+
+    @Test
+    fun everyKeyTypedDuringTheHoldGetsIt() {
+        pressWith(FINGER, shiftKey)
+        tapWith(OTHER_FINGER, letterA)
+        tapWith(OTHER_FINGER, letterB)
+        assertThat(modsOfUp(letterA.keys[0]!!).has(KeyValue.Modifier.SHIFT)).isTrue()
+        assertThat(modsOfUp(letterB.keys[0]!!).has(KeyValue.Modifier.SHIFT)).isTrue()
+        releaseFinger(FINGER)
+        assertThat(pointersFor(shift)).isEmpty()
+    }
+
+    @Test
+    fun rollingOverFromShiftIntoTheNextLetterCapitalisesIt() {
+        // A fast typist's Shift lifts after the next letter went down.
+        pressWith(FINGER, shiftKey)
+        pressWith(OTHER_FINGER, letterA)
+        releaseFinger(FINGER)
+        releaseFinger(OTHER_FINGER)
+        assertThat(modsOfUp(letterA.keys[0]!!).has(KeyValue.Modifier.SHIFT)).isTrue()
+        assertWithMessage("Shift is spent, not left latched").that(pointersFor(shift)).isEmpty()
+    }
+
+    @Test
+    fun twoHeldModifiersBothApply() {
+        pressWith(FINGER, ctrlKey)
+        pressWith(OTHER_FINGER, shiftKey)
+        tapWith(THIRD_FINGER, letterA)
+        val mods = modsOfUp(letterA.keys[0]!!)
+        assertThat(mods.has(KeyValue.Modifier.CTRL)).isTrue()
+        assertThat(mods.has(KeyValue.Modifier.SHIFT)).isTrue()
+    }
+
+    @Test
+    fun aTappedModifierAndAHeldOneBothApply() {
+        // Ctrl tapped (latched), then Shift held while t is tapped: Ctrl+Shift+T.
+        tap(ctrlKey)
+        pressWith(FINGER, shiftKey)
+        tapWith(OTHER_FINGER, letterA)
+        val mods = modsOfUp(letterA.keys[0]!!)
+        assertThat(mods.has(KeyValue.Modifier.CTRL)).isTrue()
+        assertThat(mods.has(KeyValue.Modifier.SHIFT)).isTrue()
+        releaseFinger(FINGER)
+        assertWithMessage("the one-shot Ctrl is spent, and Shift lifted").that(pointers.getModifiers().size()).isEqualTo(0)
+    }
+
+    @Test
+    fun aModifierThatTypedSomethingOpensNoPopoverAndLocksNothing() {
+        useSnapshot(snap(popover = true))
+        pressWith(FINGER, shiftWithSubkeys)
+        val shiftsTimer = ptrs.single { it.pointerId == FINGER }.timeoutWhat
+        tapWith(OTHER_FINGER, letterA)
+        // The timer the Handler had for Shift's press, were it still due.
+        pointers.handleMessage(message(shiftsTimer))
+        assertWithMessage("no popover after the chord").that(handler.shown).isNull()
+        assertThat(pointers.getKeyFlags(shift).let { if (it == -1) 0 else it and FLAG_P_LOCKED }).isEqualTo(0)
+        releaseFinger(FINGER)
+        assertThat(pointersFor(shift)).isEmpty()
+    }
+
+    @Test
+    fun typingWithAnotherFingerOnAnOpenPopoverAppliesTheModifier() {
+        useSnapshot(snap(popover = true))
+        hold(shiftWithSubkeys)
+        assertThat(handler.shown).isNotNull()
+        tapWith(OTHER_FINGER, letterA) // closes the popover, as any second finger does
+        assertThat(modsOfUp(letterA.keys[0]!!).has(KeyValue.Modifier.SHIFT)).isTrue()
+        release()
+        assertThat(pointersFor(shift)).isEmpty()
+        assertThat(pointers.getModifiers().has(KeyValue.Modifier.SHIFT)).isFalse()
+    }
+
+    @Test
+    fun aLockedShiftStaysLockedThroughAChordOnIt() {
+        longPress(shiftKey) // caps lock (popover off)
+        pressWith(FINGER, shiftKey)
+        tapWith(OTHER_FINGER, letterA)
+        releaseFinger(FINGER)
+        assertLockedByTheUser(shift)
+    }
+
+    @Test
+    fun aShiftTouchedAloneStillLeavesTheLettersAlone() {
+        // v1.2.2: a finger resting on Shift (a short swipe on it) does not shift the drawn keys.
+        press(shiftKey)
+        assertThat(pointers.getModifiers().has(KeyValue.Modifier.SHIFT)).isFalse()
+    }
+
     // ------------------------------------------------------------------ unchanged
 
     @Test
@@ -397,11 +650,24 @@ class ModifierLongPressLockTest {
 
     // ------------------------------------------------------------------ harness
 
+    /** compose_data.bin for the Compose key, loaded as [CtrlShiftLabelTest] does. */
+    private fun loadComposeData() {
+        val bin = java.io.File("src/main/assets/compose_data.bin")
+        assertWithMessage("run generateComposeData first: ${bin.absolutePath}").that(bin.exists()).isTrue()
+        val assets = mockk<android.content.res.AssetManager>()
+        every { assets.open("compose_data.bin") } answers { java.io.FileInputStream(bin) }
+        val context = mockk<android.content.Context>()
+        every { context.assets } returns assets
+        ComposeKeyData.initialize(context) // idempotent
+    }
+
     private class RecordingHandler : Pointers.IPointerEventHandler {
         val haptics = mutableListOf<HapticEvent>()
+        /** Every key release and the modifiers it carried. */
+        val ups = mutableListOf<Pair<KeyValue?, Pointers.Modifiers>>()
         override fun modifyKey(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? = k
         override fun onPointerDown(k: KeyValue?, isSwipe: Boolean) {}
-        override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) {}
+        override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) { ups += k to mods }
         override fun onPointerFlagsChanged(hapticEvent: HapticEvent?) { hapticEvent?.let { haptics += it } }
         override fun onPointerHold(k: KeyValue, mods: Pointers.Modifiers) {}
         override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {}
@@ -437,5 +703,7 @@ class ModifierLongPressLockTest {
 
     private companion object {
         const val FINGER = 0
+        const val OTHER_FINGER = 1
+        const val THIRD_FINGER = 2
     }
 }

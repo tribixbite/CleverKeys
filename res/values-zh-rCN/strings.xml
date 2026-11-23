@@ -597,8 +597,8 @@
     <string name="input_key_repeat_desc">允许长按时按键重复。</string>
     <string name="input_backspace_only_repeat_title">仅退格重复</string>
     <string name="input_backspace_only_repeat_desc">仅重复退格/导航键，不重复字符键。</string>
-    <string name="input_double_tap_shift_title">双击锁定 Shift 和 Ctrl</string>
-    <string name="input_double_tap_shift_desc">双击 Shift 锁定大写；双击 Ctrl、Alt、Fn 或 Meta 使其保持开启，直到下次点按。</string>
+    <string name="input_double_tap_shift_title">双击锁定 Shift、Ctrl 和 Fn</string>
+    <string name="input_double_tap_shift_desc">快速双击 Shift 锁定大写；快速双击 Ctrl、Fn、Alt 或 Meta 使其保持开启，直到下次点按。第二次点按较慢时会将其关闭。此项与“长按弹出子键”都开启时，长按这些键会显示其子键；否则长按会将其锁定。</string>
     <string name="input_immediate_switching_title">立即切换键盘</string>
     <string name="input_immediate_switching_desc">不显示菜单，立即切换键盘。</string>
     <string name="input_enter_always_newline_title">回车始终换行</string>
@@ -853,7 +853,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">长按显示子键</string>
     <string name="gesture_subkey_popover_title">长按弹出子键</string>
-    <string name="gesture_subkey_popover_desc">长按一个键，即可在手指周围显示它的子键。将手指移到其中一个上并松开即可输入，在中间松开则取消。选择空位可为其分配操作；在子键上停留 3 秒可编辑它。在字母键上会取代按键重复。</string>
+    <string name="gesture_subkey_popover_desc">长按一个键，即可在手指周围显示它的子键。将手指移到其中一个上并松开即可输入，在中间松开则取消。选择空位可为其分配操作；在子键上停留 3 秒可编辑它。在字母键上会取代按键重复。开启双击锁定时，长按 Shift、Ctrl、Fn、Alt 或 Meta 也会显示它们的子键，而不是将其锁定。</string>
     <string name="gesture_popover_neutral_width_title">中立区宽度</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">中间区域的宽度（在此松开手指不会触发任何操作），以按键宽度的 % 表示</string>
     <string name="gesture_popover_neutral_height_title">中立区高度</string>

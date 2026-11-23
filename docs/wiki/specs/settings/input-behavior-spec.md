@@ -249,7 +249,7 @@ validator (`backup/SettingsValidation.kt`) accepts a wider band, both are shown.
 | **Key-Repeat Interval** | `longpress_interval` | 25 | 25-200 ms (`SettingsRanges.LONGPRESS_INTERVAL`) |
 | **Key Repeat** | `keyrepeat_enabled` | true | bool |
 | **Backspace-Only Repeat** | `keyrepeat_backspace_only` | true | bool (#81) — shown only when key repeat is on |
-| **Double-Tap Lock** | `lock_double_tap` | true | bool — a second tap locks a latched Shift, Ctrl, Alt, Fn or Meta (`KeyValue.FLAG_DOUBLE_TAP_LOCK`; Shift only before 2026-11-23) |
+| **Double-Tap Lock** | `lock_double_tap` | true | bool — a second tap pressed within 400 ms of the first one's release (`Pointers.DOUBLE_TAP_LOCK_MS`) locks a latched Shift, Ctrl, Alt, Fn or Meta (`KeyValue.FLAG_DOUBLE_TAP_LOCK`; Shift only before 2026-11-23); a slower one releases it; any second activation under TalkBack or through accessibility clicks. While on, with the subkey popover on, holding those keys shows their subkeys instead of locking them |
 | **Immediate Input Switching** | `switch_input_immediate` | false | bool |
 
 ### Layout selectors

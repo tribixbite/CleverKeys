@@ -330,15 +330,19 @@ class ModifierStateAcrossResetsInstrumentedTest {
         return ms
     }
 
+    /** A real finger on the real Shift key ([touchKey]). */
+    private fun touchShift(holdMs: Long, whileDown: () -> Unit = {}) =
+        touchKey(context.getString(R.string.key_descr_shift), holdMs, whileDown)
+
     /**
-     * A real finger on the real Shift key: down, [whileDown] after [holdMs], up. A touch injected
-     * while the keyboard is still sliding in lands on the app below and never reaches the keys
-     * (API 37 emulator, 2026-11-23: no Pointers event at all); that is lifted and tried again, so
-     * a test fails on what Shift does, never on where the touch went.
+     * A real finger on the key described [label]: down, [whileDown] after [holdMs], up. A touch
+     * injected while the keyboard is still sliding in lands on the app below and never reaches the
+     * keys (API 37 emulator, 2026-11-23: no Pointers event at all); that is lifted and tried again,
+     * so a test fails on what the key does, never on where the touch went.
      */
-    private fun touchShift(holdMs: Long, whileDown: () -> Unit = {}) {
+    private fun touchKey(label: String, holdMs: Long, whileDown: () -> Unit = {}) {
         for (attempt in 1..3) {
-            val (x, y) = shiftKeyCentreOnScreen()
+            val (x, y) = keyCentreOnScreen(label)
             val downTime = SystemClock.uptimeMillis()
             touch(MotionEvent.ACTION_DOWN, downTime, x, y)
             if (!within(500L) { fingerOnKeyboard() }) {
@@ -352,7 +356,61 @@ class ModifierStateAcrossResetsInstrumentedTest {
             touch(MotionEvent.ACTION_UP, downTime, x, y)
             return
         }
-        throw AssertionError("no touch on Shift reached the keyboard in 3 attempts: ${state()}")
+        throw AssertionError("no touch on $label reached the keyboard in 3 attempts: ${state()}")
+    }
+
+    /**
+     * Two real fingers: one holds the key described [held] while the other taps [tapped], then the
+     * first lifts (a chord, as Ctrl+C on a hardware keyboard). Retried as [touchKey] is.
+     */
+    private fun chord(held: String, tapped: String) {
+        for (attempt in 1..3) {
+            val first = keyCentreOnScreen(held)
+            val second = keyCentreOnScreen(tapped)
+            val downTime = SystemClock.uptimeMillis()
+            touch(MotionEvent.ACTION_DOWN, downTime, first.first, first.second)
+            if (!within(500L) { fingerOnKeyboard() }) {
+                touch(MotionEvent.ACTION_UP, downTime, first.first, first.second)
+                Log.i(TAG, "chord attempt $attempt did not reach the keyboard; ${state()}")
+                Thread.sleep(SETTLE_MS)
+                continue
+            }
+            Thread.sleep(120L)
+            touchSecondFinger(MotionEvent.ACTION_POINTER_DOWN, downTime, first, second)
+            Thread.sleep(80L)
+            touchSecondFinger(MotionEvent.ACTION_POINTER_UP, downTime, first, second)
+            Thread.sleep(120L)
+            touch(MotionEvent.ACTION_UP, downTime, first.first, first.second)
+            return
+        }
+        throw AssertionError("no chord reached the keyboard in 3 attempts: ${state()}")
+    }
+
+    /** The second finger (pointer id 1, index 1) going down or up while the first stays at [first]. */
+    private fun touchSecondFinger(action: Int, downTime: Long, first: Pair<Float, Float>, second: Pair<Float, Float>) {
+        val properties = Array(2) { i ->
+            MotionEvent.PointerProperties().apply { id = i; toolType = MotionEvent.TOOL_TYPE_FINGER }
+        }
+        val coords = arrayOf(first, second).map { (x, y) ->
+            MotionEvent.PointerCoords().apply { this.x = x; this.y = y; pressure = 1f; size = 1f }
+        }.toTypedArray()
+        val indexed = action or (1 shl MotionEvent.ACTION_POINTER_INDEX_SHIFT)
+        val event = MotionEvent.obtain(
+            downTime, SystemClock.uptimeMillis(), indexed, 2, properties, coords,
+            0, 0, 1f, 1f, 0, 0, InputDevice.SOURCE_TOUCHSCREEN, 0,
+        )
+        try {
+            assertTrue("second finger $action not injected", instrumentation.uiAutomation.injectInputEvent(event, true))
+        } finally {
+            event.recycle()
+        }
+    }
+
+    /** The field's text, read on the main thread. */
+    private fun fieldText(activity: ImeFieldTestActivity): String {
+        var text = ""
+        instrumentation.runOnMainSync { text = activity.field.text.toString() }
+        return text
     }
 
     /** Whether the subkey popover is open on the live keyboard (Keyboard2View `_subkeyPopover`). */
@@ -397,22 +455,97 @@ class ModifierStateAcrossResetsInstrumentedTest {
         }
     }
 
-    /** The centre of the Shift key on screen, from its accessibility node. */
-    private fun shiftKeyCentreOnScreen(): Pair<Float, Float> {
+    // ------------------------------------------------------------------ one rule for every modifier
+
+    @Test
+    fun holdingFnOpensItsSubkeyPopover() = withSubkeyPopover(on = true) {
+        // Maintainer 2026-11-23: "shouldnt Fn key follow suit?" Released in the middle: nothing.
+        ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+            waitFor("the keyboard") { shown() && onLetters() }
+            Thread.sleep(SETTLE_MS)
+            var openDuringHold = false
+            touchKey(context.getString(R.string.key_descr_fn), longPressTimeout() + 400L) {
+                openDuringHold = within(1_000L) { popoverOpen() }
+            }
+            assertTrue("holding Fn must open its subkey popover: ${state()}", openDuringHold)
+            assertTrue("released in the middle: popover closed, Fn not left on: ${state()}",
+                within(2_000L) { !popoverOpen() && !has(KeyValue.Modifier.FN) })
+        }
+    }
+
+    @Test
+    fun aQuickDoubleTapOnCtrlLocksIt() {
+        val ctrl = KeyValue.getKeyByName("ctrl")
+        val label = context.getString(R.string.key_descr_ctrl)
+        ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+            waitFor("the keyboard") { shown() && onLetters() }
+            Thread.sleep(SETTLE_MS)
+            touchKey(label, holdMs = 0)
+            Thread.sleep(80L)
+            touchKey(label, holdMs = 0)
+            assertTrue("a quick double tap on Ctrl must lock it: ${state()}", within(2_000L) {
+                has(KeyValue.Modifier.CTRL) && (keyFlags(ctrl) and Pointers.FLAG_P_LOCKED) != 0
+            })
+            touchKey(label, holdMs = 0)
+            assertTrue("a tap on the locked Ctrl must release it: ${state()}", within(2_000L) { !has(KeyValue.Modifier.CTRL) })
+        }
+    }
+
+    @Test
+    fun aSlowSecondTapOnCtrlReleasesIt() {
+        // A second tap well after the first is no double tap: it turns Ctrl off, as it does in
+        // other keyboards, where it used to lock it (Pointers.DOUBLE_TAP_LOCK_MS).
+        val label = context.getString(R.string.key_descr_ctrl)
+        ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+            waitFor("the keyboard") { shown() && onLetters() }
+            Thread.sleep(SETTLE_MS)
+            touchKey(label, holdMs = 0)
+            assertTrue("one tap on Ctrl latches it: ${state()}", within(2_000L) { has(KeyValue.Modifier.CTRL) })
+            Thread.sleep(Pointers.DOUBLE_TAP_LOCK_MS + 800L)
+            touchKey(label, holdMs = 0)
+            assertTrue("a slow second tap on Ctrl must turn it off: ${state()}", within(2_000L) { !has(KeyValue.Modifier.CTRL) })
+        }
+    }
+
+    @Test
+    fun holdingShiftWhileTappingALetterTypesACapital() {
+        // Maintainer 2026-11-23: holding a modifier while tapping another key applied nothing to
+        // that first key. Shift held by one finger, a tapped by another, then b alone: "XAb".
+        val shift = context.getString(R.string.key_descr_shift)
+        ActivityScenario.launch(ImeFieldTestActivity::class.java).use { scenario ->
+            lateinit var activity: ImeFieldTestActivity
+            scenario.onActivity { activity = it }
+            waitFor("the keyboard") { shown() && onLetters() }
+            Thread.sleep(SETTLE_MS)
+            touchKey("x", holdMs = 0) // a capital from the sentence start; the automatic Shift then lets go
+            waitFor("X typed and Shift off") { fieldText(activity) == "X" && !has(KeyValue.Modifier.SHIFT) }
+            chord(shift, "a")
+            assertTrue("Shift must end with its finger: ${state()}", within(2_000L) { !has(KeyValue.Modifier.SHIFT) })
+            touchKey("b", holdMs = 0)
+            var text = ""
+            val typed = within(3_000L) { text = fieldText(activity); text == "XAb" }
+            assertTrue("held Shift + a must type A, and b after it b: got '$text' (${state()})", typed)
+        }
+    }
+
+    /**
+     * The centre on screen of the key described [label] (a letter's description is the letter,
+     * whatever its case), from its accessibility node.
+     */
+    private fun keyCentreOnScreen(label: String): Pair<Float, Float> {
         var centre: Pair<Float, Float>? = null
         instrumentation.runOnMainSync {
             val kb = keyboard() ?: return@runOnMainSync
             val provider = kb.accessibilityNodeProvider ?: return@runOnMainSync
-            val label = context.getString(R.string.key_descr_shift)
             for (id in kb.accessibilityVirtualViewIdsForTest()) {
                 val node = provider.createAccessibilityNodeInfo(id) ?: continue
-                if (node.contentDescription?.toString() != label) continue
+                if (!node.contentDescription?.toString().equals(label, ignoreCase = true)) continue
                 val r = Rect().also(node::getBoundsInScreen)
                 centre = r.exactCenterX() to r.exactCenterY()
                 break
             }
         }
-        return centre ?: throw AssertionError("no Shift key on the keyboard (${state()})")
+        return centre ?: throw AssertionError("no '$label' key on the keyboard (${state()})")
     }
 
     /** Whether a finger is on the keyboard now: a pointer bound to a touch, not a latch (main thread). */

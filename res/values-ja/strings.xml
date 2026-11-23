@@ -598,8 +598,8 @@
     <string name="input_key_repeat_desc">長押し中にキーをリピートします</string>
     <string name="input_backspace_only_repeat_title">バックスペースのみリピート</string>
     <string name="input_backspace_only_repeat_desc">バックスペース/ナビゲーションキーのみリピートし、文字キーはリピートしません</string>
-    <string name="input_double_tap_shift_title">ダブルタップでShiftとCtrlをロック</string>
-    <string name="input_double_tap_shift_desc">Shiftを2回タップするとCaps Lock、Ctrl・Alt・Fn・Metaを2回タップすると次にタップするまでオンのままになります。</string>
+    <string name="input_double_tap_shift_title">ダブルタップでShift・Ctrl・Fnをロック</string>
+    <string name="input_double_tap_shift_desc">Shiftをすばやく2回タップするとCaps Lock、Ctrl・Fn・Alt・Metaをすばやく2回タップすると次にタップするまでオンのままになります。2回目のタップが遅いとオフになります。この設定と「長押しでサブキーをポップアップ」が両方オンのときは、これらのキーを長押しするとサブキーが表示され、それ以外のときは長押しでロックされます。</string>
     <string name="input_immediate_switching_title">即時キーボード切り替え</string>
     <string name="input_immediate_switching_desc">メニューを表示せずにキーボードを即座に切り替えます</string>
     <string name="input_enter_always_newline_title">Enter で常に改行する</string>
@@ -896,7 +896,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">長押しでサブキー</string>
     <string name="gesture_subkey_popover_title">長押しでサブキーをポップアップ</string>
-    <string name="gesture_subkey_popover_desc">キーを長押しすると、指の周りにそのキーのサブキーが表示されます。指をいずれかに動かして離すと入力され、中央で離すとキャンセルされます。空きスロットを選ぶと割り当てができ、サブキーの上で 3 秒間指を止めると編集できます。文字キーではキーリピートの代わりになります。</string>
+    <string name="gesture_subkey_popover_desc">キーを長押しすると、指の周りにそのキーのサブキーが表示されます。指をいずれかに動かして離すと入力され、中央で離すとキャンセルされます。空きスロットを選ぶと割り当てができ、サブキーの上で 3 秒間指を止めると編集できます。文字キーではキーリピートの代わりになります。ダブルタップでのロックがオンのときは、Shift・Ctrl・Fn・Alt・Metaも長押しでロックされる代わりにサブキーが表示されます。</string>
     <string name="gesture_popover_neutral_width_title">ニュートラルゾーンの幅</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">指を離しても何も起こらない中央領域の幅(キー幅に対する%)</string>
     <string name="gesture_popover_neutral_height_title">ニュートラルゾーンの高さ</string>

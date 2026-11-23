@@ -848,8 +848,8 @@
     <string name="input_key_repeat_desc">Allow keys to repeat when long-pressed</string>
     <string name="input_backspace_only_repeat_title">Backspace Only Repeat</string>
     <string name="input_backspace_only_repeat_desc">Only repeat backspace/navigation keys, not character keys</string>
-    <string name="input_double_tap_shift_title">Double Tap to Lock Shift and Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tap Shift twice for caps lock, or Ctrl, Alt, Fn or Meta twice to keep it on until the next tap.</string>
+    <string name="input_double_tap_shift_title">Double Tap to Lock Shift, Ctrl and Fn</string>
+    <string name="input_double_tap_shift_desc">Tap Shift twice quickly for caps lock, or Ctrl, Fn, Alt or Meta to keep it on until you tap it again. A slower second tap turns it off. While this and Subkey popover on hold are both on, holding one of these keys shows its subkeys; otherwise holding it locks it.</string>
     <string name="input_immediate_switching_title">Immediate Keyboard Switching</string>
     <string name="input_immediate_switching_desc">Switch keyboards immediately instead of showing menu</string>
     <string name="input_enter_always_newline_title">Enter Always Inserts a New Line</string>
@@ -1230,7 +1230,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Hold for Subkeys</string>
     <string name="gesture_subkey_popover_title">Subkey popover on hold</string>
-    <string name="gesture_subkey_popover_desc">Hold a key to show its subkeys around your finger. Slide to one and let go to type it, or let go in the middle to cancel. Pick an empty slot to assign it; rest on a subkey for 3 seconds to edit it. Replaces key repeat on letter keys.</string>
+    <string name="gesture_subkey_popover_desc">Hold a key to show its subkeys around your finger. Slide to one and let go to type it, or let go in the middle to cancel. Pick an empty slot to assign it; rest on a subkey for 3 seconds to edit it. Replaces key repeat on letter keys. While Double Tap to Lock is on, holding Shift, Ctrl, Fn, Alt or Meta shows their subkeys too, instead of locking them.</string>
     <string name="gesture_popover_neutral_width_title">Neutral zone width</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Width of the middle area where letting go does nothing, as % of the key width</string>
     <string name="gesture_popover_neutral_height_title">Neutral zone height</string>

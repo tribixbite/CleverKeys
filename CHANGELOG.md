@@ -647,16 +647,26 @@ editor that used to be listed here already ship in 2.0.)
 - They also stay on when a setting or the theme changes while you type (a command such as True
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.
-- Holding Shift or Ctrl opens their subkeys when the subkey popover is on, as on letter keys; a
-  double tap locks them (see below). At the start of a sentence, where the automatic capital has
+- Holding Shift, Ctrl, Fn, Alt or Meta opens their subkeys when the subkey popover is on, as on
+  letter keys; a quick double tap locks them (see below). A modifier with no subkeys still locks
+  when held, and the arrow key between space and Enter keeps its TrackPoint hold. At the start of
+  a sentence, where the automatic capital has
   already turned Shift on, a quick double tap turns on caps lock; it used to give one capital.
   With the popover or the double tap off, holding Shift still locks it, also when it is already
   on (that hold used to turn Shift off, so caps lock took a second hold), and so for Ctrl, Alt
   and Fn.
 - With Ctrl, Alt or Meta on together with Shift or caps lock, the letter keys show capitals; they
   showed lowercase. The shortcut sent to the app is unchanged.
-- A double tap locks Ctrl, Alt, Fn and Meta as it locks Shift (📝 Input Behavior › Double Tap to
-  Lock Shift and Ctrl, on by default); the second tap used to release them. A third tap releases.
+- A quick double tap locks Ctrl, Alt, Fn and Meta as it locks Shift (📝 Input Behavior › Double
+  Tap to Lock Shift, Ctrl and Fn, on by default); the second tap used to release them. A third tap
+  releases. The second tap has to start within 400 ms of the first: a slower one turns the key
+  off, where it used to lock it, so a Ctrl tapped by mistake is cancelled with one more tap. With
+  TalkBack, Switch Access or Voice Access any second activation still locks.
+- Holding a modifier while tapping keys with another finger applies it to them, as on a hardware
+  keyboard (hold Shift and tap a for A, hold Ctrl and tap c for Ctrl+C), and it turns off when
+  lifted. The first key typed during the hold used to get nothing (later ones did), and a Shift
+  still down as the next letter landed, in fast typing, left that letter lowercase. Holding Shift
+  and typing while caps lock is on no longer turns caps lock off when you lift Shift.
 - In RustDesk and other apps built with Flutter, Shift or Ctrl no longer stays held on the remote
   machine after one use: the key's release still said it was held, and the app held the other
   side's Shift or Ctrl for everything typed after.

@@ -138,13 +138,32 @@ Backspace, or a Delete Word key) removes one pair per press, so tracking paramet
 long link one at a time and the link stays valid. Turn it off to delete those characters as an
 ordinary word instead. See the [FAQ](../FAQ.md).
 
-### Double Tap to Lock Shift and Ctrl
+### Double Tap to Lock Shift, Ctrl and Fn
 
-On by default. Tap Shift twice for caps lock. Ctrl, Alt, Fn and Meta work the same way: tap one
-twice and it stays on for every key you type until you tap it again. With this off, the second
-tap releases the key instead. Holding Shift or Ctrl opens their subkeys while the
-[subkey popover](../gestures/subkey-popover.md) is on and this setting is on; holding Alt, Fn or
-Meta, or any of them with this setting off, locks it.
+On by default. Tap Shift twice quickly for caps lock. Ctrl, Fn, Alt and Meta work the same way:
+tap one twice quickly and it stays on for every key you type until you tap it again. The second
+tap has to start within 400 ms of the first one's release; a slower second tap turns the key off,
+as one tap on a key that is on always does. With this setting off, the second tap releases the key
+at any speed.
+
+With TalkBack, or when a key is activated through Switch Access or Voice Access, any second
+activation locks: those cannot tap twice in under half a second.
+
+Holding one of these keys:
+
+| Subkey popover on hold | This setting | Holding the key |
+|---|---|---|
+| On | On | Shows its subkeys ([Subkey Popover](../gestures/subkey-popover.md)); a key with none locks |
+| On | Off | Locks it |
+| Off | either | Locks it |
+
+Alt and Meta are not on the default layout: they are optional subkeys of Fn and Ctrl (turn them on
+in Extra Keys), or keys you add in a custom layout.
+
+Holding a modifier while you tap other keys with another finger applies it to those keys, as on a
+hardware keyboard: hold Shift and tap `a` for `A`, hold Ctrl and tap `c` for Ctrl+C. The modifier
+turns off when you lift it. A Shift that goes down just before the next letter (fast typing) works
+the same way.
 
 ## Gesture Tuning Section
 
@@ -156,7 +175,7 @@ finger; slide to one and let go to type it, or let go in the middle to cancel. S
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Subkey popover on hold** | On for new installs, off after an upgrade | Turns the popover on or off. Replaces key repeat on character keys. |
+| **Subkey popover on hold** | On for new installs, off after an upgrade | Turns the popover on or off. Replaces key repeat on character keys. While Double Tap to Lock is on, it also replaces the locking hold of Shift, Ctrl, Fn, Alt and Meta. |
 | **Neutral zone width** | 60% | Width of the middle area where letting go does nothing, as % of the key width (20–150%) |
 | **Neutral zone height** | 60% | Height of that area, as % of the key height (20–150%) |
 

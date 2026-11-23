@@ -641,8 +641,8 @@
     <string name="input_key_repeat_desc">Consenti ai tasti di ripetersi quando tenuti premuti a lungo</string>
     <string name="input_backspace_only_repeat_title">Ripeti solo Backspace</string>
     <string name="input_backspace_only_repeat_desc">Ripeti solo Backspace/tasti di navigazione, non i tasti carattere</string>
-    <string name="input_double_tap_shift_title">Doppio tocco per bloccare Maiusc e Ctrl</string>
-    <string name="input_double_tap_shift_desc">Tocca due volte Maiusc per il blocco maiuscole, oppure Ctrl, Alt, Fn o Meta per tenerlo attivo fino al tocco successivo.</string>
+    <string name="input_double_tap_shift_title">Doppio tocco per bloccare Maiusc, Ctrl e Fn</string>
+    <string name="input_double_tap_shift_desc">Tocca rapidamente due volte Maiusc per il blocco maiuscole, oppure Ctrl, Fn, Alt o Meta per tenerlo attivo fino al tocco successivo. Un secondo tocco più lento lo disattiva. Con questa opzione e il Popup sottotasti tenendo premuto entrambi attivi, tenere premuto uno di questi tasti mostra i suoi sottotasti; altrimenti tenerlo premuto lo blocca.</string>
     <string name="input_immediate_switching_title">Cambio tastiera immediato</string>
     <string name="input_immediate_switching_desc">Cambia tastiera immediatamente invece di mostrare un menu</string>
     <string name="input_enter_always_newline_title">Invio inserisce sempre una nuova riga</string>
@@ -941,7 +941,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Tieni premuto per sottotasti</string>
     <string name="gesture_subkey_popover_title">Popup sottotasti tenendo premuto</string>
-    <string name="gesture_subkey_popover_desc">Tieni premuto un tasto per mostrare i suoi sottotasti intorno al dito. Sposta il dito su uno e rilascia per digitarlo, oppure rilascia al centro per annullare. Scegli uno spazio vuoto per assegnarlo; resta 3 secondi su un sottotasto per modificarlo. Sostituisce la ripetizione dei tasti sui tasti delle lettere.</string>
+    <string name="gesture_subkey_popover_desc">Tieni premuto un tasto per mostrare i suoi sottotasti intorno al dito. Sposta il dito su uno e rilascia per digitarlo, oppure rilascia al centro per annullare. Scegli uno spazio vuoto per assegnarlo; resta 3 secondi su un sottotasto per modificarlo. Sostituisce la ripetizione dei tasti sui tasti delle lettere. Con il blocco a doppio tocco attivo, tenere premuto Maiusc, Ctrl, Fn, Alt o Meta mostra anche i loro sottotasti invece di bloccarli.</string>
     <string name="gesture_popover_neutral_width_title">Larghezza zona neutra</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Larghezza dell\'area centrale in cui rilasciare non fa nulla, in % della larghezza del tasto</string>
     <string name="gesture_popover_neutral_height_title">Altezza zona neutra</string>

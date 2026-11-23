@@ -620,8 +620,8 @@
     <string name="input_key_repeat_desc">Tasten bei langem Druck wiederholen lassen</string>
     <string name="input_backspace_only_repeat_title">Nur Rücktaste wiederholen</string>
     <string name="input_backspace_only_repeat_desc">Nur Rücktaste/Navigationstasten wiederholen, nicht Zeichentasten</string>
-    <string name="input_double_tap_shift_title">Doppeltippen sperrt Umschalt und Strg</string>
-    <string name="input_double_tap_shift_desc">Zweimal auf Umschalt tippen schaltet die Feststelltaste ein, zweimal auf Strg, Alt, Fn oder Meta hält die Taste bis zum nächsten Tippen aktiv.</string>
+    <string name="input_double_tap_shift_title">Doppeltippen sperrt Umschalt, Strg und Fn</string>
+    <string name="input_double_tap_shift_desc">Schnell zweimal auf Umschalt tippen schaltet die Feststelltaste ein, schnell zweimal auf Strg, Fn, Alt oder Meta hält die Taste bis zum nächsten Tippen aktiv. Ein langsameres zweites Tippen schaltet sie aus. Sind diese Einstellung und „Untertasten-Popup beim Halten“ beide an, zeigt das Halten einer dieser Tasten ihre Untertasten; sonst sperrt das Halten sie.</string>
     <string name="input_immediate_switching_title">Sofortiges Tastaturwechseln</string>
     <string name="input_immediate_switching_desc">Tastatur sofort wechseln, anstatt ein Menü anzuzeigen</string>
     <string name="input_enter_always_newline_title">Eingabetaste fügt immer eine neue Zeile ein</string>
@@ -919,7 +919,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Halten für Untertasten</string>
     <string name="gesture_subkey_popover_title">Untertasten-Popup beim Halten</string>
-    <string name="gesture_subkey_popover_desc">Halten Sie eine Taste gedrückt, um ihre Untertasten rund um den Finger anzuzeigen. Bewegen Sie den Finger zu einer und lassen Sie los, um sie einzugeben, oder lassen Sie in der Mitte los, um abzubrechen. Wählen Sie einen leeren Platz, um ihn zu belegen; verweilen Sie 3 Sekunden auf einer Untertaste, um sie zu bearbeiten. Ersetzt die Tastenwiederholung auf Buchstabentasten.</string>
+    <string name="gesture_subkey_popover_desc">Halten Sie eine Taste gedrückt, um ihre Untertasten rund um den Finger anzuzeigen. Bewegen Sie den Finger zu einer und lassen Sie los, um sie einzugeben, oder lassen Sie in der Mitte los, um abzubrechen. Wählen Sie einen leeren Platz, um ihn zu belegen; verweilen Sie 3 Sekunden auf einer Untertaste, um sie zu bearbeiten. Ersetzt die Tastenwiederholung auf Buchstabentasten. Ist das Sperren per Doppeltippen an, zeigen auch Umschalt, Strg, Fn, Alt und Meta beim Halten ihre Untertasten, statt gesperrt zu werden.</string>
     <string name="gesture_popover_neutral_width_title">Breite der neutralen Zone</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Breite des mittleren Bereichs, in dem Loslassen nichts bewirkt, in % der Tastenbreite</string>
     <string name="gesture_popover_neutral_height_title">Höhe der neutralen Zone</string>

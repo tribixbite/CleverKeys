@@ -209,6 +209,12 @@ Ours carried the modifier's bit, and Flutter (RustDesk) keeps its modifier state
 event's meta state: it pressed Right-Ctrl/Shift itself and held it for all later input. Flutter's own
 virtual-keyboard exception (#185292) only landed 2026-04-29. Modifier events go through
 `KeyEventHandler.postKeyEvent`, not `sendKeyevent`, so auto-capitalisation does not read them as typing.
+`Pointers.getModifiers` skips a pressed, still-latchable modifier (v1.2.2: a finger resting on Shift
+must not capitalise the drawn keys), so a chord only works because `joinHeldModifiersToChord` strips
+LATCHABLE from held modifiers at the NEXT key's down; `clearLatched` did it only at that key's up,
+which missed the first key. A modifier double tap is timed (`DOUBLE_TAP_LOCK_MS`, from the first
+release to the second PRESS); accessibility clicks enter with pointer id −2
+(`Pointers.ACCESSIBILITY_POINTER_ID`) and, like TalkBack, lock on any second activation.
 
 ## Swipe-engine changes surface dictionary data (2026-11-20)
 

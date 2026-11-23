@@ -599,8 +599,8 @@
     <string name="input_key_repeat_desc">길게 누를 때 키를 반복합니다</string>
     <string name="input_backspace_only_repeat_title">백스페이스만 반복</string>
     <string name="input_backspace_only_repeat_desc">문자 키는 반복하지 않고 백스페이스/탐색 키만 반복합니다</string>
-    <string name="input_double_tap_shift_title">두 번 탭하여 Shift와 Ctrl 잠금</string>
-    <string name="input_double_tap_shift_desc">Shift를 두 번 탭하면 Caps Lock이 켜지고, Ctrl, Alt, Fn 또는 Meta를 두 번 탭하면 다음에 탭할 때까지 켜진 상태로 유지됩니다.</string>
+    <string name="input_double_tap_shift_title">두 번 탭하여 Shift, Ctrl, Fn 잠금</string>
+    <string name="input_double_tap_shift_desc">Shift를 빠르게 두 번 탭하면 Caps Lock이 켜지고, Ctrl, Fn, Alt 또는 Meta를 빠르게 두 번 탭하면 다음에 탭할 때까지 켜진 상태로 유지됩니다. 두 번째 탭이 느리면 꺼집니다. 이 설정과 ‘길게 누를 때 하위 키 팝업’이 모두 켜져 있으면 이 키를 길게 누를 때 하위 키가 표시되고, 그렇지 않으면 길게 누를 때 잠깁니다.</string>
     <string name="input_immediate_switching_title">즉시 키보드 전환</string>
     <string name="input_immediate_switching_desc">메뉴를 표시하지 않고 키보드를 즉시 전환합니다</string>
     <string name="input_enter_always_newline_title">엔터로 항상 줄 바꿈</string>
@@ -897,7 +897,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">길게 눌러 하위 키 표시</string>
     <string name="gesture_subkey_popover_title">길게 누를 때 하위 키 팝업</string>
-    <string name="gesture_subkey_popover_desc">키를 길게 누르면 손가락 주위에 해당 키의 하위 키가 표시됩니다. 손가락을 하나로 옮긴 뒤 떼면 입력되고, 가운데에서 떼면 취소됩니다. 빈 칸을 선택하면 동작을 할당할 수 있고, 하위 키 위에 3초 동안 머무르면 편집할 수 있습니다. 문자 키에서는 키 반복을 대신합니다.</string>
+    <string name="gesture_subkey_popover_desc">키를 길게 누르면 손가락 주위에 해당 키의 하위 키가 표시됩니다. 손가락을 하나로 옮긴 뒤 떼면 입력되고, 가운데에서 떼면 취소됩니다. 빈 칸을 선택하면 동작을 할당할 수 있고, 하위 키 위에 3초 동안 머무르면 편집할 수 있습니다. 문자 키에서는 키 반복을 대신합니다. 두 번 탭 잠금이 켜져 있으면 Shift, Ctrl, Fn, Alt 또는 Meta도 길게 누를 때 잠기는 대신 하위 키가 표시됩니다.</string>
     <string name="gesture_popover_neutral_width_title">중립 영역 너비</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">손을 떼도 아무 일도 일어나지 않는 가운데 영역의 너비(키 너비 대비 %)</string>
     <string name="gesture_popover_neutral_height_title">중립 영역 높이</string>

@@ -610,8 +610,8 @@
     <string name="input_key_repeat_desc">Izinkan tombol berulang saat tekan lama</string>
     <string name="input_backspace_only_repeat_title">Ulang Hanya Backspace</string>
     <string name="input_backspace_only_repeat_desc">Hanya ulangi backspace/tombol navigasi, bukan tombol karakter</string>
-    <string name="input_double_tap_shift_title">Ketuk Dua Kali untuk Mengunci Shift dan Ctrl</string>
-    <string name="input_double_tap_shift_desc">Ketuk Shift dua kali untuk caps lock, atau Ctrl, Alt, Fn, atau Meta dua kali agar tetap aktif sampai ketukan berikutnya.</string>
+    <string name="input_double_tap_shift_title">Ketuk Dua Kali untuk Mengunci Shift, Ctrl, dan Fn</string>
+    <string name="input_double_tap_shift_desc">Ketuk Shift dua kali dengan cepat untuk caps lock, atau Ctrl, Fn, Alt, atau Meta agar tetap aktif sampai ketukan berikutnya. Ketukan kedua yang lebih lambat menonaktifkannya. Saat setelan ini dan Popover subtombol saat ditahan sama-sama aktif, menahan salah satu tombol ini menampilkan subtombolnya; jika tidak, menahannya akan menguncinya.</string>
     <string name="input_immediate_switching_title">Peralihan Keyboard Segera</string>
     <string name="input_immediate_switching_desc">Beralih keyboard langsung alih-alih menampilkan menu</string>
     <string name="input_enter_always_newline_title">Enter Selalu Menyisipkan Baris Baru</string>
@@ -909,7 +909,7 @@
     <!-- Subkey popover (hold-then-select), docs/specs/subkey-popover.md -->
     <string name="gesture_subkey_popover_header">Tahan untuk Subtombol</string>
     <string name="gesture_subkey_popover_title">Popover subtombol saat ditahan</string>
-    <string name="gesture_subkey_popover_desc">Tahan sebuah tombol untuk menampilkan subtombolnya di sekitar jari Anda. Gerakkan jari ke salah satunya lalu lepaskan untuk mengetiknya, atau lepaskan di tengah untuk membatalkan. Pilih slot kosong untuk menetapkannya; diamkan jari di atas subtombol selama 3 detik untuk mengeditnya. Menggantikan pengulangan tombol pada tombol huruf.</string>
+    <string name="gesture_subkey_popover_desc">Tahan sebuah tombol untuk menampilkan subtombolnya di sekitar jari Anda. Gerakkan jari ke salah satunya lalu lepaskan untuk mengetiknya, atau lepaskan di tengah untuk membatalkan. Pilih slot kosong untuk menetapkannya; diamkan jari di atas subtombol selama 3 detik untuk mengeditnya. Menggantikan pengulangan tombol pada tombol huruf. Saat penguncian dengan ketuk dua kali aktif, menahan Shift, Ctrl, Fn, Alt, atau Meta juga menampilkan subtombolnya, bukan menguncinya.</string>
     <string name="gesture_popover_neutral_width_title">Lebar zona netral</string>
     <string name="gesture_popover_neutral_width_desc" formatted="false">Lebar area tengah tempat melepas jari tidak melakukan apa pun, dalam % lebar tombol</string>
     <string name="gesture_popover_neutral_height_title">Tinggi zona netral</string>
