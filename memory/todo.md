@@ -208,6 +208,18 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     sheet imports). Includes missing app-visibility disclosure in lv/ru/uk, opacity wording
     inverted in cs/hu, and overlay/Shift-state meaning errors. Reconcile before treating the AI
     corrections as complete; native review and the M2 shipping decision remain open.
+    2026-11-22/23 AGENT review DONE (Fable 5.1, one reviewer agent per locale; `docs/audit/2026-11-23-translation-agent-review.md`):
+    every row of every sheet read in all 21 locales; sheet 1 18/636 translated (the rest stay
+    English on purpose: printed key names, diacritic/theme names, units, Taglish), sheet 2
+    152/346 fixed, sheet 3 271/34,419 fixed, 45 native-speaker questions (report §6), 13
+    out-of-sheet strings corrected directly (ru/uk private-copy disclosure, cs/hu older opacity
+    keys). Imported and committed per locale (`b0b955426` … `1ee52c20f`), plus `50d538e5d`
+    answering the GPT-6 reconciliation table above (all its findings fixed except fa
+    `io_error_no_backup_password`, which is grammatical). Every cell passed the placeholder,
+    literal-%, length, glossary and register checks; the five Gradle translation classes
+    re-run once the concurrent keyboard session's `compileDebugUnitTestKotlin` is green again
+    (its red-phase tests, not the strings). Still an AI review: the native-speaker review and
+    the M2 decision remain OPEN.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
