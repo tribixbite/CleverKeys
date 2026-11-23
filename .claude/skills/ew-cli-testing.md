@@ -566,3 +566,11 @@ the IME reports shown can arrive while its window is still sliding in and land o
 (API 37: the long-press case failed with no `Pointers` event at all). Wait past the show animation
 and confirm a finger pointer exists in `Keyboard2View._pointers` before holding; lift and retry if
 not (`ModifierStateAcrossResetsInstrumentedTest.holdingShiftAtASentenceStartLocksIt`).
+
+`Instrumentation.runOnMainSync` throws ("can not be called from the main application thread") when
+already on the main thread, and the polling helpers in our instrumented tests (`within`, `waitFor`)
+run their lambda there: read views directly inside them. A helper that wrapped its own read in
+`runOnMainSync` failed the new chord case on all four APIs before it touched the keyboard
+(2026-11-23). Two-finger input: inject `ACTION_POINTER_DOWN`/`UP` with
+`1 shl ACTION_POINTER_INDEX_SHIFT` and both pointers' coordinates (`chord` in
+`ModifierStateAcrossResetsInstrumentedTest`); `adb shell input` cannot do it on a device.

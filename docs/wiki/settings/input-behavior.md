@@ -157,6 +157,8 @@ Holding one of these keys:
 | On | Off | Locks it |
 | Off | either | Locks it |
 
+With TalkBack on, holding always locks: the popover is not shown there.
+
 Alt and Meta are not on the default layout: they are optional subkeys of Fn and Ctrl (turn them on
 in Extra Keys), or keys you add in a custom layout.
 

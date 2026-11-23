@@ -406,12 +406,11 @@ class ModifierStateAcrossResetsInstrumentedTest {
         }
     }
 
-    /** The field's text, read on the main thread. */
-    private fun fieldText(activity: ImeFieldTestActivity): String {
-        var text = ""
-        instrumentation.runOnMainSync { text = activity.field.text.toString() }
-        return text
-    }
+    /**
+     * The field's text. Main thread: call it inside [within] or [waitFor], which poll there
+     * (runOnMainSync from the main thread throws, as its first version did on every API).
+     */
+    private fun fieldText(activity: ImeFieldTestActivity): String = activity.field.text.toString()
 
     /** Whether the subkey popover is open on the live keyboard (Keyboard2View `_subkeyPopover`). */
     private fun popoverOpen(): Boolean {

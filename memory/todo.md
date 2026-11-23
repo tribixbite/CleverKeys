@@ -138,8 +138,15 @@ first key used to get nothing); (e) both settings' descriptions say how they cha
 machine translated). Not done: (d) paste falling back to the newest CleverKeys clipping when Android has
 cleared its clipboard (maintainer: not wanted). Default layout has no Alt/Meta key: `loc` subkeys of Fn
 and Ctrl. Seen failing first: 11 mock tests; the accessibility/TalkBack exemptions by a mutant (2 failed).
-After: pure 3,991 / mock 1,953. A2, the Pixel check (incl. the paste after an edit) and CI: see the
-evidence commit that follows. Before the tag: only M1, M2, M4.
+After: pure 3,991 / mock 1,953; CI green on `357ebd37`. A2 at its app (`~/ew-output/full-2026-11-23d/`):
+1,680 on each of API 34–37, 1,677 passed + 2 expected skips; the one failure on each was the new chord
+case's helper (`runOnMainSync` on the main thread), fixed and re-run as a class: 14/14 on 34–37 (35 after
+one IME-startup timeout), red on `a6f6172e`'s app first (`~/ew-output/mods-class-2026-11-23d/`). Pixel,
+release `d771e4fc…`: slow second Ctrl tap = off, quick = locked; Fn hold = lock with the popover off,
+Fn's popover with it on; nav-key hold = TrackPoint; and the maintainer's paste repro passes on the phone
+(edited row `cktest516xy` pasted as edited); test row deleted, the previous clip copied back, setting
+restored. Not on a device: the chord (no multi-touch over adb; emulator test), TalkBack/Switch Access,
+RustDesk. Before the tag: only M1, M2, M4.
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
