@@ -534,7 +534,7 @@
     <string name="gesture_min_distance_title">Mindestabstand</string>
     <string name="gesture_min_distance_desc" formatted="false">Mindest-Wischwegstrecke zum Auslösen (% der Tastendiagonale)</string>
     <string name="gesture_max_distance_title">Maximalabstand</string>
-    <string name="gesture_max_distance_desc" formatted="false">Die Kurz-/Lang-Grenze (% der Tastendiagonale): darunter = kurze Wischgeste, darüber = Wischeingabewort. Niedrige Werte lassen leichte Übersteuerungen zu Wörtern werden; hohe Werte erfordern längere Wischgesten, bevor die Worteingabe beginnt.</string>
+    <string name="gesture_max_distance_desc" formatted="false">Die Kurz-/Lang-Grenze (% der Tastendiagonale): bis einschließlich dieses Werts = kurze Wischgeste, darüber = Wischeingabewort. Niedrige Werte lassen leichte Übersteuerungen zu Wörtern werden; hohe Werte erfordern längere Wischgesten, bevor die Worteingabe beginnt.</string>
     <string name="gesture_short_swipes_only_title">Nur kurze Wischgesten</string>
     <string name="gesture_short_swipes_only_desc">Jede Wischgeste ab dem Mindestabstand gibt unabhängig von ihrer Länge die Untertaste in ihrer Richtung ein; eine Wischgeste in eine Richtung ohne Untertaste gibt nichts ein. Die Wischeingabe ist währenddessen aus. Erfordert kurze Gesten.</string>
     <string name="swipe_enable_desc_short_swipes_only">Aus, solange „Nur kurze Wischgesten“ aktiv ist (Gesteneinstellungen).</string>

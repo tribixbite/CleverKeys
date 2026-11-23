@@ -534,7 +534,7 @@
     <string name="gesture_min_distance_title">Distancia mínima</string>
     <string name="gesture_min_distance_desc" formatted="false">Distancia mínima de deslizamiento para activar (% de la diagonal de tecla)</string>
     <string name="gesture_max_distance_title">Distancia máxima</string>
-    <string name="gesture_max_distance_desc" formatted="false">El límite corto/largo (% de la diagonal de tecla): por debajo = deslizamiento corto, más allá = palabra por deslizamiento. Los valores bajos convierten ligeros excesos en palabras; los valores altos requieren deslizamientos más largos antes de que comience la escritura por palabras.</string>
+    <string name="gesture_max_distance_desc" formatted="false">El límite corto/largo (% de la diagonal de tecla): igual o por debajo = deslizamiento corto, más allá = palabra por deslizamiento. Los valores bajos convierten ligeros excesos en palabras; los valores altos requieren deslizamientos más largos antes de que comience la escritura por palabras.</string>
     <string name="gesture_short_swipes_only_title">Solo deslizamientos cortos</string>
     <string name="gesture_short_swipes_only_desc">Cada deslizamiento de al menos la distancia mínima escribe la subtecla de su dirección, sea cual sea su longitud; un deslizamiento hacia una dirección sin subtecla no escribe nada. La escritura por deslizamiento queda desactivada mientras esté activo. Requiere gestos cortos.</string>
     <string name="swipe_enable_desc_short_swipes_only">Desactivado mientras «Solo deslizamientos cortos» esté activo (Ajuste de gestos).</string>

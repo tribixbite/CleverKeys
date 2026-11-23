@@ -1259,7 +1259,7 @@
     <string name="autocorrect_dropped_double_title">Pulihkan huruf ganda yang hilang</string>
     <string name="autocorrect_dropped_double_desc">Koreksi huruf ganda yang hanya diketik sekali (helo → hello), meski koreksi lain adalah kata yang lebih umum</string>
     <string name="autocorrect_dropped_double_margin_title">Margin frekuensi huruf ganda</string>
-    <string name="autocorrect_dropped_double_margin_desc">Seberapa lebih jarang kata berhuruf ganda dibanding kata lain agar tetap menang. Nilai lebih besar lebih sering memulihkan huruf ganda.</string>
+    <string name="autocorrect_dropped_double_margin_desc">Seberapa jauh lebih jarang kata berhuruf ganda boleh dibanding kata lain dan tetap menang. Nilai lebih besar lebih sering memulihkan huruf ganda.</string>
     <string name="autocorrect_min_exact_ratio_title">Kecocokan minimum panjang sama</string>
     <string name="autocorrect_min_exact_ratio_desc">Bagian huruf yang harus sudah di tempat yang benar sebelum kata dengan panjang sama dipertimbangkan</string>
     <string name="autocorrect_max_substitutions_title">Huruf salah maksimum</string>
@@ -1302,7 +1302,7 @@
     <string name="autocorrect_short_deletion_scope_all">Semua bahasa</string>
     <string name="autocorrect_frequency_ignored">Frekuensi diabaikan; hanya edit yang menentukan.</string>
     <string name="autocorrect_channel_inflection_cost_title">Biaya mempertahankan bentuk kata</string>
-    <string name="autocorrect_channel_inflection_cost_desc">Seberapa jauh lebih baik koreksi agar dapat mengganti kata dikenal berakhiran. Di posisi teratas, kata seperti itu selalu dipertahankan.</string>
+    <string name="autocorrect_channel_inflection_cost_desc">Seberapa jauh koreksi harus lebih baik agar dapat mengganti kata dikenal yang berakhiran. Di posisi teratas, kata seperti itu selalu dipertahankan.</string>
     <string name="autocorrect_value_always_keep">Selalu pertahankan</string>
     <string name="autocorrect_tuning_reset">Atur ulang peringkat &amp; penyetelan</string>
     <string name="autocorrect_tuning_reset_body">Kembalikan semua setelan di Peringkat &amp; penyetelan ke default? Setelan koreksi otomatis lainnya tidak berubah.</string>

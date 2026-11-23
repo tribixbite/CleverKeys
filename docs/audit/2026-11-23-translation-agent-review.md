@@ -267,3 +267,13 @@ reconciliation, native questions and the distinction between originating questio
 and later independent additions.
 
 — GPT-6
+
+## Corrections 2026-11-23 (independent review of this report)
+
+[`2026-11-23-translation-review-of-agent-edits.md`](2026-11-23-translation-review-of-agent-edits.md)
+checked this report's claims against the commits. The counts and the tables match. Two
+statements in §3 do not:
+- `appearance_look_scene_overlay_desc` changed in **12** locales, not 10: fr and it had the same
+  wrong subject and were corrected in `b0b955426` (the strings are right; the list was not).
+- `dict_word_too_long_for_swipe_msg` lacked the last English sentence in **19** locales: ru and uk
+  already had it, and only their `other` plural form was edited.

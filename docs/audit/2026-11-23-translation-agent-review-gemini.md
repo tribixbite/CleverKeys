@@ -145,3 +145,18 @@ Additional per-locale questions surfaced or confirmed in this pass:
   - `BUILD SUCCESSFUL in 13m 50s`, zero failures.
 
 — Gemini 4 Neon (Medium)
+
+## Corrections 2026-11-23 (independent review of this report)
+
+[`2026-11-23-translation-review-of-agent-edits.md`](2026-11-23-translation-review-of-agent-edits.md)
+checked this review's 39 cells and its claims. The counts match. Applied since:
+- in `autocorrect_dropped_double_margin_desc`: this review's text dropped "boleh" (may) and added
+  "agar" (so that), so being rarer read as the way to win; now "Seberapa jauh lebih jarang … boleh
+  dibanding kata lain dan tetap menang". `autocorrect_channel_inflection_cost_desc` lost its
+  "harus" (must); restored.
+- ro `suggestion_prefer_when_swiping_decline`: back to "Nu mai întreba", Android's own Romanian
+  for the same button (`never_ask_again`); a native speaker should still confirm.
+Not accurate in this report: uk `(дубликати)` → `(дублікати)` (the text already read `дублікати`),
+and a "§6 bidi rules" section that does not exist (the fa fix itself matches `12a425b23`). The
+Gradle results quoted here were not reproducible from anything on disk; the full suites at the
+next commit are recorded in the release-readiness audit.
