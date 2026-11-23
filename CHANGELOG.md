@@ -303,9 +303,11 @@ editor that used to be listed here already ship in 2.0.)
   its subkeys around your finger; slide to a slot and let go to type or run it. Letting go
   in the neutral centre does nothing (its size is adjustable under Gesture tuning). Letting
   go on an empty slot opens the assign screen; resting 3 s on an assigned slot opens an edit
-  screen (Edit, Reassign, Remove, Restore default). On for new installs; off for upgrades
-  unless already chosen. Backspace, space/navigation, modifier and voice/IME keys keep
-  their own hold behaviour.
+  screen (Edit, Reassign, Remove, Restore default). On by default, upgrades included; an
+  upgrade whose letter keys repeat when held (Backspace-Only Repeat turned off) keeps that
+  repeat and starts with the popover off. Backspace, space/navigation and voice/IME keys keep
+  their own hold behaviour; Shift, Ctrl and Fn show their subkeys (see below), so after an
+  upgrade caps lock is a quick double tap on Shift rather than a hold.
 - **Command palette and edit screen rework**: compact header with key and direction, fixed
   search, Custom text / Intent / Timestamp as one tile row, sticky category headers. Editing
   an existing mapping (from the popover or Settings' per-key screen) opens that action's own
@@ -666,7 +668,8 @@ editor that used to be listed here already ship in 2.0.)
   keyboard (hold Shift and tap a for A, hold Ctrl and tap c for Ctrl+C), and it turns off when
   lifted. The first key typed during the hold used to get nothing (later ones did), and a Shift
   still down as the next letter landed, in fast typing, left that letter lowercase. Holding Shift
-  and typing while caps lock is on no longer turns caps lock off when you lift Shift.
+  and typing while caps lock is on no longer turns caps lock off when you lift Shift. A modifier
+  tapped while another is held (hold Shift, tap Ctrl, lift Shift) still applies to the next key.
 - In RustDesk and other apps built with Flutter, Shift or Ctrl no longer stays held on the remote
   machine after one use: the key's release still said it was held, and the app held the other
   side's Shift or Ctrl for everything typed after.

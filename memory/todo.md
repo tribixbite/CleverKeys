@@ -148,6 +148,16 @@ Fn's popover with it on; nav-key hold = TrackPoint; and the maintainer's paste r
 restored. Not on a device: the chord (no multi-touch over adb; emulator test), TalkBack/Switch Access,
 RustDesk. Before the tag: only M1, M2, M4.
 
+**Status 2026-11-23, night (agent).** Maintainer: "upgrading users should get the popup keys by default
+unless we had a good reason for not", and "button up outstanding". The v5 seed turned the popover OFF
+for every upgrade (owner, 2026-09-30) to keep a held letter repeating; 1.5 shipped Backspace-only repeat
+ON, so on its defaults a held letter did nothing. Now only an upgrade whose letters repeat is seeded OFF;
+installs already past config v5 (2.0 dev builds and their GitHub pre-releases) keep what they have, as
+an OFF there may be the user's own (no marker was written). Also fixed: hold Shift, tap Ctrl, lift Shift
+dropped the one-shot Ctrl. Seen failing first: 3 mock tests. The maintainer's S25U settings as of its
+newest export (2026-10-24, `Download/cleverkeys-config (17).json`): 30 values differ from the defaults
+(popover ON, double-tap lock ON, both stored at their defaults), 41 stored keys are no longer read.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the

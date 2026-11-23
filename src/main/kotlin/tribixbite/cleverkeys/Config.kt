@@ -174,8 +174,8 @@ object Defaults {
      */
     const val SHORT_SWIPES_ONLY = false
 
-    // Hold-then-select subkey popover (docs/specs/subkey-popover.md). ON for fresh installs;
-    // existing installs are seeded OFF once by SubkeyPopoverMigration (config v5).
+    // Hold-then-select subkey popover (docs/specs/subkey-popover.md). ON, upgrades included;
+    // an upgrade whose letter keys repeat is seeded OFF once by SubkeyPopoverMigration (config v5).
     const val SUBKEY_POPOVER_ENABLED = true
     /** Neutral-zone size as % of the key's width / height; releasing inside it does nothing. */
     const val SUBKEY_POPOVER_NEUTRAL_WIDTH = 60
@@ -835,11 +835,16 @@ object KeyBorderOpacityMigration {
 }
 
 /**
- * v5 (2026-09-30): the hold-then-select subkey popover defaults ON for fresh installs
- * (`Defaults.SUBKEY_POPOVER_ENABLED`) but must not change what holding a letter does for
- * someone who already uses the keyboard — for them holding still repeats. Upgrades are seeded
- * OFF once, unless the user already chose (the key exists, e.g. restored from a backup).
- * Same fresh-vs-upgrade discriminator as [LearningMigration].
+ * v5 (2026-09-30): the hold-then-select subkey popover defaults ON
+ * (`Defaults.SUBKEY_POPOVER_ENABLED`) but must not take away what holding a letter does for
+ * someone who already uses the keyboard: a key repeat. An upgrade is seeded OFF once, only when
+ * its letter keys repeat ([repeatsLetters]: key repeat on and "Backspace only repeat" off), and
+ * unless the user already chose (the key exists, e.g. restored from a backup). Revised
+ * 2026-11-23 (maintainer: "upgrading users should get the popup keys by default unless we had a
+ * good reason for not"): it seeded every upgrade OFF, but 1.5 shipped "Backspace only repeat" on,
+ * so on the defaults a held letter did nothing there and the popover takes nothing away. A device
+ * already past v5 keeps what it has: its OFF may be the old seed or the user's own choice, and
+ * nothing recorded which. Same fresh-vs-upgrade discriminator as [LearningMigration].
  */
 object SubkeyPopoverMigration {
     const val PREF_KEY = "subkey_popover_enabled"
@@ -849,7 +854,12 @@ object SubkeyPopoverMigration {
         isFreshInstall: Boolean,
         savedVersion: Int,
         hasExplicitChoice: Boolean,
-    ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION && !hasExplicitChoice
+        repeatsLetters: Boolean,
+    ): Boolean = !isFreshInstall && savedVersion < INTRODUCED_IN_VERSION && !hasExplicitChoice && repeatsLetters
+
+    /** Whether holding a letter key repeats it under these settings (what the popover would replace). */
+    fun repeatsLetters(keyRepeatEnabled: Boolean, backspaceOnlyRepeat: Boolean): Boolean =
+        keyRepeatEnabled && !backspaceOnlyRepeat
 }
 
 /**
@@ -2278,10 +2288,14 @@ class Config private constructor(
             if (LearningMigration.requestsSelectionHistoryReset(isFreshInstall, saved_version)) {
                 e.putBoolean(LearningMigration.SELECTION_HISTORY_RESET_PENDING_KEY, true)
             }
-            // v5 (2026-09-30): subkey popover — rules in [SubkeyPopoverMigration].
+            // v5 (2026-09-30, revised 2026-11-23): subkey popover — rules in [SubkeyPopoverMigration].
             if (SubkeyPopoverMigration.seedsOff(
                     isFreshInstall, saved_version,
-                    hasExplicitChoice = prefs.contains(SubkeyPopoverMigration.PREF_KEY)
+                    hasExplicitChoice = prefs.contains(SubkeyPopoverMigration.PREF_KEY),
+                    repeatsLetters = SubkeyPopoverMigration.repeatsLetters(
+                        keyRepeatEnabled = safeGetBoolean(prefs, "keyrepeat_enabled", Defaults.KEYREPEAT_ENABLED),
+                        backspaceOnlyRepeat = safeGetBoolean(prefs, "keyrepeat_backspace_only", Defaults.KEYREPEAT_BACKSPACE_ONLY),
+                    ),
                 )
             ) {
                 e.putBoolean(SubkeyPopoverMigration.PREF_KEY, false)

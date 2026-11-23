@@ -801,7 +801,11 @@ class Pointers(
             }
         } else {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "Regular key up: clearing latched, value=$ptr_value, ptrs_before=${_ptrs.size}")
-            clearLatched()
+            // A typed key spends the one-shot modifiers. A modifier only reaches here after a chord
+            // (joinHeldModifiersToChord): the keys it typed with already spent theirs at their own
+            // release, so a modifier tapped during the hold (hold Shift, tap Ctrl, lift Shift) is
+            // still waiting for the next key; this release used to drop it.
+            if (ptr_value?.getKind() != KeyValue.Kind.Modifier) clearLatched()
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d("Pointers", "After clearLatched: ptrs_after=${_ptrs.size}")
             removePtr(ptr)
             _handler.onPointerUp(ptr_value, ptr.modifiers)

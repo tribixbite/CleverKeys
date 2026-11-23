@@ -19,7 +19,7 @@ the one you want and let go to type it. This is the same set of characters and a
 | **Purpose** | See and pick a key's subkeys without memorising swipe directions |
 | **Gesture** | Hold a key still, slide to a slot, let go |
 | **Setting** | Settings > Gesture Tuning > Hold for Subkeys > **Subkey popover on hold** |
-| **Default** | On for new installs; off if you upgraded from an earlier version |
+| **Default** | On, also after an upgrade; off after an upgrade only if holding a letter repeated it |
 
 ## How It Works
 
@@ -106,9 +106,10 @@ The two sliders appear only while the popover is on. A larger neutral zone makes
 easier to cancel; a smaller one lets a shorter slide reach a slot.
 
 > [!NOTE]
-> If you upgraded from a version without the popover, it starts **off** so holding a letter
-> keeps doing what it did before. Turn it on in Gesture Tuning. A choice restored from a
-> backup is kept.
+> If you upgraded from a version without the popover, it is **on**, unless holding a letter
+> repeated it there (Backspace-Only Repeat turned off): then it starts **off** so the repeat
+> stays, and you can turn it on in Gesture Tuning. A choice restored from a backup is kept.
+> With it on, holding Shift shows its subkeys; a quick double tap on Shift is caps lock.
 
 ## Tips
 

@@ -577,6 +577,21 @@ class ModifierLongPressLockTest {
     }
 
     @Test
+    fun aModifierTappedDuringAHoldStaysForTheNextKey() {
+        // Hold Shift, tap Ctrl, lift Shift, then tap a: the one-shot Ctrl is still waiting for a.
+        // Shift's release used to clear it (a held modifier's release cleared latches as a typed
+        // key's does).
+        pressWith(FINGER, shiftKey)
+        tapWith(OTHER_FINGER, ctrlKey)
+        releaseFinger(FINGER)
+        tapWith(OTHER_FINGER, letterA)
+        val mods = modsOfUp(letterA.keys[0]!!)
+        assertWithMessage("Ctrl tapped during the hold applies to the next key").that(mods.has(KeyValue.Modifier.CTRL)).isTrue()
+        assertWithMessage("Shift was lifted").that(mods.has(KeyValue.Modifier.SHIFT)).isFalse()
+        assertThat(pointers.getModifiers().size()).isEqualTo(0)
+    }
+
+    @Test
     fun aModifierThatTypedSomethingOpensNoPopoverAndLocksNothing() {
         useSnapshot(snap(popover = true))
         pressWith(FINGER, shiftWithSubkeys)

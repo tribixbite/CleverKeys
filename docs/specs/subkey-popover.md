@@ -104,7 +104,7 @@ A custom mapping (short swipe or popover slot) runs through `CustomShortSwipeExe
 
 | key | type | default | notes |
 |---|---|---|---|
-| `subkey_popover_enabled` | Boolean | `true` | Existing installs are seeded `false` by the v5 migration (`SubkeyPopoverMigration`), unless they have already chosen. |
+| `subkey_popover_enabled` | Boolean | `true` | An upgrade from below config v5 is seeded `false` by `SubkeyPopoverMigration` only when its letter keys repeat (`keyrepeat_enabled` on, `keyrepeat_backspace_only` off), unless it has already chosen (revised 2026-11-23; it seeded every upgrade off). A device already past v5 keeps what it has. |
 | `subkey_popover_neutral_width` | Int % of key width | 60 | 20–150 |
 | `subkey_popover_neutral_height` | Int % of key height | 60 | 20–150 |
 

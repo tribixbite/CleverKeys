@@ -177,7 +177,7 @@ finger; slide to one and let go to type it, or let go in the middle to cancel. S
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Subkey popover on hold** | On for new installs, off after an upgrade | Turns the popover on or off. Replaces key repeat on character keys. While Double Tap to Lock is on, it also replaces the locking hold of Shift, Ctrl, Fn, Alt and Meta. |
+| **Subkey popover on hold** | On; off after an upgrade only if holding a letter repeated it | Turns the popover on or off. Replaces key repeat on character keys. While Double Tap to Lock is on, it also replaces the locking hold of Shift, Ctrl, Fn, Alt and Meta. |
 | **Neutral zone width** | 60% | Width of the middle area where letting go does nothing, as % of the key width (20–150%) |
 | **Neutral zone height** | 60% | Height of that area, as % of the key height (20–150%) |
 
