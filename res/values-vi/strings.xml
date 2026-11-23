@@ -711,7 +711,7 @@
     <string name="privacy_on_device_learning_desc">Xây dựng ngay trên thiết bị các mô hình riêng tư về cụm từ và cách dùng từ dựa trên những gì bạn gõ. Tắt để dừng mọi ghi nhận tự động về hành vi gõ phím — khi tắt, không có gì mới được lưu. Dữ liệu bạn tạo ra một cách rõ ràng thì tách biệt: thống kê hiệu năng dự đoán và dữ liệu đã học được khôi phục từ bản sao lưu.</string>
     <!-- v1.6 swipe diagnostics and controls -->
     <string name="dict_word_too_long_for_swipe_title">Đã thêm nhưng quá dài để vuốt</string>
-    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s” đã được thêm cho kiểu gõ chạm, nhưng CTC cần %2$d bước và chỉ giải mã được %3$d bước.</item></plurals>
+    <plurals name="dict_word_too_long_for_swipe_msg"><item quantity="other">“%1$s” đã được thêm cho kiểu gõ chạm, nhưng CTC cần %2$d bước và chỉ giải mã được %3$d bước. Gõ vuốt sẽ không gợi ý từ này.</item></plurals>
     <string name="gesture_finger_occlusion_title">Hiệu chỉnh độ lệch chạm</string>
     <string name="gesture_finger_occlusion_desc">Dịch vị trí đọc nét vuốt so với đầu ngón tay. Dùng số dương nếu nét nằm trên phím và số âm nếu nằm dưới. Mặc định tắt.</string>
     <string name="gesture_touch_smoothing_title">Làm mượt cảm ứng</string>
@@ -923,7 +923,7 @@
     <string name="layout_manager_badge_modified_copy">Bản sao đã sửa của %1$s</string>
     <string name="layout_manager_revert">Quay lại bản gốc</string>
     <string name="layout_manager_revert_title">Quay lại bố cục gốc?</string>
-    <string name="layout_manager_revert_body">%1$s sẽ thay thế bản sao đã sửa này. Các phím phụ đã thay đổi bị loại bỏ; lựa chọn ngôn ngữ, giao diện và khoảng cách phím được giữ lại.</string>
+    <string name="layout_manager_revert_body">%1$s sẽ thay thế bản sao đã sửa này. Các phím phụ đã thay đổi bị loại bỏ; lựa chọn ngôn ngữ, chủ đề và khoảng cách phím được giữ lại.</string>
     <string name="gesture_selection_delete_header">Chế độ chọn-xóa</string>
     <string name="gesture_short_gestures_header">Cử chỉ ngắn</string>
     <string name="gesture_slider_key_header">Hành vi phím trượt</string>
@@ -1853,19 +1853,19 @@
     <string name="extra_key_accent_circumflex">Dấu mũ</string>
     <string name="extra_key_accent_tilde">Dấu ngã</string>
     <string name="extra_key_accent_cedilla">Dấu móc dưới</string>
-    <string name="extra_key_accent_umlaut">Dấu hai chấm</string>
+    <string name="extra_key_accent_umlaut">Dấu tách âm</string>
     <string name="extra_key_accent_ring">Dấu vòng</string>
-    <string name="extra_key_accent_caron">Dấu móc ngược</string>
+    <string name="extra_key_accent_caron">Dấu caron</string>
     <string name="extra_key_accent_macron">Dấu gạch trên</string>
-    <string name="extra_key_accent_ogonek">Dấu móc đuôi</string>
+    <string name="extra_key_accent_ogonek">Dấu ogonek</string>
     <string name="extra_key_accent_breve">Dấu trăng</string>
     <string name="extra_key_accent_slash">Gạch chéo</string>
     <string name="extra_key_accent_bar">Gạch ngang</string>
-    <string name="extra_key_accent_dot_below">Dấu nặng</string>
+    <string name="extra_key_accent_dot_below">Dấu chấm dưới</string>
     <string name="extra_key_accent_macron_below">Dấu gạch dưới</string>
     <string name="extra_key_accent_ring_below">Dấu vòng dưới</string>
     <string name="extra_key_accent_hook_above">Dấu hỏi</string>
-    <string name="extra_key_accent_horn">Dấu râu</string>
+    <string name="extra_key_accent_horn">Dấu móc</string>
     <string name="extra_key_accent_double_grave">Dấu huyền kép</string>
     <string name="extra_key_title_accent">%1$s %2$s</string>
     <string name="extra_key_title_with_description">%1$s (%2$s)</string>
@@ -2095,11 +2095,11 @@
     <string name="cmd_minimize_fab_desc">Thu gọn bàn phím thành một nút nổi để ứng dụng dùng toàn màn hình; chạm vào để mở lại bàn phím</string>
     <string name="cmd_hide_keyboard">Ẩn bàn phím</string>
     <string name="cmd_hide_keyboard_desc">Đóng bàn phím; chạm vào ô văn bản để mở lại</string>
-    <string name="cmd_theme_next">Giao diện tiếp theo</string>
-    <string name="cmd_theme_next_desc">Áp dụng giao diện tiếp theo theo thứ tự trong Trình quản lý giao diện</string>
-    <string name="cmd_theme_previous">Giao diện trước</string>
-    <string name="cmd_theme_previous_desc">Áp dụng giao diện trước theo thứ tự trong Trình quản lý giao diện</string>
-    <string name="theme_cycle_message">Giao diện: %1$s</string>
+    <string name="cmd_theme_next">Chủ đề tiếp theo</string>
+    <string name="cmd_theme_next_desc">Áp dụng chủ đề tiếp theo theo thứ tự trong Trình quản lý chủ đề</string>
+    <string name="cmd_theme_previous">Chủ đề trước</string>
+    <string name="cmd_theme_previous_desc">Áp dụng chủ đề trước theo thứ tự trong Trình quản lý chủ đề</string>
+    <string name="theme_cycle_message">Chủ đề: %1$s</string>
     <string name="cmd_toggle_scene_motion">Bật/tắt cảnh chuyển động</string>
     <string name="cmd_toggle_scene_motion_desc">Bật hoặc tắt nền cảnh chuyển động</string>
     <string name="scene_motion_on_message">Đã bật cảnh chuyển động</string>
@@ -2506,7 +2506,7 @@
     <string name="clipboard_edit_page_last">Trang cuối</string>
     <string name="clipboard_edit_changed">Đoạn cắt này đã bị thay đổi hoặc xóa sau khi bắt đầu chỉnh sửa, nên nội dung chỉnh sửa chưa được lưu.</string>
     <plurals name="clipboard_delete_selected_title"><item quantity="other">Xóa %1$d đoạn cắt đã chọn?</item></plurals>
-    <string name="clipboard_delete_selected_message">Chỉ các bản sao trong %1$s bị xóa; bản sao ở các thẻ khác vẫn được giữ lại. Tổng kích thước đoạn cắt: %2$s. Các đoạn cắt đã thay đổi hoặc bị gỡ sau khi bạn chọn sẽ bị bỏ qua. Thao tác này không thể hoàn tác.</string>
+    <string name="clipboard_delete_selected_message">Chỉ các bản sao trong %1$s bị xóa; bản sao ở các tab khác vẫn được giữ lại. Tổng kích thước đoạn cắt: %2$s. Các đoạn cắt đã thay đổi hoặc bị gỡ sau khi bạn chọn sẽ bị bỏ qua. Thao tác này không thể hoàn tác.</string>
     <plurals name="clipboard_delete_selected_result"><item quantity="other">Đã xóa %1$d trên %2$d đoạn cắt đã chọn.</item></plurals>
     <string name="clipboard_selection_actions">Thao tác khác</string>
     <string name="clipboard_action_add_to_pinned">Thêm vào mục đã ghim</string>
@@ -2536,10 +2536,10 @@
     <plurals name="clipboard_clean_result"><item quantity="other">Đã dọn %1$d đoạn cắt.</item></plurals>
 
     <!-- #168: current Android clipboard only; saved entries are preserved. -->
-    <string name="cmd_clear_clipboard">Xóa khay nhớ tạm hệ thống</string>
-    <string name="cmd_clear_clipboard_desc">Xóa khay nhớ tạm hiện tại của Android; lịch sử đã lưu, mục đã ghim và việc cần làm vẫn được giữ lại.</string>
-    <string name="system_clipboard_cleared">Đã xóa khay nhớ tạm hệ thống</string>
-    <string name="system_clipboard_clear_failed">Không thể xóa khay nhớ tạm hệ thống</string>
+    <string name="cmd_clear_clipboard">Xóa bộ nhớ tạm hệ thống</string>
+    <string name="cmd_clear_clipboard_desc">Xóa bộ nhớ tạm hiện tại của Android; lịch sử đã lưu, mục đã ghim và việc cần làm vẫn được giữ lại.</string>
+    <string name="system_clipboard_cleared">Đã xóa bộ nhớ tạm hệ thống</string>
+    <string name="system_clipboard_clear_failed">Không thể xóa bộ nhớ tạm hệ thống</string>
 
     <!-- Custom terminal package configuration -->
     <string name="advanced_custom_terminal_title">Gói ứng dụng terminal tuỳ chỉnh</string>
