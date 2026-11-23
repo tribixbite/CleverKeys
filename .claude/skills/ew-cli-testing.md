@@ -558,3 +558,11 @@ Espresso < 3.7.0 dies on Android 16+ (`InputManager.getInstance` removed). The e
 36/37 images report a hardware keyboard with `show_ime_with_hard_keyboard=0`, so the IME
 input view never shows: tests that need it on screen use `ShowImeWithHardKeyboardRule`.
 A bare `EditorInfo()` is `TYPE_NULL`, i.e. a blind REMOTE field — set an input type.
+
+## Touches injected into the real keyboard (2026-11-23)
+
+`UiAutomation.injectInputEvent` at a key's accessibility bounds works, but a touch sent as soon as
+the IME reports shown can arrive while its window is still sliding in and land on the app below
+(API 37: the long-press case failed with no `Pointers` event at all). Wait past the show animation
+and confirm a finger pointer exists in `Keyboard2View._pointers` before holding; lift and retry if
+not (`ModifierStateAcrossResetsInstrumentedTest.holdingShiftAtASentenceStartLocksIt`).

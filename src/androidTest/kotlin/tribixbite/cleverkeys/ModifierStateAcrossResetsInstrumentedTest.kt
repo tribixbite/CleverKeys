@@ -278,14 +278,30 @@ class ModifierStateAcrossResetsInstrumentedTest {
             waitFor("the keyboard with auto-capitalisation's Shift in the empty field") {
                 shown() && onLetters() && has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == false
             }
-            val (x, y) = shiftKeyCentreOnScreen()
             var holdMs = 0L
             instrumentation.runOnMainSync { holdMs = Config.globalConfig().snapshot.longPressTimeout }
-            // A real finger on the real key: down, held past the long press, up.
-            val downTime = SystemClock.uptimeMillis()
-            touch(MotionEvent.ACTION_DOWN, downTime, x, y)
-            Thread.sleep(holdMs + 400L)
-            touch(MotionEvent.ACTION_UP, downTime, x, y)
+            // A real finger on the real key: down, held past the long press, up. A touch injected
+            // while the keyboard is still sliding in lands on the app below and never reaches the
+            // keys (API 37 emulator, 2026-11-23: no Pointers event at all); that is lifted and
+            // tried again, so this test fails on what Shift does, never on where the touch went.
+            Thread.sleep(SETTLE_MS)
+            var landed = false
+            for (attempt in 1..3) {
+                val (x, y) = shiftKeyCentreOnScreen()
+                val downTime = SystemClock.uptimeMillis()
+                touch(MotionEvent.ACTION_DOWN, downTime, x, y)
+                landed = within(500L) { fingerOnKeyboard() }
+                if (!landed) {
+                    touch(MotionEvent.ACTION_UP, downTime, x, y)
+                    Log.i(TAG, "long press attempt $attempt did not reach the keyboard at ($x, $y); ${state()}")
+                    Thread.sleep(SETTLE_MS)
+                    continue
+                }
+                Thread.sleep(holdMs + 400L)
+                touch(MotionEvent.ACTION_UP, downTime, x, y)
+                break
+            }
+            assertTrue("no touch on Shift reached the keyboard in 3 attempts: ${state()}", landed)
             val locked = within(2_000L) { has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == true }
             assertTrue("a long press on Shift at a sentence start must turn caps lock on: ${state()}", locked)
         }
@@ -307,6 +323,16 @@ class ModifierStateAcrossResetsInstrumentedTest {
             }
         }
         return centre ?: throw AssertionError("no Shift key on the keyboard (${state()})")
+    }
+
+    /** Whether a finger is on the keyboard now: a pointer bound to a touch, not a latch (main thread). */
+    private fun fingerOnKeyboard(): Boolean {
+        val kb = keyboard() ?: return false
+        val pointers = Keyboard2View::class.java.getDeclaredField("_pointers").apply { isAccessible = true }.get(kb)
+        val ptrs = pointers.javaClass.getDeclaredField("_ptrs").apply { isAccessible = true }.get(pointers) as List<*>
+        return ptrs.any { p ->
+            p != null && p.javaClass.getDeclaredField("pointerId").apply { isAccessible = true }.getInt(p) >= 0
+        }
     }
 
     private fun touch(action: Int, downTime: Long, x: Float, y: Float) {
@@ -347,5 +373,7 @@ class ModifierStateAcrossResetsInstrumentedTest {
         const val TAG = "ModifierStateTest"
         /** Written and removed by [ctrlAndCapsLockSurviveASettingsChange]; no setting reads it. */
         const val PROBE_KEY = "test_modifier_state_probe"
+        /** Longer than the IME window's show animation (about 300 ms). */
+        const val SETTLE_MS = 700L
     }
 }

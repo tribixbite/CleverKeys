@@ -85,6 +85,25 @@ TalkBack actions, subkey popover, minimize and macros back in; 499 bytes / 485 c
 `ReleaseMetadataDriftTest` pins the same evidence tiers in that wording (count from the runtime
 table, no percentage but the benchmark's two). Before the tag: only M1, M2, M4.
 
+**Status 2026-11-23, later (agent).** Maintainer: "fix the theme/settings change modifier reset and
+the shift long-press lock and review the output of the 2 other agents who committed translations".
+Done (`31bab055`, `8325b953`, CI green): a configuration refresh (every preference written while
+typing) and a theme rebuild keep latched/locked Shift, caps lock, Ctrl, Alt, Fn; the carry arms for
+every configuration change (dark mode, font size), not only rotation; a long press on an already
+latched Shift (auto-capitalisation's at a sentence start) or Ctrl locks it. Tests seen failing first:
+9 mock, 4 instrumented on API 34 (`~/ew-output/mods-red-2026-11-23/`). After: pure 3,986 / mock
+1,909; full instrumented run at `8325b953`'s app (`~/ew-output/full-2026-11-23b/`, app sha256
+`6f18840f2f7bc26d…`): 1,672 on each of API 34–37, 0 failed on 34–36; on 37 the new long-press case
+failed once because its injected touch arrived while the keyboard was still sliding in (no Pointers
+event at all), so the test now waits 700 ms and checks a finger is on the keyboard before the hold;
+the class then passed on API 34–37 and on 37 twice (`~/ew-output/mods-class-2026-11-23c/`). Device:
+Pixel, release `03516da7…` — one long press at a sentence start typed "AA"; caps lock + Ctrl kept
+across a dark-mode switch that recreated Settings search ("put back 2 held modifier(s)"). Translations:
+an independent read of all 490 agent-changed cells; 5 meaning fixes applied (in ×2, ro, de, es),
+the rest left to a native speaker (`docs/audit/2026-11-23-translation-review-of-agent-edits.md`).
+Not changed: a long press on a Shift that is already LOCKED still unlocks it on release; with Ctrl
+and caps lock both on the letter keys still read lowercase. Before the tag: only M1, M2, M4.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
@@ -246,6 +265,14 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     broken syntax in in); 0 CSV–XML mismatches, 0 import refusals. Gradle: 5 translation classes 24/24,
     full `runPureTests` 3,986 OK, `runMockTests` 1,896 OK. Still an AI review: native-speaker review and
     the M2 decision remain OPEN.
+    2026-11-23 review of the two agents' edits (maintainer asked; an Opus reviewer, read-only, all 490
+    changed cells: `docs/audit/2026-11-23-translation-review-of-agent-edits.md`): mechanics clean, no
+    Fable edit made a correct string wrong in meaning; applied `8325b953` — in
+    `autocorrect_dropped_double_margin_desc` (Gemini's "agar" inverted the tolerance) and
+    `autocorrect_channel_inflection_cost_desc` ("harus" restored), ro "Nu mai întreba" (Android's own
+    Romanian for that button; native to confirm), de/es `gesture_max_distance_desc` "at or below"
+    (outside the sheets). Both agents' reports got dated corrections (12 not 10 scene-overlay locales;
+    19 not 21 for the swipe sentence; Gemini's uk and "§6" claims). Native review and M2 remain OPEN.
     Added 2026-11-15, in the sheets since the 2026-11-19 re-export: `io_error_backup_password_unreadable`,
     `theme_save_failed`, `theme_limit_reached`, `extra_keys_reset_title`, `extra_keys_reset_message`,
     `extra_keys_reset_done`; changed 2026-11-18: `clipboard_clean_message`; added 2026-11-18:
