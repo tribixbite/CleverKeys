@@ -225,9 +225,12 @@ cs `theme_color_opacity`, `appearance_keyboard_opacity_title/_desc`,
   failed at `compileDebugUnitTestKotlin` on the first attempt (2026-11-22 23:58) — foreign
   cross-talk: another session's red-phase tests (`RotationModifierCarryTest`,
   `HeldModifierCarryTest`, `LayoutSwitchAutocapTest`, `AutocapitalisationTest`: unresolved
-  `RotationModifierCarry`, `heldModifiers`, `refresh` …), not the strings. Result of the re-run
-  after that session's commit, the full `runPureTests` / `runMockTests` and CI: see the status
-  appended below.
+  `RotationModifierCarry`, `heldModifiers`, `refresh` …), not the strings. Re-run 2026-11-23
+  01:1x once that session's production code was in the tree: **OK (24 tests)**, BUILD SUCCESSFUL.
+- Full suites after all locales were in (one guard invocation, `runPureTests runMockTests`):
+  **pure OK (3986 tests), mock OK (1896 tests)**, BUILD SUCCESSFUL in 14m 12s, no failures in any
+  class.
+- CI (push of `4b98b41f0`…): recorded in the status line appended at the end of this file.
 
 ## 10. Commits
 
