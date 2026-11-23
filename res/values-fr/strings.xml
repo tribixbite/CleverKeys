@@ -522,7 +522,7 @@
     <string name="gesture_min_distance_title">Distance minimale</string>
     <string name="gesture_min_distance_desc" formatted="false">Distance minimale de glissé pour déclencher (% de la diagonale de touche)</string>
     <string name="gesture_max_distance_title">Distance maximale</string>
-    <string name="gesture_max_distance_desc" formatted="false">La limite court/long (% de la diagonale de touche) : en dessous = glissé court, au-delà = mot par glissé. Les valeurs basses transforment les légers dépassements en mots ; les valeurs élevées exigent des glissés plus longs avant que la saisie de mots commence.</string>
+    <string name="gesture_max_distance_desc" formatted="false">La limite court/long (% de la diagonale de touche) : jusqu\'à cette valeur incluse = glissé court, au-delà = mot par glissé. Les valeurs basses transforment les légers dépassements en mots ; les valeurs élevées exigent des glissés plus longs avant que la saisie de mots commence.</string>
     <string name="gesture_short_swipes_only_title">Glissés courts uniquement</string>
     <string name="gesture_short_swipes_only_desc">Chaque glissé d\'au moins la distance minimale saisit la sous-touche de sa direction, quelle que soit sa longueur ; un glissé vers une direction sans sous-touche ne saisit rien. La saisie par glissé est désactivée tant que cette option est active. Nécessite les gestes courts.</string>
     <string name="swipe_enable_desc_short_swipes_only">Désactivé tant que « Glissés courts uniquement » est actif (Réglage des gestes).</string>
@@ -704,7 +704,7 @@
     <plurals name="collision_warning_body"><item quantity="one">%1$d raccourci d\'un paquet importé aurait remplacé un mot réel de l\'autre langue active (%2$s). Il devient une suggestion facultative.</item><item quantity="many">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item><item quantity="other">%1$d raccourcis d\'un paquet importé auraient remplacé des mots réels de l\'autre langue active (%2$s). Ils deviennent des suggestions facultatives.</item></plurals>
     <string name="collision_warning_examples">Raccourcis concernés :</string>
     <string name="swipe_context_rescoring_title">Utiliser le contexte pour classer</string>
-    <string name="swipe_context_rescoring_desc">Réordonne les suggestions avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent ; un glissé clair reste prioritaire. Nécessite l\'apprentissage local.</string>
+    <string name="swipe_context_rescoring_desc">Réordonne les suggestions de glissé avec les paires de mots déjà saisies sur cet appareil. Seuls les résultats proches changent ; un glissé clair reste prioritaire. Sans effet tant que le clavier n\'a rien appris de votre saisie, ce qui nécessite l\'apprentissage sur l\'appareil.</string>
     <!-- ARC-067 batch (2026-09-01): machine translations pending native review -->
     <string name="swipe_engine_pack_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : seuls %2$d %% de ses mots peuvent s\'épeler avec les touches a–z. Des lettres comme ı, ł et đ n\'ont pas de forme a–z, ces mots ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
     <string name="swipe_engine_pack_head_not_typeable">Le paquet de langue %1$s que vous avez importé ne peut pas être décodé par CTC : trop de ses mots les plus courants utilisent des lettres sans forme a–z, ils ne pourraient donc pas être saisis par glissé. Le moteur géométrique les décode à la place.</string>
@@ -2566,7 +2566,7 @@
     <plurals name="clipboard_selection_count"><item quantity="one">%1$d sélectionné</item><item quantity="many">%1$d sélectionnés</item><item quantity="other">%1$d sélectionnés</item></plurals>
     <string name="clipboard_select_all_matching">Sélectionner tous les résultats correspondants</string>
     <string name="clipboard_deselect_all_matching">Désélectionner tous les résultats correspondants</string>
-    <string name="clipboard_selection_clear">Effacer la sélection</string>
+    <string name="clipboard_selection_clear">Tout désélectionner</string>
     <string name="clipboard_delete_selected">Supprimer la sélection</string>
     <string name="clipboard_selection_exit">Quitter la sélection</string>
     <string name="clipboard_select_entry_descr">Sélectionner l\'élément : %1$s</string>
@@ -2684,8 +2684,8 @@
     <string name="theme_color_popup_label">Libellé de la fenêtre contextuelle</string>
     <string name="theme_color_popup_selected">Élément contextuel sélectionné</string>
     <string name="theme_color_popup_selected_label">Libellé de l\'élément contextuel sélectionné</string>
-    <string name="theme_color_latched_key">Touche Maj verrouillée</string>
-    <string name="theme_color_latched_label">Libellé de la touche Maj verrouillée</string>
+    <string name="theme_color_latched_key">Touche Maj enclenchée</string>
+    <string name="theme_color_latched_label">Libellé de la touche Maj enclenchée</string>
     <string name="theme_section_shape">Forme des touches</string>
     <string name="theme_use_keyboard_setting">Utiliser le réglage du clavier</string>
     <string name="theme_shape_shadow">Décalage de l\'ombre</string>

@@ -1332,7 +1332,7 @@
     <string name="input_show_numpad_landscape_only">仅横屏</string>
     <string name="input_show_numpad_always">始终</string>
     <string name="input_numpad_layout_high_first">大数在上（7-8-9 在顶部）</string>
-    <string name="input_numpad_layout_low_first">小数在上（1-2-3 在顶部）</string>
+    <string name="input_numpad_layout_low_first">小数字在上（1-2-3 在顶部）</string>
     <string name="swipe_engine_mode_geometric">几何</string>
     <plurals name="settings_swipe_data_summary">
         <item quantity="other">显示 %2$d / %3$d • %1$d 个不同单词</item>
@@ -1688,7 +1688,7 @@
     <string name="theme_look_cleverkeys_desc">现代圆角按键；浅色或深色跟随系统（默认）</string>
     <string name="theme_toast_applying">正在应用主题：%1$s</string>
     <string name="theme_default_custom_name">我的主题</string>
-    <string name="theme_save_failed">无法保存主题。你的更改仍保持打开。</string>
+    <string name="theme_save_failed">无法保存主题。你的更改仍保留在编辑器中。</string>
     <string name="theme_limit_reached">自定义主题数量已达到 CleverKeys 可保存的上限。请删除一个后再保存新主题。</string>
     <string name="swipe_debug_session_intro">=== 滑动练习场会话已开始 ===\n在上方文本框中滑动。每次滑动都会显示候选排名\n并被记录（轨迹点 + 按键几何 + 排名 + 提交的单词）。</string>
     <string name="swipe_debug_log_cleared_banner">日志已清除。等待滑动输入…</string>
@@ -2582,8 +2582,8 @@
     <string name="theme_color_popup_label">弹出窗口标签</string>
     <string name="theme_color_popup_selected">弹出窗口中选中的项</string>
     <string name="theme_color_popup_selected_label">弹出窗口中选中项的标签</string>
-    <string name="theme_color_latched_key">锁定的 Shift 键</string>
-    <string name="theme_color_latched_label">锁定的 Shift 键标签</string>
+    <string name="theme_color_latched_key">临时启用的 Shift 键</string>
+    <string name="theme_color_latched_label">临时启用的 Shift 键标签</string>
     <string name="theme_section_shape">按键形状</string>
     <string name="theme_use_keyboard_setting">使用键盘设置</string>
     <string name="theme_shape_shadow">按键阴影偏移</string>

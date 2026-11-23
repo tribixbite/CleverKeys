@@ -395,14 +395,14 @@
     <string name="appearance_right_margin_landscape_desc" formatted="false">Jobb margó a képernyő szélességének %-ában</string>
     <string name="appearance_label_brightness_title">Felirat fényereje</string>
     <string name="appearance_label_brightness_desc" formatted="false">A billentyűfeliratok fényereje (0–100%)</string>
-    <string name="appearance_keyboard_opacity_title">Billentyűzet átlátszósága</string>
-    <string name="appearance_keyboard_opacity_desc">A billentyűzet hátterének átlátszósága</string>
-    <string name="appearance_key_opacity_title">Billentyűháttér átlátszósága</string>
-    <string name="appearance_key_opacity_desc">Az egyes billentyűk kitöltésének átlátszósága</string>
-    <string name="appearance_key_border_opacity_title">Billentyűkeret átlátszósága</string>
-    <string name="appearance_key_border_opacity_desc">Az egyes billentyűk körvonalának átlátszósága</string>
-    <string name="appearance_activated_key_opacity_title">Aktivált billentyű átlátszósága</string>
-    <string name="appearance_activated_key_opacity_desc">Átlátszóság billentyűlenyomáskor</string>
+    <string name="appearance_keyboard_opacity_title">Billentyűzet átlátszatlansága</string>
+    <string name="appearance_keyboard_opacity_desc">A billentyűzet hátterének átlátszatlansága</string>
+    <string name="appearance_key_opacity_title">Billentyűháttér átlátszatlansága</string>
+    <string name="appearance_key_opacity_desc">Az egyes billentyűk kitöltésének átlátszatlansága</string>
+    <string name="appearance_key_border_opacity_title">Billentyűkeret átlátszatlansága</string>
+    <string name="appearance_key_border_opacity_desc">Az egyes billentyűk körvonalának átlátszatlansága</string>
+    <string name="appearance_activated_key_opacity_title">Aktivált billentyű átlátszatlansága</string>
+    <string name="appearance_activated_key_opacity_desc">Átlátszatlanság billentyűlenyomáskor</string>
     <string name="appearance_character_size_title">Karakterméret</string>
     <string name="appearance_character_size_desc">Méretszorzó a billentyűfeliratokhoz</string>
     <string name="appearance_secondary_label_size_title">Másodlagos felirat mérete</string>
@@ -436,7 +436,7 @@
     <string name="appearance_look_motion_fps_scene">A jelenet szerint</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Keverés a kijelző hardverével</string>
-    <string name="appearance_look_scene_overlay_desc">Másodpercenként legalább 10 képkockánál a kijelző hardvere mozgatja a sarki fényt a billentyűzet újrarajzolása helyett, így kevesebb az akkumulátorhasználat; kapcsolja ki, ha a sarki fény rosszul jelenik meg</string>
+    <string name="appearance_look_scene_overlay_desc">Másodpercenként legalább 10 képkockánál a kijelző hardvere mozgatja a sarki fényt ahelyett, hogy a billentyűzet rajzolná újra, így kevesebb az akkumulátorhasználat; kapcsolja ki, ha a sarki fény rosszul jelenik meg</string>
     <string name="appearance_look_scene_crisp_title">Éles jelenetek</string>
     <string name="appearance_look_scene_crisp_desc">A sarki fény, a patak és a hó teljes felbontásban: finomabb sugarak és fodrok, kicsivel több memória</string>
     <string name="appearance_look_scene_true_black_title">Jelenetek valódi feketén</string>
@@ -564,7 +564,7 @@
     <string name="gif_remove_pack_confirm">Eltávolítja a következőt: %1$s?</string>
     <string name="input_enable_predictions_title">Szóelőrejelzés engedélyezése</string>
     <string name="input_enable_predictions_desc">Szójavaslatok megjelenítése gépelés közben</string>
-    <string name="input_suggestion_bar_opacity_title">Javaslatsor átlátszósága</string>
+    <string name="input_suggestion_bar_opacity_title">Javaslatsor átlátszatlansága</string>
     <string name="input_suggestion_bar_opacity_desc">A javaslatsor átlátszósága</string>
     <string name="input_auto_space_after_title">Automatikus szóköz javaslat után</string>
     <string name="input_auto_space_after_desc">Záró szóköz hozzáadása javaslat kiválasztásakor</string>
@@ -2666,8 +2666,8 @@
     <string name="theme_function_chars">Funkcióbillentyűként rajzolt karakterek</string>
     <string name="theme_dynamic_color">Háttérkép színeinek követése (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Funkcióbillentyűk szövegmérete</string>
-    <string name="theme_shape_key_fill_opacity">Billentyűkitöltés átlátszósága</string>
-    <string name="theme_shape_key_border_opacity">Billentyűkörvonal átlátszósága</string>
+    <string name="theme_shape_key_fill_opacity">Billentyűkitöltés átlátszatlansága</string>
+    <string name="theme_shape_key_border_opacity">Billentyűkörvonal átlátszatlansága</string>
     <string name="theme_shift_filled">Kitöltött Shift nyíl nagybetűs módban</string>
     <string name="theme_section_bar">Javaslatsáv elrendezése</string>
     <string name="theme_bar_desc">Rögzített helyek görgethető javaslatok helyett, mint az ismert billentyűzeteken. Csak a megjelenés változik: a szóköz továbbra is ugyanazt a szót szúrja be.</string>

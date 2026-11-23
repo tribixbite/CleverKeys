@@ -1052,7 +1052,7 @@
     <plurals name="import_preview_custom_themes_count"><item quantity="one">%1$d aangepast thema in deze back-up</item><item quantity="other">%1$d aangepaste thema\'s in deze back-up</item></plurals>
     <string name="import_preview_custom_themes_merge">Samenvoegen — bij conflict wint het bestand, andere thema\'s blijven (aanbevolen)</string>
     <string name="import_preview_custom_themes_replace">Vervangen — je aangepaste thema\'s wissen, set uit het bestand installeren</string>
-    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dit VERVANGT al je aangepaste thema\'s door het %1$d thema uit het bestand.</item><item quantity="other">Dit VERVANGT al je aangepaste thema\'s door de %1$d thema\'s uit het bestand.</item></plurals>
+    <plurals name="import_preview_custom_themes_warning"><item quantity="one">Dit VERVANGT al je aangepaste thema\'s door %1$d thema uit het bestand.</item><item quantity="other">Dit VERVANGT al je aangepaste thema\'s door de %1$d thema\'s uit het bestand.</item></plurals>
     <string name="import_preview_selected_count">%1$d van %2$d geselecteerd</string>
     <string name="import_preview_expand">Uitvouwen</string>
     <string name="import_preview_hide">Verbergen</string>
@@ -2629,8 +2629,8 @@
     <string name="theme_color_popup_label">Label pop-up</string>
     <string name="theme_color_popup_selected">Geselecteerd pop-upitem</string>
     <string name="theme_color_popup_selected_label">Label geselecteerd pop-upitem</string>
-    <string name="theme_color_latched_key">Vergrendelde Shift-toets</string>
-    <string name="theme_color_latched_label">Label vergrendelde Shift-toets</string>
+    <string name="theme_color_latched_key">Vastgezette Shift-toets</string>
+    <string name="theme_color_latched_label">Label vastgezette Shift-toets</string>
     <string name="theme_section_shape">Toetsvorm</string>
     <string name="theme_use_keyboard_setting">Toetsenbordinstelling gebruiken</string>
     <string name="theme_shape_shadow">Verschuiving toetsschaduw</string>

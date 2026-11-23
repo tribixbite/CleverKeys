@@ -446,7 +446,7 @@
     <string name="appearance_look_motion_fps_scene">Як у сцени</string>
     <string name="appearance_look_motion_fps_value">%1$d кадр/с</string>
     <string name="appearance_look_scene_overlay_title">Змішування засобами дисплея</string>
-    <string name="appearance_look_scene_overlay_desc">Від 10 кадрів на секунду сяйво рухає апаратура дисплея, а не перемальовування клавіатури, тож батарея витрачається менше; вимкніть, якщо сяйво виглядає неправильно</string>
+    <string name="appearance_look_scene_overlay_desc">Від 10 кадрів на секунду сяйво рухає апаратура дисплея, а не перемальовує клавіатура, тож батарея витрачається менше; вимкніть, якщо сяйво виглядає неправильно</string>
     <string name="appearance_look_scene_crisp_title">Чіткі сцени</string>
     <string name="appearance_look_scene_crisp_desc">Малювати сяйво, струмок і сніг у повній роздільності: тонші промені та брижі, трохи більше пам’яті</string>
     <string name="appearance_look_scene_true_black_title">Сцени на чисто чорному</string>
@@ -516,7 +516,7 @@
     <string name="clipboard_reorder_unavailable">Щоб змінити порядок, очистьте пошук і фільтри</string>
     <string name="clipboard_reorder_moved">Переміщено на позицію %1$d з %2$d</string>
     <string name="clipboard_private_copy_other_apps_title">Приватне копіювання в інших застосунках</string>
-    <string name="clipboard_private_copy_other_apps_desc">Додати «Приватне копіювання» до меню виділення тексту інших застосунків. Копіює виділений текст лише в CleverKeys — не в системний буфер обміну.</string>
+    <string name="clipboard_private_copy_other_apps_desc">Додати «Приватне копіювання» до меню виділення тексту інших застосунків. Копіює виділений текст лише в CleverKeys — не в системний буфер обміну. Після ввімкнення додається запис застосунку, який бачать інші застосунки.</string>
     <string name="clipboard_sanitize_links_title">Очищення параметрів відстеження</string>
     <string name="clipboard_sanitize_links_desc">Видаляти utm_*, fbclid тощо зі скопійованих URL. Базується на ClearURLs.</string>
     <string name="clipboard_sanitize_system_title">Також очищати системний буфер обміну</string>

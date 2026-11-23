@@ -314,7 +314,7 @@
     <string name="theme_color_hue">Odstín</string>
     <string name="theme_color_saturation">Sytost</string>
     <string name="theme_color_lightness">Světlost</string>
-    <string name="theme_color_opacity">Průhlednost</string>
+    <string name="theme_color_opacity">Neprůhlednost</string>
     <string name="theme_color_hex">Hex</string>
     <string name="theme_color_hex_desc">Hexadecimální zadání barvy</string>
     <string name="theme_quick_colors">Rychlé barvy</string>
@@ -394,14 +394,14 @@
     <string name="appearance_right_margin_landscape_desc" formatted="false">Pravý okraj v % šířky obrazovky</string>
     <string name="appearance_label_brightness_title">Jas popisků</string>
     <string name="appearance_label_brightness_desc" formatted="false">Jas popisků kláves (0–100 %)</string>
-    <string name="appearance_keyboard_opacity_title">Průhlednost klávesnice</string>
-    <string name="appearance_keyboard_opacity_desc">Průhlednost pozadí klávesnice</string>
-    <string name="appearance_key_opacity_title">Průhlednost pozadí kláves</string>
-    <string name="appearance_key_opacity_desc">Průhlednost výplně každé klávesy</string>
-    <string name="appearance_key_border_opacity_title">Průhlednost okraje kláves</string>
-    <string name="appearance_key_border_opacity_desc">Průhlednost obrysu každé klávesy</string>
-    <string name="appearance_activated_key_opacity_title">Průhlednost aktivované klávesy</string>
-    <string name="appearance_activated_key_opacity_desc">Průhlednost při stisku klávesy</string>
+    <string name="appearance_keyboard_opacity_title">Neprůhlednost klávesnice</string>
+    <string name="appearance_keyboard_opacity_desc">Neprůhlednost pozadí klávesnice</string>
+    <string name="appearance_key_opacity_title">Neprůhlednost pozadí kláves</string>
+    <string name="appearance_key_opacity_desc">Neprůhlednost výplně každé klávesy</string>
+    <string name="appearance_key_border_opacity_title">Neprůhlednost okraje kláves</string>
+    <string name="appearance_key_border_opacity_desc">Neprůhlednost obrysu každé klávesy</string>
+    <string name="appearance_activated_key_opacity_title">Neprůhlednost aktivované klávesy</string>
+    <string name="appearance_activated_key_opacity_desc">Neprůhlednost při stisku klávesy</string>
     <string name="appearance_character_size_title">Velikost znaků</string>
     <string name="appearance_character_size_desc">Faktor velikosti pro popisky kláves</string>
     <string name="appearance_secondary_label_size_title">Velikost sekundárního popisku</string>
@@ -435,7 +435,7 @@
     <string name="appearance_look_motion_fps_scene">Podle scény</string>
     <string name="appearance_look_motion_fps_value">%1$d fps</string>
     <string name="appearance_look_scene_overlay_title">Prolínání hardwarem displeje</string>
-    <string name="appearance_look_scene_overlay_desc">Při 10 snímcích za sekundu a více polární záři pohybuje hardware displeje místo překreslování klávesnice, což šetří baterii; vypněte, pokud záře vypadá špatně</string>
+    <string name="appearance_look_scene_overlay_desc">Při 10 snímcích za sekundu a více pohybuje polární záři hardware displeje místo toho, aby ji překreslovala klávesnice, což šetří baterii; vypněte, pokud záře vypadá špatně</string>
     <string name="appearance_look_scene_crisp_title">Ostré scény</string>
     <string name="appearance_look_scene_crisp_desc">Polární záři, potok a sníh kreslit v plném rozlišení: jemnější paprsky a vlnky, o něco více paměti</string>
     <string name="appearance_look_scene_true_black_title">Scény v čisté černé</string>
@@ -563,7 +563,7 @@
     <string name="gif_remove_pack_confirm">Odebrat %1$s?</string>
     <string name="input_enable_predictions_title">Povolit předpovědi slov</string>
     <string name="input_enable_predictions_desc">Zobrazovat návrhy slov při psaní</string>
-    <string name="input_suggestion_bar_opacity_title">Průhlednost panelu návrhů</string>
+    <string name="input_suggestion_bar_opacity_title">Neprůhlednost panelu návrhů</string>
     <string name="input_suggestion_bar_opacity_desc">Průhlednost panelu návrhů</string>
     <string name="input_auto_space_after_title">Automatická mezera za návrhem</string>
     <string name="input_auto_space_after_desc">Přidat mezeru za výběrem návrhu</string>
@@ -2750,8 +2750,8 @@
     <string name="theme_function_chars">Znaky vykreslené jako funkční klávesy</string>
     <string name="theme_dynamic_color">Barvy podle tapety (Android 12+)</string>
     <string name="theme_shape_function_label_scale">Velikost textu funkčních kláves</string>
-    <string name="theme_shape_key_fill_opacity">Průhlednost výplně kláves</string>
-    <string name="theme_shape_key_border_opacity">Průhlednost obrysu kláves</string>
+    <string name="theme_shape_key_fill_opacity">Neprůhlednost výplně kláves</string>
+    <string name="theme_shape_key_border_opacity">Neprůhlednost obrysu kláves</string>
     <string name="theme_shift_filled">Plná šipka Shift při velkých písmenech</string>
     <string name="theme_section_bar">Rozvržení panelu návrhů</string>
     <string name="theme_bar_desc">Pevná pole místo posuvných návrhů, jako na známých klávesnicích. Mění se jen vzhled: mezerník stále vloží stejné slovo.</string>
