@@ -604,6 +604,7 @@ class CleverKeysService : InputMethodService(),
         // Tile: stop the deferred-show loop so no callback outlives the service.
         _tileShow.cancel()
         _rotationGuard.cancel()
+        _rotationModifiers.cancel()
         if (::_handler.isInitialized) {
             _handler.removeCallbacks(_tileShowTick)
             _handler.removeCallbacks(_rotationShowTick)
@@ -838,6 +839,7 @@ class CleverKeysService : InputMethodService(),
         if (_tileShow.hasPending) tileLog { "onStartInput ${attribute?.packageName} while a deferred show is armed" }
         _tileShow.onStartInput(attribute?.packageName)
         _rotationGuard.onStartInput(attribute?.packageName, restarting)
+        _rotationModifiers.onStartInput(attribute?.packageName)
         if (ProcessTextReturn.hasResult() && attribute != null && attribute.packageName != packageName) {
             _handler.post { if (::_keyeventhandler.isInitialized) _keyeventhandler.deliverProcessTextResult() }
         }
@@ -901,6 +903,10 @@ class CleverKeysService : InputMethodService(),
 
         _keyboardView.setEditorAction(editorAction)
         _keyboardView.setKeyboard(current_layout())
+        // A rotation's restarts (the IME's own, and the new window of an app recreated by it) reset
+        // the view: put back what was latched or locked at the rotation. Before started(): its
+        // auto-capitalisation then sees the user's Shift and leaves it alone.
+        restoreRotationModifiers(editorRefOf(info))
         // WP9 R-1 step 8: background-warm the geometric engine when this layout routes to it,
         // so the first non-QWERTY swipe avoids the synchronous template-index build. No-op
         // unless swipe typing is on AND swipe_engine_mode is hybrid/geometric.
@@ -1007,6 +1013,12 @@ class CleverKeysService : InputMethodService(),
 
     /** Asks the keyboard back when an app's relaunch hides it on rotation; see [RotationShowGuard]. */
     private val _rotationGuard = RotationShowGuard()
+
+    /**
+     * The Shift, caps lock, Ctrl, Alt or Fn held at a rotation, put back after each reset the
+     * rotation causes; see [RotationModifierCarry] (maintainer report 2026-11-22).
+     */
+    private val _rotationModifiers = RotationModifierCarry<List<Pointers.HeldModifier>>()
 
     /** The orientation of the last configuration seen, so [onConfigurationChanged] can tell a rotation. */
     private var _lastOrientation = android.content.res.Configuration.ORIENTATION_UNDEFINED
@@ -1320,6 +1332,7 @@ class CleverKeysService : InputMethodService(),
         refreshSubtypeImm(changedTo = subtype)
         _keyboardView.setEditorAction(editorAction)
         _keyboardView.setKeyboard(current_layout())
+        restoreAutoCapitalisation()
         // REMOVED: Redundant layout update - now handled exclusively by PredictionViewSetup's GlobalLayoutListener
         // This eliminates double initialization and input lag on app switches
     }
@@ -1334,7 +1347,12 @@ class CleverKeysService : InputMethodService(),
             val pane = _receiver?.openPaneEvent()
             _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs, pane != null)
             _rotationPane = if (_rotationGuard.isArmed) pane else null
-            tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed}" }
+            // Taken before super: its restart resets the view (Keyboard2View.reset).
+            _rotationModifiers.onOrientationChanged(
+                currentEditorRef(), _keyboardView.heldModifiers().ifEmpty { null }, _rotationAtMs
+            )
+            tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed} " +
+                "modifiers=${_rotationModifiers.isArmed}" }
         }
         _lastOrientation = newConfig.orientation
         super.onConfigurationChanged(newConfig)
@@ -1342,6 +1360,34 @@ class CleverKeysService : InputMethodService(),
         // Without this, landscape margins are never applied because Config.orientation_landscape
         // isn't updated when the device rotates
         refresh_config()
+        // The refresh reset the view again (ConfigPropagator.resetKeyboardView), after super's
+        // restart: put back the rotation's modifiers and auto-capitalisation's Shift.
+        if (isInputViewShown) {
+            restoreRotationModifiers(currentEditorRef())
+            restoreAutoCapitalisation()
+        }
+    }
+
+    /** Puts back what [_rotationModifiers] carries for [editor], if anything. */
+    private fun restoreRotationModifiers(editor: EditorRef?) {
+        val held = _rotationModifiers.heldFor(editor, android.os.SystemClock.uptimeMillis()) ?: return
+        _keyboardView.restoreHeldModifiers(held)
+        tileLog { "rotation: put back ${held.size} held modifier(s)" }
+    }
+
+    /**
+     * Shows auto-capitalisation's Shift again after something other than a field start reset the
+     * keyboard view, which drops every modifier ([Keyboard2View.reset]): a letter layout shown
+     * again (KeyboardReceiver), a subtype change, a configuration refresh. A field start needs
+     * none: onStartInputView runs auto-capitalisation itself. Todo item 42.
+     */
+    fun restoreAutoCapitalisation() {
+        if (isInputViewShown && ::_keyeventhandler.isInitialized) _keyeventhandler.onKeyboardReset()
+    }
+
+    /** A finger or a TalkBack activation on a key (Keyboard2View): the user is typing. */
+    fun onKeyboardTouched() {
+        _rotationModifiers.onUserInput()
     }
 
     override fun onUpdateSelection(

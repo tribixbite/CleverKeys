@@ -74,6 +74,14 @@ class KeyEventHandler(
         moveCursorForceFallback = shouldMoveCursorForceFallback(info)
     }
 
+    /**
+     * The keyboard view was reset outside a field start (a letter layout shown again, a
+     * configuration refresh): show auto-capitalisation's Shift again ([Autocapitalisation.refresh]).
+     */
+    fun onKeyboardReset() {
+        autocap.refresh()
+    }
+
     /** Selection has been updated. */
     fun selection_updated(oldSelStart: Int, newSelStart: Int) {
         autocap.selection_updated(oldSelStart, newSelStart)

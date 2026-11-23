@@ -301,9 +301,7 @@ class KeyboardReceiver(
                 context.startActivity(intent)
             }
 
-            KeyValue.Event.SWITCH_TEXT -> {
-                keyboardView.setKeyboard(layoutManager.clearSpecialLayout())
-            }
+            KeyValue.Event.SWITCH_TEXT -> showTextLayout(layoutManager.clearSpecialLayout())
 
             KeyValue.Event.SWITCH_NUMERIC -> {
                 // Static resource name → direct R reference (no reflection needed).
@@ -615,15 +613,11 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_FORWARD -> {
-                if (layoutManager.getLayoutCount() > 1) {
-                    keyboardView.setKeyboard(layoutManager.incrTextLayout(1))
-                }
+                if (layoutManager.getLayoutCount() > 1) showTextLayout(layoutManager.incrTextLayout(1))
             }
 
             KeyValue.Event.SWITCH_BACKWARD -> {
-                if (layoutManager.getLayoutCount() > 1) {
-                    keyboardView.setKeyboard(layoutManager.incrTextLayout(-1))
-                }
+                if (layoutManager.getLayoutCount() > 1) showTextLayout(layoutManager.incrTextLayout(-1))
             }
 
             KeyValue.Event.SWITCH_GREEKMATH -> {
@@ -652,6 +646,18 @@ class KeyboardReceiver(
 
             else -> {} // Unhandled events
         }
+    }
+
+    /**
+     * Shows a letter layout: ABC back from a pane, the next or previous layout. Setting a layout
+     * resets the view, which drops every modifier, auto-capitalisation's Shift with it, so the
+     * service is asked to show it again (todo item 42). The number, symbol and Greek/Math panes
+     * are not letter layouts: the number pane has a Shift key of its own, and a Shift latched there
+     * would turn its arrow keys into selection.
+     */
+    private fun showTextLayout(layout: KeyboardData) {
+        keyboardView.setKeyboard(layout)
+        keyboard2.restoreAutoCapitalisation()
     }
 
     /**

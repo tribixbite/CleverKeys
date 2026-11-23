@@ -248,6 +248,53 @@ class Pointers(
         }
     }
 
+    /**
+     * A latched or locked modifier as [heldModifiers] reports it: its value and the state bits of
+     * its pointer that outlive the press ([HELD_STATE_FLAGS]). [restoreHeldModifiers] puts the
+     * same modifier back on another layout instance with them, so the user's own latch stays
+     * theirs (a tap toggles it as before), a lock stays a lock, and auto-capitalisation's Shift
+     * stays auto-capitalisation's.
+     */
+    class HeldModifier internal constructor(val value: KeyValue, internal val flags: Int)
+
+    /**
+     * The modifiers latched or locked now, for carrying across a view reset (a rotation:
+     * [RotationModifierCarry]). Not a key still under a finger, and not a modifier on no key
+     * (selection mode), which the editor's own state sets again.
+     */
+    fun heldModifiers(): List<HeldModifier> = _ptrs.mapNotNull { p ->
+        val value = p.value
+        if (p.pointerId < 0 && value != null && p.key !== KeyboardData.Key.EMPTY && p.hasFlagsAny(FLAG_P_LATCHED)) {
+            HeldModifier(value, p.flags and HELD_STATE_FLAGS)
+        } else {
+            null
+        }
+    }
+
+    /**
+     * Puts [held] back after a reset ([clear]) dropped it, each on the key [keyFor] finds for its
+     * value on the layout shown now. One with no key there is dropped: a modifier the user cannot
+     * see could never be released. A modifier the user latched or locked again since, or a lock,
+     * stays as it is; auto-capitalisation's plain Shift, if it came back first, gives way to the
+     * carried one. Returns how many were put back; the caller redraws once for all of them.
+     */
+    internal fun restoreHeldModifiers(held: List<HeldModifier>, keyFor: (KeyValue) -> KeyboardData.Key?): Int {
+        val snap = _config.snapshot
+        var restored = 0
+        for (h in held) {
+            val key = keyFor(h.value) ?: continue
+            val existing = getLatched(key, h.value)
+            if (existing != null) {
+                val autocapShift = (existing.flags and FLAG_P_FAKE) != 0 && (existing.flags and FLAG_P_LOCKED) == 0
+                if (!autocapShift) continue
+                removePtr(existing)
+            }
+            _ptrs.add(Pointer(-1, key, h.value, 0f, 0f, Modifiers.EMPTY, h.flags, snap))
+            restored++
+        }
+        return restored
+    }
+
     // Receiving events
 
     /**
@@ -2500,6 +2547,14 @@ class Pointers(
 
         /** Hold-then-select subkey popover is open for this pointer (docs/specs/subkey-popover.md). */
         const val FLAG_P_POPOVER_MODE = 1 shl 12
+
+        /**
+         * The state bits of a latched or locked modifier that outlive its press, carried by
+         * [HeldModifier]; the gesture bits (sliding, swipe typing, deferred down, TrackPoint,
+         * selection delete, popover) belong to a finger and never carry.
+         */
+        private const val HELD_STATE_FLAGS = FLAG_P_LATCHABLE or FLAG_P_LATCHED or FLAG_P_FAKE or
+            FLAG_P_DOUBLE_TAP_LOCK or FLAG_P_LOCKED or FLAG_P_CLEAR_LATCHED or FLAG_P_CANT_LOCK
 
         /** Movement (px) past which a hold is a swipe, not a hold — shared by repeat and popover. */
         private const val HOLD_STILLNESS_PX = 15f

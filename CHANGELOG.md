@@ -22,7 +22,7 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; everything merged up to
-> 2026-11-22 (`17e8b8d4`) is folded in, including on-device voice input (moved here from the
+> 2026-11-23 is folded in, including on-device voice input (moved here from the
 > proposed 2.1.0 by maintainer decision on 2026-10-29) and its pause-based endpointing
 > (2026-10-31).
 
@@ -641,6 +641,12 @@ editor that used to be listed here already ship in 2.0.)
   clipboard, emoji or GIF pane comes back with it. In Discord, which closed the keyboard over
   the chat when you rotated with a pane open, it now comes back with the pane. A keyboard you
   closed yourself stays closed, and so does one Discord closes on rotation without a pane open.
+- A latched or locked Shift, caps lock, Ctrl, Alt or Fn stays on when you rotate the phone, in
+  apps that restart their screen on rotation and in apps that keep it; it used to be dropped
+  every time. A tap on the keyboard after the rotation is yours: nothing comes back over it.
+- The automatic capital at the start of a sentence comes back when you return from the number
+  pane (123+, then ABC) or switch to another layout; the letters used to be lowercase. A digit
+  typed on the number pane meanwhile is taken into account.
 - A password field no longer shows the password typed into the previous one. After a failed
   login reloaded the page, the suggestion bar over the new, empty field still held the old
   password (in plain text if its eye was open); it now starts empty and masked, and the

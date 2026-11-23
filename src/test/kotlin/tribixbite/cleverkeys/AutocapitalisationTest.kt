@@ -283,8 +283,83 @@ class AutocapitalisationTest {
     }
 
     // =========================================================================
+    // refresh() tests: the keyboard view dropped its modifiers (todo item 42)
+    // =========================================================================
+
+    @Test
+    fun `refresh after a keyboard reset shows the sentence-start shift again`() {
+        // Empty field: Shift is up at the start. A trip to the number pane and back resets the
+        // view (Keyboard2View.reset drops every modifier); refresh must put Shift back at once.
+        every { mockIc.getCursorCapsMode(any()) } returns InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        enableAutocapAtSentenceStart()
+        clearMocks(mockCallback, answers = false)
+
+        autocap.refresh()
+
+        verify(exactly = 1) { mockCallback.update_shift_state(true, true) }
+    }
+
+    @Test
+    fun `refresh asks the editor again so a digit typed on the number pane keeps shift off`() {
+        // "Hello. " then 123+ and "5": the cursor is no longer at a sentence start.
+        every { mockIc.getCursorCapsMode(any()) } returns InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        enableAutocapAtSentenceStart()
+        autocap.typed("5")
+        runCapturedCallback()
+        every { mockIc.getCursorCapsMode(any()) } returns 0
+        clearMocks(mockCallback, answers = false)
+
+        autocap.refresh()
+
+        verify(exactly = 1) { mockCallback.update_shift_state(false, true) }
+        verify(exactly = 0) { mockCallback.update_shift_state(true, any()) }
+    }
+
+    @Test
+    fun `refresh does nothing while auto-capitalisation is off for the field`() {
+        mockConfig.autocapitalisation = false
+        autocap.started(
+            createEditorInfo(InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES, 1),
+            mockIc
+        )
+        autocap.refresh()
+        verify(exactly = 0) { mockCallback.update_shift_state(any(), any()) }
+        verify(exactly = 0) { mockIc.getCursorCapsMode(any()) }
+    }
+
+    @Test
+    fun `refresh before any field started does nothing`() {
+        autocap.refresh()
+        verify(exactly = 0) { mockCallback.update_shift_state(any(), any()) }
+    }
+
+    @Test
+    fun `refresh while paused does nothing`() {
+        // A macro pauses auto-capitalisation; a layout switch inside it must not latch Shift.
+        enableAutocapAtSentenceStart()
+        autocap.pause()
+        clearMocks(mockCallback, answers = false)
+        autocap.refresh()
+        verify(exactly = 0) { mockCallback.update_shift_state(true, any()) }
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
+
+    /** Start autocap in an empty normal text field whose cursor is at a sentence start. */
+    private fun enableAutocapAtSentenceStart() {
+        mockConfig.autocapitalisation = true
+        autocap.started(
+            createEditorInfo(
+                inputType = InputType.TYPE_CLASS_TEXT or
+                    InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                    InputType.TYPE_TEXT_VARIATION_NORMAL,
+                initialCapsMode = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            ),
+            mockIc
+        )
+    }
 
     /** Start autocap with caps-mode enabled and normal text input type. */
     private fun enableAutocap() {

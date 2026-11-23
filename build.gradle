@@ -1234,6 +1234,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.KeyboardTileActionTest',
     // The keyboard stays up across a rotation the app's relaunch would hide (2026-11-19).
     'tribixbite.cleverkeys.RotationShowGuardTest',
+    // Shift, caps lock and Ctrl held at a rotation come back after its resets (2026-11-22).
+    'tribixbite.cleverkeys.RotationModifierCarryTest',
     // Subkey popover assign request <-> intent extras round trip (audit 2026-10-08).
     'tribixbite.cleverkeys.popover.SubkeyAssignExtrasTest',
     'tribixbite.cleverkeys.ReleaseClaimTextActionsTest',
@@ -1843,6 +1845,10 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.PersianHalfSpaceKeyTest',
     // 2026-11-22: swipe up on Ctrl opens the number pane (123+) on every letter layout; no "ABC".
     'tribixbite.cleverkeys.CtrlNumericSwitchLayoutTest',
+    // 2026-11-22: held modifiers carried onto a new layout's keys (rotation), and auto-
+    // capitalisation's Shift shown again after a letter layout switch (todo item 42).
+    'tribixbite.cleverkeys.HeldModifierCarryTest',
+    'tribixbite.cleverkeys.LayoutSwitchAutocapTest',
     // 2026-10-25: hamza letters on the Persian layouts and Persian PC's language="fa".
     'tribixbite.cleverkeys.PersianLayoutHamzaAndLanguageTest',
     // 2026-10-23: langpack-fa.zip through BinaryDictionaryLoader / CkdtDictionaryReader caps,

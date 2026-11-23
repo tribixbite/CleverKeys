@@ -101,6 +101,19 @@ class Autocapitalisation(
         callback_now(true)
     }
 
+    /**
+     * The keyboard view dropped its modifiers ([Keyboard2View.reset]: a letter layout shown again,
+     * a configuration refresh), this Shift with them (todo item 42: 123+ then ABC at a sentence
+     * start gave lowercase). Asks the editor again, as [unpause] does, and shows the Shift that
+     * belongs at the cursor now: typing on the number pane meanwhile ("5") is taken into account.
+     * Nothing while auto-capitalisation is off for the field, not started, or paused.
+     */
+    fun refresh() {
+        if (!enabled) return
+        shouldUpdateCapsMode = true
+        callback_now(true)
+    }
+
     fun interface Callback {
         fun update_shift_state(should_enable: Boolean, should_disable: Boolean)
     }

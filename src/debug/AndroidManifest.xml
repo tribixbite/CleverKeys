@@ -6,5 +6,15 @@
         <activity
             android:name="tribixbite.cleverkeys.ClipboardEditTestActivity"
             android:exported="false" />
+        <!-- Test-only text fields for instrumented tests of the real keyboard (rotation, layout
+             switches). The first is recreated by a rotation like most apps; the second keeps its
+             window. Debug APK only. -->
+        <activity
+            android:name="tribixbite.cleverkeys.ImeFieldTestActivity"
+            android:exported="false" />
+        <activity
+            android:name="tribixbite.cleverkeys.ImeFieldKeepWindowTestActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
+            android:exported="false" />
     </application>
 </manifest>

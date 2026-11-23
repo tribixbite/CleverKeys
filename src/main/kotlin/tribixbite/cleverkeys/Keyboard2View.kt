@@ -738,6 +738,19 @@ class Keyboard2View @JvmOverloads constructor(
         invalidate() // Redraw keyboard to show shift state
     }
 
+    /** The modifiers latched or locked now, to carry across a rotation ([RotationModifierCarry]). */
+    fun heldModifiers(): List<Pointers.HeldModifier> = _pointers.heldModifiers()
+
+    /**
+     * Puts [held] back after a [reset] dropped it (a rotation's restarts), on the keys of the
+     * layout shown now; a modifier this layout has no key for is dropped. Redraws (and reports the
+     * modifiers to the IME) once, only if anything came back.
+     */
+    fun restoreHeldModifiers(held: List<Pointers.HeldModifier>) {
+        val kw = _keyboard ?: return
+        if (_pointers.restoreHeldModifiers(held) { kw.findKeyWithValue(it) } > 0) onPointerFlagsChanged(null)
+    }
+
     /**
      * Clears latched modifier state (e.g., shift) after swipe word insertion.
      * Called from InputCoordinator when a swipe word is committed.
@@ -1580,6 +1593,7 @@ class Keyboard2View @JvmOverloads constructor(
                 }
             }
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> {
+                noteUserPress()
                 // A first finger: any press still recorded lost its release (dropStalePointers).
                 if (action == MotionEvent.ACTION_DOWN && _pointers.dropStalePointers()) invalidate()
                 val p = event.actionIndex
@@ -1690,6 +1704,7 @@ class Keyboard2View @JvmOverloads constructor(
      */
     private fun activateKeyForAccessibility(kr: KeyboardGeometry.KeyRect) {
         if (_previewMode) return // read-only preview: never type
+        noteUserPress()
         val cx = (kr.bounds.left + kr.bounds.right) / 2f
         val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
         _pointers.onTouchDown(cx, cy, a11yPointerId, kr.key)
@@ -1717,9 +1732,19 @@ class Keyboard2View @JvmOverloads constructor(
      */
     private fun performAccessibilityShortSwipe(kr: KeyboardGeometry.KeyRect, direction: SwipeDirection): Boolean {
         if (_previewMode) return false // read-only preview: never type
+        noteUserPress()
         val cx = (kr.bounds.left + kr.bounds.right) / 2f
         val cy = (kr.bounds.top + kr.bounds.bottom) / 2f
         return _pointers.performAccessibilityShortSwipe(kr.key, direction, a11yPointerId, cx, cy)
+    }
+
+    /**
+     * A finger (or a TalkBack activation) is on a key: the user is typing on the keyboard as it
+     * is shown, so a rotation's carried modifiers must not come back over it
+     * ([CleverKeysService.onKeyboardTouched]). Never from a theme preview.
+     */
+    private fun noteUserPress() {
+        if (!_previewMode) _keyboard2?.onKeyboardTouched()
     }
 
     /**
