@@ -778,6 +778,11 @@ class CleverKeysService : InputMethodService(),
         // Timed for the keyboard-look switch budget (space-bar swipe between familiar-style
         // layouts re-inflates the view; docs/specs/layout-system.md "Keyboard looks").
         val rebuildStartNs = System.nanoTime()
+        // The new view starts with no modifiers. What is latched or locked on the old one (caps
+        // lock, Ctrl, auto-capitalisation's Shift) goes over to it: a theme change mid-typing (a
+        // command, a layout bound to another theme, the system's dark mode) is not the user
+        // leaving them (maintainer, 2026-11-23). A hidden keyboard holds none (onFinishInputView).
+        val held = _keyboardView.heldModifiers()
         recreateThemedViews()
 
         // Per-layout theme binding: a theme change can arrive MID-TYPING (switching onto a layout
@@ -792,6 +797,7 @@ class CleverKeysService : InputMethodService(),
         } else {
             setInputView(_keyboardView)
         }
+        _keyboardView.restoreHeldModifiers(held)
         android.util.Log.i("CleverKeysService", "Theme rebuild: theme=${_config?.themeName} shown=$isInputViewShown " +
             "took ${(System.nanoTime() - rebuildStartNs) / 1_000_000} ms")
     }
@@ -1338,19 +1344,22 @@ class CleverKeysService : InputMethodService(),
     }
 
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        val changedAtMs = android.os.SystemClock.uptimeMillis()
+        // Taken before super, for every configuration change: its restart resets the view
+        // (Keyboard2View.reset), and the app may be recreated by it, for a rotation and as much for
+        // the system's dark mode, a font size or a resize (maintainer, 2026-11-23).
+        _rotationModifiers.onConfigurationChanged(
+            currentEditorRef(), _keyboardView.heldModifiers().ifEmpty { null }, changedAtMs
+        )
         // Before super: its RESET_NEW_CONFIGURATION re-show comes next, and the guard needs the
         // window and editor as they were before the rotation.
         if (newConfig.orientation != _lastOrientation &&
             _lastOrientation != android.content.res.Configuration.ORIENTATION_UNDEFINED
         ) {
-            _rotationAtMs = android.os.SystemClock.uptimeMillis()
+            _rotationAtMs = changedAtMs
             val pane = _receiver?.openPaneEvent()
             _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs, pane != null)
             _rotationPane = if (_rotationGuard.isArmed) pane else null
-            // Taken before super: its restart resets the view (Keyboard2View.reset).
-            _rotationModifiers.onOrientationChanged(
-                currentEditorRef(), _keyboardView.heldModifiers().ifEmpty { null }, _rotationAtMs
-            )
             tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed} " +
                 "modifiers=${_rotationModifiers.isArmed}" }
         }
@@ -1360,8 +1369,10 @@ class CleverKeysService : InputMethodService(),
         // Without this, landscape margins are never applied because Config.orientation_landscape
         // isn't updated when the device rotates
         refresh_config()
-        // The refresh reset the view again (ConfigPropagator.resetKeyboardView), after super's
-        // restart: put back the rotation's modifiers and auto-capitalisation's Shift.
+        // The refresh keeps what the view holds (ConfigPropagator.resetKeyboardView; a theme rebuild
+        // in it hands that to the new view). Once more for the field shown now, in case super's
+        // restart showed it without them (a no-op when it put them back), and auto-capitalisation
+        // asked again.
         if (isInputViewShown) {
             restoreRotationModifiers(currentEditorRef())
             restoreAutoCapitalisation()

@@ -126,10 +126,12 @@ class ConfigPropagator(
      * Reset keyboard view to apply configuration changes.
      *
      * This should be called after configuration changes to ensure
-     * the keyboard view reflects the new configuration.
+     * the keyboard view reflects the new configuration. What is latched or locked (Shift, caps
+     * lock, Ctrl …) stays: this runs for every preference written, also while typing, which is
+     * not the user leaving their modifiers ([Keyboard2View.resetKeepingHeldModifiers]).
      */
     fun resetKeyboardView() {
-        keyboardView?.reset()
+        keyboardView?.resetKeepingHeldModifiers()
     }
 
     /**

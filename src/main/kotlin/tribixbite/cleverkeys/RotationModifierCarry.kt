@@ -3,7 +3,8 @@ package tribixbite.cleverkeys
 /**
  * Carries what the keyboard held at a rotation — a latched or locked Shift, caps lock, Ctrl, Alt,
  * Fn — to the keyboard shown after it (maintainer report 2026-11-22: Shift and Ctrl were gone
- * after every rotation).
+ * after every rotation). Any other configuration change restarts the keyboard the same way and
+ * is carried the same way (2026-11-23: the system's dark mode, a font size, a resize).
  *
  * A rotation resets the keyboard view, which drops every modifier ([Keyboard2View.reset]), two or
  * three times: the IME's own restart for the new configuration (`onStartInputView`), the
@@ -31,11 +32,11 @@ class RotationModifierCarry<T : Any> {
     val isArmed: Boolean get() = carried != null
 
     /**
-     * The orientation changed at [nowMs] with the keyboard over [editor] holding [held] (null:
-     * nothing latched or locked). Replaces any earlier carry; nothing held, or no editor, arms
-     * nothing.
+     * The configuration (the orientation, the system's dark mode …) changed at [nowMs] with the
+     * keyboard over [editor] holding [held] (null: nothing latched or locked). Replaces any earlier
+     * carry; nothing held, or no editor, arms nothing.
      */
-    fun onOrientationChanged(editor: EditorRef?, held: T?, nowMs: Long) {
+    fun onConfigurationChanged(editor: EditorRef?, held: T?, nowMs: Long) {
         carried = if (editor != null && held != null) Carried(editor, held, nowMs + WINDOW_MS) else null
     }
 

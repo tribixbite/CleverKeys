@@ -644,6 +644,13 @@ editor that used to be listed here already ship in 2.0.)
 - A latched or locked Shift, caps lock, Ctrl, Alt or Fn stays on when you rotate the phone, in
   apps that restart their screen on rotation and in apps that keep it; it used to be dropped
   every time. A tap on the keyboard after the rotation is yours: nothing comes back over it.
+- They also stay on when a setting or the theme changes while you type (a command such as True
+  Black or the next theme, a word added to the dictionary, the system switching to dark mode);
+  each of these used to drop them. Switching layouts yourself still starts with none.
+- A long press on Shift locks caps lock also when Shift is already on: at the start of a
+  sentence, where the automatic capital had latched it, the long press turned Shift off, and
+  caps lock took a second long press. The same goes for a Shift you tapped with "double tap for
+  caps lock" off, and for Ctrl, Alt and Fn.
 - The automatic capital at the start of a sentence comes back when you return from the number
   pane (123+, then ABC) or switch to another layout; the letters used to be lowercase. A digit
   typed on the number pane meanwhile is taken into account.

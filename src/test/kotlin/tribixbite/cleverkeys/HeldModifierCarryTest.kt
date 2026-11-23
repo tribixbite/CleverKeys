@@ -266,6 +266,76 @@ class HeldModifierCarryTest {
         verify(exactly = 0) { view.onPointerFlagsChanged(any()) }
     }
 
+    // ------------------------------------------------------------------ configuration refresh
+
+    // Maintainer, 2026-11-23: a settings or theme change while typing dropped them too. Every
+    // preference written (a setting, a command such as True Black, a word added to the
+    // dictionary) refreshes the configuration, which resets the view (ConfigPropagator) and shows
+    // the layout again (PreferenceUIUpdateHandler); neither is the user leaving their Ctrl.
+
+    private fun shiftCtrlLayout(): KeyboardData = KeyboardData.load_string_exn(
+        """<keyboard bottom_row="false"><row><key c="shift"/><key c="a"/><key c="ctrl"/></row></keyboard>"""
+    )
+
+    /** A live view showing [layout] with Ctrl latched and caps lock on (the user's own). */
+    private fun viewHoldingCtrlAndCapsLock(layout: KeyboardData): Keyboard2View {
+        val view = view(mockk(relaxed = true))
+        view.setField("_keyboard", layout)
+        userLatched(layout.findKeyWithValue(ctrl)!!, ctrl)
+        userLatched(layout.findKeyWithValue(shift)!!, shift, locked = true)
+        return view
+    }
+
+    private fun assertCtrlAndCapsLockOn(layout: KeyboardData) {
+        assertWithMessage("Ctrl still latched").that(pointers.getModifiers().has(KeyValue.Modifier.CTRL)).isTrue()
+        val shiftPtr = pointerFor(shift)
+        assertWithMessage("caps lock still on").that(shiftPtr).isNotNull()
+        assertThat(shiftPtr!!.flags and (FLAG_P_LOCKED or FLAG_P_FAKE)).isEqualTo(FLAG_P_LOCKED)
+        assertThat(pointerFor(ctrl)!!.key).isSameInstanceAs(layout.findKeyWithValue(ctrl))
+        assertThat(ptrs).hasSize(2)
+    }
+
+    @Test
+    fun aConfigurationRefreshKeepsWhatIsLatchedOrLocked() {
+        val layout = shiftCtrlLayout()
+        val view = viewHoldingCtrlAndCapsLock(layout)
+
+        ConfigPropagator.builder().setKeyboardViewProvider { view }.build().resetKeyboardView()
+
+        assertCtrlAndCapsLockOn(layout)
+    }
+
+    @Test
+    fun aPreferenceChangeKeepsWhatIsLatchedOrLocked() {
+        val layout = shiftCtrlLayout()
+        val view = viewHoldingCtrlAndCapsLock(layout)
+        // The real setKeyboard ends in reset(), which drops every pointer; the rest of it needs a
+        // laid-out view, which this one is not.
+        every { view.setKeyboard(any()) } answers { view.reset() }
+        val bridge = mockk<LayoutBridge>()
+        every { bridge.getCurrentLayout() } returns layout
+
+        PreferenceUIUpdateHandler(null, bridge, { view }, { null }).handlePreferenceChange("vibrate_custom")
+
+        assertCtrlAndCapsLockOn(layout)
+    }
+
+    @Test
+    fun autoCapitalisationsShiftOutlivesARefreshAsItsOwn() {
+        val layout = shiftCtrlLayout()
+        val view = view(mockk(relaxed = true))
+        view.setField("_keyboard", layout)
+        pointers.add_fake_pointer(layout.findKeyWithValue(shift)!!, shift, locked = false)
+
+        ConfigPropagator.builder().setKeyboardViewProvider { view }.build().resetKeyboardView()
+
+        val shiftPtr = pointerFor(shift)
+        assertWithMessage("auto-capitalisation's Shift still latched at the sentence start").that(shiftPtr).isNotNull()
+        assertWithMessage("and still auto-capitalisation's: the next letter releases it")
+            .that(shiftPtr!!.flags and (FLAG_P_FAKE or FLAG_P_LATCHED or FLAG_P_LOCKED))
+            .isEqualTo(FLAG_P_FAKE or FLAG_P_LATCHED)
+    }
+
     /** Sets a declared field anywhere up the class chain (a spy is a subclass of the view). */
     private fun Any.setField(name: String, value: Any?) {
         var type: Class<*>? = javaClass

@@ -738,17 +738,41 @@ class Keyboard2View @JvmOverloads constructor(
         invalidate() // Redraw keyboard to show shift state
     }
 
-    /** The modifiers latched or locked now, to carry across a rotation ([RotationModifierCarry]). */
+    /**
+     * The modifiers latched or locked now, to carry across a reset that is not the user's: a
+     * rotation or another configuration change ([RotationModifierCarry]), a theme rebuild (to the
+     * new view), a configuration refresh ([resetKeepingHeldModifiers]).
+     */
     fun heldModifiers(): List<Pointers.HeldModifier> = _pointers.heldModifiers()
 
     /**
-     * Puts [held] back after a [reset] dropped it (a rotation's restarts), on the keys of the
-     * layout shown now; a modifier this layout has no key for is dropped. Redraws (and reports the
-     * modifiers to the IME) once, only if anything came back.
+     * Puts [held] back after a [reset] dropped it (a rotation's restarts, a refresh, a rebuilt
+     * view), on the keys of the layout shown now; a modifier this layout has no key for is
+     * dropped. Redraws (and reports the modifiers to the IME) once, only if anything came back.
      */
     fun restoreHeldModifiers(held: List<Pointers.HeldModifier>) {
         val kw = _keyboard ?: return
         if (_pointers.restoreHeldModifiers(held) { kw.findKeyWithValue(it) } > 0) onPointerFlagsChanged(null)
+    }
+
+    /**
+     * [reset] for a configuration refresh, keeping what is latched or locked (Shift, caps lock,
+     * Ctrl …, auto-capitalisation's Shift as its own). A refresh runs for every preference written,
+     * also while typing (a setting, a command such as True Black, a word added to the dictionary),
+     * and is not the user leaving their modifiers (maintainer, 2026-11-23). A layout the user
+     * switches to, a new field and a hidden keyboard still start with none ([reset]).
+     */
+    fun resetKeepingHeldModifiers() {
+        val held = heldModifiers()
+        reset()
+        restoreHeldModifiers(held)
+    }
+
+    /** [setKeyboard] for a configuration refresh: [kw] shown again, keeping what is held as [resetKeepingHeldModifiers] does. */
+    fun setKeyboardKeepingHeldModifiers(kw: KeyboardData) {
+        val held = heldModifiers()
+        setKeyboard(kw)
+        restoreHeldModifiers(held)
     }
 
     /**

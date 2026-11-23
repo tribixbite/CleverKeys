@@ -20,7 +20,7 @@ class RotationModifierCarryTest {
     private val other = EditorRef("com.example.other", fieldId = 3, typeNull = false)
 
     private fun armed(held: String? = "ctrl+caps") =
-        RotationModifierCarry<String>().apply { onOrientationChanged(chat, held, nowMs = 0) }
+        RotationModifierCarry<String>().apply { onConfigurationChanged(chat, held, nowMs = 0) }
 
     @Test
     fun theSameFieldGetsWhatWasHeldThroughEveryResetInsideTheWindow() {
@@ -45,7 +45,7 @@ class RotationModifierCarryTest {
     @Test
     fun nothingHeldOrNoEditorArmsNothing() {
         assertThat(armed(held = null).isArmed).isFalse()
-        val noEditor = RotationModifierCarry<String>().apply { onOrientationChanged(null, "ctrl", nowMs = 0) }
+        val noEditor = RotationModifierCarry<String>().apply { onConfigurationChanged(null, "ctrl", nowMs = 0) }
         assertThat(noEditor.isArmed).isFalse()
         assertThat(noEditor.heldFor(chat, nowMs = 5)).isNull()
     }
@@ -87,11 +87,11 @@ class RotationModifierCarryTest {
     @Test
     fun aNewRotationReplacesTheEarlierCarry() {
         val carry = armed(held = "ctrl")
-        carry.onOrientationChanged(chat, "caps", nowMs = 1_500)
+        carry.onConfigurationChanged(chat, "caps", nowMs = 1_500)
         assertThat(carry.heldFor(chat, nowMs = 1_600)).isEqualTo("caps")
         assertWithMessage("the window runs from the latest rotation")
             .that(carry.heldFor(chat, nowMs = RotationModifierCarry.WINDOW_MS + 1_000)).isEqualTo("caps")
-        carry.onOrientationChanged(chat, null, nowMs = 2_000)
+        carry.onConfigurationChanged(chat, null, nowMs = 2_000)
         assertWithMessage("a rotation with nothing held clears the earlier one")
             .that(carry.isArmed).isFalse()
     }

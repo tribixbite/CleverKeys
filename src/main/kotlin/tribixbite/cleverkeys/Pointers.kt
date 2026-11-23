@@ -1793,6 +1793,14 @@ class Pointers(
         // Long press toggle lock on modifiers
         if ((ptr.flags and FLAG_P_LATCHABLE) != 0) {
             if (!ptr.hasFlagsAny(FLAG_P_CANT_LOCK)) {
+                // The modifier may be latched already: auto-capitalisation's Shift at a sentence
+                // start, or one the user tapped. Left in place, the release would find that latch
+                // ("already latched" in onTouchUp) and take both away, so the hold turned caps
+                // lock OFF (maintainer device check 2026-11-23). The hold supersedes the latch:
+                // this press alone carries the lock, drawn locked while the finger is still down,
+                // and its release latches it as the user's own. A modifier already locked keeps
+                // its old hold (the release unlocks it).
+                getLatched(ptr)?.takeIf { (it.flags and FLAG_P_LOCKED) == 0 }?.let(::removePtr)
                 lockPointer(ptr, HapticEvent.LONG_PRESS)
             }
             return

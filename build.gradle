@@ -1849,6 +1849,9 @@ tasks.register('runMockTests', JavaExec) {
     // capitalisation's Shift shown again after a letter layout switch (todo item 42).
     'tribixbite.cleverkeys.HeldModifierCarryTest',
     'tribixbite.cleverkeys.LayoutSwitchAutocapTest',
+    // 2026-11-23: a long press on a latched Shift (auto-capitalisation's at a sentence start, or
+    // a tapped one) or Ctrl locks it instead of releasing it.
+    'tribixbite.cleverkeys.ModifierLongPressLockTest',
     // 2026-10-25: hamza letters on the Persian layouts and Persian PC's language="fa".
     'tribixbite.cleverkeys.PersianLayoutHamzaAndLanguageTest',
     // 2026-10-23: langpack-fa.zip through BinaryDictionaryLoader / CkdtDictionaryReader caps,

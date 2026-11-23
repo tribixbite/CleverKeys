@@ -32,8 +32,10 @@ class PreferenceUIUpdateHandlerViewsTest {
         handler.handlePreferenceChange("suggestion_bar_opacity")
 
         verify { bar.setOpacity(42) }
-        verify { view.setKeyboard(layout) }
+        // Shown again keeping what is latched or locked (HeldModifierCarryTest, 2026-11-23).
+        verify { view.setKeyboardKeepingHeldModifiers(layout) }
         verify(exactly = 0) { firstBar.setOpacity(any()) }
+        verify(exactly = 0) { firstView.setKeyboardKeepingHeldModifiers(any()) }
         verify(exactly = 0) { firstView.setKeyboard(any()) }
     }
 }

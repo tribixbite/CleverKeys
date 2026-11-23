@@ -50,12 +50,14 @@ class PreferenceUIUpdateHandler(
     }
 
     /**
-     * Update keyboard layout view with current layout.
+     * Update keyboard layout view with current layout, keeping what is latched or locked: a
+     * preference written while typing is not the user leaving their Shift or Ctrl. A layout the
+     * user switches to still starts with none (its own setKeyboard after this, KeyboardReceiver).
      */
     private fun updateKeyboardLayout() {
         val layout = layoutBridge?.getCurrentLayout()
         if (layout != null) {
-            keyboardView()?.setKeyboard(layout)
+            keyboardView()?.setKeyboardKeepingHeldModifiers(layout)
         }
     }
 

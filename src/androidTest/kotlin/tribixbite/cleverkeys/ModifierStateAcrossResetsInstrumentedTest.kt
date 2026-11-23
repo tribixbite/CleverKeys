@@ -2,9 +2,12 @@ package tribixbite.cleverkeys
 
 import android.app.Activity
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import android.util.Log
+import android.view.InputDevice
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
@@ -188,6 +191,134 @@ class ModifierStateAcrossResetsInstrumentedTest {
         }
     }
 
+    // ------------------------------------------------------------------ theme and settings
+    // Maintainer, 2026-11-23: a theme or settings change while typing dropped them as well.
+
+    /** The keyboard shown in a field that keeps its window, with caps lock on and Ctrl latched. */
+    private fun holdCtrlAndCapsLock() {
+        waitFor("the keyboard") { shown() && onLetters() }
+        instrumentation.runOnMainSync { service()!!.triggerKeyboardEvent(KeyValue.Event.CAPS_LOCK) }
+        latchCtrlLikeAUser()
+        waitFor("Ctrl latched and caps lock on", 5_000L) {
+            has(KeyValue.Modifier.CTRL) && keyboard()?.isShiftLocked() == true
+        }
+    }
+
+    private fun ctrlAndCapsLockOn(): Boolean = has(KeyValue.Modifier.CTRL) && keyboard()?.isShiftLocked() == true
+
+    @Test
+    fun ctrlAndCapsLockSurviveAThemeChange() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val savedTheme = prefs.getString("theme", null)
+        try {
+            ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+                holdCtrlAndCapsLock()
+                var before: Keyboard2View? = null
+                instrumentation.runOnMainSync { before = keyboard() }
+                // Another theme: the keyboard view is rebuilt with it (CleverKeysService.onThemeChanged).
+                prefs.edit().putString("theme", if (savedTheme == "dark") "light" else "dark").commit()
+                waitFor("the keyboard rebuilt with the new theme") { keyboard().let { it != null && it !== before } && shown() }
+                val kept = within(2_000L) { ctrlAndCapsLockOn() }
+                assertTrue("Ctrl and caps lock must survive a theme change: ${state()}", kept)
+            }
+        } finally {
+            if (savedTheme != null) prefs.edit().putString("theme", savedTheme).commit()
+            else prefs.edit().remove("theme").commit()
+        }
+    }
+
+    @Test
+    fun ctrlAndCapsLockSurviveASettingsChange() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        try {
+            ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use {
+                holdCtrlAndCapsLock()
+                // Any preference written refreshes the configuration (ConfigurationManager), which
+                // resets the view, and shows the layout again (PreferenceUIUpdateHandler). A key of
+                // the test's own, so no setting of the user's changes; removed below.
+                prefs.edit().putBoolean(PROBE_KEY, true).commit()
+                instrumentation.waitForIdleSync()
+                assertTrue("Ctrl and caps lock must survive a settings change: ${state()}", within(1_000L) { ctrlAndCapsLockOn() })
+                // Let the refresh land; a dropped modifier would not come back by itself.
+                Thread.sleep(300L)
+                assertTrue("Ctrl and caps lock must still be on after the refresh: ${state()}", within(500L) { ctrlAndCapsLockOn() })
+            }
+        } finally {
+            prefs.edit().remove(PROBE_KEY).commit()
+        }
+    }
+
+    @Test
+    fun ctrlAndCapsLockSurviveTheSystemsDarkThemeSwitching() {
+        val originalNight = shell("cmd uimode night").substringAfter(": ").trim()
+        try {
+            shell("cmd uimode night no")
+            ActivityScenario.launch(ImeFieldTestActivity::class.java).use {
+                holdCtrlAndCapsLock()
+                // A configuration change that is not a rotation: the keyboard restarts for it and
+                // this activity (uiMode not in its configChanges) is recreated, as most apps are.
+                shell("cmd uimode night yes")
+                waitFor("the keyboard back in dark mode") {
+                    shown() && onLetters() &&
+                        (service()!!.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                }
+                val kept = within(3_000L) { ctrlAndCapsLockOn() }
+                assertTrue("Ctrl and caps lock must survive the system switching to dark mode: ${state()}", kept)
+            }
+        } finally {
+            if (originalNight in setOf("yes", "no", "auto")) shell("cmd uimode night $originalNight")
+        }
+    }
+
+    // ------------------------------------------------------------------ long press on Shift
+
+    @Test
+    fun holdingShiftAtASentenceStartLocksIt() {
+        ActivityScenario.launch(ImeFieldTestActivity::class.java).use {
+            waitFor("the keyboard with auto-capitalisation's Shift in the empty field") {
+                shown() && onLetters() && has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == false
+            }
+            val (x, y) = shiftKeyCentreOnScreen()
+            var holdMs = 0L
+            instrumentation.runOnMainSync { holdMs = Config.globalConfig().snapshot.longPressTimeout }
+            // A real finger on the real key: down, held past the long press, up.
+            val downTime = SystemClock.uptimeMillis()
+            touch(MotionEvent.ACTION_DOWN, downTime, x, y)
+            Thread.sleep(holdMs + 400L)
+            touch(MotionEvent.ACTION_UP, downTime, x, y)
+            val locked = within(2_000L) { has(KeyValue.Modifier.SHIFT) && keyboard()?.isShiftLocked() == true }
+            assertTrue("a long press on Shift at a sentence start must turn caps lock on: ${state()}", locked)
+        }
+    }
+
+    /** The centre of the Shift key on screen, from its accessibility node. */
+    private fun shiftKeyCentreOnScreen(): Pair<Float, Float> {
+        var centre: Pair<Float, Float>? = null
+        instrumentation.runOnMainSync {
+            val kb = keyboard() ?: return@runOnMainSync
+            val provider = kb.accessibilityNodeProvider ?: return@runOnMainSync
+            val label = context.getString(R.string.key_descr_shift)
+            for (id in kb.accessibilityVirtualViewIdsForTest()) {
+                val node = provider.createAccessibilityNodeInfo(id) ?: continue
+                if (node.contentDescription?.toString() != label) continue
+                val r = Rect().also(node::getBoundsInScreen)
+                centre = r.exactCenterX() to r.exactCenterY()
+                break
+            }
+        }
+        return centre ?: throw AssertionError("no Shift key on the keyboard (${state()})")
+    }
+
+    private fun touch(action: Int, downTime: Long, x: Float, y: Float) {
+        val event = MotionEvent.obtain(downTime, SystemClock.uptimeMillis(), action, x, y, 0)
+        event.source = InputDevice.SOURCE_TOUCHSCREEN
+        try {
+            assertTrue("touch $action not injected", instrumentation.uiAutomation.injectInputEvent(event, true))
+        } finally {
+            event.recycle()
+        }
+    }
+
     /** A tap on Ctrl through the keyboard's accessibility node: the real Pointers latch path. */
     private fun latchCtrlLikeAUser() {
         // Runs on the main thread: no state() (it posts to the main thread) in these messages.
@@ -214,5 +345,7 @@ class ModifierStateAcrossResetsInstrumentedTest {
 
     private companion object {
         const val TAG = "ModifierStateTest"
+        /** Written and removed by [ctrlAndCapsLockSurviveASettingsChange]; no setting reads it. */
+        const val PROBE_KEY = "test_modifier_state_probe"
     }
 }
