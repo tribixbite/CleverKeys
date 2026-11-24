@@ -609,6 +609,21 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Pasting a clipping you just cleaned or edited works after Android has cleared its clipboard.
+  Android 13 and later empty the clipboard an hour after the last copy; Clean then had nothing to
+  replace, so the paste key pasted nothing. One cleaned or edited clipping now goes onto an empty
+  clipboard (never over another app's clip, never a private clipping), and the pane says "It is
+  on the clipboard, ready to paste." Cleaning several clippings at once still changes the
+  clipboard only when one of them is on it.
+- The swipe noise filter slider can be set back to its default, 1.26 px. Its stops are 0.5 px
+  apart, so the default lay between two of them; a slider's default is now always one of its
+  stops, and the value shows two decimals.
+- Restoring a dictionary backup keeps every learned word your settings allow. On a phone where
+  CleverKeys was not yet the running keyboard, restoring the settings and then the dictionary
+  kept 5,000 of 7,165 learned words although the settings had just raised the limit to 10,000.
+- A clipboard history limited by size (Clipboard → Limit Type → By Size) removes the oldest clippings.
+  It removed the newest: once the history was full, each new copy was deleted as soon as it
+  was stored. The count limit, the default, was not affected.
 - Importing a settings backup no longer closes Settings and the keyboard. A backup whose key
   border width differed from the phone's crashed Settings as the import finished, and the keyboard
   with it (the settings had been applied). Settings also shows an imported border width now; it

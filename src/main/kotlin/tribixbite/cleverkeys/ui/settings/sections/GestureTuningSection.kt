@@ -360,7 +360,10 @@ internal fun SettingsActivity.GestureTuningSection() {
                         swipeNoiseThreshold = it
                         saveSetting("swipe_noise_threshold", swipeNoiseThreshold)
                     },
-                    displayValue = "%.1f px".format(swipeNoiseThreshold)
+                    // Two decimals: the default reads 1.26 px, not 1.3 px.
+                    displayValue = "%.2f px".format(swipeNoiseThreshold),
+                    // 1.26 px lies between the 1.0 and 1.5 stops; this keeps it reachable.
+                    defaultValue = Defaults.SWIPE_NOISE_THRESHOLD
                 )
 
                 SettingsSlider(

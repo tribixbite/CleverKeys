@@ -1,10 +1,12 @@
 package tribixbite.cleverkeys.personalization
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
+import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.persist.DebouncedPersister
 import tribixbite.cleverkeys.persist.LearnedDataStorage
 import tribixbite.cleverkeys.persist.SharedPrefsLearnedStorage
@@ -66,9 +68,14 @@ class UserVocabulary internal constructor(
         private var instance: UserVocabulary? = null
 
         /** Process-wide singleton backed by the `user_vocabulary` SharedPreferences file. */
+        /** The preference holding the vocabulary size cap. */
+        internal const val PREF_MAX_WORDS = "personalization_max_words"
+
         @JvmStatic
         fun getInstance(context: Context): UserVocabulary {
             return instance ?: synchronized(this) {
+                // The app's settings (the store a settings import and the Settings slider write).
+                val settings = DirectBootAwarePreferences.get_shared_preferences(context.applicationContext)
                 instance ?: UserVocabulary(
                     storage = SharedPrefsLearnedStorage(
                         context.applicationContext
@@ -78,19 +85,22 @@ class UserVocabulary internal constructor(
                         if (e != null) android.util.Log.e(TAG, msg, e)
                         else android.util.Log.d(TAG, msg)
                     },
-                    // Dynamic provider: the singleton picks up preference
-                    // changes without reconstruction. Falls back to the
-                    // compile-time default before Config is initialized.
-                    maxWords = {
-                        // globalConfigOrNull, NOT globalConfig(): the latter THROWS
-                        // before initGlobalConfig() (Config-less contexts: instrumented
-                        // tests, early activity starts) — the ?. can't catch a throw.
-                        Config.globalConfigOrNull()?.personalization_max_words
-                            ?: Defaults.PERSONALIZATION_MAX_WORDS
-                    }
+                    // Dynamic provider: the singleton picks up preference changes without
+                    // reconstruction. It reads the STORED cap, not the in-memory Config: only the
+                    // keyboard service's listener refreshes Config, so in a process without the
+                    // keyboard (a restore on a new phone, the headless backup activity) Config
+                    // still held the cap from before a settings import, and the dictionary import
+                    // right after cut the restored vocabulary to it (Note10+ 2026-11-24: 7,165
+                    // learned words became 5,000 with the cap 10,000 just restored). A
+                    // SharedPreferences read is an in-memory map lookup.
+                    maxWords = { storedCap(settings) }
                 ).also { instance = it }
             }
         }
+
+        /** The cap as stored in [settings] ([PREF_MAX_WORDS]), the default when unset or unreadable. */
+        internal fun storedCap(settings: SharedPreferences): Int =
+            Config.safeGetInt(settings, PREF_MAX_WORDS, Defaults.PERSONALIZATION_MAX_WORDS)
     }
 
     // Primary storage: word → usage data

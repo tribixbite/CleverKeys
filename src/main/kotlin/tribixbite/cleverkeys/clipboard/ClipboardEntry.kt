@@ -218,6 +218,24 @@ object ClipboardSizePolicy {
     /** Inclusive bounds; null maximum means unlimited. */
     fun matches(bytes: Long, minimum: Long, maximum: Long?): Boolean =
         bytes >= minimum && (maximum == null || bytes <= maximum)
+
+    /**
+     * The History rows a total-size limit removes. [newestFirst] holds (row id, bytes) from the
+     * newest clipping to the oldest: the newest stay while their running total fits in
+     * [maxBytes], and every row from the first one that does not fit is removed, so an older
+     * small row never outlives a newer one. `ClipboardDatabase.applySizeLimitBytes` used to walk
+     * the rows oldest-first and remove the NEWEST once the budget was spent: with the history
+     * full, each new copy was deleted as soon as it was stored (Pixel 2026-11-24: 159 of its
+     * newest clippings went after a restore of older backups).
+     */
+    fun idsOverSizeBudget(newestFirst: List<Pair<Long, Long>>, maxBytes: Long): List<Long> {
+        var total = 0L
+        val firstOver = newestFirst.indexOfFirst { (_, bytes) ->
+            total += bytes
+            total > maxBytes
+        }
+        return if (firstOver < 0) emptyList() else newestFirst.subList(firstOver, newestFirst.size).map { it.first }
+    }
 }
 
 /** Frozen confirmation scope: current tab, ALL matching pages, never a live query. */

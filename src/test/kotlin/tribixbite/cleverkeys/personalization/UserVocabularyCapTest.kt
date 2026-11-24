@@ -180,4 +180,20 @@ class UserVocabularyCapTest {
         assertTrue(target.hasWord("word110"))
         assertFalse(target.hasWord("word1"))
     }
+
+    /**
+     * Note10+ 2026-11-24: a settings import set the cap to 10,000, then the dictionary import kept
+     * 5,000 of 7,165 learned words. The app's singleton read its cap from the in-memory Config,
+     * which only the keyboard service refreshes on a preference change; in a process without the
+     * keyboard it was still the old cap. The singleton reads the stored preference now (the
+     * behaviour is `BackupRestoreManagerImportDictionariesEndToEndTest`, instrumented).
+     */
+    @Test
+    fun `the app singleton reads the stored cap not the in-memory Config`() {
+        val src = java.io.File("src/main/kotlin/tribixbite/cleverkeys/personalization/UserVocabulary.kt").readText()
+        val getInstance = src.substring(src.indexOf("fun getInstance("), src.indexOf("internal fun storedCap("))
+        assertTrue("the provider reads the stored preference", "maxWords = { storedCap(settings) }" in getInstance)
+        assertFalse("never the in-memory Config", "globalConfig" in getInstance)
+        assertEquals("personalization_max_words", UserVocabulary.PREF_MAX_WORDS)
+    }
 }

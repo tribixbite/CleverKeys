@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import android.view.View
@@ -12,11 +13,13 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import tribixbite.cleverkeys.a11y.ShortSwipeAccessibilityActions
+import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.customization.SwipeDirection
 
 /**
@@ -66,6 +69,38 @@ class EditedClipPasteInstrumentedTest {
     private fun keyboard(): Keyboard2View? =
         CleverKeysService.getInstance()?.window?.window?.decorView?.let(::keyboardIn)
 
+    /**
+     * The south-east short swipe on `v` (paste), through the key's accessibility short-swipe
+     * action, which is the swipe's own dispatch; returns what reached the field.
+     */
+    private fun pasteWithTheSubkey(activity: ImeFieldKeepWindowTestActivity): String {
+        var problem: String? = null
+        instrumentation.runOnMainSync {
+            val kb = keyboard()
+            val provider = kb?.accessibilityNodeProvider
+            val id = provider?.let { p ->
+                kb.accessibilityVirtualViewIdsForTest().firstOrNull {
+                    p.createAccessibilityNodeInfo(it)?.contentDescription?.toString().equals("v", ignoreCase = true)
+                }
+            }
+            problem = when {
+                provider == null -> "no keyboard view or accessibility provider"
+                id == null -> "no v key on the keyboard"
+                !provider.performAction(id, ShortSwipeAccessibilityActions.actionId(SwipeDirection.SE), null) ->
+                    "v has no south-east short swipe"
+                else -> null
+            }
+        }
+        problem?.let { throw AssertionError(it) }
+        var fieldText = ""
+        val pasted = within(3_000L) {
+            fieldText = activity.field.text.toString()
+            fieldText.isNotEmpty()
+        }
+        assertTrue("nothing was pasted", pasted)
+        return fieldText
+    }
+
     @Before
     fun setUp() {
         originalIme = shell("settings get secure default_input_method")
@@ -104,33 +139,7 @@ class EditedClipPasteInstrumentedTest {
                 assertEquals(EditEntryResult.Success, result)
                 Thread.sleep(500L)
 
-                // The south-east short swipe on v: paste.
-                var problem: String? = null
-                instrumentation.runOnMainSync {
-                    val kb = keyboard()
-                    val provider = kb?.accessibilityNodeProvider
-                    val id = provider?.let { p ->
-                        kb.accessibilityVirtualViewIdsForTest().firstOrNull {
-                            p.createAccessibilityNodeInfo(it)?.contentDescription?.toString().equals("v", ignoreCase = true)
-                        }
-                    }
-                    problem = when {
-                        provider == null -> "no keyboard view or accessibility provider"
-                        id == null -> "no v key on the keyboard"
-                        !provider.performAction(id, ShortSwipeAccessibilityActions.actionId(SwipeDirection.SE), null) ->
-                            "v has no south-east short swipe"
-                        else -> null
-                    }
-                }
-                problem?.let { throw AssertionError(it) }
-
-                var fieldText = ""
-                val pasted = within(3_000L) {
-                    fieldText = activity.field.text.toString()
-                    fieldText.isNotEmpty()
-                }
-                assertTrue("nothing was pasted", pasted)
-                assertEquals("the paste short swipe must give the clipping as edited", edited, fieldText)
+                assertEquals("the paste short swipe must give the clipping as edited", edited, pasteWithTheSubkey(activity))
                 assertTrue(
                     "the edit must not leave a second row for the same clipping",
                     history.historyEntryTimestamp(original) == null,
@@ -140,6 +149,54 @@ class EditedClipPasteInstrumentedTest {
             instrumentation.runOnMainSync {
                 history.removeHistoryEntry(original)
                 history.removeHistoryEntry(edited)
+            }
+        }
+    }
+
+    /**
+     * Maintainer 2026-11-24: "i just cleaned a clipping and then tried to paste via subkey function
+     * and nothing happened". Android 13+ clears its clipboard an hour after the last copy
+     * (device_config `clipboard/auto_clear_enabled`, true on the S25U and the Pixel); Clean then
+     * found no system clip to replace, and the paste key asked the app to paste an empty clipboard.
+     * One clipping cleaned now fills an EMPTY clipboard. The clear here is Android's own call
+     * (`clearPrimaryClip`, API 28+), the one its hourly auto-clear makes.
+     */
+    @Test
+    fun aCleanedClippingFillsAnEmptyClipboard() {
+        assumeTrue("clearPrimaryClip is API 28+", Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
+        val nonce = SystemClock.uptimeMillis()
+        val original = "ck clean   me $nonce"
+        val cleaned = "ck clean me $nonce"
+        val history = requireNotNull(ClipboardHistoryService.get_service(context)) { "no clipboard service" }
+        try {
+            ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use { scenario ->
+                lateinit var activity: ImeFieldKeepWindowTestActivity
+                scenario.onActivity { activity = it }
+                assertTrue("the keyboard", within(15_000L) {
+                    CleverKeysService.getInstance()?.isInputViewShown == true && (keyboard()?.height ?: 0) > 0
+                })
+                val clipboard = activity.getSystemService(ClipboardManager::class.java)
+                instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("test", original)) }
+                assertTrue("the copy reached CleverKeys' history", within(5_000L) { history.historyEntryTimestamp(original) != null })
+
+                // An hour later Android has cleared its clipboard; the history row stays.
+                instrumentation.runOnMainSync { clipboard.clearPrimaryClip() }
+                assertTrue("Android's clipboard is empty", within(2_000L) { !clipboard.hasPrimaryClip() })
+
+                // The pane's Clean on that one clipping (ClipboardManager.confirmClean's plan, run
+                // off the main thread as ClipboardHistoryView.runBulk runs it).
+                val plan = ClipboardBulkPlans.planClean(listOf(ClipboardEntry(original, history.historyEntryTimestamp(original) ?: 0L)))
+                val result = history.applyClean(ClipboardTab.HISTORY, plan).getOrThrow()
+                assertEquals(1, result.cleaned)
+                assertTrue("the result reports the cleaned text on the clipboard", result.onSystemClipboard)
+                Thread.sleep(500L)
+
+                assertEquals("the paste short swipe must give the cleaned clipping", cleaned, pasteWithTheSubkey(activity))
+            }
+        } finally {
+            instrumentation.runOnMainSync {
+                history.removeHistoryEntry(original)
+                history.removeHistoryEntry(cleaned)
             }
         }
     }

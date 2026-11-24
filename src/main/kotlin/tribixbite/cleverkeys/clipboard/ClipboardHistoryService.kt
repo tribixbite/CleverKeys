@@ -570,18 +570,25 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     /**
-     * Clean in place: each planned edit goes through [editEntryContent], the inline editor's own
+     * Clean in place: each planned edit goes through [editEntryFollowingClipboard], the inline editor's own
      * validation and per-table update (copies in other tabs stay). A row edited or removed since
      * the confirmation, or whose cleaned text duplicates another row, is counted as failed.
      * (editEntryContent notifies the listener; the list view ignores reloads while the holder
      * reports a running action, so nothing touches it off the main thread.)
      */
     fun applyClean(tab: ClipboardTab, plan: ClipboardBulkPlans.CleanPlan): Result<ClipboardCleanResult> = runCatching {
+        // One clipping cleaned is the one the user means to paste: it may fill an EMPTY Android
+        // clipboard (cleared an hour after the last copy, maintainer 2026-11-24). Several cleaned
+        // at once is tidying up: only the row that IS the system clip follows.
+        val fillEmpty = plan.edits.size == 1
         var cleaned = 0
+        var onClipboard = false
         for ((entry, text) in plan.edits) {
-            if (editEntryContent(entry.content, text, tab) is EditEntryResult.Success) cleaned++
+            val outcome = editEntryFollowingClipboard(entry.content, text, tab, fillEmpty)
+            if (outcome.result is EditEntryResult.Success) cleaned++
+            if (outcome.onSystemClipboard) onClipboard = true
         }
-        ClipboardCleanResult(cleaned, plan.unchanged, plan.skippedMedia, plan.edits.size - cleaned)
+        ClipboardCleanResult(cleaned, plan.unchanged, plan.skippedMedia, plan.edits.size - cleaned, onClipboard)
     }
 
     /**
@@ -770,15 +777,33 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * Validates size limit. Content is compared and stored EXACTLY (UT-4):
      * whitespace/newline-only changes are real edits and persist verbatim.
      * COPY semantics: only the entry in the specified tab is modified;
-     * copies in other tabs are unaffected.
+     * copies in other tabs are unaffected. One edited clipping may also go onto Android's
+     * clipboard ([followEditOnSystemClipboard]).
      *
      * @return EditEntryResult indicating success, duplicate conflict, or error
      */
-    fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult {
+    fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult =
+        editEntryFollowingClipboard(oldContent, newContent, tab, fillEmptyClipboard = true).result
+
+    /** [editEntryContent]'s result, and whether the edited text was put on Android's clipboard. */
+    data class EditOutcome(val result: EditEntryResult, val onSystemClipboard: Boolean)
+
+    /**
+     * [editEntryContent], with the caller saying whether the edit may fill an EMPTY Android
+     * clipboard ([fillEmptyClipboard]: one clipping edited or cleaned) and learning whether the
+     * edited text was put there ([EditOutcome.onSystemClipboard]: decided here, written on the
+     * main thread just after).
+     */
+    fun editEntryFollowingClipboard(
+        oldContent: String,
+        newContent: String,
+        tab: ClipboardTab,
+        fillEmptyClipboard: Boolean,
+    ): EditOutcome {
         // Shared exact-comparison policy (no trim — see ClipboardEditPolicy KDoc)
         when (ClipboardEditPolicy.decide(oldContent, newContent)) {
-            is ClipboardEditPolicy.Decision.NoOp -> return EditEntryResult.Success
-            is ClipboardEditPolicy.Decision.Invalid -> return EditEntryResult.InvalidContent
+            is ClipboardEditPolicy.Decision.NoOp -> return EditOutcome(EditEntryResult.Success, false)
+            is ClipboardEditPolicy.Decision.Invalid -> return EditOutcome(EditEntryResult.InvalidContent, false)
             is ClipboardEditPolicy.Decision.Apply -> { /* fall through to size check + DB write */ }
         }
 
@@ -787,7 +812,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (maxSizeKb > 0) {
             val sizeBytes = newContent.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
             if (sizeBytes > maxSizeKb * 1024) {
-                return EditEntryResult.InvalidContent
+                return EditOutcome(EditEntryResult.InvalidContent, false)
             }
         }
 
@@ -798,11 +823,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             ClipboardTab.TODOS -> _database.updateTodoEntryContent(oldContent, newContent)
         }
 
-        if (result is EditEntryResult.Success) {
-            notifyHistoryChanged()
-            followEditOnSystemClipboard(tab, oldContent, newContent)
-        }
-        return result
+        if (result !is EditEntryResult.Success) return EditOutcome(result, false)
+        notifyHistoryChanged()
+        return EditOutcome(result, followEditOnSystemClipboard(tab, oldContent, newContent, fillEmptyClipboard))
     }
 
     /** What [followEditOnSystemClipboard] last put on Android's clipboard; its capture is skipped once. */
@@ -810,20 +833,16 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private var ownEditOnSystemClip: String? = null
 
     /**
-     * The edited row was the clip on Android's clipboard: put the edited text there, so the paste
-     * key, the app's own Paste and RustDesk's paste give what the pane shows (maintainer
-     * 2026-11-23; [EditedClipFollow] decides). Inline edits and Clean both come through here.
+     * The edited row was the clip on Android's clipboard, or the clipboard is empty and
+     * [fillEmpty]: put the edited text there, so the paste key, the app's own Paste and RustDesk's
+     * paste give what the pane shows (maintainer 2026-11-23 and 2026-11-24; [EditedClipFollow]
+     * decides). Inline edits and Clean both come through here. True when the text is put.
      */
-    private fun followEditOnSystemClipboard(tab: ClipboardTab, oldContent: String, newContent: String) {
-        if (tab != ClipboardTab.HISTORY) return
-        val systemClip = try {
-            _cm.primaryClip?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text?.toString()
-        } catch (e: Exception) {
-            null // SecurityException when this keyboard is not the focused one
-        }
+    private fun followEditOnSystemClipboard(tab: ClipboardTab, oldContent: String, newContent: String, fillEmpty: Boolean): Boolean {
+        if (tab != ClipboardTab.HISTORY) return false
         val put = EditedClipFollow.textToPut(
-            tab, _database.historyEntryIsPrivate(newContent), systemClip, oldContent, newContent,
-        ) { _sanitizationConfig.sanitizer().process(it).trim() } ?: return
+            tab, _database.historyEntryIsPrivate(newContent), readSystemClipForFollow(), oldContent, newContent, fillEmpty,
+        ) { _sanitizationConfig.sanitizer().process(it).trim() } ?: return false
         ownEditOnSystemClip = put
         serviceScope.launch {
             try {
@@ -833,6 +852,24 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 android.util.Log.w("ClipboardHistory", "Edited clip not put on the system clipboard: " + e.message)
             }
         }
+        return true
+    }
+
+    /**
+     * Android's clipboard as [EditedClipFollow] needs it. The pane is open in this keyboard, the
+     * default IME, so the read is allowed; a null clip is an empty clipboard (the hourly
+     * auto-clear calls clearPrimaryClip). A refused read (SecurityException) is [EditedClipFollow.SystemClip.Unknown].
+     */
+    private fun readSystemClipForFollow(): EditedClipFollow.SystemClip = try {
+        val clip = _cm.primaryClip
+        val first = clip?.takeIf { it.itemCount > 0 }?.getItemAt(0)
+        EditedClipFollow.SystemClip.of(
+            itemCount = clip?.itemCount,
+            firstText = first?.text?.toString(),
+            firstHasNonText = first != null && (first.uri != null || first.intent != null),
+        )
+    } catch (e: Exception) {
+        EditedClipFollow.SystemClip.Unknown
     }
 
     /** Get all pinned clipboard entries */

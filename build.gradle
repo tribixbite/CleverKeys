@@ -877,6 +877,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.KeyboardHeightPrefsTest',
     // Audit remediation (2026-07-17) — new pure JVM tests
     'tribixbite.cleverkeys.ClipboardSearchRegexTest',
+    // 2026-11-24: the total-size limit keeps the newest clippings (it deleted the newest).
+    'tribixbite.cleverkeys.ClipboardSizeBudgetTest',
     'tribixbite.cleverkeys.ConfigNullSafetyTest',
     // ARC-072 (2026-08-29): the ConfigSnapshot read-model. The ratchet pins migrated
     // hot-path files off the mutable global + the structural refresh-rebuild coherence

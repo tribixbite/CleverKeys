@@ -774,6 +774,40 @@ fun sliderSteps(range: ClosedFloatingPointRange<Float>, increment: Float): Int {
 }
 
 /**
+ * Whether [value] is one of the stops of a slider over [range] in [increment] steps (within float
+ * rounding: 0.5 + 3 × 0.05 is not exactly 0.65). A default that is not one cannot be chosen again
+ * once the slider moves: `swipe_noise_threshold` 1.26 lies between the 1.0 and 1.5 stops
+ * (maintainer 2026-11-24, "i cant reach 1.26 (default noise?) with the slider").
+ */
+fun isSliderStop(value: Float, range: ClosedFloatingPointRange<Float>, increment: Float): Boolean {
+    require(increment > 0f) { "slider increment must be positive: $increment" }
+    val tolerance = increment * 1e-3f
+    if (value < range.start - tolerance || value > range.endInclusive + tolerance) return false
+    val position = (value - range.start) / increment
+    return kotlin.math.abs(position - position.roundToInt()) * increment < tolerance
+}
+
+/**
+ * Where a slider over [range] in [increment] steps lands for the raw thumb value [raw]: the
+ * nearest stop, with [extraStop] (a default between two stops, see [isSliderStop]) as one more.
+ * `SettingsSlider` runs a slider with such a default continuously (`steps = 0`) through this,
+ * so every other stop stays where [sliderSteps] puts it.
+ */
+fun snapToSliderStop(
+    raw: Float,
+    range: ClosedFloatingPointRange<Float>,
+    increment: Float,
+    extraStop: Float?,
+): Float {
+    require(increment > 0f) { "slider increment must be positive: $increment" }
+    val clamped = raw.coerceIn(range.start, range.endInclusive)
+    val regular = (range.start + ((clamped - range.start) / increment).roundToInt() * increment)
+        .coerceIn(range.start, range.endInclusive)
+    return if (extraStop != null && kotlin.math.abs(clamped - extraStop) < kotlin.math.abs(clamped - regular)) extraStop
+    else regular
+}
+
+/**
  * Pure decision logic for the v4 learning-consent migration (2026-09-24). Same
  * extraction pattern as [HapticsMigration]: [Config.migrate] supplies the facts,
  * this object owns the (unit-tested) rules.

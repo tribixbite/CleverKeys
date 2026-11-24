@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.isSliderStop
 import tribixbite.cleverkeys.sliderSteps
+import tribixbite.cleverkeys.snapToSliderStop
 
 // Composable helper components
 @Composable
@@ -232,11 +234,20 @@ internal fun SettingsActivity.SettingsSlider(
     onValueChange: (Float) -> Unit,
     displayValue: String,
     /** False = visible but inert and dimmed; see [SettingsSwitch]'s `enabled` for the rationale. */
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    /**
+     * The setting's default. Pass it when it is not one of the stops (`isSliderStop`): it then
+     * becomes one more stop, so the slider can always return to it (noise filter 1.26 px between
+     * the 1.0 and 1.5 stops, maintainer 2026-11-24).
+     */
+    defaultValue: Float? = null,
 ) {
     // Register a scroll position under the title's setting ids so search results can scroll here.
     val regIds = settingIdsFor(title)
     val contentAlpha = if (enabled) 1f else 0.38f
+    // Compose's Slider snaps only to evenly spaced stops; with a default between two of them it
+    // runs continuously and snapToSliderStop does the snapping, the default included.
+    val extraStop = defaultValue?.takeIf { it in valueRange && !isSliderStop(it, valueRange, increment) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -285,9 +296,10 @@ internal fun SettingsActivity.SettingsSlider(
 
         Slider(
             value = value,
-            onValueChange = onValueChange,
+            onValueChange = if (extraStop == null) onValueChange
+                else { raw -> onValueChange(snapToSliderStop(raw, valueRange, increment, extraStop)) },
             valueRange = valueRange,
-            steps = sliderSteps(valueRange, increment),
+            steps = if (extraStop == null) sliderSteps(valueRange, increment) else 0,
             enabled = enabled,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,

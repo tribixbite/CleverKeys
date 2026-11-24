@@ -1246,6 +1246,8 @@ class ClipboardManager(
             historyView.cleanSelection(snapshot.tab, plan) { result ->
                 report(result.fold({ done ->
                     sentences(plural(R.plurals.clipboard_clean_result, done.cleaned),
+                        // As after Merge: the paste key now gives the cleaned text.
+                        if (done.onSystemClipboard) context.getString(R.string.clipboard_merge_copied) else null,
                         *counts(done.unchanged, done.skippedMedia),
                         done.failed.takeIf { it > 0 }?.let { plural(R.plurals.clipboard_bulk_failed, it) })
                 }, { context.getString(R.string.clipboard_bulk_action_error) }))

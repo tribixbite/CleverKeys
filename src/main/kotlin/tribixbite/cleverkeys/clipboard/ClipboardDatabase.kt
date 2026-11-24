@@ -1417,9 +1417,10 @@ class ClipboardDatabase private constructor(context: Context) :
         return try {
             val db = writableDatabase
             val currentTime = System.currentTimeMillis()
-            var totalSize = 0L
-            val idsToDelete = mutableListOf<Long>()
-            val mediaPaths = mutableListOf<String>()
+            // (row id, bytes) NEWEST first, and each row's media path: the newest clippings stay
+            // while they fit, the oldest go (ClipboardSizePolicy.idsOverSizeBudget).
+            val rows = mutableListOf<Pair<Long, Long>>()
+            val mediaPathById = HashMap<Long, String>()
             // Include text content + thumbnail BLOB sizes from DB; media_path for disk stat
             db.rawQuery("""
                 SELECT $COLUMN_ID,
@@ -1427,25 +1428,23 @@ class ClipboardDatabase private constructor(context: Context) :
                        $COLUMN_MEDIA_PATH
                 FROM $TABLE_CLIPBOARD
                 WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
-                ORDER BY $COLUMN_TIMESTAMP ASC
+                ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), arrayOf(currentTime.toString())).use { cursor ->
-                if (cursor.moveToFirst()) {
-                    do {
-                        val rowDbSize = cursor.getLong(1)
-                        val mediaPath = if (!cursor.isNull(2)) cursor.getString(2) else null
-                        // Include media file size on disk when filesDir is provided
-                        val mediaFileSize = if (mediaPath != null && filesDir != null) {
-                            java.io.File(filesDir, mediaPath).let { if (it.exists()) it.length() else 0L }
-                        } else 0L
-                        totalSize += rowDbSize + mediaFileSize
-                        if (totalSize > maxSizeBytes) {
-                            idsToDelete.add(cursor.getLong(0))
-                            if (mediaPath != null) mediaPaths.add(mediaPath)
-                        }
-                    } while (cursor.moveToNext())
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(0)
+                    val rowDbSize = cursor.getLong(1)
+                    val mediaPath = if (!cursor.isNull(2)) cursor.getString(2) else null
+                    // Include media file size on disk when filesDir is provided
+                    val mediaFileSize = if (mediaPath != null && filesDir != null) {
+                        java.io.File(filesDir, mediaPath).let { if (it.exists()) it.length() else 0L }
+                    } else 0L
+                    rows += id to rowDbSize + mediaFileSize
+                    if (mediaPath != null) mediaPathById[id] = mediaPath
                 }
             }
+            val idsToDelete = ClipboardSizePolicy.idsOverSizeBudget(rows, maxSizeBytes)
             if (idsToDelete.isEmpty()) return Pair(0, emptyList())
+            val mediaPaths = idsToDelete.mapNotNull { mediaPathById[it] }
             for (chunk in idsToDelete.chunked(500)) {
                 db.execSQL("DELETE FROM $TABLE_CLIPBOARD WHERE $COLUMN_ID IN (${chunk.joinToString(",")})")
             }

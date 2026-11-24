@@ -452,34 +452,54 @@ class ClipboardMediaDatabaseTest {
 
     @Test
     fun testApplySizeLimitBytesReturnsMediaPaths() {
-        // applySizeLimitBytes iterates oldest→newest, accumulating sizes.
-        // Once running total exceeds the limit, ALL subsequent entries are marked for deletion.
-        // Strategy: fill most of 1MB with text entries, then add media entry LAST (newest)
-        // so it falls after the budget is exceeded and gets deleted.
+        // applySizeLimitBytes keeps the NEWEST clippings while they fit and removes the rest
+        // (ClipboardSizePolicy.idsOverSizeBudget). Until 2026-11-24 it walked oldest-first and
+        // removed the newest once the budget was spent; this test asserted that.
+        // Strategy: the media entry is the OLDEST, then ~900KB of newer text: the media entry is
+        // the one outside the budget, and its path comes back for file cleanup.
 
-        // Phase 1: fill ~900KB with text entries (oldest)
+        // Phase 1: the media entry, oldest (~200KB content)
+        db.addMediaClipboardEntry(
+            content = "early_photo_${"Z".repeat(200_000)}",
+            expiryTimestamp = futureExpiry,
+            mimeType = "image/jpeg",
+            thumbnailBlob = testThumbnail,
+            mediaPath = "clipboard_media/0/early_photo.jpg",
+            contentHash = "sha256_early_photo"
+        )
+        Thread.sleep(10)
+
+        // Phase 2: ~900KB of newer text entries
         for (i in 1..900) {
             db.addClipboardEntry("Fill_${i}_${"Y".repeat(1000)}", futureExpiry) // ~1KB each
             Thread.sleep(1)
         }
-        Thread.sleep(10)
 
-        // Phase 2: add media entry as newest — this tips over 1MB and gets deleted
-        db.addMediaClipboardEntry(
-            content = "late_photo_${"Z".repeat(200_000)}", // ~200KB content pushes total past 1MB
-            expiryTimestamp = futureExpiry,
-            mimeType = "image/jpeg",
-            thumbnailBlob = testThumbnail,
-            mediaPath = "clipboard_media/0/late_photo.jpg",
-            contentHash = "sha256_late_photo"
-        )
-
-        // Total: ~900KB text + ~200KB media = ~1.1MB > 1MB limit
-        // The media entry is newest, so it's the one tipping over the budget
+        // Total: ~200KB media + ~900KB text = ~1.1MB > 1MB limit; the oldest row goes
         val (removed, mediaPaths) = db.applySizeLimitBytes(1)
-        assertTrue("Should delete entries that pushed over limit", removed > 0)
+        assertTrue("Should delete the oldest entries over the limit", removed > 0)
         assertTrue("Should return media path of deleted media entry",
-            mediaPaths.contains("clipboard_media/0/late_photo.jpg"))
+            mediaPaths.contains("clipboard_media/0/early_photo.jpg"))
+        assertTrue("The newest clipping survives",
+            db.getActiveClipboardEntries().any { it.content.startsWith("Fill_900_") })
+    }
+
+    /**
+     * Pixel 2026-11-24: a 5 MB size limit removed 159 of the phone's NEWEST clippings after a
+     * restore of older backups, and kept the oldest. The newest stay now; the oldest go.
+     */
+    @Test
+    fun testApplySizeLimitBytesKeepsTheNewestClippings() {
+        val big = "B".repeat(600 * 1024)
+        db.addClipboardEntry("old_$big", futureExpiry)
+        Thread.sleep(10)
+        db.addClipboardEntry("new_$big", futureExpiry)
+
+        // 1.2MB in two rows under a 1MB limit: exactly one goes, the older one
+        val (removed, _) = db.applySizeLimitBytes(1)
+        assertEquals(1, removed)
+        val left = db.getActiveClipboardEntries().map { it.content.take(4) }
+        assertEquals(listOf("new_"), left)
     }
 
     @Test

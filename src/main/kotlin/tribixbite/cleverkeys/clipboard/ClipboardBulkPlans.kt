@@ -10,8 +10,17 @@ enum class ClipboardSelectionAction { ADD_TO_PINNED, ADD_TO_TODOS, MERGE, CLEAN 
 /** Outcome counts of copying a selection into the Pinned or Todos table. */
 data class ClipboardCopyResult(val added: Int, val alreadyPresent: Int, val failed: Int)
 
-/** Outcome counts of an in-place Clean. */
-data class ClipboardCleanResult(val cleaned: Int, val unchanged: Int, val skippedMedia: Int, val failed: Int)
+/**
+ * Outcome counts of an in-place Clean; [onSystemClipboard] when a cleaned clipping was put on
+ * Android's clipboard (`EditedClipFollow`), so the pane can say it is ready to paste.
+ */
+data class ClipboardCleanResult(
+    val cleaned: Int,
+    val unchanged: Int,
+    val skippedMedia: Int,
+    val failed: Int,
+    val onSystemClipboard: Boolean = false,
+)
 
 /**
  * Pure planning for the selection's bulk actions: which actions a tab offers, what Merge would

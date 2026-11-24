@@ -1,8 +1,11 @@
 package tribixbite.cleverkeys
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 /**
  * [sliderSteps]: Compose `Slider.steps` is the number of positions strictly between the two
@@ -57,5 +60,73 @@ class SliderStepsTest {
     fun nonPositiveIncrementIsRejected() {
         assertThrows(IllegalArgumentException::class.java) { sliderSteps(0f..10f, 0f) }
         assertThrows(IllegalArgumentException::class.java) { sliderSteps(0f..10f, -1f) }
+    }
+
+    /**
+     * Maintainer 2026-11-24: "i cant reach 1.26 (default noise?) with the slider". The noise filter
+     * moves in 0.5 px stops over 0.5..10 px and its default, 1.26 px, lies between the 1.0 and 1.5
+     * stops: once moved, the slider could never give the default back.
+     */
+    @Test
+    fun aDefaultBetweenTwoStopsIsNotAStop() {
+        assertFalse(isSliderStop(Defaults.SWIPE_NOISE_THRESHOLD, NOISE_RANGE, NOISE_INCREMENT))
+        assertTrue(isSliderStop(1.5f, NOISE_RANGE, NOISE_INCREMENT))
+        assertTrue(isSliderStop(10f, NOISE_RANGE, NOISE_INCREMENT))
+        assertTrue("float rounding: 0.5 + 3 x 0.05", isSliderStop(0.65f, 0.5f..0.9f, 0.05f))
+        assertFalse("outside the range", isSliderStop(12f, NOISE_RANGE, NOISE_INCREMENT))
+    }
+
+    @Test
+    fun aDefaultBetweenStopsBecomesOneMoreStop() {
+        val default = Defaults.SWIPE_NOISE_THRESHOLD
+        assertEquals("nearer 1.26 than 1.0 or 1.5", default, snapToSliderStop(1.2f, NOISE_RANGE, NOISE_INCREMENT, default), 0f)
+        assertEquals(default, snapToSliderStop(1.35f, NOISE_RANGE, NOISE_INCREMENT, default), 0f)
+        assertEquals(1.0f, snapToSliderStop(1.05f, NOISE_RANGE, NOISE_INCREMENT, default), 1e-6f)
+        assertEquals(1.5f, snapToSliderStop(1.45f, NOISE_RANGE, NOISE_INCREMENT, default), 1e-6f)
+        assertEquals("the other stops are where they were", 7.5f, snapToSliderStop(7.6f, NOISE_RANGE, NOISE_INCREMENT, default), 1e-6f)
+        assertEquals("clamped to the range", 10f, snapToSliderStop(11f, NOISE_RANGE, NOISE_INCREMENT, default), 1e-6f)
+        assertEquals(0.5f, snapToSliderStop(0f, NOISE_RANGE, NOISE_INCREMENT, default), 1e-6f)
+    }
+
+    @Test
+    fun withoutAnExtraStopTheGridIsUnchanged() {
+        assertEquals(1.5f, snapToSliderStop(1.3f, NOISE_RANGE, NOISE_INCREMENT, null), 1e-6f)
+        assertEquals(1.0f, snapToSliderStop(1.2f, NOISE_RANGE, NOISE_INCREMENT, null), 1e-6f)
+        assertEquals(0.65f, snapToSliderStop(0.66f, 0.5f..0.9f, 0.05f, null), 1e-6f)
+    }
+
+    @Test
+    fun theNoiseSliderOffersItsDefault() {
+        val src = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/sections/GestureTuningSection.kt").readText()
+        val call = settingsSliderCallSaving(src, "swipe_noise_threshold")
+        assertTrue("valueRange = 0.5f..10f" in call && "increment = 0.5f" in call)
+        assertTrue("the default is an extra stop", "defaultValue = Defaults.SWIPE_NOISE_THRESHOLD" in call)
+        assertTrue("two decimals: the default reads 1.26 px, not 1.3 px", "\"%.2f px\"" in call)
+        // The shared slider turns an off-grid default into a stop (steps = 0 and its own snap).
+        val controls = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsControls.kt").readText()
+        assertTrue(controls.contains("snapToSliderStop(") && controls.contains("isSliderStop("))
+    }
+
+    /** The argument list of the `SettingsSlider(` call in [src] that saves [key]. */
+    private fun settingsSliderCallSaving(src: String, key: String): String {
+        var from = 0
+        while (true) {
+            val start = src.indexOf("SettingsSlider(", from)
+            check(start >= 0) { "no SettingsSlider saves $key" }
+            var i = start + "SettingsSlider(".length
+            var depth = 1
+            while (depth > 0) {
+                when (src[i]) { '(' -> depth++; ')' -> depth-- }
+                i++
+            }
+            val call = src.substring(start, i)
+            if ("saveSetting(\"$key\"" in call) return call
+            from = i
+        }
+    }
+
+    private companion object {
+        val NOISE_RANGE = 0.5f..10f
+        const val NOISE_INCREMENT = 0.5f
     }
 }

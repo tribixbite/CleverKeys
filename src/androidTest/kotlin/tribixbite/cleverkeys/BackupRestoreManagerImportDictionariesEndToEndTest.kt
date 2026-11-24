@@ -9,6 +9,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import tribixbite.cleverkeys.personalization.UserVocabulary
 import java.io.File
 
 /**
@@ -94,5 +95,49 @@ class BackupRestoreManagerImportDictionariesEndToEndTest {
         val storedEn: Map<String, Int> =
             Gson().fromJson(prefs.getString(LanguagePreferenceKeys.customWordsKey("en"), "{}"), type)
         assertEquals(10, storedEn["foo"])
+    }
+
+    /**
+     * Note10+ 2026-11-24: the maintainer's settings export and then his dictionary export,
+     * restored on a phone where CleverKeys was not the running keyboard, kept 5,000 of his 7,165
+     * learned words, though the settings had just set the vocabulary cap
+     * (`personalization_max_words`) to 10,000. The vocabulary read its cap from the in-memory
+     * Config, and only the keyboard service refreshes Config when a preference changes. Here
+     * Config holds the old cap and the preference the restored one, as after that settings import.
+     */
+    @Test
+    fun importDictionaries_learnedVocabularyKeepsTheStoredCapNotAStaleConfig() {
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val vocabulary = UserVocabulary.getInstance(context)
+        val savedVocabulary = vocabulary.exportToJson()
+        val hadCap = prefs.contains(CAP_KEY)
+        val savedCap = Config.safeGetInt(prefs, CAP_KEY, Defaults.PERSONALIZATION_MAX_WORDS)
+        val config = Config.globalConfigOrNull()
+        val savedConfigCap = config?.personalization_max_words
+        try {
+            prefs.edit().putInt(CAP_KEY, RESTORED_CAP).commit()
+            config?.personalization_max_words = Defaults.PERSONALIZATION_MAX_WORDS
+            val now = System.currentTimeMillis()
+            val rows = (1..RESTORED_WORDS).map {
+                mapOf("word" to "ckvocab$it", "usageCount" to 3, "lastUsed" to now, "firstUsed" to now - 1_000L)
+            }
+            val result = manager.importDictionaries(writeImportFile(Gson().toJson(mapOf("user_vocabulary" to rows))))
+
+            assertEquals("words the import reports", RESTORED_WORDS, result.learnedVocabularyImported)
+            assertEquals("every restored word fits the stored cap", RESTORED_WORDS, vocabulary.size())
+        } finally {
+            prefs.edit().apply { if (hadCap) putInt(CAP_KEY, savedCap) else remove(CAP_KEY) }.commit()
+            if (config != null && savedConfigCap != null) config.personalization_max_words = savedConfigCap
+            vocabulary.clearAll()
+            vocabulary.importFromJson(savedVocabulary)
+            vocabulary.flush()
+        }
+    }
+
+    private companion object {
+        const val CAP_KEY = "personalization_max_words"
+        /** Above the default cap (5,000) and under the restored one, like the 7,165 on the S25U. */
+        const val RESTORED_WORDS = 7_000
+        const val RESTORED_CAP = 10_000
     }
 }

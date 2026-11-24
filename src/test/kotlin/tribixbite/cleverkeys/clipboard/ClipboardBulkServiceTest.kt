@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.clipboard
 
 import android.util.Log
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -112,14 +113,45 @@ class ClipboardBulkServiceTest {
         val b = ClipboardEntry("b\t", 2, rowId = 2)
         val photo = ClipboardEntry("p.png", 3, mimeType = "image/png", rowId = 3)
         val same = ClipboardEntry("same", 4, rowId = 4)
-        every { spy.editEntryContent("a  ", "a", ClipboardTab.PINNED) } returns EditEntryResult.Success
-        every { spy.editEntryContent("b\t", "b", ClipboardTab.PINNED) } returns EditEntryResult.DuplicateConflict
+        every { spy.editEntryFollowingClipboard("a  ", "a", ClipboardTab.PINNED, any()) } returns
+            ClipboardHistoryService.EditOutcome(EditEntryResult.Success, onSystemClipboard = false)
+        every { spy.editEntryFollowingClipboard("b\t", "b", ClipboardTab.PINNED, any()) } returns
+            ClipboardHistoryService.EditOutcome(EditEntryResult.DuplicateConflict, onSystemClipboard = false)
         val plan = ClipboardBulkPlans.planClean(listOf(a, b, photo, same))
 
         val result = spy.applyClean(ClipboardTab.PINNED, plan).getOrThrow()
 
         assertThat(result).isEqualTo(ClipboardCleanResult(cleaned = 1, unchanged = 1, skippedMedia = 1, failed = 1))
-        verify(exactly = 2) { spy.editEntryContent(any(), any(), ClipboardTab.PINNED) }
+        verify(exactly = 2) { spy.editEntryFollowingClipboard(any(), any(), ClipboardTab.PINNED, any()) }
+    }
+
+    /**
+     * Maintainer 2026-11-24: "cleaned a clipping and then tried to paste via subkey function and
+     * nothing happened". Android had cleared its clipboard (one hour after the last copy), and
+     * Clean only replaced a system clip that was the cleaned row. One clipping cleaned is one
+     * the user means to paste, so it may fill an EMPTY clipboard; a selection of several is
+     * tidying up and only follows the row that is the clip. The result says when the cleaned
+     * text is on the clipboard (the pane then adds "It is on the clipboard, ready to paste.").
+     */
+    @Test
+    fun oneCleanedClippingMayFillAnEmptyClipboardSeveralMayNot() {
+        val spy = spyk(service)
+        every { spy.editEntryFollowingClipboard(any(), any(), any(), any()) } answers {
+            ClipboardHistoryService.EditOutcome(EditEntryResult.Success, onSystemClipboard = arg<Boolean>(3))
+        }
+        val one = ClipboardBulkPlans.planClean(listOf(ClipboardEntry("x  y", 1, rowId = 1)))
+        val several = ClipboardBulkPlans.planClean(listOf(
+            ClipboardEntry("x  y", 1, rowId = 1), ClipboardEntry("p  q", 2, rowId = 2)))
+
+        val oneResult = spy.applyClean(ClipboardTab.HISTORY, one).getOrThrow()
+        verify(exactly = 1) { spy.editEntryFollowingClipboard("x  y", "x y", ClipboardTab.HISTORY, true) }
+        assertWithMessage("the cleaned text went onto the clipboard").that(oneResult.onSystemClipboard).isTrue()
+
+        val severalResult = spy.applyClean(ClipboardTab.HISTORY, several).getOrThrow()
+        verify(exactly = 1) { spy.editEntryFollowingClipboard("p  q", "p q", ClipboardTab.HISTORY, false) }
+        verify(exactly = 1) { spy.editEntryFollowingClipboard("x  y", "x y", ClipboardTab.HISTORY, false) }
+        assertThat(severalResult.onSystemClipboard).isFalse()
+        assertThat(severalResult.cleaned).isEqualTo(2)
     }
 
     private fun Any.setField(name: String, value: Any?) {
