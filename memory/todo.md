@@ -161,6 +161,76 @@ newest export (2026-10-24, `Download/cleverkeys-config (17).json`): 30 values di
 app (`~/ew-output/mods-class-2026-11-23e/`). The modifier checks that need hands, TalkBack or a RustDesk
 session are in the manual checklist ("Modifiers"). Before the tag: only M1, M2, M4.
 
+**Status 2026-11-24, later (agent).** Maintainer: "i just cleaned a clipping and then tried to paste via
+subkey function and nothing happened"; restore his historical config, clipboard and dictionary backups
+into various CleverKeys versions on the Pixel, a Saga and the Note10+; encrypted text and media backup
+and restore on those phones (password "meowmeow"); manual tests not yet run, such as the `am` backup
+commands; "i cant reach 1.26 (default noise?) with the slider". Results:
+- **Fixed (`docs/RELEASE_RECORD.md` "Additions 2026-11-24 (1)"):**
+  - paste after Clean: Android 13+ empties its clipboard an hour after the last copy (device_config
+    `clipboard/auto_clear_enabled`, on on the S25U and the Pixel), so Clean had nothing to replace. One
+    cleaned or edited clipping now fills an EMPTY clipboard, and the pane says it is ready to paste.
+    Verified on the Pixel (release r3 `b50588ae…`): after the auto-clear, Clean on one row → "Cleaned 1
+    clipping. It is on the clipboard, ready to paste." → the `v` paste swipe pasted the cleaned text;
+  - the noise slider gets its 1.26 default as an extra stop (`SettingsSlider` `defaultValue`); the scan of
+    every settings slider found no other default off its stops;
+  - a dictionary restored right after the settings kept 5,000 of 7,165 learned words on a phone where
+    CleverKeys was not the running keyboard (the vocabulary read its cap from a stale in-memory Config);
+  - the size limit (Limit Type → By Size) deleted the NEWEST clippings: on the Pixel (5 MB limit) a
+    restore of older backups made the history 15 MB and 159 of its newest rows went.
+- **Restores, all on 2.0 unless named:**
+  - settings: 8 files from Nov 2025 (17 prefs) to Nov 2026 (233) via `am`, each re-exported and compared:
+    every value applied except 1.2.9/1.3.0's `short_gesture_max_distance` 250 (above the 50–200 range
+    1.2.9 itself enforced, so skipped as out of range) and 1.4/1.5's float `finger_occlusion_offset` 12.5
+    (13 via the ARC-093 coercion);
+  - dictionaries: 6 files (1.2.9 → 2.0): every custom and disabled word present after each;
+  - clipboard: 4 generations (export_version 2, 3, 4, 5): every row present (to-do status and pinned
+    tags follow the newer copy when a row already existed — merge semantics);
+  - media: the Nov 23 clipboard ZIP (20 images/GIFs) restored with all 20 files; thumbnails show (Saga).
+- **Version chain (Note10+, GitHub releases installed over each other):** 1.2.9 restored the Feb backups
+  (146 settings, 128 words, 312 clipboard rows); 1.3.0, 1.4.0 and 1.5.0 kept all of it; 1.5.0 then took
+  the July 1.5-era settings and dictionary but imported 0 rows from the July clipboard JSON
+  (export_version 5; 1.5.0 rolled back on an exception it logs as "null"). 1.5.0 → 2.0 kept everything
+  (only `finger_occlusion_offset` 12.5 → 0) and turned Subkey popover on hold ON. Saga: 1.5.0 restored the
+  June and August full backups (3,860 + 1,240 rows, 13 media); 2.0 over it kept every row and word.
+- **Encryption:** with no password the `am` commands refuse (both phones); with "meowmeow" every export is
+  `CKENC1` and decrypts with `scripts/ckenc-decrypt.py`; plaintext (file or `json_base64`), a wrong
+  password and a 1-bit tamper are refused; two exports 29 ms apart → the second throttled; a missing
+  payload opens Settings. Encrypted clipboard ZIP and full backup exported on the Pixel (7,193 rows, 20
+  media, byte-identical media); in-app import of a ZIP encrypted with another password asks for it,
+  refuses a wrong one and imports with the right one; the Pixel's encrypted full backup restored on the
+  Note10+ and the Saga (password prompt, settings, words, learned data, clipboard, 20 media).
+- **Verification, `9ad7136a`:** 4,007 pure and 1,962 mock pass; A2 1,684 instrumented on each of API
+  34–37 (`~/ew-output/restore-2026-11-24/`), 0 failed, 2 expected skips; the 3 new instrumented cases
+  (Clean fills an empty clipboard, the vocabulary keeps the stored cap, the size limit keeps the newest)
+  pass. Not seen failing first on the old code (written with the fixes); release r4 `f387c20a…` built,
+  not on a phone (adb went away first).
+- **Found, not fixed (open):**
+  - an `am` import of a file CleverKeys cannot read (pushed by adb/Termux into `Download/`, EACCES) is
+    refused as "plaintext payload not accepted" (`BackupRestoreActivity.payloadIsPlaintext` treats an
+    unreadable stream as plaintext, fail-closed); the message should say the file cannot be read;
+  - after setting a password, the "Export unencrypted…" link is missing until Settings is reopened
+    (Note10+, Saga);
+  - a settings file with an empty short-swipe section does not clear mappings under Replace (known);
+  - 1.5.0 → 2.0 resets `finger_occlusion_offset` 12.5 to 0 with no migration line found; not traced.
+- **Device state when adb went away (maintainer, 11:23: "adb will be unavailable for the next 5
+  hours") — CLEAN UP when it is back:**
+  - **Pixel:** release r2 (paste fix, without the vocabulary and size-limit fixes); the backup password
+    "meowmeow" is STILL SET (Settings → Backup & Restore → Remove); the Chrome `data:` test tab is open;
+    the delete of our files did not run before it dropped: remove from Download
+    `cleverkeys-clipboard-full.zip.ckenc`, `cleverkeys_full_backup_2026-11-24.zip.ckenc`,
+    `ck-test-clipfull-nov23.zip`, `ck-test-woof-clipfull.zip.ckenc`, and `Android/data/tribixbite.cleverkeys/files/*`;
+    its own 193 settings are restored, but the maintainer's historical words and ~2,200 clippings were
+    merged in and 159 of its newest clippings were lost to the size-limit bug: re-import its baseline
+    (`px-clip.ckenc`, scratchpad `bkp/base/`) after installing the fixed build; the S25U's short swipes
+    are on its keys (Reset all in Short Swipe Customization); not checked in.
+  - **Saga `.1.130`:** clean 2.0 r3 install, CleverKeys default IME, its own 190 settings restored; password
+    "meowmeow" STILL SET; `Download/CleverKeys/ck-own-*` to delete; Settings was in front at checkout
+    (launcher now); not checked in.
+  - **Note10+:** clean (CleverKeys uninstalled, test folder deleted, Samsung Keyboard, rotation and night
+    mode as found); the check-in line was not written. Its touchscreen reports a constant contact near
+    the upper right (`getevent` event3 raw 2486,864) that dismisses dialogs there — tell the maintainer.
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by

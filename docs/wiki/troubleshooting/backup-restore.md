@@ -319,27 +319,36 @@ All backup operations can be triggered via Android intents for scripting and aut
 
 ### Basic Examples
 
-```bash
-# Export settings to Downloads/CleverKeys/
-am start -a tribixbite.cleverkeys.action.EXPORT_SETTINGS \
-  -n tribixbite.cleverkeys/.BackupRestoreActivity
+An export needs the file to write as the intent's data (`-d`); without it the command only
+opens Settings. CleverKeys can write to its own folder `Android/data/tribixbite.cleverkeys/files/`
+and to `Download/CleverKeys/` (checked 2026-11-24 on a Pixel 8 Pro, Galaxy Note10+ and Saga):
 
-# Import dictionary via base64 (bypasses scoped storage)
+```bash
+# Export settings, encrypted with your backup password
+am start -a tribixbite.cleverkeys.action.EXPORT_SETTINGS \
+  -n tribixbite.cleverkeys/.BackupRestoreActivity \
+  -d file:///sdcard/Download/CleverKeys/settings.json.ckenc
+
+# Import an encrypted dictionary backup via base64 (bypasses scoped storage)
 am start -a tribixbite.cleverkeys.action.IMPORT_DICTIONARIES \
   -n tribixbite.cleverkeys/.BackupRestoreActivity \
-  --es json_base64 "$(base64 -w0 < dictionaries.json)"
+  --es json_base64 "$(base64 -w0 < dictionaries.json.ckenc)"
 ```
+
+Commands are accepted at most once every 2 seconds; one sent sooner is refused ("throttled").
 
 ### The `json_base64` Extra
 
-On Android 10+, files modified or created by external apps (cp, vim, Termux) become
-inaccessible to CleverKeys due to scoped storage restrictions. The `json_base64` intent
-extra bypasses this by passing file content inline as base64:
+On Android 10+, files modified or created by external apps (cp, vim, Termux, `adb push`) become
+inaccessible to CleverKeys due to scoped storage restrictions: the import fails, and the
+message can wrongly say the file is a plaintext backup. The `json_base64` intent extra bypasses
+this by passing the file's content inline as base64. Automation imports accept only encrypted
+backups, so pass a `.ckenc` file:
 
 ```bash
 am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \
   -n tribixbite.cleverkeys/.BackupRestoreActivity \
-  --es json_base64 "$(base64 -w0 < backup.json)"
+  --es json_base64 "$(base64 -w0 < backup.json.ckenc)"
 ```
 
 **Size limits**:
@@ -351,6 +360,11 @@ am start -a tribixbite.cleverkeys.action.IMPORT_SETTINGS \
 
 Clipboard backups can exceed the `am start` argument limit. This script splits a JSON
 backup into chunks and imports each one. Requires `jq` and `python3`.
+
+> **2.0:** the script sends each chunk as plaintext, which automation imports refuse
+> ("plaintext backups are not accepted via automation"). Use the in-app **Import Clip** button
+> instead, or export with CleverKeys into its own folder (`-d file:///sdcard/Android/data/tribixbite.cleverkeys/files/…`)
+> and import that file by the same path: a file CleverKeys wrote itself has no size limit.
 
 ```bash
 # Chunked clipboard import — handles files of any size

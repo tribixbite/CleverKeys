@@ -226,6 +226,17 @@ settings through `getSafe*` / `Config.safeGet*` everywhere a listener or an impo
 (`ConfigMistypedPrefDriftTest`); a reset-then-import round trip on a device is the test that finds
 this class.
 
+## The in-memory Config is stale outside the keyboard (2026-11-24)
+
+Only the keyboard service's preference listener refreshes `Config.globalConfig()`. In a process where
+the keyboard is not running (a restore on a new phone, the headless `BackupRestoreActivity`, Settings
+alone) it keeps the values from when it was built, so code an import or Settings reaches must read
+the stored preference: the learned vocabulary cut a restored dictionary to the old cap (5,000 of
+7,165 words, Note10+) because it read `personalization_max_words` from Config. Restore tests belong
+on a phone where CleverKeys is not the running keyboard as well as on one where it is. Android 13+
+empties the system clipboard an hour after the last copy (`device_config clipboard
+auto_clear_enabled`): a paste test needs a copy made within the hour, or exactly that empty case.
+
 ## Swipe-engine changes surface dictionary data (2026-11-20)
 
 The CTC collision alternates (`ebef6234`, verified by pure tests and a FUTO replay) offer every form of a
