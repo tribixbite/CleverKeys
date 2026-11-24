@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.backup
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonParser
 import org.junit.Test
+import tribixbite.cleverkeys.Defaults
 
 class SettingsImportPlanBuilderTest {
 
@@ -738,6 +739,37 @@ class SettingsImportPlanBuilderTest {
         assertThat(plan.changes.map { it.key }).containsExactly("look_backdrop_motion")
         assertThat(plan.parseSkippedKeys.filter { it.kind == SkipKind.DEPRECATED }.map { it.key })
             .containsExactly("config_version", "layouts_count", "neural_prediction_enabled", "look_aurora_motion")
+    }
+
+    @Test
+    fun deadKeysInThePreOneDotZeroDevExports_areFilteredFromThePreview() {
+        // The maintainer's Oct–Nov 2025 exports (app 1.32.136–1.32.969, before 1.0) carry these
+        // 20 keys; nothing reads them (PrivacyManager keeps its own file under other names, the
+        // confidence weights and model URIs went with the old engines). `privacy_collect_swipe`,
+        // from the same files, is live and must still come through.
+        val dead = listOf(
+            "neural_custom_decoder_uri", "neural_custom_encoder_uri", "neural_model_version",
+            "neural_use_quantized", "privacy_allow_export", "privacy_allow_sharing", "privacy_anonymize",
+            "privacy_auto_delete", "privacy_local_only", "privacy_retention_days", "rollback_auto_enabled",
+            "swipe_autocorrect_enabled", "swipe_confidence_frequency_weight",
+            "swipe_confidence_location_weight", "swipe_confidence_shape_weight",
+            "swipe_confidence_velocity_weight", "swipe_endpoint_bonus_weight", "swipe_first_letter_weight",
+            "swipe_last_letter_weight", "swipe_require_endpoints",
+        )
+        val json = buildString {
+            append("""{"preferences":{""")
+            dead.forEach { append("\"$it\": 3,") }
+            append(""""privacy_collect_swipe": ${!Defaults.PRIVACY_COLLECT_SWIPE}}}""")
+        }
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        assertThat(plan.changes.map { it.key }).containsExactly("privacy_collect_swipe")
+        assertThat(plan.parseSkippedKeys.filter { it.kind == SkipKind.DEPRECATED }.map { it.key })
+            .containsExactlyElementsIn(dead)
     }
 
     @Test

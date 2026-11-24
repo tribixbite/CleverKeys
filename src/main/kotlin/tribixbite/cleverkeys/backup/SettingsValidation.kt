@@ -214,6 +214,30 @@ object SettingsValidation {
         "layouts_count",
         "neural_prediction_enabled",
         "look_aurora_motion",
+        // The maintainer's pre-1.0 dev exports (app 1.32.136–1.32.969, Oct–Nov 2025) also carry
+        // these. No code reads them: PrivacyManager keeps its own prefs file under other names
+        // (`anonymize_data`, `allow_data_export`, …), and the model URIs, quantization flag and
+        // confidence/endpoint weights belonged to engines removed before 1.0.
+        "neural_custom_decoder_uri",
+        "neural_custom_encoder_uri",
+        "neural_model_version",
+        "neural_use_quantized",
+        "privacy_allow_export",
+        "privacy_allow_sharing",
+        "privacy_anonymize",
+        "privacy_auto_delete",
+        "privacy_local_only",
+        "privacy_retention_days",
+        "rollback_auto_enabled",
+        "swipe_autocorrect_enabled",
+        "swipe_confidence_frequency_weight",
+        "swipe_confidence_location_weight",
+        "swipe_confidence_shape_weight",
+        "swipe_confidence_velocity_weight",
+        "swipe_endpoint_bonus_weight",
+        "swipe_first_letter_weight",
+        "swipe_last_letter_weight",
+        "swipe_require_endpoints",
     )
 
     /**
