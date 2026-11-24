@@ -249,12 +249,28 @@ class ProcessTextResultInstrumentedTest {
         // The recents dump lists every retained task; a hidden one is still in it, so report
         // both the raw presence and the user-visible listing separately.
         // Without that section header (older dump formats) any mention counts as listed.
-        val hasVisibleSection = "Visible recent tasks" in recents
-        val visibleSection = if (hasVisibleSection) recents.substringAfter("Visible recent tasks") else recents
+        val hasVisibleSection = VISIBLE_RECENTS_HEADER in recents
+        val visibleSection = if (hasVisibleSection) visibleRecents(recents) else recents
         Log.i(TAG, "trampoline live=$live inRecentsDump=${TRAMPOLINE in recents} " +
             "visibleSection=$hasVisibleSection inVisibleRecents=${TRAMPOLINE in visibleSection}")
         return live to (TRAMPOLINE in visibleSection)
     }
+
+    /**
+     * The "Visible recent tasks" section of [recents] alone: its `* RecentTaskInfo` entries and
+     * their indented lines, up to the first blank line or next section header (2026-11-23,
+     * Galaxy Note10+ / One UI, the class run in one `am instrument` process). AOSP ends the dump
+     * with this section, but One UI appends "Dedicated processes", "RecentPairTasks List",
+     * "RecentTasks List" and "Only PairedTaskItem List", which name every retained task — the
+     * finished, hidden trampoline's too — so all three tests failed "must not be listed in
+     * recents" while the visible list did not contain it. On AOSP every line after the header
+     * belongs to the section, so the result is the rest of the dump, exactly as before.
+     */
+    private fun visibleRecents(recents: String): String =
+        recents.substringAfter(VISIBLE_RECENTS_HEADER).lineSequence()
+            .drop(1) // the rest of the header line: " (most recent first):"
+            .takeWhile { it.startsWith("    ") || it.trimStart().startsWith("* RecentTaskInfo") }
+            .joinToString("\n")
 
     private fun withShellClipboard(block: (ClipboardManager) -> Unit) {
         instrumentation.uiAutomation.adoptShellPermissionIdentity()
@@ -378,6 +394,8 @@ class ProcessTextResultInstrumentedTest {
         const val TAG = "ProcessTextResultIT"
         const val HOST_ACTIVITY = "tribixbite.cleverkeys.processtext.ProcessTextHostActivity"
         const val TRAMPOLINE = "tribixbite.cleverkeys.ProcessTextActivity"
+        /** `dumpsys activity recents` header of the user-visible list ([visibleRecents]). */
+        const val VISIBLE_RECENTS_HEADER = "Visible recent tasks"
         const val STATUS_DESC = "pt-status"
         const val CLIPBOARD_OVERLAY_DISMISS = "Dismiss copied text"
         const val SYSTEMUI = "com.android.systemui"

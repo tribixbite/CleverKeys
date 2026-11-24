@@ -590,6 +590,39 @@ class CtcImportedPackInstrumentedTest {
             }
             throw AssertionError("IME did not reach shown=$shown")
         }
+        /** Whether `default_input_method` names [ime] (either flattened component form). */
+        fun selectedImeIs(ime: String): Boolean {
+            val selected = shell("settings get secure default_input_method")
+            return selected == ime || android.content.ComponentName.unflattenFromString(selected)
+                ?.equals(android.content.ComponentName.unflattenFromString(ime)) == true
+        }
+        /**
+         * `ime set [ime]`, then wait until the switch has STUCK: the setting still names [ime]
+         * and [arrived] still holds after a settling pause; a reverted setting is answered with
+         * another `ime set`, at most 3 times. Returns whether it stuck.
+         *
+         * 2026-11-23, Galaxy Note10+ / One UI, the class run in one `am instrument` process: the
+         * replacement loop's back-to-back `ime set` calls raced system_server's settings
+         * observer, which ~20 ms after the switch back to CleverKeys wrote the previous IME
+         * (HoneyBoard) back, so CleverKeys was never bound again and waitForShown(true) timed
+         * out. The emulator.wtf images never showed it.
+         */
+        fun setImeAndSettle(ime: String, arrived: () -> Boolean): Boolean {
+            repeat(3) { attempt ->
+                shell("ime set $ime")
+                val deadline = android.os.SystemClock.uptimeMillis() + 10_000L
+                while (android.os.SystemClock.uptimeMillis() < deadline && selectedImeIs(ime)) {
+                    if (arrived()) {
+                        Thread.sleep(500L)
+                        if (selectedImeIs(ime) && arrived()) return true
+                    }
+                    Thread.sleep(100L)
+                }
+                Log.i("CtcHeapLifecycle", "ime set $ime did not stick (attempt ${attempt + 1}): " +
+                    "default_input_method=${shell("settings get secure default_input_method")}")
+            }
+            return false
+        }
         val originalIme = shell("settings get secure default_input_method")
         val component = "${context.packageName}/tribixbite.cleverkeys.CleverKeysService"
         val wasEnabled = component in shell("ime list -s").lines()
@@ -639,8 +672,6 @@ class CtcImportedPackInstrumentedTest {
                         retired.add(java.lang.ref.WeakReference(requireNotNull(
                             tribixbite.cleverkeys.CleverKeysService.getInstance())))
                     }
-                    shell("ime set $originalIme")
-                    val deadline = android.os.SystemClock.uptimeMillis() + 10_000L
                     // Reading service objects directly in this long-lived instrumentation
                     // frame leaves ART Java-local roots alive across samples. Read on the
                     // main thread and return only a Boolean, so the probe cannot retain them.
@@ -651,9 +682,14 @@ class CtcImportedPackInstrumentedTest {
                         }
                         return absent
                     }
-                    while (!serviceAbsent() && android.os.SystemClock.uptimeMillis() < deadline) Thread.sleep(100L)
+                    // Settled on the other IME before switching back (setImeAndSettle's KDoc).
+                    val away = setImeAndSettle(originalIme) { serviceAbsent() }
                     assertTrue("old service must be destroyed", serviceAbsent())
-                    shell("ime set $component")
+                    assertTrue("default_input_method settles on $originalIme (now " +
+                        "${shell("settings get secure default_input_method")})", away)
+                    val back = setImeAndSettle(component) { !serviceAbsent() }
+                    assertTrue("CleverKeys stays the selected IME (default_input_method=" +
+                        "${shell("settings get secure default_input_method")})", back)
                     showKeyboard()
                     Thread.sleep(3_000L)
                     val replacedHeap = measure("serviceReplacement${index + 1}")

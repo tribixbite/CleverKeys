@@ -1,11 +1,12 @@
 package tribixbite.cleverkeys
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
-import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -62,15 +63,33 @@ class LayoutThemeSaveAsCustomComposeTest {
                 // Theme Manager is a LazyColumn: the Custom section is composed once scrolled to.
                 compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Harbour"))
                 compose.onNodeWithText("Harbour").assertIsDisplayed()
-                // The custom card's Edit button (its only one: no other custom themes on the image).
-                compose.onAllNodesWithContentDescription("Edit")[0].performClick()
+                // The Harbour card's own Edit button: a real phone can hold other custom themes
+                // (2026-11-23, Galaxy Note10+), so the list's first "Edit" may be another card's.
+                compose.onNode(hasContentDescription("Edit") and hasAnyAncestor(hasText("Harbour"))).performClick()
                 compose.onNodeWithText("Keyboard Look").performScrollTo().assertIsDisplayed()
             }
         } finally {
             manager.customThemes.value.filter { it.id !in before }.forEach { manager.deleteCustomTheme(it.id) }
+            commitCustomThemeStore()
             prefs.edit().apply {
                 if (savedLayouts == null) remove(LayoutsPreference.KEY) else putString(LayoutsPreference.KEY, savedLayouts)
             }.commit()
         }
+    }
+
+    /**
+     * Puts the theme store's queued write on disk now (2026-11-23, Galaxy Note10+, one
+     * `am instrument` process): `deleteCustomTheme` saves with apply(), and the process was
+     * force-stopped ~14 ms after `run finished`, before the write could run, so this test's
+     * "Harbour" came back in every later process (and ThemeCreatorBarArrangementComposeTest's
+     * first "Edit" opened it). An empty commit() on the same file (the platform keeps one
+     * SharedPreferences per file) returns once every earlier apply() of it is written.
+     * `custom_keyboard_themes` in device-protected storage is CustomThemeManager's PREFS_NAME
+     * (private there).
+     */
+    private fun commitCustomThemeStore() {
+        context.createDeviceProtectedStorageContext()
+            .getSharedPreferences("custom_keyboard_themes", android.content.Context.MODE_PRIVATE)
+            .edit().commit()
     }
 }

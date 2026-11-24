@@ -3,9 +3,10 @@ package tribixbite.cleverkeys
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
@@ -89,8 +90,11 @@ class LayoutManagerLanguageBindingComposeTest {
             // The picker is a height-capped LazyColumn sorted by display name, so the unavailable
             // binding can sit below the fold among the device's installed languages and is not
             // composed until scrolled to (ew-cli Pixel7/34, 2026-10-08: 1 warning, not 2). The
-            // picker's list is the scrollable whose first row is "Follow …".
-            val picker = compose.onNode(hasScrollToNodeAction() and hasAnyDescendant(hasText(follow)))
+            // picker's list is the dialog's lazy list (the Layout Manager list behind it is not
+            // in a dialog). Not "the list holding Follow …" (2026-11-23, Galaxy Note10+ left in
+            // landscape by an earlier class): the matcher is re-resolved during the scroll, and
+            // a 349 px list disposed the "Follow …" row, so the picker "is no longer in the tree".
+            val picker = compose.onNode(hasScrollToNodeAction() and hasAnyAncestor(isDialog()))
             picker.performScrollToNode(hasText(warning))
             assertEquals(2, compose.onAllNodesWithText(warning).fetchSemanticsNodes().size)
             // Scroll "Follow …" back into view before tapping it: a click on a row the scroll

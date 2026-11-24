@@ -574,3 +574,15 @@ run their lambda there: read views directly inside them. A helper that wrapped i
 (2026-11-23). Two-finger input: inject `ACTION_POINTER_DOWN`/`UP` with
 `1 shl ACTION_POINTER_INDEX_SHIFT` and both pointers' coordinates (`chord` in
 `ModifierStateAcrossResetsInstrumentedTest`); `adb shell input` cannot do it on a device.
+
+## The suite on a real phone without the orchestrator (2026-11-23)
+
+There is no orchestrator APK on this box, so a device run is one `am instrument -w -r -e class X`
+per class (class-level isolation), driven from the host. Give each `adb shell` `< /dev/null`: in a
+`while read` loop it otherwise reads the rest of the class list as its stdin and the loop ends after
+the first class. Exclude `LayoutThemeSuggestionBarInstrumentedTest#chromeTextareaDeviceSequence`
+on a shared phone (`-e notClass`): it opens a Chrome `data:` tab and force-stops Chrome. Galaxy
+Note10+ (API 31), 7ac2a3de debug: 130 classes in 21 min, 1,666/1,679 passed; the failures and
+their causes are in `memory/todo.md` (2026-11-23 night status). A class that fails in the full
+sequence and passes alone is order-dependent; re-run it alone before reading it as a device bug.
+

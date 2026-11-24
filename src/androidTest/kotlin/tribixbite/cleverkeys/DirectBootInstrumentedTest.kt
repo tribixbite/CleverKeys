@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.os.Build
 import androidx.preference.PreferenceManager
@@ -108,9 +109,22 @@ class DirectBootInstrumentedTest {
             .apply()
     }
 
+    /**
+     * Resolves through its own [ContextWrapper] (2026-11-23, Galaxy Note10+ / Android 12, the
+     * class run in one `am instrument` process): `get_shared_preferences` keeps one resolution
+     * keyed by the Context's IDENTITY and runs the migration once per entry, and
+     * getSharedPreferencesUsesDeviceProtectedStorageOnApi24Plus had already filled it with the
+     * same targetContext, so the flag set below was never migrated ("need_migration should be
+     * false"). A new wrapper reaches the same storage and is resolved afresh. Under the
+     * orchestrator (a fresh process per test) the cache was always empty.
+     *
+     * The cleanup commits: an apply() still queued when the process is force-stopped right
+     * after the run never reaches disk.
+     */
     @Test
     fun checkNeedMigrationRunsOnFirstUse() {
         if (Build.VERSION.SDK_INT < 24) return
+        val lookupContext = ContextWrapper(context)
 
         // Clear the migration flag to simulate first boot
         val deName = "${context.packageName}_preferences"
@@ -123,15 +137,15 @@ class DirectBootInstrumentedTest {
         defaultPrefs.edit().putString("migration_test_key", "migrated_value").apply()
 
         // Calling get_shared_preferences should trigger migration
-        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(lookupContext)
 
         // Verify migration flag was cleared
         assertFalse("need_migration should be false after migration",
             prefs.getBoolean("need_migration", true))
 
-        // Cleanup
-        defaultPrefs.edit().remove("migration_test_key").remove("need_migration").apply()
-        dePrefs.edit().remove("migration_test_key").remove("need_migration").apply()
+        // Cleanup (synchronous, see the KDoc)
+        defaultPrefs.edit().remove("migration_test_key").remove("need_migration").commit()
+        dePrefs.edit().remove("migration_test_key").remove("need_migration").commit()
     }
 
     @Test

@@ -15,6 +15,7 @@ import java.io.FileOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,6 +42,13 @@ class LookKeyMarksShowcaseTest {
     private lateinit var context: Context
     private lateinit var out: File
 
+    /**
+     * Portrait sizing for every render (2026-11-23, Galaxy Note10+): [shiftInk] samples fixed
+     * fractions of the portrait keyboard, and a real phone left in landscape by an earlier class
+     * drew the landscape one, where they held no ink at all ("filled arrow (0 -> 0)").
+     */
+    private lateinit var portrait: TestConfigHelper.PortraitKeyboardSizing
+
     private class NoopHandler : Config.IKeyEventHandler {
         override fun key_down(key: KeyValue?, isSwipe: Boolean) {}
         override fun key_up(key: KeyValue?, mods: Pointers.Modifiers, isKeyRepeat: Boolean) {}
@@ -49,7 +57,8 @@ class LookKeyMarksShowcaseTest {
 
     @Before
     fun setup() {
-        context = InstrumentationRegistry.getInstrumentation().targetContext
+        portrait = TestConfigHelper.PortraitKeyboardSizing(InstrumentationRegistry.getInstrumentation().targetContext)
+        context = portrait.context
         val prefs = context.getSharedPreferences("cleverkeys_look_marks_test_prefs", Context.MODE_PRIVATE)
         prefs.edit().clear()
             .putBoolean("swipe_typing_enabled", false)
@@ -60,6 +69,11 @@ class LookKeyMarksShowcaseTest {
         Config.initGlobalConfig(prefs, context.resources, NoopHandler(), null)
         ComposeKeyData.initialize(context)
         out = File(context.getExternalFilesDir(null), "oct30-looks").apply { mkdirs() }
+    }
+
+    @After
+    fun tearDown() {
+        if (::portrait.isInitialized) portrait.close()
     }
 
     private fun lookTheme(id: String, light: Boolean): Theme =

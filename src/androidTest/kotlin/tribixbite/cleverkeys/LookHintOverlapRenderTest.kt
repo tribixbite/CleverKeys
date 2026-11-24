@@ -118,9 +118,14 @@ class LookHintOverlapRenderTest {
         return out
     }
 
+    /**
+     * Draws through [TestConfigHelper.PortraitKeyboardSizing] (2026-11-23, Galaxy Note10+): the
+     * check is about the portrait keyboard, and a real phone left in landscape by an earlier
+     * class drew the landscape one, where '?123' ran into its 'Ctrl' hint at 1080 px.
+     */
     private fun assertNoOverlap(theme: String, layoutName: String, widthPx: Int) {
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val drawn = drawLayout(context, theme, layoutName, widthPx)
+        val drawn = TestConfigHelper.PortraitKeyboardSizing(InstrumentationRegistry.getInstrumentation().targetContext)
+            .use { portrait -> drawLayout(portrait.context, theme, layoutName, widthPx) }
         assertTrue("$layoutName drew its legends", drawn.any { it.text == "GIF" } && drawn.any { it.text == "ABC" })
         val bad = overlaps(drawn)
         assertTrue("$layoutName @ $widthPx px under $theme: legends overlap: $bad", bad.isEmpty())

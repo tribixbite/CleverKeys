@@ -2,6 +2,8 @@ package tribixbite.cleverkeys
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
+import java.io.Closeable
 
 /**
  * Helper to initialize Config for instrumented tests.
@@ -122,6 +124,54 @@ object TestConfigHelper {
             }
         } else {
             null
+        }
+    }
+
+    /**
+     * Sizes the keyboard as in PORTRAIT whatever the display's rotation, for render tests that
+     * measure the portrait keyboard: build Config and the views from [context], from before
+     * [Config.initGlobalConfig] until the drawing is done, then [close].
+     *
+     * 2026-11-23, Galaxy Note10+ / One UI, classes run in one `am instrument` process: after
+     * LayoutManagerLandscapeAddLayoutTest or ExtraKeysConfigActivityComposeTest requested
+     * landscape, the phone (auto-rotate on) stayed at ROTATION_90 once the activity finished, the
+     * target context's configuration stayed landscape, and Config sized the keyboard for
+     * landscape (characters ×1.25, the landscape height percent of a short screen):
+     * LookHintOverlapRenderTest found '?123' over its 'Ctrl' hint and LookKeyMarksShowcaseTest's
+     * fixed Shift-cell fractions sampled no ink. emulator.wtf starts each test on a portrait
+     * emulator, so neither had been seen.
+     *
+     * Both halves are needed. [context] carries a portrait Configuration (Config reads its
+     * `orientation`), but `createConfigurationContext` keeps the display's landscape
+     * DisplayMetrics, and Config measures the height percent against those whenever
+     * [Config.screenSize] (the IME service's display-size hook) is unset. So until [close] that
+     * hook answers the portrait form of the size Config would have used: the previous hook's
+     * answer, else the DisplayMetrics size. On a portrait display both are unchanged.
+     */
+    class PortraitKeyboardSizing(base: Context) : Closeable {
+        val context: Context = base.createConfigurationContext(
+            Configuration(base.resources.configuration).apply {
+                if (orientation != Configuration.ORIENTATION_PORTRAIT) {
+                    orientation = Configuration.ORIENTATION_PORTRAIT
+                    val landscapeWidthDp = screenWidthDp
+                    screenWidthDp = screenHeightDp
+                    screenHeightDp = landscapeWidthDp
+                }
+            }
+        )
+
+        private val previousScreenSize = Config.screenSize
+
+        init {
+            val dm = base.resources.displayMetrics
+            val size = previousScreenSize?.invoke() ?: ScreenSize(dm.widthPixels, dm.heightPixels)
+            val portrait = ScreenSize(minOf(size.width, size.height), maxOf(size.width, size.height))
+            Config.screenSize = { portrait }
+        }
+
+        /** Restores the previous [Config.screenSize] hook. */
+        override fun close() {
+            Config.screenSize = previousScreenSize
         }
     }
 }
