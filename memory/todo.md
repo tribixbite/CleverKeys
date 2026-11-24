@@ -161,6 +161,60 @@ newest export (2026-10-24, `Download/cleverkeys-config (17).json`): 30 values di
 app (`~/ew-output/mods-class-2026-11-23e/`). The modifier checks that need hands, TalkBack or a RustDesk
 session are in the manual checklist ("Modifiers"). Before the tag: only M1, M2, M4.
 
+**Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
+defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
+and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by
+default (it is, since #110: the S25U has it off); a battery of tests on the Note10+. Results:
+- **Import crash, FIXED.** On the Pixel (release 4112648a) Reset All brought all 182 compared settings
+  back to their defaults and kept the layouts. Importing the S25U settings export applied everything,
+  then crashed the app, keyboard included: the import writes `custom_border_line_width` as a Float,
+  and Settings' change handler read it with a raw `getInt`. Every read there now goes through the
+  `getSafe*` readers, which delegate to Config's (an imported 2.0 also shows as 2, not 0).
+- **Three smaller fixes from the same test:**
+  - the import preview names the backup's own screen density;
+  - `ime_prompt_last_boot_count` is device-bound (INTERNAL_KEYS);
+  - Settings' Reset All label is readable.
+- **Seen failing first:** 6 tests on the old code.
+- **Device verification, fixed build `13d354e1…`:**
+  - Pixel: importing its own baseline (border 2.0 → 0) applied 49 with no crash. The Pixel ended
+    on its own settings plus Subkey popover on hold ON (export diffed against the baseline). The
+    S25U's 24 short swipes were removed with Reset all; the S25U's boot count is left in its prefs
+    (unreadable on a release build; harmless).
+  - Note10+: the S25U full backup on a fresh install applied 46 settings, 628 custom words, 15
+    disabled words, 6,969 clipboard rows and 20 media files with no crash. Look and short swipes as
+    on the S25U; swipe `hello` decoded; then uninstalled.
+- **Benchmarks** (`docs/eval/2026-11-24-autocorrect-gates.md`, `…-swipe-preprocessing-settings.md`):
+  defaults stay. Length diff 3 adds nothing and costs ~45 % per autocorrect; threshold 0.6778 is
+  within noise. The S25U's dwell 9 drops fast short flicks at 120 Hz (0 gains / 11 losses); noise,
+  velocity and smoothing have no measurable effect on CTC. The S25U should go back to the defaults
+  for all six.
+- **Note10+ instrumented battery** (API 31, one `am instrument` per class, 7ac2a3de debug):
+  - 1,666 of 1,679 passed in 21 min (the Chrome-tab test excluded);
+  - 4 skipped by their assumptions;
+  - 9 failed, all test bugs that the orchestrator's fresh process hides on emulator.wtf:
+    - a DirectBoot cache shared between tests;
+    - One UI's extra recents sections;
+    - theme deletes lost to `apply()` at force-stop;
+    - an `ime set` race;
+    - a landscape display left behind by a landscape test.
+  - Test fixes are in `src/androidTest`.
+- **Verification:**
+  - Pure 3,994 / mock 1,961.
+  - The new `SettingsImportTypesInstrumentedTest` failed on the Note10+ against the old app with the
+    device's `ClassCastException`.
+  - On emulator.wtf API 34 and 37 it passed with the fixed app, and so did every changed test class:
+    48/48 on each (`~/ew-output/import-fix-2026-11-24/`).
+  - The Note10+ re-run of the fixed classes was NOT done: Play Protect rejected the new debug APK
+    (verification timeout, then REJECT). `verifier_verify_adb_installs` was left as found, pending
+    the maintainer's OK.
+  - **A2 at `fa18a6b0`** (app sha256 `d9aa2d61…`, test `a0364274…`, `~/ew-output/full-2026-11-24/`):
+    1,681 on each of API 34–37, 1,679 passed, the 2 expected skips, 0 failed. CI green.
+**Open (agent):** the touch-up classifier's SWIPE route skips `promoteWordCandidacy()`
+(`Pointers.kt:531-538`). A swipe longer than 272 px with < 2 keys registered at its last sample
+types nothing (5 of 100,000 FUTO traces at the defaults; found by the swipe replay). It needs a
+TAP fallback when candidacy still fails. Geometric smoothing 1 vs 3 is unmeasured (command in the
+swipe eval). Before the tag: only M1, M2, M4.
+
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit
 of the fixes (two reviewers) found 14 more: 13 fixed, one kept as a stated residual. Every fix has a test seen failing on the
