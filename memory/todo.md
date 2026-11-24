@@ -205,14 +205,37 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
   (Clean fills an empty clipboard, the vocabulary keeps the stored cap, the size limit keeps the newest)
   pass. Not seen failing first on the old code (written with the fixes); release r4 `f387c20a…` built,
   not on a phone (adb went away first).
-- **Found, not fixed (open):**
-  - an `am` import of a file CleverKeys cannot read (pushed by adb/Termux into `Download/`, EACCES) is
-    refused as "plaintext payload not accepted" (`BackupRestoreActivity.payloadIsPlaintext` treats an
-    unreadable stream as plaintext, fail-closed); the message should say the file cannot be read;
-  - after setting a password, the "Export unencrypted…" link is missing until Settings is reopened
-    (Note10+, Saga);
-  - a settings file with an empty short-swipe section does not clear mappings under Replace (known);
-  - 1.5.0 → 2.0 resets `finger_occlusion_offset` 12.5 to 0 with no migration line found; not traced.
+- **Found (fixed later the same day, see the next bullet):** an unreadable `am` import file reported
+  as plaintext; "Export unencrypted…" missing after setting a password. Traced: 1.5.0 → 2.0 reading 0
+  for `finger_occlusion_offset` is correct (1.5.0 never STORED 12.5, it was its default; 1.x exports
+  wrote effective values, so only a restore of such a backup set 13).
+- **Open findings fixed while adb was away (maintainer: "fix the open findings while adb is down";
+  `docs/RELEASE_RECORD.md` "Additions 2026-11-24 (2)"):** a 1.x settings file's custom/disabled words
+  (and swipe priorities) are restored with it; its `finger_occlusion_offset` 12.5 (the old neural
+  default) restores as today's 0 (other fractional values still round, ARC-093); the Medium preset is
+  the defaults (72/15/7; High's key distance 25 → 15); a clipboard restore counts only the media it
+  added, shows the export date on its own line (not as "Source version") and clipboard exports write
+  `app_version`; "Export unencrypted…" and its armed notice follow the password (Compose state); the
+  import prompt clears "Wrong backup password" on edit; an unreadable `am` import says so; the three
+  clipboard limits stay Int after a restore or Reset All. Pure 4,026 and mock 1,969 pass (the pure and
+  mock red runs failed first for the expected reasons; tests of new functions were compile-red);
+  release r5 `75496e3d…` built (scratchpad `rel/ck-r5-arm64.apk`), not on a phone. Instrumented runs NOT done: the host phone
+  was on Verizon mobile data (Wi-Fi not connected) and one emulator.wtf run uploads ~230 MB (the
+  test APK is 185 MB with the `ctc_bench` encoders), so the red run of `BackupPasswordUiStateTest` was
+  stopped mid-upload. **Run when on Wi-Fi:** `BackupPasswordUiStateTest` (3) and
+  `ClipboardFeatureTest2#export_namesTheAppVersion`, then A2.
+- **Kept as decisions (not changed):**
+  - a clipboard restore keeps the to-do status and tags of a row the phone already has: the dialog
+    says "Imports merge with existing history without overwriting", and restoring an old backup to
+    recover one clipping must not revert every other to-do. Restoring several backups oldest-first
+    leaves the oldest statuses; newest-first gives the newest. Changing it needs a per-row
+    modified time (schema change) or a maintainer decision for "backup wins";
+  - a Replace with an empty short-swipe section leaves the mappings (G-2: clearing is Reset all,
+    never an import side effect);
+  - "Restart the keyboard for changes to take effect" after a settings restore: probably stale
+    (Settings and the keyboard share a process and the keyboard refreshes on each preference
+    change), but some settings apply only when a session is next built (CTC threads); check on a
+    phone before changing the text.
 - **Device state when adb went away (maintainer, 11:23: "adb will be unavailable for the next 5
   hours") — CLEAN UP when it is back:**
   - **Pixel:** release r2 (paste fix, without the vocabulary and size-limit fixes); the backup password

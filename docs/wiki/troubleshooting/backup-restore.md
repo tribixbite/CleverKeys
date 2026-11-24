@@ -340,8 +340,9 @@ Commands are accepted at most once every 2 seconds; one sent sooner is refused (
 ### The `json_base64` Extra
 
 On Android 10+, files modified or created by external apps (cp, vim, Termux, `adb push`) become
-inaccessible to CleverKeys due to scoped storage restrictions: the import fails, and the
-message can wrongly say the file is a plaintext backup. The `json_base64` intent extra bypasses
+inaccessible to CleverKeys due to scoped storage restrictions: the import fails with "file not
+readable" (before 2026-11-24 the message wrongly said plaintext backups are not accepted). The
+`json_base64` intent extra bypasses
 this by passing the file's content inline as base64. Automation imports accept only encrypted
 backups, so pass a `.ckenc` file:
 
