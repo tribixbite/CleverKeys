@@ -51,6 +51,22 @@ class SettingsImportPlanBuilderTest {
 
 
     @Test
+    fun sourceScreen_carriesTheFilesOwnDensity() {
+        // Device test 2026-11-23: an S25U backup (screen_density 2.625) previewed on a Pixel 8 Pro
+        // (2.25) read "Source screen: 1080×2118@2.25" — the builder copied THIS device's density.
+        val json = """{"metadata":{"screen_width":1080,"screen_height":2118,"screen_density":2.625},"preferences":{}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        assertThat(plan.sourceScreen).isEqualTo(ScreenMetrics(1080, 2118, 2.625f))
+        // The early return for a file without preferences reports the same source.
+        val noPrefs = SettingsImportPlanBuilder.fromJson(json.substringBefore(",\"preferences\"") + "}", emptyMap(), screen)
+        assertThat(noPrefs.sourceScreen.density).isEqualTo(2.625f)
+        // A file written before the field existed shows this device's density, as before.
+        val old = """{"metadata":{"screen_width":720,"screen_height":1280},"preferences":{}}"""
+        assertThat(SettingsImportPlanBuilder.fromJson(old, emptyMap(), screen).sourceScreen.density)
+            .isEqualTo(screen.density)
+    }
+
+    @Test
     fun emptyDelta_whenJsonMatchesCurrentSnapshot() {
         val json = """{"metadata":{"app_version":"1.4.0","screen_width":1080,"screen_height":2400},"preferences":{"key_height":50}}"""
         val current = mapOf<String, Any?>("key_height" to 50)
@@ -370,6 +386,9 @@ class SettingsImportPlanBuilderTest {
             "voice_ime_last_used",             // runtime IME state
             "ime_prompt_shown_this_session",   // legacy pre-I-7 per-session flag (retired)
             "ime_prompt_last_boot_ms",         // I-7 (2026-09-08): boot instant of the last prompt, device-bound
+            // 2026-11-23: its replacement, this device's Settings.Global.BOOT_COUNT at the last
+            // prompt; a restore offered the source phone's count (161) as an "Added" row.
+            "ime_prompt_last_boot_count",
             // Backup-encryption state (Stage B) — never exported (§8.2).
             "backup_passphrase_ciphertext",    // Keystore-wrapped passphrase
             "backup_passphrase_iv",            // GCM IV for the wrapped passphrase

@@ -609,6 +609,16 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Importing a settings backup no longer closes Settings and the keyboard. A backup whose key
+  border width differed from the phone's crashed Settings as the import finished, and the keyboard
+  with it (the settings had been applied). Settings also shows an imported border width now; it
+  showed 0.
+- The import preview shows the backup's own screen density in "Source screen"; it showed this
+  phone's.
+- A backup no longer carries the phone's "keyboard not selected" reminder state, which the
+  import preview listed as an added setting.
+- Settings → Information & Actions: the **Reset All** label is readable (it was dark blue on dark
+  grey).
 - Italian no longer offers accent misspellings: `perche`, `piu`, `citta`, `perchè`, `pò` and 73
   others left the dictionary and the next-word model, so a swipe or a typed `perche` offers only
   `perché`. Words that are real in both spellings stay (`si`/`sì`, `pero`/`però`, the name `Sara`),

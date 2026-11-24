@@ -57,6 +57,33 @@ class ConfigMistypedPrefDriftTest {
             .that(offenders).isEmpty()
     }
 
+    /**
+     * Device test 2026-11-23 (Pixel 8 Pro, release 4112648a): applying a backup import crashed the
+     * app — Settings and the keyboard together, one process. The import writes each value with
+     * the import table's type (`custom_border_line_width` as a Float), and the Settings screen's
+     * change handler, which runs for every key the import changes while Settings is open, read it
+     * with a raw `prefs.getInt`. Every read in that file goes through the `getSafe*` readers, and
+     * no numeric read anywhere in the Settings screen is raw.
+     */
+    @Test
+    fun theSettingsScreenReadsNoPreferenceWithARawGetter() {
+        val persistence = "src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsPersistence.kt"
+        val anyRaw = Regex("""\bprefs\.get(Boolean|Int|Float|Long|String)\(""")
+        val offenders = File(persistence).readLines().withIndex()
+            .filter { anyRaw.containsMatchIn(it.value) }
+            .map { "SettingsPersistence.kt:${it.index + 1}: ${it.value.trim()}" }
+            .toMutableList()
+        val numericRaw = Regex("""\bprefs\.get(Int|Float|Long)\(""")
+        File("src/main/kotlin/tribixbite/cleverkeys/ui/settings").walkTopDown()
+            .filter { it.isFile && it.extension == "kt" && it.path != persistence }
+            .forEach { file ->
+                file.readLines().withIndex().filter { numericRaw.containsMatchIn(it.value) }
+                    .forEach { offenders += "${file.name}:${it.index + 1}: ${it.value.trim()}" }
+            }
+        assertWithMessage("raw reads in the Settings screen (use getSafeInt / getSafeFloat / …)")
+            .that(offenders).isEmpty()
+    }
+
     @Test
     fun theServicesCommandTimeReadsAreSafeToo() {
         // The scene toggles are read again when their keyboard command runs.

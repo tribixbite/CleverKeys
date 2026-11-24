@@ -33,7 +33,9 @@ internal fun SettingsActivity.VersionActionsSection() {
                     onClick = { resetAllSettings() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        // The default content colour is onPrimary: dark blue on dark grey here.
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 ) {
                     Text(stringResource(R.string.settings_reset_button))

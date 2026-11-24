@@ -216,6 +216,16 @@ which missed the first key. A modifier double tap is timed (`DOUBLE_TAP_LOCK_MS`
 release to the second PRESS); accessibility clicks enter with pointer id −2
 (`Pointers.ACCESSIBILITY_POINTER_ID`) and, like TalkBack, lock on any second activation.
 
+## Preference listeners and backup imports (2026-11-23)
+
+An import writes every key with the import table's type (`SETTINGS_DEFAULTS`), which is not always
+the type the screen writes (`custom_border_line_width`: Float there, Int from its slider). Every
+listener then runs for each changed key, and a raw `prefs.getInt` in Settings' change handler threw
+`ClassCastException` and ended the process the keyboard shares (Pixel, release 4112648a). Read
+settings through `getSafe*` / `Config.safeGet*` everywhere a listener or an import can reach
+(`ConfigMistypedPrefDriftTest`); a reset-then-import round trip on a device is the test that finds
+this class.
+
 ## Swipe-engine changes surface dictionary data (2026-11-20)
 
 The CTC collision alternates (`ebef6234`, verified by pure tests and a FUTO replay) offer every form of a

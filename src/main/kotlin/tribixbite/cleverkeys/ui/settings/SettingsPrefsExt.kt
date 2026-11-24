@@ -1,86 +1,31 @@
 package tribixbite.cleverkeys.ui.settings
 
 import android.content.SharedPreferences
+import tribixbite.cleverkeys.Config
 
-/** Safely get an Int preference, handling cases where the value is stored as a different type */
-internal fun SharedPreferences.getSafeInt(key: String, default: Int): Int {
-    return try {
-        getInt(key, default)
-    } catch (e: ClassCastException) {
-        // Value might be stored as String, try to parse it
-        try {
-            getString(key, null)?.toIntOrNull() ?: default
-        } catch (e2: Exception) {
-            default
-        }
-    }
-}
+/*
+ * The Settings screen's type-tolerant preference readers. A value can be stored with a type other
+ * than the one its screen reads: the import writes each key with the import table's type
+ * (`custom_border_line_width` as a Float, while its slider writes an Int), an older backup wrote
+ * numbers as strings, and a hand-edited file can hold anything. A raw getter throws
+ * ClassCastException on such a value, and in the change handler that throw takes down the whole
+ * process, keyboard included (device test 2026-11-23). These delegate to Config's readers, so the
+ * Settings screen and the keyboard recover the same value from the same stored data (pinned by
+ * SafePrefReadersTest.theSettingsScreenReadersAgreeWithConfigForEveryStoredType).
+ */
 
-/** Safely get a Float preference, handling cases where the value is stored as a different type */
-internal fun SharedPreferences.getSafeFloat(key: String, default: Float): Float {
-    return try {
-        getFloat(key, default)
-    } catch (e: ClassCastException) {
-        try {
-            getString(key, null)?.toFloatOrNull() ?: default
-        } catch (e2: Exception) {
-            default
-        }
-    }
-}
+/** An Int preference, also when it is stored as a Float (truncated) or a numeric String. */
+internal fun SharedPreferences.getSafeInt(key: String, default: Int): Int =
+    Config.safeGetInt(this, key, default)
 
-/** Safely get a String preference, handling cases where the value is stored as Int or other types */
-internal fun SharedPreferences.getSafeString(key: String, default: String): String {
-    return try {
-        getString(key, default) ?: default
-    } catch (e: ClassCastException) {
-        // Value might be stored as Int (e.g., from config import)
-        try {
-            getInt(key, -999999).let {
-                if (it == -999999) default else it.toString()
-            }
-        } catch (e2: ClassCastException) {
-            // Try Float
-            try {
-                getFloat(key, Float.MIN_VALUE).let {
-                    if (it == Float.MIN_VALUE) default else it.toString()
-                }
-            } catch (e3: Exception) {
-                default
-            }
-        } catch (e2: Exception) {
-            default
-        }
-    }
-}
+/** A Float preference, also when it is stored as an Int or a numeric String. */
+internal fun SharedPreferences.getSafeFloat(key: String, default: Float): Float =
+    Config.safeGetFloat(this, key, default)
 
-/** Safely get a Boolean preference, handling cases where the value is stored as String or Int */
-internal fun SharedPreferences.getSafeBoolean(key: String, default: Boolean): Boolean {
-    return try {
-        getBoolean(key, default)
-    } catch (e: ClassCastException) {
-        // Value might be stored as String or Int
-        try {
-            val stringVal = getString(key, null)
-            when (stringVal?.lowercase()) {
-                "true", "1", "yes" -> true
-                "false", "0", "no" -> false
-                else -> default
-            }
-        } catch (e2: ClassCastException) {
-            try {
-                getInt(key, -1).let {
-                    when (it) {
-                        1 -> true
-                        0 -> false
-                        else -> default
-                    }
-                }
-            } catch (e3: Exception) {
-                default
-            }
-        } catch (e2: Exception) {
-            default
-        }
-    }
-}
+/** A String preference, also when it is stored as an Int, a Float or a Boolean. */
+internal fun SharedPreferences.getSafeString(key: String, default: String): String =
+    Config.safeGetString(this, key, default)
+
+/** A Boolean preference, also when it is stored as "true"/"1"/"yes"-style text or as 1/0. */
+internal fun SharedPreferences.getSafeBoolean(key: String, default: Boolean): Boolean =
+    Config.safeGetBoolean(this, key, default)

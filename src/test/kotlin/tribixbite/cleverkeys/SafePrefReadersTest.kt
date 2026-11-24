@@ -4,6 +4,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -12,6 +13,10 @@ import io.mockk.unmockkStatic
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.ui.settings.getSafeBoolean
+import tribixbite.cleverkeys.ui.settings.getSafeFloat
+import tribixbite.cleverkeys.ui.settings.getSafeInt
+import tribixbite.cleverkeys.ui.settings.getSafeString
 
 /**
  * Pins what the four type-recovering readers (`Config.safeGetInt/Float/Boolean/String`) return for
@@ -168,6 +173,41 @@ class SafePrefReadersTest {
         assertThat(dipPref(true, 1f)).isEqualTo(1f)
         assertThat(dipPref("wide", 1f)).isEqualTo(1f)
         assertThat(warnings.filter { KEY in it }).hasSize(2)
+    }
+
+    // ------------------------------------------------ the Settings screen's readers
+
+    /**
+     * Device test 2026-11-23 (Pixel 8 Pro, release 4112648a): importing a backup whose
+     * `custom_border_line_width` is a Float (the import table's type; the slider writes an Int)
+     * crashed Settings AND the keyboard, which share the process — the screen's change handler
+     * read it with a raw `getInt`. The Settings screen's `getSafe*` readers are the ones that
+     * handler now uses, so they must recover every type Config's readers recover: before this
+     * fix `getSafeInt` turned a stored 2.0 into the default (the slider showed 0 while the
+     * keyboard drew 2 dp) and `getSafeFloat` did the same to an Int.
+     */
+    @Test
+    fun theSettingsScreenReadersAgreeWithConfigForEveryStoredType() {
+        val stored = listOf<Any?>(null, 12, 3.7f, 2.0f, "41", "2.5", "true", "no", true, false, 9L)
+        for (value in stored) {
+            val p = if (value == null) empty else prefs(value)
+            val what = "stored ${value?.javaClass?.simpleName} $value"
+            assertWithMessage("getSafeInt, $what")
+                .that(p.getSafeInt(KEY, 5)).isEqualTo(Config.safeGetInt(p, KEY, 5))
+            assertWithMessage("getSafeFloat, $what")
+                .that(p.getSafeFloat(KEY, 0.25f)).isEqualTo(Config.safeGetFloat(p, KEY, 0.25f))
+            assertWithMessage("getSafeBoolean, $what")
+                .that(p.getSafeBoolean(KEY, true)).isEqualTo(Config.safeGetBoolean(p, KEY, true))
+            assertWithMessage("getSafeString, $what")
+                .that(p.getSafeString(KEY, "d")).isEqualTo(Config.safeGetString(p, KEY, "d"))
+        }
+    }
+
+    @Test
+    fun theSettingsScreenReadsAnImportedFloatBorderWidthAsItsInt() {
+        // The concrete device case: the backup's 2.0 must reach the slider as 2, not as 0.
+        assertThat(prefs(2.0f).getSafeInt(KEY, 0)).isEqualTo(2)
+        assertThat(prefs(4).getSafeFloat(KEY, 0f)).isEqualTo(4f)
     }
 
     private companion object {

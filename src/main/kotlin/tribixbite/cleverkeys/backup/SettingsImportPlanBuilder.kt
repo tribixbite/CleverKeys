@@ -74,7 +74,13 @@ object SettingsImportPlanBuilder {
         val sourceHeight = root.getAsJsonObject("metadata")
             ?.get("screen_height")?.asInt ?: screen.height
 
-        val sourceScreen = ScreenMetrics(sourceWidth, sourceHeight, screen.density)
+        // The file's own density (written since the first exporter); a file without it shows
+        // this device's, as before. It used to be this device's always: an S25U backup read
+        // "@2.25" on a Pixel 8 Pro (device test 2026-11-23).
+        val sourceDensity = root.getAsJsonObject("metadata")
+            ?.get("screen_density")?.takeIf { it.isJsonPrimitive && it.asJsonPrimitive.isNumber }
+            ?.asFloat ?: screen.density
+        val sourceScreen = ScreenMetrics(sourceWidth, sourceHeight, sourceDensity)
 
         val rawPreferences: JsonObject = root.getAsJsonObject("preferences")
             ?: return SettingsImportPlan(

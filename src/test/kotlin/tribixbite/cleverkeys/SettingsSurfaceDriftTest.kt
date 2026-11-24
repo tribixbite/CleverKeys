@@ -262,4 +262,30 @@ class SettingsSurfaceDriftTest {
                 "ranges drift (the F-9 AutoCorrectionSettingsActivity failure); delete or wire them"
         ).that(orphans).isEmpty()
     }
+
+    /**
+     * Device check 2026-11-23 (Pixel 8 Pro): Settings' "Reset All" label was dark blue on dark
+     * grey — the button set `containerColor = surfaceVariant` and kept the default content
+     * colour, `onPrimary`, which is only legible on `primary`. A Material 3 `buttonColors` call
+     * that moves the container off `primary` names its content colour too.
+     */
+    @Test
+    fun aButtonMovedOffThePrimaryContainerNamesItsContentColour() {
+        val call = Regex("""buttonColors\(([^()]*(?:\([^()]*\)[^()]*)*)\)""")
+        var calls = 0
+        val offenders = allMainFiles().flatMap { file ->
+            call.findAll(file.readText()).mapNotNull { m ->
+                calls++
+                val args = m.groupValues[1]
+                val container = Regex("""containerColor\s*=\s*([\w.]+)""").find(args)?.groupValues?.get(1)
+                val offPrimary = container != null && !container.endsWith("colorScheme.primary")
+                if (offPrimary && !Regex("""\bcontentColor\s*=""").containsMatchIn(args)) {
+                    "${file.name}: buttonColors(${args.trim().replace(Regex("\\s+"), " ")})"
+                } else null
+            }
+        }.toList()
+        check(calls > 0) { "Matched zero buttonColors( calls — the scan is broken, not a pass." }
+        assertWithMessage("buttonColors with a non-primary container and the default content colour")
+            .that(offenders).isEmpty()
+    }
 }

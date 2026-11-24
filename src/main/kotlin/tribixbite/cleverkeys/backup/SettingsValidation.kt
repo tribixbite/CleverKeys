@@ -57,6 +57,7 @@ object SettingsValidation {
         "voice_ime_last_used",              // Runtime voice-IME state (per device)
         "ime_prompt_shown_this_session",    // Legacy pre-I-7 prompt flag (retired 2026-09-08; never portable)
         "ime_prompt_last_boot_ms",          // I-7: boot instant of the last default-IME prompt (device-bound)
+        "ime_prompt_last_boot_count",       // Its replacement (review 2026-11-14): THIS device's Settings.Global.BOOT_COUNT at that prompt
         // Backup-encryption state (Stage B). NEVER exported: exporting the
         // wrapped passphrase inside the settings backup it protects would be
         // circular, and the intent-passphrase toggle / rate-limit timestamp are

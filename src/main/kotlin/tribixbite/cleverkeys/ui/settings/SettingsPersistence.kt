@@ -34,7 +34,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
         when (key) {
             "continuous_swipe_enabled" -> { continuousSwipeEnabled = prefs.getSafeBoolean(key, Defaults.CONTINUOUS_SWIPE_ENABLED) }
             "swipe_typing_enabled" -> {
-                swipeTypingEnabled = prefs.getBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
+                swipeTypingEnabled = prefs.getSafeBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
             // GH #147/#87: a backup import or reset changes this outside the switch; the Swipe
             // Typing master switch's disabled state reads it, so keep the state in step.
@@ -48,7 +48,7 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
                     .lowercase(java.util.Locale.ROOT)
             }
             "keyboard_height" -> {
-                keyboardHeight = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
+                keyboardHeight = prefs.getSafeInt(key, Defaults.KEYBOARD_HEIGHT_PORTRAIT)
                 refreshUnfoldedHeights()   // an unset inner height follows this one
             }
             KeyboardHeightPrefs.PORTRAIT_UNFOLDED, KeyboardHeightPrefs.LANDSCAPE_UNFOLDED -> {
@@ -58,46 +58,46 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "selection_delete_mode" -> { selectionDeleteMode = readSelectionDeleteMode() }
             "selection_delete_step_dp" -> { selectionDeleteStepDp = readSelectionDeleteStepDp() }
             "vibration_enabled" -> {
-                vibrationEnabled = prefs.getBoolean(key, Defaults.HAPTIC_ENABLED)
+                vibrationEnabled = prefs.getSafeBoolean(key, Defaults.HAPTIC_ENABLED)
             }
             "debug_enabled" -> {
-                debugEnabled = prefs.getBoolean(key, Defaults.DEBUG_ENABLED)
+                debugEnabled = prefs.getSafeBoolean(key, Defaults.DEBUG_ENABLED)
                 Logs.setDebugEnabled(debugEnabled)
             }
             "clipboard_history_enabled" -> {
-                clipboardHistoryEnabled = prefs.getBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
+                clipboardHistoryEnabled = prefs.getSafeBoolean(key, Defaults.CLIPBOARD_HISTORY_ENABLED)
             }
             "gif_enabled" -> {
-                gifEnabled = prefs.getBoolean(key, Defaults.GIF_ENABLED)
+                gifEnabled = prefs.getSafeBoolean(key, Defaults.GIF_ENABLED)
             }
             "autocapitalisation" -> {
-                autoCapitalizationEnabled = prefs.getBoolean(key, Defaults.AUTOCAPITALISATION)
+                autoCapitalizationEnabled = prefs.getSafeBoolean(key, Defaults.AUTOCAPITALISATION)
             }
             "autocapitalize_i_words" -> {
-                capitalizeIWords = prefs.getBoolean(key, Defaults.AUTOCAPITALIZE_I_WORDS)
+                capitalizeIWords = prefs.getSafeBoolean(key, Defaults.AUTOCAPITALIZE_I_WORDS)
             }
             // Adaptive layout settings
             "keyboard_height_landscape" -> {
-                keyboardHeightLandscape = prefs.getInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
+                keyboardHeightLandscape = prefs.getSafeInt(key, Defaults.KEYBOARD_HEIGHT_LANDSCAPE)
                 refreshUnfoldedHeights()
             }
             MarginPrefKeys.BOTTOM_PORTRAIT -> {
-                marginBottomPortrait = prefs.getInt(key, Defaults.MARGIN_BOTTOM_PORTRAIT)
+                marginBottomPortrait = prefs.getSafeInt(key, Defaults.MARGIN_BOTTOM_PORTRAIT)
             }
             MarginPrefKeys.BOTTOM_LANDSCAPE -> {
-                marginBottomLandscape = prefs.getInt(key, Defaults.MARGIN_BOTTOM_LANDSCAPE)
+                marginBottomLandscape = prefs.getSafeInt(key, Defaults.MARGIN_BOTTOM_LANDSCAPE)
             }
             MarginPrefKeys.LEFT_PORTRAIT -> {
-                marginLeftPortrait = prefs.getInt(key, Defaults.MARGIN_LEFT_PORTRAIT)
+                marginLeftPortrait = prefs.getSafeInt(key, Defaults.MARGIN_LEFT_PORTRAIT)
             }
             MarginPrefKeys.LEFT_LANDSCAPE -> {
-                marginLeftLandscape = prefs.getInt(key, Defaults.MARGIN_LEFT_LANDSCAPE)
+                marginLeftLandscape = prefs.getSafeInt(key, Defaults.MARGIN_LEFT_LANDSCAPE)
             }
             MarginPrefKeys.RIGHT_PORTRAIT -> {
-                marginRightPortrait = prefs.getInt(key, Defaults.MARGIN_RIGHT_PORTRAIT)
+                marginRightPortrait = prefs.getSafeInt(key, Defaults.MARGIN_RIGHT_PORTRAIT)
             }
             MarginPrefKeys.RIGHT_LANDSCAPE -> {
-                marginRightLandscape = prefs.getInt(key, Defaults.MARGIN_RIGHT_LANDSCAPE)
+                marginRightLandscape = prefs.getSafeInt(key, Defaults.MARGIN_RIGHT_LANDSCAPE)
             }
             // Gesture sensitivity settings
             "swipe_dist" -> {
@@ -108,98 +108,98 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             }
             // Long press settings
             "longpress_timeout" -> {
-                longPressTimeout = prefs.getInt(key, Defaults.LONGPRESS_TIMEOUT)
+                longPressTimeout = prefs.getSafeInt(key, Defaults.LONGPRESS_TIMEOUT)
             }
             "longpress_interval" -> {
-                longPressInterval = prefs.getInt(key, Defaults.LONGPRESS_INTERVAL)
+                longPressInterval = prefs.getSafeInt(key, Defaults.LONGPRESS_INTERVAL)
             }
             "keyrepeat_enabled" -> {
-                keyRepeatEnabled = prefs.getBoolean(key, Defaults.KEYREPEAT_ENABLED)
+                keyRepeatEnabled = prefs.getSafeBoolean(key, Defaults.KEYREPEAT_ENABLED)
             }
             // Visual customization settings
             "label_brightness" -> {
-                labelBrightness = prefs.getInt(key, Defaults.LABEL_BRIGHTNESS)
+                labelBrightness = prefs.getSafeInt(key, Defaults.LABEL_BRIGHTNESS)
             }
             "keyboard_opacity" -> {
-                keyboardOpacity = prefs.getInt(key, Defaults.KEYBOARD_OPACITY)
+                keyboardOpacity = prefs.getSafeInt(key, Defaults.KEYBOARD_OPACITY)
             }
             "key_opacity" -> {
-                keyOpacity = prefs.getInt(key, Defaults.KEY_OPACITY)
+                keyOpacity = prefs.getSafeInt(key, Defaults.KEY_OPACITY)
             }
             "key_activated_opacity" -> {
-                keyActivatedOpacity = prefs.getInt(key, Defaults.KEY_ACTIVATED_OPACITY)
+                keyActivatedOpacity = prefs.getSafeInt(key, Defaults.KEY_ACTIVATED_OPACITY)
             }
             "key_border_opacity" -> {
-                keyBorderOpacity = prefs.getInt(key, Defaults.KEY_BORDER_OPACITY)
+                keyBorderOpacity = prefs.getSafeInt(key, Defaults.KEY_BORDER_OPACITY)
             }
             // Spacing and sizing settings
             "character_size" -> {
-                characterSize = (prefs.getFloat(key, Defaults.CHARACTER_SIZE) * 100).toInt()
+                characterSize = (prefs.getSafeFloat(key, Defaults.CHARACTER_SIZE) * 100).toInt()
             }
             "secondary_label_size_scale" -> {
-                secondaryLabelSizeScale = (prefs.getFloat(key, Defaults.SECONDARY_LABEL_SIZE_SCALE) * 100).toInt()
+                secondaryLabelSizeScale = (prefs.getSafeFloat(key, Defaults.SECONDARY_LABEL_SIZE_SCALE) * 100).toInt()
             }
             "key_vertical_margin" -> {
-                keyVerticalMargin = (prefs.getFloat(key, Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
+                keyVerticalMargin = (prefs.getSafeFloat(key, Defaults.KEY_VERTICAL_MARGIN) * 100).toInt()
             }
             "key_horizontal_margin" -> {
-                keyHorizontalMargin = (prefs.getFloat(key, Defaults.KEY_HORIZONTAL_MARGIN) * 100).toInt()
+                keyHorizontalMargin = (prefs.getSafeFloat(key, Defaults.KEY_HORIZONTAL_MARGIN) * 100).toInt()
             }
             // Border customization settings
             "border_config" -> {
-                borderConfigEnabled = prefs.getBoolean(key, Defaults.BORDER_CONFIG)
+                borderConfigEnabled = prefs.getSafeBoolean(key, Defaults.BORDER_CONFIG)
             }
             "look_show_hints" -> {
-                lookShowHints = prefs.getBoolean(key, Defaults.LOOK_SHOW_HINTS)
+                lookShowHints = prefs.getSafeBoolean(key, Defaults.LOOK_SHOW_HINTS)
             }
             "look_key_preview" -> {
-                lookKeyPreview = prefs.getBoolean(key, Defaults.LOOK_KEY_PREVIEW)
+                lookKeyPreview = prefs.getSafeBoolean(key, Defaults.LOOK_KEY_PREVIEW)
             }
             "look_space_language" -> {
-                lookSpaceLanguage = prefs.getBoolean(key, Defaults.LOOK_SPACE_LANGUAGE)
+                lookSpaceLanguage = prefs.getSafeBoolean(key, Defaults.LOOK_SPACE_LANGUAGE)
             }
             "look_backdrop_motion" -> {
-                lookBackdropMotion = prefs.getBoolean(key, Defaults.LOOK_BACKDROP_MOTION)
+                lookBackdropMotion = prefs.getSafeBoolean(key, Defaults.LOOK_BACKDROP_MOTION)
             }
             "look_motion_speed" -> {
-                lookMotionSpeed = prefs.getInt(key, Defaults.LOOK_MOTION_SPEED)
+                lookMotionSpeed = prefs.getSafeInt(key, Defaults.LOOK_MOTION_SPEED)
             }
             "look_motion_intensity" -> {
-                lookMotionIntensity = prefs.getInt(key, Defaults.LOOK_MOTION_INTENSITY)
+                lookMotionIntensity = prefs.getSafeInt(key, Defaults.LOOK_MOTION_INTENSITY)
             }
             "look_motion_twinkle" -> {
-                lookMotionTwinkle = prefs.getInt(key, Defaults.LOOK_MOTION_TWINKLE)
+                lookMotionTwinkle = prefs.getSafeInt(key, Defaults.LOOK_MOTION_TWINKLE)
             }
             "look_scene_crisp" -> {
-                lookSceneCrisp = prefs.getBoolean(key, Defaults.LOOK_SCENE_CRISP)
+                lookSceneCrisp = prefs.getSafeBoolean(key, Defaults.LOOK_SCENE_CRISP)
             }
             "look_scene_true_black" -> {
-                lookSceneTrueBlack = prefs.getBoolean(key, Defaults.LOOK_SCENE_TRUE_BLACK)
+                lookSceneTrueBlack = prefs.getSafeBoolean(key, Defaults.LOOK_SCENE_TRUE_BLACK)
             }
             "look_motion_resume_ms" -> {
-                lookMotionResumeMs = prefs.getInt(key, Defaults.LOOK_MOTION_RESUME_MS)
+                lookMotionResumeMs = prefs.getSafeInt(key, Defaults.LOOK_MOTION_RESUME_MS)
             }
             "look_motion_idle_s" -> {
-                lookMotionIdleS = prefs.getInt(key, Defaults.LOOK_MOTION_IDLE_S)
+                lookMotionIdleS = prefs.getSafeInt(key, Defaults.LOOK_MOTION_IDLE_S)
             }
             "look_motion_fps" -> {
-                lookMotionFps = prefs.getInt(key, Defaults.LOOK_MOTION_FPS)
+                lookMotionFps = prefs.getSafeInt(key, Defaults.LOOK_MOTION_FPS)
             }
             "look_scene_overlay" -> {
-                lookSceneOverlay = prefs.getBoolean(key, Defaults.LOOK_SCENE_OVERLAY)
+                lookSceneOverlay = prefs.getSafeBoolean(key, Defaults.LOOK_SCENE_OVERLAY)
             }
             "custom_border_radius" -> {
-                customBorderRadius = prefs.getInt(key, Defaults.CUSTOM_BORDER_RADIUS)
+                customBorderRadius = prefs.getSafeInt(key, Defaults.CUSTOM_BORDER_RADIUS)
             }
             "custom_border_line_width" -> {
-                customBorderLineWidth = prefs.getInt(key, Defaults.CUSTOM_BORDER_LINE_WIDTH)
+                customBorderLineWidth = prefs.getSafeInt(key, Defaults.CUSTOM_BORDER_LINE_WIDTH)
             }
             // Behavior settings
             "lock_double_tap" -> {
-                doubleTapLockShift = prefs.getBoolean(key, Defaults.DOUBLE_TAP_LOCK_SHIFT)
+                doubleTapLockShift = prefs.getSafeBoolean(key, Defaults.DOUBLE_TAP_LOCK_SHIFT)
             }
             "switch_input_immediate" -> {
-                switchInputImmediate = prefs.getBoolean(key, Defaults.SWITCH_INPUT_IMMEDIATE)
+                switchInputImmediate = prefs.getSafeBoolean(key, Defaults.SWITCH_INPUT_IMMEDIATE)
             }
             "enter_always_newline" -> {
                 enterAlwaysNewline = prefs.getSafeBoolean(key, Defaults.ENTER_ALWAYS_NEWLINE)
@@ -222,32 +222,32 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             }
             // Phase 1: Exposed Config.kt settings listeners
             "word_prediction_enabled" -> {
-                wordPredictionEnabled = prefs.getBoolean(key, Defaults.WORD_PREDICTION_ENABLED)
+                wordPredictionEnabled = prefs.getSafeBoolean(key, Defaults.WORD_PREDICTION_ENABLED)
             }
             "suggestion_bar_opacity" -> {
                 suggestionBarOpacity = Config.safeGetInt(prefs, key, Defaults.SUGGESTION_BAR_OPACITY)
             }
             "autocorrect_enabled" -> {
-                autoCorrectEnabled = prefs.getBoolean(key, Defaults.AUTOCORRECT_ENABLED)
+                autoCorrectEnabled = prefs.getSafeBoolean(key, Defaults.AUTOCORRECT_ENABLED)
             }
             "custom_terminal_packages" -> {
                 customTerminalPackages = prefs.getSafeString(key, Defaults.CUSTOM_TERMINAL_PACKAGES)
             }
             "vibrate_duration" -> {
-                vibrationDuration = prefs.getInt(key, Defaults.VIBRATE_DURATION)
+                vibrationDuration = prefs.getSafeInt(key, Defaults.VIBRATE_DURATION)
             }
             "vibrate_custom" -> {
                 vibrateCustom = prefs.getSafeBoolean(key, Defaults.VIBRATE_CUSTOM)
             }
             "swipe_show_debug_scores" -> {
-                swipeDebugEnabled = prefs.getBoolean(key, Defaults.SWIPE_SHOW_DEBUG_SCORES)
+                swipeDebugEnabled = prefs.getSafeBoolean(key, Defaults.SWIPE_SHOW_DEBUG_SCORES)
             }
             // Phase 5: Gesture settings listeners
             "slider_sensitivity" -> {
                 sliderSensitivity = prefs.getSafeString(key, Defaults.SLIDER_SENSITIVITY).toIntOrNull() ?: Defaults.SLIDER_SENSITIVITY_FALLBACK.toInt()
             }
             "swipe_final_autocorrect_enabled" -> {
-                swipeFinalAutocorrectEnabled = prefs.getBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
+                swipeFinalAutocorrectEnabled = prefs.getSafeBoolean(key, Defaults.SWIPE_FINAL_AUTOCORRECT_ENABLED)
             }
             "autocorrect_max_length_diff" -> {
                 autocorrectMaxLengthDiff = Config.safeGetInt(prefs, key, Defaults.AUTOCORRECT_MAX_LENGTH_DIFF)
@@ -287,7 +287,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
             Config.safeGetInt(prefs, "finger_occlusion_offset", Defaults.FINGER_OCCLUSION_OFFSET)
                 .coerceIn(SettingsRanges.FINGER_OCCLUSION_OFFSET)
         swipeContextRescoring =
-            prefs.getBoolean("swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING)
+            prefs.getSafeBoolean("swipe_context_rescoring", Defaults.SWIPE_CONTEXT_RESCORING)
 
         // Appearance settings
         keyboardHeight = prefs.getSafeInt("keyboard_height", Defaults.KEYBOARD_HEIGHT_PORTRAIT)
