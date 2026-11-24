@@ -624,7 +624,8 @@ class ChannelRankingEval {
             "inspect" -> inspectPhase(::say)
             "prefix" -> prefixPhase(::say)
             "neighbour" -> neighbourPhase(::say)
-            else -> error("CK_CH_PHASE must be dev, test, inspect, prefix or neighbour")
+            "gates" -> gatesPhase(::say)
+            else -> error("CK_CH_PHASE must be dev, test, inspect, prefix, neighbour or gates")
         }
     }
 
@@ -1835,6 +1836,358 @@ class ChannelRankingEval {
             }
         }
         File(outDir, "rows-prefix.tsv").writeText(rows.joinToString("\n") + "\n")
+    }
+
+    // ── Candidate gates (2026-11-23; descriptive, DEV data only, selects nothing) ──────────
+
+    /**
+     * One setting of the two candidate gates the channel rounds held fixed:
+     * `autocorrect_char_match_threshold` and `autocorrect_max_length_diff`.
+     */
+    private data class Gates(val threshold: Float, val maxLengthDiff: Int) {
+        override fun toString() = "thr=$threshold,diff=$maxLengthDiff"
+    }
+
+    /**
+     * The 2×2 grid: the shipped defaults first (index 0, the baseline), the maintainer's phone
+     * values (0.6778 / 3), and the two crossed settings. Every setting's gated list is a subset
+     * of the loosest one's (lowest threshold, largest difference), which [gatesPhase] relies on.
+     */
+    private val GATES = listOf(
+        Gates(Defaults.AUTOCORRECT_CHAR_MATCH_THRESHOLD, Defaults.AUTOCORRECT_MAX_LENGTH_DIFF),
+        Gates(0.6778f, 3), Gates(0.6778f, 2), Gates(0.65f, 3),
+    )
+
+    /** Production `WordPredictor.gatedCandidates` (private): the gates themselves, over a given word map. */
+    private val gatedCandidatesMethod by lazy {
+        WordPredictor::class.java.getDeclaredMethod(
+            "gatedCandidates", String::class.java, Map::class.java, List::class.java, AutocorrectTuning::class.java,
+        ).apply { isAccessible = true }
+    }
+
+    /** The `word` of a (private) `WordPredictor.AutocorrectCandidate`. */
+    private fun candidateWord(c: Any): String =
+        c.javaClass.getDeclaredField("word").apply { isAccessible = true }.get(c) as String
+
+    /** A production predictor over [base]'s dictionary and prefix index, its config carrying [g]. */
+    private fun gatedPredictor(base: WordPredictor, aliases: Map<String, String>, g: Gates): WordPredictor {
+        fun field(name: String): Any? =
+            WordPredictor::class.java.getDeclaredField(name).apply { isAccessible = true }.get(base)
+        @Suppress("UNCHECKED_CAST")
+        val dict = (field("dictionary") as AtomicReference<MutableMap<String, Int>>).get() as HashMap<String, Int>
+        @Suppress("UNCHECKED_CAST")
+        val index = (field("prefixIndex") as AtomicReference<MutableMap<String, MutableSet<String>>>).get()
+            as HashMap<String, MutableSet<String>>
+        return newPredictor(dict, index, aliases, shippedConfig().apply {
+            autocorrect_char_match_threshold = g.threshold
+            autocorrect_max_length_diff = g.maxLengthDiff
+        })
+    }
+
+    /**
+     * [p]'s candidates that pass [predictor]'s gates: production `gatedCandidates` run over just
+     * the words the loosest setting gated, in their order. A candidate's score and length
+     * difference do not depend on either gate (they are pure filters in that loop), so this is
+     * exactly the list [predictor] gates over the whole dictionary, in the same relative order.
+     */
+    private fun regate(predictor: WordPredictor, p: WordPredictor.ChannelProbe, tuning: AutocorrectTuning): List<ChannelCandidate> {
+        val words = LinkedHashMap<String, Int>(p.candidates.size * 2)
+        for (c in p.candidates) words[c.word] = c.frequency
+        val kept = (gatedCandidatesMethod.invoke(predictor, p.lowerTypedWord, words, null, tuning) as List<*>)
+            .mapTo(HashSet()) { candidateWord(it!!) }
+        return p.candidates.filter { it.word in kept }
+    }
+
+    /** One input under every [GATES] setting: the outputs, and per setting a short "why" note. */
+    private class GateOut(val outs: Array<String>, val notes: Array<String>?)
+
+    /**
+     * Every [GATES] output for [t]: ONE production `autoCorrect` at the loosest gates with the
+     * probe attached, then per setting production `channelDecide` over the re-gated candidates
+     * (exactly what `autoCorrect` does after the probe point). An input that exits before the
+     * sweep (dictionary word, contraction, collapse, minimum length) never reaches the gates,
+     * so its output is the same under every setting. [selfCheck] counts inputs where the replay
+     * at the loosest setting differs from the production output it was probed from (must be 0).
+     */
+    private fun gateOutputs(predictors: List<WordPredictor>, loose: Int, t: String, tuning: AutocorrectTuning,
+                            selfCheck: AtomicInteger, gatedSum: java.util.concurrent.atomic.AtomicLongArray): GateOut {
+        var seen: WordPredictor.ChannelProbe? = null
+        val out = predictors[loose].autoCorrect(t, tuning) { seen = it }
+        val p = seen ?: return GateOut(Array(predictors.size) { out }, null)
+        gatedSum.incrementAndGet(predictors.size) // last slot: inputs that reached the gates
+        val w = tuning.channel
+        val notes = arrayOfNulls<String>(predictors.size)
+        val outs = Array(predictors.size) { k ->
+            val cands = regate(predictors[k], p, tuning)
+            gatedSum.addAndGet(k, cands.size.toLong())
+            val costs = FloatArray(cands.size) { ChannelEditCost.cost(p.lowerTypedWord, cands[it].word, w) }
+            val r = predictors[k].channelDecide(t, cands, costs, p.guardStem, w, p.frequencyFloor, p.maxFrequency)
+            val i = ChannelRanker.pick(cands, costs, p.maxFrequency, w.frequencyWeight, w.aliasBonus)
+            notes[k] = if (i < 0) "n=0" else "n=${cands.size} win=${cands[i].word} E=${"%.2f".format(costs[i])} " +
+                "T=${"%.2f".format(ChannelRanker.totalCost(costs[i], cands[i].frequency, p.maxFrequency,
+                    w.frequencyWeight, cands[i].isAlias, w.aliasBonus))}"
+            if (k == loose && r != out) selfCheck.incrementAndGet()
+            r
+        }
+        return GateOut(outs, if (outs.any { it != outs[0] }) notes.map { it ?: "" }.toTypedArray() else null)
+    }
+
+    /** [gateOutputs] for every input of one set, in parallel, checkpointed to `gates-<name>.tsv`. */
+    private fun gateRun(name: String, inputs: List<String>, predictors: List<WordPredictor>, loose: Int,
+                        say: (String) -> Unit): Map<String, GateOut> {
+        val checkpoint = File(outDir, "gates-$name.tsv")
+        val header = "# gates=${GATES.joinToString(";")} inputs=${inputs.size}"
+        val out = ConcurrentHashMap<String, GateOut>()
+        if (checkpoint.isFile && checkpoint.useLines { it.firstOrNull() } == header) {
+            checkpoint.useLines { l ->
+                l.drop(1).forEach { x ->
+                    val c = x.split('\t')
+                    val n = GATES.size
+                    out[c[0]] = GateOut(c.subList(1, 1 + n).toTypedArray(),
+                        if (c.size > 1 + n) c.subList(1 + n, 1 + 2 * n).toTypedArray() else null)
+                }
+            }
+            check(out.keys.containsAll(inputs)) { "checkpoint $checkpoint is incomplete" }
+            say("$name: ${inputs.size} distinct inputs read from the checkpoint")
+            return out
+        }
+        val tuning = AutocorrectTuning.DEFAULT
+        val selfMismatch = AtomicInteger()
+        val gatedSum = java.util.concurrent.atomic.AtomicLongArray(GATES.size + 1)
+        val done = AtomicInteger()
+        val start = System.nanoTime()
+        val progress = File(outDir, "gates-progress.txt")
+        inputs.parallelStream().forEach { t ->
+            out[t] = gateOutputs(predictors, loose, t, tuning, selfMismatch, gatedSum)
+            val n = done.incrementAndGet()
+            if (n % 2_000 == 0) synchronized(progress) {
+                progress.appendText("$name $n/${inputs.size} ${(System.nanoTime() - start) / 1_000_000_000}s\n")
+            }
+        }
+        val probed = gatedSum.get(GATES.size).coerceAtLeast(1)
+        say("$name: ${inputs.size} distinct inputs in ${(System.nanoTime() - start) / 1_000_000_000}s; " +
+            "${gatedSum.get(GATES.size)} reached the gates; replay ≠ production at the loosest gates: " +
+            "${selfMismatch.get()}; mean gated candidates per such input " +
+            GATES.indices.joinToString(", ") { "${GATES[it]} ${"%.1f".format(gatedSum.get(it).toDouble() / probed)}" })
+        checkpoint.writeText(header + "\n" + inputs.joinToString("\n") { t ->
+            val g = out.getValue(t)
+            (listOf(t) + g.outs + (g.notes?.toList() ?: emptyList())).joinToString("\t")
+        } + "\n")
+        return out
+    }
+
+    /** Full production `autoCorrect` under every setting on a seeded sample of [inputs] (must equal the replay). */
+    private fun gateSoundness(name: String, inputs: List<String>, outs: Map<String, GateOut>,
+                              predictors: List<WordPredictor>, n: Int, say: (String) -> Unit): Int {
+        val sample = inputs.sorted().shuffled(java.util.Random(20261123L)).take(n)
+        val bad = java.util.concurrent.ConcurrentLinkedQueue<String>()
+        // Wall time per setting, interleaved per input with a rotating order so load drift on the
+        // shared dev phone falls on every setting alike (relative figures only).
+        val nanos = java.util.concurrent.atomic.AtomicLongArray(predictors.size)
+        sample.withIndex().toList().parallelStream().forEach { (i, t) ->
+            for (j in predictors.indices) {
+                val k = (i + j) % predictors.size
+                val t0 = System.nanoTime()
+                val full = predictors[k].autoCorrect(t, AutocorrectTuning.DEFAULT)
+                nanos.addAndGet(k, System.nanoTime() - t0)
+                val replay = outs.getValue(t).outs[k]
+                if (full != replay) bad += "$t@${GATES[k]}: production=$full replay=$replay"
+            }
+        }
+        say("  soundness $name: ${sample.size} seeded inputs × ${predictors.size} settings through full production " +
+            "autoCorrect: ${bad.size} mismatches ${bad.take(10)}; mean ms per autoCorrect " +
+            predictors.indices.joinToString(", ") { "${GATES[it]} ${"%.2f".format(nanos.get(it) / 1e6 / sample.size)}" })
+        return bad.size
+    }
+
+    /** right / wrong / left alone for one output against a (typo, target) pair. */
+    private fun kind(o: String, p: P): Int = when {
+        en.ok(o, p.target) -> 0
+        o.equals(p.typed, ignoreCase = true) -> 2
+        else -> 1
+    }
+
+    /** Real-typo set summary: absolute outcomes per setting, then changes against the baseline. */
+    private fun typoSummary(name: String, pairs: List<P>, outs: Map<String, GateOut>, rows: MutableList<String>,
+                            say: (String) -> Unit) {
+        val targets = pairs.map { it.target }.toSet()
+        say("\n== $name: ${pairs.size} pairs, ${pairs.map { it.typed }.distinct().size} distinct typos, " +
+            "${targets.size} targets, ${pairs.sumOf { it.occ }} occurrences")
+        say("  setting | right / wrong / left (raw pairs) | right / wrong / left (occurrence-weighted) | " +
+            "right / wrong / left (macro-average per target, %) | targets with ≥1 pair right")
+        for (k in GATES.indices) {
+            val raw = IntArray(3); val occ = IntArray(3)
+            val per = HashMap<String, DoubleArray>()
+            val anyRight = HashSet<String>()
+            for (p in pairs) {
+                val c = kind(outs.getValue(p.typed).outs[k], p)
+                raw[c]++; occ[c] += p.occ
+                per.getOrPut(p.target) { DoubleArray(4) }.also { it[c] += 1.0; it[3] += 1.0 }
+                if (c == 0) anyRight += p.target
+            }
+            val macro = DoubleArray(3) { c -> per.values.sumOf { it[c] / it[3] } * 100 / per.size }
+            say("  %-16s | %d / %d / %d | %d / %d / %d | %.2f / %.2f / %.2f | %d".format(GATES[k].toString(),
+                raw[0], raw[1], raw[2], occ[0], occ[1], occ[2], macro[0], macro[1], macro[2], anyRight.size))
+        }
+        say("  against ${GATES[0]} (fix = baseline not right → right; break = baseline right → not right; " +
+            "swap = both not right, output changed): raw pairs (distinct targets; distinct typos; occurrences)")
+        for (k in 1 until GATES.size) {
+            val fix = mutableListOf<P>(); val brk = mutableListOf<P>(); val swap = mutableListOf<P>()
+            val fixFrom = IntArray(3); val brkTo = IntArray(3)
+            for (p in pairs) {
+                val g = outs.getValue(p.typed)
+                val b = g.outs[0]; val c = g.outs[k]
+                if (b == c) continue
+                val bk = kind(b, p); val ck = kind(c, p)
+                when {
+                    bk != 0 && ck == 0 -> { fix += p; fixFrom[bk]++ }
+                    bk == 0 && ck != 0 -> { brk += p; brkTo[ck]++ }
+                    else -> swap += p
+                }
+            }
+            fun d(l: List<P>) = "${l.size} (${l.mapTo(HashSet()) { it.target }.size}; ${l.mapTo(HashSet()) { it.typed }.size}; ${l.sumOf { it.occ }})"
+            say("  %-16s fixes %s [from wrong %d, from left alone %d]; breaks %s [to wrong %d, to left alone %d]; swaps %s; net distinct targets %+d"
+                .format(GATES[k].toString(), d(fix), fixFrom[1], fixFrom[2], d(brk), brkTo[1], brkTo[2], d(swap),
+                    fix.mapTo(HashSet()) { it.target }.size - brk.mapTo(HashSet()) { it.target }.size))
+        }
+        for (p in pairs) {
+            val g = outs.getValue(p.typed)
+            if (g.outs.any { it != g.outs[0] }) rows += "$name\t${p.typed}\t${p.target}\t${p.occ}\t${typoClass(p)}\t" +
+                g.outs.joinToString("\t") + "\t" + (g.notes?.joinToString("\t") ?: "")
+        }
+    }
+
+    /** Valid unlisted words (C-oov): every change is a false correction. */
+    private fun oovSummary(pairs: List<P>, outs: Map<String, GateOut>, rows: MutableList<String>, say: (String) -> Unit) {
+        say("\n== C-oov-DEV: ${pairs.size} valid unlisted words (each distinct)")
+        for (k in GATES.indices) {
+            val changed = pairs.count { !outs.getValue(it.typed).outs[k].equals(it.typed, true) }
+            val extra = if (k == 0) "" else {
+                val newly = pairs.count { val g = outs.getValue(it.typed).outs; g[0].equals(it.typed, true) && !g[k].equals(it.typed, true) }
+                val kept = pairs.count { val g = outs.getValue(it.typed).outs; !g[0].equals(it.typed, true) && g[k].equals(it.typed, true) }
+                val other = pairs.count { val g = outs.getValue(it.typed).outs; !g[0].equals(it.typed, true) && !g[k].equals(it.typed, true) && g[0] != g[k] }
+                " | vs baseline: newly changed $newly, newly left alone $kept, changed to a different word $other"
+            }
+            say("  %-16s changed (false corrections) %d = %.2f %%%s".format(GATES[k].toString(), changed,
+                100.0 * changed / pairs.size, extra))
+        }
+        for (p in pairs) {
+            val g = outs.getValue(p.typed)
+            if (g.outs.any { it != g.outs[0] }) rows += "C-oov-DEV\t${p.typed}\t${p.target}\t1\toov\t" +
+                g.outs.joinToString("\t") + "\t" + (g.notes?.joinToString("\t") ?: "")
+        }
+    }
+
+    /**
+     * T-trunc-DEV (§16.2's unfinished words): per setting, how many prefixes are completed to
+     * their target, completed to another word that extends them, left as typed, or rewritten into
+     * a word that does not extend them (hijacked), split by how many letters are missing.
+     */
+    private fun truncSummary(pairs: List<P>, outs: Map<String, GateOut>, rows: MutableList<String>, say: (String) -> Unit) {
+        say("\n== T-trunc-DEV: ${pairs.size} unfinished prefixes of ${pairs.map { it.target }.toSet().size} targets " +
+            "(target = the most frequent top-10k word the prefix starts)")
+        fun cat(o: String, p: P): Int = when {
+            en.ok(o, p.target) -> 0
+            o.equals(p.typed, true) -> 2
+            o.lowercase().startsWith(p.typed) -> 1
+            else -> 3
+        }
+        val names = arrayOf("completed to target", "completed to another word", "left as typed", "hijacked")
+        for (bucket in listOf("all", "1", "2", "3", "4+")) {
+            val sub = pairs.filter {
+                val gap = it.target.length - it.typed.length
+                bucket == "all" || (bucket == "4+" && gap >= 4) || bucket == gap.toString()
+            }
+            if (sub.isEmpty()) continue
+            say("  missing letters $bucket (${sub.size} prefixes, ${sub.map { it.target }.toSet().size} targets):")
+            for (k in GATES.indices) {
+                val raw = IntArray(4); val tg = Array(4) { HashSet<String>() }
+                for (p in sub) { val c = cat(outs.getValue(p.typed).outs[k], p); raw[c]++; tg[c] += p.target }
+                say("    %-16s ".format(GATES[k].toString()) + names.indices.joinToString("; ") { "${names[it]} ${raw[it]} (${tg[it].size})" })
+            }
+        }
+        for (p in pairs) {
+            val g = outs.getValue(p.typed)
+            if (g.outs.any { it != g.outs[0] }) rows += "T-trunc-DEV\t${p.typed}\t${p.target}\t1\tgap${p.target.length - p.typed.length}\t" +
+                g.outs.joinToString("\t") + "\t" + (g.notes?.joinToString("\t") ?: "")
+        }
+    }
+
+    /**
+     * Gate measurement (2026-11-23, descriptive, DEV data only, selects nothing): the 2×2 grid
+     * [GATES] under the shipped default stack (channel C2 + Hebrew δ + κ + ρ). `CK_GATES_SETS`
+     * (default all: named,dict,gtc,trunc,oov,sadj); S-adj-DEV is sampled to the base words with
+     * `(fnv(word) ushr 1) % CK_GATES_SADJ_MOD == 0` (default 4, a quarter; 1 = all).
+     */
+    private fun gatesPhase(say: (String) -> Unit) {
+        KeyAdjacency.setLayoutLetters(emptyMap())
+        val sets = (System.getenv("CK_GATES_SETS") ?: "named,dict,gtc,trunc,oov,sadj").split(',').map { it.trim() }.toSet()
+        val loose = GATES.indices.single { k ->
+            GATES.all { it.threshold >= GATES[k].threshold && it.maxLengthDiff <= GATES[k].maxLengthDiff }
+        }
+        val enP = GATES.map { gatedPredictor(en.predictor, en.aliases, it) }
+        val heP = GATES.map { gatedPredictor(he.predictor, emptyMap(), it) }
+        val rows = mutableListOf("set\ttyped\ttarget\tocc\tclass\t" + GATES.joinToString("\t") { "out $it" } +
+            "\t" + GATES.joinToString("\t") { "why $it" })
+        fun writeRows() = File(outDir, "rows-gates.tsv").writeText(rows.joinToString("\n") + "\n")
+        say("GATES (2026-11-23): settings ${GATES.joinToString("; ")}; baseline ${GATES[0]}; loosest ${GATES[loose]}; " +
+            "tuning = AutocorrectTuning.DEFAULT (ranking ${AutocorrectTuning.DEFAULT.ranking}, ${AutocorrectTuning.DEFAULT.channel})")
+        var mismatches = 0
+
+        if ("named" in sets) {
+            say("\n== Named cases through full production (§1.5 T5, shated, the round-6 report cases, Hebrew)")
+            for (k in GATES.indices) {
+                val en2 = NAMED_EN + (SHATED to "shared")
+                val bad = en2.filter { (t, want) -> enP[k].autoCorrect(t, AutocorrectTuning.DEFAULT) != want }
+                    .map { (t, want) -> "$t → ${enP[k].autoCorrect(t, AutocorrectTuning.DEFAULT)} (want $want)" }
+                val report = REPORT6.joinToString(" ") { "$it→${enP[k].autoCorrect(it, AutocorrectTuning.DEFAULT)}" }
+                KeyAdjacency.setLayoutLetters(heGrid)
+                val heBad = try {
+                    NAMED_HE.filter { (t, want) -> heP[k].autoCorrect(t, AutocorrectTuning.DEFAULT) != want }
+                        .map { (t, want) -> "$t → ${heP[k].autoCorrect(t, AutocorrectTuning.DEFAULT)} (want $want)" }
+                } finally { KeyAdjacency.setLayoutLetters(emptyMap()) }
+                say("  %-16s English failing %s; Hebrew failing %s; report: %s".format(GATES[k].toString(), bad, heBad, report))
+            }
+        }
+        if ("dict" in sets) {
+            val words = en.dict.entries.filter { it.key.length >= 2 && letters.matches(it.key) }
+                .sortedByDescending { it.value }.take(20_000).map { it.key }
+            for (k in GATES.indices) {
+                val changed = words.parallelStream().filter { enP[k].autoCorrect(it, AutocorrectTuning.DEFAULT) != it }.count()
+                say("  dictionary words (top 20,000, letters only) changed under ${GATES[k]}: $changed")
+            }
+        }
+        if ("gtc" in sets) {
+            val gtc = readGtc("DEV")
+            val inputs = gtc.map { it.typed }.distinct()
+            val outs = gateRun("GTC-DEV", inputs, enP, loose, say)
+            mismatches += gateSoundness("GTC-DEV", inputs, outs, enP, 600, say)
+            typoSummary("GTC-DEV", gtc, outs, rows, say); writeRows()
+        }
+        if ("trunc" in sets) {
+            val trunc = tTrunc(dev = true)
+            val inputs = trunc.map { it.typed }.distinct()
+            val outs = gateRun("T-trunc-DEV", inputs, enP, loose, say)
+            mismatches += gateSoundness("T-trunc-DEV", inputs, outs, enP, 300, say)
+            truncSummary(trunc, outs, rows, say); writeRows()
+        }
+        if ("oov" in sets) {
+            val oov = cOov(dev = true)
+            val inputs = oov.map { it.typed }.distinct()
+            val outs = gateRun("C-oov-DEV", inputs, enP, loose, say)
+            mismatches += gateSoundness("C-oov-DEV", inputs, outs, enP, 500, say)
+            oovSummary(oov, outs, rows, say); writeRows()
+        }
+        if ("sadj" in sets) {
+            val mod = System.getenv("CK_GATES_SADJ_MOD")?.toInt() ?: 4
+            val adj = sAdj(dev = true).filter { (fnv(it.target) ushr 1) % mod == 0 }
+            say("\nS-adj-DEV sample: base words with (fnv(word) ushr 1) % $mod == 0")
+            val inputs = adj.map { it.typed }.distinct()
+            val outs = gateRun("S-adj-DEV", inputs, enP, loose, say)
+            mismatches += gateSoundness("S-adj-DEV", inputs, outs, enP, 600, say)
+            typoSummary("S-adj-DEV", adj, outs, rows, say); writeRows()
+        }
+        say("\nsoundness mismatches in total: $mismatches (0 = every replayed output equals production)")
     }
 
     /**
