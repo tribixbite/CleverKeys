@@ -219,11 +219,39 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
   import prompt clears "Wrong backup password" on edit; an unreadable `am` import says so; the three
   clipboard limits stay Int after a restore or Reset All. Pure 4,026 and mock 1,969 pass (the pure and
   mock red runs failed first for the expected reasons; tests of new functions were compile-red);
-  release r5 `75496e3d…` built (scratchpad `rel/ck-r5-arm64.apk`), not on a phone. Instrumented runs NOT done: the host phone
-  was on Verizon mobile data (Wi-Fi not connected) and one emulator.wtf run uploads ~230 MB (the
-  test APK is 185 MB with the `ctc_bench` encoders), so the red run of `BackupPasswordUiStateTest` was
-  stopped mid-upload. **Run when on Wi-Fi:** `BackupPasswordUiStateTest` (3) and
-  `ClipboardFeatureTest2#export_namesTheAppVersion`, then A2.
+  release r5 `75496e3d…` built (scratchpad `rel/ck-r5-arm64.apk`). The instrumented runs waited for
+  Wi-Fi (the host was on Verizon mobile data; one run uploads ~230 MB). Done that evening:
+  `BackupPasswordUiStateTest` (3) and `ClipboardFeatureTest2#export_namesTheAppVersion` pass on API
+  34 at `bf1d246a` (`~/ew-output/fix-2026-11-24/`) and all 4 FAIL on a worktree build with the five
+  fixed files at their pre-fix state (`~/ew-output/fix-red-2026-11-24/`: the offer missing after
+  Set, the error kept after an edit, no `app_version`).
+- **Re-checked on the phones with r5 (2026-11-24 evening, adb back):** a 1.2.9 settings file alone
+  restored its 151 custom and 9 disabled words (in-app import, Note10+, CleverKeys installed fresh
+  and NOT the running keyboard; Dictionary Manager shows 145 English custom and 9 disabled);
+  "Export unencrypted…" appeared at once after Set Password and went with Remove (Pixel); the
+  23 Nov clipboard ZIP imported twice reported "Media files restored: 20", then "0" with the merge
+  note (Note10+); a Pixel clipboard export names `app_version` 2.0.0. **Found and fixed
+  (`73ec0b12`, RELEASE_RECORD "Additions 2026-11-24 (3)"):** the result's "Restart the keyboard
+  for changes to take effect" was stale (an `am` import gave the open keyboard a number row and a
+  new height, same pid 20657; theme, words and learned data also reach it live), so the settings
+  and full-backup results drop it; four keys nothing reads (`config_version`, `layouts_count`,
+  `neural_prediction_enabled`, `look_aurora_motion`) were imported from old backups as added
+  settings and are now tombstoned. A survey of every settings export in the host's Download found
+  20 more in the pre-1.0 dev exports (`kb-config-*.json`/`uk-config.json`, app 1.32.136–1.32.969,
+  Oct–Nov 2025, 19 files; no campaign restore used them): `neural_custom_decoder_uri`,
+  `neural_custom_encoder_uri`, `neural_model_version`, `neural_use_quantized`, six `privacy_*`
+  (PrivacyManager stores those in its own file under other names), `rollback_auto_enabled`,
+  `swipe_autocorrect_enabled`, four `swipe_confidence_*_weight`, `swipe_endpoint_bonus_weight`,
+  `swipe_first_letter_weight`, `swipe_last_letter_weight`, `swipe_require_endpoints`; tombstoned
+  too (`2d16e627`). Every other key in those files has a read site (`extra_key_*` is built
+  as `"extra_key_$name"`) or the legacy margin migration. Pure 4,030 / mock 1,969 pass; the new
+  tests failed first.
+- **A2 at `73ec0b12`** (`~/ew-output/a2-2026-11-24-r6/`): 1,684 instrumented on API 34, 36 and 37,
+  0 failed, 2 expected skips. API 35: 4 failed on one shard within 52 s, all "keyboard never shown"
+  timeouts (`ModifierStateAcrossResetsInstrumentedTest` ×3, `LayoutThemeSuggestionBarInstrumentedTest`
+  ×1; the IME failed `PHASE_WM_HAS_IME_INSETS_CONTROL_TARGET` on that emulator); both classes re-run
+  on API 35: 16/16 pass (`api35-rerun/`). The 20-key tombstone commit came after this A2 (pure-only
+  change).
 - **Kept as decisions (not changed):**
   - a clipboard restore keeps the to-do status and tags of a row the phone already has: the dialog
     says "Imports merge with existing history without overwriting", and restoring an old backup to
@@ -232,27 +260,27 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
     modified time (schema change) or a maintainer decision for "backup wins";
   - a Replace with an empty short-swipe section leaves the mappings (G-2: clearing is Reset all,
     never an import side effect);
-  - "Restart the keyboard for changes to take effect" after a settings restore: probably stale
-    (Settings and the keyboard share a process and the keyboard refreshes on each preference
-    change), but some settings apply only when a session is next built (CTC threads); check on a
-    phone before changing the text.
-- **Device state when adb went away (maintainer, 11:23: "adb will be unavailable for the next 5
-  hours") — CLEAN UP when it is back:**
-  - **Pixel:** release r2 (paste fix, without the vocabulary and size-limit fixes); the backup password
-    "meowmeow" is STILL SET (Settings → Backup & Restore → Remove); the Chrome `data:` test tab is open;
-    the delete of our files did not run before it dropped: remove from Download
-    `cleverkeys-clipboard-full.zip.ckenc`, `cleverkeys_full_backup_2026-11-24.zip.ckenc`,
-    `ck-test-clipfull-nov23.zip`, `ck-test-woof-clipfull.zip.ckenc`, and `Android/data/tribixbite.cleverkeys/files/*`;
-    its own 193 settings are restored, but the maintainer's historical words and ~2,200 clippings were
-    merged in and 159 of its newest clippings were lost to the size-limit bug: re-import its baseline
-    (`px-clip.ckenc`, scratchpad `bkp/base/`) after installing the fixed build; the S25U's short swipes
-    are on its keys (Reset all in Short Swipe Customization); not checked in.
-  - **Saga `.1.130`:** clean 2.0 r3 install, CleverKeys default IME, its own 190 settings restored; password
-    "meowmeow" STILL SET; `Download/CleverKeys/ck-own-*` to delete; Settings was in front at checkout
-    (launcher now); not checked in.
-  - **Note10+:** clean (CleverKeys uninstalled, test folder deleted, Samsung Keyboard, rotation and night
-    mode as found); the check-in line was not written. Its touchscreen reports a constant contact near
-    the upper right (`getevent` event3 raw 2486,864) that dismisses dialogs there — tell the maintainer.
+  - ~~"Restart the keyboard for changes to take effect" after a settings restore~~: checked on the
+    Pixel that evening, stale, removed (see the re-check bullet above). CTC threads still applies
+    only when the encoder session is next built; its own description says so.
+- **Device state, cleaned up 2026-11-24 17:00–17:12 (all three checked IN in `/sdcard/agent-sharing.md`):**
+  - **Pixel:** release r5 installed and stays; backup password REMOVED; its own clipboard baseline
+    re-imported (the 159 rows the old size-limit bug deleted are back: every baseline history,
+    pinned and to-do row present, 5,614 history rows). The r2 bug had also removed 1,624 rows
+    after the 10:53 ZIP export, including the S25U's 20 media; that ZIP was NOT re-imported, because
+    its 6.7 MB of media would make this phone's own 5 MB size limit keep only the newest 754 rows at
+    the next copy (3,112 of its own baseline rows gone; simulated from the exports). The maintainer's
+    merged historical words and clippings stay (merges cannot be undone). Its own 193 settings
+    restored; the three dead keys above are still stored there until a Reset All (nothing reads
+    them). Short swipes: Reset all (8 historical mappings removed). Test files deleted, Chrome
+    `data:` tab closed (7 → 6 tabs), home in front.
+  - **Saga `.1.130`:** r5 installed over r3; password REMOVED; `Download/CleverKeys/ck-own-*` and the
+    empty folder this campaign made deleted; CleverKeys default, rotation 0/0, Settings in front as
+    at checkout.
+  - **Note10+:** CleverKeys uninstalled again after the re-checks, test files deleted; Samsung
+    Keyboard, auto-rotate 1, night mode as found. Its touchscreen still reports a constant contact,
+    now at display ~(365,841) (it was ~(655,481) this morning): something on the glass or a fault —
+    tell the maintainer.
 
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
