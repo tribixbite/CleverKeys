@@ -1424,7 +1424,6 @@
     <string name="backup_result_source_version">• Versiunea sursei: %1$s</string>
     <string name="backup_result_export_date">• Exportat la: %1$s</string>
     <string name="backup_result_screen_mismatch">Nepotrivire de dimensiune a ecranului: sursă %1$dx%2$d, curent %3$dx%4$d. Unele setări vizuale ar putea necesita ajustare.</string>
-    <string name="backup_result_restart_keyboard">Reporniți tastatura pentru ca modificările să aibă efect.</string>
     <string name="backup_result_dict_import_completed">Importul dicționarului a fost finalizat.</string>
     <string name="backup_result_custom_words_applied">• Cuvinte personalizate aplicate: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Cuvinte dezactivate aplicate: %1$d</string>
@@ -1459,7 +1458,6 @@
     <string name="backup_result_full_clipboard_imported">• Clipboard importat: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard omis: %1$d (duplicate)</string>
     <string name="backup_result_media_restored">• Fișiere media restaurate: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Reporniți tastatura pentru ca modificările setărilor să aibă efect.</string>
     <string name="backup_result_full_import_failed_title">Importul backupului complet a eșuat</string>
     <string name="backup_result_full_import_failed">Importul backupului complet a eșuat:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Fișierul salvat are un format nevalid: %1$s</string>

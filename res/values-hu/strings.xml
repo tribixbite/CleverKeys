@@ -1390,7 +1390,6 @@
     <string name="backup_result_source_version">• Forrásverzió: %1$s</string>
     <string name="backup_result_export_date">• Exportálva: %1$s</string>
     <string name="backup_result_screen_mismatch">Eltérő képernyőméret: forrás %1$dx%2$d, jelenlegi %3$dx%4$d. Egyes megjelenítési beállítások módosításra szorulhatnak.</string>
-    <string name="backup_result_restart_keyboard">A módosítások érvénybe lépéséhez indítsa újra a billentyűzetet.</string>
     <string name="backup_result_dict_import_completed">A szótár importálása befejeződött.</string>
     <string name="backup_result_custom_words_applied">• Alkalmazott egyéni szavak: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Alkalmazott letiltott szavak: %1$d</string>
@@ -1425,7 +1424,6 @@
     <string name="backup_result_full_clipboard_imported">• Importált vágólap-bejegyzések: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Kihagyott vágólap-bejegyzések: %1$d (duplikátumok)</string>
     <string name="backup_result_media_restored">• Visszaállított médiafájlok: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">A beállítások módosításainak érvénybe lépéséhez indítsa újra a billentyűzetet.</string>
     <string name="backup_result_full_import_failed_title">Sikertelen teljes mentés-importálás</string>
     <string name="backup_result_full_import_failed">Nem sikerült importálni a teljes mentést:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">A mentett fájl hibás: %1$s</string>

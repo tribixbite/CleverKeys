@@ -1801,7 +1801,6 @@
     <string name="backup_result_source_version">• Source version: %1$s</string>
     <string name="backup_result_export_date">• Exported: %1$s</string>
     <string name="backup_result_screen_mismatch">Screen-size mismatch: source %1$dx%2$d, current %3$dx%4$d. Some visual settings may need adjustment.</string>
-    <string name="backup_result_restart_keyboard">Restart the keyboard for changes to take effect.</string>
     <string name="backup_result_dict_import_completed">Dictionary import completed.</string>
     <string name="backup_result_custom_words_applied">• Custom words applied: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Disabled words applied: %1$d</string>
@@ -1836,7 +1835,6 @@
     <string name="backup_result_full_clipboard_imported">• Clipboard imported: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard skipped: %1$d (duplicates)</string>
     <string name="backup_result_media_restored">• Media files restored: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Restart the keyboard for settings changes to take effect.</string>
     <string name="backup_result_full_import_failed_title">Full Backup Import Failed</string>
     <string name="backup_result_full_import_failed">Failed to import full backup:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Saved file is malformed: %1$s</string>

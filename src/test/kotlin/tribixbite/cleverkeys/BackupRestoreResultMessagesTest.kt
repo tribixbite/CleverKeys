@@ -23,7 +23,7 @@ class BackupRestoreResultMessagesTest {
     // -------------------------------------------------------------------
 
     @Test
-    fun settings_minimal_appliedCountAndRestartFooter() {
+    fun settings_minimal_appliedCountAndNoRestartLine() {
         val result = BackupRestoreManager.ImportResult().apply {
             importedCount = 5
         }
@@ -32,7 +32,11 @@ class BackupRestoreResultMessagesTest {
 
         assertTrue("opening line", msg.contains("Import completed."))
         assertTrue("applied line", msg.contains("• Applied: 5"))
-        assertTrue("footer", msg.contains("Restart the keyboard for changes to take effect."))
+        // Pixel 2026-11-24: an import changed the number row and the height of the keyboard on
+        // screen, same process, no restart. "Restart the keyboard for changes to take effect"
+        // asked for something nothing needs.
+        assertFalse("no restart line: $msg", msg.contains("Restart the keyboard"))
+        assertEquals("no trailing blank line", msg.trimEnd(), msg)
         // The optional sections must NOT appear when their counters are 0
         assertFalse(msg.contains("Excluded by you"))
         assertFalse(msg.contains("Invalid/skipped"))
@@ -277,6 +281,60 @@ class BackupRestoreResultMessagesTest {
         assertTrue(msg, msg.contains("• Exported: 2026-09-08 12:18:21"))
         assertFalse(msg, msg.contains("Source version"))
         assertTrue(msg, msg.endsWith("All media files and thumbnails have been restored."))
+    }
+
+    @Test
+    fun fullBackup_listsEachPart_andAsksForNoRestart() {
+        // Settings, words and learned data reach the running keyboard through its preference
+        // listener and the shared stores, so the restore needs no keyboard restart either.
+        val result = BackupRestoreManager.FullBackupImportResult(
+            success = true,
+            configImported = true,
+            configKeysApplied = 46,
+            customWordsImported = 628,
+            disabledWordsImported = 15,
+            clipboardEntriesImported = 6969,
+            clipboardEntriesSkipped = 2,
+            mediaFilesRestored = 20,
+            sourceAppVersion = "2.0.0",
+        )
+
+        val msg = buildFullBackupResultMessage(result, EnglishResourceText)
+
+        assertEquals(
+            listOf(
+                "Full backup import completed.",
+                "",
+                "• Settings applied: 46",
+                "• Custom words: 628",
+                "• Disabled words: 15",
+                "• Clipboard imported: 6969",
+                "• Clipboard skipped: 2 (duplicates)",
+                "• Media files restored: 20",
+                "• Source version: 2.0.0",
+            ),
+            msg.lines(),
+        )
+    }
+
+    @Test
+    fun fullBackup_namesThemesAndUnreadLearnedData_onlyWhenThereAreAny() {
+        val base = BackupRestoreManager.FullBackupImportResult(
+            success = true, configImported = true, configKeysApplied = 1, customWordsImported = 0,
+            disabledWordsImported = 0, clipboardEntriesImported = 0, clipboardEntriesSkipped = 0,
+            mediaFilesRestored = 0,
+        )
+        val plain = buildFullBackupResultMessage(base, EnglishResourceText)
+        assertFalse(plain, plain.contains("Custom themes restored"))
+        assertFalse(plain, plain.contains("Learned language data"))
+        assertFalse("no version line without one: $plain", plain.contains("Source version"))
+
+        val full = buildFullBackupResultMessage(
+            base.copy(customThemesImported = 2, learnedDataIncomplete = true),
+            EnglishResourceText,
+        )
+        assertTrue(full, full.contains("• Custom themes restored: 2"))
+        assertTrue(full, full.contains("• Learned language data: some entries could not be read and were skipped"))
     }
 
     @Test

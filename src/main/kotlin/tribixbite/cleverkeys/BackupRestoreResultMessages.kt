@@ -29,7 +29,12 @@ internal interface ResultText {
  * source version, screen-size mismatch) without spinning up the activity.
  * Every line is a string resource resolved through [ResultText] (2026-09-29
  * i18n sweep); the paragraph structure (blank line after the heading and
- * before the footer) is kept here, the wording lives in `res/values`.
+ * before a footer) is kept here, the wording lives in `res/values`.
+ *
+ * Settings and full-backup results carry no "restart the keyboard" footer (2026-11-24): an
+ * import reaches the running keyboard through its preference listener (layout, size and theme
+ * changed on screen on the Pixel with the same process) and the shared word and learned-data
+ * stores. The one setting that waits for a new encoder session says so in its own description.
  *
  * Note: `driftCount` is intentionally NOT rendered to the user — it's a
  * logcat-only telemetry signal (spec §Drift detection).
@@ -77,9 +82,35 @@ internal fun buildSettingsResultMessage(
             )
         )
     }
+}.trimEnd()
+
+/**
+ * Render a `FullBackupImportResult` into the result dialog body. Lifted out of
+ * `SettingsActivity.performFullBackupImport` (2026-11-24) so the lines are tested like the
+ * single-file results above.
+ */
+internal fun buildFullBackupResultMessage(
+    result: BackupRestoreManager.FullBackupImportResult,
+    text: ResultText,
+): String = buildString {
+    appendLine(text.string(R.string.backup_result_full_import_completed))
     appendLine()
-    append(text.string(R.string.backup_result_restart_keyboard))
-}
+    appendLine(text.string(R.string.backup_result_full_settings_applied, result.configKeysApplied))
+    appendLine(text.string(R.string.backup_result_full_custom_words, result.customWordsImported))
+    appendLine(text.string(R.string.backup_result_full_disabled_words, result.disabledWordsImported))
+    if (result.customThemesImported > 0) {
+        appendLine(text.string(R.string.backup_result_custom_themes_applied, result.customThemesImported))
+    }
+    if (result.learnedDataIncomplete) {
+        appendLine(text.string(R.string.backup_result_learned_data_incomplete))
+    }
+    appendLine(text.string(R.string.backup_result_full_clipboard_imported, result.clipboardEntriesImported))
+    appendLine(text.string(R.string.backup_result_full_clipboard_skipped, result.clipboardEntriesSkipped))
+    appendLine(text.string(R.string.backup_result_media_restored, result.mediaFilesRestored))
+    result.sourceAppVersion?.let {
+        appendLine(text.string(R.string.backup_result_source_version, it))
+    }
+}.trimEnd()
 
 /** Render a `DictionaryImportResult` into the result dialog body. */
 internal fun buildDictResultMessage(

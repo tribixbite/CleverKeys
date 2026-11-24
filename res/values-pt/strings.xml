@@ -1397,7 +1397,6 @@
     <string name="backup_result_source_version">• Versão de origem: %1$s</string>
     <string name="backup_result_export_date">• Exportado em: %1$s</string>
     <string name="backup_result_screen_mismatch">Tamanho de tela diferente: origem %1$dx%2$d, atual %3$dx%4$d. Algumas configurações visuais podem precisar de ajuste.</string>
-    <string name="backup_result_restart_keyboard">Reinicie o teclado para que as alterações tenham efeito.</string>
     <string name="backup_result_dict_import_completed">Importação do dicionário concluída.</string>
     <string name="backup_result_custom_words_applied">• Palavras personalizadas aplicadas: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Palavras desativadas aplicadas: %1$d</string>
@@ -1432,7 +1431,6 @@
     <string name="backup_result_full_clipboard_imported">• Área de transferência importada: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Área de transferência ignorada: %1$d (duplicados)</string>
     <string name="backup_result_media_restored">• Arquivos de mídia restaurados: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Reinicie o teclado para que as alterações de configuração tenham efeito.</string>
     <string name="backup_result_full_import_failed_title">Falha ao importar o backup completo</string>
     <string name="backup_result_full_import_failed">Falha ao importar o backup completo:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">O arquivo salvo está malformado: %1$s</string>

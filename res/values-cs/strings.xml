@@ -1410,7 +1410,6 @@
     <string name="backup_result_source_version">• Zdrojová verze: %1$s</string>
     <string name="backup_result_export_date">• Exportováno: %1$s</string>
     <string name="backup_result_screen_mismatch">Nesoulad velikosti obrazovky: zdroj %1$dx%2$d, aktuální %3$dx%4$d. Některá vizuální nastavení může být nutné upravit.</string>
-    <string name="backup_result_restart_keyboard">Aby se změny projevily, restartujte klávesnici.</string>
     <string name="backup_result_dict_import_completed">Import slovníku dokončen.</string>
     <string name="backup_result_custom_words_applied">• Použitá vlastní slova: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Použitá zakázaná slova: %1$d</string>
@@ -1445,7 +1444,6 @@
     <string name="backup_result_full_clipboard_imported">• Importováno ze schránky: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Přeskočeno ze schránky: %1$d (duplikáty)</string>
     <string name="backup_result_media_restored">• Obnovené mediální soubory: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Aby se změny nastavení projevily, restartujte klávesnici.</string>
     <string name="backup_result_full_import_failed_title">Import úplné zálohy se nezdařil</string>
     <string name="backup_result_full_import_failed">Úplnou zálohu se nepodařilo importovat:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Uložený soubor je poškozený: %1$s</string>

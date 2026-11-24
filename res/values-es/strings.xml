@@ -1415,7 +1415,6 @@
     <string name="backup_result_source_version">• Versión de origen: %1$s</string>
     <string name="backup_result_export_date">• Exportado: %1$s</string>
     <string name="backup_result_screen_mismatch">El tamaño de pantalla no coincide: origen %1$dx%2$d, actual %3$dx%4$d. Puede que haya que ajustar algunas opciones visuales.</string>
-    <string name="backup_result_restart_keyboard">Reinicia el teclado para que se apliquen los cambios.</string>
     <string name="backup_result_dict_import_completed">Importación del diccionario completada.</string>
     <string name="backup_result_custom_words_applied">• Palabras personalizadas aplicadas: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Palabras desactivadas aplicadas: %1$d</string>
@@ -1450,7 +1449,6 @@
     <string name="backup_result_full_clipboard_imported">• Portapapeles importado: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Portapapeles omitido: %1$d (duplicados)</string>
     <string name="backup_result_media_restored">• Archivos multimedia restaurados: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Reinicia el teclado para que se apliquen los cambios de ajustes.</string>
     <string name="backup_result_full_import_failed_title">Error al importar la copia completa</string>
     <string name="backup_result_full_import_failed">No se pudo importar la copia completa:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">El archivo guardado está mal formado: %1$s</string>

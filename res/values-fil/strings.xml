@@ -1396,7 +1396,6 @@
     <string name="backup_result_source_version">• Bersyon ng pinagmulan: %1$s</string>
     <string name="backup_result_export_date">• Na-export noong: %1$s</string>
     <string name="backup_result_screen_mismatch">Hindi tugma ang laki ng screen: pinagmulan %1$dx%2$d, kasalukuyan %3$dx%4$d. Maaaring kailangang ayusin ang ilang visual na setting.</string>
-    <string name="backup_result_restart_keyboard">I-restart ang keyboard para magkabisa ang mga pagbabago.</string>
     <string name="backup_result_dict_import_completed">Tapos na ang import ng diksyunaryo.</string>
     <string name="backup_result_custom_words_applied">• Nailapat na custom na salita: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Nailapat na disabled na salita: %1$d</string>
@@ -1431,7 +1430,6 @@
     <string name="backup_result_full_clipboard_imported">• Na-import na clipboard: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Nilaktawang clipboard: %1$d (duplicate)</string>
     <string name="backup_result_media_restored">• Na-restore na media file: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">I-restart ang keyboard para magkabisa ang mga pagbabago sa setting.</string>
     <string name="backup_result_full_import_failed_title">Nabigo ang Import ng Buong Backup</string>
     <string name="backup_result_full_import_failed">Nabigong i-import ang buong backup:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Sira ang naka-save na file: %1$s</string>

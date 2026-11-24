@@ -1384,7 +1384,6 @@
     <string name="backup_result_source_version">• Bronversie: %1$s</string>
     <string name="backup_result_export_date">• Geëxporteerd op: %1$s</string>
     <string name="backup_result_screen_mismatch">Schermgrootte komt niet overeen: bron %1$dx%2$d, huidig %3$dx%4$d. Sommige visuele instellingen moeten mogelijk worden aangepast.</string>
-    <string name="backup_result_restart_keyboard">Herstart het toetsenbord om de wijzigingen toe te passen.</string>
     <string name="backup_result_dict_import_completed">Woordenboekimport voltooid.</string>
     <string name="backup_result_custom_words_applied">• Aangepaste woorden toegepast: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Uitgeschakelde woorden toegepast: %1$d</string>
@@ -1419,7 +1418,6 @@
     <string name="backup_result_full_clipboard_imported">• Klembord geïmporteerd: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Klembord overgeslagen: %1$d (duplicaten)</string>
     <string name="backup_result_media_restored">• Mediabestanden hersteld: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Herstart het toetsenbord om de gewijzigde instellingen toe te passen.</string>
     <string name="backup_result_full_import_failed_title">Import van volledige back-up mislukt</string>
     <string name="backup_result_full_import_failed">Kon volledige back-up niet importeren:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Opgeslagen bestand is ongeldig: %1$s</string>

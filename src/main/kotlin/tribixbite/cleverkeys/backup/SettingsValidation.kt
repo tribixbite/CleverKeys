@@ -204,6 +204,16 @@ object SettingsValidation {
         // tiebreak.md). Deleted with its rule; the default channel ranking makes it unnecessary.
         // 2.0-dev backups (settings since 2026-10-18) may carry it.
         "autocorrect_neighbour_tiebreak",
+        // Restore campaign 2026-11-24: the maintainer's own backups wrote these back into prefs
+        // (an unknown key imports as an ADDED row). The 2025-11-19 file carries the Unexpected
+        // Keyboard migration marker `config_version` and `layouts_count` (both gone 2025-11-28)
+        // and the neural toggle `neural_prediction_enabled` (removed 2025-12-11, before the rest of
+        // the engine's keys above); 2.0-dev files carry `look_aurora_motion`, renamed
+        // `look_backdrop_motion` before release (2026-11-10) with no migration.
+        "config_version",
+        "layouts_count",
+        "neural_prediction_enabled",
+        "look_aurora_motion",
     )
 
     /**

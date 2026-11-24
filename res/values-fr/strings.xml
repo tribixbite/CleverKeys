@@ -1407,7 +1407,6 @@
     <string name="backup_result_source_version">• Version source : %1$s</string>
     <string name="backup_result_export_date">• Exporté le : %1$s</string>
     <string name="backup_result_screen_mismatch">Tailles d\'écran différentes : source %1$dx%2$d, actuel %3$dx%4$d. Certains paramètres visuels devront peut-être être ajustés.</string>
-    <string name="backup_result_restart_keyboard">Redémarrez le clavier pour appliquer les modifications.</string>
     <string name="backup_result_dict_import_completed">Import du dictionnaire terminé.</string>
     <string name="backup_result_custom_words_applied">• Mots personnalisés appliqués : %1$d</string>
     <string name="backup_result_disabled_words_applied">• Mots désactivés appliqués : %1$d</string>
@@ -1442,7 +1441,6 @@
     <string name="backup_result_full_clipboard_imported">• Presse-papiers importé : %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Presse-papiers ignoré : %1$d (doublons)</string>
     <string name="backup_result_media_restored">• Fichiers multimédias restaurés : %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Redémarrez le clavier pour appliquer les modifications des paramètres.</string>
     <string name="backup_result_full_import_failed_title">Échec de l\'import de la sauvegarde complète</string>
     <string name="backup_result_full_import_failed">Échec de l\'import de la sauvegarde complète :\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Le fichier enregistré est mal formé : %1$s</string>

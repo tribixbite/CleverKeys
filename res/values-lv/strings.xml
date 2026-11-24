@@ -1408,7 +1408,6 @@
     <string name="backup_result_source_version">• Avota versija: %1$s</string>
     <string name="backup_result_export_date">• Eksportēts: %1$s</string>
     <string name="backup_result_screen_mismatch">Ekrāna izmēri nesakrīt: avots %1$dx%2$d, pašreizējais %3$dx%4$d. Dažus vizuālos iestatījumus var nākties pielāgot.</string>
-    <string name="backup_result_restart_keyboard">Restartējiet tastatūru, lai izmaiņas stātos spēkā.</string>
     <string name="backup_result_dict_import_completed">Vārdnīcas importēšana pabeigta.</string>
     <string name="backup_result_custom_words_applied">• Lietoti pielāgotie vārdi: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Lietoti atspējotie vārdi: %1$d</string>
@@ -1443,7 +1442,6 @@
     <string name="backup_result_full_clipboard_imported">• Importēti starpliktuves ieraksti: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Izlaisti starpliktuves ieraksti: %1$d (dublikāti)</string>
     <string name="backup_result_media_restored">• Atjaunoti multivides faili: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Restartējiet tastatūru, lai iestatījumu izmaiņas stātos spēkā.</string>
     <string name="backup_result_full_import_failed_title">Pilnā dublējuma importēšana neizdevās</string>
     <string name="backup_result_full_import_failed">Neizdevās importēt pilno dublējumu:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Saglabātais fails ir bojāts: %1$s</string>

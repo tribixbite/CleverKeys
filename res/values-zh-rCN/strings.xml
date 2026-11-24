@@ -1369,7 +1369,6 @@
     <string name="backup_result_source_version">• 来源版本：%1$s</string>
     <string name="backup_result_export_date">• 导出时间：%1$s</string>
     <string name="backup_result_screen_mismatch">屏幕尺寸不一致：来源 %1$dx%2$d，当前 %3$dx%4$d。部分外观设置可能需要调整。</string>
-    <string name="backup_result_restart_keyboard">重启键盘以使更改生效。</string>
     <string name="backup_result_dict_import_completed">词典导入完成。</string>
     <string name="backup_result_custom_words_applied">• 已应用自定义词：%1$d</string>
     <string name="backup_result_disabled_words_applied">• 已应用禁用词：%1$d</string>
@@ -1404,7 +1403,6 @@
     <string name="backup_result_full_clipboard_imported">• 已导入剪贴板：%1$d</string>
     <string name="backup_result_full_clipboard_skipped">• 已跳过剪贴板：%1$d（重复）</string>
     <string name="backup_result_media_restored">• 已恢复媒体文件：%1$d</string>
-    <string name="backup_result_restart_keyboard_settings">重启键盘以使设置更改生效。</string>
     <string name="backup_result_full_import_failed_title">完整备份导入失败</string>
     <string name="backup_result_full_import_failed">导入完整备份失败：\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">已保存的文件格式有误：%1$s</string>

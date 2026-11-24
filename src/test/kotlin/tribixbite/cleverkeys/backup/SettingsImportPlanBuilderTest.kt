@@ -714,6 +714,33 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
+    fun deadKeysInTheMaintainersOldBackups_areFilteredFromThePreview() {
+        // Restore campaign 2026-11-24: the Pixel's export after the maintainer's backups were
+        // restored held keys nothing reads. The 2025-11-19 file carries `config_version` (the
+        // Unexpected Keyboard migration marker) and `layouts_count`, both gone 2025-11-28, and
+        // `neural_prediction_enabled` (the neural toggle, removed 2025-12-11); 2.0-dev files carry
+        // `look_aurora_motion`, renamed `look_backdrop_motion` before release (2026-11-10) without
+        // a migration. Unknown keys import as ADDED rows, so each needs its tombstone; the renamed
+        // key stays live.
+        val json = """{"preferences":{
+            "config_version": 4,
+            "layouts_count": 1,
+            "neural_prediction_enabled": true,
+            "look_aurora_motion": true,
+            "look_backdrop_motion": false
+        }}""".trimIndent()
+        val plan = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        assertThat(plan.changes.map { it.key }).containsExactly("look_backdrop_motion")
+        assertThat(plan.parseSkippedKeys.filter { it.kind == SkipKind.DEPRECATED }.map { it.key })
+            .containsExactly("config_version", "layouts_count", "neural_prediction_enabled", "look_aurora_motion")
+    }
+
+    @Test
     fun deprecatedPrefixMatchDoesNotSwallowLiveKeys() {
         // The prefix rule must not become a `startsWith("neural")` catch-all that also eats
         // an unrelated future key. Only the two documented per-language bases match.

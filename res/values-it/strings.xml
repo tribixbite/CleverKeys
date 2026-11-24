@@ -1437,7 +1437,6 @@
     <string name="backup_result_source_version">• Versione di origine: %1$s</string>
     <string name="backup_result_export_date">• Esportato il: %1$s</string>
     <string name="backup_result_screen_mismatch">Dimensioni dello schermo diverse: origine %1$dx%2$d, attuale %3$dx%4$d. Alcune impostazioni visive potrebbero richiedere modifiche.</string>
-    <string name="backup_result_restart_keyboard">Riavvia la tastiera per applicare le modifiche.</string>
     <string name="backup_result_dict_import_completed">Importazione del dizionario completata.</string>
     <string name="backup_result_custom_words_applied">• Parole personalizzate applicate: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Parole disabilitate applicate: %1$d</string>
@@ -1472,7 +1471,6 @@
     <string name="backup_result_full_clipboard_imported">• Appunti importati: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Appunti saltati: %1$d (duplicati)</string>
     <string name="backup_result_media_restored">• File multimediali ripristinati: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Riavvia la tastiera per applicare le modifiche alle impostazioni.</string>
     <string name="backup_result_full_import_failed_title">Importazione del backup completo non riuscita</string>
     <string name="backup_result_full_import_failed">Importazione del backup completo non riuscita:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Il file salvato non è valido: %1$s</string>

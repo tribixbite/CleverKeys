@@ -1399,7 +1399,6 @@
     <string name="backup_result_source_version">• Phiên bản nguồn: %1$s</string>
     <string name="backup_result_export_date">• Thời điểm xuất: %1$s</string>
     <string name="backup_result_screen_mismatch">Kích thước màn hình không khớp: nguồn %1$dx%2$d, hiện tại %3$dx%4$d. Một số cài đặt hiển thị có thể cần điều chỉnh.</string>
-    <string name="backup_result_restart_keyboard">Khởi động lại bàn phím để các thay đổi có hiệu lực.</string>
     <string name="backup_result_dict_import_completed">Đã nhập từ điển xong.</string>
     <string name="backup_result_custom_words_applied">• Từ tùy chỉnh đã áp dụng: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Từ bị tắt đã áp dụng: %1$d</string>
@@ -1434,7 +1433,6 @@
     <string name="backup_result_full_clipboard_imported">• Bộ nhớ tạm đã nhập: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Bộ nhớ tạm đã bỏ qua: %1$d (trùng lặp)</string>
     <string name="backup_result_media_restored">• Tệp phương tiện đã khôi phục: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Khởi động lại bàn phím để các thay đổi cài đặt có hiệu lực.</string>
     <string name="backup_result_full_import_failed_title">Nhập bản sao lưu đầy đủ thất bại</string>
     <string name="backup_result_full_import_failed">Không nhập được bản sao lưu đầy đủ:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Tệp đã lưu bị sai định dạng: %1$s</string>

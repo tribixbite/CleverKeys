@@ -1422,7 +1422,6 @@
     <string name="backup_result_source_version">• نسخهٔ مبدأ: %1$s</string>
     <string name="backup_result_export_date">• تاریخ برون‌بری: %1$s</string>
     <string name="backup_result_screen_mismatch">ناهمخوانی اندازهٔ صفحه: مبدأ %1$dx%2$d، کنونی %3$dx%4$d. ممکن است برخی تنظیمات ظاهری نیاز به تنظیم داشته باشند.</string>
-    <string name="backup_result_restart_keyboard">برای اعمال تغییرات، صفحه‌کلید را دوباره راه‌اندازی کنید.</string>
     <string name="backup_result_dict_import_completed">وارد کردن واژه‌نامه کامل شد.</string>
     <string name="backup_result_custom_words_applied">• واژه‌های سفارشی اعمال‌شده: %1$d</string>
     <string name="backup_result_disabled_words_applied">• واژه‌های غیرفعال اعمال‌شده: %1$d</string>
@@ -1457,7 +1456,6 @@
     <string name="backup_result_full_clipboard_imported">• موارد بریده‌دانِ واردشده: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• موارد بریده‌دانِ ردشده: %1$d (تکراری)</string>
     <string name="backup_result_media_restored">• فایل‌های رسانهٔ بازیابی‌شده: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">برای اعمال تغییرات تنظیمات، صفحه‌کلید را دوباره راه‌اندازی کنید.</string>
     <string name="backup_result_full_import_failed_title">وارد کردن پشتیبان کامل ناموفق بود</string>
     <string name="backup_result_full_import_failed">وارد کردن پشتیبان کامل ناموفق بود:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">فایل ذخیره‌شده خراب است: %1$s</string>

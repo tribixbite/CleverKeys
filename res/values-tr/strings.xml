@@ -1395,7 +1395,6 @@
     <string name="backup_result_source_version">• Kaynak sürüm: %1$s</string>
     <string name="backup_result_export_date">• Dışa aktarma tarihi: %1$s</string>
     <string name="backup_result_screen_mismatch">Ekran boyutu uyuşmazlığı: kaynak %1$dx%2$d, geçerli %3$dx%4$d. Bazı görsel ayarların düzenlenmesi gerekebilir.</string>
-    <string name="backup_result_restart_keyboard">Değişikliklerin geçerli olması için klavyeyi yeniden başlatın.</string>
     <string name="backup_result_dict_import_completed">Sözlük içe aktarma tamamlandı.</string>
     <string name="backup_result_custom_words_applied">• Uygulanan özel kelime: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Uygulanan devre dışı kelime: %1$d</string>
@@ -1430,7 +1429,6 @@
     <string name="backup_result_full_clipboard_imported">• İçe aktarılan pano kaydı: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Atlanan pano kaydı: %1$d (yinelenen)</string>
     <string name="backup_result_media_restored">• Geri yüklenen medya dosyası: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Ayar değişikliklerinin geçerli olması için klavyeyi yeniden başlatın.</string>
     <string name="backup_result_full_import_failed_title">Tam Yedek İçe Aktarma Başarısız</string>
     <string name="backup_result_full_import_failed">Tam yedek içe aktarılamadı:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Kaydedilen dosya hatalı biçimli: %1$s</string>

@@ -1421,7 +1421,6 @@
     <string name="backup_result_source_version">• Версія джерела: %1$s</string>
     <string name="backup_result_export_date">• Дата експорту: %1$s</string>
     <string name="backup_result_screen_mismatch">Розмір екрана не збігається: джерело %1$dx%2$d, поточний %3$dx%4$d. Деякі візуальні налаштування може знадобитися скоригувати.</string>
-    <string name="backup_result_restart_keyboard">Перезапустіть клавіатуру, щоб зміни набули чинності.</string>
     <string name="backup_result_dict_import_completed">Імпорт словника завершено.</string>
     <string name="backup_result_custom_words_applied">• Застосовано власних слів: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Застосовано вимкнених слів: %1$d</string>
@@ -1456,7 +1455,6 @@
     <string name="backup_result_full_clipboard_imported">• Імпортовано записів буфера обміну: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Пропущено записів буфера обміну: %1$d (дублікати)</string>
     <string name="backup_result_media_restored">• Відновлено медіафайлів: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Перезапустіть клавіатуру, щоб зміни налаштувань набули чинності.</string>
     <string name="backup_result_full_import_failed_title">Помилка імпорту повної копії</string>
     <string name="backup_result_full_import_failed">Не вдалося імпортувати повну резервну копію:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Збережений файл пошкоджено: %1$s</string>

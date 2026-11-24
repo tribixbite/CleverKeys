@@ -1420,7 +1420,6 @@
     <string name="backup_result_source_version">• Wersja źródłowa: %1$s</string>
     <string name="backup_result_export_date">• Wyeksportowano: %1$s</string>
     <string name="backup_result_screen_mismatch">Niezgodny rozmiar ekranu: źródło %1$dx%2$d, obecny %3$dx%4$d. Niektóre ustawienia wyglądu mogą wymagać dostosowania.</string>
-    <string name="backup_result_restart_keyboard">Uruchom ponownie klawiaturę, aby zmiany zaczęły działać.</string>
     <string name="backup_result_dict_import_completed">Import słownika zakończony.</string>
     <string name="backup_result_custom_words_applied">• Zastosowane własne słowa: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Zastosowane wyłączone słowa: %1$d</string>
@@ -1455,7 +1454,6 @@
     <string name="backup_result_full_clipboard_imported">• Zaimportowane ze schowka: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Pominięte ze schowka: %1$d (duplikaty)</string>
     <string name="backup_result_media_restored">• Przywrócone pliki multimedialne: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Uruchom ponownie klawiaturę, aby zmiany ustawień zaczęły działać.</string>
     <string name="backup_result_full_import_failed_title">Import pełnej kopii nie powiódł się</string>
     <string name="backup_result_full_import_failed">Nie udało się zaimportować pełnej kopii zapasowej:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">Zapisany plik jest uszkodzony: %1$s</string>

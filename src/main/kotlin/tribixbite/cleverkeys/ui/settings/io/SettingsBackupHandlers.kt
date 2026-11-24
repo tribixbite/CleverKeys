@@ -25,6 +25,7 @@ import tribixbite.cleverkeys.backup.BackupExportName
 import tribixbite.cleverkeys.backup.BackupExportNaming
 import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
+import tribixbite.cleverkeys.buildFullBackupResultMessage
 import tribixbite.cleverkeys.buildSettingsResultMessage
 
 /**
@@ -392,32 +393,10 @@ internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase:
                 loadCurrentSettings()
                 LocalBroadcastManager.getInstance(_self)
                     .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
-                val message = buildString {
-                    appendLine(getString(R.string.backup_result_full_import_completed))
-                    appendLine()
-                    appendLine(getString(R.string.backup_result_full_settings_applied, result.configKeysApplied))
-                    appendLine(getString(R.string.backup_result_full_custom_words, result.customWordsImported))
-                    appendLine(getString(R.string.backup_result_full_disabled_words, result.disabledWordsImported))
-                    if (result.customThemesImported > 0) {
-                        appendLine(getString(R.string.backup_result_custom_themes_applied, result.customThemesImported))
-                    }
-                    if (result.learnedDataIncomplete) {
-                        appendLine(getString(R.string.backup_result_learned_data_incomplete))
-                    }
-                    appendLine(
-                        getString(R.string.backup_result_full_clipboard_imported, result.clipboardEntriesImported)
-                    )
-                    appendLine(
-                        getString(R.string.backup_result_full_clipboard_skipped, result.clipboardEntriesSkipped)
-                    )
-                    appendLine(getString(R.string.backup_result_media_restored, result.mediaFilesRestored))
-                    result.sourceAppVersion?.let {
-                        appendLine(getString(R.string.backup_result_source_version, it))
-                    }
-                    appendLine()
-                    append(getString(R.string.backup_result_restart_keyboard_settings))
-                }
-                showIoResult(getString(R.string.backup_result_full_restored_title), message)
+                showIoResult(
+                    getString(R.string.backup_result_full_restored_title),
+                    buildFullBackupResultMessage(result, ResourcesResultText(resources)),
+                )
             } else {
                 showIoFailure(
                     R.string.backup_result_full_import_failed_title,

@@ -1383,7 +1383,6 @@
     <string name="backup_result_source_version">• Versi sumber: %1$s</string>
     <string name="backup_result_export_date">• Diekspor: %1$s</string>
     <string name="backup_result_screen_mismatch">Ukuran layar tidak cocok: sumber %1$dx%2$d, saat ini %3$dx%4$d. Beberapa pengaturan visual mungkin perlu disesuaikan.</string>
-    <string name="backup_result_restart_keyboard">Mulai ulang keyboard agar perubahan diterapkan.</string>
     <string name="backup_result_dict_import_completed">Impor kamus selesai.</string>
     <string name="backup_result_custom_words_applied">• Kata kustom diterapkan: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Kata dinonaktifkan diterapkan: %1$d</string>
@@ -1418,7 +1417,6 @@
     <string name="backup_result_full_clipboard_imported">• Clipboard diimpor: %1$d</string>
     <string name="backup_result_full_clipboard_skipped">• Clipboard dilewati: %1$d (duplikat)</string>
     <string name="backup_result_media_restored">• File media dipulihkan: %1$d</string>
-    <string name="backup_result_restart_keyboard_settings">Mulai ulang keyboard agar perubahan pengaturan diterapkan.</string>
     <string name="backup_result_full_import_failed_title">Impor Cadangan Penuh Gagal</string>
     <string name="backup_result_full_import_failed">Gagal mengimpor cadangan penuh:\n\n%1$s</string>
     <string name="clipboard_rules_saved_malformed">File tersimpan rusak: %1$s</string>
