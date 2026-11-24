@@ -204,40 +204,12 @@ object SettingsValidation {
         // tiebreak.md). Deleted with its rule; the default channel ranking makes it unnecessary.
         // 2.0-dev backups (settings since 2026-10-18) may carry it.
         "autocorrect_neighbour_tiebreak",
-        // Restore campaign 2026-11-24: the maintainer's own backups wrote these back into prefs
-        // (an unknown key imports as an ADDED row). The 2025-11-19 file carries the Unexpected
-        // Keyboard migration marker `config_version` and `layouts_count` (both gone 2025-11-28)
-        // and the neural toggle `neural_prediction_enabled` (removed 2025-12-11, before the rest of
-        // the engine's keys above); 2.0-dev files carry `look_aurora_motion`, renamed
-        // `look_backdrop_motion` before release (2026-11-10) with no migration.
-        "config_version",
-        "layouts_count",
-        "neural_prediction_enabled",
+        // Restore campaign 2026-11-24: the maintainer's 2.0 test-build backups wrote this back into
+        // prefs (an unknown key imports as an ADDED row). It shipped in the public dev build
+        // dev-c091598 and was renamed `look_backdrop_motion` the same day (2026-11-10) with no
+        // migration. Keys that only builds before v1.0.0 (2025-12-12, the first public release)
+        // wrote get no tombstone: those configs need no import handling (maintainer, 2026-11-24).
         "look_aurora_motion",
-        // The maintainer's pre-1.0 dev exports (app 1.32.136–1.32.969, Oct–Nov 2025) also carry
-        // these. No code reads them: PrivacyManager keeps its own prefs file under other names
-        // (`anonymize_data`, `allow_data_export`, …), and the model URIs, quantization flag and
-        // confidence/endpoint weights belonged to engines removed before 1.0.
-        "neural_custom_decoder_uri",
-        "neural_custom_encoder_uri",
-        "neural_model_version",
-        "neural_use_quantized",
-        "privacy_allow_export",
-        "privacy_allow_sharing",
-        "privacy_anonymize",
-        "privacy_auto_delete",
-        "privacy_local_only",
-        "privacy_retention_days",
-        "rollback_auto_enabled",
-        "swipe_autocorrect_enabled",
-        "swipe_confidence_frequency_weight",
-        "swipe_confidence_location_weight",
-        "swipe_confidence_shape_weight",
-        "swipe_confidence_velocity_weight",
-        "swipe_endpoint_bonus_weight",
-        "swipe_first_letter_weight",
-        "swipe_last_letter_weight",
-        "swipe_require_endpoints",
     )
 
     /**

@@ -234,24 +234,19 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
   (`73ec0b12`, RELEASE_RECORD "Additions 2026-11-24 (3)"):** the result's "Restart the keyboard
   for changes to take effect" was stale (an `am` import gave the open keyboard a number row and a
   new height, same pid 20657; theme, words and learned data also reach it live), so the settings
-  and full-backup results drop it; four keys nothing reads (`config_version`, `layouts_count`,
-  `neural_prediction_enabled`, `look_aurora_motion`) were imported from old backups as added
-  settings and are now tombstoned. A survey of every settings export in the host's Download found
-  20 more in the pre-1.0 dev exports (`kb-config-*.json`/`uk-config.json`, app 1.32.136–1.32.969,
-  Oct–Nov 2025, 19 files; no campaign restore used them): `neural_custom_decoder_uri`,
-  `neural_custom_encoder_uri`, `neural_model_version`, `neural_use_quantized`, six `privacy_*`
-  (PrivacyManager stores those in its own file under other names), `rollback_auto_enabled`,
-  `swipe_autocorrect_enabled`, four `swipe_confidence_*_weight`, `swipe_endpoint_bonus_weight`,
-  `swipe_first_letter_weight`, `swipe_last_letter_weight`, `swipe_require_endpoints`; tombstoned
-  too (`2d16e627`). Every other key in those files has a read site (`extra_key_*` is built
-  as `"extra_key_$name"`) or the legacy margin migration. Pure 4,030 / mock 1,969 pass; the new
-  tests failed first.
+  and full-backup results drop it; `look_aurora_motion` (the public dev build dev-c091598's name for
+  Animated scenes, renamed the same day without a migration) was imported from 2.0 test-build
+  backups as an added setting nothing reads and is now tombstoned. The Pixel's export also held
+  `config_version`, `layouts_count` and `neural_prediction_enabled`, and the pre-1.0 dev exports
+  (`kb-config-*.json`/`uk-config.json`, app 1.32.x, Oct–Nov 2025) 20 more such keys; those were
+  tombstoned too (`73ec0b12`, `2d16e627`) and withdrawn the same evening: **maintainer: configs from
+  before v1.0.0 (2025-12-12, the first public release) need no import fixes.** Pure 4,029 / mock
+  1,969 pass after the withdrawal; the new tests failed first.
 - **A2 at `73ec0b12`** (`~/ew-output/a2-2026-11-24-r6/`): 1,684 instrumented on API 34, 36 and 37,
   0 failed, 2 expected skips. API 35: 4 failed on one shard within 52 s, all "keyboard never shown"
   timeouts (`ModifierStateAcrossResetsInstrumentedTest` ×3, `LayoutThemeSuggestionBarInstrumentedTest`
   ×1; the IME failed `PHASE_WM_HAS_IME_INSETS_CONTROL_TARGET` on that emulator); both classes re-run
-  on API 35: 16/16 pass (`api35-rerun/`). The 20-key tombstone commit came after this A2 (pure-only
-  change).
+  on API 35: 16/16 pass (`api35-rerun/`). The tombstone changes after this A2 are pure-only.
 - **Kept as decisions (not changed):**
   - a clipboard restore keeps the to-do status and tags of a row the phone already has: the dialog
     says "Imports merge with existing history without overwriting", and restoring an old backup to
@@ -271,8 +266,8 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
     its 6.7 MB of media would make this phone's own 5 MB size limit keep only the newest 754 rows at
     the next copy (3,112 of its own baseline rows gone; simulated from the exports). The maintainer's
     merged historical words and clippings stay (merges cannot be undone). Its own 193 settings
-    restored; the three dead keys above are still stored there until a Reset All (nothing reads
-    them). Short swipes: Reset all (8 historical mappings removed). Test files deleted, Chrome
+    restored; `config_version`, `layouts_count` and `neural_prediction_enabled` from a pre-1.0 file
+    stay stored there (nothing reads them; no tombstone, so a Reset All keeps them too). Short swipes: Reset all (8 historical mappings removed). Test files deleted, Chrome
     `data:` tab closed (7 → 6 tabs), home in front.
   - **Saga `.1.130`:** r5 installed over r3; password REMOVED; `Download/CleverKeys/ck-own-*` and the
     empty folder this campaign made deleted; CleverKeys default, rotation 0/0, Settings in front as

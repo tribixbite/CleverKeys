@@ -647,10 +647,9 @@ editor that used to be listed here already ship in 2.0.)
 - Restoring settings or a full backup no longer ends with "Restart the keyboard for changes to
   take effect": the changes reach the keyboard at once (a restored number row and keyboard height
   appeared on the open keyboard).
-- Restoring an old backup no longer stores settings nothing reads any more (24 found in real
-  backups, such as `neural_prediction_enabled` and `look_aurora_motion`, the pre-release name of
-  Animated scenes); the import preview listed them as added settings. Reset All removes them where
-  an earlier restore stored them.
+- Restoring a backup from a 2.0 test build no longer stores `look_aurora_motion`, the test
+  builds' name for Animated scenes, which nothing reads; the import preview listed it as an added
+  setting. Reset All removes it where an earlier restore stored it.
 - Importing a settings backup no longer closes Settings and the keyboard. A backup whose key
   border width differed from the phone's crashed Settings as the import finished, and the keyboard
   with it (the settings had been applied). Settings also shows an imported border width now; it

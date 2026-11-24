@@ -3,7 +3,6 @@ package tribixbite.cleverkeys.backup
 import com.google.common.truth.Truth.assertThat
 import com.google.gson.JsonParser
 import org.junit.Test
-import tribixbite.cleverkeys.Defaults
 
 class SettingsImportPlanBuilderTest {
 
@@ -715,18 +714,13 @@ class SettingsImportPlanBuilderTest {
     }
 
     @Test
-    fun deadKeysInTheMaintainersOldBackups_areFilteredFromThePreview() {
-        // Restore campaign 2026-11-24: the Pixel's export after the maintainer's backups were
-        // restored held keys nothing reads. The 2025-11-19 file carries `config_version` (the
-        // Unexpected Keyboard migration marker) and `layouts_count`, both gone 2025-11-28, and
-        // `neural_prediction_enabled` (the neural toggle, removed 2025-12-11); 2.0-dev files carry
-        // `look_aurora_motion`, renamed `look_backdrop_motion` before release (2026-11-10) without
-        // a migration. Unknown keys import as ADDED rows, so each needs its tombstone; the renamed
-        // key stays live.
+    fun theTestBuildsAnimatedScenesKey_isFilteredFromThePreview() {
+        // Restore campaign 2026-11-24: the Pixel's export after the maintainer's 2.0 test-build
+        // backups were restored held `look_aurora_motion`, which nothing reads: the public dev
+        // build dev-c091598 wrote it and the next renamed it `look_backdrop_motion` (2026-11-10)
+        // without a migration. An unknown key imports as an ADDED row, so it needs a tombstone;
+        // the renamed key stays live. (Keys only pre-1.0.0 builds wrote get none: maintainer.)
         val json = """{"preferences":{
-            "config_version": 4,
-            "layouts_count": 1,
-            "neural_prediction_enabled": true,
             "look_aurora_motion": true,
             "look_backdrop_motion": false
         }}""".trimIndent()
@@ -738,38 +732,7 @@ class SettingsImportPlanBuilderTest {
         )
         assertThat(plan.changes.map { it.key }).containsExactly("look_backdrop_motion")
         assertThat(plan.parseSkippedKeys.filter { it.kind == SkipKind.DEPRECATED }.map { it.key })
-            .containsExactly("config_version", "layouts_count", "neural_prediction_enabled", "look_aurora_motion")
-    }
-
-    @Test
-    fun deadKeysInThePreOneDotZeroDevExports_areFilteredFromThePreview() {
-        // The maintainer's Oct–Nov 2025 exports (app 1.32.136–1.32.969, before 1.0) carry these
-        // 20 keys; nothing reads them (PrivacyManager keeps its own file under other names, the
-        // confidence weights and model URIs went with the old engines). `privacy_collect_swipe`,
-        // from the same files, is live and must still come through.
-        val dead = listOf(
-            "neural_custom_decoder_uri", "neural_custom_encoder_uri", "neural_model_version",
-            "neural_use_quantized", "privacy_allow_export", "privacy_allow_sharing", "privacy_anonymize",
-            "privacy_auto_delete", "privacy_local_only", "privacy_retention_days", "rollback_auto_enabled",
-            "swipe_autocorrect_enabled", "swipe_confidence_frequency_weight",
-            "swipe_confidence_location_weight", "swipe_confidence_shape_weight",
-            "swipe_confidence_velocity_weight", "swipe_endpoint_bonus_weight", "swipe_first_letter_weight",
-            "swipe_last_letter_weight", "swipe_require_endpoints",
-        )
-        val json = buildString {
-            append("""{"preferences":{""")
-            dead.forEach { append("\"$it\": 3,") }
-            append(""""privacy_collect_swipe": ${!Defaults.PRIVACY_COLLECT_SWIPE}}}""")
-        }
-        val plan = SettingsImportPlanBuilder.fromJson(
-            json,
-            currentSnapshot = emptyMap(),
-            screen = screen,
-            defaultSnapshot = SETTINGS_DEFAULTS,
-        )
-        assertThat(plan.changes.map { it.key }).containsExactly("privacy_collect_swipe")
-        assertThat(plan.parseSkippedKeys.filter { it.kind == SkipKind.DEPRECATED }.map { it.key })
-            .containsExactlyElementsIn(dead)
+            .containsExactly("look_aurora_motion")
     }
 
     @Test
