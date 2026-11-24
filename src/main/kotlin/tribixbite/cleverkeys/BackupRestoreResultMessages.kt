@@ -57,6 +57,13 @@ internal fun buildSettingsResultMessage(
     if (result.customThemesImported > 0) {
         appendLine(text.string(R.string.backup_result_custom_themes_applied, result.customThemesImported))
     }
+    // Words a 1.x settings file carried (2026-11-24).
+    if (result.customWordsAdded > 0) {
+        appendLine(text.string(R.string.backup_result_custom_words_applied, result.customWordsAdded))
+    }
+    if (result.disabledWordsAdded > 0) {
+        appendLine(text.string(R.string.backup_result_disabled_words_applied, result.disabledWordsAdded))
+    }
     if (result.sourceVersion != "unknown") {
         appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
     }
@@ -93,4 +100,41 @@ internal fun buildDictResultMessage(
     if (result.sourceVersion != "unknown") {
         appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
     }
+}
+
+/**
+ * Render a clipboard restore into the result dialog body: the JSON import, or with [withMedia]
+ * the ZIP import. The file's app version shows only when the file names one (clipboard exports
+ * since 2026-11-24); its export date has its own line — it used to be shown as the version
+ * ("Source version: 2026-09-08 12:18:21", Pixel). The ZIP says media was restored only when some
+ * was.
+ */
+internal fun buildClipboardImportResultMessage(
+    result: BackupRestoreManager.ClipboardImportResult,
+    withMedia: Boolean,
+    text: ResultText,
+): String = buildString {
+    appendLine(
+        text.string(
+            if (withMedia) R.string.clipboard_backup_zip_import_completed
+            else R.string.clipboard_backup_import_completed
+        )
+    )
+    appendLine()
+    appendLine(text.plural(R.plurals.clipboard_backup_imported_entries, result.importedCount, result.importedCount))
+    appendLine(text.plural(R.plurals.clipboard_backup_skipped_duplicates, result.skippedCount, result.skippedCount))
+    if (withMedia) {
+        appendLine(text.string(R.string.backup_result_media_restored, result.mediaFilesRestored))
+    }
+    if (result.sourceVersion != "unknown") {
+        appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
+    }
+    result.exportDate?.let { appendLine(text.string(R.string.backup_result_export_date, it)) }
+    appendLine()
+    append(
+        text.string(
+            if (withMedia && result.mediaFilesRestored > 0) R.string.clipboard_backup_zip_media_restored_note
+            else R.string.clipboard_backup_import_merge_note
+        )
+    )
 }

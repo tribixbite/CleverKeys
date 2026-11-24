@@ -1397,6 +1397,7 @@
     <string name="backup_result_short_swipe_applied">• Vuốt ngắn đã áp dụng: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Chủ đề tùy chỉnh đã khôi phục: %1$d</string>
     <string name="backup_result_source_version">• Phiên bản nguồn: %1$s</string>
+    <string name="backup_result_export_date">• Thời điểm xuất: %1$s</string>
     <string name="backup_result_screen_mismatch">Kích thước màn hình không khớp: nguồn %1$dx%2$d, hiện tại %3$dx%4$d. Một số cài đặt hiển thị có thể cần điều chỉnh.</string>
     <string name="backup_result_restart_keyboard">Khởi động lại bàn phím để các thay đổi có hiệu lực.</string>
     <string name="backup_result_dict_import_completed">Đã nhập từ điển xong.</string>

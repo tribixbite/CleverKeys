@@ -1369,6 +1369,7 @@
     <string name="backup_result_short_swipe_applied">• 적용된 짧은 스와이프: %1$d</string>
     <string name="backup_result_custom_themes_applied">• 복원된 사용자 지정 테마: %1$d</string>
     <string name="backup_result_source_version">• 원본 버전: %1$s</string>
+    <string name="backup_result_export_date">• 내보낸 날짜: %1$s</string>
     <string name="backup_result_screen_mismatch">화면 크기 불일치: 원본 %1$dx%2$d, 현재 %3$dx%4$d. 일부 화면 설정을 조정해야 할 수 있습니다.</string>
     <string name="backup_result_restart_keyboard">변경 사항을 적용하려면 키보드를 다시 시작하세요.</string>
     <string name="backup_result_dict_import_completed">사전 가져오기가 완료되었습니다.</string>

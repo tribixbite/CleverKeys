@@ -59,7 +59,9 @@ internal fun BackupPassphrasePromptDialog(
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = pass,
-                    onValueChange = { pass = it },
+                    // A new attempt clears the last one's "Wrong backup password" (it stayed
+                    // under the field while the next password was typed, Pixel 2026-11-24).
+                    onValueChange = { pass = it; vm.passphrasePromptError = null },
                     label = { Text(stringResource(R.string.backup_passphrase_prompt_label)) },
                     singleLine = true,
                     visualTransformation = transform,

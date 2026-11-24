@@ -46,9 +46,10 @@ private const val WEAK_LEN = 12
  */
 @Composable
 internal fun SettingsActivity.BackupPasswordBlock() {
-    // `remember` on a mutableState so status re-reads after a Set/Remove without a
-    // full recomposition trigger from elsewhere. hasPassphrase is cheap (prefs read).
-    var hasPassphrase by remember { mutableStateOf(backupPassphraseStore.hasPassphrase()) }
+    // Whether a password is set lives on the Activity ([SettingsActivity.backupPasswordSet]) so the
+    // section's "Export unencrypted…" offer follows a Set/Remove here too. The protection label is
+    // this block's alone; it is re-read after each Set/Remove.
+    val hasPassphrase = backupPasswordSet
     var protectionState by remember { mutableStateOf(backupPassphraseStore.protectionState()) }
     var showSetDialog by remember { mutableStateOf(false) }
     var showRemoveDialog by remember { mutableStateOf(false) }
@@ -137,7 +138,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
             onConfirm = { newPass ->
                 try {
                     backupPassphraseStore.setPassphrase(newPass)
-                    hasPassphrase = true
+                    backupPasswordSet = true
                     protectionState = backupPassphraseStore.protectionState()
                     showSetDialog = false
                     null
@@ -172,7 +173,7 @@ internal fun SettingsActivity.BackupPasswordBlock() {
                 stored?.let { java.util.Arrays.fill(it, ' ') }
                 if (ok) {
                     backupPassphraseStore.clear()
-                    hasPassphrase = false
+                    backupPasswordSet = false
                     protectionState = backupPassphraseStore.protectionState()
                     showRemoveDialog = false
                 }

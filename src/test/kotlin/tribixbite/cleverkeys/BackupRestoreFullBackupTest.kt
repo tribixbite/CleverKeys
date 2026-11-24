@@ -320,7 +320,8 @@ class BackupRestoreFullBackupTest {
 
         // clipboardDb.importFromJSON is the relaxed stub returning [0,0,0,0]; the point
         // is that we REACHED it (gate passed, decrypt succeeded, ZIP parsed).
-        assertEquals("2026-07-18T00:00:00", result.sourceVersion)
+        // The file's export date (reported as its "version" until 2026-11-24).
+        assertEquals("2026-07-18T00:00:00", result.exportDate)
         verify(atLeast = 1) { clipboardDb.importFromJSON(any()) }
     }
 

@@ -284,4 +284,44 @@ class SettingsImportPlanApplyTest {
             assertThat(e.message).contains("PrefValue.Unset is illegal")
         }
     }
+
+    /**
+     * The Settings screen, `Config.set_clipboard_history_limit` and Reset All store the three
+     * clipboard limits as Int; an import stored the String form the backup carries, so the stored
+     * TYPE flipped with every restore (Pixel, 2026-11-24). Readers accept both, but the type must
+     * not depend on whether the value was restored.
+     */
+    @Test
+    fun apply_clipboardLimits_areStoredAsTheIntTheSettingsScreenWrites() {
+        val plan = planWith(
+            SettingsChange("clipboard_history_limit", PrefValue.Unset, PrefValue.Str("50"), ChangeType.ADDED),
+            SettingsChange("clipboard_max_item_size_kb", PrefValue.Unset, PrefValue.Str("500"), ChangeType.ADDED),
+            SettingsChange("clipboard_size_limit_mb", PrefValue.Unset, PrefValue.Str("5"), ChangeType.ADDED),
+        )
+
+        runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        verify(exactly = 1) { editor.putInt("clipboard_history_limit", 50) }
+        verify(exactly = 1) { editor.putInt("clipboard_max_item_size_kb", 500) }
+        verify(exactly = 1) { editor.putInt("clipboard_size_limit_mb", 5) }
+        verify(exactly = 0) { editor.putString(match { it.startsWith("clipboard_") }, any()) }
+    }
+
+    /** The plan's String form of a limit stored as Int is the same value, not a drift. */
+    @Test
+    fun apply_aLimitStoredAsInt_isNotADriftFromItsStringForm() {
+        every { prefs.all } returns mapOf("clipboard_history_limit" to 50)
+        val plan = planWith(
+            SettingsChange("clipboard_history_limit", PrefValue.Str("50"), PrefValue.Str("80"), ChangeType.MODIFIED),
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        assertThat(result.driftCount).isEqualTo(0)
+        verify(exactly = 1) { editor.putInt("clipboard_history_limit", 80) }
+    }
 }

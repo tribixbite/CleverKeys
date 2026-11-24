@@ -1405,6 +1405,7 @@
     <string name="backup_result_short_swipe_applied">• Glissés courts appliqués : %1$d</string>
     <string name="backup_result_custom_themes_applied">• Thèmes personnalisés restaurés : %1$d</string>
     <string name="backup_result_source_version">• Version source : %1$s</string>
+    <string name="backup_result_export_date">• Exporté le : %1$s</string>
     <string name="backup_result_screen_mismatch">Tailles d\'écran différentes : source %1$dx%2$d, actuel %3$dx%4$d. Certains paramètres visuels devront peut-être être ajustés.</string>
     <string name="backup_result_restart_keyboard">Redémarrez le clavier pour appliquer les modifications.</string>
     <string name="backup_result_dict_import_completed">Import du dictionnaire terminé.</string>

@@ -1001,6 +1001,25 @@ open class BackupRestoreManager(
         val result = SettingsImportApplier.apply(
             plan, excludedKeys, shortSwipeMode, prefs, shortSwipeImporter, customThemeMode, customThemeStore,
         )
+        // A 1.x settings file carries the dictionary too; its words are added the way a dictionary
+        // restore adds them (words already on the phone are kept as they are). They used to be
+        // skipped as "restored by the dictionary import", a file the user may not have (2026-11-24).
+        // The settings are committed by now, so a failure here (a language over the word cap, a
+        // failed commit) is logged and leaves the counts at 0 rather than reporting the whole
+        // import as failed.
+        plan.legacyDictionaryJson?.let { json ->
+            try {
+                val dictPlan = DictImportPlanBuilder.fromJson(
+                    json, readCurrentCustomWordsByLang(prefs), readCurrentDisabledWordsByLang(prefs),
+                )
+                val (custom, disabled) = DictImportApplier.apply(dictPlan, emptySet(), emptySet(), prefs)
+                result.customWordsAdded = custom
+                result.disabledWordsAdded = disabled
+                Log.i(TAG, "Settings file words: $custom custom, $disabled disabled added")
+            } catch (e: Exception) {
+                Log.e(TAG, "Settings file words could not be added", e)
+            }
+        }
         // #156 F5: an import can write `clipboard_private_copy_toolbar_enabled` (a normal exportable
         // key) WITHOUT flipping the manifest-disabled PrivateCopyProcessTextActivity component. The
         // Settings-load path reconciles it, but the headless (Termux-intent) restore never re-enters
@@ -1087,6 +1106,10 @@ open class BackupRestoreManager(
         @JvmField var shortSwipeCustomizationsImported: Int = 0,
         /** File DIY themes stored by the import (`custom_themes` section). */
         @JvmField var customThemesImported: Int = 0,
+        /** Custom words a 1.x settings file carried that this phone did not have ([SettingsImportPlan.legacyDictionaryJson]). */
+        @JvmField var customWordsAdded: Int = 0,
+        /** Disabled words a 1.x settings file carried that this phone did not have. */
+        @JvmField var disabledWordsAdded: Int = 0,
     ) {
         fun hasScreenSizeMismatch(): Boolean {
             if (sourceScreenWidth == 0 || sourceScreenHeight == 0)
@@ -1639,13 +1662,14 @@ open class BackupRestoreManager(
                         mediaCommit = null
                         throw e
                     }
-                    val mediaFilesRestored = stagedMedia.size
+                    val addedMedia = mediaCommit?.addedEntryNames().orEmpty()
                     mediaCommit?.finish()
                     mediaCommit = null
                     stagingDir = null
 
                     // Regenerate thumbnails for imported media entries
                     val referencedPaths = clipboardDb.getAllReferencedMediaPaths()
+                    val mediaFilesRestored = restoredMediaCount(addedMedia, referencedPaths)
                     var thumbnailsRegenerated = 0
                     try {
                         for (path in referencedPaths) {
@@ -1679,9 +1703,7 @@ open class BackupRestoreManager(
                     result.importedCount = importResult[0] + importResult[1] + importResult[2]
                     result.skippedCount = importResult[3]
                     result.mediaFilesRestored = mediaFilesRestored
-                    if (jsonData.has("export_date")) {
-                        result.sourceVersion = jsonData.getString("export_date")
-                    }
+                    result.readSource(jsonData)
                     result
                 }
             }
@@ -1736,9 +1758,7 @@ open class BackupRestoreManager(
             // Kept OUT of skippedCount, which means "duplicate" everywhere it is read.
             result.truncatedCount = importResult[4]
 
-            if (importData.has("export_date")) {
-                result.sourceVersion = importData.getString("export_date")
-            }
+            result.readSource(importData)
 
             Log.i(
                 TAG,
@@ -1777,12 +1797,25 @@ open class BackupRestoreManager(
     data class ClipboardImportResult(
         @JvmField var importedCount: Int = 0,
         @JvmField var skippedCount: Int = 0,       // duplicates, NOT cap-dropped entries
+        /** The file's `app_version` (clipboard exports name it since 2026-11-24), else "unknown". */
         @JvmField var sourceVersion: String = "unknown",
+        /** The file's `export_date`; it used to be reported as [sourceVersion]. */
+        @JvmField var exportDate: String? = null,
+        /** Media files this restore added and an imported row uses ([MediaCommit.addedEntryNames]). */
         @JvmField var mediaFilesRestored: Int = 0,
         // ARC-034: dropped by ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY. 0 for every
         // real export (history caps out in the hundreds); non-zero means a synthetic payload.
         @JvmField var truncatedCount: Int = 0,
     )
+
+    /**
+     * Take a clipboard restore's version and export date from the file's own keys: the date was
+     * reported as the version ("Source version: 2026-09-08 12:18:21", Pixel 2026-11-24).
+     */
+    private fun ClipboardImportResult.readSource(file: org.json.JSONObject) {
+        sourceVersion = file.optString("app_version").ifEmpty { "unknown" }
+        exportDate = file.optString("export_date").ifEmpty { null }
+    }
 
     /**
      * Result of clipboard export operation
@@ -2145,7 +2178,9 @@ open class BackupRestoreManager(
             // manifest. Only now may media enter the live tree; the commit remains reversible
             // until all logical sections finish applying.
             mediaCommit = commitStagedMedia(stagedMedia, mediaManager, stage)
-            mediaFilesRestored = stagedMedia.size
+            // Counted once the clipboard rows are in (below): only the files this restore added
+            // that a row uses — not every archive member (2026-11-24).
+            val addedMedia = mediaCommit?.addedEntryNames().orEmpty()
 
             // CK-150-020: the section appliers below write SharedPreferences, which — unlike the
             // media commit (reversible via `mediaCommit`) and the clipboard import (one SQLite
@@ -2258,8 +2293,9 @@ open class BackupRestoreManager(
 
             // Regenerate thumbnails for any media we just extracted to disk. Mirrors
             // importClipboardHistoryZip's post-import housekeeping.
-            if (mediaFilesRestored > 0) {
+            if (stagedMedia.isNotEmpty()) {
                 val referencedPaths = clipboardDb.getAllReferencedMediaPaths()
+                mediaFilesRestored = restoredMediaCount(addedMedia, referencedPaths)
                 try {
                     for (path in referencedPaths) {
                         val file = mediaManager.getMediaFile(path)
@@ -2469,6 +2505,8 @@ open class BackupRestoreManager(
     private data class StagedMedia(val entryName: String, val file: File)
 
     private data class CommittedMedia(
+        /** The archive member's name, which is also the path a clipping stores. */
+        val entryName: String,
         val target: File,
         val backup: File?,
         val existed: Boolean,
@@ -2514,7 +2552,19 @@ open class BackupRestoreManager(
         fun finish() {
             stagingDir.deleteRecursively()
         }
+
+        /** Archive names of the files this commit created: nothing was at their path before. */
+        fun addedEntryNames(): List<String> = committed.filter { !it.existed }.map { it.entryName }
     }
+
+    /**
+     * How many media files a restore brought back: the ones it [added] to the phone that a
+     * clipping now uses ([referenced]). Counting every archive member reported "Media files
+     * restored: 25" for a ZIP whose rows were nearly all on the phone already: their files were
+     * there, and the files of rows that were not imported are swept as orphans (Pixel, 2026-11-24).
+     */
+    private fun restoredMediaCount(added: List<String>, referenced: Set<String>): Int =
+        added.count { it in referenced }
 
     private fun createImportStagingDir(): File {
         val dir = File(
@@ -2645,7 +2695,7 @@ open class BackupRestoreManager(
                 } else null
                 // Record the rollback instruction before replacing the target so a partial copy
                 // is still recoverable.
-                committed.add(CommittedMedia(target, backup, existed))
+                committed.add(CommittedMedia(media.entryName, target, backup, existed))
                 media.file.copyTo(target, overwrite = true)
             }
             return MediaCommit(stagingDir, committed)

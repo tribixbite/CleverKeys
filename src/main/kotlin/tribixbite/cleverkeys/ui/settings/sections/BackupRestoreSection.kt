@@ -198,8 +198,9 @@ internal fun SettingsActivity.BackupRestoreSection() {
 
                 // Stage B: plaintext opt-out (design §10 decision 1 — kept). Only
                 // meaningful once a password is set (otherwise exports are already
-                // plaintext). Arms a one-shot flag consumed by the NEXT export tap.
-                if (backupPassphraseStore.hasPassphrase()) {
+                // plaintext). Arms a one-shot flag consumed by the NEXT export tap. Reads the
+                // Activity's password state, which a Set/Remove updates (2026-11-24).
+                if (backupPasswordSet) {
                     Spacer(modifier = Modifier.height(12.dp))
                     var showPlaintextConfirm by remember { mutableStateOf(false) }
                     TextButton(onClick = { showPlaintextConfirm = true }) {

@@ -158,7 +158,22 @@ object SettingsImportApplier {
     /** `theme` preference prefix of a DIY theme (`CustomThemePrefPolicy.themePrefId`). */
     private const val CUSTOM_PREFIX = "custom_"
 
+    /**
+     * Numeric settings the plan carries as a String (the backup files' form, and the diff's
+     * canonical one) that the app itself stores as Int: the Settings screen, `Config.set_*` and
+     * Reset All write Int. An import wrote the String, so the stored type flipped with every
+     * restore (Pixel, 2026-11-24); the readers accept both, but the type should not depend on
+     * the writer.
+     */
+    private val STORED_AS_INT = setOf("clipboard_history_limit", "clipboard_max_item_size_kb", "clipboard_size_limit_mb")
+
     private fun dispatchPut(editor: SharedPreferences.Editor, key: String, value: PrefValue) {
+        if (key in STORED_AS_INT && value is PrefValue.Str) {
+            value.v.trim().toIntOrNull()?.let {
+                editor.putInt(key, it)
+                return
+            }
+        }
         when (value) {
             is PrefValue.Bool -> editor.putBoolean(key, value.v)
             is PrefValue.IntV -> editor.putInt(key, value.v)
@@ -177,7 +192,8 @@ object SettingsImportApplier {
             is PrefValue.Bool -> now == planCurrent.v
             is PrefValue.IntV -> now == planCurrent.v
             is PrefValue.FloatV -> now == planCurrent.v
-            is PrefValue.Str -> now == planCurrent.v
+            // A [STORED_AS_INT] key's plan value is its String form (2026-11-24).
+            is PrefValue.Str -> now == planCurrent.v || (now is Int && now.toString() == planCurrent.v)
             is PrefValue.JsonBlob -> now is String &&
                 JsonParser.parseString(now).toString() == planCurrent.raw
             PrefValue.Unset -> false   // unreachable; guard above

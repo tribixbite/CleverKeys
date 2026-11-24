@@ -321,61 +321,7 @@ class ConfigIntegrationTest {
         assertTrue("Swipe min dwell time should be non-negative", minDwellTime >= 0)
     }
 
-    @Test
-    fun testSwipeSensitivityLowPresetValues() {
-        // Low preset: Higher thresholds = less sensitive
-        // swipeMinDistance = 80f, swipeMinKeyDistance = 60f, swipeMinDwellTime = 30
-        val lowDistance = 80f
-        val lowKeyDistance = 60f
-        val lowDwellTime = 30
-
-        assertTrue("Low preset distance should be greater than medium",
-            lowDistance > 50f)
-        assertTrue("Low preset key distance should be greater than medium",
-            lowKeyDistance > 40f)
-        assertTrue("Low preset dwell time should be greater than medium",
-            lowDwellTime > 15)
-    }
-
-    @Test
-    fun testSwipeSensitivityMediumPresetValues() {
-        // Medium preset: Default values
-        // swipeMinDistance = 50f, swipeMinKeyDistance = 40f, swipeMinDwellTime = 15
-        val mediumDistance = 50f
-        val mediumKeyDistance = 40f
-        val mediumDwellTime = 15
-
-        assertTrue("Medium preset distance should be between low and high",
-            mediumDistance > 30f && mediumDistance < 80f)
-    }
-
-    @Test
-    fun testSwipeSensitivityHighPresetValues() {
-        // High preset: Lower thresholds = more sensitive
-        // swipeMinDistance = 30f, swipeMinKeyDistance = 25f, swipeMinDwellTime = 5
-        val highDistance = 30f
-        val highKeyDistance = 25f
-        val highDwellTime = 5
-
-        assertTrue("High preset distance should be less than medium",
-            highDistance < 50f)
-        assertTrue("High preset key distance should be less than medium",
-            highKeyDistance < 40f)
-        assertTrue("High preset dwell time should be less than medium",
-            highDwellTime < 15)
-    }
-
-    @Test
-    fun testSwipeSensitivityPresetOrdering() {
-        // Verify preset values follow logical ordering:
-        // Low (80) > Medium (50) > High (30)
-        val lowDistance = 80f
-        val mediumDistance = 50f
-        val highDistance = 30f
-
-        assertTrue("Low sensitivity should require more distance than medium",
-            lowDistance > mediumDistance)
-        assertTrue("Medium sensitivity should require more distance than high",
-            mediumDistance > highDistance)
-    }
+    // The swipe sensitivity presets' values are pinned by the pure
+    // SwipeSensitivityPresetsTest against the real table (2026-11-24); the four tests that
+    // stood here compared local constants and kept passing while Medium drifted off the defaults.
 }

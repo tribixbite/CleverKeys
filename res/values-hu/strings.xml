@@ -1388,6 +1388,7 @@
     <string name="backup_result_short_swipe_applied">• Alkalmazott rövid csúsztatások: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Visszaállított egyéni témák: %1$d</string>
     <string name="backup_result_source_version">• Forrásverzió: %1$s</string>
+    <string name="backup_result_export_date">• Exportálva: %1$s</string>
     <string name="backup_result_screen_mismatch">Eltérő képernyőméret: forrás %1$dx%2$d, jelenlegi %3$dx%4$d. Egyes megjelenítési beállítások módosításra szorulhatnak.</string>
     <string name="backup_result_restart_keyboard">A módosítások érvénybe lépéséhez indítsa újra a billentyűzetet.</string>
     <string name="backup_result_dict_import_completed">A szótár importálása befejeződött.</string>

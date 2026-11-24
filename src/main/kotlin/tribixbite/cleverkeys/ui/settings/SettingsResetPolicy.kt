@@ -143,9 +143,10 @@ object SettingsResetPolicy {
         put("clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
         put("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
         put("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION)
-        put("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB)
+        // Int, as the screen stores it (the String default flipped the stored type, 2026-11-24).
+        put("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
         put("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
-        put("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
+        put("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK)
         put("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         put("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
         put("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)

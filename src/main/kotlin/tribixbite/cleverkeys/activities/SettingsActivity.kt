@@ -141,11 +141,20 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal val settingsViewModel: SettingsViewModel by viewModels()
 
     /**
+     * Whether a backup password is set, as Compose state. The password block writes it on Set and
+     * Remove, and the "Export unencrypted…" offer reads it. The offer used to ask the store itself
+     * (a prefs read no recomposition followed), so it stayed missing after a password was set
+     * until Settings was reopened (Note10+ and Saga, 2026-11-24). Read from the store in onCreate.
+     */
+    internal var backupPasswordSet by mutableStateOf(false)
+
+    /**
      * Stage B: when `true`, the NEXT export launcher callback writes a PLAINTEXT file
      * (the "Export unencrypted…" opt-out). Consumed-and-reset by [consumePlaintextOptOut]
      * so it never leaks into a later export. Only relevant while a passphrase is set.
+     * Compose state, so the "armed" label ends when an export uses it (2026-11-24).
      */
-    internal var pendingPlaintextExport: Boolean = false
+    internal var pendingPlaintextExport by mutableStateOf(false)
 
     /** Read-and-clear [pendingPlaintextExport] (one-shot). */
     internal fun consumePlaintextOptOut(): Boolean {
@@ -857,6 +866,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
 
         // Load current settings
         loadCurrentSettings()
+        backupPasswordSet = backupPassphraseStore.hasPassphrase()
 
         // Review 2026-11-14 M24: listen from create to destroy. Unregistered in onPause, the
         // keyboard's toggle_scene_motion / toggle_true_black writes (made while Settings sits

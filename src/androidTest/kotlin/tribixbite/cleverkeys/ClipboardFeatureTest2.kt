@@ -447,6 +447,17 @@ class ClipboardFeatureTest2 {
         assertEquals(0, json.getInt("total_todo"))
     }
 
+    /**
+     * A clipboard file names the app that wrote it (2026-11-24): without it, the restore dialog
+     * showed the export DATE as "Source version" (Pixel).
+     */
+    @Test
+    fun export_namesTheAppVersion() {
+        val json = db.exportToJSON()!!
+
+        assertEquals(BuildConfig.VERSION_NAME, json.getString("app_version"))
+    }
+
     @Test
     fun export_emptyDatabaseTextOnlyNoMediaSkipped() {
         val json = db.exportToJSON(textOnly = true)!!

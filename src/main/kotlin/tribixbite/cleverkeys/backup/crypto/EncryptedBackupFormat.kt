@@ -254,9 +254,31 @@ object EncryptedBackupFormat {
      * Pure JVM so both the Activity's up-front defense-in-depth sniff and unit tests can
      * share the exact decision without touching Android APIs.
      */
-    fun rejectAsPlaintextForHeadless(head: ByteArray?): Boolean {
-        if (head == null) return true // fail closed
-        return sniff(head) != PayloadKind.ENCRYPTED
+    fun rejectAsPlaintextForHeadless(head: ByteArray?): Boolean =
+        headlessImportGate(head) != HeadlessImportGate.PROCEED
+
+    /** What the headless (automation) import gate does with a payload; see [headlessImportGate]. */
+    enum class HeadlessImportGate {
+        /** A CKENC container: decrypt-and-authenticate decides. */
+        PROCEED,
+
+        /** Readable but not encrypted (plaintext JSON or ZIP, or anything else): refused. */
+        NOT_ENCRYPTED,
+
+        /** CleverKeys could not open or read the payload: refused, and reported as unreadable. */
+        UNREADABLE,
+    }
+
+    /**
+     * [rejectAsPlaintextForHeadless] with the reason kept. A payload the app cannot read (`null`
+     * [head]: a file `adb push` or Termux put in `Download/`, EACCES) was refused as "plaintext
+     * backups are not accepted via automation", which sent the user after the wrong fix (Saga,
+     * 2026-11-24). It is still refused — fail closed — but as unreadable.
+     */
+    fun headlessImportGate(head: ByteArray?): HeadlessImportGate = when {
+        head == null -> HeadlessImportGate.UNREADABLE
+        sniff(head) == PayloadKind.ENCRYPTED -> HeadlessImportGate.PROCEED
+        else -> HeadlessImportGate.NOT_ENCRYPTED
     }
 
     /** JSON insignificant whitespace: space, tab, CR, LF. */

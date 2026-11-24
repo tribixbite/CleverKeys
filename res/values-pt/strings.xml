@@ -1395,6 +1395,7 @@
     <string name="backup_result_short_swipe_applied">• Deslizes curtos aplicados: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Temas personalizados restaurados: %1$d</string>
     <string name="backup_result_source_version">• Versão de origem: %1$s</string>
+    <string name="backup_result_export_date">• Exportado em: %1$s</string>
     <string name="backup_result_screen_mismatch">Tamanho de tela diferente: origem %1$dx%2$d, atual %3$dx%4$d. Algumas configurações visuais podem precisar de ajuste.</string>
     <string name="backup_result_restart_keyboard">Reinicie o teclado para que as alterações tenham efeito.</string>
     <string name="backup_result_dict_import_completed">Importação do dicionário concluída.</string>

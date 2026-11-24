@@ -196,12 +196,27 @@ class BackupRestoreActivity : ComponentActivity() {
             }
         }
 
-        // Headless IMPORT of a plaintext (legacy) payload → reject (closes injection).
-        if (isImport && importUri != null && payloadIsPlaintext(importUri)) {
-            android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted [$caller]")
-            Toast.makeText(this, R.string.backup_headless_plaintext_rejected, Toast.LENGTH_LONG).show()
-            finish()
-            return
+        // Headless IMPORT of anything but an encrypted backup → reject (closes injection). A file
+        // the app cannot read is refused too, but said so: it is not a plaintext backup.
+        if (isImport && importUri != null) {
+            val (gate, readFailure) = sniffHeadlessImport(importUri)
+            when (gate) {
+                EncryptedBackupFormat.HeadlessImportGate.PROCEED -> Unit
+                EncryptedBackupFormat.HeadlessImportGate.NOT_ENCRYPTED -> {
+                    android.util.Log.w(TAG, "Headless $action rejected: plaintext payload not accepted [$caller]")
+                    Toast.makeText(this, R.string.backup_headless_plaintext_rejected, Toast.LENGTH_LONG).show()
+                    finish()
+                    return
+                }
+                EncryptedBackupFormat.HeadlessImportGate.UNREADABLE -> {
+                    android.util.Log.w(TAG, "Headless $action rejected: payload unreadable [$caller]", readFailure)
+                    val reason = readFailure?.let { sanitizedFailureLabel(it) }
+                        ?: getString(R.string.backup_headless_reason_unreadable)
+                    Toast.makeText(this, getString(R.string.common_import_failed_detail, reason), Toast.LENGTH_LONG).show()
+                    finish()
+                    return
+                }
+            }
         }
 
         val actionFn: (() -> Unit)? = when (action) {
@@ -381,8 +396,9 @@ class BackupRestoreActivity : ComponentActivity() {
     }
 
     /**
-     * Sniff the leading bytes of [uri] and return `true` when the payload must be
-     * rejected on the headless path (design §4.3 — headless plaintext import is refused).
+     * Sniff the leading bytes of [uri] and decide what the headless path does with the payload
+     * (design §4.3 — headless plaintext import is refused): a [EncryptedBackupFormat.HeadlessImportGate],
+     * plus the exception when the payload could not be read (for the toast and the log).
      *
      * This is DEFENSE-IN-DEPTH only. The load-bearing gate is
      * [BackupRestoreManager.enforceHeadlessEncryptionPolicy], which runs at the same
@@ -391,19 +407,21 @@ class BackupRestoreActivity : ComponentActivity() {
      * This up-front sniff opens a *separate* stream and only short-circuits obvious
      * plaintext before the manager is even invoked.
      *
-     * Returns `true` for:
+     * Returns NOT_ENCRYPTED for:
      *  - PLAINTEXT_JSON / PLAINTEXT_ZIP — legacy plaintext backups (rejected).
      *  - UNKNOWN — an unrecognized/garbage payload (rejected; the manager would reject
      *    it too, but there is no reason to proceed).
-     *  - ANY sniff FAILURE (stream throws / null) — **fail CLOSED**: an unsniffable
-     *    payload is treated as plaintext on the headless path. (Previously fail-open,
-     *    which — combined with the separate-stream TOCTOU — let an attacker throw on
-     *    this open and serve plaintext on the import read.)
      *
-     * Returns `false` ONLY for ENCRYPTED — the sole payload allowed to proceed to
+     * Returns UNREADABLE for ANY sniff FAILURE (stream throws / null) — **fail CLOSED**: an
+     * unsniffable payload is rejected on the headless path. (Previously fail-open, which —
+     * combined with the separate-stream TOCTOU — let an attacker throw on this open and serve
+     * plaintext on the import read.) Until 2026-11-24 it was reported as plaintext, which
+     * misled a user whose file the app could not read (Saga, EACCES on an adb-pushed file).
+     *
+     * Returns PROCEED ONLY for ENCRYPTED — the sole payload allowed to proceed to
      * the manager's decrypt-and-authenticate step, which is the real gate.
      */
-    private fun payloadIsPlaintext(uri: Uri): Boolean {
+    private fun sniffHeadlessImport(uri: Uri): Pair<EncryptedBackupFormat.HeadlessImportGate, Exception?> {
         return try {
             val head = contentResolver.openInputStream(uri)?.use { stream ->
                 val buffer = ByteArray(EncryptedBackupFormat.HEADER_LEN)
@@ -415,12 +433,11 @@ class BackupRestoreActivity : ComponentActivity() {
                 }
                 if (filled == buffer.size) buffer else buffer.copyOf(filled)
             }
-            EncryptedBackupFormat.rejectAsPlaintextForHeadless(head)
+            EncryptedBackupFormat.headlessImportGate(head) to null
         } catch (e: Exception) {
             // Unsniffable payload → fail CLOSED (reject) — the manager seam is the real
             // gate, but a hostile source that throws here must NOT slip past.
-            android.util.Log.w(TAG, "Could not sniff import payload; treating as plaintext (fail closed)", e)
-            true
+            EncryptedBackupFormat.HeadlessImportGate.UNREADABLE to e
         }
     }
 
@@ -454,6 +471,11 @@ class BackupRestoreActivity : ComponentActivity() {
                     backupRestoreManager.importConfig(uri, prefs)
                 }
                 DirectBootAwarePreferences.copy_preferences_to_protected_storage(this@BackupRestoreActivity, prefs)
+                // Words a 1.x settings file carried: the keyboard reloads its dictionary.
+                if (result.customWordsAdded + result.disabledWordsAdded > 0) {
+                    LocalBroadcastManager.getInstance(this@BackupRestoreActivity)
+                        .sendBroadcast(Intent(ACTION_DICTIONARY_IMPORTED))
+                }
                 headlessToast(
                     resources.getQuantityString(
                         R.plurals.backup_headless_settings_imported, result.importedCount, result.importedCount

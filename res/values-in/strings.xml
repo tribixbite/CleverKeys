@@ -1381,6 +1381,7 @@
     <string name="backup_result_short_swipe_applied">• Geser pendek diterapkan: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Tema kustom dipulihkan: %1$d</string>
     <string name="backup_result_source_version">• Versi sumber: %1$s</string>
+    <string name="backup_result_export_date">• Diekspor: %1$s</string>
     <string name="backup_result_screen_mismatch">Ukuran layar tidak cocok: sumber %1$dx%2$d, saat ini %3$dx%4$d. Beberapa pengaturan visual mungkin perlu disesuaikan.</string>
     <string name="backup_result_restart_keyboard">Mulai ulang keyboard agar perubahan diterapkan.</string>
     <string name="backup_result_dict_import_completed">Impor kamus selesai.</string>

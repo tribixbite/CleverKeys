@@ -1413,6 +1413,7 @@
     <string name="backup_result_short_swipe_applied">• Применено коротких свайпов: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Восстановлено пользовательских тем: %1$d</string>
     <string name="backup_result_source_version">• Версия источника: %1$s</string>
+    <string name="backup_result_export_date">• Дата экспорта: %1$s</string>
     <string name="backup_result_screen_mismatch">Размер экрана не совпадает: источник %1$dx%2$d, текущий %3$dx%4$d. Некоторые визуальные настройки могут потребовать корректировки.</string>
     <string name="backup_result_restart_keyboard">Перезапустите клавиатуру, чтобы изменения вступили в силу.</string>
     <string name="backup_result_dict_import_completed">Импорт словаря завершён.</string>

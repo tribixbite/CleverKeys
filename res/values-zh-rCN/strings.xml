@@ -1367,6 +1367,7 @@
     <string name="backup_result_short_swipe_applied">• 已应用短滑动：%1$d</string>
     <string name="backup_result_custom_themes_applied">• 已恢复自定义主题：%1$d</string>
     <string name="backup_result_source_version">• 来源版本：%1$s</string>
+    <string name="backup_result_export_date">• 导出时间：%1$s</string>
     <string name="backup_result_screen_mismatch">屏幕尺寸不一致：来源 %1$dx%2$d，当前 %3$dx%4$d。部分外观设置可能需要调整。</string>
     <string name="backup_result_restart_keyboard">重启键盘以使更改生效。</string>
     <string name="backup_result_dict_import_completed">词典导入完成。</string>

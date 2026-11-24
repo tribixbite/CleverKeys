@@ -286,6 +286,12 @@ internal fun SettingsActivity.applyPlannedSettings(
                 backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs, customThemeMode)
             }
             DirectBootAwarePreferences.copy_preferences_to_protected_storage(_self, prefs)
+            // Words a 1.x settings file carried: the keyboard reloads its dictionary, as after a
+            // dictionary restore.
+            if (result.customWordsAdded + result.disabledWordsAdded > 0) {
+                LocalBroadcastManager.getInstance(_self)
+                    .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
+            }
             loadCurrentSettings()
             showIoResult(
                 getString(R.string.backup_result_import_success_title),

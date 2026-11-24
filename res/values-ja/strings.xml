@@ -1368,6 +1368,7 @@
     <string name="backup_result_short_swipe_applied">• 適用したショートスワイプ: %1$d</string>
     <string name="backup_result_custom_themes_applied">• 復元したカスタムテーマ: %1$d</string>
     <string name="backup_result_source_version">• 作成元のバージョン: %1$s</string>
+    <string name="backup_result_export_date">• エクスポート日時: %1$s</string>
     <string name="backup_result_screen_mismatch">画面サイズが一致しません: 作成元 %1$dx%2$d、現在 %3$dx%4$d。一部の表示設定の調整が必要になる場合があります。</string>
     <string name="backup_result_restart_keyboard">変更を反映するには、キーボードを再起動してください。</string>
     <string name="backup_result_dict_import_completed">辞書のインポートが完了しました。</string>

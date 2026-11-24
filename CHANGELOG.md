@@ -624,6 +624,26 @@ editor that used to be listed here already ship in 2.0.)
 - A clipboard history limited by size (Clipboard → Limit Type → By Size) removes the oldest clippings.
   It removed the newest: once the history was full, each new copy was deleted as soon as it
   was stored. The count limit, the default, was not affected.
+- Restoring a settings backup from version 1.x also restores the custom and disabled words it
+  contains (words already on the phone are kept). They were skipped as "restored by the
+  dictionary import", which reads a different file.
+- A 1.4 or 1.5 settings backup no longer sets Touch Offset Correction to 13%. Those backups carry
+  the old swipe engine's default, 12.5, which was never measured; restoring one keeps today's
+  default, 0, as upgrading from 1.5 does. Other values from those versions still round to whole
+  percents.
+- The Medium swipe Sensitivity Preset is the default thresholds (72 px, 15 px, 7 ms). It set
+  50 px, 40 px and 15 ms, and the defaults showed as Custom. High no longer asks for a longer key
+  distance than the default.
+- A clipboard restore counts only the media files it added ("Media files restored" counted every
+  file in the backup, those of clippings already on the phone included), shows the backup's
+  export date on its own line instead of as "Source version", and says media was restored only
+  when some was. Clipboard exports now name the app version.
+- After you set a backup password, "Export unencrypted…" appears at once (it appeared only after
+  Settings was reopened), and its "next export will be unencrypted" notice ends when an export
+  uses it.
+- The backup password prompt clears "Wrong backup password…" when you type the next password.
+- An `am start` import of a file CleverKeys cannot read (one `adb push` or Termux put in
+  Download/) says the file cannot be read. It said plaintext backups are not accepted.
 - Importing a settings backup no longer closes Settings and the keyboard. A backup whose key
   border width differed from the phone's crashed Settings as the import finished, and the keyboard
   with it (the settings had been applied). Settings also shows an imported border width now; it

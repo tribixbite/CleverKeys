@@ -2,6 +2,7 @@ package tribixbite.cleverkeys.ui.settings
 
 import android.widget.Toast
 import androidx.annotation.StringRes
+import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 
@@ -20,51 +21,57 @@ internal enum class SwipeSensitivityPreset(@StringRes val labelRes: Int) {
     CUSTOM(R.string.settings_sensitivity_preset_custom),
 }
 
-/**
- * Get current swipe sensitivity preset based on current values
- */
-internal fun SettingsActivity.getSwipeSensitivityPreset(): SwipeSensitivityPreset {
-        // Low: Higher thresholds = less sensitive
-        val lowPreset = swipeMinDistance == 80f && swipeMinKeyDistance == 60f && swipeMinDwellTime == 30
-        // Medium: Default values
-        val mediumPreset = swipeMinDistance == 50f && swipeMinKeyDistance == 40f && swipeMinDwellTime == 15
-        // High: Lower thresholds = more sensitive
-        val highPreset = swipeMinDistance == 30f && swipeMinKeyDistance == 25f && swipeMinDwellTime == 5
+/** The three thresholds a sensitivity preset sets: swipe distance (px), key distance (px), dwell (ms). */
+internal data class SwipeThresholds(val minDistance: Float, val minKeyDistance: Float, val minDwellMs: Int)
 
-        return when {
-            lowPreset -> SwipeSensitivityPreset.LOW
-            mediumPreset -> SwipeSensitivityPreset.MEDIUM
-            highPreset -> SwipeSensitivityPreset.HIGH
-            else -> SwipeSensitivityPreset.CUSTOM
-        }
+/**
+ * What each [SwipeSensitivityPreset] sets, and the sliders' ranges and steps (Gesture Tuning uses
+ * these, so every preset value is a stop of its slider). Pure; pinned by SwipeSensitivityPresetsTest.
+ *
+ * Medium is the shipped defaults. It set 50 px / 40 px / 15 ms while the defaults are 72 / 15 / 7
+ * (2026-11-24), so choosing it doubled the dwell, past the 8.3 ms frame gap of a 120 Hz screen,
+ * which drops the second key of fast short swipes (`in`, `is`, `was`), and the defaults showed as
+ * Custom. High's key distance was 25 px, above the 15 px default it should undercut; 15 is the
+ * slider's minimum, so High now shares it.
+ */
+internal object SwipeSensitivityPresets {
+    val MIN_DISTANCE_RANGE = 20f..100f
+    const val MIN_DISTANCE_STEP = 1f
+    val MIN_KEY_DISTANCE_RANGE = 15f..80f
+    const val MIN_KEY_DISTANCE_STEP = 5f
+    val MIN_DWELL_RANGE = 0f..50f
+    const val MIN_DWELL_STEP = 1f
+
+    /** The thresholds [preset] sets, or null for [SwipeSensitivityPreset.CUSTOM] (it sets none). */
+    fun thresholds(preset: SwipeSensitivityPreset): SwipeThresholds? = when (preset) {
+        // Higher thresholds: less sensitive.
+        SwipeSensitivityPreset.LOW -> SwipeThresholds(80f, 60f, 30)
+        SwipeSensitivityPreset.MEDIUM -> SwipeThresholds(
+            Defaults.SWIPE_MIN_DISTANCE, Defaults.SWIPE_MIN_KEY_DISTANCE, Defaults.SWIPE_MIN_DWELL_TIME,
+        )
+        // Lower thresholds: more sensitive.
+        SwipeSensitivityPreset.HIGH -> SwipeThresholds(30f, 15f, 5)
+        SwipeSensitivityPreset.CUSTOM -> null
+    }
+
+    /** The preset whose thresholds are exactly [current], else [SwipeSensitivityPreset.CUSTOM]. */
+    fun presetFor(current: SwipeThresholds): SwipeSensitivityPreset =
+        SwipeSensitivityPreset.entries.firstOrNull { thresholds(it) == current } ?: SwipeSensitivityPreset.CUSTOM
 }
 
-/**
- * Apply swipe sensitivity preset values
- */
+/** The preset the current three thresholds match, else Custom. */
+internal fun SettingsActivity.getSwipeSensitivityPreset(): SwipeSensitivityPreset =
+    SwipeSensitivityPresets.presetFor(SwipeThresholds(swipeMinDistance, swipeMinKeyDistance, swipeMinDwellTime))
+
+/** Set and save the three thresholds of [preset]; Custom changes nothing. */
 internal fun SettingsActivity.applySwipeSensitivityPreset(preset: SwipeSensitivityPreset) {
-        when (preset) {
-            SwipeSensitivityPreset.LOW -> {
-                swipeMinDistance = 80f
-                swipeMinKeyDistance = 60f
-                swipeMinDwellTime = 30
-            }
-            SwipeSensitivityPreset.MEDIUM -> {
-                swipeMinDistance = 50f
-                swipeMinKeyDistance = 40f
-                swipeMinDwellTime = 15
-            }
-            SwipeSensitivityPreset.HIGH -> {
-                swipeMinDistance = 30f
-                swipeMinKeyDistance = 25f
-                swipeMinDwellTime = 5
-            }
-            SwipeSensitivityPreset.CUSTOM -> return // Don't change values
-        }
-        // Save the new values
-        saveSetting("swipe_min_distance", swipeMinDistance)
-        saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
-        saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
+    val t = SwipeSensitivityPresets.thresholds(preset) ?: return
+    swipeMinDistance = t.minDistance
+    swipeMinKeyDistance = t.minKeyDistance
+    swipeMinDwellTime = t.minDwellMs
+    saveSetting("swipe_min_distance", swipeMinDistance)
+    saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
+    saveSetting("swipe_min_dwell_time", swipeMinDwellTime)
 }
 
 internal fun SettingsActivity.resetAllSettings() {

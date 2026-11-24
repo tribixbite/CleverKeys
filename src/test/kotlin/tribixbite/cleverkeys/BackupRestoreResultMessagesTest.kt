@@ -225,4 +225,90 @@ class BackupRestoreResultMessagesTest {
 
         assertFalse(msg.contains("Learned language data"))
     }
+
+    // -------------------------------------------------------------------
+    // Settings — words a 1.x settings file carries (2026-11-24)
+    // -------------------------------------------------------------------
+
+    @Test
+    fun settings_wordsFromALegacySettingsFile_renderTheirCounts() {
+        val result = BackupRestoreManager.ImportResult().apply {
+            importedCount = 2
+            customWordsAdded = 133
+            disabledWordsAdded = 9
+        }
+
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
+
+        assertTrue(msg, msg.contains("• Custom words applied: 133"))
+        assertTrue(msg, msg.contains("• Disabled words applied: 9"))
+    }
+
+    @Test
+    fun settings_noWords_omitsTheWordLines() {
+        val msg = buildSettingsResultMessage(
+            BackupRestoreManager.ImportResult().apply { importedCount = 2 }, EnglishResourceText
+        )
+
+        assertFalse(msg.contains("Custom words applied"))
+        assertFalse(msg.contains("Disabled words applied"))
+    }
+
+    // -------------------------------------------------------------------
+    // Clipboard — buildClipboardImportResultMessage (2026-11-24)
+    // -------------------------------------------------------------------
+
+    /** Pixel 2026-11-24: "• Source version: 2026-09-08 12:18:21" — the file's export date. */
+    @Test
+    fun clipboardZip_showsTheExportDateUnderItsOwnLabelNotAsAVersion() {
+        val result = BackupRestoreManager.ClipboardImportResult().apply {
+            importedCount = 18
+            skippedCount = 5559
+            mediaFilesRestored = 1
+            exportDate = "2026-09-08 12:18:21"
+        }
+
+        val msg = buildClipboardImportResultMessage(result, withMedia = true, text = EnglishResourceText)
+
+        assertTrue(msg, msg.startsWith("Full clipboard import completed."))
+        assertTrue(msg, msg.contains("• Imported: 18 entries"))
+        assertTrue(msg, msg.contains("• Skipped: 5559 duplicates"))
+        assertTrue(msg, msg.contains("• Media files restored: 1"))
+        assertTrue(msg, msg.contains("• Exported: 2026-09-08 12:18:21"))
+        assertFalse(msg, msg.contains("Source version"))
+        assertTrue(msg, msg.endsWith("All media files and thumbnails have been restored."))
+    }
+
+    @Test
+    fun clipboardZip_withNoMediaRestored_doesNotClaimMediaWasRestored() {
+        val result = BackupRestoreManager.ClipboardImportResult().apply {
+            importedCount = 0
+            skippedCount = 40
+            mediaFilesRestored = 0
+        }
+
+        val msg = buildClipboardImportResultMessage(result, withMedia = true, text = EnglishResourceText)
+
+        assertTrue(msg, msg.contains("• Media files restored: 0"))
+        assertFalse(msg, msg.contains("All media files and thumbnails have been restored."))
+        assertTrue(msg, msg.endsWith("Imports merge with existing history without overwriting."))
+    }
+
+    @Test
+    fun clipboardJson_namesTheAppVersionWhenTheFileHasOne_andHasNoMediaLine() {
+        val result = BackupRestoreManager.ClipboardImportResult().apply {
+            importedCount = 1
+            sourceVersion = "2.0.0"
+            exportDate = "2026-11-24 10:54:56"
+        }
+
+        val msg = buildClipboardImportResultMessage(result, withMedia = false, text = EnglishResourceText)
+
+        assertTrue(msg, msg.startsWith("Clipboard import completed."))
+        assertTrue(msg, msg.contains("• Imported: 1 entry"))
+        assertTrue(msg, msg.contains("• Source version: 2.0.0"))
+        assertTrue(msg, msg.contains("• Exported: 2026-11-24 10:54:56"))
+        assertFalse(msg, msg.contains("Media files restored"))
+        assertTrue(msg, msg.endsWith("Imports merge with existing history without overwriting."))
+    }
 }

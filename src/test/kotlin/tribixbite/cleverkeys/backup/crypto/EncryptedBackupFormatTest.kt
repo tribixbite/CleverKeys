@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.backup.crypto
 
 import java.security.SecureRandom
+import tribixbite.cleverkeys.backup.crypto.EncryptedBackupFormat.HeadlessImportGate
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -130,6 +131,35 @@ class EncryptedBackupFormatTest {
         assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(byteArrayOf(0x50, 0x4B, 0x03, 0x04)))
         assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(ByteArray(0)))
         assertTrue(EncryptedBackupFormat.rejectAsPlaintextForHeadless(byteArrayOf(0, 1, 2, 3, 4, 5)))
+    }
+
+    @Test
+    fun headlessImportGate_anUnreadablePayloadIsNotCalledPlaintext() {
+        // Saga 2026-11-24: a file adb pushed into Download/ is unreadable to the app (EACCES), and
+        // the `am` import was refused as "plaintext backups are not accepted via automation".
+        // Still refused (fail closed), with its real reason.
+        assertEquals(HeadlessImportGate.UNREADABLE, EncryptedBackupFormat.headlessImportGate(null))
+        assertEquals(HeadlessImportGate.NOT_ENCRYPTED, EncryptedBackupFormat.headlessImportGate(" {".toByteArray()))
+        assertEquals(
+            HeadlessImportGate.NOT_ENCRYPTED,
+            EncryptedBackupFormat.headlessImportGate(byteArrayOf(0x50, 0x4B, 3, 4)),
+        )
+        assertEquals(HeadlessImportGate.NOT_ENCRYPTED, EncryptedBackupFormat.headlessImportGate(ByteArray(0)))
+        assertEquals(
+            HeadlessImportGate.PROCEED,
+            EncryptedBackupFormat.headlessImportGate(EncryptedBackupFormat.MAGIC + ByteArray(16)),
+        )
+    }
+
+    @Test
+    fun theAutomationImportReportsAnUnreadableFileAsUnreadable() {
+        val src = java.io.File(
+            "src/main/kotlin/tribixbite/cleverkeys/activities/BackupRestoreActivity.kt"
+        ).readText()
+        val branch = src.substringAfter("HeadlessImportGate.UNREADABLE ->").substringBefore("return")
+        assertTrue("the unreadable branch must exist", branch.length < src.length)
+        assertTrue("an unreadable file is an import failure: $branch", "common_import_failed_detail" in branch)
+        assertTrue("…not a plaintext backup: $branch", "backup_headless_plaintext_rejected" !in branch)
     }
 
     @Test

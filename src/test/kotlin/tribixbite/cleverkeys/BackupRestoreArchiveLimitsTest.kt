@@ -564,6 +564,8 @@ class BackupRestoreArchiveLimitsTest {
             dirEntry("clipboard_media/sub/"),
             "clipboard_media/sub/new.bin" to "new".toByteArray(),
         ))
+        // A clipping uses the new file: since 2026-11-24 only such files count as restored.
+        every { clipboardDb.getAllReferencedMediaPaths() } returns setOf("clipboard_media/sub/new.bin")
 
         val result = newManager().importClipboardHistoryZip(fakeUriForInput(zipBytes))
 
@@ -583,6 +585,8 @@ class BackupRestoreArchiveLimitsTest {
             dirEntry("clipboard_media/nested/"),
             "clipboard_media/nested/one.bin" to "payload".toByteArray(),
         ))
+        // A clipping uses the file: since 2026-11-24 only such files count as restored.
+        every { clipboardDb.getAllReferencedMediaPaths() } returns setOf("clipboard_media/nested/one.bin")
 
         val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
 

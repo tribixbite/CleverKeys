@@ -23,6 +23,7 @@ import tribixbite.cleverkeys.ui.settings.SettingsDropdown
 import tribixbite.cleverkeys.ui.settings.SettingsSlider
 import tribixbite.cleverkeys.ui.settings.SettingsSwitch
 import tribixbite.cleverkeys.ui.settings.SwipeSensitivityPreset
+import tribixbite.cleverkeys.ui.settings.SwipeSensitivityPresets
 import tribixbite.cleverkeys.ui.settings.applySwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.getSwipeSensitivityPreset
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -315,8 +316,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                     title = stringResource(R.string.gesture_min_swipe_distance_title),
                     description = stringResource(R.string.gesture_min_swipe_distance_desc),
                     value = swipeMinDistance,
-                    valueRange = 20f..100f,
-                    increment = 1f,
+                    valueRange = SwipeSensitivityPresets.MIN_DISTANCE_RANGE,
+                    increment = SwipeSensitivityPresets.MIN_DISTANCE_STEP,
                     onValueChange = {
                         swipeMinDistance = it
                         saveSetting("swipe_min_distance", swipeMinDistance)
@@ -328,8 +329,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                     title = stringResource(R.string.gesture_min_key_distance_title),
                     description = stringResource(R.string.gesture_min_key_distance_desc),
                     value = swipeMinKeyDistance,
-                    valueRange = 15f..80f,
-                    increment = 5f,
+                    valueRange = SwipeSensitivityPresets.MIN_KEY_DISTANCE_RANGE,
+                    increment = SwipeSensitivityPresets.MIN_KEY_DISTANCE_STEP,
                     onValueChange = {
                         swipeMinKeyDistance = it
                         saveSetting("swipe_min_key_distance", swipeMinKeyDistance)
@@ -341,8 +342,8 @@ internal fun SettingsActivity.GestureTuningSection() {
                     title = stringResource(R.string.gesture_min_key_dwell_title),
                     description = stringResource(R.string.gesture_min_key_dwell_desc),
                     value = swipeMinDwellTime.toFloat(),
-                    valueRange = 0f..50f,
-                    increment = 1f,
+                    valueRange = SwipeSensitivityPresets.MIN_DWELL_RANGE,
+                    increment = SwipeSensitivityPresets.MIN_DWELL_STEP,
                     onValueChange = {
                         swipeMinDwellTime = it.roundToInt()
                         saveSetting("swipe_min_dwell_time", swipeMinDwellTime)

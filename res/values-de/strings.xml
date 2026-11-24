@@ -1402,6 +1402,7 @@
     <string name="backup_result_short_swipe_applied">• Kurze Wischgesten übernommen: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Benutzerdefinierte Themes wiederhergestellt: %1$d</string>
     <string name="backup_result_source_version">• Quellversion: %1$s</string>
+    <string name="backup_result_export_date">• Exportiert am: %1$s</string>
     <string name="backup_result_screen_mismatch">Unterschiedliche Bildschirmgröße: Quelle %1$dx%2$d, aktuell %3$dx%4$d. Einige visuelle Einstellungen müssen eventuell angepasst werden.</string>
     <string name="backup_result_restart_keyboard">Starten Sie die Tastatur neu, damit die Änderungen wirksam werden.</string>
     <string name="backup_result_dict_import_completed">Wörterbuch-Import abgeschlossen.</string>

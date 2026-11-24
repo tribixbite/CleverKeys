@@ -10,7 +10,9 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.buildClipboardImportResultMessage
 import tribixbite.cleverkeys.clipboard.sanitize.RulesetParser
 import tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig
 import tribixbite.cleverkeys.ui.settings.saveSetting
@@ -111,12 +113,6 @@ internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
     }
 }
 
-/** The "• Imported: N entries" / "• Skipped: N duplicates" lines shared by both clipboard imports. */
-private fun SettingsActivity.clipboardImportCountLines(imported: Int, skipped: Int): List<String> = listOf(
-    resources.getQuantityString(R.plurals.clipboard_backup_imported_entries, imported, imported),
-    resources.getQuantityString(R.plurals.clipboard_backup_skipped_duplicates, skipped, skipped),
-)
-
 internal fun SettingsActivity.exportClipboardHistory() {
     try {
         clipboardExportLauncher.launch(exportName("cleverkeys-clipboard.json", "application/json"))
@@ -200,17 +196,10 @@ internal fun SettingsActivity.performClipboardImport(uri: Uri, retryPassphrase: 
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistory(uri)
             }
-            val message = buildString {
-                appendLine(getString(R.string.clipboard_backup_import_completed))
-                appendLine()
-                clipboardImportCountLines(result.importedCount, result.skippedCount).forEach { appendLine(it) }
-                if (result.sourceVersion != "unknown") {
-                    appendLine(getString(R.string.backup_result_source_version, result.sourceVersion))
-                }
-                appendLine()
-                append(getString(R.string.clipboard_backup_import_merge_note))
-            }
-            showIoResult(getString(R.string.clipboard_backup_import_success_title), message)
+            showIoResult(
+                getString(R.string.clipboard_backup_import_success_title),
+                buildClipboardImportResultMessage(result, withMedia = false, text = ResourcesResultText(resources)),
+            )
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
             promptForPassphrase(
                 e, retryPassphrase,
@@ -287,18 +276,10 @@ internal fun SettingsActivity.performClipboardZipImport(uri: Uri, retryPassphras
             val result = withContext(Dispatchers.IO) {
                 backupRestoreManager.importClipboardHistoryZip(uri)
             }
-            val message = buildString {
-                appendLine(getString(R.string.clipboard_backup_zip_import_completed))
-                appendLine()
-                clipboardImportCountLines(result.importedCount, result.skippedCount).forEach { appendLine(it) }
-                appendLine(getString(R.string.backup_result_media_restored, result.mediaFilesRestored))
-                if (result.sourceVersion != "unknown") {
-                    appendLine(getString(R.string.backup_result_source_version, result.sourceVersion))
-                }
-                appendLine()
-                append(getString(R.string.clipboard_backup_zip_media_restored_note))
-            }
-            showIoResult(getString(R.string.clipboard_backup_zip_import_success_title), message)
+            showIoResult(
+                getString(R.string.clipboard_backup_zip_import_success_title),
+                buildClipboardImportResultMessage(result, withMedia = true, text = ResourcesResultText(resources)),
+            )
         } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
             promptForPassphrase(
                 e, retryPassphrase,

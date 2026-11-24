@@ -1799,6 +1799,7 @@
     <string name="backup_result_short_swipe_applied">• Short-swipe applied: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Custom themes restored: %1$d</string>
     <string name="backup_result_source_version">• Source version: %1$s</string>
+    <string name="backup_result_export_date">• Exported: %1$s</string>
     <string name="backup_result_screen_mismatch">Screen-size mismatch: source %1$dx%2$d, current %3$dx%4$d. Some visual settings may need adjustment.</string>
     <string name="backup_result_restart_keyboard">Restart the keyboard for changes to take effect.</string>
     <string name="backup_result_dict_import_completed">Dictionary import completed.</string>

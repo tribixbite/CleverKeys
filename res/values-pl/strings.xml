@@ -1418,6 +1418,7 @@
     <string name="backup_result_short_swipe_applied">• Zastosowane krótkie gesty: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Przywrócone motywy własne: %1$d</string>
     <string name="backup_result_source_version">• Wersja źródłowa: %1$s</string>
+    <string name="backup_result_export_date">• Wyeksportowano: %1$s</string>
     <string name="backup_result_screen_mismatch">Niezgodny rozmiar ekranu: źródło %1$dx%2$d, obecny %3$dx%4$d. Niektóre ustawienia wyglądu mogą wymagać dostosowania.</string>
     <string name="backup_result_restart_keyboard">Uruchom ponownie klawiaturę, aby zmiany zaczęły działać.</string>
     <string name="backup_result_dict_import_completed">Import słownika zakończony.</string>

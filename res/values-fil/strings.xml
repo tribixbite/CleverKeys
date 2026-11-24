@@ -1394,6 +1394,7 @@
     <string name="backup_result_short_swipe_applied">• Nailapat na short-swipe: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Naibalik na custom na tema: %1$d</string>
     <string name="backup_result_source_version">• Bersyon ng pinagmulan: %1$s</string>
+    <string name="backup_result_export_date">• Na-export noong: %1$s</string>
     <string name="backup_result_screen_mismatch">Hindi tugma ang laki ng screen: pinagmulan %1$dx%2$d, kasalukuyan %3$dx%4$d. Maaaring kailangang ayusin ang ilang visual na setting.</string>
     <string name="backup_result_restart_keyboard">I-restart ang keyboard para magkabisa ang mga pagbabago.</string>
     <string name="backup_result_dict_import_completed">Tapos na ang import ng diksyunaryo.</string>

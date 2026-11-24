@@ -788,6 +788,8 @@ tasks.register('runPureTests', JavaExec) {
     // F-1/F-2 — the reset policy (remove only settings keys; markers/dictionary
     // survive) + the repo-wide ban on whole-file prefs clears (ratchet #7).
     'tribixbite.cleverkeys.ui.settings.SettingsResetPolicyTest',
+    // 2026-11-24: the swipe sensitivity presets (Medium = the shipped defaults; slider stops).
+    'tribixbite.cleverkeys.ui.settings.SwipeSensitivityPresetsTest',
     // Auto-Correction "Ranking & Tuning" settings (2026-10-18): slider grid, λ display,
     // γ always-keep position, group reset key set, backup typing/validation from Keys.
     'tribixbite.cleverkeys.ui.settings.AutocorrectTuningSlidersTest',
@@ -1705,6 +1707,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.BackupRestoreArchiveLimitsTest',
     // Audit remediation (2026-08-25) — CK-150-019/020/022 import rollback
     'tribixbite.cleverkeys.BackupRestoreDbFailureTest',
+    // 2026-11-24 device restores: the media count, the clipboard file's version, a 1.x settings
+    // file's custom words.
+    'tribixbite.cleverkeys.BackupRestoreImportReportTest',
     // Backup encryption (2026-07-17) — Android-touching tests (need android.jar)
     'tribixbite.cleverkeys.backup.crypto.BackupPassphraseStoreTest',
     'tribixbite.cleverkeys.BackupRestoreManagerEncryptionTest',

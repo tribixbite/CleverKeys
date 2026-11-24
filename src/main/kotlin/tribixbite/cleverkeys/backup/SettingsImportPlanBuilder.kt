@@ -2,11 +2,15 @@ package tribixbite.cleverkeys.backup
 
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import tribixbite.cleverkeys.MarginPrefKeys
+import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import com.google.gson.JsonParser
 import kotlin.math.roundToInt
+import tribixbite.cleverkeys.LanguagePreferenceKeys
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.SwipePriority
 
 /**
  * Pure JSON → `SettingsImportPlan` builder. No Android deps — all
@@ -98,6 +102,7 @@ object SettingsImportPlanBuilder {
 
         val changes = mutableListOf<SettingsChange>()
         val skipped = mutableListOf<SkippedKey>()
+        val legacyDictionary = LegacyDictionaryKeys()
         skipped += migration.skipped
         skipped += customThemes?.skipped.orEmpty()
 
@@ -115,12 +120,14 @@ object SettingsImportPlanBuilder {
                 continue
             }
             if (SettingsValidation.isDictionaryPreference(key)) {
-                // Per-language dictionary words (`custom_words_<lang>`,
-                // `disabled_words_<lang>`) are handled by the SEPARATE
-                // dictionary import flow (DictImportPlan). They appearing
-                // in settings preview is a leak — silently drop so the
-                // user sees a clean settings preview.
-                skipped += SkippedKey(key, "dictionary words (separate import flow)", SkipKind.SEPARATE_IMPORT)
+                // Per-language dictionary words (`custom_words_<lang>`, `disabled_words_<lang>`,
+                // `swipe_priority_<lang>`) are not settings rows. A 1.x settings file carries the
+                // whole dictionary this way, so they travel to the dictionary applier as
+                // [SettingsImportPlan.legacyDictionaryJson] (2026-11-24); a value of no known
+                // shape stays a skipped key, for the dictionary file to restore.
+                if (!legacyDictionary.add(key, valueElement)) {
+                    skipped += SkippedKey(key, "dictionary words (separate import flow)", SkipKind.SEPARATE_IMPORT)
+                }
                 continue
             }
 
@@ -209,6 +216,7 @@ object SettingsImportPlanBuilder {
             customThemesImportSize = customThemes?.themes?.size ?: 0,
             customThemesImportRawJson = customThemesRaw,
             currentCustomThemesRawJson = currentCustomThemesRawJson,
+            legacyDictionaryJson = legacyDictionary.toJsonOrNull(),
         )
     }
 
@@ -322,9 +330,11 @@ object SettingsImportPlanBuilder {
                     // representation to migrate rather than a value to preserve.
                     val raw = p.asString
                     val fractional = '.' in raw || 'e' in raw || 'E' in raw
+                    val declared = lookupDefault(key)
                     when {
                         !fractional -> PrefValue.IntV(p.asInt)
-                        lookupDefault(key) is PrefValue.IntV ->
+                        declared is PrefValue.IntV && LEGACY_DEFAULTS[key] == p.asFloat -> declared
+                        declared is PrefValue.IntV ->
                             PrefValue.IntV(coerceLegacyFractionalInt(key, p.asFloat))
                         else -> PrefValue.FloatV(p.asFloat)
                     }
@@ -352,6 +362,17 @@ object SettingsImportPlanBuilder {
      * `SettingsValidation.validate`; clamping that too would be a new silent
      * value rewrite, which is the very behaviour ARC-093 was filed against.
      */
+    /**
+     * 1.x defaults, written as fractional literals because 1.x exported every effective value, of
+     * settings whose default 2.0 changed. Such a value means "the default", not a calibration, so
+     * it imports as today's default ([parsePrefValue]); any other fractional value still rounds.
+     *
+     * `finger_occlusion_offset` 12.5 was the neural engine's default, never measured (Config's
+     * note); 2.0 defaults to 0 because CTC was trained on uncorrected touches, and an in-place
+     * upgrade from 1.5 reads 0. Restoring a 1.4/1.5 backup set 13 (Pixel and Note10+, 2026-11-24).
+     */
+    private val LEGACY_DEFAULTS: Map<String, Float> = mapOf("finger_occlusion_offset" to 12.5f)
+
     private fun coerceLegacyFractionalInt(key: String, value: Float): Int {
         val rounded = value.roundToInt()
         val range = SettingsValidation.intRangeFor(key) ?: return rounded
@@ -405,5 +426,76 @@ object SettingsImportPlanBuilder {
             is PrefValue.FloatV -> PrefValue.Str(v.v.toInt().toString())  // shouldn't happen but defensive
             else -> v
         }
+    }
+}
+
+/**
+ * Collects a settings file's dictionary keys — a 1.x export carries the whole dictionary as
+ * `custom_words_<lang>`, `disabled_words_<lang>` and (2.0 dev exports before 2026-11-15)
+ * `swipe_priority_<lang>` — into the dictionaries file's shape (`custom_words_by_language`,
+ * `disabled_words_by_language`, [SwipePriority.BACKUP_SECTION]) that `DictImportPlanBuilder`
+ * reads. Accepts the stored JSON-string form and the native object/list form of each key.
+ */
+private class LegacyDictionaryKeys {
+    private val custom = JsonObject()
+    private val disabled = JsonObject()
+    private val priorities = JsonObject()
+
+    /** Take [key]'s [value]; false when the value has no known shape (the caller skips the key). */
+    fun add(key: String, value: JsonElement): Boolean {
+        LanguagePreferenceKeys.languageFromCustomWordsKey(key)?.let { lang ->
+            val words = asObject(value)
+                ?.takeIf { obj -> obj.entrySet().all { (_, freq) -> isNumber(freq) } }
+                ?: return false
+            custom.add(lang, words)
+            return true
+        }
+        LanguagePreferenceKeys.languageFromDisabledWordsKey(key)?.let { lang ->
+            val words = asArray(value)
+                ?.takeIf { arr -> arr.all { it.isJsonPrimitive && it.asJsonPrimitive.isString } }
+                ?: return false
+            disabled.add(lang, words)
+            return true
+        }
+        LanguagePreferenceKeys.languageFromSwipePriorityKey(key)?.let { lang ->
+            val levels = asObject(value) ?: return false
+            priorities.add(lang, levels)
+            return true
+        }
+        return false
+    }
+
+    /** The collected sections as one dictionaries-file JSON, or null when none were collected. */
+    fun toJsonOrNull(): String? {
+        if (custom.size() == 0 && disabled.size() == 0 && priorities.size() == 0) return null
+        return JsonObject().apply {
+            if (custom.size() > 0) add("custom_words_by_language", custom)
+            if (disabled.size() > 0) add("disabled_words_by_language", disabled)
+            if (priorities.size() > 0) add(SwipePriority.BACKUP_SECTION, priorities)
+        }.toString()
+    }
+
+    private fun isNumber(e: JsonElement): Boolean = e.isJsonPrimitive && e.asJsonPrimitive.isNumber
+
+    /** An object, or a JSON string holding one (how the preference itself stores it). */
+    private fun asObject(value: JsonElement): JsonObject? = when {
+        value.isJsonObject -> value.asJsonObject
+        value.isJsonPrimitive && value.asJsonPrimitive.isString ->
+            parse(value.asString)?.takeIf { it.isJsonObject }?.asJsonObject
+        else -> null
+    }
+
+    /** A list, or a JSON string holding one. */
+    private fun asArray(value: JsonElement): JsonArray? = when {
+        value.isJsonArray -> value.asJsonArray
+        value.isJsonPrimitive && value.asJsonPrimitive.isString ->
+            parse(value.asString)?.takeIf { it.isJsonArray }?.asJsonArray
+        else -> null
+    }
+
+    private fun parse(text: String): JsonElement? = try {
+        JsonParser.parseString(text)
+    } catch (e: JsonParseException) {
+        null
     }
 }

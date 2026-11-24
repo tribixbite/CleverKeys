@@ -1406,6 +1406,7 @@
     <string name="backup_result_short_swipe_applied">• Lietoti īsie vilkumi: %1$d</string>
     <string name="backup_result_custom_themes_applied">• Atjaunotas pielāgotās tēmas: %1$d</string>
     <string name="backup_result_source_version">• Avota versija: %1$s</string>
+    <string name="backup_result_export_date">• Eksportēts: %1$s</string>
     <string name="backup_result_screen_mismatch">Ekrāna izmēri nesakrīt: avots %1$dx%2$d, pašreizējais %3$dx%4$d. Dažus vizuālos iestatījumus var nākties pielāgot.</string>
     <string name="backup_result_restart_keyboard">Restartējiet tastatūru, lai izmaiņas stātos spēkā.</string>
     <string name="backup_result_dict_import_completed">Vārdnīcas importēšana pabeigta.</string>

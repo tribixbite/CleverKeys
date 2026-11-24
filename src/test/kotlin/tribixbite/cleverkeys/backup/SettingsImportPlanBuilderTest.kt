@@ -733,8 +733,9 @@ class SettingsImportPlanBuilderTest {
     fun customWords_routedToDictionaryPreview_notSettingsPreview() {
         // `custom_words_fr` and `disabled_words_en` are per-language dictionary
         // entries handled by DictImportPlan. They appearing in the SETTINGS
-        // preview as "(unset) → {huge JSON blob}" is a leak — the filter
-        // sends them to parseSkippedKeys with a descriptive reason.
+        // preview as "(unset) → {huge JSON blob}" is a leak. Until 2026-11-24 the
+        // filter sent them to parseSkippedKeys; they now travel to the dictionary
+        // applier as legacyDictionaryJson (a 1.x settings file carries the dictionary).
         val json = """{"preferences":{
             "custom_words_fr": "{\"oui\":100}",
             "disabled_words_en": "[\"nope\"]",
@@ -746,11 +747,14 @@ class SettingsImportPlanBuilderTest {
             screen = screen,
             defaultSnapshot = SETTINGS_DEFAULTS,
         )
-        // Only keyboard_opacity in changes; dictionary keys filtered.
+        // Only keyboard_opacity in changes; dictionary keys go to the dictionary section.
         assertThat(plan.changes.map { it.key }).containsExactly("keyboard_opacity")
         val skippedKeys = plan.parseSkippedKeys.map { it.key }.toSet()
-        assertThat(skippedKeys).contains("custom_words_fr")
-        assertThat(skippedKeys).contains("disabled_words_en")
+        assertThat(skippedKeys).containsNoneOf("custom_words_fr", "disabled_words_en")
+        val dict = JsonParser.parseString(plan.legacyDictionaryJson!!).asJsonObject
+        assertThat(dict.getAsJsonObject("custom_words_by_language").getAsJsonObject("fr").has("oui")).isTrue()
+        assertThat(dict.getAsJsonObject("disabled_words_by_language").getAsJsonArray("en").map { it.asString })
+            .containsExactly("nope")
     }
 
     @Test
@@ -931,9 +935,10 @@ class SettingsImportPlanBuilderTest {
 
     @Test
     fun legacyFractionalIntPref_isCoercedToARoundedIntNotAFloat() {
-        // 12.5 was the v1.5.x calibrated value. roundToInt() → 13 (half-up),
-        // NOT the 12 that Config's read-time truncation produced.
-        val json = """{"preferences":{"finger_occlusion_offset":12.5}}"""
+        // A calibrated v1.5.x value: roundToInt() → 8 (half-up), NOT the 7 that Config's
+        // read-time truncation produced. (This test used 12.5 until 2026-11-24, which is the
+        // old neural DEFAULT rather than a calibration — see the next test.)
+        val json = """{"preferences":{"finger_occlusion_offset":7.5}}"""
         val plan = SettingsImportPlanBuilder.fromJson(
             json,
             currentSnapshot = emptyMap(),
@@ -944,10 +949,104 @@ class SettingsImportPlanBuilderTest {
         assertThat(plan.parseSkippedKeys.map { it.key })
             .doesNotContain("finger_occlusion_offset")
         val change = plan.changes.single { it.key == "finger_occlusion_offset" }
-        assertThat(change.proposed).isEqualTo(PrefValue.IntV(13))
+        assertThat(change.proposed).isEqualTo(PrefValue.IntV(8))
         // Effective current renders as the compile-time default (0), not Unset.
         assertThat(change.current).isEqualTo(PrefValue.IntV(0))
         assertThat(change.type).isEqualTo(ChangeType.ADDED)
+    }
+
+    @Test
+    fun legacyNeuralOcclusionDefault_becomesTodaysDefaultNotThirteen() {
+        // 1.x exported every effective value, so a 1.4/1.5 backup carries 12.5 even when the
+        // slider was never touched: 12.5 was the neural engine's default, never measured (see
+        // Config's finger_occlusion_offset note). 2.0's default is 0 because CTC was trained on
+        // uncorrected touches, and an in-place upgrade from 1.5 reads 0. Restoring such a backup
+        // set 13 instead (Pixel and Note10+, 2026-11-24), so the old default maps to today's.
+        val json = """{"preferences":{"finger_occlusion_offset":12.5}}"""
+        val fresh = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = emptyMap(),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        assertThat(fresh.changes.map { it.key }).doesNotContain("finger_occlusion_offset")
+        assertThat(fresh.parseSkippedKeys.map { it.key }).doesNotContain("finger_occlusion_offset")
+
+        // A phone tuned since then is set back to the default the backup meant.
+        val tuned = SettingsImportPlanBuilder.fromJson(
+            json,
+            currentSnapshot = mapOf("finger_occlusion_offset" to 6),
+            screen = screen,
+            defaultSnapshot = SETTINGS_DEFAULTS,
+        )
+        assertThat(tuned.changes.single { it.key == "finger_occlusion_offset" }.proposed)
+            .isEqualTo(PrefValue.IntV(0))
+    }
+
+    @Test
+    fun legacySettingsFileWords_areNotSkippedAsASeparateImport() {
+        // 1.x settings exports carried the dictionary (`custom_words_<lang>` as a JSON string,
+        // `disabled_words_<lang>` as a list). 2.0 skipped them as "restored by the dictionary
+        // import", but that is a different file: restoring only a 1.2.9 settings file left 8 of
+        // the maintainer's 141 custom words (Note10+, 2026-11-24).
+        val json = """{"preferences":{"custom_words_en":"{\"Bostonian\":100}",""" +
+            """"disabled_words_en":["teh"]}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        assertThat(plan.parseSkippedKeys.map { it.key })
+            .containsNoneOf("custom_words_en", "disabled_words_en")
+    }
+
+    @Test
+    fun legacySettingsFileWords_travelAsTheDictionaryFilesSections() {
+        // Every shape the keys have had: custom words as a JSON string (1.x) or an object,
+        // disabled words as a list or a JSON-string list, swipe priorities (2.0 dev exports
+        // before 2026-11-15) as a JSON string.
+        val json = """{"preferences":{
+            "custom_words_en":"{\"Bostonian\":100,\"zazen\":120}",
+            "custom_words_fr":{"pamplemousse":100},
+            "disabled_words_en":["teh","wich"],
+            "disabled_words_it":"[\"ciaoo\"]",
+            "swipe_priority_en":"{\"zazen\":2}"
+        }}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val dict = JsonParser.parseString(plan.legacyDictionaryJson!!).asJsonObject
+        val custom = dict.getAsJsonObject("custom_words_by_language")
+        assertThat(custom.getAsJsonObject("en")["Bostonian"].asInt).isEqualTo(100)
+        assertThat(custom.getAsJsonObject("en")["zazen"].asInt).isEqualTo(120)
+        assertThat(custom.getAsJsonObject("fr")["pamplemousse"].asInt).isEqualTo(100)
+        val disabled = dict.getAsJsonObject("disabled_words_by_language")
+        assertThat(disabled.getAsJsonArray("en").map { it.asString }).containsExactly("teh", "wich")
+        assertThat(disabled.getAsJsonArray("it").map { it.asString }).containsExactly("ciaoo")
+        val priorities = dict.getAsJsonObject(tribixbite.cleverkeys.SwipePriority.BACKUP_SECTION)
+        assertThat(priorities.getAsJsonObject("en")["zazen"].asInt).isEqualTo(2)
+
+        // The dictionary planner reads it like a dictionary file.
+        val dictPlan = DictImportPlanBuilder.fromJson(plan.legacyDictionaryJson!!, emptyMap(), emptyMap())
+        assertThat(dictPlan.mergedCustomWordsByLang["en"]!!.keys).containsExactly("Bostonian", "zazen")
+        assertThat(dictPlan.mergedDisabledWordsByLang["it"]).containsExactly("ciaoo")
+    }
+
+    @Test
+    fun aSettingsFileWithOnlyWords_isNotNothingToImport() {
+        val json = """{"preferences":{"custom_words_en":"{\"Bostonian\":100}"}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        assertThat(plan.changes).isEmpty()
+        assertThat(plan.hasNothingToImport).isFalse()
+    }
+
+    @Test
+    fun aSettingsFileWithoutWords_hasNoDictionarySection() {
+        val plan = SettingsImportPlanBuilder.fromJson("""{"preferences":{"vibrate_custom":true}}""", emptyMap(), screen)
+        assertThat(plan.legacyDictionaryJson).isNull()
+    }
+
+    @Test
+    fun anUnreadableLegacyWordsValue_isStillSkippedNotGuessed() {
+        val json = """{"preferences":{"custom_words_en":"not json","disabled_words_en":42}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+        assertThat(plan.legacyDictionaryJson).isNull()
+        assertThat(plan.parseSkippedKeys.map { it.key }).containsExactly("custom_words_en", "disabled_words_en")
     }
 
     @Test

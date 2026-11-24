@@ -23,7 +23,10 @@ enum class SkipKind(@StringRes val labelRes: Int) {
     /** No code reads this key any more. */
     DEPRECATED(R.string.import_preview_skip_deprecated),
 
-    /** Dictionary words: restored by the dictionary import, not the settings import. */
+    /**
+     * Dictionary words in a shape the settings import cannot read: left to the dictionary import.
+     * Readable ones are imported with the settings ([SettingsImportPlan.legacyDictionaryJson]).
+     */
     SEPARATE_IMPORT(R.string.import_preview_skip_separate_import),
 
     /** The JSON value has a shape no preference uses (array, nested object, …). */
@@ -90,13 +93,20 @@ data class SettingsImportPlan(
      * per-theme diff; null when the runtime could not read them (count and radio only).
      */
     val currentCustomThemesRawJson: String? = null,
+    /**
+     * The dictionary a 1.x settings file carries (`custom_words_<lang>`, `disabled_words_<lang>`,
+     * `swipe_priority_<lang>`), in the dictionaries file's shape for `DictImportPlanBuilder`; null
+     * when the file has none. Applying the plan adds the words the phone does not have
+     * (2026-11-24: a 1.2.9 settings file restored 8 of the maintainer's 141 custom words).
+     */
+    val legacyDictionaryJson: String? = null,
 ) {
     /**
      * True when applying the plan would change nothing: no setting, no skipped key to report,
-     * no short swipes and no DIY themes. The DIY-theme term was missing, so a themes-only file
-     * showed "No changes" and could not be imported (review 2026-11-14 M8).
+     * no short swipes, no DIY themes and no dictionary words. The DIY-theme term was missing, so
+     * a themes-only file showed "No changes" and could not be imported (review 2026-11-14 M8).
      */
     val hasNothingToImport: Boolean
         get() = changes.isEmpty() && parseSkippedKeys.isEmpty() &&
-            shortSwipeImportSize == 0 && customThemesImportSize == 0
+            shortSwipeImportSize == 0 && customThemesImportSize == 0 && legacyDictionaryJson == null
 }

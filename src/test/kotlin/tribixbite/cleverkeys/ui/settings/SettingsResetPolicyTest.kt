@@ -125,4 +125,19 @@ class SettingsResetPolicyTest {
         assertWithMessage("preserved engine keys must not be reseeded either")
             .that(seeds.intersect(SettingsResetPolicy.PRESERVED_SETTINGS_KEYS)).isEmpty()
     }
+
+    /**
+     * The Settings screen stores the three clipboard limits as Int (`mutableIntStateOf` +
+     * `saveSetting`), and so does `Config.set_clipboard_history_limit`. Reset All seeded two of
+     * them as the String defaults, so their stored type flipped between Int and String depending
+     * on what last wrote them (Pixel, 2026-11-24). The readers accept both; the type should not
+     * depend on the writer.
+     */
+    @Test
+    fun theClipboardLimitsAreSeededAsTheIntTheScreenWrites() {
+        val seeds = SettingsResetPolicy.seedValues()
+        for (key in listOf("clipboard_history_limit", "clipboard_max_item_size_kb", "clipboard_size_limit_mb")) {
+            assertWithMessage(key).that(seeds[key]).isInstanceOf(Int::class.javaObjectType)
+        }
+    }
 }

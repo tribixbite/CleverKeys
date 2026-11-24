@@ -1788,6 +1788,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 put("todo_entries", todoArray)
                 put("export_version", 5)
                 put("export_date", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
+                // The restore dialog's "Source version" (2026-11-24): files without it showed
+                // their export date there. Old releases ignore unknown keys.
+                put("app_version", BuildConfig.VERSION_NAME)
                 put("total_active", activeCount)
                 put("total_pinned", pinnedCount)
                 put("total_todo", todoCount)
