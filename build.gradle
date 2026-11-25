@@ -1242,6 +1242,10 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.RotationShowGuardTest',
     // Shift, caps lock and Ctrl held at a rotation come back after its resets (2026-11-22).
     'tribixbite.cleverkeys.RotationModifierCarryTest',
+    // Pre-tag review S3 (2026-11-25): touch typing disarms the rotation guards, and a pane the
+    // user closed after a rotation stays closed (pure class + service wiring source pin).
+    'tribixbite.cleverkeys.RotationPaneRestoreTest',
+    'tribixbite.cleverkeys.RotationUserInputWiringTest',
     // 2026-11-23: an edited clipping replaces Android's clip only when it is that clip.
     'tribixbite.cleverkeys.clipboard.EditedClipFollowTest',
     // Subkey popover assign request <-> intent extras round trip (audit 2026-10-08).

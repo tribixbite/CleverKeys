@@ -605,6 +605,7 @@ class CleverKeysService : InputMethodService(),
         _tileShow.cancel()
         _rotationGuard.cancel()
         _rotationModifiers.cancel()
+        _rotationPane.cancel()
         if (::_handler.isInitialized) {
             _handler.removeCallbacks(_tileShowTick)
             _handler.removeCallbacks(_rotationShowTick)
@@ -1034,9 +1035,10 @@ class CleverKeysService : InputMethodService(),
 
     /**
      * The content pane open when [_rotationGuard] armed (its opening event), reopened when the
-     * guard brings the keyboard back: the hide in between closes it (resetContentPaneState).
+     * keyboard comes back if the system closed it (the hide in between resets it), never when the
+     * user closed or changed it; see [RotationPaneRestore].
      */
-    private var _rotationPane: KeyValue.Event? = null
+    private val _rotationPane = RotationPaneRestore<KeyValue.Event>()
 
     /** Uptime of the last orientation change, for the rotation diagnostics in [onWindowHidden]. */
     private var _rotationAtMs = 0L
@@ -1048,15 +1050,14 @@ class CleverKeysService : InputMethodService(),
      * input view being started is in place; a no-op once the guard's window has passed.
      */
     private fun reopenRotationPane() {
-        val pane = _rotationPane ?: return
+        if (_rotationPane.pendingPane == null) return
         if (!_rotationGuard.isArmed) {
-            _rotationPane = null
+            _rotationPane.cancel()
             return
         }
         _handler.post {
-            if (_rotationPane != pane || !_rotationGuard.isArmed || !isTileWindowVisible()) return@post
-            if (_receiver?.openPaneEvent() != null) return@post
-            _rotationPane = null
+            if (!isTileWindowVisible()) return@post
+            val pane = _rotationPane.paneToReopen(_rotationGuard.isArmed, _receiver?.openPaneEvent()) ?: return@post
             _receiver?.handle_event_key(pane)
             tileLog { "rotation: reopened pane $pane" }
         }
@@ -1291,6 +1292,7 @@ class CleverKeysService : InputMethodService(),
         if (_tileShow.hasPending) tileLog { "deferred show cancelled by key $keyCode" }
         _tileShow.onUserInput()
         _rotationGuard.onUserInput()
+        _rotationPane.onUserInput()
         return super.onKeyDown(keyCode, event)
     }
 
@@ -1362,7 +1364,7 @@ class CleverKeysService : InputMethodService(),
             _rotationAtMs = changedAtMs
             val pane = _receiver?.openPaneEvent()
             _rotationGuard.onOrientationChanged(isTileWindowVisible(), currentEditorRef(), _rotationAtMs, pane != null)
-            _rotationPane = if (_rotationGuard.isArmed) pane else null
+            _rotationPane.onRotation(pane, _rotationGuard.isArmed)
             tileLog { "rotation: ${_lastOrientation} -> ${newConfig.orientation} armed=${_rotationGuard.isArmed} " +
                 "modifiers=${_rotationModifiers.isArmed}" }
         }
@@ -1399,9 +1401,16 @@ class CleverKeysService : InputMethodService(),
         if (isInputViewShown && ::_keyeventhandler.isInitialized) _keyeventhandler.onKeyboardReset()
     }
 
-    /** A finger or a TalkBack activation on a key (Keyboard2View): the user is typing. */
+    /**
+     * A finger or a TalkBack activation on a key (Keyboard2View): the user is typing. Disarms
+     * everything a rotation armed, like a hardware key does ([onKeyDown]): the carried
+     * modifiers, the show guard (an app that hides the keyboard right after the user typed and
+     * submitted keeps its hide) and the pane restore (pre-tag review S3, 2026-11-25).
+     */
     fun onKeyboardTouched() {
         _rotationModifiers.onUserInput()
+        _rotationGuard.onUserInput()
+        _rotationPane.onUserInput()
     }
 
     override fun onUpdateSelection(
@@ -1472,6 +1481,9 @@ class CleverKeysService : InputMethodService(),
         // no-op when nothing is dirty (2026-08-06 persistence fix).
         _predictionCoordinator?.flushLearnedData()
 
+        // Before the reset closes it: a pane the rotation's pane restore holds that is still open
+        // is being closed by the system and may come back; none open means the user closed it.
+        _rotationPane.onInputViewFinishing(_receiver?.openPaneEvent())
         // Reset content pane state (hide emoji/clipboard if open)
         _receiver?.resetContentPaneState()
     }
