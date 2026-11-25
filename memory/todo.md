@@ -475,6 +475,25 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
   (debug packages removed, CleverKeys default, Multi-Language off as found; swipes `they're you're
   I've` and fr `qu'il d'été l'été c'est j'ai` checked).
 
+**Status 2026-11-25, night (agent).** Maintainer: "audit changes since last audit and remediations of
+all audits since 1.5. request task list for bugs /gaps before tagging". Five Fable agents, read-only;
+the list is [`docs/audit/2026-11-25-pre-tag-review.md`](../docs/audit/2026-11-25-pre-tag-review.md).
+- **Blockers (§1):** B1 ß readings exponential in a run of `s` (`WordPredictor.sharpSReadings`, OOM
+  at ~35 `s`); B2 the tag workflow's `git diff --check` fails (24 whitespace errors, CK-150-017
+  regressed); B3 the `langpacks` release serves the 09-27 de/es/fr/it/pt/sv packs (re-upload needs
+  the maintainer's approval).
+- **Should fix (§2, agent):** S1 a clip over the size budget wipes History; S2 imports cut by a
+  rotation (GIF half-install, false "failed"); S3 touch typing does not disarm the rotation guard;
+  S4–S6 contraction-table data (English two-token wordfreq values, French paired keys, French
+  one-hit elisions above real words); S7 Auto-Detect argmax before the filter; S8 restored clip
+  expiry from stale Config; S9 1.x settings-file words applied unpreviewed; S10 doc drift.
+- **Maintainer (§3):** D1 two post-hoc gate results; D2 ß autocorrect without de-CH; D3 slow
+  modifier press with the popover (release note); D4 langpack re-upload; M1, M2, M4 as before.
+- Every High/P1 finding of every audit since v1.5 is fixed in code; minors and the earlier audits'
+  unrecorded leftovers are listed in §4 with owners. Release r15 built at `baa75be8` (arm64
+  `fd88c1ed…`), not installed; the phones run r14. `~/ew-output`: 54 APK copies deleted (5 GB), the
+  results kept (13 GB).
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by
