@@ -439,7 +439,7 @@ memory-phase table); the context-LM review-findings' 20/20 held under independen
   it from the two router branches or delete it and fix the four citations.
 - **ARC-098 — finish the R4 reorg + tooling sweep**: the `gesture/` cluster (7 files) and
   Bridges/Initializers→`wiring/` (folds into ARC-072 R5) toward the <100-root milestone
-  (now 114); plus the phantom-`keyboard2` tooling sweep — 18 scripts + 
+  (now 114); plus the phantom-`keyboard2` tooling sweep — 18 scripts +
   `tools/generate_compose_data.py` cite the never-existed tree (`verify_pipeline.sh` greps a
   deleted file 16×, so it verifies nothing; `run-pure-tests.sh:39` carries an UNPINNED second
   pure-test list naming deleted classes; `test-runtime.sh` probes deleted neural assets;

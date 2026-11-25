@@ -276,4 +276,3 @@ class LookBackdropTest {
         assertWithMessage("a big drop's beads leave mostly one way").that(lopsided.toDouble() / big).isGreaterThan(0.8)
     }
 }
-

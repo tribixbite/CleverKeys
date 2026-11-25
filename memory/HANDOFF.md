@@ -478,7 +478,7 @@ exports become a real per-user replay pool — the prerequisite for ever re-eval
 **Closed 2026-09-26:** whys/why's + natl/nat'l measured into `contraction_pairings.json`
 (bin-only sweep pinned in `BundledContractionDataTest`; `etoo -> eto'o` subsequently fixed by `b82dd386`);
 the global n-gram cap now prunes by frequency discounted by age on a persisted language-wide commit
-clock (`ContinuationBudget.globalVictims`). 
+clock (`ContinuationBudget.globalVictims`).
 **Round 2 (same day):** typo-tolerant tap bar (`f8fa86f6`, layout-aware adjacency, up to 2
 reserved fuzzy slots — never slot 0); tappable "Added … to dictionary" with tap-again undo
 (`4ca6c499`); deferred "Prefer" offers after re-swipe/Enter/field exit; shipped static English

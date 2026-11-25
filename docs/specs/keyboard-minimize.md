@@ -240,4 +240,3 @@ IME service's configuration is right-to-left (`FabSide.isRtl`). On the Saga, nei
 resolved direction nor the service configuration reflected an Arabic system locale (no Arabic
 translation, so Android resolves the app to English) or a Persian per-app locale. Device
 re-check owed for both cases.
-

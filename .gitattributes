@@ -65,3 +65,9 @@ build/** linguist-generated
 *.kt linguist-language=Kotlin
 *.xml linguist-language=XML
 web_demo/swipe_vocabulary.json -text
+
+# Kept byte-identical to an outside source, so `git diff --check` (the release workflow's
+# whitespace preflight, SourceTextHygieneTest) must not flag their whitespace:
+# the F-Droid recipe is a copy of fdroiddata's, the .patch files are recorded diffs.
+metadata/fdroid/*.yml -whitespace
+docs/eval/*.patch -whitespace

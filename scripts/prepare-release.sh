@@ -21,7 +21,8 @@ if [ -n "$(git -C "$PROJECT_DIR" status --porcelain --untracked-files=all)" ]; t
     git -C "$PROJECT_DIR" status --short
     exit 1
 fi
-PREVIOUS_RELEASE=$(git -C "$PROJECT_DIR" describe --tags --abbrev=0)
+# Only release tags count: CI also creates dev-* tags (CK-150-017; same lookup as release.yml).
+PREVIOUS_RELEASE=$(git -C "$PROJECT_DIR" describe --tags --abbrev=0 --match 'v*')
 git -C "$PROJECT_DIR" diff --check "$PREVIOUS_RELEASE"..HEAD
 
 # Colors

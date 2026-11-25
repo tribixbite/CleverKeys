@@ -460,4 +460,3 @@ class AuroraMotionTest {
         const val MAX_PARTICLE_STEP_DP = 3.2f
     }
 }
-

@@ -963,7 +963,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             finish()
         }
     }
-    
+
     override fun onResume() {
         super.onResume()
         // Layout Manager is a separate activity whose edits land while this one is paused.

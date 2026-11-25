@@ -459,4 +459,3 @@ As the pre-registration's pass branch (§6.0) says:
 
 Every other surface (`were`/`we're`, `well`/`we'll`, possessives) stays context-free; extending
 the chooser to any of them is a new hypothesis that needs its own round.
-

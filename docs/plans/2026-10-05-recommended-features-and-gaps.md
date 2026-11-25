@@ -1,7 +1,7 @@
 # Strategic Roadmap: Recommended Features & Architectural Gaps for CleverKeys
 
-**Date**: 2026-10-05  
-**Target Project**: [CleverKeys](file:///data/data/com.termux/files/home/git/swype/cleverkeys) (`tribixbite/CleverKeys`)  
+**Date**: 2026-10-05\
+**Target Project**: [CleverKeys](file:///data/data/com.termux/files/home/git/swype/cleverkeys) (`tribixbite/CleverKeys`)
 **Context**: Comparative architectural synthesis against [WM Keyboard](file:///data/data/com.termux/files/home/git/swype/wmkeyboard), HeliBoard, and FUTO.
 
 ---

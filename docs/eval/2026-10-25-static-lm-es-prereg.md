@@ -237,7 +237,7 @@ Even with the backoff penalty removed, es stays under +5 on AnCora.
 - **What stays in the builder** (`a4b92efd`):
   - `LangConfig.extra_eval`, which gives es's AnCora pins and the training exclusion;
   - `LangConfig.context_only` / `--context-only`, unused by every config (default empty).
-  
+
   The en model rebuilds byte-identically, and no shipped model changes.
 - **A fourth attempt would need a new reason beyond these two.** Plausible ones:
   - a model change chosen on AnCora dev, e.g. a news-register second corpus such as

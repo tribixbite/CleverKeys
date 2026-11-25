@@ -181,4 +181,3 @@ Model work again (implementer and translators = model, reviewer = model). One co
 - 2026-09-30: the tr/hu/in app strings the catalog translators flagged now use the catalog's terms
   ("Ölü tuş"; "Ferde vonal"/"Vízszintes vonal"; Latin Home/End/Page Up/Page Down). Still flagged
   for the reviewer.
-

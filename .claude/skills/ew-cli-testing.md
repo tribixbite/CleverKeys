@@ -585,4 +585,3 @@ on a shared phone (`-e notClass`): it opens a Chrome `data:` tab and force-stops
 Note10+ (API 31), 7ac2a3de debug: 130 classes in 21 min, 1,666/1,679 passed; the failures and
 their causes are in `memory/todo.md` (2026-11-23 night status). A class that fails in the full
 sequence and passes alone is order-dependent; re-run it alone before reading it as a device bug.
-
