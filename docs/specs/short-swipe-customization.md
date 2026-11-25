@@ -1,7 +1,7 @@
 # Short Swipe Customization
 
 > **Status (2026-10-23):** API blocks below re-transcribed from `customization/` at HEAD
-> (6 `ActionType`s, `CustomShortSwipeExecutor(context)`, 240 commands / 21 categories / 12 presets).
+> (6 `ActionType`s, `CustomShortSwipeExecutor(context)`, 245 commands / 21 categories (2026-11-25) / 12 presets).
 >
 > Canonical public documentation: [per-key actions guide](../wiki/customization/per-key-actions.md)
 > and [paired specification](../wiki/specs/customization/per-key-actions-spec.md).
@@ -29,7 +29,7 @@ Short Swipe Customization allows users to fully customize the 8-direction swipe 
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CustomShortSwipeExecutor.kt` | `CustomShortSwipeExecutor` | Executes commands via InputConnection |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentDefinition.kt` | `IntentDefinition`, `IntentTargetType` | Intent data model, presets, Gson-safe parsing |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/IntentEditorDialog.kt` | `IntentEditorDialog` | UI for configuring intents (presets, manual fields, extras) |
-| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | `ALL_COMMANDS`: 240 commands in 21 `Category` values (2026-10-20) |
+| `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRegistry.kt` | `CommandRegistry` | `ALL_COMMANDS`: 245 commands in 21 `Category` values (2026-11-25) |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/CommandRouting.kt` | `CommandRouting.editingValue` | which COMMAND names are editing keys owned by `KeyEventHandler.handleEditingKey` |
 | `src/main/kotlin/tribixbite/cleverkeys/customization/XmlAttributeMapper.kt` | `XmlAttributeMapper` | XML round-trip for all action types incl. INTENT |
 | `src/main/kotlin/tribixbite/cleverkeys/KeyValueParser.kt` | `parseIntentKeydef()` | Parses `intent:'json'` from layout XML |
@@ -151,7 +151,7 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-`CommandRegistry.ALL_COMMANDS` contains 240 commands in 21 `Category` values (counted at HEAD 2026-10-20; the README and wiki palette page carry the same number):
+`CommandRegistry.ALL_COMMANDS` contains 245 commands in 21 `Category` values (counted at HEAD 2026-11-25; 240 on 2026-10-20; the README and wiki palette page carry the same number):
 
 ### Core Categories
 

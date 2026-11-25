@@ -614,7 +614,9 @@ editor that used to be listed here already ship in 2.0.)
   they're came first on 4 of 39 real swipes (FUTO corpus); now 22 of 39, with your, there and were
   unchanged.
 - French elisions rank by how often each is written: d'être is offered beside d'été, qu'il above
-  will, l'état and s'agit first more often (85.6% first-word on 2,291 real French swipes, was 84.2%).
+  will, l'état and s'agit first more often (85.4% first-word on 2,291 real French swipes, was 84.2%).
+  An elision seen only once or twice in the corpus is not raised, so it does not outrank real
+  words, and a word that is also an elision's spelling (dune, d'une) keeps its own frequency.
 - Auto-Detect Language only switches between the primary and the secondary language you chose, and
   its two settings show only once a secondary language is set; it could switch an English user to
   Spanish or French on a few words (1.5–3.4% of words typed in another language triggered it).
@@ -642,8 +644,10 @@ editor that used to be listed here already ship in 2.0.)
 - German spells ß: the bundled German dictionary had no ß word at all (Strasse, gross, weiss), so
   swipes and suggestions showed the Swiss spelling. It now writes Straße, groß, weiß and keeps the
   reformed ss words (dass, muss, Fluss); Masse and Maße are both words. Typed without a ß key,
-  strasse, weiss and gross become Straße, weiß and groß. The German next-word model now knows the
-  ß words too.
+  strasse, weiss and gross become Straße, weiß and groß, except a word of your second language
+  (with English beside German, fuss stays fuss). There is no Swiss setting yet: in Switzerland,
+  where ß is not used, turn autocorrect off or add the ss words to the dictionary. The German
+  next-word model now knows the ß words too.
 - A custom layout's arrow key repeats when held, with Backspace Only Repeat on (the default), as
   that setting describes; it moved the cursor once.
 - After a swipe, I'm, I've, I'll and I'd show capitalised in every suggestion slot; the other slots
@@ -742,7 +746,11 @@ editor that used to be listed here already ship in 2.0.)
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.
 - Holding Shift, Ctrl, Fn, Alt or Meta opens their subkeys when the subkey popover is on, as on
-  letter keys; a quick double tap locks them (see below). A modifier with no subkeys still locks
+  letter keys; a quick double tap locks them (see below). This changes how caps lock is reached:
+  the upgrade to 2.0 turns the popover on for most users, and with it on, a slow press on a Shift
+  key that has subkeys opens the grid instead of locking Shift, and letting go in the middle of
+  the grid does nothing. Double tap Shift for caps lock, or turn the popover off to lock by
+  holding as before. A modifier with no subkeys still locks
   when held, and the arrow key between space and Enter keeps its TrackPoint hold. At the start of
   a sentence, where the automatic capital has
   already turned Shift on, a quick double tap turns on caps lock; it used to give one capital.
