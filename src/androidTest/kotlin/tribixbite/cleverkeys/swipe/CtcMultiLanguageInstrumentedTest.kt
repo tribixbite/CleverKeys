@@ -124,7 +124,7 @@ class CtcMultiLanguageInstrumentedTest {
          */
         val SHAPES = mapOf(
             "fr" to LexiconShape(records = 40_000, untypeable = 0, words = 38_255, collisions = 1_745),
-            "de" to LexiconShape(records = 40_000, untypeable = 0, words = 39_598, collisions = 402),
+            "de" to LexiconShape(records = 40_000, untypeable = 0, words = 39_588, collisions = 412),
             "es" to LexiconShape(records = 50_000, untypeable = 0, words = 48_605, collisions = 1_395),
         )
 

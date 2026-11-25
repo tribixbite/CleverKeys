@@ -262,12 +262,38 @@ LILAK_REPO = "https://github.com/b00f/lilak.git"
 LILAK_COMMIT = "4f1f426113e764ea099865232fd5e0fa34563c60"  # master, 2026-07-04
 
 
+# LibreOffice's German dictionary (de_DE_frami, the one the 2026-11-20 accent audit used; build-time
+# evidence only, never redistributed): it knows compounds and the 1996 reform (`Kreisstraße`,
+# `Flusskilometer`, `dass`; not `Flußkilometer`, `daß`, `Strasse`), which the system aspell `de`
+# lacks for compounds. The ß oracle of `sharp_s.py`. Fetched from the master branch, so a newer
+# upstream is refused by the pin.
+_FRAMI_URL = "https://raw.githubusercontent.com/LibreOffice/dictionaries/master/de/de_DE_frami"
+FILE_HUNSPELL = {
+    "de_DE_frami": (
+        Source(key="de_DE_frami.dic", filename="hunspell/de_DE_frami.dic", url=_FRAMI_URL + ".dic",
+               sha256="4ca3c958b0e5545910999bc246f668840bf8ede3df8e5e6790d05edd5a586c38",
+               license="see upstream de/README_de_DE_frami.txt (evidence only)", shipped=False,
+               note="LibreOffice dictionaries, fetched 2026-11-20"),
+        Source(key="de_DE_frami.aff", filename="hunspell/de_DE_frami.aff", url=_FRAMI_URL + ".aff",
+               sha256="646bf3333ac69c23e9d794533ee5241d6f755c359e8fe10a648f87613743d594",
+               license="see upstream de/README_de_DE_frami.txt (evidence only)", shipped=False,
+               note="LibreOffice dictionaries, fetched 2026-11-20"),
+    ),
+}
+
+
 def ensure_hunspell(name: str, cache: Path = CACHE) -> str:
     """Path prefix of a hunspell dictionary (`<prefix>.dic`/`.aff`) for `hunspell -d`.
 
-    Clones the pinned commit and runs its own build into the corpus cache once. Fails loud: a
-    configured oracle that cannot be built must never silently become "no oracle".
+    A [FILE_HUNSPELL] dictionary is fetched once into the corpus cache and must match its sha256
+    pins. Lilak clones the pinned commit and runs its own build into the corpus cache once. Fails
+    loud: a configured oracle that cannot be built must never silently become "no oracle".
     """
+    if name in FILE_HUNSPELL:
+        dic, aff = (ensure_source(s, cache, allow_unpinned=False, offline=False)[0]
+                    for s in FILE_HUNSPELL[name])
+        assert dic.with_suffix("") == aff.with_suffix(""), (dic, aff)
+        return str(dic.with_suffix(""))
     if name != "lilak":
         sys.exit(f"unknown hunspell provider {name!r}")
     root = cache / "lilak"

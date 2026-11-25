@@ -18,9 +18,10 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * German `ß` against the shipped German dictionary, which spells every such word with `ss`
- * (`scripts/build_wordlist.py`: wordfreq casefolds `ß` to `ss`, so `de_enhanced.bin` holds
- * `gross`, `strasse`, `weiss` and no `ß` at all).
+ * German `ß` against both spellings a German list can have. Until 2026-11-25 the shipped one
+ * spelled every such word with `ss` (wordfreq casefolds `ß` to `ss`: `gross`, `strasse`, `weiss`
+ * and no `ß` at all), as an imported pack still may; since then it spells `ß` where Germany does
+ * (`scripts/sharp_s.py`), so `ss` typed without a ß key must become that word.
  *
  * Saga 2026-11-25 (release r8, Neo 2 bound to German): typing `groß` and space committed `gros`.
  * The typed word was not a dictionary word, so space ran the correction sweep, and `gros` (a word
@@ -146,5 +147,52 @@ class WordPredictorSharpSTest {
         dictionary(mapOf("groß" to 700_000, "gros" to 650_000, "straße" to 690_000))
         assertWithMessage("groß").that(predictor.autoCorrect("groß")).isEqualTo("groß")
         assertWithMessage("Straße").that(predictor.isInDictionary("Straße")).isTrue()
+    }
+
+    // ── The list since 2026-11-25 (scripts/sharp_s.py): Germany's spelling ──────────────────
+
+    /** The rebuilt list's spellings: ß where Germany writes it, reformed `dass`, both `Maße` and `Masse`. */
+    private val germanSharpS = mapOf(
+        "groß" to 700_000, "gros" to 650_000, "große" to 600_000, "straße" to 690_000,
+        "weiß" to 680_000, "gras" to 500_000, "heißt" to 640_000, "dass" to 720_000,
+        "maße" to 560_000, "masse" to 540_000, "strand" to 560_000, "stra" to 300_000,
+    )
+
+    private fun bar(typed: String): List<String> =
+        predictor.predictWordsWithContext(typed, emptyList()).words.map { it.lowercase() }
+
+    @Test
+    fun `ss typed for a sharp s word becomes Germany's spelling, as fur becomes fuer`() {
+        dictionary(germanSharpS)
+        assertWithMessage("strasse").that(predictor.autoCorrect("strasse")).isEqualTo("straße")
+        assertWithMessage("weiss").that(predictor.autoCorrect("weiss")).isEqualTo("weiß")
+        assertWithMessage("heisst").that(predictor.autoCorrect("heisst")).isEqualTo("heißt")
+        assertWithMessage("the capital is kept").that(predictor.autoCorrect("Strasse")).isEqualTo("Straße")
+    }
+
+    @Test
+    fun `typed gross is gross with a sharp s, not gros with one s dropped`() {
+        // The doubled-letter collapse (gamees → games) would read `ss` as a stuck key.
+        dictionary(germanSharpS)
+        assertWithMessage("gross").that(predictor.autoCorrect("gross")).isEqualTo("groß")
+        assertWithMessage("grosse").that(predictor.autoCorrect("grosse")).isEqualTo("große")
+    }
+
+    @Test
+    fun `reformed ss words and real ss twins stay as typed`() {
+        dictionary(germanSharpS)
+        assertWithMessage("dass").that(predictor.autoCorrect("dass")).isEqualTo("dass")
+        assertWithMessage("Masse is a word beside Maße").that(predictor.autoCorrect("masse")).isEqualTo("masse")
+        assertWithMessage("maße").that(predictor.autoCorrect("maße")).isEqualTo("maße")
+        assertWithMessage("strasse itself is not a word of this list").that(predictor.isInDictionary("strasse")).isFalse()
+    }
+
+    @Test
+    fun `the bar offers the sharp s word while its ss is being typed`() {
+        dictionary(germanSharpS)
+        assertWithMessage("stras").that(bar("stras")).contains("straße")
+        assertWithMessage("strass").that(bar("strass")).contains("straße")
+        assertWithMessage("strasse").that(bar("strasse")).contains("straße")
+        assertWithMessage("weiss").that(bar("weiss")).contains("weiß")
     }
 }

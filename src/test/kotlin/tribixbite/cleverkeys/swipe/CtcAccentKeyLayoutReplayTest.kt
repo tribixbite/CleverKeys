@@ -228,23 +228,22 @@ class CtcAccentKeyLayoutReplayTest {
     )
 
     /**
-     * `ß` as a CENTRE key (Neo 2, Bone): one key, spelled `ss` by the lexicon (the shipped
-     * German dictionary is casefolded — `strasse`, `grosse`, `weiss`), so the key is an alias of
-     * `s` and the beam takes the second `s` from a later frame over the same key. Before
-     * 2026-11-18 the key had no slot at all and a path over it read the nearest a–z keys.
+     * `ß` as a CENTRE key (Neo 2, Bone): one key, the `ss` of the a–z surface (`straße` projects
+     * to `strasse`), so the key is an alias of `s` and the beam takes the second `s` from a later
+     * frame over the same key. Before 2026-11-18 the key had no slot at all and a path over it
+     * read the nearest a–z keys. Until 2026-11-25 the German dictionary had no `ß` word
+     * (wordfreq casefolds it), so the slate showed `strasse`; it now shows Germany's spelling.
      */
     @Test
     fun neo2SwipesOverTheSharpSKey() = assertDecodes(
         "latn_neo2.xml", "de", listOf("straße", "große", "weiß", "heißen"),
         rankOne = emptySet(),
-        expected = { CtcAzProjection.project(it)!! },
     )
 
     @Test
     fun boneSwipesOverTheSharpSKey() = assertDecodes(
         "latn_bone.xml", "de", listOf("straße", "große", "weiß", "heißen"),
         rankOne = emptySet(),
-        expected = { CtcAzProjection.project(it)!! },
     )
 
     /**

@@ -1357,6 +1357,7 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ItalianAccentSpellingDriftTest',
     // 2026-11-20: accent misspellings out of the fr/es/pt/de dictionaries and models (same method).
     'tribixbite.cleverkeys.AccentSpellingDriftTest',
+    'tribixbite.cleverkeys.GermanSharpSDictionaryDriftTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

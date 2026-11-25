@@ -150,8 +150,9 @@ class CtcCkdtLexiconTest {
         val p = projected.getValue("de")
         assertThat(p.records).isEqualTo(40_000)
         assertThat(p.untypeable).isEqualTo(0)
-        assertThat(p.freqs.size).isEqualTo(39_598)
-        assertThat(p.collisions).isEqualTo(402)
+        // 2026-11-25 ß rebuild: real pairs now share a surface (maße/masse, große/größe).
+        assertThat(p.freqs.size).isEqualTo(39_588)
+        assertThat(p.collisions).isEqualTo(412)
     }
 
     @Test

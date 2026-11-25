@@ -394,12 +394,21 @@ the next layout and back in an empty field: capital `Q`; `groß` + space stays `
   SELinux on this user build; no root), layers after rotation (scene + display-hardware blend; left
   with the maintainer as before), the 1.5 → 2.0 popover upgrade (needs this phone's data uninstalled),
   a media-only clip (would replace the phone's clip).
-- **TODO (agent, small):** with Backspace Only Repeat on (the default) an arrow that is a key's main
-  value does not repeat: `Pointers.handleLongPress` counts as navigation only keys WITH arrow
-  subkeys, while #81 and `KeyRepeatLogicTest` say arrow keys repeat. No shipped layout has one;
-  decide whether a custom layout's arrows should (docs now say they act once).
-- **TODO (data):** a German list with ß (Germany/Austria spelling) so swipes and the bar show `Straße`;
-  today the list is the casefolded wordfreq stream (`scripts/build_wordlist.py` NOTE).
+- ~~**TODO (agent, small):** a custom layout's main-value arrow does not repeat~~ DONE 2026-11-25
+  (later): it counts as navigation, as #81 says (`ReleaseClaimGestureModesTest`).
+- ~~**TODO (data):** a German list with ß~~ DONE 2026-11-25 (later), see the next status block.
+
+**Status 2026-11-25, later (agent).** Maintainer: "rebuild the german dictionary with ß and finish
+outstanding", wipe CleverKeys data incl. clipboard on the Saga allowed (clipboard backed up first and
+restored), swipe 10+ contractions in several languages, then re-run today's fixed bugs on the Note10+.
+- **German ß** (`docs/eval/2026-11-25-german-sharp-s.md`): `scripts/sharp_s.py` respells wordfreq's
+  casefolded stream (de_DE_frami + Leipzig de web counts); 543 list words carry ß, Masse/Maße and 8
+  other pairs both kept, reformed ss words kept; shipped bin reproduced byte for byte first; pack
+  rebuilt. de.cklm rebuilt under a pre-registered gate: G1–G3, G4a, G5 pass, **G4 failed as written**
+  (rate drop from a larger scored population; on shared positions every cell ≥ +0.00) — shipped,
+  maintainer may overrule. Fixed with it: typed `gross` → `gros` (stuck-key collapse) → now `groß`.
+- **Arrow key repeat** under Backspace Only Repeat: done (above).
+- Suites before the device work: pure 4,037 / mock 2,010.
 
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset

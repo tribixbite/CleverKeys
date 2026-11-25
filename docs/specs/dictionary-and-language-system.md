@@ -439,8 +439,15 @@ all. A word typed with ß whose ss spelling is a dictionary word is that word: `
 Saga, Neo 2 bound to German) and no Add-to-dictionary offer appears; disabling the ss spelling
 disables it too. It is not a lookup fold (`lookupKey` is length-preserving), and a list that spells
 ß itself (an imported pack) is found by the plain lookup first. Swipes and the bar still show the
-list's ss spelling (`Strasse`); Germany's spelling needs a German list rebuilt with ß (open,
-`memory/todo.md`). Tests: `WordPredictorSharpSTest`.
+list's ss spelling (`Strasse`). Tests: `WordPredictorSharpSTest`.
+
+Since the same day the bundled list spells ß itself (`scripts/sharp_s.py`, run by
+`build_wordlist.py` for `de`: de_DE_frami decides each casefolded ss, the Leipzig German web 2021
+counts choose between readings and split two real words such as Masse/Maße; eval
+`docs/eval/2026-11-25-german-sharp-s.md`). `sharpSDictionaryKey` stays for packs without ß. The
+inverse, `WordPredictor.sharpSReading`, makes a typed `strasse`/`gross` the ß word before the
+stuck-key collapse can read the ss as a doubled letter. Swiss spelling is not served: a typed
+`strasse` is corrected. Pins: `GermanSharpSDictionaryDriftTest`.
 
 ### Lookup fold — `ArabicScriptFold`
 

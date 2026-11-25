@@ -92,8 +92,11 @@ words). Bands: rank<band conservative, band..top requires a positive oracle.
 Guards hard-fail the build. Held-out eval: `en_user_export_eval.txt`
 (gitignored — personal vocabulary).
 Gotchas discovered 2026-07-20 (encoded in the script):
-- wordfreq CASEFOLDS: German ß→ss (dict ships strasse/grösse — NO ß word at all; typed ß words
-  are accepted by `WordPredictor.sharpSDictionaryKey` since 2026-11-25, swipes still show ss) and Greek final
+- wordfreq CASEFOLDS: German ß→ss. Since 2026-11-25 `build_wordlist.py` respells the de stream
+  with `scripts/sharp_s.py` (`LangConfig.sharp_s` = the de_DE_frami oracle, pinned in
+  `corpus_blend.FILE_HUNSPELL`, plus the de LM's Leipzig counts; split pairs carry a frequency
+  column in `de_words.txt`); review artifact `cleverkeys-dictgen-de-sharp-s.txt`. The tap eval's
+  population grows with a lexicon change: compare pairs with `STATIC_LM_EVAL_TARGETS_IN`. And Greek final
   sigma ς→σ (whole el stream + shipped pack are σ-final; the AOSP el oracle is
   remapped to match — see `load_aosp`).
 - fr/it contraction maps are ~22–26k elision-expansion tables → demoted to

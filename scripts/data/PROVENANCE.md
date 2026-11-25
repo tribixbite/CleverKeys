@@ -37,6 +37,13 @@ is recorded in the Source column.
 | `aosp_tr_wordlist.txt.gz` | `tr`, version 54, date=1414726261 | Apache-2.0 | 2026-07-20 | 180,841 | f73f52b2e2f7 |
 | `aosp_he_wordlist.txt.gz` | `iw` (legacy code for he), version 44, date=1393228136 | Apache-2.0 | 2026-09-01 | 94,799 | 3f3b47d53ae8 |
 
+German ß (2026-11-25, `scripts/sharp_s.py`): the stream's casefolded `ss` words are decided by
+LibreOffice's `de_DE_frami` hunspell dictionary (evidence only, not redistributed; cached as
+`~/.cache/cleverkeys-corpora/hunspell/de_DE_frami.{dic,aff}`, pinned in
+`corpus_blend.FILE_HUNSPELL`: .dic sha256 4ca3c958b0e5…, .aff 646bf3333ac6…, from the
+LibreOffice/dictionaries master branch as of 2026-11-20) and the counts of the pinned Leipzig
+German web 2021 corpus of the `de` static LM (table below).
+
 Role: positive keep-oracle — mobile-keyboard-curated vocabulary (names, casual
 register, abbreviations). For sv/el/tr/he the AOSP snapshot is the SOLE band-2
 oracle (Tier C in `build_wordlist.py`'s LANG_CONFIG); he's is published under

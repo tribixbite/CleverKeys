@@ -309,6 +309,33 @@ class WordPredictor : Predictor {
             needsReload = true
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Reload signal set - all instances will reload on next prediction")
         }
+
+        /**
+         * Every spelling of [word] with one or more of its `ss` read as `ß`, [word] excluded
+         * (`strasse` → `straße`; `schlossstrasse` reads its overlapping pairs both ways). The
+         * same readings `scripts/sharp_s.py` builds the German list from.
+         */
+        internal fun sharpSReadings(word: String): List<String> {
+            if (!word.contains("ss")) return emptyList()
+            val out = LinkedHashSet<String>()
+            fun walk(i: Int, acc: StringBuilder) {
+                if (i >= word.length) {
+                    out.add(acc.toString())
+                    return
+                }
+                if (word.startsWith("ss", i)) {
+                    acc.append('ß')
+                    walk(i + 2, acc)
+                    acc.setLength(acc.length - 1)
+                }
+                acc.append(word[i])
+                walk(i + 1, acc)
+                acc.setLength(acc.length - 1)
+            }
+            walk(0, StringBuilder(word.length))
+            out.remove(word)
+            return out.toList()
+        }
     }
 
     // OPTIMIZATION v4 (perftodos4.md): Use AtomicReference for lock-free atomic map swapping
@@ -2557,6 +2584,27 @@ class WordPredictor : Predictor {
         return lowerKey.replace("ß", "ss").takeIf { dict.containsKey(it) }
     }
 
+    /**
+     * The dictionary word that spells [lowerKey]'s `ss` as `ß` (`gross` → `groß`, `strasse` →
+     * `straße`): the most frequent such reading that is a word and not disabled, or null. The
+     * inverse of [sharpSDictionaryKey], for a list that spells `ß` (the bundled German one since
+     * 2026-11-25). A list without `ß` words never matches, so no language check is needed.
+     */
+    private fun sharpSReading(lowerKey: String, dict: Map<String, Int>): String? {
+        if (!lowerKey.contains("ss")) return null
+        var best: String? = null
+        var bestFreq = -1
+        for (reading in sharpSReadings(lowerKey)) {
+            val freq = dict[reading] ?: continue
+            if (disabledWords.isNotEmpty() && isWordDisabled(reading)) continue
+            if (freq > bestFreq) {
+                best = reading
+                bestFreq = freq
+            }
+        }
+        return best
+    }
+
     /** [ArabicScriptFold.foldDictionaryKeys] over a freshly loaded primary dictionary. */
     private fun foldLoadedKeys(
         dict: MutableMap<String, Int>,
@@ -3338,6 +3386,20 @@ class WordPredictor : Predictor {
         }
 
         val dict = dictionary.get()
+
+        // 1.3. `ss` typed for `ß` (the German list spells ß since 2026-11-25, scripts/sharp_s.py):
+        // `gross`, `strasse` typed without a ß key are `groß`, `straße`, the same word as `fur` is
+        // `für`. It runs before the collapse below, which reads that `ss` as a stuck key and
+        // committed `gros`; same length gates as the collapse (this changes the length too).
+        if (lowerTypedWord.length > (config?.autocorrect_min_word_length ?: Defaults.AUTOCORRECT_MIN_WORD_LENGTH) &&
+            (config?.autocorrect_max_length_diff ?: Defaults.AUTOCORRECT_MAX_LENGTH_DIFF) >= 1
+        ) {
+            sharpSReading(lowerTypedWord, dict)?.let { reading ->
+                val corrected = finalizeCorrection(typedWord, reading)
+                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "AUTO-CORRECT (ss as ß): '$typedWord' → '$corrected'")
+                return corrected
+            }
+        }
 
         // 1.4. Doubled-letter elongation collapse ("gamees" → "games",
         // "embeer" → "ember"). Key auto-repeat / a lingering finger doubles a

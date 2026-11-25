@@ -65,6 +65,11 @@ import java.io.File
  * language. `STATIC_LM_EVAL_DIR` overrides the directory the eval files are read from (a
  * candidate build's own held-out split).
  *
+ * `STATIC_LM_EVAL_TARGETS_IN=<lexicon.bin>` scores only positions whose target is also a word of
+ * that CKDT lexicon (2026-11-25): a lexicon change ADDS scorable targets (German ß words), so
+ * rates of two lexicons are over different positions; running both with the other's lexicon here
+ * compares them over the positions they share.
+ *
  * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
  * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
  * a few repeated contexts is visible as such.
@@ -108,6 +113,9 @@ class StaticLmTapEvalTest {
     /** true = score the OOD dev split (selection); false = the test split (the gate). */
     private val devSplit = System.getenv("STATIC_LM_EVAL_SPLIT") == "dev"
     private val oodPrefix = if (devSplit) "ood_dev" else "ood_test"
+    /** Positions are scored only when their target is in this lexicon too (null = every position). */
+    private val targetsIn: Set<String>? = System.getenv("STATIC_LM_EVAL_TARGETS_IN")?.takeIf { it.isNotBlank() }
+        ?.let { StaticLmLanguageData.readCkdt(File(it)).words.toHashSet() }
 
     /** One population's gate deltas (lm_static − none, top-3, points) and empty-context deviation. */
     private data class Gates(val prefix1: Double, val prefix2: Double, val prefix3: Double, val emptyDeviation: Int, val n1: Int) {
@@ -313,6 +321,7 @@ class StaticLmTapEvalTest {
         for (toks in sentences) {
             for (i in toks.indices) {
                 val target = toks[i]
+                if (targetsIn != null && target !in targetsIn) continue
                 // Sentence-initial: context empty — every arm must equal the baseline.
                 if (i == 0) {
                     for (p in 1..3) rankPrefix(target, p, null, lm, lexicon, learned, legacy)?.let { tally(emptyCtx[p - 1], it) }

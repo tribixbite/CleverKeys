@@ -2,11 +2,11 @@
   "format": "CKLM",
   "version": 1,
   "language": "de",
-  "vocab": 15007,
-  "prevs": 14292,
-  "pairs": 72488,
-  "bytes": 438403,
-  "sha256": "63892b2ce8a5c4c1f524b46dca12a257559aa340d63f83925151d2725f033bf7",
+  "vocab": 15225,
+  "prevs": 14499,
+  "pairs": 73653,
+  "bytes": 445202,
+  "sha256": "ee6a73330f6f56c70e9325292deb810557a4353028bda23b213497fba9032edf",
   "model": {
     "order": 2,
     "minCount": 3.0,
@@ -40,51 +40,51 @@
     "weightGrid": [
       {
         "weight": 0.0,
-        "top1": 7.449,
-        "top3": 14.114,
-        "n": 8162,
-        "pairs": 63457,
-        "bytes": 395463
+        "top1": 7.517,
+        "top3": 14.147,
+        "n": 8221,
+        "pairs": 64415,
+        "bytes": 401353
       },
       {
         "weight": 0.05,
-        "top1": 7.486,
-        "top3": 14.433,
-        "n": 8162,
-        "pairs": 64409,
-        "bytes": 399912
+        "top1": 7.554,
+        "top3": 14.463,
+        "n": 8221,
+        "pairs": 65394,
+        "bytes": 405917
       },
       {
         "weight": 0.1,
-        "top1": 7.474,
-        "top3": 14.531,
-        "n": 8162,
-        "pairs": 66118,
-        "bytes": 407935
+        "top1": 7.554,
+        "top3": 14.548,
+        "n": 8221,
+        "pairs": 67129,
+        "bytes": 414051
       },
       {
         "weight": 0.25,
-        "top1": 7.78,
-        "top3": 14.751,
-        "n": 8162,
-        "pairs": 72488,
-        "bytes": 438403
+        "top1": 7.858,
+        "top3": 14.767,
+        "n": 8221,
+        "pairs": 73653,
+        "bytes": 445202
       },
       {
         "weight": 0.5,
-        "top1": 7.608,
-        "top3": 14.666,
-        "n": 8162,
-        "pairs": 84467,
-        "bytes": 498424
+        "top1": 7.675,
+        "top3": 14.694,
+        "n": 8221,
+        "pairs": 85873,
+        "bytes": 506521
       },
       {
         "weight": 1.0,
-        "top1": 7.51,
-        "top3": 14.727,
-        "n": 8162,
-        "pairs": 112471,
-        "bytes": 640977
+        "top1": 7.59,
+        "top3": 14.755,
+        "n": 8221,
+        "pairs": 114445,
+        "bytes": 651772
       }
     ],
     "weightRule": "max OOD-dev (UD German-GSD dev) next-word top-3 of the pruned model among weights whose model fits the 524288-byte cap; ties -> lower weight",

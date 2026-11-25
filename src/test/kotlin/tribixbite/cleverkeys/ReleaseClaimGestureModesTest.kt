@@ -81,11 +81,13 @@ class ReleaseClaimGestureModesTest {
 
     private fun snapshot(
         keyrepeatEnabled: Boolean = true,
+        backspaceOnlyRepeat: Boolean = false,
         swipeTypingEnabled: Boolean = true,
         verticalThreshold: Int = 40,
         verticalSpeed: Float = 0.4f
     ): ConfigSnapshot = testConfigSnapshot(
         keyrepeat_enabled = keyrepeatEnabled,
+        keyrepeat_backspace_only = backspaceOnlyRepeat,
         swipe_typing_enabled = swipeTypingEnabled,
         selection_delete_vertical_threshold = verticalThreshold,
         selection_delete_vertical_speed = verticalSpeed,
@@ -344,6 +346,29 @@ class ReleaseClaimGestureModesTest {
             .that(ptr.hasFlagsAny(Pointers.FLAG_P_SELECTION_DELETE_MODE)).isFalse()
         assertThat(handler.holds.map { it.getKeyevent() }).containsExactly(KeyEvent.KEYCODE_DEL)
         assertThat(scheduled.single().second).isEqualTo(ptr.snap.longPressInterval)
+    }
+
+    @Test
+    fun `holding an arrow key repeats it with Backspace Only Repeat on`() {
+        // #81: Backspace Only Repeat (the default) keeps backspace AND navigation repeating. Only
+        // keys with arrow SUBKEYS counted as navigation, so a custom layout's main-value arrow
+        // acted once on a hold (Saga, 2026-11-25).
+        val arrowKey = KeyboardData.Key.EMPTY.withKeyValue(0, navRight)
+        val ptr = pointer(arrowKey, navRight, 0, snapshot(backspaceOnlyRepeat = true))
+
+        invokeLongPress(ptr)
+
+        assertThat(handler.holds.map { it.getKeyevent() }).containsExactly(KeyEvent.KEYCODE_DPAD_RIGHT)
+        assertThat(scheduled.single().second).isEqualTo(ptr.snap.longPressInterval)
+    }
+
+    @Test
+    fun `holding a letter does not repeat with Backspace Only Repeat on`() {
+        val ptr = pointer(letterKey, KeyValue.makeCharKey('a'), 0, snapshot(backspaceOnlyRepeat = true))
+
+        invokeLongPress(ptr)
+
+        assertThat(handler.holds).isEmpty()
     }
 
     @Test

@@ -322,6 +322,28 @@ CONFIGS: dict[str, LangConfig] = {
             ood_test=_ud("UD_German-GSD", "ce54dbe9c6a5640c93e9952f069f582f6cd1f9fc", "de_gsd", "test",
                          "595070aa50b706a91dc66f17c296f7a9a25cbc75269f177c27680fb1c21528ab"),
             ood_label="UD German-GSD",
+            # Rebuilt 2026-11-25 (maintainer: "rebuild the german dictionary with ß"), same pinned
+            # corpora and code: de_enhanced.bin now spells ß (scripts/sharp_s.py; `weiß`, `groß`,
+            # `straße`, `Maße` beside `Masse`), where wordfreq's casefolded stream gave `weiss`,
+            # `gross`, `strasse`, so every ß token of the corpora was out of vocabulary. The
+            # 2026-09-29 inputs (4775300e lexicon and contractions_de.json) first reproduced the
+            # shipped file byte-for-byte (sha256 63892b2c…; 438,403 B, OOD-test next-word 7.78 /
+            # 14.57). Pre-registered gate, written before the candidate was built: G1 the model names
+            # neither `weiss` nor `weisst` (the two spellings it named that the lexicon respelled)
+            # and names `weiß` and `weißt`; G2 size <= 1.10 x 438,403 B and the drift-test budget; G3
+            # OOD-test next-word top1/top3 >= 7.68 / 14.47 (shipped - 0.10 pt); G4
+            # StaticLmTapEvalTest de end to end (new lexicon + new model vs the shipped pair), every
+            # lm_static cell (OOD + in-domain) >= shipped - 0.10 pt; G4a the same cells, new vs
+            # shipped model under the NEW lexicon (attribution), same bar; G5 the other languages'
+            # models byte-identical; G6 drift/contraction tests green.
+            # Result: G1, G2, G3, G4a, G5 pass; G4 FAILS as written. 445,202 B (+1.6%), vocab 15,007 ->
+            # 15,225 (+207 ß words, -weiss/weisst), OOD-test next-word 7.93 / 14.75. G4a (both models
+            # under the new lexicon): every cell better, worst +0.03 pt. G4 end to end: 5 prefix top-3
+            # cells -0.21..-0.23 pt, but the scored population grew (+80 OOD / +377 in-domain
+            # positions: ß targets the old lexicon could not score) and every cell GAINED hits; on
+            # the positions both lexicons share (StaticLmTapEvalTest STATIC_LM_EVAL_TARGETS_IN, run
+            # after the gate, not pre-registered) every cell >= +0.00, best +0.28. Shipped on that
+            # evidence; the maintainer may overrule. Doc: docs/eval/2026-11-25-german-sharp-s.md.
             lexicon="de_enhanced.bin",
             contraction_files=("contractions_de.json",),
             wordfreq_lang="de",

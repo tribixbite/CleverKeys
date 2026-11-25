@@ -1928,8 +1928,10 @@ class Pointers(
             return
         }
         // For every other keys, key-repeat
-        // #81: If keyrepeat_backspace_only is enabled, skip repeat for non-backspace/nav keys
-        val isBackspaceOrNav = isBackspaceKey(kv) || hasNavigationSubkeys(ptr)
+        // #81: If keyrepeat_backspace_only is enabled, skip repeat for non-backspace/nav keys.
+        // Navigation is an arrow as the key's own value too (a custom layout's arrow key), not
+        // only a key with arrow subkeys; before 2026-11-25 such an arrow acted once on a hold.
+        val isBackspaceOrNav = isBackspaceKey(kv) || isNavigationKey(kv) || hasNavigationSubkeys(ptr)
         if (snap.keyrepeat_enabled && (!snap.keyrepeat_backspace_only || isBackspaceOrNav)) {
             // If this was a deferred down (potential swipe), output the initial character first
             // This handles holding space/letters without moving - outputs initial char then repeats

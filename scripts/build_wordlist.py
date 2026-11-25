@@ -59,6 +59,7 @@ AOSP snapshot refresh (documented, not automated):
 import argparse
 import gzip
 import json
+import math
 import re
 import struct
 import subprocess
@@ -85,6 +86,9 @@ from build_dictionary import frequency_to_rank, get_word_frequency  # noqa: E402
 from corpus_blend import (  # noqa: E402
     BLENDS, PROFILES, ZWNJ, Blend, build_blend, coverage, ensure_hunspell, foreign_spellings,
 )
+# German ß restored in the casefolded wordfreq stream (2026-11-25).
+from sharp_s import leipzig_word_counts, respell, respell_ranked, sharp_s_variants  # noqa: E402
+from build_static_lm import CACHE as CORPUS_CACHE, CONFIGS as LM_CONFIGS, ensure_source  # noqa: E402
 
 try:
     from wordfreq import iter_wordlist, zipf_frequency
@@ -155,6 +159,8 @@ class LangConfig:
     glued_suffixes: tuple = ()      # clitics a corpus glues onto the previous word (fa که را و)
     corpus: "str | None" = None     # corpus_blend.BLENDS key: candidates + frequencies from a
                                     # corpus blend instead of wordfreq alone (fa)
+    sharp_s: "str | None" = None    # German ß (sharp_s.py): the file-hunspell oracle that decides
+                                    # each casefolded `ss`; the counts are LM_CONFIGS[lang].leipzig
 
 
 # NOTE: the EN entry reproduces build_en_wordlist.py's constants exactly —
@@ -193,15 +199,17 @@ LANG_CONFIG: "dict[str, LangConfig]" = {
         must_include=("être", "été", "français", "même"),
     ),
     "de": LangConfig(
-        # NOTE no ß in the alphabet and no ß must-include forms: wordfreq
-        # casefolds ß→ss, so the candidate stream (and thus the dict — same as
-        # the previous 25k build) carries "strasse"/"grösse" spellings only.
-        name="German", alphabet=ASCII_LOWER + "äöü", aspell="de",
+        # wordfreq casefolds ß→ss, so its stream spells "strasse"/"grösse" and the dictionary
+        # had no ß word until 2026-11-25; `sharp_s` now respells the stream (sharp_s.py:
+        # de_DE_frami decides, the Leipzig German web 2021 counts choose and split) before
+        # classification. The guards hold both kinds: ß words and reformed ss words.
+        name="German", alphabet=ASCII_LOWER + "äöüß", aspell="de",
         pyspell="de", aosp="aosp_de_wordlist.txt.gz", case_policy="de_nouns",
         foreign=("en", "fr", "es", "it", "pt", "nl", "sv", "da", "nb", "pl", "cs"),
         top=80_000, band=40_000, limit=40_000, bundle=True,
         contractions="contractions_de.json",
-        must_include=("über", "grösse", "strasse", "nicht"),
+        must_include=("über", "größe", "straße", "weiß", "dass", "muss", "nicht"),
+        sharp_s="de_DE_frami",
     ),
     "nl": LangConfig(
         name="Dutch", alphabet=ASCII_LOWER + "éëïö", hunspell="nl_NL",
@@ -556,6 +564,47 @@ def read_ckdt_words(data: bytes, origin: str) -> "set[str]":
     return words
 
 
+def restore_sharp_s(lang: str, cfg: LangConfig, ranked: "list[str]", shipped: "set[str]",
+                    review_dir: Path) -> "tuple[list[str], dict[str, int], dict[str, float], set[str]]":
+    """German ß in the casefolded stream (sharp_s.py): every stream or shipped word with `ss` is
+    respelled by the [cfg.sharp_s] oracle and the pinned Leipzig counts of the language model's
+    German corpus. Returns the respelled ranked stream, its ranks (a spelling keeps its stream
+    word's rank), the frequency share of each spelling of a split pair (`maße`/`masse`) and the
+    shipped set under the same respelling, so a respelled carryover word is not "lost".
+
+    Writes every decision to `cleverkeys-dictgen-<lang>-sharp-s.txt` for review.
+    """
+    assert cfg.sharp_s
+    oracle = ensure_hunspell(cfg.sharp_s)
+    tarball, _ = ensure_source(LM_CONFIGS[lang].leipzig, CORPUS_CACHE, allow_unpinned=False,
+                               offline=False)
+    counts = leipzig_word_counts(tarball)
+    ss_words = sorted({w for w in (*ranked, *shipped) if "ss" in w})
+    tokens = sorted(set(ss_words) | {v for w in ss_words for v in sharp_s_variants(w)})
+    accepted = (hunspell_accepted(tokens, lambda w: w, oracle)
+                | hunspell_accepted(tokens, lambda w: w.capitalize(), oracle))
+    decisions = {w: respell(w, accepted, counts) for w in ss_words}
+    stream = respell_ranked(ranked, decisions)
+    respelled_shipped = {s for w in shipped
+                         for s, _ in (decisions[w].spellings if w in decisions else ((w, 1.0),))}
+    in_stream = [w for w in ranked if w in decisions]
+    reasons = Counter(decisions[w].reason for w in in_stream)
+    print(f"sharp-s ({cfg.sharp_s}, {LM_CONFIGS[lang].leipzig.key} counts): {len(in_stream):,} stream "
+          f"words with ss → " + ", ".join(f"{r} {n:,}" for r, n in sorted(reasons.items()))
+          + f"; shipped respelled {len(shipped - respelled_shipped):,}")
+    review_dir.mkdir(parents=True, exist_ok=True)
+    with open(review_dir / f"cleverkeys-dictgen-{lang}-sharp-s.txt", "w", encoding="utf-8") as fp:
+        fp.write("# Every casefolded `ss` word and what it became (sharp_s.py).\n"
+                 "# word\tspellings (share)\t# reason, corpus counts of each reading\n")
+        for w in ss_words:
+            d = decisions[w]
+            readings = [w, *sharp_s_variants(w)]
+            seen = " ".join(f"{v}={counts[v]}" for v in readings if counts.get(v))
+            fp.write(f"{w}\t" + " ".join(f"{s}({share:.2f})" for s, share in d.spellings)
+                     + f"\t# {d.reason}{' ' + seen if seen else ''}\n")
+    return stream.ranked, stream.rank_of, stream.share, respelled_shipped
+
+
 def load_shipped(lang: str, cfg: LangConfig, bootstrap: bool = False) -> "set[str]":
     """Currently-shipped word set (the carryover basis).
 
@@ -694,10 +743,19 @@ def main() -> None:
             if len(ranked) >= top:
                 break
     rank_of = {w: i for i, w in enumerate(ranked)}
+    split_share: "dict[str, float]" = {}
+    if cfg.sharp_s:
+        ranked, rank_of, split_share, shipped = restore_sharp_s(lang, cfg, ranked, shipped,
+                                                                args.review_dir)
+        seen |= set(ranked)
     func_extras = func if func_forcekeep else set()
     extras = sorted((allow | shipped | func_extras) - seen)   # beyond top-N or non-candidates
     universe = ranked + [w for w in extras if 1 <= len(w) <= 25 and _is_script_word(w, script)]
     zc = {w: zipf_of(w) for w in universe}
+    # wordfreq answers a respelled word with its casefolded twin's zipf; a split pair's members get
+    # their share of it (so the size cap and the reports order maße above masse).
+    for w, share in split_share.items():
+        zc[w] += math.log10(share)
     print(f"candidates: ranked={len(ranked)} extras={len(extras)} universe={len(universe)}")
 
     # ---------------- Stage C: positive oracles ----------------
@@ -1035,6 +1093,7 @@ def main() -> None:
         "NLTK" if is_en else None,
         f"pyspellchecker {cfg.pyspell}" if cfg.pyspell else None,
         "AOSP LatinIME" if cfg.aosp else None,
+        f"ß: hunspell {cfg.sharp_s} + Leipzig {LM_CONFIGS[lang].leipzig.filename}" if cfg.sharp_s else None,
     ])) or "none (Tier D: negatives-only)"
     if cfg.hunspell and cfg.hunspell.startswith(HUNSPELL_PROVIDER_PREFIX):
         oracle_desc = oracle_desc.replace(f"hunspell {cfg.hunspell}",
@@ -1048,8 +1107,19 @@ def main() -> None:
                  f"# top={top} band={band} limit={limit} keep={len(words_sorted)}\n"
                  f"# Oracles: {oracle_desc},\n"
                  f"# allowlist/blocklist (scripts/dictionaries/{lang}/), contraction keys.\n")
-        if blend is None:
+        if blend is None and not split_share:
             fp.write("\n".join(words_sorted) + "\n")
+        elif blend is None:
+            # A split ß/ss pair carries its share of the casefolded frequency (sharp_s.py) in the
+            # build_dictionary.py two-column format; every other word is looked up as before.
+            fp.write("# Frequencies: a word with a tab holds its share of a ß/ss pair's wordfreq "
+                     "frequency (x 1e8).\n")
+            for w in words_sorted:
+                if w in split_share:
+                    f = max(1.0, get_word_frequency(w, lang, None) * split_share[w])
+                    fp.write(f"{w}\t{f:.6g}\n")
+                else:
+                    fp.write(f"{w}\n")
         else:
             # Corpus-blend frequencies travel in the list (word<TAB>frequency, the
             # build_dictionary.py two-column format) on wordfreq's x1e8 scale, so the

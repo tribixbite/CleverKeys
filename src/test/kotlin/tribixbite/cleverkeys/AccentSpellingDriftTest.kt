@@ -133,7 +133,8 @@ class AccentSpellingDriftTest {
             kept = listOf(
                 // `wahrend` is a real word (wahren, to preserve), so it stays beside `während`.
                 "schon", "schön", "hatte", "hätte", "ware", "wäre", "wahrend", "während",
-                "blatter", "bose", "burger", "hä", "wär", "mässig",
+                "blatter", "bose", "burger", "hä", "wär",
+                // `mässig` (kept 2026-11-20) is `mäßig` since the ß rebuild ([GermanSharpSDictionaryDriftTest]).
             ),
             singleForm = mapOf("fur" to "für", "munchen" to "münchen", "uber" to "über"),
             bothForms = mapOf("schon" to listOf("schon", "schön"), "hatte" to listOf("hatte", "hätte")),

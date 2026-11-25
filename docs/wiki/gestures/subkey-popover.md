@@ -92,7 +92,8 @@ Keys that already do something when held keep that behaviour:
 | Backspace | Repeats, or selects with a short swipe then hold ([Selection-Delete](selection-delete.md)) |
 | Space, the arrow key between space and Enter, and other keys with arrow subkeys | [TrackPoint mode](trackpoint-mode.md) |
 | Enter and the Send / Go / Search key | Unchanged, so a slow press still sends; swipe to reach their subkeys |
-| Arrow, Page Up/Down, Home/End, Delete, volume and brightness keys | Repeats when **Backspace Only Repeat** is off; with it on (the default) the key acts once |
+| Arrow keys | Repeat (with **Backspace Only Repeat** on or off) |
+| Page Up/Down, Home/End, Delete, volume and brightness keys | Repeats when **Backspace Only Repeat** is off; with it on (the default) the key acts once |
 | Keys with their own long-press action (for example voice input or keyboard switch) | That action |
 
 While the popover is on, it **replaces key repeat** on the keys it applies to: holding a

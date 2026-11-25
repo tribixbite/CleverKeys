@@ -60,12 +60,11 @@ subkey popover found in mainstream keyboards".
      still send, and a neutral release sends nothing, so their subkeys stay a short swipe;
    - the arrows, page and line jumps, forward delete and the volume, brightness, zoom and seek
      keys keep their hold (`KEYEVENTS_KEEPING_THEIR_HOLD`): they repeat when
-     `keyrepeat_backspace_only` is off; with it on (the default) a hold acts once. Device check
-     2026-11-25 (Saga, release r8): Enter, Send and a volume key held 2.2 s, no popover, one action.
-     As a key's main value an arrow does not count as "navigation" for Backspace Only Repeat
-     (`Pointers.handleLongPress` asks `hasNavigationSubkeys`), so it does not repeat by default
-     either; no shipped layout has one, and whether a custom layout's arrow should repeat there is
-     open (TODO in `memory/todo.md`).
+     `keyrepeat_backspace_only` is off; with it on (the default) only Backspace and the arrows
+     repeat (#81), the others act once. Device check 2026-11-25 (Saga, release r8): Enter, Send and
+     a volume key held 2.2 s, no popover, one action. An arrow as a key's main value counts as
+     navigation since 2026-11-25 (`Pointers.handleLongPress` asked only `hasNavigationSubkeys`, so a
+     custom layout's arrow key acted once; `ReleaseClaimGestureModesTest`).
 
    On eligible keys the popover **replaces key repeat** while it is enabled; repeating a letter
    (or an Esc or Tab that has subkeys) by holding is what it gives up.
