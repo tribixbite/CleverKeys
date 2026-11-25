@@ -567,3 +567,16 @@ Learning replaces exact owned increments through `Predictor.replaceLearningCommi
 never use word-only rollback or cast to WordPredictor for suffix transactions.
 Selection callbacks require the bounded original/selected/final operation ledger;
 coordinate equality alone is insufficient. See the paired per-key-actions spec.
+
+## Contraction frequency tables (2026-11-25)
+
+`dictionaries/contraction_frequencies_<lang>.json` (alias key → frequency, lexicon scale) is applied by
+`CtcContractionKeys.inject`: a new key enters at `max(floor, table)`, a key the lexicon already holds is
+RAISED to the table value, never lowered. Shipped: `en` (93 pronoun aliases, `extract_apostrophe_words.py
+--en-alias-frequencies`) and `fr` (elisions, `scripts/build_elision_frequencies.py`). Never put these raises
+in `en_enhanced.json`: `ContractionOverlay`'s real-word guard reads an alias key's ORDINAL there (junk
+alias ≥ 1200 → shown as its contraction); raising `dont` to rank 67 made the bar show `dont`, and the
+isotonic fit moved `we'd` behind `wed` (8 red display tests). A swipe replay scores the decoded spelling
+and cannot see the display layer: run `CtcContractionDisplayTest` and `PairingBaseFrequenciesTest` too.
+Name a new asset `contraction_*`: `generateBinaryDictionaries` turns every other dictionaries/*.json
+into a stray `.bin`.

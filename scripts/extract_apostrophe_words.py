@@ -1355,6 +1355,71 @@ def rebuild_en_pairing_frequencies(dry_run: bool, check: bool) -> int:
     return 0
 
 
+def measure_en_alias_frequencies(
+    lexicon: dict, replace: dict, fit: ZipfByteFit,
+) -> dict[str, float]:
+    """
+    English REPLACE alias keys -> the frequency of the CONTRACTION they stand for (2026-11-25).
+
+    `en_enhanced.json` holds an alias key (`youre`) at the wordfreq frequency of the
+    apostrophe-free TOKEN (zipf 3.86 -> 182), while the contraction itself is written ~100x
+    more often (`you're` 5.87). The CTC beam's frequency term then argued against every
+    pronoun contraction: on 1,202 human FUTO traces `they're` was first 4 of 39 times
+    (docs/eval/2026-11-25-english-contraction-frequencies.md). For each key that is a lexicon
+    word and whose display form has an apostrophe (possessives excluded), the table holds
+    fit(zipf(display)) where that is above the key's lexicon byte.
+
+    The LEXICON is not changed: `ContractionOverlay`'s real-word guard reads an alias key's
+    frequency ORDINAL in it (a junk alias ranks >= 1200 and shows as its contraction), and a
+    raised `dont` would rank 67 and show as `dont`. The raise lives only in the swipe trie,
+    where `CtcContractionKeys.inject` applies `contraction_frequencies_en.json`.
+    """
+    from wordfreq import zipf_frequency
+
+    table: dict[str, float] = {}
+    for key, display in replace.items():
+        if key not in lexicon or "'" not in display or is_possessive(display):
+            continue
+        zipf = zipf_frequency(display, fit.lang)
+        if zipf <= 0.0:
+            continue
+        value = fit.to_byte(zipf)
+        if value > lexicon[key]:
+            table[key] = float(value)
+    return table
+
+
+EN_ALIAS_TABLE_NAME = "contraction_frequencies_en.json"
+
+
+def rebuild_en_alias_frequencies(dry_run: bool, check: bool) -> int:
+    """Write (or with `check`, compare) `contraction_frequencies_en.json` (see above).
+
+    Same rendering as `scripts/build_elision_frequencies.py` writes for French. Returns the exit
+    code: 1 when `check` finds the shipped table differs from a fresh measurement.
+    """
+    lexicon = load_lexicon(EN_LEXICON_NAME)
+    replace = json.loads((OUTPUT_DIR / "contractions_non_paired.json").read_text(encoding="utf-8"))
+    table = measure_en_alias_frequencies(lexicon, replace, ZipfByteFit(lexicon, "en"))
+    print(f"{len(table)} English alias key(s) raised in the swipe trie")
+    for key, value in sorted(table.items()):
+        print(f"  {key:>10} -> {replace[key]:<12} {lexicon[key]:>4} -> {value:.0f}")
+    rendered = json.dumps(table, ensure_ascii=False, sort_keys=True, indent=0) + "\n"
+    path = OUTPUT_DIR / EN_ALIAS_TABLE_NAME
+    if check:
+        shipped = path.read_text(encoding="utf-8") if path.is_file() else ""
+        if shipped != rendered:
+            print(f"DRIFT: {EN_ALIAS_TABLE_NAME} does not match a fresh measurement")
+            return 1
+        print(f"{EN_ALIAS_TABLE_NAME}: up to date")
+        return 0
+    if dry_run:
+        return 0
+    path.write_text(rendered, encoding="utf-8")
+    print(f"wrote {path}")
+    return 0
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument(
@@ -1372,16 +1437,23 @@ def main():
              "the per-language display files",
     )
     parser.add_argument(
+        "--en-alias-frequencies", action="store_true",
+        help="write contraction_frequencies_en.json: English REPLACE alias keys (youre, theyre) "
+             "at the frequency of the contraction they stand for, for the swipe trie only",
+    )
+    parser.add_argument(
         "--check", action="store_true",
-        help="with --en-pairing-frequencies: exit 1 if the shipped file drifts from a "
-             "fresh measurement, write nothing",
+        help="with --en-pairing-frequencies or --en-alias-frequencies: exit 1 if the shipped "
+             "file drifts from a fresh measurement, write nothing",
     )
     args = parser.parse_args()
 
     if args.en_pairing_frequencies:
         sys.exit(rebuild_en_pairing_frequencies(args.dry_run, args.check))
+    if args.en_alias_frequencies:
+        sys.exit(rebuild_en_alias_frequencies(args.dry_run, args.check))
     if args.check:
-        parser.error("--check is only meaningful with --en-pairing-frequencies")
+        parser.error("--check is only meaningful with --en-pairing-frequencies or --en-alias-frequencies")
 
     languages = list(LANG_DICT_PATHS)
     if args.lang:

@@ -1212,4 +1212,35 @@ class BundledContractionDataTest {
         repeat(nonPairedCount) { binNonPaired[readString()] = readString() }
         assertThat(binNonPaired).doesNotContainKey("lets")
     }
+
+    /**
+     * English REPLACE alias keys enter the SWIPE TRIE at the frequency of the contraction, not of
+     * the apostrophe-free token (2026-11-25; `contraction_frequencies_en.json`, written by
+     * `scripts/extract_apostrophe_words.py --en-alias-frequencies`,
+     * docs/eval/2026-11-25-english-contraction-frequencies.md). At the token's frequency
+     * (`youre` 182 against `your` 233) a swipe of they're was first 4 of 39 times on human FUTO
+     * traces; 22 of 39 after, with no control word lost.
+     *
+     * `en_enhanced.json` itself keeps the token values: `ContractionOverlay`'s real-word guard
+     * reads an alias key's ORDINAL there, and a raised `dont` (rank 67) would show as `dont`.
+     */
+    @Test
+    fun `english contraction aliases enter the swipe trie at their contraction's frequency`() {
+        val table = tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys.parseAttestedFrequencies(
+            File("$DICT_DIR/contraction_frequencies_en.json").readText()
+        )
+        val measured = mapOf(
+            "youre" to 220.0, "theyre" to 213.0, "ive" to 217.0, "dont" to 226.0, "im" to 226.0,
+            "cant" to 219.0, "isnt" to 212.0, "weve" to 205.0, "youll" to 208.0,
+        )
+        for ((key, value) in measured) {
+            assertWithMessage("contraction_frequencies_en.json $key").that(table[key]).isEqualTo(value)
+        }
+        val lexicon = Regex("^  \"([a-z]+)\": (\\d+),?$", RegexOption.MULTILINE)
+            .findAll(File("$DICT_DIR/en_enhanced.json").readText())
+            .associate { it.groupValues[1] to it.groupValues[2].toInt() }
+        assertWithMessage("en_enhanced.json keeps the token value (the overlay's guard)")
+            .that(lexicon["youre"]).isEqualTo(182)
+        assertWithMessage("…and dont's").that(lexicon["dont"]).isEqualTo(199)
+    }
 }

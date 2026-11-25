@@ -858,8 +858,10 @@ class CtcEngineAdapter(
         // German. See [CtcContractionKeys.derivedFloor].
         val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
         val contractions = contractionsFor(lang)
+        // A gated language's elisions enter at how often each is written (`d'être` above
+        // `d'été`); every other key, and every language without a table, stays at the floor.
         val injected = CtcContractionKeys.inject(
-            trie, contractions.getAliasKeys(), injectionFloor
+            trie, contractions.getAliasKeys(), injectionFloor, attestedContractionFrequencies(lang)
         )
         // Base frequencies for the overlay's promotion rule — see [TrieMemo]. Looked up in the
         // MERGED map, so a user word's calibrated frequency (wave U2) is what the variant is
@@ -974,6 +976,18 @@ class CtcEngineAdapter(
      * one of its common words (fr `la`→`l'a`, `les`→`l'es`, `ma`→`m'a`; de `im`). Those are
      * KEPT with the contraction merely appended, never substituted.
      */
+    /**
+     * `dictionaries/contraction_frequencies_<lang>.json`: alias key → the elision's measured
+     * frequency ([CtcContractionKeys.inject]). Shipped only for languages that passed the human
+     * swipe-corpus gate (French, 2026-11-25); empty for every other language.
+     */
+    private fun attestedContractionFrequencies(lang: String): Map<String, Double> = try {
+        context.assets.open("dictionaries/contraction_frequencies_$lang.json")
+            .use { CtcContractionKeys.parseAttestedFrequencies(it.readBytes().decodeToString()) }
+    } catch (_: java.io.IOException) {
+        emptyMap()
+    }
+
     private fun contractionsFor(language: String): ContractionManager {
         contractionManagers[language]?.let { return it }
         val cm = ContractionManager(context)

@@ -191,6 +191,24 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * Saga 2026-11-25 (`ModifierStateAcrossResetsInstrumentedTest`, dark-mode switch): a freshly
+     * created keyboard service whose view went stale before its FIRST show crashed in
+     * onStartInputView with `lateinit property _layoutBridge has not been initialized`. The
+     * stale-view rebuild (`recreateThemedViews` → `current_layout()`) ran before the first-show
+     * layout setup (`refreshSubtypeImm`, which creates the bridge). The layouts come first.
+     */
+    @Test
+    fun theFirstShowSetsUpTheLayoutsBeforeAStaleViewIsRebuilt() {
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        val onStart = service.substringAfter("override fun onStartInputView(").substringBefore("\n    override fun ")
+        val layouts = onStart.indexOf("refreshSubtypeImm()")
+        val rebuild = onStart.indexOf("recreateThemedViews()")
+        assertWithMessage("onStartInputView sets up the layouts").that(layouts).isAtLeast(0)
+        assertWithMessage("onStartInputView rebuilds a stale view").that(rebuild).isAtLeast(0)
+        assertWithMessage("the layout setup must precede the stale-view rebuild").that(layouts).isLessThan(rebuild)
+    }
+
+    /**
      * Per-layout theme binding: `Config.set_current_layout` must NOT resolve the theme itself.
      * ConfigurationManager decides whether to re-inflate by comparing the theme before and after
      * the refresh that the selection write triggers; resolving early would make that comparison
@@ -749,11 +767,14 @@ class CoreImeHygieneDriftTest {
         // evidence, against the 7-10 the model produces. 49% of the fr alias table was
         // unreachable. What must NOT come back is a PER-WORD frequency — that is the boost this
         // guard was always really about.
+        // 2026-11-25 (todo item 35): a key may be RAISED only by a measured, gated asset table
+        // (contraction_frequencies_<lang>.json; ContractionFrequencyAssetDriftTest pins which languages
+        // ship one), never lowered below the floor, and never by a value computed here.
         assertWithMessage(
-            "$ctcRel must insert every key at the SAME frequency — one value for the whole " +
-                "lexicon, never computed per word. A per-word frequency is the boost that made " +
-                "17,931 French pseudo-words outrank real vocabulary."
-        ).that(ctc).contains("trie.insert(lowered, frequency)")
+            "$ctcRel must insert every key at the shared floor unless the gated asset table " +
+                "raises it — never a frequency computed per word. A per-word frequency is the " +
+                "boost that made 17,931 French pseudo-words outrank real vocabulary."
+        ).that(ctc).contains("trie.insert(lowered, maxOf(frequency, attested[lowered] ?: frequency))")
         assertWithMessage(
             "$ctcRel must derive that value from the lexicon's rarest REAL word, so the " +
                 "'never preferred' invariant holds by construction in every lexicon — including " +

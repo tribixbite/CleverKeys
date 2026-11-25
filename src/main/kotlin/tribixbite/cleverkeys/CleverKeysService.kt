@@ -871,6 +871,15 @@ class CleverKeysService : InputMethodService(),
         // 2026-08-28 along with UnigramLanguageDetector — it cleared a word window nothing
         // read. The remaining per-field resets live in KeyEventHandler.started(info) below.
 
+        // Initialize subtype and layout if not already done (v1.32.413: ensure layoutManager is ready)
+        // This is needed for receiver initialization which depends on layoutManager. It runs
+        // BEFORE the stale-view rebuild below, which reads the current layout through the bridge
+        // this creates: a fresh service whose view went stale before its first show crashed
+        // there (Saga 2026-11-25, a dark-mode switch; CoreImeHygieneDriftTest).
+        if (_layoutManager == null) {
+            refreshSubtypeImm()
+        }
+
         // Rebuild a view inflated with a stale theme: another style id, another theme name
         // (runtime themes, and layouts bound to them, share one style id) or other colours of
         // the same runtime theme (edited while the keyboard was hidden).
@@ -880,12 +889,6 @@ class CleverKeysService : InputMethodService(),
         } else if (_keyboardView.parent == null) {
             // Ensure view is attached if it was detached
             setInputView(_keyboardView)
-        }
-
-        // Initialize subtype and layout if not already done (v1.32.413: ensure layoutManager is ready)
-        // This is needed for receiver initialization which depends on layoutManager
-        if (_layoutManager == null) {
-            refreshSubtypeImm()
         }
 
         // Initialize KeyboardReceiver if needed (v1.32.397: extracted to ReceiverInitializer;

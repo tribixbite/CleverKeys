@@ -335,9 +335,51 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("bound language kept").that(predictor.getField("currentLanguage")).isEqualTo("en")
 
         config.layout_bound_language = null
+        config.active_secondary_language = "es"
         predictor.addWordToContext("dogs", true)
         verify(exactly = 1) { languages.detectAndSwitch(any(), any()) }
         assertWithMessage("unbound: detection switches").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
+    /**
+     * 2026-11-25: Auto-Detect is on by default, and its toggle only shows inside Multi-Language,
+     * yet with Multi-Language OFF (no secondary language) the fallback detector still ran on
+     * every commit and could move the next-word and learned-context models to another language.
+     * Without a chosen secondary language there is nothing to detect between.
+     */
+    @Test
+    fun autoDetectionNeedsAChosenSecondaryLanguage() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = null
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.isLanguageSupported(any()) } returns true
+        predictor.setField("bigramModel", bigrams)
+        val detector = mockk<LanguageDetector>()
+        every { detector.detectLanguageFromWords(any()) } returns "es"
+        predictor.setField("languageDetector", detector)
+        listOf("el", "perro", "come", "la", "comida", "con", "su", "familia").forEach {
+            predictor.addWordToContext(it, true)
+        }
+        assertWithMessage("single-language typing keeps its language")
+            .that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    /** It only switches between the primary and the chosen secondary language. */
+    @Test
+    fun autoDetectionSwitchesOnlyBetweenTheChosenLanguages() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "de"
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any()) } returns "es"
+        predictor.setField("multiLanguageManager", languages)
+        listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("a language the user did not choose").that(predictor.getField("currentLanguage")).isEqualTo("en")
+
+        every { languages.detectAndSwitch(any(), any()) } returns "de"
+        predictor.addWordToContext("dogs", true)
+        assertWithMessage("the chosen secondary").that(predictor.getField("currentLanguage")).isEqualTo("de")
     }
 
     @Test

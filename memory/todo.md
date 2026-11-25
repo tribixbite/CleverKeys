@@ -448,6 +448,28 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
   moves up once its suggestion bar appears, so key coordinates must be measured after the first key.
 - Saga `.1.130` then got r12 over r10 (data kept).
 
+**Status 2026-11-25, evening (agent).** Maintainer: "do all of it, set cleverkeys default on the note".
+- **A2 not run on emulator.wtf: the account is out of credits (HTTP 402).** Billing is the
+  maintainer's: https://emulator.wtf/o/64da92b3-67fb-427a-b56d-11e62fff8751/billing. Instead, every
+  instrumented class ran on the Saga `.1.130` one by one (`~/ew-output/saga-instr-2026-11-25/`):
+  1,667 pass, 4 fail, 2 skip. One real bug, FIXED: the keyboard's first show after a theme change
+  crashed (`_layoutBridge` read before `refreshSubtypeImm`). The other three re-ran green on the new
+  build (`saga-instr-2026-11-25-rerun/`): night-mode height 2/2 (a show that timed out once), private
+  copy 10/10 (the previous class's test image was the clip), imported pack 13/13 twice (a heap
+  overage left by the earlier classes). A full A2 still has to run once credits return.
+- **Auto-Detect Language FIXED:** it switched between any of six languages even with no secondary
+  set (measured `LanguageDetectionEvalTest`: 1.5–3.4% of words typed in another language switched).
+  Now only primary ↔ chosen secondary, and the two settings show only with a secondary.
+- **Contraction swipes:** item 8's they're/you're FIXED (`contraction_frequencies_en.json`, swipe
+  trie only; they're 4 → 22 / 39 on FUTO; the maintainer found the traces — FUTO spells them without
+  the apostrophe). Item 35 French FIXED (`contraction_frequencies_fr.json`; `d'être` rank 2, `qu'il`
+  first in 1–2 of 3 synthetic traces). Italian: no table (gate failed; needs human Italian traces).
+  `cos'è` stays at the bar's tail (paired elision, by design). English words in the French and
+  Italian lists: not dropped (the 2026-11-20 review).
+- Suites at this code: pure 4,045 / mock 2,017. Release r14 (sha256 `122bb4de…`) on the Saga
+  (debug packages removed, CleverKeys default, Multi-Language off as found; swipes `they're you're
+  I've` and fr `qu'il d'été l'été c'est j'ai` checked).
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by
@@ -584,7 +606,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 8. [ ] maintainer soak: running every release as generated. Bugs (a) `they've`, (b) long to-do entry
    editing, (c) bépo `été`: fixed or maintainer PASS 2026-10-26. Left: the soak → ARC-063 narrow the
    blanket R8 keeps → tag decision; a few real traces of a hard pronoun contraction would decide a
-   ranking change (`they're`/`you're` lose to `there`/`your`); FIXED 2026-11-18: `ß`/`æ`/`œ` keys
+   ranking change (`they're`/`you're` lose to `there`/`your`) — FIXED 2026-11-25 on FUTO traces,
+   see that day's evening status; FIXED 2026-11-18: `ß`/`æ`/`œ` keys
    have a CTC slot and `schön`/`schon`-type collisions offer both forms (spec "Collisions": real
    FUTO traces t1 unchanged, t3 +0.1…+1.3 pt in de/es/fr; ß/æ boards synthetic pins only, no
    corpus — device check PASS 2026-11-25 on the Saga, see that day's status; it found the German list
@@ -786,7 +809,7 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     unlock). Both in the owners' hands; not worth a UI session. [log](../docs/history/todo-item-34-scene-rounds.md#item-34)
 35. [ ] device + maintainer: French/Italian accented elisions. Data fixed, replay 0 regressions;
     `l'école`/`c'est`/`l'été` and it `C'è` PASS on device. **Maintainer decision**: rank elisions by
-    their own Leipzig frequency (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +
+    their own Leipzig frequency — DONE 2026-11-25 for French (Italian gate failed; evening status) (best arm, `d'être` rank 1–2; needs a per-key table + NOTICE +
     relaxing `CoreImeHygieneDriftTest`; `docs/eval/2026-11-09-elision-base-frequency.md`); a human
     `d'être` swipe. it `l'attivita` FIXED 2026-11-18: it.cklm rebuilt from the corrected table under a
     pre-registered gate (all six pass; `scripts/build_static_lm.py` Italian config). it accent

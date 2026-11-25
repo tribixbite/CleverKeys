@@ -1358,6 +1358,7 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-11-20: accent misspellings out of the fr/es/pt/de dictionaries and models (same method).
     'tribixbite.cleverkeys.AccentSpellingDriftTest',
     'tribixbite.cleverkeys.GermanSharpSDictionaryDriftTest',
+    'tribixbite.cleverkeys.ContractionFrequencyAssetDriftTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
@@ -1420,6 +1421,8 @@ tasks.register('runMockTests', JavaExec) {
   group = 'verification'
   description = 'Run MockK-based tests with android.jar stubs (works on ARM64)'
   jvmArgs '-XX:+EnableDynamicAgentLoading'
+  // Opt-in corpus measurements in the mock tier (LanguageDetectionEvalTest) read geoFull too.
+  systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
 
   def mockTestClasses = [
     // Review 2026-11-14 (low): a SecurityException from the recorder reaches the controller;
@@ -1512,6 +1515,7 @@ tasks.register('runMockTests', JavaExec) {
     // before Enter/field-switch is flushed, contractions learn whole, password fields never
     // learn. Real SuggestionHandler + WordPredictor learn funnel over in-memory n-gram stores.
     'tribixbite.cleverkeys.LearningFunnelBookkeepingTest',
+    'tribixbite.cleverkeys.LanguageDetectionEvalTest',
     // Next-word tiers (maintainer decision 2026-09-26): the shipped static tier shows with
     // on-device learning OFF (and in incognito fields); the learned tier is never read unless
     // master + context-aware + field allow it; accepting a next-word learns nothing with the

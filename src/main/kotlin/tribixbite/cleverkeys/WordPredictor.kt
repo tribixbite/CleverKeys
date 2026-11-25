@@ -1161,12 +1161,19 @@ class WordPredictor : Predictor {
         // GH #186/#61: a layout with a language binding decides the language; detection must
         // not switch the n-gram/context models away from it mid-sentence.
         if (config?.layout_bound_language != null) return
+        // Detection chooses between the user's TWO languages only (2026-11-25). Without an active
+        // secondary language (Multi-Language off, where the toggle is not even shown) the
+        // fallback detector used to run on every commit and could move the next-word and
+        // learned-context models to any of its six languages; with one it could still pick a
+        // language the user never chose.
+        val secondary = config?.active_secondary_language ?: return
+        val chosen = setOf(config?.primary_language ?: currentLanguage, secondary)
 
         // Use MultiLanguageManager for detection and switching if available
         if (multiLanguageManager != null) {
             val sensitivity = config?.language_detection_sensitivity ?: 0.6f
             val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity)
-            if (detected != null && detected != currentLanguage) {
+            if (detected != null && detected != currentLanguage && detected in chosen) {
                 invalidateExactLearningCommit()
                 currentLanguage = detected
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -1186,7 +1193,7 @@ class WordPredictor : Predictor {
         languageDetector ?: return
 
         val detectedLanguage = languageDetector?.detectLanguageFromWords(recentWords)
-        if (detectedLanguage != null && detectedLanguage != currentLanguage) {
+        if (detectedLanguage != null && detectedLanguage != currentLanguage && detectedLanguage in chosen) {
             if (bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")

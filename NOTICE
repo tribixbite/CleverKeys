@@ -278,6 +278,10 @@ Leipzig Corpora Collection downloads (web and news text):
 Only pruned, quantised word-pair statistics are distributed; no sentence text
 is shipped.
 
+The French elision frequencies (dictionaries/contraction_frequencies_fr.json, built by
+scripts/build_elision_frequencies.py) are derived from word counts in the same
+French download (fra-fr_web_2013_300K): one number per elision, no text.
+
   Leipzig Corpora Collection — Universität Leipzig
   https://wortschatz.uni-leipzig.de/en/download
   Terms: https://wortschatz.uni-leipzig.de/en/usage

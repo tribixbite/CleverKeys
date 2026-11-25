@@ -18,3 +18,10 @@ which rules a change must clear before it ships.
 
 <!-- moved verbatim from CLAUDE.md on 2026-11-14 -->
 - **Short-word root cause, re-measured (2026-10-07):** `ad`→`as`/`wet`→`we` is the encoder's learned word prior at the trace END (last frame reads a stroke ending on `d`/`t` as an overshooting `as`/`we`; training has `we` 562× vs `wet` 4×) plus no emission for collinear pass-through letters. λ 4 is the dev optimum and endpoint rescoring is neutral on 4,000 held-out traces. Separately, the app featurizes the recognizer's SMOOTHED path with dwell samples dropped: raw input is +0.37 pt held-out top-1 (p 0.029). `docs/eval/2026-10-07-short-word-ctc.md`, `scripts/short_word_ctc_eval.py`.
+
+## Corpus searches for contractions (2026-11-25)
+
+FUTO (`futo-org/swipe.futo.org`) writes contractions WITHOUT the apostrophe (`theyre`, `Youre`, `Ive`). An
+exact, case-sensitive, apostrophe-only filter returned 0 and was reported as "no corpus"; the HF
+`/search` endpoint (case-insensitive) found 73 youre / 42 theyre / 61 ive / 214 dont across swipe-1/2/3.
+Search case-insensitively and in every spelling before saying a corpus lacks a word.

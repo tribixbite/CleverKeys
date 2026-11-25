@@ -609,6 +609,16 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Swiping you're, they're and I've: the swipe dictionary held each at the frequency of the
+  apostrophe-free word (`youre`), about a hundredth of how often the contraction is written, so
+  they're came first on 4 of 39 real swipes (FUTO corpus); now 22 of 39, with your, there and were
+  unchanged.
+- French elisions rank by how often each is written: d'être is offered beside d'été, qu'il above
+  will, l'état and s'agit first more often (85.6% first-word on 2,291 real French swipes, was 84.2%).
+- Auto-Detect Language only switches between the primary and the secondary language you chose, and
+  its two settings show only once a secondary language is set; it could switch an English user to
+  Spanish or French on a few words (1.5–3.4% of words typed in another language triggered it).
+- The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.
 - The phone pad's send key shows the field's action (Next, Go, Done…); it read "Action" in every

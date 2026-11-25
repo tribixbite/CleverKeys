@@ -114,26 +114,61 @@ object CtcContractionKeys {
 
     /**
      * Insert every injectable key of [keys] that the trie does not already contain, at
-     * [INJECTED_FREQUENCY].
+     * [frequency] (the floor) — or, for a key in [attested], at its measured value when that
+     * is higher.
+     *
+     * ## Attested frequencies (2026-11-25, todo item 35)
+     *
+     * At the floor every elision ties with every other, so a short or common-looking path wins
+     * (`d'été` over `d'être`). [attested] comes ONLY from a gated asset,
+     * `dictionaries/contraction_frequencies_<lang>.json`, built by
+     * `scripts/build_elision_frequencies.py` from how often the elision itself is written in a
+     * pinned corpus (`d'être` 1,613 times → 168) and shipped per language only after a human
+     * swipe-corpus gate (`docs/eval/2026-11-25-elision-own-frequency.md`; French). It is never
+     * computed per word here: that was the boost that put 17,931 French pseudo-words above real
+     * vocabulary. A value below the floor never lowers a key. A key the lexicon already holds is
+     * never re-inserted at the floor, but its table value RAISES it (the classifier keeps
+     * contraction keys as words at the apostrophe-free token's frequency: fr `quil` 96, though
+     * `qu'il` is written 5,601 times; [CtcLexiconTrie.insert] keeps the larger value, so a word
+     * more common as itself, `la` for `l'a`, is never lowered).
      *
      * @param trie the merged lexicon trie for the active language; mutated in place.
      * @param keys contraction alias keys (both the REPLACE and the APPEND side —
      *   `ContractionManager.getAliasKeys()`).
+     * @param attested lowercase key → measured frequency on the lexicon scale (see above).
      * @return the number of keys actually inserted (skipped ones are not counted).
      */
     fun inject(
         trie: CtcLexiconTrie,
         keys: Iterable<String>,
         frequency: Double = INJECTED_FREQUENCY,
+        attested: Map<String, Double> = emptyMap(),
     ): Int {
         var inserted = 0
         for (key in keys) {
             if (!isInjectable(key, trie.alphabet)) continue
             val lowered = key.lowercase(Locale.ROOT)
-            if (trie.contains(lowered)) continue
-            trie.insert(lowered, frequency)
+            if (trie.contains(lowered)) {
+                attested[lowered]?.let { trie.insert(lowered, it) }  // keeps the max: raise only
+                continue
+            }
+            trie.insert(lowered, maxOf(frequency, attested[lowered] ?: frequency))
             inserted++
         }
         return inserted
+    }
+
+    /** One `"key": number` entry of an `contraction_frequencies_<lang>.json` asset. */
+    private val ATTESTED_ENTRY = Regex("\"([a-z]+)\"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)")
+
+    /**
+     * Parse an `contraction_frequencies_<lang>.json` asset (a flat object of a–z keys to numbers,
+     * as `build_elision_frequencies.py` writes it). Pure, so the adapter's asset read stays a
+     * one-liner and the shape is unit-tested.
+     */
+    fun parseAttestedFrequencies(json: String): Map<String, Double> {
+        val out = HashMap<String, Double>()
+        for (m in ATTESTED_ENTRY.findAll(json)) out[m.groupValues[1]] = m.groupValues[2].toDouble()
+        return out
     }
 }

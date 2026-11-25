@@ -183,31 +183,34 @@ internal fun SettingsActivity.MultiLanguageSection() {
                             },
                             displayValue = "%.2f".format(secondaryPredictionWeight)
                         )
-                    }
 
-                    SettingsSwitch(
-                        title = stringResource(R.string.multilang_auto_detect_title),
-                        description = stringResource(R.string.multilang_auto_detect_desc),
-                        checked = autoDetectLanguage,
-                        onCheckedChange = {
-                            autoDetectLanguage = it
-                            saveSetting("pref_auto_detect_language", it)
-                        }
-                    )
-
-                    if (autoDetectLanguage) {
-                        SettingsSlider(
-                            title = stringResource(R.string.multilang_detection_sensitivity_title),
-                            description = stringResource(R.string.multilang_detection_sensitivity_desc),
-                            value = languageDetectionSensitivity,
-                            valueRange = 0.4f..0.9f,
-                            increment = 0.05f,
-                            onValueChange = {
-                                languageDetectionSensitivity = it
-                                saveSetting("pref_language_detection_sensitivity", languageDetectionSensitivity)
-                            },
-                            displayValue = "%.2f".format(languageDetectionSensitivity)
+                        // Detection switches only between the primary and this secondary
+                        // language (WordPredictor.tryAutoLanguageDetection), so it is offered
+                        // only while one is chosen (2026-11-25).
+                        SettingsSwitch(
+                            title = stringResource(R.string.multilang_auto_detect_title),
+                            description = stringResource(R.string.multilang_auto_detect_desc),
+                            checked = autoDetectLanguage,
+                            onCheckedChange = {
+                                autoDetectLanguage = it
+                                saveSetting("pref_auto_detect_language", it)
+                            }
                         )
+
+                        if (autoDetectLanguage) {
+                            SettingsSlider(
+                                title = stringResource(R.string.multilang_detection_sensitivity_title),
+                                description = stringResource(R.string.multilang_detection_sensitivity_desc),
+                                value = languageDetectionSensitivity,
+                                valueRange = 0.4f..0.9f,
+                                increment = 0.05f,
+                                onValueChange = {
+                                    languageDetectionSensitivity = it
+                                    saveSetting("pref_language_detection_sensitivity", languageDetectionSensitivity)
+                                },
+                                displayValue = "%.2f".format(languageDetectionSensitivity)
+                            )
+                        }
                     }
 
                     // The per-language "Prefix Boost" block (boost strength / max boost /
