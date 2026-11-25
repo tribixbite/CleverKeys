@@ -22,7 +22,7 @@ editor that used to be listed here already ship in 2.0.)
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; everything merged up to
-> 2026-11-23 is folded in, including on-device voice input (moved here from the
+> 2026-11-25 is folded in, including on-device voice input (moved here from the
 > proposed 2.1.0 by maintainer decision on 2026-10-29) and its pause-based endpointing
 > (2026-10-31).
 
@@ -620,7 +620,21 @@ editor that used to be listed here already ship in 2.0.)
 - Auto-Detect Language only switches between the primary and the secondary language you chose, and
   its two settings show only once a secondary language is set; it could switch an English user to
   Spanish or French on a few words (1.5–3.4% of words typed in another language triggered it).
-  Its sensitivity setting is described the right way round: a higher value switches less.
+  Its sensitivity setting is described the right way round: a higher value switches less. It
+  picks the better of your two languages (Spanish text that also looks Portuguese switches to
+  Spanish); for a pair it cannot recognise (Italian, Dutch or an imported language beside
+  another) Settings says Auto-Detect is not available instead of showing a switch that never
+  worked.
+- A correctly typed word of your second language is no longer autocorrected into a word of the
+  first (with Spanish beside English, pero became per).
+- With the History size limit set by storage size, copying something larger than the whole limit
+  deleted every History item, the new copy included; the newest copy now stays.
+- Rotating the phone during an import no longer breaks it: a GIF pack could be left half
+  installed, and backup, clipboard, dictionary and language pack imports finished but said they
+  failed and did not refresh the keyboard. Imports now finish and report normally across a
+  rotation.
+- Clipboard items restored from a backup get the expiry of the History duration you set; on a new
+  phone, or with another keyboard in use, they could take an old value or never expire.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.
@@ -671,7 +685,9 @@ editor that used to be listed here already ship in 2.0.)
   was stored. The count limit, the default, was not affected.
 - Restoring a settings backup from version 1.x also restores the custom and disabled words it
   contains (words already on the phone are kept). They were skipped as "restored by the
-  dictionary import", which reads a different file.
+  dictionary import", which reads a different file. The import preview lists them by language,
+  each can be left out, a file with nothing new says so, and a failure to write them is reported
+  as a failure.
 - A 1.4 or 1.5 settings backup no longer sets Touch Offset Correction to 13%. Those backups carry
   the old swipe engine's default, 12.5, which was never measured; restoring one keeps today's
   default, 0, as upgrading from 1.5 does. Other values from those versions still round to whole
@@ -741,7 +757,9 @@ editor that used to be listed here already ship in 2.0.)
   closed yourself stays closed, and so does one Discord closes on rotation without a pane open.
 - A latched or locked Shift, caps lock, Ctrl, Alt or Fn stays on when you rotate the phone, in
   apps that restart their screen on rotation and in apps that keep it; it used to be dropped
-  every time. A tap on the keyboard after the rotation is yours: nothing comes back over it.
+  every time. A tap on the keyboard after the rotation is yours: nothing comes back over it, and
+  an app that closes the keyboard after you type and submit (a search) keeps it closed; a pane
+  you close after rotating stays closed.
 - They also stay on when a setting or the theme changes while you type (a command such as True
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.
