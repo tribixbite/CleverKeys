@@ -170,8 +170,8 @@ Only in-force audit records live here; everything superseded is under `docs/hist
 | `2026-08-23-v1.5-delta-audit.md` | Complete post-v1.5 P0–P3 change audit | ✅ Complete |
 | `2026-08-23-v1.5-delta-evidence.md` | Commands, inventories, and evidence supporting the post-v1.5 audit | ✅ Complete |
 | `2026-08-23-v1.5-delta-remediation.md` | Finding-by-finding fixes, validation, and remaining release evidence | 🚧 Release evidence pending |
-| `2026-08-25-remediation-verification.md` | Verification of the remediation wave; residual findings CK-150-019..036 | 🚧 Residuals open |
-| `2026-08-28-archive-verification.md` | Pre-archive verification of the July–August audit corpus; leaked-item ledger ARC-001..050 | 🚧 ARC items open |
+| `2026-08-25-remediation-verification.md` | Verification of the remediation wave; residual findings CK-150-019..036 | 🚧 Residuals open: CK-150-031 and the CK-150-026 latency figures (`2026-11-25-pre-tag-review.md` §4); CK-150-027/029 closed in `5fb58037` (checked 2026-11-25) |
+| `2026-08-28-archive-verification.md` | Pre-archive verification of the July–August audit corpus; leaked-item ledger ARC-001..114 | 🚧 Open: maintainer-gated ARC-053/063, ML-side ARC-061 and ARC-060's ru probe; ARC-077 (CK-150-027/029) closed (checked 2026-11-25) |
 | `2026-09-06-comprehensive-audit.md` | Comprehensive 9-subsystem audit — master todo | ✅ Complete |
 | `2026-09-10-memory-oom-root-cause.md` | App switching, IME recreation, and heap exhaustion OOM root cause audit | ✅ Complete |
 | `2026-09-26-data-licensing-audit.md` | Data licensing audit — word lists and language packs | ✅ Complete |

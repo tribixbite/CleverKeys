@@ -542,6 +542,9 @@ implementation-complete; device-only acceptance remains in Wave J/K. Wave D has 
 ARC-087 complete, with ARC-067 still open. Wave E has ARC-089 and ARC-076 complete; its other
 items remain open. Implementation is committed locally at `5fb58037`; this documentation
 consolidation follows it. Nothing was pushed, tagged, or released.
+(2026-11-25: that paragraph is the 2026-09-01 state. Since then Waves J/K closed 2026-09-02,
+ARC-067 closed in Wave D and Wave E is complete — see the ledger and the campaign plan's wave
+table; the open items are the ones listed below.)
 
 **Release/maintainer gates (pruned 2026-10-23; ARC-054 announced 2026-09-03/09-09):**
 - ARC-053: the 2026-09-13 soak was signed off, but the October work landed after it — a
@@ -550,24 +553,27 @@ consolidation follows it. Nothing was pushed, tagged, or released.
 - Nonzero `finger_occlusion_offset` default still needs maintainer device-trace A/B evidence.
 
 **Highest-value executable work (closed items removed 2026-10-23: ARC-067, Wave E, ARC-072
-slices 1–3 incl. `wiring/KeyboardComponentGraph` and the `gesture/` move — see the ledger):**
-- ARC-067 follow-ons still open: ARC-103 (`<plurals>` conversion for count strings) and the
-  native review of every machine translation (todo "Open now" item 10).
-- Later Config/SettingsActivity decomposition slices (ARC-072 continuation).
-- Evidence-gated geometric OQs ARC-027/028/029: do not change defaults unless local-corpus replay
-  shows a non-regressing improvement. ARC-030 floors are already present.
-- Web: ARC-071 Astro 6 migration and ARC-046 regression gate + Tailwind vendoring.
-- ML repo: ARC-060 ru layout regeneration, ARC-061 golden-path fix. (ARC-056 uk/bg/mk/he
-  lexicons/langpacks CLOSED 2026-09-01 — `538a1633` toolchain + `86156ea3` artifacts.)
-- ARC-044 remainder: strengthen the non-curated instrumented tests without adding Truth to
-  androidTest dependency configurations.
+slices 1–3 incl. `wiring/KeyboardComponentGraph` and the `gesture/` move — see the ledger).**
+Rechecked 2026-11-25 against `docs/audit/2026-08-28-archive-verification.md` and the code; these
+were listed here as open and are CLOSED: ARC-103 `<plurals>` (`f9b578fb`, "Final implementation
+batch"); ARC-027/028/029 geometric OQs, tried and declined on replay evidence
+(`3237d23b`/`16d3ea8d`/`80238617`, "Wave G"); ARC-071 Astro 6 (`15814849`) and ARC-046 web-demo
+regression gate (`af9bfd8e`, "Wave H"); ARC-044 remainder (`da5171d0`/`cc07765f`/`a8f7ac03`);
+ARC-060 ru geometry regeneration (app `128c93f8`, "Round 2 closure"); ARC-077 (CK-150-027 and
+CK-150-029, both tests in `5fb58037`, see the ledger's ARC-077 line). Still open:
+- The native review of every machine translation (todo "Open now" item 10).
+- ARC-060 rider 2: the ru one-shot accuracy probe needs the training box (RTX).
+- ARC-061: both `ctc_golden.json` copies (`src/test/resources/ctc/`, `src/androidTest/assets/ctc/`)
+  still embed an absolute `/home/will/...` `source_onnx` path; the fix belongs in the ML repo's
+  `make_golden.py` (re-checked 2026-11-25; an RTX item in `memory/todo.md` "Open now").
+- Later Config/SettingsActivity decomposition slices (ARC-072 continuation; no deadline).
 
-**Verification still owed:**
-- Wave J full ew-cli run for the newly compiled ARC-058/064/074/077/091/092/095 coverage plus
-  prior owed instrumented items. The ARC-058 rotation test is the second-session memory gate.
-- Wave K on both authorized phones per the plan: preserve/restore current IME and properties;
-  never framework-restart Saga. Includes ARC-068/069/070 evidence.
-- Final Wave L ledger/HANDOFF consolidation and maintainer-input report.
+**Verification (was "still owed"; done):** Wave J (full ew-cli run, 1,466 tests) and Waves K/K2
+(both phones) closed 2026-09-02 (ledger "Waves J + K" and "Nibble batch + Wave K2"); the ledger
+and this file were consolidated afterwards (top of this file: "The executable backlog is
+CLEARED"). Since then every A2 runs the full instrumented suite, including the ARC-058/064/074/077/
+091/092/095 coverage: latest 1,684 on each of API 34–37 at `2265ec39`, 0 failed, 2 expected skips
+(`memory/todo.md` "Open now", 2026-11-25).
 
 **Do not reopen as pending:** ARC-055 wiring, ARC-059, ARC-062, ARC-065, ARC-066, ARC-074,
 ARC-075, ARC-076, ARC-086–096 (except maintainer/device gates above), ARC-099–102 are implemented

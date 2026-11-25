@@ -604,7 +604,8 @@ form has to survive somewhere. `CtcAzProjection`:
   The HIGHEST-frequency canonical wins both the trie frequency and the display slot; ties keep
   insertion order (custom words first, then rank ascending). Every other form is kept in
   `Projected.alternates` (surface → forms, most frequent first; one entry per collision — 1,745
-  fr, 402 de, 1,395 es since the 2026-11-20 accent-misspelling drops, 2,042 / 406 / 2,045 before),
+  fr, 412 de, 1,395 es; fr and es since the 2026-11-20 accent-misspelling drops, de since the
+  2026-11-25 ß rebuild (402 between the two); 2,042 / 406 / 2,045 before 2026-11-20),
   and since 2026-11-18 `CtcSurfaceForms.expand` offers them: each
   alternate of a decoded surface is a candidate scored `final − λ·(node logFreq − its logFreq)`,
   i.e. as if it were its own trie word on the same path; the slate is re-sorted and cut to 8. The
@@ -640,11 +641,13 @@ form has to survive somewhere. `CtcAzProjection`:
 | Language | records | untypeable | trie words | accent-strip collisions |
 |---|---:|---:|---:|---:|
 | `fr` | 40,000 | 0 | 38,255 | 1,745 |
-| `de` | 40,000 | 0 | 39,598 | 402 |
+| `de` | 40,000 | 0 | 39,588 | 412 |
 | `es` | 50,000 | 0 | 48,605 | 1,395 |
 
-(2026-11-20, after the accent-misspelling drops; before: fr 37,958 / 2,042, de 39,594 / 406,
-es 47,955 / 2,045.)
+(fr and es: 2026-11-20, after the accent-misspelling drops; before: fr 37,958 / 2,042, de 39,594 / 406,
+es 47,955 / 2,045. de: 2026-11-25, after the German dictionary was rebuilt with ß (`159be829`),
+which made real pairs share a surface (`maße`/`masse`, `große`/`größe`); 39,598 / 402 between
+the two. Pinned by `CtcCkdtLexiconTest` and `CtcMultiLanguageInstrumentedTest.SHAPES`.)
 
 Contractions: the CKDT dictionaries contain ZERO apostrophe words (fr "jai"/"cest", de
 "dor"), exactly like `en_enhanced.json`, so `ContractionOverlay` runs for the active

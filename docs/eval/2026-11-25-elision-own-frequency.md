@@ -5,6 +5,10 @@ itself occurs, the best arm of `2026-11-09-elision-base-frequency.md`). Found ag
 same day (synthetic straight-line swipes, r10): Italian `dellanno` → `dell'ano` first and
 `dell'anno` second; `unaltra` → `un'alta` before `un'altra`; French `l'été` fourth.
 
+> **Superseded table (note added 2026-11-25).** The pre-tag review's S4–S6 corrections replace the
+> shipped tables again: `docs/eval/2026-11-25-contraction-table-cleanup.md`. This document's gates
+> and results are kept as written; the corrections below fix two values only.
+
 ## Gate (pre-registered 2026-11-25, written before the table or the app change was built)
 
 The table: `scripts/build_elision_frequencies.py` writes `contraction_frequencies_<lang>.json` (alias
@@ -42,6 +46,10 @@ Both: G8 the pure, mock and instrumented suites green.
 floor 67; `scripts/research/elision/elision_table_ab.py fr`, all 2,291 human azerty rows, 2,180
 decoded):
 
+> **Correction (2026-11-25, pre-tag review S10).** "11,068 keys, values 75–176.5" describes the
+> FIRST arm's table. The table that shipped is the second arm's below: 11,148 keys, values
+> 75–204.5 (`contraction_frequencies_fr.json` at `a535b83a`).
+
 | gate | needed | result |
 |---|---|---|
 | G1 t1 | ≥ 84.47 | 84.17 → **85.09** (+0.92) |
@@ -59,6 +67,10 @@ is what ships).** The first arm left `qu'il` behind `will`: `quil` is a word of 
 11,269 table keys in all. The shipped table (`contraction_frequencies_fr.json`) leaves out the
 121 lexicon keys whose value is at or below their own lexicon frequency (`la` for `l'a`): under
 raise-only they did nothing, so the shipped 11,148 keys decode exactly as the gated arm.
+
+> **Correction (2026-11-25, pre-tag review S10).** "(mapped 204.5)" above is wrong for `qu'il`:
+> the shipped table gives `quil` **188** (`contraction_frequencies_fr.json` at `a535b83a`); 204.5
+> is the value of `dun` (`d'un`), the table's highest.
 
 | gate | needed | result |
 |---|---|---|

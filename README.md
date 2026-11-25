@@ -542,7 +542,7 @@ Our projects have since diverged significantly (~900 commits apart):
 - Offline GIF panel with FTS4 search
 - Multi-language simultaneous prediction with per-language dictionary management
 - Autocorrect with contraction support
-- About 7,000 automated tests: 3,687 pure JVM and 1,675 MockK tests, plus 1,646 instrumented tests run on Android 14–17 (API 34–37) emulators (counts of 2026-10-31)
+- About 7,700 automated tests: 4,045 pure JVM and 2,018 MockK tests, plus 1,684 instrumented tests run on Android 14–17 (API 34–37) emulators (counts of 2026-11-25, at `2265ec39`)
 
 If you want a lightweight keyboard without gesture typing, we recommend the original Unexpected Keyboard.
 

@@ -14,7 +14,8 @@ file; `156-at-rest-clipboard-encryption.md` moves to `docs/plans/` as a live des
 regression: most are deferred items whose only record was in the docs being archived.
 
 One doc verified fully clean: `2026-07-18-accessibility-implementation-plan.md` (all three
-⚠-skeleton corrections implemented, residuals already tracked as CK-150-027/-029).
+⚠-skeleton corrections implemented, residuals already tracked as CK-150-027/-029; both closed
+since, see ARC-077).
 
 ---
 
@@ -288,6 +289,14 @@ the waves surfaced, deferred, or left gated — the complete open backlog for th
 - ARC-077 — CK-150-027 (a11y dense hit-region parity sweep) and CK-150-029
   (touch-exploration-ON smoke incl. a `dispatchKeyEvent` non-swallow assertion) remain open
   from the 2026-08-25 ledger.
+  **CLOSED (re-checked 2026-11-25 against the tests):** both landed in `5fb58037` (2026-09-01).
+  CK-150-027: `KeyboardGeometryTest.accessibilityRectsMatchFilteredKeyAtAcrossEveryPixel`
+  sweeps every x of a 1,200 px host per row band and asserts the accessibility rect owner equals
+  the filtered `keyAt`, on qwerty, pre-`a` overlap, middle- and trailing-placeholder fixtures
+  (pure tier). CK-150-029: `KeyboardAccessibilityInstrumentedTest.touchExplorationOnConsumesHoverButDoesNotSwallowOrdinaryHardwareKeys`
+  turns touch exploration on through UiAutomation, asserts hover is consumed without typing
+  and that `dispatchKeyEvent(KEYCODE_A)` is not swallowed; it is not one of the two expected
+  skips of the full instrumented runs (`Issue181NoFontProviderTest`, `VoiceEngineDeviceBenchmark`).
 
 **Hygiene / small**
 - ARC-071 — astro 5→6 migration: bump astro past 6.4.6, drop the vite/js-yaml overrides in

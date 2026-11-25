@@ -134,7 +134,7 @@ File: `short_swipe_customizations.json`
 
 ## Available Commands
 
-CommandRegistry contains 241 commands in 21 categories (`Category` enum, `CommandRegistry.kt:56`; count as of 2026-10-29):
+CommandRegistry contains 245 commands in 21 categories (`Category` enum, `CommandRegistry.kt:56`; `ALL_COMMANDS` counted 2026-11-25):
 
 ### Core Categories
 
