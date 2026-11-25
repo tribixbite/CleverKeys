@@ -47,6 +47,46 @@ azerty, all 2,291 rows, floor arm vs candidate):
 Both: the pure, mock and instrumented suites green. If a language's candidate fails, that
 language ships the shipped table unchanged and the finding stays open.
 
-## Result
+## Result: both pass; both corrected tables ship
 
-(Filled in after the runs.)
+**English** (`contraction_frequencies_en.json`, 93 → 81 keys; the 12 keys keep their lexicon
+values). The candidate decodes exactly as the shipped table on every one of the 5,202 human
+traces (no row differs): the 12 keys never come up in these corpora, so the correction removes
+a risk (`d'art` at 205 against `haven't` on a d-a-r-t-shaped swipe), not a measured loss.
+
+| gate | needed | result |
+|---|---|---|
+| E1 contraction targets | ≥ +20 | **+41** (238 → 279 / 368; `they're` 4 → 22, `you're` 17 → 23, `I've` 36 → 46, `don't` 181 → 188) |
+| E2 controls lost | ≤ 5 | **0** (`your` 230, `there` 315, `were` 239 / 834) |
+| E3 swipe-1 test sample, 4,000 traces | t1 ≥ −0.10 pt | 91.83 → **91.83**, 0 regressions, 0 improvements |
+| E4 typing | unchanged | by construction |
+
+(The original English doc counted 1,199 decoded rows and `don't` 179 → 186 / 200; this replay
+decoded all 1,202, hence the small difference in the `don't` row. Top-1 is the beam's first
+candidate, `c[0]` in the dump; the dump's `g` field is the greedy CTC string.)
+
+**French** (`contraction_frequencies_fr.json`, 11,148 → 5,406 keys, values 76–204.5, floor 67;
+`ELISION_TABLE=<candidate> elision_table_ab.py fr`, all 2,291 human azerty rows, 2,180 decoded):
+
+| gate | needed | result |
+|---|---|---|
+| F1 t1 | ≥ 84.47 | 84.17 → **85.37** (+1.20) |
+| F2 t3 | ≥ 95.22 | 95.32 → **95.73** |
+| F3 regressions / improvements | ≤ 3 / ≥ 3× | **2** (`donjon` → `d'union`, `laisse` → `l'aise`, the same two) / **21** |
+| F4 `detre` | rank ≤ 2 in 3 traces | **2, 2, 2** (behind `d'été`) |
+
+Against the shipped table (85.55 / 95.73, re-run the same day): −0.18 pt top-1, and the one
+target lost is `l'est`, the paired key the bar shows as `lest` anyway. The probes are unchanged:
+`dete` 1, 1, 1; `lete` 4, 1, 1; `quil` 2, 1, 2 (behind `will` in two traces); `lecole` 1.
+
+Removed, 5,742 keys in all, none added and no value changed: the 49 paired keys (S5); 5,691
+more with one or two corpus hits (S6; 5,702 keys sat at 75, 11 of them paired); and `labbé`,
+`lépine`, keys with a letter outside a–z that the app's parser dropped anyway. 73 lexicon-native
+keys remain raised (`quil`, `cest`, `nest`, `jai`, …). Correction to S6 as written above: `d'abc`
+has 3 corpus hits and sat at 76, not 75, so it stays; `l'x` and `l'ob` (1 hit each) are gone. Built by `scripts/build_elision_frequencies.py --lang fr
+--write` (`--check` compares the asset with a fresh build) and
+`scripts/extract_apostrophe_words.py --en-alias-frequencies` (`--check` likewise).
+`ContractionFrequencyAssetDriftTest` pins all three rules on the shipped files.
+
+Not changed: placing a paired elision beside its base word (`d'une` next to `dune`) needs the
+overlay's promotion rule on the CKDT scale and its own gate, as before.

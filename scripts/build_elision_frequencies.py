@@ -32,6 +32,7 @@ import argparse
 import bisect
 import json
 import math
+import re
 import statistics
 import struct
 import sys
@@ -44,6 +45,13 @@ DICT_DIR = REPO / "src" / "main" / "assets" / "dictionaries"
 
 #: Lexicon words a calibration window must hold before its median is trusted.
 MIN_N = 25
+#: Corpus hits an elision needs for a raise in `full` mode (pre-tag review 2026-11-25 S6). Counts 1
+#: and 2 both calibrate to the bottom of the scale (75 for French, above the 7,098 real words at
+#: 68-74), so they say "seen" and carry no order: 5,702 such keys sat at 75, junk like `l'x`
+#: among them. From 3 hits the calibration separates (3 -> 76, 5 -> 78, 10 -> 85).
+MIN_COUNT = 3
+#: A key the app can read: `CtcContractionKeys.parseAttestedFrequencies` takes a-z keys only.
+ASCII_KEY = re.compile(r"[a-z]+")
 #: Per-language mode; a language not listed gets no table.
 MODES = {"fr": "full", "it": "band"}
 
@@ -116,9 +124,25 @@ def attested_keys(display: "Mapping[str, str]", pairs: "Mapping[str, list]",
     return out
 
 
-def full_table(keys: "Mapping[str, int]", calibrate: "Callable[[int], float]", floor: float) -> "dict[str, float]":
-    """The calibrated frequency of each key, kept only where it raises the key above the floor."""
-    return {k: round(f, 2) for k, c in sorted(keys.items()) if (f := calibrate(c)) > floor}
+def full_table(keys: "Mapping[str, int]", calibrate: "Callable[[int], float]", floor: float,
+               min_count: int = MIN_COUNT) -> "dict[str, float]":
+    """The calibrated frequency of each key seen at least [min_count] times, kept only where it
+    raises the key above the floor."""
+    return {k: round(f, 2) for k, c in sorted(keys.items())
+            if c >= min_count and (f := calibrate(c)) > floor}
+
+
+def eligible_keys(keys: "Mapping[str, int]", pairs: "Mapping[str, list]") -> "dict[str, int]":
+    """[keys] without PAIRED keys and without keys the app cannot parse.
+
+    A paired key is a word of its own (`dune` beside `d'une`): the overlay keeps that word in the
+    key's slot and puts the elision at the tail, so a raise boosts `dune`, not `d'une` (pre-tag
+    review 2026-11-25 S5; placing paired elisions beside their base is the overlay's own rule,
+    not this table's). A key with a letter outside a-z (`dévaluation`) is dropped by
+    `CtcContractionKeys.parseAttestedFrequencies`, so it is left out here rather than silently.
+    """
+    paired = {k.lower() for k in pairs}
+    return {k: c for k, c in keys.items() if k not in paired and ASCII_KEY.fullmatch(k)}
 
 
 def band_table(keys: "Mapping[str, int]", floor: float) -> "dict[str, float]":
@@ -143,7 +167,7 @@ def build(lang: str) -> "tuple[dict[str, float], dict]":
     display = json.loads((DICT_DIR / f"contractions_{lang}.json").read_text(encoding="utf-8"))
     pairs_path = DICT_DIR / f"contraction_pairs_{lang}.json"
     pairs = json.loads(pairs_path.read_text(encoding="utf-8")) if pairs_path.is_file() else {}
-    keys = attested_keys(display, pairs, elision_counts(raw), set(real))
+    keys = eligible_keys(attested_keys(display, pairs, elision_counts(raw), set(real)), pairs)
     native = sum(1 for k in keys if k in real)
     if mode == "full":
         cal = Calibration(real, raw)
@@ -162,14 +186,26 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--lang", required=True, choices=sorted(MODES))
     ap.add_argument("--write", action="store_true", help="write the asset (else report only)")
+    ap.add_argument("--out", type=Path, help="write the table here instead of the asset (a candidate)")
+    ap.add_argument("--check", action="store_true",
+                    help="exit 1 when the shipped asset differs from a fresh build")
     args = ap.parse_args()
     table, report = build(args.lang)
     print(json.dumps(report))
     for k, v in sorted(table.items(), key=lambda kv: -kv[1])[:15]:
         print(f"  {k:<16} {v}")
-    if args.write:
-        out = DICT_DIR / f"contraction_frequencies_{args.lang}.json"
-        out.write_text(json.dumps(table, ensure_ascii=False, sort_keys=True, indent=0) + "\n", encoding="utf-8")
+    rendered = json.dumps(table, ensure_ascii=False, sort_keys=True, indent=0) + "\n"
+    asset = DICT_DIR / f"contraction_frequencies_{args.lang}.json"
+    if args.check:
+        shipped = asset.read_text(encoding="utf-8") if asset.is_file() else ""
+        if shipped != rendered:
+            print(f"DRIFT: {asset.name} does not match a fresh build")
+            sys.exit(1)
+        print(f"{asset.name}: up to date")
+        return
+    if args.write or args.out:
+        out = args.out or asset
+        out.write_text(rendered, encoding="utf-8")
         print(f"wrote {out} ({len(table)} keys)")
 
 

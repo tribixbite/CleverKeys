@@ -1373,12 +1373,19 @@ def measure_en_alias_frequencies(
     frequency ORDINAL in it (a junk alias ranks >= 1200 and shows as its contraction), and a
     raised `dont` would rank 67 and show as `dont`. The raise lives only in the swipe trie,
     where `CtcContractionKeys.inject` applies `contraction_frequencies_en.json`.
+
+    A display form wordfreq does not keep as ONE token gets no entry (pre-tag review
+    2026-11-25 S4): wordfreq splits `d'art` into `d` + `art` and `y'all` into `y` + `all`, and
+    `zipf_frequency` then estimates the phrase, not the word (`dart` 176 -> 205 put `d'art` in
+    competition with `haven't`). Gated in docs/eval/2026-11-25-contraction-table-cleanup.md.
     """
-    from wordfreq import zipf_frequency
+    from wordfreq import tokenize, zipf_frequency
 
     table: dict[str, float] = {}
     for key, display in replace.items():
         if key not in lexicon or "'" not in display or is_possessive(display):
+            continue
+        if len(tokenize(display, fit.lang)) != 1:
             continue
         zipf = zipf_frequency(display, fit.lang)
         if zipf <= 0.0:

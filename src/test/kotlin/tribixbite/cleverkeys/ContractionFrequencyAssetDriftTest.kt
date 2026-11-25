@@ -66,4 +66,71 @@ class ContractionFrequencyAssetDriftTest {
                 .that(table.filterValues { it <= floor || it > 255.0 }.keys).isEmpty()
         }
     }
+
+    /**
+     * Pre-tag review 2026-11-25 S5: a PAIRED key is a word of its own (`dune` beside `d'une`); the
+     * overlay keeps that word in the key's slot and puts the elision at the tail, so a raise
+     * boosted `dune` (99 → 204), not `d'une`. Corrected and gated in
+     * `docs/eval/2026-11-25-contraction-table-cleanup.md`.
+     */
+    @Test
+    fun `no table raises a paired key`() {
+        for ((lang, file) in tables()) {
+            val pairs = File(dictionaries, "contraction_pairs_$lang.json")
+            if (!pairs.isFile) continue
+            val paired = Regex("\"([^\"]+)\"\\s*:\\s*\\[").findAll(pairs.readText())
+                .mapTo(HashSet()) { it.groupValues[1].lowercase() }
+            assertWithMessage("$lang paired keys (${paired.size}) parsed").that(paired).isNotEmpty()
+            val table = CtcContractionKeys.parseAttestedFrequencies(file.readText())
+            assertWithMessage("$lang table keys that are paired keys")
+                .that(table.keys.filter { it in paired }).isEmpty()
+        }
+    }
+
+    /**
+     * The parser takes a–z keys only; a key with another letter (`dêtre`, `dévaluation`) was in
+     * the asset and silently dropped. The builders leave such keys out, so the file says what the
+     * app reads.
+     */
+    @Test
+    fun `every table key is one the app reads`() {
+        for ((lang, file) in tables()) {
+            val text = file.readText()
+            val written = Regex("\"([^\"]+)\"\\s*:").findAll(text).map { it.groupValues[1] }.toList()
+            assertWithMessage("$lang keys the parser drops")
+                .that(written.filter { it !in CtcContractionKeys.parseAttestedFrequencies(text) }).isEmpty()
+        }
+    }
+
+    /**
+     * S4: wordfreq splits these display forms into two tokens (`d'art` → `d` + `art`), so its
+     * "frequency" was a phrase estimate (`dart` 176 → 205, `yall` 170 → 204), not the word's.
+     */
+    @Test
+    fun `english keys whose display wordfreq splits are not raised`() {
+        val table = CtcContractionKeys.parseAttestedFrequencies(
+            File(dictionaries, "contraction_frequencies_en.json").readText()
+        )
+        val split = listOf("dart", "yall", "maam", "oer", "neer", "detat", "doeuvre", "dazur", "detre", "darezzo", "destaing")
+        assertWithMessage("English two-token keys in the table").that(table.keys.filter { it in split }).isEmpty()
+        assertWithMessage("…while the single-token pronoun contractions stay").that(table.keys)
+            .containsAtLeast("youre", "theyre", "ive", "dont")
+    }
+
+    /**
+     * S6: one or two corpus hits calibrate to 75, the bottom of the French scale, above the 7,098
+     * real words at 68–74 (5,702 keys sat there, `l'x` and `l'ob` among them). A raise needs
+     * three hits (`build_elision_frequencies.MIN_COUNT`), which calibrate to 76 and up.
+     */
+    @Test
+    fun `french elisions seen once or twice are not raised`() {
+        val table = CtcContractionKeys.parseAttestedFrequencies(
+            File(dictionaries, "contraction_frequencies_fr.json").readText()
+        )
+        assertWithMessage("French values at the one- and two-hit calibration (75)")
+            .that(table.filterValues { it <= 75.0 }.keys).isEmpty()
+        assertWithMessage("junk keys").that(table.keys.filter { it in setOf("lx", "lob") }).isEmpty()
+        assertWithMessage("…while d'être and qu'il keep their raise").that(table["detre"]).isEqualTo(168.0)
+        assertWithMessage("qu'il").that(table["quil"]).isEqualTo(188.0)
+    }
 }
