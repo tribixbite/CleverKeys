@@ -4,11 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -160,30 +156,34 @@ internal fun SettingsActivity.importFullBackup() {
 }
 
 internal fun SettingsActivity.performConfigExport(uri: Uri, plaintextOptOut: Boolean = false) {
-    lifecycleScope.launch {
-        backupRestoreViewModel.isProcessing = true
-        try {
-            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
-            val count = withContext(Dispatchers.IO) {
-                backupRestoreManager.exportConfig(uri, prefs)
+    backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
+    val appContext = applicationContext
+    val manager = backupRestoreManager
+    val prefs = this.prefs
+    runSettingsFileOperation(
+        work = {
+            val count = manager.exportConfig(uri, prefs)
+            val fileName = appContext.documentDisplayName(uri)
+            followUp {
+                showIoResult(
+                    getString(R.string.backup_result_export_success_title),
+                    paragraphs(
+                        getString(R.string.backup_result_settings_exported, count),
+                        getString(R.string.common_file_name, fileName),
+                        getString(R.string.backup_result_config_export_hint),
+                    ),
+                )
             }
-            showIoResult(
-                getString(R.string.backup_result_export_success_title),
-                paragraphs(
-                    getString(R.string.backup_result_settings_exported, count),
-                    getString(R.string.common_file_name, documentDisplayName(uri)),
-                    getString(R.string.backup_result_config_export_hint),
-                ),
-            )
-        } catch (e: Exception) {
+        },
+        onFailure = { e ->
             android.util.Log.e(SettingsActivity.TAG, "Config export failed", e)
-            showIoFailure(
-                R.string.backup_result_export_failed_title, R.string.backup_result_config_export_failed, e
-            )
-        } finally {
-            backupRestoreViewModel.isProcessing = false
-        }
-    }
+            followUp {
+                showIoFailure(
+                    R.string.backup_result_export_failed_title, R.string.backup_result_config_export_failed, e
+                )
+            }
+        },
+    )
 }
 
 /**
@@ -192,36 +192,42 @@ internal fun SettingsActivity.performConfigExport(uri: Uri, plaintextOptOut: Boo
  * settings exactly, jump straight to the "No changes" result dialog.
  */
 internal fun SettingsActivity.performConfigImport(uri: Uri, retryPassphrase: CharArray? = null) {
-    lifecycleScope.launch {
-        backupRestoreViewModel.isProcessing = true
-        if (retryPassphrase == null) primeImport()
-        try {
-            val plan = withContext(Dispatchers.IO) {
-                backupRestoreManager.buildSettingsImportPlan(uri, prefs)
+    if (retryPassphrase == null) primeImport()
+    val manager = backupRestoreManager
+    val prefs = this.prefs
+    runSettingsFileOperation(
+        work = {
+            val plan = manager.buildSettingsImportPlan(uri, prefs)
+            followUp {
+                if (plan.hasNothingToImport) {
+                    showIoResult(
+                        getString(R.string.backup_result_no_changes_title),
+                        getString(R.string.backup_result_settings_no_changes),
+                    )
+                } else {
+                    backupRestoreViewModel.settingsPreviewPlan = plan
+                }
             }
-            if (plan.hasNothingToImport) {
-                showIoResult(
-                    getString(R.string.backup_result_no_changes_title),
-                    getString(R.string.backup_result_settings_no_changes),
-                )
+        },
+        onFailure = { e ->
+            if (e is BackupRestoreManager.BackupDecryptException) {
+                followUp {
+                    promptForPassphrase(
+                        e, retryPassphrase,
+                        R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed,
+                        tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.SETTINGS, uri),
+                    )
+                }
             } else {
-                backupRestoreViewModel.settingsPreviewPlan = plan
+                android.util.Log.e(SettingsActivity.TAG, "Build settings plan failed", e)
+                followUp {
+                    showIoFailure(
+                        R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed, e
+                    )
+                }
             }
-        } catch (e: BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(
-                e, retryPassphrase,
-                R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed,
-                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.SETTINGS, uri),
-            )
-        } catch (e: Exception) {
-            android.util.Log.e(SettingsActivity.TAG, "Build settings plan failed", e)
-            showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.backup_result_read_backup_failed, e
-            )
-        } finally {
-            backupRestoreViewModel.isProcessing = false
-        }
-    }
+        },
+    )
 }
 
 /**
@@ -279,34 +285,41 @@ internal fun SettingsActivity.applyPlannedSettings(
     shortSwipeMode: ShortSwipeImportMode,
     customThemeMode: ShortSwipeImportMode,
 ) {
-    val _self = this
-    lifecycleScope.launch {
-        backupRestoreViewModel.isProcessing = true
-        try {
-            val result = withContext(Dispatchers.IO) {
-                backupRestoreManager.applySettingsImportPlan(plan, excludedKeys, shortSwipeMode, prefs, customThemeMode)
-            }
-            DirectBootAwarePreferences.copy_preferences_to_protected_storage(_self, prefs)
+    val appContext = applicationContext
+    val manager = backupRestoreManager
+    val prefs = this.prefs
+    runSettingsFileOperation(
+        work = {
+            val result = manager.applySettingsImportPlan(
+                plan, excludedKeys, shortSwipeMode, prefs, customThemeMode,
+            )
+            DirectBootAwarePreferences.copy_preferences_to_protected_storage(appContext, prefs)
             // Words a 1.x settings file carried: the keyboard reloads its dictionary, as after a
             // dictionary restore.
             if (result.customWordsAdded + result.disabledWordsAdded > 0) {
-                LocalBroadcastManager.getInstance(_self)
+                LocalBroadcastManager.getInstance(appContext)
                     .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
             }
-            loadCurrentSettings()
-            showIoResult(
-                getString(R.string.backup_result_import_success_title),
-                buildSettingsResultMessage(result, ResourcesResultText(resources)),
-            )
-        } catch (e: Exception) {
+            followUp {
+                loadCurrentSettings()
+                showIoResult(
+                    getString(R.string.backup_result_import_success_title),
+                    buildSettingsResultMessage(result, ResourcesResultText(resources)),
+                )
+            }
+        },
+        onFailure = { e ->
             android.util.Log.e(SettingsActivity.TAG, "Apply settings plan failed", e)
-            showIoFailure(
-                R.string.backup_result_import_failed_title, R.string.backup_result_apply_settings_failed, e
-            )
-        } finally {
-            backupRestoreViewModel.isProcessing = false
-        }
-    }
+            followUp {
+                // Part of the file may have been written (DIY themes, then the words, precede the
+                // settings commit): show what is stored now.
+                loadCurrentSettings()
+                showIoFailure(
+                    R.string.backup_result_import_failed_title, R.string.backup_result_apply_settings_failed, e
+                )
+            }
+        },
+    )
 }
 
 /**
@@ -315,108 +328,121 @@ internal fun SettingsActivity.applyPlannedSettings(
  * so output stays in lockstep with the per-section exporters.
  */
 internal fun SettingsActivity.performFullBackupExport(uri: Uri, plaintextOptOut: Boolean = false) {
-    lifecycleScope.launch {
-        backupRestoreViewModel.isProcessing = true
-        try {
-            backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
-            val result = withContext(Dispatchers.IO) {
-                backupRestoreManager.exportFullBackup(uri, prefs)
-            }
-            if (result.success) {
-                val message = buildString {
-                    appendLine(getString(R.string.backup_result_full_backup_saved))
-                    appendLine()
-                    appendLine(getString(R.string.common_file_name, documentDisplayName(uri)))
-                    appendLine()
-                    appendLine(
-                        getString(
-                            if (result.configIncluded) R.string.backup_result_full_config_included
-                            else R.string.backup_result_full_config_none
-                        )
-                    )
-                    appendLine(getString(R.string.backup_result_full_dictionary_languages, result.dictionaryCount))
-                    appendLine(getString(R.string.backup_result_full_clipboard_entries, result.clipboardEntryCount))
-                    appendLine(getString(R.string.backup_result_full_media_files, result.mediaFileCount))
-                    if (result.totalBytes > 0) {
-                        appendLine(getString(R.string.backup_result_full_bytes_streamed, result.totalBytes))
-                    }
-                    // #156 F2: a plaintext full backup silently drops private clipboard entries.
-                    // Warn the user (matching the clipboard-only export paths) so they don't lose
-                    // privately-copied entries unknowingly and only discover it after a device wipe.
-                    if (result.privateSkipped > 0) {
-                        appendLine()
-                        appendLine(
-                            resources.getQuantityString(
-                                R.plurals.backup_result_private_excluded_full_backup,
-                                result.privateSkipped, result.privateSkipped,
-                            )
-                        )
-                    }
-                    appendLine()
-                    append(getString(R.string.backup_result_full_restore_hint))
-                }
-                showIoResult(getString(R.string.backup_result_full_backup_success_title), message)
-            } else {
+    backupRestoreManager.encryptionPolicy = exportPolicy(plaintextOptOut)
+    val appContext = applicationContext
+    val manager = backupRestoreManager
+    val prefs = this.prefs
+    runSettingsFileOperation(
+        work = {
+            val result = manager.exportFullBackup(uri, prefs)
+            val fileName = appContext.documentDisplayName(uri)
+            followUp { showFullBackupExportResult(fileName, result) }
+        },
+        onFailure = { e ->
+            android.util.Log.e(SettingsActivity.TAG, "Full backup export failed", e)
+            followUp {
                 showIoFailure(
-                    R.string.backup_result_full_backup_failed_title,
-                    R.string.backup_result_full_backup_write_failed,
-                    result.errorReason,
+                    R.string.backup_result_full_backup_failed_title, R.string.backup_result_full_backup_write_failed, e
                 )
             }
-        } catch (e: Exception) {
-            android.util.Log.e(SettingsActivity.TAG, "Full backup export failed", e)
-            showIoFailure(
-                R.string.backup_result_full_backup_failed_title, R.string.backup_result_full_backup_write_failed, e
-            )
-        } finally {
-            backupRestoreViewModel.isProcessing = false
-        }
+        },
+    )
+}
+
+/** The full-backup export's [result] (written to [fileName]), on the current Settings activity. */
+private fun SettingsActivity.showFullBackupExportResult(fileName: String, result: BackupRestoreManager.FullBackupResult) {
+    if (!result.success) {
+        showIoFailure(
+            R.string.backup_result_full_backup_failed_title,
+            R.string.backup_result_full_backup_write_failed,
+            result.errorReason,
+        )
+        return
     }
+    val message = buildString {
+        appendLine(getString(R.string.backup_result_full_backup_saved))
+        appendLine()
+        appendLine(getString(R.string.common_file_name, fileName))
+        appendLine()
+        appendLine(
+            getString(
+                if (result.configIncluded) R.string.backup_result_full_config_included
+                else R.string.backup_result_full_config_none
+            )
+        )
+        appendLine(getString(R.string.backup_result_full_dictionary_languages, result.dictionaryCount))
+        appendLine(getString(R.string.backup_result_full_clipboard_entries, result.clipboardEntryCount))
+        appendLine(getString(R.string.backup_result_full_media_files, result.mediaFileCount))
+        if (result.totalBytes > 0) {
+            appendLine(getString(R.string.backup_result_full_bytes_streamed, result.totalBytes))
+        }
+        // #156 F2: a plaintext full backup silently drops private clipboard entries.
+        // Warn the user (matching the clipboard-only export paths) so they don't lose
+        // privately-copied entries unknowingly and only discover it after a device wipe.
+        if (result.privateSkipped > 0) {
+            appendLine()
+            appendLine(
+                resources.getQuantityString(
+                    R.plurals.backup_result_private_excluded_full_backup,
+                    result.privateSkipped, result.privateSkipped,
+                )
+            )
+        }
+        appendLine()
+        append(getString(R.string.backup_result_full_restore_hint))
+    }
+    showIoResult(getString(R.string.backup_result_full_backup_success_title), message)
 }
 
 internal fun SettingsActivity.performFullBackupImport(uri: Uri, retryPassphrase: CharArray? = null) {
-    val _self = this
-    lifecycleScope.launch {
-        backupRestoreViewModel.isProcessing = true
-        if (retryPassphrase == null) primeImport()
-        try {
-            val result = withContext(Dispatchers.IO) {
-                backupRestoreManager.importFullBackup(uri, prefs)
-            }
+    if (retryPassphrase == null) primeImport()
+    val appContext = applicationContext
+    val manager = backupRestoreManager
+    val prefs = this.prefs
+    runSettingsFileOperation(
+        work = {
+            val result = manager.importFullBackup(uri, prefs)
             if (result.success) {
-                // Refresh in-memory state and copy prefs to protected storage so
-                // imported values survive Direct Boot — same housekeeping as the
-                // single-file config import.
-                DirectBootAwarePreferences.copy_preferences_to_protected_storage(
-                    _self, prefs
-                )
-                loadCurrentSettings()
-                LocalBroadcastManager.getInstance(_self)
+                // Copy prefs to protected storage so imported values survive Direct Boot, and
+                // tell the keyboard to reload its dictionary: both whether or not Settings is
+                // still open when the restore ends.
+                DirectBootAwarePreferences.copy_preferences_to_protected_storage(appContext, prefs)
+                LocalBroadcastManager.getInstance(appContext)
                     .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
-                showIoResult(
-                    getString(R.string.backup_result_full_restored_title),
-                    buildFullBackupResultMessage(result, ResourcesResultText(resources)),
-                )
-            } else {
-                showIoFailure(
-                    R.string.backup_result_full_import_failed_title,
-                    R.string.backup_result_full_import_failed,
-                    result.errorReason,
-                )
             }
-        } catch (e: tribixbite.cleverkeys.BackupRestoreManager.BackupDecryptException) {
-            promptForPassphrase(
-                e, retryPassphrase,
-                R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed,
-                tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.FULL_BACKUP, uri),
-            )
-        } catch (e: Exception) {
-            android.util.Log.e(SettingsActivity.TAG, "Full backup import failed", e)
-            showIoFailure(
-                R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed, e
-            )
-        } finally {
-            backupRestoreViewModel.isProcessing = false
-        }
-    }
+            followUp {
+                if (result.success) {
+                    loadCurrentSettings()
+                    showIoResult(
+                        getString(R.string.backup_result_full_restored_title),
+                        buildFullBackupResultMessage(result, ResourcesResultText(resources)),
+                    )
+                } else {
+                    showIoFailure(
+                        R.string.backup_result_full_import_failed_title,
+                        R.string.backup_result_full_import_failed,
+                        result.errorReason,
+                    )
+                }
+            }
+        },
+        onFailure = { e ->
+            if (e is BackupRestoreManager.BackupDecryptException) {
+                followUp {
+                    promptForPassphrase(
+                        e, retryPassphrase,
+                        R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed,
+                        tribixbite.cleverkeys.PendingPassphraseImport(tribixbite.cleverkeys.EncryptedImportKind.FULL_BACKUP, uri),
+                    )
+                }
+            } else {
+                android.util.Log.e(SettingsActivity.TAG, "Full backup import failed", e)
+                followUp {
+                    showIoFailure(
+                        R.string.backup_result_full_import_failed_title, R.string.backup_result_full_import_failed, e
+                    )
+                }
+            }
+        },
+    )
 }

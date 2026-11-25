@@ -90,56 +90,75 @@ internal fun SettingsActivity.handleGifPackShareIntent(intent: Intent?) {
 
 // GIF pack management methods
 
+/**
+ * Import a GIF pack ZIP. The import runs in [SettingsImports.gifPack], not this activity's scope:
+ * a rotation used to cancel it between its writes, leaving rows without thumbnails or, on a
+ * replace, the old pack removed and the new one missing, and then reported "Unknown error"
+ * (pre-tag review 2026-11-25 S2). The result is shown by whichever Settings activity is in front
+ * when it ends ([showGifPackImportResult]).
+ */
 internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Boolean = false) {
-    val _self = this
-    gifImportInProgress = true
-    gifImportStatus = GifImportStatus.Ok(getString(R.string.gif_importing))
-    lifecycleScope.launch {
-        try {
-            val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
+    val appContext = applicationContext
+    val started = SettingsImports.gifPack.start(null) {
+        val followUp = catchingFailures({
+            val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(appContext)
             val result = manager.importPackFromUri(uri, replaceExisting = replaceExisting)
-            // ARC-075: ONE classification of the result, by variant, shared with the section.
-            gifImportStatus = GifImportStatus.forImportResult(result, ResourcesResultText(resources))
-            when (result) {
-                is GifPackImportResult.Success -> {
-                    refreshInstalledGifPacks()
-                    Toast.makeText(
-                        _self,
-                        getString(R.string.gif_toast_pack_imported, result.name),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                is GifPackImportResult.AlreadyInstalled -> {
-                    // Audit E-8: offer replace — previously AlreadyInstalled dead-ended in a
-                    // toast and the sole call site hardcoded replaceExisting=false, so the
-                    // replace path (the only way a rebuilt pack's rows — e.g. the #149 gid:
-                    // markers — can supersede the installed ones) was unreachable.
-                    android.app.AlertDialog.Builder(_self)
-                        .setTitle(R.string.gif_replace_dialog_title)
-                        .setMessage(getString(R.string.gif_replace_dialog_body, result.name))
-                        .setPositiveButton(R.string.gif_replace_dialog_confirm) { _, _ ->
-                            performGifPackImport(uri, replaceExisting = true)
-                        }
-                        .setNegativeButton(R.string.common_cancel, null)
-                        .show()
-                }
-                is GifPackImportResult.Error -> {
-                    android.util.Log.w(SettingsActivity.TAG, "GIF pack import refused: ${result.message}")
-                    Toast.makeText(
-                        _self,
-                        getString(R.string.common_import_failed_detail, gifImportStatus?.message.orEmpty()),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        } catch (e: Exception) {
+            followUp { showGifPackImportResult(uri, result) }
+        }) { e ->
             android.util.Log.e(SettingsActivity.TAG, "GIF pack import failed", e)
-            gifImportStatus = GifImportStatus.Failed(ioFailureText(e))
+            followUp {
+                gifImportStatus = GifImportStatus.Failed(ioFailureText(e))
+                Toast.makeText(
+                    this, getString(R.string.common_import_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (started) {
+        gifImportStatus = GifImportStatus.Ok(getString(R.string.gif_importing))
+    } else {
+        // A second pack (a share intent, most likely) while one imports: the section shows the
+        // running import, whose result follows.
+        android.util.Log.w(SettingsActivity.TAG, "GIF pack import already running; $uri not imported")
+    }
+}
+
+/** The finished import's [result] on this (the current) Settings activity. */
+private fun SettingsActivity.showGifPackImportResult(uri: Uri, result: GifPackImportResult) {
+    val _self = this
+    // ARC-075: ONE classification of the result, by variant, shared with the section.
+    gifImportStatus = GifImportStatus.forImportResult(result, ResourcesResultText(resources))
+    when (result) {
+        is GifPackImportResult.Success -> {
+            refreshInstalledGifPacks()
             Toast.makeText(
-                _self, getString(R.string.common_import_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
+                _self,
+                getString(R.string.gif_toast_pack_imported, result.name),
+                Toast.LENGTH_SHORT
             ).show()
-        } finally {
-            gifImportInProgress = false
+        }
+        is GifPackImportResult.AlreadyInstalled -> {
+            // Audit E-8: offer replace — previously AlreadyInstalled dead-ended in a
+            // toast and the sole call site hardcoded replaceExisting=false, so the
+            // replace path (the only way a rebuilt pack's rows — e.g. the #149 gid:
+            // markers — can supersede the installed ones) was unreachable.
+            android.app.AlertDialog.Builder(_self)
+                .setTitle(R.string.gif_replace_dialog_title)
+                .setMessage(getString(R.string.gif_replace_dialog_body, result.name))
+                .setPositiveButton(R.string.gif_replace_dialog_confirm) { _, _ ->
+                    performGifPackImport(uri, replaceExisting = true)
+                }
+                .setNegativeButton(R.string.common_cancel, null)
+                .show()
+        }
+        is GifPackImportResult.Error -> {
+            android.util.Log.w(SettingsActivity.TAG, "GIF pack import refused: ${result.message}")
+            Toast.makeText(
+                _self,
+                getString(R.string.common_import_failed_detail, gifImportStatus?.message.orEmpty()),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

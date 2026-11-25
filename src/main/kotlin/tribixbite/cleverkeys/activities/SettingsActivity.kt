@@ -38,6 +38,7 @@ import tribixbite.cleverkeys.ui.settings.io.applyPlannedDictionaries
 import tribixbite.cleverkeys.ui.settings.io.applyPlannedSettings
 import tribixbite.cleverkeys.ui.settings.io.handleCustomRulesPicked
 import tribixbite.cleverkeys.ui.settings.io.handleGifPackShareIntent
+import tribixbite.cleverkeys.ui.settings.io.observeSettingsImports
 import tribixbite.cleverkeys.ui.settings.io.retryEncryptedImport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardExport
 import tribixbite.cleverkeys.ui.settings.io.performClipboardImport
@@ -881,8 +882,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         if (savedInstanceState != null) {
             tribixbite.cleverkeys.ui.settings.io.restoreVoicePermissionState(savedInstanceState)
         }
-        // The voice-pack import outlives a rotation; show its state here (review 2026-11-14).
-        tribixbite.cleverkeys.ui.settings.io.observeVoicePackImport(this)
+        // Imports outlive a rotation (voice packs: review 2026-11-14; GIF and language packs,
+        // backup, clipboard and dictionary files: pre-tag review 2026-11-25 S2). Show their state
+        // here and run a finished one's follow-up on this instance.
+        observeSettingsImports()
 
         if (savedInstanceState == null) {
             // Handle share intent for GIF pack ZIP import
@@ -989,9 +992,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         // Balanced with onCreate (review 2026-11-14 M24). onCreate can bail out before `prefs`
         // is set (fallbackEncrypted), and then it registered nothing.
         if (::prefs.isInitialized) prefs.unregisterOnSharedPreferenceChangeListener(this)
-        // Leaving Settings for good: the last import's message and an unmade microphone request
-        // are not news next time.
-        if (isFinishing) tribixbite.cleverkeys.ui.settings.io.VoicePackImportTracker.shared.leave()
+        // Every instance leaves the import trackers; when the last one is finishing (Settings
+        // left for good, not a rotation) the last import's message and an untaken follow-up
+        // (the microphone request, a result dialog) are not news next time.
+        tribixbite.cleverkeys.ui.settings.io.SettingsImports.detach(this, finishing = isFinishing)
         super.onDestroy()
     }
 

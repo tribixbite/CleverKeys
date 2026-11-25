@@ -88,51 +88,72 @@ internal fun SettingsActivity.importLanguagePack() {
     }
 }
 
+/**
+ * Import a language-pack ZIP. The import runs in [SettingsImports.languagePack], not this
+ * activity's scope: a rotation cancelled it, and the installed pack was then reported as a
+ * failure, without the list refresh (pre-tag review 2026-11-25 S2). The result is shown by
+ * whichever Settings activity is in front when it ends.
+ */
 internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
-    val _self = this
-    lifecycleScope.launch {
-        try {
-            val manager = LanguagePackManager.getInstance(_self)
-            when (val result = manager.importLanguagePack(uri)) {
-                is ImportResult.Success -> {
-                    val words = result.manifest.wordCount
-                    languagePackImportStatus = LanguagePackImportStatus.Imported(
-                        resources.getQuantityString(
-                            R.plurals.multilang_pack_imported_status, words, result.manifest.name, words
-                        )
-                    )
-                    refreshInstalledLanguagePacks()
-                    refreshAvailableSecondaryLanguages()
-                    Toast.makeText(
-                        _self,
-                        getString(R.string.multilang_pack_imported_toast, result.manifest.name),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // Measure the new pack for CTC eligibility now, off the main thread, rather
-                    // than leaving it to the first swipe's background scheduler: the user is
-                    // here, the file is hot, and the swipe-engine card can then tell them the
-                    // truth immediately. Idempotent — the swipe path reads the same cached
-                    // verdict. See CtcImportedPackSupport for what is being measured and why.
-                    val code = result.manifest.code
-                    withContext(Dispatchers.IO) { CtcInstalledPacks.evaluateNow(_self, code) }
-                }
-                is ImportResult.Error -> {
-                    // Typed reason → localized text; the English log text stays in logcat.
-                    android.util.Log.w(SettingsActivity.TAG, "Language pack import refused: ${result.message}")
-                    val reason = result.failure.render(ResourcesResultText(resources))
-                    languagePackImportStatus = LanguagePackImportStatus.Failed(reason)
-                    Toast.makeText(
-                        _self,
-                        getString(R.string.common_import_failed_detail, reason),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        } catch (e: Exception) {
+    val appContext = applicationContext
+    val started = SettingsImports.languagePack.start(null) {
+        val followUp = catchingFailures({
+            val result = LanguagePackManager.getInstance(appContext).importLanguagePack(uri)
+            followUp { showLanguagePackImportResult(result) }
+        }) { e ->
             android.util.Log.e(SettingsActivity.TAG, "Language pack import failed", e)
-            val detail = ioFailureText(e)
-            languagePackImportStatus = LanguagePackImportStatus.Failed(detail)
-            Toast.makeText(_self, getString(R.string.common_import_failed_detail, detail), Toast.LENGTH_SHORT).show()
+            followUp {
+                val detail = ioFailureText(e)
+                languagePackImportStatus = LanguagePackImportStatus.Failed(detail)
+                Toast.makeText(this, getString(R.string.common_import_failed_detail, detail), Toast.LENGTH_SHORT).show()
+            }
+        }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (!started) {
+        // The section has no progress line; a second pick while one imports waits for nothing.
+        // TODO: show the running import in the Multi-Language section (no string for it yet).
+        android.util.Log.w(SettingsActivity.TAG, "Language pack import already running; $uri not imported")
+    }
+}
+
+/** The finished import's [result] on this (the current) Settings activity. */
+private fun SettingsActivity.showLanguagePackImportResult(result: ImportResult) {
+    val _self = this
+    when (result) {
+        is ImportResult.Success -> {
+            val words = result.manifest.wordCount
+            languagePackImportStatus = LanguagePackImportStatus.Imported(
+                resources.getQuantityString(
+                    R.plurals.multilang_pack_imported_status, words, result.manifest.name, words
+                )
+            )
+            refreshInstalledLanguagePacks()
+            refreshAvailableSecondaryLanguages()
+            Toast.makeText(
+                _self,
+                getString(R.string.multilang_pack_imported_toast, result.manifest.name),
+                Toast.LENGTH_SHORT
+            ).show()
+            // Measure the new pack for CTC eligibility now, off the main thread, rather
+            // than leaving it to the first swipe's background scheduler: the user is
+            // here, the file is hot, and the swipe-engine card can then tell them the
+            // truth immediately. Idempotent — the swipe path reads the same cached
+            // verdict, so a rotation cancelling this measurement costs only its time.
+            // See CtcImportedPackSupport for what is being measured and why.
+            val code = result.manifest.code
+            lifecycleScope.launch { withContext(Dispatchers.IO) { CtcInstalledPacks.evaluateNow(_self, code) } }
+        }
+        is ImportResult.Error -> {
+            // Typed reason → localized text; the English log text stays in logcat.
+            android.util.Log.w(SettingsActivity.TAG, "Language pack import refused: ${result.message}")
+            val reason = result.failure.render(ResourcesResultText(resources))
+            languagePackImportStatus = LanguagePackImportStatus.Failed(reason)
+            Toast.makeText(
+                _self,
+                getString(R.string.common_import_failed_detail, reason),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }

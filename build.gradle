@@ -628,6 +628,8 @@ tasks.register('runPureTests', JavaExec) {
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
   def pureTestClasses = [
+    // Pre-tag review 2026-11-25 S2: Settings imports outlive the activity (rotation).
+    'tribixbite.cleverkeys.ui.settings.io.ImportTrackerTest',
     // 2026-10-31: in-app Open-source licenses — every licence NOTICE cites has a packaged text,
     // the packaged copies equal NOTICE / LICENSE / LICENSES, and the screen lists every section.
     'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetDriftTest',

@@ -18,6 +18,9 @@ class VoicePackImportTrackerTest {
 
     private fun tracker() = VoicePackImportTracker(Dispatchers.Default)
 
+    /** The Settings activity a test leaves (an owner of the tracker, see [ImportTracker.attach]). */
+    private val settings = Any()
+
     @Test
     fun anImportStartedByOneActivityIsSeenByTheNextOne() = runBlocking {
         val tracker = tracker()
@@ -99,7 +102,7 @@ class VoicePackImportTrackerTest {
         tracker.start("Importing…") { VoiceImportStatus.Ok("ok") to true }
         withTimeout(5_000) { tracker.state.first { !it.inProgress } }
 
-        tracker.leave()
+        tracker.detach(settings, finishing = true)
 
         assertThat(tracker.state.value.status).isNull()
         assertThat(tracker.consumeMicRequest()).isFalse()
@@ -110,7 +113,7 @@ class VoicePackImportTrackerTest {
         val tracker = tracker()
         val gate = CompletableDeferred<Unit>()
         tracker.start("Importing…") { gate.await(); VoiceImportStatus.Ok("ok") to true }
-        tracker.leave()
+        tracker.detach(settings, finishing = true)
         gate.complete(Unit)
         val done = withTimeout(5_000) { tracker.state.first { !it.inProgress } }
 
@@ -123,8 +126,29 @@ class VoicePackImportTrackerTest {
         val tracker = tracker()
         val gate = CompletableDeferred<Unit>()
         tracker.start("Importing…") { gate.await(); VoiceImportStatus.Ok("ok") to true }
-        tracker.leave()
-        tracker.attach()  // Settings opened again before the import ended
+        tracker.detach(settings, finishing = true)
+        tracker.attach(Any())  // Settings opened again before the import ended
+        gate.complete(Unit)
+        val done = withTimeout(5_000) { tracker.state.first { !it.inProgress } }
+
+        assertThat(done.status).isEqualTo(VoiceImportStatus.Ok("ok"))
+        assertThat(tracker.consumeMicRequest()).isTrue()
+    }
+
+    /**
+     * Pre-tag review 2026-11-25 §4: a Settings opened again while the old one is still being
+     * destroyed (a finishing activity's onDestroy can run after the next one's onCreate) marked
+     * the import abandoned AFTER the new activity attached, so the new one never saw the result.
+     */
+    @Test
+    fun aSettingsOpenedBeforeTheOldOneIsDestroyedKeepsTheResult() = runBlocking {
+        val tracker = tracker()
+        val gate = CompletableDeferred<Unit>()
+        val old = Any()
+        tracker.attach(old)
+        tracker.start("Importing…") { gate.await(); VoiceImportStatus.Ok("ok") to true }
+        tracker.attach(Any())  // the new Settings is created…
+        tracker.detach(old, finishing = true)  // …then the old, finished one is destroyed
         gate.complete(Unit)
         val done = withTimeout(5_000) { tracker.state.first { !it.inProgress } }
 

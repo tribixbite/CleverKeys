@@ -72,10 +72,10 @@ internal fun restoreVoicePermissionState(savedState: Bundle) {
 /**
  * Mirror the process-wide voice-pack import ([VoicePackImportTracker]) into this activity while
  * it is started, and make the opt-in microphone request a successful import calls for — once,
- * from whichever Settings activity is in front when the import ends.
+ * from whichever Settings activity is in front when the import ends. The activity registers
+ * with the tracker in [observeSettingsImports], which calls this.
  */
 internal fun observeVoicePackImport(activity: SettingsActivity) {
-    VoicePackImportTracker.shared.attach()
     with(activity) {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
