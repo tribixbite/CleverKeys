@@ -354,8 +354,9 @@ language import and non english custom word import/export, emojis, gif". Pixel, 
 
 **Status 2026-11-25 (agent).** Maintainer: "run the remaining phone checks on the saga". Saga `.1.130`,
 release r8 (`6af93925…`), then r9 (`5255c762…`) for the two fixes below, both re-checked on r9 (a swipe to
-the next layout and back in an empty field: capital `Q`; `groß` + space stays `groß`). Suites at r9 code:
-pure 4,033 / mock 2,006.
+the next layout and back in an empty field: capital `Q`; `groß` + space stays `groß`). Suites at r9 code
+(`9f4dcd49`): pure 4,033 / mock 2,006; A2 (`~/ew-output/a2-2026-11-25-r9/`): 1,684 on each of API 34–37,
+0 failed, 2 expected skips; CI green.
 - **Holds:** Enter held 2.2 s in a textarea → one newline, no popover; Send held in an
   `enterkeyhint=send` field → one submit, no popover; a volume-up key (test layout) held → no popover,
   one key event on release (Backspace-Only Repeat). In a native field it moved the media volume
