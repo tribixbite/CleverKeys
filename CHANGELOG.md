@@ -624,6 +624,11 @@ editor that used to be listed here already ship in 2.0.)
 - A swipe to a subkey of Fn (or another modifier) at the start of a sentence no longer leaves the
   keys showing that modifier's symbols until the next key.
 - Settings search finds the Language Packs block ("language pack", "import").
+- Swiping up or down on the space bar to the next or previous layout at the start of a sentence
+  keeps the automatic capital; the first letter came out lowercase.
+- German: a word typed with ß (groß, Straße, weiß) is no longer autocorrected. The bundled German
+  dictionary spells these words with ss, and space turned groß into gros. Swipes still show the
+  dictionary's ss spelling (Strasse).
 - Pasting a clipping you just cleaned or edited works after Android has cleared its clipboard.
   Android 13 and later empty the clipboard an hour after the last copy; Clean then had nothing to
   replace, so the paste key pasted nothing. One cleaned or edited clipping now goes onto an empty

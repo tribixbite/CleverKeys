@@ -126,7 +126,8 @@ Repeat rate when holding a key that repeats (25–200 ms, default 25 ms):
 
 > [!NOTE]
 > Which keys repeat depends on **Key Repeat Enabled** and **Backspace Only Repeat** (on by
-> default: only Backspace and navigation keys repeat). With the Subkey Popover on, holding a
+> default: only Backspace repeats, and keys with arrow corners such as space go into TrackPoint
+> mode; arrow, volume and other key-event keys act once). With the Subkey Popover on, holding a
 > character key opens the popover instead of repeating it, whatever these settings say.
 > Holding Backspace still repeats (after the Long Press Timeout, every Long Press Interval).
 

@@ -272,7 +272,11 @@ path, geometric always gets the smoothed path, the ML capture records both).
    `strafe`). No real corpus exists for these boards; the evidence is synthetic pins in
    `CtcAccentKeyLayoutReplayTest` (Danish/Icelandic decode against the Swedish lexicon plus five
    Danish words, since no Danish dictionary ships). A key with more than two distinct letters,
-   or none (`ı`, `þ`), stays slotless.
+   or none (`ı`, `þ`), stays slotless. Device check 2026-11-25 (Saga, release r8): Neo 2 bound to
+   German, a swipe over `ß` decodes the `ss` path (`straße` → `Strasse`, the German list's own
+   spelling: it has no ß word); Danish bound to Swedish with `være` as a Swedish custom word, three
+   swipes over `æ` put `være` on the bar each time (rank 1 at a sentence start, else 3rd behind
+   `var`/`vår`). Bound to English the `æ` key has no alias: the en lexicon is a–z stripped.
 2. **Lexicon, per language** (`CtcLanguageSupport` is the table; see "Per-language
    enablement" for the λ/source matrix). **en** reads the bundled
    `dictionaries/en_enhanced.json` ({word: freq}, frequencies already on the AOSP-like

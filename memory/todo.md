@@ -352,6 +352,54 @@ language import and non english custom word import/export, emojis, gif". Pixel, 
   theme (item 40; Theme Manager does not show the selected theme without a long scroll, so the
   Pixel's own theme could not be restored safely).
 
+**Status 2026-11-25 (agent).** Maintainer: "run the remaining phone checks on the saga". Saga `.1.130`,
+release r8 (`6af93925…`), then r9 (`5255c762…`) for the two fixes below, both re-checked on r9 (a swipe to
+the next layout and back in an empty field: capital `Q`; `groß` + space stays `groß`). Suites at r9 code:
+pure 4,033 / mock 2,006.
+- **Holds:** Enter held 2.2 s in a textarea → one newline, no popover; Send held in an
+  `enterkeyhint=send` field → one submit, no popover; a volume-up key (test layout) held → no popover,
+  one key event on release (Backspace-Only Repeat). In a native field it moved the media volume
+  (9 → 10 → 9); in Chrome the page took the key event and the volume did not move (Chrome's, not ours).
+- **Neo 2 bound to German:** a swipe over the `ß` key decodes the `ss` path (`straße` → `Strasse`).
+  FOUND: the German list has NO `ß` word at all (wordfreq casefolds; `strasse`, `gross`, `weiss`), so
+  a tapped `groß` + space committed `gros` — FIXED (a word typed with ß whose ss spelling is a word is
+  kept and known; `WordPredictorSharpSTest`). Open: swipes still show `Strasse`, the list's spelling;
+  Germany's spelling needs a German list rebuilt with ß (data, not done).
+- **Danish layout bound to Swedish** + `være` as a Swedish custom word: swiped v→æ→r→e three times, `være`
+  on the bar every time (rank 1 at a sentence start, rank 3 behind Swedish `var`/`vår` otherwise), as
+  the replay pin says. Bound to English the æ key has no alias (the en lexicon strips to a–z).
+- **FOUND and FIXED:** a swipe up or down on space to the next or previous layout at a sentence start
+  gave lowercase letters (the subkey's release cleared the Shift the switch had just latched;
+  `PointersSubkeySwipeRedrawTest`).
+- **Toggled modifiers (item 40):** CleverKeys look: latched Shift = filled arrow on the function fill,
+  locked = lavender fill with the caps bar; Ctrl latched / locked = two lavender fills, all readable.
+  Black: latched = blue fill, locked = green fill, black glyphs. CleverKeys Dark restored.
+- **Theme Creator pass:** every control changed and saved (Key Roles pills, filled Shift, separators
+  Hide, hints Digits only, hint size, Balloon preview, fill opacity, function text size, label weight,
+  border width / radius, horizontal gap, a colour from the picker, a Dark Mode colour); the preview and
+  the keyboard showed them, Edit read them back, Export as layout XML wrote them. Notes: the Gesture
+  Hints and Key-Press Preview chip rows scroll sideways and start clipped ("Digi", "B") at 1080 px in
+  English while the Separators row wraps; the mode variant list repeats every colour name, so the
+  Look Colors' "Latched Shift Key" also appears under Light / Dark Mode (I set the Light one by
+  mistake and saw no change in dark mode). Test theme deleted.
+- **Clipboard pane in split screen** (Settings over Chrome, portrait): opens over the keyboard with its
+  header, search, Select and results line; Chrome's field stays visible. Split ended.
+- **Quick Settings tile:** visible → hide; hidden → shown (full); minimized bar → hide, then shown
+  full; launcher tap → nothing over the launcher (shown 0.5–1.9 s under the shade, hidden by the system
+  on collapse), then a field tap inside the 8 s window → keyboard shown and kept. The shade no longer
+  hides the keyboard on this Saga (Chrome or native field), so the shade-hidden branch could not be
+  reached. Tile list restored byte for byte.
+- **Not run:** fast typing with two fingers (`sendevent` to the touchscreen is denied to the shell by
+  SELinux on this user build; no root), layers after rotation (scene + display-hardware blend; left
+  with the maintainer as before), the 1.5 → 2.0 popover upgrade (needs this phone's data uninstalled),
+  a media-only clip (would replace the phone's clip).
+- **TODO (agent, small):** with Backspace Only Repeat on (the default) an arrow that is a key's main
+  value does not repeat: `Pointers.handleLongPress` counts as navigation only keys WITH arrow
+  subkeys, while #81 and `KeyRepeatLogicTest` say arrow keys repeat. No shipped layout has one;
+  decide whether a custom layout's arrows should (docs now say they act once).
+- **TODO (data):** a German list with ß (Germany/Austria spelling) so swipes and the bar show `Straße`;
+  today the list is the casefolded wordfreq stream (`scripts/build_wordlist.py` NOTE).
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by
@@ -466,8 +514,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 4. [ ] device: leftovers of the plan's "Maintainer device checks". PASS 2026-10-28 (Saga 202): "."
    after lift, templates (textarea / password / pane search), font scale 2.0 pane header, fa/hu
    settings search. NOT RUN: continuous swipe with auto-space OFF and interrupted phrases (JVM tests
-   only), narrow split-screen clipboard pane, media-only clip, font-scale entries, fa/hu pane page
-   arrows. Finding: a font-scale change reaches an inflated pane only after an IME restart —
+   only), narrow split-screen clipboard pane (PASS 2026-11-25, Saga `.1.130` portrait split), media-only
+   clip, font-scale entries, fa/hu pane page arrows. Finding: a font-scale change reaches an inflated pane only after an IME restart —
    FIXED 2026-11-19 `356a1b84`: only the CLIPBOARD pane is cached (emoji/GIF inflate on every
    open); its rebuild signature now carries font scale, densityDpi and locales, so the
    `onConfigurationChanged` → `refresh_config` → `setConfig` path drops it
@@ -491,7 +539,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
    ranking change (`they're`/`you're` lose to `there`/`your`); FIXED 2026-11-18: `ß`/`æ`/`œ` keys
    have a CTC slot and `schön`/`schon`-type collisions offer both forms (spec "Collisions": real
    FUTO traces t1 unchanged, t3 +0.1…+1.3 pt in de/es/fr; ß/æ boards synthetic pins only, no
-   corpus — a device check on Neo 2/Danish is open); `yo` is nearly impossible to
+   corpus — device check PASS 2026-11-25 on the Saga, see that day's status; it found the German list
+   has no ß word and `groß` + space → `gros`, fixed); `yo` is nearly impossible to
    swipe (always `to`; maintainer 2026-11-18) — the item-17 short-word family, see there. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-8)
 9. [ ] agent (objective) + maintainer (feel): pre-tag checks. #90, #168, #145, both minimize styles
    PASS 2026-10-25 (Pixel). Full checklist 2026-11-09 (Pixel): 43 pass / 5 fail / 3 partial / 12 not
@@ -654,8 +703,8 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     density fix `32c8c4bb`; Add Layout landscape fixed; no check left. [history](../docs/history/todo-open-now-items-2026-11-14.md#item-26)
 27. [ ] agent: layout `<theme>`, per-key/row styling, custom themes v2, theme ↔ layout export (spec
     "Layout themes and per-key styling"). Device 2026-10-27 (Saga 202): checks 1–4 PASS after fixes.
-    Open: a Theme Creator pass of every new control (sliders, chips, variant rows); hint/preview
-    chip rows overflow and scroll in fa; one 126 px-short IME after a night-mode switch (not
+    Theme Creator pass of every control DONE 2026-11-25 (Saga, status of that day). Open: hint/preview
+    chip rows start clipped and scroll sideways (fa, and English at 1080 px) while Separators wraps; one 126 px-short IME after a night-mode switch (not
     reproduced, unproven). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-27)
 28. [x] agent: inline-field word delete + deferred space after a swipe (`0a6dddf9`, device PASS 2026-10-28). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-28)
 29. [x] agent: "Unfinished Words" setting (device PASS 2026-11-05). [history](../docs/history/todo-open-now-items-2026-11-14.md#item-29)
@@ -682,8 +731,9 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
 34. [ ] device + maintainer: default look, CleverKeys Aurora, animated scenes (19 rounds to 11-14;
     summary + cost model: `docs/specs/scene-backdrops-and-power.md`). Open: maintainer verdict on look,
     aurora, scenes, motion; device: fresh install / upgrade-keeps-theme / custom-theme-delete /
-    per-layout gap / picker / key-press-preview items, theme commands, QS tile shade-hidden path +
-    minimized + 8 s field tap, layers after rotation; left on shared devices: only test Chrome tabs (Note10+:
+    per-layout gap / picker / key-press-preview items, theme commands, QS tile shade-hidden path
+    (unreachable on the Saga since its shade stopped hiding the keyboard; minimized + 8 s field tap
+    PASS 2026-11-25), layers after rotation; left on shared devices: only test Chrome tabs (Note10+:
     checked 2026-11-18 — CleverKeys uninstalled, Samsung Keyboard, brightness auto; tablet: needs an
     unlock). Both in the owners' hands; not worth a UI session. [log](../docs/history/todo-item-34-scene-rounds.md#item-34)
 35. [ ] device + maintainer: French/Italian accented elisions. Data fixed, replay 0 regressions;
@@ -751,8 +801,10 @@ Gboard default), Seeker `10.105.217.200` (was 192.168.0.170; drops Wi-Fi when id
     (contrast floors 2:1 fill, 4.5:1 label); a look's latched Shift keeps its glyph frame.
     `ToggledKeyPaletteTest` (every XML theme), `KeyboardLookRenderTest`. Device PASS 2026-11-22
     (Pixel, its neon theme, release 5007948e): latched Shift and Ctrl opaque magenta `#BA08C2`
-    with white labels and corners, locked Ctrl `#FF00FF` with black labels. Open: the CleverKeys
-    look and the Black theme on a phone (release installed on the S25U for the maintainer).
+    with white labels and corners, locked Ctrl `#FF00FF` with black labels. CleverKeys look and
+    Black PASS 2026-11-25 (Saga `.1.130`, r8): look latched Shift = filled arrow on the function fill,
+    locked = lavender with the caps bar, Ctrl latched/locked two lavender fills; Black latched blue,
+    locked green, black glyphs; all readable.
 41. [x] agent: 123+ on Ctrl's swipe-up edge (maintainer 2026-11-22: "for any letter layout,
     shouldnt the '123+' numpad toggle display for the North subkey of Ctrl instead of 'ABC'?").
     `switch_numeric` moves from Ctrl SE to N on `res/xml/bottom_row.xml` and the three layouts

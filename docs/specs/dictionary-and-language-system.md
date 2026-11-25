@@ -430,6 +430,18 @@ the user's choice and does not fit the tap path (it is a swipe display rule buil
 words); a chosen spelling is learned by the ordinary learn funnel. Not offered for the secondary
 dictionary, and not for prefixes (# TODO in `WordPredictor.addHalfSpaceVariants`).
 
+### German ß — `WordPredictor.sharpSDictionaryKey` (2026-11-25)
+
+The bundled German list is built from a casefolded corpus (wordfreq maps ß to ss,
+`scripts/build_wordlist.py`): `de_enhanced.bin` holds `gross`, `strasse`, `weiss` and no ß word at
+all. A word typed with ß whose ss spelling is a dictionary word is that word: `isInDictionary` and
+`autoCorrect`'s known-word step accept it, so space keeps `groß` as typed (it committed `gros`,
+Saga, Neo 2 bound to German) and no Add-to-dictionary offer appears; disabling the ss spelling
+disables it too. It is not a lookup fold (`lookupKey` is length-preserving), and a list that spells
+ß itself (an imported pack) is found by the plain lookup first. Swipes and the bar still show the
+list's ss spelling (`Strasse`); Germany's spelling needs a German list rebuilt with ß (open,
+`memory/todo.md`). Tests: `WordPredictorSharpSTest`.
+
 ### Lookup fold — `ArabicScriptFold`
 
 Lookup keys only, never the user's text, one code unit for one code unit:

@@ -92,7 +92,8 @@ words). Bands: rank<band conservative, band..top requires a positive oracle.
 Guards hard-fail the build. Held-out eval: `en_user_export_eval.txt`
 (gitignored — personal vocabulary).
 Gotchas discovered 2026-07-20 (encoded in the script):
-- wordfreq CASEFOLDS: German ß→ss (dict ships strasse/grösse) and Greek final
+- wordfreq CASEFOLDS: German ß→ss (dict ships strasse/grösse — NO ß word at all; typed ß words
+  are accepted by `WordPredictor.sharpSDictionaryKey` since 2026-11-25, swipes still show ss) and Greek final
   sigma ς→σ (whole el stream + shipped pack are σ-final; the AOSP el oracle is
   remapped to match — see `load_aosp`).
 - fr/it contraction maps are ~22–26k elision-expansion tables → demoted to

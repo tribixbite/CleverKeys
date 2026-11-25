@@ -1104,9 +1104,11 @@ class Pointers(
             emitSubkeyValue(ptr, pipelineValue, ptr.snap)
             return
         }
-        // Delegate to handler for custom mapping execution
-        _handler.onCustomShortSwipe(mapping)
+        // The swipe spends the one-shot modifiers BEFORE its action, as a tap does ([onTouchUp]):
+        // an action may latch Shift itself (a layout switch asks auto-capitalisation again), and
+        // clearing afterwards took that Shift away. The executor reads no latched modifier.
         clearLatched()
+        _handler.onCustomShortSwipe(mapping)
         _swipeRecognizer.reset()
         retireSwipedPointer(ptr)
     }
@@ -2173,9 +2175,13 @@ class Pointers(
 
         // Non-latchable key - trigger normally
         // Note: Navigation keys are handled during onTouchMove (hold-to-repeat mode)
+        // The one-shot modifiers are spent before the key acts, in a tap's order ([onTouchUp]):
+        // the key still gets them through ptr.modifiers, and a Shift its action latches (a
+        // swipe up on space to the next layout asks auto-capitalisation again) stays. Cleared
+        // after, it took that Shift too: lowercase letters at a sentence start (Saga, 2026-11-25).
+        clearLatched()
         _handler.onPointerDown(gestureValue, false)
         _handler.onPointerUp(gestureValue, ptr.modifiers)
-        clearLatched() // Clear shift after gesture completes
         _swipeRecognizer.reset()
         retireSwipedPointer(ptr)
     }

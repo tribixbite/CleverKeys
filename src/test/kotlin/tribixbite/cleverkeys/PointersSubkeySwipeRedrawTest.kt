@@ -12,8 +12,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tribixbite.cleverkeys.customization.ActionType
 import tribixbite.cleverkeys.customization.ShortSwipeCustomizationManager
 import tribixbite.cleverkeys.customization.ShortSwipeMapping
+import tribixbite.cleverkeys.customization.SwipeDirection
 import tribixbite.cleverkeys.prefs.ConfigSnapshot
 import java.lang.reflect.Field
 
@@ -70,7 +72,10 @@ class PointersSubkeySwipeRedrawTest {
         pointers = allocate(Pointers::class.java)
         handler = RecordingHandler { pointers.getModifiers() }
         setField(pointers, "_handler", handler)
-        setField(pointers, "_config", mockk<Config>(relaxed = true))
+        // Auto-capitalisation's fake Shift captures the configuration current when it is added.
+        val config = mockk<Config>(relaxed = true)
+        every { config.snapshot } returns snap()
+        setField(pointers, "_config", config)
         setField(pointers, "_longpress_handler", mockk<Handler>(relaxed = true))
         setField(pointers, "_ptrs", ptrs)
         setField(pointers, "_swipeRecognizer", recognizer)
@@ -113,16 +118,101 @@ class PointersSubkeySwipeRedrawTest {
         assertEquals(0, swipeFnUp(shiftLatched = false).size())
     }
 
+    // ------------------------------------------- a subkey whose action latches Shift again
+
+    /*
+     * Saga 2026-11-25 (release r8): in an empty field, a swipe up on space to the next layout gave
+     * lowercase letters. The layout switch asks auto-capitalisation again
+     * ([KeyboardReceiver.showTextLayout]), which latched Shift while the subkey was being emitted;
+     * the release then cleared the latched modifiers, that new Shift with them. A tap spends the
+     * one-shot modifiers before its key acts ([Pointers.onTouchUp]), so its action's Shift stays.
+     */
+
+    private val switchForward = KeyValue.getKeyByName("switch_forward")
+    private val spaceKey = KeyboardData.Key.EMPTY
+        .withKeyValue(0, KeyValue.getKeyByName("space"))
+        .withKeyValue(7, switchForward) // N, as on the bottom row with two or more layouts
+
+    /** What the service does when the editor asks for a capital: latch Shift as a fake pointer. */
+    private fun autocapLatchesShift() =
+        pointers.set_fake_pointer_state(shiftKey, requireNotNull(shiftKey.keys[0]), latched = true, lock = false)
+
+    /** Swipe up on space; returns the modifiers last drawn. */
+    private fun swipeSpaceUp(shiftLatchedBefore: Boolean): Pointers.Modifiers {
+        val s = snap()
+        if (shiftLatchedBefore) autocapLatchesShift()
+        val space = requireNotNull(spaceKey.keys[0])
+        ptrs.add(Pointers.Pointer(0, spaceKey, space, 400f, 300f, noMods(), pointers.pointer_flags_of_kv(space, s), s))
+        pointers.onTouchMove(400f, 262f, 0)
+        pointers.onTouchMove(400f, 224f, 0)
+        pointers.onTouchUp(0)
+        return handler.drawn.last()
+    }
+
+    private fun Pointers.Modifiers.hasShift() = has(KeyValue.Modifier.SHIFT)
+
+    @Test
+    fun aLayoutSwitchBySwipe_keepsTheShiftAutoCapitalisationLatchedForIt() {
+        handler.onUp = { if (it == switchForward) autocapLatchesShift() }
+
+        val drawn = swipeSpaceUp(shiftLatchedBefore = false)
+
+        assertTrue("the swipe emitted the layout switch", handler.ups.contains(switchForward))
+        assertTrue("Shift stays latched after the switch", pointers.getModifiers().hasShift())
+        assertTrue("and the keys are drawn shifted", drawn.hasShift())
+    }
+
+    @Test
+    fun aLayoutSwitchBySwipe_atASentenceStart_endsWithShiftLatched() {
+        // The Saga case: the empty field's Shift was latched before the swipe, and the switch
+        // latched it again for the new layout.
+        handler.onUp = { if (it == switchForward) autocapLatchesShift() }
+
+        val drawn = swipeSpaceUp(shiftLatchedBefore = true)
+
+        assertTrue(pointers.getModifiers().hasShift())
+        assertTrue(drawn.hasShift())
+    }
+
+    @Test
+    fun aSubkeyWhoseActionLatchesNothing_stillSpendsTheLatchedShift() {
+        val drawn = swipeSpaceUp(shiftLatchedBefore = true)
+
+        assertTrue(handler.ups.contains(switchForward))
+        assertEquals("the one-shot Shift went with the subkey", 0, pointers.getModifiers().size())
+        assertEquals(0, drawn.size())
+    }
+
+    @Test
+    fun aCustomShortSwipe_keepsTheShiftItsCommandLatched() {
+        // A user's own mapping to the next layout runs through onCustomShortSwipe.
+        val mapping = ShortSwipeMapping("space", SwipeDirection.N, "⇥", ActionType.COMMAND, "switch_forward")
+        val manager = mockk<ShortSwipeCustomizationManager>(relaxed = true)
+        every { manager.getMapping(any(), any()) } returns null
+        every { manager.getMapping(any(), SwipeDirection.N) } returns mapping
+        setField(pointers, "_customSwipeManager", manager)
+        handler.onUp = { if (it == switchForward) autocapLatchesShift() }
+        handler.onCustom = { if (it == mapping) autocapLatchesShift() }
+
+        val drawn = swipeSpaceUp(shiftLatchedBefore = true)
+
+        assertTrue(pointers.getModifiers().hasShift())
+        assertTrue(drawn.hasShift())
+    }
+
     // ------------------------------------------------------------------ harness
 
     /** Records what [Keyboard2View]'s `updateFlags` would draw at each redrawing callback. */
     private class RecordingHandler(private val mods: () -> Pointers.Modifiers) : Pointers.IPointerEventHandler {
         val ups = mutableListOf<KeyValue?>()
         val drawn = mutableListOf<Pointers.Modifiers>()
+        /** The key's action, as the service would run it at this callback. */
+        var onUp: (KeyValue?) -> Unit = {}
+        var onCustom: (ShortSwipeMapping) -> Unit = {}
 
         override fun modifyKey(k: KeyValue?, mods: Pointers.Modifiers): KeyValue? = k
         override fun onPointerDown(k: KeyValue?, isSwipe: Boolean) { drawn += mods() }
-        override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) { ups += k; drawn += this.mods() }
+        override fun onPointerUp(k: KeyValue?, mods: Pointers.Modifiers) { ups += k; onUp(k); drawn += this.mods() }
         override fun onPointerFlagsChanged(hapticEvent: HapticEvent?) { drawn += mods() }
         override fun onPointerHold(k: KeyValue, mods: Pointers.Modifiers) {}
         override fun onSwipeMove(x: Float, y: Float, recognizer: ImprovedSwipeGestureRecognizer) {}
@@ -132,7 +222,7 @@ class PointersSubkeySwipeRedrawTest {
         override fun isPointWithinKeyWithTolerance(x: Float, y: Float, key: KeyboardData.Key, tolerance: Float) = true
         override fun getKeyHypotenuse(key: KeyboardData.Key): Float = 200f
         override fun getKeyWidth(key: KeyboardData.Key): Float = 120f
-        override fun onCustomShortSwipe(mapping: ShortSwipeMapping) {}
+        override fun onCustomShortSwipe(mapping: ShortSwipeMapping) { onCustom(mapping); drawn += mods() }
     }
 
     private fun unsafe(): Any {

@@ -1655,6 +1655,8 @@ tasks.register('runMockTests', JavaExec) {
     // the bar, the fa/ckb letter fold (real WordPredictor), and typing/cursor-sync end to end.
     'tribixbite.cleverkeys.WordPredictorHalfSpaceTest',
     'tribixbite.cleverkeys.PersianHalfSpaceTypingTest',
+    // German ß typed against the ss-only German list: kept, not corrected (Saga 2026-11-25).
+    'tribixbite.cleverkeys.WordPredictorSharpSTest',
     // Typing Bangla: vowel signs and hasanta continue the composing word (2026-11-04).
     'tribixbite.cleverkeys.BanglaSpellingMarkTypingTest',
     // Emojis are not word characters for cursor sync (device pass 2026-11-18).

@@ -931,8 +931,8 @@ class WordPredictor : Predictor {
     override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean {
         if (word.isEmpty()) return false
         val lowerWord = lookupKey(word)
-        // Check main dictionary
-        if (dictionary.get().containsKey(lowerWord)) {
+        // Check main dictionary, `groß` included where it spells `gross` ([sharpSDictionaryKey])
+        if (dictionary.get().containsKey(lowerWord) || sharpSDictionaryKey(lowerWord) != null) {
             return true
         }
         // The secondary (bilingual) lexicon, as the Predictor contract states and as the
@@ -2541,6 +2541,22 @@ class WordPredictor : Predictor {
      */
     private fun lookupKey(word: String): String = ArabicScriptFold.fold(word.lowercase(), currentLanguage)
 
+    /**
+     * The dictionary key of [lowerKey] spelled with `ss` for `ß`, when [lowerKey] has a `ß`, is
+     * not itself a dictionary word, and its `ss` spelling is; else null. The bundled German list
+     * comes from a casefolded corpus (wordfreq maps `ß` to `ss`, `scripts/build_wordlist.py`): it
+     * holds `gross`, `strasse`, `weiss` and no `ß` at all, so a German typing `groß` got the
+     * correction sweep, and space committed `gros` (Saga, 2026-11-25). Typed with `ß` it is the
+     * same word in Germany's spelling: known, and kept as typed. Not a lookup fold
+     * ([lookupKey] is length-preserving), and a list that spells `ß` is found by the plain lookup.
+     */
+    private fun sharpSDictionaryKey(lowerKey: String): String? {
+        if ('ß' !in lowerKey) return null
+        val dict = dictionary.get()
+        if (dict.containsKey(lowerKey)) return null
+        return lowerKey.replace("ß", "ss").takeIf { dict.containsKey(it) }
+    }
+
     /** [ArabicScriptFold.foldDictionaryKeys] over a freshly loaded primary dictionary. */
     private fun foldLoadedKeys(
         dict: MutableMap<String, Int>,
@@ -3309,9 +3325,12 @@ class WordPredictor : Predictor {
         // custom/user words still override the disable inside isWordDisabled.
         // The `isNotEmpty` guard keeps the common no-disabled-words path free
         // of the extra lowercase-set lookup (same pattern as the sweep).
-        val typedWordDisabled = disabledWords.isNotEmpty() && isWordDisabled(lowerTypedWord)
+        // `groß` typed against a list that spells it `gross` is that word, disabled with it too.
+        val sharpSKey = sharpSDictionaryKey(lowerTypedWord)
+        val typedWordDisabled = disabledWords.isNotEmpty() &&
+            (isWordDisabled(lowerTypedWord) || (sharpSKey != null && isWordDisabled(sharpSKey)))
         if (!typedWordDisabled &&
-            (dictionary.get().containsKey(lowerTypedWord) ||
+            (dictionary.get().containsKey(lowerTypedWord) || sharpSKey != null ||
                 (canUseAdaptation() &&
                     (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f))
         ) {
