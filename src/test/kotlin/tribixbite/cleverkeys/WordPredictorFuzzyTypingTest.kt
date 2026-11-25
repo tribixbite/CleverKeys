@@ -9,6 +9,7 @@ import io.mockk.runs
 import io.mockk.unmockkStatic
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -314,6 +315,29 @@ class WordPredictorFuzzyTypingTest {
         // Accent-free typing with a slip on the secondary's normalized form.
         val uber = bar("ubwrmo").words
         assertTrue("'übermorgen' must be offered for 'ubwrmo' (got $uber)", "übermorgen" in uber)
+    }
+
+    /**
+     * Pre-tag review 2026-11-25: autocorrect's "already a word" check read the primary list only,
+     * so a correctly typed word of the secondary language was corrected into a primary word (with
+     * Spanish beside English, `como` became `come` in a list without `como`) although [WordPredictor.isInDictionary] counts
+     * it. A word the user disabled for the secondary language still corrects.
+     */
+    @Test
+    fun secondaryLanguage_aWordOfItIsNotAutocorrected() {
+        // `pero` is no word of the real English list, and its English neighbours (`per`, `zero`,
+        // `hero`) are: the sweep corrected it.
+        assertTrue("precondition: pero is not English", "pero" !in dictField())
+        val spanish = NormalizedPrefixIndex()
+        spanish.addWord("pero", 120)
+        setField("secondaryIndex", spanish)
+        setField("secondaryLanguageCode", "es")
+        assertTrue("isInDictionary(pero)", predictor.isInDictionary("pero"))
+        assertEquals("pero", predictor.autoCorrect("pero"))
+        assertEquals("the capital is kept", "Pero", predictor.autoCorrect("Pero"))
+
+        setField("secondaryDisabledWords", setOf("pero"))
+        assertNotEquals("disabled in Spanish, it corrects", "pero", predictor.autoCorrect("pero"))
     }
 
     // ── Latency ───────────────────────────────────────────────────────────

@@ -314,9 +314,15 @@ class WordPredictor : Predictor {
          * Every spelling of [word] with one or more of its `ss` read as `ß`, [word] excluded
          * (`strasse` → `straße`; `schlossstrasse` reads its overlapping pairs both ways). The
          * same readings `scripts/sharp_s.py` builds the German list from.
+         *
+         * A run of n `s` has Fib(n + 1) readings, so the count is computed first and a word with
+         * more than [MAX_SHARP_S_READINGS] spellings (its own included) has none: 25 `s` would
+         * build 121,392 strings and about 35 ran the keyboard out of memory (pre-tag review
+         * 2026-11-25 B1). Real words stay far below the cap (`schlossstrasse` has 6).
          */
         internal fun sharpSReadings(word: String): List<String> {
             if (!word.contains("ss")) return emptyList()
+            if (sharpSSpellingCount(word) > MAX_SHARP_S_READINGS) return emptyList()
             val out = LinkedHashSet<String>()
             fun walk(i: Int, acc: StringBuilder) {
                 if (i >= word.length) {
@@ -335,6 +341,38 @@ class WordPredictor : Predictor {
             walk(0, StringBuilder(word.length))
             out.remove(word)
             return out.toList()
+        }
+
+        /**
+         * Upper bound on the spellings [sharpSReadings] may enumerate, the typed word included.
+         * 64 covers six independent `ss` pairs; German words have at most three.
+         */
+        internal const val MAX_SHARP_S_READINGS = 64
+
+        /**
+         * How many spellings [sharpSReadings] would visit for [word], its own included, without
+         * building them: the product over its runs of `s` of Fib(run + 1) (each `ss` of a run is
+         * read as `ß` or not, and two chosen pairs never overlap). Stops counting past the cap.
+         */
+        private fun sharpSSpellingCount(word: String): Long {
+            var total = 1L
+            var i = 0
+            while (i < word.length) {
+                if (word[i] != 's') { i++; continue }
+                var run = 0
+                while (i < word.length && word[i] == 's') { run++; i++ }
+                // Fib(run + 1) with Fib(1) = Fib(2) = 1: a run of 1 has one reading, 2 has two.
+                var a = 1L
+                var b = 1L
+                repeat(run - 1) {
+                    val next = a + b
+                    a = b
+                    b = next
+                }
+                total *= b
+                if (total > MAX_SHARP_S_READINGS) return total
+            }
+            return total
         }
     }
 
@@ -1169,9 +1207,10 @@ class WordPredictor : Predictor {
         val secondary = config?.active_secondary_language ?: return
         val chosen = setOf(config?.primary_language ?: currentLanguage, secondary)
 
+        val sensitivity = config?.language_detection_sensitivity ?: Defaults.LANGUAGE_DETECTION_SENSITIVITY
+
         // Use MultiLanguageManager for detection and switching if available
         if (multiLanguageManager != null) {
-            val sensitivity = config?.language_detection_sensitivity ?: 0.6f
             val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity, chosen)
             if (detected != null && detected != currentLanguage && detected in chosen) {
                 invalidateExactLearningCommit()
@@ -1185,15 +1224,21 @@ class WordPredictor : Predictor {
                 // words — clear it so the first post-switch commits don't learn
                 // mixed-language pairs into the new language's store.
                 recentWords.clear()
-                return
             }
+            // The manager's answer stands, a "no switch" (null) included: the legacy detector
+            // below used to run after it at a fixed threshold over all six of its languages and
+            // could switch anyway (pre-tag review 2026-11-25 S7).
+            return
         }
 
-        // Fallback to legacy detection only if auto-detect enabled but MultiLanguageManager unavailable
-        languageDetector ?: return
-
-        val detectedLanguage = languageDetector?.detectLanguageFromWords(recentWords)
-        if (detectedLanguage != null && detectedLanguage != currentLanguage && detectedLanguage in chosen) {
+        // Legacy detection, only when no MultiLanguageManager exists, by the manager's rules: the
+        // chosen pair only (a pair it cannot score switches nothing, as Settings says), at the
+        // user's sensitivity.
+        val detector = languageDetector ?: return
+        if (!LanguageDetector.canChooseBetween(chosen)) return
+        val result = detector.detectLanguageFromWordsWithConfidence(recentWords, chosen) ?: return
+        val detectedLanguage = result.language
+        if (result.confidence >= sensitivity && detectedLanguage != currentLanguage && detectedLanguage in chosen) {
             if (bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
@@ -3389,6 +3434,13 @@ class WordPredictor : Predictor {
                 (canUseAdaptation() &&
                     (adaptationManager?.getAdaptationMultiplier(lowerTypedWord) ?: 0f) > 1.0f))
         ) {
+            return typedWord
+        }
+        // A word of the user's other language is a word too, exactly as [isInDictionary] counts it
+        // (pre-tag review 2026-11-25): with Spanish beside English, typed `como` became `come`, and
+        // with English beside German `fuss` became `fuß`, because only the primary list was
+        // consulted here. A word disabled in either language falls through and corrects.
+        if (isInSecondaryLexiconExactly(lowerTypedWord) && !isSecondaryWordDisabled(lowerTypedWord)) {
             return typedWord
         }
 

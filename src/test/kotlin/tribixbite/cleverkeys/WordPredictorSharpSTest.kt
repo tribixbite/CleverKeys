@@ -107,6 +107,8 @@ class WordPredictorSharpSTest {
         setField("cachedMaxFreqForSize", -1)
         setField("secondaryIndex", null)
         setField("secondaryLanguageCode", "none")
+        // Objenesis skips the initializer: no secondary-language disabled words.
+        setField("secondaryDisabledWords", emptySet<String>())
     }
 
     @Test
@@ -194,5 +196,44 @@ class WordPredictorSharpSTest {
         assertWithMessage("strass").that(bar("strass")).contains("straße")
         assertWithMessage("strasse").that(bar("strasse")).contains("straße")
         assertWithMessage("weiss").that(bar("weiss")).contains("weiß")
+    }
+
+    /**
+     * Pre-tag review 2026-11-25 B1: the readings of a run of `s` grow like the Fibonacci numbers
+     * (25 `s` gave 121,392 strings, about 35 ran the keyboard out of memory), and the ß step
+     * built them on every space with autocorrect on, in every language. No German word needs more
+     * than a handful, so a word with more than [WordPredictor.MAX_SHARP_S_READINGS] has none.
+     */
+    @Test(timeout = 10_000)
+    fun `a long run of s builds no readings and corrects quickly`() {
+        dictionary(germanSharpS)
+        assertWithMessage("40 s").that(WordPredictor.sharpSReadings("s".repeat(40))).isEmpty()
+        assertWithMessage("a word ending in 60 s").that(predictor.autoCorrect("gro" + "s".repeat(60)))
+            .isNotEmpty()
+    }
+
+    @Test
+    fun `real words keep every reading`() {
+        // schlo + sss + tra + ss + e: the overlapping run reads two ways, the pair one more.
+        assertWithMessage("schlossstrasse").that(WordPredictor.sharpSReadings("schlossstrasse"))
+            .containsExactly("schloßstraße", "schloßstrasse", "schlosßtraße", "schlosßtrasse", "schlossstraße")
+        assertWithMessage("at the cap").that(WordPredictor.sharpSReadings("assessassessasse"))
+            .isNotEmpty()
+    }
+
+    /**
+     * D2 (the secondary-language half): with English beside German, a typed `fuss` is an English
+     * word, not German `fuß` typed without a ß key. Autocorrect changed it anyway: its "already a
+     * word" check read the primary list only (the general case is in [WordPredictorFuzzyTypingTest]).
+     */
+    @Test
+    fun `an ss word of the secondary language stays as typed`() {
+        dictionary(germanSharpS + mapOf("fuß" to 600_000))
+        val english = NormalizedPrefixIndex()
+        english.addWord("fuss", 120)
+        setField("secondaryIndex", english)
+        setField("secondaryLanguageCode", "en")
+        assertWithMessage("fuss").that(predictor.autoCorrect("fuss")).isEqualTo("fuss")
+        assertWithMessage("strasse is no English word").that(predictor.autoCorrect("strasse")).isEqualTo("straße")
     }
 }

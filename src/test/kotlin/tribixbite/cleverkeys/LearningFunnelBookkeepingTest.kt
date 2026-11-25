@@ -402,6 +402,69 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("the manager's language").that(languages.getCurrentLanguage()).isEqualTo("en")
     }
 
+    /**
+     * Pre-tag review 2026-11-25 S7, the predictor's half. When the manager decides not to switch
+     * (null), the predictor fell through to the legacy detector, which took the best of all six
+     * of its languages at a fixed threshold and could switch anyway. The manager's answer stands.
+     */
+    @Test
+    fun theLegacyDetectorDoesNotOverruleTheManager() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        val languages = mockk<MultiLanguageManager>()
+        every { languages.detectAndSwitch(any(), any(), any()) } returns null
+        predictor.setField("multiLanguageManager", languages)
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.isLanguageSupported(any()) } returns true
+        predictor.setField("bigramModel", bigrams)
+        val detector = mockk<LanguageDetector>()
+        every { detector.detectLanguageFromWords(any()) } returns "es"
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("es", 0.99f)
+        predictor.setField("languageDetector", detector)
+        listOf("el", "perro", "come", "la", "comida", "con").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("the manager said no switch").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    /**
+     * Without a manager, the legacy path follows the same rules: the chosen pair only, the
+     * user's sensitivity, and nothing for a pair the detector cannot score (Italian has no
+     * detector profile; Settings shows Auto-Detect as unavailable for it).
+     */
+    @Test
+    fun theLegacyDetectorChoosesAmongTheChosenPairAtTheUsersSensitivity() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.language_detection_sensitivity = 0.6f
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.isLanguageSupported(any()) } returns true
+        predictor.setField("bigramModel", bigrams)
+        val detector = mockk<LanguageDetector>()
+        predictor.setField("languageDetector", detector)
+        val words = listOf("il", "cane", "mangia", "la", "pasta", "con")
+
+        config.active_secondary_language = "it"
+        every { detector.detectLanguageFromWords(any()) } returns "it"
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("it", 0.99f)
+        words.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("a pair the detector cannot score").that(predictor.getField("currentLanguage")).isEqualTo("en")
+
+        config.active_secondary_language = "es"
+        every { detector.detectLanguageFromWords(any()) } returns "es"
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("es", 0.3f)
+        predictor.addWordToContext("perro", true)
+        assertWithMessage("below the user's sensitivity").that(predictor.getField("currentLanguage")).isEqualTo("en")
+
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("es", 0.9f)
+        predictor.addWordToContext("come", true)
+        assertWithMessage("confident, and chosen").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        verify { detector.detectLanguageFromWordsWithConfidence(any(), setOf("en", "es")) }
+    }
+
     @Test
     fun exactReceiptPreflightPermissionMismatchPermanentlyExpiresIt() {
         val vocabulary = useReceiptVocabulary()
