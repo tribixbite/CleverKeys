@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.SharedPreferences
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.util.Log
@@ -96,6 +97,10 @@ object PrivateClipMergeRule {
 
 class ClipboardDatabase private constructor(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    /** The application context ([getInstance] passes it), kept to reach the app's settings store
+     *  when a restore needs a stored preference ([restoredRowExpiry]). */
+    private val appContext: Context = context
 
     // ─── Schema creation (fresh install gets v4 directly) ───
 
@@ -1846,9 +1851,11 @@ class ClipboardDatabase private constructor(context: Context) :
         db.beginTransaction()
         try {
             val exportVersion = importData.optInt("export_version", 1)
-            val freshExpiry = ClipboardHistoryService.getHistoryTtlMs().let { ttl ->
-                if (ttl == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttl
-            }
+            // From the STORED Entry Duration, never the in-memory Config: a restore runs where
+            // the keyboard may not (S8, see restoredRowExpiry).
+            val freshExpiry = restoredRowExpiry(
+                DirectBootAwarePreferences.get_shared_preferences(appContext), System.currentTimeMillis()
+            )
 
             // Import active/history entries (same format in v2 and v3)
             if (importData.has("active_entries")) {
@@ -2244,6 +2251,17 @@ class ClipboardDatabase private constructor(context: Context) :
         private const val CREATE_INDEX_TODO_HASH = "CREATE INDEX idx_todo_hash ON $TABLE_TODO ($COLUMN_CONTENT_HASH)"
         private const val CREATE_INDEX_TODO_POS = "CREATE INDEX idx_todo_position ON $TABLE_TODO ($COLUMN_POSITION)"
         private const val CREATE_INDEX_TODO_STATUS = "CREATE INDEX idx_todo_status ON $TABLE_TODO ($COLUMN_STATUS)"
+
+        /**
+         * The expiry for a History, Pinned or Todo row an import writes at [now], from the Entry
+         * Duration stored in [settings] ([ClipboardHistoryService.storedHistoryTtlMs]). A full
+         * restore imports the settings and then the clipboard, often in a process where the
+         * keyboard is not running and the in-memory Config is stale or absent; the rows must
+         * live as long as the duration just restored says (pre-tag review 2026-11-25, S8).
+         */
+        @JvmStatic
+        internal fun restoredRowExpiry(settings: SharedPreferences, now: Long): Long =
+            ClipboardHistoryService.expiryAt(ClipboardHistoryService.storedHistoryTtlMs(settings), now)
 
         @Volatile private var instance: ClipboardDatabase? = null
         @JvmStatic

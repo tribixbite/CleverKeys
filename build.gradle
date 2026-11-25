@@ -1571,6 +1571,11 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.clipboard.ClipboardBulkPlansTest',
     'tribixbite.cleverkeys.clipboard.ClipboardBulkServiceTest',
     'tribixbite.cleverkeys.clipboard.ClipboardServiceHygieneTest',
+    // Pre-tag review 2026-11-25: S1, the size limit keeps a newest clipping larger than the
+    // whole limit (walked over a fake SQLite layer); S8, restored rows take their expiry from
+    // the stored Entry Duration, not the in-memory Config.
+    'tribixbite.cleverkeys.clipboard.ClipboardSizeLimitWalkTest',
+    'tribixbite.cleverkeys.clipboard.ClipboardRestoreExpiryTest',
     // Saga 2026-10-25: a media capture on IO notified the pane off the main thread (stuck
     // "Loading results…"); listener calls are delivered on main and failures are logged.
     'tribixbite.cleverkeys.clipboard.ClipboardHistoryListenerThreadTest',

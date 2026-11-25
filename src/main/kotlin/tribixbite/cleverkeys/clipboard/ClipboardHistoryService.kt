@@ -9,6 +9,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION
@@ -1461,19 +1462,56 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             Entries expire based on clipboard_history_duration config (default: never expire) unless pinned.
             The configurable size limit (clipboard_history_limit) controls maximum entries (0 = unlimited). */
         /** Compute the TTL in ms from user-configured clipboard_history_duration (minutes).
-         *  -1 = never expire (Long.MAX_VALUE). Default = -1 (never expire). */
+         *  -1 = never expire (Long.MAX_VALUE). Default = -1 (never expire).
+         *
+         *  Reads the IN-MEMORY Config, which only the keyboard service's preference listener
+         *  refreshes. That is right for the service's own captures, but code a restore or Settings
+         *  reaches outside the keyboard must use [storedHistoryTtlMs] instead (S8, 2026-11-25). */
         @JvmStatic
         fun getHistoryTtlMs(): Long {
             // Null-safe: the service can construct on a cold-start exported-activity path
             // (PROCESS_TEXT / editing-key) where the IME never ran, so Config isn't initialized.
             // Fall back to the documented default (-1 = never expire) rather than throwing.
-            val durationMinutes = Config.globalConfigOrNull()?.clipboard_history_duration ?: -1
-            return if (durationMinutes >= 0) {
+            val durationMinutes = Config.globalConfigOrNull()?.clipboard_history_duration
+                ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
+            return ttlMsForDurationMinutes(durationMinutes)
+        }
+
+        /** The preference holding the Entry Duration, in minutes (-1 = never expire). */
+        const val PREF_HISTORY_DURATION = "clipboard_history_duration"
+
+        /** A History TTL for an Entry Duration of [durationMinutes]; any negative value means
+         *  never expire ([Long.MAX_VALUE]). */
+        @JvmStatic
+        fun ttlMsForDurationMinutes(durationMinutes: Int): Long =
+            if (durationMinutes >= 0) {
                 java.util.concurrent.TimeUnit.MINUTES.toMillis(durationMinutes.toLong())
             } else {
                 Long.MAX_VALUE
             }
+
+        /**
+         * The History TTL from the Entry Duration as STORED in [settings] (the app's settings
+         * store, which Settings and a settings import write), not from the in-memory Config.
+         * In a process where the keyboard is not running (a restore on a new phone, the headless
+         * backup activity, Settings alone) Config still holds the duration from when it was
+         * built, or was never built and reads as "never expire"; a full restore imports the
+         * settings and then the clipboard, so the restored rows got the old duration (pre-tag
+         * review 2026-11-25, S8; the learned-vocabulary cap had the same bug, `UserVocabulary.storedCap`).
+         * The safe reader accepts the value whatever type an import stored it as; an unset or
+         * unparsable value is the default (never expire).
+         */
+        @JvmStatic
+        fun storedHistoryTtlMs(settings: SharedPreferences): Long {
+            val stored = Config.safeGetString(settings, PREF_HISTORY_DURATION, Defaults.CLIPBOARD_HISTORY_DURATION)
+            return ttlMsForDurationMinutes(stored.trim().toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK)
         }
+
+        /** The expiry timestamp for a row stored at [now] with [ttlMs] to live: [Long.MAX_VALUE]
+         *  for never expire, and saturating rather than overflowing for a huge finite TTL. */
+        @JvmStatic
+        fun expiryAt(ttlMs: Long, now: Long): Long =
+            if (ttlMs == Long.MAX_VALUE || ttlMs > Long.MAX_VALUE - now) Long.MAX_VALUE else now + ttlMs
 
         // Process-lifetime singleton. The service's own constructor stores only
         // ctx.applicationContext (see `_context`), so this never leaks a shorter-lived context.

@@ -47,12 +47,23 @@ class ClipboardSizeBudgetTest {
         assertThat(ClipboardSizePolicy.idsOverSizeBudget(emptyList(), mb)).isEmpty()
     }
 
+    /**
+     * Pre-tag review 2026-11-25 (S1): a newest clipping larger than the whole limit made the
+     * running total exceed the budget at the FIRST row, and every History row went, the clipping
+     * just copied included. The newest always stays, as under the count limit (whose minimum is
+     * one row); the older rows go because nothing else fits beside it.
+     */
     @Test
-    fun theDatabaseWalksTheRowsNewestFirst() {
-        val src = java.io.File("src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardDatabase.kt").readText()
-        val body = src.substring(src.indexOf("fun applySizeLimitBytes("), src.indexOf("fun isMediaPathReferenced("))
-        assertThat(body).contains("ORDER BY \$COLUMN_TIMESTAMP DESC")
-        assertThat(body).doesNotContain("ORDER BY \$COLUMN_TIMESTAMP ASC")
-        assertThat(body).contains("ClipboardSizePolicy.idsOverSizeBudget(")
+    fun aNewestClippingLargerThanTheLimitStaysAndTheOlderRowsGo() {
+        val rows = listOf(9L to 3 * mb, 8L to 10L, 7L to 10L)
+        assertThat(ClipboardSizePolicy.idsOverSizeBudget(rows, mb)).containsExactly(8L, 7L).inOrder()
     }
+
+    @Test
+    fun aLoneClippingLargerThanTheLimitStays() {
+        assertThat(ClipboardSizePolicy.idsOverSizeBudget(listOf(1L to 2 * mb), mb)).isEmpty()
+    }
+
+    // The database's walk order (newest first, through this policy) is pinned behaviourally by
+    // clipboard.ClipboardSizeLimitWalkTest in the mock tier; it replaced a source-text check here.
 }

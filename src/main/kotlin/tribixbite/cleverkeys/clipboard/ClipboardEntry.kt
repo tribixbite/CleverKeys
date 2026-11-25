@@ -227,6 +227,13 @@ object ClipboardSizePolicy {
      * the rows oldest-first and remove the NEWEST once the budget was spent: with the history
      * full, each new copy was deleted as soon as it was stored (Pixel 2026-11-24: 159 of its
      * newest clippings went after a restore of older backups).
+     *
+     * The newest row is never removed, even when it alone is larger than [maxBytes]: it is the
+     * clipping just copied, and removing it emptied the whole History, itself included (pre-tag
+     * review 2026-11-25, S1). That matches the count limit, which always keeps at least the
+     * newest row. Everything older goes in that case, since nothing else fits beside it. Refusing
+     * an oversized text clip at copy time is the job of the per-clipping cap
+     * (`clipboard_max_item_size_kb`, when set); this budget only decides which older rows stay.
      */
     fun idsOverSizeBudget(newestFirst: List<Pair<Long, Long>>, maxBytes: Long): List<Long> {
         var total = 0L
@@ -234,7 +241,11 @@ object ClipboardSizePolicy {
             total += bytes
             total > maxBytes
         }
-        return if (firstOver < 0) emptyList() else newestFirst.subList(firstOver, newestFirst.size).map { it.first }
+        if (firstOver < 0) return emptyList()
+        // Index 0 is the newest clipping; it stays whatever its size.
+        val firstRemoved = maxOf(firstOver, 1)
+        if (firstRemoved >= newestFirst.size) return emptyList()
+        return newestFirst.subList(firstRemoved, newestFirst.size).map { it.first }
     }
 }
 

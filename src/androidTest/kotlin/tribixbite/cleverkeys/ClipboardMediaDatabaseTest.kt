@@ -502,6 +502,22 @@ class ClipboardMediaDatabaseTest {
         assertEquals(listOf("new_"), left)
     }
 
+    /**
+     * Pre-tag review 2026-11-25 (S1): a newest clipping larger than the whole limit deleted every
+     * History row, itself included. It stays; the older rows go.
+     */
+    @Test
+    fun testApplySizeLimitBytesKeepsANewestClippingLargerThanTheLimit() {
+        db.addClipboardEntry("old_small", futureExpiry)
+        Thread.sleep(10)
+        db.addClipboardEntry("new_${"H".repeat(2 * 1024 * 1024)}", futureExpiry)
+
+        val (removed, _) = db.applySizeLimitBytes(1)
+        assertEquals(1, removed)
+        val left = db.getActiveClipboardEntries().map { it.content.take(4) }
+        assertEquals(listOf("new_"), left)
+    }
+
     @Test
     fun testApplySizeLimitBytesNullFilesDirSkipsMediaFileSize() {
         // With filesDir=null (default), only DB-resident sizes are counted
