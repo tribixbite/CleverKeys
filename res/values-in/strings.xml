@@ -1072,6 +1072,8 @@
     <string name="import_preview_word_freq">frek %1$d</string>
     <string name="import_preview_search_hint">Cari…</string>
     <string name="import_preview_dict_title">Pratinjau impor kamus</string>
+    <string name="import_preview_legacy_words_header">Kata kamus dalam file ini</string>
+    <string name="import_preview_legacy_priorities">Prioritas geser yang ditambahkan: %1$d</string>
     <string name="import_preview_learned_title">Data yang dipelajari</string>
     <string name="import_preview_learned_desc">Jumlah frasa yang dipelajari digabung sebagai satu kelompok. Jika cadangan ini berisi kosakata pribadi, kosakata itu menggantikan daftar kata yang dipelajari saat ini.</string>
     <string name="import_preview_learned_bigrams">Pasangan kata untuk digabung: %1$d</string>
@@ -1387,6 +1389,7 @@
     <string name="backup_result_dict_import_completed">Impor kamus selesai.</string>
     <string name="backup_result_custom_words_applied">• Kata kustom diterapkan: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Kata dinonaktifkan diterapkan: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Prioritas geser diterapkan: %1$d</string>
     <string name="backup_result_export_success_title">Ekspor Berhasil</string>
     <string name="backup_result_settings_exported">Pengaturan diekspor: %1$d</string>
     <string name="backup_result_config_export_hint">Pindahkan file ke perangkat lain atau simpan sebagai cadangan.</string>

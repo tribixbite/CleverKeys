@@ -1064,6 +1064,8 @@
     <string name="import_preview_word_freq">freq. %1$d</string>
     <string name="import_preview_search_hint">Buscar…</string>
     <string name="import_preview_dict_title">Prévia da importação do dicionário</string>
+    <string name="import_preview_legacy_words_header">Palavras do dicionário neste arquivo</string>
+    <string name="import_preview_legacy_priorities">Prioridades ao deslizar a adicionar: %1$d</string>
     <string name="import_preview_learned_title">Dados aprendidos</string>
     <string name="import_preview_learned_desc">As contagens de frases aprendidas são mescladas em grupo. Se este backup incluir um vocabulário pessoal, ele substituirá a lista atual de palavras aprendidas.</string>
     <string name="import_preview_learned_bigrams">Pares de palavras a mesclar: %1$d</string>
@@ -1401,6 +1403,7 @@
     <string name="backup_result_dict_import_completed">Importação do dicionário concluída.</string>
     <string name="backup_result_custom_words_applied">• Palavras personalizadas aplicadas: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Palavras desativadas aplicadas: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Prioridades ao deslizar aplicadas: %1$d</string>
     <string name="backup_result_export_success_title">Exportação concluída</string>
     <string name="backup_result_settings_exported">Configurações exportadas: %1$d</string>
     <string name="backup_result_config_export_hint">Transfira o arquivo para outro dispositivo ou guarde-o como backup.</string>

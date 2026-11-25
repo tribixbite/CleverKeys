@@ -35,6 +35,7 @@ import tribixbite.cleverkeys.backup.DictImportApplier
 import tribixbite.cleverkeys.backup.DictImportPlan
 import tribixbite.cleverkeys.backup.DictImportPlanBuilder
 import tribixbite.cleverkeys.backup.LangWord
+import tribixbite.cleverkeys.backup.LegacyWordExclusions
 import tribixbite.cleverkeys.backup.LearnedDataImport
 import tribixbite.cleverkeys.backup.RealShortSwipeImporter
 import tribixbite.cleverkeys.backup.ScreenMetrics
@@ -976,6 +977,8 @@ open class BackupRestoreManager(
         // unset keys (fresh-install over-report fix, 2026-05-14).
         // ARC-036: the pure planner knows nothing about the crypto layer, so the file's
         // provenance is attached here rather than threaded through its signature.
+        // A 1.x file's dictionary words are planned against this device's words and levels, so
+        // the preview offers only what would change (review 2026-11-25 S9).
         return SettingsImportPlanBuilder.fromJson(
             jsonString,
             currentSnapshot = snapshot,
@@ -983,6 +986,9 @@ open class BackupRestoreManager(
             defaultSnapshot = SETTINGS_DEFAULTS,
             currentShortSwipeRawJson = currentShortSwipeJson,
             currentCustomThemesRawJson = readCurrentCustomThemes(),
+            currentCustomWordsByLang = readCurrentCustomWordsByLang(prefs),
+            currentDisabledWordsByLang = readCurrentDisabledWordsByLang(prefs),
+            currentSwipePrioritiesByLang = readCurrentSwipePrioritiesByLang(prefs),
         ).copy(source = source)
     }
 
@@ -997,29 +1003,16 @@ open class BackupRestoreManager(
         shortSwipeMode: ShortSwipeImportMode,
         prefs: SharedPreferences,
         customThemeMode: ShortSwipeImportMode,
+        legacyWords: LegacyWordExclusions = LegacyWordExclusions.NONE,
     ): ImportResult = runBlocking {
+        // A 1.x settings file carries the dictionary too ([SettingsImportPlan.legacyDictionary]):
+        // previewed with the settings, applied first less what the user left out, and a failure
+        // there fails the import before any setting is written (review 2026-11-25 S9; until then
+        // the words were applied unseen after the settings commit, and a failure was only logged).
         val result = SettingsImportApplier.apply(
             plan, excludedKeys, shortSwipeMode, prefs, shortSwipeImporter, customThemeMode, customThemeStore,
+            legacyWords,
         )
-        // A 1.x settings file carries the dictionary too; its words are added the way a dictionary
-        // restore adds them (words already on the phone are kept as they are). They used to be
-        // skipped as "restored by the dictionary import", a file the user may not have (2026-11-24).
-        // The settings are committed by now, so a failure here (a language over the word cap, a
-        // failed commit) is logged and leaves the counts at 0 rather than reporting the whole
-        // import as failed.
-        plan.legacyDictionaryJson?.let { json ->
-            try {
-                val dictPlan = DictImportPlanBuilder.fromJson(
-                    json, readCurrentCustomWordsByLang(prefs), readCurrentDisabledWordsByLang(prefs),
-                )
-                val (custom, disabled) = DictImportApplier.apply(dictPlan, emptySet(), emptySet(), prefs)
-                result.customWordsAdded = custom
-                result.disabledWordsAdded = disabled
-                Log.i(TAG, "Settings file words: $custom custom, $disabled disabled added")
-            } catch (e: Exception) {
-                Log.e(TAG, "Settings file words could not be added", e)
-            }
-        }
         // #156 F5: an import can write `clipboard_private_copy_toolbar_enabled` (a normal exportable
         // key) WITHOUT flipping the manifest-disabled PrivateCopyProcessTextActivity component. The
         // Settings-load path reconciles it, but the headless (Termux-intent) restore never re-enters
@@ -1110,7 +1103,16 @@ open class BackupRestoreManager(
         @JvmField var customWordsAdded: Int = 0,
         /** Disabled words a 1.x settings file carried that this phone did not have. */
         @JvmField var disabledWordsAdded: Int = 0,
+        /** Swipe-priority levels a 1.x settings file carried that this phone did not have. */
+        @JvmField var swipePrioritiesAdded: Int = 0,
     ) {
+        /**
+         * The import changed the stored dictionary (words or swipe priorities): the keyboard must
+         * reload it. A priorities-only change did not reload it (review 2026-11-25 S9).
+         */
+        val dictionaryChanged: Boolean
+            get() = customWordsAdded + disabledWordsAdded + swipePrioritiesAdded > 0
+
         fun hasScreenSizeMismatch(): Boolean {
             if (sourceScreenWidth == 0 || sourceScreenHeight == 0)
                 return false // No source dimensions available
@@ -1374,8 +1376,9 @@ open class BackupRestoreManager(
         val currentCustom = readCurrentCustomWordsByLang(prefs)
         val currentDisabled = readCurrentDisabledWordsByLang(prefs)
         // ARC-036: see buildSettingsImportPlan — provenance attached outside the pure planner.
-        return DictImportPlanBuilder.fromJson(jsonString, currentCustom, currentDisabled)
-            .copy(source = source)
+        return DictImportPlanBuilder.fromJson(
+            jsonString, currentCustom, currentDisabled, readCurrentSwipePrioritiesByLang(prefs),
+        ).copy(source = source)
     }
 
     /**
@@ -1424,6 +1427,21 @@ open class BackupRestoreManager(
             try {
                 out[lang] = gson.fromJson(value, mapType) ?: emptyMap()
             } catch (_: Exception) { /* skip malformed */ }
+        }
+        return out
+    }
+
+    /**
+     * Read the user's current per-language swipe-priority levels from prefs (the stored JSON
+     * through [SwipePriority.parseMap], as the engines read it; a malformed value reads as none).
+     */
+    private fun readCurrentSwipePrioritiesByLang(prefs: SharedPreferences): Map<String, Map<String, SwipePriority>> {
+        val out = mutableMapOf<String, Map<String, SwipePriority>>()
+        for ((key, value) in prefs.all) {
+            val lang = LanguagePreferenceKeys.languageFromSwipePriorityKey(key) ?: continue
+            if (value !is String) continue
+            val levels = SwipePriority.parseMap(value)
+            if (levels.isNotEmpty()) out[lang] = levels
         }
         return out
     }

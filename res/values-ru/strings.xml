@@ -1072,6 +1072,8 @@
     <string name="import_preview_word_freq">частота %1$d</string>
     <string name="import_preview_search_hint">Поиск…</string>
     <string name="import_preview_dict_title">Предпросмотр импорта словаря</string>
+    <string name="import_preview_legacy_words_header">Слова словаря в этом файле</string>
+    <string name="import_preview_legacy_priorities">Приоритетов при свайпе к добавлению: %1$d</string>
     <string name="import_preview_learned_title">Выученные данные</string>
     <string name="import_preview_learned_desc">Счётчики выученных сочетаний объединяются как группа. Если резервная копия содержит личный словарь, он заменит текущий список выученных слов.</string>
     <string name="import_preview_learned_bigrams">Пар слов для объединения: %1$d</string>
@@ -1419,6 +1421,7 @@
     <string name="backup_result_dict_import_completed">Импорт словаря завершён.</string>
     <string name="backup_result_custom_words_applied">• Применено пользовательских слов: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Применено отключённых слов: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Применено приоритетов при свайпе: %1$d</string>
     <string name="backup_result_export_success_title">Экспорт выполнен</string>
     <string name="backup_result_settings_exported">Экспортировано настроек: %1$d</string>
     <string name="backup_result_config_export_hint">Перенесите файл на другое устройство или сохраните его как резервную копию.</string>

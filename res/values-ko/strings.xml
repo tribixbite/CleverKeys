@@ -1060,6 +1060,8 @@
     <string name="import_preview_word_freq">빈도 %1$d</string>
     <string name="import_preview_search_hint">검색…</string>
     <string name="import_preview_dict_title">사전 가져오기 미리보기</string>
+    <string name="import_preview_legacy_words_header">이 파일의 사전 단어</string>
+    <string name="import_preview_legacy_priorities">추가할 스와이프 우선순위: %1$d</string>
     <string name="import_preview_learned_title">학습된 데이터</string>
     <string name="import_preview_learned_desc">학습된 표현 카운트는 그룹으로 병합됩니다. 이 백업에 개인 어휘가 포함되어 있으면 현재 학습된 단어 목록을 교체합니다.</string>
     <string name="import_preview_learned_bigrams">병합할 단어 쌍: %1$d</string>
@@ -1375,6 +1377,7 @@
     <string name="backup_result_dict_import_completed">사전 가져오기가 완료되었습니다.</string>
     <string name="backup_result_custom_words_applied">• 적용된 사용자 지정 단어: %1$d</string>
     <string name="backup_result_disabled_words_applied">• 적용된 비활성화 단어: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• 적용된 스와이프 우선순위: %1$d</string>
     <string name="backup_result_export_success_title">내보내기 성공</string>
     <string name="backup_result_settings_exported">내보낸 설정: %1$d</string>
     <string name="backup_result_config_export_hint">파일을 다른 기기로 옮기거나 백업으로 보관하세요.</string>

@@ -54,6 +54,10 @@ object SettingsImportPlanBuilder {
      *   compile-time default the user already experiences. Keys absent
      *   from this map fall back to the pre-fix behavior (ADDED with
      *   `current=Unset`).
+     * @param currentCustomWordsByLang this device's custom words per language, the
+     *   [currentDisabledWordsByLang] and [currentSwipePrioritiesByLang] likewise: what a 1.x
+     *   file's dictionary is planned against ([SettingsImportPlan.legacyDictionary]). Left
+     *   empty, every word and level in the file counts as new.
      */
     fun fromJson(
         jsonString: String,
@@ -62,6 +66,9 @@ object SettingsImportPlanBuilder {
         defaultSnapshot: Map<String, PrefValue> = emptyMap(),
         currentShortSwipeRawJson: String? = null,
         currentCustomThemesRawJson: String? = null,
+        currentCustomWordsByLang: Map<String, Map<String, Int>> = emptyMap(),
+        currentDisabledWordsByLang: Map<String, Set<String>> = emptyMap(),
+        currentSwipePrioritiesByLang: Map<String, Map<String, SwipePriority>> = emptyMap(),
     ): SettingsImportPlan {
         val root = JsonParser.parseString(jsonString).asJsonObject
 
@@ -124,9 +131,17 @@ object SettingsImportPlanBuilder {
                 // `swipe_priority_<lang>`) are not settings rows. A 1.x settings file carries the
                 // whole dictionary this way, so they travel to the dictionary applier as
                 // [SettingsImportPlan.legacyDictionaryJson] (2026-11-24); a value of no known
-                // shape stays a skipped key, for the dictionary file to restore.
-                if (!legacyDictionary.add(key, valueElement)) {
-                    skipped += SkippedKey(key, "dictionary words (separate import flow)", SkipKind.SEPARATE_IMPORT)
+                // shape stays a skipped key, for the dictionary file to restore, and a language
+                // over the import cap is reported in the preview instead of failing at apply.
+                when (legacyDictionary.add(key, valueElement)) {
+                    LegacyDictionaryKeys.Taken.YES -> Unit
+                    LegacyDictionaryKeys.Taken.UNREADABLE ->
+                        skipped += SkippedKey(key, "dictionary words (separate import flow)", SkipKind.SEPARATE_IMPORT)
+                    LegacyDictionaryKeys.Taken.TOO_MANY ->
+                        skipped += SkippedKey(
+                            key, "more than ${DictImportPlanBuilder.MAX_WORDS_PER_LANGUAGE} words",
+                            SkipKind.INVALID_VALUE,
+                        )
                 }
                 continue
             }
@@ -203,6 +218,7 @@ object SettingsImportPlanBuilder {
             if (byDirection.isJsonObject) byDirection.asJsonObject.entrySet().size else 0
         } ?: 0
 
+        val legacyDictionaryJson = legacyDictionary.toJsonOrNull()
         return SettingsImportPlan(
             sourceVersion = sourceVersion,
             sourceScreen = sourceScreen,
@@ -216,7 +232,14 @@ object SettingsImportPlanBuilder {
             customThemesImportSize = customThemes?.themes?.size ?: 0,
             customThemesImportRawJson = customThemesRaw,
             currentCustomThemesRawJson = currentCustomThemesRawJson,
-            legacyDictionaryJson = legacyDictionary.toJsonOrNull(),
+            legacyDictionaryJson = legacyDictionaryJson,
+            legacyDictionary = legacyDictionaryJson
+                ?.let {
+                    DictImportPlanBuilder.fromJson(
+                        it, currentCustomWordsByLang, currentDisabledWordsByLang, currentSwipePrioritiesByLang,
+                    )
+                }
+                ?.takeIf { it.hasChanges },
         )
     }
 
@@ -441,28 +464,41 @@ private class LegacyDictionaryKeys {
     private val disabled = JsonObject()
     private val priorities = JsonObject()
 
-    /** Take [key]'s [value]; false when the value has no known shape (the caller skips the key). */
-    fun add(key: String, value: JsonElement): Boolean {
+    /** Whether [add] took a key. */
+    enum class Taken {
+        YES,
+
+        /** The value has no known shape. */
+        UNREADABLE,
+
+        /** More words than one language may import ([DictImportPlanBuilder.MAX_WORDS_PER_LANGUAGE]). */
+        TOO_MANY,
+    }
+
+    /** Take [key]'s [value]; the caller skips a key that is not [Taken.YES]. */
+    fun add(key: String, value: JsonElement): Taken {
         LanguagePreferenceKeys.languageFromCustomWordsKey(key)?.let { lang ->
             val words = asObject(value)
                 ?.takeIf { obj -> obj.entrySet().all { (_, freq) -> isNumber(freq) } }
-                ?: return false
+                ?: return Taken.UNREADABLE
+            if (words.size() > DictImportPlanBuilder.MAX_WORDS_PER_LANGUAGE) return Taken.TOO_MANY
             custom.add(lang, words)
-            return true
+            return Taken.YES
         }
         LanguagePreferenceKeys.languageFromDisabledWordsKey(key)?.let { lang ->
             val words = asArray(value)
                 ?.takeIf { arr -> arr.all { it.isJsonPrimitive && it.asJsonPrimitive.isString } }
-                ?: return false
+                ?: return Taken.UNREADABLE
+            if (words.size() > DictImportPlanBuilder.MAX_WORDS_PER_LANGUAGE) return Taken.TOO_MANY
             disabled.add(lang, words)
-            return true
+            return Taken.YES
         }
         LanguagePreferenceKeys.languageFromSwipePriorityKey(key)?.let { lang ->
-            val levels = asObject(value) ?: return false
+            val levels = asObject(value) ?: return Taken.UNREADABLE
             priorities.add(lang, levels)
-            return true
+            return Taken.YES
         }
-        return false
+        return Taken.UNREADABLE
     }
 
     /** The collected sections as one dictionaries-file JSON, or null when none were collected. */

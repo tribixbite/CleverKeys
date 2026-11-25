@@ -1074,6 +1074,8 @@
     <string name="import_preview_word_freq">sıklık %1$d</string>
     <string name="import_preview_search_hint">Ara…</string>
     <string name="import_preview_dict_title">Sözlük içe aktarma önizlemesi</string>
+    <string name="import_preview_legacy_words_header">Bu dosyadaki sözlük kelimeleri</string>
+    <string name="import_preview_legacy_priorities">Eklenecek kaydırma önceliği: %1$d</string>
     <string name="import_preview_learned_title">Öğrenilen veriler</string>
     <string name="import_preview_learned_desc">Öğrenilen ifade sayaçları grup olarak birleştirilir. Bu yedek kişisel bir kelime dağarcığı içeriyorsa, mevcut öğrenilmiş kelime listesinin yerini alır.</string>
     <string name="import_preview_learned_bigrams">Birleştirilecek kelime çifti: %1$d</string>
@@ -1399,6 +1401,7 @@
     <string name="backup_result_dict_import_completed">Sözlük içe aktarma tamamlandı.</string>
     <string name="backup_result_custom_words_applied">• Uygulanan özel kelime: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Uygulanan devre dışı kelime: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Uygulanan kaydırma önceliği: %1$d</string>
     <string name="backup_result_export_success_title">Dışa Aktarma Başarılı</string>
     <string name="backup_result_settings_exported">Dışa aktarılan ayar: %1$d</string>
     <string name="backup_result_config_export_hint">Dosyayı başka bir cihaza aktarın veya yedek olarak saklayın.</string>

@@ -61,7 +61,7 @@ internal fun SettingsActivity.performDictionaryExport(uri: Uri, plaintextOptOut:
 
 /**
  * Dictionary import: build a per-language plan so the user can deselect
- * specific words. If no new words to import, jump straight to the result
+ * specific words. If the file would change nothing, jump straight to the result
  * dialog.
  */
 internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase: CharArray? = null) {
@@ -71,11 +71,10 @@ internal fun SettingsActivity.performDictionaryImport(uri: Uri, retryPassphrase:
     runSettingsFileOperation(
         work = {
             val plan = manager.buildDictImportPlan(uri, prefs)
-            val nothingToImport = !plan.learnedData.hasEffect && plan.perLanguage.values.all {
-                it.newCustomWords.isEmpty() && it.newDisabledWords.isEmpty()
-            }
             followUp {
-                if (nothingToImport) {
+                // DictImportPlan.hasChanges: new words, learned data or swipe priorities to add
+                // (a priorities-only file was "no new words", review 2026-11-25 S9).
+                if (!plan.hasChanges) {
                     showIoResult(
                         getString(R.string.backup_result_no_changes_title),
                         getString(R.string.dictionary_backup_no_new_words),

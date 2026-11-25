@@ -1075,6 +1075,8 @@
     <string name="import_preview_word_freq">dalas %1$d</string>
     <string name="import_preview_search_hint">Maghanap…</string>
     <string name="import_preview_dict_title">Preview ng import ng diksyunaryo</string>
+    <string name="import_preview_legacy_words_header">Mga salita ng diksyunaryo sa file na ito</string>
+    <string name="import_preview_legacy_priorities">Mga priyoridad sa pag-swipe na idadagdag: %1$d</string>
     <string name="import_preview_learned_title">Natutunang data</string>
     <string name="import_preview_learned_desc">Ang mga bilang ng natutunang parirala ay minu-merge bilang isang grupo. Kung may kasamang personal na bokabularyo ang backup na ito, papalitan nito ang kasalukuyang listahan ng natutunang salita.</string>
     <string name="import_preview_learned_bigrams">Mga pares ng salitang imi-merge: %1$d</string>
@@ -1400,6 +1402,7 @@
     <string name="backup_result_dict_import_completed">Tapos na ang import ng diksyunaryo.</string>
     <string name="backup_result_custom_words_applied">• Nailapat na custom na salita: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Nailapat na disabled na salita: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Nailapat na priyoridad sa pag-swipe: %1$d</string>
     <string name="backup_result_export_success_title">Matagumpay ang Export</string>
     <string name="backup_result_settings_exported">Na-export na setting: %1$d</string>
     <string name="backup_result_config_export_hint">Ilipat ang file sa ibang device o itago ito bilang backup.</string>

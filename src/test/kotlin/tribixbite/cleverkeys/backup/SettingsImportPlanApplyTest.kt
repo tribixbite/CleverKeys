@@ -324,4 +324,90 @@ class SettingsImportPlanApplyTest {
         assertThat(result.driftCount).isEqualTo(0)
         verify(exactly = 1) { editor.putInt("clipboard_history_limit", 80) }
     }
+
+    // ── 1.x settings-file dictionary words (review 2026-11-25 S9) ─────────────────────────
+
+    private fun legacyPlan(dict: DictImportPlan, vararg changes: SettingsChange) =
+        planWith(*changes).copy(legacyDictionary = dict)
+
+    private fun legacyDict(
+        custom: Map<String, Int> = emptyMap(),
+        disabled: List<String> = emptyList(),
+        priorities: Map<String, tribixbite.cleverkeys.SwipePriority> = emptyMap(),
+    ) = DictImportPlan(
+        sourceVersion = "1.2.9",
+        perLanguage = mapOf("en" to LangChanges(custom, disabled)),
+        mergedCustomWordsByLang = mapOf("en" to custom),
+        mergedDisabledWordsByLang = if (disabled.isEmpty()) emptyMap() else mapOf("en" to disabled.toSet()),
+        mergedSwipePrioritiesByLang = if (priorities.isEmpty()) emptyMap() else mapOf("en" to priorities),
+        newSwipePriorityCount = priorities.size,
+    )
+
+    /** A failed dictionary write was logged while the import reported success. */
+    @Test
+    fun legacyWords_aFailedWriteFailsTheImportBeforeAnySettingIsWritten() {
+        every { editor.commit() } returns false
+        val plan = legacyPlan(
+            legacyDict(custom = mapOf("zazen" to 120)),
+            SettingsChange("b", PrefValue.Unset, PrefValue.Bool(true), ChangeType.ADDED),
+        )
+
+        val thrown = runCatching {
+            runBlocking { SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter) }
+        }.exceptionOrNull()
+
+        assertThat(thrown).isInstanceOf(tribixbite.cleverkeys.ClassifiedIoException::class.java)
+        verify(exactly = 0) { editor.putBoolean("b", any()) }
+    }
+
+    @Test
+    fun legacyWords_leftOutInThePreview_areNotWritten() {
+        val written = mutableMapOf<String, String>()
+        every { editor.putString(any(), any()) } answers { written[firstArg()] = secondArg(); editor }
+        val plan = legacyPlan(legacyDict(custom = mapOf("zazen" to 120, "Bostonian" to 100)))
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(
+                plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter,
+                legacyWords = LegacyWordExclusions(custom = setOf(LangWord("en", "Bostonian"))),
+            )
+        }
+
+        assertThat(written["custom_words_en"]).contains("zazen")
+        assertThat(written["custom_words_en"]).doesNotContain("Bostonian")
+        assertThat(result.customWordsAdded).isEqualTo(1)
+    }
+
+    @Test
+    fun legacyWords_allLeftOut_writeNoDictionary() {
+        val plan = legacyPlan(legacyDict(custom = mapOf("zazen" to 120), priorities = mapOf("zazen" to tribixbite.cleverkeys.SwipePriority.HIGH)))
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(
+                plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter,
+                legacyWords = LegacyWordExclusions(custom = setOf(LangWord("en", "zazen")), includePriorities = false),
+            )
+        }
+
+        assertThat(result.dictionaryChanged).isFalse()
+        verify(exactly = 0) { editor.putString("custom_words_en", any()) }
+    }
+
+    /** A priorities-only change did not reload the keyboard (the broadcast keyed on words). */
+    @Test
+    fun aPriorityOnlyLegacyChange_countsAsADictionaryChange() {
+        every { prefs.getString("custom_words_en", any()) } returns """{"zazen":120}"""
+        val plan = legacyPlan(
+            legacyDict(custom = mapOf("zazen" to 120), priorities = mapOf("zazen" to tribixbite.cleverkeys.SwipePriority.HIGHEST))
+                .copy(perLanguage = emptyMap()),
+        )
+
+        val result = runBlocking {
+            SettingsImportApplier.apply(plan, emptySet(), ShortSwipeImportMode.SKIP, prefs, ssImporter)
+        }
+
+        assertThat(result.customWordsAdded).isEqualTo(0)
+        assertThat(result.swipePrioritiesAdded).isEqualTo(1)
+        assertThat(result.dictionaryChanged).isTrue()
+    }
 }

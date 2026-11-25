@@ -1101,6 +1101,8 @@
     <string name="import_preview_word_freq">بسامد %1$d</string>
     <string name="import_preview_search_hint">جستجو…</string>
     <string name="import_preview_dict_title">پیش‌نمایش وارد کردن واژه‌نامه</string>
+    <string name="import_preview_legacy_words_header">واژه‌های واژه‌نامه در این فایل</string>
+    <string name="import_preview_legacy_priorities">اولویت‌های کشیدن برای افزودن: %1$d</string>
     <string name="import_preview_learned_title">داده‌های آموخته‌شده</string>
     <string name="import_preview_learned_desc">شمار عبارت‌های آموخته‌شده به‌صورت گروهی ادغام می‌شود. اگر این پشتیبان واژگان شخصی داشته باشد، جایگزین فهرست کنونی واژه‌های آموخته‌شده می‌شود.</string>
     <string name="import_preview_learned_bigrams">جفت‌واژه‌ها برای ادغام: %1$d</string>
@@ -1426,6 +1428,7 @@
     <string name="backup_result_dict_import_completed">وارد کردن واژه‌نامه کامل شد.</string>
     <string name="backup_result_custom_words_applied">• واژه‌های سفارشی اعمال‌شده: %1$d</string>
     <string name="backup_result_disabled_words_applied">• واژه‌های غیرفعال اعمال‌شده: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• اولویت‌های کشیدن اعمال‌شده: %1$d</string>
     <string name="backup_result_export_success_title">برون‌بری موفق بود</string>
     <string name="backup_result_settings_exported">تنظیمات برون‌بری‌شده: %1$d</string>
     <string name="backup_result_config_export_hint">فایل را به دستگاه دیگری منتقل کنید یا آن را به‌عنوان پشتیبان نگه دارید.</string>

@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
@@ -52,8 +53,9 @@ internal fun rememberResultText(): ResultText {
 /**
  * Top-level entry point for the settings import preview.
  *
- * onApply receives the user's exclusion set and the chosen short-swipe and custom-theme
- * modes. Empty exclusion + MERGE modes = "approve everything" path.
+ * onApply receives the user's exclusion set, the chosen short-swipe and custom-theme modes, and
+ * what was left out of a 1.x file's dictionary words ([SettingsImportPlan.legacyDictionary],
+ * review 2026-11-25 S9). Empty exclusions + MERGE modes = "approve everything" path.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +66,7 @@ fun SettingsImportPreviewDialog(
         excludedKeys: Set<String>,
         shortSwipeMode: ShortSwipeImportMode,
         customThemeMode: ShortSwipeImportMode,
+        legacyWords: LegacyWordExclusions,
     ) -> Unit,
 ) {
     // Saveable (review 2026-11-14): a rotation reset the user's exclusions and modes to "apply
@@ -71,6 +74,11 @@ fun SettingsImportPreviewDialog(
     val excluded = rememberSaveable { mutableStateOf(emptySet<String>()) }
     val shortSwipeMode = rememberSaveable { mutableStateOf(ShortSwipeImportMode.MERGE) }
     val customThemeMode = rememberSaveable { mutableStateOf(ShortSwipeImportMode.MERGE) }
+    // A 1.x file's dictionary: words left out, and whether its swipe priorities are applied.
+    val legacyCustom = rememberSaveable(saver = PreviewStateSavers.LangWordSet) { mutableStateOf(emptySet()) }
+    val legacyDisabled = rememberSaveable(saver = PreviewStateSavers.LangWordSet) { mutableStateOf(emptySet()) }
+    val legacyPriorities = rememberSaveable { mutableStateOf(true) }
+    val legacyWords = LegacyWordExclusions(legacyCustom.value, legacyDisabled.value, legacyPriorities.value)
     // Per-theme diff against the device's themes; null when either side is unknown.
     val customThemeDiff = remember(plan) {
         CustomThemeBackup.parseStored(plan.customThemesImportRawJson)
@@ -84,9 +92,10 @@ fun SettingsImportPreviewDialog(
         Surface(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
                 SettingsPreviewTopBar(
-                    appliedCount = plan.changes.size - excluded.value.size,
+                    appliedCount = plan.changes.size - excluded.value.size +
+                        (plan.legacyDictionary?.let { selectedDictionaryChanges(it, legacyWords) } ?: 0),
                     onCancel = onCancel,
-                    onApply = { onApply(excluded.value, shortSwipeMode.value, customThemeMode.value) },
+                    onApply = { onApply(excluded.value, shortSwipeMode.value, customThemeMode.value, legacyWords) },
                 )
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     item { SettingsPreviewHeaderCard(plan) }
@@ -172,6 +181,23 @@ fun SettingsImportPreviewDialog(
                         }
                     }
 
+                    // A 1.x settings file's dictionary words: the words this phone lacks, per
+                    // language as in the dictionary preview, and the swipe priorities as one
+                    // choice. They were applied unseen (review 2026-11-25 S9).
+                    plan.legacyDictionary?.let { dict ->
+                        item { SectionHeader(stringResource(R.string.import_preview_legacy_words_header)) }
+                        dictionaryLanguageItems(dict.perLanguage, "legacy-", legacyCustom, legacyDisabled)
+                        if (dict.newSwipePriorityCount > 0) {
+                            item(key = "legacy-priorities") {
+                                LegacyPrioritiesRow(
+                                    count = dict.newSwipePriorityCount,
+                                    included = legacyPriorities.value,
+                                    onToggle = { legacyPriorities.value = it },
+                                )
+                            }
+                        }
+                    }
+
                     if (plan.parseSkippedKeys.isNotEmpty()) {
                         item { SkippedSection(plan.parseSkippedKeys) }
                     }
@@ -183,6 +209,73 @@ fun SettingsImportPreviewDialog(
 
 private fun toggle(set: Set<String>, key: String): Set<String> =
     if (key in set) set - key else set + key
+
+/**
+ * The words and levels of [dict] that applying with [exclusions] adds, for the Apply count. The
+ * level count is the preview's upper bound: a level for a word left out is not written.
+ */
+internal fun selectedDictionaryChanges(dict: DictImportPlan, exclusions: LegacyWordExclusions): Int {
+    val words = dict.perLanguage.entries.sumOf { (lang, changes) ->
+        changes.newCustomWords.keys.count { LangWord(lang, it) !in exclusions.custom } +
+            changes.newDisabledWords.count { LangWord(lang, it) !in exclusions.disabled }
+    }
+    return words + if (exclusions.includePriorities) dict.newSwipePriorityCount else 0
+}
+
+/** The swipe priorities a 1.x settings file would add, as one checkbox row. */
+@Composable
+private fun LegacyPrioritiesRow(count: Int, included: Boolean, onToggle: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = included, role = Role.Checkbox, onValueChange = onToggle)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = included, onCheckedChange = null)
+        Spacer(Modifier.width(8.dp))
+        Text(stringResource(R.string.import_preview_legacy_priorities, count))
+    }
+}
+
+/**
+ * One [LanguageSection] per language of [perLanguage], toggling words in and out of
+ * [excludedCustom] / [excludedDisabled]. Shared by the dictionary preview and the settings
+ * preview's 1.x dictionary section; [keyPrefix] keeps their lazy keys apart from other rows.
+ */
+private fun LazyListScope.dictionaryLanguageItems(
+    perLanguage: Map<String, LangChanges>,
+    keyPrefix: String,
+    excludedCustom: MutableState<Set<LangWord>>,
+    excludedDisabled: MutableState<Set<LangWord>>,
+) {
+    items(perLanguage.entries.toList(), key = { keyPrefix + it.key }) { (lang, changes) ->
+        LanguageSection(
+            lang = lang,
+            changes = changes,
+            excludedCustom = excludedCustom.value,
+            excludedDisabled = excludedDisabled.value,
+            onToggleWord = { lw, isCustom ->
+                if (isCustom) {
+                    excludedCustom.value = toggleLW(excludedCustom.value, lw)
+                } else {
+                    excludedDisabled.value = toggleLW(excludedDisabled.value, lw)
+                }
+            },
+            onToggleAll = { l, allOn ->
+                val langCustom = perLanguage[l]!!.newCustomWords.keys.map { LangWord(l, it) }.toSet()
+                val langDisabled = perLanguage[l]!!.newDisabledWords.map { LangWord(l, it) }.toSet()
+                if (allOn) {
+                    excludedCustom.value = excludedCustom.value - langCustom
+                    excludedDisabled.value = excludedDisabled.value - langDisabled
+                } else {
+                    excludedCustom.value = excludedCustom.value + langCustom
+                    excludedDisabled.value = excludedDisabled.value + langDisabled
+                }
+            },
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -990,7 +1083,8 @@ fun DictionaryImportPreviewDialog(
     val totalCustom = plan.perLanguage.values.sumOf { it.newCustomWords.size }
     val totalDisabled = plan.perLanguage.values.sumOf { it.newDisabledWords.size }
     val applyCount = (totalCustom - excludedCustom.value.size) +
-        (totalDisabled - excludedDisabled.value.size) + plan.learnedData.totalEntries
+        (totalDisabled - excludedDisabled.value.size) + plan.learnedData.totalEntries +
+        plan.newSwipePriorityCount
 
     Dialog(
         onDismissRequest = onCancel,
@@ -1028,33 +1122,16 @@ fun DictionaryImportPreviewDialog(
                             LearnedDataPreviewCard(plan.learnedData)
                         }
                     }
-                    items(plan.perLanguage.entries.toList(), key = { it.key }) { (lang, changes) ->
-                        LanguageSection(
-                            lang = lang,
-                            changes = changes,
-                            excludedCustom = excludedCustom.value,
-                            excludedDisabled = excludedDisabled.value,
-                            onToggleWord = { lw, isCustom ->
-                                if (isCustom) {
-                                    excludedCustom.value = toggleLW(excludedCustom.value, lw)
-                                } else {
-                                    excludedDisabled.value = toggleLW(excludedDisabled.value, lw)
-                                }
-                            },
-                            onToggleAll = { l, allOn ->
-                                val langCustom = plan.perLanguage[l]!!.newCustomWords.keys
-                                    .map { LangWord(l, it) }.toSet()
-                                val langDisabled = plan.perLanguage[l]!!.newDisabledWords
-                                    .map { LangWord(l, it) }.toSet()
-                                if (allOn) {
-                                    excludedCustom.value = excludedCustom.value - langCustom
-                                    excludedDisabled.value = excludedDisabled.value - langDisabled
-                                } else {
-                                    excludedCustom.value = excludedCustom.value + langCustom
-                                    excludedDisabled.value = excludedDisabled.value + langDisabled
-                                }
-                            },
-                        )
+                    dictionaryLanguageItems(plan.perLanguage, "", excludedCustom, excludedDisabled)
+                    // A file whose only change is swipe priorities is offered too (review
+                    // 2026-11-25 S9); they follow the words and have no separate choice here.
+                    if (plan.newSwipePriorityCount > 0) {
+                        item(key = "swipe-priorities") {
+                            Text(
+                                stringResource(R.string.import_preview_legacy_priorities, plan.newSwipePriorityCount),
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            )
+                        }
                     }
                 }
             }

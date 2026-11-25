@@ -1062,6 +1062,8 @@
     <string name="import_preview_word_freq">freq %1$d</string>
     <string name="import_preview_search_hint">Zoeken…</string>
     <string name="import_preview_dict_title">Voorbeeld woordenboekimport</string>
+    <string name="import_preview_legacy_words_header">Woordenboekwoorden in dit bestand</string>
+    <string name="import_preview_legacy_priorities">Toe te voegen veegprioriteiten: %1$d</string>
     <string name="import_preview_learned_title">Geleerde gegevens</string>
     <string name="import_preview_learned_desc">Geleerde uitdrukkingsaantallen worden als groep samengevoegd. Bevat deze back-up een persoonlijke woordenschat, dan vervangt die de huidige lijst met geleerde woorden.</string>
     <string name="import_preview_learned_bigrams">Samen te voegen woordparen: %1$d</string>
@@ -1388,6 +1390,7 @@
     <string name="backup_result_dict_import_completed">Woordenboekimport voltooid.</string>
     <string name="backup_result_custom_words_applied">• Aangepaste woorden toegepast: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Uitgeschakelde woorden toegepast: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Veegprioriteiten toegepast: %1$d</string>
     <string name="backup_result_export_success_title">Export geslaagd</string>
     <string name="backup_result_settings_exported">Instellingen geëxporteerd: %1$d</string>
     <string name="backup_result_config_export_hint">Zet het bestand over naar een ander apparaat of bewaar het als back-up.</string>

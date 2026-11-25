@@ -1059,6 +1059,8 @@
     <string name="import_preview_word_freq">頻度 %1$d</string>
     <string name="import_preview_search_hint">検索…</string>
     <string name="import_preview_dict_title">辞書インポートプレビュー</string>
+    <string name="import_preview_legacy_words_header">このファイルの辞書の単語</string>
+    <string name="import_preview_legacy_priorities">追加するスワイプ優先度: %1$d</string>
     <string name="import_preview_learned_title">学習データ</string>
     <string name="import_preview_learned_desc">学習したフレーズカウントはグループとしてマージされます。このバックアップに個人語彙が含まれる場合、現在の学習単語リストを置き換えます。</string>
     <string name="import_preview_learned_bigrams">マージする単語ペア: %1$d</string>
@@ -1374,6 +1376,7 @@
     <string name="backup_result_dict_import_completed">辞書のインポートが完了しました。</string>
     <string name="backup_result_custom_words_applied">• 適用したカスタム単語: %1$d</string>
     <string name="backup_result_disabled_words_applied">• 適用した無効化単語: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• 適用したスワイプ優先度: %1$d</string>
     <string name="backup_result_export_success_title">エクスポート完了</string>
     <string name="backup_result_settings_exported">エクスポートした設定: %1$d</string>
     <string name="backup_result_config_export_hint">ファイルを別の端末に転送するか、バックアップとして保管してください。</string>

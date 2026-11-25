@@ -1092,6 +1092,8 @@
     <string name="import_preview_word_freq">frecv. %1$d</string>
     <string name="import_preview_search_hint">Caută…</string>
     <string name="import_preview_dict_title">Previzualizare import dicționar</string>
+    <string name="import_preview_legacy_words_header">Cuvinte de dicționar din acest fișier</string>
+    <string name="import_preview_legacy_priorities">Priorități la glisare de adăugat: %1$d</string>
     <string name="import_preview_learned_title">Date învățate</string>
     <string name="import_preview_learned_desc">Numărătorile expresiilor învățate se îmbină ca grup. Dacă acest backup include un vocabular personal, acesta înlocuiește lista curentă de cuvinte învățate.</string>
     <string name="import_preview_learned_bigrams">Perechi de cuvinte de îmbinat: %1$d</string>
@@ -1428,6 +1430,7 @@
     <string name="backup_result_dict_import_completed">Importul dicționarului a fost finalizat.</string>
     <string name="backup_result_custom_words_applied">• Cuvinte personalizate aplicate: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Cuvinte dezactivate aplicate: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Priorități la glisare aplicate: %1$d</string>
     <string name="backup_result_export_success_title">Export reușit</string>
     <string name="backup_result_settings_exported">Setări exportate: %1$d</string>
     <string name="backup_result_config_export_hint">Transferați fișierul pe alt dispozitiv sau păstrați-l ca backup.</string>

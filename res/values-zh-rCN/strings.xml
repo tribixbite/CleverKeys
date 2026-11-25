@@ -929,6 +929,8 @@
     <string name="import_preview_current_screen">当前屏幕：%1$d×%2$d@%3$s</string>
     <string name="import_preview_custom_words">自定义单词（%1$d）</string>
     <string name="import_preview_dict_title">词典导入预览</string>
+    <string name="import_preview_legacy_words_header">此文件中的词典词语</string>
+    <string name="import_preview_legacy_priorities">待添加的滑动优先级：%1$d</string>
     <string name="import_preview_diff_changed">~%1$d 已更改</string>
     <string name="import_preview_diff_new">+%1$d 新增</string>
     <string name="import_preview_diff_removed">−%1$d 已移除</string>
@@ -1373,6 +1375,7 @@
     <string name="backup_result_dict_import_completed">词典导入完成。</string>
     <string name="backup_result_custom_words_applied">• 已应用自定义词：%1$d</string>
     <string name="backup_result_disabled_words_applied">• 已应用禁用词：%1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• 已应用滑动优先级：%1$d</string>
     <string name="backup_result_export_success_title">导出成功</string>
     <string name="backup_result_settings_exported">已导出设置：%1$d</string>
     <string name="backup_result_config_export_hint">可将文件传输到其他设备，或保留作为备份。</string>

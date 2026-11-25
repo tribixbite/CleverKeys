@@ -1076,6 +1076,8 @@
     <string name="import_preview_word_freq">częst. %1$d</string>
     <string name="import_preview_search_hint">Szukaj…</string>
     <string name="import_preview_dict_title">Podgląd importu słownika</string>
+    <string name="import_preview_legacy_words_header">Słowa słownika w tym pliku</string>
+    <string name="import_preview_legacy_priorities">Priorytety pisania gestem do dodania: %1$d</string>
     <string name="import_preview_learned_title">Wyuczone dane</string>
     <string name="import_preview_learned_desc">Wyuczone liczniki zwrotów są scalane jako grupa. Jeśli ta kopia zawiera osobiste słownictwo, zastąpi ono bieżącą listę wyuczonych słów.</string>
     <string name="import_preview_learned_bigrams">Pary słów do scalenia: %1$d</string>
@@ -1424,6 +1426,7 @@
     <string name="backup_result_dict_import_completed">Import słownika zakończony.</string>
     <string name="backup_result_custom_words_applied">• Zastosowane własne słowa: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Zastosowane wyłączone słowa: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Zastosowane priorytety pisania gestem: %1$d</string>
     <string name="backup_result_export_success_title">Eksport zakończony</string>
     <string name="backup_result_settings_exported">Wyeksportowane ustawienia: %1$d</string>
     <string name="backup_result_config_export_hint">Przenieś plik na inne urządzenie lub zachowaj go jako kopię zapasową.</string>

@@ -184,4 +184,31 @@ class DictImportPlanBuilderTest {
         assertThat(plan.learnedData.hasEffect).isFalse()
         assertThat(plan.learnedData.rawJson).isNull()
     }
+
+    /** Review 2026-11-25 S9: a priorities-only file is a change, a file whose levels are all set is not. */
+    @Test
+    fun newSwipePriorityCount_countsOnlyTheLevelsTheApplyWouldWrite() {
+        val json = """{"custom_words_by_language":{"en":{"adb":255}},
+            "swipe_priority_by_language":{"en":{"adb":2,"wet":1,"nowhere":1}}}"""
+        val plan = DictImportPlanBuilder.fromJson(
+            json,
+            currentCustomByLang = mapOf("en" to mapOf("adb" to 255, "wet" to 200)),
+            currentDisabledByLang = emptyMap(),
+            currentSwipePrioritiesByLang = mapOf("en" to mapOf("wet" to tribixbite.cleverkeys.SwipePriority.HIGH)),
+        )
+        // adb: a word here with no level → counted; wet: already raised here; nowhere: no word.
+        assertThat(plan.newSwipePriorityCount).isEqualTo(1)
+        assertThat(plan.perLanguage).isEmpty()
+        assertThat(plan.hasChanges).isTrue()
+
+        val settled = DictImportPlanBuilder.fromJson(
+            json,
+            currentCustomByLang = mapOf("en" to mapOf("adb" to 255, "wet" to 200)),
+            currentDisabledByLang = emptyMap(),
+            currentSwipePrioritiesByLang = mapOf(
+                "en" to mapOf("adb" to tribixbite.cleverkeys.SwipePriority.HIGH, "wet" to tribixbite.cleverkeys.SwipePriority.HIGH),
+            ),
+        )
+        assertThat(settled.hasChanges).isFalse()
+    }
 }

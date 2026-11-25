@@ -369,4 +369,12 @@ class BackupRestoreResultMessagesTest {
         assertFalse(msg, msg.contains("Media files restored"))
         assertTrue(msg, msg.endsWith("Imports merge with existing history without overwriting."))
     }
+
+    /** Review 2026-11-25 S9: a 1.x settings file's swipe priorities are reported like its words. */
+    @Test
+    fun settings_legacySwipePriorities_haveTheirOwnLine() {
+        val result = BackupRestoreManager.ImportResult().apply { swipePrioritiesAdded = 3 }
+        val msg = buildSettingsResultMessage(result, EnglishResourceText)
+        assertTrue(msg, msg.contains("• Swipe priorities applied: 3"))
+    }
 }

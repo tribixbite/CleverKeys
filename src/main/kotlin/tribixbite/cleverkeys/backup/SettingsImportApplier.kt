@@ -21,6 +21,10 @@ import tribixbite.cleverkeys.theme.ThemeProvider
  *   5. DIY themes ([CustomThemeBackup]) are written through [CustomThemeStore] BEFORE the
  *      settings commit, so a restored `theme = custom_<id>` never reaches the keyboard ahead
  *      of its theme. A failed theme write throws before anything is committed.
+ *   6. A 1.x settings file's dictionary ([SettingsImportPlan.legacyDictionary]) is written
+ *      FIRST, less what the preview left out ([LegacyWordExclusions]), with its own single
+ *      commit. A failure there throws before any theme or setting is written, so the import
+ *      reports it (review 2026-11-25 S9: it was logged while the import reported success).
  */
 object SettingsImportApplier {
 
@@ -34,6 +38,7 @@ object SettingsImportApplier {
         shortSwipeImporter: ShortSwipeImporter,
         customThemeMode: ShortSwipeImportMode = ShortSwipeImportMode.SKIP,
         customThemeStore: CustomThemeStore? = null,
+        legacyWords: LegacyWordExclusions = LegacyWordExclusions.NONE,
     ): ImportResult {
         val result = ImportResult().apply {
             sourceVersion = plan.sourceVersion
@@ -42,6 +47,9 @@ object SettingsImportApplier {
             currentScreenWidth = plan.currentScreen.width
             currentScreenHeight = plan.currentScreen.height
         }
+
+        // Rule 6: the file's dictionary words before anything else; a failure throws from here.
+        plan.legacyDictionary?.let { applyLegacyDictionary(it, legacyWords, prefs, result) }
 
         val editor = prefs.edit()
         val nowBeforeCommit: Map<String, Any?> = prefs.all
@@ -119,6 +127,31 @@ object SettingsImportApplier {
             Log.i(TAG, "BackupRestore: $driftCount keys drifted between preview and apply")
         }
         return result
+    }
+
+    /**
+     * Add [dict]'s words and swipe priorities less [exclusions] (rule 6) and count them in
+     * [result]. Nothing is written when the user left everything out. Throws (through
+     * [DictImportApplier.apply]) when the write fails.
+     */
+    private fun applyLegacyDictionary(
+        dict: DictImportPlan,
+        exclusions: LegacyWordExclusions,
+        prefs: SharedPreferences,
+        result: ImportResult,
+    ) {
+        val selectedWords = dict.perLanguage.entries.sumOf { (lang, changes) ->
+            changes.newCustomWords.keys.count { LangWord(lang, it) !in exclusions.custom } +
+                changes.newDisabledWords.count { LangWord(lang, it) !in exclusions.disabled }
+        }
+        val priorities = exclusions.includePriorities && dict.newSwipePriorityCount > 0
+        if (selectedWords == 0 && !priorities) return
+        val toApply = if (exclusions.includePriorities) dict else dict.copy(mergedSwipePrioritiesByLang = emptyMap())
+        val counts = DictImportApplier.apply(toApply, exclusions.custom, exclusions.disabled, prefs)
+        result.customWordsAdded = counts.customApplied
+        result.disabledWordsAdded = counts.disabledApplied
+        result.swipePrioritiesAdded = counts.prioritiesApplied
+        Log.i(TAG, "Settings file dictionary: $counts")
     }
 
     /**

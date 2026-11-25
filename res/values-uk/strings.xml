@@ -948,6 +948,8 @@
     <string name="import_preview_current_screen">Поточний екран: %1$d×%2$d@%3$s</string>
     <string name="import_preview_custom_words">Власні слова (%1$d)</string>
     <string name="import_preview_dict_title">Попередній перегляд імпорту словника</string>
+    <string name="import_preview_legacy_words_header">Слова словника в цьому файлі</string>
+    <string name="import_preview_legacy_priorities">Пріоритетів під час свайпу до додавання: %1$d</string>
     <string name="import_preview_diff_changed">~%1$d змінено</string>
     <string name="import_preview_diff_new">+%1$d нових</string>
     <string name="import_preview_diff_removed">−%1$d видалено</string>
@@ -1425,6 +1427,7 @@
     <string name="backup_result_dict_import_completed">Імпорт словника завершено.</string>
     <string name="backup_result_custom_words_applied">• Застосовано власних слів: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Застосовано вимкнених слів: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Застосовано пріоритетів під час свайпу: %1$d</string>
     <string name="backup_result_export_success_title">Експорт виконано</string>
     <string name="backup_result_settings_exported">Експортовано налаштувань: %1$d</string>
     <string name="backup_result_config_export_hint">Перенесіть файл на інший пристрій або збережіть його як резервну копію.</string>

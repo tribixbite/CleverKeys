@@ -37,10 +37,16 @@ object DictImportPlanBuilder {
      */
     const val MAX_WORDS_PER_LANGUAGE = 100_000
 
+    /**
+     * @param currentSwipePrioritiesByLang the levels set on this device, per language, for
+     *   [DictImportPlan.newSwipePriorityCount]. Left empty, every file level for a word the
+     *   import leaves in the dictionary counts.
+     */
     fun fromJson(
         jsonString: String,
         currentCustomByLang: Map<String, Map<String, Int>>,
         currentDisabledByLang: Map<String, Set<String>>,
+        currentSwipePrioritiesByLang: Map<String, Map<String, SwipePriority>> = emptyMap(),
     ): DictImportPlan {
         val root = JsonParser.parseString(jsonString).asJsonObject
         val sourceVersion = root.getAsJsonObject("metadata")
@@ -75,6 +81,15 @@ object DictImportPlanBuilder {
             }
         }
 
+        // The levels the apply step would write with nothing left out (same rule, same words).
+        val newSwipePriorityCount = swipePriorities.entries.sumOf { (lang, levels) ->
+            val wordsAfter = (currentCustomByLang[lang]?.keys ?: emptySet()) +
+                (mergedCustom[lang]?.keys ?: emptySet())
+            DictImportApplier.prioritiesToApply(
+                levels, wordsAfter, currentSwipePrioritiesByLang[lang] ?: emptyMap(),
+            ).size
+        }
+
         return DictImportPlan(
             sourceVersion = sourceVersion,
             perLanguage = perLanguage,
@@ -82,6 +97,7 @@ object DictImportPlanBuilder {
             mergedDisabledWordsByLang = mergedDisabled,
             learnedData = learnedData,
             mergedSwipePrioritiesByLang = swipePriorities,
+            newSwipePriorityCount = newSwipePriorityCount,
         )
     }
 

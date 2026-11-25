@@ -907,9 +907,9 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                         SettingsImportPreviewDialog(
                             plan = plan,
                             onCancel = { backupRestoreViewModel.settingsPreviewPlan = null },
-                            onApply = { excluded, ssMode, themeMode ->
+                            onApply = { excluded, ssMode, themeMode, legacyWords ->
                                 backupRestoreViewModel.settingsPreviewPlan = null
-                                applyPlannedSettings(plan, excluded, ssMode, themeMode)
+                                applyPlannedSettings(plan, excluded, ssMode, themeMode, legacyWords)
                             }
                         )
                     }

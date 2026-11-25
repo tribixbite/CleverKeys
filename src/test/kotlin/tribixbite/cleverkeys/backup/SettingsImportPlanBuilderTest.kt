@@ -1227,4 +1227,58 @@ class SettingsImportPlanBuilderTest {
         assertThat(change.proposed).isEqualTo(PrefValue.Str("fr"))
         assertThat(change.type).isEqualTo(ChangeType.ADDED)
     }
+
+    // ── 1.x settings-file dictionary words are a previewed plan (review 2026-11-25 S9) ──────
+
+    private val legacyWords = """{"preferences":{
+        "custom_words_en":"{\"Bostonian\":100,\"zazen\":120}",
+        "swipe_priority_en":"{\"zazen\":2}"
+    }}"""
+
+    @Test
+    fun legacyWords_arePreviewedAsADictionaryPlanOfTheNewWordsOnly() {
+        val plan = SettingsImportPlanBuilder.fromJson(
+            legacyWords, emptyMap(), screen,
+            currentCustomWordsByLang = mapOf("en" to mapOf("Bostonian" to 100)),
+        )
+        val dict = plan.legacyDictionary!!
+        assertThat(dict.perLanguage["en"]!!.newCustomWords.keys).containsExactly("zazen")
+        assertThat(dict.newSwipePriorityCount).isEqualTo(1)
+        assertThat(plan.hasNothingToImport).isFalse()
+    }
+
+    @Test
+    fun legacyWordsAndPrioritiesAllOnThePhone_offerNothing() {
+        val plan = SettingsImportPlanBuilder.fromJson(
+            legacyWords, emptyMap(), screen,
+            currentCustomWordsByLang = mapOf("en" to mapOf("Bostonian" to 100, "zazen" to 120)),
+            currentSwipePrioritiesByLang = mapOf("en" to mapOf("zazen" to tribixbite.cleverkeys.SwipePriority.HIGH)),
+        )
+        assertThat(plan.legacyDictionary).isNull()
+        assertThat(plan.hasNothingToImport).isTrue()
+    }
+
+    @Test
+    fun aPriorityOnlyLegacyChange_isStillOffered() {
+        val plan = SettingsImportPlanBuilder.fromJson(
+            legacyWords, emptyMap(), screen,
+            currentCustomWordsByLang = mapOf("en" to mapOf("Bostonian" to 100, "zazen" to 120)),
+        )
+        val dict = plan.legacyDictionary!!
+        assertThat(dict.perLanguage).isEmpty()
+        assertThat(dict.newSwipePriorityCount).isEqualTo(1)
+        assertThat(plan.hasNothingToImport).isFalse()
+    }
+
+    /** Over the per-language cap: listed as skipped in the preview, not a silent apply failure. */
+    @Test
+    fun anOverCapLegacyLanguage_isASkippedKeyNotAnApplyFailure() {
+        val words = (0..DictImportPlanBuilder.MAX_WORDS_PER_LANGUAGE).joinToString(",") { "\"w$it\":1" }
+        val json = """{"preferences":{"custom_words_en":{$words},"custom_words_fr":{"pamplemousse":100}}}"""
+        val plan = SettingsImportPlanBuilder.fromJson(json, emptyMap(), screen)
+
+        val skipped = plan.parseSkippedKeys.single { it.key == "custom_words_en" }
+        assertThat(skipped.kind).isEqualTo(SkipKind.INVALID_VALUE)
+        assertThat(plan.legacyDictionary!!.perLanguage.keys).containsExactly("fr")
+    }
 }

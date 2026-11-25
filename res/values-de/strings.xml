@@ -1082,6 +1082,8 @@
     <string name="import_preview_word_freq">Häufigkeit %1$d</string>
     <string name="import_preview_search_hint">Suchen…</string>
     <string name="import_preview_dict_title">Wörterbuch-Importvorschau</string>
+    <string name="import_preview_legacy_words_header">Wörterbuch-Wörter in dieser Datei</string>
+    <string name="import_preview_legacy_priorities">Hinzuzufügende Wisch-Prioritäten: %1$d</string>
     <string name="import_preview_learned_title">Gelernte Daten</string>
     <string name="import_preview_learned_desc">Gelernte Wendungszähler werden als Gruppe zusammengeführt. Enthält diese Sicherung ein persönliches Vokabular, ersetzt es die aktuelle Liste gelernter Wörter.</string>
     <string name="import_preview_learned_bigrams">Zusammenzuführende Wortpaare: %1$d</string>
@@ -1408,6 +1410,7 @@
     <string name="backup_result_dict_import_completed">Wörterbuch-Import abgeschlossen.</string>
     <string name="backup_result_custom_words_applied">• Eigene Wörter übernommen: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Deaktivierte Wörter übernommen: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Wisch-Prioritäten übernommen: %1$d</string>
     <string name="backup_result_export_success_title">Export erfolgreich</string>
     <string name="backup_result_settings_exported">Exportierte Einstellungen: %1$d</string>
     <string name="backup_result_config_export_hint">Übertragen Sie die Datei auf ein anderes Gerät oder bewahren Sie sie als Sicherung auf.</string>

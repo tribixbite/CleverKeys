@@ -959,6 +959,8 @@
     <string name="import_preview_current_screen">Màn hình hiện tại: %1$d×%2$d@%3$s</string>
     <string name="import_preview_custom_words">Từ tùy chỉnh (%1$d)</string>
     <string name="import_preview_dict_title">Xem trước nhập từ điển</string>
+    <string name="import_preview_legacy_words_header">Các từ từ điển trong tệp này</string>
+    <string name="import_preview_legacy_priorities">Độ ưu tiên khi vuốt sẽ thêm: %1$d</string>
     <string name="import_preview_diff_changed">~%1$d thay đổi</string>
     <string name="import_preview_diff_new">+%1$d mới</string>
     <string name="import_preview_diff_removed">−%1$d đã xóa</string>
@@ -1403,6 +1405,7 @@
     <string name="backup_result_dict_import_completed">Đã nhập từ điển xong.</string>
     <string name="backup_result_custom_words_applied">• Từ tùy chỉnh đã áp dụng: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Từ bị tắt đã áp dụng: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Độ ưu tiên khi vuốt đã áp dụng: %1$d</string>
     <string name="backup_result_export_success_title">Xuất thành công</string>
     <string name="backup_result_settings_exported">Số cài đặt đã xuất: %1$d</string>
     <string name="backup_result_config_export_hint">Chuyển tệp sang thiết bị khác hoặc giữ lại làm bản sao lưu.</string>

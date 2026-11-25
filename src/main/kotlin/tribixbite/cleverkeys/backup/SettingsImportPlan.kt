@@ -25,7 +25,7 @@ enum class SkipKind(@StringRes val labelRes: Int) {
 
     /**
      * Dictionary words in a shape the settings import cannot read: left to the dictionary import.
-     * Readable ones are imported with the settings ([SettingsImportPlan.legacyDictionaryJson]).
+     * Readable ones are imported with the settings ([SettingsImportPlan.legacyDictionary]).
      */
     SEPARATE_IMPORT(R.string.import_preview_skip_separate_import),
 
@@ -96,17 +96,24 @@ data class SettingsImportPlan(
     /**
      * The dictionary a 1.x settings file carries (`custom_words_<lang>`, `disabled_words_<lang>`,
      * `swipe_priority_<lang>`), in the dictionaries file's shape for `DictImportPlanBuilder`; null
-     * when the file has none. Applying the plan adds the words the phone does not have
-     * (2026-11-24: a 1.2.9 settings file restored 8 of the maintainer's 141 custom words).
+     * when the file has none (2026-11-24: a 1.2.9 settings file restored 8 of the maintainer's
+     * 141 custom words). What applying it would change is [legacyDictionary].
      */
     val legacyDictionaryJson: String? = null,
+    /**
+     * [legacyDictionaryJson] planned against this device's words and swipe priorities: the words
+     * and levels the import would add, previewed (and selectable) like a dictionary file's. Null
+     * when the file has no dictionary or it would change nothing (review 2026-11-25 S9: the
+     * words were applied unseen, and a file whose words were all present still offered an import).
+     */
+    val legacyDictionary: DictImportPlan? = null,
 ) {
     /**
      * True when applying the plan would change nothing: no setting, no skipped key to report,
-     * no short swipes, no DIY themes and no dictionary words. The DIY-theme term was missing, so
+     * no short swipes, no DIY themes and no dictionary change. The DIY-theme term was missing, so
      * a themes-only file showed "No changes" and could not be imported (review 2026-11-14 M8).
      */
     val hasNothingToImport: Boolean
         get() = changes.isEmpty() && parseSkippedKeys.isEmpty() &&
-            shortSwipeImportSize == 0 && customThemesImportSize == 0 && legacyDictionaryJson == null
+            shortSwipeImportSize == 0 && customThemesImportSize == 0 && legacyDictionary == null
 }

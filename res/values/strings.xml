@@ -1459,6 +1459,10 @@
     <string name="import_preview_word_freq">freq %1$d</string>
     <string name="import_preview_search_hint">Search…</string>
     <string name="import_preview_dict_title">Dictionary import preview</string>
+    <!-- Settings import preview: the dictionary a 1.x settings file carries (review 2026-11-25 S9). -->
+    <string name="import_preview_legacy_words_header">Dictionary words in this file</string>
+    <!-- %1$d = swipe priority levels the import would add (a checkbox row) -->
+    <string name="import_preview_legacy_priorities" tools:ignore="PluralsCandidate">Swipe priorities to add: %1$d</string>
     <!-- ARC-094: learned context is restored with dictionary imports but is not individually
          selectable. Phrase entries merge; the vocabulary section replaces the current list. -->
     <string name="import_preview_learned_title">Learned data</string>
@@ -1805,6 +1809,7 @@
     <string name="backup_result_dict_import_completed">Dictionary import completed.</string>
     <string name="backup_result_custom_words_applied">• Custom words applied: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Disabled words applied: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Swipe priorities applied: %1$d</string>
     <string name="backup_result_export_success_title">Export Successful</string>
     <string name="backup_result_settings_exported">Settings exported: %1$d</string>
     <string name="backup_result_config_export_hint">Transfer the file to another device or keep it as a backup.</string>

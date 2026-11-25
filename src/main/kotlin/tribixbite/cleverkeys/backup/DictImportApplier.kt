@@ -23,15 +23,37 @@ object DictImportApplier {
     private val mapType = object : TypeToken<MutableMap<String, Int>>() {}.type
 
     /**
-     * Returns count summary as `Pair<customApplied, disabledApplied>`.
-     * Caller wraps into the project's `DictionaryImportResult` type.
+     * What one apply wrote. Destructures as `(custom, disabled)` like the `Pair` it replaced;
+     * [prioritiesApplied] was missing, so a priorities-only import did not reload the keyboard
+     * (review 2026-11-25 S9).
+     */
+    data class Counts(val customApplied: Int, val disabledApplied: Int, val prioritiesApplied: Int) {
+        /** The stored dictionary changed: the keyboard must reload it. */
+        val changedAnything: Boolean
+            get() = customApplied + disabledApplied + prioritiesApplied > 0
+    }
+
+    /**
+     * The levels of [levels] an import writes for one language: only for a word in [wordsAfter]
+     * (a personal-dictionary word once the import lands, so a word left out gets none) that has
+     * no level in [current] (an import adds, never lowers or overrides a level set here). Shared
+     * by the apply step and the preview's count ([DictImportPlan.newSwipePriorityCount]).
+     */
+    fun prioritiesToApply(
+        levels: Map<String, SwipePriority>,
+        wordsAfter: Set<String>,
+        current: Map<String, SwipePriority>,
+    ): Map<String, SwipePriority> = levels.filterKeys { word -> word in wordsAfter && word !in current }
+
+    /**
+     * Returns the [Counts] written. Caller wraps into the project's `DictionaryImportResult` type.
      */
     fun apply(
         plan: DictImportPlan,
         excludedCustom: Set<LangWord>,
         excludedDisabled: Set<LangWord>,
         prefs: SharedPreferences,
-    ): Pair<Int, Int> {
+    ): Counts {
         val editor = prefs.edit()
         var customApplied = 0
         var disabledApplied = 0
@@ -68,14 +90,10 @@ object DictImportApplier {
             val words = finalCustom[lang] ?: readCustomWordKeys(prefs, lang)
             val key = LanguagePreferenceKeys.swipePriorityKey(lang)
             var current = SwipePriority.parseMap(prefs.getString(key, null))
-            var changed = false
-            for ((word, level) in levels) {
-                if (word !in words || word in current) continue
-                current = SwipePriority.withLevel(current, word, level)
-                changed = true
-                prioritiesApplied++
-            }
-            if (changed) editor.putString(key, SwipePriority.toJson(current))
+            val toApply = prioritiesToApply(levels, words, current)
+            for ((word, level) in toApply) current = SwipePriority.withLevel(current, word, level)
+            prioritiesApplied += toApply.size
+            if (toApply.isNotEmpty()) editor.putString(key, SwipePriority.toJson(current))
         }
         if (prioritiesApplied > 0) Log.i(TAG, "Applied $prioritiesApplied swipe priorities")
 
@@ -103,7 +121,7 @@ object DictImportApplier {
                 tribixbite.cleverkeys.IoFailureReason.READ_WRITE, "dictionary commit failed"
             )
         }
-        return customApplied to disabledApplied
+        return Counts(customApplied, disabledApplied, prioritiesApplied)
     }
 
     /** The stored custom-word keys of [lang] (a language the plan carries no words for). */

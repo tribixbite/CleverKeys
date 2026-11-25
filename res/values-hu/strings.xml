@@ -1068,6 +1068,8 @@
     <string name="import_preview_word_freq">gyak. %1$d</string>
     <string name="import_preview_search_hint">Keresés…</string>
     <string name="import_preview_dict_title">Szótárimport előnézete</string>
+    <string name="import_preview_legacy_words_header">Szótárszavak ebben a fájlban</string>
+    <string name="import_preview_legacy_priorities">Hozzáadandó csúsztatási prioritások: %1$d</string>
     <string name="import_preview_learned_title">Tanult adatok</string>
     <string name="import_preview_learned_desc">A tanult kifejezésszámlálók csoportként egyesülnek. Ha ez a mentés személyes szókincset tartalmaz, az lecseréli a jelenlegi tanultszó-listát.</string>
     <string name="import_preview_learned_bigrams">Egyesítendő szópárok: %1$d</string>
@@ -1394,6 +1396,7 @@
     <string name="backup_result_dict_import_completed">A szótár importálása befejeződött.</string>
     <string name="backup_result_custom_words_applied">• Alkalmazott egyéni szavak: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Alkalmazott letiltott szavak: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Alkalmazott csúsztatási prioritások: %1$d</string>
     <string name="backup_result_export_success_title">Sikeres exportálás</string>
     <string name="backup_result_settings_exported">Exportált beállítások: %1$d</string>
     <string name="backup_result_config_export_hint">Vigye át a fájlt egy másik eszközre, vagy őrizze meg biztonsági mentésként.</string>

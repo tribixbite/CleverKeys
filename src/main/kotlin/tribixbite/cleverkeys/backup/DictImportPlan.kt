@@ -67,4 +67,33 @@ data class DictImportPlan(
      * [SettingsImportPlan.source] — same contract, same default, set by the manager after read.
      */
     val source: BackupSourceInfo = BackupSourceInfo.PLAINTEXT,
-)
+    /**
+     * Swipe-priority levels the apply step would write with nothing left out: a level for a word
+     * that is a personal-dictionary word once the plan lands and has no level here yet
+     * ([DictImportApplier.prioritiesToApply]). Counted against the current levels given to
+     * [DictImportPlanBuilder.fromJson] (review 2026-11-25 S9: a priorities-only file was "no new
+     * words", and a file whose levels were all set here still offered an import).
+     */
+    val newSwipePriorityCount: Int = 0,
+) {
+    /** Applying the plan with nothing left out would change something. */
+    val hasChanges: Boolean
+        get() = perLanguage.isNotEmpty() || learnedData.hasEffect || newSwipePriorityCount > 0
+}
+
+/**
+ * What the settings import preview left out of a 1.x settings file's dictionary
+ * ([SettingsImportPlan.legacyDictionary]): words by (language, word), as in the dictionary
+ * preview, and whether the file's swipe-priority levels are applied at all (review 2026-11-25 S9:
+ * the words were applied with no preview and no way to leave them out).
+ */
+data class LegacyWordExclusions(
+    val custom: Set<LangWord> = emptySet(),
+    val disabled: Set<LangWord> = emptySet(),
+    val includePriorities: Boolean = true,
+) {
+    companion object {
+        /** Apply everything the preview offered. */
+        val NONE = LegacyWordExclusions()
+    }
+}

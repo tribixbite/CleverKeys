@@ -1066,6 +1066,8 @@
     <string name="import_preview_word_freq">četnost %1$d</string>
     <string name="import_preview_search_hint">Hledat…</string>
     <string name="import_preview_dict_title">Náhled importu slovníku</string>
+    <string name="import_preview_legacy_words_header">Slova slovníku v tomto souboru</string>
+    <string name="import_preview_legacy_priorities">Priority psaní tahem k přidání: %1$d</string>
     <string name="import_preview_learned_title">Naučená data</string>
     <string name="import_preview_learned_desc">Počty naučených frází se slučují jako skupina. Pokud tato záloha obsahuje osobní slovní zásobu, nahradí aktuální seznam naučených slov.</string>
     <string name="import_preview_learned_bigrams">Dvojic slov ke sloučení: %1$d</string>
@@ -1414,6 +1416,7 @@
     <string name="backup_result_dict_import_completed">Import slovníku dokončen.</string>
     <string name="backup_result_custom_words_applied">• Použitá vlastní slova: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Použitá zakázaná slova: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Použité priority psaní tahem: %1$d</string>
     <string name="backup_result_export_success_title">Export proběhl úspěšně</string>
     <string name="backup_result_settings_exported">Exportovaná nastavení: %1$d</string>
     <string name="backup_result_config_export_hint">Přeneste soubor do jiného zařízení nebo si jej ponechte jako zálohu.</string>

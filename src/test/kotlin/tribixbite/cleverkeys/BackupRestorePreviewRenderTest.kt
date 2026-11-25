@@ -335,7 +335,11 @@ class BackupRestorePreviewRenderTest {
         val handler = File(
             "src/main/kotlin/tribixbite/cleverkeys/ui/settings/io/SettingsDictionaryHandlers.kt"
         ).readText()
-        assertThat(handler).contains("!plan.learnedData.hasEffect")
+        // Review 2026-11-25 S9: "nothing to import" is DictImportPlan.hasChanges, which keeps the
+        // learned-data term (and adds swipe priorities).
+        assertThat(handler).contains("!plan.hasChanges")
+        val planSource = File("src/main/kotlin/tribixbite/cleverkeys/backup/DictImportPlan.kt").readText()
+        assertThat(planSource.substringAfter("val hasChanges: Boolean")).contains("learnedData.hasEffect")
 
         val manager = File(
             "src/main/kotlin/tribixbite/cleverkeys/BackupRestoreManager.kt"

@@ -1075,6 +1075,8 @@
     <string name="import_preview_word_freq">biežums %1$d</string>
     <string name="import_preview_search_hint">Meklēt…</string>
     <string name="import_preview_dict_title">Vārdnīcas importa priekšskatījums</string>
+    <string name="import_preview_legacy_words_header">Vārdnīcas vārdi šajā failā</string>
+    <string name="import_preview_legacy_priorities">Pievienojamās vilkšanas prioritātes: %1$d</string>
     <string name="import_preview_learned_title">Apgūtie dati</string>
     <string name="import_preview_learned_desc">Apgūtie frāžu skaitītāji tiek apvienoti kā grupa. Ja šajā dublējumā ir personiskais vārdu krājums, tas aizstāj pašreizējo apgūto vārdu sarakstu.</string>
     <string name="import_preview_learned_bigrams">Apvienojamie vārdu pāri: %1$d</string>
@@ -1412,6 +1414,7 @@
     <string name="backup_result_dict_import_completed">Vārdnīcas importēšana pabeigta.</string>
     <string name="backup_result_custom_words_applied">• Lietoti pielāgotie vārdi: %1$d</string>
     <string name="backup_result_disabled_words_applied">• Lietoti atspējotie vārdi: %1$d</string>
+    <string name="backup_result_swipe_priorities_applied">• Lietotās vilkšanas prioritātes: %1$d</string>
     <string name="backup_result_export_success_title">Eksportēšana veiksmīga</string>
     <string name="backup_result_settings_exported">Eksportēti iestatījumi: %1$d</string>
     <string name="backup_result_config_export_hint">Pārsūtiet failu uz citu ierīci vai glabājiet to kā dublējumu.</string>

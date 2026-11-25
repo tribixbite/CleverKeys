@@ -19,6 +19,7 @@ import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
 import tribixbite.cleverkeys.BackupRestoreManager
 import tribixbite.cleverkeys.backup.BackupExportName
 import tribixbite.cleverkeys.backup.BackupExportNaming
+import tribixbite.cleverkeys.backup.LegacyWordExclusions
 import tribixbite.cleverkeys.backup.SettingsImportPlan
 import tribixbite.cleverkeys.backup.ShortSwipeImportMode
 import tribixbite.cleverkeys.buildFullBackupResultMessage
@@ -278,12 +279,16 @@ internal fun SettingsActivity.retryEncryptedImport(pending: tribixbite.cleverkey
  * Apply a previously-shown settings preview. Reloads in-memory state via
  * loadCurrentSettings() so the UI reflects imported values immediately,
  * and copies prefs to protected storage for Direct Boot survival.
+ *
+ * [legacyWords] is what the preview left out of a 1.x settings file's dictionary words
+ * (pre-tag review 2026-11-25 S9).
  */
 internal fun SettingsActivity.applyPlannedSettings(
     plan: SettingsImportPlan,
     excludedKeys: Set<String>,
     shortSwipeMode: ShortSwipeImportMode,
     customThemeMode: ShortSwipeImportMode,
+    legacyWords: LegacyWordExclusions = LegacyWordExclusions.NONE,
 ) {
     val appContext = applicationContext
     val manager = backupRestoreManager
@@ -291,12 +296,13 @@ internal fun SettingsActivity.applyPlannedSettings(
     runSettingsFileOperation(
         work = {
             val result = manager.applySettingsImportPlan(
-                plan, excludedKeys, shortSwipeMode, prefs, customThemeMode,
+                plan, excludedKeys, shortSwipeMode, prefs, customThemeMode, legacyWords,
             )
             DirectBootAwarePreferences.copy_preferences_to_protected_storage(appContext, prefs)
-            // Words a 1.x settings file carried: the keyboard reloads its dictionary, as after a
-            // dictionary restore.
-            if (result.customWordsAdded + result.disabledWordsAdded > 0) {
+            // Words or swipe priorities a 1.x settings file carried: the keyboard reloads its
+            // dictionary, as after a dictionary restore. A priorities-only change counts too
+            // (review 2026-11-25 S9: it did not reload the keyboard).
+            if (result.dictionaryChanged) {
                 LocalBroadcastManager.getInstance(appContext)
                     .sendBroadcast(Intent(BackupRestoreActivity.ACTION_DICTIONARY_IMPORTED))
             }
@@ -311,8 +317,8 @@ internal fun SettingsActivity.applyPlannedSettings(
         onFailure = { e ->
             android.util.Log.e(SettingsActivity.TAG, "Apply settings plan failed", e)
             followUp {
-                // Part of the file may have been written (DIY themes, then the words, precede the
-                // settings commit): show what is stored now.
+                // A failure after the dictionary words were added leaves them (they only add):
+                // show what is stored now.
                 loadCurrentSettings()
                 showIoFailure(
                     R.string.backup_result_import_failed_title, R.string.backup_result_apply_settings_failed, e

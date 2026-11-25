@@ -69,6 +69,9 @@ internal fun buildSettingsResultMessage(
     if (result.disabledWordsAdded > 0) {
         appendLine(text.string(R.string.backup_result_disabled_words_applied, result.disabledWordsAdded))
     }
+    if (result.swipePrioritiesAdded > 0) {
+        appendLine(text.string(R.string.backup_result_swipe_priorities_applied, result.swipePrioritiesAdded))
+    }
     if (result.sourceVersion != "unknown") {
         appendLine(text.string(R.string.backup_result_source_version, result.sourceVersion))
     }
