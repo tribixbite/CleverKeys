@@ -57,8 +57,11 @@ Multi-language typing system that allows users to type in two languages simultan
 | Enable Multi-Language | `pref_enable_multilang` | false | Master switch |
 | Primary Language | `pref_primary_language` | en | Main language |
 | Secondary Language | `pref_secondary_language` | none | Additional language |
-| Auto-Detect Language | `pref_auto_detect_language` | true | Enable detection |
-| Detection Sensitivity | `pref_language_detection_sensitivity` | 0.6 | Auto-switch threshold |
+| Auto-Detect Language | `pref_auto_detect_language` | true | Switch between primary and secondary as you type; shown and active only with a secondary language |
+| Detection Sensitivity | `pref_language_detection_sensitivity` | 0.6 | Minimum detector confidence to switch (higher switches less) |
+
+Auto-detection never switches to a language outside primary + secondary (2026-11-25,
+`MultiLanguageManager.detectAndSwitch(…, allowed)`, `LearningFunnelBookkeepingTest`).
 
 ## Implementation Details
 

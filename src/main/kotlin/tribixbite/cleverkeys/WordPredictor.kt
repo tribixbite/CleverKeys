@@ -1172,7 +1172,7 @@ class WordPredictor : Predictor {
         // Use MultiLanguageManager for detection and switching if available
         if (multiLanguageManager != null) {
             val sensitivity = config?.language_detection_sensitivity ?: 0.6f
-            val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity)
+            val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity, chosen)
             if (detected != null && detected != currentLanguage && detected in chosen) {
                 invalidateExactLearningCommit()
                 currentLanguage = detected

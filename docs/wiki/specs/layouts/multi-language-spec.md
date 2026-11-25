@@ -141,7 +141,13 @@ Unchanged from earlier versions. With Multi-Language on and a secondary chosen,
 primary slate, scored with `secondary_prediction_weight` (default 0.9). Accent-insensitive
 lookup lets 26-letter input reach accented words. With **Auto-Detect Language** on,
 `MultiLanguageManager.detectAndSwitch` checks recent words against the detection
-sensitivity and may switch the language models.
+sensitivity (a minimum confidence) and may switch the next-word and learned-context models.
+Since 2026-11-25 it switches only between the primary and the chosen secondary language: it
+does not run without a secondary (`WordPredictor.tryAutoLanguageDetection` returns), and
+`detectAndSwitch(…, allowed)` refuses any other detected language before the manager's own
+active language changes. The two settings are shown only with a secondary language
+(`MultiLanguageSection`). Measured before the change (`LanguageDetectionEvalTest`): with
+English chosen, 1.5–3.4% of words typed in Spanish, Portuguese or French switched the models.
 
 ## Configuration
 

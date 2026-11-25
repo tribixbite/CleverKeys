@@ -306,7 +306,7 @@ class LearningFunnelBookkeepingTest {
         val languages = mockk<MultiLanguageManager>()
         // The manager can catch up to the predictor's language after a separate dictionary
         // switch. Reporting en is not a change to this predictor's en context/store.
-        every { languages.detectAndSwitch(any(), any()) } returns "en"
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "en"
         predictor.setField("multiLanguageManager", languages)
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
         val receipt = requireNotNull(predictor.latestLearningCommit())
@@ -326,18 +326,18 @@ class LearningFunnelBookkeepingTest {
         useReceiptVocabulary()
         config.auto_detect_language = true
         val languages = mockk<MultiLanguageManager>()
-        every { languages.detectAndSwitch(any(), any()) } returns "es"
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
         predictor.setField("multiLanguageManager", languages)
 
         config.layout_bound_language = "en"
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
-        verify(exactly = 0) { languages.detectAndSwitch(any(), any()) }
+        verify(exactly = 0) { languages.detectAndSwitch(any(), any(), any()) }
         assertWithMessage("bound language kept").that(predictor.getField("currentLanguage")).isEqualTo("en")
 
         config.layout_bound_language = null
         config.active_secondary_language = "es"
         predictor.addWordToContext("dogs", true)
-        verify(exactly = 1) { languages.detectAndSwitch(any(), any()) }
+        verify(exactly = 1) { languages.detectAndSwitch(any(), any(), any()) }
         assertWithMessage("unbound: detection switches").that(predictor.getField("currentLanguage")).isEqualTo("es")
     }
 
@@ -372,14 +372,34 @@ class LearningFunnelBookkeepingTest {
         config.auto_detect_language = true
         config.active_secondary_language = "de"
         val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any()) } returns "es"
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
         predictor.setField("multiLanguageManager", languages)
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("a language the user did not choose").that(predictor.getField("currentLanguage")).isEqualTo("en")
 
-        every { languages.detectAndSwitch(any(), any()) } returns "de"
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
         predictor.addWordToContext("dogs", true)
         assertWithMessage("the chosen secondary").that(predictor.getField("currentLanguage")).isEqualTo("de")
+    }
+
+    /**
+     * The manager must not switch to a language the user did not choose either (2026-11-25):
+     * `detectAndSwitch` switched its own active language first and the predictor refused it
+     * after, so on Portuguese text with English + Spanish chosen the manager recorded `pt`
+     * while the keyboard stayed English, and the two disagreed from then on.
+     */
+    @Test
+    fun theLanguageManagerStaysOnTheChosenLanguages() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        val languages = MultiLanguageManager("en")
+        predictor.setField("multiLanguageManager", languages)
+        listOf("o", "não", "é", "uma", "da", "do", "em", "com", "os", "mais", "não", "é").forEach {
+            predictor.addWordToContext(it, true)
+        }
+        assertWithMessage("the keyboard's language").that(predictor.getField("currentLanguage")).isEqualTo("en")
+        assertWithMessage("the manager's language").that(languages.getCurrentLanguage()).isEqualTo("en")
     }
 
     @Test

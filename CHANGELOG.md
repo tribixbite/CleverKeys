@@ -618,6 +618,7 @@ editor that used to be listed here already ship in 2.0.)
 - Auto-Detect Language only switches between the primary and the secondary language you chose, and
   its two settings show only once a secondary language is set; it could switch an English user to
   Spanish or French on a few words (1.5–3.4% of words typed in another language triggered it).
+  Its sensitivity setting is described the right way round: a higher value switches less.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

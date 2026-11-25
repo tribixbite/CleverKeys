@@ -408,7 +408,10 @@ The honest position: **no swipe corpus exists for it/pt/sv**, so no per-language
 bar can be produced and none is claimed. HuggingFace `futo-org/swipe.futo.org` config
 `swipe-5` returns `num_rows_total = 0` for all three (and for `nl`), against en 47,364 /
 fr 3,124 — verified 2026-08-16 via datasets-server `/filter`. Do not re-attempt that sweep
-expecting to find data.
+expecting to find data. Re-checked 2026-11-25 for Italian: `swipe-5` holds en 47,364 / de 5,207 /
+fr 3,124 / es 2,029 / pl 1,019 / lt 52 rows and still no `it`; swipe-1–4 are English sentences;
+no other Hugging Face dataset matches "swipe"/"swype"/"gesture typing" with Italian; the How We
+Swipe corpus (OSF `sj67f`) is English only.
 
 What DOES transfer is the **preset**, by the project's own stated principle: λ is calibrated
 against the LEXICON'S FREQUENCY SCALE, not against the language. These three read the same
@@ -472,6 +475,25 @@ on both halves, while λ 4.0 is never a tune-half winner for a CKDT-scale corpus
 sweep (CleverKeys-ML `PHASE_J.md` §6.9). **Everything else in `tunedV2` (γ 0.9, β 0.25,
 α 0.0, γ_prune 0.25, β_prune 0.9882, beam 100) is language-invariant** —
 `CtcScoringParams.presetFor(language, …)` varies λ and nothing else.
+
+#### Contraction frequency tables (2026-11-25)
+
+An alias key (`youre`, `detre`) enters the swipe trie at the injection floor, or, for a key the
+lexicon already holds, at the lexicon's frequency of the apostrophe-free TOKEN. Both understate
+how often the contraction is written. `dictionaries/contraction_frequencies_<lang>.json` gives a
+key its own frequency on the lexicon scale; `CtcContractionKeys.inject` applies it (new key:
+`max(floor, table)`; lexicon key: raised, never lowered). Only languages that passed a human-corpus
+gate ship one:
+
+| lang | keys | source | human-trace result (shipped decode) |
+|---|---|---|---|
+| `en` | 93 pronoun contractions | wordfreq zipf of the contraction through the lexicon's isotonic zipf→byte fit (`extract_apostrophe_words.py --en-alias-frequencies`) | FUTO swipe-1/2/3, 1,202 traces: they're 4 → 22 / 39, you're 17 → 23 / 66, I've 36 → 46 / 61, don't 179 → 186 / 200; your/there/were and the 4,000-trace sample unchanged (91.83) |
+| `fr` | 11,148 elisions | Leipzig `fra-fr_web_2013_300K` counts, median-window calibrated (`build_elision_frequencies.py`) | FUTO azerty, 2,291 traces: top-1 84.17 → 85.55, top-3 95.32 → 95.73, 2 regressions / 22 improvements |
+| `it` | none | — | gate failed (an in-band table changed nothing; the full mapping needs human Italian traces, which no corpus has) |
+
+`en_enhanced.json` itself is NOT raised: `ContractionOverlay`'s real-word guard reads an alias key's
+frequency ordinal there. Evidence: `docs/eval/2026-11-25-english-contraction-frequencies.md`,
+`docs/eval/2026-11-25-elision-own-frequency.md`.
 
 #### Imported language packs (2026-08-29) — the dynamic half of the table
 

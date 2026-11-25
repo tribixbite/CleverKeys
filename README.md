@@ -170,6 +170,7 @@ Build your own themes on-the-fly with full control over:
 - **Two selectable swipe engines** — CTC (default): the 7 bundled Latin languages on any full a–z Latin layout via a 2.9 MB CleverKeys-trained model scoring 89.3% top-1 on a 2,400-swipe held-out English benchmark, plus 6 non-Latin languages (ru, uk, bg, mk, el, he) on their own per-script encoders, plus any imported Latin pack that is a–z-typeable; and geometric (layout-agnostic, no ML model), used when CTC prerequisites are unavailable — including Turkish, whose dotless `ı` has no a–z spelling
 - **Sub-200ms predictions** with XNNPACK hardware acceleration
 - **Autocorrect with contraction support** — "dont" to "don't", "im" to "I'm"
+- **Swiped contractions rank by how often they are written** — on real recorded swipes, they're comes first 22 of 39 times (was 4), and French elisions such as d'être, qu'il and l'état are offered beside their look-alikes
 - **Full inference control** — beam width, length normalization, pruning, early stopping
 - **Next-word prediction (on by default)** — built-in phrase suggestions before you type a letter, with optional personalized learning and tap-to-chain
 - **Suggestion transparency** — long-press any suggestion to see which engine produced it and its full score breakdown; optional per-origin markers

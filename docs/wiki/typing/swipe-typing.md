@@ -139,6 +139,13 @@ for English/French/German/Spanish does *not* apply to them.
 
 Whichever engine decodes a swipe, the results flow through the same suggestion bar, autocorrect, and contraction handling ("dont" is shown as "don't"). If you enable suggestion origin markers, each suggestion is tagged with the engine that actually produced it.
 
+Swiped contractions are ranked by how often the contraction itself is written. In English that is
+the pronoun contractions (on real recorded swipes, a swipe of they're now comes first 22 times in
+39, against 4 before; you're 23 in 66, against 17). In French it is the elisions (d'être, qu'il,
+l'état): 85.6% of 2,291 real French swipes are first-try, against 84.2% before. Italian elisions
+still rank only against each other's spelling, because there are no recorded Italian swipes to
+check a change against.
+
 ### CTC Settings
 
 With the CTC engine selected, a **Full CTC Settings** button appears with one tuning knob:

@@ -53,13 +53,17 @@ Enable a second language for combined predictions:
 2. Select a language (Spanish, French, German, etc.)
 3. Both dictionaries now contribute predictions
 
-### Step 4: Enable Language Detection (Optional)
+### Step 4: Auto-Detect Language (Optional)
 
-Auto-detect adjusts prediction weighting:
+With a secondary language chosen, **Auto-Detect Language** follows which of your two languages you
+are typing:
 
-1. Enable **Language Detection**
-2. The system analyzes recent words
-3. If you're typing mostly Spanish, Spanish predictions get boosted
+1. It appears under **Secondary Language** once one is chosen (on by default)
+2. After five words it looks at your recent words (up to the last 20)
+3. When they read as your other language, next-word predictions and learning switch to it
+
+It only ever switches between your primary and secondary language, never to a third one, and it
+does nothing without a secondary language.
 
 ## One Language per Layout
 
@@ -92,11 +96,13 @@ as before. This also works for three or more languages: bind one layout per lang
 
 Control how quickly the system adapts to detected language:
 
+Sensitivity is how confident the detector must be before it switches:
+
 | Sensitivity | Behavior |
 |-------------|----------|
-| **Low (0.4)** | Slow to switch, stable predictions |
-| **Medium (0.6)** | Balanced adaptation |
-| **High (0.9)** | Quick switching between languages |
+| **0.4** | Switches on weaker evidence (quicker, and more often by mistake) |
+| **0.6** (default) | Balanced |
+| **0.9** | Switches only when nearly certain (slower, steadier) |
 
 ## Available Languages
 
@@ -148,8 +154,8 @@ The system maps your 26-letter QWERTY input to properly accented words.
 
 - **One layout, two languages**: No need to switch layouts for bilingual typing
 - **Accent-free typing**: Just type the base letters, accents are added automatically
-- **Detection window**: The system looks at your last ~10 words to detect language
-- **Boost settings**: Adjust detection sensitivity if switching feels too fast/slow
+- **Detection window**: The system looks at your last 20 words (from the fifth word on)
+- **Sensitivity**: Raise it if the language switches when you did not mean it to; lower it if switching is too slow
 
 > [!TIP]
 > For best results, type a few words in one language before expecting accurate detection.
@@ -160,8 +166,8 @@ The system maps your 26-letter QWERTY input to properly accented words.
 |---------|----------|-------------|
 | **Primary Language** | Multi-Language section | Main dictionary |
 | **Secondary Language** | Multi-Language section | Additional dictionary |
-| **Language Detection** | Multi-Language section | Auto-detect toggle |
-| **Detection Sensitivity** | Multi-Language section | 0.4-0.9 range |
+| **Auto-Detect Language** | Multi-Language section (with a secondary language) | Switch between your two languages as you type |
+| **Detection Sensitivity** | Multi-Language section (with a secondary language) | 0.4-0.9; higher switches less |
 | **Layout language** | Layout Manager (Language chip) | Language of one layout; overrides Primary/Secondary while that layout is active |
 
 ## Common Questions

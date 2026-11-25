@@ -94,15 +94,24 @@ class MultiLanguageManager(
      * Detect language from recent context and switch if needed
      * @param recentWords List of recently typed words
      * @param confidenceThreshold Minimum confidence to trigger switch (0.0-1.0)
+     * @param allowed The languages the user chose (primary + secondary); a detected language
+     *   outside them is not switched to. Checked HERE, before [switchLanguage], so the active
+     *   language can never become one the caller then refuses (2026-11-25).
      * @return Detected language code if switched, null if no switch
      */
-    fun detectAndSwitch(recentWords: List<String>, confidenceThreshold: Float = 0.7f): String? {
+    fun detectAndSwitch(
+        recentWords: List<String>,
+        confidenceThreshold: Float = 0.7f,
+        allowed: Set<String>? = null,
+    ): String? {
         if (recentWords.isEmpty()) {
             return null
         }
 
         val result = detector.detectLanguageFromWordsWithConfidence(recentWords)
-        if (result != null && result.language != activeLanguage && result.confidence >= confidenceThreshold) {
+        if (result != null && result.language != activeLanguage && result.confidence >= confidenceThreshold &&
+            (allowed == null || result.language in allowed)
+        ) {
             Log.i(TAG, "Language detected: ${result.language} (confidence: ${result.confidence})")
             if (switchLanguage(result.language)) {
                 return result.language
