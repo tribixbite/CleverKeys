@@ -648,6 +648,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.UrlQueryDeleteTest',
     // 2026-11-22: every language layout has word delete at Backspace NW, drawn as an icon.
     'tribixbite.cleverkeys.BackspaceWordDeleteLayoutTest',
+    // 2026-11-24: the phone pad's bottom-left key is ABC, with * and 123+ as its subkeys.
+    'tribixbite.cleverkeys.PinLayoutKeysTest',
     // 2026-11-22: a toggled modifier's fill stands apart and its label reads (ToggledKeyPalette).
     'tribixbite.cleverkeys.ToggledKeyPaletteTest',
     // 2026-10-23 Persian half-space (U+200C): one shared word-character rule (WordChars) at every
@@ -1822,6 +1824,10 @@ tasks.register('runMockTests', JavaExec) {
     // android.graphics.Paint test-source shadow, which models real colour semantics.
     // GH #90: real XML parsing and Theme geometry require Android API types.
     'tribixbite.cleverkeys.NumpadKeySizeTest',
+    // 2026-11-24: the phone pad's send key shows the field's action label, Enter otherwise.
+    'tribixbite.cleverkeys.PinLayoutActionKeyTest',
+    // 2026-11-24: a bottom-row key's subkey popover stays above the navigation bar.
+    'tribixbite.cleverkeys.Keyboard2ViewPopoverMetricsTest',
     // GH #186/#61: layout switch -> active language through the real Config, the layouts
     // serializer (backup round trip, invalid-code sanitising) and the XML `language` attribute.
     'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',

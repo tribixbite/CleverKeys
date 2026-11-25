@@ -1,6 +1,6 @@
 # Subkey popover (hold-then-select)
 
-**Status:** implemented 2026-09-30; audit fixes 2026-10-08 (typed custom slots, TalkBack, second finger, blank slots, saveable editors); device feel check pending. **Owner request:** "the more traditional hold-then-select
+**Status:** implemented 2026-09-30; audit fixes 2026-10-08 (typed custom slots, TalkBack, second finger, blank slots, saveable editors); modifiers 2026-11-23; command keys (Esc, Tab, ABC, 123+…) 2026-11-24; device feel check pending. **Owner request:** "the more traditional hold-then-select
 subkey popover found in mainstream keyboards".
 
 ## Behaviour
@@ -40,19 +40,32 @@ subkey popover found in mainstream keyboards".
    "shouldnt Fn key follow suit?"). With that setting off, or under TalkBack, their hold still
    locks, and so does the hold of one with nothing to show (an empty grid would replace the
    lock). A neutral release on one does nothing (a latch already there stays). A modifier press
-   that has typed with another key (a chord: Ctrl+C with two fingers) opens nothing. Keys that
-   already own the hold keep their behaviour:
+   that has typed with another key (a chord: Ctrl+C with two fingers) opens nothing.
+
+   **Command keys** open it too, when they have something to show (a layout subkey or a custom
+   mapping) (2026-11-24, maintainer: "shouldnt the esc and tab and ABC key show popup subkeys on
+   long press too?"): the Event keys (ABC, 123+, emoji, the pane and layout switches) and the
+   editing commands, whose hold did nothing, and the key events nobody holds to repeat (Esc, Tab,
+   Insert, F1–F12, Menu, play/pause/stop/next) (`Pointers.isPopoverCommandKey`). With nothing to
+   show they keep their old hold: Esc repeats, ABC does nothing and still switches on release.
+
+   Keys that already own the hold keep their behaviour:
    - keys with navigation subkeys (space, the nav key between space and Enter) enter TrackPoint,
      a modifier given arrow subkeys included (maintainer 2026-11-23: "dont overwrite the
      trackpoint style nav for holding the nav key");
    - the dead keys latch;
    - backspace repeats or selects;
-   - `modify_long_press` remaps (voice/IME switch).
+   - `modify_long_press` remaps (voice/IME switch);
+   - Enter and the editor action key (Send, Go, Search…): a slow press of the key that sends must
+     still send, and a neutral release sends nothing, so their subkeys stay a short swipe;
+   - the arrows, page and line jumps, forward delete and the volume, brightness, zoom and seek
+     keys repeat (`KEYEVENTS_KEEPING_THEIR_HOLD`).
 
-   On eligible keys the popover **replaces key repeat** while it is enabled; repeating a letter by holding is what it gives up.
+   On eligible keys the popover **replaces key repeat** while it is enabled; repeating a letter
+   (or an Esc or Tab that has subkeys) by holding is what it gives up.
 
-   The `modify_long_press` rule only remaps Event keys, which the Char/String rule already
-   excludes; it is kept as a guard and pinned by a test.
+   The `modify_long_press` rule only remaps Event keys. It is checked before the command-key rule,
+   so voice typing and the keyboard switch keep their remap; pinned by a test.
 
    - **TalkBack.** While touch exploration is on (`AccessibilityManager.isTouchExplorationEnabled`)
      the popover never opens: it is drawn only and exposes no accessibility nodes, so a blind
@@ -126,14 +139,14 @@ read through `ConfigSnapshot`, captured at touch-down (ARC-072).
 - `SubkeyAssignExtras` (pure) writes and reads the request as the assign activity's intent extras.
 - `Keyboard2View` draws the open popover last in `onDraw` through `SubkeyPopoverRenderer` (theme key paints; open, selection-scale and dwell-ring animation; no per-frame allocation).
   - It is drawn inside the key view, not in a `PopupWindow`, because touch coordinates in an IME window are clamped to the view: a slot outside the view could never be reached.
-  - So the grid is clamped inside the view (`SubkeyPopoverGeometry.gridCentre`) and hit-tested in its drawn coordinates.
+  - So the grid is clamped inside the view (`SubkeyPopoverGeometry.gridCentre`) and hit-tested in its drawn coordinates. The clamp's height stops at the navigation bar: the view reaches under it (`_insets_bottom`), and a bottom-row key's cells were drawn behind the system's buttons (2026-11-24, `Keyboard2ViewPopoverMetricsTest`).
   - A clamped grid can leave the resting finger over a slot, so selection waits until the finger moves (`isArmed`, 15 % of a cell) — an unmoved release never types anything.
 
 ## Tests
 
 - `SubkeyPopoverGeometryTest` and `SubkeyPopoverSlotsTest` (pure).
 - `SubkeyPopoverMigrationTest`.
-- `PointersSubkeyPopoverTest` (mock tier, built like `PointersShortSwipeCustomOverrideTest`): open on hold; a neutral release emits nothing; a slot release emits the default or custom mapping; single-character text and Char-kind commands are typed through the pipeline; a custom dead-key mapping latches; an empty slot asks for assign; the 3 s dwell asks for edit and leaving a slot cancels it; repeat is not started; TalkBack keeps the old hold; a second finger dismisses (inert release, B's shift stays latched); blank slots are not selected; cancel/clear dismiss; modifier, navigation-subkey and long-press-remapped keys keep their hold; shift through a layout modmap types `!` over `1`.
+- `PointersSubkeyPopoverTest` (mock tier, built like `PointersShortSwipeCustomOverrideTest`): open on hold; a neutral release emits nothing; a slot release emits the default or custom mapping; single-character text and Char-kind commands are typed through the pipeline; a custom dead-key mapping latches; an empty slot asks for assign; the 3 s dwell asks for edit and leaving a slot cancels it; repeat is not started; TalkBack keeps the old hold; a second finger dismisses (inert release, B's shift stays latched); blank slots are not selected; cancel/clear dismiss; modifier, navigation-subkey and long-press-remapped keys keep their hold; shift through a layout modmap types `!` over `1`; Esc, Tab and ABC show their subkeys and emit the chosen one, a neutral release on ABC switches nothing, a custom mapping on Esc opens it, a command key with nothing to show keeps its hold, Enter, the action key, an arrow and volume up keep theirs.
 - `PointersShortSwipeCustomOverrideTest`: the same routing for plain short swipes (typed single characters and Char-kind commands, literal multi-character macros, a dead-key mapping latches).
 - `CommandRoutingTest` (pure): pipeline vs executor routing; every Char/String-kind catalogue command is typed through the pipeline; every catalogue command has a path.
 - `SubkeyAssignExtrasTest` (pure): the assign request round-trips through the intent extras.

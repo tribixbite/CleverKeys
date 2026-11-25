@@ -481,6 +481,153 @@ class PointersSubkeyPopoverTest {
         assertEquals(KeyValue.getKeyByName("voice_typing_chooser"), ptr.value)
     }
 
+    // ------------------------------------------------------------------ command keys
+
+    /** A key named [name] with [subkeys] in their directions. */
+    private fun keyNamed(name: String, vararg subkeys: Pair<SwipeDirection, KeyValue>): KeyboardData.Key =
+        subkeys.fold(KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.getKeyByName(name))) { key, (dir, v) ->
+            key.withKeyValue(dir.subLabelIndex, v)
+        }
+
+    /**
+     * Maintainer 2026-11-24: "shouldnt the esc and tab and ABC key show popup subkeys on long press
+     * too?" They are not text, so the popover left them alone: a held Esc or Tab repeated, a held ABC
+     * did nothing. Esc here as on the 123+ pane (numeric.xml): `~` NE, `!` SE.
+     */
+    @Test
+    fun esc_holdShowsItsSubkeys_andTypesTheOneChosen() {
+        val esc = keyNamed("esc", SwipeDirection.NE to KeyValue.makeCharKey('~'), SwipeDirection.SE to KeyValue.makeCharKey('!'))
+        hold(key = esc)
+
+        val state = handler.shown
+        assertNotNull("holding Esc must show its subkeys", state)
+        assertEquals("no Esc repeat while the popover owns the hold", 0, handler.holds.size)
+        assertEquals(PopoverSlot.Default(SwipeDirection.NE, KeyValue.makeCharKey('~')), state!!.slot(SwipeDirection.NE))
+
+        moveTo(600f, 150f)  // NE
+        release()
+
+        assertEquals(KeyValue.makeCharKey('~'), handler.ups.single())
+    }
+
+    /** Tab as on the 123+ pane: `|` NE, `\` SE. */
+    @Test
+    fun tab_holdShowsItsSubkeys() {
+        val tab = keyNamed("tab", SwipeDirection.NE to KeyValue.makeCharKey('|'), SwipeDirection.SE to KeyValue.makeCharKey('\\'))
+        hold(key = tab)
+
+        assertNotNull("holding Tab must show its subkeys", handler.shown)
+        assertEquals("no Tab repeat while the popover owns the hold", 0, handler.holds.size)
+
+        moveTo(600f, 450f)  // SE
+        release()
+
+        assertEquals(KeyValue.makeCharKey('\\'), handler.ups.single())
+    }
+
+    /**
+     * ABC as on the phone pad (pin.xml): `*` NW, 123+ SW. A pane switch chosen in the popover is
+     * emitted like the same short swipe; a release in the neutral zone switches nothing, as it types
+     * nothing on a letter.
+     */
+    @Test
+    fun abc_holdShowsItsSubkeys_andEmitsTheOneChosen() {
+        val numeric = KeyValue.getKeyByName("switch_numeric")
+        val abc = keyNamed("switch_text", SwipeDirection.NW to KeyValue.makeCharKey('*'), SwipeDirection.SW to numeric)
+        hold(key = abc)
+
+        val state = handler.shown
+        assertNotNull("holding ABC must show its subkeys", state)
+        assertEquals(PopoverSlot.Default(SwipeDirection.NW, KeyValue.makeCharKey('*')), state!!.slot(SwipeDirection.NW))
+        assertEquals(PopoverSlot.Default(SwipeDirection.SW, numeric), state.slot(SwipeDirection.SW))
+
+        moveTo(400f, 450f)  // SW
+        release()
+
+        assertEquals(numeric, handler.ups.single())
+    }
+
+    @Test
+    fun abc_releaseInTheNeutralZone_switchesNothing() {
+        hold(key = keyNamed("switch_text", SwipeDirection.NW to KeyValue.makeCharKey('*')))
+        moveTo(520f, 320f)
+        release()
+
+        assertTrue("a neutral release is a cancel on every key", handler.ups.isEmpty())
+        assertTrue(handler.dismissed)
+    }
+
+    /** A user's own mapping on a command key counts as something to show. */
+    @Test
+    fun aCustomMappingOnACommandKey_opensItsPopover() {
+        putMapping(ShortSwipeMapping.textInput("esc", SwipeDirection.N, ":wq", ":wq"))
+        hold(key = keyNamed("esc"))
+
+        assertTrue(handler.shown?.slot(SwipeDirection.N) is PopoverSlot.Custom)
+    }
+
+    /**
+     * A command key with nothing to show keeps its old hold, like a modifier with no subkeys: an
+     * empty grid would only swallow a slow press. Held Esc repeats; held ABC does nothing and its
+     * release still switches.
+     */
+    @Test
+    fun aCommandKeyWithNothingToShow_keepsItsOldHold() {
+        hold(key = keyNamed("esc"))
+
+        assertNull(handler.shown)
+        assertEquals("Esc still repeats", 1, handler.holds.size)
+    }
+
+    @Test
+    fun abcWithNothingToShow_stillSwitchesOnRelease() {
+        hold(key = keyNamed("switch_text"))
+        release()
+
+        assertNull(handler.shown)
+        assertEquals(KeyValue.getKeyByName("switch_text"), handler.ups.single())
+    }
+
+    /**
+     * Enter and the editor's action key keep their hold: a slow press of the key that sends must
+     * still send, and a popover's neutral release sends nothing. Their subkeys stay a short swipe.
+     */
+    @Test
+    fun enter_keepsItsHold() {
+        hold(key = keyNamed("enter", SwipeDirection.NW to KeyValue.getKeyByName("voice_typing"),
+            SwipeDirection.NE to KeyValue.getKeyByName("action")))
+
+        assertNull("Enter keeps its hold", handler.shown)
+    }
+
+    @Test
+    fun theEditorActionKey_keepsItsHold() {
+        val action = KeyboardData.Key.EMPTY.withKeyValue(0, KeyValue.makeActionKey("Send"))
+            .withKeyValue(SwipeDirection.NE.subLabelIndex, KeyValue.getKeyByName("enter"))
+        hold(key = action)
+        release()
+
+        assertNull("the action key keeps its hold", handler.shown)
+        assertEquals("a slow press still sends", KeyValue.makeActionKey("Send"), handler.ups.single())
+    }
+
+    /** The arrows and page/line jumps keep their repeat, the reason anyone holds them. */
+    @Test
+    fun anArrowKey_keepsItsRepeat() {
+        hold(key = keyNamed("up", SwipeDirection.NE to KeyValue.getKeyByName("page_up")))
+
+        assertNull(handler.shown)
+        assertEquals("the arrow still repeats", 1, handler.holds.size)
+    }
+
+    @Test
+    fun aVolumeKey_keepsItsRepeat() {
+        hold(key = keyNamed("volume_up", SwipeDirection.NE to KeyValue.getKeyByName("volume_mute")))
+
+        assertNull(handler.shown)
+        assertEquals("holding volume up keeps raising it", 1, handler.holds.size)
+    }
+
     /**
      * Default slots carry the current modifiers through the real [KeyModifier.modify]: with
      * shift down and a layout modmap mapping `1` to `!`, the slot drawn over `1` types `!`.

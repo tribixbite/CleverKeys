@@ -78,6 +78,12 @@ Fn, Alt and Meta: holding one shows its subkeys, and a quick double tap locks it
 Tap to Lock Shift, Ctrl and Fn** under Input Behavior; with that setting off, holding them locks
 them as before). At the start of a sentence, where Shift is already on, a quick double tap turns
 on caps lock. A modifier with no subkeys (an Alt or Meta key you added) still locks when held.
+
+It also opens on command keys that have subkeys: **Esc**, **Tab**, **ABC**, **123+**, the
+emoji key and the other pane and layout switches. On the 123+ pane, holding Esc shows `~` and
+`!`, and holding ABC shows Ctrl; on the phone pad, holding ABC shows `*` and 123+. A command key
+with no subkeys keeps what its hold did before.
+
 Keys that already do something when held keep that behaviour:
 
 | Key | Holding it still |
@@ -85,10 +91,12 @@ Keys that already do something when held keep that behaviour:
 | Accent (dead) keys | Latches the accent |
 | Backspace | Repeats, or selects with a short swipe then hold ([Selection-Delete](selection-delete.md)) |
 | Space, the arrow key between space and Enter, and other keys with arrow subkeys | [TrackPoint mode](trackpoint-mode.md) |
+| Enter and the Send / Go / Search key | Unchanged, so a slow press still sends; swipe to reach their subkeys |
+| Arrow, Page Up/Down, Home/End, Delete, volume and brightness keys | Repeats |
 | Keys with their own long-press action (for example voice input or keyboard switch) | That action |
 
 While the popover is on, it **replaces key repeat** on the keys it applies to: holding a
-letter no longer repeats it. Backspace still repeats.
+letter, or an Esc or Tab key with subkeys, no longer repeats it. Backspace still repeats.
 
 With TalkBack's explore-by-touch on, holding a key keeps its previous behaviour.
 

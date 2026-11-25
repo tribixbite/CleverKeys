@@ -238,14 +238,13 @@ object LayoutModifier {
     }
 
     /**
-     * Modify the pin entry layout. [main_kw] is used to map the digits into the
-     * same script.
+     * Modify the pin entry layout (the phone pad) like the number pane: digits in [main_kw]'s
+     * script and the action key with the editor's label, swapped with Enter where the field asks
+     * for it. Never with the numpad's digit inversion: a phone pad runs 1-2-3 from the top. It
+     * used to map the digits only, so its action key read "Action" in every field (2026-11-24).
      */
     @JvmStatic
-    fun modify_pinentry(kw: KeyboardData, main_kw: KeyboardData): KeyboardData {
-        val m = numpad_script_map(main_kw.numpad_script)
-        return if (m == null) kw else kw.mapKeys(m)
-    }
+    fun modify_pinentry(kw: KeyboardData, main_kw: KeyboardData): KeyboardData = modifyPane(kw, main_kw, invertDigits = false)
 
     /** Modify the number row according to [main_kw]'s script. */
     private fun modify_number_row(row: KeyboardData.Row, main_kw: KeyboardData): KeyboardData.Row {

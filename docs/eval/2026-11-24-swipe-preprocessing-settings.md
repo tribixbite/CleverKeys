@@ -95,6 +95,26 @@ calls `endWordSwipe()` without `promoteWordCandidacy()` (`Pointers.kt:531-538`).
 than 272 px with fewer than two keys registered at its last sample therefore types nothing (5 of
 100,000 traces at the defaults).
 
+**Fixed 2026-11-24 (evening).** The five traces (config D, vsync re-timing, `futo_train100k`), with
+the keys the recognizer registered and the CTC top 3 of the same trace:
+
+| target | registered | samples / ms | path px | CTC top 3 |
+|---|---|---|---|---|
+| `he` | `h` | 2 / 3 | 438 | he, hr, be |
+| `was` | `w` | 25 / 198 | 328 | we, wh, was |
+| `on` | `o` | 13 / 94 | 324 | of, on, o |
+| `in` | `i` | 14 / 103 | 278 | is, it, in |
+| `a` | `i` | 15 / 111 | 623 | up, is, if |
+
+`he`'s second key fell within one 3 ms step (the dwell gate); the other four end outside the
+replay's key grid. Such a SWIPE now degrades to the starting key's tap (`Pointers.onTouchUp`,
+`PointersSwipeStartKeyTest.aSwipeWithoutWordCandidacy_typesItsStartingKey_notNothing`, red first).
+Decoding the path instead would put the target first once and in the top 3 four times, but the
+recognizer's `endSwipe()` and `Keyboard2View.onSwipeEnd` hand over only a path with two registered
+keys; that is a TODO in `Pointers.kt`. To list them again: `load_rows(corpus, False, True)`, keep
+the rows where `replay(pts, CFGS["D"])` returns the route `dropped`, and decode each returned trace
+with `H.Encoder().emit` + `H.beam_decode` (all in `scripts/swipe_settings_replay.py`; ~70 s).
+
 ## Commands
 
 ```

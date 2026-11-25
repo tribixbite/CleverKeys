@@ -277,6 +277,39 @@ commands; "i cant reach 1.26 (default noise?) with the slider". Results:
     now at display ~(365,841) (it was ~(655,481) this morning): something on the glass or a fault —
     tell the maintainer.
 
+**Status 2026-11-24, night (agent).** Maintainer: "anything else you can think of to test? all 2.0.0
+outstanding buttoned up? check if the note 10 is still registering a touch", make the phone pad
+"have an ABC key instead of * (with * as a subkey for it…)", and "shouldnt the esc and tab and ABC
+key show popup subkeys on long press too?". Done (`docs/RELEASE_RECORD.md` "Additions 2026-11-24 (4)"):
+- **Phone pad** (`pin.xml`, what phone/number/date fields open): the bottom-left key is ABC, `*` at its
+  NW corner where ABC was, 123+ at SW (`PinLayoutKeysTest`).
+- **Command keys hold for their subkeys** when the popover is on: Esc, Tab, ABC, 123+, emoji and the
+  other Event/editing keys and the key events nobody holds to repeat (`Pointers.isPopoverCommandKey`).
+  One with nothing to show keeps its old hold; Enter and the action key keep theirs (a slow press
+  still sends), the arrows, jumps, deletes and volume/brightness/zoom/seek keys keep their repeat.
+- **Found on the Saga while checking those, fixed:** the phone pad's send key read "Action" in every
+  field (`modify_pinentry` only mapped digits; the key now goes through the number pane's modifier and
+  is written `enter` + `action`); a bottom-row key's popover grid was drawn behind the navigation bar
+  (clamped to the whole view; now it ends at the bottom inset; the same clamp applied to Ctrl and Fn).
+- **The open swipe item:** a SWIPE without word candidacy types its starting key instead of nothing
+  (the five FUTO traces: `he`, `was`, `on`, `in`, `a`; decoding the path instead is a TODO: CTC put
+  `he` first and `was`/`on`/`in` in its top 3, but the recognizer hands over only two-key paths).
+- Tests seen failing first: 5 + 4 mock (popover, action key, nav bar), 1 pure (phone pad), 1 mock
+  (swipe); guards for Enter, the action key, arrows, volume, nothing-to-show and digit order passed
+  before and after. Suites: pure 4,032 / mock 1,986. **A2** at the working tree over `f42722ae` (app
+  sha256 `cc1fdcecf58267e9…`, test `0855b7402b27082b…`, `~/ew-output/a2-2026-11-24-r7/`): 1,684 on each
+  of API 34–37, 0 failed, 2 expected skips.
+- **Device, Saga `.1.130`, release r7 `020dff2e…`** (r6 `76ae0595…` first): Chrome phone field → the
+  pad with ABC; tap ABC = letters; hold ABC = `*` NW and 123+ SW above the nav bar, each chosen from
+  it (`*` typed, 123+ opened the pane); the send key reads Next and moved focus to the next field.
+  123+ pane: hold Esc → `~` typed, hold Tab → `\` typed, hold ABC → Ctrl shown and a neutral release
+  stayed on the pane. Test tab closed, Settings in front, r7 stays.
+- **Note10+:** no touch now (26 s of `getevent` on sec_touchscreen: 0 events; `dumpsys input` Last Raw
+  Touch pointerCount=0); the Google app was in front, left as found.
+- **Pixel not used:** Minecraft was in front (someone using it).
+- `build-on-termux.sh release` without `--no-install` ran `termux-open` on the APK (an "Open with"
+  chooser on the host; it was gone, the host locked); now always `--no-install`.
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by
@@ -325,11 +358,13 @@ default (it is, since #110: the S25U has it off); a battery of tests on the Note
     the maintainer's OK.
   - **A2 at `fa18a6b0`** (app sha256 `d9aa2d61…`, test `a0364274…`, `~/ew-output/full-2026-11-24/`):
     1,681 on each of API 34–37, 1,679 passed, the 2 expected skips, 0 failed. CI green.
-**Open (agent):** the touch-up classifier's SWIPE route skips `promoteWordCandidacy()`
+~~**Open (agent):** the touch-up classifier's SWIPE route skips `promoteWordCandidacy()`
 (`Pointers.kt:531-538`). A swipe longer than 272 px with < 2 keys registered at its last sample
 types nothing (5 of 100,000 FUTO traces at the defaults; found by the swipe replay). It needs a
-TAP fallback when candidacy still fails. Geometric smoothing 1 vs 3 is unmeasured (command in the
-swipe eval). Before the tag: only M1, M2, M4.
+TAP fallback when candidacy still fails.~~ FIXED 2026-11-24 (night): such a SWIPE types its
+starting key (the five were `he`, `was`, `on`, `in`, `a`; decoding the path instead is a TODO in
+`Pointers.kt`, see the swipe eval and the night status below). Still open: geometric smoothing 1 vs
+3 is unmeasured (command in the swipe eval). Before the tag: only M1, M2, M4.
 
 **Review since v1.5.0 (2026-11-14; fixes 2026-11-15, agent):** `docs/audit/2026-11-14-post-v1.5-review.md`
 §2a is the status table. H1–H4 and all 26 mediums are fixed, and so are most lows; a follow-up audit

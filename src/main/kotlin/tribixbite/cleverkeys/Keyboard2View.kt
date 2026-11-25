@@ -1189,7 +1189,10 @@ class Keyboard2View @JvmOverloads constructor(
         val cellW = key.width * _keyWidth
         val cellH = row.height * tc.row_height
         if (cellW <= 0f || cellH <= 0f || width == 0 || height == 0) return null
-        return SubkeyPopoverMetrics(cellW, cellH, width.toFloat(), height.toFloat())
+        // The grid stays above the navigation bar: the view reaches under it (`_insets_bottom`),
+        // and a bottom-row key's lowest cells were drawn behind the system's buttons (Saga,
+        // 2026-11-24: holding ABC on the phone pad put its 123+ cell under Back).
+        return SubkeyPopoverMetrics(cellW, cellH, width.toFloat(), (height - _insets_bottom).toFloat())
     }
 
     override fun onSubkeyPopoverShow(state: SubkeyPopoverState) {

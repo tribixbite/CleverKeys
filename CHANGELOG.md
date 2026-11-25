@@ -609,6 +609,13 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
+  typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.
+- The phone pad's send key shows the field's action (Next, Go, Done…); it read "Action" in every
+  phone, number and date field. Where a field wants Enter, the key is Enter with the action on
+  its corner, as on the letters.
+- The subkey popover of a bottom-row key (Ctrl, Fn, ABC) is drawn above the navigation bar; its
+  lowest cells were behind the navigation buttons.
 - Pasting a clipping you just cleaned or edited works after Android has cleared its clipboard.
   Android 13 and later empty the clipboard an hour after the last copy; Clean then had nothing to
   replace, so the paste key pasted nothing. One cleaned or edited clipping now goes onto an empty
@@ -708,6 +715,15 @@ editor that used to be listed here already ship in 2.0.)
   With the popover or the double tap off, holding Shift still locks it, also when it is already
   on (that hold used to turn Shift off, so caps lock took a second hold), and so for Ctrl, Alt
   and Fn.
+- Holding Esc, Tab, ABC, 123+, the emoji key or another pane or layout switch opens its subkeys
+  when the subkey popover is on (on the 123+ pane: `~` and `!` on Esc, `|` and `\` on Tab, Ctrl on
+  ABC). Esc and Tab used to repeat, the others did nothing. A key with no subkeys keeps its old
+  hold; Enter and the Send / Go key keep theirs, so a slow press still sends, and the arrows,
+  Delete and the volume keys still repeat.
+- The phone pad (what a phone, number or date field opens) has an ABC key at its bottom left, in
+  place of `*`; `*` is ABC's top-left subkey, where ABC was, and 123+ stays bottom-left. Holding
+  ABC shows both. Its send key is Enter with the field's action on its corner, swapped where the
+  field asks for the action, as on the letters (it was the action with Enter on its corner).
 - With Ctrl, Alt or Meta on together with Shift or caps lock, the letter keys show capitals; they
   showed lowercase. The shortcut sent to the app is unchanged.
 - A quick double tap locks Ctrl, Alt, Fn and Meta as it locks Shift (📝 Input Behavior › Double

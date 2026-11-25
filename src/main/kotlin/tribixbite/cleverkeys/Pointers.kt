@@ -519,7 +519,17 @@ class Pointers(
             // - a Char key that is not a letter (space, digit, punctuation): swipe typing
             //   only starts on letters, so the gesture stays that key's tap/short swipe.
             // canSwipeType = swipe_typing_enabled && isCharKey && letter start covers all three.
-            val effectiveGestureType = if (!canSwipeType && gestureType == GestureClassifier.GestureType.SWIPE) {
+            // - no word candidacy (fewer than two keys registered at the last sample: a flick
+            //   whose second key fell within one frame, a swipe that left the keyboard): the
+            //   decoder types nothing then. 5 of 100,000 FUTO traces did that (`he`, `was`, `on`,
+            //   `in`, `a`; docs/eval/2026-11-24-swipe-preprocessing-settings.md); they type the
+            //   starting key instead (2026-11-24).
+            // TODO: decode such a swipe's path instead of tapping. CTC put `he` first and `was`,
+            //   `on`, `in` in its top 3 (`a` not), but the recognizer's endSwipe() and
+            //   Keyboard2View.onSwipeEnd only hand over a path that registered two keys.
+            val effectiveGestureType = if (gestureType == GestureClassifier.GestureType.SWIPE &&
+                (!canSwipeType || !_swipeRecognizer.promoteWordCandidacy())
+            ) {
                 GestureClassifier.GestureType.TAP
             } else {
                 gestureType
@@ -1927,9 +1937,10 @@ class Pointers(
     /**
      * Whether holding [ptr]'s key may open the popover. Keys that already own the hold keep it:
      * keys with navigation subkeys (TrackPoint, the nav key between space and Enter), the dead keys
-     * (latch), backspace (repeat/selection), keys `modify_long_press` remaps (voice/IME switch), and
-     * anything else that is not text (Char/String). The lockable modifiers open it
-     * ([isPopoverModifier]).
+     * (latch), backspace (repeat/selection), keys `modify_long_press` remaps (voice/IME switch),
+     * Enter and the editor action key, and the arrows and page/line jumps (repeat). Text keys
+     * (Char/String), the lockable modifiers ([isPopoverModifier]) and the command keys
+     * ([isPopoverCommandKey]) open it.
      */
     private fun isSubkeyPopoverKey(ptr: Pointer): Boolean {
         val value = ptr.value ?: return false
@@ -1945,11 +1956,12 @@ class Pointers(
                 !ptr.hasFlagsAny(FLAG_P_LATCHED)
         }
         if (ptr.hasFlagsAny(FLAG_P_LATCHABLE or FLAG_P_LATCHED)) return false
+        if (KeyModifier.modify_long_press(value) != value) return false
+        if (isPopoverCommandKey(value)) return true
         if (value.hasFlagsAny(KeyValue.FLAG_SPECIAL)) return false
         if (value.getKind() != KeyValue.Kind.Char && value.getKind() != KeyValue.Kind.String) return false
         if (value.getString().isBlank()) return false
-        if (isBackspaceKey(value)) return false
-        return KeyModifier.modify_long_press(value) == value
+        return !isBackspaceKey(value)
     }
 
     /**
@@ -1958,6 +1970,23 @@ class Pointers(
      */
     private fun isPopoverModifier(value: KeyValue): Boolean =
         value.getKind() == KeyValue.Kind.Modifier && value.hasFlagsAny(KeyValue.FLAG_DOUBLE_TAP_LOCK)
+
+    /**
+     * Command keys whose hold has no use of its own, so it shows their subkeys (maintainer
+     * 2026-11-24: "shouldnt the esc and tab and ABC key show popup subkeys on long press too?"):
+     * the Event keys (ABC, 123+, emoji, the pane and layout switches) and the editing commands,
+     * which do nothing when held, and the key events nobody holds to repeat (Esc, Tab, Insert, the
+     * F keys, play/pause). The editor action key and [KEYEVENTS_KEEPING_THEIR_HOLD] keep their
+     * hold: a slow press of the key that sends must still send (a release in the popover's neutral
+     * zone sends nothing), and the arrows, jumps, deletes and volume keys repeat. A command key
+     * opens the popover only with something to show ([tryOpenSubkeyPopover]).
+     */
+    private fun isPopoverCommandKey(value: KeyValue): Boolean = when (value.getKind()) {
+        KeyValue.Kind.Event -> value.getEvent() != KeyValue.Event.ACTION
+        KeyValue.Kind.Editing -> true
+        KeyValue.Kind.Keyevent -> value.getKeyevent() !in KEYEVENTS_KEEPING_THEIR_HOLD
+        else -> false
+    }
 
     /** Open the popover for [ptr] if it applies; false leaves the hold to the other behaviours. */
     private fun tryOpenSubkeyPopover(ptr: Pointer, snap: ConfigSnapshot): Boolean {
@@ -1977,8 +2006,11 @@ class Pointers(
         )
         // A key with nothing to show and nothing assignable keeps its old hold (repeat). A modifier
         // with nothing to show (an Alt or Meta key added to a layout) keeps its lock: an empty grid
-        // in place of the hold that locks it would look like a hold that does nothing.
-        if (slots.all { it is PopoverSlot.Empty } && (keyCode == null || isPopoverModifier(value))) return false
+        // in place of the hold that locks it would look like a hold that does nothing. A command
+        // key with nothing to show keeps its hold too: on Esc or ABC an empty grid would only
+        // swallow a slow press.
+        if (slots.all { it is PopoverSlot.Empty } &&
+            (keyCode == null || isPopoverModifier(value) || isPopoverCommandKey(value))) return false
         val state = SubkeyPopoverState(
             keyCode = keyCode,
             keyLabel = value.getString(),
@@ -2675,6 +2707,34 @@ class Pointers(
 
         /** Movement (px) past which a hold is a swipe, not a hold — shared by repeat and popover. */
         private const val HOLD_STILLNESS_PX = 15f
+
+        /**
+         * Key events whose hold stays theirs ([isPopoverCommandKey]): the arrows, page and line
+         * jumps, the two deletes and the volume, brightness, zoom and seek keys repeat, and Enter
+         * is the key that sends.
+         */
+        private val KEYEVENTS_KEEPING_THEIR_HOLD = setOf(
+            android.view.KeyEvent.KEYCODE_VOLUME_UP,
+            android.view.KeyEvent.KEYCODE_VOLUME_DOWN,
+            android.view.KeyEvent.KEYCODE_BRIGHTNESS_UP,
+            android.view.KeyEvent.KEYCODE_BRIGHTNESS_DOWN,
+            android.view.KeyEvent.KEYCODE_ZOOM_IN,
+            android.view.KeyEvent.KEYCODE_ZOOM_OUT,
+            android.view.KeyEvent.KEYCODE_MEDIA_REWIND,
+            android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD,
+            android.view.KeyEvent.KEYCODE_DPAD_UP,
+            android.view.KeyEvent.KEYCODE_DPAD_DOWN,
+            android.view.KeyEvent.KEYCODE_DPAD_LEFT,
+            android.view.KeyEvent.KEYCODE_DPAD_RIGHT,
+            android.view.KeyEvent.KEYCODE_PAGE_UP,
+            android.view.KeyEvent.KEYCODE_PAGE_DOWN,
+            android.view.KeyEvent.KEYCODE_MOVE_HOME,
+            android.view.KeyEvent.KEYCODE_MOVE_END,
+            android.view.KeyEvent.KEYCODE_DEL,
+            android.view.KeyEvent.KEYCODE_FORWARD_DEL,
+            android.view.KeyEvent.KEYCODE_ENTER,
+            android.view.KeyEvent.KEYCODE_NUMPAD_ENTER,
+        )
 
         /**
          * A double tap on a lockable modifier: the second press starts within this of the first

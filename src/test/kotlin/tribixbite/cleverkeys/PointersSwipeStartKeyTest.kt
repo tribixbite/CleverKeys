@@ -274,6 +274,34 @@ class PointersSwipeStartKeyTest {
         }
     }
 
+    /**
+     * A gesture the touch-up classifier calls SWIPE went to the word decoder even without word
+     * candidacy (fewer than two keys registered at its last sample), and the decoder types nothing
+     * then: 5 of 100,000 FUTO traces (`he`, `was`, `on`, `in`, `a`; the swipe replay,
+     * docs/eval/2026-11-24-swipe-preprocessing-settings.md). It is the starting key's tap instead,
+     * as a SWIPE already is when swipe typing cannot apply at all.
+     */
+    @Test
+    fun aSwipeWithoutWordCandidacy_typesItsStartingKey_notNothing() {
+        every { recognizer.isSwipeTyping() } returns false
+        every { recognizer.promoteWordCandidacy() } returns false
+        handler.reset()
+        ptrs.clear()
+        val value = requireNotNull(letterM.keys[0])
+        val s = snap()
+        // A letter press is deferred until the release decides tap or swipe (onTouchDown).
+        val flags = pointers.pointer_flags_of_kv(value, s) or Pointers.FLAG_P_DEFERRED_DOWN
+        val ptr = Pointers.Pointer(0, letterM, value, 400f, 100f, noMods(), flags, s)
+        ptr.lastX = 100f
+        ptr.hasLeftStartingKey = true
+        ptrs.add(ptr)
+
+        pointers.onTouchUp(0)
+
+        assertEquals("the word decoder is not asked", 0, handler.swipeEndCount)
+        assertEquals("the starting key is typed", listOf<KeyValue?>(value), handler.ups)
+    }
+
     @Test
     fun startPredicate_acceptsOnlySingleLetterCentres() {
         assertTrue(KeyLetter.startsWordSwipe(letterM))
