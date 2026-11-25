@@ -1123,7 +1123,9 @@ class SuggestionHandler(
         // instead — see [shouldAugmentPossessiveAt]. That path deliberately ignores the active
         // (primary) language: in a merged en+fr slate the primary tells you nothing about the
         // candidate in slot 2.
-        val barWords = rescoredPredictions.toMutableList()
+        // Every slot shows an I-word as it will be committed (`i've` → `I've`); the commit
+        // engine capitalizes the word it commits, so only the bar lagged (Saga, 2026-11-25).
+        val barWords = rescoredPredictions.mapTo(ArrayList(rescoredPredictions.size), ::capitalizeIWord)
         val barScores = rescoredScores.toMutableList()
         val engineWordCount = barWords.size
         val barLanguages = chosen.languages

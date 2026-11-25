@@ -153,6 +153,24 @@ class SwipeContractionChoiceTest {
         )
     }
 
+    // ------------------------------------------------------------------ I-words on the bar
+
+    /**
+     * Saga 2026-11-25: a swipe of i-v-e showed `one, i've, ice`; picking `i've` committed `I've`
+     * (the commit engine capitalizes) but the bar showed it lowercase. Every bar slot of a swipe
+     * shows the I-word as it will be committed.
+     */
+    @Test
+    fun aSwipeShowsIWordsCapitalisedInEverySlot() {
+        config.autocapitalize_i_words = true
+        every { ic.getTextBeforeCursor(any(), any()) } returns "and "
+        handler().handleSwipePredictionResults(
+            listOf("one", "i've", "ice"), listOf(120, 110, 90), ic, field(), resources,
+            false, false, inputCoordinator
+        )
+        assertWithMessage("bar after a swipe").that(barWords.take(3)).containsExactly("one", "I've", "ice").inOrder()
+    }
+
     // ------------------------------------------------------------------ the swap
 
     @Test

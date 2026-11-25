@@ -635,6 +635,8 @@ editor that used to be listed here already ship in 2.0.)
   ß words too.
 - A custom layout's arrow key repeats when held, with Backspace Only Repeat on (the default), as
   that setting describes; it moved the cursor once.
+- After a swipe, I'm, I've, I'll and I'd show capitalised in every suggestion slot; the other slots
+  showed i've, though picking it typed I've.
 - Pasting a clipping you just cleaned or edited works after Android has cleared its clipboard.
   Android 13 and later empty the clipboard an hour after the last copy; Clean then had nothing to
   replace, so the paste key pasted nothing. One cleaned or edited clipping now goes onto an empty

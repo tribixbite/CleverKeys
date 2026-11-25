@@ -409,6 +409,29 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
   maintainer may overrule. Fixed with it: typed `gross` → `gros` (stuck-key collapse) → now `groß`.
 - **Arrow key repeat** under Backspace Only Repeat: done (above).
 - Suites before the device work: pure 4,037 / mock 2,010.
+- **Saga `.1.130`, release r10 `5c3afa60…`** (CleverKeys data wiped as allowed; the full backup taken
+  first held 199 settings and NO clipboard rows or words — the pane confirmed "Results: 0"; restored
+  after, config identical but for the export date):
+  - **1.5 → 2.0 popover upgrade:** 1.5.0 fresh on its defaults (Backspace Only Repeat on) → r10 over
+    it: Subkey popover on hold ON. 1.5.0 with Backspace Only Repeat OFF → r10: OFF. Both as designed.
+  - **Contraction swipes** (synthetic straight lines, launcher test field): en 9/12 committed
+    (`Don't can't I'm isn't won't let's didn't wouldn't that's`); `theyre` → there with they're 2nd,
+    `ive` → one with I've 2nd, `youre` → your, you're not in the top 5 (the item-8 pronoun family).
+    fr 7/9 (`C'est j'ai l'école n'est d'accord aujourd'hui s'il`; qu'il and l'été on the bar behind
+    the loanwords will/lee). it 5/8 (`l'acqua nell'ambito sull'altra quell'anno`, …); `ce`/`cose`
+    are real words on the same path (c'è 2nd; cos'è not in the top 5); `dellanno` → **dell'ano**
+    first, dell'anno 2nd — evidence for the item-35 decision (rank elisions by their own frequency).
+    de 2/2 (`Geht's gibt's`).
+  - **German ß:** swipes `straße große weiß heißt fußball schließlich` (8/8 with the two
+    contractions); tapped `gross strasse weiss heisst fuss` + space → `Groß straße weiß heißt fuß`,
+    `dass masse muss` kept.
+  - **Image-only clipboard** (Chrome "Copy image", test template `AB{clipboard}CD` on g N): template
+    → nothing typed, bar "Action unavailable in this editor or panel"; paste swipe the same; the pane
+    lists the PNG with its thumbnail; its send button into a textarea → nothing typed, no crash
+    (`commitContent returned false`). Finding (not changed): the message blames the editor when the
+    clipboard simply has no text (a new string needs item 10's 21 locales).
+  - **Found and fixed:** the swipe bar showed `i've` lowercase in slots after the first
+    (`SwipeContractionChoiceTest`); pure 4,037 / mock 2,013.
 
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
