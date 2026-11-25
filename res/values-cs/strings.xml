@@ -628,6 +628,7 @@
     <string name="multilang_secondary_weight_desc">Váha předpovědí pro sekundární slovník (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Automaticky rozpoznávat jazyk</string>
     <string name="multilang_auto_detect_desc">Automaticky rozpoznávat a přepínat jazyk při psaní</string>
+    <string name="multilang_auto_detect_unavailable">Automatické rozpoznávání jazyka není pro tuto dvojici k dispozici: rozpozná pouze angličtinu, španělštinu, francouzštinu, portugalštinu, němčinu a švédštinu.</string>
     <string name="multilang_detection_sensitivity_title">Citlivost detekce</string>
     <string name="multilang_detection_sensitivity_desc">Jak rychle přepínat jazyky (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternativní primární jazyk</string>

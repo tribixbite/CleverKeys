@@ -94,9 +94,14 @@ class MultiLanguageManager(
      * Detect language from recent context and switch if needed
      * @param recentWords List of recently typed words
      * @param confidenceThreshold Minimum confidence to trigger switch (0.0-1.0)
-     * @param allowed The languages the user chose (primary + secondary); a detected language
-     *   outside them is not switched to. Checked HERE, before [switchLanguage], so the active
-     *   language can never become one the caller then refuses (2026-11-25).
+     * @param allowed The languages the user chose (primary + secondary). Detection chooses AMONG
+     *   them: the best-scoring allowed language is switched to when it clears
+     *   [confidenceThreshold] (each language's score is absolute, so restricting the choice does
+     *   not change what the threshold means). Restricted HERE, before [switchLanguage], so the
+     *   active language can never become one the caller then refuses (2026-11-25). When the
+     *   detector cannot score every allowed language ([LanguageDetector.canChooseBetween] false)
+     *   nothing is switched: it could move to the one it can score and never come back (pre-tag
+     *   review S7). Null: any language the detector has a profile for.
      * @return Detected language code if switched, null if no switch
      */
     fun detectAndSwitch(
@@ -107,11 +112,12 @@ class MultiLanguageManager(
         if (recentWords.isEmpty()) {
             return null
         }
+        if (allowed != null && !LanguageDetector.canChooseBetween(allowed)) {
+            return null
+        }
 
-        val result = detector.detectLanguageFromWordsWithConfidence(recentWords)
-        if (result != null && result.language != activeLanguage && result.confidence >= confidenceThreshold &&
-            (allowed == null || result.language in allowed)
-        ) {
+        val result = detector.detectLanguageFromWordsWithConfidence(recentWords, allowed)
+        if (result != null && result.language != activeLanguage && result.confidence >= confidenceThreshold) {
             Log.i(TAG, "Language detected: ${result.language} (confidence: ${result.confidence})")
             if (switchLanguage(result.language)) {
                 return result.language

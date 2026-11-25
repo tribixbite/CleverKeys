@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
+import tribixbite.cleverkeys.LanguageDetector
 import tribixbite.cleverkeys.LanguagePrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
@@ -186,18 +187,31 @@ internal fun SettingsActivity.MultiLanguageSection() {
 
                         // Detection switches only between the primary and this secondary
                         // language (WordPredictor.tryAutoLanguageDetection), so it is offered
-                        // only while one is chosen (2026-11-25).
-                        SettingsSwitch(
-                            title = stringResource(R.string.multilang_auto_detect_title),
-                            description = stringResource(R.string.multilang_auto_detect_desc),
-                            checked = autoDetectLanguage,
-                            onCheckedChange = {
-                                autoDetectLanguage = it
-                                saveSetting("pref_auto_detect_language", it)
-                            }
-                        )
+                        // only while one is chosen (2026-11-25), and only when the detector can
+                        // score both: with one it has no profile for (Italian, Dutch, an imported
+                        // pack) it could switch away and never back, so the keyboard does not
+                        // run it for that pair and Settings says why (pre-tag review S7).
+                        val detectable = LanguageDetector.canChooseBetween(listOf(primaryLanguage, secondaryLanguage))
+                        if (detectable) {
+                            SettingsSwitch(
+                                title = stringResource(R.string.multilang_auto_detect_title),
+                                description = stringResource(R.string.multilang_auto_detect_desc),
+                                checked = autoDetectLanguage,
+                                onCheckedChange = {
+                                    autoDetectLanguage = it
+                                    saveSetting("pref_auto_detect_language", it)
+                                }
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(R.string.multilang_auto_detect_unavailable),
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 8.dp)
+                            )
+                        }
 
-                        if (autoDetectLanguage) {
+                        if (detectable && autoDetectLanguage) {
                             SettingsSlider(
                                 title = stringResource(R.string.multilang_detection_sensitivity_title),
                                 description = stringResource(R.string.multilang_detection_sensitivity_desc),

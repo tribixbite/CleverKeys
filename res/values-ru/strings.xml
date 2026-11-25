@@ -628,6 +628,7 @@
     <string name="multilang_secondary_weight_desc">Вес предсказания для дополнительного словаря (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Автоопределение языка</string>
     <string name="multilang_auto_detect_desc">Автоматически определять и переключать языки при наборе</string>
+    <string name="multilang_auto_detect_unavailable">Автоопределение языка недоступно для этой пары: распознаются только английский, испанский, французский, португальский, немецкий и шведский.</string>
     <string name="multilang_detection_sensitivity_title">Чувствительность определения</string>
     <string name="multilang_detection_sensitivity_desc">Скорость переключения языков (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Альтернативный основной язык</string>

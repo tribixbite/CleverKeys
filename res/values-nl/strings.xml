@@ -624,6 +624,7 @@
     <string name="multilang_secondary_weight_desc">Voorspellingsgewicht voor secundair woordenboek (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Taal automatisch detecteren</string>
     <string name="multilang_auto_detect_desc">Automatisch taal detecteren en wisselen tijdens het typen</string>
+    <string name="multilang_auto_detect_unavailable">Taal automatisch detecteren is niet beschikbaar voor dit paar: alleen Engels, Spaans, Frans, Portugees, Duits en Zweeds worden herkend.</string>
     <string name="multilang_detection_sensitivity_title">Detectiegevoeligheid</string>
     <string name="multilang_detection_sensitivity_desc">Hoe snel van taal te wisselen (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternatieve primaire taal</string>

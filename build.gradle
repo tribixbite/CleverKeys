@@ -1519,6 +1519,9 @@ tasks.register('runMockTests', JavaExec) {
     // before Enter/field-switch is flushed, contractions learn whole, password fields never
     // learn. Real SuggestionHandler + WordPredictor learn funnel over in-memory n-gram stores.
     'tribixbite.cleverkeys.LearningFunnelBookkeepingTest',
+    // Pre-tag review S7 (2026-11-25): Auto-Detect chooses among the two chosen languages with the
+    // real detector scores, and never runs (nor is offered) for a pair it cannot score.
+    'tribixbite.cleverkeys.AutoDetectChosenLanguagesTest',
     'tribixbite.cleverkeys.LanguageDetectionEvalTest',
     // Next-word tiers (maintainer decision 2026-09-26): the shipped static tier shows with
     // on-device learning OFF (and in incognito fields); the learned tier is never read unless

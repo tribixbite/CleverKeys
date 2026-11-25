@@ -639,6 +639,7 @@
     <string name="multilang_secondary_weight_desc">Вага передбачення для додаткового словника (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Автовизначення мови</string>
     <string name="multilang_auto_detect_desc">Автоматично визначати та перемикати мови під час набору</string>
+    <string name="multilang_auto_detect_unavailable">Автовизначення мови недоступне для цієї пари: розпізнаються лише англійська, іспанська, французька, португальська, німецька та шведська.</string>
     <string name="multilang_detection_sensitivity_title">Чутливість визначення</string>
     <string name="multilang_detection_sensitivity_desc">Швидкість перемикання мов (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Альтернативна основна мова</string>

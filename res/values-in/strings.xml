@@ -633,6 +633,7 @@
     <string name="multilang_secondary_weight_desc">Bobot prediksi untuk kamus sekunder (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Deteksi Bahasa Otomatis</string>
     <string name="multilang_auto_detect_desc">Otomatis mendeteksi dan mengganti bahasa saat mengetik</string>
+    <string name="multilang_auto_detect_unavailable">Deteksi Bahasa Otomatis tidak tersedia untuk pasangan ini: hanya mengenali bahasa Inggris, Spanyol, Prancis, Portugis, Jerman, dan Swedia.</string>
     <string name="multilang_detection_sensitivity_title">Sensitivitas Deteksi</string>
     <string name="multilang_detection_sensitivity_desc">Seberapa cepat beralih bahasa (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Bahasa Utama Alternatif</string>

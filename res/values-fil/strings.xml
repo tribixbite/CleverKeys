@@ -633,6 +633,7 @@
     <string name="multilang_secondary_weight_desc">Timbang ng prediction para sa secondary na diksyunaryo (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Auto-Detect ng Wika</string>
     <string name="multilang_auto_detect_desc">Awtomatikong tuklasin at palitan ang mga wika habang nagtatype</string>
+    <string name="multilang_auto_detect_unavailable">Hindi available ang Auto-Detect ng Wika para sa pares na ito: Ingles, Espanyol, Pranses, Portuges, Aleman at Swedish lang ang nakikilala nito.</string>
     <string name="multilang_detection_sensitivity_title">Sensitivity ng Pagtuklas</string>
     <string name="multilang_detection_sensitivity_desc">Gaano kabilis ang paglipat ng mga wika (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Alternatibong Pangunahing Wika</string>

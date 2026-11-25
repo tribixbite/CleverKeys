@@ -879,6 +879,7 @@
     <string name="multilang_secondary_weight_desc">Prediction weight for the secondary dictionary while typing (0.5–1.5). Swipe suggestions are unaffected.</string>
     <string name="multilang_auto_detect_title">Auto-Detect Language</string>
     <string name="multilang_auto_detect_desc">Automatically detect and switch languages while typing</string>
+    <string name="multilang_auto_detect_unavailable">Auto-Detect is not available for this pair: it can only recognize English, Spanish, French, Portuguese, German and Swedish.</string>
     <string name="multilang_detection_sensitivity_title">Detection Sensitivity</string>
     <string name="multilang_detection_sensitivity_desc">How quickly to switch languages (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Alternate Primary</string>

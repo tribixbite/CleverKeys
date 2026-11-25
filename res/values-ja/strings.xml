@@ -621,6 +621,7 @@
     <string name="multilang_secondary_weight_desc">副辞書の予測ウェイト（0.5〜1.5）</string>
     <string name="multilang_auto_detect_title">言語の自動検出</string>
     <string name="multilang_auto_detect_desc">入力中に自動的に言語を検出して切り替えます</string>
+    <string name="multilang_auto_detect_unavailable">この言語の組み合わせでは言語の自動検出を使用できません。認識できるのは英語、スペイン語、フランス語、ポルトガル語、ドイツ語、スウェーデン語のみです。</string>
     <string name="multilang_detection_sensitivity_title">検出感度</string>
     <string name="multilang_detection_sensitivity_desc">言語を切り替える速さ（0.4〜0.9）</string>
     <string name="multilang_alternate_primary_title">代替主要言語</string>

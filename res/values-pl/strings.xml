@@ -638,6 +638,7 @@
     <string name="multilang_secondary_weight_desc">Waga przewidywań dla słownika pomocniczego (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Automatyczne wykrywanie języka</string>
     <string name="multilang_auto_detect_desc">Automatycznie wykrywaj i przełączaj język podczas pisania</string>
+    <string name="multilang_auto_detect_unavailable">Automatyczne wykrywanie języka nie jest dostępne dla tej pary: rozpoznaje tylko angielski, hiszpański, francuski, portugalski, niemiecki i szwedzki.</string>
     <string name="multilang_detection_sensitivity_title">Czułość wykrywania</string>
     <string name="multilang_detection_sensitivity_desc">Jak szybko przełączać języki (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternatywny język główny</string>

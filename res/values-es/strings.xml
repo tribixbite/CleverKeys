@@ -643,6 +643,7 @@
     <string name="multilang_secondary_weight_desc">Peso de predicción para el diccionario secundario (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Detectar idioma automáticamente</string>
     <string name="multilang_auto_detect_desc">Detecta y cambia automáticamente de idioma al escribir</string>
+    <string name="multilang_auto_detect_unavailable">La detección automática de idioma no está disponible para este par: solo reconoce inglés, español, francés, portugués, alemán y sueco.</string>
     <string name="multilang_detection_sensitivity_title">Sensibilidad de detección</string>
     <string name="multilang_detection_sensitivity_desc">Con qué rapidez cambiar de idioma (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Idioma principal alternativo</string>

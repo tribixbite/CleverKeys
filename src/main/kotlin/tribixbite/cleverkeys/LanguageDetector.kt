@@ -16,6 +16,21 @@ class LanguageDetector {
         // Detection thresholds
         private const val MIN_CONFIDENCE_THRESHOLD = 0.6f
         private const val MIN_TEXT_LENGTH = 10 // Minimum characters needed for detection
+
+        /** The languages a detector has a profile for; built once from the tables themselves. */
+        private val SCORED_LANGUAGES: Set<String> by lazy { LanguageDetector().languageCharFreqs.keys.toSet() }
+
+        /**
+         * Whether detection can choose between [languages]: at least two distinct languages, each
+         * one the detector has a profile for. With a language it cannot score (Italian, Dutch, an
+         * imported pack) it could switch to the other language and never back, so Auto-Detect is
+         * neither offered (Settings) nor run (`MultiLanguageManager.detectAndSwitch`) for that
+         * pair (pre-tag review S7, 2026-11-25).
+         */
+        fun canChooseBetween(languages: Collection<String>): Boolean {
+            val distinct = languages.toSet()
+            return distinct.size >= 2 && SCORED_LANGUAGES.containsAll(distinct)
+        }
     }
 
     /**
@@ -255,18 +270,25 @@ class LanguageDetector {
     /**
      * Detect language with confidence score
      * @param text Input text to analyze
-     * @return DetectionResult with language and confidence, or null if detection fails
+     * @param candidates The languages to choose among (null: every language with a profile). The
+     *   best is taken AMONG these, so a language the caller would refuse cannot win and hide a
+     *   candidate that scored above the caller's threshold (pre-tag review S7: Spanish text that
+     *   scored a little higher as Portuguese, with English + Spanish chosen, switched nothing).
+     *   Candidates without a profile are not scored.
+     * @return DetectionResult with language and confidence, or null if detection fails or no
+     *   candidate has a profile
      */
-    fun detectLanguageWithConfidence(text: String?): DetectionResult? {
+    fun detectLanguageWithConfidence(text: String?, candidates: Set<String>? = null): DetectionResult? {
         if (text == null || text.length < MIN_TEXT_LENGTH) {
             return null
         }
 
         val normalizedText = text.lowercase().trim()
 
-        // Calculate scores for each language
+        // Calculate scores for each candidate language
         val languageScores = mutableMapOf<String, Float>()
         for (language in languageCharFreqs.keys) {
+            if (candidates != null && language !in candidates) continue
             val score = calculateLanguageScore(normalizedText, language)
             languageScores[language] = score
         }
@@ -282,14 +304,15 @@ class LanguageDetector {
     /**
      * Detect language with confidence from word list
      * @param words List of recent words typed by user
+     * @param candidates The languages to choose among; see [detectLanguageWithConfidence]
      * @return DetectionResult with language and confidence, or null if detection fails
      */
-    fun detectLanguageFromWordsWithConfidence(words: List<String>?): DetectionResult? {
+    fun detectLanguageFromWordsWithConfidence(words: List<String>?, candidates: Set<String>? = null): DetectionResult? {
         if (words.isNullOrEmpty()) {
             return null
         }
         val text = words.filterNotNull().joinToString(" ")
-        return detectLanguageWithConfidence(text)
+        return detectLanguageWithConfidence(text, candidates)
     }
 
     /**

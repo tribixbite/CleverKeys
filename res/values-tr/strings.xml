@@ -632,6 +632,7 @@
     <string name="multilang_secondary_weight_desc">İkincil sözlük için tahmin ağırlığı (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Dili Otomatik Algıla</string>
     <string name="multilang_auto_detect_desc">Yazarken dilleri otomatik algıla ve değiştir</string>
+    <string name="multilang_auto_detect_unavailable">Dili otomatik algılama bu dil çifti için kullanılamaz: yalnızca İngilizce, İspanyolca, Fransızca, Portekizce, Almanca ve İsveççe tanınır.</string>
     <string name="multilang_detection_sensitivity_title">Algılama Duyarlılığı</string>
     <string name="multilang_detection_sensitivity_desc">Dillerin ne kadar hızlı değiştirileceği (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternatif Birincil</string>

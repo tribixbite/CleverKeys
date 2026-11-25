@@ -620,6 +620,7 @@
     <string name="multilang_secondary_weight_desc">次要词典的预测权重（0.5~1.5）。</string>
     <string name="multilang_auto_detect_title">自动检测语言</string>
     <string name="multilang_auto_detect_desc">输入时自动检测并切换语言。</string>
+    <string name="multilang_auto_detect_unavailable">此语言组合无法使用自动检测语言：仅能识别英语、西班牙语、法语、葡萄牙语、德语和瑞典语。</string>
     <string name="multilang_detection_sensitivity_title">检测灵敏度</string>
     <string name="multilang_detection_sensitivity_desc">切换语言的速度（0.4~0.9）。</string>
     <string name="multilang_alternate_primary_title">备用主要语言</string>

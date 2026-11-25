@@ -629,6 +629,7 @@
     <string name="multilang_secondary_weight_desc">Előrejelzési súly a másodlagos szótárhoz (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Automatikus nyelvfelismerés</string>
     <string name="multilang_auto_detect_desc">Automatikus nyelvfelismerés és -váltás gépelés közben</string>
+    <string name="multilang_auto_detect_unavailable">Az automatikus nyelvfelismerés ehhez a nyelvpárhoz nem érhető el: csak az angol, spanyol, francia, portugál, német és svéd nyelvet ismeri fel.</string>
     <string name="multilang_detection_sensitivity_title">Felismerési érzékenység</string>
     <string name="multilang_detection_sensitivity_desc">Milyen gyorsan vált nyelvet (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternatív elsődleges</string>

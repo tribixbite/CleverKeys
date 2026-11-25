@@ -650,6 +650,7 @@
     <string name="multilang_secondary_weight_desc">Trọng số dự đoán cho từ điển phụ (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Tự động phát hiện ngôn ngữ</string>
     <string name="multilang_auto_detect_desc">Tự động phát hiện và chuyển đổi ngôn ngữ khi gõ</string>
+    <string name="multilang_auto_detect_unavailable">Tự động phát hiện ngôn ngữ không khả dụng cho cặp ngôn ngữ này: chỉ nhận dạng được tiếng Anh, Tây Ban Nha, Pháp, Bồ Đào Nha, Đức và Thụy Điển.</string>
     <string name="multilang_detection_sensitivity_title">Độ nhạy phát hiện</string>
     <string name="multilang_detection_sensitivity_desc">Tốc độ chuyển đổi ngôn ngữ (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Ngôn ngữ chính thay thế</string>

@@ -643,6 +643,7 @@
     <string name="multilang_secondary_weight_desc">Vorhersagegewichtung für das sekundäre Wörterbuch (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Sprache automatisch erkennen</string>
     <string name="multilang_auto_detect_desc">Sprache beim Tippen automatisch erkennen und wechseln</string>
+    <string name="multilang_auto_detect_unavailable">Die automatische Spracherkennung ist für dieses Paar nicht verfügbar: Sie erkennt nur Englisch, Spanisch, Französisch, Portugiesisch, Deutsch und Schwedisch.</string>
     <string name="multilang_detection_sensitivity_title">Erkennungsempfindlichkeit</string>
     <string name="multilang_detection_sensitivity_desc">Wie schnell Sprachen gewechselt werden (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Alternative Primärsprache</string>

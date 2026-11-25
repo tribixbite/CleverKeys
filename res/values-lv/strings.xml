@@ -637,6 +637,7 @@
     <string name="multilang_secondary_weight_desc">Prognozes svars sekundārajai vārdnīcai (0.5–1.5)</string>
     <string name="multilang_auto_detect_title">Automātiska valodas noteikšana</string>
     <string name="multilang_auto_detect_desc">Automātiski noteikt un pārslēgt valodas rakstīšanas laikā</string>
+    <string name="multilang_auto_detect_unavailable">Automātiska valodas noteikšana šim valodu pārim nav pieejama: tā atpazīst tikai angļu, spāņu, franču, portugāļu, vācu un zviedru valodu.</string>
     <string name="multilang_detection_sensitivity_title">Noteikšanas jutīgums</string>
     <string name="multilang_detection_sensitivity_desc">Cik ātri pārslēgt valodas (0.4–0.9)</string>
     <string name="multilang_alternate_primary_title">Alternatīvā primārā valoda</string>

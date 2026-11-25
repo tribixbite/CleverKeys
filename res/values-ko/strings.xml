@@ -622,6 +622,7 @@
     <string name="multilang_secondary_weight_desc">보조 사전의 예측 가중치（0.5~1.5）</string>
     <string name="multilang_auto_detect_title">언어 자동 감지</string>
     <string name="multilang_auto_detect_desc">입력 중 자동으로 언어를 감지하고 전환합니다</string>
+    <string name="multilang_auto_detect_unavailable">이 언어 조합에서는 언어 자동 감지를 사용할 수 없습니다. 영어, 스페인어, 프랑스어, 포르투갈어, 독일어, 스웨덴어만 인식합니다.</string>
     <string name="multilang_detection_sensitivity_title">감지 감도</string>
     <string name="multilang_detection_sensitivity_desc">언어를 전환하는 속도（0.4~0.9）</string>
     <string name="multilang_alternate_primary_title">대체 기본 언어</string>

@@ -659,6 +659,7 @@
     <string name="multilang_secondary_weight_desc">وزن پیش‌بینی برای واژه‌نامه ثانویه (۰٫۵ تا ۱٫۵)</string>
     <string name="multilang_auto_detect_title">تشخیص خودکار زبان</string>
     <string name="multilang_auto_detect_desc">هنگام تایپ، زبان را به‌طور خودکار تشخیص دهید و تعویض کنید</string>
+    <string name="multilang_auto_detect_unavailable">تشخیص خودکار زبان برای این جفت زبان در دسترس نیست: فقط انگلیسی، اسپانیایی، فرانسوی، پرتغالی، آلمانی و سوئدی را تشخیص می‌دهد.</string>
     <string name="multilang_detection_sensitivity_title">حساسیت تشخیص</string>
     <string name="multilang_detection_sensitivity_desc">چقدر سریع زبان‌ها تعویض می‌شوند (۰٫۴ تا ۰٫۹)</string>
     <string name="multilang_alternate_primary_title">زبان اصلی جایگزین</string>

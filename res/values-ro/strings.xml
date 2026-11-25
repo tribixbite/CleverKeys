@@ -648,6 +648,7 @@
     <string name="multilang_secondary_weight_desc">Ponderea predicției pentru dicționarul secundar (0,5–1,5)</string>
     <string name="multilang_auto_detect_title">Detectare automată limbă</string>
     <string name="multilang_auto_detect_desc">Detectează și comută automat limbile în timp ce scrieți</string>
+    <string name="multilang_auto_detect_unavailable">Detectarea automată a limbii nu este disponibilă pentru această pereche: recunoaște doar engleza, spaniola, franceza, portugheza, germana și suedeza.</string>
     <string name="multilang_detection_sensitivity_title">Sensibilitate detectare</string>
     <string name="multilang_detection_sensitivity_desc">Viteza de comutare a limbii (0,4–0,9)</string>
     <string name="multilang_alternate_primary_title">Principal alternativ</string>
