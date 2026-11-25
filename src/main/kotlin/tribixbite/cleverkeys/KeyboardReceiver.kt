@@ -437,8 +437,14 @@ class KeyboardReceiver(
             }
 
             KeyValue.Event.SWITCH_GIF -> {
-                // GIF panel is opt-in — ignore key if disabled in settings
-                if (!Config.globalConfig().gif_enabled) return
+                // GIF panel is opt-in — ignore key if disabled in settings. The key's swipe has
+                // already spent auto-capitalisation's Shift (a subkey spends one-shot modifiers),
+                // so ask again: at a sentence start the next letter stays a capital (Note10+,
+                // 2026-11-25).
+                if (!Config.globalConfig().gif_enabled) {
+                    keyboard2.restoreAutoCapitalisation()
+                    return
+                }
 
                 // Toggle behavior: if GIF pane already visible, close it
                 if (gifSearchActive) {

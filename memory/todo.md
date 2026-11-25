@@ -432,6 +432,21 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
     clipboard simply has no text (a new string needs item 10's 21 locales).
   - **Found and fixed:** the swipe bar showed `i've` lowercase in slots after the first
     (`SwipeContractionChoiceTest`); pure 4,037 / mock 2,013.
+- **Note10+, re-run of the fixes of 2026-11-24 night and 11-25 (release r11 `7798a6cd…`, then r12
+  `559767b0…`; CleverKeys installed fresh, uninstalled again after):** all PASS — emoji pane closed at
+  a sentence start keeps the capital (`H`); Fn's swipe-up leaves the letters drawn (no Fn layer);
+  Settings search "language pack" → Language Packs; space swipe up to QWERTZ (German) and down back
+  at a sentence start → capitals both ways; QWERTZ ß corner `Groß` + space stays, typed `strasse` →
+  `straße`; Chrome phone field: ABC bottom-left, its hold popover (`*`, 123+) ends above the nav bar,
+  a neutral release types nothing, Next moves focus; swipe bar `I've` in slot 2; German secondary:
+  a custom word added with the keyboard open offered at once, a disabled word gone at once.
+  **Found and fixed:** Fn's swipe-up with the GIF panel off spent the automatic capital (next letter
+  lowercase) — `LayoutSwitchAutocapTest`, PASS on r12. Pure 4,037 / mock 2,014. Not device-checked:
+  a main-value arrow's repeat (no shipped layout has one; extra keys offer no arrow; mock test).
+  Findings, not changed: typed `zauberk` with German secondary put English `Dauber` (a fuzzy
+  correction) in slot 1 above the user's own `Zauberkuchen`; on this Android 12 phone the keyboard
+  moves up once its suggestion bar appears, so key coordinates must be measured after the first key.
+- Saga `.1.130` then got r12 over r10 (data kept).
 
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset

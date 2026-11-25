@@ -3,6 +3,7 @@ package tribixbite.cleverkeys
 import android.util.Log
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
@@ -103,6 +104,21 @@ class LayoutSwitchAutocapTest {
             receiver.handle_event_key(event)
         }
         verify(exactly = 3) { service.restoreAutoCapitalisation() }
+    }
+
+    /**
+     * Note10+ 2026-11-25 (release r11): in an empty field, Fn's swipe-up (GIF) with the GIF panel
+     * off did nothing visible, but the swipe had spent auto-capitalisation's Shift, so the next
+     * letter came out lowercase. A refused GIF key asks auto-capitalisation again.
+     */
+    @Test
+    fun aRefusedGifKeyShowsAutocapsShiftAgain() {
+        val config = mockk<Config>(relaxed = true)
+        config.gif_enabled = false
+        mockkObject(Config.Companion)
+        every { Config.globalConfig() } returns config
+        receiver.handle_event_key(KeyValue.Event.SWITCH_GIF)
+        verify(exactly = 1) { service.restoreAutoCapitalisation() }
     }
 
     @Test
