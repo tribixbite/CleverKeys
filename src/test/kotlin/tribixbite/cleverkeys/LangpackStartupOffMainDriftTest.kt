@@ -123,7 +123,7 @@ class LangpackStartupOffMainDriftTest {
     fun secondaryDictionaryPublicationFieldsStayVolatile() {
         val predictor = source("tribixbite/cleverkeys/WordPredictor.kt")
 
-        for (field in listOf("secondaryIndex", "secondaryLanguageCode")) {
+        for (field in listOf("secondaryIndex", "secondaryLanguageCode", "secondaryDisabledWords")) {
             val decl = Regex("""@Volatile\s*\n\s*private var $field""")
             assertWithMessage(
                 "WordPredictor.$field can be written by the blocking secondary-dictionary load " +

@@ -86,6 +86,25 @@ class LayoutSwitchAutocapTest {
         verify(exactly = 0) { service.restoreAutoCapitalisation() }
     }
 
+    /**
+     * Pixel 2026-11-24 (release r7): in an empty field, opening the emoji pane (Fn's swipe) and
+     * closing it without an emoji left the letters lowercase. The opener is a key like any other,
+     * so its release spends the one-shot Shift, and closing a pane asked auto-capitalisation
+     * nothing. Closing the emoji, clipboard or GIF pane asks again: the editor decides, so after an
+     * inserted emoji the Shift stays off.
+     */
+    @Test
+    fun closingAContentPaneShowsAutocapsShiftAgain() {
+        // Closing a pane clears the clipboard pane's search routing first.
+        receiver.setField("clipboardManager", mockk<ClipboardManager>(relaxed = true))
+        for (event in listOf(
+            KeyValue.Event.SWITCH_BACK_EMOJI, KeyValue.Event.SWITCH_BACK_CLIPBOARD, KeyValue.Event.SWITCH_BACK_GIF,
+        )) {
+            receiver.handle_event_key(event)
+        }
+        verify(exactly = 3) { service.restoreAutoCapitalisation() }
+    }
+
     @Test
     fun theNumberSymbolAndGreekPanesDoNotLatchShift() {
         for (event in listOf(

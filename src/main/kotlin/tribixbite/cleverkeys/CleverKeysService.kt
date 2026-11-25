@@ -1542,6 +1542,8 @@ class CleverKeysService : InputMethodService(),
         }
 
         _preferenceUIUpdateHandler?.handlePreferenceChange(key)
+        // The secondary language's custom / disabled words: its dictionary is rebuilt.
+        if (key != null) _predictionCoordinator?.onUserWordsChanged(key)
     }
 
     override fun onEvaluateFullscreenMode(): Boolean {

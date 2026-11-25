@@ -106,6 +106,8 @@ class WordPredictorFuzzyTypingTest {
         setField("cachedMaxFreqForSize", -1)
         setField("secondaryIndex", null)
         setField("secondaryLanguageCode", "none")
+        // Objenesis skips the initializer: no secondary-language disabled words (2026-11-24).
+        setField("secondaryDisabledWords", emptySet<String>())
 
         // Scoring knobs at their shipped defaults (Objenesis skipped Config's initializers).
         config.prediction_frequency_scale = Defaults.PREDICTION_FREQUENCY_SCALE

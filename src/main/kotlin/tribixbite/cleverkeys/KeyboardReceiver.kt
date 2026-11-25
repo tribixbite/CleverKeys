@@ -581,6 +581,10 @@ class KeyboardReceiver(
                 // view (the openers refuse without a container), so there is nothing to
                 // restore; hideContentPane() is a safe no-op when the views are null.
                 hideContentPane()
+                // The key that opened the pane spent the one-shot Shift like any key, so ask
+                // auto-capitalisation again: in an empty field the letters came back lowercase
+                // (Pixel, 2026-11-24). The editor decides, so after an inserted emoji it stays off.
+                keyboard2.restoreAutoCapitalisation()
             }
 
             // gh #175: collapse to a thin bar / a floating button; tapping it expands again.

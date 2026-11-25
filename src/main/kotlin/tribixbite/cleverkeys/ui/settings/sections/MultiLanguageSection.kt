@@ -1,6 +1,25 @@
 package tribixbite.cleverkeys.ui.settings.sections
 
 import tribixbite.cleverkeys.LanguagePrefs
+import tribixbite.cleverkeys.R
+import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.langpack.LanguagePackManifest
+import tribixbite.cleverkeys.langpack.NoticeTextLayout
+import tribixbite.cleverkeys.langpack.PackAttributionDisplay
+import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
+import tribixbite.cleverkeys.ui.settings.SettingsDropdown
+import tribixbite.cleverkeys.ui.settings.SettingsSlider
+import tribixbite.cleverkeys.ui.settings.SettingsSwitch
+import tribixbite.cleverkeys.ui.settings.contentYOf
+import tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus
+import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
+import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
+import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
+import tribixbite.cleverkeys.ui.settings.io.loadLanguagePackNotice
+import tribixbite.cleverkeys.ui.settings.io.rescanContractionCollisions
+import tribixbite.cleverkeys.ui.settings.openExternalUrl
+import tribixbite.cleverkeys.ui.settings.recordSettingPosition
+import tribixbite.cleverkeys.ui.settings.saveSetting
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -37,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -45,23 +65,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import tribixbite.cleverkeys.R
-import tribixbite.cleverkeys.SettingsActivity
-import tribixbite.cleverkeys.langpack.LanguagePackManifest
-import tribixbite.cleverkeys.langpack.PackAttributionDisplay
-import tribixbite.cleverkeys.ui.settings.CollapsibleSettingsSection
-import tribixbite.cleverkeys.ui.settings.SettingsDropdown
-import tribixbite.cleverkeys.ui.settings.SettingsSlider
-import tribixbite.cleverkeys.ui.settings.SettingsSwitch
-import tribixbite.cleverkeys.ui.settings.openExternalUrl
-import tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus
-import tribixbite.cleverkeys.ui.settings.io.deleteLanguagePack
-import tribixbite.cleverkeys.langpack.NoticeTextLayout
-import tribixbite.cleverkeys.ui.settings.io.getLanguageDisplayName
-import tribixbite.cleverkeys.ui.settings.io.importLanguagePack
-import tribixbite.cleverkeys.ui.settings.io.loadLanguagePackNotice
-import tribixbite.cleverkeys.ui.settings.io.rescanContractionCollisions
-import tribixbite.cleverkeys.ui.settings.saveSetting
 
 /**
  * The NOTICE.txt viewer's state: which pack is open, and its text once loaded. [text] is null
@@ -278,7 +281,10 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         text = stringResource(R.string.multilang_packs_header),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        // Scroll target of the "Language Packs" search entry (SettingsActivity).
+                        modifier = Modifier.padding(bottom = 4.dp).onGloballyPositioned {
+                            recordSettingPosition("language_packs", contentYOf(it))
+                        }
                     )
                     Text(
                         text = stringResource(R.string.multilang_packs_desc),

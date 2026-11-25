@@ -1465,6 +1465,8 @@ tasks.register('runMockTests', JavaExec) {
     // its direction's subkey, never a word swipe or a tap of the start key; OFF unchanged.
     'tribixbite.cleverkeys.PointersShortSwipesOnlyTest',
     'tribixbite.cleverkeys.PointersSwipeStartKeyTest',
+    // 2026-11-24: after a subkey swipe on a modifier the keys are drawn from the pointers left.
+    'tribixbite.cleverkeys.PointersSubkeySwipeRedrawTest',
     // 2026-10-30: an Event subkey on a letter (the voice key on `a`) never hijacks a word
     // swipe; the eager space-bar path leaves no trail; a stale press is dropped at first down.
     'tribixbite.cleverkeys.PointersEventSubkeyWordSwipeTest',
@@ -1720,6 +1722,10 @@ tasks.register('runMockTests', JavaExec) {
     // Review 2026-11-14 lows: the next-word read filter counts the secondary lexicon, and the
     // typo purge waits for the configured secondary on a language-bound layout.
     'tribixbite.cleverkeys.WordPredictorSecondaryLexiconTest',
+    // 2026-11-24: the secondary language's disabled words filter its candidates; its custom and
+    // disabled words reload its dictionary when they change.
+    'tribixbite.cleverkeys.WordPredictorSecondaryUserWordsTest',
+    'tribixbite.cleverkeys.PredictionCoordinatorSecondaryWordsTest',
     'tribixbite.cleverkeys.TypoPurgeBoundLayoutTest',
     'tribixbite.cleverkeys.ImeDialogDismissTest',
     'tribixbite.cleverkeys.BinaryDictionaryCorruptBodyTest',

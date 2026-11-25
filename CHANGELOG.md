@@ -616,6 +616,14 @@ editor that used to be listed here already ship in 2.0.)
   its corner, as on the letters.
 - The subkey popover of a bottom-row key (Ctrl, Fn, ABC) is drawn above the navigation bar; its
   lowest cells were behind the navigation buttons.
+- Closing the emoji, clipboard or GIF pane at the start of a sentence brings the automatic capital
+  back; the letters came back lowercase.
+- Words added to, imported into or disabled in your secondary language take effect at once; they
+  waited for the next language change or keyboard restart. A word disabled in the secondary
+  language (Dictionary Manager, its Disabled tab) is no longer suggested; it still was.
+- A swipe to a subkey of Fn (or another modifier) at the start of a sentence no longer leaves the
+  keys showing that modifier's symbols until the next key.
+- Settings search finds the Language Packs block ("language pack", "import").
 - Pasting a clipping you just cleaned or edited works after Android has cleared its clipboard.
   Android 13 and later empty the clipboard an hour after the last copy; Clean then had nothing to
   replace, so the paste key pasted nothing. One cleaned or edited clipping now goes onto an empty

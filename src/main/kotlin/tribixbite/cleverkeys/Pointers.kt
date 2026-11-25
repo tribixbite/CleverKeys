@@ -1108,7 +1108,18 @@ class Pointers(
         _handler.onCustomShortSwipe(mapping)
         clearLatched()
         _swipeRecognizer.reset()
+        retireSwipedPointer(ptr)
+    }
+
+    /**
+     * Remove the pointer a short swipe or popover slot was emitted from, then redraw from the
+     * pointers left. [clearLatched] redraws while the swiped key is still down, and it has just
+     * taken "latchable" off a pressed modifier, so a swipe on Fn with auto-capitalisation's Shift
+     * latched left every key drawn in Fn's layer until the next key (Pixel, 2026-11-24).
+     */
+    private fun retireSwipedPointer(ptr: Pointer) {
         removePtr(ptr)
+        _handler.onPointerFlagsChanged(null)
     }
 
     // ── Accessibility (TalkBack) short swipes ─────────────────────────────────
@@ -2155,9 +2166,8 @@ class Pointers(
             // so the flags above and the pointer that holds them agree.
             val latchedPtr = Pointer(-1, ptr.key, gestureValue, ptr.downX, ptr.downY, Modifiers.EMPTY, latchedFlags, snap)
             _ptrs.add(latchedPtr)
-            _handler.onPointerFlagsChanged(null)
             _swipeRecognizer.reset()
-            removePtr(ptr)
+            retireSwipedPointer(ptr)
             return
         }
 
@@ -2167,7 +2177,7 @@ class Pointers(
         _handler.onPointerUp(gestureValue, ptr.modifiers)
         clearLatched() // Clear shift after gesture completes
         _swipeRecognizer.reset()
-        removePtr(ptr)
+        retireSwipedPointer(ptr)
     }
 
     // Sliding

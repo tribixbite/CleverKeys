@@ -40,6 +40,12 @@ class PredictionCoordinator(
     private var dictionaryManager: DictionaryManager? = null
     private var wordPredictor: Predictor? = null
 
+    /**
+     * The secondary language last asked of [wordPredictor], or null for none: the language whose
+     * custom and disabled words [onUserWordsChanged] reloads.
+     */
+    private var secondaryLanguage: String? = null
+
     // Supporting services
     private var mlDataStore: SwipeMLDataStore? = null
     private var adaptationManager: UserAdaptationManager? = null
@@ -152,6 +158,7 @@ class PredictionCoordinator(
             val secondaryLang = config.active_secondary_language
             if (secondaryLang != null) {
                 Log.d(TAG, "Loading secondary dictionary for touch typing: $secondaryLang")
+                secondaryLanguage = secondaryLang
                 loadSecondaryDictionaryAsync(secondaryLang) {
                     MemoryProbe.mark("wordPredictor.secondary", settle = true) { "lang=$secondaryLang" }
                 }
@@ -218,12 +225,35 @@ class PredictionCoordinator(
 
         if (language == "none" || language.isEmpty()) {
             Log.i(TAG, "Unloading secondary dictionary for touch typing")
+            secondaryLanguage = null
             wordPredictor?.unloadSecondaryDictionary()
         } else {
             // Issue #179: async — this fires from the main-thread preference listener, and a
             // langpack secondary would otherwise be parsed on the UI thread mid-session.
             Log.i(TAG, "Loading secondary dictionary for touch typing: $language")
+            secondaryLanguage = language
             wordPredictor?.loadSecondaryDictionaryAsync(language)
+        }
+    }
+
+    /**
+     * A preference [key] changed (the service's listener). A change to the secondary language's
+     * custom or disabled words rebuilds its dictionary, as a language change does. The primary
+     * language's words reach the predictor through [UserDictionaryObserver], which listens to that
+     * one language; nothing listened to the secondary's, so a word imported into, added to or
+     * disabled in it changed nothing until the next language change or keyboard restart (Pixel,
+     * 2026-11-24: Dutch custom words from a dictionary backup were not offered). The rebuild is
+     * off the main thread, and only the latest of a burst is published (Dictionary Manager writes
+     * the preference once per word).
+     */
+    fun onUserWordsChanged(key: String) {
+        val language = LanguagePreferenceKeys.languageFromCustomWordsKey(key)
+            ?: LanguagePreferenceKeys.languageFromDisabledWordsKey(key)
+            ?: return
+        val secondary = secondaryLanguage ?: return
+        if (language.equals(secondary, ignoreCase = true)) {
+            Log.i(TAG, "Words of the secondary language '$secondary' changed: reloading its dictionary")
+            wordPredictor?.loadSecondaryDictionaryAsync(secondary)
         }
     }
 

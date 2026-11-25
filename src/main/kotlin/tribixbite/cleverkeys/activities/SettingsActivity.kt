@@ -768,6 +768,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             searchEntry(R.string.swipe_full_ctc_settings, listOf("ctc", "swipe engine", "beam", "trie"), "swipeTyping", CtcSettingsActivity::class.java),
             searchEntry(R.string.ctc_settings_threads_title, listOf("threads", "cpu", "xnnpack", "performance", "onnx"), "swipeTyping", CtcSettingsActivity::class.java, gatedBy = "swipe_typing", settingId = "onnx_threads"),
             searchEntry(R.string.gif_import_pack, listOf("gif", "import", "pack", "zip", "download"), "gif", expandSection = { gifSectionExpanded = true }, gatedBy = "gif_enabled", settingId = "gif_import"),
+            // The Language Packs block is buttons, which the generator does not index (2026-11-24).
+            searchEntry(R.string.multilang_packs_header, listOf("language", "pack", "packs", "import", "dictionary", "zip", "download"), "multiLang", expandSection = { multiLangSectionExpanded = true }, gatedBy = "multilang", settingId = "language_packs"),
             searchEntry(R.string.settings_section_help, listOf("help", "faq", "documentation", "wiki", "questions"), "help", expandSection = { helpSectionExpanded = true }, settingId = "help_faq"),
             searchEntry(R.string.settings_faq_numbers_q, listOf("numbers", "symbols", "subkey", "short swipe"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_numbers"),
             searchEntry(R.string.settings_faq_cursor_q, listOf("cursor", "navigation", "spacebar", "move"), "help", expandSection = { helpSectionExpanded = true }, settingId = "faq_cursor"),

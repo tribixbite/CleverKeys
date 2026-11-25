@@ -182,6 +182,14 @@ candidate wins; the secondary loop `continue`s on words already present). A cont
 key absent from the secondary dictionary is indexed at rank `CONTRACTION_ALIAS_RANK = 254`
 (score 5,000) so it is reachable by prefix but never outranks a real word.
 
+The secondary language's own user words (2026-11-24): its `custom_words_<lang>` are added to the
+secondary index when it is built, and its `disabled_words_<lang>` (less its custom words) filter its
+candidates (`WordPredictor.isSecondaryWordDisabled`, beside the primary's disabled words). A change
+to either preference rebuilds the secondary dictionary (`PredictionCoordinator.onUserWordsChanged`,
+from the service's preference listener): the primary's words go through `UserDictionaryObserver`,
+which listens to that one language, so before this a Dutch word imported, added or disabled while
+Dutch was secondary changed nothing until the next language change or keyboard restart.
+
 ### Manual Language Switching (as built)
 
 `MultiLanguageManager.switchLanguage(newLanguage): Boolean` (`MultiLanguageManager.kt:66`) only

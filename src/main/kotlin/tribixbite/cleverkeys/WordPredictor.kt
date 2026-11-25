@@ -54,6 +54,22 @@ class WordPredictor : Predictor {
          */
         private const val CONTRACTION_ALIAS_RANK = 254
 
+        /**
+         * [disabled] (one language's `disabled_words_<lang>` set) lowercased, less the words of
+         * that language's `custom_words_<lang>` JSON: a word added back as a custom word wins, as
+         * [isWordDisabled] lets the primary language's do. Unreadable JSON leaves every disabled
+         * word in.
+         */
+        internal fun secondaryDisabledSet(disabled: Set<String>, customWordsJson: String): Set<String> {
+            if (disabled.isEmpty()) return emptySet()
+            val custom = try {
+                JSONObject(customWordsJson).keys().asSequence().mapTo(HashSet()) { it.lowercase() }
+            } catch (e: JSONException) {
+                emptySet<String>()
+            }
+            return disabled.mapTo(HashSet()) { it.lowercase() } - custom
+        }
+
         // ── Autocorrect tuning constants ────────────────────────────
         // Used by the dual-gate scoring in `autoCorrect`. Constants
         // (not config knobs) because they're calibration values that
@@ -444,6 +460,15 @@ class WordPredictor : Predictor {
     private var secondaryLanguageCode: String = "none"
 
     /**
+     * The secondary language's disabled words ([secondaryDisabledSet]), published with
+     * [secondaryIndex]. Its candidates used to be checked against the primary language's
+     * disabled words only, so a word disabled in Dictionary Manager's tab for the secondary
+     * language was still offered (Pixel, 2026-11-24).
+     */
+    @Volatile
+    private var secondaryDisabledWords: Set<String> = emptySet()
+
+    /**
      * Typo hygiene (learning-system audit 2026-09-26): the ONE "may this word be learned?"
      * predicate, over the LIVE lexicon — see [LearnableWordPolicy] for the rules and the
      * table of consumers. The repeat tally is the personalization vocabulary's usage count.
@@ -583,6 +608,7 @@ class WordPredictor : Predictor {
         prefixIndex.set(mutableMapOf())
         secondaryIndex = null
         secondaryLanguageCode = "none"
+        secondaryDisabledWords = emptySet()
         isLoadingState = false
         customAndUserWords = emptySet()
         contractionAliases = emptyMap()
@@ -1808,12 +1834,35 @@ class WordPredictor : Predictor {
                 if (index != null) {
                     secondaryIndex = index
                     secondaryLanguageCode = language
+                    secondaryDisabledWords = readSecondaryDisabledWords(language)
                     notifySecondaryLexiconChanged()
                 }
                 callback?.run()
             }
         }
     }
+
+    /** [language]'s disabled words for its candidates ([secondaryDisabledSet]); empty if unreadable. */
+    private fun readSecondaryDisabledWords(language: String): Set<String> {
+        val ctx = context ?: return emptySet()
+        return try {
+            val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
+            secondaryDisabledSet(
+                prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(language), emptySet()) ?: emptySet(),
+                prefs.getString(LanguagePreferenceKeys.customWordsKey(language), "{}") ?: "{}",
+            )
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to read the secondary language's disabled words: $language", e)
+            emptySet()
+        }
+    }
+
+    /**
+     * Whether a secondary-language candidate is disabled: in the primary language, as before
+     * ([isWordDisabled]), or in its own language ([secondaryDisabledWords]).
+     */
+    private fun isSecondaryWordDisabled(word: String): Boolean =
+        (disabledWords.isNotEmpty() && isWordDisabled(word)) || word.lowercase() in secondaryDisabledWords
 
     /**
      * Load a secondary language dictionary for bilingual touch typing.
@@ -1838,6 +1887,7 @@ class WordPredictor : Predictor {
         val index = buildSecondaryDictionary(language) ?: return false
         secondaryIndex = index
         secondaryLanguageCode = language
+        secondaryDisabledWords = readSecondaryDisabledWords(language)
         notifySecondaryLexiconChanged()
         return true
     }
@@ -1897,6 +1947,7 @@ class WordPredictor : Predictor {
         asyncLoader.cancelSecondary()
         secondaryIndex = null
         secondaryLanguageCode = "none"
+        secondaryDisabledWords = emptySet()
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
         notifySecondaryLexiconChanged()
     }
@@ -2672,8 +2723,8 @@ class WordPredictor : Predictor {
                         continue
                     }
 
-                    // Skip disabled words
-                    if (isWordDisabled(result.bestCanonical)) {
+                    // Skip disabled words, the primary language's and its own
+                    if (isSecondaryWordDisabled(result.bestCanonical)) {
                         continue
                     }
 
@@ -3035,7 +3086,7 @@ class WordPredictor : Predictor {
             val hit = secIndex.lookup(normalized) ?: continue
             val canonical = hit.bestCanonical
             if (canonical.lowercase() in present) continue
-            if (disabledWords.isNotEmpty() && isWordDisabled(canonical)) continue
+            if (isSecondaryWordDisabled(canonical)) continue
             val frequency = secondaryRankToFrequency(hit.bestFrequencyRank)
             val prefixScore = fuzzyPrefixScoreFor(normalizedSeq, normalized, cost, secondaryBudget)
             val base = resolveScoreBreakdown(canonical, seq, frequency, context, prefixScore)?.finalScore ?: 0

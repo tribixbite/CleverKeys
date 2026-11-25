@@ -310,6 +310,48 @@ key show popup subkeys on long press too?". Done (`docs/RELEASE_RECORD.md` "Addi
 - `build-on-termux.sh release` without `--no-install` ran `termux-open` on the APK (an "Open with"
   chooser on the host; it was gone, the host locked); now always `--no-install`.
 
+**Status 2026-11-24, late night (agent).** Maintainer: "talkback rustdesk chords and voice seem good"
+(recorded in the manual checklist as the maintainer's report), "continue running outstanding and also do
+language import and non english custom word import/export, emojis, gif". Pixel, release r7 (`020dff2e…`):
+- **Language packs:** nl (40,000 words) and ru (50,000) imported through Multi-Language → Import Pack,
+  listed in Manage with source/licence; Dutch as secondary: `Gezel` → Gezellig/Gezellige/Gezelschap, a
+  `fiets` swipe → diets, fiets. Found: Import Pack shows only with Multi-Language on (wiki fixed) and
+  Settings search did not find it (fixed, hand entry). The contraction-conflict dialog reappears on each
+  reselection of the same languages, and says "from an imported language pack" where English
+  shortcuts colliding with Dutch words are counted too (wording kept: a string change for 21 locales).
+- **Non-English custom words:** a dictionary file with nl/ru/de/fr words (`Weißwurstfrühstück`,
+  `приветик`, `garçonnièrette`, `œuvrette`) and a disabled de word: preview per language, applied
+  8 + 1, the export afterwards holds every word under its language, characters intact, nothing
+  else changed. de/fr words have no Dictionary Manager tab while those languages are not active
+  (stored, not lost). Found and fixed: secondary-language custom words not offered until a reload;
+  secondary-language disabled words never filtered.
+- **Emoji:** recents, people tab (skin tones inline), search `heart` typed into the pane's box, ❤️
+  inserted; after emojis the bar offers `and`/`are` for `a`. Found and fixed: closing the pane at a
+  sentence start lost the automatic capital.
+- **GIF:** panel turned on, `discord-community-06` (753) imported in ~4 s, page 2/8, search `cat`,
+  re-import → "Pack already installed … Replace?" → replaced; a GIF tapped in a Google Messages draft
+  to the fictional 555-0100 went in as an image (`commitContent result=true`, webp), removed unsent
+  (draft deleted). Found and fixed: after Fn's swipe-up with Shift latched the keys stayed drawn in
+  Fn's layer.
+- **Fixes** (RELEASE_RECORD "Additions 2026-11-24 (5)"; each test seen failing first, the predictor and
+  coordinator ones against mutants because they use new API): closing a pane restores the automatic
+  capital; the secondary language's custom/disabled words rebuild its dictionary at once and its
+  disabled words filter its candidates; a subkey swipe's pointer is retired with a redraw; Language
+  Packs in Settings search. **Release r8 `6af93925…` on the Pixel:** capital back after the emoji pane;
+  no Fn layer after Fn's swipe-up; `zwembadjuffie` offered right after its import with the keyboard
+  already open; disabled `fietsenstalling` not offered; search "language pack" → the Language Packs
+  block. Suites: pure 4,033 / mock 1,996. **A2** at that code (app sha256 `c7b2dd14ff689748…`, test unchanged
+  `0855b7402b27082b…`, `~/ew-output/a2-2026-11-24-r8/`): 1,684 on each of API 34–37, 0 failed, 2 expected skips.
+- **Pixel restored:** packs, test words (nl/ru/de/fr), the disabled words, GIF pack all removed;
+  Multi-Language OFF, secondary None, GIF panel OFF; the dictionary export equals the 22:07 baseline
+  (custom 802, disabled 18, priorities, bigrams, trigrams). The typing had added learned `gezellig`,
+  `diets`, `fietsenstal` and the phrase `gezellig → diets`: removed (Learning & Data). `thubfs` fell out
+  of the 5,000-word learned list when `fietsenstal` came in (not restorable without re-importing
+  learned data). Emoji recents now hold the test emojis. Test files deleted, Chrome tab closed,
+  home in front, checked IN. Not run: the toggled-modifier look on the CleverKeys look and Black
+  theme (item 40; Theme Manager does not show the selected theme without a long scroll, so the
+  Pixel's own theme could not be restored safely).
+
 **Status 2026-11-24 (agent).** Maintainer (2026-11-23 late): check the newest S25U export against the
 defaults; were the autocorrect gates benchmarked; turn the popover on for the Pixel and test a reset
 and a restore of the S25U backup there; which swipe settings to adopt; Backspace Undo Swipe on by

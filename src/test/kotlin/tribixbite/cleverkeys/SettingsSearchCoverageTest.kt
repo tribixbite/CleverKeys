@@ -231,6 +231,21 @@ class SettingsSearchCoverageTest {
      * appear as a string literal somewhere under ui/settings (a `sectionId = "…"`, a FAQ item's
      * id, a control's highlight id). `whats_new` opens a URL instead and is exempt.
      */
+    /**
+     * Pixel 2026-11-24: Settings search for "language pack" found nothing. The generator indexes
+     * switches, sliders and dropdowns; the Language Packs block (Import Pack, Manage) is buttons
+     * under a header, shown only with Multi-Language on. A hand entry finds it, landing on the
+     * Multi-Language switch while that is off.
+     */
+    @Test
+    fun languagePacksAreFindable() {
+        val entry = settingsFile.readText().split("searchEntry(").drop(1)
+            .map { it.substringBefore("\n") }
+            .single { "settingId = \"language_packs\"" in it }
+        for (word in listOf("language", "pack", "import")) assertThat(entry).contains("\"$word\"")
+        assertThat(entry).contains("gatedBy = \"multilang\"")
+    }
+
     @Test
     fun everyInPageHandEntryHasAScrollTarget() {
         val activitySrc = settingsFile.readText()

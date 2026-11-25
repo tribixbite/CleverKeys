@@ -15,14 +15,15 @@ Add language dictionaries by importing language pack files. Keyboard layouts are
 | What | Description |
 |------|-------------|
 | **Purpose** | Add language support (dictionary + predictions) |
-| **Access** | Settings > 🌐 Multi-Language > **Import Pack** |
+| **Access** | Settings > 🌐 Multi-Language > turn on **Enable Multi-Language** > **Import Pack** |
 | **Contents** | Dictionary, frequency list, contractions |
 
 > [!TIP]
 > **Greek, Russian, German, French, Spanish, Italian, Portuguese, Dutch,
 > Swedish, Turkish, Persian, Indonesian, Malay, Tagalog, Swahili and more are already
 > built** — you don't need to build anything. See [Prebuilt Language Packs](#prebuilt-language-packs)
-> below, then import via Settings > 🌐 Multi-Language > Import Pack.
+> below, then import via Settings > 🌐 Multi-Language > Import Pack (the Language Packs block
+> appears once **Enable Multi-Language** is on).
 
 ## What's in a Language Pack
 
