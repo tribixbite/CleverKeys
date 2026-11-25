@@ -466,7 +466,12 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
   first in 1–2 of 3 synthetic traces). Italian: no table (gate failed; needs human Italian traces).
   `cos'è` stays at the bar's tail (paired elision, by design). English words in the French and
   Italian lists: not dropped (the 2026-11-20 review).
-- Suites at this code: pure 4,045 / mock 2,017. Release r14 (sha256 `122bb4de…`) on the Saga
+- Follow-up `2265ec39`: the language manager checks the chosen languages before it switches; wiki
+  Auto-Detect page corrected (sensitivity was described backwards). No Italian swipe corpus exists
+  (FUTO swipe-5: en/de/fr/es/pl/lt). **A2 at `2265ec39`** (`~/ew-output/a2-2026-11-25-r15/`): 1,684 on
+  each of API 34–37, 0 failed, 2 expected skips (emulator.wtf re-funded); pure 4,045 / mock 2,018; CI
+  green. Host disk was full (195 MB free): 2.2 GB of scratch APKs removed; `~/ew-output` is 17 GB.
+- Suites at `a535b83a`: pure 4,045 / mock 2,017. Release r14 (sha256 `122bb4de…`) on the Saga
   (debug packages removed, CleverKeys default, Multi-Language off as found; swipes `they're you're
   I've` and fr `qu'il d'été l'été c'est j'ai` checked).
 
