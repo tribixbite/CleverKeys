@@ -1894,6 +1894,12 @@ open class BackupRestoreManager(
         @JvmField val learnedDataIncomplete: Boolean = false,
         /** DIY themes restored from config.json's `custom_themes` section. */
         @JvmField val customThemesImported: Int = 0,
+        /**
+         * Swipe-priority levels added, from dictionaries.json and from a 1.x config.json's
+         * `swipe_priority_<lang>` keys ([customWordsImported] and [disabledWordsImported] count
+         * both sections' words likewise).
+         */
+        @JvmField val swipePrioritiesImported: Int = 0,
     )
 
     /**
@@ -2075,6 +2081,7 @@ open class BackupRestoreManager(
         var configImported = false
         var customWordsImported = 0
         var disabledWordsImported = 0
+        var swipePrioritiesImported = 0
         var clipboardEntriesImported = 0
         var clipboardEntriesSkipped = 0
         var mediaFilesRestored = 0
@@ -2226,12 +2233,17 @@ open class BackupRestoreManager(
                     val configString = String(bytes, Charsets.UTF_8)
                     val dm = context.resources.displayMetrics
                     val screen = ScreenMetrics(dm.widthPixels, dm.heightPixels, dm.density)
+                    // A 1.x config.json carries the dictionary as settings keys; plan it against
+                    // this device's words and levels, as the single-file import does (S9).
                     val plan = SettingsImportPlanBuilder.fromJson(
                         configString,
                         currentSnapshot = prefsSnapshot,
                         screen = screen,
                         defaultSnapshot = SETTINGS_DEFAULTS,
                         currentShortSwipeRawJson = null,
+                        currentCustomWordsByLang = readCurrentCustomWordsByLang(prefs),
+                        currentDisabledWordsByLang = readCurrentDisabledWordsByLang(prefs),
+                        currentSwipePrioritiesByLang = readCurrentSwipePrioritiesByLang(prefs),
                     )
                     val result = runBlocking {
                         SettingsImportApplier.apply(
@@ -2241,6 +2253,12 @@ open class BackupRestoreManager(
                     }
                     configKeysApplied = result.importedCount
                     customThemesImported = result.customThemesImported
+                    // The 1.x words and levels the settings apply wrote (its rule 6) are part of
+                    // the restore's word counts; dictionaries.json's are added below (2.1 item,
+                    // 2026-11-26: the summary used to count only dictionaries.json's).
+                    customWordsImported += result.customWordsAdded
+                    disabledWordsImported += result.disabledWordsAdded
+                    swipePrioritiesImported += result.swipePrioritiesAdded
                     shortSwipesReplaced = plan.shortSwipeImportRawJson != null
                     configImported = true
                     // #156 F5: full-backup restore also writes clipboard_private_copy_toolbar_enabled;
@@ -2255,11 +2273,10 @@ open class BackupRestoreManager(
                     val currentCustom = readCurrentCustomWordsByLang(prefs)
                     val currentDisabled = readCurrentDisabledWordsByLang(prefs)
                     val plan = DictImportPlanBuilder.fromJson(dictString, currentCustom, currentDisabled)
-                    val (custom, disabled) = DictImportApplier.apply(
-                        plan, emptySet(), emptySet(), prefs
-                    )
-                    customWordsImported = custom
-                    disabledWordsImported = disabled
+                    val counts = DictImportApplier.apply(plan, emptySet(), emptySet(), prefs)
+                    customWordsImported += counts.customApplied
+                    disabledWordsImported += counts.disabledApplied
+                    swipePrioritiesImported += counts.prioritiesApplied
 
                     // Learned data (context-LM bigrams + trigrams + user vocabulary) rides the
                     // dictionaries payload since 2026-08-06 (backup blind-spot fix; trigrams
@@ -2304,6 +2321,7 @@ open class BackupRestoreManager(
                 configKeysApplied = 0
                 customWordsImported = 0
                 disabledWordsImported = 0
+                swipePrioritiesImported = 0
                 clipboardEntriesImported = 0
                 clipboardEntriesSkipped = 0
                 throw e
@@ -2344,7 +2362,7 @@ open class BackupRestoreManager(
             stagingDir = null
 
             Log.i(TAG, "Full backup imported: cfg=$configKeysApplied, custom=$customWordsImported, " +
-                "disabled=$disabledWordsImported, clip imported=$clipboardEntriesImported, " +
+                "disabled=$disabledWordsImported, priorities=$swipePrioritiesImported, clip imported=$clipboardEntriesImported, " +
                 "clip skipped=$clipboardEntriesSkipped, media restored=$mediaFilesRestored")
 
             FullBackupImportResult(
@@ -2358,6 +2376,7 @@ open class BackupRestoreManager(
                 mediaFilesRestored = mediaFilesRestored,
                 sourceAppVersion = sourceAppVersion,
                 learnedDataIncomplete = learnedDataIncomplete,
+                swipePrioritiesImported = swipePrioritiesImported,
                 customThemesImported = customThemesImported,
             )
         } catch (e: BackupDecryptException) {

@@ -337,6 +337,25 @@ class BackupRestoreResultMessagesTest {
         assertTrue(full, full.contains("• Learned language data: some entries could not be read and were skipped"))
     }
 
+    /** Swipe-priority levels (from dictionaries.json or a 1.x config.json) get a line when any were added. */
+    @Test
+    fun fullBackup_namesSwipePriorities_onlyWhenAnyWereAdded() {
+        val base = BackupRestoreManager.FullBackupImportResult(
+            success = true, configImported = true, configKeysApplied = 1, customWordsImported = 2,
+            disabledWordsImported = 0, clipboardEntriesImported = 0, clipboardEntriesSkipped = 0,
+            mediaFilesRestored = 0,
+        )
+        val none = buildFullBackupResultMessage(base, EnglishResourceText)
+        assertFalse(none, none.contains("Swipe priorities"))
+
+        val some = buildFullBackupResultMessage(base.copy(swipePrioritiesImported = 3), EnglishResourceText)
+        assertEquals(
+            "directly after the word lines",
+            listOf("• Custom words: 2", "• Disabled words: 0", "• Swipe priorities applied: 3"),
+            some.lines().subList(3, 6),
+        )
+    }
+
     @Test
     fun clipboardZip_withNoMediaRestored_doesNotClaimMediaWasRestored() {
         val result = BackupRestoreManager.ClipboardImportResult().apply {

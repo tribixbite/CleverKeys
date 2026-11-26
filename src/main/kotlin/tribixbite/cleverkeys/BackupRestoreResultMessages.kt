@@ -101,6 +101,9 @@ internal fun buildFullBackupResultMessage(
     appendLine(text.string(R.string.backup_result_full_settings_applied, result.configKeysApplied))
     appendLine(text.string(R.string.backup_result_full_custom_words, result.customWordsImported))
     appendLine(text.string(R.string.backup_result_full_disabled_words, result.disabledWordsImported))
+    if (result.swipePrioritiesImported > 0) {
+        appendLine(text.string(R.string.backup_result_swipe_priorities_applied, result.swipePrioritiesImported))
+    }
     if (result.customThemesImported > 0) {
         appendLine(text.string(R.string.backup_result_custom_themes_applied, result.customThemesImported))
     }

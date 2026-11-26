@@ -421,6 +421,36 @@ class BackupRestoreFullBackupTest {
         assertEquals(1, result.customWordsImported)
     }
 
+    /**
+     * A full backup's config.json from 1.x carries the dictionary as settings keys
+     * (`custom_words_<lang>`, `disabled_words_<lang>`, `swipe_priority_<lang>`). Since S9
+     * (2026-11-25) the settings apply writes them, but the restore's result counted only
+     * dictionaries.json's words: the 1.x words were added and the summary said 0 (2.1 item,
+     * agents 2026-11-26). Both sections' words and levels are counted now.
+     */
+    @Test
+    fun importFullBackup_countsTheDictionaryWordsA1xConfigCarries() {
+        val configJson = """{"preferences":{""" +
+            """"custom_words_en":"{\"Bostonian\":100,\"zazen\":120}",""" +
+            """"disabled_words_en":["teh"],""" +
+            """"swipe_priority_en":"{\"zazen\":2}"}}"""
+        val dictionaries = """{"custom_words_by_language":{"en":{"kotlin":5}}}"""
+        val zipBytes = buildZip(listOf(
+            BackupRestoreManager.ENTRY_MANIFEST to
+                """{"format":"cleverkeys_full_backup","format_version":1,"app_version":"1.4.0-test"}"""
+                    .toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_CONFIG to configJson.toByteArray(Charsets.UTF_8),
+            BackupRestoreManager.ENTRY_DICTIONARIES to dictionaries.toByteArray(Charsets.UTF_8),
+        ))
+
+        val result = newManager().importFullBackup(fakeUriForInput(zipBytes), prefs)
+
+        assertTrue("import should succeed: err=${result.errorMessage}", result.success)
+        assertEquals("2 words from config.json + 1 from dictionaries.json", 3, result.customWordsImported)
+        assertEquals(1, result.disabledWordsImported)
+        assertEquals(1, result.swipePrioritiesImported)
+    }
+
     @Test
     fun exportFullBackup_includesClipboardHistoryJson() {
         // Override clipboard mock to return a non-empty payload so the section is non-empty.

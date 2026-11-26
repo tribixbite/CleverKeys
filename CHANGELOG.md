@@ -617,6 +617,9 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A full backup's summary counts every dictionary word and swipe priority it added. A backup
+  made with a 1.x version carries the words in its settings file as well; those were added, but
+  the summary counted only the dictionary file's words, and swipe priorities not at all.
 - Adding a word to the dictionary needs less memory while the swipe dictionary is rebuilt: the
   old copy is let go before the new one is built, and the English word list is read piece by piece
   instead of all at once. On a test phone with a 256 MB limit this rebuild had reached 195 MB.
