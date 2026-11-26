@@ -8,8 +8,6 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -79,6 +77,7 @@ class MainDictionarySource(
         // plain var that a concurrent load on another IO thread may replace.
         cachedWords?.let { cached ->
             Log.d(TAG, "Returning ${cached.size} cached words for $languageCode")
+            loadGate.markLoaded(languageCode)
             return@withContext cached
         }
 
@@ -89,6 +88,7 @@ class MainDictionarySource(
                 cachedWords = cached.words
                 prefixIndex = cached.prefixIndex
                 Log.d(TAG, "Returning ${cached.words.size} words from shared cache for $languageCode")
+                loadGate.markLoaded(languageCode)
                 return@withContext cached.words
             }
         }
@@ -96,13 +96,14 @@ class MainDictionarySource(
         // One language parses at a time (2026-11-18 OOM): every language tab is created at once
         // and used to parse its dictionary in parallel, so the peak was the sum of all of them,
         // on top of the keyboard's own heap in the same process. A tab that waited here for the
-        // same language finds it cached.
-        loadLock.withLock {
+        // same language finds it cached. The turn goes by tab order (2026-11-26): the primary's
+        // list no longer waits for a secondary that happened to ask first ([DictionaryLoadGate]).
+        loadGate.withTurn(languageCode) {
             synchronized(Companion) {
                 sharedCache[languageCode]?.let { cached ->
                     cachedWords = cached.words
                     prefixIndex = cached.prefixIndex
-                    return@withLock cached.words
+                    return@withTurn cached.words
                 }
             }
             loadWithMemoryRetry()
@@ -111,7 +112,7 @@ class MainDictionarySource(
 
     /**
      * Parse this language's dictionary (pack, bundled binary or JSON) and cache it. Runs under
-     * [loadLock]: one language at a time.
+     * [loadGate]: one language at a time, in tab order.
      */
     private fun loadUncached(): List<DictionaryWord> {
         try {
@@ -414,14 +415,24 @@ class MainDictionarySource(
         )
         private val sharedCache = mutableMapOf<String, LanguageCache>()
 
-        /** Serializes dictionary parsing across instances and languages ([getAllWords]). */
-        private val loadLock = Mutex()
+        /** Serializes dictionary parsing across instances and languages, in tab order ([getAllWords]). */
+        private val loadGate = DictionaryLoadGate()
+
+        /**
+         * The order Dictionary Manager's tabs show their languages in ([DictionaryTabPlan.loadOrder]);
+         * a language already cached is not waited for. Call before the tabs are created.
+         */
+        fun prioritize(languages: List<String>) {
+            val cached = synchronized(this) { sharedCache.keys.toSet() }
+            loadGate.prioritize(languages, cached)
+        }
 
         /** Invalidate shared cache for all languages. */
         fun invalidateCache() {
             synchronized(this) {
                 sharedCache.clear()
             }
+            loadGate.clear()
         }
 
         /** Invalidate shared cache for a specific language. */

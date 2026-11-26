@@ -83,4 +83,11 @@ class DictionaryTabPlanTest {
     fun boundLanguagesListsEachBindingOnceInLayoutOrder() {
         assertThat(DictionaryTabPlan.boundLanguages(listOf(null, "fa", "de", "fa"))).containsExactly("fa", "de").inOrder()
     }
+
+    /** 2026-11-26: lists parse in tab order, so German primary + Russian secondary loads German first. */
+    @Test
+    fun loadOrderIsTheActiveTabsInTabOrder() {
+        val plan = DictionaryTabPlan.plan("de", "ru", listOf(null, "fa", "de"), listOf("pt"))
+        assertThat(DictionaryTabPlan.loadOrder(plan)).containsExactly("de", "ru", "fa").inOrder()
+    }
 }

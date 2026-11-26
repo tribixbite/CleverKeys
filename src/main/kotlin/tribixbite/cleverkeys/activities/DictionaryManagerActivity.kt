@@ -234,7 +234,11 @@ class DictionaryManagerActivity : AppCompatActivity() {
             android.util.Log.e(TAG, "Failed to list imported language packs", e)
             emptyList()
         }
-        for (tab in DictionaryTabPlan.plan(primaryLanguage, secondaryLanguage, boundLanguages, installedPacks)) {
+        val plan = DictionaryTabPlan.plan(primaryLanguage, secondaryLanguage, boundLanguages, installedPacks)
+        // The lists parse one at a time; the primary's first, so it shows as soon as it is ready
+        // instead of after whichever language asked first (de + ru, 2026-11-26).
+        MainDictionarySource.prioritize(DictionaryTabPlan.loadOrder(plan))
+        for (tab in plan) {
             val type = when (tab.kind) {
                 DictionaryTabPlan.Kind.ACTIVE -> WordListFragment.TabType.ACTIVE
                 DictionaryTabPlan.Kind.DISABLED -> WordListFragment.TabType.DISABLED
@@ -573,6 +577,13 @@ internal object DictionaryTabPlan {
         }
         return tabs
     }
+
+    /**
+     * The languages whose word lists [tabs] load (their Active tabs), in tab order: the order
+     * Dictionary Manager parses them in ([MainDictionarySource.prioritize]).
+     */
+    fun loadOrder(tabs: List<Tab>): List<String> =
+        tabs.filter { it.kind == Kind.ACTIVE }.mapNotNull { it.language }.distinct()
 
     /** The distinct bound languages of [bindings], in layout order. */
     fun boundLanguages(bindings: List<String?>): List<String> = bindings.filterNotNull().distinct()
