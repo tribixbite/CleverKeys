@@ -668,6 +668,9 @@ editor that used to be listed here already ship in 2.0.)
   sliders save; each read logged a stored-type warning before.
 - An "Added to dictionary" confirmation leaves the suggestion bar when it ends, is undone or
   dismissed, or when you move to another field; it could stay for minutes.
+- After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
+  or Multi-Language off, changing the second language or picking a layout bound to your first
+  language returns them to your first language; they stayed in the second.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

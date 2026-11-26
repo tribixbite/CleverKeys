@@ -519,6 +519,86 @@ class LearningFunnelBookkeepingTest {
         verify(exactly = 0) { prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("de"), any()) }
     }
 
+    // ------------------------------------------- back to the primary (Fable review 2026-11-26)
+    //
+    // After a detected switch, nothing moved the NEXT-WORD language back to the dictionary's:
+    // turning Auto-Detect off, turning Multi-Language off (or removing the secondary language) and
+    // switching to a layout bound to the already-loaded primary all left next-word predictions in
+    // the secondary language. Each case below starts on English's dictionary with German detected.
+
+    /** English is the loaded dictionary; German was detected and is the next-word language. */
+    private fun detectGermanOverEnglish(): BigramModel {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "de"
+        config.primary_language = "en"
+        config.layout_bound_language = null
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        predictor.setField("bigramModel", bigrams)
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
+        predictor.setField("multiLanguageManager", languages)
+        listOf("wir", "haben", "das", "schon", "doch").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("precondition: German detected").that(predictor.getField("currentLanguage")).isEqualTo("de")
+        return bigrams
+    }
+
+    @Test
+    fun turningAutoDetectOffReturnsTheNextWordLanguageToThePrimary() {
+        val bigrams = detectGermanOverEnglish()
+
+        config.auto_detect_language = false
+        predictor.setConfig(config)
+
+        assertWithMessage("back to the dictionary's language at once, before any commit")
+            .that(predictor.getField("currentLanguage")).isEqualTo("en")
+        verify { bigrams.setLanguage("en") }
+        assertWithMessage("the context model follows")
+            .that((predictor.getField("contextModel") as ContextModel).language).isEqualTo("en")
+    }
+
+    @Test
+    fun turningMultiLanguageOffReturnsTheNextWordLanguageToThePrimary() {
+        detectGermanOverEnglish()
+
+        config.active_secondary_language = null
+        predictor.addWordToContext("the", true)
+
+        assertWithMessage("no secondary language: the primary's").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    @Test
+    fun replacingTheSecondaryLanguageReturnsTheNextWordLanguageToThePrimary() {
+        detectGermanOverEnglish()
+
+        config.active_secondary_language = "fr"
+        predictor.setConfig(config)
+
+        assertWithMessage("German is no longer a chosen language").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    @Test
+    fun aLayoutBoundToTheLoadedPrimaryReturnsTheNextWordLanguageToIt() {
+        detectGermanOverEnglish()
+
+        // Bound to English, which is already loaded: no dictionary load (setLanguage) follows.
+        config.layout_bound_language = "en"
+        predictor.addWordToContext("the", true)
+
+        assertWithMessage("the bound layout's language").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    @Test
+    fun whileDetectionStaysOnTheDetectedLanguageIsKept() {
+        detectGermanOverEnglish()
+
+        predictor.setConfig(config)
+        predictor.addWordToContext("ja", true)
+
+        assertWithMessage("nothing changed: German stays").that(predictor.getField("currentLanguage")).isEqualTo("de")
+    }
+
     @Test
     fun exactReceiptPreflightPermissionMismatchPermanentlyExpiresIt() {
         val vocabulary = useReceiptVocabulary()

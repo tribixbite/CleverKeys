@@ -895,6 +895,8 @@ class WordPredictor : Predictor {
     override fun setConfig(config: Config) {
         this.config = config
         refreshLearningEpoch()
+        // Auto-Detect off, Multi-Language off or another secondary: a detected language ends now.
+        returnNextWordLanguageToPrimaryUnlessDetecting()
 
         // H3 (review 2026-08-06): keep the selection-adaptation store's enabled
         // flag synced to the master gate so its multiplier READS are inert with
@@ -1121,7 +1123,13 @@ class WordPredictor : Predictor {
         }
         // A replacement of the newest token must not switch language halfway through its
         // transaction. Ordinary subsequent commits retain the existing detection behavior.
-        if (recentWords.size >= 5) tryAutoLanguageDetection()
+        if (recentWords.size >= 5) {
+            tryAutoLanguageDetection()
+        } else {
+            // A detection window is still filling (it is cleared at every switch): a layout bound
+            // to the already-loaded primary must still return the next-word language to it.
+            returnNextWordLanguageToPrimaryUnlessDetecting()
+        }
     }
 
     /** Caller holds the participating store locks. Receipts describe actual writes, not gate guesses. */
@@ -1253,22 +1261,49 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * The two languages Auto-Detect chooses between, or null when detection is not running:
+     *  - Auto-Detect is off (Phase 8.3);
+     *  - the layout binds a language (GH #186/#61): it decides the language, and detection must
+     *    not switch the n-gram/context models away from it mid-sentence;
+     *  - there is no active secondary language (2026-11-25): with Multi-Language off, where the
+     *    toggle is not even shown, the fallback detector used to run on every commit and could
+     *    move the next-word and learned-context models to any of its six languages; with one it
+     *    could still pick a language the user never chose.
+     */
+    private fun detectionPair(): Set<String>? {
+        val cfg = config ?: return null
+        if (!cfg.auto_detect_language) return null
+        if (cfg.layout_bound_language != null) return null
+        val secondary = cfg.active_secondary_language ?: return null
+        // Safe call kept: an Objenesis/relaxed test Config leaves the non-null field null.
+        return setOf(config?.primary_language ?: currentLanguage, secondary)
+    }
+
+    /**
+     * Move the next-word language back to the loaded dictionary's ([dictionaryLanguage]) when a
+     * detected language no longer applies: detection stopped ([detectionPair] null) or the
+     * detected language is no longer one of the chosen pair (the secondary was replaced).
+     * Fable review 2026-11-26: only [setLanguage] and detection itself moved it, so turning
+     * Auto-Detect or Multi-Language off, removing the secondary language, or switching to a
+     * layout bound to the already-loaded primary (no dictionary load follows) left next-word
+     * predictions in the secondary language. A no-op while the two languages agree.
+     */
+    private fun returnNextWordLanguageToPrimaryUnlessDetecting() {
+        val primary = dictionaryLanguage
+        if (currentLanguage == primary) return
+        val pair = detectionPair()
+        if (pair != null && currentLanguage in pair) return
+        switchNextWordLanguage(primary)
+    }
+
+    /**
      * Try to automatically detect and switch language based on recent words
      */
     private fun tryAutoLanguageDetection() {
-        // Phase 8.3: Skip entirely if auto-detect is disabled
-        val autoDetectEnabled = config?.auto_detect_language ?: false
-        if (!autoDetectEnabled) return
-        // GH #186/#61: a layout with a language binding decides the language; detection must
-        // not switch the n-gram/context models away from it mid-sentence.
-        if (config?.layout_bound_language != null) return
-        // Detection chooses between the user's TWO languages only (2026-11-25). Without an active
-        // secondary language (Multi-Language off, where the toggle is not even shown) the
-        // fallback detector used to run on every commit and could move the next-word and
-        // learned-context models to any of its six languages; with one it could still pick a
-        // language the user never chose.
-        val secondary = config?.active_secondary_language ?: return
-        val chosen = setOf(config?.primary_language ?: currentLanguage, secondary)
+        val chosen = detectionPair() ?: run {
+            returnNextWordLanguageToPrimaryUnlessDetecting()
+            return
+        }
 
         val sensitivity = config?.language_detection_sensitivity ?: Defaults.LANGUAGE_DETECTION_SENSITIVITY
 
