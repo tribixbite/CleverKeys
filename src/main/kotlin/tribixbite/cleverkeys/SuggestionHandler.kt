@@ -3315,19 +3315,6 @@ class SuggestionHandler(
     }
 
     /**
-     * W2 follow-up (2026-11-26, maintainer question "are swipe corrections recorded as n-gram
-     * pairs?"): [newWord] is about to be learned. Two editor facts decide what its learn may
-     * pair it with:
-     *
-     * 1. It stands exactly where the newest learned word stood ([LearnedPlacement.anchor]
-     *    followed by [newWord]): that word is gone, deleted letter by letter with "Backspace
-     *    undoes swipe" off, removed by the editor's own word delete, or partly deleted and
-     *    completed into another word. Its learn (prev→wrong, the trigram, the vocabulary +1) is
-     *    reversed through its exact receipt, so the new word learns prev→new, never wrong→new.
-     * 2. Otherwise, it does not follow the newest learned word at all (the cursor moved back to
-     *    fix an earlier word): the learn window is closed first, as at a sentence boundary, so no
-     *    pair is learned between two words that are not next to each other in the text.
-    /**
      * [text] without its trailing run of characters that are not part of a word, judged per code
      * point: a supplementary letter (its two UTF-16 halves are not letters on their own) ends the
      * run, an emoji does not; inside the BMP the word-character rule is [WordChars.isWordCharAt]
@@ -3345,6 +3332,19 @@ class SuggestionHandler(
         return text.substring(0, end)
     }
 
+    /**
+     * W2 follow-up (2026-11-26, maintainer question "are swipe corrections recorded as n-gram
+     * pairs?"): [newWord] is about to be learned. Two editor facts decide what its learn may
+     * pair it with:
+     *
+     * 1. It stands exactly where the newest learned word stood ([LearnedPlacement.anchor]
+     *    followed by [newWord]): that word is gone, deleted letter by letter with "Backspace
+     *    undoes swipe" off, removed by the editor's own word delete, or partly deleted and
+     *    completed into another word. Its learn (prev→wrong, the trigram, the vocabulary +1) is
+     *    reversed through its exact receipt, so the new word learns prev→new, never wrong→new.
+     * 2. Otherwise, it does not follow the newest learned word at all (the cursor moved back to
+     *    fix an earlier word): the learn window is closed first, as at a sentence boundary, so no
+     *    pair is learned between two words that are not next to each other in the text.
      *
      * Never a false rollback: the receipt must still be the predictor's newest, untouched commit
      * (any later commit, boundary, language switch or store change expires it), the anchor is the
@@ -3377,19 +3377,6 @@ class SuggestionHandler(
         lastLearningCommit = null
     }
 
-    /** True when the text [before] a word does not glue onto it ("fix" + "got" is not "fixgot"). */
-    private fun endsAtWordBoundary(before: String, word: String): Boolean =
-        before.isEmpty() || !WordChars.isWordCharAt(before + word, before.length - 1)
-
-    /**
-     * W2 (learning-system audit 2026-09-26): undo the learn a just-committed word performed,
-     * because the user rejected it (tapped an alternate over it, or backspace-undid it).
-     *
-     * Delegates to [Predictor.rollbackCommittedWord], which removes the word from the rolling
-     * learn window and decrements the newest bigram/trigram its commit recorded — under the
-     * same gates the learn used, and only when [word] is still the newest window entry, so a
-     * word whose learn was suppressed (password, incognito, master off) or already flushed out
-     * of the window is never decremented.
     /**
      * Is [editor] ALSO consistent with [oldWord] still standing at [anchor], right before
      * [newWord]? A full-window anchor is compared as a suffix, so in a run of one word longer
@@ -3406,6 +3393,19 @@ class SuggestionHandler(
         return if (anchor.length < SwipeCorrectionTracker.ANCHOR_WINDOW) before == expected else before.endsWith(expected)
     }
 
+    /** True when the text [before] a word does not glue onto it ("fix" + "got" is not "fixgot"). */
+    private fun endsAtWordBoundary(before: String, word: String): Boolean =
+        before.isEmpty() || !WordChars.isWordCharAt(before + word, before.length - 1)
+
+    /**
+     * W2 (learning-system audit 2026-09-26): undo the learn a just-committed word performed,
+     * because the user rejected it (tapped an alternate over it, or backspace-undid it).
+     *
+     * Delegates to [Predictor.rollbackCommittedWord], which removes the word from the rolling
+     * learn window and decrements the newest bigram/trigram its commit recorded — under the
+     * same gates the learn used, and only when [word] is still the newest window entry, so a
+     * word whose learn was suppressed (password, incognito, master off) or already flushed out
+     * of the window is never decremented.
      *
      * The predictor also rolls back the personalization-vocabulary +1 the commit recorded
      * (`UserVocabulary.unrecordWordUsage`). The prediction-context tracker drops the rejected
