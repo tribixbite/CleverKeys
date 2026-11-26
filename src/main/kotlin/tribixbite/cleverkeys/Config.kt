@@ -655,6 +655,50 @@ data class ClipboardHistoryLimits(
     }
 }
 
+/**
+ * The clipboard CAPTURE switches as STORED in the app's settings: whether History records at all,
+ * the two exclusions and the media toggles. A sibling of [ClipboardHistoryLimits] for the same
+ * reason (Fable audit 2026-11-26, 0498aa112 left these on Config): the in-memory Config is
+ * refreshed only by the keyboard's preference listener, so History turned OFF by a restore in a
+ * process without the keyboard kept capturing, and an exclusion the restore turned on did not
+ * apply. The one reader for both `Config.refresh` and [ClipboardHistoryService].
+ */
+data class ClipboardCaptureSettings(
+    /** History records clips at all (`clipboard_history_enabled`). */
+    val historyEnabled: Boolean,
+    /** Skip clips set while a password manager is in front (`clipboard_exclude_password_managers`). */
+    val excludePasswordManagers: Boolean,
+    /** #86: skip clips flagged `IS_SENSITIVE` on Android 13+ (`clipboard_respect_sensitive_flag`). */
+    val respectSensitiveFlag: Boolean,
+    /** v4: text-only History, no media capture (`clipboard_text_only`). */
+    val textOnly: Boolean,
+    /** v4: media capture on (`clipboard_media_enabled`). */
+    val mediaEnabled: Boolean,
+    /** Largest media clip in MB, clamped through [SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB] (F-8). */
+    val maxMediaSizeMb: Int,
+) {
+    /** Whether a media (non-text) clip may be captured at all. */
+    val capturesMedia: Boolean get() = !textOnly && mediaEnabled
+
+    /** [maxMediaSizeMb] in bytes, as `ClipboardMediaManager.saveMedia` takes it. */
+    val maxMediaBytes: Long get() = maxMediaSizeMb * 1024L * 1024L
+
+    companion object {
+        @JvmStatic
+        fun fromSettings(prefs: SharedPreferences): ClipboardCaptureSettings = ClipboardCaptureSettings(
+            historyEnabled = Config.safeGetBoolean(prefs, "clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED),
+            excludePasswordManagers = Config.safeGetBoolean(
+                prefs, "clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS),
+            respectSensitiveFlag = Config.safeGetBoolean(
+                prefs, "clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG),
+            textOnly = Config.safeGetBoolean(prefs, "clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY),
+            mediaEnabled = Config.safeGetBoolean(prefs, "clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED),
+            maxMediaSizeMb = Config.safeGetInt(prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
+                .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last),
+        )
+    }
+}
+
 object SettingsRanges {
     /**
      * Keyboard height percent, every orientation and screen (`keyboard_height*`). The sliders
@@ -1493,7 +1537,10 @@ class Config private constructor(
         current_layout_narrow = safeGetInt(_prefs, "current_layout_portrait", 0)
         current_layout_wide = safeGetInt(_prefs, "current_layout_landscape", 0)
         circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
-        clipboard_history_enabled = safeGetBoolean(_prefs, "clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
+        // The capture switches share one stored-settings reader with the clipboard service
+        // ([ClipboardCaptureSettings], Fable audit 2026-11-26).
+        val clipboardCapture = ClipboardCaptureSettings.fromSettings(_prefs)
+        clipboard_history_enabled = clipboardCapture.historyEnabled
 
         // The History limits share one stored-settings reader with the clipboard service, which
         // reads them from the store directly ([ClipboardHistoryLimits], S8 follow-up 2026-11-25).
@@ -1507,21 +1554,20 @@ class Config private constructor(
         clipboard_limit_type = clipboardLimits.limitType
         clipboard_size_limit_mb = clipboardLimits.totalSizeMb
 
-        clipboard_exclude_password_managers = safeGetBoolean(_prefs, "clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
+        clipboard_exclude_password_managers = clipboardCapture.excludePasswordManagers
 
         clipboard_history_duration = safeGetString(_prefs, "clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
 
-        clipboard_respect_sensitive_flag = safeGetBoolean(_prefs, "clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
+        clipboard_respect_sensitive_flag = clipboardCapture.respectSensitiveFlag
 
         // v4: Clipboard feature toggles
-        clipboard_text_only = safeGetBoolean(_prefs, "clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)
+        clipboard_text_only = clipboardCapture.textOnly
         clipboard_pinned_enabled = safeGetBoolean(_prefs, "clipboard_pinned_enabled", Defaults.CLIPBOARD_PINNED_ENABLED)
         clipboard_todo_enabled = safeGetBoolean(_prefs, "clipboard_todo_enabled", Defaults.CLIPBOARD_TODO_ENABLED)
         clipboard_swipe_delete_enabled = safeGetBoolean(_prefs, "clipboard_swipe_delete_enabled", Defaults.CLIPBOARD_SWIPE_DELETE_ENABLED)
-        clipboard_media_enabled = safeGetBoolean(_prefs, "clipboard_media_enabled", Defaults.CLIPBOARD_MEDIA_ENABLED)
-        // F-8: clamp through the shared range (slider + validator + this read site agree)
-        clipboard_max_media_size_mb = safeGetInt(_prefs, "clipboard_max_media_size_mb", Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB)
-            .coerceIn(SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.first, SettingsRanges.CLIPBOARD_MAX_MEDIA_SIZE_MB.last)
+        clipboard_media_enabled = clipboardCapture.mediaEnabled
+        // F-8: clamped through the shared range inside the reader (slider + validator + read site agree)
+        clipboard_max_media_size_mb = clipboardCapture.maxMediaSizeMb
 
         // URL sanitization toggles (Chunk 3): ONE read implementation, shared with the
         // mid-session reload the clipboard service triggers (audit M3).

@@ -26,6 +26,8 @@ import org.junit.Before
 import org.junit.Test
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.DirectBootAwarePreferences
+import tribixbite.cleverkeys.TypedFakePreferences
 import tribixbite.cleverkeys.MockSharedPreferences
 import java.lang.reflect.Field
 
@@ -57,6 +59,8 @@ class ClipboardCatchUpTest {
     private lateinit var cm: ClipboardManager
     private lateinit var context: Context
     private lateinit var config: Config
+    /** The settings store the capture switches are read from. */
+    private lateinit var settings: TypedFakePreferences
     private lateinit var service: ClipboardHistoryService
     /** The persisted last-seen store, shared by every service instance a test builds. */
     private lateinit var prefs: MockSharedPreferences
@@ -78,10 +82,16 @@ class ClipboardCatchUpTest {
         prefs = MockSharedPreferences()
         every { context.getSharedPreferences(ClipboardHistoryService.LAST_SEEN_PREFS, any()) } returns prefs
         config = mockk(relaxed = true)
-        config.clipboard_history_enabled = true
-        config.clipboard_exclude_password_managers = false
-        config.clipboard_respect_sensitive_flag = true
         setGlobalConfig(config)
+        // The capture switches are read from the STORED settings (ClipboardCaptureSettings,
+        // Fable audit 2026-11-26), never from Config.
+        settings = TypedFakePreferences(mapOf(
+            "clipboard_history_enabled" to true,
+            "clipboard_exclude_password_managers" to false,
+            "clipboard_respect_sensitive_flag" to true,
+        ))
+        mockkStatic(DirectBootAwarePreferences::class)
+        every { DirectBootAwarePreferences.get_shared_preferences(any()) } returns settings
 
         service = newService(registered = true)
     }
@@ -164,7 +174,7 @@ class ClipboardCatchUpTest {
 
     @Test
     fun historyDisabled_readsAndRecordsNothing() {
-        config.clipboard_history_enabled = false
+        settings.values["clipboard_history_enabled"] = false
         every { cm.primaryClip } returns clip("off", 1_000)
         service.onKeyboardShown()
         verify(exactly = 0) { cm.primaryClip }
@@ -186,7 +196,7 @@ class ClipboardCatchUpTest {
      */
     @Test
     fun passwordManagerCopy_isNotRecordedByALaterCatchUp() {
-        config.clipboard_exclude_password_managers = true
+        settings.values["clipboard_exclude_password_managers"] = true
         val usage = mockk<UsageStatsManager>()
         every { context.getSystemService(Context.USAGE_STATS_SERVICE) } returns usage
         fun foreground(pkg: String) {
@@ -272,7 +282,7 @@ class ClipboardCatchUpTest {
     @Test
     fun api25_passwordManagerCopy_isNotReadAndNotRecordedByALaterCatchUp() {
         setSdkInt(25)
-        config.clipboard_exclude_password_managers = true
+        settings.values["clipboard_exclude_password_managers"] = true
         val usage = mockk<UsageStatsManager>()
         every { context.getSystemService(Context.USAGE_STATS_SERVICE) } returns usage
         fun foreground(pkg: String) {

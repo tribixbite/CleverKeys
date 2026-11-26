@@ -171,6 +171,102 @@ class ClipboardStoredLimitsTest {
                 """globalConfig(OrNull)?\(\)\??\.clipboard_(history_limit|limit_type|size_limit_mb|max_item_size_kb|history_duration)""")
     }
 
+    // ---------------------------------------------------------------- capture switches
+    // Fable audit 2026-11-26 (0498aa112 incomplete): the History on/off switch, the two
+    // exclusions and the media size cap were still read from the in-memory Config. History
+    // turned OFF by a restore in a process without the keyboard kept capturing.
+
+    /** The URL sanitizer passes text through, so `addClip` reaches the store in the mock tier. */
+    private fun passThroughSanitizer() {
+        val sanitization = mockk<tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig>()
+        every { sanitization.sanitizer().process(any()) } answers { firstArg() }
+        service.setField("_sanitizationConfig\$delegate", lazyOf(sanitization))
+    }
+
+    @Test
+    fun historyTurnedOffByARestoreStopsCapture() {
+        passThroughSanitizer()
+        settings.values["clipboard_history_enabled"] = false
+
+        service.addClip("a secret the user no longer wants kept")
+
+        verify(exactly = 0) { database.addClipboardEntry(any(), any(), any(), any()) }
+        assertThat(service.getClipboardStatus()).isEqualTo("Clipboard history disabled in settings")
+    }
+
+    @Test
+    fun historyTurnedOnByARestoreCaptures() {
+        val stale = Config.globalConfig()
+        stale.clipboard_history_enabled = false
+        settings.values["clipboard_history_enabled"] = true
+        passThroughSanitizer()
+
+        service.addClip("kept")
+
+        verify(exactly = 1) { database.addClipboardEntry("kept", any(), any(), any()) }
+    }
+
+    @Test
+    fun aRestoredPasswordManagerExclusionSkipsTheClipUnread() {
+        // The stale Config (relaxed) has the exclusion off; the restore turned it on.
+        settings.values["clipboard_exclude_password_managers"] = true
+        val manager = android.app.ActivityManager.RunningTaskInfo::class.java
+            .let { objenesis.newInstance(it) }
+        manager.topActivity = mockk<android.content.ComponentName> {
+            every { packageName } returns tribixbite.cleverkeys.Defaults.PASSWORD_MANAGER_PACKAGES.first()
+        }
+        val activities = mockk<android.app.ActivityManager>()
+        @Suppress("DEPRECATION")
+        every { activities.getRunningTasks(1) } returns listOf(manager)
+        val context = mockk<Context>(relaxed = true)
+        every { context.getSystemService(Context.USAGE_STATS_SERVICE) } returns null
+        every { context.getSystemService(Context.ACTIVITY_SERVICE) } returns activities
+        service.setField("_context", context)
+        val cm = mockk<android.content.ClipboardManager>(relaxed = true)
+        service.setField("_cm", cm)
+
+        ClipboardHistoryService::class.java.getDeclaredMethod("captureClip", Boolean::class.javaPrimitiveType)
+            .apply { isAccessible = true }
+            .invoke(service, false)
+
+        verify(exactly = 0) { cm.primaryClip }
+        verify(exactly = 0) { database.addClipboardEntry(any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun theCaptureReaderTakesTheStoredSwitchesAndClampsTheMediaCap() {
+        assertThat(tribixbite.cleverkeys.ClipboardCaptureSettings.fromSettings(TypedFakePreferences())).isEqualTo(
+            tribixbite.cleverkeys.ClipboardCaptureSettings(
+                historyEnabled = tribixbite.cleverkeys.Defaults.CLIPBOARD_HISTORY_ENABLED,
+                excludePasswordManagers = tribixbite.cleverkeys.Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS,
+                respectSensitiveFlag = tribixbite.cleverkeys.Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG,
+                textOnly = tribixbite.cleverkeys.Defaults.CLIPBOARD_TEXT_ONLY,
+                mediaEnabled = tribixbite.cleverkeys.Defaults.CLIPBOARD_MEDIA_ENABLED,
+                maxMediaSizeMb = tribixbite.cleverkeys.Defaults.CLIPBOARD_MAX_MEDIA_SIZE_MB,
+            ))
+        val restored = tribixbite.cleverkeys.ClipboardCaptureSettings.fromSettings(TypedFakePreferences(mapOf(
+            "clipboard_history_enabled" to false,
+            "clipboard_exclude_password_managers" to true,
+            "clipboard_respect_sensitive_flag" to true,
+            "clipboard_text_only" to true,
+            "clipboard_media_enabled" to false,
+            "clipboard_max_media_size_mb" to 400,   // above SettingsRanges' 50
+        )))
+        assertThat(restored).isEqualTo(tribixbite.cleverkeys.ClipboardCaptureSettings(false, true, true, true, false, 50))
+    }
+
+    @Test
+    fun noCaptureSwitchIsReadFromTheInMemoryConfig() {
+        val config = java.io.File("src/main/kotlin/tribixbite/cleverkeys/Config.kt").readText()
+        assertThat(config).contains("ClipboardCaptureSettings.fromSettings(_prefs)")
+        val service = java.io.File("src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt").readText()
+        assertWithMessage("no capture switch is read from the in-memory Config")
+            .that(service).doesNotContainMatch(
+                """globalConfig(OrNull)?\(\)\??\.clipboard_(history_enabled|exclude_password_managers|respect_sensitive_flag|text_only|media_enabled|max_media_size_mb)\b""")
+        assertWithMessage("no Config snapshot held in a local either")
+            .that(service).doesNotContainMatch("""val\s+cfg\s*=\s*Config\.globalConfig\(\)""")
+    }
+
     private fun Any.setField(name: String, value: Any?) {
         var cls: Class<*>? = javaClass
         while (cls != null) {

@@ -235,9 +235,12 @@ class ClipboardServiceHygieneTest {
     fun emptyLegacyClearCallbackCannotCreateHistoryEntry() {
         // Both current-clip listener ingestion and private copy use this empty-text guard.
         val config = mockk<tribixbite.cleverkeys.Config>(relaxed = true)
-        config.clipboard_history_enabled = true
         mockkObject(tribixbite.cleverkeys.Config.Companion)
         every { tribixbite.cleverkeys.Config.globalConfig() } returns config
+        // History is on in the STORED settings, which the capture reads (Fable audit 2026-11-26).
+        io.mockk.mockkStatic(tribixbite.cleverkeys.DirectBootAwarePreferences::class)
+        every { tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(any()) } returns
+            tribixbite.cleverkeys.TypedFakePreferences(mapOf("clipboard_history_enabled" to true))
         service.addClip("")
         verify { database wasNot Called }
         verify { mediaManager wasNot Called }

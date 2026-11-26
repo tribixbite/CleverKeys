@@ -224,8 +224,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             registerClipboardListener()
             return
         }
-        val historyEnabled = Config.globalConfigOrNull()?.clipboard_history_enabled ?: false
-        if (!historyEnabled) return
+        if (!storedCapture().historyEnabled) return
         // API 24-25: ClipDescription has no set timestamp, so a catch-up could only tell clips
         // apart by reading the whole clip over Binder on every keyboard show. It is also
         // unnecessary there: before API 29 the platform delivers onPrimaryClipChanged to every
@@ -288,7 +287,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * Returns status message indicating if clipboard monitoring is active.
      */
     fun getClipboardStatus(): String {
-        if (!Config.globalConfig().clipboard_history_enabled)
+        if (!storedCapture().historyEnabled)
             return "Clipboard history disabled in settings"
 
         if (!_isListenerRegistered) {
@@ -394,7 +393,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /** Add clipboard entries to the history, skipping consecutive duplicates and
         empty strings. */
     fun addClip(clip: String?) {
-        if (!Config.globalConfig().clipboard_history_enabled) return
+        if (!storedCapture().historyEnabled) return
         // OS-listener path: sanitize + optionally rewrite the OS clipboard, non-private insert.
         storeClip(clip, rewriteOsClipboard = true, isPrivate = false, sourcePackage = null)
     }
@@ -512,6 +511,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /** The History TTL from the stored Entry Duration ([storedHistoryTtlMs]), same reason. */
     private fun storedTtlMs(): Long = storedHistoryTtlMs(storedSettings())
+
+    /**
+     * The capture switches as stored NOW ([ClipboardCaptureSettings]): History on/off, the
+     * password-manager and IS_SENSITIVE exclusions and the media toggles and cap. Same reason as
+     * [storedLimits]: History turned off by a restore in a process without the keyboard kept
+     * capturing while it read Config (Fable audit 2026-11-26).
+     */
+    private fun storedCapture(): ClipboardCaptureSettings = ClipboardCaptureSettings.fromSettings(storedSettings())
 
     /**
      * Apply the stored history limit after an insert (based on limit type); [limits] defaults to
@@ -1027,8 +1034,10 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      */
     private fun captureClip(catchUp: Boolean) {
         try {
-            // Check if password manager exclusion is enabled
-            if (Config.globalConfig().clipboard_exclude_password_managers) {
+            // One stored-settings read per capture ([storedCapture]), never the in-memory Config.
+            val capture = storedCapture()
+            // Password-manager exclusion (#62, setting `clipboard_exclude_password_managers`)
+            if (capture.excludePasswordManagers) {
                 val foregroundApp = getForegroundAppPackage()
                 if (isPasswordManagerApp(foregroundApp)) {
                     if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
@@ -1068,7 +1077,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
             // #86: Android 13+ (API 33): Respect IS_SENSITIVE flag set by password managers
             // This is a more robust detection than package blocklisting
-            if (Config.globalConfig().clipboard_respect_sensitive_flag &&
+            if (capture.respectSensitiveFlag &&
                 VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 val extras = clip.description?.extras
                 if (extras != null) {
@@ -1124,7 +1133,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      */
     private fun processClipUri(uri: Uri) {
         try {
-            if (!Config.globalConfig().clipboard_history_enabled) return
+            val capture = storedCapture()
+            if (!capture.historyEnabled) return
 
             val mimeType = _context.contentResolver.getType(uri) ?: "application/octet-stream"
 
@@ -1136,11 +1146,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
                 }
             } else {
                 // Media content (image, video, PDF, etc.) — skip in text-only or media-disabled mode
-                val cfg = Config.globalConfig()
-                if (cfg.clipboard_text_only || !cfg.clipboard_media_enabled) return
+                if (!capture.capturesMedia) return
 
-                val maxMediaBytes = Config.globalConfig().clipboard_max_media_size_mb * 1024L * 1024L
-                val result = _mediaManager.saveMedia(uri, mimeType, maxMediaBytes) ?: return
+                val result = _mediaManager.saveMedia(uri, mimeType, capture.maxMediaBytes) ?: return
 
                 addMediaClip(
                     content = result.displayName,
@@ -1206,7 +1214,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         mediaPath: String,
         contentHash: String
     ) {
-        if (!Config.globalConfig().clipboard_history_enabled) return
+        if (!storedCapture().historyEnabled) return
 
         val ttlMs = storedTtlMs()
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
