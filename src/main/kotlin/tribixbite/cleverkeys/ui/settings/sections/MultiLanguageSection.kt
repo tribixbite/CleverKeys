@@ -88,15 +88,19 @@ internal object MultiLanguagePair {
      * blank/"none" rule is the shared resolver's ([LayoutLanguageBinding.resolve], as for
      * `LanguagePrefs.userLanguages`); this adds only that a language is no pair with itself.
      * Called inside the Multi-Language block, so Multi-Language counts as on.
+     *
+     * A secondary not among [available] (its pack was removed, or a restored backup names one
+     * not installed) is no pair either: the dropdown, which lists only [available], shows "None"
+     * for it, and the block under it must agree (Saga 2026-11-26).
      */
-    fun chosenSecondary(primary: String, secondary: String?): String? =
+    fun chosenSecondary(primary: String, secondary: String?, available: Collection<String>): String? =
         LayoutLanguageBinding.resolve(
             bindings = emptyList(),
             currentIndex = 0,
             userPrimary = primary,
             multilangEnabled = true,
             userSecondary = secondary?.trim(),
-        ).secondary?.takeIf { it.isNotBlank() && it != primary }
+        ).secondary?.takeIf { it.isNotBlank() && it != primary && it in available }
 }
 
 @Composable
@@ -208,7 +212,7 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         }
                     )
 
-                    if (MultiLanguagePair.chosenSecondary(primaryLanguage, secondaryLanguage) != null) {
+                    if (MultiLanguagePair.chosenSecondary(primaryLanguage, secondaryLanguage, availableSecondaryLanguages) != null) {
                         Text(
                             text = stringResource(R.string.multilang_secondary_note),
                             fontSize = 11.sp,

@@ -67,6 +67,9 @@ editor that used to be listed here already ship in 2.0.)
   at the top). Every search result now reaches its setting, or the switch or choice that reveals
   it: the autocorrect ranking and tuning settings while Auto-Correction is off or the other
   ranking is chosen, and "Vertical Speed" while Selection Delete follows the finger.
+- Deleting the language pack of the current secondary language sets the secondary back to None:
+  the secondary settings and "Auto-Detect is not available for this pair" no longer stay under
+  "None", and the keyboard stops using that language as its secondary.
 
 ---
 

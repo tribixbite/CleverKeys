@@ -1,22 +1,26 @@
 package tribixbite.cleverkeys.ui.settings.io
 
+import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.LanguageAvailability
 import tribixbite.cleverkeys.LanguageDisplayNames
+import tribixbite.cleverkeys.LanguagePrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.swipe.CtcInstalledPacks
+import tribixbite.cleverkeys.ui.settings.updateConfigFromSettings
 
 /**
  * Detect available V2 binary dictionaries for language selection: the bundled
@@ -173,17 +177,45 @@ private fun SettingsActivity.showLanguagePackImportResult(result: ImportResult) 
  */
 internal fun SettingsActivity.deleteLanguagePack(code: String) {
     val appContext = applicationContext
+    // The starting activity's preferences: the work resets the language choices there itself.
+    val languagePrefs = prefs
     val started = SettingsImports.languagePack.start(null) {
         val followUp = catchingFailures({
             val deleted = LanguagePackManager.getInstance(appContext).deletePack(code)
+            var resets = emptyMap<String, String>()
             if (deleted) {
                 // Drop the CTC eligibility verdict with the pack. A later reimport of the same
                 // language could otherwise restore identical bytes whose mtime happens to match
                 // the stored fingerprint and inherit a stale measurement.
                 CtcInstalledPacks.invalidate(appContext, code)
+                // A secondary choice naming the removed language goes back to "none", here and
+                // not in the follow-up, so the keyboard drops it even when Settings was left: it
+                // kept the language as its active secondary otherwise (Saga 2026-11-26).
+                resets = RemovedPackLanguagePrefs.resets(
+                    code,
+                    stillAvailable = LanguageAvailability.availableLanguages(appContext),
+                    secondary = Config.safeGetString(languagePrefs, LanguagePrefs.SECONDARY, Defaults.SECONDARY_LANGUAGE),
+                    secondaryAlt = Config.safeGetString(
+                        languagePrefs, LanguagePrefs.SECONDARY_ALT, Defaults.SECONDARY_LANGUAGE_ALT
+                    ),
+                )
+                if (resets.isNotEmpty()) {
+                    // commit: the keyboard's preference listener reloads its languages from it.
+                    languagePrefs.edit().apply { resets.forEach { (key, value) -> putString(key, value) } }.commit()
+                    if (LanguagePrefs.SECONDARY in resets) {
+                        // As saveSetting does for a serving key: other screens refresh their lists.
+                        LocalBroadcastManager.getInstance(appContext)
+                            .sendBroadcast(Intent("tribixbite.cleverkeys.LANGUAGE_CHANGED"))
+                    }
+                }
             }
             followUp {
                 if (deleted) {
+                    // The shown choices follow the stored ones at once (the block under the
+                    // secondary dropdown hides with "None").
+                    resets[LanguagePrefs.SECONDARY]?.let { secondaryLanguage = it }
+                    resets[LanguagePrefs.SECONDARY_ALT]?.let { secondaryLanguageAlt = it }
+                    if (resets.isNotEmpty()) updateConfigFromSettings()
                     refreshInstalledLanguagePacks()
                     refreshAvailableSecondaryLanguages()
                     Toast.makeText(this, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
@@ -204,6 +236,29 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
     if (!started) {
         android.util.Log.w(SettingsActivity.TAG, "Language pack operation already running; $code not removed")
         showLanguagePackBusy()
+    }
+}
+
+/**
+ * The language choices a pack removal must reset (pure, `RemovedPackLanguagePrefsTest`): the
+ * secondary and the quick-toggle secondary, back to "none", when they name the removed language
+ * [code] and it is not in [stillAvailable] (a bundled dictionary can still serve it).
+ *
+ * # TODO: the primary and its quick-toggle alternate have no "none"; a removed primary's pack
+ * still leaves that choice stored (its dropdown then shows the first option).
+ */
+internal object RemovedPackLanguagePrefs {
+    fun resets(
+        code: String,
+        stillAvailable: Collection<String>,
+        secondary: String?,
+        secondaryAlt: String?,
+    ): Map<String, String> {
+        if (code in stillAvailable) return emptyMap()
+        return buildMap {
+            if (secondary == code) put(LanguagePrefs.SECONDARY, LanguageDisplayNames.NONE)
+            if (secondaryAlt == code) put(LanguagePrefs.SECONDARY_ALT, LanguageDisplayNames.NONE)
+        }
     }
 }
 
