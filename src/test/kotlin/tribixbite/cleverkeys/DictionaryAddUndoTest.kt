@@ -481,6 +481,37 @@ class DictionaryAddUndoTest {
         verify(exactly = 0) { dictionary.removeUserWord("parcero") }
     }
 
+    /** Fable finding 6: the autocorrect-undo add and the "+word" chip follow the same rule. */
+    @Test
+    fun theAutocorrectUndoAddGoesToTheDetectedSecondaryList() {
+        every { predictor.autoDetectedSecondaryLanguage() } returns "es"
+        every { dictionary.addUserWord("parce", "es") } returns true
+        every { contextTracker.getLastCommitSource() } returns PredictionSource.AUTOCORRECT
+        every { contextTracker.getLastAutocorrectOriginalWord() } returns "parce"
+        every { contextTracker.getLastAutoInsertedWord() } returns "parte"
+
+        handler().tap("parce")
+
+        verify(exactly = 1) { dictionary.addUserWord("parce", "es") }
+        verify(exactly = 0) { dictionary.addUserWord("parce") }
+        undo.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("parce", "es") }
+    }
+
+    @Test
+    fun theExactAddChipGoesToTheDetectedSecondaryList() {
+        every { predictor.autoDetectedSecondaryLanguage() } returns "es"
+        every { dictionary.addUserWord("parcero", "es") } returns true
+        every { contextTracker.getCurrentWord() } returns "parc"
+
+        handler().tap(Suggestion.ExactAdd("parcero").wire)
+
+        verify(exactly = 1) { dictionary.addUserWord("parcero", "es") }
+        verify(exactly = 0) { dictionary.addUserWord("parcero") }
+        undo.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("parcero", "es") }
+    }
+
     @Test
     fun withoutADetectedSwitchABarAddGoesToThePrimaryList() {
         every { predictor.autoDetectedSecondaryLanguage() } returns null

@@ -1611,6 +1611,36 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("detection off").that(predictor.autoDetectedSecondaryLanguage()).isNull()
     }
 
+    /**
+     * Fable review of 7d1275a67, finding 6: the detection must be fresh. A detected switch sticks
+     * until the next detection run (five words into a window), so short English messages after a
+     * Spanish paragraph still read as Spanish. The verdict counts only until the window that
+     * produced it ends (a sentence boundary) or the input session changes.
+     */
+    @Test
+    fun aDetectedSecondaryNoLongerCountsAfterTheWindowOrTheSessionEnds() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
+        predictor.setField("multiLanguageManager", languages)
+        listOf("el", "perro", "come", "la", "comida").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("fresh").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
+
+        predictor.onSentenceBoundary()
+        assertWithMessage("the window that detected it ended").that(predictor.autoDetectedSecondaryLanguage()).isNull()
+
+        listOf("y", "el", "gato", "bebe", "agua").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("a new detection in the new window").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
+        predictor.onInputSessionChanged()
+        assertWithMessage("a new input session").that(predictor.autoDetectedSecondaryLanguage()).isNull()
+        listOf("el", "perro", "come", "la", "comida").forEach { predictor.addWordToContext(it, true) }
+        predictor.clearContext()
+        assertWithMessage("the context was cleared").that(predictor.autoDetectedSecondaryLanguage()).isNull()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**

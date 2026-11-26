@@ -2266,6 +2266,9 @@ class SuggestionHandler(
     private var learnedPlacement: LearnedPlacement? = null
 
     fun onEditorSessionChanged() {
+        // Auto-Detect's verdict belongs to the session it was made in (a dictionary add after a
+        // restarted input must not follow a language detected in the previous message).
+        predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
         wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
     }
 
@@ -2651,25 +2654,8 @@ class SuggestionHandler(
 
         vlog { "ADD TO DICTIONARY: Adding '$wordToAdd'" }
 
-        // Multi-language (2026-11-26): while Auto-Detect has switched to the secondary language
-        // the word is the secondary's, so it goes to that list; otherwise to the primary's.
-        val secondary = predictionCoordinator.getWordPredictor()?.autoDetectedSecondaryLanguage()
-            ?.takeIf { it.isNotBlank() }
-
         // Add to user dictionary, without a capital auto-capitalisation put there
-        val stored = userWordStorageForm(wordToAdd, ic, editorInfo, secondary)
-        val dictionary = predictionCoordinator.getDictionaryManager()
-        val inserted = if (secondary != null) {
-            dictionary?.addUserWord(stored, secondary) ?: false
-        } else {
-            dictionary?.addUserWord(stored) ?: false
-        }
-
-        // Refresh dictionary so word appears in predictions immediately. A secondary-list write
-        // reaches its predictors without this: the service's preference listener rebuilds the
-        // secondary dictionary (PredictionCoordinator.onUserWordsChanged → its custom words),
-        // and both swipe engines key their per-language lexicon on custom_words_<lang> content.
-        predictionCoordinator.refreshCustomWords()
+        val add = addWordFromBar(wordToAdd, ic, editorInfo)
 
         // Clear tracking
         contextTracker.clearAutocorrectTracking()
@@ -2677,7 +2663,39 @@ class SuggestionHandler(
         specialPromptActive = false
 
         // Tappable confirmation (bar clears after it instead of restoring the prompt)
-        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary, secondary)
+        confirmDictionaryAdd(add.stored, add.inserted, R.string.suggestion_added_to_dictionary, add.list)
+    }
+
+    /** What a bar add stored, whether it was new, and the non-active list it went to (if any). */
+    private data class BarAdd(val stored: String, val inserted: Boolean, val list: String?)
+
+    /**
+     * THE personal-dictionary write of every bar add (the "Add to dictionary?" prompt, the
+     * "+word" chip, the autocorrect-undo add). Multi-language (2026-11-26): while Auto-Detect has
+     * freshly switched the next-word language to the secondary
+     * ([Predictor.autoDetectedSecondaryLanguage]) the word goes to the secondary's list;
+     * otherwise to the primary's.
+     *
+     * Refreshing the primary's words is what makes the word appear in predictions at once. A
+     * secondary-list write reaches its consumers without it: the service's preference listener
+     * rebuilds the secondary tap dictionary with its custom words
+     * (`PredictionCoordinator.onUserWordsChanged` → `WordPredictor.loadSecondaryDictionaryAsync`),
+     * and the CTC engine resolves the secondary's lexicon on every decode
+     * (`CtcEngineAdapter.decodeAsync` → `lexiconFor`, which re-reads `custom_words_<lang>` and
+     * keys its memo on that content). The geometric engine decodes the primary only.
+     */
+    private fun addWordFromBar(word: String, ic: InputConnection?, editorInfo: EditorInfo?): BarAdd {
+        val secondary = predictionCoordinator.getWordPredictor()?.autoDetectedSecondaryLanguage()
+            ?.takeIf { it.isNotBlank() }
+        val stored = userWordStorageForm(word, ic, editorInfo, secondary)
+        val dictionary = predictionCoordinator.getDictionaryManager()
+        val inserted = if (secondary != null) {
+            dictionary?.addUserWord(stored, secondary) ?: false
+        } else {
+            dictionary?.addUserWord(stored) ?: false
+        }
+        predictionCoordinator.refreshCustomWords()
+        return BarAdd(stored, inserted, secondary)
     }
 
     /**
@@ -3123,9 +3141,7 @@ class SuggestionHandler(
 
         // Add to user dictionary (the field keeps the letters as typed; only the stored form drops
         // a capital auto-capitalisation put there)
-        val stored = userWordStorageForm(exactWord, ic, editorInfo)
-        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
-        predictionCoordinator.refreshCustomWords()
+        val add = addWordFromBar(exactWord, ic, editorInfo)
 
         // Update context with the committed word (it replaces the typed partial, so the
         // partial must not be flushed again later — W5/W7)
@@ -3139,7 +3155,7 @@ class SuggestionHandler(
         suggestionBar?.clearSuggestions()
 
         // Tappable confirmation; its undo takes the word out of the dictionary, not the field.
-        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
+        confirmDictionaryAdd(add.stored, add.inserted, R.string.suggestion_added_to_dictionary, add.list)
     }
 
     /**
@@ -3195,13 +3211,10 @@ class SuggestionHandler(
             // Update context with the original word
             updateContext(tappedWord, inputConnection)
 
-            // Add to user dictionary so it won't be autocorrected again
-            val stored = userWordStorageForm(tappedWord, inputConnection, editorInfo)
-            val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
-            vlog { "AUTOCORRECT UNDO: Added '$stored' to user dictionary" }
-
-            // Refresh dictionary so word appears in predictions immediately
-            predictionCoordinator.refreshCustomWords()
+            // Add to user dictionary so it won't be autocorrected again (the list Auto-Detect's
+            // fresh verdict names, else the primary's — [addWordFromBar])
+            val add = addWordFromBar(tappedWord, inputConnection, editorInfo)
+            vlog { "AUTOCORRECT UNDO: Added '${add.stored}' to user dictionary" }
 
             // Clear autocorrect tracking
             contextTracker.clearAutocorrectTracking()
@@ -3213,7 +3226,7 @@ class SuggestionHandler(
             // Tappable confirmation (bar clears after it instead of restoring the prompt). Its undo
             // only takes the word back out of the dictionary: the field keeps the original the
             // user tapped — the text revert was the point of the tap.
-            confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
+            confirmDictionaryAdd(add.stored, add.inserted, R.string.suggestion_added_to_dictionary, add.list)
 
             // Clear suggestions after brief delay (message will auto-clear)
         }

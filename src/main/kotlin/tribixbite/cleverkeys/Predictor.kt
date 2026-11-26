@@ -160,6 +160,9 @@ interface Predictor {
      */
     fun autoDetectedSecondaryLanguage(): String? = null
 
+    /** A new input session started (a new field, or the app restarted its input). */
+    fun onInputSessionChanged() {}
+
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)
 

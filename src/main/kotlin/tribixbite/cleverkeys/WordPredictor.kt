@@ -1007,6 +1007,7 @@ class WordPredictor : Predictor {
         // mixed-language pairs into the NEW language's store.
         if (language != currentLanguage) {
             invalidateExactLearningCommit()
+            secondaryVerdictFresh = false
             recentWords.clear()
             detectedDisabledCache = null
         }
@@ -1351,17 +1352,42 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * True while the newest detection verdict named the next-word language, the active secondary,
+     * and the window that produced it has not ended. Set by [noteDetectionVerdict]; cleared by a
+     * switch, a sentence boundary ([onSentenceBoundary]), a context clear ([clearContext]) and a
+     * new input session ([onInputSessionChanged]).
+     */
+    @Volatile private var secondaryVerdictFresh = false
+
+    /** A detection run named [language] (a switch to it, or a confirmation of it). */
+    private fun noteDetectionVerdict(language: String) {
+        secondaryVerdictFresh = language == currentLanguage && language != dictionaryLanguage &&
+            language == config?.active_secondary_language
+    }
+
+    /**
      * 2026-11-26 (Pixel: `parcero` added from the bar while typing Spanish in en+es went to the
      * English list): the active secondary language when a detected switch moved the next-word
      * language to it ([switchNextWordLanguage]) and detection still applies; null otherwise,
      * including before any dictionary load ([dictionaryLanguageOrNull] unset).
+     *
+     * Fresh evidence only (Fable review of 7d1275a67): detection runs once five words fill a
+     * window, and a switch otherwise sticks, so short English messages after a Spanish paragraph
+     * still read as Spanish. The verdict counts in the window that produced it (the switch's own
+     * window included) and in the input session it was made in; after that the answer is null,
+     * i.e. the primary, until detection names the secondary again.
      */
     override fun autoDetectedSecondaryLanguage(): String? {
-        if (dictionaryLanguageOrNull == null) return null
+        if (dictionaryLanguageOrNull == null || !secondaryVerdictFresh) return null
         val next = currentLanguage
         if (next == dictionaryLanguage) return null
         val pair = detectionPair() ?: return null
         return next.takeIf { it in pair && it == config?.active_secondary_language }
+    }
+
+    /** A new input session: Auto-Detect's verdict from the previous one no longer counts. */
+    override fun onInputSessionChanged() {
+        secondaryVerdictFresh = false
     }
 
     /**
@@ -1405,6 +1431,7 @@ class WordPredictor : Predictor {
                 // primary dictionary and its disabled / custom words stay.
                 switchNextWordLanguage(detected)
             }
+            if (detected != null && detected in chosen) noteDetectionVerdict(detected)
             // The manager's answer stands, a "no switch" (null) included: the legacy detector
             // below used to run after it at a fixed threshold over all six of its languages and
             // could switch anyway (pre-tag review 2026-11-25 S7).
@@ -1418,13 +1445,14 @@ class WordPredictor : Predictor {
         if (!LanguageDetector.canChooseBetween(chosen)) return
         val result = detector.detectLanguageFromWordsWithConfidence(recentWords, chosen) ?: return
         val detectedLanguage = result.language
-        if (result.confidence >= sensitivity && detectedLanguage != currentLanguage && detectedLanguage in chosen) {
-            if (bigramModel?.isLanguageSupported(detectedLanguage) == true) {
+        if (result.confidence >= sensitivity && detectedLanguage in chosen) {
+            if (detectedLanguage != currentLanguage && bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
                 }
                 switchNextWordLanguage(detectedLanguage)
             }
+            noteDetectionVerdict(detectedLanguage)
         }
     }
 
@@ -1447,6 +1475,7 @@ class WordPredictor : Predictor {
      */
     override fun clearContext() {
         invalidateExactLearningCommit()
+        secondaryVerdictFresh = false
         recentWords.clear()
         lastRecordedCommit = null
     }
@@ -1528,6 +1557,7 @@ class WordPredictor : Predictor {
      */
     override fun onSentenceBoundary() {
         invalidateExactLearningCommit()
+        secondaryVerdictFresh = false
         recentWords.clear()
     }
 
