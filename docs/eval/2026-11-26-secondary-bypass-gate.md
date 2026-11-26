@@ -102,4 +102,56 @@ CK_SB_PHASE=test CK_SB_MARGIN=<M> …same…
 
 ## Result
 
-(appended after the runs)
+Runs 2026-11-26 in a worktree of `25234af47` plus the rule (`WordPredictor.autoCorrect(…,
+secondaryBypassMargin)`); logs kept in the session scratchpad (`eval-dev.log`, `run4.log`).
+
+**DEV** (typo pairs from 44,285 DEV rows; eligible en+de 271 pairs / 235 typos, real words 20,704 /
+274,871 tokens; en+es 203 / 180, 20,990 / 156,445):
+
+| pair | M | fixes | wrong | real-word token retention | top-300 breaks |
+|---|---|---|---|---|---|
+| en+de | −∞ (pre-`aa9b57ba`) | 100 (36.9%) | 150 | 30.2% | 259 |
+| en+de | 0 | 83 (30.6%) | 107 | 90.9% | 22 |
+| en+de | 32 | 47 (17.3%) | 71 | 98.2% | 1 |
+| en+de | 56 | 31 (11.4%) | 47 | 99.45% | 0 |
+| en+de | 64 | 25 (9.2%) | 37 | 99.64% | 0 |
+| en+de | +∞ (current) | 0 | 0 | 100% | 0 |
+| en+es | −∞ | 77 (37.9%) | 115 | 26.7% | 249 |
+| en+es | 0 | 66 (32.5%) | 73 | 87.2% | 20 |
+| en+es | 32 | 33 (16.3%) | 52 | 97.6% | 4 |
+| en+es | 56 | 23 (11.3%) | 34 | 99.34% | 0 |
+| en+es | 64 | 19 (9.4%) | 28 | 99.55% | 0 |
+| en+es | +∞ | 0 | 0 | 100% | 0 |
+
+Selection: the smallest M meeting retention ≥ 99.5% and ≤ 1 top-300 break in both pairs is
+**M = 64** (en+es sets it; en+de alone would allow 64 as well, 56 fails it at 99.45%).
+
+**TEST at M = 64** (run once; production matched the simulation on every eligible input, 0
+mismatches in both pairs):
+
+| check | en+de | en+es | verdict |
+|---|---|---|---|
+| R1 token retention ≥ 99.5% | 99.667% (916 of 274,670 tokens changed, 254 words) | 99.546% (712 of 156,675, 304 words) | pass |
+| R2 ≤ 1 top-300 break | 0 | 0 | pass |
+| R3 must-keep words | all kept (`nicht` falls at M ≤ −64, `mucho` at M ≤ 0) | all kept | pass |
+| R3 de+en `fuss` | kept (`fuß` wins only at M ≤ 48) | | pass |
+| R3 `thier` → `their` | fixed (gap 120) | | pass |
+| R3 `wich` → `which` | **fails**: the English correction is `with` at every M (gap 125) | | **fail** |
+| T1 fixes ≥ 20% of 260 / 214 eligible pairs | **18 (6.9%)** | **18 (8.4%)** | **fail** |
+| T1 wrong ≤ half the fixes | **39 wrong vs 18 fixes** | **42 vs 18** | **fail** |
+
+**Verdict: the rule fails its gate; current behaviour stays (`SECONDARY_BYPASS_MARGIN_STEPS =
+Int.MAX_VALUE`).** What the numbers say: the typos that are secondary-list words are mostly short
+and ambiguous (`sed`, `anc`, `dn`, `tuch`), so the English correction is as often the wrong word
+as the right one, even before the margin; and the margin that protects real German / Spanish text
+(≥ 64) leaves under a tenth of them fixed, while still rewriting 254 German and 304 Spanish real
+words of the TEST text (`weh` → we, `ehe` → the, `haz` → has, `foro` → for, `oír` → our). `thier`
+is fixable on its own (gap 120 > any safe margin), `wich` is not (autocorrect's English answer is
+`with`).
+
+Kept in the code: the margin parameter of `WordPredictor.autoCorrect` (default = the shipped
+`Int.MAX_VALUE`, so the production path is unchanged) and `SecondaryBypassEval`, so a better
+signal can be measured with the same harness. Candidates not tried here (they would need their own
+pre-registration): a list of known English misspellings removed from the secondary lists at build
+time (`scripts/build_wordlist.py`), or requiring the secondary word to be in the Auto-Detect
+language (next-word language) before it bypasses.

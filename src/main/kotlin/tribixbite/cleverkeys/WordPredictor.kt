@@ -55,6 +55,14 @@ class WordPredictor : Predictor {
         private const val CONTRACTION_ALIAS_RANK = 254
 
         /**
+         * Autocorrect step 1's secondary-word margin, in byte-rank steps: a word of the secondary
+         * language is kept as typed unless the primary correction is more than this many steps
+         * more common ([secondaryWordYields]). [Int.MAX_VALUE] = always kept (the behaviour since
+         * `aa9b57ba`). Chosen by docs/eval/2026-11-26-secondary-bypass-gate.md.
+         */
+        internal const val SECONDARY_BYPASS_MARGIN_STEPS = Int.MAX_VALUE
+
+        /**
          * [disabled] (one language's `disabled_words_<lang>` set) lowercased, less the words of
          * that language's `custom_words_<lang>` JSON: a word added back as a custom word wins, as
          * [isWordDisabled] lets the primary language's do. Unreadable JSON leaves every disabled
@@ -1059,6 +1067,44 @@ class WordPredictor : Predictor {
         val wanted = ArabicScriptFold.fold(word.lowercase(), language)
         return index.lookup(index.normalizeKey(word))?.canonicals
             ?.any { ArabicScriptFold.fold(it.lowercase(), language) == wanted } == true
+    }
+
+    /**
+     * The secondary index's 0–255 frequency rank (0 = most common) of the accent-free group that
+     * holds [word]'s exact spelling, or null when [word] is not one of its spellings (same match as
+     * [isInSecondaryLexiconExactly]). The index exposes the group's best rank only, so a rarer
+     * accent twin (`como` beside `cómo`) is credited with the group's most common rank: the error
+     * keeps more secondary words, never fewer.
+     */
+    private fun secondaryExactRank(word: String): Int? {
+        val index = secondaryIndex ?: return null
+        val language = secondaryLanguageCode
+        val wanted = ArabicScriptFold.fold(word.lowercase(), language)
+        val found = index.lookup(index.normalizeKey(word)) ?: return null
+        if (found.canonicals.none { ArabicScriptFold.fold(it.lowercase(), language) == wanted }) return null
+        return found.bestFrequencyRank
+    }
+
+    /**
+     * Whether the secondary-language word [secondaryWord] gives way to the primary-language
+     * correction [correction] (autocorrect step 1, docs/eval/2026-11-26-secondary-bypass-gate.md):
+     * the correction's byte frequency `freq · 255 / maxFreq` exceeds the word's `255 − rank` by more
+     * than [marginSteps]. A correction with no primary frequency (none found under its lookup key,
+     * its apostrophe-free key or its `ß` key) never wins.
+     */
+    internal fun secondaryWordYields(secondaryWord: String, correction: String, marginSteps: Int): Boolean {
+        val rank = secondaryExactRank(secondaryWord) ?: return false
+        val dict = dictionary.get()
+        val maxFreq = dictMaxFrequency(dict)
+        if (maxFreq <= 0) return false
+        val key = lookupKey(correction)
+        val freq = dict[key]
+            ?: NextWordPredictor.apostropheFreeKey(key)?.let { dict[it] }
+            ?: sharpSDictionaryKey(key)?.let { dict[it] }
+            ?: return false
+        val correctionByte = freq.toLong() * 255 / maxFreq
+        val secondaryByte = (255 - rank).toLong()
+        return correctionByte - secondaryByte > marginSteps
     }
 
     override fun isInDictionary(word: String, fieldAllowsPersonalizedLearning: Boolean): Boolean {
@@ -3593,6 +3639,7 @@ class WordPredictor : Predictor {
     internal fun autoCorrect(
         typedWord: String,
         tuning: AutocorrectTuning,
+        secondaryBypassMargin: Int = SECONDARY_BYPASS_MARGIN_STEPS,
         probe: ((ChannelProbe) -> Unit)? = null,
     ): String {
         if (config?.autocorrect_enabled != true || typedWord.isEmpty()) {
@@ -3657,8 +3704,23 @@ class WordPredictor : Predictor {
         // (pre-tag review 2026-11-25): with Spanish beside English, typed `como` became `come`, and
         // with English beside German `fuss` became `fuß`, because only the primary list was
         // consulted here. A word disabled in either language falls through and corrects.
-        if (isInSecondaryLexiconExactly(lowerTypedWord) && !isSecondaryWordDisabled(lowerTypedWord)) {
-            return typedWord
+        //
+        // Not when the primary-language correction is far more common (2026-11-26,
+        // docs/eval/2026-11-26-secondary-bypass-gate.md): the German and Spanish lists are built from
+        // web text and carry English misspellings as rare entries (en+de `thier`, `wich`), which the
+        // all-or-nothing bypass left uncorrected. [secondaryBypassMargin] = [Int.MAX_VALUE] always
+        // bypasses, [Int.MIN_VALUE] never does (the rest of autocorrect decides).
+        if (secondaryBypassMargin != Int.MIN_VALUE &&
+            isInSecondaryLexiconExactly(lowerTypedWord) && !isSecondaryWordDisabled(lowerTypedWord)
+        ) {
+            if (secondaryBypassMargin == Int.MAX_VALUE) return typedWord
+            val primaryCorrection = autoCorrect(typedWord, tuning, Int.MIN_VALUE, probe)
+            if (primaryCorrection.equals(typedWord, ignoreCase = true)) return typedWord
+            return if (secondaryWordYields(lowerTypedWord, primaryCorrection, secondaryBypassMargin)) {
+                primaryCorrection
+            } else {
+                typedWord
+            }
         }
 
         val dict = dictionary.get()

@@ -1724,6 +1724,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.ContractionEnglishBaseLoadCountTest',
     // 2026-11-26: a detected next-word language's disabled words filter its next-word output.
     'tribixbite.cleverkeys.NextWordDetectedLanguageDisabledTest',
+    // 2026-11-26: the secondary-word autocorrect bypass stays (margin rule failed its gate).
+    'tribixbite.cleverkeys.autocorrect.SecondaryBypassMarginTest',
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',
