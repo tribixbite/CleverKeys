@@ -105,6 +105,8 @@ class DictionaryManagerActivity : AppCompatActivity() {
     private var multiLangEnabled = false
     // Languages bound to a layout (GH #186/#61), each shown with its own tabs.
     private var boundLanguages: List<String> = emptyList()
+    // D2: the stored Swiss-spelling switch the German list was built with.
+    private var swissSpelling = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -146,6 +148,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
         multiLangEnabled = Config.safeGetBoolean(prefs, LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
         secondaryLanguage = languages.secondary
         boundLanguages = readBoundLanguages(prefs)
+        swissSpelling = LanguagePrefs.germanSwissSpelling(prefs)
 
         android.util.Log.d(TAG, "Language prefs: primary=$primaryLanguage, secondary=$secondaryLanguage, " +
             "multilang=$multiLangEnabled, bound=$boundLanguages")
@@ -447,12 +450,19 @@ class DictionaryManagerActivity : AppCompatActivity() {
         val oldPrimary = primaryLanguage
         val oldSecondary = secondaryLanguage
         val oldBound = boundLanguages
+        val oldSwiss = swissSpelling
 
         // Reload language preferences
         loadLanguagePreferences()
 
-        // Only rebuild if languages actually changed (a layout's binding counts: GH #186/#61)
-        if (primaryLanguage != oldPrimary || secondaryLanguage != oldSecondary || boundLanguages != oldBound) {
+        // A Swiss-spelling flip respells the German list: the cached one is in the old spelling.
+        if (swissSpelling != oldSwiss) MainDictionarySource.invalidateCache()
+
+        // Only rebuild if languages actually changed (a layout's binding counts: GH #186/#61), or
+        // the spelling the German list is shown in.
+        if (primaryLanguage != oldPrimary || secondaryLanguage != oldSecondary || boundLanguages != oldBound ||
+            swissSpelling != oldSwiss
+        ) {
             android.util.Log.d(TAG, "Languages changed: $oldPrimary/$oldSecondary -> $primaryLanguage/$secondaryLanguage")
 
             // Clear current search
@@ -506,7 +516,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
         val prefs = DirectBootAwarePreferences.get_shared_preferences(this)
         val current = LanguagePrefs.userLanguages(prefs)
         if (current.primary != primaryLanguage || current.secondary != secondaryLanguage ||
-            readBoundLanguages(prefs) != boundLanguages
+            readBoundLanguages(prefs) != boundLanguages || LanguagePrefs.germanSwissSpelling(prefs) != swissSpelling
         ) {
             rebuildTabsForLanguageChange()
         }

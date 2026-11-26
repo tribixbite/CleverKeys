@@ -633,6 +633,10 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
     // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
     'tribixbite.cleverkeys.DictionaryLoadGateTest',
+    'tribixbite.cleverkeys.DictionaryListSpellingTest',
+    // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
+    // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
+    'tribixbite.cleverkeys.DictionaryLoadGateTest',
     // 2026-10-31: in-app Open-source licenses — every licence NOTICE cites has a packaged text,
     // the packaged copies equal NOTICE / LICENSE / LICENSES, and the screen lists every section.
     'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetDriftTest',

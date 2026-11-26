@@ -31,10 +31,9 @@ import java.util.Locale
  *
  * ## Dictionary Manager
  *
- * Its word list is the shipped one and still shows `straße`; a word disabled there is disabled in
- * its Swiss spelling too ([foldDisabled], applied by every loader above).
- * # TODO: show the respelled list in Dictionary Manager while the preference is on
- * (`MainDictionarySource` caches the list per language, so the cache key needs the choice).
+ * Its German list is respelled the same way while the preference is on (`DictionaryListSpelling`,
+ * 2026-11-26; `MainDictionarySource` caches it per language AND spelling). A word disabled there
+ * in either spelling is disabled in the Swiss one ([foldDisabled], applied by every loader above).
  *
  * ## Twins
  *

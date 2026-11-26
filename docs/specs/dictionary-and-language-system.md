@@ -492,13 +492,18 @@ Rules:
   an import onto a device without the key writes the backup's value even when it is the default
   (`SEEDED_WHEN_ABSENT_KEYS`); a settings reset removes the key, and the device seeds it again.
 
-- **Disabled words.** Dictionary Manager lists the shipped list and stores `straße`; every loader
-  filters with `SwissSpelling.foldDisabled` (the stored set plus the `ss` spelling of its ß
-  words), so that word is disabled as `strasse` too. Disabling one twin disables the merged word.
+- **Disabled words.** Every loader filters with `SwissSpelling.foldDisabled` (the stored set plus
+  the `ss` spelling of its ß words), so a `straße` disabled before the switch was turned on is
+  disabled as `strasse` too. Disabling one twin disables the merged word.
+- **Dictionary Manager** (2026-11-26) lists the German list in Swiss spelling while the stored
+  switch is on (`DictionaryListSpelling.respell` in `MainDictionarySource`, cached per language
+  AND spelling; a flip while it is open rebuilds the tabs): twins are one row with the higher
+  frequency, disabled when any twin or its `ss` spelling is. Disabling a row stores the spelling
+  shown; enabling one removes every stored spelling that respells to it
+  (`DictionaryListSpelling.spellingsToEnable`).
 
-Not done: the Dictionary Manager's word list still shows the shipped spelling (`straße`) with the
-switch on (# TODO in `SwissSpelling`). An imported German pack is folded like the bundled list.
-Tests: `SwissSpellingFoldTest`, `SwissSpellingSeedTest`, `SwissSpellingWiringDriftTest`,
+An imported German pack is folded like the bundled list.
+Tests: `DictionaryListSpellingTest`, `SwissSpellingFoldTest`, `SwissSpellingSeedTest`, `SwissSpellingWiringDriftTest`,
 `WordPredictorSharpSTest`, `CtcAccentKeyLayoutReplayTest`, `ActiveLanguageSyncTest`,
 `SettingsImportPlanBuilderTest` (`germanSwissSpelling_*`).
 
