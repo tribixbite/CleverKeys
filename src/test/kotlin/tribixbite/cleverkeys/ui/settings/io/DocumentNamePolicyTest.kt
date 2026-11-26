@@ -72,10 +72,18 @@ class DocumentNamePolicyTest {
             val text = file.readText()
             assertWithMessage("${file.name} reads lastPathSegment for display")
                 .that(text).doesNotContain("lastPathSegment")
+            // A name resolved earlier is fine when it comes from the shared resolver: imports and
+            // exports run in a process-lifetime scope since 2026-11-25 (`ImportTracker`) and
+            // resolve the name with the application context, then show it on the current
+            // Settings activity (`val fileName = appContext.documentDisplayName(uri)`).
+            val resolvedNames = Regex("""val\s+(\w+)\s*=\s*(?:\w+\.)?documentDisplayName\(uri\)""")
+                .findAll(text).mapTo(HashSet()) { it.groupValues[1] }
             Regex("""R\.string\.common_file_name,\s*([^)\n]*\)?)""").findAll(text).forEach { m ->
                 fileNameLines++
-                assertWithMessage("${file.name}: common_file_name argument")
-                    .that(m.groupValues[1]).startsWith("documentDisplayName(uri)")
+                val argument = m.groupValues[1]
+                assertWithMessage("${file.name}: common_file_name argument $argument")
+                    .that(argument.startsWith("documentDisplayName(uri)") ||
+                        argument.removeSuffix(")").trim() in resolvedNames).isTrue()
             }
         }
         // Settings, full backup, dictionary, clipboard JSON and clipboard ZIP exports.
