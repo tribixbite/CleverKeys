@@ -34,6 +34,18 @@ editor that used to be listed here already ship in 2.0.)
   in the same sentence and field, goes to that language's personal dictionary (it went to the
   primary's), and its undo removes it from there. Otherwise it goes to the primary's.
 
+### Fixed (swiping and the personal dictionary, 2026-11-26)
+
+- A word you added to the SECOND language's personal dictionary in Multi-Language now wins a
+  swipe exactly as it would from the first language's list: swiping `parcero` from the Spanish
+  list under English gave `parcel`. The word is ranked as if it were in the first language's
+  list, at its own frequency and swipe priority, so an English word your swipe fits better
+  still wins.
+- A word you disabled in Dictionary Manager is no longer offered among the swipe suggestions
+  (a disabled `world` still showed after `would`, `works` …). A disabled word of the first
+  language is also kept out of the second language's swipe suggestions, as in typing. Its
+  apostrophe forms (`world's`) are separate entries and are still offered.
+
 ### Fixed (Settings and Dictionary Manager, 2026-11-26)
 
 - Dictionary Manager shows the primary language's list as soon as it is loaded: the lists still
