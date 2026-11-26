@@ -637,9 +637,9 @@ editor that used to be listed here already ship in 2.0.)
   picks the better of your two languages (Spanish text that also looks Portuguese switches to
   Spanish); for a pair it cannot recognise (Italian, Dutch or an imported language beside
   another) Settings says Auto-Detect is not available instead of showing a switch that never
-  worked. When it switches, next-word suggestions and the words you disabled follow the new
-  language: next-word used only a small built-in table of that language, and the disabled words
-  stayed the first language's. Known limits: Spanish has no next-word model of its own (only the
+  worked. When it switches, next-word suggestions follow the new language (they used only a small
+  built-in table of it); the words you disabled and your own dictionary words stay those of your
+  main language, whose dictionary stays loaded. Known limits: Spanish has no next-word model of its own (only the
   small built-in table; a Spanish model is planned for 2.1), and at the default sensitivity
   Auto-Detect seldom switches. A sweep of the default (0.40–0.60) found no value that both
   switches promptly and rarely switches by mistake, so it stays 0.6; lower it in Settings to

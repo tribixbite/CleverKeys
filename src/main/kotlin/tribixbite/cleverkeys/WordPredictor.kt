@@ -412,7 +412,24 @@ class WordPredictor : Predictor {
     // personalizationEngine directly in resolveScoreBreakdown. Class deleted.
     private var languageDetector: LanguageDetector? = LanguageDetector()
     private var multiLanguageManager: MultiLanguageManager? = null // Phase 8.3: Multi-language models
+    /**
+     * The NEXT-WORD language: the bigram tables, the static continuations, the learned context
+     * model and the learn receipts. [setLanguage] sets it with the dictionary; an Auto-Detect
+     * switch ([switchNextWordLanguage]) moves it alone.
+     */
     private var currentLanguage: String = "en" // Default to English
+
+    /**
+     * The language of the loaded PRIMARY dictionary, which owns the disabled words, the custom /
+     * user words, the user-dictionary observer and the lookup fold. Set only by [setLanguage]
+     * (every dictionary load calls it). Null until then, and in Objenesis-built test instances,
+     * where [dictionaryLanguage] falls back to [currentLanguage].
+     *
+     * Fable audit 2026-11-26: a detected switch moved this state with the next-word language
+     * while the primary dictionary stayed loaded, so German's disabled words replaced English's.
+     */
+    @Volatile private var dictionaryLanguageOrNull: String? = null
+    private val dictionaryLanguage: String get() = dictionaryLanguageOrNull ?: currentLanguage
     private val recentWords: MutableList<String> = mutableListOf() // For language detection
 
     /**
@@ -792,12 +809,13 @@ class WordPredictor : Predictor {
         }
         val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
         // v1.1.92: Use language-specific disabled words key
-        val disabledWordsKey = LanguagePreferenceKeys.disabledWordsKey(currentLanguage)
+        val language = dictionaryLanguage
+        val disabledWordsKey = LanguagePreferenceKeys.disabledWordsKey(language)
         val disabledSet = prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
         // Create a new HashSet to avoid modifying the original. D2: with Swiss spelling the list
         // holds `strasse` for the `straße` Dictionary Manager disables ([SwissSpelling.foldDisabled]).
-        disabledWords = SwissSpelling.foldDisabled(swissSpellingFor(ctx, currentLanguage), disabledSet).toMutableSet()
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$currentLanguage'")
+        disabledWords = SwissSpelling.foldDisabled(swissSpellingFor(ctx, language), disabledSet).toMutableSet()
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$language'")
     }
 
     /**
@@ -824,27 +842,29 @@ class WordPredictor : Predictor {
      * PERFORMANCE: Only reloads small dynamic sets, overwrites existing entries
      * Also rebuilds prefix index to include new words
      *
-     * v1.1.90: Uses currentLanguage to filter UserDictionary by locale.
+     * v1.1.90: Filters UserDictionary by locale — the loaded dictionary's language
+     * ([dictionaryLanguage]), not the Auto-Detect next-word language (Fable audit 2026-11-26).
      */
     override fun reloadCustomAndUserWords() {
+        val language = dictionaryLanguage
         context?.let {
             // Issue #72: Clear proper noun case map before reloading
             userWordOriginalCase.clear()
-            // v1.1.90: Pass currentLanguage to filter by locale
-            val customWords = loadCustomAndUserWords(it, currentLanguage)
+            // v1.1.90: Pass the dictionary's language to filter by locale
+            val customWords = loadCustomAndUserWords(it, language)
             // Persian/Kurdish lookup fold, as on the full-load paths: the reload wrote the user's
             // words under their raw keys, so after a Dictionary Manager edit a fa/ckb user word
             // typed with the other yeh/kaf was "unknown" until the next full load (follow-up
             // review 2026-11-15). A no-op for every other language.
-            foldLoadedKeys(dictionary.get(), prefixIndex.get(), currentLanguage)
+            foldLoadedKeys(dictionary.get(), prefixIndex.get(), language)
             // Track for disabled-word override check
-            customAndUserWords = customWords.mapTo(HashSet()) { w -> ArabicScriptFold.fold(w, currentLanguage) }
+            customAndUserWords = customWords.mapTo(HashSet()) { w -> ArabicScriptFold.fold(w, language) }
             // NOTE: Full rebuild needed here because we don't track which words were removed
             // Future optimization: track previous custom words to compute diff (added/removed)
             buildPrefixIndex()
             lastReloadTime = System.currentTimeMillis()
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                Log.d(TAG, "Reloaded ${customWords.size} custom/user words for '$currentLanguage' + rebuilt prefix index")
+                Log.d(TAG, "Reloaded ${customWords.size} custom/user words for '$language' + rebuilt prefix index")
             }
         }
     }
@@ -934,10 +954,35 @@ class WordPredictor : Predictor {
      *
      * v1.1.91: Also updates UserDictionaryObserver to filter by new language.
      * v1.1.92: Reloads disabled words for language-specific key.
-     * 2026-11-26: the only switch path; both Auto-Detect branches of [tryAutoLanguageDetection]
-     * switch through it (pinned by `LearningFunnelBookkeepingTest`).
+     * This is the DICTIONARY language switch (every dictionary load calls it): it sets the
+     * next-word language too ([switchNextWordLanguage]). An Auto-Detect switch calls only
+     * [switchNextWordLanguage], because the primary dictionary stays loaded (Fable audit
+     * 2026-11-26; pinned by `LearningFunnelBookkeepingTest`).
      */
     fun setLanguage(language: String) {
+        dictionaryLanguageOrNull = language
+        switchNextWordLanguage(language)
+
+        // v1.1.91: Update observer to filter by new language
+        dictionaryObserver?.setLanguage(language)
+
+        // v1.1.92: Reload disabled words for language-specific key
+        loadDisabledWords()
+    }
+
+    /**
+     * Move the NEXT-WORD language alone: the bigram tables, that language's static
+     * continuations (`.cklm`, parsed on the seed loader's thread, never on the commit path),
+     * the learned context model and the multi-language manager. The dictionary's disabled
+     * words, custom words and user-dictionary observer stay with [dictionaryLanguage]; the
+     * secondary language's lexicon state belongs to the secondary path.
+     *
+     * Before the 2026-11-26 fix (`4f034ac03`) a detected switch went through [setLanguage]
+     * and replaced the primary's disabled words with the detected language's, ran the
+     * observer's ContentResolver query on the commit path and then ignored the primary's
+     * custom-word changes.
+     */
+    private fun switchNextWordLanguage(language: String) {
         // L6 (review 2026-08-06): the rolling learn window must not straddle a
         // language switch — otherwise the first commits after the switch record
         // mixed-language pairs into the NEW language's store.
@@ -966,12 +1011,6 @@ class WordPredictor : Predictor {
                 Log.w(TAG, "Failed to switch MultiLanguageManager to: $language")
             }
         }
-
-        // v1.1.91: Update observer to filter by new language
-        dictionaryObserver?.setLanguage(language)
-
-        // v1.1.92: Reload disabled words for language-specific key
-        loadDisabledWords()
     }
 
     /**
@@ -1240,12 +1279,11 @@ class WordPredictor : Predictor {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
                 }
-                // The one switch path (2026-11-26): this branch used to set only the bigram
-                // tables' language and the context model, so a detected switch kept the old
-                // language's static next-word model (the new one's `.cklm` was never loaded),
-                // disabled words and user-dictionary filter. [setLanguage] also clears the
-                // window that triggered detection (L6) and expires the exact learn receipt.
-                setLanguage(detected)
+                // A detected switch moves the next-word language only (Fable audit 2026-11-26):
+                // the new language's `.cklm` loads off the main thread, the window that
+                // triggered detection is cleared (L6) and the exact learn receipt expires; the
+                // primary dictionary and its disabled / custom words stay.
+                switchNextWordLanguage(detected)
             }
             // The manager's answer stands, a "no switch" (null) included: the legacy detector
             // below used to run after it at a fixed threshold over all six of its languages and
@@ -1265,7 +1303,7 @@ class WordPredictor : Predictor {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
                 }
-                setLanguage(detectedLanguage)
+                switchNextWordLanguage(detectedLanguage)
             }
         }
     }
@@ -2671,11 +2709,11 @@ class WordPredictor : Predictor {
     }
 
     /**
-     * The dictionary key for [word] in the current language: lowercase, then the Arabic-script
+     * The dictionary key for [word] in the dictionary's language ([dictionaryLanguage]): lowercase, then the Arabic-script
      * lookup fold ([ArabicScriptFold]: `fa` folds ي ك ى → ی ک ی and ۀ ة ە → ه, `ckb` only ي ك,
      * every other language nothing). Keys are folded the same way at load ([foldLoadedKeys]).
      */
-    private fun lookupKey(word: String): String = ArabicScriptFold.fold(word.lowercase(), currentLanguage)
+    private fun lookupKey(word: String): String = ArabicScriptFold.fold(word.lowercase(), dictionaryLanguage)
 
     /**
      * The dictionary key of [lowerKey] spelled with `ss` for `ß`, when [lowerKey] has a `ß`, is

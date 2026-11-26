@@ -50,7 +50,8 @@ class SwissSpellingWiringDriftTest {
         )
         assertWithMessage("disabled words follow the respelling")
             .that(predictor.substringAfter("private fun loadDisabledWords() {").substringBefore("override fun isWordDisabled("))
-            .contains("SwissSpelling.foldDisabled(swissSpellingFor(ctx, currentLanguage), disabledSet)")
+            // `language` is the DICTIONARY language (Fable audit 2026-11-26), not the next-word one.
+            .contains("SwissSpelling.foldDisabled(swissSpellingFor(ctx, language), disabledSet)")
         assertWithMessage("the loaders read the STORED preference, not the in-memory Config")
             .that(predictor.substringAfter("private fun swissSpellingFor(").substringBefore("private fun foldSwissSpelling("))
             .contains("LanguagePrefs.germanSwissSpelling(DirectBootAwarePreferences.get_shared_preferences(ctx))")

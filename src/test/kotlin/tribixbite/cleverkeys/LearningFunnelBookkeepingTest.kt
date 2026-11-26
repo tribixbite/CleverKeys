@@ -468,14 +468,20 @@ class LearningFunnelBookkeepingTest {
     }
 
     /**
-     * 2026-11-26 (Pixel S7 follow-up): a switch the language MANAGER detects must switch the
-     * predictor the same way [WordPredictor.setLanguage] does. Its branch set only the bigram
-     * tables' language and the context model, so after detecting German the next-word seed kept
-     * the hardcoded table instead of loading `de.cklm`, English's disabled words stayed in force,
-     * and the user-dictionary observer kept filtering by English.
+     * 2026-11-26 (Pixel S7 follow-up, corrected after the Fable audit): a switch the language
+     * MANAGER detects moves only the NEXT-WORD language. Its branch first set only the bigram
+     * tables' language and the context model, so the new language's `de.cklm` was never loaded;
+     * the first fix routed it through [WordPredictor.setLanguage], which also moved the PRIMARY
+     * dictionary's state to the detected language while the primary dictionary stayed loaded:
+     * German's disabled words replaced English's (an English disabled word was offered and
+     * autocorrected again), the user-dictionary observer ran a query on the commit path and then
+     * ignored English custom-word changes, and a reload pulled German custom words into the
+     * English dictionary. The detected language gets its bigram/context models and its static
+     * continuations (loaded off the main thread); disabled words, custom words and the observer
+     * stay with the dictionary's language.
      */
     @Test
-    fun aDetectedSwitchLoadsTheNewLanguagesModelDisabledWordsAndObserver() {
+    fun aDetectedSwitchMovesOnlyTheNextWordLanguage() {
         useReceiptVocabulary()
         config.auto_detect_language = true
         config.active_secondary_language = "de"
@@ -483,6 +489,7 @@ class LearningFunnelBookkeepingTest {
         predictor.setField("context", ctx)
         val prefs = mockk<android.content.SharedPreferences>(relaxed = true)
         every { prefs.getStringSet(any(), any()) } returns emptySet()
+        every { prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("en"), any()) } returns setOf("colour")
         every { prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("de"), any()) } returns setOf("doch")
         mockkStatic(DirectBootAwarePreferences::get_shared_preferences)
         every { DirectBootAwarePreferences.get_shared_preferences(any()) } returns prefs
@@ -490,18 +497,26 @@ class LearningFunnelBookkeepingTest {
         predictor.setField("bigramModel", bigrams)
         val observer = mockk<UserDictionaryObserver>(relaxed = true)
         predictor.setField("dictionaryObserver", observer)
+        // English is the loaded dictionary: setLanguage is what a dictionary load calls.
+        predictor.setLanguage("en")
+        assertWithMessage("English's disabled words").that(predictor.getField("disabledWords") as Set<*>).containsExactly("colour")
         val languages = mockk<MultiLanguageManager>(relaxed = true)
         every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
         predictor.setField("multiLanguageManager", languages)
 
         listOf("wir", "haben", "das", "schon", "doch").forEach { predictor.addWordToContext(it, true) }
 
-        assertWithMessage("switched").that(predictor.getField("currentLanguage")).isEqualTo("de")
+        assertWithMessage("next-word language switched").that(predictor.getField("currentLanguage")).isEqualTo("de")
         verify { bigrams.setLanguage("de") }
         verify { bigrams.loadStaticContinuationsAsync(ctx, "de") }
-        verify { observer.setLanguage("de") }
-        assertWithMessage("German's disabled words").that(predictor.getField("disabledWords") as Set<*>).containsExactly("doch")
+        assertWithMessage("context model follows").that((predictor.getField("contextModel") as ContextModel).language).isEqualTo("de")
         assertWithMessage("the window that triggered the switch is cleared").that(learnWindow()).isEmpty()
+        verify(exactly = 0) { observer.setLanguage("de") }
+        assertWithMessage("the primary's disabled words stay").that(predictor.getField("disabledWords") as Set<*>).containsExactly("colour")
+        // A Dictionary Manager edit after the switch still reloads the PRIMARY's lists.
+        predictor.reloadDisabledWords()
+        assertWithMessage("a reload reads the primary's key").that(predictor.getField("disabledWords") as Set<*>).containsExactly("colour")
+        verify(exactly = 0) { prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("de"), any()) }
     }
 
     @Test
