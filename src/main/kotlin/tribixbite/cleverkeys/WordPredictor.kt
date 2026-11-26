@@ -835,6 +835,8 @@ class WordPredictor : Predictor {
      */
     fun reloadDisabledWords() {
         loadDisabledWords()
+        // A Dictionary Manager edit may have changed the detected next-word language's list too.
+        detectedDisabledCache = null
     }
 
     /**
@@ -991,6 +993,7 @@ class WordPredictor : Predictor {
         if (language != currentLanguage) {
             invalidateExactLearningCommit()
             recentWords.clear()
+            detectedDisabledCache = null
         }
         currentLanguage = language
         bigramModel?.let {
@@ -1515,7 +1518,46 @@ class WordPredictor : Predictor {
             config?.context_aware_predictions_enabled ?: false
         )
         if (!canUse) return emptyList()
-        return contextModel?.getNextWordCandidates(contextWords, maxResults) ?: emptyList()
+        val candidates = contextModel?.getNextWordCandidates(contextWords, maxResults) ?: return emptyList()
+        val disabled = detectedNextWordDisabled() ?: return candidates
+        return candidates.filterNot { isDisabledIn(disabled, it.word) }
+    }
+
+    /**
+     * The disabled words of the Auto-Detect NEXT-WORD language when it is not the loaded
+     * dictionary's language, else null (2026-11-26). An Auto-Detect switch moves only the
+     * next-word language ([switchNextWordLanguage]); [isWordDisabled], which the next-word filter
+     * (`NextWordPredictor.candidatesFor`) asks, keeps reading the PRIMARY dictionary's list, so a
+     * word disabled in the detected language's Dictionary Manager tab came back as its next-word
+     * continuation. Back on the primary this is null and that filter alone applies, as before.
+     *
+     * The loaded secondary's list ([secondaryDisabledWords], published with its index) when the
+     * detected language is the secondary; otherwise (its index not published yet) the stored list,
+     * read once per language and kept until the next switch or Dictionary Manager reload.
+     */
+    private fun detectedNextWordDisabled(): Set<String>? {
+        val language = currentLanguage
+        if (language == dictionaryLanguage) return null
+        if (language == secondaryLanguageCode) return secondaryDisabledWords
+        detectedDisabledCache?.let { (cachedLanguage, words) -> if (cachedLanguage == language) return words }
+        return readSecondaryDisabledWords(language).also { detectedDisabledCache = language to it }
+    }
+
+    /** [detectedNextWordDisabled]'s stored-list read for a language whose index is not loaded. */
+    @Volatile
+    private var detectedDisabledCache: Pair<String, Set<String>>? = null
+
+    /**
+     * [word] (lowercased) or its apostrophe-free key is in [disabled]: every bundled dictionary
+     * stores a contraction apostrophe-free (`geht's` under `gehts`), and Dictionary Manager disables
+     * that key, as `NextWordPredictor.candidatesFor` checks for the primary.
+     */
+    private fun isDisabledIn(disabled: Set<String>, word: String): Boolean {
+        if (disabled.isEmpty()) return false
+        val lower = word.lowercase()
+        if (lower in disabled) return true
+        val key = NextWordPredictor.apostropheFreeKey(lower) ?: return false
+        return key in disabled
     }
 
     /**
@@ -1544,11 +1586,13 @@ class WordPredictor : Predictor {
         maxResults: Int
     ): List<StaticBigramSeed.Continuation> {
         val prevWord = contextWords.lastOrNull() ?: return emptyList()
-        val seed = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
+        val raw = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
         // D2: the model spells Germany's way (`straße`); with Swiss spelling the dictionary the
         // seed is checked against does not, so the continuations are shown respelled, a twin once.
-        if (!primarySwissSpelling) return seed
-        return SwissSpelling.foldDistinct(seed, { it.word }) { c, word -> c.copy(word = word) }
+        val seed = if (!primarySwissSpelling) raw else SwissSpelling.foldDistinct(raw, { it.word }) { c, word -> c.copy(word = word) }
+        // A detected next-word language's own disabled words (2026-11-26, [detectedNextWordDisabled]).
+        val disabled = detectedNextWordDisabled() ?: return seed
+        return seed.filterNot { isDisabledIn(disabled, it.word) }
     }
 
     /**

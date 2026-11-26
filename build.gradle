@@ -1722,6 +1722,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.ContractionUnlockResyncTest',
     // 2026-11-26: one primary change parses the English contraction base once.
     'tribixbite.cleverkeys.ContractionEnglishBaseLoadCountTest',
+    // 2026-11-26: a detected next-word language's disabled words filter its next-word output.
+    'tribixbite.cleverkeys.NextWordDetectedLanguageDisabledTest',
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',

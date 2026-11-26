@@ -671,6 +671,8 @@ editor that used to be listed here already ship in 2.0.)
 - After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
   or Multi-Language off, changing the second language or picking a layout bound to your first
   language returns them to your first language; they stayed in the second.
+- After Auto-Detect switched next-word predictions to your second language, a word you disabled
+  for that language in the Dictionary Manager is no longer suggested as the next word.
 - Changing a setting or the language no longer makes keyboards from earlier sessions reload their
   dictionaries and contractions in the background; one language change loaded the English
   contraction list six times.
