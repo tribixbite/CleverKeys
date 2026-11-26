@@ -119,8 +119,9 @@ internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Bo
         gifImportStatus = GifImportStatus.Ok(getString(R.string.gif_importing))
     } else {
         // A second pack (a share intent, most likely) while one imports: the section shows the
-        // running import, whose result follows.
+        // running import, whose result follows; the user is told this file was not imported.
         android.util.Log.w(SettingsActivity.TAG, "GIF pack import already running; $uri not imported")
+        Toast.makeText(this, R.string.gif_import_already_running, Toast.LENGTH_LONG).show()
     }
 }
 

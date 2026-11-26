@@ -1474,6 +1474,7 @@
     <string name="dictionary_backup_apply_failed">Nabigong ilapat ang import ng diksyunaryo:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Naka-install na ang pack na \'%1$s\'</string>
     <string name="gif_toast_pack_imported">Na-import ang GIF pack: %1$s</string>
+    <string name="gif_import_already_running">May isa pang pag-import ng GIF pack na tumatakbo pa. Subukang muli kapag tapos na ito.</string>
     <string name="gif_replace_dialog_title">Naka-install na ang pack</string>
     <string name="gif_replace_dialog_body">Naka-install na ang \'%1$s\'. Palitan ito ng napiling file? (Ina-update ng muling pag-import ng na-rebuild na pack ang mga GIF nito.)</string>
     <string name="gif_replace_dialog_confirm">Palitan</string>

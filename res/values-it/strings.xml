@@ -1515,6 +1515,7 @@
     <string name="dictionary_backup_apply_failed">Applicazione dell\'importazione del dizionario non riuscita:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pacchetto \"%1$s\" già installato</string>
     <string name="gif_toast_pack_imported">Pacchetto GIF importato: %1$s</string>
+    <string name="gif_import_already_running">È ancora in corso un\'altra importazione di un pacchetto GIF. Riprova quando è terminata.</string>
     <string name="gif_replace_dialog_title">Pacchetto già installato</string>
     <string name="gif_replace_dialog_body">\"%1$s\" è già installato. Sostituirlo con il file selezionato? (Reimportare un pacchetto ricostruito ne aggiorna le GIF.)</string>
     <string name="gif_replace_dialog_confirm">Sostituisci</string>

@@ -1502,6 +1502,7 @@
     <string name="dictionary_backup_apply_failed">Aplicarea importului de dicționar a eșuat:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pachetul „%1$s” este deja instalat</string>
     <string name="gif_toast_pack_imported">Pachet GIF importat: %1$s</string>
+    <string name="gif_import_already_running">Un alt import al unui pachet GIF este încă în curs. Încercați din nou după ce se termină.</string>
     <string name="gif_replace_dialog_title">Pachet deja instalat</string>
     <string name="gif_replace_dialog_body">„%1$s” este deja instalat. Îl înlocuiți cu fișierul selectat? (Reimportarea unui pachet reconstruit îi actualizează GIF-urile.)</string>
     <string name="gif_replace_dialog_confirm">Înlocuiește</string>

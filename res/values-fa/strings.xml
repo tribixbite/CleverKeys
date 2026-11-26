@@ -1500,6 +1500,7 @@
     <string name="dictionary_backup_apply_failed">اعمال واژه‌نامهٔ واردشده ناموفق بود:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">بستهٔ «%1$s» از قبل نصب شده است</string>
     <string name="gif_toast_pack_imported">بستهٔ گیف وارد شد: %1$s</string>
+    <string name="gif_import_already_running">وارد کردن یک بستهٔ گیف دیگر هنوز در حال انجام است. پس از پایان آن دوباره امتحان کنید.</string>
     <string name="gif_replace_dialog_title">بسته از قبل نصب شده است</string>
     <string name="gif_replace_dialog_body">«%1$s» از قبل نصب شده است. با فایل انتخاب‌شده جایگزین شود؟ (وارد کردن دوبارهٔ بسته‌ای که از نو ساخته شده، گیف‌های آن را به‌روز می‌کند.)</string>
     <string name="gif_replace_dialog_confirm">جایگزینی</string>

@@ -76,4 +76,11 @@ class GifAndRulesImportScopeDriftTest {
         assertThat(imports.substringAfter("fun SettingsActivity.observeSettingsImports"))
             .contains("SettingsImports.clipboardRules.consumeEvent()")
     }
+
+    @Test
+    fun aRefusedSecondGifImportIsShownToTheUser() {
+        val refused = body(gif, "performGifPackImport").substringAfter("} else {", missingDelimiterValue = "")
+        assertWithMessage("performGifPackImport tells the user when another pack import runs")
+            .that(refused).contains("R.string.gif_import_already_running")
+    }
 }

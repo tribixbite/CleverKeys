@@ -1485,6 +1485,7 @@
     <string name="dictionary_backup_apply_failed">Échec de l\'application de l\'import du dictionnaire :\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pack « %1$s » déjà installé</string>
     <string name="gif_toast_pack_imported">Pack GIF importé : %1$s</string>
+    <string name="gif_import_already_running">Une autre importation de pack GIF est encore en cours. Réessayez quand elle sera terminée.</string>
     <string name="gif_replace_dialog_title">Pack déjà installé</string>
     <string name="gif_replace_dialog_body">« %1$s » est déjà installé. Le remplacer par le fichier sélectionné ? (Réimporter un pack reconstruit met à jour ses GIF.)</string>
     <string name="gif_replace_dialog_confirm">Remplacer</string>

@@ -1449,6 +1449,7 @@
     <string name="dictionary_backup_apply_failed">사전 가져오기를 적용하지 못했습니다:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">\'%1$s\' 팩이 이미 설치되어 있습니다</string>
     <string name="gif_toast_pack_imported">GIF 팩을 가져왔습니다: %1$s</string>
+    <string name="gif_import_already_running">다른 GIF 팩 가져오기가 아직 진행 중입니다. 끝난 후 다시 시도하세요.</string>
     <string name="gif_replace_dialog_title">이미 설치된 팩</string>
     <string name="gif_replace_dialog_body">\'%1$s\'이(가) 이미 설치되어 있습니다. 선택한 파일로 교체하시겠습니까? (다시 빌드한 팩을 다시 가져오면 해당 GIF가 업데이트됩니다.)</string>
     <string name="gif_replace_dialog_confirm">교체</string>

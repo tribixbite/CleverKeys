@@ -1448,6 +1448,7 @@
     <string name="dictionary_backup_apply_failed">辞書のインポートを適用できませんでした:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">パック「%1$s」はインストール済みです</string>
     <string name="gif_toast_pack_imported">GIF パックをインポートしました: %1$s</string>
+    <string name="gif_import_already_running">別の GIF パックのインポートがまだ実行中です。完了してからもう一度お試しください。</string>
     <string name="gif_replace_dialog_title">パックはインストール済みです</string>
     <string name="gif_replace_dialog_body">「%1$s」はすでにインストールされています。選択したファイルで置き換えますか？(再構築したパックを再インポートすると、その GIF が更新されます。)</string>
     <string name="gif_replace_dialog_confirm">置き換え</string>

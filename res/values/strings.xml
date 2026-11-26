@@ -1881,6 +1881,7 @@
     <string name="dictionary_backup_apply_failed">Failed to apply dictionary import:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pack \'%1$s\' already installed</string>
     <string name="gif_toast_pack_imported">GIF pack imported: %1$s</string>
+    <string name="gif_import_already_running">Another GIF pack import is still running. Try again when it finishes.</string>
     <string name="gif_replace_dialog_title">Pack already installed</string>
     <string name="gif_replace_dialog_body">\'%1$s\' is already installed. Replace it with the selected file? (Re-importing a rebuilt pack updates its GIFs.)</string>
     <string name="gif_replace_dialog_confirm">Replace</string>

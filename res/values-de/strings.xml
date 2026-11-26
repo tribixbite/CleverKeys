@@ -1482,6 +1482,7 @@
     <string name="dictionary_backup_apply_failed">Wörterbuch-Import konnte nicht übernommen werden:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Paket „%1$s“ bereits installiert</string>
     <string name="gif_toast_pack_imported">GIF-Paket importiert: %1$s</string>
+    <string name="gif_import_already_running">Ein anderer Import eines GIF-Pakets läuft noch. Versuchen Sie es erneut, wenn der Vorgang abgeschlossen ist.</string>
     <string name="gif_replace_dialog_title">Paket bereits installiert</string>
     <string name="gif_replace_dialog_body">„%1$s“ ist bereits installiert. Durch die ausgewählte Datei ersetzen? (Erneutes Importieren eines neu erstellten Pakets aktualisiert seine GIFs.)</string>
     <string name="gif_replace_dialog_confirm">Ersetzen</string>
