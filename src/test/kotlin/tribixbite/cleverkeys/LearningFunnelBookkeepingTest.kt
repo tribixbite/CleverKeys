@@ -1485,6 +1485,31 @@ class LearningFunnelBookkeepingTest {
         verify(exactly = 1) { personalization.unrecordWordTyped("cats") }
     }
 
+    /**
+     * Task B (2026-11-26): which secondary Auto-Detect has switched the next-word language to —
+     * the list a bar "Add to dictionary" writes to. Null until a detected switch, and again once
+     * detection stops applying.
+     */
+    @Test
+    fun theDetectedSecondaryIsReportedOnlyWhileDetectionHasSwitchedToIt() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any(), any()) } returns null
+        predictor.setField("multiLanguageManager", languages)
+        listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("no switch yet").that(predictor.autoDetectedSecondaryLanguage()).isNull()
+
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
+        predictor.addWordToContext("perros", true)
+        assertWithMessage("switched to the secondary").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
+
+        config.auto_detect_language = false
+        assertWithMessage("detection off").that(predictor.autoDetectedSecondaryLanguage()).isNull()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**

@@ -73,6 +73,7 @@ class DictionaryAddUndoTest {
         every { dictionary.getCurrentLanguage() } returns "en"
         every { dictionary.addUserWord(any()) } returns true
         predictor = mockk(relaxed = true)
+        every { predictor.autoDetectedSecondaryLanguage() } returns null
         coordinator = mockk(relaxed = true)
         every { coordinator.getDictionaryManager() } returns dictionary
         every { coordinator.getWordPredictor() } returns predictor
@@ -455,6 +456,66 @@ class DictionaryAddUndoTest {
         handler.handleRegularTyping(" ", ic, field())
         handler.handleRegularTyping(".", ic, field())
         verify(exactly = 2) { bar.dismissUndoableMessage() }
+    }
+
+    // ------------------------------------------- multi-language list (2026-11-26)
+    //
+    // Pixel, English + Spanish with Auto-Detect: `parcero` added from the bar while typing Spanish
+    // went to CUSTOM [EN]. Rule (maintainer decision via orchestrator, 2026-11-26): when
+    // Auto-Detect has actually switched the next-word language to the secondary at the time of
+    // the add, the word goes to the secondary's list; otherwise to the primary's.
+
+    @Test
+    fun aBarAddWhileAutoDetectHasSwitchedToTheSecondaryGoesToItsList() {
+        every { predictor.autoDetectedSecondaryLanguage() } returns "es"
+        every { dictionary.addUserWord("parcero", "es") } returns true
+
+        handler().tap(Suggestion.AddToDictionary("parcero").wire)
+
+        verify(exactly = 1) { dictionary.addUserWord("parcero", "es") }
+        verify(exactly = 0) { dictionary.addUserWord("parcero") }
+        // The undo takes it out of the list it went to, even once detection has switched back.
+        every { predictor.autoDetectedSecondaryLanguage() } returns null
+        undo.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("parcero", "es") }
+        verify(exactly = 0) { dictionary.removeUserWord("parcero") }
+    }
+
+    @Test
+    fun withoutADetectedSwitchABarAddGoesToThePrimaryList() {
+        every { predictor.autoDetectedSecondaryLanguage() } returns null
+
+        handler().tap(Suggestion.AddToDictionary("parcero").wire)
+
+        verify(exactly = 1) { dictionary.addUserWord("parcero") }
+        verify(exactly = 0) { dictionary.addUserWord(any(), any()) }
+    }
+
+    /** The real store: a language-addressed add writes that list only, and leaves the active set. */
+    @Test
+    fun aLanguageAddressedAddWritesOnlyThatLanguagesList() {
+        val saved = mutableMapOf<String, String?>()
+        val prefs = mockk<android.content.SharedPreferences>(relaxed = true)
+        val editor = mockk<android.content.SharedPreferences.Editor>(relaxed = true)
+        every { prefs.edit() } returns editor
+        every { editor.putString(any(), any()) } answers { saved[firstArg()] = secondArg(); editor }
+        every { prefs.getString(any(), any()) } answers { saved[firstArg()] ?: secondArg() }
+        val manager = objenesis.newInstance(DictionaryManager::class.java)
+        manager.setField("prefs", prefs)
+        manager.setField("gson", com.google.gson.Gson())
+        manager.setField("userWords", mutableSetOf<String>())
+        manager.setField("currentLanguage", "en")
+
+        assertThat(manager.addUserWord("parcero", "es")).isTrue()
+        assertThat(manager.addUserWord("parcero", "es")).isFalse()
+
+        assertThat(saved[LanguagePreferenceKeys.customWordsKey("es")]).contains("parcero")
+        assertThat(saved).doesNotContainKey(LanguagePreferenceKeys.customWordsKey("en"))
+        assertThat(manager.isUserWord("parcero")).isFalse()
+        assertThat(manager.isUserWord("parcero", "es")).isTrue()
+
+        manager.removeUserWord("parcero", "es")
+        assertThat(manager.isUserWord("parcero", "es")).isFalse()
     }
 
     @Test

@@ -153,6 +153,13 @@ interface Predictor {
         commit: LearningCommit, fieldAllowsPersonalizedLearning: Boolean = true
     ): Boolean = false
 
+    /**
+     * The secondary language Auto-Detect has actually switched the NEXT-WORD language to, or
+     * null while the next-word language is the loaded primary's (or detection is not running).
+     * Decides which personal-dictionary list a word added from the bar goes to.
+     */
+    fun autoDetectedSecondaryLanguage(): String? = null
+
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)
 

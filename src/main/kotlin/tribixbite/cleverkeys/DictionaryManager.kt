@@ -174,11 +174,20 @@ class DictionaryManager(private val context: Context) {
      *   "Added … to dictionary" confirmation offers its undo only for a true add, so an undo can
      *   never remove a word the user already had.
      */
-    fun addUserWord(word: String?): Boolean {
+    fun addUserWord(word: String?): Boolean = addUserWord(word, currentLanguage)
+
+    /**
+     * [addUserWord] into [language]'s `custom_words_<language>` list, which need not be the
+     * active one: in multi-language mode a word added while Auto-Detect has switched to the
+     * secondary language belongs to the secondary's list (2026-11-26, Pixel: `parcero` typed in
+     * Spanish with English + Spanish landed in CUSTOM [EN]). The in-memory set follows only when
+     * [language] is the active language; the secondary's predictors read the stored list.
+     */
+    fun addUserWord(word: String?, language: String): Boolean {
         if (word.isNullOrEmpty()) return false
 
-        val inserted = word in persistUserWords(added = setOf(word))
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$currentLanguage' (new=$inserted)")
+        val inserted = word in persistUserWords(language, added = setOf(word))
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Added '$word' to custom words for '$language' (new=$inserted)")
         return inserted
     }
 
@@ -186,8 +195,18 @@ class DictionaryManager(private val context: Context) {
      * Remove a word from the user dictionary
      */
     fun removeUserWord(word: String) {
-        persistUserWords(removed = setOf(word))
+        removeUserWord(word, currentLanguage)
     }
+
+    /** [removeUserWord] from [language]'s list (the undo of [addUserWord] with a language). */
+    fun removeUserWord(word: String, language: String) {
+        persistUserWords(language, removed = setOf(word))
+    }
+
+    /** Is [word] stored, exactly, in [language]'s list (a fresh read; any language)? */
+    fun isUserWord(word: String, language: String): Boolean =
+        if (language == currentLanguage) isUserWord(word)
+        else word in readStoredWordMap(LanguagePreferenceKeys.customWordsKey(language))
 
     /**
      * The swipe priority of personal-dictionary word [word] (any casing), or null when [word]
@@ -354,25 +373,30 @@ class DictionaryManager(private val context: Context) {
      * @return the words of [added] that were NOT in the freshly read store (the true inserts)
      */
     private fun persistUserWords(
+        language: String = currentLanguage,
         added: Set<String> = emptySet(),
         removed: Set<String> = emptySet(),
         clearStored: Boolean = false,
     ): Set<String> {
-        val key = getCustomWordsKey()
+        val key = LanguagePreferenceKeys.customWordsKey(language)
         val stored: Map<String, Int> = if (clearStored) emptyMap() else readStoredWordMap(key)
         val merged = LinkedHashSet(stored.keys).apply {
             addAll(added)
             removeAll(removed)
         }
-        mutateUserWords {
-            clear()
-            addAll(merged)
+        // The in-memory set mirrors the ACTIVE language only; another language's list is read
+        // from the store by its consumers (the secondary dictionary, the swipe lexicon).
+        if (language == currentLanguage) {
+            mutateUserWords {
+                clear()
+                addAll(merged)
+            }
         }
         val wordsMap = merged.associateWith { stored[it] ?: UserWordFrequency.DEFAULT }
         val editor = prefs.edit().putString(key, gson.toJson(wordsMap))
         // A word that leaves the store leaves its swipe priority too (same editor, so the two
         // keys can never disagree on disk): re-adding it later starts at NORMAL.
-        val priorityKey = LanguagePreferenceKeys.swipePriorityKey(currentLanguage)
+        val priorityKey = LanguagePreferenceKeys.swipePriorityKey(language)
         val priorities = SwipePriority.parseMap(prefs.getString(priorityKey, null))
         val kept = priorities.filterKeys { it in merged }
         if (kept.size != priorities.size) {

@@ -1351,6 +1351,20 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * 2026-11-26 (Pixel: `parcero` added from the bar while typing Spanish in en+es went to the
+     * English list): the active secondary language when a detected switch moved the next-word
+     * language to it ([switchNextWordLanguage]) and detection still applies; null otherwise,
+     * including before any dictionary load ([dictionaryLanguageOrNull] unset).
+     */
+    override fun autoDetectedSecondaryLanguage(): String? {
+        if (dictionaryLanguageOrNull == null) return null
+        val next = currentLanguage
+        if (next == dictionaryLanguage) return null
+        val pair = detectionPair() ?: return null
+        return next.takeIf { it in pair && it == config?.active_secondary_language }
+    }
+
+    /**
      * Move the next-word language back to the loaded dictionary's ([dictionaryLanguage]) when a
      * detected language no longer applies: detection stopped ([detectionPair] null) or the
      * detected language is no longer one of the chosen pair (the secondary was replaced).

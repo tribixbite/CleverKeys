@@ -2649,11 +2649,24 @@ class SuggestionHandler(
 
         vlog { "ADD TO DICTIONARY: Adding '$wordToAdd'" }
 
-        // Add to user dictionary, without a capital auto-capitalisation put there
-        val stored = userWordStorageForm(wordToAdd, ic, editorInfo)
-        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
+        // Multi-language (2026-11-26): while Auto-Detect has switched to the secondary language
+        // the word is the secondary's, so it goes to that list; otherwise to the primary's.
+        val secondary = predictionCoordinator.getWordPredictor()?.autoDetectedSecondaryLanguage()
+            ?.takeIf { it.isNotBlank() }
 
-        // Refresh dictionary so word appears in predictions immediately
+        // Add to user dictionary, without a capital auto-capitalisation put there
+        val stored = userWordStorageForm(wordToAdd, ic, editorInfo, secondary)
+        val dictionary = predictionCoordinator.getDictionaryManager()
+        val inserted = if (secondary != null) {
+            dictionary?.addUserWord(stored, secondary) ?: false
+        } else {
+            dictionary?.addUserWord(stored) ?: false
+        }
+
+        // Refresh dictionary so word appears in predictions immediately. A secondary-list write
+        // reaches its predictors without this: the service's preference listener rebuilds the
+        // secondary dictionary (PredictionCoordinator.onUserWordsChanged → its custom words),
+        // and both swipe engines key their per-language lexicon on custom_words_<lang> content.
         predictionCoordinator.refreshCustomWords()
 
         // Clear tracking
@@ -2662,7 +2675,7 @@ class SuggestionHandler(
         specialPromptActive = false
 
         // Tappable confirmation (bar clears after it instead of restoring the prompt)
-        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
+        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary, secondary)
     }
 
     /**
@@ -2677,7 +2690,9 @@ class SuggestionHandler(
      * rather than adding a second, lowercase entry. The confirmation and its undo use the
      * returned form, so the undo removes exactly what was stored.
      */
-    private fun userWordStorageForm(word: String, ic: InputConnection?, editorInfo: EditorInfo?): String {
+    private fun userWordStorageForm(
+        word: String, ic: InputConnection?, editorInfo: EditorInfo?, list: String? = null
+    ): String {
         if (!UserWordCasing.hasAutoCapitalShape(word)) return word
         val inputType = editorInfo?.inputType ?: 0
         val isText = inputType and android.text.InputType.TYPE_MASK_CLASS == android.text.InputType.TYPE_CLASS_TEXT
@@ -2691,7 +2706,8 @@ class SuggestionHandler(
         // (Fable audits 2026-11-26).
         if (mode != UserWordCasing.AutoCapMode.SENTENCES) return word
         val dictionary = predictionCoordinator.getDictionaryManager()
-        if (dictionary?.isUserWord(word) == true) return word
+        val stored = if (list != null) dictionary?.isUserWord(word, list) else dictionary?.isUserWord(word)
+        if (stored == true) return word
         val window = word.length + USER_WORD_CASING_CONTEXT_CHARS
         val before = try {
             ic?.getTextBeforeCursor(window, 0)?.toString()
@@ -2699,7 +2715,7 @@ class SuggestionHandler(
             Log.w(TAG, "Editor read for the stored word's casing failed; keeping it as typed", e)
             null
         }
-        val locale = java.util.Locale.forLanguageTag(activeLanguageCode())
+        val locale = java.util.Locale.forLanguageTag(list ?: activeLanguageCode())
         return UserWordCasing.storageForm(word, before, mode, readWindowFilled = (before?.length ?: 0) >= window, locale = locale)
     }
 
@@ -2714,11 +2730,14 @@ class SuggestionHandler(
      * be tapped; the bar is the one feedback surface the user can act on.
      *
      * @param messageRes the confirmation text, one `%1$s` for [word]
+     * @param list the language list the add wrote to when it is not the active (primary) one
+     *   ([DictionaryManager.addUserWord] with a language); the undo removes from that list
      */
     private fun confirmDictionaryAdd(
         word: String,
         inserted: Boolean,
         messageRes: Int,
+        list: String? = null,
     ) {
         val message = context.getString(messageRes, word)
         if (!inserted) {
@@ -2727,7 +2746,7 @@ class SuggestionHandler(
         }
         val language = activeLanguageCode()
         suggestionBar?.showUndoableMessage(message, context.getString(R.string.suggestion_tap_again_to_undo)) {
-            undoDictionaryAdd(word, language)
+            undoDictionaryAdd(word, language, list)
         }
     }
 
@@ -2743,14 +2762,15 @@ class SuggestionHandler(
      * language, and removing [word] from another language's list could delete the user's own
      * entry there.
      */
-    private fun undoDictionaryAdd(word: String, language: String) {
+    private fun undoDictionaryAdd(word: String, language: String, list: String? = null) {
         val dictionary = predictionCoordinator.getDictionaryManager() ?: return
         if (activeLanguageCode() != language) {
             Log.w(TAG, "Dictionary-add undo skipped: language changed since the add")
             return
         }
         vlog { "DICTIONARY UNDO: removing the word just added" }
-        dictionary.removeUserWord(word)
+        // The list the add wrote to, even when Auto-Detect has switched back since.
+        if (list != null) dictionary.removeUserWord(word, list) else dictionary.removeUserWord(word)
         predictionCoordinator.refreshCustomWords()
         suggestionBar?.showTemporaryMessage(
             context.getString(R.string.suggestion_removed_from_dictionary, word), 1500L, clearAfter = true
