@@ -30,6 +30,11 @@ editor that used to be listed here already ship in 2.0.)
 - "Auto-Detect is not available for this pair" no longer shows when no second language is set.
 - Removing a language pack finishes when the screen is rotated midway; a second pack import or
   removal started while one runs now says so instead of doing nothing.
+- Importing custom clipboard sanitization rules finishes when the screen is rotated midway (the
+  rules file, its location and the clipboard's reload no longer stop half way).
+- A second GIF pack shared or picked while one imports now says it was not imported.
+- The "Pack already installed — replace it?" prompt of a GIF pack import stays open across a
+  rotation, and shows for a shared pack while the GIF section is collapsed.
 
 ---
 
