@@ -5,7 +5,7 @@ import tribixbite.cleverkeys.LanguagePrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SwissSpelling
-import tribixbite.cleverkeys.LanguageDisplayNames
+import tribixbite.cleverkeys.LayoutLanguageBinding
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
 import tribixbite.cleverkeys.langpack.NoticeTextLayout
 import tribixbite.cleverkeys.langpack.PackAttributionDisplay
@@ -83,9 +83,20 @@ private data class PackNoticeViewer(val packName: String, val loaded: Boolean, v
  * available for this pair" with no pair (todo 2026-11-26).
  */
 internal object MultiLanguagePair {
-    /** The secondary language that forms a pair with [primary], or null when there is none. */
+    /**
+     * The secondary language that forms a pair with [primary], or null when there is none. The
+     * blank/"none" rule is the shared resolver's ([LayoutLanguageBinding.resolve], as for
+     * `LanguagePrefs.userLanguages`); this adds only that a language is no pair with itself.
+     * Called inside the Multi-Language block, so Multi-Language counts as on.
+     */
     fun chosenSecondary(primary: String, secondary: String?): String? =
-        secondary?.takeIf { it.isNotBlank() && it != LanguageDisplayNames.NONE && it != primary }
+        LayoutLanguageBinding.resolve(
+            bindings = emptyList(),
+            currentIndex = 0,
+            userPrimary = primary,
+            multilangEnabled = true,
+            userSecondary = secondary?.trim(),
+        ).secondary?.takeIf { it.isNotBlank() && it != primary }
 }
 
 @Composable
