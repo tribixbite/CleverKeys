@@ -1632,13 +1632,13 @@ class WordPredictor : Predictor {
         maxResults: Int
     ): List<StaticBigramSeed.Continuation> {
         val prevWord = contextWords.lastOrNull() ?: return emptyList()
-        val raw = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
+        val seed = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
         // D2: the model spells Germany's way (`straße`); with Swiss spelling the dictionary the
         // seed is checked against does not, so the continuations are shown respelled, a twin once.
-        val seed = if (!primarySwissSpelling) raw else SwissSpelling.foldDistinct(raw, { it.word }) { c, word -> c.copy(word = word) }
+        val shown = if (!primarySwissSpelling) seed else SwissSpelling.foldDistinct(seed, { it.word }) { c, word -> c.copy(word = word) }
         // A detected next-word language's own disabled words (2026-11-26, [detectedNextWordDisabled]).
-        val disabled = detectedNextWordDisabled() ?: return seed
-        return seed.filterNot { isDisabledIn(disabled, it.word) }
+        val disabled = detectedNextWordDisabled() ?: return shown
+        return shown.filterNot { isDisabledIn(disabled, it.word) }
     }
 
     /**
