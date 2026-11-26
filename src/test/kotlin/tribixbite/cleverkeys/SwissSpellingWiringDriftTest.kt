@@ -62,7 +62,7 @@ class SwissSpellingWiringDriftTest {
         val ctc = source("swipe/CtcEngineAdapter.kt").substringAfter("private fun lexiconFor(language: String): TrieMemo? {")
         assertWithMessage("CTC reads the stored preference")
             .that(ctc).contains("SwissSpelling.appliesTo(LanguagePrefs.germanSwissSpelling(prefs), lang)")
-        assertOrder("CTC", ctc, "SwissSpelling.lexiconVariant(swissSpelling, lang)", "trieMemos[lang]?.let")
+        assertOrder("CTC", ctc, "SwissSpelling.lexiconVariant(swissSpelling, lang)", "trieMemos.current(lang)")
         assertWithMessage("CTC disabled words follow the respelling")
             .that(ctc).contains("val disabled = SwissSpelling.foldDisabled(swissSpelling, inputs.disabled)")
         assertOrder(
@@ -74,7 +74,7 @@ class SwissSpellingWiringDriftTest {
         val geometric = source("swipe/GeometricEngineAdapter.kt").substringAfter("private fun dictionaryFor(language: String): DictMemo? {")
         assertWithMessage("geometric reads the stored preference")
             .that(geometric).contains("SwissSpelling.appliesTo(LanguagePrefs.germanSwissSpelling(prefs), lang)")
-        assertOrder("geometric", geometric, "SwissSpelling.lexiconVariant(swissSpelling, lang)", "dictionaryMemos[lang]?.let")
+        assertOrder("geometric", geometric, "SwissSpelling.lexiconVariant(swissSpelling, lang)", "dictionaryMemos.current(lang)")
         assertOrder("geometric", geometric, "SwissSpelling::foldWords", "GeometricUserWordMerge.merge(base, userWords")
         assertWithMessage("geometric disabled words follow the respelling")
             .that(geometric).contains("val disabled = SwissSpelling.foldDisabled(swissSpelling, storedDisabled)")

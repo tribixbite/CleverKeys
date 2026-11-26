@@ -1118,6 +1118,12 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ctc.CtcPurityDriftTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcModuleTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcLexiconMergeTest',
+    // Memory analysis 2026-11-26, candidate 2 (2.0-safe part): the en lexicon is streamed, and a
+    // memo miss releases the stale lexicon before its replacement is built. The report prints the
+    // rebuild's live heap with the old lexicon held vs released (not a gate).
+    'tribixbite.cleverkeys.swipe.ctc.CtcEnLexiconJsonTest',
+    'tribixbite.cleverkeys.swipe.LexiconMemoTest',
+    'tribixbite.cleverkeys.swipe.ctc.CtcLexiconRebuildPeakReportTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionDisplayTest',
     // Contraction-alias injection into the lexicon trie: what makes the mapping table
     // reachable by the beam at all, and the floor frequency that keeps it safe (2026-08-17).

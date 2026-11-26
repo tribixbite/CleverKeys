@@ -192,3 +192,49 @@ Two of the low-risk candidates, test-first; nothing was re-measured on a phone.
   context, once per process (`@Synchronized` start, volatile publication). A query typed before the
   load finishes gets the name-table results, as one typed during the old start-up load did.
   Test: `EmojiKeywordIndexLazyLoadTest` (mock tier).
+
+## Candidate 2, 2.0-safe part: the rebuild peak (pre-registered 2026-11-26, before implementing)
+
+Scope: the two parts of candidate 2 that leave the shipped lexicon untouched. The incremental
+insert/remove of one word is not part of 2.0.
+
+- **2a.** Read `en_enhanced.json` with a streaming reader (Gson `JsonReader`, already a
+  dependency and loadable in the pure tier) instead of `readBytes()` + `JSONObject` in
+  `CtcEngineAdapter.lexiconFor`. The asset has 98,140 keys and no duplicate key, so the pairs, their
+  order and every value must equal the old parse's.
+- **2a′.** A memo miss releases the stale slot BEFORE the replacement is built, so the old trie
+  (28.25 MiB retained for English) and the new one are not both live. Both swipe adapters, through
+  one pure helper. Every memo access stays on the adapter's single worker thread (spec, concurrency
+  contract), so no decode can run while its own thread is building; a decode that cancels a build
+  rebuilds from an empty slot and never sees a partial value.
+
+Gates, fixed before the code:
+
+1. Behaviour-neutral: `CtcParityTest`, `CtcDecodeReplayTest`, `CtcContractionDisplayTest` and
+   `CtcCkdtLexiconTest` pass unchanged (no test edited).
+2. New tests, red first where the old code allows a red: the streamed pairs equal the old parse
+   (words, values, order); the reader consumes well under the whole file before its first pair;
+   after a miss the memo no longer reaches the old value (`WeakReference` cleared after GC);
+   a decode holding the old snapshot completes on it; a decode that cancels a rebuild gets the new,
+   complete value; an interrupted build leaves the slot empty.
+3. Full `runPureTests` and `runMockTests` green; `compileDebugAndroidTestKotlin` green.
+4. Report only, not gated: live heap during a pure-JVM rebuild with the old trie held vs released.
+
+### Result (same day)
+
+Implemented as registered: `swipe/LexiconMemo.kt` (both adapters' memo; `current()` drops a stale
+entry on the miss) and `swipe/ctc/CtcEnLexiconJson.kt` (Gson `JsonReader`). Red first, against
+the old semantics: 5 of 7 `LexiconMemoTest` cases (old value still reachable during the rebuild,
+stale slot kept after a failed build) and `CtcEnLexiconJsonTest.theFirstPairArrivesBefore…`
+(1,834,729 of 1,834,729 bytes consumed before the first key, bound 64 KiB). Gates 1–3 green.
+
+Report (`CtcLexiconRebuildPeakReportTest`, pure JVM, MiB after GC; JVM object sizes, not ART's):
+old read's intermediates 15.8; one English lexicon 49.7; end of a rebuild with the old lexicon
+held 83.6, released 49.7. Estimated device saving per English rebuild: the old memo, 28.25 MiB
+retained in dump (a), plus the read's file bytes, text and map (1.75 + ~3.5 MiB + the 98k-entry
+map; the JVM figure is larger because its `org.json` map differs) — about 33–38 MiB of the
+50–67 MiB peak, from the measured retained sizes, not a phone measurement. The geometric memo
+change frees only the old ordinal map while `TemplateCache` still holds the old dictionary's
+index. `WordPredictor` was checked and left alone: its custom-word reload rebuilds the prefix
+index in place, and its full reload builds the new maps off the main thread while the old ones
+keep serving taps, so dropping them first would leave taps without a dictionary.

@@ -313,6 +313,11 @@ path, geometric always gets the smoothed path, the ML capture records both).
    decode with no ContentObserver plumbing, and a language switch can never reuse the
    previous language's trie. The decoder memo carries the language too, because the preset
    (λ) is language-dependent; both are pinned by `CoreImeHygieneDriftTest`.
+   A miss releases the stale trie BEFORE the replacement is built (`LexiconMemo.current`,
+   2026-11-26), so a custom-word add no longer holds the old and the new English trie at once;
+   the geometric dictionary memo shares the helper. The en JSON is streamed
+   (`CtcEnLexiconJson`, Gson `JsonReader`) instead of `readBytes()` + `JSONObject`; same pairs,
+   same order (`CtcEnLexiconJsonTest`, `LexiconMemoTest`).
 4. **ONNX session.** Loaded lazily on the decode thread via the existing `ModelLoader`
    (XNNPACK-first, `onnx_xnnpack_threads` pref coerced 1..8). **Bounded model-load retry**
    (audit L5): up to 3 failed attempts (cold-boot transients must not permanently disable

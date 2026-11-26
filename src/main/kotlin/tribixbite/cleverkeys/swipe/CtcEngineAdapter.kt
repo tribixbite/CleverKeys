@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
+import tribixbite.cleverkeys.swipe.ctc.CtcEnLexiconJson
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
 import tribixbite.cleverkeys.swipe.ctc.CtcImportedPackSupport
@@ -594,11 +595,12 @@ class CtcEngineAdapter(
         val priority: CtcPriorityBonus,
     )
 
-    /** Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. */
-    private val trieMemos = object : LinkedHashMap<String, TrieMemo>(2, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, TrieMemo>?): Boolean =
-            size > 2
-    }
+    /**
+     * Keep only the active primary/secondary tries; wider caching would retain ~19 MB each. A miss
+     * releases the stale trie before [lexiconFor] builds its replacement, so a rebuild never holds
+     * two of one language's tries ([LexiconMemo]).
+     */
+    private val trieMemos = LexiconMemo<TrieMemo>(capacity = 2)
 
     /**
      * The merged lexicon trie for [language] — see [lexiconFor]. `internal` so the
@@ -608,7 +610,7 @@ class CtcEngineAdapter(
     internal fun trieFor(language: String): CtcLexiconTrie? = lexiconFor(language)?.trie
 
     /** Test census for the access-ordered two-entry trie memo. */
-    internal fun trieLanguagesForTest(): List<String> = trieMemos.keys.toList()
+    internal fun trieLanguagesForTest(): List<String> = trieMemos.languages()
 
     /**
      * [language]'s bounded rescue index — see [applyFuzzyRescue]. `internal` for the same reason
@@ -699,7 +701,11 @@ class CtcEngineAdapter(
             sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson,
             SwissSpelling.lexiconVariant(swissSpelling, lang),
         )
-        trieMemos[lang]?.let { if (it.language == lang && it.version == version) return it }
+        // A miss drops the stale trie here, BEFORE the build below: the old English trie and its
+        // ordinals/rescue index (28 MiB retained) are no longer live beside the new ones. Every
+        // reader is on this worker thread, and a decode keeps its own reference to the memo it was
+        // handed, so no decode can see the slot empty or half built (memory analysis 2026-11-26).
+        trieMemos.current(lang) { it.language == lang && it.version == version }?.let { return it }
 
         val start = System.currentTimeMillis()
 
@@ -712,16 +718,13 @@ class CtcEngineAdapter(
         val shippedPairs = try {
             when (source) {
                 CtcLanguageSupport.LexiconSource.EN_JSON -> {
-                    val base = context.assets.open(asset!!)
-                        .use { JSONObject(it.readBytes().decodeToString()) }
-                    val pairs = ArrayList<Pair<String, Double>>(base.length())
-                    val keys = base.keys()
-                    while (keys.hasNext()) {
-                        if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
-                        val word = keys.next()
-                        pairs.add(word to base.optInt(word, 1).toDouble())
+                    // Streamed: the whole file, its text and a 98k-entry map are never held at
+                    // once (memory analysis 2026-11-26, candidate 2a). Same pairs, same order.
+                    context.assets.open(asset!!).use { stream ->
+                        CtcEnLexiconJson.readPairs(stream) {
+                            if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
+                        }
                     }
-                    pairs
                 }
                 CtcLanguageSupport.LexiconSource.CKDT_BIN -> {
                     val entries = context.assets.open(asset!!)
@@ -740,7 +743,7 @@ class CtcEngineAdapter(
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "No CTC lexicon source ($sourceId)", e)
-            trieMemos.remove(lang)
+            // The miss above already emptied this language's slot; the other one is kept.
             return null
         }
 

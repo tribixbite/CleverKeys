@@ -617,6 +617,9 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Adding a word to the dictionary needs less memory while the swipe dictionary is rebuilt: the
+  old copy is let go before the new one is built, and the English word list is read piece by piece
+  instead of all at once. On a test phone with a 256 MB limit this rebuild had reached 195 MB.
 - A word added to your dictionary at the start of a field or sentence (from the "Add to
   dictionary?" prompt, the tap-to-add chip, undoing an autocorrection or a Prefer offer) is stored
   in lowercase when its capital came from auto-capitalisation, so it no longer comes out

@@ -227,10 +227,7 @@ class GeometricEngineAdapter(
      * memo here, so the map needs no synchronization; the field is `val` so its reference
      * is safely published.
      */
-    private val dictionaryMemos = object : LinkedHashMap<String, DictMemo>(2, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, DictMemo>?): Boolean =
-            size > 2
-    }
+    private val dictionaryMemos = LexiconMemo<DictMemo>(capacity = 2)
 
     // ── Contraction display overlay (parity with the deleted vocabulary layer) ──────
     // Every dictionary stores contractions as apostrophe-free ALIASES ("theyd", "cest")
@@ -670,9 +667,13 @@ class GeometricEngineAdapter(
         // invariant `CtcEngineAdapter.lexiconFor` states: a language switch may never reuse
         // the previous language's dictionary, and reading the language explicitly (rather
         // than trusting the map key alone) keeps that legible at the hit site.
-        dictionaryMemos[lang]?.let { memo ->
-            if (memo.dictionary.language == lang && memo.dictionary.version == version) return memo
-        }
+        //
+        // A miss drops the stale memo before the rebuild below (memory analysis 2026-11-26, as in
+        // `CtcEngineAdapter.lexiconFor`): its ordinal map and word array are not kept beside the
+        // new ones, except while the template cache still holds that dictionary's index.
+        dictionaryMemos.current(lang) { memo ->
+            memo.dictionary.language == lang && memo.dictionary.version == version
+        }?.let { return it }
 
         // Only the shipped (or pack) list is respelled; the user's words are merged below.
         val respell: ((List<String>) -> List<String>)? =
@@ -694,9 +695,8 @@ class GeometricEngineAdapter(
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                 Log.d(TAG, "No geometric dictionary source for '$lang': ${e.javaClass.simpleName}")
             }
-            // Drop only THIS language's slot: the other slot may still hold a perfectly good
-            // dictionary for the language the user toggles back to.
-            dictionaryMemos.remove(lang)
+            // Only THIS language's slot is empty (the miss above emptied it): the other slot may
+            // still hold a perfectly good dictionary for the language the user toggles back to.
             return null
         }
 

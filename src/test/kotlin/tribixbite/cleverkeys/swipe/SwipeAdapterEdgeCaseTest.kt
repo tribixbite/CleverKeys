@@ -184,22 +184,8 @@ class SwipeAdapterEdgeCaseTest {
         adapter.setField("tasks", runner())
         adapter.setField("mainHandler", handler)
         adapter.setField("decodeGeneration", AtomicLong(0))
-        adapter.setField("dictionaryMemos", newInstanceOfFieldType(adapter, "dictionaryMemos"))
+        adapter.setField("dictionaryMemos", LexiconMemo<Any>(capacity = 2))
         return adapter
-    }
-
-    /**
-     * Builds the field's own (anonymous LinkedHashMap) type, so its eviction override is the
-     * production one rather than a plain map standing in for it.
-     */
-    private fun newInstanceOfFieldType(owner: Any, name: String): Any {
-        val type = owner.javaClass.getDeclaredField(name).type
-        val ctor = type.declaredConstructors.single().apply { isAccessible = true }
-        val args = ctor.parameterTypes.map { p ->
-            require(p.isInstance(owner)) { "unexpected constructor parameter $p on $type" }
-            owner
-        }
-        return ctor.newInstance(*args.toTypedArray())
     }
 
     /** Write a private field declared on the receiver's own class (see ImeTeardownExecutorShutdownTest). */

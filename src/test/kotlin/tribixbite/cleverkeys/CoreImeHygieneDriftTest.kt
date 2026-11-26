@@ -1312,15 +1312,13 @@ class CoreImeHygieneDriftTest {
     fun geometricDictionaryMemoIsATwoSlotLruKeyedByLanguage() {
         val adapter = source("tribixbite/cleverkeys/swipe/GeometricEngineAdapter.kt")
 
+        // The access order and the bound live in LexiconMemo since 2026-11-26 and are pinned
+        // behaviourally there (LexiconMemoTest): least recently used evicted at capacity.
         assertWithMessage(
-            "the dictionary memo must be an access-ordered LinkedHashMap (the `true` third " +
-                "argument) — insertion order would evict the language the user is actively " +
-                "toggling back to."
-        ).that(adapter).contains("LinkedHashMap<String, DictMemo>(2, 0.75f, true)")
-        assertWithMessage(
-            "the memo must stay bounded at two slots (the bilingual pair). Unbounded " +
-                "caching retains a merged word array plus an ordinal map per language."
-        ).that(adapter).contains("size > 2")
+            "the dictionary memo must be the shared access-ordered LexiconMemo bounded at two " +
+                "slots (the bilingual pair). Unbounded caching retains a merged word array plus " +
+                "an ordinal map per language."
+        ).that(adapter).contains("LexiconMemo<DictMemo>(capacity = 2)")
 
         assertWithMessage("dictionaryFor's section boundary must exist")
             .that(adapter).contains("private fun enPairingBaseFrequencies(")
@@ -1337,9 +1335,10 @@ class CoreImeHygieneDriftTest {
             "the memo must be keyed by language on both read and write."
         ).that(dictBody).contains("dictionaryMemos[lang] = built")
         assertWithMessage(
-            "a failed load must evict only its OWN language's slot (remove(lang)); " +
-                "clearing the whole memo throws away the other language for nothing."
-        ).that(dictBody).contains("dictionaryMemos.remove(lang)")
+            "the hit check must go through LexiconMemo.current, whose miss empties only this " +
+                "language's slot before the rebuild (and so after a failed load); clearing the " +
+                "whole memo throws away the other language for nothing."
+        ).that(dictBody).contains("dictionaryMemos.current(lang)")
         assertWithMessage(
             "the single-slot field must be gone — leaving it would let a stale writer " +
                 "resurrect the one-language-at-a-time behaviour."
