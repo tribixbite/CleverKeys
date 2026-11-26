@@ -1929,8 +1929,10 @@ tasks.register('runMockTests', JavaExec) {
     // Pixel 2026-10-25: an edit of the displayed custom theme while the keyboard is hidden
     // re-inflates the view on the next onStartInputView (stamp carries the runtime colours).
     'tribixbite.cleverkeys.theme.KeyboardViewThemeTrackerTest',
-    // 2026-11-26 memory analysis, defect 1: a retired service sheds its dictionaries.
+    // 2026-11-26 memory analysis: a retired service sheds its dictionaries (defect 1) and the
+    // emoji keyword index loads when the emoji pane opens, not at keyboard start (candidate 5).
     'tribixbite.cleverkeys.RetiredPredictorReleaseTest',
+    'tribixbite.cleverkeys.EmojiKeywordIndexLazyLoadTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'

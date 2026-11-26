@@ -12,12 +12,16 @@ import java.io.InputStreamReader
  * Features:
  * - 9,800+ keywords from Discord/Twemoji, Slack, GitHub, Google Noto, CLDR
  * - Prefix matching: "fi" finds "fire", "fireworks", "fish", etc.
- * - Background loading on IO thread (doesn't block keyboard startup)
- * - Memory efficient Trie structure
+ * - Background loading on IO thread, started when the emoji pane opens ([EmojiGridView]), not
+ *   at keyboard start: the trie is ~7.66 MiB of heap that a user who never searches emoji
+ *   should not pay for (2026-11-26 memory analysis, candidate 5)
  *
  * Usage:
- *   EmojiKeywordIndex.prewarm(context)  // Call in service onCreate
+ *   EmojiKeywordIndex.prewarm(context)  // When the emoji pane opens; idempotent
  *   val results = EmojiKeywordIndex.search("pump")  // Returns ["🎃", ...]
+ *
+ * Thread-safety: the trie is built privately on the IO thread and published through volatile
+ * fields; [prewarm] is synchronized so two callers cannot start two loads.
  *
  * @since v1.2.6
  */
@@ -25,9 +29,9 @@ object EmojiKeywordIndex {
     private const val TAG = "EmojiKeywordIndex"
     private const val ASSET_FILE = "emoji_keywords.tsv"
 
-    private var rootNode: TrieNode? = null
-    private var loadJob: Job? = null
-    private var isLoaded = false
+    @Volatile private var rootNode: TrieNode? = null
+    @Volatile private var loadJob: Job? = null
+    @Volatile private var isLoaded = false
 
     /**
      * Trie node for prefix-based emoji search.
@@ -38,12 +42,15 @@ object EmojiKeywordIndex {
     }
 
     /**
-     * Start loading the keyword index in background.
-     * Call this early (e.g., InputMethodService.onCreate) so data is ready
-     * when user opens emoji search.
+     * Start loading the keyword index in background, unless it is loaded or loading.
+     * Called when the emoji pane opens, so the data is ready by the time the user types a query
+     * into its search bar. Assets are read through the APPLICATION context, so the background
+     * load never keeps the caller's (view or service) context alive.
      */
+    @Synchronized
     fun prewarm(context: Context) {
         if (isLoaded || loadJob?.isActive == true) return
+        val appContext = context.applicationContext ?: context
 
         loadJob = CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -51,7 +58,7 @@ object EmojiKeywordIndex {
                 val newRoot = TrieNode()
                 var lineCount = 0
 
-                context.assets.open(ASSET_FILE).use { inputStream ->
+                appContext.assets.open(ASSET_FILE).use { inputStream ->
                     BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).use { reader ->
                         reader.forEachLine { line ->
                             // Format: keyword\temoji1,emoji2,emoji3

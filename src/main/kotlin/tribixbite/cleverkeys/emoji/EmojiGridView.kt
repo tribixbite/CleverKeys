@@ -71,6 +71,9 @@ class EmojiGridView(context: Context, attrs: AttributeSet?) :
         loadLastUsed()
         setEmojiGroup(if (lastUsed.isEmpty()) 0 else GROUP_LAST_USE)
         setupScrollListener()  // v1.2.6: Dismiss tooltip on scroll
+        // The keyword index loads when the pane opens, before its search bar can take a query, not at
+        // keyboard start (2026-11-26 memory analysis, candidate 5). Off the main thread; once per process.
+        EmojiKeywordIndex.prewarm(context)
     }
 
     // What the grid shows now, so it can be re-filtered once EmojiCompat finishes loading.

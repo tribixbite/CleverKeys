@@ -475,8 +475,8 @@ class CleverKeysService : InputMethodService(),
         // listeners exist, so the write refreshes nothing.
         seedGermanSwissSpelling(Config.globalConfig())?.let { Config.globalConfig().german_swiss_spelling = it }
 
-        // Prewarm emoji keyword index for fast search (loads in background on IO thread)
-        EmojiKeywordIndex.prewarm(this)
+        // The emoji keyword index (7.66 MiB of trie) is NOT loaded here: the emoji grid starts its
+        // background load when the emoji pane opens (2026-11-26 memory analysis, candidate 5).
 
         // Let the pure CTC language table see this device's imported language packs. Must run
         // before the first swipe: `performCtcSwipeTyping` asks CtcEngineAdapter.supportsLanguage

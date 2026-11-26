@@ -1,6 +1,7 @@
 # Memory analysis: debug build on the Saga, 2026-11-26
 
-Status: measured, not fixed. Nothing in the app was changed. Code references are to HEAD
+Status: measured; defect 1 and candidate 5 were fixed afterwards (see "Fixed" at the end). The
+measurements below predate those fixes. Code references are to HEAD
 `edc9132d6`. All sizes are MiB (1,048,576 bytes), as `dumpsys meminfo` and the heap tools print
 them.
 
@@ -165,3 +166,29 @@ mtrack before changing anything. One star layer already applies when twinkle is 
   implementation.
 - The mid-rebuild dump caught the JSON-text stage (95.4 MiB live); the larger later stage was seen
   only through the GC log and `CKMemProbe`.
+
+## Fixed (2026-11-26, later the same day)
+
+Two of the low-risk candidates, test-first; nothing was re-measured on a phone.
+
+- **Defect 1.** `AutocorrectMemo` holds its owner through a `WeakReference` and gains a terminal
+  `close()`, which `SuggestionHandler.shutdown()` calls: the memo empties and a bar fill still in
+  flight on the worker stores nothing. `WordPredictor` keys its two identity caches
+  (`halfSpaceVariantsDict`, `fuzzyAlphabetIndexRef`) weakly, and `shutdown()` drops every lazily
+  built lookup cache (half-space variants, fuzzy alphabet, the max- and strong-exact-frequency
+  caches) and the disabled-word set. A lookup that arrives after shutdown answers but caches
+  nothing. The weak keys also cover the reload case above: a swapped-out dictionary no longer
+  waits for the next lookup to become collectable. The other lazily built members
+  (`learnableWordPolicyCache`, `typoPurgeSchedulerCache`) are closures over the predictor and hold
+  no dictionary data, and `ContextModel`/`PersonalizationEngine` are views over process
+  singletons, so they were left alone. The swipe adapters needed no change: `InputCoordinator.shutdown()`
+  already detaches both (2026-09-10), and every late decode callback is gated on its `closed`.
+  Tests: `RetiredPredictorReleaseTest` (mock tier, `WeakReference` reachability of the old maps
+  after shutdown and after a swap; no cache rebuilt by a late lookup; memo empty after handler
+  shutdown and after a late fill) and `AutocorrectMemoOwnershipTest` (pure). The recreation memory
+  gate on emulator.wtf was not re-run.
+- **Candidate 5.** `CleverKeysService.onCreate` no longer prewarms `EmojiKeywordIndex`; the
+  emoji grid starts the background load when the emoji pane opens, through the application
+  context, once per process (`@Synchronized` start, volatile publication). A query typed before the
+  load finishes gets the name-table results, as one typed during the old start-up load did.
+  Test: `EmojiKeywordIndexLazyLoadTest` (mock tier).

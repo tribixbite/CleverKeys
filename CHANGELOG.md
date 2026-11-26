@@ -1206,6 +1206,10 @@ editor that used to be listed here already ship in 2.0.)
 - The keyboard process no longer runs out of memory at startup with several languages active
   (the CTC trie, duplicate predictors per language and an unbounded model cache held ~190 MB),
   and dictionaries kept alive by a destroyed keyboard instance are released.
+- A keyboard instance the system keeps after you switch keyboards no longer holds on to the
+  English dictionary (about 18 MB): the autocorrect memo and two lookup caches kept it alive. A
+  reloaded dictionary is also freed at once instead of at the next lookup. The emoji search index
+  (about 8 MB) now loads when you first open the emoji pane, not every time the keyboard starts.
 - On high-report-rate screens a slow two-key swipe registered only its first key and decoded
   nothing; key registration now measures travel from the last registered key.
 - The Privacy & Data swipe-collection toggle stored nothing on the main swipe path (a developer
