@@ -661,6 +661,8 @@ editor that used to be listed here already ship in 2.0.)
   it could still be kept or pruned by the old ones. The same holds for History on or off, the
   password-manager and sensitive-content exclusions and the media size cap: History turned off by
   a restore kept recording until the keyboard next started.
+- The clipboard History count, size and item-size settings are read as the numbers the Settings
+  sliders save; each read logged a stored-type warning before.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

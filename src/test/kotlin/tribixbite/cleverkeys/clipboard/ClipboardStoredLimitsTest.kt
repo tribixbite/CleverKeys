@@ -160,6 +160,24 @@ class ClipboardStoredLimitsTest {
         assertThat(limits.bySize).isTrue()
     }
 
+    /**
+     * Note10+ r17 (2026-11-26): the screen's sliders, Reset All and an import all STORE these
+     * three as Int, but the reader read them as String, so every read logged "String preference
+     * … was stored as int". Int is their stored type; the reader reads it without a warning and
+     * still accepts the String an older import left (see the case above).
+     */
+    @Test
+    fun theReaderReadsTheIntTheScreenStoresWithoutAWarning() {
+        val screen = TypedFakePreferences(mapOf(
+            "clipboard_limit_type" to "size",
+            "clipboard_history_limit" to 120,
+            "clipboard_size_limit_mb" to 5,
+            "clipboard_max_item_size_kb" to 512,
+        ))
+        assertThat(ClipboardHistoryLimits.fromSettings(screen)).isEqualTo(ClipboardHistoryLimits("size", 120, 5, 512))
+        verify(exactly = 0) { Log.w("Config", match<String> { it.contains("was stored as") }) }
+    }
+
     @Test
     fun configRefreshAndTheServiceShareTheReader() {
         // One parser: Config.refresh assigns its four clipboard fields from it.

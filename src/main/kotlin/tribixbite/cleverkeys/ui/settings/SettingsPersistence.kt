@@ -341,23 +341,28 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Input behavior settings
         vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
-        clipboardHistoryLimit = prefs.getSafeString("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
+        // The three clipboard limits are STORED as Int, as the sliders write them (Note10+ r17,
+        // 2026-11-26: a String read logged a type warning each time); getSafeInt also takes the
+        // numeric String an older import left. `ConfigMistypedPrefDriftTest` pins one type per key.
+        clipboardHistoryLimit = prefs.getSafeInt("clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
         clipboardHistoryDuration = prefs.getSafeString("clipboard_history_duration", Defaults.CLIPBOARD_HISTORY_DURATION).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
         clipboardPaneHeightPercent = Config.safeGetInt(prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
             .coerceIn(SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
-        clipboardMaxItemSizeKb = (prefs.getSafeString("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+        clipboardMaxItemSizeKb = prefs.getSafeInt("clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
             .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last)
         // F-10: BIDIRECTIONAL write-back of any out-of-range stored value. The old
         // `<` guard migrated only OVERSIZE legacy values (5000KB-era), so an
         // imported sub-64 value displayed as "64KB" here while the clipboard
         // service enforced the raw value indefinitely. Only fires when the key
         // actually holds a numeric value that disagrees with the clamp.
-        val storedMaxItemSizeKb = prefs.getSafeString("clipboard_max_item_size_kb", "").toIntOrNull()
+        val storedMaxItemSizeKb = if (prefs.contains("clipboard_max_item_size_kb")) {
+            prefs.getSafeInt("clipboard_max_item_size_kb", Int.MIN_VALUE).takeIf { it != Int.MIN_VALUE }
+        } else null
         if (storedMaxItemSizeKb != null && storedMaxItemSizeKb != clipboardMaxItemSizeKb) {
             saveSetting("clipboard_max_item_size_kb", clipboardMaxItemSizeKb)
         }
         clipboardLimitType = prefs.getSafeString("clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
-        clipboardSizeLimitMb = prefs.getSafeString("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+        clipboardSizeLimitMb = prefs.getSafeInt("clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK)
         clipboardExcludePasswordManagers = prefs.getSafeBoolean("clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
         clipboardRespectSensitiveFlag = prefs.getSafeBoolean("clipboard_respect_sensitive_flag", Defaults.CLIPBOARD_RESPECT_SENSITIVE_FLAG)
         clipboardTextOnly = prefs.getSafeBoolean("clipboard_text_only", Defaults.CLIPBOARD_TEXT_ONLY)

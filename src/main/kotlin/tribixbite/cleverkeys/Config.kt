@@ -640,16 +640,16 @@ data class ClipboardHistoryLimits(
             limitType = Config.safeGetString(prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE),
             // G-5: read-site clamp — pre-fix imports could have written out-of-range
             // (or negative) values that the string-form validator used to accept.
-            maxEntries = (Config.safeGetString(prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT)
-                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+            // The three numbers are STORED as Int (the sliders, Reset All and an import write Int;
+            // Note10+ r17, 2026-11-26: reading them as String logged a type warning on every
+            // read). safeGetInt still takes the numeric String an older import left.
+            maxEntries = Config.safeGetInt(prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
                 .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last),
-            totalSizeMb = Config.safeGetString(prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
-                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK,
+            totalSizeMb = Config.safeGetInt(prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK),
             // F-10: same 64..1024 clamp as the Settings UI/state side (SettingsRanges) —
             // the old floor of 1 let an imported sub-64 value display as "64KB" while
             // the service enforced the raw value.
-            maxItemSizeKb = (Config.safeGetString(prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB)
-                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+            maxItemSizeKb = Config.safeGetInt(prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
                 .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last),
         )
     }
@@ -2171,7 +2171,8 @@ class Config private constructor(
             recoverMistyped(key, defaultValue, "int",
                 // JSON imports usually store numbers as Float.
                 { prefs.getFloat(key, Float.MIN_VALUE).let { if (it == Float.MIN_VALUE) defaultValue else it.toInt() } },
-                { prefs.getString(key, null)?.toIntOrNull() ?: defaultValue },
+                // Trimmed: a hand-edited or older import's numeric text may carry spaces.
+                { prefs.getString(key, null)?.trim()?.toIntOrNull() ?: defaultValue },
             )
         }
 

@@ -190,3 +190,13 @@ toggles and cap come from `ClipboardCaptureSettings.fromSettings` (also used by 
 (`ClipboardStoredLimitsTest`, 5 new cases; red: capture continued with History off in the store, a
 password-manager clip was read). Doc drift: `contraction-system.md` fr collisions 284, it 102 of
 22,238 (and it pairs 154), per `build_contraction_collisions.py --check`.
+
+2026-11-26, Note10+ r17 follow-up (issue 5): `clipboard_history_limit`, `clipboard_size_limit_mb`
+and `clipboard_max_item_size_kb` were written as Int by every writer (the sliders,
+`Config.set_clipboard_history_limit`, Reset All, `SettingsImportApplier.STORED_AS_INT`) but read
+as String (`ClipboardHistoryLimits.fromSettings`, `SettingsPersistence`), so every read logged
+"String preference … was stored as int". Int is their stored type; the readers use
+`safeGetInt`/`getSafeInt`, which still take a numeric String (now trimmed). The backup file keeps
+the text form (`SETTINGS_DEFAULTS`), converted on import as before. Red first:
+`ConfigMistypedPrefDriftTest.eachNumericClipboardKeyHasOneStoredType` (String reads found) and
+`ClipboardStoredLimitsTest.theReaderReadsTheIntTheScreenStoresWithoutAWarning` (three warnings).
