@@ -18,6 +18,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 (The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
 editor that used to be listed here already ship in 2.0.)
 
+### Fixed (learning from corrected words, 2026-11-26)
+
+- A swiped or autocorrected word you delete with ordinary Backspace (with "Backspace undoes
+  swipe" off), with the editor's own word delete, or by deleting part of it and typing on, is no
+  longer learned: when the next word takes its place, its word pair, its three-word sequence and
+  its personal-vocabulary count are taken back, and the next word does not learn a pair with it.
+- Going back to fix an earlier word no longer learns a pair between the fixed word and the last
+  word you typed, and tapping a suggestion there no longer deletes text before the cursor by the
+  length of the last swiped word (`fix got something`, tap `git` on `got`, gave `git something`).
+- Replacing a swiped word whose commit made Auto-Detect switch languages takes its word pair back
+  from the language it was learned in.
+- In Multi-Language with Auto-Detect, a word added from the suggestion bar while Auto-Detect has
+  switched to the second language goes to that language's personal dictionary (it went to the
+  primary's), and its undo removes it from there.
+
 ### Fixed (Settings and Dictionary Manager, 2026-11-26)
 
 - Dictionary Manager shows the primary language's list as soon as it is loaded: the lists still
