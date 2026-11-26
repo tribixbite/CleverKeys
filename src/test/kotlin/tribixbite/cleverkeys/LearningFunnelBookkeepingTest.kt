@@ -1485,6 +1485,107 @@ class LearningFunnelBookkeepingTest {
         verify(exactly = 1) { personalization.unrecordWordTyped("cats") }
     }
 
+    // ---------------------------------------------------- Fable review of a11db8b84 (2026-11-26)
+
+    /** Finding 1: a word inserted BEFORE the newest learned word does not take its place. */
+    @Test
+    fun aWordInsertedBeforeTheNewestLearnedWordDoesNotRollItBack() {
+        val vocabulary = useReceiptVocabulary()
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        cursorAt = "fix ".length
+        cursorSync()
+        type("really ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix really got ")
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("got's usage kept").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
+        assertWithMessage("got kept in the prediction context").that(tracker.getContextWords()).contains("got")
+        assertWithMessage("no got→really (really is not after got)").that(bigram("got", "really")).isEqualTo(0)
+    }
+
+    /** Finding 2: the first word of a field, then the app clears the field (a WebView send). */
+    @Test
+    fun aFirstWordFollowedByAnAppClearedFieldIsNotRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        type("yes ")
+        editor.setLength(0)
+        cursorSync()
+        type("no ")
+
+        assertWithMessage("yes's usage kept").that(vocabulary.getWordUsage("yes")?.usageCount).isEqualTo(1)
+        assertWithMessage("no yes→no across the send").that(bigram("yes", "no")).isEqualTo(0)
+    }
+
+    /** Finding 3a: an editor that reads back "" is no evidence against the swipe REPLACE. */
+    @Test
+    fun aBarAlternateReplacesTheSwipeWhenTheEditorReadsBackNothing() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        every { ic.getTextBeforeCursor(any(), any()) } returns ""
+        tap("git")
+
+        assertWithMessage("replaced, not appended").that(editor.toString()).isEqualTo("fix git ")
+    }
+
+    /** Finding 3b: an editor that rewrites the case (an all-caps filter) still gets the REPLACE. */
+    @Test
+    fun aBarAlternateReplacesTheSwipeInAnEditorThatRewritesItsCase() {
+        every { ic.commitText(any(), any()) } answers {
+            val text = firstArg<CharSequence>().toString().uppercase()
+            editor.insert(cursor(), text)
+            cursorAt = cursorAt?.let { it + text.length }
+            true
+        }
+        editor.append("FIX ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        assertWithMessage("the editor shows its own case").that(editor.toString()).isEqualTo("FIX GOT ")
+        tap("git")
+
+        assertWithMessage("replaced, not appended").that(editor.toString()).isEqualTo("FIX GIT ")
+    }
+
+    /**
+     * Finding 4: a run of one word longer than the anchor window: every commit stays learned.
+     * (The stores never record a self-pair `la→la`; the vocabulary count is what a false
+     * rollback would take.)
+     */
+    @Test
+    fun aLongRunOfTheSameWordKeepsEveryCommit() {
+        val vocabulary = useReceiptVocabulary()
+        editor.append("we sang ")
+        handler.updateContext("we")
+        handler.updateContext("sang")
+        repeat(30) { type("la ") }
+
+        assertWithMessage("la counted every time").that(vocabulary.getWordUsage("la")?.usageCount).isEqualTo(30)
+        assertWithMessage("sang→la kept").that(bigram("sang", "la")).isEqualTo(1)
+    }
+
+    /** Finding 5: a closing quote, a bracket or an emoji between two words is not a context break. */
+    @Test
+    fun aQuoteBracketOrEmojiBetweenWordsKeepsTheLearnWindow() {
+        for (between in listOf("\", ", "), ", " \uD83D\uDE00 ")) {
+            editor.setLength(0)
+            predictor.clearContext()
+            editor.append("fix ")
+            handler.updateContext("fix")
+            swipe("got", "git")
+            // The space the swipe added is replaced by the separator run (an app-side edit).
+            editor.setLength(editor.length - 1)
+            editor.append(between)
+            cursorSync()
+            newSwipe("it")
+            assertWithMessage("got→it learned across '$between'").that(bigram("got", "it")).isAtLeast(1)
+            assertWithMessage("the window still holds got before it ('$between')")
+                .that(learnWindow().takeLast(2)).containsExactly("got", "it").inOrder()
+            bigramStore.clearAll()
+        }
+    }
+
     /**
      * Task B (2026-11-26): which secondary Auto-Detect has switched the next-word language to —
      * the list a bar "Add to dictionary" writes to. Null until a detected switch, and again once

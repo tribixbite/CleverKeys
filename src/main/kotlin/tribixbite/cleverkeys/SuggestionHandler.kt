@@ -2259,7 +2259,9 @@ class SuggestionHandler(
      * learn back (W2 follow-up 2026-11-26, [reconcileLearnWithEditor]); null [anchor] when the read
      * cannot prove the old word's place (the adjacency check still uses [word]).
      */
-    private class LearnedPlacement(val commit: LearningCommit, val word: String, val anchor: String?)
+    private class LearnedPlacement(
+        val commit: LearningCommit, val word: String, val anchor: String?, val after: String?
+    )
 
     private var learnedPlacement: LearnedPlacement? = null
 
@@ -3255,14 +3257,24 @@ class SuggestionHandler(
     /**
      * Does the newest swipe auto-insert still end the text before the cursor, exactly as it was
      * committed ([PredictionContextTracker.getLastAutoInsertedText], else the legacy `word + " "`)?
-     * An editor that cannot be read gives no evidence against it, so the tracking is trusted, as
-     * it was before this check existed.
+     * An editor that cannot be read (null, or "" as many app fields answer) gives no evidence
+     * against it, so the tracking is trusted, as it was before this check existed — the rule
+     * [editorEndsWithWholeToken] follows. The case is not compared: an editor may rewrite it (an
+     * all-caps field shows `GOT ` for the committed `got `).
      */
     private fun swipeEndsTextBeforeCursor(ic: InputConnection): Boolean {
         val word = contextTracker.getLastAutoInsertedWord() ?: return false
         val expected = contextTracker.getLastAutoInsertedText()?.takeIf { it.trim(' ') == word } ?: "$word "
-        val before = editorTextBeforeCursor(ic, expected.length) ?: return true
-        return before == expected
+        val before = editorTextBeforeCursor(ic, expected.length)
+        if (before.isNullOrEmpty()) return true
+        return before.equals(expected, ignoreCase = true)
+    }
+
+    /** Text after the cursor, or null when the editor cannot be read. */
+    private fun editorTextAfterCursor(ic: InputConnection?, chars: Int): String? = try {
+        ic?.getTextAfterCursor(chars, 0)?.toString()
+    } catch (e: Exception) {
+        null
     }
 
     /**
@@ -3276,18 +3288,28 @@ class SuggestionHandler(
         val anchor = textBeforeTrailingWord(before, word) ?: return null
         // A full read is a window, not the field start: it must still hold a whole anchor window
         // to prove anything about the old word's place (the adjacency check needs only [word]).
-        val provable = before.length < window || anchor.length >= SwipeCorrectionTracker.ANCHOR_WINDOW
-        return LearnedPlacement(commit, word, anchor.takeLast(SwipeCorrectionTracker.ANCHOR_WINDOW).takeIf { provable })
+        // An empty anchor proves nothing either (Fable review 2026-11-26): the first word of a
+        // field, and the app then clears the field without restarting input (a WebView chat's
+        // send), puts the next word "where it was" while it was in fact sent.
+        val provable = anchor.isNotBlank() &&
+            (before.length < window || anchor.length >= SwipeCorrectionTracker.ANCHOR_WINDOW)
+        // The text AFTER the word is part of its place: a word typed in front of it (the cursor
+        // moved between "fix " and "got") meets the same anchor, but "got" still follows it.
+        val after = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW)
+        return LearnedPlacement(
+            commit, word, anchor.takeLast(SwipeCorrectionTracker.ANCHOR_WINDOW).takeIf { provable }, after
+        )
     }
 
     /**
-     * [editor] (text before the cursor) without its trailing [word] and the separator run
-     * [SwipeCorrectionTracker.editorContinuesAnchor] accepts after a word (whitespace, one
-     * punctuation character, whitespace); null when [editor] does not end with [word].
+     * [editor] (text before the cursor) without its trailing [word] and whatever run of non-word
+     * characters follows it (spaces, `", `, `), `, an emoji); null when [editor] does not end
+     * with [word]. Fable review 2026-11-26: one punctuation character was all it skipped, so a
+     * closing quote plus a comma, or an emoji, between two words read as "not next to each
+     * other" and closed the learn window (clearing Auto-Detect's window with it).
      */
     private fun textBeforeTrailingWord(editor: String, word: String): String? {
-        var rest = editor.trimEnd()
-        if (rest.isNotEmpty() && !rest.last().isLetterOrDigit()) rest = rest.dropLast(1).trimEnd()
+        val rest = trimTrailingNonWordRun(editor)
         if (!rest.endsWith(word, ignoreCase = true)) return null
         return rest.dropLast(word.length)
     }
@@ -3305,12 +3327,31 @@ class SuggestionHandler(
      * 2. Otherwise, it does not follow the newest learned word at all (the cursor moved back to
      *    fix an earlier word): the learn window is closed first, as at a sentence boundary, so no
      *    pair is learned between two words that are not next to each other in the text.
+    /**
+     * [text] without its trailing run of characters that are not part of a word, judged per code
+     * point: a supplementary letter (its two UTF-16 halves are not letters on their own) ends the
+     * run, an emoji does not; inside the BMP the word-character rule is [WordChars.isWordCharAt]
+     * (an Indic mark on its letter, a joining half-space or ZWJ are word characters).
+     */
+    private fun trimTrailingNonWordRun(text: String): String {
+        var end = text.length
+        while (end > 0) {
+            val codePoint = Character.codePointBefore(text, end)
+            val width = Character.charCount(codePoint)
+            val wordChar = if (width == 1) WordChars.isWordCharAt(text, end - 1) else Character.isLetterOrDigit(codePoint)
+            if (wordChar) break
+            end -= width
+        }
+        return text.substring(0, end)
+    }
+
      *
      * Never a false rollback: the receipt must still be the predictor's newest, untouched commit
-     * (any later commit, boundary, language switch or store change expires it), and the anchor is
-     * the text before the old word, so the new word can only sit there if the old one left. A
-     * word typed elsewhere, after the kept word, or after a deleted space alone fails the anchor.
-     * An editor that cannot be read decides nothing.
+     * (any later commit, boundary, language switch or store change expires it), the anchor is the
+     * text before the old word and the text after the cursor must be what followed it, so the new
+     * word can only sit there if the old one left. A word typed elsewhere, after the kept word,
+     * in front of it, or after a deleted space alone fails one of them. An editor that cannot be
+     * read decides nothing, and an empty anchor (the field's first word) proves nothing.
      */
     private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection) {
         val placed = learnedPlacement ?: return
@@ -3319,7 +3360,10 @@ class SuggestionHandler(
         val editor = editorBeforeCursorFor(ic, newWord) ?: return
         val predictor = predictionCoordinator.getWordPredictor() ?: return
         val anchor = placed.anchor
-        if (anchor != null && SwipeCorrectionTracker.editorContinuesAnchor(anchor, editor, newWord)) {
+        if (anchor != null && SwipeCorrectionTracker.editorContinuesAnchor(anchor, editor, newWord) &&
+            !oldWordMayStillPrecede(anchor, editor, newWord, placed.word) &&
+            placed.after != null && editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) == placed.after
+        ) {
             if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
             vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }
             lastLearningCommit = null
@@ -3346,6 +3390,22 @@ class SuggestionHandler(
      * same gates the learn used, and only when [word] is still the newest window entry, so a
      * word whose learn was suppressed (password, incognito, master off) or already flushed out
      * of the window is never decremented.
+    /**
+     * Is [editor] ALSO consistent with [oldWord] still standing at [anchor], right before
+     * [newWord]? A full-window anchor is compared as a suffix, so in a run of one word longer
+     * than the window ("la la la …", Fable review 2026-11-26) every new word "continues" the
+     * previous word's anchor too. Then the editor does not prove the old word left, and nothing
+     * is rolled back. (A shorter anchor is the whole field before the word: its length decides.)
+     */
+    private fun oldWordMayStillPrecede(anchor: String, editor: String, newWord: String, oldWord: String): Boolean {
+        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return true
+        val beforeOld = textBeforeTrailingWord(beforeNew, oldWord) ?: return false
+        if (!endsAtWordBoundary(beforeOld, oldWord)) return false
+        val expected = anchor.trimEnd()
+        val before = beforeOld.trimEnd()
+        return if (anchor.length < SwipeCorrectionTracker.ANCHOR_WINDOW) before == expected else before.endsWith(expected)
+    }
+
      *
      * The predictor also rolls back the personalization-vocabulary +1 the commit recorded
      * (`UserVocabulary.unrecordWordUsage`). The prediction-context tracker drops the rejected
