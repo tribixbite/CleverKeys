@@ -164,6 +164,35 @@ class CtcSlateAssemblyTest {
     }
 
     @Test
+    fun `a poorly fitting secondary custom word stays below primary words whose bar score rounds to 0`() {
+        // Review of 6e474b0df: the placement compared its unrounded score with the ROUNDED bar
+        // scores, so every primary alternate below 0.5 permille counted as "not above". Here the
+        // top word takes the whole softmax and the four alternates show 0 while still scoring
+        // ~0.3 permille; parcero's path puts it at ~0.18, below every one of them.
+        val alternates = listOf("parcel", "parade", "pardon", "parcels").map { cand(it, -40.5, 255.0, en, length = 6) }
+        val primary = englishSlate(cand("parked", -0.3, 255.0, en), *alternates.toTypedArray())
+        assertThat(primary.scores).containsExactly(999, 0, 0, 0, 0).inOrder()
+        val user = cand("parcero", -51.35, 255.0, es)
+        val placed = CtcSlateAssembly.primaryEquivalentScore(user, 255, en, enFloor)
+        assertThat(placed).isLessThan(alternates.minOf { it.finalScore })
+        val secondary = slate(
+            "es", es,
+            listOf("palabra", "parada", "parece", "pareja", "paredes").map { cand(it, -10.0, 200.0, es) } + user,
+            spanishUserWords("parcero" to 255),
+        )
+
+        val merged = CtcSlateAssembly.dual(primary, secondary, limit = 11).map { it.word }
+
+        assertWithMessage(
+            "a custom word lands where its real score puts it — below all five English words — " +
+                "and at worst keeps its plain secondary slot; it must not take the bar's second place"
+        ).that(merged).isEqualTo(
+            CtcRankMerger.merge("en", primary.words, "es", secondary.words, 11).map { it.word }
+        )
+        assertThat(merged.indexOf("parcero")).isGreaterThan(merged.indexOf("parcels"))
+    }
+
+    @Test
     fun `a raised swipe priority carries over from the secondary list`() {
         val primary = englishSlate(cand("parcel", -6.0, 179.0, en))
         // Without a bonus the primary list would rank parcero below parcel; High (+2) lifts it over.

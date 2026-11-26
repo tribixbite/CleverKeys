@@ -94,9 +94,10 @@ class CtcDecodedSlate(
  *     swipe to the English `parcel`, while the same word in the English list won. A secondary
  *     display word that is one of its list's user words now earns the rank the PRIMARY list would
  *     give it: [primaryEquivalentScore] (the candidate's own emission evidence under the primary's
- *     preset and frequency scale, plus its swipe-priority bonus) placed on the primary slate's own
- *     softmax scale. It goes ahead of the primary word at that rank, and never below its plain
- *     secondary slot. Ordinary secondary words keep the rank merge exactly (ARC-018).
+ *     preset and frequency scale, plus its swipe-priority bonus) ranked against the primary's beam
+ *     words by their exact final scores ([rankInPrimarySlate]). It goes ahead of the primary word at
+ *     that rank, and never below its plain secondary slot. Ordinary secondary words keep the rank
+ *     merge exactly (ARC-018).
  */
 object CtcSlateAssembly {
 
@@ -144,7 +145,7 @@ object CtcSlateAssembly {
         val (secondaryWords, _) = withoutExcluded(
             secondary.words, secondary.scores, secondary.userWords.excluded, primary.userWords.excluded,
         )
-        val earned = earnedPrimaryRanks(primary, primaryScores, secondary, secondaryWords)
+        val earned = earnedPrimaryRanks(primary, primaryWords, primaryScores, secondary, secondaryWords)
         return CtcRankMerger.merge(
             primary.language, primaryWords, secondary.language, secondaryWords, limit, earned,
         )
@@ -180,10 +181,12 @@ object CtcSlateAssembly {
      * Secondary slate index → the rank its word earns in the primary slate, for every word of
      * [secondaryWords] (the filtered secondary slate) that is a user word of the secondary list and
      * one of its decoded [CtcDecodedSlate.candidates] (a fuzzy-rescue entry has no emission
-     * evidence of its own and keeps its plain slot). [primaryScores] is the filtered primary slate.
+     * evidence of its own and keeps its plain slot). [primaryWords]/[primaryScores] are the filtered
+     * primary slate.
      */
     private fun earnedPrimaryRanks(
         primary: CtcDecodedSlate,
+        primaryWords: List<String>,
         primaryScores: List<Int>,
         secondary: CtcDecodedSlate,
         secondaryWords: List<String>,
@@ -203,27 +206,48 @@ object CtcSlateAssembly {
             val candidate = candidates[lower] ?: continue
             val score = primaryEquivalentScore(candidate, frequency, primary.params, primary.userWords.calibrationFloor)
             val ranks = earned ?: HashMap<Int, Int>().also { earned = it }
-            ranks[index] = rankInPrimarySlate(score, primary.candidates, primaryScores)
+            ranks[index] = rankInPrimarySlate(score, primary.candidates, primaryWords, primaryScores)
         }
         return earned ?: emptyMap()
     }
 
     /**
-     * How many entries of the primary display slate ([primaryScores], non-increasing) score above a
-     * word with final score [finalScore], on that slate's own scale: the softmax over
-     * [primaryCandidates] the scores were computed from ([softmaxPermille]), unrounded. An empty
-     * primary beam has nothing to rank against: 0.
+     * How many entries of the primary display slate ([primaryWords], parallel [primaryScores]) rank
+     * above a word with final score [finalScore] — the rank the primary list would give it.
+     *
+     * A beam word of the primary ([primaryCandidates], matched by its display spelling) is compared
+     * on its exact final score, never on its bar score: the bar score is a ROUNDED permille, so an
+     * alternate below 0.5 permille shows 0 and read as "not above" any word, which put a custom
+     * word with near-zero path evidence second on the bar (review of 6e474b0df). The final scores
+     * are also immune to the softmax underflowing for a far-behind word. An entry that is not a
+     * beam word (a contraction variant, a fuzzy-rescue fill) has only its bar score, which is
+     * compared with [finalScore] on that slate's own unrounded scale ([softmaxPermille] over
+     * [primaryCandidates]). An empty primary beam has nothing to rank against: 0, since the primary
+     * list would have put the word in its beam, above any rescue fill.
      */
     internal fun rankInPrimarySlate(
         finalScore: Double,
         primaryCandidates: List<CtcCandidate>,
+        primaryWords: List<String>,
         primaryScores: List<Int>,
     ): Int {
         if (primaryCandidates.isEmpty()) return 0
+        val beamScores = HashMap<String, Double>(primaryCandidates.size * 2)
+        for (c in primaryCandidates) beamScores.putIfAbsent(c.word.lowercase(Locale.ROOT), c.finalScore)
         val max = primaryCandidates.maxOf { it.finalScore }
         var sum = 0.0
         for (c in primaryCandidates) sum += exp(c.finalScore - max)
         val onSlateScale = exp(finalScore - max) / sum * 1000.0 // +Infinity sorts above every entry
-        return primaryScores.count { it > onSlateScale }
+        var above = 0
+        for ((i, word) in primaryWords.withIndex()) {
+            val beamScore = beamScores[word.lowercase(Locale.ROOT)]
+            val isAbove = if (beamScore != null) {
+                beamScore > finalScore
+            } else {
+                primaryScores.getOrElse(i) { 0 } > onSlateScale
+            }
+            if (isAbove) above++
+        }
+        return above
     }
 }

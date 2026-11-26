@@ -426,7 +426,10 @@ stored 1..255 frequency, and the base floor a stored frequency is calibrated ont
   primary scale (`UserWordFrequency.scaleOnto`) and its own swipe-priority bonus
   (`CtcSlateAssembly.primaryEquivalentScore`); both decodes read one emission matrix, so only the
   frequency term changes, as for `CtcSurfaceForms` alternates. That score is ranked against the
-  primary slate on its own softmax scale; the earned rank r gives `1000/(r+1)` and goes ahead of
+  primary slate: a primary beam word by its exact final score (not its rounded bar score, which
+  shows 0 below 0.5 permille and once let a near-zero custom word jump every such alternate), a
+  contraction variant or rescue fill by its bar score on the unrounded scale; the earned rank r
+  gives `1000/(r+1)` and goes ahead of
   the primary word at rank r, never below the word's plain secondary slot. Ordinary secondary
   words keep the rank merge exactly. Pinned by `CtcSlateAssemblyTest` and, through the real
   encoder, `CtcSecondaryListReplayTest` (the placement equals the English list's own final score
@@ -889,7 +892,7 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/UserSwipePriorityBonusTest` | 9 | Level table, surface keying (strip / joiner / CKDT projection), geometric table, memo version, adapter wiring, tap untouched |
 | `swipe/UserSwipePriorityReplayTest` | 3 | Shipped-stack level sweep + pins: `ad`/`wet` win at High, `adb` at Highest, `somethings` at Normal; zero bonus is identical |
 | `swipe/CustomWordEditLexiconInputTest` | 3 | Dictionary Manager Edit/raise writers → CTC lexicon inputs: a frequency-only edit changes the memo version and the next build carries 255 with the priority unchanged |
-| `swipe/ctc/CtcSlateAssemblyTest` | 13 | Slate assembly (2026-11-26): a secondary-list user word placed at the primary list's own score (stored frequency calibrated, priority carried, never demoted), ordinary secondary words byte-identical to the rank merge, disabled words dropped per language with the tap path's primary-over-secondary rule, the shared softmax scale |
+| `swipe/ctc/CtcSlateAssemblyTest` | 14 | Slate assembly (2026-11-26): a secondary-list user word placed at the primary list's own score (stored frequency calibrated, priority carried, never demoted, never above alternates whose bar score rounds to 0), ordinary secondary words byte-identical to the rank merge, disabled words dropped per language with the tap path's primary-over-secondary rule, the shared softmax scale |
 | `swipe/CtcSecondaryListReplayTest` | 4 | The same through the real encoder and the shipped en/es lexicons: `parcero` (Spanish list) wins its own trace under an English primary, its placement equals the English list's final score, English traces keep the English list's top word; a disabled `world` (re-injected as a pairing key) is offered by no slate while `world's` stays |
 | `swipe/CtcSlateAssemblyWiringTest` | 3 | Source scan: the adapter builds `CtcUserWords` from the merge's own inputs, routes both slates through the assembly and shares its softmax |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
