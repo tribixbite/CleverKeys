@@ -503,10 +503,8 @@ class ContractionManager(private val context: Context) {
      */
     private fun loadBinaryContractions(): Boolean {
         return try {
-            val data = BinaryContractionLoader.loadContractions(
-                context,
-                "dictionaries/contractions.bin"
-            ) ?: return false
+            // Parsed once per process ([EnglishContractionBase]); this manager copies the tables.
+            val data = EnglishContractionBase.binary(context) ?: return false
 
             nonPairedContractions.putAll(data.nonPairedContractions)
             knownContractions.addAll(data.knownContractions)
@@ -703,18 +701,10 @@ class ContractionManager(private val context: Context) {
      * The decoder predicts "dont", we replace with "don't".
      */
     private fun loadNonPairedContractions() {
-        val inputStream = assetManager.open("dictionaries/contractions_non_paired.json")
-        val jsonString = readStream(inputStream)
-
-        val jsonObj = JSONObject(jsonString)
-        val keys = jsonObj.keys()
-
-        while (keys.hasNext()) {
-            val withoutApostrophe = keys.next()
-            val withApostrophe = jsonObj.getString(withoutApostrophe)
-
-            nonPairedContractions[withoutApostrophe.lowercase()] = withApostrophe.lowercase()
-            knownContractions.add(withApostrophe.lowercase())
+        // Parsed once per process ([EnglishContractionBase]); keys and values come lowercased.
+        for ((withoutApostrophe, withApostrophe) in EnglishContractionBase.nonPaired(context)) {
+            nonPairedContractions[withoutApostrophe] = withApostrophe
+            knownContractions.add(withApostrophe)
         }
 
         Log.d(TAG, "Loaded ${nonPairedContractions.size} non-paired contractions")
@@ -743,12 +733,10 @@ class ContractionManager(private val context: Context) {
      * only ever surfaced on the tap path.
      */
     private fun loadPairedContractions() {
-        val inputStream = assetManager.open("dictionaries/contraction_pairings.json")
-        val jsonString = readStream(inputStream)
-
         var pairedCount = 0
 
-        for ((lowerBase, variants) in parsePairings(jsonString)) {
+        // Parsed once per process ([EnglishContractionBase]); the lists are copied below.
+        for ((lowerBase, variants) in EnglishContractionBase.pairings(context)) {
             for (variant in variants) {
                 val contraction = variant.contraction
 
@@ -875,5 +863,109 @@ class ContractionManager(private val context: Context) {
             "have", "has", "had", "will", "would", "shall", "should", "can", "could", "may",
             "might", "must", "let", "not",
         )
+    }
+}
+
+/**
+ * The bundled ENGLISH contraction base, parsed once per process and shared read-only by every
+ * [ContractionManager] (2026-11-26 debug-build log analysis).
+ *
+ * One primary-language change used to read and parse `contractions.bin` and
+ * `contraction_pairings.json` once per manager that wanted English: the typing manager
+ * (`KeyboardComponentGraph`), the CTC adapter's per-language manager, the static LM's alias
+ * manager (`BigramModel.replaceAliasesFor`), the geometric adapter, plus Settings'
+ * [ContractionCollisionScanner]. The files ship in the APK and cannot change while the process
+ * lives (an app update restarts it), so the asset name alone identifies the content: there is no
+ * content version to key on beyond it. Language packs never replace these files — a pack's
+ * `contractions.json` is a per-language REPLACE file read by [ContractionManager.loadLanguageContractions].
+ *
+ * Every accessor returns UNMODIFIABLE tables; a manager copies what it keeps into its own maps
+ * (its merges, reclassification and cross-language demotions mutate only those copies). Sharing
+ * the parsed strings also stops two managers from holding two copies of the same 1,232 display
+ * forms (memory analysis 2026-11-26, candidate 9).
+ *
+ * A failed read is remembered too: an asset that is missing or corrupt stays so for the process.
+ * Thread-safe: managers are built on the main thread, the decode threads and the LM seed loader.
+ */
+internal object EnglishContractionBase {
+    private const val TAG = "EnglishContractionBase"
+    private const val BINARY = "dictionaries/contractions.bin"
+    private const val NON_PAIRED = "dictionaries/contractions_non_paired.json"
+    private const val PAIRINGS = "dictionaries/contraction_pairings.json"
+
+    /** A memoized parse; [value] null = the asset could not be read or parsed. */
+    private class Slot<T>(val value: T?)
+
+    @Volatile private var binarySlot: Slot<BinaryContractionLoader.ContractionData>? = null
+    @Volatile private var nonPairedSlot: Slot<Map<String, String>>? = null
+    @Volatile private var pairingsSlot: Slot<Map<String, List<ContractionManager.PairedVariant>>>? = null
+
+    /** `contractions.bin` (non-paired map + every known display form), or null when unreadable. */
+    fun binary(context: Context): BinaryContractionLoader.ContractionData? =
+        (binarySlot ?: synchronized(this) {
+            binarySlot ?: Slot(
+                BinaryContractionLoader.loadContractions(context, BINARY)?.let { data ->
+                    BinaryContractionLoader.ContractionData(
+                        java.util.Collections.unmodifiableMap(HashMap(data.nonPairedContractions)),
+                        java.util.Collections.unmodifiableSet(HashSet(data.knownContractions)),
+                    )
+                }
+            ).also { binarySlot = it }
+        }).value
+
+    /**
+     * `contractions_non_paired.json`, keys and values lowercased (the JSON fallback of the binary
+     * store and [ContractionCollisionScanner]'s English base). Empty when unreadable.
+     */
+    fun nonPaired(context: Context): Map<String, String> =
+        (nonPairedSlot ?: synchronized(this) {
+            nonPairedSlot ?: Slot(
+                readJson(context, NON_PAIRED) { json ->
+                    val obj = JSONObject(json)
+                    val out = HashMap<String, String>(obj.length() * 2)
+                    val keys = obj.keys()
+                    while (keys.hasNext()) {
+                        val key = keys.next()
+                        out[key.lowercase()] = obj.getString(key).lowercase()
+                    }
+                    java.util.Collections.unmodifiableMap(out)
+                }
+            ).also { nonPairedSlot = it }
+        }).value ?: emptyMap()
+
+    /**
+     * `contraction_pairings.json` through [ContractionManager.parsePairings] (lowercase base →
+     * variants in file order, frequencies kept). Empty when unreadable.
+     */
+    fun pairings(context: Context): Map<String, List<ContractionManager.PairedVariant>> =
+        (pairingsSlot ?: synchronized(this) {
+            pairingsSlot ?: Slot(
+                readJson(context, PAIRINGS) { json ->
+                    val parsed = ContractionManager.parsePairings(json)
+                    val out = LinkedHashMap<String, List<ContractionManager.PairedVariant>>(parsed.size * 2)
+                    for ((base, variants) in parsed) out[base] = java.util.Collections.unmodifiableList(ArrayList(variants))
+                    java.util.Collections.unmodifiableMap(out)
+                }
+            ).also { pairingsSlot = it }
+        }).value ?: emptyMap()
+
+    private fun <T> readJson(context: Context, asset: String, parse: (String) -> T): T? = try {
+        val json = context.assets.open(asset).bufferedReader().use { it.readText() }
+        parse(json)
+    } catch (e: java.io.IOException) {
+        Log.e(TAG, "Failed to read $asset", e)
+        null
+    } catch (e: org.json.JSONException) {
+        Log.e(TAG, "Failed to parse $asset", e)
+        null
+    }
+
+    /** Forget every parse (tests only: each test class may serve different assets). */
+    fun clearForTest() {
+        synchronized(this) {
+            binarySlot = null
+            nonPairedSlot = null
+            pairingsSlot = null
+        }
     }
 }

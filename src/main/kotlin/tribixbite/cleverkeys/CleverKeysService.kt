@@ -102,6 +102,9 @@ class CleverKeysService : InputMethodService(),
     private lateinit var _configManager: ConfigurationManager
     private var _config: Config? = null // Cached reference from _configManager, updated by ConfigChangeListener
 
+    /** The preferences [onCreate] registered this service's listeners on; null until then. */
+    private var _listenerPrefs: SharedPreferences? = null
+
     /**
      * Stale-view detection for the keyboard view: what it was inflated with (style id, effective
      * theme name and, for runtime themes, the colours). An edit of the displayed custom theme
@@ -494,6 +497,8 @@ class CleverKeysService : InputMethodService(),
         prefs.registerOnSharedPreferenceChangeListener(_configManager)
         // Also register this service to handle theme changes directly
         prefs.registerOnSharedPreferenceChangeListener(this)
+        // Kept so onDestroy unregisters from the same instance (releasePreferenceListeners).
+        _listenerPrefs = prefs
 
         // Register theme change broadcast receiver (for immediate theme updates from ThemeSettingsActivity)
         val themeChangeReceiver = object : BroadcastReceiver() {
@@ -603,6 +608,8 @@ class CleverKeysService : InputMethodService(),
 
     override fun onDestroy() {
         super.onDestroy()
+        // First: a retired service must not react to any preference write made from here on.
+        releasePreferenceListeners()
         Utils.dismiss_ime_dialogs()
         _voiceInput?.release()
         _voiceInput = null
@@ -645,6 +652,29 @@ class CleverKeysService : InputMethodService(),
 
         // Cleanup DirectBootManager (v1.1.75: Direct Boot compatibility)
         DirectBootManager.getInstance(this).cleanup()
+    }
+
+    /**
+     * Undo [onCreate]'s preference registrations (2026-11-26 debug-build log analysis).
+     *
+     * They were never removed. The framework keeps a retired service reachable (the IME
+     * back-callback root, docs/audit/2026-11-26-memory-analysis.md), so SharedPreferences' weakly
+     * held listeners stayed alive, and every preference write refreshed each retired service's
+     * Config and ran its [ActiveLanguageSync]: one primary-language change loaded the typing
+     * contractions six times on the Saga (five retired services, each "WordPredictor not
+     * initialized"). Pinned by `ServicePrefListenerLifecycleDriftTest`.
+     */
+    private fun releasePreferenceListeners() {
+        _listenerPrefs?.let { prefs ->
+            if (::_configManager.isInitialized) {
+                prefs.unregisterOnSharedPreferenceChangeListener(_configManager)
+            }
+            prefs.unregisterOnSharedPreferenceChangeListener(this)
+        }
+        _listenerPrefs = null
+        if (::_configManager.isInitialized) {
+            _configManager.unregisterConfigChangeListener(this)
+        }
     }
 
     /**

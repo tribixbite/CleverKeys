@@ -671,6 +671,9 @@ editor that used to be listed here already ship in 2.0.)
 - After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
   or Multi-Language off, changing the second language or picking a layout bound to your first
   language returns them to your first language; they stayed in the second.
+- Changing a setting or the language no longer makes keyboards from earlier sessions reload their
+  dictionaries and contractions in the background; one language change loaded the English
+  contraction list six times.
 - Clipboard link cleaning follows the settings a restore wrote, even while another keyboard is in
   use, and a copy is no longer lost when the keyboard had never started.
 - A word added from a person-name field keeps its capital (Kowalski), even at the field start.

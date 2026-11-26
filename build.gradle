@@ -697,6 +697,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.RotationSaveableStateDriftTest',
     'tribixbite.cleverkeys.SettingsIntentHandlingDriftTest',
     'tribixbite.cleverkeys.SettingsPrefListenerLifecycleDriftTest',
+    // 2026-11-26: a retired keyboard service stops listening to preference writes.
+    'tribixbite.cleverkeys.ServicePrefListenerLifecycleDriftTest',
     'tribixbite.cleverkeys.ExternalUrlLaunchDriftTest',
     // Review 2026-11-14 M22: Layout Manager row ids survive recreation; dialogs resolve rows by id.
     'tribixbite.cleverkeys.LayoutRowIdsTest',
@@ -1718,6 +1720,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.ContractionEnglishBaseMergeTest',
     // Review 2026-11-14 (direct boot): typing contractions reload once at the first unlock.
     'tribixbite.cleverkeys.ContractionUnlockResyncTest',
+    // 2026-11-26: one primary change parses the English contraction base once.
+    'tribixbite.cleverkeys.ContractionEnglishBaseLoadCountTest',
     // Sentence-start autocap on swipe commits (2026-09-03): when no shift state was latched
     // at swipe start, the commit consults the same getCursorCapsMode decision tap typing uses.
     'tribixbite.cleverkeys.SwipeAutocapCommitTest',

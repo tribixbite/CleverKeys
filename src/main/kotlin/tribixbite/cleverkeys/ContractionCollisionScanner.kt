@@ -169,18 +169,10 @@ object ContractionCollisionScanner {
         }.getOrElse { emptyMap() }
         if (lang != SwipeContractionPolicy.ENGLISH) return bundled
 
-        val base = runCatching {
-            parseMappings(context.assets.open("dictionaries/contractions_non_paired.json")
-                .bufferedReader().use { it.readText() })
-        }.getOrElse { emptyMap() }
-        val pairedBases = runCatching {
-            val obj = JSONObject(context.assets.open("dictionaries/contraction_pairings.json")
-                .bufferedReader().use { it.readText() })
-            val out = HashSet<String>(obj.length() * 2)
-            val keys = obj.keys()
-            while (keys.hasNext()) out.add(keys.next().lowercase())
-            out
-        }.getOrElse { emptySet() }
+        // The English base files, from the process-wide parse the keyboard's managers share
+        // (2026-11-26: a scan used to read and parse both files again).
+        val base = EnglishContractionBase.nonPaired(context)
+        val pairedBases = EnglishContractionBase.pairings(context).keys
 
         return (base + bundled).filterKeys { it !in pairedBases }
     }
