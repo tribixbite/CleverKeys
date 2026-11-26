@@ -1902,6 +1902,8 @@ tasks.register('runMockTests', JavaExec) {
     // GH #186/#61: layout switch -> active language through the real Config, the layouts
     // serializer (backup round trip, invalid-code sanitising) and the XML `language` attribute.
     'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',
+    // 2026-11-26: a stored secondary with no dictionary on this phone is no secondary (read time).
+    'tribixbite.cleverkeys.ConfigUnavailableSecondaryTest',
     // iOS-/Gboard-/SwiftKey-style predefined layouts through the real layout parser.
     'tribixbite.cleverkeys.StyleLayoutsTest',
     // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an

@@ -1930,12 +1930,16 @@ class Config private constructor(
             userPrimary = user_primary_language,
             multilangEnabled = enable_multilang,
             userSecondary = user_secondary_language,
+            isAvailable = languageIsAvailable(),
         ).secondary ?: return null
         fun base(code: String) = code.substringBefore('-').substringBefore('_').lowercase(java.util.Locale.ROOT)
         if (base(storeLanguage) != base(user_primary_language)) return null
         val someLayoutUnbound = layouts.isEmpty() || layouts.indices.any { layout_languages.getOrNull(it) == null }
         return configured.takeIf { someLayoutUnbound }
     }
+
+    /** The installed [languageAvailability] check, or one that counts every language. */
+    private fun languageIsAvailable(): (String) -> Boolean = languageAvailability ?: { true }
 
     /**
      * Re-resolve the active languages from the current layout's binding and the user's
@@ -1949,6 +1953,7 @@ class Config private constructor(
             userPrimary = user_primary_language,
             multilangEnabled = enable_multilang,
             userSecondary = user_secondary_language,
+            isAvailable = languageIsAvailable(),
         )
         primary_language = active.primary
         active_secondary_language = active.secondary
@@ -2153,6 +2158,42 @@ class Config private constructor(
          */
         @Volatile
         var themeAvailability: ((String) -> Boolean)? = null
+
+        /**
+         * Whether a language has a dictionary on this device, consulted when the active
+         * secondary is resolved ([LayoutLanguageBinding.resolve]): a stored secondary without one
+         * (a restored backup naming a pack never installed here) is no secondary, at read time,
+         * so the stored choice comes back by itself once the pack is installed (2026-11-26).
+         * Null (not installed) counts every language, the behaviour before. Installed like
+         * [themeAvailability], via [ensureLanguageAvailability].
+         *
+         * # TODO: CleverKeysService.onCreate should call [ensureLanguageAvailability] next to
+         * [themeAvailability] (outside the 2026-11-26 change's file fence); until then only a
+         * process in which Settings has started has it. A pack import or removal also re-resolves
+         * only at the next Config refresh (any preference change, a rotation, a layout switch).
+         */
+        @Volatile
+        var languageAvailability: ((String) -> Boolean)? = null
+
+        /**
+         * Install [languageAvailability] from [context] unless something already has: a language
+         * counts when [LanguageAvailability.availableLanguages] lists it (the list the Settings
+         * language pickers show), or while the answer is unknown: before the first unlock the pack
+         * storage is unreadable and every pack would look missing (nothing re-resolves at the
+         * unlock), and an empty list is a failed scan (a bundled dictionary always exists).
+         */
+        fun ensureLanguageAvailability(context: android.content.Context) {
+            if (languageAvailability != null) return
+            val app = context.applicationContext
+            languageAvailability = { code ->
+                if (!tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(app).isPackStorageReadable()) {
+                    true
+                } else {
+                    val known = LanguageAvailability.availableLanguages(app)
+                    known.isEmpty() || code in known
+                }
+            }
+        }
 
         /**
          * Install [themeAvailability] from [context]'s ThemeProvider unless something already has

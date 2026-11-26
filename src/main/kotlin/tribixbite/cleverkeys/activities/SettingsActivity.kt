@@ -854,6 +854,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
             // Run config migration
             Config.migrate(prefs)
 
+            // A stored secondary with no dictionary here resolves to none (Config.languageAvailability),
+            // also in a process where the keyboard built Config first: its next refresh uses it.
+            Config.ensureLanguageAvailability(this)
+
             // Initialize global config if not already initialized
             try {
                 config = Config.globalConfig()

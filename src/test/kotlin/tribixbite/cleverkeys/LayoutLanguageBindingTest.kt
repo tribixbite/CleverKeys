@@ -87,6 +87,40 @@ class LayoutLanguageBindingTest {
         assertThat(LayoutLanguageBinding.resolve(listOf(null), 0, "en", true, "none").secondary).isNull()
     }
 
+    /**
+     * 2026-11-26: a stored secondary with no installed or bundled dictionary (a restored backup
+     * naming a pack this phone never had, or one whose pack was removed) resolves to none at read
+     * time, through the same check the Settings pair uses (`MultiLanguagePair.chosenSecondary`).
+     * The keyboard otherwise served it: CTC merge, the Auto-Detect pair, the contraction mappings.
+     */
+    @Test
+    fun aSecondaryWithNoDictionaryResolvesToNone() {
+        val installed = setOf("en", "de")
+        val active = LayoutLanguageBinding.resolve(
+            bindings = listOf(null),
+            currentIndex = 0,
+            userPrimary = "de",
+            multilangEnabled = true,
+            userSecondary = "ru",
+            isAvailable = { it in installed },
+        )
+        assertThat(active).isEqualTo(ActiveLanguages(primary = "de", secondary = null, boundLayoutLanguage = null))
+    }
+
+    @Test
+    fun anAvailableSecondaryStaysActive() {
+        val active = LayoutLanguageBinding.resolve(listOf(null), 0, "de", true, "ru", isAvailable = { true })
+        assertThat(active.secondary).isEqualTo("ru")
+    }
+
+    @Test
+    fun theAvailabilityCheckDoesNotUnbindABoundLayout() {
+        // A layout binding is its own choice (Layout Manager warns about a binding with no
+        // dictionary); only the Multi-Language secondary is resolved away.
+        val active = LayoutLanguageBinding.resolve(listOf("fa"), 0, "en", true, "ru", isAvailable = { false })
+        assertThat(active).isEqualTo(ActiveLanguages(primary = "fa", secondary = null, boundLayoutLanguage = "fa"))
+    }
+
     @Test
     fun aBoundLayoutMakesItsLanguageTheOnlyActiveLanguage() {
         // #186: EN primary + FA secondary; switch_forward to the Persian board bound to fa.

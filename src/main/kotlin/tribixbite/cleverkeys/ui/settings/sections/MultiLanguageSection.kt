@@ -91,7 +91,8 @@ internal object MultiLanguagePair {
      *
      * A secondary not among [available] (its pack was removed, or a restored backup names one
      * not installed) is no pair either: the dropdown, which lists only [available], shows "None"
-     * for it, and the block under it must agree (Saga 2026-11-26).
+     * for it, and the block under it must agree (Saga 2026-11-26). The check is the resolver's
+     * `isAvailable`, the one the keyboard's Config resolves its active secondary with.
      */
     fun chosenSecondary(primary: String, secondary: String?, available: Collection<String>): String? =
         LayoutLanguageBinding.resolve(
@@ -100,7 +101,8 @@ internal object MultiLanguagePair {
             userPrimary = primary,
             multilangEnabled = true,
             userSecondary = secondary?.trim(),
-        ).secondary?.takeIf { it.isNotBlank() && it != primary && it in available }
+            isAvailable = { it in available },
+        ).secondary?.takeIf { it.isNotBlank() && it != primary }
 }
 
 @Composable

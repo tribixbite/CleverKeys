@@ -76,6 +76,9 @@ editor that used to be listed here already ship in 2.0.)
 - Deleting the language pack of the current secondary language sets the secondary back to None:
   the secondary settings and "Auto-Detect is not available for this pair" no longer stay under
   "None", and the keyboard stops using that language as its secondary.
+- A secondary language whose dictionary is not on the phone (a restored backup naming a pack
+  never installed here) is treated as no secondary language, and the choice is kept for when the
+  pack is installed. The keyboard applies this once Settings has been opened since it started.
 
 ---
 

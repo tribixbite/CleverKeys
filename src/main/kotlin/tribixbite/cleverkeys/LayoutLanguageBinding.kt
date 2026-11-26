@@ -105,6 +105,16 @@ object LayoutLanguageBinding {
      * @param userPrimary `pref_primary_language`.
      * @param multilangEnabled `pref_enable_multilang`.
      * @param userSecondary `pref_secondary_language` ("none" = no secondary).
+     * @param isAvailable whether a language has a dictionary on this device (bundled or an
+     *   installed pack). A secondary without one resolves to none at READ time (2026-11-26: a
+     *   restored backup naming a pack never installed here kept it active for the CTC merge, the
+     *   Auto-Detect pair and the contraction mappings); the stored preference is untouched, so an
+     *   install brings it back at the next resolution. Settings' pair check
+     *   (`MultiLanguagePair.chosenSecondary`) goes through the same parameter. The default counts
+     *   every language, as before.
+     *
+     * # TODO: a primary without a dictionary stays the primary: no layout or system fallback
+     * exists for an unknown primary to resolve to (the dictionary loaders just find nothing).
      */
     fun resolve(
         bindings: List<String?>,
@@ -112,6 +122,7 @@ object LayoutLanguageBinding {
         userPrimary: String,
         multilangEnabled: Boolean,
         userSecondary: String?,
+        isAvailable: (String) -> Boolean = { true },
     ): ActiveLanguages {
         val index = if (currentIndex >= bindings.size) 0 else currentIndex
         val bound = bindings.getOrNull(index)
@@ -122,7 +133,7 @@ object LayoutLanguageBinding {
         // Unbound: exactly the pre-binding behaviour (the secondary loads whenever
         // Multi-Language is on and a secondary is chosen).
         val secondary = userSecondary?.takeIf {
-            multilangEnabled && it.isNotEmpty() && it != LanguageDisplayNames.NONE
+            multilangEnabled && it.isNotEmpty() && it != LanguageDisplayNames.NONE && isAvailable(it)
         }
         return ActiveLanguages(primary = userPrimary, secondary = secondary, boundLayoutLanguage = null)
     }
