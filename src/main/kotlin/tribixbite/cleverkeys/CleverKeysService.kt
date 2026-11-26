@@ -1643,6 +1643,11 @@ class CleverKeysService : InputMethodService(),
         _preferenceUIUpdateHandler?.handlePreferenceChange(key)
         // The secondary language's custom / disabled words: its dictionary is rebuilt.
         if (key != null) _predictionCoordinator?.onUserWordsChanged(key)
+        // A disabled-words change reaches the predictor's disabled sets (both languages) now,
+        // before the next swipe is filtered (Saga r20 F6: they reloaded only at the next tap).
+        if (key != null && LanguagePreferenceKeys.languageFromDisabledWordsKey(key) != null) {
+            _predictionCoordinator?.getWordPredictor()?.reloadDisabledWords()
+        }
     }
 
     override fun onEvaluateFullscreenMode(): Boolean {

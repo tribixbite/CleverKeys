@@ -433,4 +433,22 @@ class LearningWiringDriftTest {
         assertThat(file.exists()).isTrue()
         return file.readText()
     }
+
+    /**
+     * Saga r20 F5/F6 (2026-11-26): the service routes (a) every unowned selection update through
+     * the edit-time learn check BEFORE the cursor bookkeeping, and (b) a disabled-words
+     * preference change to the predictor's disabled sets at once.
+     */
+    @Test
+    fun `the service checks edits for learned words and reloads disabled words on change`() {
+        val service = readSource("CleverKeysService.kt")
+        val selection = service.substringAfter("override fun onUpdateSelection(").substringBefore("override fun onFinishInputView")
+        val check = selection.indexOf("reconcileLearnAfterDeletion(")
+        assertThat(check).isGreaterThan(-1)
+        assertThat(selection.indexOf("onCursorMoved(")).isGreaterThan(check)
+        val listener = service.substringAfter("_preferenceUIUpdateHandler?.handlePreferenceChange(key)").substringBefore("override fun ")
+        assertThat(listener).contains("languageFromDisabledWordsKey(key)")
+        assertThat(listener).contains("reloadDisabledWords()")
+    }
+
 }

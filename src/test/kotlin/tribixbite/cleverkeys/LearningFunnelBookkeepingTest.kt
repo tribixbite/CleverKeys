@@ -1834,6 +1834,42 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("got's usage kept").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
     }
 
+    /**
+     * F6 (Saga): a word disabled in Dictionary Manager was still swiped in, because the disabled
+     * sets reloaded only at the next tap prediction. The preference change reloads both
+     * languages' sets at once, and [Predictor.isWordDisabled] with a language reads them.
+     */
+    @Test
+    fun aDisabledWordsChangeReachesBothLanguagesAtOnce() {
+        val ctx = mockk<android.content.Context>(relaxed = true)
+        predictor.setField("context", ctx)
+        val stored = mutableMapOf<String, Set<String>>()
+        val prefs = mockk<android.content.SharedPreferences>(relaxed = true)
+        every { prefs.getStringSet(any(), any()) } answers {
+            (stored[firstArg<String>()] ?: secondArg<Set<String>?>())?.let { HashSet(it) }
+        }
+        every { prefs.getString(any(), any()) } answers { secondArg() }
+        mockkStatic(DirectBootAwarePreferences::get_shared_preferences)
+        every { DirectBootAwarePreferences.get_shared_preferences(any()) } returns prefs
+        predictor.setField("bigramModel", mockk<BigramModel>(relaxed = true))
+        predictor.setField("dictionaryObserver", mockk<UserDictionaryObserver>(relaxed = true))
+        predictor.setLanguage("en")
+        predictor.setField("secondaryLanguageCode", "es")
+        predictor.setField("customAndUserWords", emptySet<String>())
+        // The harness stubs isWordDisabled to false for the other tests; this one reads the sets.
+        every { predictor.isWordDisabled(any()) } answers { callOriginal() }
+        assertWithMessage("not yet").that(predictor.isWordDisabled("you")).isFalse()
+
+        stored[LanguagePreferenceKeys.disabledWordsKey("en")] = setOf("you")
+        stored[LanguagePreferenceKeys.disabledWordsKey("es")] = setOf("que")
+        predictor.reloadDisabledWords()
+
+        assertWithMessage("the primary's list").that(predictor.isWordDisabled("you")).isTrue()
+        assertWithMessage("the primary's list, by language").that(predictor.isWordDisabled("you", "en")).isTrue()
+        assertWithMessage("the secondary's list").that(predictor.isWordDisabled("que", "es")).isTrue()
+        assertWithMessage("not the primary's").that(predictor.isWordDisabled("que", "en")).isFalse()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**

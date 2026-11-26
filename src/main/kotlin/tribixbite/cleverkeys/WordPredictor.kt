@@ -519,7 +519,9 @@ class WordPredictor : Predictor {
     private var config: Config? = null
     private var adaptationManager: UserAdaptationManager? = null
     private var context: Context? = null // For accessing SharedPreferences for disabled words
-    private var disabledWords: MutableSet<String> = mutableSetOf() // Cache of disabled words
+    // Cache of disabled words. Volatile: replaced on the main thread by [reloadDisabledWords] and
+    // read by the swipe filter and the prediction executor.
+    @Volatile private var disabledWords: MutableSet<String> = mutableSetOf()
     // Track custom/user-added words — these override disabled status (Issue #72: Boston bug)
     @Volatile
     private var customAndUserWords: Set<String> = emptySet()
@@ -846,12 +848,40 @@ class WordPredictor : Predictor {
     }
 
     /**
-     * Reload disabled words (called when Dictionary Manager updates the list)
+     * Reload disabled words (called when Dictionary Manager updates the list).
+     *
+     * Saga r20 F6 (2026-11-26): the service's preference listener calls this for every
+     * `disabled_words_<lang>` change, so a word disabled in Dictionary Manager is filtered from
+     * the very next swipe; before, the sets reloaded only at the next TAP prediction
+     * ([checkAndReload]), after a swipe had already inserted the word. The loaded secondary's set
+     * is re-read too (a pref read; its index is not rebuilt for a disabled-word change), so both
+     * languages' sets that [isWordDisabled] reads are live.
      */
-    fun reloadDisabledWords() {
+    override fun reloadDisabledWords() {
         loadDisabledWords()
         // A Dictionary Manager edit may have changed the detected next-word language's list too.
         detectedDisabledCache = null
+        // secondaryLanguageCode is "none" unless a secondary index was published with it.
+        val secondary = secondaryLanguageCode
+        if (secondary != "none") secondaryDisabledWords = readSecondaryDisabledWords(secondary)
+    }
+
+    /**
+     * [isWordDisabled] for a word of [language] — the accessor the swipe slate filter uses for a
+     * candidate whose language it knows. The primary's set for the loaded dictionary's language,
+     * [isSecondaryWordDisabled] for the loaded secondary, and for any other language the
+     * primary's set plus that language's stored list (read once, kept until the next reload).
+     */
+    override fun isWordDisabled(word: String, language: String): Boolean = when (language) {
+        dictionaryLanguage -> isWordDisabled(word)
+        secondaryLanguageCode -> isSecondaryWordDisabled(word)
+        else -> isWordDisabled(word) || word.lowercase() in storedDisabledWords(language)
+    }
+
+    /** [language]'s stored disabled list, cached in [detectedDisabledCache]'s slot. */
+    private fun storedDisabledWords(language: String): Set<String> {
+        detectedDisabledCache?.let { (cachedLanguage, words) -> if (cachedLanguage == language) return words }
+        return readSecondaryDisabledWords(language).also { detectedDisabledCache = language to it }
     }
 
     /**

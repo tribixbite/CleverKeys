@@ -120,6 +120,19 @@ interface Predictor {
     /** @return true if the user has explicitly disabled [word] from suggestions. */
     fun isWordDisabled(word: String): Boolean
 
+    /**
+     * [isWordDisabled] for a word of [language]: the primary's list for the loaded dictionary's
+     * language, the loaded secondary's (with the primary's) for the secondary, else that
+     * language's stored list. Live: [reloadDisabledWords] refreshes every set it reads.
+     */
+    fun isWordDisabled(word: String, language: String): Boolean = isWordDisabled(word)
+
+    /**
+     * Re-read the disabled words of the primary and the loaded secondary language now (the
+     * service's preference listener calls it for any `disabled_words_<lang>` change).
+     */
+    fun reloadDisabledWords() {}
+
     /** Restore user-dictionary casing ("iPhone", proper nouns) over lowercase storage forms. */
     fun applyUserWordCaseToList(words: List<String>): List<String>
 
