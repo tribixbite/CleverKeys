@@ -200,3 +200,25 @@ as String (`ClipboardHistoryLimits.fromSettings`, `SettingsPersistence`), so eve
 the text form (`SETTINGS_DEFAULTS`), converted on import as before. Red first:
 `ConfigMistypedPrefDriftTest.eachNumericClipboardKeyHasOneStoredType` (String reads found) and
 `ClipboardStoredLimitsTest.theReaderReadsTheIntTheScreenStoresWithoutAWarning` (three warnings).
+
+2026-11-26, Fable review of the 11-26 fixes, round 2. (1) Note10+ r18, an "Added “X” to
+dictionary" message stayed ~3 min: `showMessage` emptied the bar's lists and added a TextView
+outside the view pools; every way out (timeout restore, `clearSuggestions`, `dismissUndoableMessage`,
+the undo tap) set the empty list the bar already "held" and the identical-content skip returned
+before `rebindSuggestionViews`. `SuggestionBar.barShowsNonSuggestionContent` (set by the message,
+voice and emoji-search views, cleared after a rebind) disables the skip; `onStartInputView` (new
+field) and `onFinishInputView` drop a live message before clearing. Red: the
+`CoreImeHygieneDriftTest` service pin; `SuggestionBarMessageTeardownTest` (instrumented, 5 cases)
+compiles but was NOT run: emulator.wtf answered 402, out of credits. (2) A detected next-word
+language now returns to the dictionary's when detection stops applying (`setConfig` and each
+commit): Auto-Detect off, no or another secondary language, a layout bound to the loaded primary
+(`LearningFunnelBookkeepingTest`, 4 red + 1 guard). Not fixed: the detected language's own disabled
+words still do not filter its next-word suggestions. (3) `storeClip`'s OS-rewrite switch and
+`SanitizationConfig`'s ruleset come from `ClipboardSanitizeSettings.fromSettings` (stored); the
+cache is keyed on the stored toggles; no Config left means the clip is still stored
+(`ClipboardStoredLimitsTest`, red: IllegalStateException lost the clip, a restored switch did not
+clean). (4) Geometric pairing bases stream the en asset through `CtcEnLexiconJson`
+(`PairingBaseFrequencies.fromEnLexicon`); person-name fields keep a word's capital and the dead
+`AutoCapMode.WORDS` is gone; Settings' load rewrites String-stored clipboard limits as Int once
+(non-numeric removed); `SettingsValidation` rejects a non-numeric or out-of-range size / item-size
+limit (`SettingsRanges.CLIPBOARD_SIZE_LIMIT_MB` 0..100).

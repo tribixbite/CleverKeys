@@ -301,6 +301,28 @@ class DictionaryAddUndoTest {
         verify(exactly = 1) { dictionary.addUserWord("Muster") }
     }
 
+    /**
+     * Fable review 2026-11-26: a person-name field keeps the name as typed whatever caps flags it
+     * declares. A name field that also asks for CAP_SENTENCES (some contact forms set both)
+     * folded `Kowalski` at its start to `kowalski`.
+     */
+    @Test
+    fun aPersonNameFieldKeepsTheNameAsTyped() {
+        config.autocapitalisation = true
+        editorShows("Kowalski ")
+        val handler = handler()
+        val name = android.text.InputType.TYPE_TEXT_VARIATION_PERSON_NAME
+
+        handler.tapIn(Suggestion.AddToDictionary("Kowalski").wire,
+            capField(flags = name or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES))
+        handler.tapIn(Suggestion.AddToDictionary("Kowalski").wire,
+            capField(flags = name or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS))
+
+        verify(exactly = 2) { dictionary.addUserWord("Kowalski") }
+        verify(exactly = 0) { dictionary.addUserWord("kowalski") }
+    }
+
     @Test
     fun internalCapitalsAndAllCapsAreKeptAtASentenceStart() {
         config.autocapitalisation = true
@@ -370,7 +392,6 @@ class DictionaryAddUndoTest {
         assertThat(UserWordCasing.autoCapitalisesAfter("see e.g. ", s)).isFalse()
         assertThat(UserWordCasing.autoCapitalisesAfter("end.", s)).isFalse()
         assertThat(UserWordCasing.autoCapitalisesAfter("und ", s)).isFalse()
-        assertThat(UserWordCasing.autoCapitalisesAfter("und ", UserWordCasing.AutoCapMode.WORDS)).isTrue()
         assertThat(UserWordCasing.autoCapitalisesAfter("", UserWordCasing.AutoCapMode.NONE)).isFalse()
     }
 
@@ -403,10 +424,19 @@ class DictionaryAddUndoTest {
     @Test
     fun aCapWordsFieldKeepsTheWordAsTypedAndASentenceFieldStillFolds() {
         val en = java.util.Locale.ENGLISH
-        assertThat(UserWordCasing.storageForm("Kowalski", "Kowalski ", UserWordCasing.AutoCapMode.WORDS, false, en))
+        // A CAP_WORDS-only field declares no sentence caps: nothing to fold (2026-11-26: the old
+        // WORDS mode meant exactly this, NONE).
+        val words = UserWordCasing.AutoCapMode.of(autocapEnabled = true, capSentences = false, personName = false)
+        assertThat(words).isEqualTo(UserWordCasing.AutoCapMode.NONE)
+        assertThat(UserWordCasing.storageForm("Kowalski", "Kowalski ", words, false, en))
             .isEqualTo("Kowalski")
-        assertThat(UserWordCasing.storageForm("Kowalski", "Anna Kowalski ", UserWordCasing.AutoCapMode.WORDS, false, en))
+        assertThat(UserWordCasing.storageForm("Kowalski", "Anna Kowalski ", words, false, en))
             .isEqualTo("Kowalski")
+        // A person-name field keeps its capitals even when it also asks for sentence caps.
+        assertThat(UserWordCasing.AutoCapMode.of(autocapEnabled = true, capSentences = true, personName = true))
+            .isEqualTo(UserWordCasing.AutoCapMode.NONE)
+        assertThat(UserWordCasing.AutoCapMode.of(autocapEnabled = true, capSentences = true, personName = false))
+            .isEqualTo(UserWordCasing.AutoCapMode.SENTENCES)
         assertThat(UserWordCasing.storageForm("Parcero", "Parcero ", UserWordCasing.AutoCapMode.SENTENCES, false, en))
             .isEqualTo("parcero")
     }

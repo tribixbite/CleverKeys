@@ -673,6 +673,10 @@ editor that used to be listed here already ship in 2.0.)
   language returns them to your first language; they stayed in the second.
 - Clipboard link cleaning follows the settings a restore wrote, even while another keyboard is in
   use, and a copy is no longer lost when the keyboard had never started.
+- A word added from a person-name field keeps its capital (Kowalski), even at the field start.
+- A backup with a non-numeric or out-of-range clipboard size or item-size limit is reported as
+  skipped on import instead of being kept as text and ignored; a limit an older import stored as
+  text is rewritten as a number when Settings opens.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

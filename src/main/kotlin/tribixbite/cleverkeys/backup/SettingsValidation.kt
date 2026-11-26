@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.backup
 import tribixbite.cleverkeys.swipe.SwipeEngineRouter
 import tribixbite.cleverkeys.MarginPrefKeys
 import tribixbite.cleverkeys.SettingsRanges
+import tribixbite.cleverkeys.ClipboardHistoryLimits
 import tribixbite.cleverkeys.TerminalUtils
 import tribixbite.cleverkeys.autocorrect.AutocorrectTuning
 import tribixbite.cleverkeys.autocorrect.FrequencyFloor
@@ -443,6 +444,10 @@ object SettingsValidation {
         // Clipboard history limit (0 = unlimited). Shared with the slider,
         // validateString's canonical string form (G-5) and the Config clamp.
         put("clipboard_history_limit", SettingsRanges.CLIPBOARD_HISTORY_LIMIT)
+        // The other two clipboard limits (Fable review 2026-11-26: a non-numeric import of either
+        // was accepted, stored as that String and silently read as the default).
+        put("clipboard_size_limit_mb", SettingsRanges.CLIPBOARD_SIZE_LIMIT_MB)
+        put("clipboard_max_item_size_kb", SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB)
 
         // Clipboard media size cap in MB — F-8: shared with the new slider and
         // the Config read-site clamp (historic coerceIn 1..50).
@@ -557,13 +562,14 @@ object SettingsValidation {
             // Slider sensitivity (string representation)
             "slider_sensitivity" -> value.matches(Regex("[0-9]+"))
 
-            // G-5: clipboard_history_limit is STORED as a String (see the isIntKey
-            // note below), so real exports carry the string form — which used to
-            // fall through to `else -> true`, bypassing the deliberate 0..500
-            // bound entirely ("9999"/"abc"/"-5" imported cleanly and applied).
-            // Parse and enforce the same shared range the IntV form checks.
-            "clipboard_history_limit" ->
-                value.toIntOrNull()?.let { it in SettingsRanges.CLIPBOARD_HISTORY_LIMIT } == true
+            // G-5: the clipboard limits are EXPORTED in their text form (see
+            // [EXPORTED_AS_TEXT_NUMERIC]), which used to fall through to `else -> true`,
+            // bypassing the bounds entirely ("9999"/"abc"/"-5" imported cleanly and applied).
+            // Parse (trimmed, as the import applier does before it stores the Int) and enforce
+            // the same shared range the IntV form checks. Non-numeric text is rejected: a
+            // visible skip row, not a String the readers silently replace with their default.
+            in EXPORTED_AS_TEXT_NUMERIC_CLIPBOARD ->
+                value.trim().toIntOrNull()?.let { it in INT_RANGES.getValue(key) } == true
 
             // Swipe distance (string representation)
             "swipe_dist" -> value.matches(Regex("[0-9]+(\\.[0-9]+)?"))
@@ -585,12 +591,20 @@ object SettingsValidation {
     }
 
     /**
-     * Keys with an [INT_RANGES] bound whose value is STORED as a String (`Defaults.CIRCLE_SENSITIVITY
-     * = "2"`, `Defaults.CLIPBOARD_HISTORY_LIMIT = "0"`; their read sites use `safeGetString`). Their
-     * imports carry the string form, which [validateString] range-checks; treating them as Int
-     * keys would reject every real export as "expected Int, got String".
+     * The clipboard limits: STORED as Int (the sliders, Reset All, `SettingsImportApplier`'s
+     * STORED_AS_INT; b20be6218) but EXPORTED in the text form of `SETTINGS_DEFAULTS`
+     * (`Defaults.CLIPBOARD_HISTORY_LIMIT = "0"`), so a real backup carries a String for each.
      */
-    private val STRING_STORED_NUMERIC: Set<String> = setOf("clipboard_history_limit", "circle_sensitivity")
+    private val EXPORTED_AS_TEXT_NUMERIC_CLIPBOARD: Set<String> =
+        ClipboardHistoryLimits.NUMERIC_KEYS.toSet()
+
+    /**
+     * Keys with an [INT_RANGES] bound whose import carries a String: the clipboard limits above
+     * and `circle_sensitivity` (stored as a String, `Defaults.CIRCLE_SENSITIVITY = "2"`).
+     * [validateString] range-checks that form; treating them as Int keys would reject every
+     * real export as "expected Int, got String". The Int form is range-checked by [validateInt].
+     */
+    private val EXPORTED_AS_TEXT_NUMERIC: Set<String> = EXPORTED_AS_TEXT_NUMERIC_CLIPBOARD + "circle_sensitivity"
 
     /**
      * `true` if the key is stored as an Int — used for type-mismatch detection when a Bool or a
@@ -598,7 +612,7 @@ object SettingsValidation {
      * key list this replaced had already lost `ctc_beam_width` and `finger_occlusion_offset`,
      * so a Bool or String import for either passed type checking.
      */
-    private fun isIntKey(key: String): Boolean = key in INT_RANGES && key !in STRING_STORED_NUMERIC
+    private fun isIntKey(key: String): Boolean = key in INT_RANGES && key !in EXPORTED_AS_TEXT_NUMERIC
 
     /**
      * Helper: `true` if the key is in the string-validated allowlist (used for
@@ -607,8 +621,9 @@ object SettingsValidation {
     private fun isStringValidatedKey(key: String): Boolean = when (key) {
         "theme", "number_row", "show_numpad", "numpad_layout",
         "number_entry_layout", "circle_sensitivity", "slider_sensitivity",
-        "swipe_dist", "clipboard_history_limit", "custom_terminal_packages",
+        "swipe_dist", "custom_terminal_packages",
         "selection_delete_mode" -> true
+        in EXPORTED_AS_TEXT_NUMERIC_CLIPBOARD -> true
         in TUNING_STRINGS -> true
         else -> false
     }

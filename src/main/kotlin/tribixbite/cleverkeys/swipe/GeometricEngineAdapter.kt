@@ -20,6 +20,7 @@ import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.GeoKnobRanges
 import tribixbite.cleverkeys.UserDictionaryWords
+import tribixbite.cleverkeys.swipe.ctc.CtcEnLexiconJson
 import tribixbite.cleverkeys.swipe.ctc.CtcLanguageSupport
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import tribixbite.cleverkeys.swipe.geometric.GeometricDictionary
@@ -755,10 +756,15 @@ class GeometricEngineAdapter(
     ): Map<String, Int> {
         val asset = CtcLanguageSupport.assetFor(SwipeContractionPolicy.ENGLISH) ?: return emptyMap()
         return try {
-            val json = context.assets.open(asset).use { it.readBytes().decodeToString() }
-            if (Thread.currentThread().isInterrupted) throw InterruptedException("Dictionary load cancelled")
-            PairingBaseFrequencies.fromEnLexiconJson(
-                json, userWords, disabled, contractionsFor(language).getPairedFrequencyBases()
+            // Streamed (Fable review 2026-11-26), like the CTC lexicon: the 1.75 MiB asset is
+            // never decoded whole into a String; the reader holds one key at a time.
+            val base = context.assets.open(asset).use { input ->
+                CtcEnLexiconJson.readPairs(input) {
+                    if (Thread.currentThread().isInterrupted) throw InterruptedException("Dictionary load cancelled")
+                }
+            }
+            PairingBaseFrequencies.fromEnLexicon(
+                base, userWords, disabled, contractionsFor(language).getPairedFrequencyBases()
             )
         } catch (e: InterruptedException) {
             throw e

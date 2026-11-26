@@ -132,7 +132,13 @@ class PairingBaseFrequenciesTest {
         val ctc = File("$SWIPE_SRC/CtcEngineAdapter.kt").readText()
         assertWithMessage("geometric must pass a real base frequency, not the pre-parity null")
             .that(geo).doesNotContain("baseFrequency = { null }")
-        assertThat(geo).contains("PairingBaseFrequencies.fromEnLexiconJson(")
+        // Streamed like the CTC lexicon (Fable review 2026-11-26): the en asset is read through
+        // the one streaming reader both engines share, never decoded whole into a String.
+        assertThat(geo).contains("PairingBaseFrequencies.fromEnLexicon(")
+        val derivation = geo.substringAfter("private fun enPairingBaseFrequencies(").substringBefore("\n    }\n")
+        assertThat(derivation).contains("CtcEnLexiconJson.readPairs(")
+        assertWithMessage("no whole-file text decode of the en lexicon")
+            .that(derivation).doesNotContain("decodeToString()")
         assertThat(geo).contains("baseFrequency = { pairingBaseFrequencies[it] }")
         assertThat(ctc).contains("PairingBaseFrequencies.select(")
         assertThat(ctc).contains("baseFrequency = { pairingBaseFrequencies[it] }")

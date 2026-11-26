@@ -24,6 +24,32 @@ class SettingsImportPlanBuilderTest {
         assertThat(invalid.parseSkippedKeys.map { it.key }).contains("custom_terminal_packages")
     }
 
+    /**
+     * The three clipboard limits are stored as Int and exported in their text form (b20be6218).
+     * Only `clipboard_history_limit` was checked; a non-numeric size or item limit imported
+     * cleanly, was stored as that String and every reader fell back to its default without a word
+     * (Fable review 2026-11-26). Each is now a number in its range, read trimmed like the applier.
+     */
+    @Test
+    fun theClipboardLimitsImportOnlyAsNumbersInRange() {
+        for (key in listOf("clipboard_history_limit", "clipboard_size_limit_mb", "clipboard_max_item_size_kb")) {
+            assertThat(SettingsValidation.validate(key, PrefValue.Str("abc"))).isNotNull()
+            assertThat(SettingsValidation.validate(key, PrefValue.Str(""))).isNotNull()
+            assertThat(SettingsValidation.validate(key, PrefValue.Str("-5"))).isNotNull()
+            assertThat(SettingsValidation.validate(key, PrefValue.Bool(true))).isNotNull()
+        }
+        assertThat(SettingsValidation.validate("clipboard_history_limit", PrefValue.Str(" 50 "))).isNull()
+        assertThat(SettingsValidation.validate("clipboard_history_limit", PrefValue.Str("9999"))).isNotNull()
+        assertThat(SettingsValidation.validate("clipboard_size_limit_mb", PrefValue.Str("5"))).isNull()
+        assertThat(SettingsValidation.validate("clipboard_size_limit_mb", PrefValue.Str("0"))).isNull()
+        assertThat(SettingsValidation.validate("clipboard_max_item_size_kb", PrefValue.Str("512"))).isNull()
+        // The reader clamps an item size to 64..1024; an import outside it is refused, not clamped silently.
+        assertThat(SettingsValidation.validate("clipboard_max_item_size_kb", PrefValue.Str("8"))).isNotNull()
+        // The Int form (a hand-edited file) is accepted inside the same ranges.
+        assertThat(SettingsValidation.validate("clipboard_size_limit_mb", PrefValue.IntV(5))).isNull()
+        assertThat(SettingsValidation.validate("clipboard_max_item_size_kb", PrefValue.IntV(5000))).isNotNull()
+    }
+
     private val screen = ScreenMetrics(width = 1080, height = 2400, density = 3.0f)
 
     // ── D2: Swiss German spelling (pref_german_swiss_spelling) ──────────────────────────────

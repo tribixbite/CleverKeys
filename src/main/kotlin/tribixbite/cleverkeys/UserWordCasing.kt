@@ -24,10 +24,11 @@ import java.util.Locale
  * Everything else keeps the user's casing: a capital typed mid-sentence is the user's Shift (a
  * name, a German noun), and with auto-capitalisation off every capital is the user's.
  *
- * A CAP_WORDS-only field ([AutoCapMode.WORDS]) keeps the word as typed (Fable audit
- * 2026-11-26): by convention it is a name field (contacts, addresses, a person's name), where
- * the capital auto-capitalisation put on every word is the one the user means, so folding it
- * stored `Kowalski` lowercase.
+ * A name field keeps the word as typed (Fable audits 2026-11-26): a CAP_WORDS-only field is one
+ * by convention (contacts, addresses), and a `TYPE_TEXT_VARIATION_PERSON_NAME` field is one
+ * whatever caps flags it also declares (some contact forms set CAP_SENTENCES too). There the
+ * capital auto-capitalisation put on the word is the one the user means; folding it stored
+ * `Kowalski` lowercase. [AutoCapMode.of] maps both to [AutoCapMode.NONE].
  *
  * Ambiguity accepted: at a sentence start a deliberate Shift (a name like `Paris`, any German
  * noun) cannot be told from auto-capitalisation's — with auto-capitalisation on, the Shift was
@@ -48,25 +49,30 @@ object UserWordCasing {
 
     /** Which capitals auto-capitalisation puts in the active field. */
     enum class AutoCapMode {
-        /** Auto-capitalisation is off, or the field declares no caps mode: every capital is the user's. */
+        /**
+         * Nothing to fold: auto-capitalisation is off, the field declares no sentence caps, or it
+         * is a name field (CAP_WORDS only, or a person-name variation). Every capital is kept.
+         */
         NONE,
 
         /** `TYPE_TEXT_FLAG_CAP_SENTENCES` (with or without CAP_WORDS): sentence and paragraph starts. */
-        SENTENCES,
+        SENTENCES;
 
-        /** `TYPE_TEXT_FLAG_CAP_WORDS` alone: every word start after whitespace, and paragraph starts. */
-        WORDS;
+        // The former WORDS mode is gone (2026-11-26): since the first Fable audit nothing folded in
+        // a CAP_WORDS-only field, so WORDS meant the same as NONE and only a test reached its
+        // branch of [autoCapitalisesAfter].
 
         companion object {
             /**
              * The mode for the user setting [autocapEnabled] and a field asking for
-             * [capSentences] / [capWords] (its `inputType` flags). Both flags behave as
-             * SENTENCES, as `TextUtils.getCapsMode` evaluates them.
+             * [capSentences] (its `inputType` flag), unless it is a [personName] field
+             * (`TYPE_TEXT_VARIATION_PERSON_NAME`), which keeps every capital. CAP_WORDS
+             * does not matter: alone it marks a name field (NONE), and with CAP_SENTENCES the
+             * editor's `TextUtils.getCapsMode` evaluates the pair as sentence caps.
              */
-            fun of(autocapEnabled: Boolean, capSentences: Boolean, capWords: Boolean): AutoCapMode = when {
-                !autocapEnabled -> NONE
+            fun of(autocapEnabled: Boolean, capSentences: Boolean, personName: Boolean): AutoCapMode = when {
+                !autocapEnabled || personName -> NONE
                 capSentences -> SENTENCES
-                capWords -> WORDS
                 else -> NONE
             }
         }
@@ -105,7 +111,7 @@ object UserWordCasing {
         readWindowFilled: Boolean,
         locale: Locale,
     ): String {
-        // WORDS: a name field by convention; its capitals are meant (see the class KDoc).
+        // NONE includes the name fields: their capitals are meant (see the class KDoc).
         if (mode != AutoCapMode.SENTENCES || !hasAutoCapitalShape(word)) return word
         val text = textBeforeCursor ?: return word
         val index = lastStandaloneIndexOf(text, word) ?: return word
@@ -137,13 +143,12 @@ object UserWordCasing {
 
     /**
      * Would auto-capitalisation capitalise a letter typed right after [preceding]? A port of
-     * `android.text.TextUtils.getCapsMode` for the WORDS / SENTENCES modes — the test behind the
+     * `android.text.TextUtils.getCapsMode` for the SENTENCES mode — the test behind the
      * editor's `getCursorCapsMode`, which is what [Autocapitalisation] consults when it latches
      * Shift — so this agrees with what auto-capitalisation did when the word was typed.
      *  - back over opening quotes and brackets (`"`, `'`, START_PUNCTUATION);
      *  - a paragraph start (the field start or a newline, after optional spaces / tabs) always
      *    capitalises;
-     *  - CAP_WORDS alone: any whitespace before the word capitalises;
      *  - CAP_SENTENCES: whitespace, then optional closing quotes / brackets, then `.`, `?` or
      *    `!`, where a `.` closing a dotted abbreviation (`e.g.`) does not count.
      */
@@ -158,7 +163,6 @@ object UserWordCasing {
         var j = i
         while (j > 0 && (preceding[j - 1] == ' ' || preceding[j - 1] == '\t')) j--
         if (j == 0 || preceding[j - 1] == '\n') return true
-        if (mode == AutoCapMode.WORDS) return i != j
         if (i == j) return false
         while (j > 0) {
             val c = preceding[j - 1]

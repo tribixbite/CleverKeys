@@ -635,6 +635,33 @@ data class ClipboardHistoryLimits(
         const val LIMIT_TYPE_COUNT = "count"
         const val LIMIT_TYPE_SIZE = "size"
 
+        /** The three numeric limits; their stored type is Int (b20be6218). */
+        val NUMERIC_KEYS: List<String> = listOf("clipboard_history_limit", "clipboard_size_limit_mb", "clipboard_max_item_size_kb")
+
+        /**
+         * One-time repair (Fable review 2026-11-26, after b20be6218): an import from before that
+         * commit stored the three limits as String. The readers accept that, but each read of a
+         * String through the Int reader logs a type warning. Rewrite a numeric String as the Int
+         * it says (trimmed), and REMOVE a non-numeric one, so its reader takes the default as it
+         * already did, now explicitly. Synchronous `commit()`, so the next read sees Int. A no-op
+         * (no write, no listener call) when every key is already Int or unset.
+         *
+         * @return the keys rewritten or removed
+         */
+        @JvmStatic
+        fun rewriteStoredTextAsInt(prefs: SharedPreferences): List<String> {
+            val all = prefs.all
+            val text = NUMERIC_KEYS.mapNotNull { key -> (all[key] as? String)?.let { key to it } }
+            if (text.isEmpty()) return emptyList()
+            val editor = prefs.edit()
+            for ((key, value) in text) {
+                val number = value.trim().toIntOrNull()
+                if (number != null) editor.putInt(key, number) else editor.remove(key)
+            }
+            editor.commit()
+            return text.map { it.first }
+        }
+
         @JvmStatic
         fun fromSettings(prefs: SharedPreferences): ClipboardHistoryLimits = ClipboardHistoryLimits(
             limitType = Config.safeGetString(prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE),
@@ -774,6 +801,12 @@ object SettingsRanges {
 
     /** Clipboard history entry cap (`clipboard_history_limit`; 0 = unlimited). */
     val CLIPBOARD_HISTORY_LIMIT: IntRange = 0..500
+
+    /**
+     * Total History size cap in MB (`clipboard_size_limit_mb`). The slider offers 1..100; 0 is
+     * accepted on import because the limits treat it as unlimited (backup validation only).
+     */
+    val CLIPBOARD_SIZE_LIMIT_MB: IntRange = 0..100
 
     /**
      * Clipboard max item size in KB (`clipboard_max_item_size_kb`). Floor 64

@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.ClipboardHistoryLimits
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.Logs
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
@@ -341,6 +342,8 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Input behavior settings
         vibrationEnabled = prefs.getSafeBoolean("vibration_enabled", Defaults.HAPTIC_ENABLED)
         clipboardHistoryEnabled = prefs.getSafeBoolean("clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
+        // An older import left the limits as String: store them as the Int they are, once.
+        ClipboardHistoryLimits.rewriteStoredTextAsInt(prefs)
         // The three clipboard limits are STORED as Int, as the sliders write them (Note10+ r17,
         // 2026-11-26: a String read logged a type warning each time); getSafeInt also takes the
         // numeric String an older import left. `ConfigMistypedPrefDriftTest` pins one type per key.

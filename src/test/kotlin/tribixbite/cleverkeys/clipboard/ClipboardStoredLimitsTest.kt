@@ -178,6 +178,38 @@ class ClipboardStoredLimitsTest {
         verify(exactly = 0) { Log.w("Config", match<String> { it.contains("was stored as") }) }
     }
 
+    /**
+     * Fable review 2026-11-26, b20be6218 follow-up: an import from before that commit left the
+     * limits stored as String. Settings' load rewrites them once as the Int they say (a
+     * non-numeric one is removed: its reader takes the default, as it already did).
+     */
+    @Test
+    fun theSettingsLoadRewritesTextLimitsAsIntOnce() {
+        val prefs = TypedFakePreferences(mapOf(
+            "clipboard_history_limit" to " 40 ",
+            "clipboard_size_limit_mb" to "abc",
+            "clipboard_max_item_size_kb" to 256,
+            "clipboard_history_duration" to "60",   // stays a String everywhere
+        ))
+
+        assertThat(ClipboardHistoryLimits.rewriteStoredTextAsInt(prefs))
+            .containsExactly("clipboard_history_limit", "clipboard_size_limit_mb")
+        assertThat(prefs.values).isEqualTo(mapOf(
+            "clipboard_history_limit" to 40,
+            "clipboard_max_item_size_kb" to 256,
+            "clipboard_history_duration" to "60",
+        ))
+        assertThat(prefs.commits).isEqualTo(1)
+
+        assertWithMessage("a second load writes nothing")
+            .that(ClipboardHistoryLimits.rewriteStoredTextAsInt(prefs)).isEmpty()
+        assertThat(prefs.commits).isEqualTo(1)
+        val settings = java.io.File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsPersistence.kt").readText()
+        assertWithMessage("Settings' load runs the repair before it reads the limits")
+            .that(settings.indexOf("ClipboardHistoryLimits.rewriteStoredTextAsInt(prefs)"))
+            .isIn(com.google.common.collect.Range.closed(0, settings.indexOf("clipboardHistoryLimit = prefs.getSafeInt(")))
+    }
+
     @Test
     fun configRefreshAndTheServiceShareTheReader() {
         // One parser: Config.refresh assigns its four clipboard fields from it.

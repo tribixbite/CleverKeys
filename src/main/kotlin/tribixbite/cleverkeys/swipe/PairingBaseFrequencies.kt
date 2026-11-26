@@ -1,7 +1,7 @@
 package tribixbite.cleverkeys.swipe
 
+import tribixbite.cleverkeys.swipe.ctc.CtcEnLexiconJson
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
-import tribixbite.cleverkeys.swipe.geometric.FlatJsonDictionaryLoader
 
 /**
  * The base-word frequencies [ContractionOverlay]'s promotion rule compares a paired variant's
@@ -29,7 +29,8 @@ import tribixbite.cleverkeys.swipe.geometric.FlatJsonDictionaryLoader
  *
  * The CTC adapter already holds the merged map (it IS its lexicon) and calls [select]. The
  * geometric adapter decodes against the CKDT, so for English it reads the same bundled asset
- * the CTC path reads and runs the same merge via [fromEnLexiconJson]. Both routes end in
+ * the CTC path reads, through the same streaming reader, and runs the same merge via
+ * [fromEnLexicon]. Both routes end in
  * [select] over a [CtcLexiconMerge.merge] result built from the same bytes and the same user
  * words, so for any base the two engines compare the SAME number — promotion parity holds by
  * construction and `PairingBaseFrequenciesTest` pins it over the shipped asset.
@@ -54,8 +55,9 @@ object PairingBaseFrequencies {
     }
 
     /**
-     * [select] over `en_enhanced.json`'s text ([json]) merged with [userWords] minus
-     * [disabled] exactly as the CTC lexicon merge does it.
+     * [select] over `en_enhanced.json`'s pairs ([base], file order, as
+     * [CtcEnLexiconJson.readPairs] streams them for the CTC lexicon too) merged with [userWords]
+     * minus [disabled] exactly as the CTC lexicon merge does it.
      *
      * The FULL base is merged, not a pre-filter of it: [CtcLexiconMerge.merge] derives the
      * custom-word calibration floor from the whole base iterable, so filtering first would
@@ -65,13 +67,22 @@ object PairingBaseFrequencies {
      * @param userWords the user-word list in CTC merge order (custom words then platform
      *   user-dictionary rows — `UserDictionarySnapshot.mergeWithCustom`), stored 1..255.
      */
+    fun fromEnLexicon(
+        base: List<Pair<String, Double>>,
+        userWords: List<Pair<String, Int>>,
+        disabled: Set<String>,
+        bases: Set<String>,
+    ): Map<String, Int> = select(CtcLexiconMerge.merge(base, userWords, disabled), bases)
+
+    /**
+     * [fromEnLexicon] over the lexicon's text ([json]), parsed by the same streaming reader. For
+     * callers that already hold the text (tests, evals); the adapter streams the asset instead.
+     */
     fun fromEnLexiconJson(
         json: String,
         userWords: List<Pair<String, Int>>,
         disabled: Set<String>,
         bases: Set<String>,
-    ): Map<String, Int> {
-        val base = FlatJsonDictionaryLoader.readEntries(json).map { (word, freq) -> word to freq.toDouble() }
-        return select(CtcLexiconMerge.merge(base, userWords, disabled), bases)
-    }
+    ): Map<String, Int> =
+        fromEnLexicon(CtcEnLexiconJson.readPairs(json.byteInputStream()), userWords, disabled, bases)
 }
