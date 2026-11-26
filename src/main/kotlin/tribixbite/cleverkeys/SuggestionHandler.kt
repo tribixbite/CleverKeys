@@ -3559,10 +3559,16 @@ class SuggestionHandler(
      * the user is still inside the word, and the typing path will learn it when it completes.
      * Unlike the bar-tap undo this does NOT add the word to the dictionary (#110 semantics).
      */
-    override fun onAutocorrectUndone(correctedWord: String, originalWord: String, originalCompleted: Boolean) {
+    override fun onAutocorrectUndone(
+        correctedWord: String, originalWord: String, originalCompleted: Boolean, ic: InputConnection?
+    ) {
         rollbackRejectedWord(correctedWord)
         if (originalCompleted && !isPasswordMode) {
-            updateContext(originalWord)
+            // With the editor, the restored word gets a placement like any other learned word, so
+            // deleting it by hand before the next word takes its learning back (Note10+ F4,
+            // 2026-11-26: "tem" restored, deleted, "them" typed — tem kept its count and its
+            // context entry).
+            updateContext(originalWord, ic)
         }
     }
 

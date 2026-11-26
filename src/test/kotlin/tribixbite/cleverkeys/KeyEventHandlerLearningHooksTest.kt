@@ -207,7 +207,7 @@ class KeyEventHandlerLearningHooksTest {
 
         verify { conn.deleteSurroundingText(4, 0) }
         verify(exactly = 1) { hooks.onSwipeWordUndone("got", conn) }
-        verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any()) }
+        verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any(), any()) }
     }
 
     @Test
@@ -219,7 +219,8 @@ class KeyEventHandlerLearningHooksTest {
         release("backspace")
 
         verify { conn.commitText("teh ", 1) }
-        verify(exactly = 1) { hooks.onAutocorrectUndone("the", "teh", true) }
+        // The editor rides along so the restored word gets a placement (Note10+ F4, 2026-11-26).
+        verify(exactly = 1) { hooks.onAutocorrectUndone("the", "teh", true, conn) }
         verify(exactly = 0) { hooks.onSwipeWordUndone(any(), any()) }
     }
 
@@ -231,7 +232,7 @@ class KeyEventHandlerLearningHooksTest {
 
         release("backspace")
 
-        verify(exactly = 1) { hooks.onAutocorrectUndone("the", "teh", false) }
+        verify(exactly = 1) { hooks.onAutocorrectUndone("the", "teh", false, conn) }
     }
 
     @Test
@@ -241,7 +242,7 @@ class KeyEventHandlerLearningHooksTest {
         release("backspace")
 
         verify(exactly = 0) { hooks.onSwipeWordUndone(any(), any()) }
-        verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any()) }
+        verify(exactly = 0) { hooks.onAutocorrectUndone(any(), any(), any(), any()) }
         verify(exactly = 0) { hooks.onEditorWordBoundary(any()) }
     }
 }

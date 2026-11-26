@@ -933,8 +933,9 @@ class KeyEventHandler(
         recv.clearAutocorrectUndoState()
         // W2: the correction was rejected. Roll it back and — when the restored word is complete
         // (trailing space kept) — learn the original instead, as the bar-tap undo does.
+        // The editor rides along: the restored word's learn records where it sits (Note10+ F4).
         learningHooks?.onAutocorrectUndone(
-            correctedWord, originalWord, originalCompleted = charsToDelete > correctedWord.length
+            correctedWord, originalWord, originalCompleted = charsToDelete > correctedWord.length, ic = conn
         )
         recv.handle_backspace()
         return true
@@ -1862,9 +1863,13 @@ class KeyEventHandler(
 
         /**
          * Backspace reverted [correctedWord] to [originalWord] (#110 autocorrect undo).
-         * [originalCompleted] is true when the restored word kept its trailing space.
+         * [originalCompleted] is true when the restored word kept its trailing space. [ic] is the
+         * editor AFTER the restore (null when there is none): the restored word's learn records
+         * where it sits, so deleting it by hand later takes that learning back too.
          */
-        fun onAutocorrectUndone(correctedWord: String, originalWord: String, originalCompleted: Boolean)
+        fun onAutocorrectUndone(
+            correctedWord: String, originalWord: String, originalCompleted: Boolean, ic: InputConnection? = null
+        )
     }
 
     interface IReceiver {

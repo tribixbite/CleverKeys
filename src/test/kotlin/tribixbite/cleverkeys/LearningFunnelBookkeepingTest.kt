@@ -1695,6 +1695,71 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("English detected again").that(predictor.getField("currentLanguage")).isEqualTo("en")
     }
 
+    /**
+     * F4 (Note10+): "count tem " autocorrected to "ten", the first Backspace restored "tem ", the
+     * user deleted it by hand and typed "them all ". The restored word was learned without a
+     * placement, so its vocabulary count and its prediction-context entry stayed.
+     */
+    @Test
+    fun aWordRestoredByTheAutocorrectUndoAndThenDeletedLeavesNoLearning() {
+        val vocabulary = useReceiptVocabulary()
+        config.autocorrect_enabled = true
+        every { predictor.autoCorrect(any()) } answers { firstArg() }
+        every { predictor.autoCorrect("tem") } returns "ten"
+        editor.append("count ")
+        handler.updateContext("count")
+        type("tem ")
+        assertWithMessage("autocorrect ran").that(editor.toString()).isEqualTo("count ten ")
+
+        // KeyEventHandler.handleBackspaceUndoAutocorrect: "ten " → "tem ", reported with the editor.
+        editor.setLength(editor.length - "ten ".length)
+        editor.append("tem ")
+        handler.onAutocorrectUndone("ten", "tem", originalCompleted = true, ic = ic)
+        handler.handleBackspace(ic, textField())
+        cursorSync()
+        backspaceChars("tem ".length)
+        type("them all ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("count them all ")
+        assertWithMessage("tem's usage reversed").that(vocabulary.getWordUsage("tem")).isNull()
+        assertWithMessage("ten's usage reversed").that(vocabulary.getWordUsage("ten")).isNull()
+        assertWithMessage("count→them").that(bigram("count", "them")).isEqualTo(1)
+        assertWithMessage("no tem→them").that(bigram("tem", "them")).isEqualTo(0)
+        assertWithMessage("them→all").that(bigram("them", "all")).isEqualTo(1)
+        assertWithMessage("tem left the prediction context").that(tracker.getContextWords()).doesNotContain("tem")
+        assertWithMessage("learn window").that(learnWindow()).containsExactly("count", "them", "all").inOrder()
+    }
+
+    // ---------------------------------------------------- Saga device run of r20 (2026-11-26)
+
+    /** F4 on the Saga: the wrong PAIRS stayed ("red → wirld", "wirld → wield"), red → wield missing. */
+    @Test
+    fun aRestoredAutocorrectOriginalDeletedByHandLeavesNoPair() {
+        val vocabulary = useReceiptVocabulary()
+        config.autocorrect_enabled = true
+        every { predictor.autoCorrect(any()) } answers { firstArg() }
+        every { predictor.autoCorrect("wirld") } returns "world"
+        editor.append("red ")
+        handler.updateContext("red")
+        type("wirld ")
+        assertWithMessage("autocorrect ran").that(editor.toString()).isEqualTo("red world ")
+        editor.setLength(editor.length - "world ".length)
+        editor.append("wirld ")
+        handler.onAutocorrectUndone("world", "wirld", originalCompleted = true, ic = ic)
+        handler.handleBackspace(ic, textField())
+        cursorSync()
+        backspaceChars("wirld ".length)
+        type("wield sword ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("red wield sword ")
+        assertWithMessage("red→wield").that(bigram("red", "wield")).isEqualTo(1)
+        assertWithMessage("no red→wirld").that(bigram("red", "wirld")).isEqualTo(0)
+        assertWithMessage("no wirld→wield").that(bigram("wirld", "wield")).isEqualTo(0)
+        assertWithMessage("no red→world").that(bigram("red", "world")).isEqualTo(0)
+        assertWithMessage("wield→sword").that(bigram("wield", "sword")).isEqualTo(1)
+        assertWithMessage("wirld's usage reversed").that(vocabulary.getWordUsage("wirld")).isNull()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**
