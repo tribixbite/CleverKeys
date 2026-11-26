@@ -133,7 +133,7 @@ class MainDictionarySource(
         // plain var that a concurrent load on another IO thread may replace.
         cachedWords?.let { cached ->
             Log.d(TAG, "Returning ${cached.size} cached words for $languageCode")
-            loadGate.markLoaded(languageCode)
+            loadLock.markLoaded(languageCode)
             return@withContext cached
         }
 
@@ -144,7 +144,7 @@ class MainDictionarySource(
                 cachedWords = cached.words
                 prefixIndex = cached.prefixIndex
                 Log.d(TAG, "Returning ${cached.words.size} words from shared cache for $languageCode")
-                loadGate.markLoaded(languageCode)
+                loadLock.markLoaded(languageCode)
                 return@withContext cached.words
             }
         }
@@ -154,7 +154,7 @@ class MainDictionarySource(
         // on top of the keyboard's own heap in the same process. A tab that waited here for the
         // same language finds it cached. The turn goes by tab order (2026-11-26): the primary's
         // list no longer waits for a secondary that happened to ask first ([DictionaryLoadGate]).
-        loadGate.withTurn(languageCode) {
+        loadLock.withTurn(languageCode) {
             synchronized(Companion) {
                 cachedFor()?.let { cached ->
                     cachedWords = cached.words
@@ -168,7 +168,7 @@ class MainDictionarySource(
 
     /**
      * Parse this language's dictionary (pack, bundled binary or JSON) and cache it. Runs under
-     * [loadGate]: one language at a time, in tab order.
+     * [loadLock]: one language at a time, in tab order.
      */
     private fun loadUncached(): List<DictionaryWord> {
         try {
@@ -489,7 +489,7 @@ class MainDictionarySource(
         private val sharedCache = mutableMapOf<String, LanguageCache>()
 
         /** Serializes dictionary parsing across instances and languages, in tab order ([getAllWords]). */
-        private val loadGate = DictionaryLoadGate()
+        private val loadLock = DictionaryLoadGate()
 
         /**
          * The order Dictionary Manager's tabs show their languages in ([DictionaryTabPlan.loadOrder]);
@@ -497,7 +497,7 @@ class MainDictionarySource(
          */
         fun prioritize(languages: List<String>) {
             val cached = synchronized(this) { sharedCache.keys.toSet() }
-            loadGate.prioritize(languages, cached)
+            loadLock.prioritize(languages, cached)
         }
 
         /** Invalidate shared cache for all languages. */
@@ -505,7 +505,7 @@ class MainDictionarySource(
             synchronized(this) {
                 sharedCache.clear()
             }
-            loadGate.clear()
+            loadLock.clear()
         }
 
         /** Invalidate shared cache for a specific language. */
