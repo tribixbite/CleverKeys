@@ -634,6 +634,11 @@ tasks.register('runPureTests', JavaExec) {
     // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
     'tribixbite.cleverkeys.DictionaryLoadGateTest',
     'tribixbite.cleverkeys.DictionaryListSpellingTest',
+    'tribixbite.cleverkeys.ui.settings.SettingsSearchConditionGatesTest',
+    // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
+    // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
+    'tribixbite.cleverkeys.DictionaryLoadGateTest',
+    'tribixbite.cleverkeys.DictionaryListSpellingTest',
     // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
     // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
     'tribixbite.cleverkeys.DictionaryLoadGateTest',

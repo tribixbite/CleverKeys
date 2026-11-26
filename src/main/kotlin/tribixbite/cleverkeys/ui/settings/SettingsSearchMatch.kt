@@ -78,4 +78,22 @@ internal object SettingsSearchMatch {
      *  registered gate, else the target (scrolling to an unregistered id does nothing). */
     fun timedOutScrollTarget(target: String, gates: List<String>, current: Map<String, Int>): String =
         if (current[target] != null) target else gates.firstOrNull { current[it] != null } ?: target
+
+    /**
+     * Revealing controls the generator cannot see, by setting id, innermost first. A control in an
+     * `if` on a LOCAL value (no control sets it) gets no generated gate, so its result landed on
+     * the section and scrolled nowhere. Each list names the controls that bring it on screen.
+     *
+     * - The Swiss spelling switch shows while German is selected (`germanSelected`); German is
+     *   chosen in Primary Language, which itself shows only with Multi-Language on (2026-11-26).
+     */
+    private val CONDITION_GATES: Map<String, List<String>> = mapOf(
+        "multilang_swiss_spelling_title" to listOf("multilang_primary_title", "multilang_enable_title"),
+    )
+
+    /** The gates of the setting [settingId]: the [generated] ones, then the hand-kept ones. */
+    fun gatesFor(settingId: String, generated: List<String>): List<String> {
+        val extra = CONDITION_GATES[settingId] ?: return generated
+        return (generated + extra).distinct()
+    }
 }
