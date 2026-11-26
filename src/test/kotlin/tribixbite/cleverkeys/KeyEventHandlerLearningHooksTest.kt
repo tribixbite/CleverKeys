@@ -143,6 +143,40 @@ class KeyEventHandlerLearningHooksTest {
         verify(exactly = 1) { hooks.onEditorWordBoundary(conn) }
     }
 
+    /**
+     * Fable audit 2026-11-26: every soft Enter reported a submit to the rotation show guard,
+     * which then let an app's hide stand. In a multi-line field (a chat composer) Enter inserts
+     * a newline, so a rotation after one hid the keyboard for good. Enter is a submit only where
+     * it performs the editor action: a single-line field that has not opted out of it.
+     */
+    @Test
+    fun enterIsASubmitOnlyWhereItPerformsTheEditorAction() {
+        every { recv.getCurrentInputConnection() } returns null
+        val chat = mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            imeOptions = EditorInfo.IME_ACTION_SEND
+        }
+        every { recv.getCurrentEditorInfo() } returns chat
+        release("enter")
+        verify(exactly = 0) { recv.onEditorSubmit() }
+
+        val search = mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+            imeOptions = EditorInfo.IME_ACTION_SEARCH
+        }
+        every { recv.getCurrentEditorInfo() } returns search
+        release("enter")
+        verify(exactly = 1) { recv.onEditorSubmit() }
+
+        val noEnterAction = mockk<EditorInfo>(relaxed = true).apply {
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+            imeOptions = EditorInfo.IME_ACTION_DONE or EditorInfo.IME_FLAG_NO_ENTER_ACTION
+        }
+        every { recv.getCurrentEditorInfo() } returns noEnterAction
+        release("enter")
+        verify(exactly = 1) { recv.onEditorSubmit() }
+    }
+
     @Test
     fun theImeActionReportsTheBoundaryBeforePerformingTheAction() {
         release("action")

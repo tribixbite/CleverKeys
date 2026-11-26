@@ -111,10 +111,37 @@ object EditorInfoHelper {
      */
     @JvmStatic
     fun shouldSwapEnterActionKey(imeOptions: Int, inputType: Int, enterAlwaysNewline: Boolean): Boolean {
-        val editorWantsAction = (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION) == 0
-        if (!editorWantsAction) return false
+        if (!editorWantsEnterAction(imeOptions)) return false
         if (enterAlwaysNewline && acceptsNewlines(inputType)) return false
         return true
+    }
+
+    /** The editor has not opted out of Enter performing its action (`IME_FLAG_NO_ENTER_ACTION`). */
+    private fun editorWantsEnterAction(imeOptions: Int): Boolean =
+        (imeOptions and EditorInfo.IME_FLAG_NO_ENTER_ACTION) == 0
+
+    /**
+     * Does an Enter KEY EVENT sent to [info]'s field perform the editor action (a search, Send,
+     * Done) rather than insert a newline? The same bits [shouldSwapEnterActionKey] reads:
+     *  - a field that accepts newlines ([acceptsNewlines]: a chat composer, a notes field) takes
+     *    Enter as a newline whatever action it declares;
+     *  - an editor that set `IME_FLAG_NO_ENTER_ACTION` does not want Enter to act;
+     *  - a blind field (`TYPE_NULL`: a terminal, a remote desktop) gets the key itself, which is
+     *    no editor action;
+     *  - otherwise a single-line field: TextView turns Enter into its editor action, as the
+     *    platform does for every field that cannot hold a newline (see [shouldSwapEnterActionKey]).
+     * A null [info] is no evidence of an action: false.
+     *
+     * Used for the rotation show guard's SUBMIT (Fable audit 2026-11-26): a newline is typing,
+     * not a submit, so an app's hide after it must not stand.
+     */
+    @JvmStatic
+    fun enterPerformsEditorAction(info: EditorInfo?): Boolean {
+        if (info == null) return false
+        if ((info.inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_NULL) return false
+        if (acceptsNewlines(info.inputType)) return false
+        if (!editorWantsEnterAction(info.imeOptions)) return false
+        return (info.imeOptions and EditorInfo.IME_MASK_ACTION) != EditorInfo.IME_ACTION_NONE
     }
 
     /**

@@ -783,8 +783,9 @@ editor that used to be listed here already ship in 2.0.)
   apps that restart their screen on rotation and in apps that keep it; it used to be dropped
   every time. A tap on the keyboard after the rotation is yours: the carried keys do not come back
   over it. The keyboard itself still comes back if you keep typing while the phone rotates, but an
-  app that closes it after you submit (Enter or the action key, as in a search) keeps it closed; a
-  pane you close after rotating stays closed.
+  app that closes it after you submit (the action key, or Enter where it runs the field's action,
+  as in a search) keeps it closed; Enter that starts a new line in a chat or notes field is typing,
+  not a submit. A pane you close after rotating stays closed.
 - They also stay on when a setting or the theme changes while you type (a command such as True
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.

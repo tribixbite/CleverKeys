@@ -193,9 +193,11 @@ class KeyEventHandler(
                     // the editor still ends with the word.
                     if (key.getKeyevent() == KeyEvent.KEYCODE_ENTER) {
                         learningHooks?.onEditorWordBoundary(recv.getCurrentInputConnection())
-                        // Enter to the app is a submit (a search, a sent message): see
-                        // IReceiver.onEditorSubmit.
-                        recv.onEditorSubmit()
+                        // Enter to the app is a submit (a search, a sent message: see
+                        // IReceiver.onEditorSubmit) only where it performs the editor action. A
+                        // newline in a multi-line field (a chat composer) is typing, so the
+                        // rotation show guard stays armed (Fable audit 2026-11-26).
+                        if (EditorInfoHelper.enterPerformsEditorAction(recv.getCurrentEditorInfo())) recv.onEditorSubmit()
                     }
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -1884,8 +1886,9 @@ class KeyEventHandler(
          */
         fun handle_non_text_input() {}
         /**
-         * Enter (or the action key) was sent to the app: the user submitted. The service's
-         * rotation show guard then lets an app's hide stand (RotationShowGuard.UserInput.SUBMIT).
+         * Enter that performs the editor action ([EditorInfoHelper.enterPerformsEditorAction]; a
+         * newline is not one) or the action key was sent to the app: the user submitted. The
+         * service's rotation show guard then lets an app's hide stand (RotationShowGuard.UserInput.SUBMIT).
          */
         fun onEditorSubmit() {}
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
