@@ -33,6 +33,12 @@ editor that used to be listed here already ship in 2.0.)
   "+word" chip or an autocorrect undo) while Auto-Detect has just detected the second language,
   in the same sentence and field, goes to that language's personal dictionary (it went to the
   primary's), and its undo removes it from there. Otherwise it goes to the primary's.
+- Deleting a word you just typed or swiped (letter by letter, or with Ctrl+Backspace) takes back
+  what it taught the keyboard at once, also when you then leave the field; a word an autocorrect
+  undo put back is covered too. The deleted swipe's alternates leave the bar.
+- After Auto-Detect switched to the second language, another field or app starts again in the
+  primary language, and typing in the primary switches back within the same field.
+- A word disabled in Dictionary Manager is no longer swiped in right afterwards.
 
 ### Fixed (swiping and the personal dictionary, 2026-11-26)
 
