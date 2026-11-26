@@ -151,10 +151,50 @@ class RotationShowGuardTest {
     }
 
     @Test
-    fun userInputDisarms() {
+    fun aHardwareKeyDisarms() {
         val guard = armed()
-        guard.onUserInput()
+        guard.onUserInput(RotationShowGuard.UserInput.HARDWARE_KEY)
         assertThat(guard.onWindowHidden(byUser = false, nowMs = 100)).isFalse()
+    }
+
+    /**
+     * Typing on the keys while the phone rotates (the common accidental rotation) is NOT a
+     * reason to let the relaunched app keep the keyboard hidden: that is the Google app's 0/8
+     * this guard exists for. Pre-tag follow-up 2026-11-25: S3 made every key touch disarm it.
+     */
+    @Test
+    fun typingWhileRotatingStillGetsTheKeyboardBack() {
+        val guard = armed()
+        repeat(5) { guard.onUserInput(RotationShowGuard.UserInput.KEY_TOUCH) }
+        assertWithMessage("key touches leave the guard armed").that(guard.isArmed).isTrue()
+        assertThat(guard.onWindowHidden(byUser = false, nowMs = 150)).isTrue()
+        guard.onStartInput(search.packageName, restarting = false)
+        guard.onUserInput(RotationShowGuard.UserInput.KEY_TOUCH)
+        assertThat(guard.check(300, windowVisible = false, current = search)).isEqualTo(Check.REQUEST_SHOW)
+    }
+
+    /**
+     * Typing and SUBMITTING (Enter, the action key) inside the window: an app that hides the
+     * keyboard then (a search showing its results) keeps its hide (S3's original case).
+     */
+    @Test
+    fun typingAndSubmittingDisarms() {
+        val guard = armed()
+        guard.onUserInput(RotationShowGuard.UserInput.KEY_TOUCH)
+        guard.onUserInput(RotationShowGuard.UserInput.SUBMIT)
+        assertThat(guard.isArmed).isFalse()
+        guard.onStartInput(search.packageName, restarting = false)
+        assertThat(guard.onWindowHidden(byUser = false, nowMs = 400)).isFalse()
+        assertThat(guard.check(500, windowVisible = false, current = search)).isEqualTo(Check.DONE)
+    }
+
+    @Test
+    fun aSubmitAfterTheLoopStartedStopsIt() {
+        val guard = armed()
+        assertThat(guard.onWindowHidden(byUser = false, nowMs = 150)).isTrue()
+        guard.onUserInput(RotationShowGuard.UserInput.SUBMIT)
+        guard.onStartInput(search.packageName, restarting = false)
+        assertThat(guard.check(300, windowVisible = false, current = search)).isEqualTo(Check.DONE)
     }
 
     @Test

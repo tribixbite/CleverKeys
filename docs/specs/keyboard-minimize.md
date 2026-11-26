@@ -168,7 +168,8 @@ pane comes back with it. `RotationShowGuard` (pure) decides; the service drives 
 | App recreates its window (Google app); the platform's `SHOW_RESTORE_IME_VISIBILITY` misses because the IME re-shows 4 ms after the rotation | hide undone, at most 2 requests | Pixel 8 Pro: 8/8 kept, was 0/8 (Gboard 3/8, SwiftKey 8/8) |
 | App keeps its window and hides the keyboard itself (Discord, `HIDE_SOFT_INPUT_BY_INSETS_API`), no pane open | the app's hide stands | Discord's wide layout returns to its channel list over the bound chat box |
 | Same, a pane open at the rotation (the keyboard was taller than the new screen) | 1 request; a second hide stands | Pixel at the S25U's 1080x2340/420 dpi: old build 7/10 closed, new build 0/50 left closed; maintainer retest PASS 2026-11-20 (build `0b453fbe`) |
-| User hide (Back, `hide_keyboard`, the tile), a hardware key, input in another app, the TYPE_NULL fallback of a screen without an editor, or a hide later than 2 s | nothing shown | `RotationShowGuardTest` |
+| User hide (Back, `hide_keyboard`, the tile), a hardware key, a submit (Enter to the app or the action key), input in another app, the TYPE_NULL fallback of a screen without an editor, or a hide later than 2 s | nothing shown | `RotationShowGuardTest` |
+| Typing on the soft keys while the phone rotates (no submit) in an app that recreates its window | hide undone, as without typing | `RotationShowGuardTest.typingWhileRotatingStillGetsTheKeyboardBack` (2026-11-25; S3 had made any key touch disarm) |
 
 Not possible: shrinking the keyboard before the app measures the new screen. The IME learns of
 the rotation at the same moment as the app (stowing the pane during the rotation: still 9/10

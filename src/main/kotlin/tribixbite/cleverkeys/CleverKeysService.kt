@@ -1323,7 +1323,7 @@ class CleverKeysService : InputMethodService(),
         if (keyCode == android.view.KeyEvent.KEYCODE_BACK && isTileWindowVisible()) _tileShow.noteUserDismiss()
         if (_tileShow.hasPending) tileLog { "deferred show cancelled by key $keyCode" }
         _tileShow.onUserInput()
-        _rotationGuard.onUserInput()
+        _rotationGuard.onUserInput(RotationShowGuard.UserInput.HARDWARE_KEY)
         _rotationPane.onUserInput()
         return super.onKeyDown(keyCode, event)
     }
@@ -1434,15 +1434,24 @@ class CleverKeysService : InputMethodService(),
     }
 
     /**
-     * A finger or a TalkBack activation on a key (Keyboard2View): the user is typing. Disarms
-     * everything a rotation armed, like a hardware key does ([onKeyDown]): the carried
-     * modifiers, the show guard (an app that hides the keyboard right after the user typed and
-     * submitted keeps its hide) and the pane restore (pre-tag review S3, 2026-11-25).
+     * A finger or a TalkBack activation on a key (Keyboard2View): the user is typing. Drops the
+     * carried modifiers and the pane restore (pre-tag review S3, 2026-11-25), and tells the show
+     * guard, which stays armed: typing while the phone rotates still gets the keyboard back in an
+     * app whose relaunch hides it. Only a submit ([onEditorSubmit]) or a hardware key disarms it.
      */
     fun onKeyboardTouched() {
         _rotationModifiers.onUserInput()
-        _rotationGuard.onUserInput()
+        _rotationGuard.onUserInput(RotationShowGuard.UserInput.KEY_TOUCH)
         _rotationPane.onUserInput()
+    }
+
+    /**
+     * Enter or the action key went to the app (KeyEventHandler, KeyboardReceiver): the user
+     * submitted. An app that hides the keyboard right after (a search showing its results) keeps
+     * its hide, so the rotation show guard is disarmed (pre-tag review S3 and its follow-up).
+     */
+    fun onEditorSubmit() {
+        _rotationGuard.onUserInput(RotationShowGuard.UserInput.SUBMIT)
     }
 
     override fun onUpdateSelection(

@@ -620,6 +620,8 @@ class KeyboardReceiver(
 
             KeyValue.Event.ACTION -> {
                 keyboard2.currentInputConnection?.performEditorAction(keyboard2.actionId)
+                // A submit: the rotation show guard lets the app's hide stand.
+                keyboard2.onEditorSubmit()
             }
 
             KeyValue.Event.SWITCH_FORWARD -> {
@@ -973,6 +975,10 @@ class KeyboardReceiver(
 
     override fun handle_non_text_input() {
         keyboard2.handleNonTextInput()
+    }
+
+    override fun onEditorSubmit() {
+        keyboard2.onEditorSubmit()
     }
 
     override fun handle_delete_last_word() {

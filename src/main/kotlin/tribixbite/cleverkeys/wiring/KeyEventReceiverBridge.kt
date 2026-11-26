@@ -95,6 +95,11 @@ class KeyEventReceiverBridge(
         receiver?.handle_non_text_input()
     }
 
+    /** Enter to the app: reaches the service's rotation show guard (a submit disarms it). */
+    override fun onEditorSubmit() {
+        receiver?.onEditorSubmit()
+    }
+
     override fun handle_delete_last_word() {
         receiver?.handle_delete_last_word()
     }

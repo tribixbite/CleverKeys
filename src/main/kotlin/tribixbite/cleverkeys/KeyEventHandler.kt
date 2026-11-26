@@ -193,6 +193,9 @@ class KeyEventHandler(
                     // the editor still ends with the word.
                     if (key.getKeyevent() == KeyEvent.KEYCODE_ENTER) {
                         learningHooks?.onEditorWordBoundary(recv.getCurrentInputConnection())
+                        // Enter to the app is a submit (a search, a sent message): see
+                        // IReceiver.onEditorSubmit.
+                        recv.onEditorSubmit()
                     }
                     send_key_down_up(key.getKeyevent())
                     // Handle backspace for word prediction
@@ -1880,6 +1883,11 @@ class KeyEventHandler(
          * Terminals expose no readable buffer, so the receiver ends the typed word there.
          */
         fun handle_non_text_input() {}
+        /**
+         * Enter (or the action key) was sent to the app: the user submitted. The service's
+         * rotation show guard then lets an app's hide stand (RotationShowGuard.UserInput.SUBMIT).
+         */
+        fun onEditorSubmit() {}
         fun handle_delete_last_word() {} // Delete last auto-inserted or typed word
         // Clipboard search mode methods
         fun isClipboardSearchMode(): Boolean = false // Check if clipboard search mode is active

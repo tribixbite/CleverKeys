@@ -32,8 +32,8 @@ package tribixbite.cleverkeys
  *   returns [Check.DONE]: it waits until the same app has an editor bound again and asks for a
  *   show at most [MAX_RESTORES] times.
  *
- * Never fighting the user or the app: the guard lives [WINDOW_MS] from the rotation, a user hide
- * or input ([onUserInput]) disarms it, input in another app cancels it, an app that kept its
+ * Never fighting the user or the app: the guard lives [WINDOW_MS] from the rotation, a user hide,
+ * a submit or a hardware key ([onUserInput]) disarms it (typing on the soft keys does not), input in another app cancels it, an app that kept its
  * window keeps its own hide (unless a pane was open), and it never shows the keyboard over the
  * platform's fallback connection (a window without an editor) unless the keyboard was over a
  * TYPE_NULL view to begin with (a terminal).
@@ -142,9 +142,37 @@ class RotationShowGuard {
         return Check.REQUEST_SHOW
     }
 
-    /** The user typed or otherwise acted: never override them. */
-    fun onUserInput() {
-        armed = null
+    /** What the user did, as [onUserInput] tells them apart. */
+    enum class UserInput {
+        /**
+         * A finger or a TalkBack activation on a soft key: typing. Leaves the guard ARMED.
+         * Typing while the phone rotates is the common accidental rotation, and an app that
+         * recreates its window hides the keyboard then exactly as it does without typing (the
+         * Google app, 8 of 8); a key touch that disarmed lost that re-show (pre-tag follow-up
+         * 2026-11-25 to S3). The typed text is not a request to close the keyboard.
+         */
+        KEY_TOUCH,
+
+        /** A hardware key: the user types on a physical keyboard, so the soft one may stay hidden. */
+        HARDWARE_KEY,
+
+        /**
+         * Enter or the action key (`performEditorAction`) sent to the app: the user submitted.
+         * An app that hides the keyboard then (a search showing its results) means it, so the
+         * hide stands (S3's case: type, submit, and the guard used to show it again).
+         */
+        SUBMIT,
+    }
+
+    /**
+     * The user acted ([input]): a submit or a hardware key disarms the guard, so it never
+     * overrides them; typing on the soft keys does not (see [UserInput.KEY_TOUCH]).
+     */
+    fun onUserInput(input: UserInput) {
+        when (input) {
+            UserInput.KEY_TOUCH -> Unit
+            UserInput.HARDWARE_KEY, UserInput.SUBMIT -> armed = null
+        }
     }
 
     /** Teardown. */

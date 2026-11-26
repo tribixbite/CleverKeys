@@ -767,9 +767,10 @@ editor that used to be listed here already ship in 2.0.)
   closed yourself stays closed, and so does one Discord closes on rotation without a pane open.
 - A latched or locked Shift, caps lock, Ctrl, Alt or Fn stays on when you rotate the phone, in
   apps that restart their screen on rotation and in apps that keep it; it used to be dropped
-  every time. A tap on the keyboard after the rotation is yours: nothing comes back over it, and
-  an app that closes the keyboard after you type and submit (a search) keeps it closed; a pane
-  you close after rotating stays closed.
+  every time. A tap on the keyboard after the rotation is yours: the carried keys do not come back
+  over it. The keyboard itself still comes back if you keep typing while the phone rotates, but an
+  app that closes it after you submit (Enter or the action key, as in a search) keeps it closed; a
+  pane you close after rotating stays closed.
 - They also stay on when a setting or the theme changes while you type (a command such as True
   Black or the next theme, a word added to the dictionary, the system switching to dark mode);
   each of these used to drop them. Switching layouts yourself still starts with none.

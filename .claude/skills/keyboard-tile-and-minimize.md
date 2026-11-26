@@ -116,8 +116,13 @@ via the LineageOS mirrors, Saga logs, a 2026-10-22 Saga run). The facts to carry
   when the orientation changes with the window visible over an editor (`currentEditorRef()`);
   a non-user hide within `WINDOW_MS` (2 s) starts the tick, which calls `requestShowSelfCompat()`
   once the same app's editor is bound again. A user hide (`_tileShow.dismissedByUser`), a hardware
-  key (`onKeyDown` → `onUserInput`), input in another app or the TYPE_NULL fallback connection
-  (unless the editor was TYPE_NULL, a terminal) never get a show.
+  key (`onKeyDown` → `onUserInput(HARDWARE_KEY)`), a submit (Enter to the app or the action key:
+  `KeyEventHandler` / `KeyboardReceiver` → `onEditorSubmit` → `onUserInput(SUBMIT)`), input in
+  another app or the TYPE_NULL fallback connection (unless the editor was TYPE_NULL, a terminal)
+  never get a show. A soft-key touch (`onKeyboardTouched` → `onUserInput(KEY_TOUCH)`) does NOT
+  disarm the show guard (typing while rotating still gets the keyboard back); it drops only the
+  carried modifiers and the pane restore. S3 (`9426af0b`) had made every touch disarm; narrowed
+  2026-11-25, `RotationShowGuardTest.typingWhileRotatingStillGetsTheKeyboardBack`.
 - Two cases, told apart by `onStartInput(restarting = false)` after the rotation:
   - **Window recreated** (the Google app): the platform's `SHOW_RESTORE_IME_VISIBILITY` misses
     because CleverKeys' `RESET_NEW_CONFIGURATION` re-show comes 4 ms after the rotation

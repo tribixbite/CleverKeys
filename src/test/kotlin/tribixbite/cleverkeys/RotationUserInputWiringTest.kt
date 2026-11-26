@@ -45,22 +45,48 @@ class RotationUserInputWiringTest {
     private fun calls(body: String, call: String): Boolean =
         Regex("""(?<![\w.])${Regex.escape(call)}\s*\(""").containsMatchIn(body)
 
+    /**
+     * A key touch is reported as [RotationShowGuard.UserInput.KEY_TOUCH], which keeps the guard
+     * armed (typing while the phone rotates still gets the keyboard back); it still drops the
+     * carried modifiers and the pane restore. Pre-tag follow-up 2026-11-25 to S3.
+     */
     @Test
-    fun touchTypingDisarmsTheShowGuardAndThePaneRestore() {
+    fun touchTypingReportsAKeyTouchAndDropsThePaneRestore() {
         val touched = body(Regex("""\bfun\s+onKeyboardTouched\s*\(\s*\)"""))
-        assertWithMessage("onKeyboardTouched must disarm the rotation show guard (S3)")
-            .that(calls(touched, "_rotationGuard.onUserInput")).isTrue()
+        assertWithMessage("onKeyboardTouched reports a KEY_TOUCH to the show guard")
+            .that(touched).containsMatch("""(?<![\w.])_rotationGuard\.onUserInput\s*\(\s*RotationShowGuard\.UserInput\.KEY_TOUCH\s*\)""")
+        assertWithMessage("onKeyboardTouched must not report anything else to the show guard")
+            .that(Regex("""(?<![\w.])_rotationGuard\.""").findAll(touched).count()).isEqualTo(1)
         assertWithMessage("onKeyboardTouched must drop a pending pane restore (S3)")
             .that(calls(touched, "_rotationPane.onUserInput")).isTrue()
         assertWithMessage("onKeyboardTouched still drops the carried modifiers")
             .that(calls(touched, "_rotationModifiers.onUserInput")).isTrue()
     }
 
+    /** Enter and the action key reach the guard as a SUBMIT, which disarms it (S3's case). */
+    @Test
+    fun aSubmitDisarmsTheShowGuard() {
+        val submit = body(Regex("""\bfun\s+onEditorSubmit\s*\(\s*\)"""))
+        assertWithMessage("onEditorSubmit reports a SUBMIT to the show guard")
+            .that(submit).containsMatch("""(?<![\w.])_rotationGuard\.onUserInput\s*\(\s*RotationShowGuard\.UserInput\.SUBMIT\s*\)""")
+        val receiver = KotlinSourceScan.stripComments(File(KotlinSourceScan.sourceRoot, "KeyboardReceiver.kt").readText())
+        assertWithMessage("the action key (performEditorAction) reports a submit")
+            .that(receiver).containsMatch("""performEditorAction\(keyboard2\.actionId\)[\s\S]{0,200}?keyboard2\.onEditorSubmit\s*\(""")
+        assertWithMessage("the receiver forwards the key handler's Enter submit")
+            .that(receiver).containsMatch("""override\s+fun\s+onEditorSubmit\s*\(\s*\)[^{]*\{[^}]*keyboard2\.onEditorSubmit\s*\(""")
+        val bridge = KotlinSourceScan.stripComments(File(KotlinSourceScan.sourceRoot, "wiring/KeyEventReceiverBridge.kt").readText())
+        assertWithMessage("the key handler's receiver bridge forwards the submit")
+            .that(bridge).containsMatch("""override\s+fun\s+onEditorSubmit\s*\(\s*\)[^{]*\{[^}]*receiver\?\.onEditorSubmit\s*\(""")
+        val handler = KotlinSourceScan.stripComments(File(KotlinSourceScan.sourceRoot, "KeyEventHandler.kt").readText())
+        assertWithMessage("an Enter key sent to the app reports a submit")
+            .that(handler).containsMatch("""KEYCODE_ENTER\)\s*\{[^}]*recv\.onEditorSubmit\s*\(""")
+    }
+
     @Test
     fun aHardwareKeyDisarmsTheShowGuardAndThePaneRestore() {
         val keyDown = body(Regex("""\boverride\s+fun\s+onKeyDown\s*\("""))
         assertWithMessage("onKeyDown disarms the rotation show guard")
-            .that(calls(keyDown, "_rotationGuard.onUserInput")).isTrue()
+            .that(keyDown).containsMatch("""(?<![\w.])_rotationGuard\.onUserInput\s*\(\s*RotationShowGuard\.UserInput\.HARDWARE_KEY\s*\)""")
         assertWithMessage("onKeyDown drops a pending pane restore")
             .that(calls(keyDown, "_rotationPane.onUserInput")).isTrue()
     }

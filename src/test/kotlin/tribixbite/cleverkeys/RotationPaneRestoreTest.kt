@@ -104,17 +104,18 @@ class RotationPaneRestoreTest {
     }
 
     /**
-     * The show guard side of S3: typing disarms it, so an app that hides the keyboard right
-     * after the user typed and submitted keeps its hide. The service wiring is pinned by
-     * [RotationUserInputWiringTest].
+     * The show guard side of S3: a submit disarms it, so an app that hides the keyboard right
+     * after the user typed and submitted keeps its hide (typing alone does not: follow-up
+     * 2026-11-25, [RotationShowGuardTest.typingWhileRotatingStillGetsTheKeyboardBack]). The
+     * service wiring is pinned by [RotationUserInputWiringTest]. Name kept for RELEASE_RECORD.
      */
     @Test
     fun userInputDisarmsTheShowGuard() {
         val editor = EditorRef("com.google.android.googlequicksearchbox", fieldId = 2131435733, typeNull = false)
         val guard = RotationShowGuard().apply { onOrientationChanged(windowVisible = true, editor = editor, nowMs = 0) }
-        guard.onUserInput()
+        guard.onUserInput(RotationShowGuard.UserInput.SUBMIT)
         assertThat(guard.isArmed).isFalse()
-        assertWithMessage("a hide after the user's typing stands")
+        assertWithMessage("a hide after the user's submit stands")
             .that(guard.onWindowHidden(byUser = false, nowMs = 500)).isFalse()
     }
 }
