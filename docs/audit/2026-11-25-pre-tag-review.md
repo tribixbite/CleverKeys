@@ -169,3 +169,24 @@ de-CH half is a Swiss spelling setting (`de82d474a`). A Fable audit of this reme
 blocker; its three should-fixes are in (`0498aa112`, `e120bb2fd`, `a56d5d4b9`). Device runs on r16/r17
 (Saga, Note10+, Pixel) found and fixed `dart` → `d'art` (pre-existing) and capitalised on-the-fly
 words; S7's threshold could not be calibrated within its gate (default 0.6 kept, 2.1 scorer).
+
+**2026-11-26, Fable audit of the 2026-11-26 fixes** (four findings, each red before its fix in
+`runMockTests`). (1) HIGH, regression from `4f034ac03`: a detected Auto-Detect switch went through
+`setLanguage` and moved the PRIMARY dictionary's state to the secondary while the primary stayed
+loaded (German disabled words replaced English's; the observer queried on the commit path and then
+ignored `custom_words_en`). `WordPredictor` now keeps a dictionary language beside the next-word
+language: a detected switch calls `switchNextWordLanguage` (bigram/context models, `.cklm` on the
+seed loader's thread, window cleared, receipt expired); disabled words, custom words, the observer
+and the lookup fold stay with the dictionary (`LearningFunnelBookkeepingTest.
+aDetectedSwitchMovesOnlyTheNextWordLanguage`; red: `observer.setLanguage("de")` was called).
+(2) MEDIUM, `edc9132d6`: a CAP_WORDS-only field (a name field) stores the word as typed; sentence
+fields keep the rule (`DictionaryAddUndoTest`; red: `kowalski`). Not changed: `Dr. Smith` in a
+sentence field still folds, the same ambiguity the editor's caps mode has. (3) LOW-MEDIUM,
+`e120bb2fd`: Enter counts as a submit only where it performs the editor action
+(`EditorInfoHelper.enterPerformsEditorAction`: not multi-line, no `IME_FLAG_NO_ENTER_ACTION`, not
+blind, action not NONE) (`KeyEventHandlerLearningHooksTest`; red: submit reported for a multi-line
+Send field). (4) LOW, `0498aa112` incomplete: History on/off, both exclusions and the media
+toggles and cap come from `ClipboardCaptureSettings.fromSettings` (also used by `Config.refresh`)
+(`ClipboardStoredLimitsTest`, 5 new cases; red: capture continued with History off in the store, a
+password-manager clip was read). Doc drift: `contraction-system.md` fr collisions 284, it 102 of
+22,238 (and it pairs 154), per `build_contraction_collisions.py --check`.

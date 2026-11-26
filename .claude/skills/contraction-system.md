@@ -39,11 +39,11 @@ file an entry lives in*.
 The rank guard still exists as defence in depth for **imported language packs**, which ship only
 an uncurated `contractions.json`.
 
-### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01; fr/it re-keyed 2026-11-07; it misspellings dropped 2026-11-19)
+### Shipped inventory (verified 2026-08-21; fr pairs updated 2026-09-01; fr/it re-keyed 2026-11-07; it misspellings dropped 2026-11-19; fr/it counts re-verified 2026-11-26 with `build_contraction_collisions.py --check` and the JSON key counts)
 
 ```
-contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   283
-contractions_it.json     22,241   contraction_pairs_it.json   161   collisions_it   105
+contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   284
+contractions_it.json     22,238   contraction_pairs_it.json   154   collisions_it   102
 contractions_de.json         21   (no pairs file)                   collisions_de     7
 contractions_en.json        119   contraction_pairings.json 1,744   collisions_en     8 (10 before 2026-11-25)
 contractions_nl.json        118   (import-only pack language)
