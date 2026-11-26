@@ -475,6 +475,32 @@ restored), swipe 10+ contractions in several languages, then re-run today's fixe
   (debug packages removed, CleverKeys default, Multi-Language off as found; swipes `they're you're
   I've` and fr `qu'il d'été l'été c'est j'ai` checked).
 
+**Status 2026-11-25, late night (agent).** Maintainer: "do all of it, including uploading the updated
+langpacks". Done, each test-first (red then green), commits `73a51ab7..762cca58`:
+- **B1** ß readings capped at 64 spellings (`aa9b57ba`); **B2** whitespace preflight green, the
+  F-Droid recipe and `docs/eval/*.patch` exempt in `.gitattributes`, `prepare-release.sh` matches
+  `v*`, `SourceTextHygieneTest` runs the check every pure run (`73a51ab7`); **B3** the six packs
+  de/es/fr/it/pt/sv uploaded to `langpacks` and verified byte for byte (old copies kept in the
+  session scratchpad); their manifests still say `version: 2` (display-only field).
+- **S1** newest clip kept under the size limit, **S8** restored expiry from the stored pref
+  (`8b4bf500`); **S2** imports in a process-lifetime `ImportTracker` (`4fe3142b`); **S9** 1.x
+  words previewed and selectable (`16632023`); **S3** touch disarms the rotation guard, a
+  hand-closed pane stays closed (`9426af0b`); **S7** Auto-Detect among the chosen pair, "not
+  available" for an unscorable pair (`f90e6ca7`), the predictor's legacy fallback too
+  (`aa9b57ba`); **S4–S6** tables corrected, gates pre-registered (`cec0a86f`) and passed
+  (`29e8f45c`, `docs/eval/2026-11-25-contraction-table-cleanup.md`); **S10** docs (`e59719e7`).
+- **Found and fixed on the way:** autocorrect corrected a correctly typed word of the SECONDARY
+  language (en+es `pero` → `per`, de+en `fuss` → `fuß`); step 1 now counts the secondary lexicon
+  as `isInDictionary` does (`aa9b57ba`).
+- **D3** release note in CHANGELOG; **D2** second-language half fixed, the de-CH half is still the
+  maintainer's (CHANGELOG says there is no Swiss setting). **D1**, M1, M2, M4 (tag) unchanged.
+- **New 2.1 items from the agents:** keyboard-process clip captures and `applyHistoryLimits` still
+  read Config (stale outside the keyboard); clipboard custom-rules picker still in the activity
+  scope; a second GIF/langpack import mid-import is refused with a log line only (TODO); the GIF
+  "replace pack?" dialog is lost on rotation; full-backup restore does not count the 1.x words in
+  its result; the 4 new strings (S7 1, S9 3) in 21 locales are agent translations, unreviewed.
+- Not run: instrumented suite (A2) for this round, device checks of S2/S3; release r16 not built.
+
 **Status 2026-11-25, night (agent).** Maintainer: "audit changes since last audit and remediations of
 all audits since 1.5. request task list for bugs /gaps before tagging". Five Fable agents, read-only;
 the list is [`docs/audit/2026-11-25-pre-tag-review.md`](../docs/audit/2026-11-25-pre-tag-review.md).

@@ -132,3 +132,14 @@ and translation audits, and the November review's H1–H4 and M1–M26 (all fixe
 - **Assets:** both contraction tables reproduce byte for byte from their builders, and the langpack bins equal the bundled ones.
 - **Frequency tables:** the scales match their tries, raise-only holds, and a missing table gives an empty map with no crash.
 - **German list:** 542 ß words and no pre-1996 forms.
+
+## 7. Status 2026-11-25 (late night): remediation
+
+All agent items are fixed with tests, each red before its fix: B1 `aa9b57ba`, B2 `73a51ab7`, S1 and
+S8 `8b4bf500`, S2 `4fe3142b`, S3 `9426af0b`, S4–S6 `29e8f45c` (gates `cec0a86f`, results in
+`docs/eval/2026-11-25-contraction-table-cleanup.md`), S7 `f90e6ca7` and `aa9b57ba`, S9 `16632023`,
+S10 `e59719e7`. B3/D4: the six packs were re-uploaded on the maintainer's approval and verified by
+download. D3 has its release note. D2: a word of the second language is no longer corrected (part
+of a wider fix: no secondary-language word was safe from autocorrect); the de-CH question stays
+open. D1, M1, M2 and M4 remain the maintainer's. Correction to S6 as written: `d'abc` has 3 corpus
+hits and sat at 76, so it stays.

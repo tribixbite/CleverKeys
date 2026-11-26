@@ -25,3 +25,8 @@ FUTO (`futo-org/swipe.futo.org`) writes contractions WITHOUT the apostrophe (`th
 exact, case-sensitive, apostrophe-only filter returned 0 and was reported as "no corpus"; the HF
 `/search` endpoint (case-insensitive) found 73 youre / 42 theyre / 61 ive / 214 dont across swipe-1/2/3.
 Search case-insensitively and in every spelling before saying a corpus lacks a word.
+
+- **`short_word_ctc_eval.py dump` rows: top-1 is `c[0][0]` (the beam), NOT `g`** (2026-11-25). `g` is the
+  greedy CTC string; scoring on it made the base, shipped and candidate arms of the English
+  contraction gate look identical. The harness reads `en_enhanced.json` relative to its own copy, so
+  an arm is a copied tree with an edited lexicon.
