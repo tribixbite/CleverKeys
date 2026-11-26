@@ -18,11 +18,16 @@ import java.util.Locale
  *     caps lock), not internal capitals (`McDonald`, `iPhone`), at least two characters with a
  *     letter after the first (so `I` and `A1` are left alone);
  *  2. auto-capitalisation would have capitalised a letter typed at the word's position: the
- *     setting is on, the field declares a caps mode ([AutoCapMode]), and the editor text before
- *     the word is a sentence / paragraph start (or, in a CAP_WORDS-only field, a word start) by
- *     the same test the editor's `getCursorCapsMode` applies ([autoCapitalisesAfter]).
+ *     setting is on, the field asks for SENTENCE capitals ([AutoCapMode.SENTENCES]), and the
+ *     editor text before the word is a sentence / paragraph start by the same test the editor's
+ *     `getCursorCapsMode` applies ([autoCapitalisesAfter]).
  * Everything else keeps the user's casing: a capital typed mid-sentence is the user's Shift (a
  * name, a German noun), and with auto-capitalisation off every capital is the user's.
+ *
+ * A CAP_WORDS-only field ([AutoCapMode.WORDS]) keeps the word as typed (Fable audit
+ * 2026-11-26): by convention it is a name field (contacts, addresses, a person's name), where
+ * the capital auto-capitalisation put on every word is the one the user means, so folding it
+ * stored `Kowalski` lowercase.
  *
  * Ambiguity accepted: at a sentence start a deliberate Shift (a name like `Paris`, any German
  * noun) cannot be told from auto-capitalisation's — with auto-capitalisation on, the Shift was
@@ -100,7 +105,8 @@ object UserWordCasing {
         readWindowFilled: Boolean,
         locale: Locale,
     ): String {
-        if (mode == AutoCapMode.NONE || !hasAutoCapitalShape(word)) return word
+        // WORDS: a name field by convention; its capitals are meant (see the class KDoc).
+        if (mode != AutoCapMode.SENTENCES || !hasAutoCapitalShape(word)) return word
         val text = textBeforeCursor ?: return word
         val index = lastStandaloneIndexOf(text, word) ?: return word
         if (index == 0 && readWindowFilled) return word

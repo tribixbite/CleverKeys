@@ -2648,8 +2648,8 @@ class SuggestionHandler(
 
     /**
      * The form every IME add path stores [word] in ([UserWordCasing.storageForm], 2026-11-25):
-     * lowercase when its only capital is its first letter and it sits where auto-capitalisation
-     * capitalises, so a word added at a field or sentence start (`Grüezi`, `Parcero`) does not
+     * lowercase when its only capital is its first letter and it sits at a sentence start the
+     * field auto-capitalises (never in a CAP_WORDS-only name field), so a word added at a field or sentence start (`Grüezi`, `Parcero`) does not
      * come out capitalised mid-sentence ever after; otherwise [word] as given.
      *
      * Read AFTER the word was committed: the editor text before the cursor must contain it, and
@@ -2666,7 +2666,8 @@ class SuggestionHandler(
             capSentences = inputType and android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0,
             capWords = inputType and android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS != 0,
         )
-        if (mode == UserWordCasing.AutoCapMode.NONE) return word
+        // Only a sentence field folds; a CAP_WORDS-only field is a name field (Fable audit 2026-11-26).
+        if (mode != UserWordCasing.AutoCapMode.SENTENCES) return word
         val dictionary = predictionCoordinator.getDictionaryManager()
         if (dictionary?.isUserWord(word) == true) return word
         val window = word.length + USER_WORD_CASING_CONTEXT_CHARS

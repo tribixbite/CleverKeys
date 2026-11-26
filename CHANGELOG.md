@@ -621,7 +621,9 @@ editor that used to be listed here already ship in 2.0.)
   dictionary?" prompt, the tap-to-add chip, undoing an autocorrection or a Prefer offer) is stored
   in lowercase when its capital came from auto-capitalisation, so it no longer comes out
   capitalised mid-sentence (`und Grüezi`, `Parcero Parcero`). A capital you typed mid-sentence is
-  kept, as are all-caps words and words with capitals inside.
+  kept, as are all-caps words and words with capitals inside. In a field that capitalises every
+  word (a name or address field) the word is stored as typed, so a surname such as `Kowalski`
+  keeps its capital.
 - Swiping you're, they're and I've: the swipe dictionary held each at the frequency of the
   apostrophe-free word (`youre`), about a hundredth of how often the contraction is written, so
   they're came first on 4 of 39 real swipes (FUTO corpus); now 22 of 39, with your, there and were

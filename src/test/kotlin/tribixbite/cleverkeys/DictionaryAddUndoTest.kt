@@ -283,8 +283,13 @@ class DictionaryAddUndoTest {
         verify(exactly = 1) { dictionary.addUserWord("Grüezi") }
     }
 
+    /**
+     * A CAP_WORDS-only field is a name field: the word keeps the capital it was typed with
+     * (Fable audit 2026-11-26; before, any position in it was folded and `Muster` was stored
+     * lowercase).
+     */
     @Test
-    fun aWordsCapitalisingFieldCapitalisesEveryWordSoAnyPositionIsLowercased() {
+    fun aWordsCapitalisingFieldKeepsTheNameAsTyped() {
         config.autocapitalisation = true
         editorShows("Hans Muster ")
 
@@ -293,7 +298,7 @@ class DictionaryAddUndoTest {
             capField(flags = android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS)
         )
 
-        verify(exactly = 1) { dictionary.addUserWord("muster") }
+        verify(exactly = 1) { dictionary.addUserWord("Muster") }
     }
 
     @Test
@@ -387,6 +392,23 @@ class DictionaryAddUndoTest {
         assertThat(
             UserWordCasing.storageForm("İstanbullu", "İstanbullu ", s, false, java.util.Locale.forLanguageTag("tr"))
         ).isEqualTo("istanbullu")
+    }
+
+    /**
+     * Fable audit 2026-11-26: a CAP_WORDS-only field is a name field by convention (contact and
+     * address forms), and there every capital is meant: auto-capitalisation capitalised it only
+     * because the user would have typed it anyway. Folding `Kowalski` there stored a surname
+     * lowercase. A sentence field keeps the sentence-start rule.
+     */
+    @Test
+    fun aCapWordsFieldKeepsTheWordAsTypedAndASentenceFieldStillFolds() {
+        val en = java.util.Locale.ENGLISH
+        assertThat(UserWordCasing.storageForm("Kowalski", "Kowalski ", UserWordCasing.AutoCapMode.WORDS, false, en))
+            .isEqualTo("Kowalski")
+        assertThat(UserWordCasing.storageForm("Kowalski", "Anna Kowalski ", UserWordCasing.AutoCapMode.WORDS, false, en))
+            .isEqualTo("Kowalski")
+        assertThat(UserWordCasing.storageForm("Parcero", "Parcero ", UserWordCasing.AutoCapMode.SENTENCES, false, en))
+            .isEqualTo("parcero")
     }
 
     // ------------------------------------------------------------- dismissal
