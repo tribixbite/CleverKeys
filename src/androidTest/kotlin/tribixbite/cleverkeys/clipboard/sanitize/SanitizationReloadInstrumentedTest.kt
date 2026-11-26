@@ -22,10 +22,10 @@ import tribixbite.cleverkeys.DirectBootAwarePreferences
  * and rebuilt a no-op sanitizer. It only worked after a full keyboard restart (when
  * `Config.refresh()` re-read prefs).
  *
- * Fix: the rules-changed receiver in `ClipboardHistoryService` now calls
- * [Config.reloadSanitizationSettings] before `rebuild()`. This test exercises that exact
- * path (reload → rebuild → build) against a real SharedPreferences-backed Config and the
- * real bundled ClearURLs ruleset, asserting sanitization applies mid-session.
+ * First fix: the rules-changed receiver reloaded Config before `rebuild()`. Since 2026-11-26
+ * the sanitizer reads the STORED toggles and keys its cache on them, so a stored change applies
+ * on the next call with no reload or broadcast. This test drives that against real
+ * SharedPreferences and the real bundled ClearURLs ruleset.
  *
  * (The one-line receiver call that invokes the reload is verified by inspection, consistent
  * with the convention documented in `SanitizationConfigBuildTest`.)
@@ -64,17 +64,16 @@ class SanitizationReloadInstrumentedTest {
             Config.globalConfig().clipboard_sanitize_links_enabled
         )
 
-        val sanitizer = SanitizationConfig(context)
+        // The sanitizer reads the STORED toggles (Fable review 2026-11-26): this test's store.
+        val sanitizer = SanitizationConfig(context) { prefs }
         val url = "https://example.com/p?utm_source=foo&keep=bar"
 
         // OFF → URL passes through unchanged (no-op sanitizer).
         assertEquals(url, sanitizer.sanitizer().process(url))
 
-        // User flips the toggle ON in settings (persists pref); the rules-changed receiver
-        // then fires. Reproduce exactly that receiver path:
+        // User flips the toggle ON in settings (persists pref). No Config reload and no
+        // rebuild: the cached ruleset is keyed on the stored toggles, so the next call rebuilds.
         prefs.edit().putBoolean("clipboard_sanitize_links_enabled", true).commit()
-        Config.globalConfig().reloadSanitizationSettings()
-        sanitizer.rebuild()
 
         // ON → tracking param stripped, real param retained, WITHOUT a keyboard restart.
         val result = sanitizer.sanitizer().process(url)

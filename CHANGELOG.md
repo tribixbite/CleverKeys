@@ -671,6 +671,8 @@ editor that used to be listed here already ship in 2.0.)
 - After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
   or Multi-Language off, changing the second language or picking a layout bound to your first
   language returns them to your first language; they stayed in the second.
+- Clipboard link cleaning follows the settings a restore wrote, even while another keyboard is in
+  use, and a copy is no longer lost when the keyboard had never started.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

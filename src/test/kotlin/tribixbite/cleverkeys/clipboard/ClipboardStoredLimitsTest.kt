@@ -197,7 +197,9 @@ class ClipboardStoredLimitsTest {
     /** The URL sanitizer passes text through, so `addClip` reaches the store in the mock tier. */
     private fun passThroughSanitizer() {
         val sanitization = mockk<tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig>()
-        every { sanitization.sanitizer().process(any()) } answers { firstArg() }
+        val off = tribixbite.cleverkeys.ClipboardSanitizeSettings(false, false, false, null, false)
+        every { sanitization.storedSwitches() } returns off
+        every { sanitization.sanitizer(off).process(any()) } answers { firstArg() }
         service.setField("_sanitizationConfig\$delegate", lazyOf(sanitization))
     }
 
@@ -283,6 +285,100 @@ class ClipboardStoredLimitsTest {
                 """globalConfig(OrNull)?\(\)\??\.clipboard_(history_enabled|exclude_password_managers|respect_sensitive_flag|text_only|media_enabled|max_media_size_mb)\b""")
         assertWithMessage("no Config snapshot held in a local either")
             .that(service).doesNotContainMatch("""val\s+cfg\s*=\s*Config\.globalConfig\(\)""")
+    }
+
+    // ---------------------------------------------------------------- link sanitizing
+    // Fable review 2026-11-26: `storeClip` read `clipboard_sanitize_system_clipboard` from
+    // `Config.globalConfig()` BEFORE the insert, and `SanitizationConfig` built its ruleset from
+    // Config too. After a restore in a process without the keyboard both were stale, and where
+    // Config was never initialised the read threw and the clip was lost.
+
+    private val bundledRules = """{"providers":{"globalRules":{"urlPattern":".*","rules":["utm_source"]}}}"""
+
+    /** A real [tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig] over [bundledRules]. */
+    private fun realSanitizer() {
+        val assets = mockk<android.content.res.AssetManager>()
+        every { assets.open("url_rules/clearurls.json") } answers { bundledRules.byteInputStream() }
+        val context = mockk<Context>(relaxed = true)
+        every { context.assets } returns assets
+        service.setField("_context", context)
+        service.setField("_sanitizationConfig\$delegate",
+            lazyOf(tribixbite.cleverkeys.clipboard.sanitize.SanitizationConfig(context)))
+    }
+
+    @Test
+    fun aClipIsStoredWhenConfigWasNeverInitialised() {
+        every { Config.globalConfig() } throws IllegalStateException("Config not initialised")
+        every { Config.globalConfigOrNull() } returns null
+        realSanitizer()
+
+        service.addClip("kept although the keyboard never ran")
+
+        verify(exactly = 1) { database.addClipboardEntry("kept although the keyboard never ran", any(), any(), any()) }
+    }
+
+    @Test
+    fun aRestoredSanitizeSwitchCleansTheStoredLink() {
+        // The stale Config (relaxed) has sanitizing off; the restore turned it on.
+        settings.values["clipboard_sanitize_links_enabled"] = true
+        settings.values["clipboard_sanitize_system_clipboard"] = false
+        realSanitizer()
+
+        service.addClip("https://example.com/p?utm_source=feed&keep=1")
+
+        verify(exactly = 1) { database.addClipboardEntry("https://example.com/p?keep=1", any(), any(), any()) }
+    }
+
+    @Test
+    fun theCachedRulesetFollowsTheStoredSwitches() {
+        settings.values["clipboard_sanitize_system_clipboard"] = false
+        realSanitizer()
+        service.addClip("https://example.com/a?utm_source=x")
+        verify(exactly = 1) { database.addClipboardEntry("https://example.com/a?utm_source=x", any(), any(), any()) }
+
+        // Switched on with no rules-changed broadcast (an import in a process without Settings).
+        settings.values["clipboard_sanitize_links_enabled"] = true
+        service.addClip("https://example.com/b?utm_source=x")
+
+        verify(exactly = 1) { database.addClipboardEntry("https://example.com/b", any(), any(), any()) }
+    }
+
+    @Test
+    fun theSanitizeReaderTakesTheStoredSwitches() {
+        val reader = tribixbite.cleverkeys.ClipboardSanitizeSettings
+        assertThat(reader.fromSettings(TypedFakePreferences())).isEqualTo(
+            tribixbite.cleverkeys.ClipboardSanitizeSettings(
+                sanitizeLinks = tribixbite.cleverkeys.Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED,
+                embedEnrich = tribixbite.cleverkeys.Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED,
+                customRules = tribixbite.cleverkeys.Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED,
+                customRulesUri = null,
+                rewriteSystemClipboard = tribixbite.cleverkeys.Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD,
+            ))
+        assertThat(reader.fromSettings(TypedFakePreferences(mapOf(
+            "clipboard_sanitize_links_enabled" to true,
+            "clipboard_embed_enrich_enabled" to true,
+            "clipboard_custom_rules_enabled" to true,
+            "clipboard_custom_rules_uri" to "content://rules",
+            "clipboard_sanitize_system_clipboard" to false,
+        )))).isEqualTo(tribixbite.cleverkeys.ClipboardSanitizeSettings(true, true, true, "content://rules", false))
+        // An empty stored URI means none, as Config read it.
+        assertThat(reader.fromSettings(TypedFakePreferences(mapOf("clipboard_custom_rules_uri" to ""))).customRulesUri).isNull()
+    }
+
+    @Test
+    fun noSanitizeSwitchIsReadFromTheInMemoryConfig() {
+        val config = java.io.File("src/main/kotlin/tribixbite/cleverkeys/Config.kt").readText()
+        assertThat(config).contains("ClipboardSanitizeSettings.fromSettings(_prefs)")
+        val pattern = """globalConfig(OrNull)?\(\)\??\.clipboard_(sanitize_links_enabled|embed_enrich_enabled|custom_rules_enabled|custom_rules_uri|sanitize_system_clipboard)\b"""
+        for (path in listOf(
+            "src/main/kotlin/tribixbite/cleverkeys/clipboard/ClipboardHistoryService.kt",
+            "src/main/kotlin/tribixbite/cleverkeys/clipboard/sanitize/SanitizationConfig.kt",
+        )) {
+            val text = java.io.File(path).readText()
+            assertWithMessage("$path reads no sanitize switch from Config").that(text).doesNotContainMatch(pattern)
+            assertWithMessage("$path holds no Config snapshot").that(text)
+                .doesNotContainMatch("""=\s*(try \{\s*)?Config\.globalConfig(OrNull)?\(\)""")
+        }
     }
 
     private fun Any.setField(name: String, value: Any?) {

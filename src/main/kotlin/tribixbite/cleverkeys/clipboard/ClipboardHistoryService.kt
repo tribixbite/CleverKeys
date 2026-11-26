@@ -103,15 +103,15 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     /**
      * Receives [SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED] from the settings
      * UI (toggle change, custom-rules import). Drops the cached sanitizer so the next
-     * clipboard insert rebuilds it from current Config + on-disk custom file.
+     * clipboard insert rebuilds it from the stored toggles + on-disk custom file (a toggle change
+     * alone already rebuilds it, the cache is keyed on the stored toggles; the custom file's
+     * content is what needs this).
      */
     private val _sanitizationRulesReceiver = object : BroadcastReceiver() {
         override fun onReceive(c: Context?, intent: Intent?) {
             if (intent?.action == SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED) {
-                // Refresh the live Config BEFORE dropping the cache: the settings UI persists
-                // the toggle to SharedPreferences but never pushes it into the in-memory Config,
-                // so build() would otherwise re-read the stale startup value (sanitizer would
-                // appear to do nothing until a full keyboard restart).
+                // Keep the in-memory Config's copy of the toggles current for its other readers;
+                // the sanitizer itself reads the stored settings (Fable review 2026-11-26).
                 try {
                     Config.globalConfig().reloadSanitizationSettings()
                 } catch (e: Exception) {
@@ -470,7 +470,11 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         // URL sanitization (text/plain only). No-op when all three toggles are off.
         // Sanitizing the *stored* content is store hygiene — applies to private entries too.
-        val processed = _sanitizationConfig.sanitizer().process(clip)
+        // The switches are the STORED ones, read once for both uses below (Fable review
+        // 2026-11-26): Config was stale after a restore without the keyboard, and where it was
+        // never built its read threw here, before the insert, and the clip was lost.
+        val sanitize = _sanitizationConfig.storedSwitches()
+        val processed = _sanitizationConfig.sanitizer(sanitize).process(clip)
 
         // OS-clipboard rewrite: ONLY on the OS-listener path. If sanitization actually cleaned
         // the URL and the user opted in, overwrite the Android system clipboard so pastes from ANY
@@ -482,7 +486,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             systemClipboardRewrite(
                 original = clip,
                 processed = processed,
-                enabled = Config.globalConfig().clipboard_sanitize_system_clipboard,
+                enabled = sanitize.rewriteSystemClipboard,
             )?.let { rewriteSystemClipboard(it) }
         }
 

@@ -9,7 +9,7 @@ import org.junit.Test
 
 /**
  * Direct unit coverage of `SanitizationConfig.build()` — the production
- * code that resolves the active sanitizer from the three Config toggles
+ * code that resolves the active sanitizer from the three stored toggles
  * + bundled assets + custom file.
  *
  * Two contracts under test:
@@ -39,7 +39,6 @@ class SanitizationConfigBuildTest {
     @After
     fun tearDown() {
         unmockkStatic(Log::class)
-        unmockkObject(tribixbite.cleverkeys.Config.Companion)
     }
 
     @Test
@@ -53,16 +52,14 @@ class SanitizationConfigBuildTest {
         // every { }. We create a relaxed mock and set the fields directly
         // — the defaults already match the "all off" state but we set
         // explicitly for clarity.
-        mockkObject(tribixbite.cleverkeys.Config.Companion)
-        val cfg = mockk<tribixbite.cleverkeys.Config>(relaxed = true)
-        cfg.clipboard_sanitize_links_enabled = false
-        cfg.clipboard_embed_enrich_enabled = false
-        cfg.clipboard_custom_rules_enabled = false
-        cfg.clipboard_custom_rules_uri = null
-        every { tribixbite.cleverkeys.Config.globalConfig() } returns cfg
-
+        // The toggles are the STORED ones (Fable review 2026-11-26), all off.
+        val stored = tribixbite.cleverkeys.TypedFakePreferences(mapOf(
+            "clipboard_sanitize_links_enabled" to false,
+            "clipboard_embed_enrich_enabled" to false,
+            "clipboard_custom_rules_enabled" to false,
+        ))
         val ctx = mockk<android.content.Context>(relaxed = true)
-        val sanitizer = SanitizationConfig(ctx).sanitizer()
+        val sanitizer = SanitizationConfig(ctx) { stored }.sanitizer()
 
         val input = "https://example.com/page?utm_source=foo"
         assertThat(sanitizer.process(input)).isEqualTo(input)
@@ -76,14 +73,13 @@ class SanitizationConfigBuildTest {
         // but the persisted file is gone (manual cache wipe, app reinstall,
         // SAF grant revoked), the bundled rules must still apply — never
         // crash, never disable everything.
-        mockkObject(tribixbite.cleverkeys.Config.Companion)
-        val cfg = mockk<tribixbite.cleverkeys.Config>(relaxed = true)
-        cfg.clipboard_sanitize_links_enabled = true
-        cfg.clipboard_embed_enrich_enabled = false
-        cfg.clipboard_custom_rules_enabled = true
         // URI persisted but file at app-private location does not exist
-        cfg.clipboard_custom_rules_uri = "content://does.not.exist/rules.json"
-        every { tribixbite.cleverkeys.Config.globalConfig() } returns cfg
+        val stored = tribixbite.cleverkeys.TypedFakePreferences(mapOf(
+            "clipboard_sanitize_links_enabled" to true,
+            "clipboard_embed_enrich_enabled" to false,
+            "clipboard_custom_rules_enabled" to true,
+            "clipboard_custom_rules_uri" to "content://does.not.exist/rules.json",
+        ))
 
         val bundledJson = """{
             "providers": {
@@ -107,7 +103,7 @@ class SanitizationConfigBuildTest {
             }
         }
 
-        val sanitizer = SanitizationConfig(ctx).sanitizer()
+        val sanitizer = SanitizationConfig(ctx) { stored }.sanitizer()
         // Bundled `utm_source` strip MUST still apply despite custom file missing.
         assertThat(sanitizer.process("https://example.com/page?utm_source=foo&keep=bar"))
             .isEqualTo("https://example.com/page?keep=bar")

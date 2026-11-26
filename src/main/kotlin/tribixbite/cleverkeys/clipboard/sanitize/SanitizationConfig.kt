@@ -1,50 +1,64 @@
 package tribixbite.cleverkeys.clipboard.sanitize
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
-import tribixbite.cleverkeys.Config
+import tribixbite.cleverkeys.ClipboardSanitizeSettings
+import tribixbite.cleverkeys.DirectBootAwarePreferences
 import java.io.File
 
 /**
- * Resolves the active sanitization ruleset from the three Config toggles
- * + the bundled assets + the user-supplied custom file.
+ * Resolves the active sanitization ruleset from the three STORED toggles
+ * ([ClipboardSanitizeSettings]) + the bundled assets + the user-supplied custom file.
  *
- * Stateless apart from a private cache to avoid re-parsing on every clipboard
- * insert. Cache invalidates on `rebuild()` which the settings UI calls when
- * any toggle or the custom-rules URI changes.
+ * The toggles are read from the settings store on every call, never from the in-memory Config
+ * (Fable review 2026-11-26): only the keyboard service refreshes Config, so after a restore in a
+ * process without the keyboard it built the ruleset from the old toggles. The parsed ruleset is
+ * cached per toggle set ([ClipboardSanitizeSettings.rulesetInputs]), so a changed toggle rebuilds
+ * it with no broadcast; [rebuild] remains for the custom FILE, whose content the key cannot see.
+ *
+ * @param storedSettings the settings store; the device-protected app store by default.
  */
-class SanitizationConfig(private val context: Context) {
+class SanitizationConfig(
+    private val context: Context,
+    private val storedSettings: () -> SharedPreferences = { DirectBootAwarePreferences.get_shared_preferences(context) },
+) {
 
-    @Volatile private var cached: UrlSanitizer? = null
+    /** A built sanitizer and the toggle set it was built from. */
+    private class Built(val inputs: ClipboardSanitizeSettings, val sanitizer: UrlSanitizer)
+
+    @Volatile private var cached: Built? = null
+
+    /** The sanitize switches as stored now (an in-memory map lookup). */
+    fun storedSwitches(): ClipboardSanitizeSettings = ClipboardSanitizeSettings.fromSettings(storedSettings())
 
     /**
-     * Returns the current sanitizer. If all toggles are off, returns a
-     * no-op sanitizer that returns input unchanged in O(text-length).
+     * Returns the sanitizer for the stored toggles. If all are off, it is a no-op sanitizer that
+     * returns input unchanged in O(text-length).
      */
-    internal fun sanitizer(): UrlSanitizer {
-        cached?.let { return it }
+    internal fun sanitizer(): UrlSanitizer = sanitizer(storedSwitches())
+
+    /** The sanitizer for [settings] (a caller that already read them, like `storeClip`). */
+    internal fun sanitizer(settings: ClipboardSanitizeSettings): UrlSanitizer {
+        val inputs = settings.rulesetInputs
+        cached?.takeIf { it.inputs == inputs }?.let { return it.sanitizer }
         synchronized(this) {
-            cached?.let { return it }
-            val s = build()
-            cached = s
-            return s
+            cached?.takeIf { it.inputs == inputs }?.let { return it.sanitizer }
+            val built = Built(inputs, build(inputs))
+            cached = built
+            return built.sanitizer
         }
     }
 
-    /** Force the next call to sanitizer() to rebuild from current Config + custom file. */
+    /** Force the next call to sanitizer() to rebuild (the custom rules file changed). */
     fun rebuild() { cached = null }
 
-    private fun build(): UrlSanitizer {
-        val cfg = try { Config.globalConfig() } catch (e: Exception) {
-            Log.w(TAG, "Config not yet initialised — sanitizer disabled this call", e)
-            return RulesetUrlSanitizer(Ruleset(emptyMap()))
-        }
-
-        val sanitize = cfg.clipboard_sanitize_links_enabled
-        val embed = cfg.clipboard_embed_enrich_enabled
-        val custom = cfg.clipboard_custom_rules_enabled
-        val customUri = cfg.clipboard_custom_rules_uri
+    private fun build(settings: ClipboardSanitizeSettings): UrlSanitizer {
+        val sanitize = settings.sanitizeLinks
+        val embed = settings.embedEnrich
+        val custom = settings.customRules
+        val customUri = settings.customRulesUri
 
         if (!sanitize && !embed && !custom) {
             // Fast path: all toggles off → never touch context.assets at all.

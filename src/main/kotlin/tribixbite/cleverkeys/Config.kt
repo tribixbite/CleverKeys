@@ -699,6 +699,42 @@ data class ClipboardCaptureSettings(
     }
 }
 
+/**
+ * The clipboard link-sanitizing switches as STORED (Fable review 2026-11-26), read the way
+ * [ClipboardCaptureSettings] reads the capture switches and for the same reason: only the
+ * keyboard service's preference listener refreshes `Config.globalConfig()`, so after a restore in
+ * a process without the keyboard Config held the old switches, and where Config was never built
+ * the clipboard service's read threw and the clip was lost. One parser: [Config] fills its fields
+ * from it, `SanitizationConfig` and `ClipboardHistoryService` read it from the stored settings.
+ */
+data class ClipboardSanitizeSettings(
+    /** ClearURLs tracking-parameter rules (`clipboard_sanitize_links_enabled`). */
+    val sanitizeLinks: Boolean,
+    /** Embed-friendly link rewrites (`clipboard_embed_enrich_enabled`). */
+    val embedEnrich: Boolean,
+    /** The user's imported rules (`clipboard_custom_rules_enabled`). */
+    val customRules: Boolean,
+    /** The imported rules' SAF URI (`clipboard_custom_rules_uri`); null when none (stored empty). */
+    val customRulesUri: String?,
+    /** Put a cleaned link back on the Android clipboard (`clipboard_sanitize_system_clipboard`). */
+    val rewriteSystemClipboard: Boolean,
+) {
+    /** The inputs the sanitizer's ruleset is built from (everything but [rewriteSystemClipboard]). */
+    val rulesetInputs: ClipboardSanitizeSettings get() = copy(rewriteSystemClipboard = false)
+
+    companion object {
+        @JvmStatic
+        fun fromSettings(prefs: SharedPreferences): ClipboardSanitizeSettings = ClipboardSanitizeSettings(
+            sanitizeLinks = Config.safeGetBoolean(prefs, "clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED),
+            embedEnrich = Config.safeGetBoolean(prefs, "clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED),
+            customRules = Config.safeGetBoolean(prefs, "clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED),
+            customRulesUri = Config.safeGetString(prefs, "clipboard_custom_rules_uri", "").takeIf { it.isNotEmpty() },
+            rewriteSystemClipboard = Config.safeGetBoolean(
+                prefs, "clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD),
+        )
+    }
+}
+
 object SettingsRanges {
     /**
      * Keyboard height percent, every orientation and screen (`keyboard_height*`). The sliders
@@ -1971,11 +2007,13 @@ class Config private constructor(
     fun reloadSanitizationSettings() {
         // Safe getters, like the rest of refresh(): a mistyped value here crashed every keyboard
         // start (follow-up review 2026-11-15 of H4). An empty stored URI means "none", as before.
-        clipboard_sanitize_links_enabled = safeGetBoolean(_prefs, "clipboard_sanitize_links_enabled", Defaults.CLIPBOARD_SANITIZE_LINKS_ENABLED)
-        clipboard_embed_enrich_enabled = safeGetBoolean(_prefs, "clipboard_embed_enrich_enabled", Defaults.CLIPBOARD_EMBED_ENRICH_ENABLED)
-        clipboard_custom_rules_enabled = safeGetBoolean(_prefs, "clipboard_custom_rules_enabled", Defaults.CLIPBOARD_CUSTOM_RULES_ENABLED)
-        clipboard_custom_rules_uri = safeGetString(_prefs, "clipboard_custom_rules_uri", "").takeIf { it.isNotEmpty() }
-        clipboard_sanitize_system_clipboard = safeGetBoolean(_prefs, "clipboard_sanitize_system_clipboard", Defaults.CLIPBOARD_SANITIZE_SYSTEM_CLIPBOARD)
+        // The clipboard service reads the same parser from the stored settings, never these.
+        val sanitize = ClipboardSanitizeSettings.fromSettings(_prefs)
+        clipboard_sanitize_links_enabled = sanitize.sanitizeLinks
+        clipboard_embed_enrich_enabled = sanitize.embedEnrich
+        clipboard_custom_rules_enabled = sanitize.customRules
+        clipboard_custom_rules_uri = sanitize.customRulesUri
+        clipboard_sanitize_system_clipboard = sanitize.rewriteSystemClipboard
     }
 
     fun set_gif_enabled(enabled: Boolean) {
