@@ -9,6 +9,8 @@ import org.json.JSONObject
 import tribixbite.cleverkeys.BuildConfig
 import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.DirectBootAwarePreferences
+import tribixbite.cleverkeys.LanguagePrefs
+import tribixbite.cleverkeys.SwissSpelling
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.PredictionResult
@@ -640,8 +642,13 @@ class GeometricEngineAdapter(
         val lang = language.lowercase(Locale.ROOT)
         // The same three personal-dictionary reads the CTC lexicon makes (audit L7); swipe
         // priority (2026-10-08) is part of the version, like the words themselves.
-        val (customJson, disabled, priorityJson) =
-            UserLexiconInputs.read(DirectBootAwarePreferences.get_shared_preferences(context), lang)
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val (customJson, storedDisabled, priorityJson) = UserLexiconInputs.read(prefs, lang)
+        // D2: Swiss German spelling, as in `CtcEngineAdapter.lexiconFor`: the base list is
+        // respelled at read, the choice is part of the memo key, and a `straße` disabled in
+        // Dictionary Manager disables the respelled `strasse` too.
+        val swissSpelling = SwissSpelling.appliesTo(LanguagePrefs.germanSwissSpelling(prefs), lang)
+        val disabled = SwissSpelling.foldDisabled(swissSpelling, storedDisabled)
 
         // ARC-081: the platform user dictionary is the SECOND user-word store, and it is
         // mutable outside this app entirely, so it has to be read here (not cached across
@@ -655,7 +662,8 @@ class GeometricEngineAdapter(
             "asset:dictionaries/${lang}_enhanced.bin"
         }
         val version = LexiconContentVersion.of(
-            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson
+            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson,
+            SwissSpelling.lexiconVariant(swissSpelling, lang),
         )
 
         // The LANGUAGE is part of the memo identity, not just the content hash — the same
@@ -666,12 +674,15 @@ class GeometricEngineAdapter(
             if (memo.dictionary.language == lang && memo.dictionary.version == version) return memo
         }
 
+        // Only the shipped (or pack) list is respelled; the user's words are merged below.
+        val respell: ((List<String>) -> List<String>)? =
+            if (swissSpelling) SwissSpelling::foldWords else null
         val base = try {
             if (langpackFile.isFile) {
-                langpackFile.inputStream().use { CkdtDictionaryReader.read(it, lang, version) }
+                langpackFile.inputStream().use { CkdtDictionaryReader.read(it, lang, version, respell) }
             } else {
                 context.assets.open("dictionaries/${lang}_enhanced.bin")
-                    .use { CkdtDictionaryReader.read(it, lang, version) }
+                    .use { CkdtDictionaryReader.read(it, lang, version, respell) }
             }
         } catch (e: InterruptedException) {
             // A cancellation (the CKDT reader checks the worker's interrupt flag), not a

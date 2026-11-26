@@ -865,6 +865,8 @@
     <string name="privacy_perf_stats">Previsões: %1$d • Média: %2$dms • Top-1: %3$d%%</string>
     <string name="privacy_no_perf_data">Nenhum dado de desempenho coletado ainda. Ative a coleta acima e use a digitação por deslize.</string>
     <string name="multilang_secondary_note">O dicionário secundário será carregado na próxima abertura do teclado. Palavras dos dois idiomas aparecerão nas previsões.</string>
+    <string name="multilang_swiss_spelling_title">Ortografia suíça (ss em vez de ß)</string>
+    <string name="multilang_swiss_spelling_desc">As palavras alemãs são sugeridas com ss em vez de ß: Strasse, gross, weiss. As palavras que você adicionou mantêm a grafia.</string>
     <string name="multilang_quick_toggle_header">Alternância rápida de idioma</string>
     <string name="multilang_quick_toggle_desc">Configure idiomas alternativos para comandos de alternância rápida. Atribua PRIMARY_LANG_TOGGLE ou SECONDARY_LANG_TOGGLE ao deslize curto de qualquer tecla.</string>
     <string name="multilang_packs_header">Pacotes de idiomas</string>

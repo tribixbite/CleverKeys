@@ -23,8 +23,21 @@ object LanguagePrefs {
     /** Multi-Language master switch. */
     const val MULTILANG = "pref_enable_multilang"
 
-    /** The keys whose change alters which languages are served (Settings broadcasts LANGUAGE_CHANGED on them). */
-    val SERVING_KEYS: Set<String> = setOf(PRIMARY, SECONDARY, MULTILANG)
+    /**
+     * D2: Swiss German spelling, `ss` for `ß` ([SwissSpelling]). One switch for every German
+     * lexicon (primary, secondary, a layout's bound language); it changes nothing in any other
+     * language. Absent until German is first served, then seeded from the system languages
+     * ([seedGermanSwissSpelling]).
+     */
+    const val GERMAN_SWISS_SPELLING = "pref_german_swiss_spelling"
+
+    /**
+     * The keys whose change alters what the served lexicons hold (Settings broadcasts
+     * LANGUAGE_CHANGED on them). The keyboard itself does not go by keys: every preference
+     * change refreshes Config, and [ActiveLanguageSync] reloads what the refresh changed, the
+     * German lexicons included when [GERMAN_SWISS_SPELLING] flips.
+     */
+    val SERVING_KEYS: Set<String> = setOf(PRIMARY, SECONDARY, MULTILANG, GERMAN_SWISS_SPELLING)
 
     /**
      * The user's own language choice from [prefs], as the languages an UNBOUND layout serves:
@@ -45,4 +58,43 @@ object LanguagePrefs {
         multilangEnabled = Config.safeGetBoolean(prefs, MULTILANG, Defaults.ENABLE_MULTILANG),
         userSecondary = Config.safeGetString(prefs, SECONDARY, Defaults.SECONDARY_LANGUAGE),
     )
+
+    /**
+     * The STORED Swiss-spelling choice. Lexicon loaders read this rather than the in-memory
+     * Config: the swipe engines build off the main thread from the stored preferences, and Config
+     * is stale in a process where the keyboard is not running (CLAUDE.md, 2026-11-24).
+     */
+    fun germanSwissSpelling(prefs: SharedPreferences): Boolean =
+        Config.safeGetBoolean(prefs, GERMAN_SWISS_SPELLING, Defaults.GERMAN_SWISS_SPELLING)
+
+    /**
+     * Give [GERMAN_SWISS_SPELLING] its first value, once: when the key is absent and German is
+     * among [servedLanguages], write [SwissSpelling.seedDefault] of the system [locales] (on for
+     * `de-CH` / `de-LI`). Written explicitly and synchronously (`commit`), so the value no longer
+     * follows a later change of the system language, a backup carries it, and the lexicon load
+     * that follows reads it.
+     *
+     * A stored value (the user's switch, a restored backup, a settings reset) is never replaced.
+     *
+     * @param servedLanguages every language now served or selected: the primary, the secondary,
+     *   layout-bound languages; nulls are ignored
+     * @return the value written, or null when nothing was written
+     */
+    fun seedGermanSwissSpelling(
+        prefs: SharedPreferences,
+        servedLanguages: Collection<String?>,
+        locales: List<java.util.Locale>,
+    ): Boolean? {
+        if (prefs.contains(GERMAN_SWISS_SPELLING)) return null
+        if (servedLanguages.none { SwissSpelling.isGerman(it) }) return null
+        val seeded = SwissSpelling.seedDefault(locales)
+        prefs.edit().putBoolean(GERMAN_SWISS_SPELLING, seeded).commit()
+        return seeded
+    }
+
+    /** The system languages of [configuration], most preferred first (the seed's input). */
+    fun systemLocales(configuration: android.content.res.Configuration): List<java.util.Locale> {
+        val list = configuration.locales
+        return List(list.size()) { list[it] }
+    }
 }

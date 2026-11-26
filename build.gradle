@@ -1364,6 +1364,10 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-11-20: accent misspellings out of the fr/es/pt/de dictionaries and models (same method).
     'tribixbite.cleverkeys.AccentSpellingDriftTest',
     'tribixbite.cleverkeys.GermanSharpSDictionaryDriftTest',
+    // D2 (2026-11-25): Swiss German spelling (ss for ß) — the load-time folds, the swipe memo
+    // key, the next-word aliases, the locale seed; and that every loader calls them.
+    'tribixbite.cleverkeys.SwissSpellingFoldTest',
+    'tribixbite.cleverkeys.SwissSpellingWiringDriftTest',
     'tribixbite.cleverkeys.ContractionFrequencyAssetDriftTest',
   ]
 
@@ -1676,6 +1680,8 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.PersianHalfSpaceTypingTest',
     // German ß typed against the ss-only German list: kept, not corrected (Saga 2026-11-25).
     'tribixbite.cleverkeys.WordPredictorSharpSTest',
+    // D2: pref_german_swiss_spelling is seeded once, from the system languages (de-CH / de-LI).
+    'tribixbite.cleverkeys.SwissSpellingSeedTest',
     // Typing Bangla: vowel signs and hasanta continue the composing word (2026-11-04).
     'tribixbite.cleverkeys.BanglaSpellingMarkTypingTest',
     // Emojis are not word characters for cursor sync (device pass 2026-11-18).

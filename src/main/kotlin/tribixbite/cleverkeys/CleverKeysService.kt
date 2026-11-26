@@ -470,6 +470,11 @@ class CleverKeysService : InputMethodService(),
         // Initialize global config for KeyEventHandler
         Config.initGlobalConfig(prefs, resources, _keyeventhandler, foldStateTracker.isUnfolded())
 
+        // D2: an install that already serves German (an upgrade, a restored backup) gets its
+        // Swiss-spelling value here, before any dictionary loads and before the preference
+        // listeners exist, so the write refreshes nothing.
+        seedGermanSwissSpelling(Config.globalConfig())?.let { Config.globalConfig().german_swiss_spelling = it }
+
         // Prewarm emoji keyword index for fast search (loads in background on IO thread)
         EmojiKeywordIndex.prewarm(this)
 
@@ -728,6 +733,12 @@ class CleverKeysService : InputMethodService(),
         // Update cached reference
         _config = newConfig
 
+        // D2: the first time German becomes a served language, Swiss spelling gets its value
+        // from the system languages (on for de-CH / de-LI). The write is a preference change:
+        // it refreshes this same Config and re-enters this method with the key present, so the
+        // German dictionary below loads with the seeded value. Once per install.
+        seedGermanSwissSpelling(newConfig)
+
         // Propagate config to all managers (v1.32.386: delegated to ConfigPropagator)
         _configPropagator?.propagateConfig(newConfig, resources)
 
@@ -737,9 +748,30 @@ class CleverKeysService : InputMethodService(),
         // dictionary reload must never take the IME down.
         try {
             _activeLanguageSync?.apply(newConfig.activeLanguages())
+            // D2: a Swiss-spelling flip reloads the German lexicons (same refresh, after the
+            // languages themselves are settled).
+            _activeLanguageSync?.applySwissSpelling(newConfig.german_swiss_spelling)
         } catch (t: Throwable) {
             android.util.Log.e("CleverKeysService", "Active language sync failed", t)
         }
+    }
+
+    /**
+     * D2: [LanguagePrefs.seedGermanSwissSpelling] for the languages [config] serves now.
+     *
+     * @return the value written, or null when the key already existed, German is not served, or
+     *   the preferences could not be written (never fatal: the static default stays in force)
+     */
+    private fun seedGermanSwissSpelling(config: Config): Boolean? = try {
+        val active = config.activeLanguages()
+        LanguagePrefs.seedGermanSwissSpelling(
+            DirectBootAwarePreferences.get_shared_preferences(this),
+            listOf(active.primary, active.secondary),
+            LanguagePrefs.systemLocales(resources.configuration),
+        )
+    } catch (t: Throwable) {
+        android.util.Log.e("CleverKeysService", "Swiss spelling seed failed", t)
+        null
     }
 
     /**

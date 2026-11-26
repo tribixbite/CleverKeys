@@ -898,6 +898,8 @@
     <string name="privacy_perf_stats">پیش‌بینی‌ها: %1$d • میانگین: %2$d میلی‌ثانیه • Top-1: %3$d%%</string>
     <string name="privacy_no_perf_data">هنوز داده‌ای از کارایی گردآوری نشده است. گردآوری را در بالا فعال کنید و از تایپ کشیدنی استفاده کنید.</string>
     <string name="multilang_secondary_note">واژه‌نامهٔ ثانویه در باز شدن بعدی صفحه‌کلید بارگذاری می‌شود. واژه‌های هر دو زبان در پیش‌بینی‌ها ظاهر می‌شوند.</string>
+    <string name="multilang_swiss_spelling_title">املای سوئیسی (ss به‌جای ß)</string>
+    <string name="multilang_swiss_spelling_desc">واژه‌های آلمانی با ss به‌جای ß پیشنهاد می‌شوند: Strasse، gross، weiss. واژه‌هایی که خودتان افزوده‌اید املای خود را نگه می‌دارند.</string>
     <string name="multilang_quick_toggle_header">جابه‌جایی سریع زبان</string>
     <string name="multilang_quick_toggle_desc">زبان‌های جایگزین را برای فرمان‌های جابه‌جایی سریع پیکربندی کنید. PRIMARY_LANG_TOGGLE یا SECONDARY_LANG_TOGGLE را به کشیدن کوتاه هر کلیدی اختصاص دهید.</string>
     <string name="multilang_packs_header">بسته‌های زبان</string>

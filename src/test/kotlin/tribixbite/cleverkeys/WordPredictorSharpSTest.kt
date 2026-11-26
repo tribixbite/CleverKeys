@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.os.Trace
 import android.util.Log
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.just
@@ -109,6 +110,8 @@ class WordPredictorSharpSTest {
         setField("secondaryLanguageCode", "none")
         // Objenesis skips the initializer: no secondary-language disabled words.
         setField("secondaryDisabledWords", emptySet<String>())
+        // Germany's spelling unless a test loads the Swiss one ([swissDictionary]).
+        setField("primarySwissSpelling", false)
     }
 
     @Test
@@ -235,5 +238,97 @@ class WordPredictorSharpSTest {
         setField("secondaryLanguageCode", "en")
         assertWithMessage("fuss").that(predictor.autoCorrect("fuss")).isEqualTo("fuss")
         assertWithMessage("strasse is no English word").that(predictor.autoCorrect("strasse")).isEqualTo("straße")
+    }
+
+    // ── D2: Swiss spelling (pref_german_swiss_spelling) ─────────────────────────────────────
+
+    /**
+     * The rebuilt list as the predictor loads it with Swiss spelling on: the load-time fold
+     * ([SwissSpelling.foldDictionaryKeys], the call `WordPredictor.foldSwissSpelling` makes) over
+     * [germanSharpS], THEN the user's own words — the load order, so [custom] is never respelled.
+     */
+    private fun swissDictionary(custom: Map<String, Int> = emptyMap()) {
+        val shipped = HashMap(germanSharpS)
+        SwissSpelling.foldDictionaryKeys(shipped, null, 3)
+        dictionary(shipped + custom)
+        setField("customAndUserWords", custom.keys.toSet())
+        setField("primarySwissSpelling", true)
+    }
+
+    @Test
+    fun `Swiss spelling - ss words stay as typed on space`() {
+        swissDictionary()
+        assertWithMessage("strasse").that(predictor.autoCorrect("strasse")).isEqualTo("strasse")
+        assertWithMessage("gross (not gros, not groß)").that(predictor.autoCorrect("gross")).isEqualTo("gross")
+        assertWithMessage("grosse").that(predictor.autoCorrect("grosse")).isEqualTo("grosse")
+        assertWithMessage("weiss").that(predictor.autoCorrect("weiss")).isEqualTo("weiss")
+        assertWithMessage("heisst").that(predictor.autoCorrect("heisst")).isEqualTo("heisst")
+        assertWithMessage("the capital is kept").that(predictor.autoCorrect("Strasse")).isEqualTo("Strasse")
+        assertWithMessage("strasse is a word now").that(predictor.isInDictionary("strasse")).isTrue()
+    }
+
+    @Test
+    fun `Swiss spelling - the bar offers the ss word and never the sharp s one`() {
+        swissDictionary()
+        assertWithMessage("stras").that(bar("stras")).contains("strasse")
+        assertWithMessage("stras").that(bar("stras")).doesNotContain("straße")
+        assertWithMessage("strass").that(bar("strass")).contains("strasse")
+        assertWithMessage("weis").that(bar("weis")).contains("weiss")
+        assertWithMessage("gro").that(bar("gro").filter { 'ß' in it }).isEmpty()
+    }
+
+    @Test
+    fun `Swiss spelling - twins are one word and reformed ss words are untouched`() {
+        swissDictionary()
+        assertWithMessage("masse (Maße and Masse)").that(predictor.autoCorrect("masse")).isEqualTo("masse")
+        assertWithMessage("dass").that(predictor.autoCorrect("dass")).isEqualTo("dass")
+        assertWithMessage("gros is still a word of its own").that(predictor.autoCorrect("gros")).isEqualTo("gros")
+    }
+
+    @Test
+    fun `Swiss spelling - a typed sharp s is still that word and is not rewritten`() {
+        // A German guest on a Swiss phone: the text is the user's, only the suggestions are Swiss.
+        swissDictionary()
+        assertWithMessage("groß").that(predictor.autoCorrect("groß")).isEqualTo("groß")
+        assertWithMessage("Straße is known").that(predictor.isInDictionary("Straße")).isTrue()
+    }
+
+    @Test
+    fun `Swiss spelling - the user's own sharp s word keeps its spelling`() {
+        swissDictionary(custom = mapOf("straße" to 255))
+        assertWithMessage("the custom word is offered as the user wrote it").that(bar("straß")).contains("straße")
+        assertWithMessage("typed straße").that(predictor.autoCorrect("straße")).isEqualTo("straße")
+        assertWithMessage("strasse is the list's word and stays too").that(predictor.autoCorrect("strasse")).isEqualTo("strasse")
+    }
+
+    /** A German next-word model spelling Germany's way, as `de.cklm` does. */
+    private fun germanModel(): BigramModel {
+        val lm = StaticContextLm.parse(
+            StaticContextLmFixtures.encode(
+                unigrams = mapOf("die" to 0.03, "straße" to 0.002, "maße" to 0.0005, "masse" to 0.0006, "stadt" to 0.003),
+                table = mapOf("die" to mapOf("straße" to 0.05, "maße" to 0.01, "masse" to 0.008, "stadt" to 0.004)),
+                language = "de",
+            )
+        )
+        val model = BigramModel()
+        model.installStaticLm("de", lm.withReplaceAliases(model.lookupAliases(lm, "de", emptyMap())))
+        model.applyLanguage("de")
+        return model
+    }
+
+    @Test
+    fun `Swiss spelling - next-word continuations are respelled, a twin shown once`() {
+        swissDictionary()
+        setField("bigramModel", germanModel())
+        assertThat(predictor.getStaticNextWordSeed(listOf("die"), 5).map { it.word })
+            .containsExactly("strasse", "masse", "stadt").inOrder()
+    }
+
+    @Test
+    fun `Germany's spelling - next-word continuations are the model's own`() {
+        dictionary(germanSharpS)
+        setField("bigramModel", germanModel())
+        assertThat(predictor.getStaticNextWordSeed(listOf("die"), 5).map { it.word })
+            .containsExactly("straße", "maße", "masse", "stadt").inOrder()
     }
 }

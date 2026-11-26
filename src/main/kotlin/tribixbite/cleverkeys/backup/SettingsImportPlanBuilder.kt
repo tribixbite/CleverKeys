@@ -180,10 +180,15 @@ object SettingsImportPlanBuilder {
             // The diff is against this effective value — comparing against
             // `Unset` would emit a noisy "ADDED: unset → default" row for
             // every key in a fresh-install backup.
-            val effective = if (current == PrefValue.Unset)
-                defaultSnapshot[key] ?: lookupDefault(key) ?: PrefValue.Unset
-            else
+            // A key that is SEEDED on first use ([SEEDED_WHEN_ABSENT_KEYS]) has no effective
+            // value while absent: the device would pick one itself later, so the backup's
+            // explicit choice is always a change to write, even when it equals the default.
+            val effective = if (current == PrefValue.Unset) {
+                if (key in SEEDED_WHEN_ABSENT_KEYS) PrefValue.Unset
+                else defaultSnapshot[key] ?: lookupDefault(key) ?: PrefValue.Unset
+            } else {
                 current
+            }
             if (effective == proposed) continue   // no perceived change — skip
 
             val type = if (current == PrefValue.Unset) ChangeType.ADDED else ChangeType.MODIFIED

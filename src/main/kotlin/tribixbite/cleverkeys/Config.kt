@@ -478,6 +478,12 @@ object Defaults {
     const val AUTO_DETECT_LANGUAGE = true
     const val LANGUAGE_DETECTION_SENSITIVITY = 0.6f
     const val SECONDARY_PREDICTION_WEIGHT = 0.9f  // v1.1.94: Multiplier for secondary dictionary predictions
+    /**
+     * D2: Swiss German spelling (`ss` for `ß`, [SwissSpelling]). The STATIC default; a device
+     * whose system languages include de-CH / de-LI gets it seeded on the first time German is
+     * served ([LanguagePrefs.seedGermanSwissSpelling]).
+     */
+    const val GERMAN_SWISS_SPELLING = false
 
     // ONNX Runtime settings
     const val ONNX_XNNPACK_THREADS = 2  // Default to 2 (optimal for most ARM devices)
@@ -1120,6 +1126,12 @@ class Config private constructor(
     // Multi-language support (Phase 8.3 & 8.4)
     @JvmField var enable_multilang = Defaults.ENABLE_MULTILANG // Phase 8.3: Enable multi-language support
     /**
+     * D2: `pref_german_swiss_spelling` — German lexicons are loaded with `ss` for `ß`
+     * ([SwissSpelling]). The keyboard reloads them when this flips ([ActiveLanguageSync]); the
+     * loaders themselves read the STORED value ([LanguagePrefs.germanSwissSpelling]).
+     */
+    @JvmField var german_swiss_spelling = Defaults.GERMAN_SWISS_SPELLING
+    /**
      * The ACTIVE primary language — what prediction, autocorrect, learning, the n-gram/static LM,
      * contractions and swipe routing serve. Equals `pref_primary_language` unless the current
      * layout carries a language binding (GH #186/#61), in which case it is the bound language.
@@ -1502,6 +1514,7 @@ class Config private constructor(
 
         // Multi-language settings (Phase 8.3 & 8.4)
         enable_multilang = safeGetBoolean(_prefs, LanguagePrefs.MULTILANG, Defaults.ENABLE_MULTILANG)
+        german_swiss_spelling = LanguagePrefs.germanSwissSpelling(_prefs)
         // The user's language choices; the ACTIVE languages are resolved against the current
         // layout's binding at the end of refresh (recomputeActiveLanguages).
         user_primary_language = safeGetString(_prefs, LanguagePrefs.PRIMARY, Defaults.PRIMARY_LANGUAGE)

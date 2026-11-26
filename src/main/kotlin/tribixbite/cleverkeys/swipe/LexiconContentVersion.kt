@@ -30,6 +30,11 @@ object LexiconContentVersion {
      * @param swipePriorityJson the raw `swipe_priority_<lang>` preference value (user swipe
      *   priority, 2026-10-08). Hashed ONLY when non-empty, so a user who never raised a word
      *   keeps the exact version (and memo) they had before the input existed.
+     * @param spellingVariant a token for a respelling applied to the BASE list at load (D2:
+     *   [tribixbite.cleverkeys.SwissSpelling.LEXICON_VARIANT] while German is loaded with `ss`
+     *   for `ß`). Hashed ONLY when non-empty, for the same reason: without a respelling the
+     *   version is the one every install already had. Flipping the preference changes it, which
+     *   is what rebuilds the memoised trie / word array.
      */
     fun of(
         sourceId: String,
@@ -37,6 +42,7 @@ object LexiconContentVersion {
         disabled: Set<String>,
         userDictionaryFingerprint: String,
         swipePriorityJson: String = "",
+        spellingVariant: String = "",
     ): Long {
         val md = MessageDigest.getInstance("SHA-256")
         md.update(sourceId.toByteArray(Charsets.UTF_8)); md.update(0)
@@ -49,6 +55,10 @@ object LexiconContentVersion {
         if (swipePriorityJson.isNotEmpty()) {
             md.update(3)
             md.update(swipePriorityJson.toByteArray(Charsets.UTF_8))
+        }
+        if (spellingVariant.isNotEmpty()) {
+            md.update(4)
+            md.update(spellingVariant.toByteArray(Charsets.UTF_8))
         }
         val d = md.digest()
         var v = 0L

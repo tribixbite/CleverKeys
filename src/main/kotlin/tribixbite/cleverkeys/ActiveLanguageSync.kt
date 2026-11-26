@@ -28,10 +28,22 @@ package tribixbite.cleverkeys
  * Pure (no Android types) so the ordering and the diff are pinned in `runPureTests`
  * (`ActiveLanguageSyncTest`); the composition root wires the [Sink].
  *
+ * ## Swiss German spelling (D2)
+ *
+ * `pref_german_swiss_spelling` changes what a German lexicon HOLDS without changing which
+ * language is served, so the language diff above cannot see it. [applySwissSpelling] is fed
+ * Config's value after the same refresh and reloads the German slots when it flips; every loader
+ * reads the stored preference itself ([SwissSpelling], [LanguagePrefs.germanSwissSpelling]).
+ *
  * @param initial the languages the components were constructed with, so the first refresh after
  *   startup does not reload dictionaries that are already loaded.
+ * @param initialSwissSpelling the Swiss-spelling value those components were loaded with.
  */
-class ActiveLanguageSync(initial: ActiveLanguages, private val sink: Sink) {
+class ActiveLanguageSync(
+    initial: ActiveLanguages,
+    private val sink: Sink,
+    initialSwissSpelling: Boolean = false,
+) {
 
     /** Side effects of a language change, in the order [apply] calls them. */
     interface Sink {
@@ -80,6 +92,33 @@ class ActiveLanguageSync(initial: ActiveLanguages, private val sink: Sink) {
         // Recorded only once every sink ran: a sink that throws leaves [applied] at the old state,
         // so the next apply() retries instead of treating the language as served (review 2026-11-14).
         applied = target
+        return true
+    }
+
+    /** The Swiss-spelling value the German lexicons were last loaded with. Main thread only. */
+    var appliedSwissSpelling: Boolean = initialSwissSpelling
+        private set
+
+    /**
+     * Bring the German lexicons to the Swiss-spelling preference [enabled]. Main thread only;
+     * call it after [apply], so [applied] already names the languages of this refresh.
+     *
+     * Reloads the primary and/or the secondary dictionary when that slot is German, then re-warms
+     * the swipe engine (whose lexicon memo is keyed on the same value). Contractions do not
+     * depend on the spelling and are not reloaded. With no German slot nothing is reloaded: the
+     * value is recorded, and a later switch to German loads with it through [apply].
+     *
+     * @return true when [enabled] differs from [appliedSwissSpelling]
+     */
+    fun applySwissSpelling(enabled: Boolean): Boolean {
+        if (enabled == appliedSwissSpelling) return false
+        val primaryGerman = SwissSpelling.isGerman(applied.primary)
+        val secondaryGerman = SwissSpelling.isGerman(applied.secondary)
+        if (primaryGerman) sink.reloadPrimary(applied.primary)
+        if (secondaryGerman) sink.reloadSecondary(applied.secondary)
+        if (primaryGerman || secondaryGerman) sink.rewarmSwipe()
+        // After the sinks, like [apply]: a sink that throws leaves the old value for a retry.
+        appliedSwissSpelling = enabled
         return true
     }
 }

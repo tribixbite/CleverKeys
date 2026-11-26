@@ -1089,6 +1089,8 @@
     <string name="multilang_quick_toggle_desc">Cấu hình ngôn ngữ thay thế cho lệnh chuyển nhanh. Gán PRIMARY_LANG_TOGGLE hoặc SECONDARY_LANG_TOGGLE cho vuốt ngắn của phím bất kỳ.</string>
     <string name="multilang_quick_toggle_header">Chuyển ngôn ngữ nhanh</string>
     <string name="multilang_secondary_note">Từ điển phụ sẽ được tải vào lần mở bàn phím tiếp theo. Từ của cả hai ngôn ngữ sẽ xuất hiện trong dự đoán.</string>
+    <string name="multilang_swiss_spelling_title">Chính tả Thụy Sĩ (ss thay cho ß)</string>
+    <string name="multilang_swiss_spelling_desc">Từ tiếng Đức được gợi ý với ss thay cho ß: Strasse, gross, weiss. Những từ bạn tự thêm vẫn giữ nguyên cách viết.</string>
     <string name="privacy_collected_data_header">Dữ liệu đã thu thập</string>
     <string name="privacy_export_json">Xuất JSON</string>
     <string name="privacy_export_ndjson">Xuất NDJSON</string>

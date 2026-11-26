@@ -56,6 +56,7 @@ import tribixbite.cleverkeys.ui.settings.io.performPerfStatsExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataJsonExport
 import tribixbite.cleverkeys.ui.settings.io.performSwipeDataNdjsonExport
 import tribixbite.cleverkeys.ui.settings.io.refreshBoundLayoutLanguages
+import tribixbite.cleverkeys.ui.settings.refreshGermanSwissSpelling
 import tribixbite.cleverkeys.ui.settings.fallbackEncrypted
 import tribixbite.cleverkeys.ui.settings.handlePreferenceChanged
 import tribixbite.cleverkeys.ui.settings.loadCurrentSettings
@@ -517,6 +518,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var multiLangEnabled by mutableStateOf(Defaults.ENABLE_MULTILANG)
     internal var primaryLanguage by mutableStateOf(Defaults.PRIMARY_LANGUAGE)
     internal var secondaryLanguage by mutableStateOf(Defaults.SECONDARY_LANGUAGE) // "none", "es", "fr", etc.
+    /** D2: `pref_german_swiss_spelling` (`ss` for `ß`); its switch shows only while German is selected. */
+    internal var germanSwissSpelling by mutableStateOf(Defaults.GERMAN_SWISS_SPELLING)
     internal var autoDetectLanguage by mutableStateOf(Defaults.AUTO_DETECT_LANGUAGE)
     internal var languageDetectionSensitivity by mutableFloatStateOf(Defaults.LANGUAGE_DETECTION_SENSITIVITY)
     internal var secondaryPredictionWeight by mutableFloatStateOf(Defaults.SECONDARY_PREDICTION_WEIGHT) // v1.1.94: Secondary dictionary weight
@@ -971,6 +974,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         super.onResume()
         // Layout Manager is a separate activity whose edits land while this one is paused.
         refreshBoundLayoutLanguages()
+        // D2: a layout newly bound to German reveals (and first seeds) the Swiss-spelling switch.
+        refreshGermanSwissSpelling()
         // The microphone may have been granted in system settings, or by the keyboard's prompt.
         tribixbite.cleverkeys.ui.settings.io.refreshVoiceInputState(this)
         // I-7: remind (once per boot) when another keyboard is the default.

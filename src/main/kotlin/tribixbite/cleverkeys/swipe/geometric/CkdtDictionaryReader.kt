@@ -71,17 +71,33 @@ object CkdtDictionaryReader {
      * @param language BCP-47-ish code for the cache key (the header language is read
      *   but the caller's explicit code wins — a langpack may carry a different tag).
      * @param version generation token for the cache key (bump on any word-set change).
+     * @param respell an optional respelling of the whole best-first word list, applied before
+     *   the ordinals are assigned (D2: `SwissSpelling::foldWords`, `ß` → `ss` with a twin kept
+     *   once at its better position). It must be reflected in [version] by the caller.
      * @throws IllegalArgumentException on a bad magic / version.
      */
-    fun read(input: InputStream, language: String, version: Long = 1L): GeometricDictionary {
+    fun read(
+        input: InputStream,
+        language: String,
+        version: Long = 1L,
+        respell: ((List<String>) -> List<String>)? = null,
+    ): GeometricDictionary {
         val bytes = readBoundedBytes(input)
-        return read(bytes, language, version)
+        return read(bytes, language, version, respell)
     }
 
     /** Read a CKDT dictionary from an in-memory byte array. */
-    fun read(bytes: ByteArray, language: String, version: Long = 1L): GeometricDictionary {
+    fun read(
+        bytes: ByteArray,
+        language: String,
+        version: Long = 1L,
+        respell: ((List<String>) -> List<String>)? = null,
+    ): GeometricDictionary {
         val ordered = readEntries(bytes)
-        return ArrayBackedDictionary(language, version, Array(ordered.size) { ordered[it].word })
+        if (respell == null) {
+            return ArrayBackedDictionary(language, version, Array(ordered.size) { ordered[it].word })
+        }
+        return ArrayBackedDictionary(language, version, respell(ordered.map { it.word }).toTypedArray())
     }
 
     /**

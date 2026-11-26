@@ -195,6 +195,9 @@ internal val SETTINGS_DEFAULTS: Map<String, PrefValue> = mapOf(
 
     // ── Multi-language ──────────────────────────────────────────────
     LanguagePrefs.MULTILANG to PrefValue.Bool(Defaults.ENABLE_MULTILANG),
+    // D2: Swiss German spelling (ss for ß). A user choice, so it is exported and restored; a
+    // backup without it leaves the key absent and the device seeds it from its own languages.
+    LanguagePrefs.GERMAN_SWISS_SPELLING to PrefValue.Bool(Defaults.GERMAN_SWISS_SPELLING),
     LanguagePrefs.PRIMARY to PrefValue.Str(Defaults.PRIMARY_LANGUAGE),
     // ARC-100 reclassified these after preview-behavior tests; constants since audit M10.
     LanguagePrefs.PRIMARY_ALT to PrefValue.Str(Defaults.PRIMARY_LANGUAGE_ALT),
@@ -340,6 +343,21 @@ internal val NON_DEFAULTED_KEYS: Set<String> = setOf(
     // (KeyboardHeightPrefs), so Reset removes them and never seeds a value.
     KeyboardHeightPrefs.PORTRAIT_UNFOLDED,
     KeyboardHeightPrefs.LANDSCAPE_UNFOLDED,
+)
+
+/**
+ * Keys of [SETTINGS_DEFAULTS] whose ABSENCE is a state of its own: the device gives them a value
+ * the first time they matter, from something a backup does not carry.
+ *
+ * `pref_german_swiss_spelling` (D2) is absent until German is first served, then seeded from the
+ * system languages (on for de-CH / de-LI, `LanguagePrefs.seedGermanSwissSpelling`). So for these
+ * keys an import onto a device where the key is absent always writes the backup's value, even
+ * when it equals the static default: a Swiss user who turned the switch OFF would otherwise have
+ * it seeded back ON by the next phone. They keep their [SETTINGS_DEFAULTS] entry for the storage
+ * type check and for Reset, which removes them (and so lets the device seed again).
+ */
+internal val SEEDED_WHEN_ABSENT_KEYS: Set<String> = setOf(
+    LanguagePrefs.GERMAN_SWISS_SPELLING,
 )
 
 /**

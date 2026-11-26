@@ -36,6 +36,10 @@ internal fun SettingsActivity.handlePreferenceChanged(sharedPreferences: SharedP
             "swipe_typing_enabled" -> {
                 swipeTypingEnabled = prefs.getSafeBoolean(key, Defaults.SWIPE_TYPING_ENABLED)
             }
+            // D2: a backup import or reset moves the switch too; a language choice that makes
+            // German served for the first time seeds it from the system languages.
+            LanguagePrefs.GERMAN_SWISS_SPELLING -> { germanSwissSpelling = LanguagePrefs.germanSwissSpelling(prefs) }
+            LanguagePrefs.PRIMARY, LanguagePrefs.SECONDARY, LanguagePrefs.MULTILANG -> refreshGermanSwissSpelling()
             // GH #147/#87: a backup import or reset changes this outside the switch; the Swipe
             // Typing master switch's disabled state reads it, so keep the state in step.
             "short_swipes_only" -> {
@@ -503,6 +507,7 @@ internal fun SettingsActivity.loadCurrentSettings() {
         // Load installed language packs
         refreshInstalledLanguagePacks()
         refreshBoundLayoutLanguages()
+        refreshGermanSwissSpelling()
 
         // Privacy settings - collection OFF by default (CleverKeys is fully offline);
         // the MASTER on-device learning gate defaults ON (it is the opt-OUT)
@@ -578,6 +583,27 @@ internal fun SettingsActivity.saveSetting(key: String, value: Any) {
                     Toast.LENGTH_SHORT).show()
             }
         }
+}
+
+/**
+ * D2: bring [SettingsActivity.germanSwissSpelling] in step with the stored preference, first
+ * giving the preference its one-time value when German is selected (primary, secondary with
+ * Multi-Language on, or a layout's bound language) and the key is still absent
+ * ([LanguagePrefs.seedGermanSwissSpelling]: on for a de-CH / de-LI system language). Reads the
+ * STORED language choice: this process may not have the keyboard's Config.
+ */
+internal fun SettingsActivity.refreshGermanSwissSpelling() {
+    try {
+        val user = LanguagePrefs.userLanguages(prefs)
+        LanguagePrefs.seedGermanSwissSpelling(
+            prefs,
+            listOf(user.primary, user.secondary) + boundLayoutLanguages,
+            LanguagePrefs.systemLocales(resources.configuration),
+        )
+    } catch (e: Exception) {
+        android.util.Log.w(SettingsActivity.TAG, "Swiss spelling seed failed", e)
+    }
+    germanSwissSpelling = LanguagePrefs.germanSwissSpelling(prefs)
 }
 
 /** Re-reads the effective inner-screen heights (following the outer value while unset). */

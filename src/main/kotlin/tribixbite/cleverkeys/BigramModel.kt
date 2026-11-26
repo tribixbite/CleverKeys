@@ -558,7 +558,7 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
             Log.e(TAG, "Malformed static context LM $asset; keeping the built-in tables", e)
             return false
         }
-        val lm = parsed.withReplaceAliases(replaceAliasesFor(context, language))
+        val lm = parsed.withReplaceAliases(lookupAliases(parsed, language, replaceAliasesFor(context, language)))
         installStaticLm(language, lm)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.d(
@@ -599,6 +599,31 @@ class BigramModel internal constructor() { // internal: a fresh instance per pur
     } catch (e: RuntimeException) {
         Log.w(TAG, "Contraction aliases for the $language LM unavailable; keys score by backoff", e)
         emptyMap()
+    }
+
+    /**
+     * Every lookup alias [parsed] is installed with: [replace] (the language's REPLACE
+     * contractions), plus, for German, the Swiss spellings of the model's `ß` words
+     * ([SwissSpelling.sharpSAliases]: `strasse → straße`, `weiss → weiß`).
+     *
+     * D2: `de.cklm` spells Germany's way. With Swiss spelling on, the tap candidates and the
+     * previous word are `strasse`, `weiss`; without these aliases every one of them is a word the
+     * model does not name and scores by backoff. Installed whatever the preference says, because
+     * the model loads once per process and the preference can flip afterwards; with it off they
+     * only ever match a word the German list does not hold (a typed `strasse` the user kept),
+     * which then reads `straße`'s statistics. An `ss` word the model names itself (`masse` beside
+     * `maße`, `dass`) is never aliased. A contraction alias wins a shared key.
+     */
+    internal fun lookupAliases(
+        parsed: StaticContextLm,
+        language: String,
+        replace: Map<String, String>,
+    ): Map<String, String> {
+        if (!SwissSpelling.isGerman(language)) return replace
+        val sharpSWords = ArrayList<Pair<String, Float>>()
+        parsed.forEachWord { word, unigram -> if ('ß' in word) sharpSWords.add(word to unigram) }
+        if (sharpSWords.isEmpty()) return replace
+        return SwissSpelling.sharpSAliases(sharpSWords) { parsed.contains(it) } + replace
     }
 
     /**

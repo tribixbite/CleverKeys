@@ -872,6 +872,8 @@
     <string name="privacy_perf_stats">Mga prediction: %1$d • Avg: %2$dms • Top-1: %3$d%%</string>
     <string name="privacy_no_perf_data">Wala pang nakolektang performance data. I-enable ang pagkolekta sa itaas at gumamit ng swipe typing.</string>
     <string name="multilang_secondary_note">Ilo-load ang secondary na diksyunaryo sa susunod na pagbukas ng keyboard. Lalabas sa mga prediction ang mga salita mula sa parehong wika.</string>
+    <string name="multilang_swiss_spelling_title">Swiss na baybay (ss sa halip na ß)</string>
+    <string name="multilang_swiss_spelling_desc">Iminumungkahi ang mga salitang German na may ss sa halip na ß: Strasse, gross, weiss. Nananatili ang baybay ng mga salitang idinagdag mo.</string>
     <string name="multilang_quick_toggle_header">Mabilisang Pagpapalit ng Wika</string>
     <string name="multilang_quick_toggle_desc">I-configure ang mga alternatibong wika para sa mga mabilisang toggle command. I-assign ang PRIMARY_LANG_TOGGLE o SECONDARY_LANG_TOGGLE sa maikling swipe ng anumang key.</string>
     <string name="multilang_packs_header">Mga Language Pack</string>

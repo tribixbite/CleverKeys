@@ -134,6 +134,42 @@ class NormalizedPrefixIndex(
     }
 
     /**
+     * Respell every canonical form through [respell] (D2: Swiss German `ß` → `ss`,
+     * [SwissSpelling.fold]). Forms that become the same word are merged, keeping the better
+     * (lower) rank, and each touched list is left sorted by rank.
+     *
+     * The normalized key and the prefix buckets are NOT touched, so [respell] must keep a word's
+     * [normalizeKey]: a form whose respelling would file under another key is left as it was.
+     * (`ß` → `ss` qualifies: [AccentNormalizer] already normalizes `ß` to `ss`.)
+     *
+     * Call it after the shipped list is loaded and BEFORE the user's words are added, so a
+     * user's own spelling is never rewritten.
+     *
+     * @return the number of canonical forms rewritten
+     */
+    fun respellCanonicals(respell: (String) -> String): Int {
+        var rewritten = 0
+        for ((normalized, entries) in canonicalMap) {
+            var touched = false
+            for (i in entries.indices) {
+                val entry = entries[i]
+                val respelled = respell(entry.canonical)
+                if (respelled == entry.canonical || normalizeKey(respelled) != normalized) continue
+                entries[i] = CanonicalEntry(respelled, entry.frequencyRank)
+                touched = true
+                rewritten++
+            }
+            if (!touched) continue
+            entries.sortBy { it.frequencyRank } // stable: equal ranks keep file order
+            val seen = HashSet<String>(entries.size * 2)
+            val before = entries.size
+            entries.retainAll { seen.add(it.canonical) } // first = best rank wins
+            wordCount -= before - entries.size
+        }
+        return rewritten
+    }
+
+    /**
      * Get all words starting with a prefix.
      *
      * @param prefix The prefix to search for (will be normalized)

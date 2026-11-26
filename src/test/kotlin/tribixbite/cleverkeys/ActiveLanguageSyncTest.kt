@@ -124,4 +124,62 @@ class ActiveLanguageSyncTest {
         assertWithMessage("no secondary is ever loaded while every layout is bound")
             .that(sink.calls.filter { it.startsWith("secondary:") }).isEmpty()
     }
+
+    // ── D2: Swiss German spelling (pref_german_swiss_spelling) ──────────────────────────────
+
+    @Test
+    fun flippingSwissSpellingReloadsAGermanPrimaryAndRewarmsTheSwipeEngine() {
+        val sink = RecordingSink()
+        val sync = ActiveLanguageSync(ActiveLanguages("de", null, null), sink)
+
+        assertThat(sync.applySwissSpelling(true)).isTrue()
+
+        assertWithMessage(
+            "the German dictionary is reloaded with the new spelling and the swipe lexicon re-warmed; " +
+                "contractions do not depend on the spelling"
+        ).that(sink.calls).containsExactly("primary:de", "rewarm").inOrder()
+        assertThat(sync.appliedSwissSpelling).isTrue()
+
+        sink.calls.clear()
+        assertWithMessage("the same value again reloads nothing").that(sync.applySwissSpelling(true)).isFalse()
+        assertThat(sink.calls).isEmpty()
+
+        assertThat(sync.applySwissSpelling(false)).isTrue()
+        assertThat(sink.calls).containsExactly("primary:de", "rewarm").inOrder()
+    }
+
+    @Test
+    fun flippingSwissSpellingReloadsOnlyTheGermanSlot() {
+        val sink = RecordingSink()
+        val sync = ActiveLanguageSync(ActiveLanguages("en", "de", null), sink)
+
+        sync.applySwissSpelling(true)
+
+        assertThat(sink.calls).containsExactly("secondary:de", "rewarm").inOrder()
+    }
+
+    @Test
+    fun flippingSwissSpellingWithoutGermanReloadsNothingAndIsRemembered() {
+        val sink = RecordingSink()
+        val sync = ActiveLanguageSync(enFa, sink)
+
+        assertThat(sync.applySwissSpelling(true)).isTrue()
+        assertThat(sink.calls).isEmpty()
+
+        // German arrives later: the language diff loads it, with the stored spelling.
+        sync.apply(ActiveLanguages("de", null, null))
+        sink.calls.clear()
+        assertWithMessage("already applied: no second reload").that(sync.applySwissSpelling(true)).isFalse()
+        assertThat(sink.calls).isEmpty()
+    }
+
+    @Test
+    fun theSyncStartsFromTheSpellingTheComponentsWereLoadedWith() {
+        val sink = RecordingSink()
+        val sync = ActiveLanguageSync(ActiveLanguages("de", null, null), sink, initialSwissSpelling = true)
+
+        assertWithMessage("startup must not reload a dictionary it already loaded")
+            .that(sync.applySwissSpelling(true)).isFalse()
+        assertThat(sink.calls).isEmpty()
+    }
 }

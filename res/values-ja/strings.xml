@@ -860,6 +860,8 @@
     <string name="privacy_perf_stats">予測: %1$d • 平均: %2$dms • Top-1: %3$d%%</string>
     <string name="privacy_no_perf_data">パフォーマンスデータはまだ収集されていません。上で収集を有効にしてスワイプ入力を使用してください。</string>
     <string name="multilang_secondary_note">副辞書は次回キーボードを開いたときに読み込まれます。両方の言語の単語が予測に表示されます。</string>
+    <string name="multilang_swiss_spelling_title">スイス式の綴り（ß の代わりに ss）</string>
+    <string name="multilang_swiss_spelling_desc">ドイツ語の単語を ß の代わりに ss で候補に表示します（Strasse、gross、weiss）。自分で追加した単語の綴りは変わりません。</string>
     <string name="multilang_quick_toggle_header">クイック言語切替</string>
     <string name="multilang_quick_toggle_desc">クイック切替コマンド用の代替言語を設定します。任意のキーのショートスワイプに PRIMARY_LANG_TOGGLE または SECONDARY_LANG_TOGGLE を割り当ててください。</string>
     <string name="multilang_packs_header">言語パック</string>

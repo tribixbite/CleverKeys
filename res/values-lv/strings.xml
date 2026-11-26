@@ -876,6 +876,8 @@
     <string name="privacy_perf_stats">Prognozes: %1$d • Vid.: %2$dms • Top-1: %3$d%%</string>
     <string name="privacy_no_perf_data">Veiktspējas dati vēl nav savākti. Iespējojiet vākšanu augstāk un izmantojiet vilkuma rakstīšanu.</string>
     <string name="multilang_secondary_note">Sekundārā vārdnīca tiks ielādēta nākamajā tastatūras atvēršanas reizē. Prognozēs parādīsies abu valodu vārdi.</string>
+    <string name="multilang_swiss_spelling_title">Šveices pareizrakstība (ss, nevis ß)</string>
+    <string name="multilang_swiss_spelling_desc">Vācu vārdi tiek piedāvāti ar ss, nevis ß: Strasse, gross, weiss. Jūsu pievienotie vārdi saglabā savu rakstību.</string>
     <string name="multilang_quick_toggle_header">Ātrā valodu pārslēgšana</string>
     <string name="multilang_quick_toggle_desc">Konfigurējiet alternatīvās valodas ātrās pārslēgšanas komandām. Piešķiriet PRIMARY_LANG_TOGGLE vai SECONDARY_LANG_TOGGLE jebkura taustiņa īsajam vilkumam.</string>
     <string name="multilang_packs_header">Valodu pakotnes</string>

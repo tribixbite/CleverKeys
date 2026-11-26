@@ -773,8 +773,9 @@ class WordPredictor : Predictor {
         // v1.1.92: Use language-specific disabled words key
         val disabledWordsKey = LanguagePreferenceKeys.disabledWordsKey(currentLanguage)
         val disabledSet = prefs.getStringSet(disabledWordsKey, emptySet()) ?: emptySet()
-        // Create a new HashSet to avoid modifying the original
-        disabledWords = disabledSet.toMutableSet()
+        // Create a new HashSet to avoid modifying the original. D2: with Swiss spelling the list
+        // holds `strasse` for the `straße` Dictionary Manager disables ([SwissSpelling.foldDisabled]).
+        disabledWords = SwissSpelling.foldDisabled(swissSpellingFor(ctx, currentLanguage), disabledSet).toMutableSet()
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Loaded ${disabledWords.size} disabled words for '$currentLanguage'")
     }
 
@@ -1449,7 +1450,11 @@ class WordPredictor : Predictor {
         maxResults: Int
     ): List<StaticBigramSeed.Continuation> {
         val prevWord = contextWords.lastOrNull() ?: return emptyList()
-        return bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
+        val seed = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
+        // D2: the model spells Germany's way (`straße`); with Swiss spelling the dictionary the
+        // seed is checked against does not, so the continuations are shown respelled, a twin once.
+        if (!primarySwissSpelling) return seed
+        return SwissSpelling.foldDistinct(seed, { it.word }) { c, word -> c.copy(word = word) }
     }
 
     /**
@@ -1604,6 +1609,15 @@ class WordPredictor : Predictor {
     private var publishedLexiconLanguage: String? = null
 
     /**
+     * D2: whether the PUBLISHED primary lexicon was loaded with Swiss German spelling
+     * ([SwissSpelling]: `ss` for `ß`). Set with the lexicon it describes (the sync load, and the
+     * async load's main-thread swap), so the next-word seed is respelled exactly while the
+     * dictionary it is checked against is.
+     */
+    @Volatile
+    private var primarySwissSpelling: Boolean = false
+
+    /**
      * Checkpoint all learned data (context LM bigrams + personalization vocabulary)
      * to persistent storage. Asynchronous flush of the debounced write-back stores;
      * cheap no-op when nothing is dirty.
@@ -1706,6 +1720,10 @@ class WordPredictor : Predictor {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Built prefix index: ${prefixIndex.get().size} prefixes for ${dictionary.get().size} words")
         }
 
+        // D2: Swiss German spelling, on the shipped list only — BEFORE the user's words join
+        // the map, so a custom `Straße` keeps its ß.
+        primarySwissSpelling = foldSwissSpelling(context, dictionary.get(), prefixIndex.get(), language)
+
         // Load custom words and user dictionary (additive to main dictionary)
         // OPTIMIZATION v2: Use incremental prefix index updates instead of full rebuild
         // v1.1.90: Pass language to filter UserDictionary by locale
@@ -1773,6 +1791,8 @@ class WordPredictor : Predictor {
             private val loadedBaseFrequencies = mutableMapOf<String, Int>()
             private val loadedAliases = mutableMapOf<String, String>()
             private var loadedCustomWords: Set<String> = emptySet()
+            /** D2: whether this load respelled the list ([primarySwissSpelling] once published). */
+            private var loadedSwissSpelling = false
 
             override fun onLoadStarted(lang: String) {
                 isLoadingState = true
@@ -1785,6 +1805,10 @@ class WordPredictor : Predictor {
                 prefixIndex: MutableMap<String, MutableSet<String>>
             ): Set<String> {
                 // OPTIMIZATION v4 (perftodos4.md): This runs on BACKGROUND THREAD!
+                // D2: Swiss German spelling, on the shipped list only — the maps hold nothing of
+                // the user's yet, so a custom `Straße` keeps its ß.
+                loadedSwissSpelling = foldSwissSpelling(ctx, dictionary, prefixIndex, language)
+
                 // Load custom words into the maps before they're swapped on main thread
                 // v1.1.90: Pass language to filter UserDictionary by locale
                 val customWords = loadCustomAndUserWordsIntoMap(
@@ -1827,6 +1851,7 @@ class WordPredictor : Predictor {
                 this@WordPredictor.prefixIndex.set(prefixIndex as MutableMap<String, MutableSet<String>>)
 
                 customAndUserWords = loadedCustomWords
+                primarySwissSpelling = loadedSwissSpelling
                 userWordOriginalCase.clear()
                 userWordOriginalCase.putAll(loadedCase)
                 shadowedBaseFrequencies.clear()
@@ -1927,7 +1952,11 @@ class WordPredictor : Predictor {
         return try {
             val prefs = DirectBootAwarePreferences.get_shared_preferences(ctx)
             secondaryDisabledSet(
-                prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(language), emptySet()) ?: emptySet(),
+                // D2: a German secondary list respelled the Swiss way is disabled the same way.
+                SwissSpelling.foldDisabled(
+                    swissSpellingFor(ctx, language),
+                    prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey(language), emptySet()) ?: emptySet(),
+                ),
                 prefs.getString(LanguagePreferenceKeys.customWordsKey(language), "{}") ?: "{}",
             )
         } catch (e: Exception) {
@@ -1993,6 +2022,13 @@ class WordPredictor : Predictor {
             if (loaded && index.size() > 0) {
                 MemoryProbe.mark("secondary.binaryIndex", settle = true) {
                     "lang=$language words=${index.size()} normalized=${index.normalizedCount()}"
+                }
+
+                // D2: Swiss German spelling for a German SECONDARY list, before the user's
+                // words are added (theirs are never respelled).
+                if (swissSpellingFor(ctx, language)) {
+                    val respelled = index.respellCanonicals(SwissSpelling::fold)
+                    Log.i(TAG, "Swiss spelling for secondary '$language': $respelled words respelled")
                 }
 
                 // v1.1.94: Also load custom words for secondary language
@@ -2655,6 +2691,41 @@ class WordPredictor : Predictor {
             }
         }
         return best
+    }
+
+    /**
+     * D2: whether [language]'s lexicon is to be loaded with Swiss German spelling: it is German
+     * and `pref_german_swiss_spelling` is on. Reads the STORED preference (a load can run off the
+     * main thread, and before a Config exists); the Config value only without a context.
+     */
+    private fun swissSpellingFor(ctx: Context?, language: String): Boolean {
+        if (!SwissSpelling.isGerman(language)) return false
+        if (ctx == null) return config?.german_swiss_spelling ?: Defaults.GERMAN_SWISS_SPELLING
+        return try {
+            LanguagePrefs.germanSwissSpelling(DirectBootAwarePreferences.get_shared_preferences(ctx))
+        } catch (e: Exception) {
+            Log.w(TAG, "Swiss spelling preference unreadable; loading Germany's spelling", e)
+            Defaults.GERMAN_SWISS_SPELLING
+        }
+    }
+
+    /**
+     * D2: respell a freshly loaded SHIPPED primary list the Swiss way when [swissSpellingFor]
+     * says so ([SwissSpelling.foldDictionaryKeys]: keys and prefix index, twins merged to the
+     * higher frequency). Must run before the user's words are merged into [dict].
+     *
+     * @return whether the list was respelled (the value to publish as [primarySwissSpelling])
+     */
+    private fun foldSwissSpelling(
+        ctx: Context?,
+        dict: MutableMap<String, Int>,
+        index: MutableMap<String, MutableSet<String>>,
+        language: String,
+    ): Boolean {
+        if (!swissSpellingFor(ctx, language)) return false
+        val folded = SwissSpelling.foldDictionaryKeys(dict, index, PREFIX_INDEX_MAX_LENGTH)
+        Log.i(TAG, "Swiss spelling for '$language': $folded keys respelled")
+        return true
     }
 
     /** [ArabicScriptFold.foldDictionaryKeys] over a freshly loaded primary dictionary. */

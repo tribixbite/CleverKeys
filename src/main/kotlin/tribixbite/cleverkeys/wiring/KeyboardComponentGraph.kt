@@ -189,7 +189,7 @@ class KeyboardComponentGraph(
             override fun rewarmSwipe() = CleverKeysService.requestGeometricRewarm()
 
             override fun announce(active: ActiveLanguages) = service.announceLayoutLanguage(active.primary)
-        })
+        }, initialSwissSpelling = config.german_swiss_spelling)
     }
 
     // Convenience reads — each forces the [managers] cluster on first access.

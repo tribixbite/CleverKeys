@@ -4,6 +4,7 @@ import tribixbite.cleverkeys.LanguageDetector
 import tribixbite.cleverkeys.LanguagePrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.SwissSpelling
 import tribixbite.cleverkeys.langpack.LanguagePackManifest
 import tribixbite.cleverkeys.langpack.NoticeTextLayout
 import tribixbite.cleverkeys.langpack.PackAttributionDisplay
@@ -118,6 +119,25 @@ internal fun SettingsActivity.MultiLanguageSection() {
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                    )
+                }
+
+                // D2: Swiss German spelling. Shown only while German is selected in any way it can
+                // be served: as the primary (with or without Multi-Language), as the secondary
+                // while Multi-Language is on, or as a layout's bound language.
+                val germanSelected = SwissSpelling.isGerman(primaryLanguage) ||
+                    (multiLangEnabled && SwissSpelling.isGerman(secondaryLanguage)) ||
+                    boundLayoutLanguages.any { SwissSpelling.isGerman(it) }
+                if (germanSelected) {
+                    SettingsSwitch(
+                        title = stringResource(R.string.multilang_swiss_spelling_title),
+                        description = stringResource(R.string.multilang_swiss_spelling_desc),
+                        checked = germanSwissSpelling,
+                        onCheckedChange = {
+                            germanSwissSpelling = it
+                            // Reload: Config refresh -> ActiveLanguageSync.applySwissSpelling.
+                            saveSetting(LanguagePrefs.GERMAN_SWISS_SPELLING, it)
+                        }
                     )
                 }
 

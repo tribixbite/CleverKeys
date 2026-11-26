@@ -1173,6 +1173,8 @@
 
     <!-- MultiLanguageSection.kt — secondary language, quick toggle, language packs -->
     <string name="multilang_secondary_note">Secondary dictionary will be loaded on next keyboard open. Words from both languages will appear in predictions.</string>
+    <string name="multilang_swiss_spelling_title">Swiss spelling (ss for ß)</string>
+    <string name="multilang_swiss_spelling_desc">German words are suggested with ss in place of ß: Strasse, gross, weiss. Words you added yourself keep their spelling.</string>
     <string name="multilang_quick_toggle_header">Quick Language Toggle</string>
     <string name="multilang_quick_toggle_desc">Configure alternate languages for quick toggle commands. Assign PRIMARY_LANG_TOGGLE or SECONDARY_LANG_TOGGLE to any key\'s short swipe.</string>
     <string name="multilang_packs_header">Language Packs</string>

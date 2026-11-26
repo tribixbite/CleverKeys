@@ -1059,6 +1059,8 @@
     <string name="multilang_quick_toggle_desc">为快速切换命令配置备用语言。将 PRIMARY_LANG_TOGGLE 或 SECONDARY_LANG_TOGGLE 指定给任意按键的短滑动。</string>
     <string name="multilang_quick_toggle_header">快速语言切换</string>
     <string name="multilang_secondary_note">次要词典将在下次打开键盘时加载。两种语言的单词都会出现在预测中。</string>
+    <string name="multilang_swiss_spelling_title">瑞士拼写（用 ss 代替 ß）</string>
+    <string name="multilang_swiss_spelling_desc">德语单词以 ss 代替 ß 给出建议：Strasse、gross、weiss。您自己添加的单词保持原有拼写。</string>
     <string name="privacy_collected_data_header">已收集的数据</string>
     <string name="privacy_export_json">导出 JSON</string>
     <string name="privacy_export_ndjson">导出 NDJSON</string>

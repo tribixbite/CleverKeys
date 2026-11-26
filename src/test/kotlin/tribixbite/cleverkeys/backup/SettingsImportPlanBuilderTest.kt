@@ -26,6 +26,64 @@ class SettingsImportPlanBuilderTest {
 
     private val screen = ScreenMetrics(width = 1080, height = 2400, density = 3.0f)
 
+    // ── D2: Swiss German spelling (pref_german_swiss_spelling) ──────────────────────────────
+
+    @Test
+    fun germanSwissSpelling_backupRoundTripsBothChoices() {
+        val key = tribixbite.cleverkeys.LanguagePrefs.GERMAN_SWISS_SPELLING
+        assertThat(SETTINGS_DEFAULTS[key]).isEqualTo(PrefValue.Bool(false))
+        for (choice in listOf(true, false)) {
+            val (obj, count) = SettingsExporter.buildPreferencesJson(mapOf(key to choice))
+            assertThat(count).isEqualTo(1)
+            // Onto a device holding the other choice …
+            val flipped = SettingsImportPlanBuilder.fromJson("""{"preferences":$obj}""", mapOf(key to !choice), screen)
+            assertThat(flipped.changes.single().proposed).isEqualTo(PrefValue.Bool(choice))
+            assertThat(flipped.changes.single().type).isEqualTo(ChangeType.MODIFIED)
+            // … and onto one where the same choice is already stored: nothing to do.
+            val same = SettingsImportPlanBuilder.fromJson("""{"preferences":$obj}""", mapOf(key to choice), screen)
+            assertThat(same.changes).isEmpty()
+            assertThat(flipped.parseSkippedKeys + same.parseSkippedKeys).isEmpty()
+        }
+    }
+
+    @Test
+    fun germanSwissSpelling_anExplicitChoiceIsWrittenOverAnAbsentKey() {
+        // The key is absent until German is first served, then seeded from the system languages
+        // (on for de-CH / de-LI). So an imported OFF is a change even though it equals the static
+        // default: skipped, the next Swiss phone would seed the switch back on.
+        val key = tribixbite.cleverkeys.LanguagePrefs.GERMAN_SWISS_SPELLING
+        assertThat(SEEDED_WHEN_ABSENT_KEYS).contains(key)
+        for (choice in listOf(false, true)) {
+            val plan = SettingsImportPlanBuilder.fromJson("""{"preferences":{"$key":$choice}}""", emptyMap(), screen)
+            val change = plan.changes.single()
+            assertThat(change.key).isEqualTo(key)
+            assertThat(change.type).isEqualTo(ChangeType.ADDED)
+            assertThat(change.current).isEqualTo(PrefValue.Unset)
+            assertThat(change.proposed).isEqualTo(PrefValue.Bool(choice))
+        }
+        // A backup that never served German carries no key, and writes none.
+        val none = SettingsImportPlanBuilder.fromJson("""{"preferences":{"key_height":50}}""", mapOf("key_height" to 50), screen)
+        assertThat(none.changes).isEmpty()
+    }
+
+    @Test
+    fun germanSwissSpelling_aWrongTypedValueIsSkipped() {
+        val key = tribixbite.cleverkeys.LanguagePrefs.GERMAN_SWISS_SPELLING
+        for (bogus in listOf("\"yes\"", "1", "1.5")) {
+            val plan = SettingsImportPlanBuilder.fromJson("""{"preferences":{"$key":$bogus}}""", emptyMap(), screen)
+            assertThat(plan.changes).isEmpty()
+            assertThat(plan.parseSkippedKeys.map { it.key }).contains(key)
+        }
+    }
+
+    @Test
+    fun germanSwissSpelling_aSettingsResetRemovesTheKeySoTheDeviceSeedsItAgain() {
+        val key = tribixbite.cleverkeys.LanguagePrefs.GERMAN_SWISS_SPELLING
+        val policy = tribixbite.cleverkeys.ui.settings.SettingsResetPolicy
+        assertThat(policy.keysToRemove(setOf(key, "custom_words_de"))).containsExactly(key)
+        assertThat(policy.seedValues().keys).doesNotContain(key)
+    }
+
     @Test
     fun unfinishedWordMode_backupRoundTripsEveryOfferedChoiceAndRejectsOthers() {
         val key = tribixbite.cleverkeys.autocorrect.AutocorrectTuning.Keys.UNFINISHED_WORD_MODE.key

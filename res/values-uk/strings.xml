@@ -1078,6 +1078,8 @@
     <string name="multilang_quick_toggle_desc">Налаштуйте альтернативні мови для команд швидкого перемикання. Призначте PRIMARY_LANG_TOGGLE або SECONDARY_LANG_TOGGLE короткому свайпу будь-якої клавіші.</string>
     <string name="multilang_quick_toggle_header">Швидке перемикання мови</string>
     <string name="multilang_secondary_note">Додатковий словник буде завантажено під час наступного відкриття клавіатури. Слова з обох мов з’являтимуться в передбаченнях.</string>
+    <string name="multilang_swiss_spelling_title">Швейцарський правопис (ss замість ß)</string>
+    <string name="multilang_swiss_spelling_desc">Німецькі слова пропонуються з ss замість ß: Strasse, gross, weiss. Слова, які ви додали самі, зберігають своє написання.</string>
     <string name="privacy_collected_data_header">Зібрані дані</string>
     <string name="privacy_export_json">Експорт JSON</string>
     <string name="privacy_export_ndjson">Експорт NDJSON</string>

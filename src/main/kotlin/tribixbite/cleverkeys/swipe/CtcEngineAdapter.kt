@@ -12,6 +12,8 @@ import tribixbite.cleverkeys.Config
 import tribixbite.cleverkeys.ContractionManager
 import tribixbite.cleverkeys.Defaults
 import tribixbite.cleverkeys.DirectBootAwarePreferences
+import tribixbite.cleverkeys.LanguagePrefs
+import tribixbite.cleverkeys.SwissSpelling
 import tribixbite.cleverkeys.KeyValue
 import tribixbite.cleverkeys.KeyboardData
 import tribixbite.cleverkeys.MemoryProbe
@@ -669,9 +671,14 @@ class CtcEngineAdapter(
             }
             return null
         }
-        val inputs = UserLexiconInputs.read(DirectBootAwarePreferences.get_shared_preferences(context), lang)
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val inputs = UserLexiconInputs.read(prefs, lang)
+        // D2: Swiss German spelling — the base list is respelled before the merge below, and the
+        // choice is part of the memo key, so flipping the preference rebuilds this trie.
+        val swissSpelling = SwissSpelling.appliesTo(LanguagePrefs.germanSwissSpelling(prefs), lang)
         val customJson = inputs.customJson
-        val disabled = inputs.disabled
+        // A `straße` disabled in Dictionary Manager disables the respelled `strasse` too.
+        val disabled = SwissSpelling.foldDisabled(swissSpelling, inputs.disabled)
         val priorityJson = inputs.priorityJson
         // A langpack is mutable on disk (import/re-import/removal), so its identity carries
         // length + mtime the way GeometricEngineAdapter's does; a bundled asset is immutable
@@ -689,7 +696,8 @@ class CtcEngineAdapter(
         // outside this app entirely, so it is read per build and folded into the memo key.
         val userDictionary = userDictionarySource(lang)
         val version = LexiconContentVersion.of(
-            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson
+            sourceId, customJson, disabled, userDictionary.fingerprint, priorityJson,
+            SwissSpelling.lexiconVariant(swissSpelling, lang),
         )
         trieMemos[lang]?.let { if (it.language == lang && it.version == version) return it }
 
@@ -701,7 +709,7 @@ class CtcEngineAdapter(
         // unit-tested [CtcLexiconMerge]. Insertion order only
         // affects beam tie-breaks; LinkedHashMap keeps it deterministic (en: asset JSON
         // order on Android's org.json; CKDT: rank ascending, file order as tie-break).
-        val basePairs = try {
+        val shippedPairs = try {
             when (source) {
                 CtcLanguageSupport.LexiconSource.EN_JSON -> {
                     val base = context.assets.open(asset!!)
@@ -735,6 +743,10 @@ class CtcEngineAdapter(
             trieMemos.remove(lang)
             return null
         }
+
+        // D2: `straße` → `strasse` on the shipped (or pack) list only, twins merged to the higher
+        // frequency; the user's words below keep their own spelling.
+        val basePairs = SwissSpelling.foldBaseLexicon(swissSpelling, shippedPairs)
 
         val customPairs = customWordPairs(customJson, lang)
         // ARC-081: the preference and the platform provider are ONE user-word list from here

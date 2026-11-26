@@ -9,6 +9,7 @@ import org.junit.AfterClass
 import org.junit.Assume
 import org.junit.BeforeClass
 import org.junit.Test
+import tribixbite.cleverkeys.SwissSpelling
 import tribixbite.cleverkeys.a11y.KeyboardGeometry
 import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
@@ -89,10 +90,14 @@ class CtcAccentKeyLayoutReplayTest {
          * base scale). Used to give the Swedish base a handful of Danish `æ` words: no Danish
          * dictionary ships, so that board has no real lexicon to decode against.
          */
-        fun lexiconOf(lang: String, extra: List<Pair<String, Int>>): Lexicon {
+        fun lexiconOf(lang: String, extra: List<Pair<String, Int>>, swissSpelling: Boolean = false): Lexicon {
             val entries = File("src/main/assets/dictionaries/${lang}_enhanced.bin").inputStream()
                 .use { CkdtDictionaryReader.readEntries(it) }
-            val merged = CtcLexiconMerge.merge(CtcCkdtLexicon.frequencyPairs(entries), extra, emptySet())
+            // D2: the base list is respelled before the merge, as `CtcEngineAdapter.lexiconFor` does.
+            val base = SwissSpelling.foldBaseLexicon(
+                SwissSpelling.appliesTo(swissSpelling, lang), CtcCkdtLexicon.frequencyPairs(entries),
+            )
+            val merged = CtcLexiconMerge.merge(base, extra, emptySet())
             val projected = CtcAzProjection.projectLexicon(merged)
             return Lexicon(CtcLexiconTrie.loadFromFrequencyMap(AZ, projected.freqs), projected.display, projected.alternates)
         }
@@ -245,6 +250,34 @@ class CtcAccentKeyLayoutReplayTest {
         "latn_bone.xml", "de", listOf("straße", "große", "weiß", "heißen"),
         rankOne = emptySet(),
     )
+
+    /**
+     * D2: Swiss German spelling (`pref_german_swiss_spelling`). The German lexicon is loaded with
+     * `ss` for `ß`, so the same swipes show `strasse`, `grosse`, `weiss`, `heissen`: on QWERTZ,
+     * where a Swiss writer draws the two `s` on the `s` key …
+     */
+    @Test
+    fun qwertzGermanShowsSsUnderSwissSpelling() = assertDecodes(
+        "latn_qwertz_de.xml", "de", listOf("strasse", "grosse", "weiss", "heissen"),
+        rankOne = emptySet(),
+        lex = lexiconOf("de", emptyList(), swissSpelling = true),
+    )
+
+    /** … and on a board with a `ß` key (Neo 2): the key still reads as `ss`, shown the Swiss way. */
+    @Test
+    fun neo2SharpSKeyShowsSsUnderSwissSpelling() = assertDecodes(
+        "latn_neo2.xml", "de", listOf("straße", "große", "weiß", "heißen"),
+        rankOne = emptySet(),
+        lex = lexiconOf("de", emptyList(), swissSpelling = true),
+        expected = { SwissSpelling.fold(it) },
+    )
+
+    /** The switch respells German only: another language's lexicon is the one it always was. */
+    @Test
+    fun swissSpellingLeavesOtherLanguagesAlone() {
+        val french = lexiconOf("fr", emptyList(), swissSpelling = true)
+        assertWithMessage("fr display forms").that(french.display).isEqualTo(lexicon("fr").display)
+    }
 
     /**
      * Danish `æ` as a centre key: the lexicon spells it `ae`, so the key folds into BOTH `a` and
