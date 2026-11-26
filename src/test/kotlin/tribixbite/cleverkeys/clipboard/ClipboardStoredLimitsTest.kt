@@ -221,6 +221,21 @@ class ClipboardStoredLimitsTest {
                 """globalConfig(OrNull)?\(\)\??\.clipboard_(history_limit|limit_type|size_limit_mb|max_item_size_kb|history_duration)""")
     }
 
+    /**
+     * The selection-toolbar "Private copy" (PrivateCopyProcessTextActivity) is a cold-start entry
+     * point that runs where the keyboard may not (2.1 item, agents 2026-11-26): its size cap is the
+     * stored one, like the service's, not the in-memory Config's.
+     */
+    @Test
+    fun thePrivateCopyToolbarCapIsTheStoredOne() {
+        val activity = java.io.File(
+            "src/main/kotlin/tribixbite/cleverkeys/activities/PrivateCopyProcessTextActivity.kt"
+        ).readText()
+        assertWithMessage("the toolbar's size cap is not read from the in-memory Config")
+            .that(activity).doesNotContainMatch("""globalConfig(OrNull)?\(\)\??\.clipboard_""")
+        assertThat(activity).contains("ClipboardHistoryLimits.fromSettings(")
+    }
+
     // ---------------------------------------------------------------- capture switches
     // Fable audit 2026-11-26 (0498aa112 incomplete): the History on/off switch, the two
     // exclusions and the media size cap were still read from the in-memory Config. History

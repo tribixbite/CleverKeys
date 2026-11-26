@@ -118,14 +118,12 @@ class PrivateCopyProcessTextActivity : Activity() {
 
         // Parse + validate via the pure-JVM parser (the ONLY intent-reading code). READONLY is
         // irrelevant to behavior — we only ever read the text extra, never transform/return it.
-        // Single source of truth for the cap: the SAME clipboard_max_item_size_kb the service's
-        // storeClip enforces (design §6.2) — the parser only re-checks it so it stays unit-testable.
-        // TODO(2.1): read ClipboardHistoryLimits.fromSettings(DirectBootAwarePreferences
-        //  .get_shared_preferences(this)).maxItemSizeKb like the service; the in-memory Config can
-        //  be stale after a restore in this process. The service's storeClip re-checks the stored
-        //  limit, so an oversized clip is still refused there. Kept on Config for now because
-        //  PrivateCopyProcessTextActivityTest drives this cap through the Config field.
-        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        // Single source of truth for the cap: the SAME stored clipboard_max_item_size_kb, read by
+        // the same reader, that the service's storeClip enforces (design §6.2); the parser only
+        // re-checks it so it stays unit-testable. Never the in-memory Config: this activity is a
+        // cold-start entry point, and only the keyboard's listener refreshes Config, so after a
+        // restore in a process without the keyboard it held the old cap (2.1 item, 2026-11-26).
+        val maxSizeKb = ClipboardHistoryLimits.fromSettings(prefs).maxItemSizeKb
         val maxBytes = maxSizeKb * 1024
         val processText = intent?.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
         val result = PrivateCopyIntentParser.parse(intent?.action, processText, maxBytes)

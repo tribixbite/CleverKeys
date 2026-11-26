@@ -617,6 +617,9 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Private copy from the text-selection menu uses the largest-clipping size saved in Settings,
+  also right after a restore while the keyboard is not running (it used a copy that only the
+  running keyboard refreshes).
 - A full backup's summary counts every dictionary word and swipe priority it added. A backup
   made with a 1.x version carries the words in its settings file as well; those were added, but
   the summary counted only the dictionary file's words, and swipe priorities not at all.

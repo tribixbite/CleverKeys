@@ -252,20 +252,29 @@ class PrivateCopyProcessTextActivityTest {
     @Test
     fun overCapText_noRow_noCrash() {
         // A payload just over the 512 KB-class default cap can't cross startActivity's Binder
-        // transaction (UTF-16 doubles it past the ~1 MB limit → "Failure from system"). Lower the
-        // cap so a small string is still over-cap, exercising the same OVER_CAP reject path via a
-        // legal Intent. clipboard_max_item_size_kb is the exact field the activity reads.
-        val cfg = Config.globalConfig()
-        val originalCap = cfg.clipboard_max_item_size_kb
-        cfg.clipboard_max_item_size_kb = 1
+        // transaction (UTF-16 doubles it past the ~1 MB limit → "Failure from system"). Store the
+        // lowest cap the reader allows (64 KB, SettingsRanges' floor) so a 65 KB string is over it,
+        // exercising the same OVER_CAP reject path via a legal Intent. The activity reads the
+        // STORED cap (ClipboardHistoryLimits.fromSettings), never the in-memory Config (2.1 item,
+        // 2026-11-26), so the cap goes through the settings store and is restored synchronously.
+        val key = "clipboard_max_item_size_kb"
+        val settings = DirectBootAwarePreferences.get_shared_preferences(context)
+        val original: Any? = settings.all[key]
+        settings.edit().putInt(key, 64).commit()
         try {
-            val oversized = "a".repeat(2 * 1024)   // 2 KB > 1 KB cap, tiny for Binder
+            val oversized = "a".repeat(65 * 1024)   // 65 KB > 64 KB cap, small for Binder
             ActivityScenario.launch<PrivateCopyProcessTextActivity>(
                 processTextIntent(oversized, readonly = false)
             ).use { }
             assertEquals("oversized selection must not be stored", 0, db.getActiveClipboardEntries().size)
         } finally {
-            cfg.clipboard_max_item_size_kb = originalCap
+            settings.edit().apply {
+                when (original) {
+                    null -> remove(key)
+                    is Int -> putInt(key, original)
+                    else -> putString(key, original.toString())
+                }
+            }.commit()
         }
     }
 
