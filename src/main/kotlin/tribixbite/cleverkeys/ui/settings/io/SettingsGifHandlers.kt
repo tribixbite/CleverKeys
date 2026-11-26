@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.ResultText
+import tribixbite.cleverkeys.PendingGifReplace
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.gif.GifPackImportResult
 
@@ -144,14 +145,9 @@ private fun SettingsActivity.showGifPackImportResult(uri: Uri, result: GifPackIm
             // toast and the sole call site hardcoded replaceExisting=false, so the
             // replace path (the only way a rebuilt pack's rows — e.g. the #149 gid:
             // markers — can supersede the installed ones) was unreachable.
-            android.app.AlertDialog.Builder(_self)
-                .setTitle(R.string.gif_replace_dialog_title)
-                .setMessage(getString(R.string.gif_replace_dialog_body, result.name))
-                .setPositiveButton(R.string.gif_replace_dialog_confirm) { _, _ ->
-                    performGifPackImport(uri, replaceExisting = true)
-                }
-                .setNegativeButton(R.string.common_cancel, null)
-                .show()
+            // The prompt is DATA in the SettingsViewModel, rendered by the Settings content:
+            // a platform dialog built here belonged to this activity and vanished on a rotation.
+            pendingGifReplace = PendingGifReplace(uri, result.name)
         }
         is GifPackImportResult.Error -> {
             android.util.Log.w(SettingsActivity.TAG, "GIF pack import refused: ${result.message}")

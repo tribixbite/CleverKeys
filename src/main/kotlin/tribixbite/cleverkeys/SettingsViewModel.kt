@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys
 
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,6 +82,14 @@ class SettingsViewModel : ViewModel() {
     var showGifRemovePackDialog by mutableStateOf<String?>(null)
     var showLanguagePackDialog by mutableStateOf(false)
 
+    /**
+     * The GIF "replace installed pack?" prompt, shown while non-null. DATA, not a dialog or a
+     * callback: this VM outlives the activity across a rotation, and the Settings content (not
+     * the collapsible GIF section) renders it, so the prompt survives both; the live activity
+     * turns a confirm into `performGifPackImport(uri, replaceExisting = true)`.
+     */
+    var pendingGifReplace by mutableStateOf<PendingGifReplace?>(null)
+
     // ── Collected-data viewer paging and content ──────────────────────────────
 
     var collectedDataList by mutableStateOf<List<SwipeMLData>>(emptyList())
@@ -104,3 +113,6 @@ class SettingsViewModel : ViewModel() {
     var languagePackImportStatus by
         mutableStateOf<tribixbite.cleverkeys.ui.settings.io.LanguagePackImportStatus?>(null)
 }
+
+/** A GIF pack import that found [name] already installed: [uri] is the file to replace it with. */
+data class PendingGifReplace(val uri: Uri, val name: String)

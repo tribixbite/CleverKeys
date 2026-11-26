@@ -367,6 +367,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
     internal var showGifRemovePackDialog: String?
         get() = settingsViewModel.showGifRemovePackDialog
         set(value) { settingsViewModel.showGifRemovePackDialog = value }
+    // The GIF replace prompt, delegated to settingsViewModel (survives rotation).
+    internal var pendingGifReplace: PendingGifReplace?
+        get() = settingsViewModel.pendingGifReplace
+        set(value) { settingsViewModel.pendingGifReplace = value }
     internal var gifStorageUsed by mutableLongStateOf(0L)
 
     internal var autoCapitalizationEnabled by mutableStateOf(Defaults.AUTOCAPITALISATION)
@@ -936,6 +940,29 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                                     Text(stringResource(R.string.common_ok))
                                 }
                             }
+                        )
+                    }
+                    // A GIF pack import found the pack installed: replace it with the file?
+                    // Rendered here, not in the collapsible GIF section, so it shows for a
+                    // shared ZIP too, and from the ViewModel, so it survives a rotation.
+                    pendingGifReplace?.let { pending ->
+                        AlertDialog(
+                            onDismissRequest = { pendingGifReplace = null },
+                            title = { Text(stringResource(R.string.gif_replace_dialog_title)) },
+                            text = { Text(stringResource(R.string.gif_replace_dialog_body, pending.name)) },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    pendingGifReplace = null
+                                    performGifPackImport(pending.uri, replaceExisting = true)
+                                }) {
+                                    Text(stringResource(R.string.gif_replace_dialog_confirm))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { pendingGifReplace = null }) {
+                                    Text(stringResource(R.string.common_cancel))
+                                }
+                            },
                         )
                     }
                     // Stage B: passphrase prompt for an encrypted import that couldn't be

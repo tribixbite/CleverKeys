@@ -83,4 +83,21 @@ class GifAndRulesImportScopeDriftTest {
         assertWithMessage("performGifPackImport tells the user when another pack import runs")
             .that(refused).contains("R.string.gif_import_already_running")
     }
+
+    @Test
+    fun theReplacePromptSurvivesRotation() {
+        val result = body(gif, "showGifPackImportResult")
+        assertWithMessage("the replace prompt must not be an activity-owned AlertDialog.Builder")
+            .that(result).doesNotContain("AlertDialog.Builder")
+        assertThat(result).contains("pendingGifReplace = PendingGifReplace(")
+        assertThat(viewModel).contains("var pendingGifReplace by mutableStateOf<")
+        // Rendered by the Settings content (not the collapsible GIF section), confirm re-runs the
+        // import as a replace, and every exit clears the pending prompt.
+        val shown = activity.substringAfter("pendingGifReplace?.let", missingDelimiterValue = "")
+        assertWithMessage("SettingsActivity renders pendingGifReplace").that(shown).isNotEmpty()
+        val dialog = shown.substringBefore("BackupPassphrasePromptDialog(")
+        assertThat(dialog).contains("performGifPackImport(")
+        assertThat(dialog).contains("replaceExisting = true")
+        assertThat(dialog).contains("onDismissRequest = { pendingGifReplace = null }")
+    }
 }
