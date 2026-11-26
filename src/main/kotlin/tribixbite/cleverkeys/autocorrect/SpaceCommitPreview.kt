@@ -4,6 +4,7 @@ import tribixbite.cleverkeys.ProvenanceNote
 import tribixbite.cleverkeys.Suggestion
 import tribixbite.cleverkeys.SuggestionMeta
 import tribixbite.cleverkeys.SuggestionOrigin
+import java.lang.ref.WeakReference
 
 /**
  * What pressing SPACE will commit for the tap-typed word being composed (Pixel report
@@ -181,23 +182,48 @@ object BarHighlightPlanner {
  *
  * Thread-safe: the bar fills it on the prediction worker, the space path reads it on the main
  * thread; the single entry is an immutable snapshot behind a volatile reference.
+ *
+ * Ownership (2026-11-26 memory analysis, defect 1): the owner is only an identity key and is held
+ * WEAKLY. A framework JNI global keeps a retired service reachable, and a strong owner here kept
+ * the retired predictor and its dictionary (18 MiB of English on the Saga) alive with it. [close]
+ * is the owner's terminal shutdown: the memo empties and a late fill stores nothing.
  */
 class AutocorrectMemo {
-    private data class Entry(val word: String, val owner: Any, val fingerprint: Any, val result: String)
+    private class Entry(
+        val word: String,
+        val owner: WeakReference<Any>,
+        val fingerprint: Any,
+        val result: String,
+    )
 
     @Volatile private var entry: Entry? = null
+    @Volatile private var closed = false
 
     /** Returns the memoized correction for [word], computing (and storing) it on a miss. */
     fun get(word: String, owner: Any, fingerprint: Any, compute: (String) -> String): String {
         entry?.let { e ->
-            if (e.word == word && e.owner === owner && e.fingerprint == fingerprint) return e.result
+            if (e.word == word && e.owner.get() === owner && e.fingerprint == fingerprint) return e.result
         }
         val result = compute(word)
-        entry = Entry(word, owner, fingerprint, result)
+        if (!closed) {
+            entry = Entry(word, WeakReference(owner), fingerprint, result)
+            // A close() between the check and the write must still win.
+            if (closed) entry = null
+        }
         return result
     }
 
     fun clear() {
         entry = null
     }
+
+    /** Terminal: empties the memo and stops it storing (the owning handler's shutdown). */
+    fun close() {
+        closed = true
+        entry = null
+    }
+
+    /** True while no correction is memoized (test hook). */
+    @androidx.annotation.VisibleForTesting
+    internal val isEmpty: Boolean get() = entry == null
 }

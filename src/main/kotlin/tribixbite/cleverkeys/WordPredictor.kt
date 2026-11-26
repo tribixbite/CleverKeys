@@ -398,9 +398,11 @@ class WordPredictor : Predictor {
 
     // Persian half-space spellings of the CURRENT dictionary (decision (d), 2026-10-23), rebuilt
     // when the dictionary map or its size changes — see [halfSpaceVariantsFor]. Nullable so an
-    // Objenesis-built test instance starts empty.
+    // Objenesis-built test instance starts empty. The map is only an identity key, held WEAKLY
+    // (2026-11-26 memory analysis, defect 1): a strong key kept a replaced dictionary (4.62 MiB
+    // of English) alive after a reload, and after [shutdown] in a framework-retained service.
     @Volatile private var halfSpaceVariants: HalfSpaceVariants? = null
-    @Volatile private var halfSpaceVariantsDict: Map<String, Int>? = null
+    @Volatile private var halfSpaceVariantsDict: java.lang.ref.WeakReference<Map<String, Int>>? = null
     @Volatile private var halfSpaceVariantsForSize: Int = -1
     private var bigramModel: BigramModel? = BigramModel.getInstance(null)
     private var contextModel: ContextModel? = null // Phase 7.1: Dynamic N-gram model
@@ -685,6 +687,19 @@ class WordPredictor : Predictor {
         contractionAliases = emptyMap()
         userWordOriginalCase.clear()
         shadowedBaseFrequencies.clear()
+        disabledWords = mutableSetOf()
+        // Every lazily built lookup cache (2026-11-26 memory analysis, defect 1). The framework can
+        // keep a retired service — and through its SuggestionHandler this predictor — reachable;
+        // these caches outlive the map swap above unless they are dropped too. [closed] keeps a
+        // late lookup from rebuilding them (see [halfSpaceVariantsFor], [primaryFuzzyAlphabet]).
+        halfSpaceVariants = null
+        halfSpaceVariantsDict = null
+        halfSpaceVariantsForSize = -1
+        fuzzyAlphabetCache = null
+        fuzzyAlphabetIndexRef = null
+        fuzzyAlphabetIndexSize = -1
+        cachedMaxFreqForSize = -1
+        cachedStrongExactForSize = -1
     }
 
     /**
@@ -2751,10 +2766,12 @@ class WordPredictor : Predictor {
      */
     private fun halfSpaceVariantsFor(dict: Map<String, Int>): HalfSpaceVariants {
         val cached = halfSpaceVariants
-        if (cached != null && halfSpaceVariantsDict === dict && halfSpaceVariantsForSize == dict.size) return cached
+        if (cached != null && halfSpaceVariantsDict?.get() === dict && halfSpaceVariantsForSize == dict.size) return cached
         val built = HalfSpaceVariants.build(dict.keys)
+        // A lookup after [shutdown] answers but caches nothing: shutdown is terminal.
+        if (closed) return built
         halfSpaceVariants = built
-        halfSpaceVariantsDict = dict
+        halfSpaceVariantsDict = java.lang.ref.WeakReference(dict)
         halfSpaceVariantsForSize = dict.size
         return built
     }
@@ -3130,9 +3147,13 @@ class WordPredictor : Predictor {
     @Volatile private var cachedStrongExactFrequency: Int = 0
     @Volatile private var cachedStrongExactForSize: Int = -1
 
-    /** Primary index alphabet (every letter of its keys), cached per index identity + size. */
+    /**
+     * Primary index alphabet (every letter of its keys), cached per index identity + size. The
+     * index is only an identity key, held WEAKLY: a strong key kept a replaced or retired prefix
+     * index (9.71 MiB of English) alive (2026-11-26 memory analysis, defect 1).
+     */
     @Volatile private var fuzzyAlphabetCache: CharArray? = null
-    @Volatile private var fuzzyAlphabetIndexRef: Any? = null
+    @Volatile private var fuzzyAlphabetIndexRef: java.lang.ref.WeakReference<Any>? = null
     @Volatile private var fuzzyAlphabetIndexSize: Int = -1
 
     /**
@@ -3188,12 +3209,14 @@ class WordPredictor : Predictor {
 
     private fun primaryFuzzyAlphabet(index: Map<String, Set<String>>): CharArray {
         val cached = fuzzyAlphabetCache
-        if (cached != null && fuzzyAlphabetIndexRef === index && fuzzyAlphabetIndexSize == index.size) {
+        if (cached != null && fuzzyAlphabetIndexRef?.get() === index && fuzzyAlphabetIndexSize == index.size) {
             return cached
         }
         val chars = FuzzyPrefixMatcher.alphabetOfKeys(index.keys)
+        // A lookup after [shutdown] answers but caches nothing: shutdown is terminal.
+        if (closed) return chars
         fuzzyAlphabetCache = chars
-        fuzzyAlphabetIndexRef = index
+        fuzzyAlphabetIndexRef = java.lang.ref.WeakReference(index)
         fuzzyAlphabetIndexSize = index.size
         return chars
     }

@@ -741,6 +741,10 @@ class SuggestionHandler(
     fun shutdown() {
         predictionTasks.shutdown()
         mainHandler.removeCallbacksAndMessages(null)
+        // Terminal (2026-11-26 memory analysis, defect 1): the framework can keep a retired service
+        // and this handler reachable; the memo must not keep the retired predictor, and a bar fill
+        // still in flight on the worker must not store one again.
+        autocorrectMemo.close()
     }
 
     /** True once the prediction executor has been shut down (test/diagnostic hook). */

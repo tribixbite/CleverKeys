@@ -76,6 +76,8 @@ class ImeTeardownExecutorShutdownTest {
         val handler = objenesis.newInstance(SuggestionHandler::class.java).apply {
             setField("predictionTasks", runner)
             setField("mainHandler", mainHandler)
+            // Closed by shutdown (2026-11-26): pinned in RetiredPredictorReleaseTest.
+            setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
         }
 
         assertWithMessage("a live SuggestionHandler must report a LIVE prediction executor")
@@ -102,6 +104,7 @@ class ImeTeardownExecutorShutdownTest {
         val handler = objenesis.newInstance(SuggestionHandler::class.java).apply {
             setField("predictionTasks", runner)
             setField("mainHandler", mockk<Handler>(relaxed = true))
+            setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
         }
 
         // Teardown can legitimately run twice (an early cleanup followed by onDestroy).
@@ -118,6 +121,7 @@ class ImeTeardownExecutorShutdownTest {
         val handler = objenesis.newInstance(SuggestionHandler::class.java).apply {
             setField("predictionTasks", runner)
             setField("mainHandler", mockk<Handler>(relaxed = true))
+            setField("autocorrectMemo", tribixbite.cleverkeys.autocorrect.AutocorrectMemo())
         }
 
         handler.shutdown()

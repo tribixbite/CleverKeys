@@ -1369,6 +1369,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.SwissSpellingFoldTest',
     'tribixbite.cleverkeys.SwissSpellingWiringDriftTest',
     'tribixbite.cleverkeys.ContractionFrequencyAssetDriftTest',
+    // 2026-11-26 memory analysis, defect 1: the autocorrect memo holds its predictor weakly.
+    'tribixbite.cleverkeys.autocorrect.AutocorrectMemoOwnershipTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
@@ -1927,6 +1929,8 @@ tasks.register('runMockTests', JavaExec) {
     // Pixel 2026-10-25: an edit of the displayed custom theme while the keyboard is hidden
     // re-inflates the view on the next onStartInputView (stamp carries the runtime colours).
     'tribixbite.cleverkeys.theme.KeyboardViewThemeTrackerTest',
+    // 2026-11-26 memory analysis, defect 1: a retired service sheds its dictionaries.
+    'tribixbite.cleverkeys.RetiredPredictorReleaseTest',
   ]
 
   mainClass = 'org.junit.runner.JUnitCore'
