@@ -73,4 +73,30 @@ recorded here. No second threshold is tried on the confirm half.
 
 ## Result
 
-(appended after the runs)
+### Dev half (2026-11-26, at `4ebb45e69`)
+
+No threshold meets the selection rule, so **the default stays 0.6 and the confirm half was not
+run** (as pre-registered). Worst pair per cell:
+
+| threshold | FS, worst pair (/1,000) | pairs with FS > 3 | back, all pairs | never, worst | median, worst |
+|---|---|---|---|---|---|
+| 0.40 | 16.45 (fr+es) | 8 of 9 (en+es 8.30) | 93.7–99.0% | 0.3% | 10 |
+| 0.45 | 12.40 (fr+es) | 4 of 9 (en+es 5.55) | 86.0–92.3% | 1.3% | 13 |
+| 0.50 | 7.05 (fr+es) | 2 of 9 (en pairs ≤ 1.90) | 60.0–74.0% | 7.7% | 19 |
+| 0.55 | 2.00 | 0 | 22.7–38.7% | 35.3% | 30 |
+| 0.60 | 0.20 | 0 | 4.0–6.7% | 82.3% | > 40 |
+
+The rule's two conditions do not overlap: false switches drop under 3 per 1,000 words only at
+0.50 and above, where switching back within 20 words falls to 74% or less. The outcome does not
+depend on reading G1 as "every pair" or "the English pairs only": at 0.45 en+es fails it, and at
+0.50 every pair fails switch-back. Full log: the run's stdout (`AUTO-DETECT SWEEP  half=dev`).
+
+### What this means
+
+At 0.6, Auto-Detect almost never switches (63–82% of 40-word runs never do), and when it does, it
+rarely comes back (back 4–7%). No absolute threshold works for both directions with this scorer:
+one language's absolute score sits in a narrow band (about 0.45–0.55 on ordinary text) for both
+the right and the wrong language. A fix needs a better scorer (or a margin between the two
+chosen languages), which was ruled out of this change (the slider keeps its absolute meaning).
+TODO(2.1): redesign the detector score, then repeat this protocol on the confirm half, which is
+still unused.

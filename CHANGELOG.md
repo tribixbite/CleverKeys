@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 50k dictionary assets for 20 languages
 - Performance optimization (model quantization)
+- Spanish next-word model (`es.cklm`) and a better Auto-Detect Language score
 
 (The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
 editor that used to be listed here already ship in 2.0.)
@@ -638,7 +639,11 @@ editor that used to be listed here already ship in 2.0.)
   another) Settings says Auto-Detect is not available instead of showing a switch that never
   worked. When it switches, next-word suggestions and the words you disabled follow the new
   language: next-word used only a small built-in table of that language, and the disabled words
-  stayed the first language's.
+  stayed the first language's. Known limits: Spanish has no next-word model of its own (only the
+  small built-in table; a Spanish model is planned for 2.1), and at the default sensitivity
+  Auto-Detect seldom switches. A sweep of the default (0.40–0.60) found no value that both
+  switches promptly and rarely switches by mistake, so it stays 0.6; lower it in Settings to
+  switch sooner (docs/eval/2026-11-26-auto-detect-threshold.md).
 - A correctly typed word of your second language is no longer autocorrected into a word of the
   first (with Spanish beside English, pero became per).
 - With the History size limit set by storage size, copying something larger than the whole limit

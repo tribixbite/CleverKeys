@@ -62,6 +62,11 @@ Multi-language typing system that allows users to type in two languages simultan
 
 Auto-detection never switches to a language outside primary + secondary (2026-11-25,
 `MultiLanguageManager.detectAndSwitch(…, allowed)`, `LearningFunnelBookkeepingTest`).
+Both detection branches switch through `WordPredictor.setLanguage` (2026-11-26), so a detected
+switch loads the new language's static next-word model and disabled words. The 0.6 default was
+swept on held-out text (`docs/eval/2026-11-26-auto-detect-threshold.md`): no value in 0.40–0.60
+both switches within ~20 words and keeps false switches under 3 per 1,000, so it stays; the
+detector score needs a redesign (2.1).
 
 ## Implementation Details
 
