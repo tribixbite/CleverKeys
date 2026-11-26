@@ -1051,6 +1051,14 @@ class BundledContractionDataTest {
             ("intl" to "int'l") to 162, // 2.79 / intl 165
             ("quran" to "qur'an") to 171, // 3.25 / quran 176
             ("lets" to "let's") to 207, // 5.16 / lets 195 — PAIRED 2026-10-07, promotes
+            // PAIRED 2026-11-25 (real-word bases, see the test below). Every one stays behind its
+            // base. d'art is two wordfreq tokens (d + art), so it carries its BASE's measured byte
+            // (a tie), not the 205 a phrase estimate would give — which would have promoted it.
+            ("dart" to "d'art") to 176, // (two tokens) / dart 176
+            ("sharia" to "shari'a") to 152, // 2.22 / sharia 175
+            ("shias" to "shi'as") to 136, // 1.24 / shias 156
+            ("shiism" to "shi'ism") to 142, // 1.63 / shiism 142
+            ("secy" to "sec'y") to 139, // 1.46 / secy 150
         )
         for ((pair, expected) in measured) {
             assertWithMessage("${pair.first} -> ${pair.second}")
@@ -1087,7 +1095,8 @@ class BundledContractionDataTest {
         // whys -> why's and natl -> nat'l entries added so those variants have a frequency
         // (they lived only in contractions.bin before; see the bin-only sweep test below).
         val all = pairings.values.flatten()
-        assertThat(all.size).isEqualTo(1791) // +lets → let's (2026-10-07)
+        // +lets → let's (2026-10-07); +dart, sharia, shias, shiism, secy (2026-11-25)
+        assertThat(all.size).isEqualTo(1796)
         for (v in all) {
             assertWithMessage("${v.contraction} frequency").that(v.frequency).isNotNull()
             assertWithMessage("${v.contraction} frequency").that(v.frequency!!).isIn(1..255)
@@ -1211,6 +1220,68 @@ class BundledContractionDataTest {
         val binNonPaired = HashMap<String, String>()
         repeat(nonPairedCount) { binNonPaired[readString()] = readString() }
         assertThat(binNonPaired).doesNotContainKey("lets")
+    }
+
+    /**
+     * English keys whose bare form is the word people mean are PAIRED, not REPLACE (2026-11-25,
+     * Saga r16: typing `dart` + space committed `d'art`, and a swipe never offered `dart`).
+     *
+     * Rule, over the 14 English keys whose bare form is a real word (the list in
+     * `scripts/extract_apostrophe_words.py`'s LANGUAGE_PIPELINE comment) plus `shias`/`shiism`:
+     * REPLACE stays only where the apostrophe form is ONE wordfreq token and leads the bare form
+     * by at least 1 zipf (10x): `cant` +1.45, `whats` +1.32, `wont` +1.25, `hows` +1.19. The rest
+     * move to PAIRED: `sharia` (3.49 vs `shari'a` 2.22), `shias` (2.49 vs 1.24), `secy` (2.13 vs
+     * 1.46), `shiism` (1.66 vs 1.63, a tie) and `dart` (3.52; wordfreq splits `d'art` into `d` +
+     * `art`, so its 5.06 is a phrase estimate, and the French loan phrase is not the English noun).
+     * `lets` (+0.65) went the same way on 2026-10-07.
+     *
+     * Each key is a pairing base with exactly its apostrophe form, absent from the REPLACE json and
+     * from the binary's non-paired section, and in `WordPredictor.REAL_WORD_CONTRACTION_BASES` so
+     * the tap path's autocorrect alias (read from `contractions_en.json`, which keeps the
+     * generator's rows) does not rewrite it either. The kept REPLACE keys are pinned too.
+     */
+    @Test
+    fun `english real-word keys are PAIRED, the contraction-dominant ones stay REPLACE`() {
+        val paired = mapOf(
+            "dart" to "d'art", "sharia" to "shari'a", "shias" to "shi'as",
+            "shiism" to "shi'ism", "secy" to "sec'y",
+        )
+        val pairings = ContractionManager.parsePairings(
+            File("$DICT_DIR/contraction_pairings.json").readText()
+        )
+        val buf = java.nio.ByteBuffer.wrap(File("$DICT_DIR/contractions.bin").readBytes())
+            .order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        fun readString(): String {
+            val bytes = ByteArray(buf.short.toInt() and 0xFFFF)
+            buf.get(bytes)
+            return String(bytes, Charsets.UTF_8)
+        }
+        buf.position(8) // magic + version
+        val nonPairedCount = buf.int
+        buf.int // paired count
+        val binNonPaired = HashMap<String, String>()
+        repeat(nonPairedCount) { binNonPaired[readString()] = readString() }
+        val nonPairedJson = jsonObject("contractions_non_paired.json")
+        // Source scan: WordPredictor's companion cannot load on the pure runner (no android.jar).
+        val predictorSource = File("src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt").readText()
+        val setBody = Regex("""REAL_WORD_CONTRACTION_BASES = setOf\(([^)]*)\)""")
+            .find(predictorSource)?.groupValues?.get(1)
+            ?: error("REAL_WORD_CONTRACTION_BASES not found in WordPredictor.kt")
+        val realWordBases = Regex("\"([a-z]+)\"").findAll(setBody).map { it.groupValues[1] }.toSet()
+
+        for ((key, form) in paired) {
+            assertWithMessage("$key pairs with $form")
+                .that(pairings[key]?.map { it.contraction }).containsExactly(form)
+            assertWithMessage("$key is no REPLACE key in the json").that(nonPairedJson).doesNotContainKey(key)
+            assertWithMessage("$key is no REPLACE key in the bin").that(binNonPaired).doesNotContainKey(key)
+            assertWithMessage("$key is a tap-path real-word base").that(realWordBases).contains(key)
+        }
+        for ((key, form) in mapOf("cant" to "can't", "wont" to "won't", "hows" to "how's", "whats" to "what's")) {
+            assertWithMessage("$key stays REPLACE").that(nonPairedJson[key]).isEqualTo(form)
+            assertWithMessage("$key stays REPLACE in the bin").that(binNonPaired[key]).isEqualTo(form)
+            assertWithMessage("$key is no pairing base").that(pairings).doesNotContainKey(key)
+            assertWithMessage("$key keeps its tap autocorrect alias").that(realWordBases).doesNotContain(key)
+        }
     }
 
     /**

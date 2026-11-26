@@ -10658,5 +10658,35 @@
       "contraction": "let's",
       "frequency": 207
     }
+  ],
+  "dart": [
+    {
+      "contraction": "d'art",
+      "frequency": 176
+    }
+  ],
+  "sharia": [
+    {
+      "contraction": "shari'a",
+      "frequency": 152
+    }
+  ],
+  "shias": [
+    {
+      "contraction": "shi'as",
+      "frequency": 136
+    }
+  ],
+  "shiism": [
+    {
+      "contraction": "shi'ism",
+      "frequency": 142
+    }
+  ],
+  "secy": [
+    {
+      "contraction": "sec'y",
+      "frequency": 139
+    }
   ]
 }

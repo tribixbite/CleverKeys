@@ -1043,6 +1043,10 @@ editor that used to be listed here already ship in 2.0.)
   such as `the's`, `as'` or `this'`.
 - Swiping `lets` keeps `let's` first and now offers the bare word `lets` beside it; typing
   `lets` still autocorrects to `let's`.
+- Typing `dart` and a space no longer turns it into `d'art`, and swiping it shows `dart`, with
+  `d'art` offered beside it. The same for `sharia`, `shias`, `shiism` and `secy` (`shari'a`,
+  `shi'as`, `shi'ism`, `sec'y` are offered). `cant`, `wont`, `hows` and `whats` still become
+  `can't`, `won't`, `how's` and `what's`. (Since 1.2.9.)
 - The 2026-09-06 comprehensive audit: 69 findings fixed across IME routing, dictionary updates,
   clipboard, GIF, settings validation, backup/langpack, ML data handling and theming — including
   all 8 critical ones (script-blind letter gate, late-bound keyboard view, GIF database crash on

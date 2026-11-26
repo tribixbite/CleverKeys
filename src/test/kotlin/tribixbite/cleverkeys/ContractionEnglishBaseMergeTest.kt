@@ -63,6 +63,14 @@ class ContractionEnglishBaseMergeTest {
     @After
     fun teardown() = unmockkAll()
 
+    private companion object {
+        /** English keys whose bare form is a real word, PAIRED since 2026-11-25. */
+        val REAL_WORD_KEYS = listOf(
+            "dart" to "d'art", "sharia" to "shari'a", "shias" to "shi'as",
+            "shiism" to "shi'ism", "secy" to "sec'y",
+        )
+    }
+
     /** Is [form] offered for [key], as a replacement or as a paired variant? */
     private fun offers(key: String, form: String): Boolean =
         manager.getNonPairedMapping(key) == form || manager.getPairedContractions(key)?.contains(form) == true
@@ -90,6 +98,53 @@ class ContractionEnglishBaseMergeTest {
             assertWithMessage("$key offers $french").that(offers(key, french)).isTrue()
             assertWithMessage("$key never offers $english").that(offers(key, english)).isFalse()
         }
+    }
+
+    /**
+     * Saga r16 (2026-11-25): `dart` + space committed `d'art` and no swipe offered `dart`. The keys
+     * whose bare form is the word people mean are PAIRED in the English base (see
+     * `BundledContractionDataTest`): both load paths keep the word in its slot and offer the
+     * apostrophe form beside it, while the contraction-dominant `cant` still replaces.
+     */
+    @Test
+    fun englishRealWordKeysAreOfferedBesideTheWordOnTheTypingPath() {
+        manager.loadTypingMappings("en", null)
+
+        for ((key, form) in REAL_WORD_KEYS) {
+            assertWithMessage("$key is never replaced").that(manager.getNonPairedMapping(key)).isNull()
+            assertWithMessage("$key offers $form").that(manager.getPairedContractions(key)).containsExactly(form)
+            assertWithMessage("$key: the bar injects $form")
+                .that(ContractionInjectionPolicy.injectableVariants(key, manager.getPairedContractions(key)))
+                .containsExactly(form)
+        }
+        assertWithMessage("cant still replaces").that(manager.getNonPairedMapping("cant")).isEqualTo("can't")
+    }
+
+    @Test
+    fun englishRealWordKeysDisplayAsTheWordOnTheSwipePath() {
+        manager.loadSwipeDisplayMappings("en")
+        // The overlay exactly as CtcEngineAdapter runs it for en over the shipped lexicon.
+        val lexiconJson = File("src/main/assets/dictionaries/en_enhanced.json").readText()
+        val base = tribixbite.cleverkeys.swipe.geometric.FlatJsonDictionaryLoader.readEntries(lexiconJson)
+            .map { (word, freq) -> word to freq.toDouble() }
+        val merged = tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge.merge(base, emptyList(), emptySet())
+        val ordinals = tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge.ordinals(merged)
+        val baseFrequencies = tribixbite.cleverkeys.swipe.PairingBaseFrequencies
+            .select(merged, manager.getPairedFrequencyBases())
+        fun overlay(decoded: String) = tribixbite.cleverkeys.swipe.ContractionOverlay.apply(
+            words = listOf(decoded, "zzfill"),
+            scores = listOf(900, 100),
+            pairedVariants = { manager.getPairedContractions(it) },
+            nonPairedMapping = { manager.getNonPairedMapping(it) },
+            wordOrdinal = { ordinals[it] },
+            pairedVariantFrequency = { b, v -> manager.getPairedVariantFrequency(b, v) },
+            baseFrequency = { baseFrequencies[it] },
+        ).first
+
+        for ((key, form) in REAL_WORD_KEYS) {
+            assertWithMessage("swiped $key").that(overlay(key)).containsExactly(key, form, "zzfill").inOrder()
+        }
+        assertWithMessage("swiped cant").that(overlay("cant").first()).isEqualTo("can't")
     }
 
     @Test

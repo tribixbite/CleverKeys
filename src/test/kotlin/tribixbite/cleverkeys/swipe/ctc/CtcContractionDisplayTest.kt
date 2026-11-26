@@ -282,6 +282,21 @@ class CtcContractionDisplayTest {
     }
 
     @Test
+    fun `shipped real-word bases — dart keeps rank 0 with d'art one tap away`() {
+        // 2026-11-25 (Saga r16): `dart`, `sharia`, `shias`, `shiism`, `secy` moved from REPLACE
+        // to PAIRED. Each base outranks its apostrophe form's measured frequency (d'art carries
+        // dart's own byte: wordfreq splits it into two tokens), so the decoded word stays the
+        // auto-insert and the variant is spliced right behind it.
+        for ((base, variant) in listOf(
+            "dart" to "d'art", "sharia" to "shari'a", "shias" to "shi'as",
+            "shiism" to "shi'ism", "secy" to "sec'y",
+        )) {
+            val (words, _) = applyShipped(listOf(base, "zzfill"), listOf(900, 100))
+            assertWithMessage(base).that(words.take(3)).containsExactly(base, variant, "zzfill").inOrder()
+        }
+    }
+
+    @Test
     fun `its stays its with the variant appended`() {
         val (words, _) = applyCtc(listOf("its"), listOf(900))
         assertThat(words).containsExactly("its", "it's").inOrder()

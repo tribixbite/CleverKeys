@@ -112,13 +112,16 @@ WORD_PATTERN = re.compile(r"word=([^,]+),f=(\d+)")
 # en is deliberately reachability-filtered but NOT classified.  Its aliases come
 # from the bundled ENGLISH base (contractions.bin / contractions_non_paired.json
 # / contraction_pairings.json), which ContractionManager loads FIRST and which
-# shadows every key contractions_en.json repeats - all 14 English keys whose
+# shadows every key contractions_en.json repeats.  Of the 14 English keys whose
 # bare form is a real word ("cant", "shell", "shed", "wed", "lets", "wont",
-# "dart", "whore", "readers", "editors", "sharia", "hows", "whats", "secy") are
-# already owned by that base, 6 of them already as PAIRED entries.  Moving them
-# inside this file would be a no-op; fixing English means fixing the base, which
-# is a separate change with a much larger blast radius (it drives the typing
-# pipeline, not just swipe).
+# "dart", "whore", "readers", "editors", "sharia", "hows", "whats", "secy"), the
+# base holds 10 as PAIRED entries (2026-11-25: + dart, sharia, secy, and the
+# non-listed shias/shiism, via EXTRA_EN_PAIRINGS below) and keeps only the four
+# whose contraction is the dominant reading as REPLACE: cant, wont, hows, whats
+# (rule and evidence at EXTRA_EN_PAIRINGS).  Moving a key inside THIS file is a
+# no-op for ContractionManager; the tap path's autocorrect alias, which reads
+# this file directly, is skipped for a paired key by
+# WordPredictor.REAL_WORD_CONTRACTION_BASES (except `lets`, kept on purpose).
 LANGUAGE_PIPELINE = {
     "fr": {"lexicon": "fr_enhanced.bin", "hunspell": "fr_FR", "classify": True},
     "it": {"lexicon": "it_enhanced.bin", "hunspell": "it_IT", "classify": True},
@@ -1125,12 +1128,49 @@ CLITIC_S_HOSTS = frozenset({
 #:                  rank 0 and `lets` sits at slot 1.  Removed from the hand-curated
 #:                  contractions_non_paired.json in the same change; contractions_en.json
 #:                  keeps it (the tap path's autocorrect alias: typed lets + space -> let's).
+#: Moved from REPLACE (2026-11-25, Saga r16: typing `dart` + space committed `d'art`, and no
+#: swipe offered `dart`).  Rule over the English keys whose bare form is a real word: REPLACE
+#: stays only where the apostrophe form is ONE wordfreq token and leads the bare form by at
+#: least 1 zipf (10x) — cant +1.45, whats +1.32, wont +1.25, hows +1.19 stay; lets (+0.65)
+#: already moved.  These five fail it:
+#:   dart   -> d'art    dart 3.52; wordfreq splits d'art into `d` + `art`, so its 5.06 is a
+#:                      phrase estimate (see `frequency_zipf`: it carries dart's own byte).
+#:   sharia -> shari'a  3.49 vs 2.22 — sharia is the common spelling.
+#:   shias  -> shi'as   2.49 vs 1.24.
+#:   shiism -> shi'ism  1.66 vs 1.63 — a tie; the bare form must not be destroyed.
+#:   secy   -> sec'y    2.13 vs 1.46.
+#: Every base outranks its variant, so the word keeps rank 0 and the variant is spliced at
+#: slot 1.  Removed from contractions_non_paired.json in the same change; contractions_en.json
+#: keeps the generator's rows and WordPredictor.REAL_WORD_CONTRACTION_BASES skips them on the
+#: tap path.
 EXTRA_EN_PAIRINGS: dict[str, list[str]] = {
     "its": ["it's"],
     "whys": ["why's"],
     "natl": ["nat'l"],
     "lets": ["let's"],
+    "dart": ["d'art"],
+    "sharia": ["shari'a"],
+    "shias": ["shi'as"],
+    "shiism": ["shi'ism"],
+    "secy": ["sec'y"],
 }
+
+
+def frequency_zipf(base: str, variant: str, lang: str) -> float:
+    """
+    The zipf a pairing variant's frequency is measured from.
+
+    wordfreq tokenises some apostrophe forms as several words (`d'art` -> `d` + `art`), and
+    `zipf_frequency` then estimates the PHRASE (`d'art` 5.06, above `dart` 3.52), which would
+    promote the variant over a real word.  Such a variant has no word frequency of its own, so it
+    takes its base's zipf: a tie, which ContractionOverlay places right behind the base.  No
+    variant shipped before 2026-11-25 is multi-token, so this changes no earlier value.
+    """
+    from wordfreq import tokenize, zipf_frequency
+
+    if len(tokenize(variant, lang)) != 1:
+        return zipf_frequency(base, lang)
+    return zipf_frequency(variant, lang)
 
 
 def is_possessive(variant: str) -> bool:
@@ -1269,8 +1309,6 @@ def measure_en_pairing_frequencies(
     variant zipf).  A variant wordfreq has no data for (zipf 0) keeps its value — there
     is nothing to measure it against — and is reported by the caller.
     """
-    from wordfreq import zipf_frequency
-
     updated: dict[str, list[dict]] = {
         base: [dict(entry) for entry in variants] for base, variants in pairings.items()
     }
@@ -1288,7 +1326,7 @@ def measure_en_pairing_frequencies(
             variant = entry["contraction"]
             if is_possessive(variant):
                 continue
-            zipf = zipf_frequency(variant, fit.lang)
+            zipf = frequency_zipf(base, variant, fit.lang)
             if zipf <= 0.0:
                 if (base, variant) in added:
                     raise SystemExit(f"{base} -> {variant}: added pairing has no wordfreq data")

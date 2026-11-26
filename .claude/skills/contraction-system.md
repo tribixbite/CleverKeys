@@ -45,7 +45,7 @@ an uncurated `contractions.json`.
 contractions_fr.json     25,578   contraction_pairs_fr.json   471   collisions_fr   283
 contractions_it.json     22,241   contraction_pairs_it.json   161   collisions_it   105
 contractions_de.json         21   (no pairs file)                   collisions_de     7
-contractions_en.json        119   contraction_pairings.json 1,744   collisions_en    10
+contractions_en.json        119   contraction_pairings.json 1,744   collisions_en     8 (10 before 2026-11-25)
 contractions_nl.json        118   (import-only pack language)
 es / pt / sv / id / ms / sw / tl = 0 entries — EMPTY ON PURPOSE, see §7
 ```
@@ -75,7 +75,7 @@ English does not use `contractions_en.json` as its source of truth. `loadEnglish
 Step 3 is the 2026-07-23 fix. Without it, typing `well` produced `we'll` and the word "well" was
 destroyed in its own slot.
 
-**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 106 keys** (106 + `etoo` on 2026-09-26; −`lets` on 2026-10-07, now PAIRED — §6c).
+**The effective English REPLACE set is `(base ∪ contractions_en) − pairings` = 101 keys** (106 + `etoo` on 2026-09-26; −`lets` on 2026-10-07; −`dart`/`sharia`/`shias`/`shiism`/`secy` on 2026-11-25, all now PAIRED — §6c rules 7–8).
 
 Anything that models English — the sidecar generator, the runtime scanner, a data test — must
 subtract the pairings. Two of the three once disagreed, and that disagreement is exactly how a
@@ -274,6 +274,17 @@ The rule now:
    `contractions_non_paired.json`, bin rebuilt. `contractions_en.json` KEEPS `lets` on purpose:
    it is the tap path's autocorrect alias (typed `lets` + space → `let's`; `lets` is not in
    `WordPredictor.REAL_WORD_CONTRACTION_BASES`). Evidence: eval doc 2026-10-07 §6.2.
+8. **Real-word REPLACE keys are PAIRED (2026-11-25, Saga r16: `dart` + space → `d'art`, since
+   1.2.9).** Rule over the English keys whose bare form is a real word: REPLACE stays only where
+   the apostrophe form is ONE wordfreq token and leads the bare form by ≥ 1 zipf — `cant` +1.45,
+   `whats` +1.32, `wont` +1.25, `hows` +1.19 stay. `dart` (wordfreq splits `d'art` into `d` +
+   `art`, so its 5.06 is a phrase estimate), `sharia` (3.49 vs 2.22), `shias`, `shiism` (a tie)
+   and `secy` moved: `EXTRA_EN_PAIRINGS` + `--en-pairing-frequencies`, removed from
+   `contractions_non_paired.json`, bin rebuilt, and — unlike `lets` — added to
+   `WordPredictor.REAL_WORD_CONTRACTION_BASES`, because `contractions_en.json` (generated, keeps
+   the rows) otherwise feeds the tap autocorrect alias that committed `d'art`. A multi-token
+   variant takes its BASE's zipf (`frequency_zipf`): a tie, so `d'art` is spliced at slot 1 and
+   never promoted. Each base outranks its variant: swipe shows `[dart, d'art, …]`.
 
 **The frequency is BASE-scoped in storage** (`base → variant → freq`) — that is the runtime
 contract — but since 2026-09-26 every non-possessive variant carries **one value file-wide**,
@@ -479,6 +490,7 @@ guard.
 | letter plurals (`i's`/`a's` for `is`/`as`) never offered, spliced or tailed; `i'd`/`isn't`/`cd's` untouched; floor equals the tap path's | `ContractionOverlayTest` (pure) |
 | D1 augment: closed-class words never take `'s`/`'` | `PipelineOracleJvmTest#oracle_jvm_closedClassWordsNeverTakeAPossessive` (pure) |
 | `lets` is PAIRED (pairings + frequency, not in the REPLACE json or bin, kept in `contractions_en.json`); swipe shows [let's, lets] | `BundledContractionDataTest` + `CtcContractionDisplayTest` (pure) |
+| `dart`/`sharia`/`shias`/`shiism`/`secy` PAIRED (pairings, not in the REPLACE json or bin, in `REAL_WORD_CONTRACTION_BASES`); `cant`/`wont`/`hows`/`whats` stay REPLACE; swipe shows [dart, d'art]; typing `dart` commits `dart` and the bar injects `d'art` | `BundledContractionDataTest` + `CtcContractionDisplayTest` (pure), `ContractionEnglishBaseMergeTest` + `AutoCorrectEndToEndTest` (mock) |
 | D1 augment (`SuggestionHandler.possessiveAdditions`) adds no second copy of a spliced possessive (case-insensitive) and only appends | `ContractionOverlayTest` (pure) |
 | shipped pronoun set over MEASURED data: I'd/I'll/we'd/he's/she's rank 0; shed/shell/whore/well/hell/were/its/natl keep rank 0 with the variant at #1; why's rank 0 over whys; its/it's inside PROMOTION_MARGIN; would/world keeps world at #2; REPLACE six keep their slot | `CtcContractionDisplayTest` (pure) |
 | promotion needs lead ≥ PROMOTION_MARGIN (boundary), possessive never ahead even above the margin | `ContractionOverlayTest` (pure) |

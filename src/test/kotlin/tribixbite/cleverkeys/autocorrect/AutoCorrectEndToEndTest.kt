@@ -508,6 +508,20 @@ class AutoCorrectEndToEndTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
+    fun realWordContractionKey_isNotRewrittenOnCommit() {
+        // Saga r16 (2026-11-25): typing `dart` + space committed `d'art`. The bare forms of
+        // these keys are the words people mean, so the tap alias (from contractions_en.json) must
+        // not rewrite them; the apostrophe form is offered on the bar as a PAIRED variant instead.
+        for (word in listOf("dart", "sharia", "shias", "shiism", "secy")) {
+            assertEquals(word, word, predictor.autoCorrect(word))
+        }
+        // Controls: keys whose contraction is the dominant reading keep the rewrite.
+        assertEquals("can't", predictor.autoCorrect("cant"))
+        assertEquals("won't", predictor.autoCorrect("wont"))
+        assertEquals("let's", predictor.autoCorrect("lets"))
+    }
+
+    @Test
     fun userWordThatIsAnAliasKey_isNotRewrittenOnCommit() {
         // en shape of the skill's fr example (`dangle` → `d'angle`): the user
         // added "dont" as a personal word; committing it must keep THEIR word,

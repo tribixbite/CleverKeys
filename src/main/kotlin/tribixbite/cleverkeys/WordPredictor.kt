@@ -291,9 +291,15 @@ class WordPredictor : Predictor {
         // Real English words that also appear as contraction bases in contractions_en.json.
         // These must NOT be autocorrected (e.g., "well" should stay "well", not become "we'll").
         // Excludes "hes"/"shes"/"intl" which are NOT real words despite appearing in pairings data.
+        // dart/sharia/shias/shiism/secy (2026-11-25, Saga r16: typed `dart` + space committed
+        // `d'art`): PAIRED in the English base because the bare form is the word people mean;
+        // contractions_en.json (generated) keeps the rows, so the alias must be skipped here.
+        // `lets` stays OUT on purpose: typed `lets` + space still commits `let's`.
+        // Pinned by BundledContractionDataTest (source scan) and AutoCorrectEndToEndTest.
         private val REAL_WORD_CONTRACTION_BASES = setOf(
             "well", "were", "hell", "shed", "shell", "wed",
-            "editors", "girls", "readers", "states", "whore"
+            "editors", "girls", "readers", "states", "whore",
+            "dart", "sharia", "shias", "shiism", "secy"
         )
 
         // Static flag to signal all WordPredictor instances need to reload custom/user/disabled words
