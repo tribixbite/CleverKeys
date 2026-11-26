@@ -162,3 +162,10 @@ key disarms it now (`RotationShowGuard.UserInput`); `RotationShowGuardTest`
 (3) The alias-key floor comment and `docs/specs/ctc-swipe-engine.md` now state the real rule: a key
 with an attested-frequency entry (>= 3 corpus hits) may outrank rare real words (fr: 2,670 keys at
 76-80 above 7,098 words at 68-74); the floor binds only keys without one. No behaviour change.
+
+**2026-11-26.** D1: both results confirmed on held-out data with gates committed first (German
+next-word on Leipzig news 2023, French table on 521 qwerty/qwertz rows); assets unchanged. D2: the
+de-CH half is a Swiss spelling setting (`de82d474a`). A Fable audit of this remediation found no
+blocker; its three should-fixes are in (`0498aa112`, `e120bb2fd`, `a56d5d4b9`). Device runs on r16/r17
+(Saga, Note10+, Pixel) found and fixed `dart` → `d'art` (pre-existing) and capitalised on-the-fly
+words; S7's threshold could not be calibrated within its gate (default 0.6 kept, 2.1 scorer).

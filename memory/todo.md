@@ -501,6 +501,42 @@ langpacks". Done, each test-first (red then green), commits `73a51ab7..762cca58`
   its result; the 4 new strings (S7 1, S9 3) in 21 locales are agent translations, unreviewed.
 - Not run: instrumented suite (A2) for this round, device checks of S2/S3; release r16 not built.
 
+**Status 2026-11-26 (agent).** Maintainer: "ideal solution for d1 and d2 … implement … test all fixes
+with a new build on the saga, note and pixel … a custom non-English word added then swiped … fable
+audit"; later "why 300 MB" and "debug build memory analysis". Release r17 (`9dd2a0a25`, arm64
+sha256 `4cea9b43…`) is installed on the Saga `.1.130` and the Pixel; the Note10+ runs r16 (`279aabec…`).
+- **D1 done (confirmations, preregistered first):** de.cklm passes C1/C2 on Leipzig news 2023
+  (`docs/eval/2026-11-25-german-lm-heldout-confirmation.md`); the French table passes H1–H4 on 521
+  never-used qwerty/qwertz rows, +7 top-1 rows, 0 regressed (`…-french-table-heldout-confirmation.md`).
+  Both keep their assets. The maintainer may still overrule.
+- **D2 done:** Swiss spelling switch (block below), on the Saga: switch visibility, typing, bar,
+  swipe and a flip without restart all PASS.
+- **Device results r16** (`build/nov26-{saga,pixel,note10}/`): B1, secondary-language words, S2
+  rotation during import, S3 (10/10 each case), S5/S6 French swipes, S7 en+it note, S9 1.x preview,
+  custom words `Grüezi` (de) / `parcero` (en+es) added from the bar and swiped: PASS. FAIL then fixed:
+  `dart` → `d'art` (since 1.2.9; `255274a4a`), added words stored with the sentence-start capital
+  (`edc9132d6`), S7 en+es never switched (threshold, below). S1 NOT RUN (a real History row present).
+- **r17 retest:** `dart`/`sharia` kept, `cant`/`wont` still contract; added words stored lowercase at
+  sentence start, a deliberate mid-sentence capital kept; Pixel rotation (i)/(ii) 10/10, panes 6/6.
+  Case (iii) submit could not be run in the Google app without real searches; on Chrome it is
+  uninformative (Chrome hides the keyboard on every rotation itself).
+- **Fable audit of the remediation:** no blocker. Fixed from it: clipboard limits from stored
+  settings (`0498aa112`), rotation guard disarms only on submit (`e120bb2fd`), alias-floor comment and
+  spec (`a56d5d4b9`). Auto-Detect: one switch path (`4f034ac03`); threshold calibration failed its dev
+  rule, default stays 0.6 (`docs/eval/2026-11-26-auto-detect-threshold.md`).
+- **Memory** (`docs/audit/2026-11-26-memory-analysis.md`): a retired service kept the English
+  dictionary (18 MiB each) through the autocorrect memo: fixed `27db169ee`; emoji keyword index
+  lazy (`9dd2a0a25`, −7.7 MiB at start). r17 on the Saga: Java heap +3 MiB over 6 recreations.
+- **Open (agent, 2.1):** Auto-Detect needs a new scorer (it seldom switches at 0.6; Spanish has no
+  `es.cklm`); the Views count still grows ~18 per service recreation (framework back-callback root;
+  check with a debug heap dump); a custom-word add rebuilds the whole CTC trie (peak +50–67 MiB);
+  compact prefix tables / trie (memory report candidates 2–8); the en+de bypass passes typos that are
+  de-list words (`thier`, `wich`); S2 pack removals still in `lifecycleScope`; a word added in en+es
+  goes to the English list; "Auto-Detect is not available for this pair" shows with no pair.
+- **Open (maintainer):** M1 soak, M2 strings (now incl. the Swiss-spelling strings), M4 tag. The
+  Pixel test typing evicted ~20 old learned words (5,000 cap) and removed `shoyld` by mistake.
+- Suites at `9dd2a0a25`: pure 4,126, mock 2,095, androidTest compiles; CI green. A2 not re-run.
+
 **Status 2026-11-25, D2 (agent).** Swiss German spelling is a setting now
 (`pref_german_swiss_spelling`, "Swiss spelling (ss for ß)", Multi-Language section while German is
 selected; spec `docs/specs/dictionary-and-language-system.md` § Swiss German spelling).
