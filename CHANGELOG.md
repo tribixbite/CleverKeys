@@ -29,9 +29,10 @@ editor that used to be listed here already ship in 2.0.)
   length of the last swiped word (`fix got something`, tap `git` on `got`, gave `git something`).
 - Replacing a swiped word whose commit made Auto-Detect switch languages takes its word pair back
   from the language it was learned in.
-- In Multi-Language with Auto-Detect, a word added from the suggestion bar while Auto-Detect has
-  switched to the second language goes to that language's personal dictionary (it went to the
-  primary's), and its undo removes it from there.
+- In Multi-Language with Auto-Detect, a word added from the suggestion bar (the add prompt, the
+  "+word" chip or an autocorrect undo) while Auto-Detect has just detected the second language,
+  in the same sentence and field, goes to that language's personal dictionary (it went to the
+  primary's), and its undo removes it from there. Otherwise it goes to the primary's.
 
 ### Fixed (Settings and Dictionary Manager, 2026-11-26)
 
