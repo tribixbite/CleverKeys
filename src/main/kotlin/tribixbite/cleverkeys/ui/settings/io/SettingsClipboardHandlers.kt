@@ -1,13 +1,10 @@
 package tribixbite.cleverkeys.ui.settings.io
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.StringRes
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import tribixbite.cleverkeys.R
@@ -42,8 +39,11 @@ internal fun SettingsActivity.recomputeCustomRulesStatus() {
  * ruleset has changed (toggle flip OR custom-rules import). The service
  * invalidates its cached SanitizationConfig so the next clipboard insert
  * sees the fresh state.
+ *
+ * A [Context] receiver (any context of this process reaches the same local broadcast manager)
+ * so the custom-rules import can send it from its work, with no activity.
  */
-internal fun SettingsActivity.notifySanitizationRulesChanged() {
+internal fun Context.notifySanitizationRulesChanged() {
     LocalBroadcastManager.getInstance(this)
         .sendBroadcast(Intent(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED))
 }
@@ -52,6 +52,12 @@ internal fun SettingsActivity.notifySanitizationRulesChanged() {
  * SAF picker callback — reads the user-selected JSON, validates by parsing,
  * copies into app private dir for resilience against grant revocation,
  * persists the URI, and broadcasts a cache-invalidation signal.
+ *
+ * Runs in [SettingsImports.clipboardRules], not this activity's `lifecycleScope`: a rotation
+ * cancelled it between its writes (rules file copied, but URI, status and the rules-changed
+ * broadcast skipped). Every write and the broadcast happen in the work, so they complete even
+ * when the follow-up is dropped (Settings left for good); the follow-up only updates what this
+ * screen shows, on whichever Settings activity is in front when the import ends.
  *
  * Failure modes:
  *   - Stream open fails → status text + Toast, on-disk copy untouched
@@ -62,55 +68,62 @@ internal fun SettingsActivity.notifySanitizationRulesChanged() {
  * In every failure case the previous valid file (if any) is retained.
  */
 internal fun SettingsActivity.handleCustomRulesPicked(uri: Uri) {
-    val _self = this
-    lifecycleScope.launch {
-        try {
-            val json = withContext(Dispatchers.IO) {
-                contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: run {
-                        // The URI goes to logcat only; the exception message is shown in the
-                        // status line (clipboard_rules_invalid_detail), so it is localized.
-                        android.util.Log.w(SettingsActivity.TAG, "Could not open custom rules URI: $uri")
-                        throw IOException(getString(R.string.clipboard_rules_open_failed))
-                    }
-            }
+    val appContext = applicationContext
+    // The starting activity's preferences: the work writes the URI there itself (see above).
+    val rulesPrefs = prefs
+    val started = SettingsImports.clipboardRules.start(null) {
+        val followUp = catchingFailures({
+            val json = appContext.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                ?: run {
+                    // The URI goes to logcat only; the exception message is shown in the
+                    // status line (clipboard_rules_invalid_detail), so it is localized.
+                    android.util.Log.w(SettingsActivity.TAG, "Could not open custom rules URI: $uri")
+                    throw IOException(appContext.getString(R.string.clipboard_rules_open_failed))
+                }
 
             // Validate by parsing — rejects malformed JSON / unsupported schema.
             val parsed = RulesetParser.fromJson(json)
-            if (parsed.providers.size == 0) {
-                // Direct write here: recomputeCustomRulesStatus reads on-disk
-                // state, but we deliberately did NOT writeText for this branch
-                // (parser accepted but content is useless), so the helper has
-                // nothing to summarise. This is the one allowed deviation.
-                clipboardCustomRulesStatus = getString(R.string.clipboard_rules_zero_providers)
-                return@launch
-            }
-
-            // Copy to app-private dir for resilience against SAF grant revocation.
-            // CRITICAL: parent dir doesn't exist by default — must mkdirs() first.
-            val customFile = SanitizationConfig.customFile(_self)
-            withContext(Dispatchers.IO) {
+            if (parsed.providers.isEmpty()) {
+                // Direct write here: recomputeCustomRulesStatus reads on-disk state, but we
+                // deliberately did NOT writeText for this branch (parser accepted but content
+                // is useless), so the helper has nothing to summarise. The one allowed deviation.
+                followUp { clipboardCustomRulesStatus = getString(R.string.clipboard_rules_zero_providers) }
+            } else {
+                // Copy to app-private dir for resilience against SAF grant revocation.
+                // CRITICAL: parent dir doesn't exist by default — must mkdirs() first.
+                val customFile = SanitizationConfig.customFile(appContext)
                 customFile.parentFile?.mkdirs()
                 customFile.writeText(json)
+
+                // Persist URI for diagnostics + reload, here rather than only in the follow-up.
+                rulesPrefs.edit().putString("clipboard_custom_rules_uri", uri.toString()).apply()
+                appContext.notifySanitizationRulesChanged()
+
+                followUp {
+                    // saveSetting re-writes the same value and refreshes the in-memory config.
+                    saveSetting("clipboard_custom_rules_uri", uri.toString())
+                    clipboardCustomRulesUri = uri.toString()
+                    // Single source of truth for status text — same on-disk file produces the
+                    // same status regardless of code path (picker success vs. activity
+                    // recreate). In-session filename display dropped for consistency; the user
+                    // sees the filename in the SAF picker UI itself.
+                    recomputeCustomRulesStatus()
+                }
             }
-
-            // Persist URI for diagnostics + reload.
-            saveSetting("clipboard_custom_rules_uri", uri.toString())
-            clipboardCustomRulesUri = uri.toString()
-            // Single source of truth for status text — same on-disk file
-            // produces the same status regardless of code path (picker
-            // success vs. activity recreate). In-session filename display
-            // dropped for consistency; user sees the filename in the SAF
-            // picker UI itself.
-            recomputeCustomRulesStatus()
-
-            notifySanitizationRulesChanged()
-        } catch (e: Exception) {
+        }) { e ->
             android.util.Log.w(SettingsActivity.TAG, "Custom rules import failed", e)
-            // TODO(i18n): the parser/IO detail message is English.
-            clipboardCustomRulesStatus = getString(R.string.clipboard_rules_invalid_detail, e.message.orEmpty())
-            Toast.makeText(_self, R.string.clipboard_rules_invalid, Toast.LENGTH_LONG).show()
+            followUp {
+                // TODO(i18n): the parser/IO detail message is English.
+                clipboardCustomRulesStatus = getString(R.string.clipboard_rules_invalid_detail, e.message.orEmpty())
+                Toast.makeText(this, R.string.clipboard_rules_invalid, Toast.LENGTH_LONG).show()
+            }
         }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (!started) {
+        // The SAF picker is modal, so a second pick while one rules file imports (a few KB) is
+        // not reachable from the UI; the running import's result follows.
+        android.util.Log.w(SettingsActivity.TAG, "Custom rules import already running; $uri not imported")
     }
 }
 

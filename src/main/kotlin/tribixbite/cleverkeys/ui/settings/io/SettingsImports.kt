@@ -35,9 +35,12 @@ internal object SettingsImports {
     /** The Multi-Language section's language-pack import. */
     val languagePack = ImportTracker<Unit, SettingsFollowUp>()
 
+    /** The Clipboard section's custom sanitization-rules import (a small JSON file). */
+    val clipboardRules = ImportTracker<Unit, SettingsFollowUp>()
+
     /** Every tracker a Settings activity registers with, the voice-pack import's included. */
     private val all: List<ImportTracker<*, *>>
-        get() = listOf(files, gifPack, languagePack, VoicePackImportTracker.shared)
+        get() = listOf(files, gifPack, languagePack, clipboardRules, VoicePackImportTracker.shared)
 
     fun attach(owner: SettingsActivity) = all.forEach { it.attach(owner) }
 
@@ -85,6 +88,11 @@ internal fun SettingsActivity.observeSettingsImports() {
             launch {
                 SettingsImports.languagePack.state.collect { state ->
                     if (state.event != null) SettingsImports.languagePack.consumeEvent()?.invoke(this@observeSettingsImports)
+                }
+            }
+            launch {
+                SettingsImports.clipboardRules.state.collect { state ->
+                    if (state.event != null) SettingsImports.clipboardRules.consumeEvent()?.invoke(this@observeSettingsImports)
                 }
             }
         }
