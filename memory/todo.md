@@ -501,6 +501,22 @@ langpacks". Done, each test-first (red then green), commits `73a51ab7..762cca58`
   its result; the 4 new strings (S7 1, S9 3) in 21 locales are agent translations, unreviewed.
 - Not run: instrumented suite (A2) for this round, device checks of S2/S3; release r16 not built.
 
+**Status 2026-11-25, D2 (agent).** Swiss German spelling is a setting now
+(`pref_german_swiss_spelling`, "Swiss spelling (ss for ß)", Multi-Language section while German is
+selected; spec `docs/specs/dictionary-and-language-system.md` § Swiss German spelling).
+- Every German lexicon is respelled at load (`SwissSpelling`): tap primary and secondary, CTC and
+  geometric (memo keyed on the choice), next-word through aliases; the user's own words and the
+  typed text are never respelled. Seeded once from the system languages (on for de-CH / de-LI).
+- Tests: `SwissSpellingFoldTest`, `SwissSpellingSeedTest`, `SwissSpellingWiringDriftTest`,
+  `WordPredictorSharpSTest`, `CtcAccentKeyLayoutReplayTest`, `ActiveLanguageSyncTest`,
+  `SettingsImportPlanBuilderTest`.
+- **Open (device / maintainer):** not run on a phone (switch visibility, a flip reloading the
+  lexicons without a restart, a de-CH system language seeding it on); no Swiss corpus measured;
+  the 2 new strings in 21 locales are agent translations, unreviewed.
+- **Open (agent, 2.1):** Dictionary Manager still lists `straße` with the switch on (disabling it
+  there does disable `strasse`); a settings search for the switch while German is not selected
+  lands on the section only.
+
 **Status 2026-11-25, night (agent).** Maintainer: "audit changes since last audit and remediations of
 all audits since 1.5. request task list for bugs /gaps before tagging". Five Fable agents, read-only;
 the list is [`docs/audit/2026-11-25-pre-tag-review.md`](../docs/audit/2026-11-25-pre-tag-review.md).

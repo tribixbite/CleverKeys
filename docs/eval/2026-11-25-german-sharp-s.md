@@ -78,3 +78,28 @@ list: a typed `strasse` is corrected; a user can add it as a custom word.
 Pins: `GermanSharpSDictionaryDriftTest` (4; all fail on the old assets), `CtcAccentKeyLayoutReplayTest`
 Neo 2 / Bone ß-key swipes now expect `straße` (red on the old lexicon), lexicon shape 39,588
 surfaces / 412 collisions (`CtcCkdtLexiconTest`, `CtcMultiLanguageInstrumentedTest.SHAPES`).
+
+## Note, 2026-11-25 (later): Swiss spelling is served by a setting (D2)
+
+The sentence above ("Swiss spelling (no ß) is not served by this list") describes the list, and
+still does: the assets spell Germany's way and were not rebuilt. What changed is the load.
+`pref_german_swiss_spelling` ("Swiss spelling (ss for ß)", Settings → Multi-Language, shown while
+German is selected) respells every German lexicon as it is loaded (`SwissSpelling`): the tap
+dictionary and its prefix index, a German secondary list, the CTC base list and the geometric
+word array (both keyed on the choice, so a flip rebuilds them). Twins (`maße`/`masse`,
+`buße`/`busse`) become one word with the higher frequency; the user's own words are merged after
+the fold and keep their spelling. With no ß word in the map `sharpSReading` finds nothing, so a
+typed `strasse`, `gross`, `weiss` stays; a typed `groß` still counts as `gross`
+(`sharpSDictionaryKey`) and is kept. `de.cklm` is unchanged: Swiss spellings reach it through
+lookup aliases (`strasse → straße`, none for a word the model names itself such as `masse`), and
+its continuations are shown respelled. The static default is off; the key is written once, the
+first time German is served, on for a de-CH / de-LI system language.
+
+Nothing here was measured on a corpus: no Swiss German typing or swipe set exists in this tree,
+and the fold changes spelling, not ranking (the a–z surfaces of the CTC trie are identical with
+the switch on or off; a twin keeps the more frequent word's frequency). Pins:
+`SwissSpellingFoldTest` (the folds on the shipped `de_enhanced.bin` and `de.cklm`, the memo key,
+the seed), `WordPredictorSharpSTest` ("Swiss spelling - …"), `CtcAccentKeyLayoutReplayTest`
+(`qwertzGermanShowsSsUnderSwissSpelling`, `neo2SharpSKeyShowsSsUnderSwissSpelling`),
+`SwissSpellingSeedTest`, `SwissSpellingWiringDriftTest`. The off state is today's: lexicon shape
+39,588 / 412 and every earlier case of `WordPredictorSharpSTest` are unchanged.

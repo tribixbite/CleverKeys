@@ -150,6 +150,16 @@ Multi-language mode automatically handles accented characters:
 
 The system maps your 26-letter QWERTY input to properly accented words.
 
+### German: ß or Swiss ss
+
+German suggestions use ß where Germany and Austria write it (Straße, groß, weiß). In Switzerland
+and Liechtenstein, where ß is not used, turn on **Swiss spelling (ss for ß)**: the switch appears
+in the Multi-Language section while German is your primary or secondary language, or the language
+of a layout. Suggestions, swipes and next-word predictions then show Strasse, gross, weiss, and a
+typed "strasse" is left alone. Words you added to the dictionary yourself keep their spelling, and
+a ß you type is never changed. The switch starts on when one of the phone's system languages is
+German (Switzerland) or German (Liechtenstein).
+
 ## Tips and Tricks
 
 - **One layout, two languages**: No need to switch layouts for bilingual typing
@@ -168,6 +178,7 @@ The system maps your 26-letter QWERTY input to properly accented words.
 | **Secondary Language** | Multi-Language section | Additional dictionary |
 | **Auto-Detect Language** | Multi-Language section (with a secondary language) | Switch between your two languages as you type |
 | **Detection Sensitivity** | Multi-Language section (with a secondary language) | 0.4-0.9; higher switches less |
+| **Swiss spelling (ss for ß)** | Multi-Language section (while German is selected) | German words with ss in place of ß |
 | **Layout language** | Layout Manager (Language chip) | Language of one layout; overrides Primary/Secondary while that layout is active |
 
 ## Common Questions

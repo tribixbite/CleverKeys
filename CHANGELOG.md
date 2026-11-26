@@ -31,6 +31,13 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Added
 
+- **Swiss spelling for German (ss for ß).** Settings → Multi-Language shows a **Swiss spelling
+  (ss for ß)** switch while German is selected (as the primary or secondary language, or as a
+  layout's language). With it on, German words are suggested and swiped the Swiss way: Strasse,
+  gross, weiss, heisst; a typed strasse stays strasse, and next-word suggestions follow. Words
+  you added to the dictionary yourself keep their spelling, and a ß you type is never rewritten.
+  The switch starts on when one of the phone's system languages is German (Switzerland) or German
+  (Liechtenstein), off otherwise; it is part of a settings backup.
 - **Voice input — offline dictation in the keyboard.** A new **Voice input** key (Extra Keys) and
   `voice_input` command type what you say, recognised on the phone by a speech model you import
   once as a voice pack (`voicepack-moonshine-v2-tiny-en.zip`, English, Moonshine v2 tiny
@@ -659,8 +666,8 @@ editor that used to be listed here already ship in 2.0.)
   swipes and suggestions showed the Swiss spelling. It now writes Straße, groß, weiß and keeps the
   reformed ss words (dass, muss, Fluss); Masse and Maße are both words. Typed without a ß key,
   strasse, weiss and gross become Straße, weiß and groß, except a word of your second language
-  (with English beside German, fuss stays fuss). There is no Swiss setting yet: in Switzerland,
-  where ß is not used, turn autocorrect off or add the ss words to the dictionary. The German
+  (with English beside German, fuss stays fuss). In Switzerland, where ß is not used, turn on
+  Settings → Multi-Language → Swiss spelling (ss for ß), described under Added. The German
   next-word model now knows the ß words too.
 - A custom layout's arrow key repeats when held, with Backspace Only Repeat on (the default), as
   that setting describes; it moved the cursor once.

@@ -446,8 +446,61 @@ Since the same day the bundled list spells ß itself (`scripts/sharp_s.py`, run 
 counts choose between readings and split two real words such as Masse/Maße; eval
 `docs/eval/2026-11-25-german-sharp-s.md`). `sharpSDictionaryKey` stays for packs without ß. The
 inverse, `WordPredictor.sharpSReading`, makes a typed `strasse`/`gross` the ß word before the
-stuck-key collapse can read the ss as a doubled letter. Swiss spelling is not served: a typed
-`strasse` is corrected. Pins: `GermanSharpSDictionaryDriftTest`.
+stuck-key collapse can read the ss as a doubled letter. Pins: `GermanSharpSDictionaryDriftTest`.
+
+### Swiss German spelling — `SwissSpelling` (2026-11-25, D2)
+
+Switzerland and Liechtenstein write no ß. One preference, `pref_german_swiss_spelling`
+(`LanguagePrefs.GERMAN_SWISS_SPELLING`, "Swiss spelling (ss for ß)", Multi-Language section,
+shown only while German is the primary, the secondary with Multi-Language on, or a layout's bound
+language), respells every German lexicon **as it is loaded**; no output site is patched.
+
+| lexicon | fold | where |
+|---|---|---|
+| tap primary (map + prefix index) | `SwissSpelling.foldDictionaryKeys` | `WordPredictor.foldSwissSpelling`, sync and async load |
+| tap secondary (`NormalizedPrefixIndex`) | `respellCanonicals(SwissSpelling::fold)` | `WordPredictor.buildSecondaryDictionary` |
+| CTC base pairs | `SwissSpelling.foldBaseLexicon` | `CtcEngineAdapter.lexiconFor`, before `CtcLexiconMerge.merge` |
+| geometric word array | `SwissSpelling::foldWords` | `GeometricEngineAdapter.dictionaryFor` via `CkdtDictionaryReader.read(respell =)` |
+| next-word model | lookup aliases + respelled output | `BigramModel.lookupAliases`, `WordPredictor.getStaticNextWordSeed` |
+
+Rules:
+
+- **Shipped list only.** Each fold runs before the user's words (custom words, the platform user
+  dictionary) are merged, so a user's `Straße` stays `Straße`. The editor text is never rewritten:
+  a typed `groß` is the word `gross` (`sharpSDictionaryKey`) and is kept as typed.
+- **Twins merge** (`maße`/`masse`): one key, the higher frequency (tap), the better rank
+  (secondary, geometric), the higher frequency at the first twin's position (CTC).
+- **Autocorrect needs no flag.** With no ß word in the map, `sharpSReading` (step 1.3) finds
+  nothing, so `strasse`, `gross`, `weiss` + space stay; `stras` offers `strasse`.
+- **Swipe memo.** The choice is an input of `LexiconContentVersion.of(spellingVariant =)`
+  (`SwissSpelling.LEXICON_VARIANT`, hashed only when active, so the off key is the one every
+  install had). The CTC trie's a–z surfaces are the same either way (ß already projects to `ss`);
+  only the display forms and alternates change.
+- **Next-word.** `de.cklm` keeps Germany's spelling. It is installed with one alias per ß word
+  whose `ss` spelling the model does not name itself (`strasse → straße`, not `masse`), whatever
+  the preference says (the model loads once per process); the seed is respelled and de-duplicated
+  while the primary list is (`WordPredictor.primarySwissSpelling`).
+- **Reload on a flip.** Every preference change refreshes Config; `CleverKeysService.onConfigChanged`
+  then calls `ActiveLanguageSync.applySwissSpelling`, which reloads the German primary and/or
+  secondary dictionary and re-warms the swipe engine. The loaders read the STORED preference
+  (`LanguagePrefs.germanSwissSpelling`), not the in-memory Config.
+- **First value.** The static default is off. The key is absent until German is first served, then
+  written once (`commit`) by `LanguagePrefs.seedGermanSwissSpelling`: on when a system language is
+  de-CH or de-LI. The keyboard seeds at start and in `onConfigChanged`; Settings seeds when German
+  is chosen there. A stored value is never replaced.
+- **Backup.** Classified in `SETTINGS_DEFAULTS` (Boolean). Because absence means "not seeded yet",
+  an import onto a device without the key writes the backup's value even when it is the default
+  (`SEEDED_WHEN_ABSENT_KEYS`); a settings reset removes the key, and the device seeds it again.
+
+- **Disabled words.** Dictionary Manager lists the shipped list and stores `straße`; every loader
+  filters with `SwissSpelling.foldDisabled` (the stored set plus the `ss` spelling of its ß
+  words), so that word is disabled as `strasse` too. Disabling one twin disables the merged word.
+
+Not done: the Dictionary Manager's word list still shows the shipped spelling (`straße`) with the
+switch on (# TODO in `SwissSpelling`). An imported German pack is folded like the bundled list.
+Tests: `SwissSpellingFoldTest`, `SwissSpellingSeedTest`, `SwissSpellingWiringDriftTest`,
+`WordPredictorSharpSTest`, `CtcAccentKeyLayoutReplayTest`, `ActiveLanguageSyncTest`,
+`SettingsImportPlanBuilderTest` (`germanSwissSpelling_*`).
 
 ### Lookup fold — `ArabicScriptFold`
 

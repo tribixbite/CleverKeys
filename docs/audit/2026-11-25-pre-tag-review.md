@@ -143,3 +143,8 @@ download. D3 has its release note. D2: a word of the second language is no longe
 of a wider fix: no secondary-language word was safe from autocorrect); the de-CH question stays
 open. D1, M1, M2 and M4 remain the maintainer's. Correction to S6 as written: `d'abc` has 3 corpus
 hits and sat at 76, so it stays.
+
+D2, later the same day: the de-CH half is a setting, `pref_german_swiss_spelling` ("Swiss spelling
+(ss for ß)"), which respells every German lexicon at load and is seeded on for a de-CH / de-LI
+system language (`docs/specs/dictionary-and-language-system.md` § Swiss German spelling). Not yet
+checked on a phone.

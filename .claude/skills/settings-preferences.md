@@ -271,6 +271,23 @@ Do not add prefs or `SettingsDefaults` entries for it. Spec: `docs/specs/layout-
 - The settings file is read through `DirectBootAwarePreferences`; the custom-theme store is a
   DIFFERENT prefs file (`custom_keyboard_themes`), see `theme-system.md`.
 
+## A preference that is SEEDED on first use (2026-11-25, `pref_german_swiss_spelling`)
+
+Swiss German spelling (`LanguagePrefs.GERMAN_SWISS_SPELLING`, switch in the Multi-Language section,
+shown only while German is selected) has a static default (off) AND a first value the device
+picks itself: `LanguagePrefs.seedGermanSwissSpelling` writes it once (`commit`), the first time
+German is served, on for a de-CH / de-LI system language. Consequences for such a key:
+
+- Readers that can run outside the keyboard (lexicon loaders, Settings) read the STORED value
+  (`LanguagePrefs.germanSwissSpelling`), not Config.
+- It changes what a lexicon HOLDS without changing the served language, so `ActiveLanguageSync`
+  has its own entry for it (`applySwissSpelling`), fed from `onConfigChanged`.
+- Backup: keep it in `SETTINGS_DEFAULTS` (type check, reset removes it) and list it in
+  `SEEDED_WHEN_ABSENT_KEYS`, so an imported value equal to the default is still written over an
+  absent key. Do not add it to `SettingsResetPolicy.seedValues`: a reset must leave it absent.
+- Its switch is gated on a language choice, not on another switch, so the generated search entry
+  has no `gateIds`; a search for it while German is not selected finds the section only.
+
 ## Internal prefs added October 2026 (classify as INTERNAL, never exported)
 
 - `voice_input_enabled` and `voice_mic_permission_blocked` (2026-10-29, voice input): the switch is

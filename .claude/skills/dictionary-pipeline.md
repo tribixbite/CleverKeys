@@ -291,6 +291,18 @@ de were cleaned (`docs/eval/2026-11-19-italian-accent-spellings.md`,
   the dir needs the shipped `<l>.json` sidecar beside `<l>.cklm` (`git show HEAD:src/main/assets/lm/<l>.json`),
   or the test dies with FileNotFoundException in `StaticLmLanguageData.sidecar`.
 
+## German ß and Swiss spelling (2026-11-25)
+
+- The assets spell Germany's way (`straße`, `groß`; `scripts/sharp_s.py`). Do NOT build a second
+  German list for Switzerland: `pref_german_swiss_spelling` respells every German lexicon at LOAD
+  (`SwissSpelling`: tap map + prefix index, secondary index, CTC base pairs, geometric word array;
+  next-word through lookup aliases). Spec: `docs/specs/dictionary-and-language-system.md`
+  § Swiss German spelling.
+- A new loader of a German word list must apply the fold too, BEFORE it merges the user's words,
+  and a memoised one must key on `SwissSpelling.lexiconVariant` (`SwissSpellingWiringDriftTest`).
+- After a German rebuild, `SwissSpellingFoldTest` re-reads `de_enhanced.bin` and `de.cklm` with the
+  fold on: the a–z surfaces must not change, no display form may keep a ß.
+
 ## Arabic-script lookup fold and the Persian half-space (2026-10-23)
 
 - `ArabicScriptFold` folds LOOKUP KEYS only (dictionary keys at load, the typed word at
