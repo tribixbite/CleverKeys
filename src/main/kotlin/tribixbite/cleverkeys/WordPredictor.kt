@@ -919,6 +919,8 @@ class WordPredictor : Predictor {
      *
      * v1.1.91: Also updates UserDictionaryObserver to filter by new language.
      * v1.1.92: Reloads disabled words for language-specific key.
+     * 2026-11-26: the only switch path; both Auto-Detect branches of [tryAutoLanguageDetection]
+     * switch through it (pinned by `LearningFunnelBookkeepingTest`).
      */
     fun setLanguage(language: String) {
         // L6 (review 2026-08-06): the rolling learn window must not straddle a
@@ -1220,17 +1222,15 @@ class WordPredictor : Predictor {
         if (multiLanguageManager != null) {
             val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity, chosen)
             if (detected != null && detected != currentLanguage && detected in chosen) {
-                invalidateExactLearningCommit()
-                currentLanguage = detected
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
                 }
-                bigramModel?.setLanguage(detected)
-                contextModel?.language = detected
-                // L6: the window that triggered detection holds PRIOR-language
-                // words — clear it so the first post-switch commits don't learn
-                // mixed-language pairs into the new language's store.
-                recentWords.clear()
+                // The one switch path (2026-11-26): this branch used to set only the bigram
+                // tables' language and the context model, so a detected switch kept the old
+                // language's static next-word model (the new one's `.cklm` was never loaded),
+                // disabled words and user-dictionary filter. [setLanguage] also clears the
+                // window that triggered detection (L6) and expires the exact learn receipt.
+                setLanguage(detected)
             }
             // The manager's answer stands, a "no switch" (null) included: the legacy detector
             // below used to run after it at a fixed threshold over all six of its languages and

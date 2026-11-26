@@ -636,7 +636,9 @@ editor that used to be listed here already ship in 2.0.)
   picks the better of your two languages (Spanish text that also looks Portuguese switches to
   Spanish); for a pair it cannot recognise (Italian, Dutch or an imported language beside
   another) Settings says Auto-Detect is not available instead of showing a switch that never
-  worked.
+  worked. When it switches, next-word suggestions and the words you disabled follow the new
+  language: next-word used only a small built-in table of that language, and the disabled words
+  stayed the first language's.
 - A correctly typed word of your second language is no longer autocorrected into a word of the
   first (with Spanish beside English, pero became per).
 - With the History size limit set by storage size, copying something larger than the whole limit

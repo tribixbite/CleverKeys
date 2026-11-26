@@ -327,6 +327,8 @@ class LearningFunnelBookkeepingTest {
         config.auto_detect_language = true
         val languages = mockk<MultiLanguageManager>()
         every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
+        // The switch goes through setLanguage, which re-syncs the manager (already on es: a no-op).
+        every { languages.switchLanguage(any()) } returns true
         predictor.setField("multiLanguageManager", languages)
 
         config.layout_bound_language = "en"
@@ -463,6 +465,43 @@ class LearningFunnelBookkeepingTest {
         predictor.addWordToContext("come", true)
         assertWithMessage("confident, and chosen").that(predictor.getField("currentLanguage")).isEqualTo("es")
         verify { detector.detectLanguageFromWordsWithConfidence(any(), setOf("en", "es")) }
+    }
+
+    /**
+     * 2026-11-26 (Pixel S7 follow-up): a switch the language MANAGER detects must switch the
+     * predictor the same way [WordPredictor.setLanguage] does. Its branch set only the bigram
+     * tables' language and the context model, so after detecting German the next-word seed kept
+     * the hardcoded table instead of loading `de.cklm`, English's disabled words stayed in force,
+     * and the user-dictionary observer kept filtering by English.
+     */
+    @Test
+    fun aDetectedSwitchLoadsTheNewLanguagesModelDisabledWordsAndObserver() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "de"
+        val ctx = mockk<android.content.Context>(relaxed = true)
+        predictor.setField("context", ctx)
+        val prefs = mockk<android.content.SharedPreferences>(relaxed = true)
+        every { prefs.getStringSet(any(), any()) } returns emptySet()
+        every { prefs.getStringSet(LanguagePreferenceKeys.disabledWordsKey("de"), any()) } returns setOf("doch")
+        mockkStatic(DirectBootAwarePreferences::get_shared_preferences)
+        every { DirectBootAwarePreferences.get_shared_preferences(any()) } returns prefs
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        predictor.setField("bigramModel", bigrams)
+        val observer = mockk<UserDictionaryObserver>(relaxed = true)
+        predictor.setField("dictionaryObserver", observer)
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
+        predictor.setField("multiLanguageManager", languages)
+
+        listOf("wir", "haben", "das", "schon", "doch").forEach { predictor.addWordToContext(it, true) }
+
+        assertWithMessage("switched").that(predictor.getField("currentLanguage")).isEqualTo("de")
+        verify { bigrams.setLanguage("de") }
+        verify { bigrams.loadStaticContinuationsAsync(ctx, "de") }
+        verify { observer.setLanguage("de") }
+        assertWithMessage("German's disabled words").that(predictor.getField("disabledWords") as Set<*>).containsExactly("doch")
+        assertWithMessage("the window that triggered the switch is cleared").that(learnWindow()).isEmpty()
     }
 
     @Test
