@@ -50,7 +50,17 @@
  *     `src/test/resources/layouts/futo_<layout>.json` (COMMITTED — same format as the
  *     precedent `futo_qwerty.json`; needs `git add -f` past the blanket *.json ignore).
  *
+ * ## (layout, language) override (`--pairs`)
+ * `--pairs qwerty:fr,qwertz:fr` fetches the rows of a language typed on a layout OTHER than
+ * the one mapped above (the held-out French set of
+ * `docs/eval/2026-11-25-french-table-heldout-confirmation.md`). Same filters; the output is
+ * `futo_swipe5_<language>_<layout>.jsonl.gz` and each line also carries the row's `session`
+ * (so results can be counted per writer). With `--pairs` the default layouts are NOT fetched
+ * and no geometry file is written: the committed `futo_<layout>.json` is compared with the
+ * dataset's and a difference is fatal.
+ *
  * Usage:  node scripts/fetch_futo_multilayout_sample.mjs [--layouts a,b,...] [--limit 100]
+ *         node scripts/fetch_futo_multilayout_sample.mjs --pairs qwerty:fr,qwertz:fr
  * Env:    CLEVERKEYS_TEST_CACHE overrides the cache dir.
  *
  * Device note: `curl` is shimmed/broken in the Termux shell (a login-profile
@@ -58,7 +68,7 @@
  */
 
 import { createGzip } from "node:zlib";
-import { createWriteStream, mkdirSync, writeFileSync, existsSync } from "node:fs";
+import { createWriteStream, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -107,6 +117,24 @@ const LAYOUTS = strArg("--layouts", Object.keys(LAYOUT_LANG).join(","))
   .split(",")
   .map((s) => s.trim())
   .filter((s) => s in LAYOUT_LANG);
+
+/**
+ * `--pairs layout:lang,...` → explicit (layout, language) pairs, replacing the default
+ * mapping for this run. Names are restricted to lowercase letters/underscores because they
+ * go into the `where` clause and a file name.
+ * @type {{layout: string, lang: string}[]}
+ */
+const PAIRS = strArg("--pairs", "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map((s) => {
+    const [layout, lang] = s.split(":");
+    if (!/^[a-z_]+$/.test(layout ?? "") || !/^[a-z_]+$/.test(lang ?? "")) {
+      throw new Error(`--pairs: expected layout:lang, got "${s}"`);
+    }
+    return { layout, lang };
+  });
 
 // ── word filter ────────────────────────────────────────────────────────────────
 
@@ -168,9 +196,14 @@ function filterUrl(where, offset, limit) {
 
 // ── per-layout pipeline ─────────────────────────────────────────────────────
 
-/** Fetch + filter every row of one layout; write the gzipped JSONL sample. */
-async function processLayout(layout) {
-  const lang = LAYOUT_LANG[layout];
+/**
+ * Fetch + filter every row of one layout; write the gzipped JSONL sample.
+ * @param {string} layout FUTO layout name
+ * @param {string} [langOverride] language other than the layout's mapped one (`--pairs`);
+ *   the file is then named `<lang>_<layout>` and each line carries its `session`.
+ */
+async function processLayout(layout, langOverride) {
+  const lang = langOverride ?? LAYOUT_LANG[layout];
   const where = `"layout"='${layout}' AND "dual_finger"=0 AND "language"='${lang}'`;
 
   // Probe for the total (num_rows_total) to page deterministically.
@@ -238,13 +271,20 @@ async function processLayout(layout) {
       if (seen.has(dedupKey)) continue;
       seen.add(dedupKey);
 
-      lines.push(JSON.stringify({ word, w, h, pts }));
+      lines.push(
+        JSON.stringify(
+          langOverride
+            ? { word, w, h, pts, session: String(row.session) }
+            : { word, w, h, pts },
+        ),
+      );
       kept++;
     }
   }
 
   // Write gzipped JSONL to the local cache.
-  const outFile = join(CACHE_DIR, `futo_swipe5_${layout}.jsonl.gz`);
+  const stem = langOverride ? `${lang}_${layout}` : layout;
+  const outFile = join(CACHE_DIR, `futo_swipe5_${stem}.jsonl.gz`);
   const gz = createGzip({ level: 9 });
   const out = createWriteStream(outFile);
   const body = lines.join("\n") + (lines.length ? "\n" : "");
@@ -272,11 +312,32 @@ async function fetchLayoutJson(layout) {
   console.log(`[${layout}] layout geometry keys=${obj.keys.length} -> ${outFile}`);
 }
 
+/** `--pairs` mode: the committed geometry must BE the dataset's; never overwrite it. */
+async function verifyLayoutJson(layout) {
+  const text = await fetchTextRetry(`${LAYOUT_BASE}/${layout}.json`, `${layout}.json`);
+  const committed = readFileSync(join(LAYOUT_OUT_DIR, `futo_${layout}.json`), "utf8");
+  if (text !== committed) {
+    throw new Error(`futo_${layout}.json differs from the dataset's swipe-5 geometry`);
+  }
+  console.log(`[${layout}] committed geometry matches the dataset's`);
+}
+
 // ── main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
   mkdirSync(CACHE_DIR, { recursive: true });
   mkdirSync(LAYOUT_OUT_DIR, { recursive: true });
+  if (PAIRS.length) {
+    console.log(
+      `[futo-multi] config=${CONFIG} split=${SPLIT} pairs=[${PAIRS.map((p) => `${p.layout}:${p.lang}`).join(",")}]`,
+    );
+    for (const { layout } of PAIRS) await verifyLayoutJson(layout);
+    for (const { layout, lang } of PAIRS) {
+      const s = await processLayout(layout, lang);
+      console.log(`  ${s.layout.padEnd(8)} ${s.lang}  kept=${s.kept}/${s.total}`);
+    }
+    return;
+  }
   console.log(
     `[futo-multi] config=${CONFIG} split=${SPLIT} layouts=[${LAYOUTS.join(",")}]`,
   );

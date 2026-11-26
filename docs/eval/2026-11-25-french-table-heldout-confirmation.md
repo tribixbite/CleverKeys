@@ -64,3 +64,51 @@ Verdict rule, fixed now:
   maintainer's to order; this run only reports the failure.
 
 No retuning against these rows in either case: they are spent as a held-out set once decoded.
+
+## Result: H1–H4 pass. Direction confirmed on 521 rows, magnitude unconfirmed
+
+Added after the pre-registration (`d4f063c1f`); the text above is unchanged.
+
+Harness check first: the azerty default of `elision_table_ab.py fr`, re-run after the script gained
+its `--corpus` argument, reproduces the cleanup document exactly (2,180 decoded; floor 84.17 /
+95.32, table 85.37 / 95.73; the same 2 regressions and 21 improvements).
+
+Fetched with `node scripts/fetch_futo_multilayout_sample.mjs --pairs qwerty:fr,qwertz:fr`; the
+committed geometries matched the dataset's. Run with
+`elision_table_ab.py fr --corpus fr_qwerty:qwerty --corpus fr_qwertz:qwertz`.
+
+| set | rows in split | kept by the filters | decoded | OOV / untypeable | distinct targets | sessions |
+|---|---|---|---|---|---|---|
+| qwerty | 510 | 477 (13 under 3 points, 1 bad word, 19 duplicates) | 455 | 21 / 1 | 289 | 9 |
+| qwertz | 72 | 70 (1 bad word, 1 duplicate) | 66 | 4 / 0 | 57 | 2 |
+| pooled | 582 | 547 | 521 | 25 / 1 | 327 | 11 |
+
+Gates, on the pooled set:
+
+| gate | needed | result |
+|---|---|---|
+| H1 top-1 | table ≥ floor | 457 → **464** of 521 (87.72 → 89.06, +7 rows) |
+| H2 top-3 | ≥ floor − 0.20 pt | 497 → **497** of 521 (95.39 → 95.39) |
+| H3 targets | improved ≥ regressed, regressed ≤ 2 | **6** improved / **0** regressed |
+| H4 elision rows | hits(table) ≥ hits(floor) | 17 → **24** of 25 rows (24 distinct targets, 10 sessions); top-3 23 → 24 |
+
+Per layout, for information: qwerty top-1 405 → 411 of 455 (89.01 → 90.33), top-3 437 → 437,
+5 improved / 0 regressed, elision rows 14 → 20 of 21; qwertz top-1 52 → 53 of 66 (78.79 →
+80.30), top-3 60 → 60, 1 improved / 0 regressed, elision rows 3 → 4 of 4.
+
+Concentration. The table changed the top-1 of 7 rows, over 6 distinct targets and 5 of the 11
+sessions: `l'art` twice (was `larry`), `jusqu'à` (was `jusque`), `d'autres` (was `faire`), `l'ont`
+(was `long`), `l'acteur` (was `lecture`), `n'était` (was `mettait`). All 7 are elision rows; none
+of the 496 decoded rows with a non-elision target changed its top-1 in either direction, so the
+regression side saw no event at all here (on azerty it was 2 targets in 2,180 rows; at that rate
+about 0.5 was expected, so 0 does not show the rate is lower). Two of the six targets, `l'art`
+and `jusqu'à`, are also among the 21 azerty improvements: the same words, written by other
+people on other layouts. Six of the seven changed rows moved the target from rank 2 or 3 to
+rank 1, which is why top-3 is flat: `d'autres` came from outside the top 3, and one real-word
+row left it (`lavoir`, second behind `labour` under the floor, fourth under the table behind
+the raised `l'amour` and `l'avoue`; top-1 was wrong in both arms, so H3 does not count it).
+
+Verdict, by the rule fixed above: **direction confirmed on 521 rows (547 kept, 327 distinct
+targets, 11 sessions), magnitude unconfirmed.** The table stays as shipped; no fallback. The net
+of +7 rows is in line with the ≈6 the azerty rate predicted, and it rests on 6 words from 5
+writers. These rows are now spent as a held-out set.
