@@ -70,8 +70,13 @@ class LearningFunnelBookkeepingTest {
     private lateinit var resources: Resources
     private lateinit var handler: SuggestionHandler
 
-    /** The fake editor's content; the cursor is always at the end. */
+    /** The fake editor's content. */
     private val editor = StringBuilder()
+
+    /** The fake editor's cursor; null keeps it at the end of [editor] (most tests). */
+    private var cursorAt: Int? = null
+
+    private fun cursor(): Int = (cursorAt ?: editor.length).coerceIn(0, editor.length)
     private lateinit var ic: InputConnection
 
     /** Words the handler last pushed to the bar; `getTopSuggestion` answers from it. */
@@ -153,19 +158,30 @@ class LearningFunnelBookkeepingTest {
         resources = mockk(relaxed = true)
 
         editor.setLength(0)
+        cursorAt = null
         ic = mockk(relaxed = true)
         every { ic.getTextBeforeCursor(any(), any()) } answers {
             val n = firstArg<Int>()
-            editor.substring(maxOf(0, editor.length - n))
+            val c = cursor()
+            editor.substring(maxOf(0, c - n), c)
         }
-        every { ic.getTextAfterCursor(any(), any()) } returns ""
+        every { ic.getTextAfterCursor(any(), any()) } answers {
+            val c = cursor()
+            editor.substring(c, minOf(editor.length, c + firstArg<Int>()))
+        }
         every { ic.commitText(any(), any()) } answers {
-            editor.append(firstArg<CharSequence>())
+            val text = firstArg<CharSequence>()
+            val c = cursor()
+            editor.insert(c, text)
+            cursorAt = cursorAt?.let { it + text.length }
             true
         }
         every { ic.deleteSurroundingText(any(), any()) } answers {
-            val before = firstArg<Int>()
-            editor.setLength(maxOf(0, editor.length - before))
+            val c = cursor()
+            val start = maxOf(0, c - firstArg<Int>())
+            val end = minOf(editor.length, c + secondArg<Int>())
+            editor.delete(start, end)
+            cursorAt = cursorAt?.let { start }
             true
         }
         every { ic.getCursorCapsMode(any()) } returns 0
@@ -675,7 +691,8 @@ class LearningFunnelBookkeepingTest {
     /** Production order: KeyEventHandler commits the char, THEN reports it as typed. */
     private fun type(text: String, field: EditorInfo = textField()) {
         for (c in text) {
-            editor.append(c)
+            editor.insert(cursor(), c)
+            cursorAt = cursorAt?.plus(1)
             handler.handleRegularTyping(c.toString(), ic, field)
         }
     }
@@ -1175,6 +1192,297 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("learn window").that(learnWindow()).isEmpty()
         verify(exactly = 0) { personalization.recordWordTyped(any(), any()) }
         verify(exactly = 0) { adaptation.recordSelection(any()) }
+    }
+
+    // ================================================================ W2 follow-up (2026-11-26)
+    //
+    // Maintainer question: "with learning on, are swipe word corrections erroneously getting
+    // recorded as n-gram pairs?" One test per route by which a wrong word leaves the editor.
+
+    /** The selection callback a real editor sends after an edit (InputCoordinator.onCursorMoved). */
+    private fun cursorSync(field: EditorInfo = textField()) {
+        tracker.onCursorPositionChanged(cursor())
+        tracker.synchronizeWithCursor(ic, "en", field)
+        if (tracker.getCurrentWord().isNotEmpty()) {
+            handler.handleCursorSyncPrediction(ic, field)
+        } else {
+            handler.handleCursorParkPrediction(field, ic)
+        }
+    }
+
+    /** Ordinary Backspace presses (the #110 whole-word undo off or not applicable). */
+    private fun backspaceChars(count: Int, field: EditorInfo = textField()) {
+        repeat(count) {
+            val c = cursor()
+            editor.deleteCharAt(c - 1)
+            cursorAt = cursorAt?.minus(1)
+            handler.handleBackspace(ic, field)
+            cursorSync(field)
+        }
+    }
+
+    /** A new gesture: InputCoordinator clears the auto-insert tracking when it starts. */
+    private fun newSwipe(vararg slate: String) {
+        tracker.clearLastAutoInsertedWord()
+        swipe(*slate)
+    }
+
+    private fun trigram(w1: String, w2: String, w3: String): Float =
+        trigramStore.getProbability("en", w1, w2, w3)
+
+    private fun assertOnlyTheCorrectionLearned(prev: String, wrong: String, right: String) {
+        assertWithMessage("$prev→$wrong rolled back").that(bigram(prev, wrong)).isEqualTo(0)
+        assertWithMessage("no $wrong→$right chain").that(bigram(wrong, right)).isEqualTo(0)
+        assertWithMessage("$prev→$right learned once").that(bigram(prev, right)).isEqualTo(1)
+    }
+
+    /** Scenario 1: bar alternate over the auto-inserted swipe word, trigram included. */
+    @Test
+    fun scenario1BarAlternateOverASwipeLeavesNoWrongPairOrTrigram() {
+        editor.append("we fix ")
+        handler.updateContext("we")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        tap("git")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("we fix git ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+        assertWithMessage("we fix got").that(trigram("we", "fix", "got")).isEqualTo(0f)
+        assertWithMessage("we fix git").that(trigram("we", "fix", "git")).isGreaterThan(0f)
+    }
+
+    /** Scenario 2: the #110 whole-word Backspace undo, then the right word swiped. */
+    @Test
+    fun scenario2BackspaceUndoThenReswipeLearnsOnlyTheCorrection() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        editor.setLength(editor.length - "got ".length)
+        handler.onSwipeWordUndone("got", ic)
+        newSwipe("git")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix git ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+    }
+
+    /** Scenario 3: "Backspace undoes swipe" OFF — the word deleted letter by letter, then re-swiped. */
+    @Test
+    fun scenario3LetterByLetterDeleteThenReswipeLearnsOnlyTheCorrection() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars("got ".length)
+        newSwipe("git")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix git ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+        assertWithMessage("learn window").that(learnWindow()).containsExactly("fix", "git").inOrder()
+        assertWithMessage("the rejected word's vocabulary +1 reversed").that(vocabulary.getWordUsage("got")).isNull()
+        assertWithMessage("the kept word counted once").that(vocabulary.getWordUsage("git")?.usageCount).isEqualTo(1)
+    }
+
+    /** Scenario 3, retyped by tapping instead of swiping. */
+    @Test
+    fun scenario3LetterByLetterDeleteThenRetypeLearnsOnlyTheCorrection() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars("got ".length)
+        type("git ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix git ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+    }
+
+    /** Scenario 3, part of the word kept: "got" → "go", then "ne" typed onto it. */
+    @Test
+    fun scenario3PartlyDeletedWordCompletedDifferentlyLearnsTheNewWord() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars(2)
+        type("ne ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix gone ")
+        assertOnlyTheCorrectionLearned("fix", "got", "gone")
+    }
+
+    /** Scenario 3, the editor's own word delete (Ctrl+Backspace / `delete_word`): one edit, no hook. */
+    @Test
+    fun scenario3CtrlBackspaceThenReswipeLearnsOnlyTheCorrection() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        editor.setLength(editor.length - "got ".length)
+        cursorSync()
+        newSwipe("git")
+
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+    }
+
+    /** Scenario 3, the keyboard's delete-last-word command (it reports the rejection itself). */
+    @Test
+    fun scenario3DeleteLastWordThenReswipeLearnsOnlyTheCorrection() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        handler.handleDeleteLastWord(ic, textField())
+        cursorSync()
+        newSwipe("git")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix git ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+    }
+
+    /** No false rollback: the swiped word kept, the next word swiped after it. */
+    @Test
+    fun aKeptSwipeWordFollowedByTheNextWordStaysLearned() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        newSwipe("it")
+
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("got→it learned").that(bigram("got", "it")).isEqualTo(1)
+    }
+
+    /** No false rollback: only the automatic space deleted, then punctuation. */
+    @Test
+    fun deletingOnlyTheSpaceAfterASwipeWordKeepsItLearned() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars(1)
+        type(". ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix got. ")
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        verify(exactly = 0) { personalization.unrecordWordTyped(any()) }
+    }
+
+    /** No false rollback: the cursor moved elsewhere and a word was typed there. */
+    @Test
+    fun aWordTypedElsewhereDoesNotRollTheSwipeWordBack() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        cursorAt = 0
+        cursorSync()
+        type("so ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("so fix got ")
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        verify(exactly = 0) { personalization.unrecordWordTyped(any()) }
+    }
+
+    /** Scenario 4: the next word swiped first, then the user goes back and fixes the first one. */
+    @Test
+    fun scenario4FixingAnEarlierWordAfterTheCursorMovedBackLearnsNoChainedPair() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        newSwipe("it")
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix got it ")
+
+        cursorAt = "fix got".length
+        cursorSync()
+        tap("git")
+
+        assertWithMessage("editor").that(editor.toString()).startsWith("fix git")
+        assertWithMessage("no it→git (the replacement is not after the newest word)")
+            .that(bigram("it", "git")).isEqualTo(0)
+        assertWithMessage("no got→git (the replaced word is not before it either)")
+            .that(bigram("got", "git")).isEqualTo(0)
+        assertWithMessage("it, still in the editor, keeps its learn").that(bigram("got", "it")).isEqualTo(1)
+        // TODO(W2 history): fix→got and got→it stay learned. They belong to commits older than
+        // the newest receipt, which is the only one the predictor can reverse exactly.
+    }
+
+    /**
+     * Scenario 4, editor side: the bar tap must not run the swipe REPLACE (delete the newest
+     * swipe's length before the cursor) once the cursor has moved away from that swipe.
+     */
+    @Test
+    fun scenario4BarTapAfterTheCursorMovedBackDoesNotDeleteByTheLastSwipesLength() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        newSwipe("something")
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix got something ")
+
+        cursorAt = "fix got".length
+        cursorSync()
+        tap("git")
+
+        assertWithMessage("only the word at the cursor is replaced")
+            .that(editor.toString().replace("  ", " ")).isEqualTo("fix git something ")
+        assertWithMessage("something, still in the editor, keeps its learn").that(bigram("got", "something")).isEqualTo(1)
+    }
+
+    /** Scenario 5: undo, re-swipe (the correction candidate), then the next word settles it. */
+    @Test
+    fun scenario5SettledSwipeCorrectionLeavesOnlyTheCorrection() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        editor.setLength(editor.length - "got ".length)
+        handler.onSwipeWordUndone("got", ic)
+        newSwipe("git")
+        newSwipe("now")
+
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+        assertWithMessage("git→now").that(bigram("git", "now")).isEqualTo(1)
+    }
+
+    /** Scenario 6: a typed word autocorrected, then deleted letter by letter and retyped. */
+    @Test
+    fun scenario6RetypingAnAutocorrectedWordLearnsOnlyTheRetypedWord() {
+        config.autocorrect_enabled = true
+        every { predictor.autoCorrect(any()) } answers { firstArg() }
+        every { predictor.autoCorrect("teh") } returns "the"
+        editor.append("fix ")
+        handler.updateContext("fix")
+        type("teh ")
+        assertWithMessage("autocorrect ran").that(editor.toString()).isEqualTo("fix the ")
+        backspaceChars("the ".length)
+        type("ten ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix ten ")
+        assertOnlyTheCorrectionLearned("fix", "the", "ten")
+    }
+
+    /**
+     * Scenario 7: the wrong word's commit is the one that made Auto-Detect switch the next-word
+     * language. Its pair went to the ENGLISH store; the rollback must take it from there.
+     */
+    @Test
+    fun scenario7RollbackAfterADetectedSwitchTargetsTheStoreTheCommitWroteTo() {
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        val languages = mockk<MultiLanguageManager>(relaxed = true)
+        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
+        predictor.setField("multiLanguageManager", languages)
+        // English is the loaded dictionary (setLanguage, which a real dictionary load calls).
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        editor.append("we all really like ")
+        listOf("we", "all", "really", "like").forEach { handler.updateContext(it) }
+        swipe("cats", "cat")
+        assertWithMessage("the fifth commit switched").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        assertWithMessage("like→cats in the English store").that(bigram("like", "cats")).isEqualTo(1)
+
+        tap("cat")
+
+        assertWithMessage("like→cats rolled back from the English store").that(bigram("like", "cats")).isEqualTo(0)
+        verify(exactly = 1) { personalization.unrecordWordTyped("cats") }
     }
 
     // ------------------------------------------------------------------ reflection

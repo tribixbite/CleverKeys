@@ -1784,8 +1784,15 @@ class SuggestionHandler(
                 // CRITICAL: If we just auto-inserted a word from a swipe, delete it for replacement
                 // This allows user to tap a different prediction instead of appending
                 // Only delete if the last commit was from a swipe (not from other sources)
+                // Verified at use (2026-11-26): the swipe must still end the text before the
+                // cursor. The tracking survives cursor moves, so with the cursor moved back into
+                // an earlier word ("fix got| something") the delete below removed the LAST
+                // swipe's length there ("fix got" → "", the tap then gave "git something") and
+                // rolled back the wrong word's learning. The typed-word branch below replaces the
+                // word at the cursor instead. A terminal-style editor cannot be read: trusted.
                 if (!contextTracker.getLastAutoInsertedWord().isNullOrEmpty() &&
-                    contextTracker.getLastCommitSource() == PredictionSource.SWIPE
+                    contextTracker.getLastCommitSource() == PredictionSource.SWIPE &&
+                    (inTermuxApp || swipeEndsTextBeforeCursor(inputConnection))
                 ) {
                     vlog { "REPLACE: Deleting auto-inserted word: '${contextTracker.getLastAutoInsertedWord()}'" }
                     val rejectedWord = contextTracker.getLastAutoInsertedWord().orEmpty()
@@ -2178,7 +2185,7 @@ class SuggestionHandler(
             pendingJoinerStem = null
 
             // Update context with the selected word — never from a password field (W8).
-            if (!inPasswordField) updateContext(processedWord)
+            if (!inPasswordField) updateContext(processedWord, inputConnection)
 
             // Clear current word
             // NOTE: Don't clear suggestions here - they're re-displayed after auto-insertion
@@ -2243,6 +2250,18 @@ class SuggestionHandler(
     private var suffixOperationId = 0L
     private var wordEditSession = 0L
     private var lastLearningCommit: LearningCommit? = null
+
+    /**
+     * Where the newest learned word sits in the editor: [anchor] is the text before it (the
+     * [SwipeCorrectionTracker.editorContinuesAnchor] contract: a whole-field prefix when shorter
+     * than [SwipeCorrectionTracker.ANCHOR_WINDOW], else that window's suffix). Lets the next
+     * commit prove that [word] was deleted or rewritten through ordinary editing and roll its
+     * learn back (W2 follow-up 2026-11-26, [reconcileLearnWithEditor]); null [anchor] when the read
+     * cannot prove the old word's place (the adjacency check still uses [word]).
+     */
+    private class LearnedPlacement(val commit: LearningCommit, val word: String, val anchor: String?)
+
+    private var learnedPlacement: LearnedPlacement? = null
 
     fun onEditorSessionChanged() {
         wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
@@ -3090,7 +3109,7 @@ class SuggestionHandler(
         // partial must not be flushed again later — W5/W7)
         pendingTypedWord = null
         pendingJoinerStem = null
-        updateContext(exactWord)
+        updateContext(exactWord, ic)
 
         // Reset state
         contextTracker.clearCurrentWord()
@@ -3152,7 +3171,7 @@ class SuggestionHandler(
             rollbackRejectedWord(correctedWord)
 
             // Update context with the original word
-            updateContext(tappedWord)
+            updateContext(tappedWord, inputConnection)
 
             // Add to user dictionary so it won't be autocorrected again
             val stored = userWordStorageForm(tappedWord, inputConnection, editorInfo)
@@ -3186,8 +3205,11 @@ class SuggestionHandler(
      *
      * @param word Completed word to add to context
      */
-    fun updateContext(word: String?) {
+    fun updateContext(word: String?, ic: InputConnection? = null) {
         if (word.isNullOrEmpty()) return
+        // W2 follow-up: the previous learned word may have been deleted in the editor since, or
+        // this word may be going in somewhere else (the cursor moved back to an earlier word).
+        if (ic != null) reconcileLearnWithEditor(word, ic)
 
         // Use the current source from tracker, or UNKNOWN if not set
         val source = contextTracker.getLastCommitSource() ?: PredictionSource.UNKNOWN
@@ -3201,6 +3223,7 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
         lastLearningCommit = predictionCoordinator.getWordPredictor()?.latestLearningCommit()
+        learnedPlacement = ic?.let { placementOf(word, lastLearningCommit, it) }
 
         // ARC-006: the UnigramLanguageDetector feed that used to live here was deleted
         // 2026-08-28. It had been write-only since OptimizedVocabulary was removed — every
@@ -3208,6 +3231,91 @@ class SuggestionHandler(
         // whose scores nothing read. Re-adding it requires a real CONSUMER first (plus the
         // pure test ADR-011 §E promised), not just the feed.
     }
+
+    /**
+     * Does the newest swipe auto-insert still end the text before the cursor, exactly as it was
+     * committed ([PredictionContextTracker.getLastAutoInsertedText], else the legacy `word + " "`)?
+     * An editor that cannot be read gives no evidence against it, so the tracking is trusted, as
+     * it was before this check existed.
+     */
+    private fun swipeEndsTextBeforeCursor(ic: InputConnection): Boolean {
+        val word = contextTracker.getLastAutoInsertedWord() ?: return false
+        val expected = contextTracker.getLastAutoInsertedText()?.takeIf { it.trim(' ') == word } ?: "$word "
+        val before = editorTextBeforeCursor(ic, expected.length) ?: return true
+        return before == expected
+    }
+
+    /**
+     * Where [word], just committed and learned as [commit], sits in the editor; null when the
+     * editor cannot show it ends the text before the cursor (no proof can be built on it then).
+     */
+    private fun placementOf(word: String, commit: LearningCommit?, ic: InputConnection): LearnedPlacement? {
+        commit ?: return null
+        val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
+        val before = editorTextBeforeCursor(ic, window) ?: return null
+        val anchor = textBeforeTrailingWord(before, word) ?: return null
+        // A full read is a window, not the field start: it must still hold a whole anchor window
+        // to prove anything about the old word's place (the adjacency check needs only [word]).
+        val provable = before.length < window || anchor.length >= SwipeCorrectionTracker.ANCHOR_WINDOW
+        return LearnedPlacement(commit, word, anchor.takeLast(SwipeCorrectionTracker.ANCHOR_WINDOW).takeIf { provable })
+    }
+
+    /**
+     * [editor] (text before the cursor) without its trailing [word] and the separator run
+     * [SwipeCorrectionTracker.editorContinuesAnchor] accepts after a word (whitespace, one
+     * punctuation character, whitespace); null when [editor] does not end with [word].
+     */
+    private fun textBeforeTrailingWord(editor: String, word: String): String? {
+        var rest = editor.trimEnd()
+        if (rest.isNotEmpty() && !rest.last().isLetterOrDigit()) rest = rest.dropLast(1).trimEnd()
+        if (!rest.endsWith(word, ignoreCase = true)) return null
+        return rest.dropLast(word.length)
+    }
+
+    /**
+     * W2 follow-up (2026-11-26, maintainer question "are swipe corrections recorded as n-gram
+     * pairs?"): [newWord] is about to be learned. Two editor facts decide what its learn may
+     * pair it with:
+     *
+     * 1. It stands exactly where the newest learned word stood ([LearnedPlacement.anchor]
+     *    followed by [newWord]): that word is gone, deleted letter by letter with "Backspace
+     *    undoes swipe" off, removed by the editor's own word delete, or partly deleted and
+     *    completed into another word. Its learn (prev→wrong, the trigram, the vocabulary +1) is
+     *    reversed through its exact receipt, so the new word learns prev→new, never wrong→new.
+     * 2. Otherwise, it does not follow the newest learned word at all (the cursor moved back to
+     *    fix an earlier word): the learn window is closed first, as at a sentence boundary, so no
+     *    pair is learned between two words that are not next to each other in the text.
+     *
+     * Never a false rollback: the receipt must still be the predictor's newest, untouched commit
+     * (any later commit, boundary, language switch or store change expires it), and the anchor is
+     * the text before the old word, so the new word can only sit there if the old one left. A
+     * word typed elsewhere, after the kept word, or after a deleted space alone fails the anchor.
+     * An editor that cannot be read decides nothing.
+     */
+    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection) {
+        val placed = learnedPlacement ?: return
+        learnedPlacement = null
+        if (placed.commit !== lastLearningCommit) return
+        val editor = editorBeforeCursorFor(ic, newWord) ?: return
+        val predictor = predictionCoordinator.getWordPredictor() ?: return
+        val anchor = placed.anchor
+        if (anchor != null && SwipeCorrectionTracker.editorContinuesAnchor(anchor, editor, newWord)) {
+            if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
+            vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }
+            lastLearningCommit = null
+            contextTracker.rollbackLastWord(placed.word)
+            return
+        }
+        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return
+        if (textBeforeTrailingWord(beforeNew, placed.word)?.let { endsAtWordBoundary(it, placed.word) } == true) return
+        vlog { "LEARN WINDOW CLOSED: this word does not follow the previous one in the editor" }
+        predictor.onSentenceBoundary()
+        lastLearningCommit = null
+    }
+
+    /** True when the text [before] a word does not glue onto it ("fix" + "got" is not "fixgot"). */
+    private fun endsAtWordBoundary(before: String, word: String): Boolean =
+        before.isEmpty() || !WordChars.isWordCharAt(before + word, before.length - 1)
 
     /**
      * W2 (learning-system audit 2026-09-26): undo the learn a just-committed word performed,
@@ -3298,7 +3406,7 @@ class SuggestionHandler(
         if (word.isEmpty()) return false
 
         vlog { "LEARN FLUSH: typed word completed without a space (len=${word.length})" }
-        updateContext(capitalizeIWord(word))
+        updateContext(capitalizeIWord(word), ic)
         contextTracker.clearCurrentWord()
         // The flushed word may answer a swipe undo. Enter / leaving the field / a swipe is not a
         // moment to put an offer in the bar — an earned offer waits for the next idle bar.
@@ -3484,7 +3592,7 @@ class SuggestionHandler(
                     pendingJoinerStem = null
                     val stemWord = trimJoiners(danglingStem)
                     if (stemWord.isNotEmpty() && editorEndsWithWholeToken(ic, danglingStem, text)) {
-                        updateContext(stemWord)
+                        updateContext(stemWord, ic)
                     }
                 }
 
@@ -3547,7 +3655,7 @@ class SuggestionHandler(
                             inputConnection.deleteSurroundingText(completedWord.length + 1, 0)
                             // Insert the capitalized word with trailing space
                             inputConnection.commitText("$capitalizedWord ", 1)
-                            if (typedThisSession) updateContext(capitalizedWord)
+                            if (typedThisSession) updateContext(capitalizedWord, inputConnection)
                             noteTypedWordCommitted(capitalizedWord, inputConnection, editorInfo)
                                 ?.let { deferSwipeOffer(it) }
                             contextTracker.clearCurrentWord()
@@ -3583,7 +3691,7 @@ class SuggestionHandler(
                             )
 
                             // Update context with corrected word (learn-once: typed words only)
-                            if (typedThisSession) updateContext(correctedWord)
+                            if (typedThisSession) updateContext(correctedWord, inputConnection)
                             // Swipe corrections: the committed word is autocorrect's, not the
                             // user's — it cannot answer a swipe undo. (A kept re-swipe settles;
                             // the bar is about to show the autocorrect undo, so its offer waits.)
@@ -3633,7 +3741,7 @@ class SuggestionHandler(
                     if (typedThisSession && learnWord.isNotEmpty() &&
                         (!stemUnmerged || editorEndsWithWholeToken(ic, rawLearnToken, text))
                     ) {
-                        updateContext(learnWord)
+                        updateContext(learnWord, ic)
                         rememberVerifiedWord(ic, editorInfo, learnWord, ownsSpace = text == " ")
                     }
 

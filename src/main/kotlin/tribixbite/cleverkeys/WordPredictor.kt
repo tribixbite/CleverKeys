@@ -452,7 +452,14 @@ class WordPredictor : Predictor {
      */
     private var lastRecordedCommit: RecordedCommit? = null
 
-    private class RecordedCommit(val word: String, val window: List<String>, val language: String)
+    /**
+     * [language] is the next-word language whose store the commit wrote to; [dictionaryLanguage]
+     * the loaded primary dictionary whose lexicon judged learnability. A detected switch moves
+     * only the former (2026-11-26), so a rollback after it still targets [language]'s store.
+     */
+    private class RecordedCommit(
+        val word: String, val window: List<String>, val language: String, val dictionaryLanguage: String
+    )
 
     private data class LearningGates(
         val master: Boolean, val context: Boolean, val vocabulary: Boolean,
@@ -1190,7 +1197,7 @@ class WordPredictor : Predictor {
         recentWords.add(normalizedWord)
         while (recentWords.size > MAX_RECENT_WORDS) recentWords.removeAt(0)
         lastRecordedCommit = RecordedCommit(
-            normalizedWord, recentWords.takeLast(LearningGate.CONTEXT_WINDOW), currentLanguage
+            normalizedWord, recentWords.takeLast(LearningGate.CONTEXT_WINDOW), currentLanguage, dictionaryLanguage
         )
         // Supersede the previous identity BEFORE any sink can throw or be interrupted.
         exactLearningCommit = null
@@ -1266,16 +1273,36 @@ class WordPredictor : Predictor {
         commit: LearningCommit, replacement: String, fieldAllowsPersonalizedLearning: Boolean
     ): LearningCommitReplacement {
         if (replacement.isBlank()) return LearningCommitReplacement.Invalidated
+        return reverseLearningCommit(commit, fieldAllowsPersonalizedLearning) { gates ->
+            LearningCommitReplacement.Applied(recordContextCommit(replacement, gates, fieldAllowsPersonalizedLearning))
+        } ?: LearningCommitReplacement.Invalidated
+    }
+
+    /**
+     * W2 follow-up (2026-11-26): the word [commit] learned left the editor through ordinary
+     * editing (Backspace letter by letter, the editor's own word delete) and a different word
+     * now stands in its place. Same exact-receipt contract as [replaceLearningCommit], without
+     * recording a replacement: the caller's next [addWordToContext] learns what the user kept.
+     */
+    override fun rollbackLearningCommit(commit: LearningCommit, fieldAllowsPersonalizedLearning: Boolean): Boolean =
+        reverseLearningCommit(commit, fieldAllowsPersonalizedLearning) { true } == true
+
+    /**
+     * Reverse the exact latest commit's increments once and restore its learn window, then run
+     * [afterRollback] under the same learning-store locks. Null when [commit] is not the newest
+     * commit, a store changed since, or a store refused the decrement (ownership is dropped then).
+     */
+    private fun <T : Any> reverseLearningCommit(
+        commit: LearningCommit, fieldAllowed: Boolean, afterRollback: (LearningGates) -> T
+    ): T? {
         val gates = refreshLearningEpoch()
-        if (matchingLearningCommit(commit, gates, fieldAllowsPersonalizedLearning) == null) {
-            return LearningCommitReplacement.Invalidated
-        }
-        return withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
-            val recorded = matchingLearningCommit(commit, gates, fieldAllowsPersonalizedLearning)
-                ?: return@withLearningStoreLocks LearningCommitReplacement.Invalidated
+        if (matchingLearningCommit(commit, gates, fieldAllowed) == null) return null
+        return withLearningStoreLocks(gates, fieldAllowed) {
+            val recorded = matchingLearningCommit(commit, gates, fieldAllowed)
+                ?: return@withLearningStoreLocks null
             if (!receiptsAreCurrent(recorded)) {
                 invalidateExactLearningCommit()
-                return@withLearningStoreLocks LearningCommitReplacement.Invalidated
+                return@withLearningStoreLocks null
             }
             // Consume before mutation; a failed operation is never retried against an older
             // same-spelled word. All validation precedes the first decrement under these locks.
@@ -1288,23 +1315,18 @@ class WordPredictor : Predictor {
                 val vocabularyUndone = recorded.vocabularyReceipt?.let {
                     recorded.vocabularyOwner?.rollbackReceipt(it) == true
                 } ?: true
-                if (!contextUndone || !vocabularyUndone) {
-                    recentWords.clear()
-                    return@withLearningStoreLocks LearningCommitReplacement.Invalidated
-                }
                 recentWords.clear()
+                if (!contextUndone || !vocabularyUndone) return@withLearningStoreLocks null
                 recentWords.addAll(recorded.windowBefore)
-                LearningCommitReplacement.Applied(
-                    recordContextCommit(replacement, gates, fieldAllowsPersonalizedLearning)
-                )
+                afterRollback(gates)
             } catch (error: Exception) {
                 // Store/persistence failures are not an atomic rollback guarantee. Abandon
                 // transient ownership; do not replay writes or reconstruct forgotten data.
                 invalidateExactLearningCommit()
                 lastRecordedCommit = null
                 recentWords.clear()
-                Log.w(TAG, "Learning replacement failed; commit ownership invalidated", error)
-                LearningCommitReplacement.Invalidated
+                Log.w(TAG, "Learning rollback failed; commit ownership invalidated", error)
+                null
             }
         }
     }
@@ -1453,12 +1475,17 @@ class WordPredictor : Predictor {
         invalidateExactLearningCommit()
         val normalized = word.lowercase().trim()
         val inWindow = recentWords.isNotEmpty() && recentWords.last() == normalized
-        // Window cleared by a sentence boundary since the commit: undo from the one-slot
-        // record, but only for the same language store (a switch drops the pairing).
-        val recorded = lastRecordedCommit?.takeIf { it.word == normalized && it.language == currentLanguage }
-        val window: List<String> = when {
-            inWindow -> recentWords.takeLast(LearningGate.CONTEXT_WINDOW)
-            recorded != null -> recorded.window
+        // Window cleared since the commit (a sentence boundary, or the detected language switch
+        // this very commit triggered): undo from the one-slot record, in the store the commit
+        // wrote to. Only while the same primary dictionary is loaded, so the learnability
+        // predicate below is the one the record used.
+        val recorded = lastRecordedCommit?.takeIf { it.word == normalized && it.dictionaryLanguage == dictionaryLanguage }
+        // The store: the active one (null) for the live window, the commit's own for the record.
+        val window: List<String>
+        val storeLanguage: String?
+        when {
+            inWindow -> { window = recentWords.takeLast(LearningGate.CONTEXT_WINDOW); storeLanguage = null }
+            recorded != null -> { window = recorded.window; storeLanguage = recorded.language }
             else -> return
         }
         lastRecordedCommit = null
@@ -1467,7 +1494,9 @@ class WordPredictor : Predictor {
         val contextAware = config?.context_aware_predictions_enabled ?: false
         if (LearningGate.canLearnContext(master, contextAware) && window.size >= 2) {
             // Same predicate as the record, so a skipped (unlearnable) n-gram is not decremented.
-            contextModel?.rollbackCommit(window, learnableWordPolicy::isLearnable)
+            // Before 2026-11-26 a record from another next-word language was dropped: the wrong
+            // word whose commit made Auto-Detect switch kept its pair in the old language's store.
+            contextModel?.rollbackCommit(window, learnableWordPolicy::isLearnable, storeLanguage)
         }
         val personalized = config?.personalized_learning_enabled ?: false
         if (LearningGate.canLearnPersonalization(master, personalized)) {

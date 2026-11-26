@@ -144,6 +144,15 @@ interface Predictor {
         commit: LearningCommit, replacement: String, fieldAllowsPersonalizedLearning: Boolean = true
     ): LearningCommitReplacement = LearningCommitReplacement.Invalidated
 
+    /**
+     * Undo the exact latest commit's learn once, restoring the learn window to what it was
+     * before it, when [commit] is still the newest commit and no store changed since. True when
+     * the learn was reversed; false (nothing touched) for any other handle.
+     */
+    fun rollbackLearningCommit(
+        commit: LearningCommit, fieldAllowsPersonalizedLearning: Boolean = true
+    ): Boolean = false
+
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)
 

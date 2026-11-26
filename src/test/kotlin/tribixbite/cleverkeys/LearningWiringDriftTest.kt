@@ -284,12 +284,13 @@ class LearningWiringDriftTest {
             .isGreaterThan(rejectionIdx)
         // And the learn funnel records the FINAL word: the final-autocorrect
         // rewrite (processedWord = correctedWord) happens BEFORE the single
-        // updateContext(processedWord) learn call in onSuggestionSelected.
+        // updateContext(processedWord) learn call in onSuggestionSelected (it also passes the
+        // editor since 2026-11-26, so the learn can check where the word landed).
         val rewriteIdx = handler.indexOf("processedWord = correctedWord")
-        val learnIdx = handler.indexOf("updateContext(processedWord)")
+        val learnIdx = handler.indexOf("updateContext(processedWord")
         assertThat(rewriteIdx).isGreaterThan(-1)
         assertThat(learnIdx).isGreaterThan(rewriteIdx)
-        assertThat(handler.indexOf("updateContext(processedWord)", learnIdx + 1)).isEqualTo(-1)
+        assertThat(handler.indexOf("updateContext(processedWord", learnIdx + 1)).isEqualTo(-1)
     }
 
     // -------------------------------------------- L5 (resolved 2026-08-06)

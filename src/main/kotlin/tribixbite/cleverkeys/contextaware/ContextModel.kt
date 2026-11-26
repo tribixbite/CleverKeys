@@ -243,16 +243,23 @@ class ContextModel internal constructor(
      * @param words rolling committed-word window, most recent (the rejected
      *   word) last — only the trailing 3 words are consulted
      * @param isLearnable the per-word write gate [recordCommit] was given
+     * @param storeLanguage the language store the commit wrote to; null for the active one. A
+     *   detected next-word switch can move [language] between the record and its rollback
      */
-    fun rollbackCommit(words: List<String>, isLearnable: (String) -> Boolean = { true }) {
+    fun rollbackCommit(
+        words: List<String>,
+        isLearnable: (String) -> Boolean = { true },
+        storeLanguage: String? = null
+    ) {
         val n = words.size
         if (n < 2) return
         val last = words[n - 1]
         val prev = words[n - 2]
         if (!isLearnable(last) || !isLearnable(prev)) return
-        bigramStore.unrecordBigram(language, prev, last)
+        val lang = storeLanguage?.let(BigramStore::normalizeLanguage) ?: language
+        bigramStore.unrecordBigram(lang, prev, last)
         if (trigramStore != null && n >= 3 && isLearnable(words[n - 3])) {
-            trigramStore.unrecordTrigram(language, words[n - 3], prev, last)
+            trigramStore.unrecordTrigram(lang, words[n - 3], prev, last)
         }
     }
 
