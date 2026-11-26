@@ -1211,6 +1211,7 @@
     <string name="text_action_no_selection">Walang napiling text para sa %1$s</string>
     <string name="multilang_pack_imported_toast">Na-import ang language pack: %1$s</string>
     <string name="multilang_pack_deleted">Na-delete ang language pack</string>
+    <string name="multilang_pack_busy">May isa pang pag-import o pag-alis ng language pack na tumatakbo pa. Subukang muli kapag tapos na ito.</string>
     <string name="multilang_secondary_none_available">Walang available na karagdagang diksyunaryo</string>
     <string name="multilang_secondary_desc">I-enable ang mga bilingual na prediksyon (hal. Ingles + Espanyol)</string>
     <plurals name="multilang_pack_imported_status">

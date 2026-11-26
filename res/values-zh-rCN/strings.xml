@@ -1195,6 +1195,7 @@
     <string name="text_action_no_selection">未选择文字，无法使用%1$s</string>
     <string name="multilang_pack_imported_toast">已导入语言包：%1$s</string>
     <string name="multilang_pack_deleted">已删除语言包</string>
+    <string name="multilang_pack_busy">另一个语言包的导入或删除仍在进行中。请在其完成后重试。</string>
     <string name="multilang_secondary_none_available">没有其他可用词典</string>
     <string name="multilang_secondary_desc">启用双语预测（例如：英语 + 西班牙语）</string>
     <plurals name="multilang_pack_imported_status">

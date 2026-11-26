@@ -1209,6 +1209,7 @@
     <string name="text_action_no_selection">Tidak ada teks yang dipilih untuk %1$s</string>
     <string name="multilang_pack_imported_toast">Paket bahasa diimpor: %1$s</string>
     <string name="multilang_pack_deleted">Paket bahasa dihapus</string>
+    <string name="multilang_pack_busy">Impor atau penghapusan paket bahasa lain masih berjalan. Coba lagi setelah selesai.</string>
     <string name="multilang_secondary_none_available">Tidak ada kamus tambahan yang tersedia</string>
     <string name="multilang_secondary_desc">Aktifkan prediksi dwibahasa (mis. Inggris + Spanyol)</string>
     <plurals name="multilang_pack_imported_status">

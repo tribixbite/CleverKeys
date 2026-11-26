@@ -1212,6 +1212,7 @@
     <string name="text_action_no_selection">Nav atlasīta teksta darbībai %1$s</string>
     <string name="multilang_pack_imported_toast">Valodas pakotne importēta: %1$s</string>
     <string name="multilang_pack_deleted">Valodas pakotne dzēsta</string>
+    <string name="multilang_pack_busy">Joprojām notiek cita valodas pakotnes importēšana vai noņemšana. Mēģiniet vēlreiz, kad tā būs pabeigta.</string>
     <string name="multilang_secondary_none_available">Nav pieejamu papildu vārdnīcu</string>
     <string name="multilang_secondary_desc">Iespējot divvalodu prognozes (piem., angļu + spāņu)</string>
     <plurals name="multilang_pack_imported_status">

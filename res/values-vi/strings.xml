@@ -1225,6 +1225,7 @@
     <string name="text_action_no_selection">Chưa chọn văn bản cho %1$s</string>
     <string name="multilang_pack_imported_toast">Đã nhập gói ngôn ngữ: %1$s</string>
     <string name="multilang_pack_deleted">Đã xóa gói ngôn ngữ</string>
+    <string name="multilang_pack_busy">Một thao tác nhập hoặc xóa gói ngôn ngữ khác vẫn đang chạy. Hãy thử lại khi thao tác đó xong.</string>
     <string name="multilang_secondary_none_available">Không có từ điển bổ sung nào</string>
     <string name="multilang_secondary_desc">Bật dự đoán song ngữ (ví dụ: tiếng Anh + tiếng Tây Ban Nha)</string>
     <plurals name="multilang_pack_imported_status">

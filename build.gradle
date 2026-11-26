@@ -636,6 +636,13 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.DictionaryListSpellingTest',
     'tribixbite.cleverkeys.ui.settings.SettingsSearchConditionGatesTest',
     'tribixbite.cleverkeys.ui.settings.sections.MultiLanguagePairTest',
+    'tribixbite.cleverkeys.ui.settings.io.LanguagePackOperationScopeDriftTest',
+    // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
+    // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
+    'tribixbite.cleverkeys.DictionaryLoadGateTest',
+    'tribixbite.cleverkeys.DictionaryListSpellingTest',
+    'tribixbite.cleverkeys.ui.settings.SettingsSearchConditionGatesTest',
+    'tribixbite.cleverkeys.ui.settings.sections.MultiLanguagePairTest',
     // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search
     // gates for the Swiss switch; no Auto-Detect note without a pair; pack removals outlive Settings.
     'tribixbite.cleverkeys.DictionaryLoadGateTest',

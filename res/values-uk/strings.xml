@@ -1214,6 +1214,7 @@
     <string name="text_action_no_selection">Немає виділеного тексту для дії «%1$s»</string>
     <string name="multilang_pack_imported_toast">Мовний пакет імпортовано: %1$s</string>
     <string name="multilang_pack_deleted">Мовний пакет видалено</string>
+    <string name="multilang_pack_busy">Ще триває імпорт або видалення іншого мовного пакета. Спробуйте ще раз, коли це завершиться.</string>
     <string name="multilang_secondary_none_available">Немає доступних додаткових словників</string>
     <string name="multilang_secondary_desc">Увімкнути двомовні передбачення (напр., українська + англійська)</string>
     <plurals name="multilang_pack_imported_status">

@@ -1199,6 +1199,7 @@
     <string name="text_action_no_selection">Geen tekst geselecteerd voor %1$s</string>
     <string name="multilang_pack_imported_toast">Taalpakket geïmporteerd: %1$s</string>
     <string name="multilang_pack_deleted">Taalpakket verwijderd</string>
+    <string name="multilang_pack_busy">Er loopt nog een andere import of verwijdering van een taalpakket. Probeer het opnieuw als die klaar is.</string>
     <string name="multilang_secondary_none_available">Geen extra woordenboeken beschikbaar</string>
     <string name="multilang_secondary_desc">Tweetalige voorspellingen inschakelen (bijv. Nederlands + Spaans)</string>
     <plurals name="multilang_pack_imported_status">

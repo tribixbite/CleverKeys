@@ -1208,6 +1208,7 @@
     <string name="text_action_no_selection">Нет выделенного текста для действия «%1$s»</string>
     <string name="multilang_pack_imported_toast">Языковой пакет импортирован: %1$s</string>
     <string name="multilang_pack_deleted">Языковой пакет удалён</string>
+    <string name="multilang_pack_busy">Ещё выполняется импорт или удаление другого языкового пакета. Повторите попытку, когда оно завершится.</string>
     <string name="multilang_secondary_none_available">Нет доступных дополнительных словарей</string>
     <string name="multilang_secondary_desc">Включить двуязычные предсказания (например, русский + английский)</string>
     <plurals name="multilang_pack_imported_status">

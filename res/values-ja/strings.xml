@@ -1196,6 +1196,7 @@
     <string name="text_action_no_selection">%1$s: テキストが選択されていません</string>
     <string name="multilang_pack_imported_toast">言語パックをインポートしました: %1$s</string>
     <string name="multilang_pack_deleted">言語パックを削除しました</string>
+    <string name="multilang_pack_busy">別の言語パックのインポートまたは削除がまだ実行中です。完了してからもう一度お試しください。</string>
     <string name="multilang_secondary_none_available">利用できる追加の辞書はありません</string>
     <string name="multilang_secondary_desc">2 言語での予測を有効にします(例: 英語 + スペイン語)</string>
     <plurals name="multilang_pack_imported_status">

@@ -111,10 +111,16 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
         ImportTracker.Outcome(null, followUp)
     }
     if (!started) {
-        // The section has no progress line; a second pick while one imports waits for nothing.
-        // TODO: show the running import in the Multi-Language section (no string for it yet).
-        android.util.Log.w(SettingsActivity.TAG, "Language pack import already running; $uri not imported")
+        // A second pick (or a shared file) while a pack import or removal runs: say so rather
+        // than drop it silently (todo 2026-11-26; it was a log line only).
+        android.util.Log.w(SettingsActivity.TAG, "Language pack operation already running; $uri not imported")
+        showLanguagePackBusy()
     }
+}
+
+/** Another language-pack import or removal is still running; this one was not started. */
+private fun SettingsActivity.showLanguagePackBusy() {
+    Toast.makeText(this, getString(R.string.multilang_pack_busy), Toast.LENGTH_SHORT).show()
 }
 
 /** The finished import's [result] on this (the current) Settings activity. */
@@ -158,28 +164,46 @@ private fun SettingsActivity.showLanguagePackImportResult(result: ImportResult) 
     }
 }
 
+/**
+ * Remove the installed pack [code]. The removal runs in [SettingsImports.languagePack] like the
+ * import, not this activity's scope: a rotation cancelled it, leaving the files deleted while the
+ * list, the secondary-language choices and the toast were skipped (todo 2026-11-26, the S2
+ * leftover). One pack operation at a time: a removal asked for while an import runs is refused
+ * with a message.
+ */
 internal fun SettingsActivity.deleteLanguagePack(code: String) {
-    val _self = this
-    lifecycleScope.launch {
-        try {
-            val manager = LanguagePackManager.getInstance(_self)
-            if (manager.deletePack(code)) {
+    val appContext = applicationContext
+    val started = SettingsImports.languagePack.start(null) {
+        val followUp = catchingFailures({
+            val deleted = LanguagePackManager.getInstance(appContext).deletePack(code)
+            if (deleted) {
                 // Drop the CTC eligibility verdict with the pack. A later reimport of the same
                 // language could otherwise restore identical bytes whose mtime happens to match
                 // the stored fingerprint and inherit a stale measurement.
-                CtcInstalledPacks.invalidate(_self, code)
-                refreshInstalledLanguagePacks()
-                refreshAvailableSecondaryLanguages()
-                Toast.makeText(_self, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
+                CtcInstalledPacks.invalidate(appContext, code)
             }
-        } catch (e: Exception) {
+            followUp {
+                if (deleted) {
+                    refreshInstalledLanguagePacks()
+                    refreshAvailableSecondaryLanguages()
+                    Toast.makeText(this, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }) { e ->
             android.util.Log.e(SettingsActivity.TAG, "Language pack delete failed", e)
-            Toast.makeText(
-                _self,
-                getString(R.string.common_delete_failed_detail, ioFailureText(e)),
-                Toast.LENGTH_SHORT
-            ).show()
+            followUp {
+                Toast.makeText(
+                    this,
+                    getString(R.string.common_delete_failed_detail, ioFailureText(e)),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (!started) {
+        android.util.Log.w(SettingsActivity.TAG, "Language pack operation already running; $code not removed")
+        showLanguagePackBusy()
     }
 }
 

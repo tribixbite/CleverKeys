@@ -1219,6 +1219,7 @@
     <string name="text_action_no_selection">Kein Text ausgewählt für %1$s</string>
     <string name="multilang_pack_imported_toast">Sprachpaket importiert: %1$s</string>
     <string name="multilang_pack_deleted">Sprachpaket gelöscht</string>
+    <string name="multilang_pack_busy">Ein anderer Import oder eine Entfernung eines Sprachpakets läuft noch. Versuchen Sie es erneut, wenn der Vorgang abgeschlossen ist.</string>
     <string name="multilang_secondary_none_available">Keine weiteren Wörterbücher verfügbar</string>
     <string name="multilang_secondary_desc">Zweisprachige Vorhersagen aktivieren (z. B. Deutsch + Spanisch)</string>
     <plurals name="multilang_pack_imported_status">

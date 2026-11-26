@@ -1618,6 +1618,7 @@
     <string name="text_action_no_selection">No text selected for %1$s</string>
     <string name="multilang_pack_imported_toast">Language pack imported: %1$s</string>
     <string name="multilang_pack_deleted">Language pack deleted</string>
+    <string name="multilang_pack_busy">Another language pack import or removal is still running. Try again when it finishes.</string>
     <string name="multilang_secondary_none_available">No additional dictionaries available</string>
     <string name="multilang_secondary_desc">Enable bilingual predictions (e.g., English + Spanish)</string>
     <plurals name="multilang_pack_imported_status">

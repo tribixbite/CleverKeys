@@ -1205,6 +1205,7 @@
     <string name="text_action_no_selection">Nincs kijelölt szöveg ehhez: %1$s</string>
     <string name="multilang_pack_imported_toast">Nyelvi csomag importálva: %1$s</string>
     <string name="multilang_pack_deleted">Nyelvi csomag törölve</string>
+    <string name="multilang_pack_busy">Egy másik nyelvi csomag importálása vagy eltávolítása még folyamatban van. Próbálja újra, ha befejeződött.</string>
     <string name="multilang_secondary_none_available">Nincsenek további elérhető szótárak</string>
     <string name="multilang_secondary_desc">Kétnyelvű előrejelzések engedélyezése (pl. angol + spanyol)</string>
     <plurals name="multilang_pack_imported_status">

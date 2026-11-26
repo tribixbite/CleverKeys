@@ -1210,6 +1210,7 @@
     <string name="text_action_no_selection">%1$s için metin seçilmedi</string>
     <string name="multilang_pack_imported_toast">Dil paketi içe aktarıldı: %1$s</string>
     <string name="multilang_pack_deleted">Dil paketi silindi</string>
+    <string name="multilang_pack_busy">Başka bir dil paketi içe aktarma veya kaldırma işlemi hâlâ sürüyor. Bittiğinde yeniden deneyin.</string>
     <string name="multilang_secondary_none_available">Kullanılabilir ek sözlük yok</string>
     <string name="multilang_secondary_desc">İki dilli tahminleri etkinleştir (örn. Türkçe + İngilizce)</string>
     <plurals name="multilang_pack_imported_status">

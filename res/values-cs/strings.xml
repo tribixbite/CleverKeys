@@ -1203,6 +1203,7 @@
     <string name="text_action_no_selection">Není vybrán žádný text pro akci %1$s</string>
     <string name="multilang_pack_imported_toast">Jazykový balíček importován: %1$s</string>
     <string name="multilang_pack_deleted">Jazykový balíček smazán</string>
+    <string name="multilang_pack_busy">Ještě probíhá jiný import nebo odebrání jazykového balíčku. Zkuste to znovu, až skončí.</string>
     <string name="multilang_secondary_none_available">Nejsou k dispozici žádné další slovníky</string>
     <string name="multilang_secondary_desc">Povolit dvojjazyčné předpovědi (např. angličtina + španělština)</string>
     <plurals name="multilang_pack_imported_status">

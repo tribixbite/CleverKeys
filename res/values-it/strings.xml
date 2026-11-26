@@ -1241,6 +1241,7 @@
     <string name="text_action_no_selection">Nessun testo selezionato per %1$s</string>
     <string name="multilang_pack_imported_toast">Pacchetto lingua importato: %1$s</string>
     <string name="multilang_pack_deleted">Pacchetto lingua eliminato</string>
+    <string name="multilang_pack_busy">È ancora in corso un\'altra importazione o rimozione di un pacchetto lingua. Riprova quando è terminata.</string>
     <string name="multilang_secondary_none_available">Nessun dizionario aggiuntivo disponibile</string>
     <string name="multilang_secondary_desc">Abilita previsioni bilingui (es. italiano + spagnolo)</string>
     <plurals name="multilang_pack_imported_status">

@@ -1197,6 +1197,7 @@
     <string name="text_action_no_selection">%1$s: 선택된 텍스트가 없습니다</string>
     <string name="multilang_pack_imported_toast">언어 팩을 가져왔습니다: %1$s</string>
     <string name="multilang_pack_deleted">언어 팩을 삭제했습니다</string>
+    <string name="multilang_pack_busy">다른 언어 팩 가져오기 또는 삭제가 아직 진행 중입니다. 끝난 후 다시 시도하세요.</string>
     <string name="multilang_secondary_none_available">사용 가능한 추가 사전이 없습니다</string>
     <string name="multilang_secondary_desc">2개 언어 예측을 사용합니다(예: 영어 + 스페인어)</string>
     <plurals name="multilang_pack_imported_status">

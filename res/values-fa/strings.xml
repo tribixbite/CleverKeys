@@ -1237,6 +1237,7 @@
     <string name="text_action_no_selection">متنی برای %1$s انتخاب نشده است</string>
     <string name="multilang_pack_imported_toast">بستهٔ زبان وارد شد: %1$s</string>
     <string name="multilang_pack_deleted">بستهٔ زبان حذف شد</string>
+    <string name="multilang_pack_busy">وارد کردن یا حذف یک بستهٔ زبان دیگر هنوز در حال انجام است. پس از پایان آن دوباره امتحان کنید.</string>
     <string name="multilang_secondary_none_available">واژه‌نامهٔ دیگری در دسترس نیست</string>
     <string name="multilang_secondary_desc">فعال‌سازی پیش‌بینی‌های دوزبانه (مثلاً فارسی + انگلیسی)</string>
     <plurals name="multilang_pack_imported_status">

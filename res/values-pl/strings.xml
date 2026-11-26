@@ -1213,6 +1213,7 @@
     <string name="text_action_no_selection">Brak zaznaczonego tekstu dla akcji %1$s</string>
     <string name="multilang_pack_imported_toast">Zaimportowano pakiet językowy: %1$s</string>
     <string name="multilang_pack_deleted">Usunięto pakiet językowy</string>
+    <string name="multilang_pack_busy">Nadal trwa inny import lub usuwanie pakietu językowego. Spróbuj ponownie po jego zakończeniu.</string>
     <string name="multilang_secondary_none_available">Brak dodatkowych słowników</string>
     <string name="multilang_secondary_desc">Włącz dwujęzyczne przewidywania (np. angielski + hiszpański)</string>
     <plurals name="multilang_pack_imported_status">

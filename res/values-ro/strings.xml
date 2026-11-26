@@ -1228,6 +1228,7 @@
     <string name="text_action_no_selection">Niciun text selectat pentru %1$s</string>
     <string name="multilang_pack_imported_toast">Pachet de limbă importat: %1$s</string>
     <string name="multilang_pack_deleted">Pachet de limbă șters</string>
+    <string name="multilang_pack_busy">Un alt import sau o altă eliminare a unui pachet de limbă este încă în curs. Încercați din nou după ce se termină.</string>
     <string name="multilang_secondary_none_available">Nu există dicționare suplimentare disponibile</string>
     <string name="multilang_secondary_desc">Activează predicțiile bilingve (de ex. română + engleză)</string>
     <plurals name="multilang_pack_imported_status">
