@@ -70,6 +70,8 @@ import java.io.File
  * rates of two lexicons are over different positions; running both with the other's lexicon here
  * compares them over the positions they share.
  *
+ * Each gate cell also prints `HITS` lines (n, top-1 and top-3 hit counts of `none` and `lm_static`).
+ *
  * Counts: every cell reports token POSITIONS; the header also reports distinct sentences,
  * distinct previous words (contexts) and distinct (previous, target) pairs, so a rate built on
  * a few repeated contexts is visible as such.
@@ -360,9 +362,11 @@ class StaticLmTapEvalTest {
             "target outside lexicon∪contractions ${pct(targetOov, positions)}; prev word known to LM ${pct(prevKnown, positions)}")
         println("     NEXT-WORD (n=${nextWord.n}; baseline 'none' = corpus top unigrams ${unigramTop})")
         printCell(nextWord)
+        printHits(label, "next_word", nextWord)
         for (p in 1..3) {
             println("     PREFIX RE-RANK, prefix=$p (n=${prefix[p - 1].n}) — target in top-3 of UnifiedScore.combine")
             printCell(prefix[p - 1])
+            printHits(label, "prefix_$p", prefix[p - 1])
         }
         if (contraction != null) {
             for (p in 1..3) {
@@ -421,6 +425,18 @@ class StaticLmTapEvalTest {
             val t3 = c.pct(c.top3[arm.ordinal])
             println("        %-14s top-1 %6.2f%% (%+6.2f)   top-3 %6.2f%% (%+6.2f)".format(
                 arm.name.lowercase(), t1, t1 - base1, t3, t3 - base3))
+        }
+    }
+
+    /**
+     * Machine-readable hit counts of the gate arms for one cell. The report's percentages have
+     * two decimals, which is ±7 positions at n = 140,000: a gate on absolute hits, or on rates
+     * of two runs with different n, needs the counts themselves.
+     */
+    private fun printHits(label: String, cell: String, c: Cell) {
+        for (arm in listOf(Arm.NONE, Arm.LM_STATIC)) {
+            println("HITS label=\"$label\" cell=$cell arm=${arm.name.lowercase()} n=${c.n} " +
+                "top1=${c.top1[arm.ordinal]} top3=${c.top3[arm.ordinal]}")
         }
     }
 

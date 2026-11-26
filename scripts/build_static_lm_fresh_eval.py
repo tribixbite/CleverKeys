@@ -24,7 +24,13 @@ sentence per line), read by `StaticLmTapEvalTest` with ``STATIC_LM_EVAL_SPLIT=de
 ``STATIC_LM_EVAL_DIR=<that dir>``; ``heldout_<lang>.txt`` there is a symlink to the standing one
 (the harness checks it exists; dev mode never reads it). Local only, never committed or shipped.
 
-Usage: python3 scripts/build_static_lm_fresh_eval.py [--lang en,de,...]
+``--confirm`` writes only the ``confirm`` population instead (2026-11-25, German: the held-out
+confirmation of the ß-lexicon `de.cklm`, pre-registration
+`docs/eval/2026-11-25-german-lm-heldout-confirmation.md`): one more pinned corpus per language in
+`CONFIRM`, with the same leakage control plus the ``ud`` and ``web`` files above as spent
+populations. It never rewrites ``ud`` or ``web``.
+
+Usage: python3 scripts/build_static_lm_fresh_eval.py [--lang en,de,...] [--confirm]
 
 License: GPL-3.0 (part of CleverKeys)
 """
@@ -35,7 +41,7 @@ import argparse
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
+from typing import Iterable, Iterator
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_static_lm as b  # noqa: E402  (the builder is the tokenization contract)
@@ -95,6 +101,12 @@ WEB: dict[str, Fresh] = {
     "sv": _web("swe-se_web_2020_10K", "6caf5299675b033704d2effb29d40f85247394e66e1de20e329ee9893d0f055b"),
 }
 
+# Confirmation corpora (pinned before any was evaluated; see the language's pre-registration).
+# de: Leipzig German news 2023, a genre and year no German build input or earlier eval has.
+CONFIRM: dict[str, Fresh] = {
+    "de": _web("deu_news_2023_10K", "166d8ff8b4e6c30d38c6fdf9cbe847f7ba6ca18da15633799a72dc11cfee7380"),
+}
+
 
 def fetch(f: Fresh) -> Path:
     """The local path of [f], downloaded when absent; refuses a hash mismatch."""
@@ -122,16 +134,32 @@ def training_keys(cfg: b.LangConfig) -> set[int]:
     return keys
 
 
-def standing_eval_keys(lang: str, nfc: bool) -> set[int]:
-    """Keys of the earlier eval files of [lang] (already one sentence per line)."""
+def _file_keys(paths: Iterable[Path], nfc: bool) -> set[int]:
+    """Keys of eval files that hold one sentence per line; an absent file adds nothing."""
     keys: set[int] = set()
-    for name in (f"ood_dev_{lang}.txt", f"ood_test_{lang}.txt", f"heldout_{lang}.txt"):
-        p = STANDING_EVAL / name
+    for p in paths:
         if p.exists():
             for line in p.read_text(encoding="utf-8").splitlines():
                 for seg in b.split_sentences(line, nfc):
                     keys.add(hash(b.sentence_key(seg)))
     return keys
+
+
+def standing_eval_keys(lang: str, nfc: bool) -> set[int]:
+    """Keys of the earlier eval files of [lang] (already one sentence per line)."""
+    return _file_keys((STANDING_EVAL / name for name in
+                       (f"ood_dev_{lang}.txt", f"ood_test_{lang}.txt", f"heldout_{lang}.txt")), nfc)
+
+
+def fresh_eval_keys(lang: str, nfc: bool) -> set[int]:
+    """Keys of the 2026-10-25 fresh populations of [lang] (spent by the FLOOR_ONE decision).
+
+    Both files must exist: a missing one would silently weaken the leakage control."""
+    paths = [OUT / pop / f"ood_dev_{lang}.txt" for pop in ("ud", "web")]
+    missing = [str(p) for p in paths if not p.exists()]
+    if missing:
+        raise SystemExit(f"spent fresh populations missing (run without --confirm first): {missing}")
+    return _file_keys(paths, nfc)
 
 
 def write_population(lang: str, pop: str, texts: Iterator[str], nfc: bool, excluded: set[int],
@@ -167,11 +195,20 @@ def write_population(lang: str, pop: str, texts: Iterator[str], nfc: bool, exclu
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--lang", default=",".join(LANGS))
+    ap.add_argument("--confirm", action="store_true",
+                    help="write only the 'confirm' population (languages with a CONFIRM corpus)")
     args = ap.parse_args()
     for lang in args.lang.split(","):
         cfg = b.CONFIGS[lang]
         excluded = training_keys(cfg) | standing_eval_keys(lang, cfg.nfc)
         seen: set[int] = set()
+        if args.confirm:
+            if lang not in CONFIRM:
+                raise SystemExit(f"no confirmation corpus registered for '{lang}'")
+            excluded |= fresh_eval_keys(lang, cfg.nfc)
+            confirm_texts = (s for s, _ in b.leipzig_lines(fetch(CONFIRM[lang])))
+            write_population(lang, "confirm", confirm_texts, cfg.nfc, excluded, seen)
+            continue
         ud_texts = (t for f in UD[lang] for t in b.conllu_texts(fetch(f)))
         write_population(lang, "ud", ud_texts, cfg.nfc, excluded, seen)
         web_texts = (s for s, _ in b.leipzig_lines(fetch(WEB[lang])))
