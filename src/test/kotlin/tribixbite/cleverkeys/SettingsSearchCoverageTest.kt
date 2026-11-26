@@ -109,6 +109,36 @@ class SettingsSearchCoverageTest {
      * The method keeps its pre-2026-09-30 name ("Slug") although it now compares setting ids:
      * docs/RELEASE_RECORD.md v1.2.9 anchors this symbol and released sections are immutable.
      */
+    /**
+     * The text of `fun SettingsActivity.<name>(…) { … }` in a section file, or null when no section
+     * file defines it (a Compose or Material function such as `Text()`).
+     */
+    private fun composableBody(name: String): String? {
+        val files = sectionsDir.listFiles { f -> f.extension == "kt" } ?: return null
+        for (file in files) {
+            val text = file.readText()
+            val def = text.indexOf("fun SettingsActivity.$name(")
+            if (def < 0) continue
+            // Past the parameter list (paren-matched: parameters may carry default calls).
+            var paramsEnd = def + "fun SettingsActivity.$name".length
+            var parens = 0
+            do {
+                when (text[paramsEnd]) { '(' -> parens++; ')' -> parens-- }
+                paramsEnd++
+            } while (parens > 0)
+            val open = text.indexOf('{', paramsEnd)
+            var depth = 0
+            for (i in open until text.length) {
+                when (text[i]) {
+                    '{' -> depth++
+                    '}' -> if (--depth == 0) return text.substring(open, i + 1)
+                }
+            }
+            return text.substring(open)
+        }
+        return null
+    }
+
     @Test
     fun advancedPanelSlugSetMatchesThePanelContents() {
         val section = File(sectionsDir, "InputBehaviorSection.kt").readText()
@@ -119,7 +149,15 @@ class SettingsSearchCoverageTest {
             "Panel markers not found in InputBehaviorSection.kt — the slicer needs updating, " +
                 "not a real pass."
         }
-        val panelIds = controlRegex.findAll(section.substring(start, end))
+        val panel = section.substring(start, end)
+        // The panel also draws the controls of the composables it CALLS: "Max Learned Words" is
+        // in LearningDataManagerBlock (LearningDataSection.kt), missed until 2026-11-26 because
+        // only the panel's own text was read.
+        val calledBodies = Regex("""(?<![\w.])([A-Z]\w*)\(\)""").findAll(panel)
+            .map { it.groupValues[1] }.distinct()
+            .mapNotNull { name -> composableBody(name) }
+        val panelIds = (sequenceOf(panel) + calledBodies)
+            .flatMap { controlRegex.findAll(it) }
             .map { it.groupValues[4] }
             .filter { it.isNotEmpty() }
             .toSortedSet()

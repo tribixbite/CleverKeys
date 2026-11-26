@@ -678,7 +678,10 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
      * living INSIDE the collapsible "Advanced Prediction Settings" sub-panel of the Input section
      * ([InputBehaviorSection]'s `wordPredictionAdvancedExpanded` block). Their search entries must
      * open that panel as well as the section. `SettingsSearchCoverageTest` pins this set to the
-     * panel's contents; a miss degrades to "section opens, no scroll", it does not crash.
+     * panel's contents, including the controls of composables the panel calls
+     * (`LearningDataManagerBlock`'s "Max Learned Words", missed until 2026-11-26), and
+     * `SettingsSearchReachabilityTest` checks every entry reaches its control; a miss degrades to
+     * "section opens, no scroll", it does not crash.
      */
     private val WORD_PREDICTION_ADVANCED_IDS = setOf(
         "input_context_aware_title",
@@ -689,6 +692,7 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
         "input_learning_aggression_title",
         "input_context_boost_title",
         "input_frequency_scale_title",
+        "input_personalization_max_words_title",
     )
 
     /** English resources, for matching English titles under any UI language. */

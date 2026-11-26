@@ -80,16 +80,34 @@ internal object SettingsSearchMatch {
         if (current[target] != null) target else gates.firstOrNull { current[it] != null } ?: target
 
     /**
-     * Revealing controls the generator cannot see, by setting id, innermost first. A control in an
-     * `if` on a LOCAL value (no control sets it) gets no generated gate, so its result landed on
-     * the section and scrolled nowhere. Each list names the controls that bring it on screen.
+     * Revealing controls the generator cannot see, by setting id, innermost first. The generator
+     * reads one `if` at a time in one file, so a control gets no generated gate when
+     * - its `if` tests a LOCAL value no control sets (`germanSelected`), or
+     * - it sits in a composable CALLED inside the `if` (the generator sees the call site's `if`
+     *   only for controls written inline there), or in an `else` or `when` branch.
+     * Such a result landed on the section and scrolled nowhere. Each list names the controls that
+     * bring it on screen; `SettingsSearchReachabilityTest` walks the real nesting and fails for
+     * any entry left without one.
      *
-     * - The Swiss spelling switch shows while German is selected (`germanSelected`); German is
-     *   chosen in Primary Language, which itself shows only with Multi-Language on (2026-11-26).
+     * # TODO: teach scripts/generate_settings_search_index.py call-site, `else` and `when`
+     * nesting; most of this table would then be generated.
      */
-    private val CONDITION_GATES: Map<String, List<String>> = mapOf(
-        "multilang_swiss_spelling_title" to listOf("multilang_primary_title", "multilang_enable_title"),
-    )
+    private val CONDITION_GATES: Map<String, List<String>> = buildMap {
+        // The Swiss spelling switch shows while German is selected (`germanSelected`); German is
+        // chosen in Primary Language, which itself shows only with Multi-Language on (2026-11-26).
+        put("multilang_swiss_spelling_title", listOf("multilang_primary_title", "multilang_enable_title"))
+        // LearningDataManagerBlock (Max Learned Words) is called inside `if (wordPredictionEnabled)`
+        // of InputBehaviorSection; its result also opens the Advanced panel (2026-11-26).
+        put("input_personalization_max_words_title", listOf("input_enable_predictions_title"))
+        // "Vertical Speed" is the `else` of `if (followFinger)`, a local value of the
+        // Selection Delete mode dropdown.
+        put("gesture_vertical_speed_title", listOf("gesture_selection_delete_mode_title"))
+        // AutocorrectRankingAndTuning is called inside `if (autoCorrectEnabled)`.
+        for (id in AUTOCORRECT_TUNING_IDS) put(id, listOf(AUTOCORRECT_SWITCH))
+        // Band / channel controls are the `when (tuning.ranking)` branches of that composable:
+        // the Correction Ranking dropdown picks the branch.
+        for (id in AUTOCORRECT_RANKING_BRANCH_IDS) put(id, listOf(AUTOCORRECT_RANKING, AUTOCORRECT_SWITCH))
+    }
 
     /** The gates of the setting [settingId]: the [generated] ones, then the hand-kept ones. */
     fun gatesFor(settingId: String, generated: List<String>): List<String> {
@@ -97,3 +115,38 @@ internal object SettingsSearchMatch {
         return (generated + extra).distinct()
     }
 }
+
+/** The "Enable Auto-Correction" switch and the "Correction Ranking" dropdown (setting ids). */
+private const val AUTOCORRECT_SWITCH = "autocorrect_enable_title"
+private const val AUTOCORRECT_RANKING = "autocorrect_ranking_title"
+
+/** Controls written directly in AutoCorrectionSection's `AutocorrectRankingAndTuning`. */
+private val AUTOCORRECT_TUNING_IDS = listOf(
+    AUTOCORRECT_RANKING,
+    "autocorrect_min_exact_ratio_title",
+    "autocorrect_max_substitutions_title",
+    "autocorrect_length_edit_budget_title",
+    "autocorrect_elongation_collapse_title",
+    "autocorrect_inflection_guard_title",
+    "autocorrect_inflection_guard_min_stem_title",
+    "autocorrect_channel_inflection_cost_title",
+)
+
+/** Controls of the `BandRankingControls` / `ChannelRankingControls` branches. */
+private val AUTOCORRECT_RANKING_BRANCH_IDS = listOf(
+    "autocorrect_band_gap_title",
+    "autocorrect_transposition_penalty_title",
+    "autocorrect_dropped_double_title",
+    "autocorrect_dropped_double_margin_title",
+    "autocorrect_channel_distance_cost_title",
+    "autocorrect_channel_indel_cost_title",
+    "autocorrect_channel_double_cost_title",
+    "autocorrect_channel_transposition_cost_title",
+    "autocorrect_channel_frequency_weight_title",
+    "autocorrect_channel_alias_bonus_title",
+    "autocorrect_channel_short_deletion_cost_title",
+    "autocorrect_channel_max_correction_cost_title",
+    "autocorrect_unfinished_word_mode_title",
+    "autocorrect_channel_completion_cost_title",
+    "autocorrect_short_deletion_scope_title",
+)

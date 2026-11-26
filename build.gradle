@@ -640,6 +640,8 @@ tasks.register('runPureTests', JavaExec) {
     // 2026-11-26 (2.1): the clipboard rules import outlives a rotation; a busy GIF import says so;
     // the GIF replace prompt survives a rotation.
     'tribixbite.cleverkeys.ui.settings.io.GifAndRulesImportScopeDriftTest',
+    // 2026-11-26 (2.1): every settings-search entry reaches its control or a gate (Max Learned Words).
+    'tribixbite.cleverkeys.ui.settings.SettingsSearchReachabilityTest',
     // 2026-10-31: in-app Open-source licenses — every licence NOTICE cites has a packaged text,
     // the packaged copies equal NOTICE / LICENSE / LICENSES, and the screen lists every section.
     'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetDriftTest',

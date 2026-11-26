@@ -63,6 +63,10 @@ editor that used to be listed here already ship in 2.0.)
 - A second GIF pack shared or picked while one imports now says it was not imported.
 - The "Pack already installed — replace it?" prompt of a GIF pack import stays open across a
   rotation, and shows for a shared pack while the GIF section is collapsed.
+- Settings search for "Max Learned Words" scrolls to it (it opened the Input section and stayed
+  at the top). Every search result now reaches its setting, or the switch or choice that reveals
+  it: the autocorrect ranking and tuning settings while Auto-Correction is off or the other
+  ranking is chosen, and "Vertical Speed" while Selection Delete follows the finger.
 
 ---
 
