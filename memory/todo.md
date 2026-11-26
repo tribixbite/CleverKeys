@@ -501,6 +501,31 @@ langpacks". Done, each test-first (red then green), commits `73a51ab7..762cca58`
   its result; the 4 new strings (S7 1, S9 3) in 21 locales are agent translations, unreviewed.
 - Not run: instrumented suite (A2) for this round, device checks of S2/S3; release r16 not built.
 
+**Status 2026-11-26, morning (agent).** Maintainer: real searches/clipboard allowed on the Note10+;
+compact-dictionary estimate; Fable audit; DM load timing; "do the peak fix for 2.0". Release r19
+(`fda0160ae`, arm64 `6315d2b8…`) is on the Saga `.1.130` and the Note10+; the Pixel runs r17.
+- **Fable audit of the post-audit fixes** found a regression in `4f034ac03` (a detected switch moved
+  disabled/custom words to the secondary): fixed `2b005218b` (next-word language separate from the
+  dictionary language), plus `0d6bb34a6`, `c7125e150`, `b2da6758c`, `b20be6218`. Second Fable review:
+  stuck "Added …" bar message (`bf5d090b4`), next-word language returns to the primary (`42275cc46`),
+  link cleaning from stored settings (`9365dcc96`), name-field casing / geometric streaming / limit
+  types (`fda0160ae`).
+- **Peak fix** `b7dfc796c` (stale lexicon released before the rebuild, en list streamed). Saga debug
+  build: custom-word add peak live 99 MiB (was 154), probe max 165 MiB (was 195), IME-away 9.3 MiB
+  (was 38.4); one trie per language in the heap dump.
+- **Device:** Note10+ S1 By Size PASS, S3 (iii) real searches 10/10 hidden + control 20/20, clipboard
+  slider types, History-off, name-field casing, newline-then-rotate (Gmail 5/5), bar message 4/4,
+  link cleaning, `dart`: PASS. Saga: 10 instrumented classes (58 tests) PASS incl.
+  `SuggestionBarMessageTeardownTest`, `SanitizationReloadInstrumentedTest`, `CtcMultiLanguageInstrumentedTest`.
+- **Timing (r17):** Dictionary Manager list filled 0.40–0.65 s (Saga), 0.51–1.25 s (Note10+); keyboard
+  ready after an IME switch 0.44–0.80 s (Saga); Italian secondary +1.2 s.
+- **Open (agent, 2.1):** compact storage plan (Fable: tap prefix arrays 6–8 d, flat trie + cached image
+  6–8 d, incremental word insert 3–4 d; Dictionary Manager re-parses assets itself, separate 1.5 d fix);
+  English contraction list loaded 6× on a primary change; de+ru German list waits for the ru pack in
+  Dictionary Manager; a detected language's disabled words don't filter its next-word output.
+- Suites at `fda0160ae`: pure 4,141, mock 2,115, androidTest compiles. emulator.wtf is out of credits
+  (HTTP 402); A2 not re-run. Note10+ side effects (allowed): 10 test Google searches, HELLO WORLD clip gone.
+
 **Status 2026-11-26 (agent).** Maintainer: "ideal solution for d1 and d2 … implement … test all fixes
 with a new build on the saga, note and pixel … a custom non-English word added then swiped … fable
 audit"; later "why 300 MB" and "debug build memory analysis". Release r17 (`9dd2a0a25`, arm64
