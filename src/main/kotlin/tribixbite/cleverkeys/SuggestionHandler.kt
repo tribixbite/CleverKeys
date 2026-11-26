@@ -3268,6 +3268,78 @@ class SuggestionHandler(
     }
 
     /**
+     * Saga r20 F5 (2026-11-26): an EDIT removed or shortened the newest learned word — Backspace
+     * letter by letter with "Backspace undoes swipe" off, the editor's own word delete (Ctrl+
+     * Backspace), a partial delete. Its learning is reversed at once through its exact receipt,
+     * instead of at the next commit: a user who deletes the wrong word and then leaves the field
+     * kept `set → got` before. A word retyped there is learned again at its commit.
+     *
+     * Called by `CleverKeysService.onUpdateSelection` for every unowned selection update, before
+     * the cursor bookkeeping (so InputCoordinator no longer keeps the deleted swipe's alternates
+     * in the bar). The proof is the commit-time one ([reconcileLearnWithEditor]) turned around:
+     * the text before the cursor must be exactly the word's anchor followed by a STRICT prefix of
+     * the word (possibly empty), and the text after the cursor what followed the word. So:
+     *  - deleting only the trailing space leaves the whole word: nothing happens;
+     *  - a cursor move changes the text after the cursor: nothing happens;
+     *  - an empty anchor (the field's first word) proves nothing, so an app clearing its field
+     *    after a send never takes a sent word's learning;
+     *  - an editor that cannot be read decides nothing.
+     */
+    fun reconcileLearnAfterDeletion(ic: InputConnection?) {
+        ic ?: return
+        val placed = learnedPlacement ?: return
+        if (placed.commit !== lastLearningCommit || isPasswordMode) return
+        val anchor = placed.anchor ?: return
+        val after = placed.after ?: return
+        val word = placed.word
+        val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
+        val before = editorTextBeforeCursor(ic, window) ?: return
+        if (!showsShortenedWordAt(anchor, before, word)) return
+        if (editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) != after) return
+        val predictor = predictionCoordinator.getWordPredictor() ?: return
+        if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
+        vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
+        learnedPlacement = null
+        lastLearningCommit = null
+        contextTracker.rollbackLastWord(word)
+        // The word is gone, and with it what the bar and Backspace still offered for it: its swipe
+        // alternates and REPLACE target, and an autocorrect undo of it.
+        if (contextTracker.getLastAutoInsertedWord()?.equals(word, ignoreCase = true) == true) {
+            contextTracker.clearLastAutoInsertedWord()
+            contextTracker.clearAutocorrectTracking()
+            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+            if (!specialPromptActive) suggestionBar?.clearSuggestions()
+        }
+    }
+
+    /**
+     * Does [before] (text before the cursor) show [anchor] followed by a strict prefix of [word]?
+     * A whole-field anchor (shorter than the window) must match from the field start; a window
+     * anchor is matched as a suffix, and then refused when [before] could ALSO be the whole word
+     * standing at an earlier copy of the same text (a run of one word, see [oldWordMayStillPrecede]).
+     */
+    private fun showsShortenedWordAt(anchor: String, before: String, word: String): Boolean {
+        val wholeField = anchor.length < SwipeCorrectionTracker.ANCHOR_WINDOW
+        for (kept in word.length - 1 downTo 0) {
+            val prefix = word.substring(0, kept)
+            val matches = if (wholeField) {
+                before.length == anchor.length + kept && before.startsWith(anchor) &&
+                    before.regionMatches(anchor.length, prefix, 0, kept, ignoreCase = true)
+            } else {
+                before.length >= anchor.length + kept &&
+                    before.regionMatches(before.length - kept - anchor.length, anchor, 0, anchor.length) &&
+                    before.regionMatches(before.length - kept, prefix, 0, kept, ignoreCase = true)
+            }
+            if (!matches) continue
+            if (wholeField) return true
+            val stillStanding = textBeforeTrailingWord(before, word)
+                ?.let { endsAtWordBoundary(it, word) && it.trimEnd().endsWith(anchor.trimEnd()) } == true
+            return !stillStanding
+        }
+        return false
+    }
+
+    /**
      * Does the newest swipe auto-insert still end the text before the cursor, exactly as it was
      * committed ([PredictionContextTracker.getLastAutoInsertedText], else the legacy `word + " "`)?
      * An editor that cannot be read (null, or "" as many app fields answer) gives no evidence

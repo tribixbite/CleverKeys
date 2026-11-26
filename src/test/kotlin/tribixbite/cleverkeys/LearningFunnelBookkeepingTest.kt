@@ -1201,6 +1201,9 @@ class LearningFunnelBookkeepingTest {
 
     /** The selection callback a real editor sends after an edit (InputCoordinator.onCursorMoved). */
     private fun cursorSync(field: EditorInfo = textField()) {
+        // CleverKeysService.onUpdateSelection: an edit that shortened the newest learned word
+        // takes its learning back at once (Saga F5), before the cursor bookkeeping below.
+        handler.reconcileLearnAfterDeletion(ic)
         tracker.onCursorPositionChanged(cursor())
         tracker.synchronizeWithCursor(ic, "en", field)
         if (tracker.getCurrentWord().isNotEmpty()) {
@@ -1758,6 +1761,77 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("no red→world").that(bigram("red", "world")).isEqualTo(0)
         assertWithMessage("wield→sword").that(bigram("wield", "sword")).isEqualTo(1)
         assertWithMessage("wirld's usage reversed").that(vocabulary.getWordUsage("wirld")).isNull()
+    }
+
+    /** F5: deleted letter by letter ("Backspace undoes swipe" off), then the field is left. */
+    @Test
+    fun aSwipedWordDeletedLetterByLetterIsRolledBackBeforeTheFieldIsLeft() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars("got ".length)
+        handler.flushTypedWordOnFinishInput(ic)
+        handler.onEditorSessionChanged()
+
+        assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
+        assertWithMessage("got's usage reversed").that(vocabulary.getWordUsage("got")).isNull()
+        assertWithMessage("got left the prediction context").that(tracker.getContextWords()).doesNotContain("got")
+    }
+
+    /** F5: Ctrl+Backspace (one editor edit), then the field is left; its alternates leave the bar. */
+    @Test
+    fun aSwipedWordRemovedWithCtrlBackspaceIsRolledBackAndStopsOwningTheBar() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("set ")
+        handler.updateContext("set")
+        swipe("got", "hot", "for")
+        editor.setLength(editor.length - "got ".length)
+        cursorSync()
+
+        assertWithMessage("set→got rolled back at the edit").that(bigram("set", "got")).isEqualTo(0)
+        assertWithMessage("got's usage reversed").that(vocabulary.getWordUsage("got")).isNull()
+        assertWithMessage("no swipe word left to replace or undo").that(tracker.getLastAutoInsertedWord()).isNull()
+        // InputCoordinator keeps the bar while the last commit is a swipe: "got hot for" stayed.
+        assertWithMessage("the bar no longer belongs to the swipe")
+            .that(tracker.getLastCommitSource()).isNotEqualTo(PredictionSource.SWIPE)
+    }
+
+    /** F5: a partly deleted word that is retyped is learned again, once, at its commit. */
+    @Test
+    fun aPartlyDeletedWordThatIsRetypedIsLearnedOnce() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceChars(2)
+        assertWithMessage("rolled back as soon as the word was shortened").that(bigram("fix", "got")).isEqualTo(0)
+        type("t ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix got ")
+        assertWithMessage("fix→got learned once").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("got counted once").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
+    }
+
+    /** F5 guard: moving the cursor into the word and back is not an edit. */
+    @Test
+    fun aCursorMoveIntoTheNewestLearnedWordDoesNotRollItBack() {
+        val vocabulary = useReceiptVocabulary()
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        cursorAt = "fix go".length
+        cursorSync()
+        cursorAt = "fix ".length
+        cursorSync()
+        cursorAt = null
+        cursorSync()
+
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("got's usage kept").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection
