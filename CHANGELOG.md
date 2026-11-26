@@ -666,6 +666,8 @@ editor that used to be listed here already ship in 2.0.)
   a restore kept recording until the keyboard next started.
 - The clipboard History count, size and item-size settings are read as the numbers the Settings
   sliders save; each read logged a stored-type warning before.
+- An "Added to dictionary" confirmation leaves the suggestion bar when it ends, is undone or
+  dismissed, or when you move to another field; it could stay for minutes.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.

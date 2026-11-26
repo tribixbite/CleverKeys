@@ -891,6 +891,11 @@ class CleverKeysService : InputMethodService(),
         _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
+        // A confirmation ("Added “X” to dictionary") belongs to the field it was shown in. The bar
+        // refuses clearSuggestions while a message shows, so drop it first (Note10+ r18,
+        // 2026-11-26: it stayed ~3 min). A restart of the same field keeps it, and with no message
+        // the bar is left alone (inline autofill chips may already be on it).
+        if (!restarting) _suggestionBar?.let { bar -> if (bar.dismissTemporaryMessage()) bar.clearSuggestions() }
         // Record a copy the clipboard listener could not see (Saga 2026-10-07): one bounded
         // read of the current clip, recorded only if this service has not observed it.
         ClipboardHistoryService.on_keyboard_shown()
@@ -1497,7 +1502,9 @@ class CleverKeysService : InputMethodService(),
         _minimizer.reset()
         _keyboardView.reset()
 
-        // Clear suggestions to prevent stale state/crashes on app switch
+        // Clear suggestions to prevent stale state/crashes on app switch. A live bar message is
+        // dropped first: clearSuggestions leaves one alone (Note10+ r18, 2026-11-26).
+        _suggestionBar?.dismissTemporaryMessage()
         _suggestionBar?.clearSuggestions()
         // clearSuggestions leaves the password UI alone; the field's password must not outlive it.
         _suggestionBar?.clearPasswordText()

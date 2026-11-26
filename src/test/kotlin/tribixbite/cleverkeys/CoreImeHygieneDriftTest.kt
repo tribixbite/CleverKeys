@@ -166,6 +166,28 @@ class CoreImeHygieneDriftTest {
     }
 
     /**
+     * Note10+ r18 (2026-11-26): an "Added to dictionary" confirmation outlived its field. The bar
+     * refuses `clearSuggestions` while a temporary message shows, so a field change (a new editor,
+     * or the keyboard hidden) must drop the live message FIRST, then clear. The bar half (the
+     * cleared message view really leaves) is `SuggestionBarMessageTeardownTest`; this pins the
+     * service's two call sites, which need a live IME to exercise.
+     */
+    @Test
+    fun aFieldChangeDropsALiveBarMessageBeforeClearingTheBar() {
+        val service = source("tribixbite/cleverkeys/CleverKeysService.kt")
+        val onStart = service.substringAfter("override fun onStartInputView(").substringBefore("\n    override fun ")
+        val onFinish = service.substringAfter("override fun onFinishInputView(").substringBefore("\n    override fun ")
+        for ((name, body) in listOf("onStartInputView" to onStart, "onFinishInputView" to onFinish)) {
+            val dismiss = body.indexOf("dismissTemporaryMessage()")
+            assertWithMessage("$name drops a live bar message").that(dismiss).isAtLeast(0)
+            assertWithMessage("$name clears the bar after dropping it")
+                .that(body.indexOf("clearSuggestions()", dismiss)).isGreaterThan(dismiss)
+        }
+        assertWithMessage("a restart of the same field keeps its message")
+            .that(onStart).containsMatch("""if \(!restarting\)[^\n]*\n?[^\n]*dismissTemporaryMessage\(\)""")
+    }
+
+    /**
      * Per-layout theme binding: a theme change can now arrive MID-TYPING (switching onto a layout
      * bound to another theme). `onThemeChanged` used to hand the bare new keyboard view to
      * `setInputView`, dropping the suggestion strip until the next field focus rebuilt the

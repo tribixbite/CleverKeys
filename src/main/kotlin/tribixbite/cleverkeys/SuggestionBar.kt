@@ -116,6 +116,17 @@ class SuggestionBar : LinearLayout {
     private var isShowingTemporaryMessage = false
 
     /**
+     * True while the bar's children are something other than the pooled suggestion views: a
+     * [showMessage] text, the voice indicator, the emoji-search status. Those views live outside
+     * the pools, so only [rebindSuggestionViews] removes them; the identical-content skip in
+     * [setSuggestionsWithScores] must not apply while this is set. Note10+ r18 (2026-11-26): an
+     * "Added to dictionary" message shown over an empty bar ended by setting the empty list the
+     * bar already "held", the skip returned before the rebind, and the message stayed on screen
+     * for minutes. Cleared once a rebind (or a full child reset) leaves only suggestion content.
+     */
+    private var barShowsNonSuggestionContent = false
+
+    /**
      * The tappable confirmation currently on screen ([showUndoableMessage]), or null. Any other
      * way the message leaves — timeout, [dismissUndoableMessage], a newer message — finishes it,
      * so its undo can only run from the two taps.
@@ -800,7 +811,8 @@ class SuggestionBar : LinearLayout {
         // SuggestionHandler and InputCoordinator both post the same predictions.
         // Metas participate so a provenance change (e.g. swipe alternates gaining
         // appended next-word candidates) still re-renders.
-        if (suggestions != null && suggestions == currentSuggestions.toList() &&
+        if (!barShowsNonSuggestionContent &&
+            suggestions != null && suggestions == currentSuggestions.toList() &&
             (metas ?: emptyList()) == currentMetas.toList() &&
             highlightIndex == currentHighlightIndex &&
             typedWord == currentTypedWord
@@ -840,6 +852,8 @@ class SuggestionBar : LinearLayout {
         // (pool slot i always renders suggestion i), preserving click semantics.
         try {
             rebindSuggestionViews()
+            // The rebind reconciled the children to the pooled views: a message view is gone.
+            barShowsNonSuggestionContent = false
         } catch (e: Exception) {
             Log.e("SuggestionBar", "Error updating suggestion views: ${e.message}")
         }
@@ -1021,6 +1035,7 @@ class SuggestionBar : LinearLayout {
             savedMetas = emptyList()
         }
         isShowingTemporaryMessage = true
+        barShowsNonSuggestionContent = true
 
         // Clear and show single message
         removeAllViews()
@@ -1109,6 +1124,7 @@ class SuggestionBar : LinearLayout {
         dismissProvenancePopup()
         contentGeneration++
         isInVoiceMode = true
+        barShowsNonSuggestionContent = true
 
         removeAllViews()
         suggestionViews.clear()
@@ -1161,6 +1177,7 @@ class SuggestionBar : LinearLayout {
         if (!isInVoiceMode) return
         isInVoiceMode = false
         removeAllViews()
+        barShowsNonSuggestionContent = false
         suggestionViews.clear()
         dividerViews.clear()
         spacerViews.clear()
@@ -1193,6 +1210,7 @@ class SuggestionBar : LinearLayout {
 
         // Enter emoji search display mode
         isInEmojiSearchMode = true
+        barShowsNonSuggestionContent = true
 
         // Clear and show single status message
         removeAllViews()
@@ -1231,6 +1249,7 @@ class SuggestionBar : LinearLayout {
 
         // Clear the display
         removeAllViews()
+        barShowsNonSuggestionContent = false
         suggestionViews.clear()
         dividerViews.clear()
         spacerViews.clear()
@@ -1273,8 +1292,10 @@ class SuggestionBar : LinearLayout {
         // causing Safe, Bitwarden, etc. to fail on login forms.
         // isPasswordMode only hides typed characters; autofill chips are separate.
 
-        // Clear existing suggestions and views
+        // Clear existing suggestions and views. Autofill chips are deliberately NOT flagged as
+        // [barShowsNonSuggestionContent]: an empty prediction post must not wipe them.
         removeAllViews()
+        barShowsNonSuggestionContent = false
         suggestionViews.clear()
         dividerViews.clear()
         spacerViews.clear()
@@ -1562,8 +1583,9 @@ class SuggestionBar : LinearLayout {
     // a tap as a click, so performClick() has no meaning here.
     @SuppressLint("ClickableViewAccessibility")
     private fun setupPasswordModeViews() {
-        // Clear any existing suggestion views
+        // Clear any existing suggestion views (and any message: the password UI replaces it)
         removeAllViews()
+        barShowsNonSuggestionContent = false
         suggestionViews.clear()
         dividerViews.clear()
         spacerViews.clear()
@@ -1791,6 +1813,7 @@ class SuggestionBar : LinearLayout {
 
         // Clear all views - suggestions will be recreated as needed
         removeAllViews()
+        barShowsNonSuggestionContent = false
         suggestionViews.clear()
         dividerViews.clear()
         spacerViews.clear()
