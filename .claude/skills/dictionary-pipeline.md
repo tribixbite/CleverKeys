@@ -238,6 +238,16 @@ add-to-dictionary offers:
   pins fixture == production load and forbids a tap harness built from the JSON. The autocorrect
   constant `DROPPED_DOUBLE_MARGIN_STEPS = 64` (DD-M) was tuned on the `.bin` scale — an M
   measured on the JSON (the first M=32) kept `helo` → `help` on phones.
+- **Stored casing of a keyboard-added word** (2026-11-25): every IME add path (prompt, "+word",
+  autocorrect undo, Prefer offer) stores `SuggestionHandler.userWordStorageForm(word)`, which is
+  `UserWordCasing.storageForm`: a word whose only capital is its first letter, sitting where
+  auto-capitalisation capitalises (a port of `TextUtils.getCapsMode` over the editor text read
+  after the commit; setting on and a CAP_SENTENCES / CAP_WORDS field), is stored lowercase. The
+  stored casing is restored on every prediction (`WordPredictor.applyUserWordCase`, #72), which
+  is why `Parcero` typed at a field start came out capitalised mid-sentence. A sentence-start
+  name or German noun is stored lowercase too (Shift cannot be attributed there); the bar's
+  `shouldCapitalize` and the swipe commit's auto-cap still capitalise it at a sentence start.
+  The confirmation and its undo use the stored form. Pinned by `DictionaryAddUndoTest`.
 
 ## Common Pitfalls
 

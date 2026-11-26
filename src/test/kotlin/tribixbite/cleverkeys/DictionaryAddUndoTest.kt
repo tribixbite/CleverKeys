@@ -206,6 +206,189 @@ class DictionaryAddUndoTest {
         verify(exactly = 1) { dictionary.removeUserWord("teh") }
     }
 
+    // ------------------------------------------- casing of the stored word (2026-11-25)
+    //
+    // Device report (Saga, Note10+, Pixel; release r16): a word typed at a field or sentence start
+    // and then added was stored as `Grüezi` / `Parcero` because its capital came from
+    // auto-capitalisation, and every later swipe or tap wrote it capitalised mid-sentence. Rule
+    // ([UserWordCasing]): a word whose only capital is its first letter, sitting where
+    // auto-capitalisation capitalises, is stored in lowercase; anywhere else the user's capital
+    // is kept. The editor text before the cursor is the evidence, read after the word is in it.
+
+    /** An ordinary sentence-capitalising field with auto-capitalisation on. */
+    private fun capField(flags: Int = android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES): EditorInfo =
+        field().apply { inputType = android.text.InputType.TYPE_CLASS_TEXT or flags }
+
+    private fun SuggestionHandler.tapIn(wire: String, info: EditorInfo) =
+        onSuggestionSelected(wire, ic, info, resources)
+
+    private fun editorShows(textBeforeCursor: String) {
+        every { ic.getTextBeforeCursor(any(), any()) } returns textBeforeCursor
+    }
+
+    @Test
+    fun aFieldStartWordAddedFromThePromptIsStoredLowercase() {
+        config.autocapitalisation = true
+        editorShows("Grüezi ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("grüezi") }
+        verify(exactly = 0) { dictionary.addUserWord("Grüezi") }
+        // The confirmation names what was stored, and its undo removes exactly that.
+        assertThat(shownMessage.captured).isEqualTo("added:grüezi")
+        undo.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("grüezi") }
+    }
+
+    @Test
+    fun aWordAfterASentenceEndIsStoredLowercase() {
+        config.autocapitalisation = true
+        editorShows("Wir sind da. Grüezi ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("grüezi") }
+    }
+
+    @Test
+    fun aWordCapitalisedMidSentenceKeepsItsCapital() {
+        // The user's own Shift (a name, a German noun): auto-capitalisation did not act there.
+        config.autocapitalisation = true
+        editorShows("und dann sagte er Grüezi ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("Grüezi") }
+        assertThat(shownMessage.captured).isEqualTo("added:Grüezi")
+    }
+
+    @Test
+    fun withAutoCapitalisationOffTheCapitalIsTheUsers() {
+        config.autocapitalisation = false
+        editorShows("Grüezi ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("Grüezi") }
+    }
+
+    @Test
+    fun aFieldThatAsksForNoCapitalsKeepsTheUsersCapital() {
+        config.autocapitalisation = true
+        editorShows("Grüezi ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField(flags = 0))
+
+        verify(exactly = 1) { dictionary.addUserWord("Grüezi") }
+    }
+
+    @Test
+    fun aWordsCapitalisingFieldCapitalisesEveryWordSoAnyPositionIsLowercased() {
+        config.autocapitalisation = true
+        editorShows("Hans Muster ")
+
+        handler().tapIn(
+            Suggestion.AddToDictionary("Muster").wire,
+            capField(flags = android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS)
+        )
+
+        verify(exactly = 1) { dictionary.addUserWord("muster") }
+    }
+
+    @Test
+    fun internalCapitalsAndAllCapsAreKeptAtASentenceStart() {
+        config.autocapitalisation = true
+        val handler = handler()
+
+        editorShows("McDonald ")
+        handler.tapIn(Suggestion.AddToDictionary("McDonald").wire, capField())
+        editorShows("NASA ")
+        handler.tapIn(Suggestion.AddToDictionary("NASA").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("McDonald") }
+        verify(exactly = 1) { dictionary.addUserWord("NASA") }
+    }
+
+    @Test
+    fun theAutocorrectUndoAddStoresASentenceStartWordLowercase() {
+        // `parcero` typed at a field start, auto-capitalised to `Parcero`, autocorrected to
+        // `Parcel`; tapping the original restores `Parcero` in the field and adds `parcero`.
+        config.autocapitalisation = true
+        every { contextTracker.getLastCommitSource() } returns PredictionSource.AUTOCORRECT
+        every { contextTracker.getLastAutocorrectOriginalWord() } returns "Parcero"
+        every { contextTracker.getLastAutoInsertedWord() } returns "Parcel"
+        editorShows("Parcero ")
+
+        handler().tapIn("Parcero", capField())
+
+        verify(exactly = 1) { ic.commitText("Parcero ", 1) }
+        verify(exactly = 1) { dictionary.addUserWord("parcero") }
+        assertThat(shownMessage.captured).isEqualTo("added:parcero")
+        undo.captured.invoke()
+        verify(exactly = 1) { dictionary.removeUserWord("parcero") }
+    }
+
+    @Test
+    fun theExactAddChipStoresASentenceStartWordLowercase() {
+        config.autocapitalisation = true
+        every { contextTracker.getCurrentWord() } returns "Kotl"
+        editorShows("Kotlin ")
+
+        handler().tapIn(Suggestion.ExactAdd("Kotlin").wire, capField())
+
+        // The field keeps the capital the user saw; only the stored form is folded.
+        verify(exactly = 1) { ic.commitText("Kotlin ", 1) }
+        verify(exactly = 1) { dictionary.addUserWord("kotlin") }
+    }
+
+    @Test
+    fun aWordTheEditorDoesNotShowIsStoredAsGiven() {
+        // No evidence of where the word sits (the read failed or the text moved on): keep it.
+        config.autocapitalisation = true
+        editorShows("something else entirely ")
+
+        handler().tapIn(Suggestion.AddToDictionary("Grüezi").wire, capField())
+
+        verify(exactly = 1) { dictionary.addUserWord("Grüezi") }
+    }
+
+    @Test
+    fun theSentenceStartTestFollowsTheEditorsCapsModeRules() {
+        val s = UserWordCasing.AutoCapMode.SENTENCES
+        assertThat(UserWordCasing.autoCapitalisesAfter("", s)).isTrue()
+        assertThat(UserWordCasing.autoCapitalisesAfter("Hallo\n", s)).isTrue()
+        assertThat(UserWordCasing.autoCapitalisesAfter("Really? ", s)).isTrue()
+        assertThat(UserWordCasing.autoCapitalisesAfter("He said. \"", s)).isTrue()
+        assertThat(UserWordCasing.autoCapitalisesAfter("(done.) ", s)).isTrue()
+        // A dotted abbreviation does not end a sentence; nor does a period with no space after it.
+        assertThat(UserWordCasing.autoCapitalisesAfter("see e.g. ", s)).isFalse()
+        assertThat(UserWordCasing.autoCapitalisesAfter("end.", s)).isFalse()
+        assertThat(UserWordCasing.autoCapitalisesAfter("und ", s)).isFalse()
+        assertThat(UserWordCasing.autoCapitalisesAfter("und ", UserWordCasing.AutoCapMode.WORDS)).isTrue()
+        assertThat(UserWordCasing.autoCapitalisesAfter("", UserWordCasing.AutoCapMode.NONE)).isFalse()
+    }
+
+    @Test
+    fun theStoredFormNeedsTheWordStandingAloneAndAKnownStart() {
+        val s = UserWordCasing.AutoCapMode.SENTENCES
+        val de = java.util.Locale.GERMAN
+        // Only a whole-word match counts; a longer word containing it is no evidence.
+        assertThat(UserWordCasing.storageForm("Grüezi", "Grüezimann ", s, false, de)).isEqualTo("Grüezi")
+        // The read window cut the text before the word: its context is unknown.
+        assertThat(UserWordCasing.storageForm("Grüezi", "Grüezi ", s, true, de)).isEqualTo("Grüezi")
+        assertThat(UserWordCasing.storageForm("Grüezi", null, s, false, de)).isEqualTo("Grüezi")
+        // Single letters and digits after the capital are not the auto-capital shape.
+        assertThat(UserWordCasing.hasAutoCapitalShape("I")).isFalse()
+        assertThat(UserWordCasing.hasAutoCapitalShape("A1")).isFalse()
+        assertThat(UserWordCasing.hasAutoCapitalShape("iPhone")).isFalse()
+        assertThat(UserWordCasing.hasAutoCapitalShape("Ärger")).isTrue()
+        // The dictionary language's case mapping: Turkish dotted İ lowercases to a plain i.
+        assertThat(
+            UserWordCasing.storageForm("İstanbullu", "İstanbullu ", s, false, java.util.Locale.forLanguageTag("tr"))
+        ).isEqualTo("istanbullu")
+    }
+
     // ------------------------------------------------------------- dismissal
 
     @Test

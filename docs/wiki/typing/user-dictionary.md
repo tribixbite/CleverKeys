@@ -42,6 +42,22 @@ This works for:
 - **Acronyms**: API, URL, HTML
 - **Technical terms**: Your project-specific vocabulary
 
+### Words added at the start of a sentence
+
+A capital that auto-capitalisation put on a word is not part of the word. When you add a word
+from the keyboard whose only capital is its first letter, and it sits where auto-capitalisation
+capitalises (the start of the field, a line, or a sentence), it is stored in lowercase: `Grüezi`
+typed at a sentence start is stored as `grüezi`. It still comes out as `Grüezi` at the next
+sentence start, and as `grüezi` in the middle of one.
+
+A capital you typed mid-sentence is yours and is kept (`und dann Grüezi` stores `Grüezi`), and so
+is any capital with auto-capitalisation off, in a field that asks for none, in an all-caps word
+(`NASA`) or a word with capitals inside (`McDonald`, `iPhone`).
+
+At a sentence start the keyboard cannot tell your own Shift from auto-capitalisation's, so a
+name or a German noun added there is stored in lowercase too. Add it once mid-sentence, or edit
+it in the Dictionary Manager, to keep its capital.
+
 ## Adding Words
 
 ### Method 1: Automatic Prompt
@@ -49,7 +65,8 @@ This works for:
 1. Type a new word and press space
 2. If not autocorrected, a prompt appears
 3. Tap "Add to dictionary" to save it
-4. The word is saved with your capitalization
+4. The word is saved with your capitalization (a capital auto-capitalisation added at a
+   sentence start is not kept: see above)
 5. The bar confirms "Added “word” to dictionary". Tap that message **twice** to undo: the
    first tap shows "Tap again to undo", the second removes the word again. The text you
    typed is left as it is. The confirmation times out after about 3 seconds.

@@ -108,6 +108,13 @@ class SuggestionHandler(
         private const val EDITOR_PARK_CONTEXT_CHARS = 96
 
         /**
+         * Characters read before a word being added to the personal dictionary, beyond the word
+         * itself, to find the sentence boundary in front of it ([userWordStorageForm]): room for
+         * the separator typed after the word, the previous sentence's end and its spacing.
+         */
+        private const val USER_WORD_CASING_CONTEXT_CHARS = 48
+
+        /**
          * Issue #72: Words that should always be capitalized.
          * Includes "I" and all its contractions.
          */
@@ -1601,7 +1608,7 @@ class SuggestionHandler(
         when (val route = routeSuggestionSelection(word)) {
             // "Add to dictionary?" tap → add the word to the user dictionary.
             is SelectionRoute.AddToDictionary -> {
-                handleAddToDictionary(route.word)
+                handleAddToDictionary(route.word, ic, editorInfo)
                 return null
             }
             // #42: "+word" tap → commit the exact typed word and add to dictionary.
@@ -1611,7 +1618,7 @@ class SuggestionHandler(
             }
             // Swipe-correction offer (audit 2026-09-26): accept → personal dictionary.
             is SelectionRoute.PreferSwipeWord -> {
-                handlePreferSwipeWord(route.word)
+                handlePreferSwipeWord(route.word, ic, editorInfo)
                 return null
             }
             // Swipe-correction offer: "Don't ask" → never offer this word again.
@@ -2609,9 +2616,9 @@ class SuggestionHandler(
      * Handle "Add to dictionary?" tap: add the word to user dictionary.
      * Does not modify the input text since the word is already committed.
      *
-     * @param wordToAdd The word to add to dictionary
+     * @param wordToAdd The word to add to dictionary (stored as [userWordStorageForm])
      */
-    private fun handleAddToDictionary(wordToAdd: String) {
+    private fun handleAddToDictionary(wordToAdd: String, ic: InputConnection?, editorInfo: EditorInfo?) {
         if (wordToAdd.isEmpty()) {
             Log.w(TAG, "ADD TO DICTIONARY: Empty word, ignoring")
             return
@@ -2619,8 +2626,9 @@ class SuggestionHandler(
 
         vlog { "ADD TO DICTIONARY: Adding '$wordToAdd'" }
 
-        // Add to user dictionary
-        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(wordToAdd) ?: false
+        // Add to user dictionary, without a capital auto-capitalisation put there
+        val stored = userWordStorageForm(wordToAdd, ic, editorInfo)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
 
         // Refresh dictionary so word appears in predictions immediately
         predictionCoordinator.refreshCustomWords()
@@ -2631,7 +2639,41 @@ class SuggestionHandler(
         specialPromptActive = false
 
         // Tappable confirmation (bar clears after it instead of restoring the prompt)
-        confirmDictionaryAdd(wordToAdd, inserted, R.string.suggestion_added_to_dictionary)
+        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
+    }
+
+    /**
+     * The form every IME add path stores [word] in ([UserWordCasing.storageForm], 2026-11-25):
+     * lowercase when its only capital is its first letter and it sits where auto-capitalisation
+     * capitalises, so a word added at a field or sentence start (`Grüezi`, `Parcero`) does not
+     * come out capitalised mid-sentence ever after; otherwise [word] as given.
+     *
+     * Read AFTER the word was committed: the editor text before the cursor must contain it, and
+     * the text before it is what decides. A failed read means no evidence, and [word] is kept.
+     * A word already stored in exactly this casing is kept too, so the add stays the no-op it was
+     * rather than adding a second, lowercase entry. The confirmation and its undo use the
+     * returned form, so the undo removes exactly what was stored.
+     */
+    private fun userWordStorageForm(word: String, ic: InputConnection?, editorInfo: EditorInfo?): String {
+        if (!UserWordCasing.hasAutoCapitalShape(word)) return word
+        val inputType = editorInfo?.inputType ?: 0
+        val mode = UserWordCasing.AutoCapMode.of(
+            autocapEnabled = config.autocapitalisation,
+            capSentences = inputType and android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES != 0,
+            capWords = inputType and android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS != 0,
+        )
+        if (mode == UserWordCasing.AutoCapMode.NONE) return word
+        val dictionary = predictionCoordinator.getDictionaryManager()
+        if (dictionary?.isUserWord(word) == true) return word
+        val window = word.length + USER_WORD_CASING_CONTEXT_CHARS
+        val before = try {
+            ic?.getTextBeforeCursor(window, 0)?.toString()
+        } catch (e: Exception) {
+            Log.w(TAG, "Editor read for the stored word's casing failed; keeping it as typed", e)
+            null
+        }
+        val locale = java.util.Locale.forLanguageTag(activeLanguageCode())
+        return UserWordCasing.storageForm(word, before, mode, readWindowFilled = (before?.length ?: 0) >= window, locale = locale)
     }
 
     /**
@@ -2912,7 +2954,7 @@ class SuggestionHandler(
      * Accepting is an explicit act on a prompt that only appears while the learning gates pass,
      * so it is not re-gated here (same as the add-to-dictionary prompt).
      */
-    private fun handlePreferSwipeWord(word: String) {
+    private fun handlePreferSwipeWord(word: String, ic: InputConnection?, editorInfo: EditorInfo?) {
         swipePreferenceOffer = null
         specialPromptActive = false
         if (word.isBlank()) return
@@ -2923,7 +2965,8 @@ class SuggestionHandler(
             return
         }
         vlog { "SWIPE PREFER: adding '$word' to the personal dictionary" }
-        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(word) ?: false
+        val stored = userWordStorageForm(word, ic, editorInfo)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
         predictionCoordinator.refreshCustomWords()
         try {
             correctionStore()?.forgetWord(activeLanguageCode(), word)
@@ -2934,7 +2977,7 @@ class SuggestionHandler(
         // stays as accept left it — counts at 0 (forgotten above) and NOT declined. So it can be
         // offered again, but only after a fresh [SwipeCorrectionPolicy.OFFER_MIN_CORRECTIONS]
         // corrections: an undo says "not now", and re-offering on the very next slip would nag.
-        confirmDictionaryAdd(word, inserted, R.string.suggestion_prefer_when_swiping_added)
+        confirmDictionaryAdd(stored, inserted, R.string.suggestion_prefer_when_swiping_added)
     }
 
     /**
@@ -3029,8 +3072,10 @@ class SuggestionHandler(
             ic?.commitText("$exactWord ", 1)
         }
 
-        // Add to user dictionary
-        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(exactWord) ?: false
+        // Add to user dictionary (the field keeps the letters as typed; only the stored form drops
+        // a capital auto-capitalisation put there)
+        val stored = userWordStorageForm(exactWord, ic, editorInfo)
+        val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
         predictionCoordinator.refreshCustomWords()
 
         // Update context with the committed word (it replaces the typed partial, so the
@@ -3045,7 +3090,7 @@ class SuggestionHandler(
         suggestionBar?.clearSuggestions()
 
         // Tappable confirmation; its undo takes the word out of the dictionary, not the field.
-        confirmDictionaryAdd(exactWord, inserted, R.string.suggestion_added_to_dictionary)
+        confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
     }
 
     /**
@@ -3102,8 +3147,9 @@ class SuggestionHandler(
             updateContext(tappedWord)
 
             // Add to user dictionary so it won't be autocorrected again
-            val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(tappedWord) ?: false
-            vlog { "AUTOCORRECT UNDO: Added '$tappedWord' to user dictionary" }
+            val stored = userWordStorageForm(tappedWord, inputConnection, editorInfo)
+            val inserted = predictionCoordinator.getDictionaryManager()?.addUserWord(stored) ?: false
+            vlog { "AUTOCORRECT UNDO: Added '$stored' to user dictionary" }
 
             // Refresh dictionary so word appears in predictions immediately
             predictionCoordinator.refreshCustomWords()
@@ -3118,7 +3164,7 @@ class SuggestionHandler(
             // Tappable confirmation (bar clears after it instead of restoring the prompt). Its undo
             // only takes the word back out of the dictionary: the field keeps the original the
             // user tapped — the text revert was the point of the tap.
-            confirmDictionaryAdd(tappedWord, inserted, R.string.suggestion_added_to_dictionary)
+            confirmDictionaryAdd(stored, inserted, R.string.suggestion_added_to_dictionary)
 
             // Clear suggestions after brief delay (message will auto-clear)
         }
