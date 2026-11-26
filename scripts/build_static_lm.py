@@ -344,6 +344,10 @@ CONFIGS: dict[str, LangConfig] = {
             # the positions both lexicons share (StaticLmTapEvalTest STATIC_LM_EVAL_TARGETS_IN, run
             # after the gate, not pre-registered) every cell >= +0.00, best +0.28. Shipped on that
             # evidence; the maintainer may overrule. Doc: docs/eval/2026-11-25-german-sharp-s.md.
+            # 2026-11-25 held-out confirmation, pre-registered (docs/eval/2026-11-25-german-lm-heldout-
+            # confirmation.md) on Leipzig deu_news_2023_10K, read by no earlier German decision:
+            # CONFIRMED. Shared positions: all 8 lm_static cells +0.02..+0.17 pt over the old pair;
+            # full population: every cell gains hits (+108..+467).
             lexicon="de_enhanced.bin",
             contraction_files=("contractions_de.json",),
             wordfreq_lang="de",
