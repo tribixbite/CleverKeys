@@ -857,17 +857,22 @@ class CtcEngineAdapter(
         // Make the contraction mapping table REACHABLE. The overlay can only rewrite a
         // surface the beam actually produced, and a productive elision (fr "dabaissement" →
         // "d'abaissement") is not a dictionary word, so without this the mapping is inert.
-        // Injected at a floor frequency so a pseudo-word never outranks real vocabulary —
-        // see [CtcContractionKeys].
-        // Injected one below the lexicon's RAREST REAL WORD, not at the scale's bottom. The
-        // invariant is unchanged — every real word still strictly outranks every pseudo-word on
-        // frequency — but injecting at 1.0 over-guarded it by an order of magnitude: the beam
+        // Injected at a floor frequency so a pseudo-word without a corpus attestation never
+        // outranks real vocabulary — see [CtcContractionKeys].
+        // Injected one below the lexicon's RAREST REAL WORD, not at the scale's bottom. For a key
+        // WITHOUT an attested-frequency table entry the invariant holds: every real word strictly
+        // outranks it on frequency. A key WITH a table entry (below) enters at its own written
+        // frequency instead, and that may outrank rare real words: the French table (keys with
+        // >= 3 corpus hits, `scripts/build_elision_frequencies.py` MIN_COUNT) puts 973 keys at 76
+        // and 2,670 at <= 80, above the 7,098 real French words at 68-74 (pre-tag review
+        // 2026-11-25). That is deliberate: an elision written that often is more likely than a
+        // rare word. But injecting at 1.0 over-guarded the floor by an order of magnitude: the beam
         // score divides emission evidence by len^0.9 while the frequency bonus enters undivided,
         // so the ~8.5-nat gap to fr's rarest word demanded ~75 nats of raw evidence against the
         // 7-10 the shipped model actually produces. 49% of the fr alias table was unreachable as
         // a result. Derived per-lexicon because a constant cannot serve them all: the rarest real
         // word is 69 in fr but 12 in de, so any constant above 11 would break the invariant for
-        // German. See [CtcContractionKeys.derivedFloor].
+        // German. See [CtcContractionKeys.derivedFloor] and, for the table, [CtcContractionKeys.inject].
         val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
         val contractions = contractionsFor(lang)
         // A gated language's elisions enter at how often each is written (`d'être` above

@@ -84,7 +84,10 @@ object CtcContractionKeys {
      * constant at or below 11 leaves French's gap at 4+ nats and changes nothing.
      *
      * Deriving preserves the invariant BY CONSTRUCTION, in every lexicon, including ones not yet
-     * added: every real word still strictly outranks every pseudo-word on frequency.
+     * added: every real word still strictly outranks every pseudo-word injected AT the floor.
+     * A key with an attested-frequency table entry is not bound by it ([inject]): the French
+     * table puts 2,670 keys at 76-80, above the 7,098 real words at 68-74 (pre-tag review
+     * 2026-11-25).
      *
      * @param realFrequencies the merged lexicon's frequencies BEFORE injection.
      */

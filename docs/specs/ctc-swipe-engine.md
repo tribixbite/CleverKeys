@@ -195,16 +195,24 @@ is inert. French `dabaissement` → `d'abaissement` never fired, because `dabais
 a French word and never will be; it is the *productive elision* of `abaissement`, which is
 exactly what French speakers type constantly.
 
-`CtcContractionKeys` injects the alias keys as their own trie paths, at
-`INJECTED_FREQUENCY = CtcLexiconMerge.MIN_FREQ` — the **bottom** of the AOSP-like 1..255
-scale, whose `ln(freq + 1e-10) ≈ 0`. That is deliberately a FLOOR and not the boost the
-deleted `OptimizedVocabulary` used (`WordInfo(0.88f, tier 2)`): the beam adds
-`lambda * ln(freq)` to every candidate, so a boosted pseudo-word would outrank most of the
-real vocabulary. With the floor, an injected key gets no frequency bonus at all while every
-real word gets a positive one, so it can only win a slate slot when the emission evidence
-alone favours it — the "the user really did swipe that path" case. Keys already in the trie
-are SKIPPED, so a real word that is also an alias key (fr `la` → `l'a`) keeps its real
-frequency and its real-word ordinal guard. Only keys spelled entirely from the trie's
+`CtcContractionKeys` injects the alias keys as their own trie paths, at a FLOOR:
+`CtcContractionKeys.derivedFloor`, one below the merged lexicon's rarest real word (fr 69 → 68,
+de 12 → 11), never below `INJECTED_FREQUENCY = CtcLexiconMerge.MIN_FREQ`, the bottom of the
+AOSP-like 1..255 scale. It is deliberately a floor and not the boost the deleted
+`OptimizedVocabulary` used (`WordInfo(0.88f, tier 2)`): the beam adds `lambda * ln(freq)` to
+every candidate, so a boosted pseudo-word would outrank most of the real vocabulary.
+
+The actual ranking rule (corrected 2026-11-25; this section said every real word outranks every
+pseudo-word): a key **without** an entry in its language's attested-frequency table
+(`contraction_frequencies_<lang>.json`, below) enters at the floor, so every real word strictly
+outranks it on frequency and it wins a slate slot only when the emission evidence favours it —
+the "the user really did swipe that path" case. A key **with** a table entry (a key with at least
+3 corpus hits, `build_elision_frequencies.py` `MIN_COUNT`) enters at `max(floor, table value)` and
+MAY outrank rare real words: the French table puts 973 keys at 76 and 2,670 at ≤ 80, above the
+7,098 real French words at 68–74. That is intended (an elision written that often is likelier
+than a rare word) and was gated on human traces (see "Contraction frequency tables"). Keys already
+in the trie are never re-inserted at the floor, so a real word that is also an alias key (fr `la` →
+`l'a`) keeps its real frequency and its real-word ordinal guard; a table value can only raise it. Only keys spelled entirely from the trie's
 alphabet are injectable; a key carrying a hyphen or an accent has no a–z path and stays
 unreachable. Pure JVM, pinned by `CtcContractionKeysTest`.
 
@@ -488,7 +496,7 @@ gate ship one:
 | lang | keys | source | human-trace result (shipped decode) |
 |---|---|---|---|
 | `en` | 93 pronoun contractions | wordfreq zipf of the contraction through the lexicon's isotonic zipf→byte fit (`extract_apostrophe_words.py --en-alias-frequencies`) | FUTO swipe-1/2/3, 1,202 traces: they're 4 → 22 / 39, you're 17 → 23 / 66, I've 36 → 46 / 61, don't 179 → 186 / 200; your/there/were and the 4,000-trace sample unchanged (91.83) |
-| `fr` | 11,148 elisions | Leipzig `fra-fr_web_2013_300K` counts, median-window calibrated (`build_elision_frequencies.py`) | FUTO azerty, 2,291 traces: top-1 84.17 → 85.55, top-3 95.32 → 95.73, 2 regressions / 22 improvements |
+| `fr` | 5,406 elisions (11,148 before the two-token / paired / one-hit drop, `29e8f45c`) | Leipzig `fra-fr_web_2013_300K` counts, median-window calibrated (`build_elision_frequencies.py`) | FUTO azerty, 2,291 traces: top-1 84.17 → 85.55, top-3 95.32 → 95.73, 2 regressions / 22 improvements |
 | `it` | none | — | gate failed (an in-band table changed nothing; the full mapping needs human Italian traces, which no corpus has) |
 
 `en_enhanced.json` itself is NOT raised: `ContractionOverlay`'s real-word guard reads an alias key's

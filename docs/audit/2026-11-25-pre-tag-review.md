@@ -148,3 +148,17 @@ D2, later the same day: the de-CH half is a setting, `pref_german_swiss_spelling
 (ss for ß)"), which respells every German lexicon at load and is seeded on for a de-CH / de-LI
 system language (`docs/specs/dictionary-and-language-system.md` § Swiss German spelling). Not yet
 checked on a phone.
+
+2026-11-26, follow-up audit of the S3/S8 fixes (three should-fix findings, each red before its fix):
+(1) S8 covered only the restored rows' expiry; the service still read every other History limit
+from the in-memory Config. Limit type, count, total size, item size and the capture TTL now come
+from the stored settings through one reader, `ClipboardHistoryLimits.fromSettings` (Config.kt,
+also used by `Config.refresh`); `ClipboardStoredLimitsTest` (Config holds the old values, the store
+the new). `PrivateCopyProcessTextActivity`'s pre-check stays on Config (TODO, 2.1); the service
+re-checks the stored cap. (2) S3 disarmed the rotation show guard on any key touch, which lost the
+re-show for typing while rotating. Only a submit (Enter to the app, the action key) or a hardware
+key disarms it now (`RotationShowGuard.UserInput`); `RotationShowGuardTest`
+`typingWhileRotatingStillGetsTheKeyboardBack` / `typingAndSubmittingDisarms`. Pane close unchanged.
+(3) The alias-key floor comment and `docs/specs/ctc-swipe-engine.md` now state the real rule: a key
+with an attested-frequency entry (>= 3 corpus hits) may outrank rare real words (fr: 2,670 keys at
+76-80 above 7,098 words at 68-74); the floor binds only keys without one. No behaviour change.
