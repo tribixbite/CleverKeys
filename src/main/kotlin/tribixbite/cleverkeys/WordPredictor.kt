@@ -1385,9 +1385,33 @@ class WordPredictor : Predictor {
         return next.takeIf { it in pair && it == config?.active_secondary_language }
     }
 
-    /** A new input session: Auto-Detect's verdict from the previous one no longer counts. */
+    /**
+     * A new input session (another field or app, or the app restarted its input): Auto-Detect's
+     * verdict from the previous one no longer counts, and next-word starts in the primary's
+     * language again; detection switches it from fresh evidence. Note10+ 2026-11-26 (F2):
+     * Spanish detected in a Chrome textarea kept a Samsung Notes field predicting in Spanish (an
+     * empty bar for English) until a language change in Settings.
+     */
     override fun onInputSessionChanged() {
         secondaryVerdictFresh = false
+        if (dictionaryLanguageOrNull != null && currentLanguage != dictionaryLanguage) {
+            switchNextWordLanguage(dictionaryLanguage)
+        }
+    }
+
+    /**
+     * Does the current window, scored between the two chosen languages, favour the PRIMARY while
+     * next-word is on the secondary? Returning needs no confidence threshold: the primary is the
+     * default, leaving it takes the user's sensitivity, and keeping the secondary takes evidence
+     * that still names it. Note10+ 2026-11-26 (F2): the detector's score is absolute, English
+     * text typically scores below the default 0.6, so a switch to Spanish never came back.
+     */
+    private fun windowFavoursPrimary(chosen: Set<String>): Boolean {
+        val primary = dictionaryLanguage
+        if (dictionaryLanguageOrNull == null || currentLanguage == primary || primary !in chosen) return false
+        val detector = languageDetector ?: return false
+        if (!LanguageDetector.canChooseBetween(chosen)) return false
+        return detector.detectLanguageFromWordsWithConfidence(recentWords, chosen)?.language == primary
     }
 
     /**
@@ -1431,7 +1455,12 @@ class WordPredictor : Predictor {
                 // primary dictionary and its disabled / custom words stay.
                 switchNextWordLanguage(detected)
             }
-            if (detected != null && detected in chosen) noteDetectionVerdict(detected)
+            if (detected != null && detected in chosen) {
+                noteDetectionVerdict(detected)
+            } else if (windowFavoursPrimary(chosen)) {
+                // No confident switch, but the window reads as the primary: next-word returns.
+                switchNextWordLanguage(dictionaryLanguage)
+            }
             // The manager's answer stands, a "no switch" (null) included: the legacy detector
             // below used to run after it at a fixed threshold over all six of its languages and
             // could switch anyway (pre-tag review 2026-11-25 S7).
@@ -1445,7 +1474,10 @@ class WordPredictor : Predictor {
         if (!LanguageDetector.canChooseBetween(chosen)) return
         val result = detector.detectLanguageFromWordsWithConfidence(recentWords, chosen) ?: return
         val detectedLanguage = result.language
-        if (result.confidence >= sensitivity && detectedLanguage in chosen) {
+        // Back to the primary needs no threshold ([windowFavoursPrimary]); away from it does.
+        val backToPrimary = dictionaryLanguageOrNull != null && detectedLanguage == dictionaryLanguage &&
+            currentLanguage != dictionaryLanguage
+        if ((result.confidence >= sensitivity || backToPrimary) && detectedLanguage in chosen) {
             if (detectedLanguage != currentLanguage && bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")

@@ -1641,6 +1641,60 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("the context was cleared").that(predictor.autoDetectedSecondaryLanguage()).isNull()
     }
 
+    // ---------------------------------------------------- Note10+ device run of r20 (2026-11-26)
+
+    /** The legacy detector path the device ran ("Auto-detected language change from en to es"). */
+    private fun useRealLegacyDetector() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        config.language_detection_sensitivity = Defaults.LANGUAGE_DETECTION_SENSITIVITY
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.isLanguageSupported(any()) } returns true
+        predictor.setField("bigramModel", bigrams)
+        predictor.setField("languageDetector", LanguageDetector())
+        predictor.setField("multiLanguageManager", null)
+    }
+
+    private val spanish = "la casa de mi madre es muy bonita y no es para el perro".split(" ")
+    private val english = "thank i want to go to the park with you and it is".split(" ")
+
+    /**
+     * F2 (Note10+): Spanish detected in a Chrome textarea, then a Samsung Notes field typed in
+     * English kept predicting in Spanish (empty bar) until a language change in Settings. A new
+     * input session starts next-word in the primary language; detection switches it again from
+     * fresh evidence.
+     */
+    @Test
+    fun aNewInputSessionStartsNextWordInThePrimaryLanguage() {
+        useRealLegacyDetector()
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        // CleverKeysService: onFinishInputView → flushLearnedData (clearContext) and
+        // onEditorSessionChanged; onStartInputView → onEditorSessionChanged.
+        predictor.clearContext()
+        handler.onEditorSessionChanged()
+
+        assertWithMessage("the new field starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
+        assertWithMessage("its context model too").that((predictor.getField("contextModel") as ContextModel).language).isEqualTo("en")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("fresh Spanish evidence switches again").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
+    /** F2, second half: inside one field, an English context of 5+ words switches back. */
+    @Test
+    fun anEnglishContextSwitchesBackInsideOneField() {
+        useRealLegacyDetector()
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        english.forEach { predictor.addWordToContext(it, true) }
+
+        assertWithMessage("English detected again").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**
