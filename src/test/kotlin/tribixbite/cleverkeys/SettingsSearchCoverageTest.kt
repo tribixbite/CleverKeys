@@ -275,9 +275,11 @@ class SettingsSearchCoverageTest {
     fun hiddenControlsCarryTheControlsThatRevealThem() {
         val gates = GENERATED_SEARCH_ENTRIES.associate { it.settingId to it.gateIds }
         assertThat(gates["multilang_primary_title"]).containsExactly("multilang_enable_title")
-        // Nested blocks: the inner dropdown first, then the outer switch.
-        assertThat(gates["multilang_secondary_weight_title"])
-            .containsExactly("multilang_secondary_title", "multilang_enable_title").inOrder()
+        // Nested blocks: the inner dropdowns first, then the outer switch. The secondary block
+        // reads the primary too since 2026-11-26 (a secondary equal to the primary is no pair).
+        assertThat(gates["multilang_secondary_weight_title"]).containsExactly(
+            "multilang_secondary_title", "multilang_primary_title", "multilang_enable_title",
+        ).inOrder()
         assertThat(gates["swipe_trail_glow_radius_title"])
             .containsExactly("swipe_trail_effect_title", "swipe_trail_enable_title").inOrder()
         // A dropdown gate: the condition reads the dropdown's state, not a boolean switch.
