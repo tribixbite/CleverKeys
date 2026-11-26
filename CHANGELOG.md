@@ -18,6 +18,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 (The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
 editor that used to be listed here already ship in 2.0.)
 
+### Fixed (Settings and Dictionary Manager, 2026-11-26)
+
+- Dictionary Manager shows the primary language's list as soon as it is loaded: the lists still
+  load one at a time, but in tab order, so German no longer waits for a Russian secondary.
+- With Swiss spelling on, Dictionary Manager lists German words with ss (`strasse`), as the
+  keyboard suggests them; `Maße`/`Masse` show as one row, and a word disabled in either spelling
+  shows as disabled.
+- Searching Settings for the Swiss spelling switch while German is not selected lands on Primary
+  Language (or on the Multi-Language switch while that is off), where German is chosen.
+- "Auto-Detect is not available for this pair" no longer shows when no second language is set.
+- Removing a language pack finishes when the screen is rotated midway; a second pack import or
+  removal started while one runs now says so instead of doing nothing.
+
 ---
 
 ## [2.0.0] - unreleased
