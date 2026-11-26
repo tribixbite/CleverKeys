@@ -608,6 +608,53 @@ object GeoKnobRanges {
  * form. This object is the single source of truth; `SettingsRangeDriftTest`
  * pins every consumer site.
  */
+/**
+ * The clipboard History limits as STORED in the app's settings (what Settings and a settings
+ * import write): limit type, entry count, total size, per-item size. The one reader for both
+ * `Config.refresh` and [ClipboardHistoryService], which reads the store directly because the
+ * in-memory Config is refreshed only by the keyboard's preference listener: after a full restore
+ * in a process without the keyboard (a new phone, the headless backup activity, Settings alone)
+ * it still held the old limits, and the next capture was pruned by them (pre-tag review
+ * 2026-11-25, follow-up to S8). The safe readers accept a value stored with any type (Settings
+ * writes the three numbers as Int, the import table as String).
+ */
+data class ClipboardHistoryLimits(
+    /** [LIMIT_TYPE_COUNT] or [LIMIT_TYPE_SIZE] (`clipboard_limit_type`). */
+    val limitType: String,
+    /** History entry cap, 0 = unlimited (`clipboard_history_limit`). */
+    val maxEntries: Int,
+    /** Total History size cap in MB, 0 = unlimited (`clipboard_size_limit_mb`). */
+    val totalSizeMb: Int,
+    /** Largest single clipping in KB (`clipboard_max_item_size_kb`). */
+    val maxItemSizeKb: Int,
+) {
+    /** Whether History is pruned by total size rather than by entry count. */
+    val bySize: Boolean get() = limitType == LIMIT_TYPE_SIZE
+
+    companion object {
+        const val LIMIT_TYPE_COUNT = "count"
+        const val LIMIT_TYPE_SIZE = "size"
+
+        @JvmStatic
+        fun fromSettings(prefs: SharedPreferences): ClipboardHistoryLimits = ClipboardHistoryLimits(
+            limitType = Config.safeGetString(prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE),
+            // G-5: read-site clamp — pre-fix imports could have written out-of-range
+            // (or negative) values that the string-form validator used to accept.
+            maxEntries = (Config.safeGetString(prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT)
+                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
+                .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last),
+            totalSizeMb = Config.safeGetString(prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB)
+                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK,
+            // F-10: same 64..1024 clamp as the Settings UI/state side (SettingsRanges) —
+            // the old floor of 1 let an imported sub-64 value display as "64KB" while
+            // the service enforced the raw value.
+            maxItemSizeKb = (Config.safeGetString(prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB)
+                .trim().toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
+                .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last),
+        )
+    }
+}
+
 object SettingsRanges {
     /**
      * Keyboard height percent, every orientation and screen (`keyboard_height*`). The sliders
@@ -1448,23 +1495,17 @@ class Config private constructor(
         circle_sensitivity = safeGetString(_prefs, "circle_sensitivity", Defaults.CIRCLE_SENSITIVITY).toIntOrNull() ?: Defaults.CIRCLE_SENSITIVITY_FALLBACK
         clipboard_history_enabled = safeGetBoolean(_prefs, "clipboard_history_enabled", Defaults.CLIPBOARD_HISTORY_ENABLED)
 
-        // G-5: read-site clamp — pre-fix imports could have written out-of-range
-        // (or negative) values that the string-form validator used to accept.
-        clipboard_history_limit = (safeGetString(_prefs, "clipboard_history_limit", Defaults.CLIPBOARD_HISTORY_LIMIT).toIntOrNull() ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK)
-            .coerceIn(SettingsRanges.CLIPBOARD_HISTORY_LIMIT.first, SettingsRanges.CLIPBOARD_HISTORY_LIMIT.last)
+        // The History limits share one stored-settings reader with the clipboard service, which
+        // reads them from the store directly ([ClipboardHistoryLimits], S8 follow-up 2026-11-25).
+        val clipboardLimits = ClipboardHistoryLimits.fromSettings(_prefs)
+        clipboard_history_limit = clipboardLimits.maxEntries
 
         clipboard_pane_height_percent = safeGetInt(_prefs, "clipboard_pane_height_percent", Defaults.CLIPBOARD_PANE_HEIGHT_PERCENT)
             .coerceIn(SettingsRanges.CLIPBOARD_PANE_HEIGHT_PERCENT)
 
-        // F-10: same 64..1024 clamp as the Settings UI/state side (SettingsRanges) —
-        // the old floor of 1 let an imported sub-64 value display as "64KB" while
-        // the service enforced the raw value.
-        clipboard_max_item_size_kb = (safeGetString(_prefs, "clipboard_max_item_size_kb", Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB).toIntOrNull() ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK)
-            .coerceIn(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.first, SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last)
-
-        clipboard_limit_type = safeGetString(_prefs, "clipboard_limit_type", Defaults.CLIPBOARD_LIMIT_TYPE)
-
-        clipboard_size_limit_mb = safeGetString(_prefs, "clipboard_size_limit_mb", Defaults.CLIPBOARD_SIZE_LIMIT_MB).toIntOrNull() ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+        clipboard_max_item_size_kb = clipboardLimits.maxItemSizeKb
+        clipboard_limit_type = clipboardLimits.limitType
+        clipboard_size_limit_mb = clipboardLimits.totalSizeMb
 
         clipboard_exclude_password_managers = safeGetBoolean(_prefs, "clipboard_exclude_password_managers", Defaults.CLIPBOARD_EXCLUDE_PASSWORD_MANAGERS)
 

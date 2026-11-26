@@ -1580,6 +1580,9 @@ tasks.register('runMockTests', JavaExec) {
     // the stored Entry Duration, not the in-memory Config.
     'tribixbite.cleverkeys.clipboard.ClipboardSizeLimitWalkTest',
     'tribixbite.cleverkeys.clipboard.ClipboardRestoreExpiryTest',
+    // Follow-up to S8 (2026-11-25): every History limit (type, count, size, item size, duration)
+    // is read from the stored settings, not the in-memory Config.
+    'tribixbite.cleverkeys.clipboard.ClipboardStoredLimitsTest',
     // Saga 2026-10-25: a media capture on IO notified the pane off the main thread (stuck
     // "Loading results…"); listener calls are delivered on main and failures are logged.
     'tribixbite.cleverkeys.clipboard.ClipboardHistoryListenerThreadTest',

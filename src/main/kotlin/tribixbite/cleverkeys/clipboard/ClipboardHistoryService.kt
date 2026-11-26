@@ -142,7 +142,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     init {
         // Handle expired entries based on current user setting
-        val ttlMs = getHistoryTtlMs()
+        val ttlMs = storedTtlMs()
         if (ttlMs == Long.MAX_VALUE) {
             // User has "never expire" — rescue entries with stale expiry timestamps
             // from when the default was 7 days. Don't delete anything by time.
@@ -303,7 +303,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     fun clearExpiredAndGetHistory(): List<ClipboardEntry> {
         // Only run time-based cleanup when user has a finite duration set
-        val ttlMs = getHistoryTtlMs()
+        val ttlMs = storedTtlMs()
         if (ttlMs != Long.MAX_VALUE) {
             val (_, expiredMediaPaths) = _database.cleanupExpiredEntries()
             expiredMediaPaths.forEach { mediaPath ->
@@ -317,7 +317,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             // Issue #71: Original 100-entry limit was for TransactionTooLargeException prevention,
             // but since ClipboardHistoryView accesses service in-process (no IPC), this isn't needed.
             // Respect user's configured limit (0 = unlimited, otherwise use their setting)
-            val configLimit = Config.globalConfig().clipboard_history_limit
+            val configLimit = storedLimits().maxEntries
             if (configLimit > 0 && entries.size > configLimit) {
                 entries.take(configLimit)
             } else {
@@ -435,15 +435,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             return
         }
 
-        // Null-safe Config reads: storeClip is reachable on a cold-start exported-activity path
-        // (PROCESS_TEXT / editing-key) where the IME never ran, so the global Config may be
-        // uninitialized. Fall back to the documented defaults rather than throwing (matches
-        // getHistoryTtlMs). PrivateCopyProcessTextActivity inits Config eagerly, but this keeps the
-        // service self-consistent for any future cold-start caller.
-        val config = Config.globalConfigOrNull()
+        // The limits come from the stored settings, not the in-memory Config: storeClip is
+        // reachable on a cold-start exported-activity path (PROCESS_TEXT / editing-key) where the
+        // IME never ran, and after a restore in such a process Config holds the old limits
+        // ([storedLimits]). An unset setting reads as its documented default.
+        val limits = storedLimits()
 
         // Check maximum item size limit
-        val maxSizeKb = config?.clipboard_max_item_size_kb ?: Defaults.CLIPBOARD_MAX_ITEM_SIZE_KB_FALLBACK
+        val maxSizeKb = limits.maxItemSizeKb
         if (maxSizeKb > 0) {
             try {
                 val sizeBytes = clip.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
@@ -467,7 +466,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         // Calculate expiry time from user-configured duration (minutes, -1 = never expire)
-        val ttlMs = getHistoryTtlMs()
+        val ttlMs = storedTtlMs()
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
 
         // URL sanitization (text/plain only). No-op when all three toggles are off.
@@ -492,20 +491,36 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         val added = _database.addClipboardEntry(processed, expiryTime, isPrivate, sourcePackage)
 
         if (added) {
-            applyHistoryLimits(config)
+            applyHistoryLimits(limits)
             notifyHistoryChanged()
         }
     }
 
     /**
-     * Apply the configured history limit after an insert (based on limit type). Null-safe:
-     * same cold-start rationale as [storeClip]'s size cap — fall back to the documented defaults.
+     * The app's settings store (what Settings and a settings import write). Device-protected,
+     * so it is readable before the first unlock too.
      */
-    private fun applyHistoryLimits(config: Config?) {
-        val limitType = config?.clipboard_limit_type ?: Defaults.CLIPBOARD_LIMIT_TYPE
-        if ("size" == limitType) {
+    private fun storedSettings(): SharedPreferences = DirectBootAwarePreferences.get_shared_preferences(_context)
+
+    /**
+     * The History limits as stored NOW. Never the in-memory Config: only the keyboard service's
+     * listener refreshes it, so after a full restore in a process without the keyboard it held
+     * the old limit type and values and the next capture was pruned by them (pre-tag review
+     * 2026-11-25, follow-up to S8). A SharedPreferences read is an in-memory map lookup.
+     */
+    private fun storedLimits(): ClipboardHistoryLimits = ClipboardHistoryLimits.fromSettings(storedSettings())
+
+    /** The History TTL from the stored Entry Duration ([storedHistoryTtlMs]), same reason. */
+    private fun storedTtlMs(): Long = storedHistoryTtlMs(storedSettings())
+
+    /**
+     * Apply the stored history limit after an insert (based on limit type); [limits] defaults to
+     * the stored ones ([storedLimits]).
+     */
+    private fun applyHistoryLimits(limits: ClipboardHistoryLimits = storedLimits()) {
+        if (limits.bySize) {
             // Apply size-based limit (total MB — includes text + thumbnails + media files)
-            val maxSizeMB = config?.clipboard_size_limit_mb ?: Defaults.CLIPBOARD_SIZE_LIMIT_MB_FALLBACK
+            val maxSizeMB = limits.totalSizeMb
             if (maxSizeMB > 0) {
                 val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
                 // Delete media files of pruned entries (only if no other table references them)
@@ -515,8 +530,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             }
         } else {
             // Apply count-based limit (default)
-            val maxHistorySize = config?.clipboard_history_limit ?: Defaults.CLIPBOARD_HISTORY_LIMIT_FALLBACK
-            pruneByCountAndCleanMedia(maxHistorySize)
+            pruneByCountAndCleanMedia(limits.maxEntries)
         }
     }
 
@@ -562,12 +576,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * normal history limits apply afterwards, exactly as for a capture.
      */
     fun addMergedClip(plan: ClipboardBulkPlans.MergePlan): Result<Unit> = runCatching {
-        val ttlMs = getHistoryTtlMs()
+        val ttlMs = storedTtlMs()
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
         check(_database.addClipboardEntry(plan.text, expiryTime, plan.isPrivate, null)) {
             "Merged clipping was not stored"
         }
-        applyHistoryLimits(Config.globalConfigOrNull())
+        applyHistoryLimits()
     }
 
     /**
@@ -808,8 +822,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             is ClipboardEditPolicy.Decision.Apply -> { /* fall through to size check + DB write */ }
         }
 
-        // Validate size limit
-        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        // Validate size limit (stored, as for a capture: [storedLimits])
+        val maxSizeKb = storedLimits().maxItemSizeKb
         if (maxSizeKb > 0) {
             val sizeBytes = newContent.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
             if (sizeBytes > maxSizeKb * 1024) {
@@ -1152,7 +1166,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * Respects clipboard_max_item_size_kb limit. Returns null if stream fails or exceeds limit.
      */
     private fun readTextFromUri(uri: Uri): String? {
-        val maxSizeKb = Config.globalConfig().clipboard_max_item_size_kb
+        val maxSizeKb = storedLimits().maxItemSizeKb
         val maxSizeBytes = if (maxSizeKb > 0) maxSizeKb * 1024 else Int.MAX_VALUE
 
         return try {
@@ -1194,7 +1208,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     ) {
         if (!Config.globalConfig().clipboard_history_enabled) return
 
-        val ttlMs = getHistoryTtlMs()
+        val ttlMs = storedTtlMs()
         val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
 
         val added = _database.addMediaClipboardEntry(
@@ -1207,19 +1221,8 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         )
 
         if (added) {
-            // Apply size limits (includes text + thumbnails + media files on disk)
-            val limitType = Config.globalConfig().clipboard_limit_type
-            if ("size" == limitType) {
-                val maxSizeMB = Config.globalConfig().clipboard_size_limit_mb
-                if (maxSizeMB > 0) {
-                    val (_, mediaPaths) = _database.applySizeLimitBytes(maxSizeMB, _context.filesDir)
-                    for (path in mediaPaths) {
-                        if (!_database.isMediaPathReferenced(path)) _mediaManager.deleteMedia(path)
-                    }
-                }
-            } else {
-                pruneByCountAndCleanMedia(Config.globalConfig().clipboard_history_limit)
-            }
+            // Apply the stored limits (size includes text + thumbnails + media files on disk)
+            applyHistoryLimits()
 
             notifyHistoryChanged()
         }
@@ -1408,7 +1411,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
             if (e) {
                 // Re-enable: rescue stale entries if "never expire" is set, then re-register
-                if (getHistoryTtlMs() == Long.MAX_VALUE) {
+                if (service.storedTtlMs() == Long.MAX_VALUE) {
                     service._database.rescueExpiredEntries()
                 }
                 service.addCurrentClip()
@@ -1452,7 +1455,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             val service = _service ?: return
             // Re-read fresh config from SharedPreferences
             Config.globalConfig().reloadClipboardDuration()
-            val ttlMs = getHistoryTtlMs()
+            val ttlMs = service.storedTtlMs()
             if (ttlMs == Long.MAX_VALUE) {
                 service._database.rescueExpiredEntries()
             }
@@ -1461,21 +1464,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         /** Clipboard history is persistently stored in SQLite database and survives app restarts.
             Entries expire based on clipboard_history_duration config (default: never expire) unless pinned.
             The configurable size limit (clipboard_history_limit) controls maximum entries (0 = unlimited). */
-        /** Compute the TTL in ms from user-configured clipboard_history_duration (minutes).
-         *  -1 = never expire (Long.MAX_VALUE). Default = -1 (never expire).
-         *
-         *  Reads the IN-MEMORY Config, which only the keyboard service's preference listener
-         *  refreshes. That is right for the service's own captures, but code a restore or Settings
-         *  reaches outside the keyboard must use [storedHistoryTtlMs] instead (S8, 2026-11-25). */
-        @JvmStatic
-        fun getHistoryTtlMs(): Long {
-            // Null-safe: the service can construct on a cold-start exported-activity path
-            // (PROCESS_TEXT / editing-key) where the IME never ran, so Config isn't initialized.
-            // Fall back to the documented default (-1 = never expire) rather than throwing.
-            val durationMinutes = Config.globalConfigOrNull()?.clipboard_history_duration
-                ?: Defaults.CLIPBOARD_HISTORY_DURATION_FALLBACK
-            return ttlMsForDurationMinutes(durationMinutes)
-        }
+        // getHistoryTtlMs() (the TTL from the in-memory Config) was removed 2026-11-25: every
+        // service path now reads the stored Entry Duration ([storedHistoryTtlMs]), so a capture
+        // after a restore in a process without the keyboard gets the restored duration.
 
         /** The preference holding the Entry Duration, in minutes (-1 = never expire). */
         const val PREF_HISTORY_DURATION = "clipboard_history_duration"

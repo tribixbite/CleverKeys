@@ -41,6 +41,11 @@ class ClipboardBulkServiceTest {
         database = mockk(relaxed = true)
         every { database.runInTransaction<Any?>(any()) } answers { firstArg<() -> Any?>().invoke() }
         service = objenesis.newInstance(ClipboardHistoryService::class.java)
+        // Merge reads the History limits and duration from the stored settings (2026-11-25).
+        mockkStatic(tribixbite.cleverkeys.DirectBootAwarePreferences::class)
+        every { tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(any()) } returns
+            tribixbite.cleverkeys.TypedFakePreferences()
+        service.setField("_context", mockk<android.content.Context>(relaxed = true))
         service.setField("_database", database)
         service.setField("_mediaManager\$delegate", lazyOf(mockk<ClipboardMediaManager>(relaxed = true)))
         notified = 0

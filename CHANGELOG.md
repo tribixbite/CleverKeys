@@ -642,6 +642,9 @@ editor that used to be listed here already ship in 2.0.)
   rotation.
 - Clipboard items restored from a backup get the expiry of the History duration you set; on a new
   phone, or with another keyboard in use, they could take an old value or never expire.
+- After a restore made while another keyboard was in use, the clipboard History limits you
+  restored (By Size, a smaller count, the item size and the duration) apply to the next clipping;
+  it could still be kept or pruned by the old ones.
 - The keyboard no longer crashes on its first show after a theme change.
 - A swipe that registered fewer than two keys (a very fast flick, or one that left the keyboard)
   typed nothing; it types its first letter now. 5 of 100,000 recorded swipes did this.
