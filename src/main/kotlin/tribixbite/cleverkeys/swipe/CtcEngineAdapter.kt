@@ -31,6 +31,7 @@ import tribixbite.cleverkeys.swipe.ctc.CtcBeamDecoder
 import tribixbite.cleverkeys.swipe.ctc.CtcCandidate
 import tribixbite.cleverkeys.swipe.ctc.CtcCkdtLexicon
 import tribixbite.cleverkeys.swipe.ctc.CtcContractionKeys
+import tribixbite.cleverkeys.swipe.ctc.CtcDecodedSlate
 import tribixbite.cleverkeys.swipe.ctc.CtcEnLexiconJson
 import tribixbite.cleverkeys.swipe.ctc.CtcFeaturizer
 import tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescue
@@ -41,17 +42,16 @@ import tribixbite.cleverkeys.swipe.ctc.CtcPackModel
 import tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonus
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconMerge
 import tribixbite.cleverkeys.swipe.ctc.CtcLexiconTrie
-import tribixbite.cleverkeys.swipe.ctc.CtcRankMerger
 import tribixbite.cleverkeys.swipe.ctc.CtcScoringParams
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptProjection
 import tribixbite.cleverkeys.swipe.ctc.CtcScriptSupport
+import tribixbite.cleverkeys.swipe.ctc.CtcSlateAssembly
 import tribixbite.cleverkeys.swipe.ctc.CtcSurfaceForms
+import tribixbite.cleverkeys.swipe.ctc.CtcUserWords
 import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
 import java.lang.ref.WeakReference
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicLong
-import kotlin.math.exp
-import kotlin.math.roundToInt
 
 /**
  * G5 — the impurity boundary between the Android IME and the pure-JVM CTC swipe
@@ -575,6 +575,9 @@ class CtcEngineAdapter(
      *  - [priority] — decoded surface → the final-score bonus of a personal-dictionary word the
      *    user raised for swiping ([UserSwipePriorityBonus]); [CtcPriorityBonus.NONE] for a user
      *    who raised nothing, which keeps the decode byte-identical to the pre-priority one.
+     *  - [userWords] — the disabled words the slate must never show and the user words' stored
+     *    frequencies ([CtcUserWords]), from the same inputs as the merge; read by
+     *    [CtcSlateAssembly] (Note10+ r20 F1/F3, 2026-11-26).
      *
      * [language] is part of the memo IDENTITY, not just the content hash: a language
      * switch must never reuse the previous language's trie (the content hash alone would
@@ -593,6 +596,7 @@ class CtcEngineAdapter(
         val pairingBaseFrequencies: Map<String, Int>,
         val userPreferences: Map<String, UserJoinerPreference.Preference>,
         val priority: CtcPriorityBonus,
+        val userWords: CtcUserWords,
     )
 
     /**
@@ -769,6 +773,13 @@ class CtcEngineAdapter(
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         val merged = CtcLexiconMerge.merge(basePairs, userWordPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
+        // The slate's view of the same personal dictionary (F1/F3, 2026-11-26): the words the merge
+        // just dropped as disabled — the alias-key injection below can put a disabled contraction
+        // key back into the trie, so the finished slate is filtered against them — and the user
+        // words' stored frequencies, which place a secondary-list word as the primary would.
+        // Built from the merge's own inputs, re-read from the preferences on every decode above,
+        // so it is exactly as fresh as the trie (the memo key hashes this disabled set).
+        val userWords = CtcUserWords.of(userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs))
         MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
 
         val priorities = SwipePriority.parseMap(priorityJson)
@@ -908,6 +919,7 @@ class CtcEngineAdapter(
             pairingBaseFrequencies,
             userPreferences,
             priority,
+            userWords,
         )
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         trieMemos[lang] = built
@@ -1062,25 +1074,25 @@ class CtcEngineAdapter(
     /**
      * Both display overlays, in the order documented above, with the bounded fuzzy rescue
      * between them: canonical forms → softmax scores → rescue into spare slots → contractions.
+     * Returns the display slate together with the expanded candidates its scores were normalised
+     * over and the lexicon's [CtcUserWords], which is what [CtcSlateAssembly] needs from a decode.
      */
     private fun applyDisplay(
         candidates: List<CtcCandidate>,
         greedy: String,
         lexicon: TrieMemo,
-        lambda: Double,
-    ): PredictionResult =
-        applyContractionDisplay(
-            applyFuzzyRescue(
-                toPredictionResult(applyCanonicalDisplay(candidates, lexicon, lambda)),
-                greedy,
-                candidates,
-                lexicon,
-            ),
+        params: CtcScoringParams,
+    ): CtcDecodedSlate {
+        val expanded = applyCanonicalDisplay(candidates, lexicon, params.lambda)
+        val display = applyContractionDisplay(
+            applyFuzzyRescue(toPredictionResult(expanded), greedy, candidates, lexicon),
             lexicon.language,
             lexicon.ordinals,
             lexicon.pairingBaseFrequencies,
             lexicon.userPreferences,
         )
+        return CtcDecodedSlate(lexicon.language, expanded, display.words, display.scores, params, lexicon.userWords)
+    }
 
     /**
      * Adds at most two bounded dictionary matches for the unconstrained greedy surface.
@@ -1225,11 +1237,13 @@ class CtcEngineAdapter(
                     val beamWidth = Config.globalConfig().ctc_beam_width.coerceIn(SettingsRanges.CTC_BEAM_WIDTH)
                     // Run the encoder ONCE, then decode each active language against its own
                     // trie/preset. Raw final scores use different frequency scales and are never
-                    // compared; CtcRankMerger combines the displayed slates by rank.
+                    // compared; CtcRankMerger combines the displayed slates by rank. The one
+                    // exception is a secondary-list USER word, re-scored on the primary's scale
+                    // from its own emission evidence (CtcSlateAssembly.primaryEquivalentScore).
                     val features = CtcFeaturizer.featurize(px, py, pt)
                     val emissions = model.emit(features, mapped.padded)
                     val greedy = CtcBeamDecoder.greedy(emissions, mapped.layout.alphabet)
-                    fun decodeLexicon(lexicon: TrieMemo): PredictionResult {
+                    fun decodeLexicon(lexicon: TrieMemo): CtcDecodedSlate {
                         val params = CtcScoringParams.presetFor(
                             lexicon.language, beamWidth = beamWidth, topK = TOP_K
                         )
@@ -1239,21 +1253,20 @@ class CtcEngineAdapter(
                             params,
                             priority = lexicon.priority,
                         )
-                        return applyDisplay(candidates, greedy, lexicon, params.lambda)
+                        return applyDisplay(candidates, greedy, lexicon, params)
                     }
 
                     val primaryResult = decodeLexicon(primaryLexicon)
                     val secondaryResult = secondaryLexicon?.let(::decodeLexicon)
                     if (secondaryResult == null) {
-                        primaryResult
+                        // F3 (2026-11-26): without a disabled word re-inserted as an alias key.
+                        val (words, scores) = CtcSlateAssembly.single(primaryResult)
+                        PredictionResult(words, scores)
                     } else {
-                        val merged = CtcRankMerger.merge(
-                            primaryLexicon.language,
-                            primaryResult.words,
-                            secondaryLexicon.language,
-                            secondaryResult.words,
-                            TOP_K,
-                        )
+                        // F1/F3 (2026-11-26): both slates filtered (a secondary one also against
+                        // the primary's disabled words, the tap rule), then merged by rank with a
+                        // secondary-list user word at the rank the primary list would give it.
+                        val merged = CtcSlateAssembly.dual(primaryResult, secondaryResult, TOP_K)
                         // CK-150-024: carry each merged word's SOURCE LANGUAGE. The merged slate
                         // is the one place a single result mixes languages, and the shared
                         // pipeline's English-only possessive augmentation would otherwise append
@@ -1306,12 +1319,11 @@ class CtcEngineAdapter(
     /** Engine-relative scores: softmax over final scores × 1000 (geometric parity). */
     private fun toPredictionResult(candidates: List<CtcCandidate>): PredictionResult {
         if (candidates.isEmpty()) return PredictionResult(emptyList(), emptyList())
-        val max = candidates.maxOf { it.finalScore }
-        val exps = candidates.map { exp(it.finalScore - max) }
-        val sum = exps.sum()
-        val words = candidates.map { it.word }
-        val scores = exps.map { ((it / sum) * 1000.0).roundToInt().coerceIn(0, 1000) }
-        return PredictionResult(words, scores)
+        // One implementation with the slate assembly, which ranks a placed user word on this scale.
+        return PredictionResult(
+            candidates.map { it.word },
+            CtcSlateAssembly.softmaxPermille(candidates.map { it.finalScore }),
+        )
     }
 
     /**

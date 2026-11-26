@@ -52,7 +52,9 @@ import java.io.File
  * Alias-key injection is mirrored here; the bounded fuzzy rescue is not a mirror at all — this
  * calls the shipped [CtcFuzzyRescue.find] and [CtcFuzzyRescue.Companion.mergeIntoBeam] directly,
  * so the merge cannot drift from the adapter's. Secondary-language rank merging
- * is intentionally outside this English-only context corpus. Beam width (100), topK (8), the
+ * is intentionally outside this English-only context corpus, and so is `CtcSlateAssembly` (its
+ * disabled-word filter and secondary-list placement are no-ops for a lexicon with no user words;
+ * `CtcSecondaryListReplayTest` drives it over [decoderOver]). Beam width (100), topK (8), the
  * softmax→0..1000 scale and its rounding, model asset, layout frame and provider setup are mirrored.
  *
  * The execution provider actually obtained is recorded in [executionProvider] rather than assumed,
@@ -201,6 +203,16 @@ class CtcReplayEngine private constructor(
         val customTrie = CtcLexiconTrie.loadStrippingNonAlphabet(layout.alphabet, merged)
         return CtcSwipeDecoder(model, layout, customTrie, params.copy(topK = topK), priority = priority)
     }
+
+    /**
+     * The shipped model and golden layout over ANY [trie] at ANY [scoringParams] — for decoding
+     * a second language's lexicon against the same encoder, as `CtcEngineAdapter.decodeAsync`
+     * does for a secondary language (2026-11-26, secondary-list user words). The encoder is
+     * deterministic, so two decoders built here see the identical emission matrix the adapter
+     * computes once and decodes twice.
+     */
+    fun decoderOver(trie: CtcLexiconTrie, scoringParams: CtcScoringParams): CtcSwipeDecoder =
+        CtcSwipeDecoder(model, layout, trie, scoringParams)
 
     // ── learned-unigram replay instrument (2026-09-26; additive) ───────────────────────
 

@@ -1142,6 +1142,11 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ctc.CtcContractionKeysTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcFuzzyRescueTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcRankMergerTest',
+    // 2026-11-26 (Note10+ r20 F1/F3): a secondary-list user word is placed as the primary list
+    // would place it, and a disabled word (re-inserted as an alias key) reaches no swipe slate.
+    'tribixbite.cleverkeys.swipe.ctc.CtcSlateAssemblyTest',
+    'tribixbite.cleverkeys.swipe.CtcSecondaryListReplayTest',
+    'tribixbite.cleverkeys.swipe.CtcSlateAssemblyWiringTest',
     // Greek final-sigma repair — PHASE_O §3.3 prerequisite. sigma/final-sigma are distinct KEYS
     // in different rows, so an unrepaired word-final sigma is undecodable for 25.7% of the pack.
     'tribixbite.cleverkeys.swipe.ctc.CtcGreekOrthographyTest',

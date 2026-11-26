@@ -398,6 +398,40 @@ user word already enters the lexicon at the cap (`CtcLexiconMerge`: stored 255 �
   so a frequency-only edit changes the memo version and the next decode rebuilds
   (`CustomWordEditLexiconInputTest`).
 
+### Slate assembly: disabled words and secondary-list user words (2026-11-26)
+
+Every decoded slate reaches the pipeline through `swipe/ctc/CtcSlateAssembly` (pure JVM). Each
+trie build also builds `CtcUserWords` from the same inputs the merge consumed
+(`CtcUserWords.of(userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs))`): the excluded
+set (disabled minus the user's own words, lowercased, Swiss-spelling folded), every user word's
+stored 1..255 frequency, and the base floor a stored frequency is calibrated onto.
+
+- **Disabled words (Note10+ r20, F3).** The merge drops a disabled word, but alias-key injection
+  (`CtcContractionKeys.inject`) inserts every contraction key the trie lacks, so a disabled
+  PAIRING key came back at the floor: `world` (→ `world's`) and `you` (→ `you're`, …) were still
+  swipe alternates after being disabled. The finished display slate (after the canonical forms,
+  the rescue and the contraction overlay) drops every word in the lexicon's excluded set. A
+  secondary slate also drops the primary's excluded words, the tap rule
+  (`WordPredictor.isSecondaryWordDisabled`); a primary slate ignores the secondary's. The key
+  itself is still injected, so a disabled `well` keeps `we'll` reachable; the possessive `world's`
+  is a separate pairing entry and stays, as on tap. The set is read per decode from
+  `disabled_words_<lang>` (`UserLexiconInputs.read`, the key the tap path reads) and lives in the
+  trie memo whose key hashes it, so nothing caches it past a change.
+- **Secondary-list user words (Note10+ r20, F1).** `CtcRankMerger` gives primary rank N
+  `1000/(N+1)` and secondary rank N `920/(N+1)`, so a user word in the SECONDARY list could never
+  take rank one: `parcero` (added to the Spanish list under an English primary) lost every swipe
+  to `parcel`, while a primary-list word won. A secondary display word that is a user word of its
+  list now gets the score the primary list itself would give it —
+  `ctc/len^γ + β·len + λ·ln f` with the PRIMARY preset, the stored frequency calibrated onto the
+  primary scale (`UserWordFrequency.scaleOnto`) and its own swipe-priority bonus
+  (`CtcSlateAssembly.primaryEquivalentScore`); both decodes read one emission matrix, so only the
+  frequency term changes, as for `CtcSurfaceForms` alternates. That score is ranked against the
+  primary slate on its own softmax scale; the earned rank r gives `1000/(r+1)` and goes ahead of
+  the primary word at rank r, never below the word's plain secondary slot. Ordinary secondary
+  words keep the rank merge exactly. Pinned by `CtcSlateAssemblyTest` and, through the real
+  encoder, `CtcSecondaryListReplayTest` (the placement equals the English list's own final score
+  within 1e-6; `parcel`/`parade`/`pardon` traces still give the English list's top word).
+
 ### Per-language enablement
 
 The shipped encoder is layout- and language-agnostic (it emits a–z posteriors from
@@ -855,6 +889,9 @@ counts are `@Test` counts at 2026-08-19 and move with the suites:
 | `swipe/UserSwipePriorityBonusTest` | 9 | Level table, surface keying (strip / joiner / CKDT projection), geometric table, memo version, adapter wiring, tap untouched |
 | `swipe/UserSwipePriorityReplayTest` | 3 | Shipped-stack level sweep + pins: `ad`/`wet` win at High, `adb` at Highest, `somethings` at Normal; zero bonus is identical |
 | `swipe/CustomWordEditLexiconInputTest` | 3 | Dictionary Manager Edit/raise writers → CTC lexicon inputs: a frequency-only edit changes the memo version and the next build carries 255 with the priority unchanged |
+| `swipe/ctc/CtcSlateAssemblyTest` | 13 | Slate assembly (2026-11-26): a secondary-list user word placed at the primary list's own score (stored frequency calibrated, priority carried, never demoted), ordinary secondary words byte-identical to the rank merge, disabled words dropped per language with the tap path's primary-over-secondary rule, the shared softmax scale |
+| `swipe/CtcSecondaryListReplayTest` | 4 | The same through the real encoder and the shipped en/es lexicons: `parcero` (Spanish list) wins its own trace under an English primary, its placement equals the English list's final score, English traces keep the English list's top word; a disabled `world` (re-injected as a pairing key) is offered by no slate while `world's` stays |
+| `swipe/CtcSlateAssemblyWiringTest` | 3 | Source scan: the adapter builds `CtcUserWords` from the merge's own inputs, routes both slates through the assembly and shares its softmax |
 | `swipe/ctc/CtcContractionDisplayTest` | 7 | Alias→apostrophe display over the real merged-lexicon ordinals (H1) |
 | `swipe/ctc/CtcContractionKeysTest` | 7 | Alias-key injection: injectability over the trie alphabet, the MIN_FREQ floor, native-key skip |
 | `swipe/ctc/CtcLanguagePresetTest` | 23 | `presetFor` λ-by-lexicon-scale (en 4.0 / the CKDT six 2.0 / unknown→en) and the SCRIPT footing (`tunedRuCkdt` verbatim for every `CtcScriptSupport` row), language-invariance of every other Latin constant, the `CtcLanguageSupport` table (the eight-language supported set, the `PROVISIONAL` three, the `VAL_ONLY` one, the empty `NEEDS_VALIDATION`, asset **and langpack** paths — exactly one resolution per language — and normalization) |

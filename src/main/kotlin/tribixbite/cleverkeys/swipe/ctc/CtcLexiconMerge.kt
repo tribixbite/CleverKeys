@@ -59,14 +59,7 @@ object CtcLexiconMerge {
         custom: Iterable<Pair<String, Int>>,
         disabled: Set<String>,
     ): LinkedHashMap<String, Double> {
-        var baseFloor = MAX_FREQ
-        var hasBase = false
-        for ((_, freq) in base) {
-            hasBase = true
-            val f = freq.coerceAtLeast(MIN_FREQ)
-            if (f < baseFloor) baseFloor = f
-        }
-        if (!hasBase) baseFloor = MIN_FREQ // no base scale to calibrate against — identity
+        val baseFloor = baseFloor(base)
 
         val disabledLower = disabled.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }
         val seenLower = HashSet<String>()
@@ -83,6 +76,25 @@ object CtcLexiconMerge {
             merged[word] = freq.coerceAtLeast(MIN_FREQ)
         }
         return merged
+    }
+
+    /**
+     * The floor [merge] calibrates a stored 1..255 user frequency onto: [base]'s rarest frequency
+     * (each clamped to at least [MIN_FREQ]), or [MIN_FREQ] — the identity mapping — when [base] is
+     * empty. 134 for the en JSON scale, 1 for every CKDT `255 − rank` source.
+     *
+     * Public because the dual-language slate needs the PRIMARY lexicon's floor to place a
+     * secondary-list user word as the primary list would have filed it ([CtcSlateAssembly]).
+     */
+    fun baseFloor(base: Iterable<Pair<String, Double>>): Double {
+        var floor = MAX_FREQ
+        var hasBase = false
+        for ((_, freq) in base) {
+            hasBase = true
+            val f = freq.coerceAtLeast(MIN_FREQ)
+            if (f < floor) floor = f
+        }
+        return if (hasBase) floor else MIN_FREQ // no base scale to calibrate against — identity
     }
 
     /**
