@@ -108,4 +108,26 @@ class ConfigUnavailableSecondaryTest {
         assertWithMessage("the primary's store would wait for a lexicon that cannot load")
             .that(config.purgeSecondaryFor("de")).isNull()
     }
+
+    /**
+     * Coordinator item 9 (2026-11-26): [LanguagePrefs.userLanguages], which Dictionary Manager,
+     * the Swiss-spelling seed and WordPredictor read, agrees with Config: a stored secondary with
+     * no dictionary here is no secondary, and it comes back once the language is available.
+     */
+    @Test
+    fun theUserLanguagesReaderAppliesTheSameAvailabilityCheck() {
+        val prefs = MockSharedPreferences()
+        prefs.edit()
+            .putString(LanguagePrefs.PRIMARY, "de")
+            .putBoolean(LanguagePrefs.MULTILANG, true)
+            .putString(LanguagePrefs.SECONDARY, "ru")
+            .apply()
+        val installed = mutableSetOf("de")
+        Config.languageAvailability = { it in installed }
+
+        assertWithMessage("missing here").that(LanguagePrefs.userLanguages(prefs).secondary).isNull()
+        installed += "ru"
+        assertWithMessage("installed").that(LanguagePrefs.userLanguages(prefs).secondary).isEqualTo("ru")
+    }
+
 }

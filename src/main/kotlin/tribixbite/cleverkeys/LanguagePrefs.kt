@@ -50,6 +50,12 @@ object LanguagePrefs {
      * serving RIGHT NOW reads `Config.activeLanguages()` instead.
      *
      * Type-corrupted values (an imported backup) are recovered like every Config read.
+     *
+     * A stored secondary with no dictionary on this device is no secondary here either, through
+     * the same [Config.languageAvailability] check Config resolves with (2026-11-26), so
+     * Dictionary Manager, the Swiss-spelling seed and WordPredictor agree with the keyboard. Not
+     * installed (a process where neither the keyboard nor Settings has started): every language
+     * counts, as before.
      */
     fun userLanguages(prefs: SharedPreferences): ActiveLanguages = LayoutLanguageBinding.resolve(
         bindings = emptyList(),
@@ -57,6 +63,7 @@ object LanguagePrefs {
         userPrimary = Config.safeGetString(prefs, PRIMARY, Defaults.PRIMARY_LANGUAGE),
         multilangEnabled = Config.safeGetBoolean(prefs, MULTILANG, Defaults.ENABLE_MULTILANG),
         userSecondary = Config.safeGetString(prefs, SECONDARY, Defaults.SECONDARY_LANGUAGE),
+        isAvailable = Config.languageAvailability ?: { true },
     )
 
     /**
