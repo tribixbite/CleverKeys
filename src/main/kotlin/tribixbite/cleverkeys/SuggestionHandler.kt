@@ -2399,6 +2399,12 @@ class SuggestionHandler(
      * so Spanish needed five new words to come back).
      */
     fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean, ic: InputConnection? = null) {
+        // TODO(Note10+ r23, kept): a word still being typed when an app moves to another of its
+        // fields with an input restart (two textareas on one page) is not learned, so its pair
+        // (`word → is`) is lost. A restart has no onFinishInputView, so
+        // flushTypedWordOnFinishInput never runs, and the cursor sync in the new field abandons the
+        // pending word. Safe (nothing wrong is learned); flushing here would need the old field's
+        // text, which the new connection no longer shows.
         val identity = info?.let { FieldIdentity.of(it) }
         val boundAnotherEditor = inputStartedSinceView
         val restartedInput = restarting || inputRestartedSinceView

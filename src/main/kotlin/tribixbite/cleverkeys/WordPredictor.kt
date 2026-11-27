@@ -1545,6 +1545,15 @@ class WordPredictor : Predictor {
         val window = detectionWords ?: return
         val result = detector.detectLanguageFromWordsWithConfidence(window, chosen) ?: return
         val detectedLanguage = result.language
+        // TODO(Note10+ r23 L4, 2026-11-27): the confidence is an absolute score (60% letter
+        // frequencies, 40% share of the language's common-word list covered), so it grows with
+        // the window: `el perro de la casa es muy` scores es 0.31 / en 0.13, and 18 clearly
+        // Spanish words reach only 0.48, below the default 0.6. r22 switched at `muy` only because
+        // the field reset did not see a new Chrome tab and the window still held earlier Spanish.
+        // A relative rule (the secondary leading the primary by a ratio once the window has
+        // DETECTION_MIN_WORDS words) would switch on short text; it needs tuning against
+        // LanguageDetectionEvalTest (-PgeoFull=true: false switches per 1,000 primary words)
+        // before it changes what users get.
         val confident = result.confidence >= sensitivity
         val onSecondary = dictionaryLanguageOrNull != null && currentLanguage != dictionaryLanguage
         // Back to the primary needs no threshold, but [WEAK_RETURN_RUNS] windows of NEW words
