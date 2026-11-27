@@ -201,4 +201,26 @@ class ImportTrackerTest {
         assertThat(job.isCancelled).isTrue()
         assertThat(reportedAsFailure).isFalse()
     }
+
+    /**
+     * Fable audit D2 (2026-11-26): an import finished while Settings was stopped, so its follow-up
+     * waits; a second share then arrives through onNewIntent before onStart. Starting it replaced
+     * the whole state, the waiting follow-up included, so the first result was never shown.
+     */
+    @Test
+    fun aSecondStartKeepsTheFollowUpNotYetTaken() = runBlocking {
+        val tracker = tracker()
+        tracker.start("Importing…") { ImportTracker.Outcome("Imported 1", FollowUp("result 1")) }
+        tracker.awaitIdle()
+
+        val gate = CompletableDeferred<Unit>()
+        tracker.start("Importing…") { gate.await(); ImportTracker.Outcome("Imported 2", FollowUp("result 2")) }
+        assertThat(tracker.state.value.event).isEqualTo(FollowUp("result 1"))
+        gate.complete(Unit)
+        tracker.awaitIdle()
+
+        assertThat(tracker.consumeEvent()).isEqualTo(FollowUp("result 1"))
+        assertThat(tracker.consumeEvent()).isEqualTo(FollowUp("result 2"))
+        assertThat(tracker.consumeEvent()).isNull()
+    }
 }

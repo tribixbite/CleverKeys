@@ -46,13 +46,16 @@ internal open class ImportTracker<S : Any, E : Any>(
     /**
      * @property inProgress an operation is running
      * @property status the message to show, or null
-     * @property event the follow-up not yet taken by an activity, or null
+     * @property events the follow-ups not yet taken by an activity, oldest first
      */
     data class State<S : Any, E : Any>(
         val inProgress: Boolean = false,
         val status: S? = null,
-        val event: E? = null,
-    )
+        val events: List<E> = emptyList(),
+    ) {
+        /** The oldest follow-up not yet taken, or null. */
+        val event: E? get() = events.firstOrNull()
+    }
 
     /** What a finished operation leaves: the [status] to show and the [event] to deliver. */
     data class Outcome<S : Any, E : Any>(val status: S? = null, val event: E? = null)
@@ -81,15 +84,20 @@ internal open class ImportTracker<S : Any, E : Any>(
         var started = false
         _state.update { current ->
             started = !current.inProgress
-            if (started) State(inProgress = true, status = progress) else current
+            // A follow-up not yet taken stays (Fable audit D2): an import that finished while
+            // Settings was stopped, then a second share arriving before onStart, lost the first
+            // result when this replaced the whole state.
+            if (started) State(inProgress = true, status = progress, events = current.events) else current
         }
         if (!started) return false
         scope.launch {
             try {
                 val outcome = work()
                 synchronized(lock) {
-                    _state.value = if (abandoned) State()
-                    else State(inProgress = false, status = outcome.status, event = outcome.event)
+                    _state.update { current ->
+                        if (abandoned) State()
+                        else State(inProgress = false, status = outcome.status, events = current.events + listOfNotNull(outcome.event))
+                    }
                     abandoned = false
                 }
             } finally {
@@ -102,12 +110,15 @@ internal open class ImportTracker<S : Any, E : Any>(
         return true
     }
 
-    /** The pending follow-up, once: the caller runs it now. Null when there is none. */
+    /**
+     * The oldest pending follow-up, once: the caller runs it now. Null when there is none. A next
+     * one, if any, is the new state's [State.event], so a collector takes them in turn.
+     */
     fun consumeEvent(): E? {
         var taken: E? = null
         _state.update { current ->
             taken = current.event
-            if (taken != null) current.copy(event = null) else current
+            if (taken != null) current.copy(events = current.events.drop(1)) else current
         }
         return taken
     }
