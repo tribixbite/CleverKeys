@@ -716,9 +716,7 @@ class WordPredictor : Predictor {
         stopObservingDictionaryChanges()
         dictionary.set(mutableMapOf())
         prefixIndex.set(mutableMapOf())
-        secondaryIndex = null
-        secondaryLanguageCode = "none"
-        secondaryDisabledWords = emptySet()
+        publishSecondary(null, "none", emptySet())
         isLoadingState = false
         customAndUserWords = emptySet()
         contractionAliases = emptyMap()
@@ -864,9 +862,26 @@ class WordPredictor : Predictor {
         loadDisabledWords()
         // A Dictionary Manager edit may have changed the detected next-word language's list too.
         detectedDisabledCache = null
-        // secondaryLanguageCode is "none" unless a secondary index was published with it.
+        // secondaryLanguageCode is "none" unless a secondary index was published with it. The
+        // read happens outside the lock; the write only if that language is still the published
+        // one, so a secondary load that published another language meanwhile keeps its own list.
         val secondary = secondaryLanguageCode
-        if (secondary != "none") secondaryDisabledWords = readSecondaryDisabledWords(secondary)
+        if (secondary == "none") return
+        val fresh = readSecondaryDisabledWords(secondary)
+        synchronized(this) { if (secondaryLanguageCode == secondary) secondaryDisabledWords = fresh }
+    }
+
+    /**
+     * Publish the secondary index, its language and its disabled list as one step, under the lock
+     * [reloadDisabledWords] writes under (Fable review 2026-11-26: a reload that read the old
+     * language and wrote after a new load published would have kept the old list).
+     */
+    private fun publishSecondary(index: NormalizedPrefixIndex?, language: String, disabled: Set<String>) {
+        synchronized(this) {
+            secondaryIndex = index
+            secondaryLanguageCode = language
+            secondaryDisabledWords = disabled
+        }
     }
 
     /**
@@ -2278,9 +2293,7 @@ class WordPredictor : Predictor {
             val index = buildSecondaryDictionary(language)
             Runnable {
                 if (index != null) {
-                    secondaryIndex = index
-                    secondaryLanguageCode = language
-                    secondaryDisabledWords = readSecondaryDisabledWords(language)
+                    publishSecondary(index, language, readSecondaryDisabledWords(language))
                     notifySecondaryLexiconChanged()
                 }
                 callback?.run()
@@ -2335,9 +2348,7 @@ class WordPredictor : Predictor {
         if (closed) return false
         asyncLoader.cancelSecondary()
         val index = buildSecondaryDictionary(language) ?: return false
-        secondaryIndex = index
-        secondaryLanguageCode = language
-        secondaryDisabledWords = readSecondaryDisabledWords(language)
+        publishSecondary(index, language, readSecondaryDisabledWords(language))
         notifySecondaryLexiconChanged()
         return true
     }
@@ -2402,9 +2413,7 @@ class WordPredictor : Predictor {
      */
     override fun unloadSecondaryDictionary() {
         asyncLoader.cancelSecondary()
-        secondaryIndex = null
-        secondaryLanguageCode = "none"
-        secondaryDisabledWords = emptySet()
+        publishSecondary(null, "none", emptySet())
         Log.i(TAG, "Unloaded secondary dictionary for touch typing")
         notifySecondaryLexiconChanged()
     }
