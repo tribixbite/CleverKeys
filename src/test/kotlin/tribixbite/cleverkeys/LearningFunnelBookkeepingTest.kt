@@ -2739,8 +2739,11 @@ class LearningFunnelBookkeepingTest {
         config.backspace_undo_swipe = false
         handler.onInputFieldStarted(chromeField(), restarting = false, ic)
         type("fix ", chromeField())
+        // Pixel r23 L2b narrowed this: a field whose whole text is exactly the word may roll it back
+        // by the keyboard's own Backspace. A look-alike holding more text may not.
         editor.setLength(0)
-        editor.append("fix ")
+        editor.append("fix now")
+        cursorAt = 4
         hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 4; initialSelEnd = 4 }, newInput = true)
         reportedCaret = cursor()
         backspaceChars("x ".length, field = chromeField())
@@ -2860,6 +2863,82 @@ class LearningFunnelBookkeepingTest {
         swipe("toy", "try", field = chromeField())
 
         assertWithMessage("no fix→toy from the other textarea's fix").that(bigram("fix", "toy")).isEqualTo(0)
+    }
+
+    // ---------------------------------------------------------- Pixel r23 L2b (2026-11-27)
+
+    /**
+     * Pixel r23 L2b: an empty Chrome textarea, swipe `Mop`, rotate (the keyboard's config restart,
+     * Chrome hides it, a tap binds the field again), Backspace it away, swipe `Map`: `mop` went
+     * 6 → 7. Chrome's EditorInfo carries no initial text, so nothing proved the blank-anchor word
+     * after the restart and the keyboard's own deletion was ignored.
+     */
+    @Test
+    fun aFirstWordDeletedAfterAChromeRotationAndTapIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        hideAndShowKeyboard(field = chromeField(), restarting = true) // RESET_NEW_CONFIGURATION
+        hideAndShowKeyboard(field = chromeField(), newInput = true) // Chrome hid it; the tap binds again
+        reportedCaret = cursor()
+        backspaceChars("mop ".length, field = chromeField())
+        newSwipe("map")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("map ")
+        assertWithMessage("mop's +1 reversed").that(vocabulary.getWordUsage("mop")).isNull()
+    }
+
+    /**
+     * Saga r23 L2b, a native field (Settings search) where the keyboard stays shown: the config
+     * restart, then the window hide and RotationShowGuard's restore over the recreated window.
+     */
+    @Test
+    fun aFirstWordDeletedAfterANativeRotationRestoreIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(textField(), restarting = false, ic)
+        swipe("got", "git")
+        hideAndShowKeyboard(restarting = true)
+        hideAndShowKeyboard(newInput = true) // the recreated window's input start, re-shown by the guard
+        reportedCaret = cursor()
+        backspaceChars("got ".length)
+        newSwipe("fix")
+
+        assertWithMessage("got's +1 reversed").that(vocabulary.getWordUsage("got")).isNull()
+    }
+
+    /** L2b: the same with the restart alone, on API 30+ with no initial text in the EditorInfo. */
+    @Test
+    fun aFirstWordDeletedAfterARestartWithoutInitialTextIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("dug", "dig", field = chromeField())
+        EditorInitialText.platformSdk = { 30 }
+        EditorInitialText.reader = { _, _ -> null to null }
+        hideAndShowKeyboard(field = chromeField(), restarting = true)
+        reportedCaret = cursor()
+        backspaceChars("dug ".length, field = chromeField())
+        newSwipe("dig")
+
+        assertWithMessage("dug's +1 reversed").that(vocabulary.getWordUsage("dug")).isNull()
+    }
+
+    /** L2b, the guard: a look-alike field with more text than the word keeps the word's learning. */
+    @Test
+    fun aLookAlikeFieldWithMoreTextDoesNotRollTheFirstWordBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        editor.setLength(0)
+        editor.append("mop it ")
+        hideAndShowKeyboard(field = chromeField(), newInput = true)
+        reportedCaret = cursor()
+        backspaceChars("mop it ".length, field = chromeField())
+
+        assertWithMessage("mop kept its count").that(vocabulary.getWordUsage("mop")?.usageCount).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection
