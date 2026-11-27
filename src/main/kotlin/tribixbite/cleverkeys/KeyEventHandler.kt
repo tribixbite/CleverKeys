@@ -1603,16 +1603,24 @@ class KeyEventHandler(
     private fun handleSlider(s: KeyValue.Slider, r: Int, keyDown: Boolean) {
         // In clipboard edit mode, route cursor movements to the inline EditText
         if (recv.isClipboardEditMode()) {
+            // A slide is ONE slider key for its whole length: the one in the direction it started
+            // (space bar: cursor_left west, cursor_right east). When the finger turns back past
+            // the start, Pointers' Sliding sends a NEGATIVE repeat, and the app path honours it
+            // (moveCursor(-r) / moveCursor(r) below). Mapping only the slider kind to an arrow
+            // and repeating abs(r) kept the caret going the old way: "swiping space to move cursor
+            // ... seems to reverse direction" (maintainer 2026-11-26).
+            val forward = r > 0
             val keyCode = when (s) {
-                KeyValue.Slider.Cursor_left -> KeyEvent.KEYCODE_DPAD_LEFT
-                KeyValue.Slider.Cursor_right -> KeyEvent.KEYCODE_DPAD_RIGHT
-                KeyValue.Slider.Cursor_up -> KeyEvent.KEYCODE_DPAD_UP
-                KeyValue.Slider.Cursor_down -> KeyEvent.KEYCODE_DPAD_DOWN
+                KeyValue.Slider.Cursor_left -> if (forward) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
+                KeyValue.Slider.Cursor_right -> if (forward) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
+                KeyValue.Slider.Cursor_up -> if (forward) KeyEvent.KEYCODE_DPAD_UP else KeyEvent.KEYCODE_DPAD_DOWN
+                KeyValue.Slider.Cursor_down -> if (forward) KeyEvent.KEYCODE_DPAD_DOWN else KeyEvent.KEYCODE_DPAD_UP
                 else -> null
             }
             if (keyCode != null) {
-                // Dispatch once per repeat unit so slider distance maps to cursor steps
-                repeat(kotlin.math.abs(r).coerceAtLeast(1)) {
+                // One arrow per repeat unit, so slider distance maps to caret steps. A zero repeat
+                // moves nothing, as moveCursor(0) does in the app.
+                repeat(kotlin.math.abs(r)) {
                     recv.dispatchKeyToClipboardEdit(keyCode)
                 }
             }

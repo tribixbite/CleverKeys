@@ -35,6 +35,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardBulkPlans
 import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
+import tribixbite.cleverkeys.clipboard.ClipboardEditCaret
 import tribixbite.cleverkeys.clipboard.ClipboardEditPages
 import tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardReorderPolicy
@@ -1557,18 +1558,23 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
 
             when (keyCode) {
                 android.view.KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    // Collapse selection to start, or move left by 1
-                    val newPos = if (hasSelection) minOf(start, end) else (start - 1).coerceAtLeast(0)
+                    // Collapse selection to start, or move one character back (a surrogate pair
+                    // is one character: ClipboardEditCaret).
+                    val newPos = if (hasSelection) minOf(start, end) else ClipboardEditCaret.stepBack(text, start)
                     et.setSelection(newPos)
                     editingCursorPosition = newPos
                 }
                 android.view.KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    // Collapse selection to end, or move right by 1
-                    val newPos = if (hasSelection) maxOf(start, end) else (end + 1).coerceAtMost(text.length)
+                    // Collapse selection to end, or move one character forward
+                    val newPos = if (hasSelection) maxOf(start, end) else ClipboardEditCaret.stepForward(text, end)
                     et.setSelection(newPos)
                     editingCursorPosition = newPos
                 }
-                android.view.KeyEvent.KEYCODE_DPAD_UP -> {
+                // Up / down move one VISUAL line, as in an app's text field ([moveByVisualLine]).
+                // The logical-line fallback below only knows '\n': in a URL that wraps it sent up
+                // to offset 0 and down to the end (maintainer 2026-11-26). It stays for a field
+                // that has no layout yet.
+                android.view.KeyEvent.KEYCODE_DPAD_UP -> if (!moveByVisualLine(et, up = true)) {
                     // Use cursor position (collapse selection if any)
                     val pos = if (hasSelection) minOf(start, end) else start
                     val lineStart = text.lastIndexOf('\n', pos - 1) + 1
@@ -1584,7 +1590,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                         editingCursorPosition = 0
                     }
                 }
-                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> {
+                android.view.KeyEvent.KEYCODE_DPAD_DOWN -> if (!moveByVisualLine(et, up = false)) {
                     // Use cursor position (collapse selection if any)
                     val pos = if (hasSelection) maxOf(start, end) else start
                     var lineEnd = text.indexOf('\n', pos)
@@ -1620,6 +1626,22 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 }
             }
         }
+    }
+
+    /**
+     * Move the field's caret one visual line [up] or down with the platform's own vertical
+     * movement (`Selection.moveUp` / `moveDown`, what ArrowKeyMovementMethod runs for DPAD_UP /
+     * DOWN in any EditText): the same column on the line above or below, the text's start from
+     * the first line and its end from the last, a selection collapsed first. False when the field
+     * has no laid-out text yet (the caller falls back to logical lines).
+     */
+    private fun moveByVisualLine(et: EditText, up: Boolean): Boolean {
+        val layout = et.layout ?: return false
+        if (layout.lineCount <= 0) return false
+        val text = et.text ?: return false
+        if (up) android.text.Selection.moveUp(text, layout) else android.text.Selection.moveDown(text, layout)
+        editingCursorPosition = et.selectionEnd.coerceIn(0, text.length)
+        return true
     }
 
     /** Send the specified entry to the editor (position in current page). */

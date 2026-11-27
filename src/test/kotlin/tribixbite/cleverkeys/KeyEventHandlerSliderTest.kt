@@ -185,6 +185,66 @@ class KeyEventHandlerSliderTest {
         verify(exactly = 0) { recv.getCurrentInputConnection() }
     }
 
+    // ── The space-bar slider in the clipboard editor keeps the finger's direction ──
+    //
+    // Maintainer 2026-11-26: "swiping space to move cursor on wrapped lines seems to reverse
+    // direction". A slide is one slider key for its whole length (the direction it STARTED in:
+    // `cursor_left` west of space, `cursor_right` east), and Pointers' Sliding sends a NEGATIVE
+    // repeat when the finger turns back. The app path honours the sign (moveCursor(-r) /
+    // moveCursor(r)); the editor path mapped the slider kind to one arrow and repeated
+    // abs(r) times, so turning back kept the caret going the old way.
+
+    @Test
+    fun aSlideThatTurnsBackMovesTheEditorCaretBack() {
+        every { recv.isClipboardEditMode() } returns true
+        val left = android.view.KeyEvent.KEYCODE_DPAD_LEFT
+        val right = android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+
+        // Started east of space (cursor_right): 2 steps east, then the finger comes back 3.
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_right, 2), Pointers.Modifiers.EMPTY, true)
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_right, -3), Pointers.Modifiers.EMPTY, true)
+
+        verify(exactly = 2) { recv.dispatchKeyToClipboardEdit(right) }
+        verify(exactly = 3) { recv.dispatchKeyToClipboardEdit(left) }
+    }
+
+    @Test
+    fun aSlideStartedWestMovesLeftThenRightWhenTheFingerReturns() {
+        every { recv.isClipboardEditMode() } returns true
+        val left = android.view.KeyEvent.KEYCODE_DPAD_LEFT
+        val right = android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_left, 4), Pointers.Modifiers.EMPTY, true)
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_left, -1), Pointers.Modifiers.EMPTY, true)
+
+        verify(exactly = 4) { recv.dispatchKeyToClipboardEdit(left) }
+        verify(exactly = 1) { recv.dispatchKeyToClipboardEdit(right) }
+    }
+
+    @Test
+    fun verticalEditorSlidersKeepTheirDirectionToo() {
+        every { recv.isClipboardEditMode() } returns true
+        val up = android.view.KeyEvent.KEYCODE_DPAD_UP
+        val down = android.view.KeyEvent.KEYCODE_DPAD_DOWN
+
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_up, -2), Pointers.Modifiers.EMPTY, true)
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_down, -1), Pointers.Modifiers.EMPTY, true)
+
+        verify(exactly = 2) { recv.dispatchKeyToClipboardEdit(down) }
+        verify(exactly = 1) { recv.dispatchKeyToClipboardEdit(up) }
+    }
+
+    @Test
+    fun aZeroRepeatEditorSliderMovesNothing() {
+        // The app path's moveCursor(0) moves nothing; the editor path used to take one step.
+        every { recv.isClipboardEditMode() } returns true
+
+        handler.key_up(KeyValue.sliderKey(KeyValue.Slider.Cursor_right, 0), Pointers.Modifiers.EMPTY, true)
+
+        verify(exactly = 0) { recv.dispatchKeyToClipboardEdit(any()) }
+        verify(exactly = 0) { recv.getCurrentInputConnection() }
+    }
+
     // ------------------------------------------------------------------ helpers
 
     /**

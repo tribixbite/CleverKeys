@@ -628,6 +628,8 @@ tasks.register('runPureTests', JavaExec) {
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
   def pureTestClasses = [
+    // 2026-11-26: one clipboard-editor caret step is one character (a surrogate pair whole).
+    'tribixbite.cleverkeys.clipboard.ClipboardEditCaretTest',
     // Pre-tag review 2026-11-25 S2: Settings imports outlive the activity (rotation).
     'tribixbite.cleverkeys.ui.settings.io.ImportTrackerTest',
     // 2026-11-26 (2.1): Dictionary Manager loads by tab order, Swiss spelling in its list; search

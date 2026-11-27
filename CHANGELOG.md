@@ -23,6 +23,9 @@ editor that used to be listed here already ship in 2.0.)
 - A save the clipboard refuses now says why under the entry (for example "An entry with this
   content already exists" when the edited text is already another History clipping). The
   message never reached the screen, so the checkmark seemed to do nothing.
+- Sliding on the space bar to move the cursor while editing a clipping follows your finger when
+  it turns back; the cursor kept going the way the slide started. One step is one character,
+  an emoji included, and up / down move one line as you see it, also in a URL that wraps.
 
 ### Fixed (learning from corrected words, 2026-11-26)
 
