@@ -83,6 +83,11 @@ editor that used to be listed here already ship in 2.0.)
 - A secondary language whose dictionary is not on the phone (a restored backup naming a pack
   never installed here) is treated as no secondary language, and the choice is kept for when the
   pack is installed. The keyboard applies this once Settings has been opened since it started.
+- Dictionary Manager keeps a German word you disabled under Swiss spelling (`strasse`, or one
+  row of `Maße`/`Masse`) disabled when you toggle another word; it showed enabled again while the
+  keyboard still left it out. Disabling such a word stores its dictionary spelling (`straße`), so
+  it stays disabled with Swiss spelling off, and a search typed before a list finished loading
+  now finds its words.
 
 ---
 

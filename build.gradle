@@ -1904,6 +1904,9 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.LayoutLanguageBindingConfigTest',
     // 2026-11-26: a stored secondary with no dictionary on this phone is no secondary (read time).
     'tribixbite.cleverkeys.ConfigUnavailableSecondaryTest',
+    // 2026-11-26 (Fable C1/C3/C4/C5): Dictionary Manager's German list in Swiss spelling, through
+    // the real MainDictionarySource (refresh, toggle, search before load, cache spelling).
+    'tribixbite.cleverkeys.MainDictionarySourceSpellingTest',
     // iOS-/Gboard-/SwiftKey-style predefined layouts through the real layout parser.
     'tribixbite.cleverkeys.StyleLayoutsTest',
     // Per-layout theme binding through the real Config, ConfigurationManager (re-inflate only on an

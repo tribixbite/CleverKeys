@@ -240,7 +240,7 @@ class DictionaryManagerActivity : AppCompatActivity() {
         val plan = DictionaryTabPlan.plan(primaryLanguage, secondaryLanguage, boundLanguages, installedPacks)
         // The lists parse one at a time; the primary's first, so it shows as soon as it is ready
         // instead of after whichever language asked first (de + ru, 2026-11-26).
-        MainDictionarySource.prioritize(DictionaryTabPlan.loadOrder(plan))
+        MainDictionarySource.prioritize(DictionaryTabPlan.loadOrder(plan), swissSpelling)
         for (tab in plan) {
             val type = when (tab.kind) {
                 DictionaryTabPlan.Kind.ACTIVE -> WordListFragment.TabType.ACTIVE

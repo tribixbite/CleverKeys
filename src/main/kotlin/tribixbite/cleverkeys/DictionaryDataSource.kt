@@ -17,45 +17,117 @@ import kotlinx.coroutines.withContext
 class DictionaryLoadException(message: String, cause: Throwable? = null) : Exception(message, cause)
 
 /**
- * Dictionary Manager's German list under Swiss spelling ([SwissSpelling], D2 follow-up
- * 2026-11-26). The keyboard respells every German lexicon at load; the manager listed the shipped
- * `straße`, words the keyboard never offers. Pure (`DictionaryListSpellingTest`).
+ * How Dictionary Manager's main-dictionary rows match the stored disabled words, and its German
+ * list under Swiss spelling ([SwissSpelling], D2 follow-up 2026-11-26). Pure
+ * (`DictionaryListSpellingTest`; through the real source in `MainDictionarySourceSpellingTest`).
+ *
+ * The keyboard respells every German lexicon at load; the manager listed the shipped `straße`,
+ * words the keyboard never offers, so under Swiss spelling the list is respelled the same way and
+ * twins (`Maße`/`Masse`) merged. One rule ([EnabledCheck]) decides whether a row is enabled, for
+ * the load, for the re-sync after any toggle ([MainDictionarySource.onRefresh]) and for which
+ * stored entries an enable removes: before, the re-sync compared only the row's own word, so a
+ * row disabled through its shipped `straße` (or a twin, or the loader's lowercase/accent-free key)
+ * showed enabled after the next toggle in any tab (Fable audit C1).
  */
 internal object DictionaryListSpelling {
 
     /**
-     * [words] (one language's shipped list, best first) with every `ß` written `ss`. Twins
-     * (`Maße`/`Masse`) become one row at the first one's position with the higher frequency;
-     * the row is enabled only when every twin is and its `ss` spelling is not in [disabled]
-     * (the keyboard's [SwissSpelling.foldDisabled] disables `masse` for a disabled `Maße`).
+     * The spellings a stored disabled entry can name a row by, kept only when they are not the
+     * default (the row's own word and its lower case): [shipped] are the dictionary's canonical
+     * spellings merged into the row (what a disable stores, audit C3), [keys] the loader's
+     * normalized keys of those (lower case, accents stripped, `ß` as `ss`).
      */
-    fun respell(words: List<DictionaryWord>, disabled: Set<String>): List<DictionaryWord> {
-        val foldedDisabled = SwissSpelling.foldDisabled(true, disabled)
-        val merged = LinkedHashMap<String, DictionaryWord>(words.size * 2)
-        for (row in words) {
-            val folded = SwissSpelling.fold(row.word)
-            val enabled = row.enabled && folded !in foldedDisabled &&
-                folded.lowercase(java.util.Locale.ROOT) !in foldedDisabled
-            val existing = merged[folded]
-            merged[folded] = if (existing == null) {
-                if (folded === row.word && enabled == row.enabled) row else row.copy(word = folded, enabled = enabled)
-            } else {
-                existing.copy(
-                    frequency = maxOf(existing.frequency, row.frequency),
-                    enabled = existing.enabled && enabled,
-                )
+    class RowSpellings(val shipped: List<String>, val keys: List<String>)
+
+    /** One entry of a language's shipped list: [row] in its canonical spelling, and its normalized [key]. */
+    class Shipped(val row: DictionaryWord, val key: String)
+
+    /** The rows to show, in shipped order, and (by row identity) their non-default [spellings]. */
+    class Listing(val words: List<DictionaryWord>, val spellings: Map<DictionaryWord, RowSpellings>)
+
+    /**
+     * Whether rows are enabled against ONE stored disabled set. A row is disabled when the set
+     * holds any of its spellings, or, under [swiss], when the row's (`ss`) word or its lower case
+     * is in the keyboard's [SwissSpelling.foldDisabled] set (a disabled `Maße` disables `masse`).
+     */
+    class EnabledCheck(private val disabled: Set<String>, swiss: Boolean) {
+        private val folded: Set<String>? = if (swiss) SwissSpelling.foldDisabled(true, disabled) else null
+
+        fun isEnabled(row: DictionaryWord, spellings: RowSpellings?): Boolean {
+            if (spellings == null) {
+                if (row.word in disabled) return false
+                val lower = row.word.lowercase()
+                if (lower != row.word && lower in disabled) return false
+            } else if (spellings.shipped.any { it in disabled } || spellings.keys.any { it in disabled }) {
+                return false
             }
+            val foldedDisabled = folded ?: return true
+            return row.word !in foldedDisabled && row.word.lowercase() !in foldedDisabled
         }
-        return merged.values.toList()
     }
 
     /**
-     * The stored entries to remove when the row [word] is enabled under Swiss spelling: [word]
-     * itself and every entry of [disabled] that respells to it (`Maße` for the row `Masse`),
-     * or the row would stay disabled through its `ß` spelling.
+     * [shipped] as the list shows it, each row's [DictionaryWord.enabled] set by [EnabledCheck]:
+     * as shipped, or under [swiss] with every `ß` written `ss` and twins merged into one row at
+     * the first one's position with the higher frequency.
      */
+    fun list(shipped: List<Shipped>, disabled: Set<String>, swiss: Boolean): Listing {
+        val check = EnabledCheck(disabled, swiss)
+        val spellings = java.util.IdentityHashMap<DictionaryWord, RowSpellings>()
+        if (!swiss) {
+            for (entry in shipped) {
+                val extra = if (entry.key == entry.row.word.lowercase()) null
+                else RowSpellings(listOf(entry.row.word), listOf(entry.key))
+                if (extra != null) spellings[entry.row] = extra
+                entry.row.enabled = check.isEnabled(entry.row, extra)
+            }
+            return Listing(shipped.map { it.row }, spellings)
+        }
+        class Merge(val first: DictionaryWord, val word: String) {
+            var frequency = first.frequency
+            val shippedSpellings = mutableListOf<String>()
+            val keys = mutableListOf<String>()
+        }
+        val merged = LinkedHashMap<String, Merge>(shipped.size * 2)
+        for (entry in shipped) {
+            val folded = SwissSpelling.fold(entry.row.word)
+            val merge = merged.getOrPut(folded) { Merge(entry.row, folded) }
+            merge.frequency = maxOf(merge.frequency, entry.row.frequency)
+            merge.shippedSpellings += entry.row.word
+            merge.keys += entry.key
+        }
+        val words = merged.values.map { merge ->
+            val row = if (merge.word == merge.first.word && merge.frequency == merge.first.frequency) merge.first
+            else merge.first.copy(word = merge.word, frequency = merge.frequency)
+            val default = merge.shippedSpellings.size == 1 && merge.shippedSpellings[0] == row.word &&
+                merge.keys[0] == row.word.lowercase()
+            val extra = if (default) null else RowSpellings(merge.shippedSpellings.distinct(), merge.keys.distinct())
+            if (extra != null) spellings[row] = extra
+            row.enabled = check.isEnabled(row, extra)
+            row
+        }
+        return Listing(words, spellings)
+    }
+
+    /** [words] under Swiss spelling, each one's normalized key taken as its lower case. */
+    fun respell(words: List<DictionaryWord>, disabled: Set<String>): List<DictionaryWord> =
+        list(words.map { Shipped(it, it.word.lowercase()) }, disabled, swiss = true).words
+
+    /**
+     * The stored entries an enable of [row] removes: every entry of [disabled] that alone
+     * disables it by [EnabledCheck], so the row is enabled afterwards whichever spelling disabled
+     * it (`Maße` for the Swiss row `Masse`, `haus` for the row `Haus`).
+     */
+    fun entriesDisabling(row: DictionaryWord, spellings: RowSpellings?, disabled: Set<String>, swiss: Boolean): Set<String> =
+        disabled.filterTo(linkedSetOf()) { !EnabledCheck(setOf(it), swiss).isEnabled(row, spellings) }
+
+    /** [entriesDisabling] for the Swiss row [word] with its default spellings, plus [word] itself. */
     fun spellingsToEnable(word: String, disabled: Set<String>): Set<String> =
-        disabled.filterTo(linkedSetOf(word)) { SwissSpelling.fold(it).equals(word, ignoreCase = true) }
+        linkedSetOf(word) + entriesDisabling(DictionaryWord(word, 0, WordSource.MAIN), null, disabled, swiss = true)
+
+    /** The entries a disable of [row] stores: the shipped spellings it was merged from (audit C3). */
+    fun spellingsToDisable(row: DictionaryWord, spellings: RowSpellings?): List<String> =
+        spellings?.shipped ?: listOf(row.word)
 }
 
 /**
@@ -109,6 +181,8 @@ class MainDictionarySource(
     private var cachedWords: List<DictionaryWord>? = null
     // Prefix index for fast search: prefix -> list of matching words
     private var prefixIndex: Map<String, List<DictionaryWord>>? = null
+    // Rows whose stored-disabled spellings are not just their word (DictionaryListSpelling).
+    private var rowSpellings: Map<DictionaryWord, DictionaryListSpelling.RowSpellings>? = null
 
     init {
         // Reuse shared cache if it was built for this language.
@@ -118,6 +192,7 @@ class MainDictionarySource(
             cachedFor()?.let { cached ->
                 cachedWords = cached.words
                 prefixIndex = cached.prefixIndex
+                rowSpellings = cached.spellings
             }
         }
     }
@@ -143,6 +218,7 @@ class MainDictionarySource(
             cachedFor()?.let { cached ->
                 cachedWords = cached.words
                 prefixIndex = cached.prefixIndex
+                rowSpellings = cached.spellings
                 Log.d(TAG, "Returning ${cached.words.size} words from shared cache for $languageCode")
                 loadLock.markLoaded(languageCode)
                 return@withContext cached.words
@@ -159,6 +235,7 @@ class MainDictionarySource(
                 cachedFor()?.let { cached ->
                     cachedWords = cached.words
                     prefixIndex = cached.prefixIndex
+                    rowSpellings = cached.spellings
                     return@withTurn cached.words
                 }
             }
@@ -173,7 +250,7 @@ class MainDictionarySource(
     private fun loadUncached(): List<DictionaryWord> {
         try {
             val disabled = disabledSource.getDisabledWords()
-            val words = mutableListOf<DictionaryWord>()
+            val words = mutableListOf<DictionaryListSpelling.Shipped>()
 
             // v1.1.89: Try language-specific binary dictionary first
             // v1.1.96: Also check installed language packs
@@ -187,12 +264,10 @@ class MainDictionarySource(
                     val packPath = packManager.getDictionaryPath(languageCode)
                     if (packPath != null) {
                         Log.d(TAG, "Found language pack dictionary: ${packPath.absolutePath}")
-                        val loaded = loadBinaryDictionaryFromFile(packPath, words, disabled)
+                        val loaded = loadBinaryDictionaryFromFile(packPath, words)
                         if (loaded) {
                             Log.d(TAG, "Loaded ${words.size} words from language pack: $languageCode")
-                            val sorted = displayList(words, disabled)
-                            publish(sorted)
-                            return sorted
+                            return publish(displayList(words, disabled))
                         }
                     }
                 } catch (e: Exception) {
@@ -202,12 +277,10 @@ class MainDictionarySource(
                 // Fall back to bundled assets
                 try {
                     val binFilename = "dictionaries/${languageCode}_enhanced.bin"
-                    val loaded = loadBinaryDictionary(binFilename, words, disabled)
+                    val loaded = loadBinaryDictionary(binFilename, words)
                     if (loaded) {
                         Log.d(TAG, "Loaded ${words.size} words from bundled binary dictionary: $binFilename")
-                        val sorted = displayList(words, disabled)
-                        publish(sorted)
-                        return sorted
+                        return publish(displayList(words, disabled))
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Binary dictionary not found for $languageCode, trying JSON/TXT fallback")
@@ -226,12 +299,11 @@ class MainDictionarySource(
                     if (word.matches(Regex("^[\\p{L}'-]+$"))) {
                         val frequency = jsonDict.getInt(word)
                         // Use raw frequency from JSON (128-255 range)
+                        // The JSON keys are lower-cased above, so the word is its own key.
                         words.add(
-                            DictionaryWord(
-                                word = word,
-                                frequency = frequency,
-                                source = WordSource.MAIN,
-                                enabled = !disabled.contains(word)
+                            DictionaryListSpelling.Shipped(
+                                DictionaryWord(word = word, frequency = frequency, source = WordSource.MAIN),
+                                key = word,
                             )
                         )
                     }
@@ -246,9 +318,7 @@ class MainDictionarySource(
                 return emptyList()
             }
 
-            val sorted = displayList(words, disabled)
-            publish(sorted)
-            return sorted
+            return publish(displayList(words, disabled))
         } catch (e: Exception) {
             Log.e(TAG, "Error loading main dictionary", e)
             return emptyList()
@@ -281,17 +351,24 @@ class MainDictionarySource(
      * if building it runs out of memory, [cachedWords] stays unset, so the instance fast path
      * cannot hand out words whose search index is missing (search would find nothing).
      */
-    private fun publish(sorted: List<DictionaryWord>) {
-        buildPrefixIndex(sorted)
-        cachedWords = sorted
+    private fun publish(listing: DictionaryListSpelling.Listing): List<DictionaryWord> {
+        buildPrefixIndex(listing.words, listing.spellings)
+        rowSpellings = listing.spellings
+        cachedWords = listing.words
+        return listing.words
     }
 
     /**
-     * [words] in the spelling the keyboard serves, sorted for display: respelled when
+     * [shipped] in the spelling the keyboard serves, sorted for display: respelled when
      * [swissSpelling] ([DictionaryListSpelling]), as-is otherwise.
      */
-    private fun displayList(words: List<DictionaryWord>, disabled: Set<String>): List<DictionaryWord> =
-        (if (swissSpelling) DictionaryListSpelling.respell(words, disabled) else words).sorted()
+    private fun displayList(
+        shipped: List<DictionaryListSpelling.Shipped>,
+        disabled: Set<String>,
+    ): DictionaryListSpelling.Listing {
+        val listing = DictionaryListSpelling.list(shipped, disabled, swissSpelling)
+        return DictionaryListSpelling.Listing(listing.words.sorted(), listing.spellings)
+    }
 
     /**
      * Build prefix index for fast word search.
@@ -300,7 +377,10 @@ class MainDictionarySource(
      * Also updates shared static cache so subsequent MainDictionarySource
      * instances for the same language skip the full load.
      */
-    private fun buildPrefixIndex(words: List<DictionaryWord>) {
+    private fun buildPrefixIndex(
+        words: List<DictionaryWord>,
+        spellings: Map<DictionaryWord, DictionaryListSpelling.RowSpellings>,
+    ) {
         val index = mutableMapOf<String, MutableList<DictionaryWord>>()
 
         for (word in words) {
@@ -316,12 +396,16 @@ class MainDictionarySource(
 
         // Persist to shared static cache for cross-instance reuse
         synchronized(Companion) {
-            sharedCache[languageCode] = LanguageCache(words, index, swissSpelling)
+            sharedCache[languageCode] = LanguageCache(words, index, swissSpelling, spellings)
         }
     }
 
     override suspend fun searchWords(query: String): List<DictionaryWord> {
         if (query.isBlank()) return getAllWords()
+        // A search can come before the list (a keystroke cancels the tab's first load while it
+        // waits its turn): load, or await the load, rather than search a missing index and show
+        // nothing until the query is cleared (Fable audit C5).
+        if (prefixIndex == null) getAllWords()
 
         val lowerQuery = query.lowercase()
 
@@ -346,37 +430,46 @@ class MainDictionarySource(
      * Re-sync all cached DictionaryWord.enabled flags from the current disabled set.
      * Handles cross-source coherence: when DisabledDictionarySource toggles a word,
      * this source's cache becomes stale. Called by WordListFragment.refresh() before
-     * re-filtering. O(n) scan of ~98k words against a HashSet — <10ms.
+     * re-filtering. O(n) scan of the list against a HashSet.
+     *
+     * The same rule as the load ([DictionaryListSpelling.EnabledCheck], with each row's shipped
+     * spellings): comparing the row's word alone re-enabled a Swiss `strasse` whose `straße` was
+     * disabled, a merged twin, and a row disabled through the loader's lowercase key (audit C1).
      *
      * The prefix index stores the SAME DictionaryWord object references as cachedWords,
      * so mutating .enabled here also fixes prefix index search results.
      */
     override fun onRefresh() {
-        cachedWords?.let { words ->
-            val disabled = disabledSource.getDisabledWords()
-            for (dw in words) {
-                dw.enabled = !disabled.contains(dw.word)
-            }
+        val words = cachedWords ?: return
+        val check = DictionaryListSpelling.EnabledCheck(disabledSource.getDisabledWords(), swissSpelling)
+        val spellings = rowSpellings
+        for (dw in words) {
+            dw.enabled = check.isEnabled(dw, spellings?.get(dw))
         }
     }
 
     override suspend fun toggleWord(word: String, enabled: Boolean) {
-        if (enabled && swissSpelling) {
-            // A Swiss row may be disabled through its stored `ß` spelling (disabled before the
-            // switch was turned on): enable every spelling that respells to it.
-            for (spelling in DictionaryListSpelling.spellingsToEnable(word, disabledSource.getDisabledWords())) {
-                disabledSource.setWordEnabled(spelling, true)
+        val row = cachedWords?.firstOrNull { it.word == word }
+        val spellings = row?.let { rowSpellings?.get(it) }
+        if (enabled) {
+            // Remove every stored entry that disables the row, whichever spelling it names (a
+            // Swiss row disabled through its `ß` spelling before the switch was turned on).
+            val stored = disabledSource.getDisabledWords()
+            val entries = if (row != null) {
+                DictionaryListSpelling.entriesDisabling(row, spellings, stored, swissSpelling) + word
+            } else {
+                setOf(word)
             }
+            for (entry in entries) disabledSource.setWordEnabled(entry, true)
         } else {
-            disabledSource.setWordEnabled(word, enabled)
+            // Store the shipped spellings (audit C3): a Swiss row stored as `strasse` matched
+            // nothing in the list, and the keyboard offered the word again, with the switch off.
+            val entries = if (row != null) DictionaryListSpelling.spellingsToDisable(row, spellings) else listOf(word)
+            for (entry in entries) disabledSource.setWordEnabled(entry, false)
         }
-        // Update cached entries in-place so subsequent getAllWords()/searchWords()
-        // reflect the new enabled state without a full 98k-word reload
-        cachedWords?.forEach { dw ->
-            if (dw.word.equals(word, ignoreCase = true)) {
-                dw.enabled = enabled
-            }
-        }
+        // Re-derive every cached row's flag from the stored set, so getAllWords()/searchWords()
+        // reflect the change without a reload and every spelling of the row agrees.
+        onRefresh()
     }
 
     override suspend fun addWord(word: String, frequency: Int) {
@@ -400,14 +493,13 @@ class MainDictionarySource(
      */
     private fun loadBinaryDictionaryFromFile(
         file: java.io.File,
-        words: MutableList<DictionaryWord>,
-        disabled: Set<String>
+        words: MutableList<DictionaryListSpelling.Shipped>,
     ): Boolean {
         return try {
             val index = NormalizedPrefixIndex(indexPrefixes = false)  // only canonicals are read
             val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndexFromFile(file, index)
             if (loaded) {
-                extractWordsFromIndex(index, words, disabled)
+                extractWordsFromIndex(index, words)
                 true
             } else {
                 false
@@ -424,14 +516,13 @@ class MainDictionarySource(
      */
     private fun loadBinaryDictionary(
         filename: String,
-        words: MutableList<DictionaryWord>,
-        disabled: Set<String>
+        words: MutableList<DictionaryListSpelling.Shipped>,
     ): Boolean {
         return try {
             val index = NormalizedPrefixIndex(indexPrefixes = false)  // only canonicals are read
             val loaded = BinaryDictionaryLoader.loadIntoNormalizedIndex(context, filename, index)
             if (loaded) {
-                extractWordsFromIndex(index, words, disabled)
+                extractWordsFromIndex(index, words)
                 true
             } else {
                 false
@@ -448,8 +539,7 @@ class MainDictionarySource(
      */
     private fun extractWordsFromIndex(
         index: NormalizedPrefixIndex,
-        words: MutableList<DictionaryWord>,
-        disabled: Set<String>
+        words: MutableList<DictionaryListSpelling.Shipped>,
     ) {
         for (word in index.normalizedWords()) {
             // Canonical form (with accents) and frequency rank. A direct lookup: this used to ask
@@ -460,12 +550,15 @@ class MainDictionarySource(
             // rank 0 → 10000, rank 255 → 1
             val rank = match?.bestFrequencyRank ?: 255
             val frequency = 10000 - (rank * 39)  // ~10000 to ~50
+            // Enabled is set by DictionaryListSpelling.list from both spellings (canonical, key).
             words.add(
-                DictionaryWord(
-                    word = canonical,  // Show accented form
-                    frequency = frequency.coerceIn(1, 10000),
-                    source = WordSource.MAIN,
-                    enabled = !disabled.contains(word) && !disabled.contains(canonical)
+                DictionaryListSpelling.Shipped(
+                    DictionaryWord(
+                        word = canonical,  // Show accented form
+                        frequency = frequency.coerceIn(1, 10000),
+                        source = WordSource.MAIN,
+                    ),
+                    key = word,
                 )
             )
         }
@@ -485,6 +578,8 @@ class MainDictionarySource(
             val prefixIndex: Map<String, List<DictionaryWord>>,
             /** Built in Swiss spelling; an entry in the other spelling is a miss (and is replaced). */
             val swissSpelling: Boolean,
+            /** The rows' non-default spellings ([DictionaryListSpelling.RowSpellings]), by identity. */
+            val spellings: Map<DictionaryWord, DictionaryListSpelling.RowSpellings>,
         )
         private val sharedCache = mutableMapOf<String, LanguageCache>()
 
@@ -495,10 +590,19 @@ class MainDictionarySource(
          * The order Dictionary Manager's tabs show their languages in ([DictionaryTabPlan.loadOrder]);
          * a language already cached is not waited for. Call before the tabs are created.
          */
-        fun prioritize(languages: List<String>) {
-            val cached = synchronized(this) { sharedCache.keys.toSet() }
-            loadLock.prioritize(languages, cached)
+        fun prioritize(languages: List<String>, germanSwissSpelling: Boolean) {
+            loadLock.prioritize(languages, loadedLanguages { SwissSpelling.appliesTo(germanSwissSpelling, it) })
         }
+
+        /**
+         * The languages whose list is cached in the spelling [swissFor] says it now loads in: an
+         * entry built in the other spelling is a miss for the tab ([cachedFor]), so it must still
+         * be waited for (Fable audit C4).
+         */
+        internal fun loadedLanguages(swissFor: (String) -> Boolean): Set<String> =
+            synchronized(this) {
+                sharedCache.filter { (language, cache) -> cache.swissSpelling == swissFor(language) }.keys.toSet()
+            }
 
         /** Invalidate shared cache for all languages. */
         fun invalidateCache() {
