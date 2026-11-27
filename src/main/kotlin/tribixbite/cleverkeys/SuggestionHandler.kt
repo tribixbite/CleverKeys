@@ -2315,15 +2315,36 @@ class SuggestionHandler(
      * detection (Fable review 2026-11-26: each of them, and a dictation write, used to wipe it,
      * so Spanish needed five new words to come back).
      */
-    fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean) {
+    fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean, ic: InputConnection? = null) {
         val identity = info?.let { "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}" }
-        val newField = !restarting && identity != startedFieldIdentity
+        // Note10+ r22: every Chrome textarea reports the same package / field id / input type, so
+        // a new tab looked like the same field and kept the detected language. A start that is
+        // not a restart, in an EMPTY editor, is a new field (a re-shown or restarted field that
+        // still holds its text is not).
+        val newField = !restarting &&
+            (identity != startedFieldIdentity || (info != null && ic != null && editorLooksEmpty(info, ic)))
         startedFieldIdentity = identity
         if (newField) {
-            predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
+            val predictor = predictionCoordinator.getWordPredictor()
+            // H1: the learn window ends with the field (moved here from onFinishInputView's flush,
+            // which also ran for a hide and re-show of the same field, Pixel r22 R3).
+            predictor?.clearContext()
+            predictor?.onInputSessionChanged()
             // Another field's word is no proof about this one's text.
             learnedPlacement = null
         }
+    }
+
+    /**
+     * The field is empty: its EditorInfo puts the caret at the start (a WebView may not have
+     * synced its text to the connection yet, so a caret inside text wins over empty reads) and
+     * both sides of the caret read back empty (null reads prove nothing).
+     */
+    private fun editorLooksEmpty(info: EditorInfo, ic: InputConnection): Boolean {
+        if (info.initialSelStart > 0 || info.initialSelEnd > 0) return false
+        val before = editorTextBeforeCursor(ic, 1) ?: return false
+        val after = editorTextAfterCursor(ic, 1) ?: return false
+        return before.isEmpty() && after.isEmpty()
     }
 
     /**

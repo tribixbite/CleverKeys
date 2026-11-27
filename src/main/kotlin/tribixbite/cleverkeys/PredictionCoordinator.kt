@@ -353,12 +353,14 @@ class PredictionCoordinator(
      * TrigramStore / UserVocabulary `getInstance` — so the cached predictors were
      * flushing the very same stores this line flushes.)
      *
-     * H1 (review 2026-08-06): after the flush, the predictor's rolling
-     * recent-words window is CLEARED. Without this, the learn funnel's window
-     * straddled the field/app boundary — the last words typed in app A were
-     * joined to the first word committed in app B, learned as a bigram, and
-     * surfaced cross-app by next-word prediction. (`_contextTracker.clearAll()`
-     * only cleared the surface tracker, not this buffer.)
+     * H1 (review 2026-08-06) clears the predictor's learn window at a field boundary so that no
+     * pair joins the last words of app A to the first of app B. That clear USED to run here, at
+     * every onFinishInputView; it now runs when a NEW field starts
+     * (`SuggestionHandler.onInputFieldStarted`). Pixel / Note10+ / Saga r22 R3 (2026-11-27):
+     * hiding the keyboard (Back, or a rotation that recreates the input) and showing it again in
+     * the same field cleared the window, and with it the newest word's learn receipt and the
+     * one-slot commit record, so deleting that word afterwards reversed nothing (`fix → toy`
+     * kept, `fix → try` never learned).
      */
     fun flushLearnedData() {
         try {
@@ -366,7 +368,6 @@ class PredictionCoordinator(
             // W6 (learning-system audit 2026-09-26): selection history is a learned store
             // too — it used to be left out here, and its own cleanup() had no callers.
             adaptationManager?.requestFlush()
-            wordPredictor?.clearContext()
         } catch (e: Exception) {
             Log.e(TAG, "Error flushing learned data", e)
         }
@@ -381,6 +382,8 @@ class PredictionCoordinator(
         // predictor/dictionary teardown below discards the live instances
         // (2026-08-06 persistence fix)
         flushLearnedData()
+        // The keyboard is going away: nothing may pair with what comes after it.
+        wordPredictor?.clearContext()
 
         // Cancel owned loads and detach observation before dropping the serving predictor.
         wordPredictor?.shutdown()

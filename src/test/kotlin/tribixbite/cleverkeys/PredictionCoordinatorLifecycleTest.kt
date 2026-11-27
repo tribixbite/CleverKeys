@@ -168,11 +168,13 @@ class PredictionCoordinatorLifecycleTest {
 
         coordinator.flushLearnedData()
 
-        // Persist first, then drop the rolling window: clearing before the save would throw
-        // away context the store had not yet been told about.
-        assertThat(fake.calls).containsExactly("persist", "clearContext").inOrder()
+        // (The name predates it.) Pixel r22 R3 (2026-11-27): the flush only persists now; the
+        // learn window is cleared when a NEW field starts (SuggestionHandler.onInputFieldStarted),
+        // so hiding and re-showing the keyboard in the same field keeps the newest word's receipt
+        // for a deletion that follows.
+        assertThat(fake.calls).containsExactly("persist")
         assertThat(fake.persistCalls).isEqualTo(1)
-        assertThat(fake.clearContextCalls).isEqualTo(1)
+        assertThat(fake.clearContextCalls).isEqualTo(0)
     }
 
     @Test

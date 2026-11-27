@@ -54,13 +54,13 @@ editor that used to be listed here already ship in 2.0.)
   in the same sentence and field, goes to that language's personal dictionary (it went to the
   primary's), and its undo removes it from there. Otherwise it goes to the primary's.
 - Deleting a word you just typed or swiped takes back what it taught the keyboard at once, also
-  when you then leave the field, after an app restarted its input, or after the sentence ended:
-  letter by letter, with Ctrl+Backspace, or by selecting it and deleting, cutting or typing over
-  it. The first word of a field is covered when you delete it with the keyboard (not when the
+  when you then leave the field, after an app restarted its input, after you hid and showed the
+  keyboard or rotated the screen, or after the sentence ended: letter by letter, with
+  Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. The first word of a field is covered when you delete it with the keyboard (not when the
   app clears its field), and so is a word an autocorrect undo put back. A forward Delete is not
   covered yet. The deleted swipe's alternates leave the bar.
 - After Auto-Detect switched to the second language, another field or app starts again in the
-  primary language, and typing in the primary switches back within the same field, also across
+  primary language (also an empty text box in a new browser tab, which looks like the last one), and typing in the primary switches back within the same field, also across
   short sentences: after about ten words that read as the primary, or at once when they clearly
   do.
 - Typing predictions and next-word suggestions drop a word disabled in Dictionary Manager at once,

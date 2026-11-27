@@ -2238,6 +2238,152 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("got keeps its pair").that(bigram("fix", "got")).isEqualTo(1)
     }
 
+    // ---------------------------------------------------- Pixel r22 R3 (2026-11-27): the real lifecycle
+
+    /** The production PredictionCoordinator's flush, over this harness's predictor. */
+    private fun realCoordinator(): PredictionCoordinator =
+        objenesis.newInstance(PredictionCoordinator::class.java).also {
+            it.setField("wordPredictor", predictor)
+            it.setField("adaptationManager", adaptation)
+        }
+
+    /**
+     * CleverKeysService.onFinishInputView then onStartInputView, in the service's order: what a
+     * rotation (the activity is recreated) and Back + a tap on the field (hide, show) both run.
+     */
+    private fun hideAndShowKeyboard(field: EditorInfo = textField(), restarting: Boolean = false) {
+        val coordinator = realCoordinator()
+        // onFinishInputView
+        handler.onEditorSessionChanged()
+        handler.flushTypedWordOnFinishInput(ic)
+        tracker.clearAll()
+        coordinator.flushLearnedData()
+        // onStartInputView, with the editor as it now reads
+        handler.onEditorSessionChanged()
+        handler.onInputFieldStarted(field, restarting, ic)
+    }
+
+    /**
+     * Pixel r22 R3: `fix ` + swipe `toy`, rotate (or Back, tap the field), four Backspaces, swipe
+     * `try`. The deletion was seen ("LEARN REMOVED") but `fix → toy` and toy's +1 stayed, and no
+     * `fix → try` was learned: the hide's flushLearnedData cleared the learn window, which took
+     * the receipt and the one-slot record with it, so the rollback undid nothing and then closed
+     * the window. 23622f144's test modelled the restart without onFinishInputView.
+     */
+    @Test
+    fun aDeletionAfterTheKeyboardWasHiddenAndShownIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(textField(), restarting = false)
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("toy", "try")
+        hideAndShowKeyboard()
+        backspaceChars("toy ".length)
+        newSwipe("try")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix try ")
+        assertWithMessage("fix→toy reversed").that(bigram("fix", "toy")).isEqualTo(0)
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
+        assertWithMessage("fix→try learned").that(bigram("fix", "try")).isEqualTo(1)
+    }
+
+    /** Saga r22 R3: Chrome restarts its input on a rotation; the same deletion after it. */
+    @Test
+    fun aDeletionAfterARotationThatRestartsTheInputIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git", field = chromeField())
+        hideAndShowKeyboard(field = chromeField(), restarting = true)
+        backspaceChars("got ".length, field = chromeField())
+        newSwipe("something")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix something ")
+        assertWithMessage("fix→got reversed").that(bigram("fix", "got")).isEqualTo(0)
+        assertWithMessage("got's +1 reversed").that(vocabulary.getWordUsage("got")).isNull()
+        assertWithMessage("fix→something learned").that(bigram("fix", "something")).isEqualTo(1)
+    }
+
+    /** R3 guard: another field still starts a new learn window (H1: no pair across fields). */
+    @Test
+    fun aNewFieldStillStartsANewLearnWindow() {
+        handler.onInputFieldStarted(textField(), restarting = false)
+        type("fix ")
+        hideAndShowKeyboard(field = chromeField())
+        editor.setLength(0)
+        type("today ")
+
+        assertWithMessage("no fix→today across fields").that(bigram("fix", "today")).isEqualTo(0)
+    }
+
+    /** R3 guard: two fields that look alike (WebView textareas share an id): no pair across them. */
+    @Test
+    fun aLookAlikeFieldDoesNotPairWithThePreviousOne() {
+        handler.onInputFieldStarted(textField(), restarting = false)
+        type("fix ")
+        hideAndShowKeyboard()
+        editor.setLength(0)
+        type("today ")
+
+        assertWithMessage("no fix→today: today does not follow fix in this editor").that(bigram("fix", "today")).isEqualTo(0)
+    }
+
+    /**
+     * Note10+ r22: after Spanish was detected, a brand-new Chrome tab predicted Spanish from its
+     * first letter. Every Chrome textarea reports the same package / field id / input type, so
+     * the new tab looked like the same field. An EMPTY editor at a (non-restart) start is a new
+     * field.
+     */
+    @Test
+    fun aNewEmptyChromeTextareaStartsInThePrimaryLanguage() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        editor.setLength(0) // the new tab's textarea
+        hideAndShowKeyboard(field = chromeField())
+
+        assertWithMessage("the new textarea starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    /** The other direction: the same textarea, with its text, re-shown or restarted keeps Spanish. */
+    @Test
+    fun theSameChromeTextareaReshownOrRestartedKeepsTheDetectedLanguage() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+
+        hideAndShowKeyboard(field = chromeField())
+        assertWithMessage("re-shown").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        hideAndShowKeyboard(field = chromeField(), restarting = true)
+        assertWithMessage("restarted").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
+    /**
+     * A start whose EditorInfo puts the caret inside text is the same field even when the
+     * connection reads back empty at that moment (a WebView that has not synced its text yet):
+     * only an empty field with the caret at its start counts as a new one.
+     */
+    @Test
+    fun aStartWithTheCaretInsideTextIsNotANewFieldEvenIfTheReadsAreEmpty() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        val caret = editor.length
+
+        editor.setLength(0) // the connection's reads, not the field
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = caret; initialSelEnd = caret })
+
+        assertWithMessage("kept").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**

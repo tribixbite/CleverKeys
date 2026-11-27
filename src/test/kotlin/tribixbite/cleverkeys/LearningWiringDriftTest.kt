@@ -23,9 +23,13 @@ class LearningWiringDriftTest {
 
     @Test
     fun `H1 - session boundaries clear the learn window`() {
-        // onFinishInputView → PredictionCoordinator.flushLearnedData → clearContext
+        // A NEW field start clears the window (SuggestionHandler.onInputFieldStarted, since Pixel
+        // r22 R3: onFinishInputView's flush also ran for a hide and re-show of the same field);
+        // shutdown still clears it.
         val coordinator = readSource("PredictionCoordinator.kt")
         assertThat(coordinator).contains("wordPredictor?.clearContext()")
+        val fieldStart = readSource("SuggestionHandler.kt").substringAfter("fun onInputFieldStarted(").substringBefore("\n    }\n")
+        assertThat(fieldStart).contains("predictor?.clearContext()")
 
         val service = readSource("CleverKeysService.kt")
         assertThat(service).contains("_predictionCoordinator?.flushLearnedData()")
@@ -448,7 +452,7 @@ class LearningWiringDriftTest {
         assertThat(selection.indexOf("onCursorMoved(")).isGreaterThan(check)
         // Only onStartInputView tells a new field from a restart (Fable review 2026-11-26).
         val start = service.substringAfter("override fun onStartInputView(").substringBefore("override fun ")
-        assertThat(start).contains("_suggestionHandler.onInputFieldStarted(info, restarting)")
+        assertThat(start).contains("_suggestionHandler.onInputFieldStarted(info, restarting, currentInputConnection)")
         val listener = service.substringAfter("_preferenceUIUpdateHandler?.handlePreferenceChange(key)").substringBefore("override fun ")
         assertThat(listener).contains("languageFromDisabledWordsKey(key)")
         assertThat(listener).contains("reloadDisabledWords()")
