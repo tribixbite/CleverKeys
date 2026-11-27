@@ -46,4 +46,24 @@ class LanguagePackOperationScopeDriftTest {
                 .that(refused).contains("showLanguagePackBusy()")
         }
     }
+
+    /**
+     * Fable audit D4 (2026-11-26): a removal the pack manager refused (it returned false, no
+     * exception) showed nothing. Its follow-up says the delete failed.
+     */
+    @Test
+    fun aRefusedRemovalSaysTheDeleteFailed() {
+        val delete = body("deleteLanguagePack")
+        val open = delete.indexOf('{', delete.indexOf("followUp {"))
+        var depth = 0
+        var end = open
+        while (end < delete.length) {
+            when (delete[end]) { '{' -> depth++; '}' -> depth-- }
+            end++
+            if (depth == 0) break
+        }
+        val resultFollowUp = delete.substring(open, end)
+        assertWithMessage("the follow-up of a finished removal covers deleted == false")
+            .that(resultFollowUp).contains("R.string.common_delete_failed_detail")
+    }
 }

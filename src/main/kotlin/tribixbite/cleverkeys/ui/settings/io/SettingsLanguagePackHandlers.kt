@@ -225,6 +225,11 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
                     refreshInstalledLanguagePacks()
                     refreshAvailableSecondaryLanguages()
                     Toast.makeText(this, getString(R.string.multilang_pack_deleted), Toast.LENGTH_SHORT).show()
+                } else {
+                    // The manager refused without an exception (Fable audit D4): it said nothing.
+                    Toast.makeText(
+                        this, getString(R.string.common_delete_failed_detail, ioFailureText(null)), Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }) { e ->
