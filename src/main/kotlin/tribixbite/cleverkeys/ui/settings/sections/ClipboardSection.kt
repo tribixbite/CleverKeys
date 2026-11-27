@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
 import tribixbite.cleverkeys.PrivateCopyProcessTextActivity
+import tribixbite.cleverkeys.ClipboardHistoryLimits
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.SettingsActivity
 import tribixbite.cleverkeys.SettingsRanges
@@ -96,16 +97,24 @@ internal fun SettingsActivity.ClipboardSection() {
                             .coerceAtLeast(0)
                     }
                     // Contextual description based on limit+duration combination
-                    val durationDesc = when {
-                        clipboardHistoryDuration != -1 && clipboardHistoryLimit == 0 ->
+                    val durationDesc = when (
+                        ClipboardDurationNote.kind(clipboardHistoryDuration, clipboardLimitType, clipboardHistoryLimit)
+                    ) {
+                        ClipboardDurationNote.Kind.UNLIMITED_COUNT ->
                             stringResource(R.string.clipboard_entry_duration_desc_unlimited_count)
-                        clipboardHistoryDuration == -1 && clipboardHistoryLimit > 0 ->
+                        ClipboardDurationNote.Kind.NEVER_CAPPED ->
                             pluralStringResource(
                                 R.plurals.clipboard_entry_duration_desc_never_capped,
                                 clipboardHistoryLimit,
                                 clipboardHistoryLimit
                             )
-                        else -> stringResource(R.string.clipboard_entry_duration_desc_default)
+                        ClipboardDurationNote.Kind.DEFAULT -> stringResource(R.string.clipboard_entry_duration_desc_default)
+                    }
+                    // Kept out of the slider's call: the search index generator takes a control
+                    // whose call mentions `clipboardLimitType` as the switch revealing the size
+                    // limit, which this slider only reads.
+                    val liftsCountLimit = { duration: Int ->
+                        ClipboardDurationNote.liftsCountLimit(duration, clipboardLimitType, clipboardHistoryLimit)
                     }
                     SettingsSlider(
                         title = stringResource(R.string.clipboard_entry_duration_title),
@@ -118,7 +127,7 @@ internal fun SettingsActivity.ClipboardSection() {
                             clipboardHistoryDuration = durationPresets[idx]
                             saveSetting("clipboard_history_duration", clipboardHistoryDuration.toString())
                             // Auto-link: "Never expire" + capped count → set count to unlimited too
-                            if (clipboardHistoryDuration == -1 && clipboardHistoryLimit > 0) {
+                            if (liftsCountLimit(clipboardHistoryDuration)) {
                                 clipboardHistoryLimit = 0
                                 saveSetting("clipboard_history_limit", 0)
                             }
@@ -442,3 +451,26 @@ internal fun SettingsActivity.setPrivateCopyToolbarComponentEnabled(enabled: Boo
 /** Clipboard entry duration is persisted in minutes (`clipboard_history_duration`). */
 private const val MINUTES_PER_HOUR = 60
 private const val MINUTES_PER_DAY = 24 * MINUTES_PER_HOUR
+
+/**
+ * The Entry Duration note and its "Never expire" auto-link (pure, `ClipboardDurationNoteTest`).
+ * Both read the entry count only in count mode: By Size hides the count slider and applies no
+ * count, so the note warned about a count the user could not see, and "Never" rewrote it
+ * (Fable audit D1, 2026-11-26).
+ */
+internal object ClipboardDurationNote {
+    /** Which note the duration slider shows. */
+    enum class Kind { UNLIMITED_COUNT, NEVER_CAPPED, DEFAULT }
+
+    /** The note for [durationMinutes] (-1 = never) under [limitType] with the stored [countLimit] (0 = unlimited). */
+    fun kind(durationMinutes: Int, limitType: String, countLimit: Int): Kind = when {
+        limitType != ClipboardHistoryLimits.LIMIT_TYPE_COUNT -> Kind.DEFAULT
+        durationMinutes != -1 && countLimit == 0 -> Kind.UNLIMITED_COUNT
+        durationMinutes == -1 && countLimit > 0 -> Kind.NEVER_CAPPED
+        else -> Kind.DEFAULT
+    }
+
+    /** Whether choosing [durationMinutes] also sets the count to unlimited (count mode only). */
+    fun liftsCountLimit(durationMinutes: Int, limitType: String, countLimit: Int): Boolean =
+        limitType == ClipboardHistoryLimits.LIMIT_TYPE_COUNT && durationMinutes == -1 && countLimit > 0
+}

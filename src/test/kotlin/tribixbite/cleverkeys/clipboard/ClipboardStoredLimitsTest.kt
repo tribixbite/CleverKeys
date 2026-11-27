@@ -120,6 +120,22 @@ class ClipboardStoredLimitsTest {
         assertThat(service.clearExpiredAndGetHistory().map { it.content }).containsExactly("e1", "e2").inOrder()
     }
 
+    /**
+     * Fable audit D1 (2026-11-26): By Size keeps every entry within the MB budget, and the count
+     * slider is hidden then. The list was still cut to the stored (hidden) count, so 50 of the
+     * entries showed while the rest counted against the budget and went into backups.
+     */
+    @Test
+    fun byTotalSizeTheListIsNotCutToTheHiddenCount() {
+        settings.values["clipboard_limit_type"] = "size"
+        settings.values["clipboard_history_limit"] = 2
+        every { database.getActiveClipboardEntries() } returns
+            (1..5).map { ClipboardEntry("e$it", it.toLong(), rowId = it.toLong()) }
+
+        assertThat(service.clearExpiredAndGetHistory().map { it.content })
+            .containsExactly("e1", "e2", "e3", "e4", "e5").inOrder()
+    }
+
     @Test
     fun anEditLargerThanTheStoredItemLimitIsRefused() {
         settings.values["clipboard_max_item_size_kb"] = 64

@@ -315,8 +315,11 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             val entries = _database.getActiveClipboardEntries()
             // Issue #71: Original 100-entry limit was for TransactionTooLargeException prevention,
             // but since ClipboardHistoryView accesses service in-process (no IPC), this isn't needed.
-            // Respect user's configured limit (0 = unlimited, otherwise use their setting)
-            val configLimit = storedLimits().maxEntries
+            // Respect user's configured limit (0 = unlimited, otherwise use their setting). By Size
+            // has no count: the count slider is hidden then, and cutting the list to its stored
+            // value hid entries that still counted against the MB budget (Fable audit D1).
+            val limits = storedLimits()
+            val configLimit = if (limits.bySize) 0 else limits.maxEntries
             if (configLimit > 0 && entries.size > configLimit) {
                 entries.take(configLimit)
             } else {
@@ -1363,6 +1366,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
          * Actually initialize the clipboard service (called when user is unlocked).
          */
         private fun initializeService(ctx: Context, cb: ClipboardPasteCallback) {
+            // One-time repair of limits an old import stored as String (a no-op once they are
+            // Int). It ran only when Settings loaded; the service reads them first (audit D6).
+            ClipboardHistoryLimits.rewriteStoredTextAsInt(DirectBootAwarePreferences.get_shared_preferences(ctx))
             val service = get_service(ctx)
             if (service != null) {
                 service._pasteCallback = cb

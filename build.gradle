@@ -644,6 +644,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.ui.settings.SettingsSearchReachabilityTest',
     // 2026-11-26 (2.1): removing the secondary's language pack puts the secondary back to none.
     'tribixbite.cleverkeys.ui.settings.io.RemovedPackLanguagePrefsTest',
+    // 2026-11-26 (Fable D1): the Entry Duration note ignores the hidden count in By Size mode.
+    'tribixbite.cleverkeys.ui.settings.sections.ClipboardDurationNoteTest',
     // 2026-10-31: in-app Open-source licenses — every licence NOTICE cites has a packaged text,
     // the packaged copies equal NOTICE / LICENSE / LICENSES, and the screen lists every section.
     'tribixbite.cleverkeys.legal.OpenSourceLicensesAssetDriftTest',
