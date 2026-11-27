@@ -1469,6 +1469,8 @@ tasks.register('runMockTests', JavaExec) {
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
 
   def mockTestClasses = [
+    // 2026-11-26: a refused clipboard-editor save shows its reason after the row re-binds.
+    'tribixbite.cleverkeys.clipboard.ClipboardEditSaveErrorTest',
     // Review 2026-11-14 (low): a SecurityException from the recorder reaches the controller;
     // an unanswered getTextBeforeCursor is unknown context; a failed user-dictionary read is
     // never cached; the dictionary key fold ignores the device locale; an unknown stored

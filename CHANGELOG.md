@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 (The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
 editor that used to be listed here already ship in 2.0.)
 
+### Fixed (editing a clipping in the clipboard pane, 2026-11-26)
+
+- A save the clipboard refuses now says why under the entry (for example "An entry with this
+  content already exists" when the edited text is already another History clipping). The
+  message never reached the screen, so the checkmark seemed to do nothing.
+
 ### Fixed (learning from corrected words, 2026-11-26)
 
 - A swiped or autocorrected word you delete with ordinary Backspace (with "Backspace undoes

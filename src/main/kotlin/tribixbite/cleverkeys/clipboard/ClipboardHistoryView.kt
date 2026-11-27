@@ -2485,6 +2485,18 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // The capped field scrolls its own text: a drag inside it must not scroll the pane.
                 editField.setOnTouchListener(EditFieldScrollTouch)
 
+                // The previous bind's TextWatcher comes off BEFORE this bind's setText. setText
+                // always notifies the watchers (even with unchanged text), and that watcher's
+                // "the user typed, retire the error" branch cleared editingErrorRes and hid the
+                // line in the same re-bind showEditError uses to show it: every refused save
+                // looked like a dead checkmark (maintainer 2026-11-26). Tag-based, so a recycled
+                // field never accumulates watchers.
+                @Suppress("UNCHECKED_CAST")
+                (editField.getTag(R.id.clipboard_entry_edit_field) as? android.text.TextWatcher)?.let {
+                    editField.removeTextChangedListener(it)
+                    editField.setTag(R.id.clipboard_entry_edit_field, null)
+                }
+
                 // Bug #3 fix: use in-progress text (not DB content) to survive view recreation.
                 // Always set text+visibility — needed for correct height during measurement.
                 // Never the full text of a paged entry: only its current page (todo 22).
@@ -2513,12 +2525,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 view.findViewById<View>(R.id.clipboard_entry_cancel).setOnClickListener { cancelEdit() }
                 deleteButton.setOnClickListener { delete_entry(pos) }
 
-                // TextWatcher: tag-based management prevents accumulation on view recycling.
-                // Remove any existing watcher from THIS editField (via tag), then add fresh one.
-                @Suppress("UNCHECKED_CAST")
-                (editField.getTag(R.id.clipboard_entry_edit_field) as? android.text.TextWatcher)?.let {
-                    editField.removeTextChangedListener(it)
-                }
+                // TextWatcher: tag-based management prevents accumulation on view recycling. The
+                // previous bind's watcher on THIS editField was removed above, before setText;
+                // add this bind's (it captures this row's save button and error line).
                 val watcher = object : android.text.TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
