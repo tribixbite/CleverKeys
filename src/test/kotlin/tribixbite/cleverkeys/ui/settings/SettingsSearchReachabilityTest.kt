@@ -168,6 +168,44 @@ class SettingsSearchReachabilityTest {
         return here + callers.flatMap { (f, p) -> effectiveRegions(f, p, visiting + fn.name) }
     }
 
+    /** Lower-case identifiers of [expr]: the state names (constants and types start upper case). */
+    private fun identifiers(expr: String): List<String> =
+        Regex("""[A-Za-z_]\w*""").findAll(expr).map { it.value }.filter { it[0].isLowerCase() }.toList()
+
+    /**
+     * The state a hiding [region]'s condition reads: its identifiers, with each local
+     * `val name = …` defined before the region in the same file replaced by what it reads,
+     * transitively (`followFinger` → `selectionDeleteMode`, `tuning` → `autocorrectTuning`).
+     */
+    private fun conditionState(region: Region): Set<String> {
+        val text = sources.single { it.name == region.file }.text
+        val out = linkedSetOf<String>()
+        val queue = ArrayDeque(identifiers(region.label))
+        while (queue.isNotEmpty()) {
+            val name = queue.removeFirst()
+            if (!out.add(name)) continue
+            Regex("""\bval\s+${Regex.escape(name)}\s*=\s*([^\n]+)""").findAll(text)
+                .lastOrNull { it.range.first < region.start }
+                ?.let { queue.addAll(identifiers(it.groupValues[1])) }
+        }
+        return out
+    }
+
+    /**
+     * The state [control] writes: every `name = …` assignment inside the lambdas of its call
+     * (`autoCorrectEnabled = it`, `clipboardLimitType = …`), not its named arguments.
+     */
+    private fun writes(control: Control): Set<String> {
+        val text = sources.single { it.name == control.file }.text
+        val open = text.indexOf('(', control.pos)
+        val args = text.substring(open, close(text, open, '(', ')'))
+        return Regex("""(?<![\w.])([a-z]\w*)\s*=(?!=)""").findAll(args).filter { m ->
+            val before = args.substring(0, m.range.first)
+            val depth = before.count { it == '{' } - before.count { it == '}' }
+            depth >= 1 && !before.trimEnd().endsWith("val") && !before.trimEnd().endsWith("var")
+        }.map { it.groupValues[1] }.toSet()
+    }
+
     /** `WORD_PREDICTION_ADVANCED_IDS`: the entries whose result also opens the Advanced panel. */
     private val advancedPanelIds: Set<String> by lazy {
         val body = File(activityPath).readText()
@@ -194,17 +232,60 @@ class SettingsSearchReachabilityTest {
                 val handled = if (region.kind == "visible" && region.label == "wordPredictionAdvancedExpanded") {
                     id in advancedPanelIds
                 } else {
-                    gates.any { gate ->
-                        gate != id && controls.any { gc ->
-                            gc.id == gate && effectiveRegions(gc.file, gc.pos).none { it == region }
+                    // What the app does with only this condition off: it lands on the FIRST gate
+                    // composed then (in the target's section, outside this body), so that gate
+                    // must be the control writing the state the condition reads.
+                    val landing = gates.firstNotNullOfOrNull { gate ->
+                        controls.firstOrNull { gc ->
+                            gc.id == gate && gate != id &&
+                                effectiveRegions(gc.file, gc.pos).let { gr ->
+                                    gr.none { it == region } && gr.any { it.kind == "section" && it.label == sectionKey }
+                                }
                         }
                     }
+                    landing != null && writes(landing).any { it in conditionState(region) }
                 }
-                if (!handled) out += "$id: hidden by $region; gates=$gates"
+                if (!handled && "$id|${region.label}" !in KNOWN_GAPS) {
+                    out += "$id: hidden by $region (state ${conditionState(region)}); gates=$gates"
+                }
             }
             out
         }
         return perControl.minByOrNull { it.size } ?: emptyList()
+    }
+
+    /**
+     * `settingId|condition` pairs with no landing yet. The control revealing them sits in ANOTHER
+     * section, which a search result does not open, so no gate can be composed for it.
+     *
+     * # TODO: "Backspace Undo Swipe" (Input) is hidden while swipe typing (Swipe Typing section)
+     * is off; land on the swipe switch by opening its section too.
+     */
+    private val KNOWN_GAPS = setOf(
+        "input_backspace_undo_swipe_title|swipeTypingEnabled",
+    )
+
+    @Test
+    fun theKnownGapsAreStillGaps() {
+        for (gap in KNOWN_GAPS) {
+            val (id, condition) = gap.split('|')
+            val control = controls.single { it.id == id }
+            assertWithMessage("$gap no longer hides the control: drop it from KNOWN_GAPS")
+                .that(effectiveRegions(control.file, control.pos).map { it.label }).contains(condition)
+        }
+    }
+
+    /** Fable audit D5: a gate counts only when its control writes the state that hides the target. */
+    @Test
+    fun aGateMustWriteTheStateThatHidesTheTarget() {
+        val vertical = controls.single { it.id == "gesture_vertical_speed_title" }
+        val hiding = effectiveRegions(vertical.file, vertical.pos).single { it.kind == "else" }
+        assertWithMessage("the Selection Delete dropdown writes what `followFinger` reads")
+            .that(writes(controls.single { it.id == "gesture_selection_delete_mode_title" }).any { it in conditionState(hiding) })
+            .isTrue()
+        assertWithMessage("the Auto-Correction switch does not")
+            .that(writes(controls.single { it.id == "autocorrect_enable_title" }).any { it in conditionState(hiding) })
+            .isFalse()
     }
 
     @Test

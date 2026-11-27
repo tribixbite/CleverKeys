@@ -109,10 +109,41 @@ internal object SettingsSearchMatch {
         for (id in AUTOCORRECT_RANKING_BRANCH_IDS) put(id, listOf(AUTOCORRECT_RANKING, AUTOCORRECT_SWITCH))
     }
 
-    /** The gates of the setting [settingId]: the [generated] ones, then the hand-kept ones. */
+    /**
+     * Revealing controls for a condition INSIDE the generated ones, so they go first: the result
+     * lands on the first gate on screen ([settledScrollTarget]), and an outer gate is on screen
+     * whenever the inner condition alone is off (Fable audit D5, 2026-11-26).
+     *
+     * - The Quick Toggle's alternate primary shows only while another language is available
+     *   besides the primary (`altPrimaryOptions`); the primary is chosen in Primary Language.
+     */
+    private val INNER_GATES: Map<String, List<String>> = mapOf(
+        "multilang_alternate_primary_title" to listOf("multilang_primary_title"),
+    )
+
+    /**
+     * Generated gates that name a control which only READS the hiding state, by setting id: the
+     * generator takes the nearest earlier control mentioning it ("Short swipes only", disabled by
+     * the same switch), not the control that sets it ("Enable short gestures").
+     *
+     * # TODO: have the generator prefer the control whose callbacks assign the state.
+     */
+    private val GENERATED_GATE_FIXES: Map<String, Map<String, String>> = buildMap {
+        val shortGestures = mapOf("gesture_short_swipes_only_title" to "gesture_enable_short_title")
+        put("gesture_min_distance_title", shortGestures)
+        put("gesture_max_distance_title", shortGestures)
+    }
+
+    /**
+     * The gates of the setting [settingId], innermost first: the hand-kept inner ones, the
+     * [generated] ones (corrected where they name the wrong control), then the hand-kept outer
+     * ones. `SettingsSearchReachabilityTest` checks that, with any one hiding condition off, the
+     * first gate on screen is the control that sets it.
+     */
     fun gatesFor(settingId: String, generated: List<String>): List<String> {
-        val extra = CONDITION_GATES[settingId] ?: return generated
-        return (generated + extra).distinct()
+        val fixes = GENERATED_GATE_FIXES[settingId]
+        val corrected = if (fixes == null) generated else generated.map { fixes[it] ?: it }
+        return (INNER_GATES[settingId].orEmpty() + corrected + CONDITION_GATES[settingId].orEmpty()).distinct()
     }
 }
 
