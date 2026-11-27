@@ -659,19 +659,55 @@ class DisabledDictionarySource(
         prefs.edit().putStringSet(disabledWordsKey, disabled).apply()
     }
 
+    /**
+     * This list is shown in Swiss spelling: the stored switch is on and the language is German.
+     * Read per call from the stored preference, like [MainDictionarySource.swissSpelling].
+     */
+    private fun swissSpelling(): Boolean = languageCode != null &&
+        SwissSpelling.appliesTo(LanguagePrefs.germanSwissSpelling(prefs), languageCode)
+
+    /**
+     * The rows shown, each with the stored entries it stands for. Under Swiss spelling an entry is
+     * shown as the keyboard treats it (`straße` as `strasse`, Pixel r22 R9), and entries that
+     * spell one word merge into one row; otherwise each stored entry is its own row.
+     */
+    private fun rows(): Map<String, List<String>> {
+        val stored = getDisabledWords()
+        if (!swissSpelling()) return stored.associateWith { listOf(it) }
+        return stored.groupBy { SwissSpelling.fold(it) }
+    }
+
     override suspend fun getAllWords(): List<DictionaryWord> = withContext(Dispatchers.IO) {
-        getDisabledWords()
+        rows().keys
             .map { DictionaryWord(it, 0, WordSource.MAIN, false) }
             .sorted()
     }
 
+    /** A row matches when the query is in its shown spelling or in any stored entry it stands for. */
     override suspend fun searchWords(query: String): List<DictionaryWord> {
         if (query.isBlank()) return getAllWords()
-        return getAllWords().filter { it.word.contains(query, ignoreCase = true) }
+        return withContext(Dispatchers.IO) {
+            rows().filter { (shown, stored) ->
+                shown.contains(query, ignoreCase = true) || stored.any { it.contains(query, ignoreCase = true) }
+            }.keys.map { DictionaryWord(it, 0, WordSource.MAIN, false) }.sorted()
+        }
     }
 
+    /**
+     * Enabling a row removes every stored entry that disables it by the Active tab's rule
+     * ([DictionaryListSpelling.entriesDisabling], as `MainDictionarySource.toggleWord`), so a
+     * Swiss row shown as `strasse` re-enables its stored `straße` too.
+     */
     override suspend fun toggleWord(word: String, enabled: Boolean) {
-        setWordEnabled(word, enabled)
+        if (!enabled) {
+            setWordEnabled(word, false)
+            return
+        }
+        val stored = getDisabledWords()
+        val row = DictionaryWord(word, 0, WordSource.MAIN, false)
+        for (entry in DictionaryListSpelling.entriesDisabling(row, null, stored, swissSpelling()) + word) {
+            setWordEnabled(entry, true)
+        }
     }
 
     override suspend fun addWord(word: String, frequency: Int) {
@@ -680,7 +716,7 @@ class DisabledDictionarySource(
     }
 
     override suspend fun deleteWord(word: String) {
-        setWordEnabled(word, true) // Re-enable word
+        toggleWord(word, true) // Re-enable word, every stored spelling of it
     }
 
     override suspend fun updateWord(oldWord: String, newWord: String, frequency: Int) {

@@ -122,6 +122,9 @@ editor that used to be listed here already ship in 2.0.)
   keyboard still left it out. Disabling such a word stores its dictionary spelling (`straße`), so
   it stays disabled with Swiss spelling off, and a search typed before a list finished loading
   now finds its words.
+- With Swiss spelling on, Dictionary Manager's Disabled tab lists a German word as the keyboard
+  treats it (, not the stored ), a search finds it by either spelling, and
+  enabling it there removes every stored spelling of it.
 
 ---
 

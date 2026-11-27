@@ -158,4 +158,52 @@ class MainDictionarySourceSpellingTest {
         assertThat(MainDictionarySource.loadedLanguages { it == "de" }).doesNotContain("de")
         assertThat(MainDictionarySource.loadedLanguages { false }).contains("de")
     }
+
+    // ── The Disabled tab (Pixel r22, R9) ─────────────────────────────────────────────────────
+
+    /**
+     * Pixel r22 (2026-11-26, R9): with Swiss spelling on, the Disabled [DE] tab listed the stored
+     * `straße` and a search for "stras" did not find it, while the Active tab and the keyboard
+     * spell it `strasse`. The Disabled tab shows the entry as the keyboard treats it.
+     */
+    @Test
+    fun underSwissSpellingTheDisabledTabShowsTheSsSpelling() = runBlocking<Unit> {
+        swiss(true)
+        disabled().setWordEnabled("straße", false)
+
+        assertThat(disabled().getAllWords().map { it.word }).containsExactly("strasse")
+    }
+
+    @Test
+    fun aSearchInTheDisabledTabFindsEitherSpelling() = runBlocking<Unit> {
+        swiss(true)
+        disabled().setWordEnabled("straße", false)
+
+        assertThat(disabled().searchWords("stras").map { it.word }).containsExactly("strasse")
+        assertThat(disabled().searchWords("straß").map { it.word }).containsExactly("strasse")
+    }
+
+    @Test
+    fun reEnablingFromTheDisabledTabRemovesEveryStoredSpelling() = runBlocking<Unit> {
+        swiss(true)
+        disabled().setWordEnabled("straße", false)
+        disabled().setWordEnabled("strasse", false)
+        val active = source()
+        assertThat(active.row("strasse").enabled).isFalse()
+
+        disabled().toggleWord("strasse", true)
+        active.onRefresh()
+
+        assertThat(disabled().getDisabledWords()).isEmpty()
+        assertThat(active.row("strasse").enabled).isTrue()
+    }
+
+    @Test
+    fun withTheSwitchOffTheDisabledTabShowsTheStoredSpelling() = runBlocking<Unit> {
+        swiss(false)
+        disabled().setWordEnabled("straße", false)
+
+        assertThat(disabled().getAllWords().map { it.word }).containsExactly("straße")
+        assertThat(disabled().searchWords("straß").map { it.word }).containsExactly("straße")
+    }
 }
