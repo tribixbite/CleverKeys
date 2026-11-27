@@ -1486,7 +1486,7 @@
     <string name="dictionary_backup_apply_failed">Neizdevās lietot vārdnīcas importu:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pakotne “%1$s” jau ir instalēta</string>
     <string name="gif_toast_pack_imported">GIF pakotne importēta: %1$s</string>
-    <string name="gif_import_already_running">Joprojām notiek citas GIF pakotnes importēšana. Mēģiniet vēlreiz, kad tā būs pabeigta.</string>
+    <string name="gif_pack_busy">Joprojām notiek citas GIF pakotnes importēšana vai noņemšana. Mēģiniet vēlreiz, kad tā būs pabeigta.</string>
     <string name="gif_replace_dialog_title">Pakotne jau instalēta</string>
     <string name="gif_replace_dialog_body">“%1$s” jau ir instalēta. Vai aizstāt to ar atlasīto failu? (Atkārtoti importējot pārbūvētu pakotni, tiek atjaunināti tās GIF.)</string>
     <string name="gif_replace_dialog_confirm">Aizstāt</string>

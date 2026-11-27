@@ -1477,7 +1477,7 @@
     <string name="dictionary_backup_apply_failed">Không áp dụng được dữ liệu từ điển đã nhập:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Gói \'%1$s\' đã được cài</string>
     <string name="gif_toast_pack_imported">Đã nhập gói GIF: %1$s</string>
-    <string name="gif_import_already_running">Một thao tác nhập gói GIF khác vẫn đang chạy. Hãy thử lại khi thao tác đó xong.</string>
+    <string name="gif_pack_busy">Một thao tác nhập hoặc xóa gói GIF khác vẫn đang chạy. Hãy thử lại khi thao tác đó xong.</string>
     <string name="gif_replace_dialog_title">Gói đã được cài</string>
     <string name="gif_replace_dialog_body">\'%1$s\' đã được cài. Thay thế bằng tệp đã chọn? (Nhập lại một gói đã dựng lại sẽ cập nhật các GIF của nó.)</string>
     <string name="gif_replace_dialog_confirm">Thay thế</string>

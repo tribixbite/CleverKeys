@@ -1468,7 +1468,7 @@
     <string name="dictionary_backup_apply_failed">Nem sikerült alkalmazni a szótárimportálást:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">A(z) „%1$s” csomag már telepítve van</string>
     <string name="gif_toast_pack_imported">GIF-csomag importálva: %1$s</string>
-    <string name="gif_import_already_running">Egy másik GIF-csomag importálása még folyamatban van. Próbálja újra, ha befejeződött.</string>
+    <string name="gif_pack_busy">Egy másik GIF-csomag importálása vagy eltávolítása még folyamatban van. Próbálja újra, ha befejeződött.</string>
     <string name="gif_replace_dialog_title">A csomag már telepítve van</string>
     <string name="gif_replace_dialog_body">A(z) „%1$s” már telepítve van. Lecseréli a kiválasztott fájlra? (Egy újraépített csomag ismételt importálása frissíti a GIF-jeit.)</string>
     <string name="gif_replace_dialog_confirm">Csere</string>

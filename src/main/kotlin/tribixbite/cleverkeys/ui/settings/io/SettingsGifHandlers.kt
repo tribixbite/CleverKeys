@@ -3,8 +3,6 @@ package tribixbite.cleverkeys.ui.settings.io
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.ResultText
@@ -119,11 +117,16 @@ internal fun SettingsActivity.performGifPackImport(uri: Uri, replaceExisting: Bo
     if (started) {
         gifImportStatus = GifImportStatus.Ok(getString(R.string.gif_importing))
     } else {
-        // A second pack (a share intent, most likely) while one imports: the section shows the
-        // running import, whose result follows; the user is told this file was not imported.
-        android.util.Log.w(SettingsActivity.TAG, "GIF pack import already running; $uri not imported")
-        Toast.makeText(this, R.string.gif_import_already_running, Toast.LENGTH_LONG).show()
+        // A second pack (a share intent, most likely) while a pack import or removal runs: the
+        // section shows the running one, whose result follows; this file was not imported.
+        android.util.Log.w(SettingsActivity.TAG, "GIF pack operation already running; $uri not imported")
+        showGifPackBusy()
     }
+}
+
+/** Another GIF pack import or removal is still running; this one was not started. */
+private fun SettingsActivity.showGifPackBusy() {
+    Toast.makeText(this, R.string.gif_pack_busy, Toast.LENGTH_LONG).show()
 }
 
 /** The finished import's [result] on this (the current) Settings activity. */
@@ -160,43 +163,67 @@ private fun SettingsActivity.showGifPackImportResult(uri: Uri, result: GifPackIm
     }
 }
 
+/**
+ * Remove the installed pack [packId]. Like the import, it runs in [SettingsImports.gifPack], one
+ * GIF pack operation at a time, and not in this activity's scope (Fable audit D3, 2026-11-26): a
+ * rotation cut the removal there, and it could run beside an import of the same pack.
+ */
 internal fun SettingsActivity.performGifRemovePack(packId: String) {
-    val _self = this
-    lifecycleScope.launch {
-        try {
-            val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
-            manager.removePack(packId)
-            refreshInstalledGifPacks()
-            gifImportStatus = GifImportStatus.afterRemoval(
-                gifImportStatus, installedGifPacks.mapTo(HashSet()) { it.packId }
-            )
-            Toast.makeText(_self, R.string.gif_toast_pack_removed, Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)
-            Toast.makeText(
-                _self, getString(R.string.common_remove_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
-            ).show()
-        }
+    val appContext = applicationContext
+    val started = SettingsImports.gifPack.start(null) {
+        val followUp = catchingFailures({
+            tribixbite.cleverkeys.gif.GifPackManager.getInstance(appContext).removePack(packId)
+            followUp {
+                refreshInstalledGifPacks()
+                gifImportStatus = GifImportStatus.afterRemoval(
+                    gifImportStatus, installedGifPacks.mapTo(HashSet()) { it.packId }
+                )
+                Toast.makeText(this, R.string.gif_toast_pack_removed, Toast.LENGTH_SHORT).show()
+            }
+        }) { e -> gifRemovalFailure(e) }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (!started) {
+        android.util.Log.w(SettingsActivity.TAG, "GIF pack operation already running; $packId not removed")
+        showGifPackBusy()
     }
 }
 
+/**
+ * Remove every pack and turn the GIF panel off, in [SettingsImports.gifPack] like
+ * [performGifRemovePack]. The `gif_enabled` write is part of the work, so the panel is off even
+ * when the follow-up is dropped (Settings left meanwhile).
+ */
 internal fun SettingsActivity.performGifRemoveAll() {
-    val _self = this
-    lifecycleScope.launch {
-        try {
-            val manager = tribixbite.cleverkeys.gif.GifPackManager.getInstance(_self)
-            manager.removeAll()
-            gifEnabled = false
-            prefs.edit().putBoolean("gif_enabled", false).apply()
-            refreshInstalledGifPacks()
-            gifImportStatus = null
-            Toast.makeText(_self, R.string.gif_toast_all_removed, Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)
-            Toast.makeText(
-                _self, getString(R.string.common_remove_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
-            ).show()
-        }
+    val appContext = applicationContext
+    // The starting activity's preferences: the work turns the panel off there itself.
+    val gifPrefs = prefs
+    val started = SettingsImports.gifPack.start(null) {
+        val followUp = catchingFailures({
+            tribixbite.cleverkeys.gif.GifPackManager.getInstance(appContext).removeAll()
+            gifPrefs.edit().putBoolean("gif_enabled", false).apply()
+            followUp {
+                gifEnabled = false
+                refreshInstalledGifPacks()
+                gifImportStatus = null
+                Toast.makeText(this, R.string.gif_toast_all_removed, Toast.LENGTH_SHORT).show()
+            }
+        }) { e -> gifRemovalFailure(e) }
+        ImportTracker.Outcome(null, followUp)
+    }
+    if (!started) {
+        android.util.Log.w(SettingsActivity.TAG, "GIF pack operation already running; packs not removed")
+        showGifPackBusy()
+    }
+}
+
+/** The follow-up of a GIF pack removal that threw [e]. */
+private fun gifRemovalFailure(e: Exception): SettingsFollowUp {
+    android.util.Log.e(SettingsActivity.TAG, "GIF pack removal failed", e)
+    return followUp {
+        Toast.makeText(
+            this, getString(R.string.common_remove_failed_detail, ioFailureText(e)), Toast.LENGTH_SHORT
+        ).show()
     }
 }
 

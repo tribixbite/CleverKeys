@@ -83,6 +83,8 @@ editor that used to be listed here already ship in 2.0.)
 - A secondary language whose dictionary is not on the phone (a restored backup naming a pack
   never installed here) is treated as no secondary language, and the choice is kept for when the
   pack is installed. The keyboard applies this once Settings has been opened since it started.
+- Removing one GIF pack or all of them finishes when the screen is rotated midway, and waits for a
+  running GIF pack import (or says another GIF pack import or removal is still running).
 - Clipboard History in By Size mode shows every kept entry: it showed only as many as the hidden
   entry count, while the rest still counted against the size budget and went into backups. The
   Entry Duration note and "Never expire" no longer use that hidden count either.

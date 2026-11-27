@@ -1462,7 +1462,7 @@
     <string name="dictionary_backup_apply_failed">Kon woordenboekimport niet toepassen:\n\n%1$s</string>
     <string name="gif_import_status_already_installed">Pakket \'%1$s\' al geïnstalleerd</string>
     <string name="gif_toast_pack_imported">GIF-pakket geïmporteerd: %1$s</string>
-    <string name="gif_import_already_running">Er loopt nog een andere import van een GIF-pakket. Probeer het opnieuw als die klaar is.</string>
+    <string name="gif_pack_busy">Er loopt nog een andere import of verwijdering van een GIF-pakket. Probeer het opnieuw als die klaar is.</string>
     <string name="gif_replace_dialog_title">Pakket al geïnstalleerd</string>
     <string name="gif_replace_dialog_body">\'%1$s\' is al geïnstalleerd. Vervangen door het geselecteerde bestand? (Een opnieuw gebouwd pakket opnieuw importeren werkt de GIF\'s bij.)</string>
     <string name="gif_replace_dialog_confirm">Vervangen</string>

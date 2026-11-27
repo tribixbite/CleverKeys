@@ -12,7 +12,7 @@ import java.io.File
  *   skipped). It runs in [SettingsImports.clipboardRules] now, with every write and the
  *   broadcast inside the work and only the shown status in the follow-up;
  * - a second GIF pack import while one runs was refused with a log line only; the user is told
- *   (`gif_import_already_running`);
+ *   (`gif_pack_busy`, which also covers the removals that now share the tracker, audit D3);
  * - the GIF "replace pack?" prompt was an `AlertDialog.Builder` on the activity, lost on a
  *   rotation. It is DATA in [tribixbite.cleverkeys.SettingsViewModel] (`pendingGifReplace`),
  *   rendered by the Settings content, like `BackupRestoreViewModel.pendingPassphraseImport`.
@@ -77,11 +77,60 @@ class GifAndRulesImportScopeDriftTest {
             .contains("SettingsImports.clipboardRules.consumeEvent()")
     }
 
+    /** Index just past the `}` closing the `{` at [open] in [code]. */
+    private fun blockEnd(code: String, open: Int): Int {
+        var depth = 0
+        for (i in open until code.length) {
+            when (code[i]) {
+                '{' -> depth++
+                '}' -> if (--depth == 0) return i + 1
+            }
+        }
+        return code.length
+    }
+
+    /**
+     * The block run when the tracker refused to start ([code] holds `val started = …start(`):
+     * `if (!started) { … }`, or the `else` of `if (started) { … }`. Scoped to that block, so a
+     * string id elsewhere in the function cannot satisfy an assertion about the refusal.
+     */
+    private fun refusedBranch(code: String): String {
+        val negative = code.indexOf("if (!started) {")
+        if (negative >= 0) {
+            val open = code.indexOf('{', negative)
+            return code.substring(open, blockEnd(code, open))
+        }
+        val positive = code.indexOf("if (started) {")
+        check(positive >= 0) { "no `started` branch" }
+        val end = blockEnd(code, code.indexOf('{', positive))
+        check(code.substring(end).trimStart().startsWith("else {")) { "no refusal branch after `if (started)`" }
+        val open = code.indexOf('{', end)
+        return code.substring(open, blockEnd(code, open))
+    }
+
     @Test
     fun aRefusedSecondGifImportIsShownToTheUser() {
-        val refused = body(gif, "performGifPackImport").substringAfter("} else {", missingDelimiterValue = "")
-        assertWithMessage("performGifPackImport tells the user when another pack import runs")
-            .that(refused).contains("R.string.gif_import_already_running")
+        assertWithMessage("performGifPackImport tells the user when another pack operation runs")
+            .that(refusedBranch(body(gif, "performGifPackImport"))).contains("showGifPackBusy()")
+        assertThat(body(gif, "showGifPackBusy")).contains("R.string.gif_pack_busy")
+    }
+
+    /**
+     * Fable audit D3 (2026-11-26): the GIF pack removals ran in the activity's `lifecycleScope`
+     * (a rotation cut them) and beside a running import. They go through [SettingsImports.gifPack]
+     * like the import, one operation at a time, and a refused one says so.
+     */
+    @Test
+    fun gifPackRemovalsOutliveTheActivityAndWaitForNoImport() {
+        for (name in listOf("performGifRemovePack", "performGifRemoveAll")) {
+            val removal = body(gif, name)
+            assertWithMessage("$name must not run in lifecycleScope").that(removal).doesNotContain("lifecycleScope")
+            assertWithMessage(name).that(removal).contains("SettingsImports.gifPack.start(")
+            assertWithMessage("$name tells the user when another pack operation runs")
+                .that(refusedBranch(removal)).contains("showGifPackBusy()")
+        }
+        assertWithMessage("Remove All turns the panel off in its work, not only in the follow-up")
+            .that(withoutFollowUps(body(gif, "performGifRemoveAll"))).contains("putBoolean(\"gif_enabled\", false)")
     }
 
     @Test

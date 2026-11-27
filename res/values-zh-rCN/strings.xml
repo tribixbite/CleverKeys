@@ -1447,7 +1447,7 @@
     <string name="dictionary_backup_apply_failed">应用词典导入失败：\n\n%1$s</string>
     <string name="gif_import_status_already_installed">包“%1$s”已安装</string>
     <string name="gif_toast_pack_imported">已导入 GIF 包：%1$s</string>
-    <string name="gif_import_already_running">另一个 GIF 包的导入仍在进行中。请在其完成后重试。</string>
+    <string name="gif_pack_busy">另一个 GIF 包的导入或删除仍在进行中。请在其完成后重试。</string>
     <string name="gif_replace_dialog_title">包已安装</string>
     <string name="gif_replace_dialog_body">“%1$s”已安装。要用所选文件替换它吗？（重新导入重建后的包会更新其中的 GIF。）</string>
     <string name="gif_replace_dialog_confirm">替换</string>
