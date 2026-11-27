@@ -468,6 +468,21 @@ class WordPredictor : Predictor {
     private var lastRecordedCommit: RecordedCommit? = null
 
     /**
+     * The record [lastRecordedCommit] replaced: the commit before the newest. When the newest is
+     * rolled back it becomes the newest record again, so the word before it can be taken back too
+     * after a sentence boundary emptied the window (Fable review 2026-11-27, #5: `fix toy.`, then
+     * deleting back through `fix` kept fix's +1). Dropped with [lastRecordedCommit].
+     */
+    private var priorRecordedCommit: RecordedCommit? = null
+
+    /** Drop the learn window and both commit records (no pair may join what came before). */
+    private fun dropLearnWindow() {
+        recentWords.clear()
+        lastRecordedCommit = null
+        priorRecordedCommit = null
+    }
+
+    /**
      * [language] is the next-word language whose store the commit wrote to; [dictionaryLanguage]
      * the loaded primary dictionary whose lexicon judged learnability. A detected switch moves
      * only the former (2026-11-26), so a rollback after it still targets [language]'s store.
@@ -518,6 +533,10 @@ class WordPredictor : Predictor {
         val gates = learningGates()
         if (lastLearningGates != gates) {
             invalidateExactLearningCommit()
+            // Fable review 2026-11-27 (#2): the window and the records also belong to the old
+            // gates. Learning off, `my pin is`, learning on, `long` stored `pin is long`; and
+            // deleting a word committed while learning was off decremented counts it never added.
+            dropLearnWindow()
             lastLearningGates = gates
         }
         return gates
@@ -1220,8 +1239,16 @@ class WordPredictor : Predictor {
     override fun addWordToContext(word: String?, fieldAllowsPersonalizedLearning: Boolean) {
         if (word.isNullOrBlank()) return
         val gates = refreshLearningEpoch()
-        withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
-            recordContextCommit(word, gates, fieldAllowsPersonalizedLearning)
+        if (fieldAllowsPersonalizedLearning) {
+            withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
+                recordContextCommit(word, gates, fieldAllowsPersonalizedLearning)
+            }
+        } else {
+            // M5 + Fable review 2026-11-27 (#1): an incognito word never enters the learn window,
+            // where it would become the context of the next word learned in an ordinary field;
+            // and the words before it do not pair across it.
+            invalidateExactLearningCommit()
+            dropLearnWindow()
         }
         // Auto-Detect reads its own window (audit B1): the field's last words, across sentence
         // boundaries, which empty the learn window. Detection needed five words in the LEARN
@@ -1247,6 +1274,7 @@ class WordPredictor : Predictor {
         val windowBefore = recentWords.toList()
         recentWords.add(normalizedWord)
         while (recentWords.size > MAX_RECENT_WORDS) recentWords.removeAt(0)
+        priorRecordedCommit = lastRecordedCommit
         lastRecordedCommit = RecordedCommit(
             normalizedWord, recentWords.takeLast(LearningGate.CONTEXT_WINDOW), currentLanguage, dictionaryLanguage
         )
@@ -1357,8 +1385,10 @@ class WordPredictor : Predictor {
             }
             // Consume before mutation; a failed operation is never retried against an older
             // same-spelled word. All validation precedes the first decrement under these locks.
+            // The commit before it is the newest record again (#5).
             exactLearningCommit = null
-            lastRecordedCommit = null
+            lastRecordedCommit = priorRecordedCommit
+            priorRecordedCommit = null
             try {
                 val contextUndone = recorded.contextReceipt?.let {
                     recorded.contextOwner?.rollbackReceipt(it) == true
@@ -1374,8 +1404,7 @@ class WordPredictor : Predictor {
                 // Store/persistence failures are not an atomic rollback guarantee. Abandon
                 // transient ownership; do not replay writes or reconstruct forgotten data.
                 invalidateExactLearningCommit()
-                lastRecordedCommit = null
-                recentWords.clear()
+                dropLearnWindow()
                 Log.w(TAG, "Learning rollback failed; commit ownership invalidated", error)
                 null
             }
@@ -1575,8 +1604,12 @@ class WordPredictor : Predictor {
         resetWeakReturn()
         // The field ends (flushLearnedData at onFinishInputView) or an explicit edit rewrote it.
         detectionWords?.clear()
-        recentWords.clear()
-        lastRecordedCommit = null
+        dropLearnWindow()
+    }
+
+    override fun learnWindowEndsWith(word: String): Boolean {
+        refreshLearningEpoch()
+        return recentWords.lastOrNull() == word.lowercase().trim()
     }
 
     /**
@@ -1614,6 +1647,8 @@ class WordPredictor : Predictor {
      *   as passed to [addWordToContext] for the original commit
      */
     override fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean) {
+        // A gate change since the commit drops the window and the records first (#2).
+        refreshLearningEpoch()
         invalidateExactLearningCommit()
         val normalized = word.lowercase().trim()
         val inWindow = recentWords.isNotEmpty() && recentWords.last() == normalized
@@ -1630,7 +1665,9 @@ class WordPredictor : Predictor {
             recorded != null -> { window = recorded.window; storeLanguage = recorded.language }
             else -> return
         }
-        lastRecordedCommit = null
+        // Consumed; the commit before it is the newest record again (#5) when this was the newest.
+        lastRecordedCommit = priorRecordedCommit.takeIf { lastRecordedCommit?.word == normalized }
+        priorRecordedCommit = null
 
         val master = (config?.on_device_learning_enabled ?: false) && fieldAllowsPersonalizedLearning
         val contextAware = config?.context_aware_predictions_enabled ?: false

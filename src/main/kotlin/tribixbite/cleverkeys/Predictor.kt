@@ -176,6 +176,12 @@ interface Predictor {
     /** A new input session started (a new field, or the app restarted its input). */
     fun onInputSessionChanged() {}
 
+    /**
+     * Does the learn window end with [word]? A rollback that takes it from the live window leaves
+     * the window as the editor's text before it, so the window need not be closed.
+     */
+    fun learnWindowEndsWith(word: String): Boolean = false
+
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)
 

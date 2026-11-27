@@ -2434,6 +2434,76 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
     }
 
+    // ------------------------------------------- Fable review 2026-11-27 of 8d42e6fbc / b2e554f8c
+
+    /**
+     * #1: an incognito word never enters the learn window, so it cannot become the context of a
+     * word typed in a normal tab that looks the same (`IME_FLAG_NO_PERSONALIZED_LEARNING` was
+     * not part of the field identity either).
+     */
+    @Test
+    fun anIncognitoWordNeverBecomesContextInANormalTab() {
+        val incognito = chromeField().apply { imeOptions = EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING }
+        handler.onInputFieldStarted(incognito, restarting = false, ic)
+        handler.setFieldPersonalizedLearningAllowed(false)
+        type("my secret ", incognito)
+        assertWithMessage("no incognito word in the learn window").that(learnWindow()).isEmpty()
+
+        editor.setLength(0)
+        editor.append("notes my secret ")
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 16; initialSelEnd = 16 })
+        type("plan ", chromeField())
+
+        assertWithMessage("no secret→plan").that(bigram("secret", "plan")).isEqualTo(0)
+        assertWithMessage("no my secret plan").that(trigram("my", "secret", "plan")).isEqualTo(0f)
+    }
+
+    /** #2: learning off, `my pin is`, learning turned on, `long`: `pin is long` was stored. */
+    @Test
+    fun turningLearningOnDoesNotPairWithWordsTypedWhileItWasOff() {
+        config.on_device_learning_enabled = false
+        type("my pin is ")
+        config.on_device_learning_enabled = true
+        type("long ")
+
+        assertWithMessage("no pin is long").that(trigram("pin", "is", "long")).isEqualTo(0f)
+        assertWithMessage("no is→long").that(bigram("is", "long")).isEqualTo(0)
+    }
+
+    /** #2, reverse: deleting a word committed while learning was off decrements nothing. */
+    @Test
+    fun deletingAWordTypedWhileLearningWasOffTakesNothingBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        type("my word ")
+        config.on_device_learning_enabled = false
+        type("my word ")
+        config.on_device_learning_enabled = true
+        reportedCaret = cursor()
+        backspaceChars("word ".length)
+        type("x ")
+
+        assertWithMessage("my→word kept").that(bigram("my", "word")).isEqualTo(1)
+        assertWithMessage("word's count kept").that(vocabulary.getWordUsage("word")?.usageCount).isEqualTo(1)
+    }
+
+    /** #5: after `fix toy.` (the sentence ended), deleting back through `fix` kept fix's +1. */
+    @Test
+    fun deletingBackThroughAnEndedSentenceTakesBothWordsBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        type("fix ")
+        swipe("toy", "try")
+        type(".")
+        reportedCaret = cursor()
+        backspaceChars(editor.length)
+
+        assertWithMessage("editor").that(editor.toString()).isEmpty()
+        assertWithMessage("fix→toy reversed").that(bigram("fix", "toy")).isEqualTo(0)
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
+        assertWithMessage("fix's +1 reversed").that(vocabulary.getWordUsage("fix")).isNull()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**
