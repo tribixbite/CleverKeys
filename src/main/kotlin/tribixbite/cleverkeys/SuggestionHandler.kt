@@ -2336,9 +2336,17 @@ class SuggestionHandler(
      */
     private var windowNeedsProof = false
 
-    /** CleverKeysService.onStartInput: see [inputStartedSinceView]. */
+    /**
+     * A restarting `onStartInput` came since the input view last started. Chrome (and Compose,
+     * Flutter) move between the fields of one host view with `imm.restartInput`, so a restart
+     * can be another field (Fable re-check 2026-11-27, #1); the IME's own configuration change
+     * (a rotation) restarts the same one.
+     */
+    private var inputRestartedSinceView = false
+
+    /** CleverKeysService.onStartInput: see [inputStartedSinceView] and [inputRestartedSinceView]. */
     fun onInputStarted(restarting: Boolean) {
-        if (!restarting) inputStartedSinceView = true
+        if (restarting) inputRestartedSinceView = true else inputStartedSinceView = true
     }
 
     /** The field the input view last started for (package, field id, input type); null before any. */
@@ -2360,15 +2368,29 @@ class SuggestionHandler(
                 LearningGate.fieldAllowsPersonalizedLearning(it.imeOptions)
         }
         val boundAnotherEditor = inputStartedSinceView
+        val restartedInput = restarting || inputRestartedSinceView
         inputStartedSinceView = false
+        inputRestartedSinceView = false
+        // A restart into a field of another identity is another field (#1: a text input after a
+        // textarea in one WebView). With no field started yet there is nothing to compare.
+        val identityChanged = if (restarting) {
+            startedFieldIdentity != null && identity != null && identity != startedFieldIdentity
+        } else {
+            identity != startedFieldIdentity
+        }
         // Note10+ r22: every Chrome textarea reports the same package / field id / input type, so
         // a new tab looked like the same field and kept the detected language. An EMPTY editor
         // right after the app bound another editor is a new field. Only then (Fable #3): Back and
-        // a tap on a chat box emptied by sending binds nothing and keeps the detected language.
-        val newField = !restarting && (identity != startedFieldIdentity ||
-            (boundAnotherEditor && info != null && ic != null && editorLooksEmpty(info, ic)))
+        // a tap on a chat box emptied by sending binds nothing and keeps the detected language;
+        // nor after a restart, which a rotation of that box also is.
+        val newField = identityChanged ||
+            (!restarting && boundAnotherEditor && info != null && ic != null && editorLooksEmpty(info, ic))
         startedFieldIdentity = identity
-        windowNeedsProof = !newField && boundAnotherEditor
+        // A field that looks the same after another editor was bound, or after a restart (another
+        // textarea of the same page, or the same field after a rotation): its next commit must
+        // show the window's last word at its anchor. A field's first word (blank anchor) cannot,
+        // so it loses its pair across a restart; a proven deletion lifts the requirement.
+        windowNeedsProof = !newField && (boundAnotherEditor || restartedInput)
         if (newField) {
             val predictor = predictionCoordinator.getWordPredictor()
             // H1: the learn window ends with the field (moved here from onFinishInputView's flush,
@@ -3488,7 +3510,9 @@ class SuggestionHandler(
         ic ?: return
         val placed = learnedPlacement ?: return
         if (placed.editChecksOff || isPasswordMode) return
-        val firstWordByKeyboard = imeDeletion && placed.wholeField && placed.anchor.isBlank()
+        // Not while the window may be another field's (Fable re-check #3): a blank anchor proves
+        // nothing about which field the word was typed in.
+        val firstWordByKeyboard = imeDeletion && placed.wholeField && placed.anchor.isBlank() && !windowNeedsProof
         if (!placed.provable && !firstWordByKeyboard) return
         val recordedAfter = placed.after ?: return
         val word = placed.word
@@ -3797,7 +3821,10 @@ class SuggestionHandler(
         // After another editor was bound, nothing unproven continues the window (#1).
         val proofRequired = windowNeedsProof
         windowNeedsProof = false
-        val unproven = { if (proofRequired) closeLearnWindow("this editor does not show the window's last word") else Reconciled.UNCHECKED }
+        val unproven = {
+            if (proofRequired) closeLearnWindow("this editor does not show the window's last word", forget = true)
+            else Reconciled.UNCHECKED
+        }
         val placed = learnedPlacement ?: return unproven()
         learnedPlacement = null
         if (ic == null || read == null) return unproven()
@@ -3821,13 +3848,18 @@ class SuggestionHandler(
         ) {
             return Reconciled.KEPT
         }
-        return closeLearnWindow("this word does not follow the previous one in the editor")
+        return closeLearnWindow("this word does not follow the previous one in the editor", forget = proofRequired)
     }
 
-    /** Close the learn window, as at a sentence boundary: the next word pairs with nothing. */
-    private fun closeLearnWindow(why: String): Reconciled {
+    /**
+     * Close the learn window, as at a sentence boundary: the next word pairs with nothing. With
+     * [forget] (a failed field proof: the window may be another field's) the commit records go
+     * too, so no rollback here can reach that field's learning (Fable re-check #2).
+     */
+    private fun closeLearnWindow(why: String, forget: Boolean = false): Reconciled {
         vlog { "LEARN WINDOW CLOSED: $why" }
-        predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
+        val predictor = predictionCoordinator.getWordPredictor()
+        if (forget) predictor?.forgetLearnWindow() else predictor?.onSentenceBoundary()
         lastLearningCommit = null
         return Reconciled.CLOSED
     }

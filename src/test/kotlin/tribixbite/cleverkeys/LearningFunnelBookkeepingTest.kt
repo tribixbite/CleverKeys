@@ -2263,9 +2263,11 @@ class LearningFunnelBookkeepingTest {
         handler.flushTypedWordOnFinishInput(ic)
         tracker.clearAll()
         coordinator.flushLearnedData()
-        // onStartInput: another editor was bound (a new tab, another field, a recreated window).
-        // Back + a tap on the same field has none.
+        // onStartInput: another editor was bound (a new tab, another field, a recreated window), or
+        // the IME's own configuration change restarted the input (a rotation). Back + a tap on the
+        // same field has none.
         if (newInput) handler.onInputStarted(restarting = false)
+        if (restarting) handler.onInputStarted(restarting = true)
         // onStartInputView, with the editor as it now reads
         handler.onEditorSessionChanged()
         handler.onInputFieldStarted(field, restarting, ic)
@@ -2631,6 +2633,105 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("fix→got reversed").that(bigram("fix", "got")).isEqualTo(0)
         assertWithMessage("got's +1 reversed").that(vocabulary.getWordUsage("got")).isNull()
         assertWithMessage("fix→something learned").that(bigram("fix", "something")).isEqualTo(1)
+    }
+
+    // ------------------------------------------------- Fable re-check 2026-11-27 of 75674eb83
+
+    /** A Chrome `<input type=text>`: the same package and field id as a textarea, another input type. */
+    private fun chromeTextInput(): EditorInfo = objenesis.newInstance(EditorInfo::class.java).apply {
+        packageName = "com.android.chrome"
+        inputType = InputType.TYPE_CLASS_TEXT
+    }
+
+    /**
+     * #1: Chrome (and Compose, Flutter) move between the fields of one host view with
+     * `imm.restartInput`, which arrives as a restart. Textarea A `my diagnosis is`, then the
+     * page's second textarea, ending in `is`: `great` learned `diagnosis is great`.
+     */
+    @Test
+    fun aRestartIntoAnotherTextareaEndingInTheSameWordDoesNotContinueTheWindow() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        webViewRestart(chromeField())
+        type("great ", chromeField())
+
+        assertWithMessage("no diagnosis is great").that(trigram("diagnosis", "is", "great")).isEqualTo(0f)
+        assertWithMessage("no is→great").that(bigram("is", "great")).isEqualTo(0)
+    }
+
+    /** #1: the same restart into a textarea that cannot be read. */
+    @Test
+    fun aRestartIntoAnUnreadableTextareaDoesNotContinueTheWindow() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        every { ic.getTextBeforeCursor(any(), any()) } returns null
+        every { ic.getExtractedText(any(), any()) } returns null
+        webViewRestart(chromeField())
+        type("great ", chromeField())
+
+        assertWithMessage("no diagnosis is great").that(trigram("diagnosis", "is", "great")).isEqualTo(0f)
+        assertWithMessage("no is→great").that(bigram("is", "great")).isEqualTo(0)
+    }
+
+    /** #1: a restart into another kind of field (a text input after a textarea) is a new field. */
+    @Test
+    fun aRestartIntoAnotherKindOfFieldIsANewField() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        editor.setLength(0)
+        editor.append("hello there ")
+        webViewRestart(chromeTextInput())
+
+        assertWithMessage("the text input starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
+        assertWithMessage("its learn window is empty").that(learnWindow()).isEmpty()
+    }
+
+    /**
+     * #2: a failed field proof closed the window but kept both commit records from field A, so
+     * B's first commit moved A's `is` record to the prior slot and rolling B's word back revived
+     * it: a rollback of `is` then took A's `diagnosis → is` back.
+     */
+    @Test
+    fun aFailedFieldProofDropsTheOldFieldsCommitRecords() {
+        val vocabulary = useReceiptVocabulary()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 9; initialSelEnd = 9 }, newInput = true)
+        type("great ", chromeField())
+        predictor.rollbackCommittedWord("great", true)
+        predictor.rollbackCommittedWord("is", true)
+
+        assertWithMessage("A's diagnosis→is kept").that(bigram("diagnosis", "is")).isEqualTo(1)
+        assertWithMessage("A's is kept its count").that(vocabulary.getWordUsage("is")?.usageCount).isEqualTo(1)
+    }
+
+    /**
+     * #3: in a look-alike field, a keyboard deletion that empties it took back field A's first
+     * word: the blank-anchor path for the keyboard's own deletions runs before any field proof.
+     */
+    @Test
+    fun aKeyboardDeletionInALookAlikeFieldDoesNotUnlearnTheOldFieldsFirstWord() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("fix ", chromeField())
+        editor.setLength(0)
+        editor.append("fix ")
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 4; initialSelEnd = 4 }, newInput = true)
+        reportedCaret = cursor()
+        backspaceChars("x ".length, field = chromeField())
+
+        assertWithMessage("A's fix kept its count").that(vocabulary.getWordUsage("fix")?.usageCount).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection

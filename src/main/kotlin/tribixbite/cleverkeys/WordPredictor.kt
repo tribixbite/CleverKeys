@@ -1700,6 +1700,16 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * Fable re-check 2026-11-27 (#2): a failed field proof closed the window but kept both
+     * records, so the next commit moved the old field's record to the prior slot, where rolling
+     * the new word back revived it.
+     */
+    override fun forgetLearnWindow() {
+        onSentenceBoundary()
+        dropLearnWindow()
+    }
+
+    /**
      * Next-word prediction support (audit 2026-08-06 §4): learned continuations
      * for the given committed-word context, ranked by conditional probability.
      * Empty when the context LM is disabled or has no data for the context.

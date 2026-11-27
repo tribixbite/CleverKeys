@@ -191,6 +191,12 @@ interface Predictor {
     /** Mark a sentence boundary so the next word is not conditioned on the previous one. */
     fun onSentenceBoundary()
 
+    /**
+     * The learn window may be another field's: close it like a sentence boundary AND forget the
+     * commit records, so no later rollback can reach that field's learning.
+     */
+    fun forgetLearnWindow() = onSentenceBoundary()
+
     /** Reset transient prediction state without touching learned data. */
     fun reset()
 

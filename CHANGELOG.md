@@ -64,9 +64,10 @@ editor that used to be listed here already ship in 2.0.)
   autocorrect undo put back. A forward Delete is not covered yet. The deleted swipe's alternates
   leave the bar.
 - Words typed in a private (incognito) browser tab are never used as the context of words typed
-  later in an ordinary tab, and switching to another tab whose text box looks the same and ends
-  in the same word no longer continues the last tab's phrase (`my diagnosis is` in one tab,
-  `great` after a draft ending in `is` in another, learned `diagnosis is great`).
+  later in an ordinary tab, and switching to another tab, or to another text box on the same
+  page, that looks the same and ends in the same word no longer continues the last box's phrase
+  (`my diagnosis is` in one, `great` after a draft ending in `is` in another, learned
+  `diagnosis is great`).
 - Turning learning on no longer pairs the next word with words typed while it was off, and
   deleting a word typed while learning was off no longer takes back counts it never added.
 - After Auto-Detect switched to the second language, another field or app starts again in the
