@@ -3309,14 +3309,34 @@ class SuggestionHandler(
         val word = placed.word
         val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
         val before = editorTextBeforeCursor(ic, window) ?: return
-        if (keptPrefixOfShortenedWord(anchor, before, word) == null) return
-        if (editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) != after) return
+        val kept = keptPrefixOfShortenedWord(anchor, before, word) ?: return
+        if (!afterTextUnchanged(ic, after)) return
         val predictor = predictionCoordinator.getWordPredictor() ?: return
         if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
         vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
         learnedPlacement = null
         lastLearningCommit = null
         contextTracker.rollbackLastWord(word)
+        // What is left of the word is the word being typed now (Fable review 2026-11-26): the
+        // debounced cursor sync may not have run yet, so `t` + space learned the fragment `t`,
+        // and a space after `go` learned nothing. The tracker takes the editor's letters, and they
+        // are pending like typed ones, so the commit learns the editor's word (`got` again, `go`).
+        // Not when the following text glues onto it (then the sync decides what the word is).
+        if (kept.isNotEmpty() && (after.isEmpty() || !WordChars.isWordCharAt(after, 0))) {
+            contextTracker.clearCurrentWord()
+            contextTracker.clearCurrentWordSuffix()
+            contextTracker.appendToCurrentWord(kept)
+            pendingTypedWord = kept
+            pendingJoinerStem = null
+        }
+        // The word is gone, and with it what the bar and Backspace still offered for it: its swipe
+        // alternates and REPLACE target, and an autocorrect undo of it.
+        if (contextTracker.getLastAutoInsertedWord()?.equals(word, ignoreCase = true) == true) {
+            contextTracker.clearLastAutoInsertedWord()
+            contextTracker.clearAutocorrectTracking()
+            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+            if (!specialPromptActive) suggestionBar?.clearSuggestions()
+        }
     }
 
     /**
@@ -3345,6 +3365,44 @@ class SuggestionHandler(
             return editorPrefix.takeIf { !stillStanding }
         }
         return null
+    }
+
+    /**
+     * Is the text after the cursor what followed the learned word at its commit ([recorded])?
+     * An empty read is not proof on its own (Fable review 2026-11-26): an editor that answers
+     * getTextBeforeCursor but always "" after the cursor made a caret move into the word look
+     * like a deletion. Then the editor must also show the caret at the end of its text.
+     */
+    private fun afterTextUnchanged(ic: InputConnection, recorded: String?): Boolean {
+        recorded ?: return false
+        val now = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return false
+        if (now != recorded) return false
+        return now.isNotEmpty() || caretProvenAtFieldEnd(ic)
+    }
+
+    /**
+     * Does the editor show a collapsed caret at the very end of its text, by a read other than
+     * getTextAfterCursor? API 31+: `getSurroundingText` when the editor implements it (an absolute
+     * offset; the platform default composes the same after-cursor read and reports -1). Otherwise
+     * the extracted text. Any failure or inconsistency is "not proven".
+     */
+    @android.annotation.SuppressLint("NewApi") // guarded by EditorSelectionReader.platformSdk, which lint cannot see
+    private fun caretProvenAtFieldEnd(ic: InputConnection): Boolean = try {
+        val surrounding = if (EditorSelectionReader.platformSdk() >= android.os.Build.VERSION_CODES.S) {
+            ic.getSurroundingText(0, 1, 0)?.takeIf { it.offset >= 0 }
+        } else {
+            null
+        }
+        if (surrounding != null) {
+            surrounding.selectionStart == surrounding.selectionEnd && surrounding.selectionEnd == surrounding.text.length
+        } else {
+            val extracted = ic.getExtractedText(EditorSelectionReader.newExtractedTextRequest().apply { hintMaxChars = 0 }, 0)
+            val text = extracted?.text
+            extracted != null && text != null && extracted.selectionStart == extracted.selectionEnd &&
+                extracted.selectionEnd == text.length
+        }
+    } catch (e: Exception) {
+        false
     }
 
     /**
@@ -3455,7 +3513,7 @@ class SuggestionHandler(
         val anchor = placed.anchor
         if (anchor != null && SwipeCorrectionTracker.editorContinuesAnchor(anchor, editor, newWord) &&
             !oldWordMayStillPrecede(anchor, editor, newWord, placed.word) &&
-            placed.after != null && editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) == placed.after
+            afterTextUnchanged(ic, placed.after)
         ) {
             if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
             vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }

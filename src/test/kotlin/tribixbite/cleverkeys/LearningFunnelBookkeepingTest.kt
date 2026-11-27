@@ -4,6 +4,8 @@ import android.content.res.Resources
 import android.text.InputType
 import android.util.Log
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.ExtractedText
+import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
@@ -185,6 +187,18 @@ class LearningFunnelBookkeepingTest {
             true
         }
         every { ic.getCursorCapsMode(any()) } returns 0
+        // The end-of-field proof (an empty after-cursor read alone proves nothing) reads the
+        // editor's extracted text; ExtractedText(Request) are android.jar stubs here.
+        every { ic.getExtractedText(any(), any()) } answers {
+            objenesis.newInstance(ExtractedText::class.java).apply {
+                text = editor.toString()
+                startOffset = 0
+                selectionStart = cursor()
+                selectionEnd = cursor()
+            }
+        }
+        EditorSelectionReader.newExtractedTextRequest = { objenesis.newInstance(ExtractedTextRequest::class.java) }
+        EditorSelectionReader.platformSdk = { 0 }
 
         val contractions = mockk<ContractionManager>(relaxed = true)
         every { contractions.isKnownContraction(any()) } returns false
@@ -671,6 +685,8 @@ class LearningFunnelBookkeepingTest {
 
     @After
     fun teardown() {
+        EditorSelectionReader.newExtractedTextRequest = { ExtractedTextRequest() }
+        EditorSelectionReader.platformSdk = { android.os.Build.VERSION.SDK_INT }
         scheduler.shutdownNow()
         scheduler.awaitTermination(2, TimeUnit.SECONDS)
         unmockkAll()
@@ -1923,6 +1939,74 @@ class LearningFunnelBookkeepingTest {
 
         assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
         assertWithMessage("got's usage kept").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
+    }
+
+    /** Backspace whose selection update arrives before the 100 ms debounced cursor sync runs. */
+    private fun backspaceBeforeTheCursorSync(count: Int) {
+        repeat(count) {
+            val c = cursor()
+            editor.deleteCharAt(c - 1)
+            cursorAt = cursorAt?.minus(1)
+            handler.handleBackspace(ic, textField())
+            handler.reconcileLearnAfterDeletion(ic)
+        }
+    }
+
+    /** Fable review of 91307aab4, finding 3: `got` → `go` → `t` + space before the sync. */
+    @Test
+    fun aWordRetypedBeforeTheCursorSyncIsLearnedWhole() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceBeforeTheCursorSync(2)
+        type("t ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix got ")
+        assertWithMessage("fix→got learned again").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("no fragment t").that(vocabulary.getWordUsage("t")).isNull()
+        assertWithMessage("no fix→t").that(bigram("fix", "t")).isEqualTo(0)
+    }
+
+    /** Finding 3: `got` → `go`, then a space: the editor's word `go` is what is learned. */
+    @Test
+    fun aShortenedWordEndedWithASpaceIsLearnedAsTheEditorShowsIt() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        backspaceBeforeTheCursorSync(2)
+        type(" ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix go ")
+        assertWithMessage("fix→go").that(bigram("fix", "go")).isEqualTo(1)
+        assertWithMessage("go counted").that(vocabulary.getWordUsage("go")?.usageCount).isEqualTo(1)
+        assertWithMessage("got not").that(vocabulary.getWordUsage("got")).isNull()
+    }
+
+    /**
+     * Finding 4: an editor that answers "" after the cursor everywhere makes a caret move into
+     * the word look like a deletion. An empty after-read is only trusted once the editor shows
+     * the caret at the end of the field.
+     */
+    @Test
+    fun aCaretMoveInAnEditorThatReadsNothingAfterTheCursorIsNotADeletion() {
+        val vocabulary = useReceiptVocabulary()
+        every { ic.getTextAfterCursor(any(), any()) } returns ""
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        cursorAt = "fix go".length
+        cursorSync()
+
+        assertWithMessage("fix→got kept").that(bigram("fix", "got")).isEqualTo(1)
+        assertWithMessage("got's usage kept").that(vocabulary.getWordUsage("got")?.usageCount).isEqualTo(1)
+        // A real deletion at the end of that field is still taken back.
+        cursorAt = null
+        backspaceChars(2)
+        assertWithMessage("a deletion at the field end").that(bigram("fix", "got")).isEqualTo(0)
     }
 
     /**
