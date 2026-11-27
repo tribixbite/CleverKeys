@@ -56,7 +56,9 @@ editor that used to be listed here already ship in 2.0.)
 - Deleting a word you just typed or swiped takes back what it taught the keyboard at once, also
   when you then leave the field, after an app restarted its input, after you hid and showed the
   keyboard or rotated the screen, or after the sentence ended: letter by letter, with
-  Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. The first word of a field is covered when you delete it with the keyboard (not when the
+  Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. Deleting on into
+  the word before it takes that word back too, also after Backspace undid a swipe (`so ` + swipe
+  `well`, Backspace, `so` deleted, swipe `fix` learned the pair `so → fix`). The first word of a field is covered when you delete it with the keyboard (not when the
   app clears its field), and so is a word an autocorrect undo put back. A forward Delete is not
   covered yet. The deleted swipe's alternates leave the bar.
 - After Auto-Detect switched to the second language, another field or app starts again in the

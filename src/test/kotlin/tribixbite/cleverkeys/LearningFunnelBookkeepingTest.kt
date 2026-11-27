@@ -2366,6 +2366,35 @@ class LearningFunnelBookkeepingTest {
     }
 
     /**
+     * Saga r22: type `so `, swipe `well`, Backspace (the #110 undo removes `well `), three more
+     * Backspaces (the field is empty), swipe `fix` → `so → fix` was learned and `so` kept its +1.
+     * After the undo the learn window ends with `so` again, but `so`'s place in the editor was no
+     * longer watched, so deleting it went unseen. Chosen: its +1 is reversed too, because the
+     * same editor proof that guards every other rollback shows it gone.
+     */
+    @Test
+    fun aWordDeletedAfterASwipeUndoDoesNotPairWithTheNextOne() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = true
+        type("so ")
+        swipe("well", "will")
+        // KeyEventHandler.handleBackspaceUndoSwipe: deletes "well " and reports it; handle_backspace follows.
+        val c = cursor()
+        editor.setLength(editor.length - "well ".length)
+        handler.onSwipeWordUndone("well", ic)
+        handler.handleBackspace(ic, textField())
+        handler.onUnownedSelectionUpdate(c, c, cursor(), cursor(), ic)
+        reportedCaret = cursor()
+        backspaceChars("so ".length)
+        newSwipe("fix")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix ")
+        assertWithMessage("no so→fix").that(bigram("so", "fix")).isEqualTo(0)
+        assertWithMessage("so's +1 reversed").that(vocabulary.getWordUsage("so")).isNull()
+        assertWithMessage("well's +1 reversed").that(vocabulary.getWordUsage("well")).isNull()
+    }
+
+    /**
      * A start whose EditorInfo puts the caret inside text is the same field even when the
      * connection reads back empty at that moment (a WebView that has not synced its text yet):
      * only an empty field with the caret at its start counts as a new one.
@@ -2382,6 +2411,27 @@ class LearningFunnelBookkeepingTest {
         hideAndShowKeyboard(field = chromeField().apply { initialSelStart = caret; initialSelEnd = caret })
 
         assertWithMessage("kept").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
+    /**
+     * Pixel r22 (b): `fix ` + swipe `toy`, then Backspace past `toy ` into `fix` (`fi` left) and
+     * type `lip`: `fix → filip` was learned. Once `toy` was rolled back the learn window ended
+     * with `fix` again, but nothing watched `fix`'s place, so shortening it went unseen.
+     */
+    @Test
+    fun deletingIntoThePreviousWordTakesItsLearningBackToo() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        type("fix ")
+        swipe("toy", "try")
+        backspaceChars("toy ".length + "x ".length)
+        type("lip ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("filip ")
+        assertWithMessage("fix→toy reversed").that(bigram("fix", "toy")).isEqualTo(0)
+        assertWithMessage("no fix→filip").that(bigram("fix", "filip")).isEqualTo(0)
+        assertWithMessage("fix's +1 reversed").that(vocabulary.getWordUsage("fix")).isNull()
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
     }
 
     // ------------------------------------------------------------------ reflection

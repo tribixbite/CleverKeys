@@ -2289,6 +2289,13 @@ class SuggestionHandler(
     ) {
         /** Set once an edit left the word's region: later edits do no editor reads for it. */
         var editChecksOff = false
+
+        /**
+         * Set when this placement is watched again because the word learned after it was removed
+         * from the editor: what is left of that word (`to` of `toy`), which still sits after this
+         * word's separator until it is deleted too. "" when nothing is left.
+         */
+        var remains = ""
     }
 
     /** One editor read around the caret: text before (null if unreadable) and after it. */
@@ -2303,6 +2310,14 @@ class SuggestionHandler(
     private var imeDeletionPending = false
 
     private var learnedPlacement: LearnedPlacement? = null
+
+    /**
+     * The placement of the word learned before [learnedPlacement] while the learn window still
+     * ends with it, so that when the newest word is undone (the #110 Backspace undo, a proven
+     * removal) the restored previous word is watched again (Saga r22: `so ` + swipe `well`, the
+     * undo, `so` deleted by hand, then `fix` learned `so → fix`).
+     */
+    private var previousPlacement: LearnedPlacement? = null
 
     /** The field the input view last started for (package, field id, input type); null before any. */
     private var startedFieldIdentity: String? = null
@@ -2332,6 +2347,7 @@ class SuggestionHandler(
             predictor?.onInputSessionChanged()
             // Another field's word is no proof about this one's text.
             learnedPlacement = null
+            previousPlacement = null
         }
     }
 
@@ -3335,7 +3351,8 @@ class SuggestionHandler(
         val read = ic?.let { readAroundCaret(it, word) }
         // W2 follow-up: the previous learned word may have been deleted in the editor since, or
         // this word may be going in somewhere else (the cursor moved back to an earlier word).
-        if (ic != null && read != null) reconcileLearnWithEditor(word, ic, read)
+        val prior = learnedPlacement
+        val outcome = if (ic != null && read != null) reconcileLearnWithEditor(word, ic, read) else Reconciled.UNCHECKED
 
         // Use the current source from tracker, or UNKNOWN if not set
         val source = contextTracker.getLastCommitSource() ?: PredictionSource.UNKNOWN
@@ -3349,7 +3366,16 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
         lastLearningCommit = predictionCoordinator.getWordPredictor()?.latestLearningCommit()
-        learnedPlacement = read?.let { placementOf(word, lastLearningCommit, it) }
+        val placed = read?.let { placementOf(word, lastLearningCommit, it) }
+        // The word before this one, while the learn window still ends with it: a removed prior
+        // was replaced by this word, so ITS predecessor stays; a closed window keeps nothing.
+        previousPlacement = when {
+            placed == null -> null
+            outcome == Reconciled.REMOVED -> previousPlacement
+            outcome == Reconciled.KEPT -> prior
+            else -> null
+        }
+        learnedPlacement = placed
 
         // ARC-006: the UnigramLanguageDetector feed that used to live here was deleted
         // 2026-08-28. It had been write-only since OptimizedVocabulary was removed — every
@@ -3441,13 +3467,18 @@ class SuggestionHandler(
         val before = editorTextBeforeCursor(ic, window) ?: return
         val kept = keptPrefixOfShortenedWord(placed.anchor, before, word)
         if (kept == null) {
-            if (!inPlacementRegion(placed, before)) placed.editChecksOff = true
+            if (!inPlacementRegion(placed, before) && !inRemainsOfRemovedWord(placed, before)) placed.editChecksOff = true
             return
         }
         val afterNow = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return
         if (!afterShowsRemovedRest(placed, kept, afterNow, recordedAfter, ic)) return
         learnedPlacement = null
         applyProvenRemoval(placed)
+        // The learn window ends with the previous word again: watch its place (Pixel r22, `fix `
+        // + swipe `toy`, Backspace into `fix`, `lip`: `fix → filip`). The rest of the removed
+        // word still stands after it until the next Backspaces take it.
+        learnedPlacement = previousPlacement?.also { it.remains = kept }
+        previousPlacement = null
         vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
         // What is left of the word is the word being typed now (Fable review 2026-11-26): the
         // debounced cursor sync may not have run yet, so `t` + space learned the fragment `t`,
@@ -3504,6 +3535,26 @@ class SuggestionHandler(
             if (before.length < need || (placed.wholeField && before.length != need)) continue
             if (before.regionMatches(before.length - need, anchor, 0, anchor.length) &&
                 before.regionMatches(before.length - k, full, 0, k, ignoreCase = true)
+            ) return true
+        }
+        return false
+    }
+
+    /**
+     * [placed] is watched again after the word learned behind it was removed, and [before] still
+     * shows what is left of that word ([LearnedPlacement.remains], or a prefix of it) right after
+     * [placed]'s whole word and separator: [placed] itself is untouched so far.
+     */
+    private fun inRemainsOfRemovedWord(placed: LearnedPlacement, before: String): Boolean {
+        val remains = placed.remains
+        val full = placed.word + placed.trailing
+        val anchor = placed.anchor
+        for (k in remains.length downTo 1) {
+            val need = anchor.length + full.length + k
+            if (before.length < need || (placed.wholeField && before.length != need)) continue
+            if (before.regionMatches(before.length - k, remains, 0, k, ignoreCase = true) &&
+                before.regionMatches(before.length - k - full.length, full, 0, full.length, ignoreCase = true) &&
+                before.regionMatches(before.length - need, anchor, 0, anchor.length)
             ) return true
         }
         return false
@@ -3705,11 +3756,11 @@ class SuggestionHandler(
      * in front of it, or after a deleted space alone fails one of them. An editor that cannot be
      * read decides nothing, and an empty anchor (the field's first word) proves nothing.
      */
-    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection, read: CaretRead) {
-        val placed = learnedPlacement ?: return
+    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection, read: CaretRead): Reconciled {
+        val placed = learnedPlacement ?: return Reconciled.UNCHECKED
         learnedPlacement = null
-        val editor = read.before ?: return
-        val predictor = predictionCoordinator.getWordPredictor() ?: return
+        val editor = read.before ?: return Reconciled.UNCHECKED
+        val predictor = predictionCoordinator.getWordPredictor() ?: return Reconciled.UNCHECKED
         // No identity check against [lastLearningCommit] (audit A1): an input restart or a
         // dictation write nulls it, and both checks below then never ran, while the learn window
         // kept the word. The receipt check in [applyProvenRemoval] is the predictor's.
@@ -3719,13 +3770,28 @@ class SuggestionHandler(
         ) {
             applyProvenRemoval(placed)
             vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }
-            return
+            return Reconciled.REMOVED
         }
-        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return
-        if (textBeforeTrailingWord(beforeNew, placed.word)?.let { endsAtWordBoundary(it, placed.word) } == true) return
+        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return Reconciled.UNCHECKED
+        if (textBeforeTrailingWord(beforeNew, placed.word)?.let { endsAtWordBoundary(it, placed.word) } == true) {
+            return Reconciled.KEPT
+        }
         vlog { "LEARN WINDOW CLOSED: this word does not follow the previous one in the editor" }
         predictor.onSentenceBoundary()
         lastLearningCommit = null
+        return Reconciled.CLOSED
+    }
+
+    /** What [reconcileLearnWithEditor] found about the newest learned word. */
+    private enum class Reconciled {
+        /** Nothing could be proven (no placement, or an unreadable editor). */
+        UNCHECKED,
+        /** It was gone; its learning was reversed and the new word takes its place. */
+        REMOVED,
+        /** It directly precedes the new word: the pair is learned. */
+        KEPT,
+        /** The new word does not follow it: the learn window was closed. */
+        CLOSED,
     }
 
     /**
@@ -3770,8 +3836,12 @@ class SuggestionHandler(
             ?.rollbackCommittedWord(word, fieldAllowsPersonalizedLearning)
         contextTracker.rollbackLastWord(word)
         // Its learning is reversed already: its placement must not prove a "removal" again, which
-        // would find the receipt gone and close the learn window the replacement learns with.
-        if (learnedPlacement?.word.equals(word, ignoreCase = true)) learnedPlacement = null
+        // would find the receipt gone and close the learn window the replacement learns with. The
+        // window ends with the previous word again, so that word's place is watched (Saga r22).
+        if (learnedPlacement?.word.equals(word, ignoreCase = true)) {
+            learnedPlacement = previousPlacement?.also { it.remains = "" }
+            previousPlacement = null
+        }
     }
 
     /**
