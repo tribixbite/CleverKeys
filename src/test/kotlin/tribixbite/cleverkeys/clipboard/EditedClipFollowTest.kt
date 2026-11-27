@@ -26,8 +26,7 @@ class EditedClipFollowTest {
         old: String = "meet at 5",
         new: String = "meet at 6",
         fillEmpty: Boolean = true,
-        editorClip: String? = null,
-    ) = EditedClipFollow.textToPut(tab, isPrivate, systemClip, old, new, fillEmpty, storedForm, editorClip)
+    ) = EditedClipFollow.textToPut(tab, isPrivate, systemClip, old, new, fillEmpty, storedForm)
 
     @Test
     fun theEditedHistoryRowThatIsTheSystemClipReplacesIt() {
@@ -83,50 +82,25 @@ class EditedClipFollowTest {
         assertThat(put(tab = ClipboardTab.PINNED, systemClip = SystemClip.Empty)).isNull()
     }
 
-    // ── Maintainer 2026-11-26: "short swipe paste function didn't paste it" ─────────────────
-    // They had just copied `https://github.com/rustdesk/rustdesk-server` and edited it into
-    // `…/tribixbite/rustdesk-server`. Cutting or copying INSIDE the editor puts that fragment on
-    // Android's clipboard, so at Save the clip was no longer the row's old text and the edit did
-    // not follow: the paste gave the fragment. The editor's own clip ([editorClip]: passed only
-    // while the clip it replaced was this clipping, see ClipboardHistoryView.exposeEditSelection)
-    // counts as this clipping.
+    // ── Maintainer decision 2026-11-26: a fragment cut or copied in the editor stays ──────────
+    // "anything cut or copied appears above the entry being edited". Cutting or copying INSIDE the
+    // editor puts that fragment on Android's clipboard; the edit's Save never replaces it (the
+    // fragment is not the row's old text), so the paste gives the fragment and History shows it as
+    // a new row above the edited entry. (c9d61bcdd had made Save replace it; removed.)
 
     private val url = "https://github.com/rustdesk/rustdesk-server"
     private val urlEdited = "https://github.com/tribixbite/rustdesk-server"
 
     @Test
-    fun aClipTheEditorPutThereWhileEditingThisClippingFollowsTheEdit() {
-        assertThat(
-            put(systemClip = SystemClip.Text("rustdesk"), old = url, new = urlEdited, editorClip = "rustdesk")
-        ).isEqualTo(urlEdited)
+    fun aFragmentTheEditorCutOrCopiedIsNeverReplacedBySave() {
+        assertThat(put(systemClip = SystemClip.Text("rustdesk"), old = url, new = urlEdited)).isNull()
+        assertWithMessage("even a fragment that is the row's last word")
+            .that(put(systemClip = SystemClip.Text("rustdesk-server"), old = url, new = urlEdited)).isNull()
     }
 
     @Test
-    fun theEditorsClipCountsOnlyWhileItIsStillOnTheClipboard() {
-        assertWithMessage("another app copied after the editor's cut: not ours to replace")
-            .that(put(systemClip = SystemClip.Text("hunter2"), old = url, new = urlEdited, editorClip = "rustdesk"))
-            .isNull()
-        assertWithMessage("no editor clip: the old rule (the clip must be the row)")
-            .that(put(systemClip = SystemClip.Text("rustdesk"), old = url, new = urlEdited, editorClip = null))
-            .isNull()
-    }
-
-    @Test
-    fun theEditorsClipNeverCarriesAPrivateOrCopiedRowToTheClipboard() {
-        assertThat(put(isPrivate = true, systemClip = SystemClip.Text("rustdesk"), old = url, new = urlEdited, editorClip = "rustdesk")).isNull()
-        assertThat(put(tab = ClipboardTab.PINNED, systemClip = SystemClip.Text("rustdesk"), old = url, new = urlEdited, editorClip = "rustdesk")).isNull()
-    }
-
-    @Test
-    fun theWorkingClipIsTheRowTheEditorsOwnClipOrNothing() {
-        fun working(clip: SystemClip, editorClip: String? = null) =
-            EditedClipFollow.isWorkingClip(clip, url, editorClip, storedForm)
-        assertWithMessage("the row as opened").that(working(SystemClip.Text(url))).isTrue()
-        assertWithMessage("in the form the History stored it").that(working(SystemClip.Text("$url?utm_source=x"))).isTrue()
-        assertWithMessage("the editor's own earlier cut").that(working(SystemClip.Text("rust"), editorClip = "rust")).isTrue()
-        assertWithMessage("an empty clipboard holds nothing to protect").that(working(SystemClip.Empty)).isTrue()
-        assertWithMessage("another clipping").that(working(SystemClip.Text("meet at 5"))).isFalse()
-        assertWithMessage("an image or an unreadable clip").that(working(SystemClip.Unknown)).isFalse()
+    fun theRowAsOpenedOnTheClipboardStillFollows() {
+        assertThat(put(systemClip = SystemClip.Text(url), old = url, new = urlEdited)).isEqualTo(urlEdited)
     }
 
     @Test

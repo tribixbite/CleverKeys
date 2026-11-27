@@ -154,17 +154,16 @@ class EditedClipPasteInstrumentedTest {
     }
 
     /**
-     * Maintainer 2026-11-26: they copied `https://github.com/rustdesk/rustdesk-server`, edited it
-     * into `…/tribixbite/rustdesk-server` in the pane, and "short swipe paste function didn't paste
-     * it". A cut inside the editor had put the fragment on Android's clipboard, so at Save the clip
-     * was no longer the row and the edit did not follow. The editor passes its own cut
-     * (`ClipboardHistoryView.exposeEditSelection` → `editorClip`); the paste then gives the edit.
+     * Maintainer decision 2026-11-26: "anything cut or copied appears above the entry being
+     * edited". A fragment the editor cuts or copies goes on Android's clipboard (as
+     * `ClipboardHistoryView.exposeEditSelection` writes it), is captured as a new History row above
+     * the entry, and the entry's Save does not replace it: the paste short swipe gives the fragment.
      */
     @Test
-    fun theSubkeyPasteGivesTheEditAfterTheEditorCutPartOfIt() {
+    fun aFragmentCutInTheEditorIsWhatThePasteGivesAfterSave() {
         val nonce = SystemClock.uptimeMillis()
         val original = "https://github.com/rustdesk/rustdesk-server?ck=$nonce"
-        val fragment = "rustdesk"
+        val fragment = "rustdesk $nonce"
         val edited = "https://github.com/tribixbite/rustdesk-server?ck=$nonce"
         val history = requireNotNull(ClipboardHistoryService.get_service(context)) { "no clipboard service" }
         try {
@@ -178,23 +177,19 @@ class EditedClipPasteInstrumentedTest {
                 instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("test", original)) }
                 assertTrue("the copy reached CleverKeys' history", within(5_000L) { history.historyEntryTimestamp(original) != null })
 
-                // The editor's cut of the org segment, as exposeEditSelection writes it, while the
-                // clip it replaces is the row being edited.
-                var working = false
-                instrumentation.runOnMainSync {
-                    working = history.systemClipIsWorkingClip(ClipboardTab.HISTORY, original, null)
-                    clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", fragment))
-                }
-                assertTrue("the copied row is the clip the edit works with", working)
+                // The editor's cut, as exposeEditSelection writes it; it is captured like any copy.
+                instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", fragment)) }
+                assertTrue("the cut fragment became a History row", within(5_000L) { history.historyEntryTimestamp(fragment) != null })
 
                 var result: EditEntryResult? = null
-                instrumentation.runOnMainSync {
-                    result = history.editEntryContent(original, edited, ClipboardTab.HISTORY, editorClip = fragment)
-                }
+                instrumentation.runOnMainSync { result = history.editEntryContent(original, edited, ClipboardTab.HISTORY) }
                 assertEquals(EditEntryResult.Success, result)
                 Thread.sleep(500L)
 
-                assertEquals("the paste short swipe must give the clipping as edited", edited, pasteWithTheSubkey(activity))
+                assertEquals("the paste short swipe gives the cut fragment, not the saved entry", fragment, pasteWithTheSubkey(activity))
+                val fragmentAt = requireNotNull(history.historyEntryTimestamp(fragment))
+                val editedAt = requireNotNull(history.historyEntryTimestamp(edited)) { "the edit was saved" }
+                assertTrue("the fragment's row is above the edited entry", fragmentAt > editedAt)
             }
         } finally {
             instrumentation.runOnMainSync {

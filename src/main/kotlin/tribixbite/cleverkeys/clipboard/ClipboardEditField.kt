@@ -47,8 +47,8 @@ class ClipboardEditField @JvmOverloads constructor(
      * caret's Paste bubble); true when it handled the action, and then the platform's own does not
      * run. The list binds it to the editor's own cut, copy and paste, so those keep the editor's
      * rules: the #156 private-entry confirmation (the platform's copy put a private entry's text
-     * on Android's clipboard without asking), an undo step, and the clipboard follow at Save
-     * (maintainer 2026-11-26). Null outside an edit: everything is the platform's.
+     * on Android's clipboard without asking) and an undo step (2026-11-26). Null outside an edit:
+     * everything is the platform's.
      */
     var textMenuHandler: ((id: Int) -> Boolean)? = null
 

@@ -269,8 +269,9 @@ Routing priority matches the IME key-event chain (see `.claude/skills/ime-key-ro
 1. Should history entries support tags? Currently only pinned/todos do. Adding tags to history would blur the ephemeral/curated boundary.
 2. Should "add to todo" from a pinned entry default to the pinned entry's current tags? Currently todos start with empty tags.
 3. Drag-and-drop ordering within Pinned — `position REAL` column is in place but the UI isn't wired yet.
-4. Clipboard follow after a cut or copy inside the editor (2026-11-26, waiting for the
-   maintainer): see "Editing a clipping in the pane" → "Open question" at the end of this spec.
+4. ~~Clipboard follow after a cut or copy inside the editor.~~ Decided 2026-11-26 by the
+   maintainer: such a fragment stays on the clipboard and is the row above the entry; Save never
+   replaces it ("Editing a clipping in the pane", end of this spec).
 5. A History edit whose new text is already another History row is refused as a duplicate (D-7,
    now shown inline). Should it merge into that row instead? Not decided.
 
@@ -1005,8 +1006,8 @@ change made for it).
   left it. getView reads that caret before its `setText`.
 - The text toolbar's Cut / Copy / Paste go through the editor's own cut / copy / paste
   (`textMenuHandler`): the #156 confirmation before a private entry's text reaches Android's
-  clipboard, an undo step, and the clip follow below. Select all, Share and the text
-  classifier's actions stay the platform's (Share on a private entry is a TODO).
+  clipboard and an undo step; the fragment stays on the clipboard (below). Select all, Share and
+  the text classifier's actions stay the platform's (Share on a private entry is a TODO).
 
 **Cursor movement.** A cursor slider routed to the editor picks its arrow by the repeat's sign as
 well as its kind (a slide that turns back sends a negative repeat; zero moves nothing). Left /
@@ -1021,33 +1022,22 @@ is "the clipping the user is working with":
    (URL-cleaned, trimmed) — 2026-11-23;
 2. nothing: an empty clipboard (Android 13+ clears it an hour after the last copy), for one
    clipping edited or cleaned (`fillEmpty`; Clean on several rows passes false) — 2026-11-24;
-3. `editorClip`: what this edit's own cut or copy (Ctrl+X / Ctrl+C, the cut and copy keys, the
-   field's text toolbar) put there while the clip it replaced was 1, 2 or an earlier such cut —
-   2026-11-26. Just before its own cut / copy writes, the view asks
-   `ClipboardHistoryService.systemClipIsWorkingClip(tab, opened, editingOwnClip)` and keeps the
-   fragment in `editingOwnClip` (null otherwise; reset on open and cancel); `save_edit` passes it
-   to `editEntryContent(old, new, tab, editorClip)`; `EditedClipFollow.isWorkingClip` decides.
 Never followed: Pinned and To-dos rows (copies of a clipping, not the clipping), a private row or
 one whose privacy cannot be read (#156), a non-text or unreadable clip, an OLD row's edit (the
-clip is another clipping; a fragment cut from such a row stays on the clipboard), and a clip
-another app put there after the editor's cut. Tests: `EditedClipFollowTest` (pure),
-`ClipboardEditCutFollowTest` (mock, the real view and service over a fake clipboard),
-`EditedClipPasteInstrumentedTest` (real IME and paste; the cut case not yet run).
+clip is another clipping), and a fragment the editor itself cut or copied (below). Tests:
+`EditedClipFollowTest` (pure), `ClipboardEditCutFollowTest` (mock, the real view and service over
+a fake clipboard), `EditedClipPasteInstrumentedTest` (real IME and paste).
 
-**Open question: the follow after an in-editor cut or copy (Fable review 2026-11-26, maintainer
-to decide; rule 3 is unchanged until then).** Rule 3 has a cost: open the newest row, Copy (or
-Cut) a fragment in order to paste it somewhere else, make another change, Save — Android's
-clipboard then holds the whole edited entry, not the fragment the user meant to paste. Options:
-- **(a) Follow only after a Cut.** A cut moves text out of the entry (often to put it back in
-  the same field); a copy is usually meant for elsewhere. Simple, but a Cut meant for elsewhere
-  is still replaced.
-- **(b) Follow only when the fragment was pasted back into the field.** The editor's cut / copy
-  then served the edit itself (moving text inside the entry), so the clipboard holds nothing the
-  user still needs. Needs the editor's paste to record that it pasted `editingOwnClip`.
-- **(c) Follow only while the clip is still a substring of the opened text.** Every cut or copy
-  the editor makes comes from the text it opened, so against the OPENED text this only excludes a
-  clip that came from elsewhere (which rule 3 already refuses); it does not tell "copied to paste
-  elsewhere" apart. Checked against the EDITED text instead, it would follow a fragment that was
-  moved within the entry and not one that was cut out of it.
-(Dropping rule 3 restores the 2026-11-23 behaviour: after an in-editor cut or copy, the paste
-gives the fragment.)
+**A cut or copy inside the editor stays on the clipboard (maintainer decision 2026-11-26).** For
+a day (`c9d61bcdd`) a third rule let Save replace a fragment the editor itself had cut or copied
+while the row was the clip. Fable flagged the cost (a fragment copied to paste ELSEWHERE was
+replaced by the whole entry at Save) and the maintainer chose the earlier behaviour: "anything cut
+or copied appears above the entry being edited. The bug I reported was unrelated and was simply
+editing the entry." The rule was removed (the options considered — follow only after a Cut, only
+when the fragment was pasted back, only while the clip is a substring of the text — are moot). A
+fragment cut or copied in the editor (Ctrl+X / Ctrl+C, the cut and copy keys, the field's text
+toolbar) is the user's clip: the capture records it as a new History row above the entry, the
+paste gives it, and the entry's Save leaves it there. Tests: `ClipboardEditCutFollowTest` (mock:
+the fragment is the clip and the row above the edited entry after Save, for Cut, Copy and the
+toolbar's Cut), `EditedClipFollowTest`, and
+`EditedClipPasteInstrumentedTest.aFragmentCutInTheEditorIsWhatThePasteGivesAfterSave`.

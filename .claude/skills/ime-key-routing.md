@@ -285,7 +285,7 @@ looked like a dead checkmark; and a caret read after setText would be setText's 
   caret where the user put it. Ignored outside an edit.
 - `textMenuHandler` — the field's text toolbar (long press, double tap, the Paste bubble) offers
   Cut / Copy / Paste to the editor's own `cutFromEditText` / `copyFromEditText` /
-  `pasteToEditText` first (the #156 private-entry confirmation, an undo step, the clip follow);
+  `pasteToEditText` first (the #156 private-entry confirmation, an undo step);
   everything else stays the platform's.
 Tests: `ClipboardEditSaveErrorTest`, `ClipboardEditCaretTrackingTest`, `ClipboardEditCutFollowTest`
 (mock; `ClipboardEditorRowFixture` gives a field whose setText resets the selection and notifies

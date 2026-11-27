@@ -807,14 +807,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * whitespace/newline-only changes are real edits and persist verbatim.
      * COPY semantics: only the entry in the specified tab is modified;
      * copies in other tabs are unaffected. One edited clipping may also go onto Android's
-     * clipboard ([followEditOnSystemClipboard]). [editorClip] is what the inline editor itself put
-     * on Android's clipboard during this edit (its cut / copy) while the clip it replaced was this
-     * clipping ([systemClipIsWorkingClip]); null when it put none.
+     * clipboard ([followEditOnSystemClipboard]).
      *
      * @return EditEntryResult indicating success, duplicate conflict, or error
      */
-    fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab, editorClip: String? = null): EditEntryResult =
-        editEntryFollowingClipboard(oldContent, newContent, tab, fillEmptyClipboard = true, editorClip = editorClip).result
+    fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult =
+        editEntryFollowingClipboard(oldContent, newContent, tab, fillEmptyClipboard = true).result
 
     /** [editEntryContent]'s result, and whether the edited text was put on Android's clipboard. */
     data class EditOutcome(val result: EditEntryResult, val onSystemClipboard: Boolean)
@@ -830,7 +828,6 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         newContent: String,
         tab: ClipboardTab,
         fillEmptyClipboard: Boolean,
-        editorClip: String? = null,
     ): EditOutcome {
         // Shared exact-comparison policy (no trim — see ClipboardEditPolicy KDoc)
         when (ClipboardEditPolicy.decide(oldContent, newContent)) {
@@ -857,7 +854,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         if (result !is EditEntryResult.Success) return EditOutcome(result, false)
         notifyHistoryChanged()
-        return EditOutcome(result, followEditOnSystemClipboard(tab, oldContent, newContent, fillEmptyClipboard, editorClip))
+        return EditOutcome(result, followEditOnSystemClipboard(tab, oldContent, newContent, fillEmptyClipboard))
     }
 
     /** What [followEditOnSystemClipboard] last put on Android's clipboard; its capture is skipped once. */
@@ -866,23 +863,16 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /**
      * The edited row was the clip on Android's clipboard, or the clipboard is empty and
-     * [fillEmpty], or the clip is [editorClip] (the inline editor's own cut / copy of this
-     * clipping): put the edited text there, so the paste key, the app's own Paste and RustDesk's
-     * paste give what the pane shows (maintainer 2026-11-23, 2026-11-24 and 2026-11-26;
-     * [EditedClipFollow] decides). Inline edits and Clean both come through here. True when the
-     * text is put.
+     * [fillEmpty]: put the edited text there, so the paste key, the app's own Paste and RustDesk's
+     * paste give what the pane shows (maintainer 2026-11-23 and 2026-11-24; [EditedClipFollow]
+     * decides; a fragment the editor cut or copied stays, maintainer 2026-11-26). Inline edits and
+     * Clean both come through here. True when the text is put.
      */
-    private fun followEditOnSystemClipboard(
-        tab: ClipboardTab,
-        oldContent: String,
-        newContent: String,
-        fillEmpty: Boolean,
-        editorClip: String?,
-    ): Boolean {
+    private fun followEditOnSystemClipboard(tab: ClipboardTab, oldContent: String, newContent: String, fillEmpty: Boolean): Boolean {
         if (tab != ClipboardTab.HISTORY) return false
         val put = EditedClipFollow.textToPut(
             tab, _database.historyEntryIsPrivate(newContent), readSystemClipForFollow(), oldContent, newContent, fillEmpty,
-            storedForm = ::storedFormOf, editorClip = editorClip,
+            storedForm = ::storedFormOf,
         ) ?: return false
         ownEditOnSystemClip = put
         serviceScope.launch {
@@ -898,17 +888,6 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /** [text] in the form the History stores a copy of it ([storeClip]: URL-cleaned, trimmed). */
     private fun storedFormOf(text: String): String = _sanitizationConfig.sanitizer().process(text).trim()
-
-    /**
-     * Whether Android's clipboard holds, right now, the clipping an inline edit of [openedContent]
-     * on [tab] works with ([EditedClipFollow.isWorkingClip]): that History row's text, the
-     * editor's own earlier cut / copy ([editorClip]), or nothing. The editor asks just before its
-     * own cut or copy replaces the clip; only then may the edit's Save replace that cut later.
-     * Pinned and To-dos rows are copies and never follow, so they are never the working clip.
-     */
-    fun systemClipIsWorkingClip(tab: ClipboardTab, openedContent: String, editorClip: String?): Boolean =
-        tab == ClipboardTab.HISTORY &&
-            EditedClipFollow.isWorkingClip(readSystemClipForFollow(), openedContent, editorClip, ::storedFormOf)
 
     /**
      * Android's clipboard as [EditedClipFollow] needs it. The pane is open in this keyboard, the
