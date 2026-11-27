@@ -467,4 +467,24 @@ class LearningWiringDriftTest {
         assertThat(ensure).isGreaterThan(-1)
         assertThat(onCreate.indexOf("initGlobalConfig(")).isGreaterThan(ensure)
     }
+
+    /** Item 8: a pack import or removal reaches the running keyboard at once. */
+    @Test
+    fun `a language pack operation makes the keyboard re-resolve its languages`() {
+        val service = readSource("CleverKeysService.kt")
+        val onCreate = service.substringAfter("override fun onCreate()").substringBefore("\n    override fun ")
+        assertThat(onCreate).contains("IntentFilter(ACTION_LANGUAGE_PACKS_CHANGED)")
+        val received = service.substringAfter("private fun onLanguagePacksChanged()").substringBefore("\n    }\n")
+        assertThat(received).contains("_configManager.refresh(resources)")
+        assertThat(received).contains("reloadWordPredictorSecondaryDictionary(")
+        assertThat(service.substringAfter("override fun onDestroy()").substringBefore("\n    override fun "))
+            .contains("_languagePacksReceiver")
+
+        val handlers = readSource("ui/settings/io/SettingsLanguagePackHandlers.kt")
+        val import = handlers.substringAfter("fun SettingsActivity.performLanguagePackImport(").substringBefore("\n}\n")
+        assertThat(import).contains("CleverKeysService.notifyLanguagePacksChanged(appContext)")
+        val delete = handlers.substringAfter("fun SettingsActivity.deleteLanguagePack(").substringBefore("\n}\n")
+        assertThat(delete).contains("CleverKeysService.notifyLanguagePacksChanged(appContext)")
+    }
+
 }

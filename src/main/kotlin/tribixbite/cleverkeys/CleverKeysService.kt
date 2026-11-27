@@ -179,12 +179,29 @@ class CleverKeysService : InputMethodService(),
     // Theme change broadcast receiver
     private var _themeChangeReceiver: BroadcastReceiver? = null
 
+    /** [ACTION_LANGUAGE_PACKS_CHANGED] receiver, unregistered in onDestroy. */
+    private var _languagePacksReceiver: BroadcastReceiver? = null
+
     companion object {
         /** Lets a theme change re-inflate the keyboard before its name shows in the bar. */
         private const val THEME_MESSAGE_DELAY_MS = 350L
 
         /** Broadcast action sent when theme changes in ThemeSettingsActivity */
         const val ACTION_THEME_CHANGED = "tribixbite.cleverkeys.ACTION_THEME_CHANGED"
+
+        /**
+         * App-private broadcast: a language pack was imported or removed (Settings →
+         * Multi-Language). An import changes no preference, so without it the keyboard kept a
+         * stored secondary whose pack had just arrived resolved to none until its next Config
+         * refresh (2026-11-26).
+         */
+        const val ACTION_LANGUAGE_PACKS_CHANGED = "tribixbite.cleverkeys.ACTION_LANGUAGE_PACKS_CHANGED"
+
+        /** Tell a running keyboard that the installed language packs changed. Any thread. */
+        @JvmStatic
+        fun notifyLanguagePacksChanged(context: Context) {
+            context.sendBroadcast(Intent(ACTION_LANGUAGE_PACKS_CHANGED).setPackage(context.packageName))
+        }
 
         /**
          * Boolean extra of [ACTION_THEME_CHANGED]: rebuild the keyboard view even when its theme
@@ -529,6 +546,15 @@ class CleverKeysService : InputMethodService(),
         _themeChangeReceiver = themeChangeReceiver
         PrivateReceivers.register(this, themeChangeReceiver, IntentFilter(ACTION_THEME_CHANGED))
 
+        // A language pack imported or removed in Settings: re-resolve the languages at once.
+        val languagePacksReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == ACTION_LANGUAGE_PACKS_CHANGED) onLanguagePacksChanged()
+            }
+        }
+        _languagePacksReceiver = languagePacksReceiver
+        PrivateReceivers.register(this, languagePacksReceiver, IntentFilter(ACTION_LANGUAGE_PACKS_CHANGED))
+
         // The default-keyboard reminder (I-7) is NOT checked here: Android creates this service
         // only while CleverKeys is becoming the selected keyboard, so the check could only misfire
         // (reading the previous default mid-switch) and burn the once-per-boot slot. The launcher
@@ -640,6 +666,14 @@ class CleverKeysService : InputMethodService(),
                 // Receiver may not have been registered
             }
             _themeChangeReceiver = null
+        }
+        _languagePacksReceiver?.let {
+            try {
+                unregisterReceiver(it)
+            } catch (e: Exception) {
+                // Receiver may not have been registered
+            }
+            _languagePacksReceiver = null
         }
 
         // Cleanup all managers (v1.32.404: extracted to CleanupHandler)
@@ -1653,6 +1687,20 @@ class CleverKeysService : InputMethodService(),
         if (key != null && LanguagePreferenceKeys.languageFromDisabledWordsKey(key) != null) {
             _predictionCoordinator?.getWordPredictor()?.reloadDisabledWords()
         }
+    }
+
+    /**
+     * [ACTION_LANGUAGE_PACKS_CHANGED]: re-resolve the active languages now. The refresh runs
+     * [onConfigChanged], whose ActiveLanguageSync loads a secondary that became available (a pack
+     * imported for a stored-but-missing secondary) and drops one that went. A pack re-imported
+     * for the SAME active secondary changes no resolution, so its dictionary is reloaded here from
+     * the new file.
+     */
+    private fun onLanguagePacksChanged() {
+        val before = _config?.activeLanguages()?.secondary
+        _configManager.refresh(resources)
+        val after = _config?.activeLanguages()?.secondary
+        if (after != null && after == before) _predictionCoordinator?.reloadWordPredictorSecondaryDictionary(after)
     }
 
     override fun onEvaluateFullscreenMode(): Boolean {

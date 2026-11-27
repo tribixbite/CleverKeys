@@ -17,6 +17,7 @@ import tribixbite.cleverkeys.LanguagePrefs
 import tribixbite.cleverkeys.R
 import tribixbite.cleverkeys.ResourcesResultText
 import tribixbite.cleverkeys.SettingsActivity
+import tribixbite.cleverkeys.CleverKeysService
 import tribixbite.cleverkeys.langpack.ImportResult
 import tribixbite.cleverkeys.langpack.LanguagePackManager
 import tribixbite.cleverkeys.swipe.CtcInstalledPacks
@@ -103,6 +104,9 @@ internal fun SettingsActivity.performLanguagePackImport(uri: Uri) {
     val started = SettingsImports.languagePack.start(null) {
         val followUp = catchingFailures({
             val result = LanguagePackManager.getInstance(appContext).importLanguagePack(uri)
+            // The running keyboard re-resolves its languages now, even when Settings is left: an
+            // import changes no preference, so nothing else tells it (2026-11-26).
+            if (result is ImportResult.Success) CleverKeysService.notifyLanguagePacksChanged(appContext)
             followUp { showLanguagePackImportResult(result) }
         }) { e ->
             android.util.Log.e(SettingsActivity.TAG, "Language pack import failed", e)
@@ -199,6 +203,8 @@ internal fun SettingsActivity.deleteLanguagePack(code: String) {
                         languagePrefs, LanguagePrefs.SECONDARY_ALT, Defaults.SECONDARY_LANGUAGE_ALT
                     ),
                 )
+                // The keyboard re-resolves at once (a removal that resets no preference too).
+                CleverKeysService.notifyLanguagePacksChanged(appContext)
                 if (resets.isNotEmpty()) {
                     // commit: the keyboard's preference listener reloads its languages from it.
                     languagePrefs.edit().apply { resets.forEach { (key, value) -> putString(key, value) } }.commit()
