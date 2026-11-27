@@ -182,6 +182,9 @@ interface Predictor {
      */
     fun learnWindowEndsWith(word: String): Boolean = false
 
+    /** The learn window's last word (lowercase), or null when it is empty. */
+    fun learnWindowLastWord(): String? = null
+
     /** Undo a learn performed by [addWordToContext] (autocorrect reverted by the user). */
     fun rollbackCommittedWord(word: String, fieldAllowsPersonalizedLearning: Boolean = true)
 

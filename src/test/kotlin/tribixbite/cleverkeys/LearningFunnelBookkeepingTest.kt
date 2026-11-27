@@ -3040,6 +3040,75 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("mop's +1 reversed").that(vocabulary.getWordUsage("mop")).isNull()
     }
 
+    // -------------------------------------------------------- Pixel r24 (2026-11-27): clears
+
+    /** Ctrl+Backspace: the keyboard's word delete (KeyEventHandler DELETE_WORD) of the word before the caret. */
+    private fun ctrlBackspace(field: EditorInfo = textField()) {
+        reportedCaret = cursor()
+        handler.onImeDeletion()
+        val text = editor.toString()
+        var i = text.length
+        while (i > 0 && text[i - 1] == ' ') i--
+        while (i > 0 && text[i - 1] != ' ') i--
+        editor.setLength(i)
+        cursorSync(field)
+    }
+
+    private fun assertNoPairWithClearedWords(words: List<String>) {
+        for (w in words) assertWithMessage("no $w→now").that(bigram(w, "now")).isEqualTo(0)
+        for (i in 0 until words.size - 1) {
+            assertWithMessage("no ${words[i]} ${words[i + 1]} now").that(trigram(words[i], words[i + 1], "now")).isEqualTo(0f)
+        }
+    }
+
+    /**
+     * Pixel r24: `blue car seat `, Backspace until the field is empty, `now ` learned
+     * `blue → now`: the newest word and the one watched previous word were taken back, but the
+     * third word back stayed in the learn window. 3, 4 and 5 words, letter by letter.
+     */
+    @Test
+    fun clearingAFieldLetterByLetterLeavesNoPairWithTheNextWord() {
+        for (sentence in listOf("blue car seat", "pink cup lid top", "que son el perro grande")) {
+            editor.setLength(0)
+            handler.onInputFieldStarted(textField(), restarting = false, ic)
+            hideAndShowKeyboard(newInput = true) // a fresh field per sentence
+            type("$sentence ")
+            reportedCaret = cursor()
+            backspaceChars(editor.length)
+            type("now ")
+
+            assertWithMessage("editor").that(editor.toString()).isEqualTo("now ")
+            assertNoPairWithClearedWords(sentence.split(" "))
+        }
+    }
+
+    /** The same with repeated Ctrl+Backspace. */
+    @Test
+    fun clearingAFieldWordByWordLeavesNoPairWithTheNextWord() {
+        for (sentence in listOf("blue car seat", "pink cup lid top", "que son el perro grande")) {
+            editor.setLength(0)
+            hideAndShowKeyboard(newInput = true)
+            type("$sentence ")
+            repeat(sentence.split(" ").size) { ctrlBackspace() }
+            type("now ")
+
+            assertWithMessage("editor").that(editor.toString()).isEqualTo("now ")
+            assertNoPairWithClearedWords(sentence.split(" "))
+        }
+    }
+
+    /** The guard: shortening the newest word and retyping it keeps the pair before it. */
+    @Test
+    fun retypingTheEndOfTheNewestWordKeepsThePairBeforeIt() {
+        type("blue car seat ")
+        reportedCaret = cursor()
+        backspaceChars("t ".length)
+        type("t now ")
+
+        assertWithMessage("car→seat kept").that(bigram("car", "seat")).isEqualTo(1)
+        assertWithMessage("seat→now learned").that(bigram("seat", "now")).isEqualTo(1)
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**

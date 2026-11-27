@@ -1614,6 +1614,13 @@ class CleverKeysService : InputMethodService(),
             _suggestionHandler.flushTypedWordOnFinishInput(currentInputConnection)
         }
 
+        // TODO(r24 observation, 2026-11-27): this also runs when a rotation finishes the input
+        // view (Chrome's input restart, an app that recreates its window such as Settings
+        // search; Samsung Notes keeps the view and keeps the undo), so the swipe's auto-insert
+        // tracking is gone and the first Backspace deletes only the trailing space instead of the
+        // #110 whole-word undo. Older than the 2026-11-26/27 learning work (clearAll here dates
+        // from 2026-03-12). Keeping it across a same-field restart would need the editor to prove
+        // the word is still there. Learning is correct either way.
         // Clear prediction context to prevent cross-app text leaking
         // (e.g., typing "t" in app A then "h" in app B showing "th" predictions)
         _contextTracker.clearAll()

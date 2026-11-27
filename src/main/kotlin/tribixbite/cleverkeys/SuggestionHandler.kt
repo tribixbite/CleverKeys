@@ -3544,6 +3544,47 @@ class SuggestionHandler(
             return
         }
         reconcileLearnAfterDeletion(ic, imeDeletion)
+        if (imeDeletion && ic != null) closeWindowWhoseLastWordIsGone(ic)
+    }
+
+    /**
+     * Pixel r24 (2026-11-27): `blue car seat `, Backspace until the field was empty, `now `
+     * learned `blue → now`. Only the newest word and the one watched before it are taken back;
+     * an older word stayed in the learn window and paired with the next commit. After a deletion
+     * by the keyboard, the window's last word must still stand before the caret (past its
+     * separators, or before a word being typed after it); otherwise the window is closed, as at
+     * a sentence boundary, and the bar's context drops the words the editor no longer shows.
+     * The older word's +1 is not taken back (no receipt reaches it). A caret move, an insert
+     * before the word or an app-side clear is not a keyboard deletion and closes nothing here.
+     */
+    private fun closeWindowWhoseLastWordIsGone(ic: InputConnection) {
+        val predictor = predictionCoordinator.getWordPredictor() ?: return
+        val before = editorTextBeforeCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return
+        val last = predictor.learnWindowLastWord()
+        if (last != null && !wordStandsAtEnd(before, last)) {
+            vlog { "LEARN WINDOW CLOSED: the window's last word is no longer before the caret" }
+            predictor.onSentenceBoundary()
+            lastLearningCommit = null
+        }
+        var context = contextTracker.getContextWords()
+        while (context.isNotEmpty() && !wordStandsAtEnd(before, context.last())) {
+            if (!contextTracker.rollbackLastWord(context.last())) break
+            context = contextTracker.getContextWords()
+        }
+    }
+
+    /**
+     * [word] ends [before] (past its trailing separators), or ends it before a run of word
+     * characters typed after a separator (a word being typed or shortened after it).
+     */
+    private fun wordStandsAtEnd(before: String, word: String): Boolean {
+        fun endsWithWord(text: String) =
+            textBeforeTrailingWord(text, word)?.let { endsAtWordBoundary(it, word) } == true
+        if (endsWithWord(before)) return true
+        var i = before.length
+        while (i > 0 && WordChars.isWordCharAt(before, i - 1)) i--
+        if (i == before.length || i == 0) return false
+        return endsWithWord(before.substring(0, i))
     }
 
     /**

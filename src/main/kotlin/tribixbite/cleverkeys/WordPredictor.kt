@@ -1617,6 +1617,11 @@ class WordPredictor : Predictor {
         dropLearnWindow()
     }
 
+    override fun learnWindowLastWord(): String? {
+        refreshLearningEpoch()
+        return recentWords.lastOrNull()
+    }
+
     override fun learnWindowEndsWith(word: String): Boolean {
         refreshLearningEpoch()
         return recentWords.lastOrNull() == word.lowercase().trim()
