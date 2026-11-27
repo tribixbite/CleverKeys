@@ -404,6 +404,10 @@ class ClipboardHistoryTest {
         clipboardService?.setOnClipboardHistoryChange(null)
     }
 
+    /**
+     * Maintainer decision 2026-11-26: an inline History edit into another row's text merges into
+     * that row (it was refused as DuplicateConflict). Pinned and To-dos still refuse.
+     */
     @Test
     fun testEditDuplicateViaService() {
         clearAllTablesForEdit()
@@ -413,7 +417,17 @@ class ClipboardHistoryTest {
         val result = clipboardService?.editEntryContent(
             "Entry X", "Entry Y", ClipboardTab.HISTORY
         )
-        assertTrue("Should be DuplicateConflict", result is EditEntryResult.DuplicateConflict)
+        assertEquals(EditEntryResult.Success, result)
+        val rows = ClipboardDatabase.getInstance(context).getActiveClipboardEntries().map { it.content }
+        assertEquals("the edit merged into Entry Y", listOf("Entry Y"), rows)
+
+        val db = ClipboardDatabase.getInstance(context)
+        db.pinEntry("Pin X")
+        db.pinEntry("Pin Y")
+        assertEquals(
+            EditEntryResult.DuplicateConflict,
+            clipboardService?.editEntryContent("Pin X", "Pin Y", ClipboardTab.PINNED),
+        )
     }
 
     @Test

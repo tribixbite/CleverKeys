@@ -71,6 +71,46 @@ object ClipboardEditPolicy {
      */
     fun updateOutcome(updatedRows: Int): EditEntryResult =
         if (updatedRows > 0) EditEntryResult.Success else EditEntryResult.EntryChanged
+
+    /** What an edit whose new text is already another row of the same table does. */
+    enum class DuplicateAction {
+        /** The edited row goes; the existing row takes its place at the top (History). */
+        MERGE,
+
+        /** [EditEntryResult.DuplicateConflict]: nothing is written, the editor says why. */
+        REFUSE,
+    }
+
+    /**
+     * Maintainer decision 2026-11-26: an inline History edit into another History row's text
+     * merges into that row ([mergeRequested]: the inline editor on History) — History is a log of
+     * copies and never holds one text twice (a capture of an existing text moves that row up,
+     * #108), so the edit means "this clipping is now that one". Pinned and To-dos rows are
+     * curated copies with their own tags, drag order and To-do status, and a merge would have to
+     * drop one row's; Clean on a selection is tidying up: both keep refusing. A row whose
+     * [existingMimeType] is not text (media, whose content is a display name) never absorbs text;
+     * defensive, since its content_hash is the file's SHA-256 and never matches a text hash.
+     */
+    fun duplicateAction(mergeRequested: Boolean, existingMimeType: String?): DuplicateAction =
+        if (mergeRequested && (existingMimeType ?: ClipboardEntry.MIME_TEXT_PLAIN) == ClipboardEntry.MIME_TEXT_PLAIN) {
+            DuplicateAction.MERGE
+        } else {
+            DuplicateAction.REFUSE
+        }
+
+    /** The #156 markers of a merged row ([mergedMarkers]). */
+    data class MergedMarkers(val isPrivate: Boolean, val sourcePackage: String?)
+
+    /**
+     * The merged History row's #156 markers, as a fresh copy of the text onto the existing row
+     * would set them ([PrivateClipMergeRule], the capture's dedup): private when EITHER row was
+     * (an edited private row's text stays private), provenance the edited row's when it has one.
+     */
+    fun mergedMarkers(existingPrivate: Boolean, existingSource: String?, editedPrivate: Boolean, editedSource: String?): MergedMarkers =
+        MergedMarkers(
+            isPrivate = PrivateClipMergeRule.mergeIsPrivate(existingPrivate, editedPrivate),
+            sourcePackage = PrivateClipMergeRule.mergeSourcePackage(existingSource, editedSource),
+        )
 }
 
 /**
@@ -1034,6 +1074,21 @@ class ClipboardDatabase private constructor(context: Context) :
     }
 
     /**
+     * [updateHistoryEntryContent] for the inline editor: when another History row already holds
+     * [newContent], the edit MERGES into it ([ClipboardEditPolicy.duplicateAction], maintainer
+     * 2026-11-26) instead of being refused. In one transaction the edited row is deleted and the
+     * existing row moves to the top as a fresh copy of the text would (ClipboardDatabase
+     * .addClipboardEntry's #108 move): timestamp now, expiry [expiryTimestamp] (now + the History
+     * duration, from the caller), privacy and provenance per [ClipboardEditPolicy.mergedMarkers].
+     * History rows carry no tags; the Pinned / To-dos copies of either text are separate rows and
+     * stay as they are. Success; EntryChanged when the edited row is gone; a plain edit when no
+     * other row holds the text.
+     */
+    fun updateHistoryEntryContentMerging(oldContent: String, newContent: String, expiryTimestamp: Long): EditEntryResult {
+        return updateEntryContentInTable(TABLE_CLIPBOARD, oldContent, newContent, mergeExpiry = expiryTimestamp)
+    }
+
+    /**
      * Update the content of a pinned_entries entry.
      * Recomputes content_hash. Rejects blank content and same-table duplicates.
      * Preserves position, tags, timestamp, media fields.
@@ -1056,7 +1111,12 @@ class ClipboardDatabase private constructor(context: Context) :
      * Uses a transaction with dedup guard: if the new content already exists in the
      * same table (different row), returns DuplicateConflict instead of creating a duplicate.
      */
-    private fun updateEntryContentInTable(table: String, oldContent: String, newContent: String): EditEntryResult {
+    private fun updateEntryContentInTable(
+        table: String,
+        oldContent: String,
+        newContent: String,
+        mergeExpiry: Long? = null,
+    ): EditEntryResult {
         // UT-4: exact comparison + verbatim storage — whitespace/newline-only edits
         // are real changes and must persist (no trim normalization).
         val storedContent = when (val decision = ClipboardEditPolicy.decide(oldContent, newContent)) {
@@ -1072,14 +1132,28 @@ class ClipboardDatabase private constructor(context: Context) :
             db.beginTransaction()
             try {
                 // Dedup: check if another entry in this table already has the new content
-                val hasDuplicate = db.rawQuery(
-                    "SELECT 1 FROM $table WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_CONTENT != ? LIMIT 1",
+                val duplicate = db.rawQuery(
+                    "SELECT $COLUMN_ID, $COLUMN_MIME_TYPE, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE FROM $table " +
+                        "WHERE $COLUMN_CONTENT_HASH = ? AND $COLUMN_CONTENT = ? AND $COLUMN_CONTENT != ? LIMIT 1",
                     arrayOf(newHash, storedContent, oldContent)
-                ).use { it.moveToFirst() }
+                ).use { c ->
+                    if (c.moveToFirst()) {
+                        EditRowMarkers(c.getLong(0), c.getString(1), c.getInt(2) != 0, if (c.isNull(3)) null else c.getString(3))
+                    } else {
+                        null
+                    }
+                }
 
-                if (hasDuplicate) {
-                    db.endTransaction()
-                    return EditEntryResult.DuplicateConflict
+                if (duplicate != null) {
+                    val action = ClipboardEditPolicy.duplicateAction(
+                        mergeRequested = mergeExpiry != null && table == TABLE_CLIPBOARD,
+                        existingMimeType = duplicate.mimeType,
+                    )
+                    if (action == ClipboardEditPolicy.DuplicateAction.REFUSE || mergeExpiry == null) {
+                        db.endTransaction()
+                        return EditEntryResult.DuplicateConflict
+                    }
+                    return mergeIntoHistoryRow(db, oldContent, duplicate, mergeExpiry)
                 }
 
                 // Update content + hash, preserving all other columns.
@@ -1105,6 +1179,47 @@ class ClipboardDatabase private constructor(context: Context) :
             EditEntryResult.Error(e.message ?: "Unknown error")
         }
     }
+
+    /** Id, mime type and #156 markers of one row, read inside an edit's transaction. */
+    private data class EditRowMarkers(val id: Long, val mimeType: String?, val isPrivate: Boolean, val sourcePackage: String?)
+
+    /**
+     * The MERGE of [updateHistoryEntryContentMerging], inside the caller's open transaction: delete
+     * the edited History row ([oldContent], or its trimmed form, the same fallback the plain UPDATE
+     * uses) and move [existing] to the top as a fresh copy would. EntryChanged (nothing written)
+     * when the edited row is gone.
+     */
+    private fun mergeIntoHistoryRow(db: SQLiteDatabase, oldContent: String, existing: EditRowMarkers, expiryTimestamp: Long): EditEntryResult {
+        val edited = findHistoryRowMarkers(db, oldContent)
+            ?: oldContent.trim().takeIf { it != oldContent }?.let { findHistoryRowMarkers(db, it) }
+        if (edited == null) {
+            db.endTransaction()
+            return EditEntryResult.EntryChanged
+        }
+        val markers = ClipboardEditPolicy.mergedMarkers(existing.isPrivate, existing.sourcePackage, edited.isPrivate, edited.sourcePackage)
+        db.delete(TABLE_CLIPBOARD, "$COLUMN_ID = ?", arrayOf(edited.id.toString()))
+        val values = ContentValues().apply {
+            put(COLUMN_TIMESTAMP, System.currentTimeMillis())
+            put(COLUMN_EXPIRY_TIMESTAMP, expiryTimestamp)
+            put(COLUMN_IS_PRIVATE, if (markers.isPrivate) 1 else 0)
+            if (markers.sourcePackage != null) put(COLUMN_SOURCE_PACKAGE, markers.sourcePackage) else putNull(COLUMN_SOURCE_PACKAGE)
+        }
+        db.update(TABLE_CLIPBOARD, values, "$COLUMN_ID = ?", arrayOf(existing.id.toString()))
+        db.setTransactionSuccessful()
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
+            Log.d(TAG, "Edit merged into an existing History row (id=${existing.id}, removed id=${edited.id})")
+        }
+        return EditEntryResult.Success
+    }
+
+    /** The History row holding exactly [content], or null. */
+    private fun findHistoryRowMarkers(db: SQLiteDatabase, content: String): EditRowMarkers? =
+        db.rawQuery(
+            "SELECT $COLUMN_ID, $COLUMN_MIME_TYPE, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE FROM $TABLE_CLIPBOARD WHERE $COLUMN_CONTENT = ? LIMIT 1",
+            arrayOf(content)
+        ).use { c ->
+            if (c.moveToFirst()) EditRowMarkers(c.getLong(0), c.getString(1), c.getInt(2) != 0, if (c.isNull(3)) null else c.getString(3)) else null
+        }
 
     /** Check if content exists in todo_entries */
     fun isTodo(content: String?): Boolean {

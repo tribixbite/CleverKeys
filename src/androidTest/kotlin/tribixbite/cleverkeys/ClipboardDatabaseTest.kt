@@ -1298,6 +1298,75 @@ class ClipboardDatabaseTest {
         assertTrue(entries.any { it.content == "Entry B" })
     }
 
+    /**
+     * Maintainer decision 2026-11-26: the inline editor's History update MERGES into a row that
+     * already holds the new text: the edited row is removed and the existing one moves to the top
+     * with a fresh expiry, as a new copy of that text would (ClipboardDatabase.addClipboardEntry's
+     * #108 move). The plain update above keeps refusing (Clean uses it).
+     */
+    @Test
+    fun testMergingEditFoldsIntoTheExistingHistoryRow() {
+        clearAllTables()
+        db.addClipboardEntry("https://github.com/tribixbite/rustdesk-server", futureExpiry)
+        Thread.sleep(5)
+        db.addClipboardEntry("https://github.com/rustdesk/rustdesk-server", futureExpiry)
+        val oldTop = db.historyEntryTimestamp("https://github.com/rustdesk/rustdesk-server")!!
+        Thread.sleep(5)
+        val freshExpiry = System.currentTimeMillis() + 7_200_000L
+
+        val result = db.updateHistoryEntryContentMerging(
+            "https://github.com/rustdesk/rustdesk-server", "https://github.com/tribixbite/rustdesk-server", freshExpiry,
+        )
+
+        assertEquals(EditEntryResult.Success, result)
+        val entries = db.getActiveClipboardEntries()
+        assertEquals("one row remains", listOf("https://github.com/tribixbite/rustdesk-server"), entries.map { it.content })
+        assertTrue("it moved to the top", entries.single().timestamp > oldTop)
+    }
+
+    @Test
+    fun testMergingEditKeepsPrivacySticky() {
+        clearAllTables()
+        db.addClipboardEntry("shared text", futureExpiry, isPrivate = false)
+        db.addClipboardEntry("secret draft", futureExpiry, isPrivate = true, sourcePackage = "org.vault")
+
+        assertEquals(EditEntryResult.Success, db.updateHistoryEntryContentMerging("secret draft", "shared text", futureExpiry))
+
+        val merged = db.getActiveClipboardEntries().single()
+        assertEquals("shared text", merged.content)
+        assertTrue("an edited private row keeps the merged text private (#156)", merged.isPrivate)
+        assertEquals("org.vault", merged.sourcePackage)
+    }
+
+    @Test
+    fun testMergingEditNeverFoldsIntoAMediaRow() {
+        clearAllTables()
+        db.addMediaClipboardEntry("IMG_2041.png", futureExpiry, "image/png", null, "clipboard_media/1/IMG_2041.png", "sha-1")
+        db.addClipboardEntry("a caption", futureExpiry)
+
+        val result = db.updateHistoryEntryContentMerging("a caption", "IMG_2041.png", futureExpiry)
+
+        // A media row's content_hash is its file's SHA-256, never the text hash, so it is not even
+        // found as a duplicate: the caption is edited in place and the picture's row is untouched.
+        assertEquals(EditEntryResult.Success, result)
+        val entries = db.getActiveClipboardEntries()
+        assertEquals(2, entries.size)
+        assertTrue("the picture is still a picture", entries.any { it.content == "IMG_2041.png" && it.isMedia })
+        assertTrue("the edited caption is a text row", entries.any { it.content == "IMG_2041.png" && !it.isMedia })
+    }
+
+    @Test
+    fun testMergingEditWithoutADuplicateIsAPlainEdit() {
+        clearAllTables()
+        db.addClipboardEntry("Entry A", futureExpiry)
+        val stamp = db.historyEntryTimestamp("Entry A")!!
+
+        assertEquals(EditEntryResult.Success, db.updateHistoryEntryContentMerging("Entry A", "Entry A2", futureExpiry))
+
+        assertEquals("the edit keeps the row's place", stamp, db.historyEntryTimestamp("Entry A2"))
+        assertEquals(1, db.getActiveClipboardEntries().size)
+    }
+
     @Test
     fun testEditRejectsDuplicateInPinnedTable() {
         clearAllTables()

@@ -29,13 +29,23 @@ import tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizer
  *    becomes a History row, and the service's own write after an edit is skipped once.
  *  - [history] is the History table, newest first: a capture inserts at the top (an existing row
  *    moves there, #108), an edit replaces the row in place keeping its position (the timestamp
- *    is not changed by an edit), a duplicate edit is refused, a missing row is EntryChanged.
+ *    is not changed by an edit), a duplicate edit is refused, a missing row is EntryChanged; the
+ *    inline editor's MERGING update instead removes the edited row and moves the existing one to
+ *    the top (ClipboardDatabase.updateHistoryEntryContentMerging, 2026-11-26).
  *
  * Call [mockStatics] in the test's setup before constructing it (and `unmockkAll` in teardown).
  */
 internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList()) {
 
     var systemClip: String? = null
+
+    /** How many times anything wrote Android's clipboard. */
+    var clipWrites = 0
+        private set
+
+    /** The expiry the last merging update gave the merged row. */
+    var mergeExpiry: Long? = null
+        private set
     val history: MutableList<String> = initialHistory.toMutableList()
 
     val clipboard: ClipboardManager = mockk(relaxed = true)
@@ -48,6 +58,7 @@ internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList(
         every { clipboard.setPrimaryClip(any()) } answers {
             val text = firstArg<ClipData>().getItemAt(0).text.toString()
             systemClip = text
+            clipWrites++
             service.addClip(text)  // the OnPrimaryClipChangedListener's capture
         }
         every { context.getSystemService(Context.CLIPBOARD_SERVICE) } returns clipboard
@@ -64,6 +75,25 @@ internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList(
             when {
                 new != old && new in history -> EditEntryResult.DuplicateConflict
                 old !in history -> EditEntryResult.EntryChanged
+                else -> {
+                    history[history.indexOf(old)] = new
+                    EditEntryResult.Success
+                }
+            }
+        }
+        every { database.updateHistoryEntryContentMerging(any(), any(), any()) } answers {
+            val old = firstArg<String>()
+            val new = secondArg<String>()
+            mergeExpiry = thirdArg()
+            when {
+                new == old -> EditEntryResult.Success
+                old !in history -> EditEntryResult.EntryChanged
+                new in history -> {
+                    history.remove(old)
+                    history.remove(new)
+                    history.add(0, new)
+                    EditEntryResult.Success
+                }
                 else -> {
                     history[history.indexOf(old)] = new
                     EditEntryResult.Success

@@ -468,8 +468,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         }
 
         // Calculate expiry time from user-configured duration (minutes, -1 = never expire)
-        val ttlMs = storedTtlMs()
-        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+        val expiryTime = freshExpiryTimestamp()
 
         // URL sanitization (text/plain only). No-op when all three toggles are off.
         // Sanitizing the *stored* content is store hygiene — applies to private entries too.
@@ -518,6 +517,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     /** The History TTL from the stored Entry Duration ([storedHistoryTtlMs]), same reason. */
     private fun storedTtlMs(): Long = storedHistoryTtlMs(storedSettings())
+
+    /** The expiry a History row copied now gets: now + the stored Entry Duration, or never. */
+    private fun freshExpiryTimestamp(): Long {
+        val ttlMs = storedTtlMs()
+        return if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+    }
 
     /**
      * The capture switches as stored NOW ([ClipboardCaptureSettings]): History on/off, the
@@ -590,8 +595,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * normal history limits apply afterwards, exactly as for a capture.
      */
     fun addMergedClip(plan: ClipboardBulkPlans.MergePlan): Result<Unit> = runCatching {
-        val ttlMs = storedTtlMs()
-        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+        val expiryTime = freshExpiryTimestamp()
         check(_database.addClipboardEntry(plan.text, expiryTime, plan.isPrivate, null)) {
             "Merged clipping was not stored"
         }
@@ -807,12 +811,14 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * whitespace/newline-only changes are real edits and persist verbatim.
      * COPY semantics: only the entry in the specified tab is modified;
      * copies in other tabs are unaffected. One edited clipping may also go onto Android's
-     * clipboard ([followEditOnSystemClipboard]).
+     * clipboard ([followEditOnSystemClipboard]). This is the inline editor's path: on History an
+     * edit into another row's text MERGES into that row (maintainer decision 2026-11-26,
+     * [ClipboardDatabase.updateHistoryEntryContentMerging]); Pinned and To-dos refuse it.
      *
      * @return EditEntryResult indicating success, duplicate conflict, or error
      */
     fun editEntryContent(oldContent: String, newContent: String, tab: ClipboardTab): EditEntryResult =
-        editEntryFollowingClipboard(oldContent, newContent, tab, fillEmptyClipboard = true).result
+        editEntryFollowingClipboard(oldContent, newContent, tab, fillEmptyClipboard = true, mergeHistoryDuplicate = true).result
 
     /** [editEntryContent]'s result, and whether the edited text was put on Android's clipboard. */
     data class EditOutcome(val result: EditEntryResult, val onSystemClipboard: Boolean)
@@ -821,13 +827,17 @@ class ClipboardHistoryService private constructor(ctx: Context) {
      * [editEntryContent], with the caller saying whether the edit may fill an EMPTY Android
      * clipboard ([fillEmptyClipboard]: one clipping edited or cleaned) and learning whether the
      * edited text was put there ([EditOutcome.onSystemClipboard]: decided here, written on the
-     * main thread just after).
+     * main thread just after). [mergeHistoryDuplicate]: a History edit into another row's text
+     * merges into it (the inline editor); false keeps the refusal (Clean, which tidies a selection).
+     * After a merge the follow is the same: the edited row was the clip, or the clipboard is empty,
+     * and the merged text goes there; when the existing row is the clip it already holds that text.
      */
     fun editEntryFollowingClipboard(
         oldContent: String,
         newContent: String,
         tab: ClipboardTab,
         fillEmptyClipboard: Boolean,
+        mergeHistoryDuplicate: Boolean = false,
     ): EditOutcome {
         // Shared exact-comparison policy (no trim — see ClipboardEditPolicy KDoc)
         when (ClipboardEditPolicy.decide(oldContent, newContent)) {
@@ -847,7 +857,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         // Route to correct table (exact strings — DB layer stores newContent verbatim)
         val result = when (tab) {
-            ClipboardTab.HISTORY -> _database.updateHistoryEntryContent(oldContent, newContent)
+            ClipboardTab.HISTORY ->
+                if (mergeHistoryDuplicate) _database.updateHistoryEntryContentMerging(oldContent, newContent, freshExpiryTimestamp())
+                else _database.updateHistoryEntryContent(oldContent, newContent)
             ClipboardTab.PINNED -> _database.updatePinnedEntryContent(oldContent, newContent)
             ClipboardTab.TODOS -> _database.updateTodoEntryContent(oldContent, newContent)
         }
@@ -1228,8 +1240,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     ) {
         if (!storedCapture().historyEnabled) return
 
-        val ttlMs = storedTtlMs()
-        val expiryTime = if (ttlMs == Long.MAX_VALUE) Long.MAX_VALUE else System.currentTimeMillis() + ttlMs
+        val expiryTime = freshExpiryTimestamp()
 
         val added = _database.addMediaClipboardEntry(
             content = content,

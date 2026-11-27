@@ -272,8 +272,9 @@ Routing priority matches the IME key-event chain (see `.claude/skills/ime-key-ro
 4. ~~Clipboard follow after a cut or copy inside the editor.~~ Decided 2026-11-26 by the
    maintainer: such a fragment stays on the clipboard and is the row above the entry; Save never
    replaces it ("Editing a clipping in the pane", end of this spec).
-5. A History edit whose new text is already another History row is refused as a duplicate (D-7,
-   now shown inline). Should it merge into that row instead? Not decided.
+5. ~~A History edit whose new text is already another History row: refuse or merge?~~ Decided
+   2026-11-26 by the maintainer: it merges into that row ("Editing a clipping in the pane" →
+   "A History edit into another row's text merges"). Pinned and To-dos still refuse.
 
 ## Future Enhancements
 
@@ -989,11 +990,40 @@ paste function didn't paste it". Commits `584860d70`, `1a76f195e`, `8f7717df5`, 
 InvalidContent, Error) keeps the edit open and shows its reason on `clipboard_entry_edit_error`
 (D-7). The re-bind that shows it used to run `setText` with the previous bind's TextWatcher still
 attached; that watcher read the re-bind as typing and hid the line. getView now removes the old
-watcher before `setText` (`ime-key-routing.md` "ListView Scrap View Architecture"). The
-maintainer's exact edit is refused only when the edited URL is already a History row. Whether
-the save failure had another cause as well is being checked on a device: the insertion-handle
-popup lying over the checkmark after a tap near the right edge of wrapped line 1 (open, no
-change made for it).
+watcher before `setText` (`ime-key-routing.md` "ListView Scrap View Architecture"). Device check
+(Note10+, release r22, 2026-11-26): with a `…/tribixbite/rustdesk-server` row already in History
+the checkmark did nothing and showed no message, and deleting that row made the same edit save at
+once — the duplicate refusal, hidden, was the whole cause. The other hypothesis (the
+insertion-handle popup over the checkmark after a tap near the right edge of wrapped line 1) did
+not happen: the handle hangs below line 1 and never reaches the button column.
+
+**A History edit into another row's text merges (maintainer decision 2026-11-26).** History is a
+log of copies and never holds one text twice (a capture of an existing text moves that row to the
+top, #108), so an inline History edit whose new text is another row's now means "this clipping is
+that one": Save succeeds with no message, the edited row is deleted and the existing row moves to
+the top as a fresh copy of the text would (timestamp now, expiry now + the History duration), in
+one transaction (`ClipboardDatabase.updateHistoryEntryContentMerging`, chosen by
+`ClipboardEditPolicy.duplicateAction`). Its #156 markers: private when EITHER row was (an edited
+private row's text stays private), provenance the edited row's when it has one
+(`ClipboardEditPolicy.mergedMarkers`). History rows carry no tags; the Pinned and To-dos copies of
+either text are separate rows (COPY semantics) and are not touched, so the existing text keeps its
+pins, to-dos and their tags, and the edited text's own copies stay too. Clipboard follow after a
+merge (rules 1–2 below): when the edited row was the clip, or the clipboard is empty, the merged
+text is put there; when the existing row is the clip, it already holds that text (no write); a
+private merged row is never put there; another clip is left alone. A media row never absorbs text
+(its content is a display name, and its content hash a file digest, so it is not even found as a
+duplicate). Not merged: Pinned and To-dos (curated copies with their own tags, drag order and
+To-do status; a merge would have to drop one row's), which keep refusing with "An entry with this
+content already exists"; and Clean, which tidies a selection and still counts a cleaned text that
+duplicates another row as failed. Tests: `ClipboardEditMergePolicyTest` (pure),
+`ClipboardEditMergeTest` (mock: the maintainer's case — History [rustdesk URL (clip), fork URL],
+edit the first into the second, Save → History [fork URL] and the clip is the fork URL — plus the
+existing row as the clip, an empty clipboard, an old row, a private row, the fresh expiry, Pinned
+refusing, Clean refusing), `ClipboardDatabaseTest` (instrumented: the merge SQL, sticky privacy, a
+media row, no duplicate), and, instrumented and not run yet,
+`EditedClipPasteInstrumentedTest.theMaintainersEditIntoAnExistingRowMergesAndThePasteGivesIt`,
+`ClipboardSoftWrapEditTest.aRealTapOnSaveIntoAnExistingHistoryRowMergesIntoIt` and
+`ClipboardSoftWrapEditTest.aRealTapOnSaveThatPinnedRefusesShowsWhy`.
 
 **The edit field is `ClipboardEditField`** (an EditText subclass, `clipboard/ClipboardEditField.kt`):
 - A tap past the midpoint of the last character of a line that wraps without a trailing space

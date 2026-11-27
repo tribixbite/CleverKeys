@@ -20,9 +20,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed (editing a clipping in the clipboard pane, 2026-11-26)
 
-- A save the clipboard refuses now says why under the entry (for example "An entry with this
-  content already exists" when the edited text is already another History clipping). The
-  message never reached the screen, so the checkmark seemed to do nothing.
+- Editing a History clipping into the text of another History clipping now saves: the two become
+  one clipping at the top, and if you had the edited one on Android's clipboard, a paste gives the
+  saved text. It was refused as a duplicate, and because the message never reached the screen the
+  checkmark seemed to do nothing. A save that is still refused (for example the same text in
+  Pinned or To-dos) now says why under the entry.
 - Sliding on the space bar to move the cursor while editing a clipping follows your finger when
   it turns back; the cursor kept going the way the slide started. One step is one character,
   an emoji included, and up / down move one line as you see it, also in a URL that wraps.

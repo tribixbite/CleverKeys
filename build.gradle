@@ -628,6 +628,8 @@ tasks.register('runPureTests', JavaExec) {
   description = 'Run pure JVM tests via JUnitCore (works on ARM64)'
 
   def pureTestClasses = [
+    // 2026-11-26: a History edit into another row's text merges into it (decision, markers).
+    'tribixbite.cleverkeys.clipboard.ClipboardEditMergePolicyTest',
     // 2026-11-26: a tap at the end of a line that wraps inside a word goes after its last character.
     'tribixbite.cleverkeys.clipboard.SoftWrapTapTest',
     // 2026-11-26: one clipboard-editor caret step is one character (a surrogate pair whole).
@@ -1473,6 +1475,8 @@ tasks.register('runMockTests', JavaExec) {
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
 
   def mockTestClasses = [
+    // 2026-11-26: the maintainer's rustdesk → tribixbite edit merges and the paste gives it.
+    'tribixbite.cleverkeys.clipboard.ClipboardEditMergeTest',
     // 2026-11-26: an edit after the editor's own cut of the clip being edited still reaches the paste.
     'tribixbite.cleverkeys.clipboard.ClipboardEditCutFollowTest',
     // 2026-11-26: a caret the user put in the clipboard editor survives a row re-bind.

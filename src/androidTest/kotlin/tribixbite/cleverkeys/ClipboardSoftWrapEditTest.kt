@@ -35,8 +35,10 @@ import kotlin.math.ceil
  *  2. Up / down (arrow keys, a vertical slider) moved by LOGICAL line: in a URL without line
  *     breaks, up went to the very start and down to the very end. They move one visual line,
  *     as in an app's field (Selection.moveUp/moveDown over the field's Layout).
- *  3. "the entry cant be saved - the checkmark does nothing" — a refused save's reason never
- *     reached the screen (the row re-bind hid it); a real tap on Save either saves or shows why.
+ *  3. "the entry cant be saved - the checkmark does nothing" — the fork's URL was already a History
+ *     row (device-confirmed, Note10+), the save was refused as a duplicate and the reason never
+ *     reached the screen (the row re-bind hid it). A History edit into another row's text now
+ *     merges into it (maintainer decision 2026-11-26); a refusal elsewhere (Pinned) shows why.
  *
  * The pane is sized so line 0 ends with the org segment (`https://github.com/rustdesk` |
  * `/rustdesk-server`), where the user taps to edit it, as on a ~360–412 dp phone pane: the field's
@@ -87,14 +89,14 @@ class ClipboardSoftWrapEditTest {
     }
 
     /** The list in a [PANE_HEIGHT_PX] ScrollView showing [entries] on History, editing row 0. */
-    private fun hostEditing(entries: List<ClipboardEntry>): Hosted {
+    private fun hostEditing(entries: List<ClipboardEntry>, tab: ClipboardTab = ClipboardTab.HISTORY): Hosted {
         val scenario = ActivityScenario.launch(ClipboardEditTestActivity::class.java)
         lateinit var chv: ClipboardHistoryView
         lateinit var pane: ScrollView
         scenario.onActivity { activity ->
             val themed = ContextThemeWrapper(activity, R.style.Dark)
             chv = ClipboardHistoryView(themed, null)
-            setField(chv, "currentTab", ClipboardTab.HISTORY)
+            setField(chv, "currentTab", tab)
             pane = ScrollView(themed)
             pane.addView(chv, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
             activity.container.addView(pane, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, PANE_HEIGHT_PX))
@@ -275,7 +277,7 @@ class ClipboardSoftWrapEditTest {
     }
 
     @Test
-    fun aRealTapOnSaveThatTheHistoryRefusesShowsWhy() {
+    fun aRealTapOnSaveIntoAnExistingHistoryRowMergesIntoIt() {
         val history = requireNotNull(ClipboardHistoryService.get_service(context)) { "no clipboard service" }
         instrumentation.runOnMainSync {
             history.addClip(edited)  // the fork's URL is already a History row
@@ -283,6 +285,34 @@ class ClipboardSoftWrapEditTest {
         }
         val stamp = requireNotNull(history.historyEntryTimestamp(url)) { "the URL row was not stored" }
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = stamp)))
+        try {
+            wrapAfterTheOrg(hosted)
+            instrumentation.runOnMainSync { hosted.chv.replaceEditRange(org, org + "rustdesk".length, "tribixbite") }
+
+            tapCentreOf(R.id.clipboard_entry_save, hosted)
+
+            var editing = true
+            instrumentation.runOnMainSync { editing = hosted.chv.isEditing() }
+            assertFalse("the checkmark saves: the edit merges into the fork's row", editing)
+            assertTrue("the edited row is gone", history.historyEntryTimestamp(url) == null)
+            assertTrue("the fork's row moved to the top", (history.historyEntryTimestamp(edited) ?: 0L) > stamp)
+        } finally {
+            hosted.scenario.close()
+            instrumentation.runOnMainSync {
+                history.removeHistoryEntry(url)
+                history.removeHistoryEntry(edited)
+            }
+        }
+    }
+
+    @Test
+    fun aRealTapOnSaveThatPinnedRefusesShowsWhy() {
+        val db = ClipboardDatabase.getInstance(context)
+        instrumentation.runOnMainSync {
+            db.pinEntry(edited)  // the fork's URL is already a pinned row
+            db.pinEntry(url)
+        }
+        val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = 1_700_000_000_000L)), ClipboardTab.PINNED)
         try {
             wrapAfterTheOrg(hosted)
             instrumentation.runOnMainSync { hosted.chv.replaceEditRange(org, org + "rustdesk".length, "tribixbite") }
@@ -298,14 +328,14 @@ class ClipboardSoftWrapEditTest {
                 shown = error.isShown
                 message = error.text.toString()
             }
-            assertTrue("a refused save keeps the edit open", editing)
+            assertTrue("Pinned rows are curated copies: a duplicate is refused and the edit stays open", editing)
             assertTrue("the checkmark must not look dead: the reason is on screen", shown)
             assertEquals(context.getString(R.string.clipboard_edit_duplicate), message)
         } finally {
             hosted.scenario.close()
             instrumentation.runOnMainSync {
-                history.removeHistoryEntry(url)
-                history.removeHistoryEntry(edited)
+                db.unpinEntry(url)
+                db.unpinEntry(edited)
             }
         }
     }

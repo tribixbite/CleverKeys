@@ -154,6 +154,53 @@ class EditedClipPasteInstrumentedTest {
     }
 
     /**
+     * Maintainer 2026-11-26, the exact case (device-confirmed on the Note10+, r22): History holds
+     * `https://github.com/rustdesk/rustdesk-server` (the current clip) and
+     * `https://github.com/tribixbite/rustdesk-server`; editing the first into the second was refused
+     * as a duplicate and the checkmark seemed dead. Decision: the edit MERGES — one row remains, at
+     * the top, and the paste short swipe gives the fork's URL.
+     */
+    @Test
+    fun theMaintainersEditIntoAnExistingRowMergesAndThePasteGivesIt() {
+        val nonce = SystemClock.uptimeMillis()
+        val rustdesk = "https://github.com/rustdesk/rustdesk-server?ck=$nonce"
+        val fork = "https://github.com/tribixbite/rustdesk-server?ck=$nonce"
+        val history = requireNotNull(ClipboardHistoryService.get_service(context)) { "no clipboard service" }
+        try {
+            ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use { scenario ->
+                lateinit var activity: ImeFieldKeepWindowTestActivity
+                scenario.onActivity { activity = it }
+                assertTrue("the keyboard", within(15_000L) {
+                    CleverKeysService.getInstance()?.isInputViewShown == true && (keyboard()?.height ?: 0) > 0
+                })
+                val clipboard = activity.getSystemService(ClipboardManager::class.java)
+                // The fork's URL was copied some time ago; the rustdesk URL just now (the clip).
+                instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("test", fork)) }
+                assertTrue("the fork reached History", within(5_000L) { history.historyEntryTimestamp(fork) != null })
+                instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("test", rustdesk)) }
+                assertTrue("the rustdesk URL reached History", within(5_000L) { history.historyEntryTimestamp(rustdesk) != null })
+                val forkBefore = requireNotNull(history.historyEntryTimestamp(fork))
+
+                // The pane's Save (ClipboardHistoryView.save_edit's call).
+                var result: EditEntryResult? = null
+                instrumentation.runOnMainSync { result = history.editEntryContent(rustdesk, fork, ClipboardTab.HISTORY) }
+                assertEquals("the edit is saved, not refused", EditEntryResult.Success, result)
+                Thread.sleep(500L)
+
+                assertTrue("the edited row is gone", history.historyEntryTimestamp(rustdesk) == null)
+                val forkAfter = requireNotNull(history.historyEntryTimestamp(fork)) { "the fork's row remains" }
+                assertTrue("and moved to the top", forkAfter > forkBefore)
+                assertEquals("the paste short swipe gives the merged text", fork, pasteWithTheSubkey(activity))
+            }
+        } finally {
+            instrumentation.runOnMainSync {
+                history.removeHistoryEntry(rustdesk)
+                history.removeHistoryEntry(fork)
+            }
+        }
+    }
+
+    /**
      * Maintainer decision 2026-11-26: "anything cut or copied appears above the entry being
      * edited". A fragment the editor cuts or copies goes on Android's clipboard (as
      * `ClipboardHistoryView.exposeEditSelection` writes it), is captured as a new History row above
