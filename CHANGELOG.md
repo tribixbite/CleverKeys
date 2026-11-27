@@ -33,12 +33,20 @@ editor that used to be listed here already ship in 2.0.)
   "+word" chip or an autocorrect undo) while Auto-Detect has just detected the second language,
   in the same sentence and field, goes to that language's personal dictionary (it went to the
   primary's), and its undo removes it from there. Otherwise it goes to the primary's.
-- Deleting a word you just typed or swiped (letter by letter, or with Ctrl+Backspace) takes back
-  what it taught the keyboard at once, also when you then leave the field; a word an autocorrect
-  undo put back is covered too. The deleted swipe's alternates leave the bar.
+- Deleting a word you just typed or swiped takes back what it taught the keyboard at once, also
+  when you then leave the field, after an app restarted its input, or after the sentence ended:
+  letter by letter, with Ctrl+Backspace, or by selecting it and deleting, cutting or typing over
+  it. The first word of a field is covered when you delete it with the keyboard (not when the
+  app clears its field), and so is a word an autocorrect undo put back. A forward Delete is not
+  covered yet. The deleted swipe's alternates leave the bar.
 - After Auto-Detect switched to the second language, another field or app starts again in the
-  primary language, and typing in the primary switches back within the same field.
-- A word disabled in Dictionary Manager is no longer swiped in right afterwards.
+  primary language, and typing in the primary switches back within the same field, also across
+  short sentences: after about ten words that read as the primary, or at once when they clearly
+  do.
+- Typing predictions and next-word suggestions drop a word disabled in Dictionary Manager at once,
+  in both languages (they waited for the next typed prediction).
+- Moving the cursor to another word takes the last swipe's alternates off the suggestion bar, and
+  tapping one of them can no longer replace the word under the cursor.
 - A detected second language now survives a rotation, hiding and showing the keyboard in the same
   field, or dictation; only another field starts again in the primary language.
 - Importing the language pack of a second language you had chosen (for example from a restored
@@ -84,7 +92,9 @@ editor that used to be listed here already ship in 2.0.)
   "None", and the keyboard stops using that language as its secondary.
 - A secondary language whose dictionary is not on the phone (a restored backup naming a pack
   never installed here) is treated as no secondary language, and the choice is kept for when the
-  pack is installed. The keyboard applies this once Settings has been opened since it started.
+  pack is installed. The keyboard applies this from its start, and again right after a language
+  pack is imported or removed. A second language set to the first language is treated as none,
+  and a pack counts as installed when its dictionary is there, whether or not its manifest reads.
 - Settings search lands on "Enable short gestures" for the short swipe distance settings while
   short gestures are off, and on Primary Language for the alternate primary language.
 - A language pack that could not be removed now says so.
