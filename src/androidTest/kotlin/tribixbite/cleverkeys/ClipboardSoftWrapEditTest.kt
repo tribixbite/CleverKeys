@@ -38,9 +38,12 @@ import kotlin.math.ceil
  *  3. "the entry cant be saved - the checkmark does nothing" — a refused save's reason never
  *     reached the screen (the row re-bind hid it); a real tap on Save either saves or shows why.
  *
- * The pane is sized so line 0 ends inside `rustdesk` (`https://github.com/rust` | `desk/…`), as
- * on a ~360–412 dp phone pane. Hosted in [ClipboardEditTestActivity] (ScrollView → list, the
- * production pane's structure).
+ * The pane is sized so line 0 ends with the org segment (`https://github.com/rustdesk` |
+ * `/rustdesk-server`), where the user taps to edit it, as on a ~360–412 dp phone pane: the field's
+ * content is wider than that prefix and narrower than the prefix plus the next `/`. Minikin breaks
+ * a URL before a single slash (WordBreaker's email/URL rules), and a field that broke anywhere
+ * would overflow at that same `/`, so line 0 ends there either way, with a letter. Hosted in
+ * [ClipboardEditTestActivity] (ScrollView → list, the production pane's structure).
  */
 @RunWith(AndroidJUnit4::class)
 class ClipboardSoftWrapEditTest {
@@ -114,18 +117,18 @@ class ClipboardSoftWrapEditTest {
     }
 
     /**
-     * Narrow the pane until the field's line 0 is `https://github.com/rust`: content width between
-     * the widths of that prefix and of the prefix plus `d`. Returns the field.
+     * Narrow the pane until the field's line 0 is `https://github.com/rustdesk`: content width
+     * between the widths of that prefix and of the prefix plus the `/` after it. Returns the field.
      */
-    private fun wrapInsideTheOrg(hosted: Hosted): EditText {
+    private fun wrapAfterTheOrg(hosted: Hosted): EditText {
         var delta = 0
         var target = 0
         instrumentation.runOnMainSync {
             val et = editField(hosted.chv)
             val content = et.width - et.totalPaddingLeft - et.totalPaddingRight
             delta = hosted.pane.width - content
-            val shorter = et.paint.measureText(url, 0, org + 4)
-            val longer = et.paint.measureText(url, 0, org + 5)
+            val shorter = et.paint.measureText(url, 0, org + "rustdesk".length)
+            val longer = et.paint.measureText(url, 0, org + "rustdesk".length + 1)
             target = ceil((shorter + longer) / 2f).toInt()
             hosted.pane.layoutParams = hosted.pane.layoutParams.apply { width = target + delta }
         }
@@ -136,9 +139,9 @@ class ClipboardSoftWrapEditTest {
         assertNotNull("the field is laid out", layout)
         assertTrue("precondition: the URL wraps (${layout.lineCount} lines)", layout.lineCount >= 2)
         val end = layout.getLineEnd(0)
-        assertTrue(
-            "precondition: line 0 ends inside the first rustdesk, got \"${url.substring(0, end)}\"",
-            end in (org + 1) until (org + "rustdesk".length),
+        assertEquals(
+            "precondition: line 0 ends with the org segment, got \"${url.substring(0, end)}\"",
+            org + "rustdesk".length, end,
         )
         return et
     }
@@ -176,7 +179,7 @@ class ClipboardSoftWrapEditTest {
     fun aTapAtTheEndOfAWrappedLinePutsTheCaretAfterItsLastCharacter() {
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = 1_700_000_000_000L)))
         try {
-            val et = wrapInsideTheOrg(hosted)
+            val et = wrapAfterTheOrg(hosted)
             val layout = et.layout
             val lineEnd = layout.getLineEnd(0)
 
@@ -201,7 +204,7 @@ class ClipboardSoftWrapEditTest {
     fun aTapInsideAWrappedLineStillLandsWhereTapped() {
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = 1_700_000_000_000L)))
         try {
-            val et = wrapInsideTheOrg(hosted)
+            val et = wrapAfterTheOrg(hosted)
             val layout = et.layout
             // Between the 2nd and 3rd character of "github" on line 0.
             val target = url.indexOf("github") + 2
@@ -221,7 +224,7 @@ class ClipboardSoftWrapEditTest {
     fun upAndDownMoveOneVisualLine() {
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = 1_700_000_000_000L)))
         try {
-            val et = wrapInsideTheOrg(hosted)
+            val et = wrapAfterTheOrg(hosted)
             val layout = et.layout
             val onLine1 = layout.getLineStart(1) + 3
             instrumentation.runOnMainSync { et.setSelection(onLine1) }
@@ -250,7 +253,7 @@ class ClipboardSoftWrapEditTest {
         val stamp = requireNotNull(history.historyEntryTimestamp(url)) { "the URL row was not stored" }
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = stamp)))
         try {
-            val et = wrapInsideTheOrg(hosted)
+            val et = wrapAfterTheOrg(hosted)
             // A real tap puts the caret on line 1 (mid-URL), then the org segment is replaced.
             tapInField(et, et.layout.getPrimaryHorizontal(et.layout.getLineStart(1) + 2), 1)
             instrumentation.runOnMainSync { hosted.chv.replaceEditRange(org, org + "rustdesk".length, "tribixbite") }
@@ -281,7 +284,7 @@ class ClipboardSoftWrapEditTest {
         val stamp = requireNotNull(history.historyEntryTimestamp(url)) { "the URL row was not stored" }
         val hosted = hostEditing(listOf(ClipboardEntry(content = url, timestamp = stamp)))
         try {
-            wrapInsideTheOrg(hosted)
+            wrapAfterTheOrg(hosted)
             instrumentation.runOnMainSync { hosted.chv.replaceEditRange(org, org + "rustdesk".length, "tribixbite") }
 
             tapCentreOf(R.id.clipboard_entry_save, hosted)
