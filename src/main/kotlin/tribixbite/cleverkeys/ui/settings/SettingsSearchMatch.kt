@@ -135,6 +135,21 @@ internal object SettingsSearchMatch {
     }
 
     /**
+     * Rows hidden by a switch in ANOTHER section, by setting id, with that switch's gate key
+     * ([SearchableSetting.gatedBy], resolved by `isGateEnabled`). A result opens only its own
+     * section, so no gate there can reveal such a row; while the switch is off the result is
+     * redirected to it instead (`executeSearchAction`), its section opened.
+     *
+     * - "Backspace Undo Swipe" (Input) shows only while swipe typing (Swipe Typing) is on.
+     */
+    private val CROSS_SECTION_GATES: Map<String, String> = mapOf(
+        "input_backspace_undo_swipe_title" to "swipe_typing",
+    )
+
+    /** The gate key of [settingId] when another section's switch hides it, else null. */
+    fun crossSectionGateFor(settingId: String): String? = CROSS_SECTION_GATES[settingId]
+
+    /**
      * The gates of the setting [settingId], innermost first: the hand-kept inner ones, the
      * [generated] ones (corrected where they name the wrong control), then the hand-kept outer
      * ones. `SettingsSearchReachabilityTest` checks that, with any one hiding condition off, the

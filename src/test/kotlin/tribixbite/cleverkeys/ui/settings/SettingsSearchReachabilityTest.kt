@@ -1,5 +1,6 @@
 package tribixbite.cleverkeys.ui.settings
 
+import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import tribixbite.cleverkeys.GENERATED_SEARCH_ENTRIES
@@ -243,36 +244,50 @@ class SettingsSearchReachabilityTest {
                                 }
                         }
                     }
-                    landing != null && writes(landing).any { it in conditionState(region) }
+                    val state = conditionState(region)
+                    val redirect = SettingsSearchMatch.crossSectionGateFor(id)
+                    if (redirect != null && gateState(redirect) in state) {
+                        // The result is redirected before anything opens while that state is off
+                        // (executeSearchAction's gatedBy): it lands on the control registered
+                        // under the gate key, in its own section, which must set the state.
+                        highlightControl(redirect)?.let { gateState(redirect) in writes(it) } == true
+                    } else {
+                        landing != null && writes(landing).any { it in state }
+                    }
                 }
-                if (!handled && "$id|${region.label}" !in KNOWN_GAPS) {
-                    out += "$id: hidden by $region (state ${conditionState(region)}); gates=$gates"
-                }
+                if (!handled) out += "$id: hidden by $region (state ${conditionState(region)}); gates=$gates"
             }
             out
         }
         return perControl.minByOrNull { it.size } ?: emptyList()
     }
 
-    /**
-     * `settingId|condition` pairs with no landing yet. The control revealing them sits in ANOTHER
-     * section, which a search result does not open, so no gate can be composed for it.
-     *
-     * # TODO: "Backspace Undo Swipe" (Input) is hidden while swipe typing (Swipe Typing section)
-     * is off; land on the swipe switch by opening its section too.
-     */
-    private val KNOWN_GAPS = setOf(
-        "input_backspace_undo_swipe_title|swipeTypingEnabled",
-    )
+    /** The state `SettingsActivity.isGateEnabled` reads for the gate key [key] (`"swipe_typing" -> swipeTypingEnabled`). */
+    private fun gateState(key: String): String? {
+        val search = File("src/main/kotlin/tribixbite/cleverkeys/ui/settings/SettingsSearch.kt").readText()
+        val body = search.substringAfter("fun SettingsActivity.isGateEnabled(", "").substringBefore("\n}")
+        return Regex(""""${Regex.escape(key)}"\s*->\s*(\w+)""").find(body)?.groupValues?.get(1)
+    }
 
+    /** The control registering its position under the gate key [key] (`highlightId = "swipe_typing"`). */
+    private fun highlightControl(key: String): Control? = controls.firstOrNull { c ->
+        val text = sources.single { it.name == c.file }.text
+        val open = text.indexOf('(', c.pos)
+        text.substring(open, close(text, open, '(', ')')).contains("highlightId = \"$key\"")
+    }
+
+    /**
+     * 2026-11-26: "Backspace Undo Swipe" (Input) is hidden while swipe typing is off, and the
+     * switch is in the Swipe Typing section, which a result for an Input row does not open. Its
+     * result is redirected to that switch while swipe typing is off.
+     */
     @Test
-    fun theKnownGapsAreStillGaps() {
-        for (gap in KNOWN_GAPS) {
-            val (id, condition) = gap.split('|')
-            val control = controls.single { it.id == id }
-            assertWithMessage("$gap no longer hides the control: drop it from KNOWN_GAPS")
-                .that(effectiveRegions(control.file, control.pos).map { it.label }).contains(condition)
-        }
+    fun aRowHiddenByAnotherSectionsSwitchIsRedirectedToIt() {
+        assertThat(SettingsSearchMatch.crossSectionGateFor("input_backspace_undo_swipe_title")).isEqualTo("swipe_typing")
+        assertThat(gateState("swipe_typing")).isEqualTo("swipeTypingEnabled")
+        assertThat(highlightControl("swipe_typing")?.id).isEqualTo("swipe_enable_title")
+        assertWithMessage("the redirect is wired into the generated entries")
+            .that(File(activityPath).readText()).contains("gatedBy = SettingsSearchMatch.crossSectionGateFor(e.settingId)")
     }
 
     /** Fable audit D5: a gate counts only when its control writes the state that hides the target. */

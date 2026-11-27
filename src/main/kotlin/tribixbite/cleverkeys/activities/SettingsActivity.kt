@@ -757,6 +757,8 @@ class SettingsActivity : ComponentActivity(), SharedPreferences.OnSharedPreferen
                     },
                     settingId = e.settingId,
                     gateIds = SettingsSearchMatch.gatesFor(e.settingId, e.gateIds),
+                    // A row hidden by another section's switch: land on that switch while it is off.
+                    gatedBy = SettingsSearchMatch.crossSectionGateFor(e.settingId),
                 )
             }.toTypedArray(),
             // ===== Hand-maintained NON-control entries (activity navigation, FAQ) =====
