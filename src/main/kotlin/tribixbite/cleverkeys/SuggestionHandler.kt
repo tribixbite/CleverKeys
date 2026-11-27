@@ -2265,10 +2265,25 @@ class SuggestionHandler(
 
     private var learnedPlacement: LearnedPlacement? = null
 
+    /** The field the input view last started for (package, field id, input type); null before any. */
+    private var startedFieldIdentity: String? = null
+
+    /**
+     * `CleverKeysService.onStartInputView`. Only a NEW field ends Auto-Detect's verdict and puts
+     * next-word back in the primary language ([Predictor.onInputSessionChanged]): another app,
+     * field or input type. A restart of the same editor (`restarting`: a rotation, a WebView or
+     * chat app restarting its input) and a hide and re-show of the same field keep a correct
+     * detection (Fable review 2026-11-26: each of them, and a dictation write, used to wipe it,
+     * so Spanish needed five new words to come back).
+     */
+    fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean) {
+        val identity = info?.let { "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}" }
+        val newField = !restarting && identity != startedFieldIdentity
+        startedFieldIdentity = identity
+        if (newField) predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
+    }
+
     fun onEditorSessionChanged() {
-        // Auto-Detect's verdict belongs to the session it was made in (a dictionary add after a
-        // restarted input must not follow a language detected in the previous message).
-        predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
         wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
     }
 
@@ -3294,7 +3309,7 @@ class SuggestionHandler(
         val word = placed.word
         val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
         val before = editorTextBeforeCursor(ic, window) ?: return
-        if (!showsShortenedWordAt(anchor, before, word)) return
+        if (keptPrefixOfShortenedWord(anchor, before, word) == null) return
         if (editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) != after) return
         val predictor = predictionCoordinator.getWordPredictor() ?: return
         if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
@@ -3302,14 +3317,6 @@ class SuggestionHandler(
         learnedPlacement = null
         lastLearningCommit = null
         contextTracker.rollbackLastWord(word)
-        // The word is gone, and with it what the bar and Backspace still offered for it: its swipe
-        // alternates and REPLACE target, and an autocorrect undo of it.
-        if (contextTracker.getLastAutoInsertedWord()?.equals(word, ignoreCase = true) == true) {
-            contextTracker.clearLastAutoInsertedWord()
-            contextTracker.clearAutocorrectTracking()
-            contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
-            if (!specialPromptActive) suggestionBar?.clearSuggestions()
-        }
     }
 
     /**
@@ -3318,7 +3325,7 @@ class SuggestionHandler(
      * anchor is matched as a suffix, and then refused when [before] could ALSO be the whole word
      * standing at an earlier copy of the same text (a run of one word, see [oldWordMayStillPrecede]).
      */
-    private fun showsShortenedWordAt(anchor: String, before: String, word: String): Boolean {
+    private fun keptPrefixOfShortenedWord(anchor: String, before: String, word: String): String? {
         val wholeField = anchor.length < SwipeCorrectionTracker.ANCHOR_WINDOW
         for (kept in word.length - 1 downTo 0) {
             val prefix = word.substring(0, kept)
@@ -3331,12 +3338,13 @@ class SuggestionHandler(
                     before.regionMatches(before.length - kept, prefix, 0, kept, ignoreCase = true)
             }
             if (!matches) continue
-            if (wholeField) return true
+            val editorPrefix = before.substring(before.length - kept)
+            if (wholeField) return editorPrefix
             val stillStanding = textBeforeTrailingWord(before, word)
                 ?.let { endsAtWordBoundary(it, word) && it.trimEnd().endsWith(anchor.trimEnd()) } == true
-            return !stillStanding
+            return editorPrefix.takeIf { !stillStanding }
         }
-        return false
+        return null
     }
 
     /**

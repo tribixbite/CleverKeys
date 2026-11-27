@@ -921,6 +921,8 @@ class CleverKeysService : InputMethodService(),
         _viewEditor = editorRefOf(info)
         _keyboardView.cancelContinuousSwipe()
         _suggestionHandler.onEditorSessionChanged()
+        // Only a new field resets the detected next-word language (not a restart or a re-show).
+        _suggestionHandler.onInputFieldStarted(info, restarting)
         // A confirmation ("Added “X” to dictionary") belongs to the field it was shown in. The bar
         // refuses clearSuggestions while a message shows, so drop it first (Note10+ r18,
         // 2026-11-26: it stayed ~3 min). A restart of the same field keeps it, and with no message

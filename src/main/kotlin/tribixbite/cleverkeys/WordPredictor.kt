@@ -1416,7 +1416,8 @@ class WordPredictor : Predictor {
     }
 
     /**
-     * A new input session (another field or app, or the app restarted its input): Auto-Detect's
+     * A new input FIELD (another app, field or input type; not a restart or a re-show of the same
+     * one, see `SuggestionHandler.onInputFieldStarted`): Auto-Detect's
      * verdict from the previous one no longer counts, and next-word starts in the primary's
      * language again; detection switches it from fresh evidence. Note10+ 2026-11-26 (F2):
      * Spanish detected in a Chrome textarea kept a Samsung Notes field predicting in Spanish (an

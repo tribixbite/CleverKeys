@@ -446,6 +446,9 @@ class LearningWiringDriftTest {
         val check = selection.indexOf("reconcileLearnAfterDeletion(")
         assertThat(check).isGreaterThan(-1)
         assertThat(selection.indexOf("onCursorMoved(")).isGreaterThan(check)
+        // Only onStartInputView tells a new field from a restart (Fable review 2026-11-26).
+        val start = service.substringAfter("override fun onStartInputView(").substringBefore("override fun ")
+        assertThat(start).contains("_suggestionHandler.onInputFieldStarted(info, restarting)")
         val listener = service.substringAfter("_preferenceUIUpdateHandler?.handlePreferenceChange(key)").substringBefore("override fun ")
         assertThat(listener).contains("languageFromDisabledWordsKey(key)")
         assertThat(listener).contains("reloadDisabledWords()")

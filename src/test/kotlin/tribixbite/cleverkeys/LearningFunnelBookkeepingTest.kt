@@ -1672,18 +1672,70 @@ class LearningFunnelBookkeepingTest {
     @Test
     fun aNewInputSessionStartsNextWordInThePrimaryLanguage() {
         useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false)
         spanish.forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
 
-        // CleverKeysService: onFinishInputView → flushLearnedData (clearContext) and
-        // onEditorSessionChanged; onStartInputView → onEditorSessionChanged.
-        predictor.clearContext()
+        // CleverKeysService: onFinishInputView → onEditorSessionChanged and flushLearnedData
+        // (clearContext); onStartInputView of ANOTHER field → onInputFieldStarted.
         handler.onEditorSessionChanged()
+        predictor.clearContext()
+        handler.onInputFieldStarted(textField(), restarting = false)
 
         assertWithMessage("the new field starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
         assertWithMessage("its context model too").that((predictor.getField("contextModel") as ContextModel).language).isEqualTo("en")
         spanish.forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("fresh Spanish evidence switches again").that(predictor.getField("currentLanguage")).isEqualTo("es")
+    }
+
+    private fun chromeField(): EditorInfo = objenesis.newInstance(EditorInfo::class.java).apply {
+        packageName = "com.android.chrome"
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+    }
+
+    /**
+     * Fable review of 251e9c152, finding 1: only a NEW field resets the detected language. A
+     * restart (rotation, a WebView restarting input), a hide and re-show of the same field and a
+     * dictation write each wiped a correct detection, and Spanish then needed five new words.
+     */
+    @Test
+    fun theSameFieldRestartedReshownOrDictatedIntoKeepsTheDetectedLanguage() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false)
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        val window = learnWindow()
+
+        handler.onInputFieldStarted(chromeField(), restarting = true)
+        assertWithMessage("a restart").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        handler.onEditorSessionChanged()
+        handler.onInputFieldStarted(chromeField(), restarting = false)
+        assertWithMessage("hidden and shown again").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        handler.onEditorSessionChanged() // a dictation write (CleverKeysService onExternalEdit)
+        assertWithMessage("a dictation write").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        assertWithMessage("the window survives").that(learnWindow()).isEqualTo(window)
+    }
+
+    /**
+     * Finding 1, the finish order: the last, unfinished word of the field is learned in the
+     * detected language's store with its window, not after a reset into the primary's.
+     */
+    @Test
+    fun leavingTheFieldLearnsTheLastWordInTheDetectedLanguage() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false)
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        editor.append("el perro ")
+        type("gato")
+
+        // CleverKeysService.onFinishInputView: onEditorSessionChanged, then the flush.
+        handler.onEditorSessionChanged()
+        handler.flushTypedWordOnFinishInput(ic)
+
+        assertWithMessage("perro→gato in the Spanish store")
+            .that(bigramStore.getAllBigrams("es", "perro").map { it.word2 }).contains("gato")
+        assertWithMessage("nothing in the English store").that(bigram("perro", "gato")).isEqualTo(0)
     }
 
     /** F2, second half: inside one field, an English context of 5+ words switches back. */
