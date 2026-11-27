@@ -275,6 +275,14 @@ Routing priority matches the IME key-event chain (see `.claude/skills/ime-key-ro
 5. ~~A History edit whose new text is already another History row: refuse or merge?~~ Decided
    2026-11-26 by the maintainer: it merges into that row ("Editing a clipping in the pane" →
    "A History edit into another row's text merges"). Pinned and To-dos still refuse.
+6. ~~Single delete vs bulk delete of the current clip.~~ Decided 2026-11-27 by the maintainer:
+   the difference stays ("ok for system to have diff sometimes"). **Deleting the current clip:**
+   deleting ONE History row (its delete button or a swipe, `ClipboardHistoryService.removeHistoryEntry`)
+   whose text is exactly Android's current clip also clears Android's clipboard (since 2025-09-21;
+   audit D-4, `ac382bf00`: compared with the real clip, never for a private row, and a refused
+   clipboard read clears nothing). Deleting one row is a statement about that text, so it should not
+   stay pasteable. A bulk "Delete results" / Select delete leaves Android's clipboard untouched: it is
+   a cleanup of many rows, and wiping the clip the user is still working with would surprise them.
 
 ## Future Enhancements
 
@@ -835,7 +843,7 @@ own SharedPreferences file, `clipboard_last_seen` (one string: `t:<timestamp>` o
 settings export; unreadable while the device is locked, when the clipboard is too). Before
 this it lived only in memory, and the registration read that runs on every `on_startup` (IME
 switch-back, process restart) re-recorded whatever was on the clipboard — so a clip deleted
-from History (bulk or single delete leaves the OS clipboard untouched) came back after the
+from History (a bulk delete leaves the OS clipboard untouched; see "Deleting the current clip" below) came back after the
 service restarted. Now an observed clip is not re-recorded by registration or catch-up while
 it stays on the clipboard. Limits, by design: on API 24–25 copying the same text again while
 CleverKeys was not listening cannot be told apart from the earlier copy; turning clipboard
