@@ -43,6 +43,19 @@ class ClipboardEditField @JvmOverloads constructor(
     }
 
     /**
+     * Offered the text toolbar's / context menu's action first (a long press, a double tap, the
+     * caret's Paste bubble); true when it handled the action, and then the platform's own does not
+     * run. The list binds it to the editor's own cut, copy and paste, so those keep the editor's
+     * rules: the #156 private-entry confirmation (the platform's copy put a private entry's text
+     * on Android's clipboard without asking), an undo step, and the clipboard follow at Save
+     * (maintainer 2026-11-26). Null outside an edit: everything is the platform's.
+     */
+    var textMenuHandler: ((id: Int) -> Boolean)? = null
+
+    override fun onTextContextMenuItem(id: Int): Boolean =
+        textMenuHandler?.invoke(id) == true || super.onTextContextMenuItem(id)
+
+    /**
      * The platform's offset for a touch at ([x], [y]), with the soft-wrap correction of
      * [SoftWrapTap]. The Editor maps a tap (and a long press, a double tap, a drop) through this
      * public method, so overriding it moves exactly those; caret and handle DRAGS go through the

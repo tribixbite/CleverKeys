@@ -533,6 +533,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     // silently leak its plaintext to the OS clipboard — it routes through the same
     // confirm-before-expose dialog copyEntryToSystemClipboard uses.
     private var editingIsPrivate: Boolean = false
+    // What this edit's own cut / copy last put on Android's clipboard while the clip it replaced
+    // was the clipping this edit works with (the row as opened, an empty clipboard, or an earlier
+    // such cut). Save passes it on, so the edit still follows to Android's clipboard after the
+    // editor itself replaced the clip with a fragment (maintainer 2026-11-26: "short swipe paste
+    // function didn't paste it"). Null when the edit made no such cut or copy.
+    private var editingOwnClip: String? = null
     // D-7: string resource of the current save_edit failure, rendered inline in the edit row
     // (Toasts are invisible in IME context — ime-visual-feedback.md). Non-null only while an
     // edit session is showing an error; cleared on text change, cancel, and successful save.
@@ -1105,6 +1111,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingSession++
         // #156: remember the entry's privacy so cutFromEditText() can gate the OS-clipboard write.
         editingIsPrivate = entry.isPrivate
+        editingOwnClip = null
         // Re-render to show EditText + save/cancel buttons for this entry
         clipboardAdapter.notifyDataSetChanged()
     }
@@ -1120,7 +1127,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         // is refused (EntryChanged) instead of overwritten.
         val newContent = editingPages?.fullText(fieldText) ?: fieldText
 
-        when (service?.editEntryContent(oldContent, newContent, currentTab)) {
+        when (service?.editEntryContent(oldContent, newContent, currentTab, editingOwnClip)) {
             is EditEntryResult.Success -> {
                 // Timestamp key doesn't change when content is edited — no migration needed
                 cancelEdit()
@@ -1151,6 +1158,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         editingHistory = null
         editingCursorPosition = null
         editingIsPrivate = false
+        editingOwnClip = null
         editingErrorRes = null
         // Remove TextWatcher via tag-based cleanup (matches getView tag management).
         // Also try field-based removal as belt-and-suspenders.
@@ -1512,8 +1520,15 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
         if (editingIsPrivate) {
             confirmPrivateExposure(selected)
         } else {
-            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager
-            clipboard?.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? SystemClipboardManager ?: return
+            // Asked BEFORE the write: is the clip this cut / copy replaces the one this edit works
+            // with? Then the fragment stands for that clipping, and Save may replace it with the
+            // edited text; otherwise (an old row's edit) the fragment stays the user's clip.
+            val opened = editingOriginalContent
+            editingOwnClip = selected.takeIf {
+                opened != null && service?.systemClipIsWorkingClip(currentTab, opened, editingOwnClip) == true
+            }
+            clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", selected))
         }
     }
 
@@ -1637,6 +1652,36 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     private fun onEditFieldSelectionChanged(end: Int) {
         if (!isEditing() || end < 0) return
         editingCursorPosition = end
+    }
+
+    /**
+     * The edit field's text toolbar / context menu action [id] (ClipboardEditField.textMenuHandler):
+     * Cut, Copy and Paste run the editor's own [cutFromEditText] / [copyFromEditText] /
+     * [pasteToEditText], so they keep its rules — the #156 confirmation before a private entry's
+     * text reaches Android's clipboard (the platform's copy and cut skipped it), one undo step,
+     * and the clip ownership Save follows ([editingOwnClip]). Copy then collapses the selection to
+     * its end, as the platform's does, which also closes the toolbar. Everything else (select all,
+     * share, the text classifier's actions) stays the platform's: false.
+     * TODO: Share on a private entry still hands its text to the share sheet unasked (#156).
+     */
+    private fun onEditFieldMenuItem(id: Int): Boolean {
+        if (!isEditing()) return false
+        return when (id) {
+            android.R.id.cut -> {
+                cutFromEditText()
+                true
+            }
+            android.R.id.copy -> {
+                copyFromEditText()
+                activeEditingEditText?.let { it.setSelection(it.selectionEnd.coerceAtLeast(0)) }
+                true
+            }
+            android.R.id.paste, android.R.id.pasteAsPlainText -> {
+                pasteToEditText()
+                true
+            }
+            else -> false
+        }
     }
 
     /**
@@ -2548,6 +2593,9 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // 2026-11-26: a refused save's re-bind put the caret back where the keyboard had
                 // last moved it).
                 (editField as? ClipboardEditField)?.selectionListener = { _, end -> onEditFieldSelectionChanged(end) }
+                // The field's text toolbar (long press, double tap, the Paste bubble) cuts, copies
+                // and pastes through the editor's own paths ([onEditFieldMenuItem]).
+                (editField as? ClipboardEditField)?.textMenuHandler = { id -> onEditFieldMenuItem(id) }
 
                 // Save button state — reflects current content on every render
                 val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
@@ -2642,8 +2690,12 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 editField.removeTextChangedListener(it)
                 editField.setTag(R.id.clipboard_entry_edit_field, null)
             }
-            // Nor may a recycled editor field report caret moves for the row being edited.
-            (editField as? ClipboardEditField)?.selectionListener = null
+            // Nor may a recycled editor field report caret moves or menu actions for the row
+            // being edited.
+            (editField as? ClipboardEditField)?.let {
+                it.selectionListener = null
+                it.textMenuHandler = null
+            }
 
             // ── Media thumbnail rendering ──
             if (entry.isMedia) {

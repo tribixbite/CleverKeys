@@ -1473,6 +1473,8 @@ tasks.register('runMockTests', JavaExec) {
   systemProperty 'geoFull', (project.findProperty('geoFull') ?: 'false')
 
   def mockTestClasses = [
+    // 2026-11-26: an edit after the editor's own cut of the clip being edited still reaches the paste.
+    'tribixbite.cleverkeys.clipboard.ClipboardEditCutFollowTest',
     // 2026-11-26: a caret the user put in the clipboard editor survives a row re-bind.
     'tribixbite.cleverkeys.clipboard.ClipboardEditCaretTrackingTest',
     // 2026-11-26: a refused clipboard-editor save shows its reason after the row re-binds.

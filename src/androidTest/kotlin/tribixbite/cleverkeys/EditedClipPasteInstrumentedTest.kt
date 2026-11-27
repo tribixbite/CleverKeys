@@ -154,6 +154,58 @@ class EditedClipPasteInstrumentedTest {
     }
 
     /**
+     * Maintainer 2026-11-26: they copied `https://github.com/rustdesk/rustdesk-server`, edited it
+     * into `…/tribixbite/rustdesk-server` in the pane, and "short swipe paste function didn't paste
+     * it". A cut inside the editor had put the fragment on Android's clipboard, so at Save the clip
+     * was no longer the row and the edit did not follow. The editor passes its own cut
+     * (`ClipboardHistoryView.exposeEditSelection` → `editorClip`); the paste then gives the edit.
+     */
+    @Test
+    fun theSubkeyPasteGivesTheEditAfterTheEditorCutPartOfIt() {
+        val nonce = SystemClock.uptimeMillis()
+        val original = "https://github.com/rustdesk/rustdesk-server?ck=$nonce"
+        val fragment = "rustdesk"
+        val edited = "https://github.com/tribixbite/rustdesk-server?ck=$nonce"
+        val history = requireNotNull(ClipboardHistoryService.get_service(context)) { "no clipboard service" }
+        try {
+            ActivityScenario.launch(ImeFieldKeepWindowTestActivity::class.java).use { scenario ->
+                lateinit var activity: ImeFieldKeepWindowTestActivity
+                scenario.onActivity { activity = it }
+                assertTrue("the keyboard", within(15_000L) {
+                    CleverKeysService.getInstance()?.isInputViewShown == true && (keyboard()?.height ?: 0) > 0
+                })
+                val clipboard = activity.getSystemService(ClipboardManager::class.java)
+                instrumentation.runOnMainSync { clipboard.setPrimaryClip(ClipData.newPlainText("test", original)) }
+                assertTrue("the copy reached CleverKeys' history", within(5_000L) { history.historyEntryTimestamp(original) != null })
+
+                // The editor's cut of the org segment, as exposeEditSelection writes it, while the
+                // clip it replaces is the row being edited.
+                var working = false
+                instrumentation.runOnMainSync {
+                    working = history.systemClipIsWorkingClip(ClipboardTab.HISTORY, original, null)
+                    clipboard.setPrimaryClip(ClipData.newPlainText("CleverKeys", fragment))
+                }
+                assertTrue("the copied row is the clip the edit works with", working)
+
+                var result: EditEntryResult? = null
+                instrumentation.runOnMainSync {
+                    result = history.editEntryContent(original, edited, ClipboardTab.HISTORY, editorClip = fragment)
+                }
+                assertEquals(EditEntryResult.Success, result)
+                Thread.sleep(500L)
+
+                assertEquals("the paste short swipe must give the clipping as edited", edited, pasteWithTheSubkey(activity))
+            }
+        } finally {
+            instrumentation.runOnMainSync {
+                history.removeHistoryEntry(original)
+                history.removeHistoryEntry(edited)
+                history.removeHistoryEntry(fragment)
+            }
+        }
+    }
+
+    /**
      * Maintainer 2026-11-24: "i just cleaned a clipping and then tried to paste via subkey function
      * and nothing happened". Android 13+ clears its clipboard an hour after the last copy
      * (device_config `clipboard/auto_clear_enabled`, true on the S25U and the Pixel); Clean then

@@ -31,6 +31,12 @@ editor that used to be listed here already ship in 2.0.)
   deleted the wrong one. Android draws that cursor at the start of the next line, which is the
   same place in the text. The cursor also stays where you put it when the entry is redrawn, for
   example after a refused save.
+- After editing a History clipping you had just copied, the paste key and the paste short swipe
+  give the edited text also when you cut or copied part of it while editing (the cut part had
+  taken its place on Android's clipboard, so that was pasted). Editing an older clipping still
+  leaves Android's clipboard alone. Cut, Copy and Paste in the edited text's own toolbar now work
+  as the keyboard's do: a private clipping asks before its text reaches Android's clipboard, and
+  they can be undone.
 
 ### Fixed (learning from corrected words, 2026-11-26)
 
