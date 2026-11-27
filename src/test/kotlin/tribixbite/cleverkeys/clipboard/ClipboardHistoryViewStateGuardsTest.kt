@@ -544,9 +544,12 @@ class ClipboardHistoryViewStateGuardsTest {
         val factory = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
         val doc = factory.newDocumentBuilder().parse(java.io.File("res/layout/clipboard_history_entry.xml"))
         val ns = "http://schemas.android.com/apk/res/android"
-        val fields = doc.getElementsByTagName("EditText")
-        val editor = (0 until fields.length).map { fields.item(it) as org.w3c.dom.Element }
+        // Any tag: the editor is a ClipboardEditField (an EditText subclass) since 2026-11-26.
+        val elements = doc.getElementsByTagName("*")
+        val editor = (0 until elements.length).map { elements.item(it) as org.w3c.dom.Element }
             .single { it.getAttributeNS(ns, "id") == "@+id/clipboard_entry_edit_field" }
+        assertWithMessage("the editor is the soft-wrap-aware field")
+            .that(editor.tagName).isEqualTo("tribixbite.cleverkeys.clipboard.ClipboardEditField")
         val inputType = editor.getAttributeNS(ns, "inputType").split("|").toSet()
         assertWithMessage("textNoSuggestions turns the spell checker (and its focusable popup) off")
             .that(inputType).contains("textNoSuggestions")

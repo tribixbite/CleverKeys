@@ -169,8 +169,11 @@
        (edits arbitrary clipboard content) → importantForAutofill="no". LabelFor is
        suppressed: this field overlays the visible clipboard_entry_text above it, which
        is the accessible label; a hint/contentDescription would add a hardcoded string or
-       shadow the edited value for TalkBack. -->
-  <EditText
+       shadow the edited value for TalkBack.
+       ClipboardEditField (2026-11-26): an EditText whose tap at the end of a line that wraps
+       inside a word goes after that line's last character, and which reports caret moves so a
+       row re-bind keeps the caret where the user put it. -->
+  <tribixbite.cleverkeys.clipboard.ClipboardEditField
       android:id="@+id/clipboard_entry_edit_field"
       style="@style/clipboardEntry"
       android:layout_weight="0"

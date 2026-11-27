@@ -36,6 +36,7 @@ import tribixbite.cleverkeys.clipboard.ClipboardCleanResult
 import tribixbite.cleverkeys.clipboard.ClipboardCopyResult
 import tribixbite.cleverkeys.clipboard.ClipboardPendingDeletion
 import tribixbite.cleverkeys.clipboard.ClipboardEditCaret
+import tribixbite.cleverkeys.clipboard.ClipboardEditField
 import tribixbite.cleverkeys.clipboard.ClipboardEditPages
 import tribixbite.cleverkeys.clipboard.ClipboardPreviewPolicy
 import tribixbite.cleverkeys.clipboard.ClipboardReorderPolicy
@@ -1629,6 +1630,16 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
     }
 
     /**
+     * The edit field's caret moved to [end] (ClipboardEditField.selectionListener): a tap, a
+     * handle drag, a long press, or the keyboard's own setText / setSelection. It becomes the
+     * caret a re-bind puts back. Ignored outside an edit, and for a cleared selection (-1).
+     */
+    private fun onEditFieldSelectionChanged(end: Int) {
+        if (!isEditing() || end < 0) return
+        editingCursorPosition = end
+    }
+
+    /**
      * Move the field's caret one visual line [up] or down with the platform's own vertical
      * movement (`Selection.moveUp` / `moveDown`, what ArrowKeyMovementMethod runs for DPAD_UP /
      * DOWN in any EditText): the same column on the line above or below, the text's start from
@@ -2523,13 +2534,20 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 // Always set text+visibility — needed for correct height during measurement.
                 // Never the full text of a paged entry: only its current page (todo 22).
                 val displayText = editingInProgressText ?: text
+                // The caret to put back, read BEFORE setText: the field reports every selection
+                // change (ClipboardEditField.selectionListener), setText's reset to 0 included.
+                val cursorPos = editingCursorPosition ?: displayText.length
                 editField.setText(displayText)
 
                 // Restore cursor after setText (which resets to 0). Must run on EVERY
                 // getView call, not just first render — ListView re-getViews after height
                 // changes and the cursor would jump to 0 without this.
-                val cursorPos = editingCursorPosition ?: displayText.length
                 editField.setSelection(cursorPos.coerceIn(0, displayText.length))
+                // From here on the field's own caret moves (a tap, a handle drag, a long press)
+                // are the tracked caret too, so the next re-bind keeps them (maintainer
+                // 2026-11-26: a refused save's re-bind put the caret back where the keyboard had
+                // last moved it).
+                (editField as? ClipboardEditField)?.selectionListener = { _, end -> onEditFieldSelectionChanged(end) }
 
                 // Save button state — reflects current content on every render
                 val saveButton = view.findViewById<View>(R.id.clipboard_entry_save)
@@ -2624,6 +2642,8 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
                 editField.removeTextChangedListener(it)
                 editField.setTag(R.id.clipboard_entry_edit_field, null)
             }
+            // Nor may a recycled editor field report caret moves for the row being edited.
+            (editField as? ClipboardEditField)?.selectionListener = null
 
             // ── Media thumbnail rendering ──
             if (entry.isMedia) {
