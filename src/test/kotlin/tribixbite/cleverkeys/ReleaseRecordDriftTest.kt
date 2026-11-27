@@ -333,6 +333,11 @@ class ReleaseRecordDriftTest {
         // already re-anchored by the v2.0.0 row, which records the original anchor was wrong.
         "src/main/kotlin/tribixbite/cleverkeys/customization/KeyboardPreviewView.kt" to
             "icon preview in customization dialog (v1.1.72)",
+        // Audit B2 (2026-11-26): MultiLanguageManager was never built in production (setContext
+        // ran before setConfig) and was deleted; the v2.0.0 row below carries the language
+        // selection and Auto-Detect claims its rows anchored.
+        "src/main/kotlin/tribixbite/cleverkeys/MultiLanguageManager.kt" to
+            "language choice and Auto-Detect without the language manager",
     )
 
     @Test

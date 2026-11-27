@@ -1869,6 +1869,20 @@ class SuggestionHandler(
                     contextTracker.clearLastAutoInsertedWord()
                     contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
                 }
+                // Case 7 (Note10+ r21): the bar is still the last swipe's (its tracking stands) but
+                // the swipe no longer ends the text before the caret: the caret moved before its
+                // selection update arrived. Its alternate belongs to another word, so the tap
+                // must not replace the word under the caret. Refused; the stale bar goes.
+                else if (isManualSelection && !inTermuxApp &&
+                    !contextTracker.getLastAutoInsertedWord().isNullOrEmpty() &&
+                    contextTracker.getLastCommitSource() == PredictionSource.SWIPE
+                ) {
+                    vlog { "REPLACE refused: a tap on the last swipe's alternate with the caret elsewhere" }
+                    contextTracker.clearLastAutoInsertedWord()
+                    contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+                    suggestionBar?.clearSuggestions()
+                    return null
+                }
                 // ALSO: If user is selecting a prediction during regular typing, delete the partial word
                 // This handles typing "hel" then selecting "hello" - we need to delete "hel" first
                 // v1.2.6: Also handles cursor mid-word - need to delete BOTH prefix AND suffix
@@ -3338,8 +3352,35 @@ class SuggestionHandler(
         val imeDeletion = imeDeletionPending
         imeDeletionPending = false
         if (newSelStart != newSelEnd) return
+        dropSwipeTrackingTheCaretLeft(ic)
         if (newSelStart >= oldSelStart && newSelEnd >= oldSelEnd) return
         reconcileLearnAfterDeletion(ic, imeDeletion)
+    }
+
+    /**
+     * Note10+ r21 case 7 (2026-11-26): swipe `fix got something`, put the caret at the start of
+     * `got`, tap a bar entry → `fix someone something`. With the caret at a word start the synced
+     * prefix is empty, and InputCoordinator keeps the bar while the last commit is a swipe, so the
+     * LAST swipe's alternates stayed; the tap's REPLACE was refused (the swipe no longer ends the
+     * text before the caret) and the typed-word replace put `someone` over `got`. (A caret placed
+     * inside `got` syncs a prefix and refreshes the bar, which is likely why the Saga, with a
+     * different tap position, showed `got`'s own alternates.)
+     *
+     * Once the text before the caret no longer ends with the swiped word, the swipe's tracking
+     * goes (its REPLACE target, its commit source) and so do its alternates in the bar; the
+     * debounced cursor sync then treats the caret as any other. The word staying before the caret
+     * with only its space deleted, or a `.` after it, keeps the #110 Backspace undo working.
+     * An editor that reads back nothing (a terminal) is trusted, as at the tap.
+     */
+    private fun dropSwipeTrackingTheCaretLeft(ic: InputConnection?) {
+        ic ?: return
+        if (contextTracker.getLastCommitSource() != PredictionSource.SWIPE) return
+        val word = contextTracker.getLastAutoInsertedWord()?.takeIf { it.isNotEmpty() } ?: return
+        val before = editorTextBeforeCursor(ic, word.length + SwipeCorrectionTracker.RESOLUTION_SLACK)
+        if (before.isNullOrEmpty() || textBeforeTrailingWord(before, word) != null) return
+        contextTracker.clearLastAutoInsertedWord()
+        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+        if (!specialPromptActive) suggestionBar?.clearSuggestions()
     }
 
     /** KeyEventHandler sent a deletion the editor applies next ([imeDeletionPending]). */
@@ -3421,7 +3462,8 @@ class SuggestionHandler(
     private fun applyProvenRemoval(placed: LearnedPlacement) {
         val predictor = predictionCoordinator.getWordPredictor() ?: return
         if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) {
-            predictor.rollbackCommittedWord(placed.word, fieldAllowsPersonalizedLearning)
+            // The one undo helper (RejectedWordRollbackTest pins that every undo path uses it).
+            rollbackRejectedWord(placed.word)
             predictor.onSentenceBoundary()
         }
         lastLearningCommit = null

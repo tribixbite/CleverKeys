@@ -160,6 +160,7 @@ class LearningFunnelBookkeepingTest {
             barWords = firstArg<List<String>>().toList()
         }
         every { bar.getTopSuggestion() } answers { barWords.firstOrNull() }
+        every { bar.clearSuggestions() } answers { barWords = emptyList() }
 
         inputCoordinator = mockk(relaxed = true)
         every { inputCoordinator.getCurrentSwipeData() } returns null
@@ -429,6 +430,27 @@ class LearningFunnelBookkeepingTest {
             LanguageDetector.DetectionResult("de", 0.99f)
         predictor.addWordToContext("dogs", true)
         assertWithMessage("the chosen secondary").that(predictor.getField("currentLanguage")).isEqualTo("de")
+    }
+
+    /**
+     * Name kept for docs/RELEASE_RECORD.md (the v2.0.0 row "the language manager stays on the
+     * chosen languages" anchors it). The manager is gone (audit B2, 2026-11-26); the claim it
+     * carried is that Portuguese text with English + Spanish chosen never moves the keyboard to
+     * Portuguese, which the production detector now pins: it scores the chosen pair only.
+     */
+    @Test
+    fun theLanguageManagerStaysOnTheChosenLanguages() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        config.language_detection_sensitivity = Defaults.LANGUAGE_DETECTION_SENSITIVITY
+        detects("en") // installs a bigram model that supports every language
+        predictor.setField("languageDetector", LanguageDetector())
+        listOf("o", "não", "é", "uma", "da", "do", "em", "com", "os", "mais", "não", "é").forEach {
+            predictor.addWordToContext(it, true)
+        }
+        assertWithMessage("never a language outside the chosen pair")
+            .that(predictor.getField("currentLanguage")).isAnyOf("en", "es")
     }
 
     /**
@@ -2158,6 +2180,62 @@ class LearningFunnelBookkeepingTest {
 
         assertWithMessage("editor").that(editor.toString()).isEqualTo("fix ")
         assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
+    }
+
+    /**
+     * The debounced cursor sync as InputCoordinator.onCursorMoved runs it: a word at the caret
+     * gets its predictions; an empty prefix gets the park pass, EXCEPT while the last commit is a
+     * swipe or an autocorrect undo is offered: then the bar is kept for their alternates.
+     */
+    private fun inputCoordinatorSync(field: EditorInfo = textField()) {
+        val old = if (reportedCaret >= 0) reportedCaret else cursor()
+        handler.onUnownedSelectionUpdate(old, old, cursor(), cursor(), ic)
+        reportedCaret = cursor()
+        tracker.onCursorPositionChanged(cursor())
+        tracker.synchronizeWithCursor(ic, "en", field)
+        when {
+            tracker.getCurrentWord().isNotEmpty() -> handler.handleCursorSyncPrediction(ic, field)
+            tracker.getLastAutocorrectOriginalWord() == null &&
+                tracker.getLastCommitSource() != PredictionSource.SWIPE -> handler.handleCursorParkPrediction(field, ic)
+            else -> Unit // the bar is kept
+        }
+    }
+
+    /**
+     * Note10+ r21 case 7 (2026-11-26): swipe `fix got something`, put the caret at the start of
+     * `got`, tap a bar entry. The bar still held the LAST swipe's alternates (the empty prefix at
+     * a word start keeps the bar while the last commit is a swipe), and tapping `someone` gave
+     * `fix someone something`: a stale alternate replaced the word under the caret.
+     */
+    @Test
+    fun aBarTapAfterTheCaretMovedToAnotherWordNeverUsesTheLastSwipesAlternates() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        newSwipe("something", "somethin", "someone")
+        assertWithMessage("precondition: the swipe's alternates").that(barWords).contains("someone")
+
+        cursorAt = "fix ".length
+        inputCoordinatorSync()
+        assertWithMessage("the last swipe's alternates left the bar").that(barWords).doesNotContain("someone")
+        assertWithMessage("no REPLACE target left for a later tap")
+            .that(tracker.getLastAutoInsertedWord()).isNull()
+    }
+
+    /** Case 7, the race: the tap arrives before the caret's selection update. */
+    @Test
+    fun aTapOnTheLastSwipesAlternateWithTheCaretElsewhereIsRefused() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        newSwipe("something", "somethin", "someone")
+        cursorAt = "fix ".length
+        tracker.synchronizeWithCursor(ic, "en", textField())
+
+        tap("someone")
+
+        assertWithMessage("nothing replaced").that(editor.toString()).isEqualTo("fix got something ")
+        assertWithMessage("got keeps its pair").that(bigram("fix", "got")).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection
