@@ -1541,6 +1541,11 @@ class WordPredictor : Predictor {
                 // the new language's `.cklm` loads off the main thread, the learn window is
                 // cleared (L6) and the exact learn receipt expires; the primary dictionary and
                 // its disabled / custom words stay.
+                // TODO(detection lag, Pixel r22 2026-11-27): the pairs learned while the detector
+                // still said the old language (up to DETECTION_MIN_WORDS words, `see → you` in es)
+                // stay in the old language's store. Re-filing them exactly needs a receipt per
+                // commit in the detection window (only the newest commit holds one), so it is not
+                // done; the old store's counts for those pairs are what is left over.
                 switchNextWordLanguage(detectedLanguage)
             }
             noteDetectionVerdict(detectedLanguage)
