@@ -501,6 +501,70 @@ langpacks". Done, each test-first (red then green), commits `73a51ab7..762cca58`
   its result; the 4 new strings (S7 1, S9 3) in 21 locales are agent translations, unreviewed.
 - Not run: instrumented suite (A2) for this round, device checks of S2/S3; release r16 not built.
 
+**Status 2026-11-26, evening (agent).** Maintainer: "install r19 on the pixel and fix the 2.1 small
+items"; "test edge cases on both devices … with learning on are word swipe corrections erroneously
+getting recorded as n gram pairs?"; "also test on the pixel and add any other test activities";
+"have fable audit all of today's fixes". r19 went on the Pixel; r20 (`2bcdb3e53`, `67d2a66c…`) and
+r21 (`c334d78da`, `67c3d279…`) were run on the Saga `.1.130`, Note10+ and Pixel; r22 (`955531df2`,
+arm64 `8115e576…`) is being run on all three.
+- **2.1 small items fixed:** contraction base loaded once and retired services release their
+  listeners (`61b860194`); detected next-word language's disabled words (`7243dc6e5`); Dictionary
+  Manager tab-order load (`0fc38f6c8`), Swiss list (`c6d10ad6e`, `794f2e878`), search during load;
+  Swiss-switch search, no-pair Auto-Detect note, pack removal off lifecycleScope + busy toasts;
+  clipboard custom-rules import, GIF busy toast/replace prompt/removals in trackers; Private copy cap
+  from stored settings; 1.x words counted in a full restore; bar add goes to the detected secondary's
+  list only on a fresh verdict (`7d1275a67`, `5092b1d8d`).
+- **The `thier`/`wich` bypass rule FAILED its pre-registered gate** (`25234af47`, `822d7fa36`,
+  `docs/eval/2026-11-26-secondary-bypass-gate.md`): the bypass stays unconditional.
+- **Learning answer:** yes, before today. A swipe/autocorrect correction made through the editor
+  (letter-by-letter with Backspace Undo Swipe off, Ctrl+Backspace, retyping after an autocorrect undo,
+  select-delete, after an input restart) left `prev → wrong` and `wrong → next` learned. Fixed in
+  `a11db8b84`, `6b904c2e9`, `91307aab4`, `fe6c3a0c4`, `a196a3088`, `23622f144` (editor-proven placement
+  + exact receipts; rollback at the deletion itself). Device r21: every route PASS on all three phones
+  (no wrong pair; `red → wield`, no `wirld`); no false rollback (insert-before, `la`×20, quotes/emoji).
+- **Device-found and fixed:** a secondary-list custom word lost the swipe (`6e474b0df`, `20946bc3e`);
+  disabled words re-injected via contraction alias keys (`6e474b0df`); detected language leaked
+  across fields (`251e9c152`, `73d411929`, `64a102522` own 20-word window); a disabled `well` took
+  `we'll` (`30fa7c4c6`); stale bar after a caret move replaced the wrong word (`fb92c1571`);
+  pack-less secondary still served (`88025d854`, `e500fe58a`, `4c719e707`, `aadfca566`).
+- **Fable reviews:** two on the learning fixes, then four audits of all of today's fixes (A learning,
+  B languages, C swipe/memory/DM, D settings/clipboard): no high finding; every medium and low fixed
+  or TODO'd (`23622f144`, `64a102522`, `aadfca566`, `fb92c1571`, `d10f16162`, `794f2e878`, `093af2088`,
+  `b449aeac6`, `5e2de9116`, `80a7f76a0`, `5a2c1b43c`, `df63c2768`). `MultiLanguageManager` deleted (never
+  built in production; superseding RELEASE_RECORD row added).
+- **Open (agent, 2.1):** a forward Delete of part of the word and a rollback's evicted entries
+  (TODOs); fixing an OLDER word (two commits back) keeps its pairs; geometric still drops a disabled
+  paired key with its contraction (TODO); a swipe started within ~0.3 s of an app switch loses its
+  first points (Pixel, Saga); a deleted custom word gets no "+word" chip again (usage history);
+  Auto-Detect still needs a better scorer (Spanish rarely reaches 0.6 without function words).
+- **Open (maintainer):** a name typed as the first word of an ordinary message is stored lowercase
+  (by design, bites German nouns); the new strings `multilang_pack_busy`, `gif_pack_busy` in 21
+  locales are agent translations, unreviewed; M1, M2, M4 as before.
+- Suites at `955531df2`: pure 4,232, mock 2,193, androidTest compiles; CI green at `24900bf11`,
+  `2bcdb3e53`. A2 not re-run (emulator.wtf out of credits). Pixel: ~40 existing words' and 8 pairs'
+  usage counts rose and 3 triples were added by the r21 run (not removable from the browser).
+- **2026-11-27 (r22 runs, then fixes for r23).** r22 (`955531df2`, `8115e576…`) on all three
+  phones: everything passed except R3 (a deletion after a keyboard hide/re-show or a Chrome rotation
+  kept `prev → wrong`: the hide's `flushLearnedData` cleared the window), a detected language
+  carried into a new Chrome tab (every textarea is `chrome / -1 / 0x2c0a1`), and the Saga's
+  `so → fix` (a word deleted after a swipe undo still paired). Fixed in `8d42e6fbc`, `b2e554f8c`; a
+  Fable review then found a HIGH privacy regression (a look-alike non-empty field, e.g. a second
+  Chrome tab ending in the same word, continued the old window; incognito words entered the window),
+  fixed with editor-proven continuation, the incognito bit in the field identity and a gate-flip
+  drop (`442c81a56`, `75674eb83`), the restart path (`b12ff1d0c`) and flags-only restarts / a
+  first word proven from the restart's EditorInfo (`a62ce0f6f`). Fable's last check: no cross-field
+  path left.
+- **Clipboard edit (maintainer report):** the dead checkmark was a refused DUPLICATE save whose error
+  line the rebind wiped (confirmed on the Note10+ with r22, `584860d70`); the edit now MERGES into
+  the existing History row (`ca9d84330`, maintainer's choice); Pinned/To-dos refuse visibly. Tap at
+  a wrapped line's end (`8f7717df5`), space-bar slider direction and visual up/down (`1a76f195e`).
+  A cut/copy inside the editor stays on the clipboard after Save (`2d66d50b3`, maintainer: matches
+  their build). Docs `0a2dd90a9`. Open (maintainer): a single-row delete of the current clip empties
+  Android's clipboard, a bulk "Delete results" does not (spec only covers the bulk case).
+- r23 (`a62ce0f6f`, arm64 `672015a6…`): pure 4,252, mock 2,253, androidTest compiles; pushed;
+  device runs L1–L8, C1–C4 in progress on the Saga `.1.130`, Note10+ and Pixel. Instrumented
+  clipboard tests (`ClipboardSoftWrapEditTest`, merge cases) not run: emulator.wtf out of credits.
+
 **Status 2026-11-26, morning (agent).** Maintainer: real searches/clipboard allowed on the Note10+;
 compact-dictionary estimate; Fable audit; DM load timing; "do the peak fix for 2.0". Release r19
 (`fda0160ae`, arm64 `6315d2b8…`) is on the Saga `.1.130` and the Note10+; the Pixel runs r17.
