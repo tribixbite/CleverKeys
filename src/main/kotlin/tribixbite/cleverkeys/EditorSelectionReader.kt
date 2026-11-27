@@ -2,6 +2,7 @@ package tribixbite.cleverkeys
 
 import android.annotation.SuppressLint
 import android.os.Build
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
 
@@ -17,6 +18,40 @@ internal data class EditorSelectionRead(
     val selected: String,
     val after: String,
 )
+
+/**
+ * The text around the caret that the app put in the [EditorInfo] (API 30+,
+ * `EditorInfo.setInitialSurroundingText`), read without a call to the app: at an input restart
+ * the connection may not have the field's text yet (a WebView), and the EditorInfo is what the
+ * restart carries.
+ */
+internal object EditorInitialText {
+
+    /** The platform level; a seam for the reason [EditorSelectionReader.platformSdk] is one. */
+    @Volatile
+    internal var platformSdk: () -> Int = { Build.VERSION.SDK_INT }
+
+    /**
+     * Reads the initial text before and after the caret, `length` characters each. A seam only
+     * because EditorInfo is an android.jar stub in host tests; production leaves it null.
+     */
+    @Volatile
+    internal var reader: ((EditorInfo, Int) -> Pair<CharSequence?, CharSequence?>)? = null
+
+    /** The EditorInfo can carry initial text on this platform (API 30+). */
+    fun supported(): Boolean = platformSdk() >= Build.VERSION_CODES.R
+
+    /** Before and after the caret, up to [length] characters each; null when unsupported or not given. */
+    @SuppressLint("NewApi") // guarded by supported(), which lint cannot see
+    fun around(info: EditorInfo, length: Int): Pair<String, String>? {
+        if (!supported()) return null
+        val (before, after) = runCatching {
+            reader?.invoke(info, length)
+                ?: (info.getInitialTextBeforeCursor(length, 0) to info.getInitialTextAfterCursor(length, 0))
+        }.getOrNull() ?: return null
+        return (before ?: return null).toString() to (after ?: return null).toString()
+    }
+}
 
 /**
  * Shared by [EditorTextWindowReader] and [EditorReadback]: both need ABSOLUTE selection offsets,

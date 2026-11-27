@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.KeyEvent
+import android.text.InputType
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import tribixbite.cleverkeys.ml.PlaygroundTraceRecorder
@@ -2349,8 +2350,35 @@ class SuggestionHandler(
         if (restarting) inputRestartedSinceView = true else inputStartedSinceView = true
     }
 
-    /** The field the input view last started for (package, field id, input type); null before any. */
-    private var startedFieldIdentity: String? = null
+    /**
+     * What makes a field the same field. The incognito bit is part of it (Fable review 2026-11-27,
+     * #1): a private tab and an ordinary one that otherwise look the same are two fields.
+     */
+    private data class FieldIdentity(
+        val packageName: String?, val fieldId: Int, val inputType: Int, val allowsLearning: Boolean,
+    ) {
+        /**
+         * The same field across an input restart: only the input class and variation count
+         * (Fable check of b12ff1d0c, #1). A restart that toggles flags (TextView.setInputType, a
+         * Compose KeyboardOptions change, a page changing autocapitalize or inputmode:
+         * CAP_SENTENCES, NO_SUGGESTIONS …) is still the field; text → email or password is not.
+         */
+        fun sameAcrossRestart(other: FieldIdentity): Boolean =
+            packageName == other.packageName && fieldId == other.fieldId && allowsLearning == other.allowsLearning &&
+                (inputType and CLASS_AND_VARIATION) == (other.inputType and CLASS_AND_VARIATION)
+
+        companion object {
+            private const val CLASS_AND_VARIATION = InputType.TYPE_MASK_CLASS or InputType.TYPE_MASK_VARIATION
+
+            fun of(info: EditorInfo) = FieldIdentity(
+                info.packageName, info.fieldId, info.inputType,
+                LearningGate.fieldAllowsPersonalizedLearning(info.imeOptions),
+            )
+        }
+    }
+
+    /** The field the input view last started for; null before any. */
+    private var startedFieldIdentity: FieldIdentity? = null
 
     /**
      * `CleverKeysService.onStartInputView`. Only a NEW field ends Auto-Detect's verdict and puts
@@ -2361,20 +2389,16 @@ class SuggestionHandler(
      * so Spanish needed five new words to come back).
      */
     fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean, ic: InputConnection? = null) {
-        // The incognito bit is part of a field (Fable review 2026-11-27, #1): a private tab and an
-        // ordinary one that otherwise look the same are two fields.
-        val identity = info?.let {
-            "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}\u0000" +
-                LearningGate.fieldAllowsPersonalizedLearning(it.imeOptions)
-        }
+        val identity = info?.let { FieldIdentity.of(it) }
         val boundAnotherEditor = inputStartedSinceView
         val restartedInput = restarting || inputRestartedSinceView
         inputStartedSinceView = false
         inputRestartedSinceView = false
         // A restart into a field of another identity is another field (#1: a text input after a
         // textarea in one WebView). With no field started yet there is nothing to compare.
+        val started = startedFieldIdentity
         val identityChanged = if (restarting) {
-            startedFieldIdentity != null && identity != null && identity != startedFieldIdentity
+            started != null && identity != null && !identity.sameAcrossRestart(started)
         } else {
             identity != startedFieldIdentity
         }
@@ -2391,6 +2415,14 @@ class SuggestionHandler(
         // show the window's last word at its anchor. A field's first word (blank anchor) cannot,
         // so it loses its pair across a restart; a proven deletion lifts the requirement.
         windowNeedsProof = !newField && (boundAnotherEditor || restartedInput)
+        // A restart of the same field whose EditorInfo shows the newest learned word where it was
+        // committed needs nothing more (Fable check of b12ff1d0c, #2: after a Chrome rotation a
+        // field's first word was no longer taken back by Backspace, nor kept its pair).
+        if (windowNeedsProof && restartedInput && !boundAnotherEditor && info != null &&
+            learnedPlacement?.let { placementShownByEditorInfo(it, info) } == true
+        ) {
+            windowNeedsProof = false
+        }
         if (newField) {
             val predictor = predictionCoordinator.getWordPredictor()
             // H1: the learn window ends with the field (moved here from onFinishInputView's flush,
@@ -2401,6 +2433,33 @@ class SuggestionHandler(
             learnedPlacement = null
             previousPlacement = null
         }
+    }
+
+    /**
+     * At an input restart, without a call to the app: does [info] show [placed] where its commit
+     * left it? API 30+: its initial text before the caret is the anchor, the word and its
+     * separator (exactly, for a whole-field placement), and the text after the caret is the one
+     * recorded. Below API 30: the caret of a whole-field placement is where its commit left it.
+     */
+    private fun placementShownByEditorInfo(placed: LearnedPlacement, info: EditorInfo): Boolean {
+        val recordedAfter = placed.after ?: return false
+        val tail = placed.word + placed.trailing
+        val full = placed.anchor + tail
+        if (!EditorInitialText.supported()) {
+            return placed.wholeField && info.initialSelStart == full.length && info.initialSelEnd == full.length
+        }
+        if (!placed.wholeField && !placed.provable) return false
+        val window = SwipeCorrectionTracker.ANCHOR_WINDOW
+        val (before, after) = EditorInitialText.around(info, maxOf(full.length + 1, window)) ?: return false
+        val beforeShown = if (placed.wholeField) {
+            before.length == full.length && before.startsWith(placed.anchor) &&
+                before.regionMatches(placed.anchor.length, tail, 0, tail.length, ignoreCase = true)
+        } else {
+            before.length >= full.length &&
+                before.regionMatches(before.length - full.length, placed.anchor, 0, placed.anchor.length) &&
+                before.regionMatches(before.length - tail.length, tail, 0, tail.length, ignoreCase = true)
+        }
+        return beforeShown && after.take(window) == recordedAfter.take(window)
     }
 
     /**

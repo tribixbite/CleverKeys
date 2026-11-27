@@ -208,6 +208,9 @@ class LearningFunnelBookkeepingTest {
         }
         EditorSelectionReader.newExtractedTextRequest = { objenesis.newInstance(ExtractedTextRequest::class.java) }
         EditorSelectionReader.platformSdk = { 0 }
+        // The EditorInfo's initial text (API 30+): off unless a test turns it on.
+        EditorInitialText.platformSdk = { 0 }
+        EditorInitialText.reader = null
 
         val contractions = mockk<ContractionManager>(relaxed = true)
         every { contractions.isKnownContraction(any()) } returns false
@@ -677,6 +680,8 @@ class LearningFunnelBookkeepingTest {
     fun teardown() {
         EditorSelectionReader.newExtractedTextRequest = { ExtractedTextRequest() }
         EditorSelectionReader.platformSdk = { android.os.Build.VERSION.SDK_INT }
+        EditorInitialText.platformSdk = { android.os.Build.VERSION.SDK_INT }
+        EditorInitialText.reader = null
         scheduler.shutdownNow()
         scheduler.awaitTermination(2, TimeUnit.SECONDS)
         unmockkAll()
@@ -2677,21 +2682,30 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("no is→great").that(bigram("is", "great")).isEqualTo(0)
     }
 
-    /** #1: a restart into another kind of field (a text input after a textarea) is a new field. */
+    /**
+     * #1, as narrowed by the next review (flags-only restarts are the same field): a text input
+     * after a textarea differs only in TYPE_TEXT_FLAG_MULTI_LINE, so the restart keeps the page's
+     * detected language, and its window must still be proven before a pair is learned.
+     * (Another variation, an email field, is a new field: see
+     * aRestartIntoAnotherInputVariationIsANewField.)
+     */
     @Test
-    fun aRestartIntoAnotherKindOfFieldIsANewField() {
+    fun aRestartIntoATextInputAfterATextareaKeepsTheLanguageButProvesTheWindow() {
         useRealLegacyDetector()
         handler.onInputFieldStarted(chromeField(), restarting = false, ic)
         editor.append(spanish.joinToString(" ") + " ")
         spanish.forEach { predictor.addWordToContext(it, true) }
+        type("es ", chromeField())
         assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
 
         editor.setLength(0)
-        editor.append("hello there ")
+        editor.append("draft es ")
         webViewRestart(chromeTextInput())
+        assertWithMessage("the page's language kept").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        type("grande ", chromeTextInput())
 
-        assertWithMessage("the text input starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
-        assertWithMessage("its learn window is empty").that(learnWindow()).isEmpty()
+        assertWithMessage("no es→grande from the textarea's es")
+            .that(bigramStore.getAllBigrams("es", "es").map { it.word2 }).doesNotContain("grande")
     }
 
     /**
@@ -2732,6 +2746,120 @@ class LearningFunnelBookkeepingTest {
         backspaceChars("x ".length, field = chromeField())
 
         assertWithMessage("A's fix kept its count").that(vocabulary.getWordUsage("fix")?.usageCount).isEqualTo(1)
+    }
+
+    // ------------------------------------------------- Fable check 2026-11-27 of b12ff1d0c
+
+    /**
+     * #1: a restart that only toggles inputType flags (TextView.setInputType, a Compose
+     * KeyboardOptions change, a page changing autocapitalize) is the same field: it reset
+     * Auto-Detect and cleared the window.
+     */
+    @Test
+    fun aRestartThatOnlyChangesInputTypeFlagsIsTheSameField() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        val window = learnWindow()
+
+        webViewRestart(chromeField().apply {
+            inputType = inputType or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        })
+
+        assertWithMessage("Spanish kept").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        assertWithMessage("the window kept").that(learnWindow()).isEqualTo(window)
+    }
+
+    /** #1, the other direction: a restart into another variation (an email field) is a new field. */
+    @Test
+    fun aRestartIntoAnotherInputVariationIsANewField() {
+        useRealLegacyDetector()
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, true) }
+
+        webViewRestart(chromeField().apply {
+            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+        })
+
+        assertWithMessage("the email field starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
+        assertWithMessage("its learn window is empty").that(learnWindow()).isEmpty()
+    }
+
+    /** The EditorInfo of the restart shows the editor's text around the caret (API 30+). */
+    private fun editorInfoShowsTheText() {
+        EditorInitialText.platformSdk = { 30 }
+        EditorInitialText.reader = { _, n ->
+            val c = cursor()
+            editor.substring(maxOf(0, c - n), c) to editor.substring(c, minOf(editor.length, c + n))
+        }
+    }
+
+    /**
+     * #2: after a same-field restart (a rotation in Chrome), a field's first word was no longer
+     * taken back by Backspace: its blank anchor proves nothing, and the restart required a proof.
+     * The rotation's EditorInfo shows it at the caret (API 30+), without asking the app.
+     */
+    @Test
+    fun aFirstWordDeletedAfterARotationIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("toy", "try", field = chromeField())
+        assertWithMessage("the first word").that(editor.toString()).isEqualTo("toy ")
+        editorInfoShowsTheText()
+        hideAndShowKeyboard(field = chromeField(), restarting = true)
+        reportedCaret = cursor()
+        backspaceChars("toy ".length, field = chromeField())
+        newSwipe("try")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("try ")
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
+    }
+
+    /** #2, below API 30: the restart's caret is where the whole-field placement's commit left it. */
+    @Test
+    fun aFirstWordDeletedAfterARotationIsRolledBackBelowApi30() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("toy", "try", field = chromeField())
+        EditorInitialText.platformSdk = { 29 }
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 4; initialSelEnd = 4 }, restarting = true)
+        reportedCaret = cursor()
+        backspaceChars("toy ".length, field = chromeField())
+        newSwipe("try")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("try ")
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
+    }
+
+    /** #2: a first word keeps its pair across a rotation the EditorInfo proves. */
+    @Test
+    fun aFirstWordKeepsItsPairAcrossARotation() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("fix ", chromeField())
+        editorInfoShowsTheText()
+        hideAndShowKeyboard(field = chromeField(), restarting = true)
+        swipe("toy", "try", field = chromeField())
+
+        assertWithMessage("fix→toy learned").that(bigram("fix", "toy")).isEqualTo(1)
+    }
+
+    /** #2, the guard: a restart into a textarea whose text differs proves nothing. */
+    @Test
+    fun aRestartIntoATextareaWithOtherTextProvesNothing() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("fix ", chromeField())
+        editor.setLength(0)
+        editor.append("a fix ")
+        editorInfoShowsTheText()
+        webViewRestart(chromeField())
+        swipe("toy", "try", field = chromeField())
+
+        assertWithMessage("no fix→toy from the other textarea's fix").that(bigram("fix", "toy")).isEqualTo(0)
     }
 
     // ------------------------------------------------------------------ reflection
