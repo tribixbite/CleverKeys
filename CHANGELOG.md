@@ -39,6 +39,10 @@ editor that used to be listed here already ship in 2.0.)
 - After Auto-Detect switched to the second language, another field or app starts again in the
   primary language, and typing in the primary switches back within the same field.
 - A word disabled in Dictionary Manager is no longer swiped in right afterwards.
+- A detected second language now survives a rotation, hiding and showing the keyboard in the same
+  field, or dictation; only another field starts again in the primary language.
+- Importing the language pack of a second language you had chosen (for example from a restored
+  backup) makes it active at once, without changing a setting.
 
 ### Fixed (swiping and the personal dictionary, 2026-11-26)
 
