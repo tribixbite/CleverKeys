@@ -463,6 +463,9 @@ class CleverKeysService : InputMethodService(),
         // Installed BEFORE initGlobalConfig, whose refresh resolves the first effective theme.
         val themeProvider = tribixbite.cleverkeys.theme.ThemeProvider.getInstance(this)
         Config.themeAvailability = themeProvider::isAvailable
+        // A stored secondary with no installed or bundled dictionary resolves to none at read
+        // time ([Config.languageAvailability]); before initGlobalConfig, like the theme check.
+        Config.ensureLanguageAvailability(this)
 
         // Keyboard sizing reads the display's full bounds, never this service's displayMetrics
         // (their height changes after the first configuration change on Android 15+).

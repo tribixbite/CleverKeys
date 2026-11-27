@@ -454,4 +454,17 @@ class LearningWiringDriftTest {
         assertThat(listener).contains("reloadDisabledWords()")
     }
 
+
+    /**
+     * Coordinator item 7 (2026-11-26): the keyboard installs the language-availability check
+     * before its first Config (only a process in which Settings had started had it).
+     */
+    @Test
+    fun `the keyboard installs the language availability check before its first Config`() {
+        val service = readSource("CleverKeysService.kt")
+        val onCreate = service.substringAfter("override fun onCreate()").substringBefore("\n    override fun ")
+        val ensure = onCreate.indexOf("Config.ensureLanguageAvailability(this)")
+        assertThat(ensure).isGreaterThan(-1)
+        assertThat(onCreate.indexOf("initGlobalConfig(")).isGreaterThan(ensure)
+    }
 }
