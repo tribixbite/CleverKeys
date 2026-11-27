@@ -443,7 +443,7 @@ class LearningWiringDriftTest {
     fun `the service checks edits for learned words and reloads disabled words on change`() {
         val service = readSource("CleverKeysService.kt")
         val selection = service.substringAfter("override fun onUpdateSelection(").substringBefore("override fun onFinishInputView")
-        val check = selection.indexOf("reconcileLearnAfterDeletion(")
+        val check = selection.indexOf("_suggestionHandler.onUnownedSelectionUpdate(")
         assertThat(check).isGreaterThan(-1)
         assertThat(selection.indexOf("onCursorMoved(")).isGreaterThan(check)
         // Only onStartInputView tells a new field from a restart (Fable review 2026-11-26).

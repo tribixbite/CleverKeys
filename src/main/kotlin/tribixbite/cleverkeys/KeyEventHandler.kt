@@ -1164,6 +1164,7 @@ class KeyEventHandler(
             // Input Behavior can turn it off); anywhere else the editor's own Ctrl+Backspace
             // decides the word. A terminal is never read.
             KeyValue.Editing.DELETE_WORD -> {
+                learningHooks?.onImeDeletion()
                 val conn = recv.getCurrentInputConnection()
                 val pairs = Config.globalConfigOrNull()?.delete_word_url_pairs ?: Defaults.DELETE_WORD_URL_PAIRS
                 if (conn == null || !pairs || isTerminalStyleEditor() || !EditorUrlQueryDelete.apply(conn)) {
@@ -1851,6 +1852,13 @@ class KeyEventHandler(
          * a swiped word ([InlineSwipeSession.spaceBeforeTap]): " " or "".
          */
         fun inlineSpaceBeforeTap(typed: CharSequence): String = ""
+        /**
+         * The keyboard sent a deletion the editor applies next (a Ctrl+Backspace / delete-word
+         * key; Backspace reaches the receiver's handle_backspace too). Lets the next shrinking
+         * selection update be attributed to the keyboard (a field's first word can then be
+         * proven deleted; an app clearing its field never calls this).
+         */
+        fun onImeDeletion() {}
         /** Enter or the IME action is about to be sent; [ic] still ends with the typed word. */
         fun onEditorWordBoundary(ic: InputConnection?)
 

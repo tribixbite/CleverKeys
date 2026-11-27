@@ -220,7 +220,13 @@ class ContextModel internal constructor(
             (receipt.trigram?.let { trigramStore?.isReceiptCurrent(it) == true } ?: true)
     }
 
-    /** No learnability re-evaluation: reverse only the increments whose sinks issued receipts. */
+    /**
+     * No learnability re-evaluation: reverse only the increments whose sinks issued receipts.
+     *
+     * TODO(audit A7, pre-existing): a commit that pushed another continuation out of its prefix's
+     * budget ([ContinuationBudget]) is reversed without bringing that entry back; the rollback
+     * restores the counts it wrote, not what the budget evicted to make room for them.
+     */
     internal fun rollbackReceipt(receipt: CommitReceipt): Boolean = withLearningLocks {
         if (!isReceiptCurrent(receipt)) return@withLearningLocks false
         receipt.consumed = true

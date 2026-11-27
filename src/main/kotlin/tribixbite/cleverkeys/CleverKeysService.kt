@@ -1546,11 +1546,12 @@ class CleverKeysService : InputMethodService(),
         _suggestionHandler.onEditorSelectionChanged(newSelStart, newSelEnd) {
             _keyboardView.onContinuousSelectionChanged(newSelStart, newSelEnd)
 
-            // A collapsed caret that moved back may mean an edit deleted the newest learned word
-            // (Saga r20 F5): its learning goes now, before the cursor sync below decides the bar.
-            if (newSelStart == newSelEnd && newSelStart < oldSelStart) {
-                _suggestionHandler.reconcileLearnAfterDeletion(currentInputConnection)
-            }
+            // An edit may have deleted the newest learned word (Saga r20 F5; a deleted or overtyped
+            // selection too, audit A2): its learning goes now, before the cursor sync below decides
+            // the bar. The handler decides which updates can be such an edit.
+            _suggestionHandler.onUnownedSelectionUpdate(
+                oldSelStart, oldSelEnd, newSelStart, newSelEnd, currentInputConnection
+            )
 
             // Cursor prediction sync applies only to collapsed, moved selections.
             if (newSelStart == newSelEnd && oldSelStart != newSelStart) {

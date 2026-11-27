@@ -79,6 +79,13 @@ class LearningFunnelBookkeepingTest {
     private var cursorAt: Int? = null
 
     private fun cursor(): Int = (cursorAt ?: editor.length).coerceIn(0, editor.length)
+
+    /**
+     * The caret the editor last reported (onUpdateSelection's old position): kept current by the
+     * keyboard's own commits and deletions through [ic]; edits made straight on [editor] (typed
+     * letters, a hand deletion, an app-side change) are reported by the next [cursorSync].
+     */
+    private var reportedCaret = -1
     private lateinit var ic: InputConnection
 
     /** Words the handler last pushed to the bar; `getTopSuggestion` answers from it. */
@@ -175,6 +182,7 @@ class LearningFunnelBookkeepingTest {
             val c = cursor()
             editor.insert(c, text)
             cursorAt = cursorAt?.let { it + text.length }
+            reportedCaret = cursor()
             true
         }
         every { ic.deleteSurroundingText(any(), any()) } answers {
@@ -183,6 +191,7 @@ class LearningFunnelBookkeepingTest {
             val end = minOf(editor.length, c + secondArg<Int>())
             editor.delete(start, end)
             cursorAt = cursorAt?.let { start }
+            reportedCaret = cursor()
             true
         }
         every { ic.getCursorCapsMode(any()) } returns 0
@@ -1178,7 +1187,9 @@ class LearningFunnelBookkeepingTest {
     private fun cursorSync(field: EditorInfo = textField()) {
         // CleverKeysService.onUpdateSelection: an edit that shortened the newest learned word
         // takes its learning back at once (Saga F5), before the cursor bookkeeping below.
-        handler.reconcileLearnAfterDeletion(ic)
+        val old = if (reportedCaret >= 0) reportedCaret else cursor()
+        handler.onUnownedSelectionUpdate(old, old, cursor(), cursor(), ic)
+        reportedCaret = cursor()
         tracker.onCursorPositionChanged(cursor())
         tracker.synchronizeWithCursor(ic, "en", field)
         if (tracker.getCurrentWord().isNotEmpty()) {
@@ -1943,7 +1954,8 @@ class LearningFunnelBookkeepingTest {
             editor.deleteCharAt(c - 1)
             cursorAt = cursorAt?.minus(1)
             handler.handleBackspace(ic, textField())
-            handler.reconcileLearnAfterDeletion(ic)
+            handler.onUnownedSelectionUpdate(c, c, c - 1, c - 1, ic)
+            reportedCaret = c - 1
         }
     }
 
@@ -2038,6 +2050,114 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("the primary's list, by language").that(predictor.isWordDisabled("you", "en")).isTrue()
         assertWithMessage("the secondary's list").that(predictor.isWordDisabled("que", "es")).isTrue()
         assertWithMessage("not the primary's").that(predictor.isWordDisabled("que", "en")).isFalse()
+    }
+
+    // ---------------------------------------------------- Fable audit A of today's fixes (2026-11-26)
+
+    /** A selection the user deletes or types over: the editor collapses it, then reports it. */
+    private fun replaceSelection(start: Int, end: Int, typed: String = "") {
+        editor.replace(start, end, typed)
+        cursorAt = start + typed.length
+        if (typed.isNotEmpty()) handler.handleRegularTyping(typed, ic, textField())
+        // CleverKeysService.onUpdateSelection with the editor's own numbers, e.g. (4,7)→(4,4).
+        handler.onUnownedSelectionUpdate(start, end, cursor(), cursor(), ic)
+        reportedCaret = cursor()
+        tracker.synchronizeWithCursor(ic, "en", textField())
+    }
+
+    /** A1: the app restarts input (rotation, WebView) between the swipe and its deletion. */
+    @Test
+    fun anInputRestartKeepsTheDeletionRollbackWorking() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        handler.onEditorSessionChanged()
+        handler.onInputFieldStarted(textField(), restarting = true)
+        backspaceChars("got ".length)
+        newSwipe("git")
+
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+        assertWithMessage("no fix got git trigram").that(trigram("fix", "got", "git")).isEqualTo(0f)
+    }
+
+    /** A1: a dictation write between two typed words; the second does not pair with the first. */
+    @Test
+    fun aDictationWriteBetweenTwoWordsClosesTheLearnWindow() {
+        type("fix ")
+        editor.append("the build is green ")
+        handler.onEditorSessionChanged() // CleverKeysService onExternalEdit
+        type("today ")
+
+        assertWithMessage("no fix→today across the dictated text").that(bigram("fix", "today")).isEqualTo(0)
+    }
+
+    /** A2: the swiped word selected and deleted ((4,7)→(4,4)); the space after it stays. */
+    @Test
+    fun aSelectedAndDeletedWordIsRolledBackAtTheEdit() {
+        val vocabulary = useReceiptVocabulary()
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        replaceSelection("fix ".length, "fix got".length)
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix  ")
+        assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
+        assertWithMessage("got's usage reversed").that(vocabulary.getWordUsage("got")).isNull()
+    }
+
+    /** A2: the swiped word selected and typed over, then completed: only the correction is learned. */
+    @Test
+    fun aSelectedWordTypedOverLearnsOnlyTheNewWord() {
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        replaceSelection("fix ".length, "fix got".length, "g")
+        type("it ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix git  ")
+        assertOnlyTheCorrectionLearned("fix", "got", "git")
+    }
+
+    /** A3: the field's first word deleted with the keyboard's Backspace is taken back. */
+    @Test
+    fun theFieldsFirstWordDeletedWithBackspaceIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        swipe("got", "git")
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("got ")
+        backspaceChars("got ".length)
+
+        assertWithMessage("got's usage reversed").that(vocabulary.getWordUsage("got")).isNull()
+    }
+
+    /** A4: the receipt expired (a store was reset) while the proof holds: no wrong→new pair. */
+    @Test
+    fun aRefusedRollbackStillKeepsTheRemovedWordOutOfThePairs() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        trigramStore.clearAll()
+        backspaceChars("got ".length)
+        newSwipe("git")
+
+        assertWithMessage("no got→git").that(bigram("got", "git")).isEqualTo(0)
+        assertWithMessage("got left the prediction context").that(tracker.getContextWords()).doesNotContain("got")
+    }
+
+    /** A5: sentence punctuation ended the receipt; the word is then deleted by hand. */
+    @Test
+    fun aWordDeletedAfterItsSentenceEndedIsRolledBack() {
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("got", "git")
+        type(".")
+        backspaceChars(editor.length - "fix ".length)
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix ")
+        assertWithMessage("fix→got rolled back").that(bigram("fix", "got")).isEqualTo(0)
     }
 
     // ------------------------------------------------------------------ reflection

@@ -2260,8 +2260,33 @@ class SuggestionHandler(
      * cannot prove the old word's place (the adjacency check still uses [word]).
      */
     private class LearnedPlacement(
-        val commit: LearningCommit, val word: String, val anchor: String?, val after: String?
-    )
+        val commit: LearningCommit,
+        val word: String,
+        /** The text before [word] (a window suffix, or the whole field when shorter); "" for the field's first word. */
+        val anchor: String,
+        /** [anchor] is the whole field before the word (compared exactly, not as a suffix). */
+        val wholeField: Boolean,
+        /** [anchor] proves the place on its own: not blank, and the whole field or a full window. */
+        val provable: Boolean,
+        /** The separator run the editor showed after [word] at its commit (`" "`, `", "`, "" …). */
+        val trailing: String,
+        /** The text after the cursor at the commit (what followed [word] + [trailing]); null if unreadable. */
+        val after: String?,
+    ) {
+        /** Set once an edit left the word's region: later edits do no editor reads for it. */
+        var editChecksOff = false
+    }
+
+    /** One editor read around the caret: text before (null if unreadable) and after it. */
+    private class CaretRead(val before: String?, val after: String?)
+
+    /**
+     * An IME deletion (Backspace, the editor's word delete sent by the keyboard) is on its way to
+     * the editor: the next shrinking selection update was caused by the keyboard itself, which
+     * is what lets a field's FIRST word (an empty anchor) be proven deleted (audit A3); an app
+     * clearing its field after a send never sets it.
+     */
+    private var imeDeletionPending = false
 
     private var learnedPlacement: LearnedPlacement? = null
 
@@ -2280,9 +2305,20 @@ class SuggestionHandler(
         val identity = info?.let { "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}" }
         val newField = !restarting && identity != startedFieldIdentity
         startedFieldIdentity = identity
-        if (newField) predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
+        if (newField) {
+            predictionCoordinator.getWordPredictor()?.onInputSessionChanged()
+            // Another field's word is no proof about this one's text.
+            learnedPlacement = null
+        }
     }
 
+    /**
+     * The suffix-edit session ends (a restarted input, a hidden keyboard, a dictation write). The
+     * learned word's placement is NOT tied to it (audit A1, 2026-11-26): its proofs read the
+     * editor, and the predictor's receipt decides whether a rollback may still run. Nulling it
+     * here turned both rollbacks off while the learn window kept the word, so a restart followed
+     * by deleting `got` and typing `git` learned got→git.
+     */
     fun onEditorSessionChanged() {
         wordEditSession++; wordEditReceipt = null; suffixOperation = null; lastLearningCommit = null
     }
@@ -2492,6 +2528,8 @@ class SuggestionHandler(
         swipeCorrectionTracker?.clear(); suggestionBar?.clearSuggestions()
         wordEditReceipt = old.copy(edit = edit, learning = fresh)
         lastLearningCommit = fresh
+        // The learned word is now [newWord]; the old placement no longer describes it.
+        learnedPlacement = null
         // The operation's callback allowance stays until its own callbacks consume it,
         // a later operation replaces it, or its time bound passes (OwnedSelectionLedger).
         return true
@@ -3257,9 +3295,12 @@ class SuggestionHandler(
      */
     fun updateContext(word: String?, ic: InputConnection? = null) {
         if (word.isNullOrEmpty()) return
+        // One read around the caret serves the reconcile below and the placement after the learn
+        // (audit A cost, 2026-11-26): the word is already in the editor, so both see the same text.
+        val read = ic?.let { readAroundCaret(it, word) }
         // W2 follow-up: the previous learned word may have been deleted in the editor since, or
         // this word may be going in somewhere else (the cursor moved back to an earlier word).
-        if (ic != null) reconcileLearnWithEditor(word, ic)
+        if (ic != null && read != null) reconcileLearnWithEditor(word, ic, read)
 
         // Use the current source from tracker, or UNKNOWN if not set
         val source = contextTracker.getLastCommitSource() ?: PredictionSource.UNKNOWN
@@ -3273,7 +3314,7 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.addWordToContext(word, fieldAllowsPersonalizedLearning)
         lastLearningCommit = predictionCoordinator.getWordPredictor()?.latestLearningCommit()
-        learnedPlacement = ic?.let { placementOf(word, lastLearningCommit, it) }
+        learnedPlacement = read?.let { placementOf(word, lastLearningCommit, it) }
 
         // ARC-006: the UnigramLanguageDetector feed that used to live here was deleted
         // 2026-08-28. It had been write-only since OptimizedVocabulary was removed — every
@@ -3283,46 +3324,75 @@ class SuggestionHandler(
     }
 
     /**
+     * `CleverKeysService.onUpdateSelection`, for every unowned selection update, before the
+     * cursor bookkeeping. A collapsed caret whose start OR end moved back may follow an edit that
+     * removed text before it (audit A2, 2026-11-26): Backspace ((8,8)→(7,7)), but also deleting
+     * a selection, which collapses it to its start ((4,7)→(4,4)), cut, and typing over a
+     * selection ((4,7)→(5,5)). Only `newSelStart < oldSelStart` used to count.
+     *
+     * TODO(audit A6): a forward Delete keeps the caret where it is, so no shrinking update comes;
+     * its rollback waits for the next commit's proof (which a partial forward delete of the word
+     * does not meet).
+     */
+    fun onUnownedSelectionUpdate(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, ic: InputConnection?) {
+        val imeDeletion = imeDeletionPending
+        imeDeletionPending = false
+        if (newSelStart != newSelEnd) return
+        if (newSelStart >= oldSelStart && newSelEnd >= oldSelEnd) return
+        reconcileLearnAfterDeletion(ic, imeDeletion)
+    }
+
+    /** KeyEventHandler sent a deletion the editor applies next ([imeDeletionPending]). */
+    override fun onImeDeletion() {
+        imeDeletionPending = true
+    }
+
+    /**
      * Saga r20 F5 (2026-11-26): an EDIT removed or shortened the newest learned word — Backspace
      * letter by letter with "Backspace undoes swipe" off, the editor's own word delete (Ctrl+
-     * Backspace), a partial delete. Its learning is reversed at once through its exact receipt,
-     * instead of at the next commit: a user who deletes the wrong word and then leaves the field
-     * kept `set → got` before. A word retyped there is learned again at its commit.
+     * Backspace), a deleted, cut or overtyped selection, a partial delete. Its learning is
+     * reversed at once ([applyProvenRemoval]), instead of at the next commit: a user who deletes
+     * the wrong word and then leaves the field kept `set → got` before. A word retyped there is
+     * learned again at its commit.
      *
-     * Called by `CleverKeysService.onUpdateSelection` for every unowned selection update, before
-     * the cursor bookkeeping (so InputCoordinator no longer keeps the deleted swipe's alternates
-     * in the bar). The proof is the commit-time one ([reconcileLearnWithEditor]) turned around:
-     * the text before the cursor must be exactly the word's anchor followed by a STRICT prefix of
-     * the word (possibly empty), and the text after the cursor what followed the word. So:
+     * The proof: the text before the cursor is the word's anchor followed by a STRICT prefix of
+     * the word (possibly empty), and the text after the cursor is what is left of the word and
+     * its separator, followed by what followed them at the commit. So:
      *  - deleting only the trailing space leaves the whole word: nothing happens;
-     *  - a cursor move changes the text after the cursor: nothing happens;
-     *  - an empty anchor (the field's first word) proves nothing, so an app clearing its field
-     *    after a send never takes a sent word's learning;
+     *  - a cursor move deletes nothing (what is left equals what was there): nothing happens;
+     *  - an empty anchor (the field's first word) proves nothing, unless the keyboard itself
+     *    sent the deletion ([imeDeletion], audit A3): an app clearing its field after a send
+     *    never takes a sent word's learning;
      *  - an editor that cannot be read decides nothing.
+     * The first shrinking update outside the word's region stops further reads for it.
      */
-    fun reconcileLearnAfterDeletion(ic: InputConnection?) {
+    private fun reconcileLearnAfterDeletion(ic: InputConnection?, imeDeletion: Boolean) {
         ic ?: return
         val placed = learnedPlacement ?: return
-        if (placed.commit !== lastLearningCommit || isPasswordMode) return
-        val anchor = placed.anchor ?: return
-        val after = placed.after ?: return
+        if (placed.editChecksOff || isPasswordMode) return
+        val firstWordByKeyboard = imeDeletion && placed.wholeField && placed.anchor.isBlank()
+        if (!placed.provable && !firstWordByKeyboard) return
+        val recordedAfter = placed.after ?: return
         val word = placed.word
-        val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
+        val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + placed.trailing.length +
+            SwipeCorrectionTracker.RESOLUTION_SLACK
         val before = editorTextBeforeCursor(ic, window) ?: return
-        val kept = keptPrefixOfShortenedWord(anchor, before, word) ?: return
-        if (!afterTextUnchanged(ic, after)) return
-        val predictor = predictionCoordinator.getWordPredictor() ?: return
-        if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
-        vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
+        val kept = keptPrefixOfShortenedWord(placed.anchor, before, word)
+        if (kept == null) {
+            if (!inPlacementRegion(placed, before)) placed.editChecksOff = true
+            return
+        }
+        val afterNow = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return
+        if (!afterShowsRemovedRest(placed, kept, afterNow, recordedAfter, ic)) return
         learnedPlacement = null
-        lastLearningCommit = null
-        contextTracker.rollbackLastWord(word)
+        applyProvenRemoval(placed)
+        vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
         // What is left of the word is the word being typed now (Fable review 2026-11-26): the
         // debounced cursor sync may not have run yet, so `t` + space learned the fragment `t`,
         // and a space after `go` learned nothing. The tracker takes the editor's letters, and they
         // are pending like typed ones, so the commit learns the editor's word (`got` again, `go`).
         // Not when the following text glues onto it (then the sync decides what the word is).
-        if (kept.isNotEmpty() && (after.isEmpty() || !WordChars.isWordCharAt(after, 0))) {
+        if (kept.isNotEmpty() && (afterNow.isEmpty() || !WordChars.isWordCharAt(afterNow, 0))) {
             contextTracker.clearCurrentWord()
             contextTracker.clearCurrentWordSuffix()
             contextTracker.appendToCurrentWord(kept)
@@ -3337,6 +3407,61 @@ class SuggestionHandler(
             contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
             if (!specialPromptActive) suggestionBar?.clearSuggestions()
         }
+    }
+
+    /**
+     * Reverse the learn of [placed], proven gone from the editor. Through its exact receipt when
+     * the predictor still holds it. Otherwise (audits A4/A5, 2026-11-26): the receipt died at
+     * sentence punctuation or a detected switch, so the one-slot commit record the #110
+     * Backspace undo uses takes it back ([Predictor.rollbackCommittedWord], a no-op when that
+     * record is another word's); and since a refused receipt can also mean a store changed (a
+     * vocabulary cleanup, an import, a purge, a Settings delete), the learn window is closed so
+     * that, whatever the stores allowed, no pair is learned with the removed word.
+     */
+    private fun applyProvenRemoval(placed: LearnedPlacement) {
+        val predictor = predictionCoordinator.getWordPredictor() ?: return
+        if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) {
+            predictor.rollbackCommittedWord(placed.word, fieldAllowsPersonalizedLearning)
+            predictor.onSentenceBoundary()
+        }
+        lastLearningCommit = null
+        contextTracker.rollbackLastWord(placed.word)
+    }
+
+    /**
+     * Does [before] still end inside [placed]'s region: its anchor followed by a prefix of the
+     * word and its separator (the caret is on the word, or just after a deleted space)? False once
+     * the caret is elsewhere or the text before the anchor changed.
+     */
+    private fun inPlacementRegion(placed: LearnedPlacement, before: String): Boolean {
+        val full = placed.word + placed.trailing
+        val anchor = placed.anchor
+        for (k in full.length downTo 0) {
+            val need = anchor.length + k
+            if (before.length < need || (placed.wholeField && before.length != need)) continue
+            if (before.regionMatches(before.length - need, anchor, 0, anchor.length) &&
+                before.regionMatches(before.length - k, full, 0, k, ignoreCase = true)
+            ) return true
+        }
+        return false
+    }
+
+    /**
+     * The text after the cursor at a removal: what is left of the word + separator ("" after a
+     * Backspace from the end, `" "` after a deleted or overtyped selection, `t ` after deleting
+     * the middle `o` of `got`), then [recordedAfter]. Something must be missing between [kept]
+     * and that rest, or nothing was deleted (a caret move). An empty read counts only when the
+     * editor also shows the caret at the end of its text ([caretProvenAtFieldEnd]).
+     */
+    private fun afterShowsRemovedRest(
+        placed: LearnedPlacement, kept: String, afterNow: String, recordedAfter: String, ic: InputConnection
+    ): Boolean {
+        if (!afterNow.endsWith(recordedAfter)) return false
+        val rest = afterNow.substring(0, afterNow.length - recordedAfter.length)
+        val full = placed.word + placed.trailing
+        if (kept.length + rest.length >= full.length) return false
+        if (!full.regionMatches(full.length - rest.length, rest, 0, rest.length, ignoreCase = true)) return false
+        return afterNow.isNotEmpty() || caretProvenAtFieldEnd(ic)
     }
 
     /**
@@ -3368,16 +3493,19 @@ class SuggestionHandler(
     }
 
     /**
-     * Is the text after the cursor what followed the learned word at its commit ([recorded])?
-     * An empty read is not proof on its own (Fable review 2026-11-26): an editor that answers
-     * getTextBeforeCursor but always "" after the cursor made a caret move into the word look
-     * like a deletion. Then the editor must also show the caret at the end of its text.
+     * At a commit that replaces [placed] in its place: the text after the cursor is [placed]'s
+     * recorded after-text, possibly behind what is left of its separator (a selected word typed
+     * over keeps the space after it: `fix git| ` + the recorded ""). An empty read counts only
+     * when the editor also shows the caret at the end of its text (Fable review 2026-11-26: an
+     * editor answering "" after the cursor everywhere made a caret move look like a deletion).
      */
-    private fun afterTextUnchanged(ic: InputConnection, recorded: String?): Boolean {
-        recorded ?: return false
-        val now = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return false
-        if (now != recorded) return false
-        return now.isNotEmpty() || caretProvenAtFieldEnd(ic)
+    private fun afterFitsReplacement(placed: LearnedPlacement, afterNow: String?, ic: InputConnection): Boolean {
+        val recorded = placed.after ?: return false
+        afterNow ?: return false
+        if (!afterNow.endsWith(recorded)) return false
+        val rest = afterNow.substring(0, afterNow.length - recorded.length)
+        if (rest.length > placed.trailing.length || !placed.trailing.endsWith(rest)) return false
+        return afterNow.isNotEmpty() || caretProvenAtFieldEnd(ic)
     }
 
     /**
@@ -3428,27 +3556,37 @@ class SuggestionHandler(
         null
     }
 
+    /** The read [updateContext] shares between the reconcile and the placement of [word]. */
+    private fun readAroundCaret(ic: InputConnection, word: String): CaretRead = CaretRead(
+        editorTextBeforeCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK),
+        editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW),
+    )
+
     /**
-     * Where [word], just committed and learned as [commit], sits in the editor; null when the
-     * editor cannot show it ends the text before the cursor (no proof can be built on it then).
+     * Where [word], just committed and learned as [commit], sits in the editor ([read], taken
+     * after the commit); null when the editor cannot show it ends the text before the cursor.
      */
-    private fun placementOf(word: String, commit: LearningCommit?, ic: InputConnection): LearnedPlacement? {
+    private fun placementOf(word: String, commit: LearningCommit?, read: CaretRead): LearnedPlacement? {
         commit ?: return null
         val window = SwipeCorrectionTracker.ANCHOR_WINDOW + word.length + SwipeCorrectionTracker.RESOLUTION_SLACK
-        val before = editorTextBeforeCursor(ic, window) ?: return null
-        val anchor = textBeforeTrailingWord(before, word) ?: return null
+        val before = read.before ?: return null
+        val rest = trimTrailingNonWordRun(before)
+        if (!rest.endsWith(word, ignoreCase = true)) return null
+        val anchor = rest.dropLast(word.length)
         // A full read is a window, not the field start: it must still hold a whole anchor window
         // to prove anything about the old word's place (the adjacency check needs only [word]).
-        // An empty anchor proves nothing either (Fable review 2026-11-26): the first word of a
-        // field, and the app then clears the field without restarting input (a WebView chat's
-        // send), puts the next word "where it was" while it was in fact sent.
-        val provable = anchor.isNotBlank() &&
-            (before.length < window || anchor.length >= SwipeCorrectionTracker.ANCHOR_WINDOW)
+        // An empty anchor proves nothing on its own either (Fable review 2026-11-26): the first
+        // word of a field, and the app then clears the field without restarting input (a WebView
+        // chat's send), puts the next word "where it was" while it was in fact sent.
+        val provable = anchor.isNotBlank() && (before.length < window || anchor.length >= SwipeCorrectionTracker.ANCHOR_WINDOW)
+        // The read reached the field start with a short anchor: compared exactly. A blank one
+        // stays usable for the keyboard's own deletions (audit A3).
+        val wholeField = before.length < window && anchor.length < SwipeCorrectionTracker.ANCHOR_WINDOW
         // The text AFTER the word is part of its place: a word typed in front of it (the cursor
         // moved between "fix " and "got") meets the same anchor, but "got" still follows it.
-        val after = editorTextAfterCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW)
         return LearnedPlacement(
-            commit, word, anchor.takeLast(SwipeCorrectionTracker.ANCHOR_WINDOW).takeIf { provable }, after
+            commit, word, anchor.takeLast(SwipeCorrectionTracker.ANCHOR_WINDOW), wholeField, provable,
+            before.substring(rest.length), read.after,
         )
     }
 
@@ -3504,21 +3642,20 @@ class SuggestionHandler(
      * in front of it, or after a deleted space alone fails one of them. An editor that cannot be
      * read decides nothing, and an empty anchor (the field's first word) proves nothing.
      */
-    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection) {
+    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection, read: CaretRead) {
         val placed = learnedPlacement ?: return
         learnedPlacement = null
-        if (placed.commit !== lastLearningCommit) return
-        val editor = editorBeforeCursorFor(ic, newWord) ?: return
+        val editor = read.before ?: return
         val predictor = predictionCoordinator.getWordPredictor() ?: return
-        val anchor = placed.anchor
-        if (anchor != null && SwipeCorrectionTracker.editorContinuesAnchor(anchor, editor, newWord) &&
-            !oldWordMayStillPrecede(anchor, editor, newWord, placed.word) &&
-            afterTextUnchanged(ic, placed.after)
+        // No identity check against [lastLearningCommit] (audit A1): an input restart or a
+        // dictation write nulls it, and both checks below then never ran, while the learn window
+        // kept the word. The receipt check in [applyProvenRemoval] is the predictor's.
+        if (placed.provable && SwipeCorrectionTracker.editorContinuesAnchor(placed.anchor, editor, newWord) &&
+            !oldWordMayStillPrecede(placed.anchor, editor, newWord, placed.word) &&
+            afterFitsReplacement(placed, read.after, ic)
         ) {
-            if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) return
+            applyProvenRemoval(placed)
             vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }
-            lastLearningCommit = null
-            contextTracker.rollbackLastWord(placed.word)
             return
         }
         val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return
@@ -3569,6 +3706,9 @@ class SuggestionHandler(
         predictionCoordinator.getWordPredictor()
             ?.rollbackCommittedWord(word, fieldAllowsPersonalizedLearning)
         contextTracker.rollbackLastWord(word)
+        // Its learning is reversed already: its placement must not prove a "removal" again, which
+        // would find the receipt gone and close the learn window the replacement learns with.
+        if (learnedPlacement?.word.equals(word, ignoreCase = true)) learnedPlacement = null
     }
 
     /**
@@ -3720,6 +3860,7 @@ class SuggestionHandler(
      */
     fun handleRegularTyping(text: String, ic: InputConnection?, editorInfo: EditorInfo?) {
         wordEditReceipt = null
+        imeDeletionPending = false
         // Any typing dismisses an undoable "Added …" confirmation — BEFORE the prediction update
         // below, which a showing bar message would otherwise swallow.
         suggestionBar?.dismissUndoableMessage()
@@ -4106,6 +4247,8 @@ class SuggestionHandler(
      */
     fun handleBackspace(ic: InputConnection? = null, editorInfo: EditorInfo? = null) {
         wordEditReceipt = null
+        // The keyboard's own deletion: its selection update may prove a first word gone (A3).
+        imeDeletionPending = true
         suggestionBar?.dismissUndoableMessage()
 
         // Handle password mode: update password display
