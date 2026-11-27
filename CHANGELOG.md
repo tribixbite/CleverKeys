@@ -54,7 +54,9 @@ editor that used to be listed here already ship in 2.0.)
 - A word you disabled in Dictionary Manager is no longer offered among the swipe suggestions
   (a disabled `world` still showed after `would`, `works` …). A disabled word of the first
   language is also kept out of the second language's swipe suggestions, as in typing. Its
-  apostrophe forms (`world's`) are separate entries and are still offered.
+  apostrophe forms (`world's`) are separate entries and are still offered. Disabling `well`
+  keeps `we'll` in the swipe suggestions (it disappeared with it), and disabling `we'll` keeps
+  `well`.
 
 ### Fixed (Settings and Dictionary Manager, 2026-11-26)
 

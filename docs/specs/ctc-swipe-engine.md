@@ -412,9 +412,22 @@ stored 1..255 frequency, and the base floor a stored frequency is calibrated ont
   swipe alternates after being disabled. The finished display slate (after the canonical forms,
   the rescue and the contraction overlay) drops every word in the lexicon's excluded set. A
   secondary slate also drops the primary's excluded words, the tap rule
-  (`WordPredictor.isSecondaryWordDisabled`); a primary slate ignores the secondary's. The key
-  itself is still injected, so a disabled `well` keeps `we'll` reachable; the possessive `world's`
-  is a separate pairing entry and stays, as on tap. The set is read per decode from
+  (`WordPredictor.isSecondaryWordDisabled`); a primary slate ignores the secondary's. The
+  possessive `world's` is a separate pairing entry and stays, as on tap.
+- **A disabled base keeps its contraction (Saga r21, case 10).** The injection puts a disabled
+  key back only at the FLOOR, so a disabled `well` fell out of the slate and took `we'll` with
+  it (`ell | wl | el | will | …`). `swipe/DisabledPairedSurfaces` keeps a disabled paired key
+  whose contraction is spelled on the same path (a non-possessive projection: `well`→`we'll`,
+  `were`→`we're`, `ill`→`i'll`) in the trie at its own frequency, inserted before the injection;
+  the filter removes the word and the variant keeps its slot (`we'll | wells | …`). A key whose
+  only projection is a possessive (`teams`→`team's`) or whose contractions are other paths
+  (`you`→`you're`, `world`→`world's` on `worlds`) stays at the floor, and `ContractionOverlay`'s
+  `isExcludedBase` never splices a possessive beside a disabled base, so `team's` cannot
+  inherit its rank one.
+  Disabling `we'll` removes only `we'll`. Pinned by `DisabledPairedSurfacesTest`,
+  `ContractionOverlayTest` and the real-encoder `CtcDisabledWordReplayTest`. The geometric
+  engine still drops a disabled paired key with its contraction (TODO in
+  `GeometricEngineAdapter.dictionaryFor`). The set is read per decode from
   `disabled_words_<lang>` (`UserLexiconInputs.read`, the key the tap path reads) and lives in the
   trie memo whose key hashes it, so nothing caches it past a change.
 - **Secondary-list user words (Note10+ r20, F1).** `CtcRankMerger` gives primary rank N

@@ -180,6 +180,13 @@ object ContractionOverlay {
      *   engines); null means "not comparable", and a spliced variant then never goes ahead.
      * @param userPreferredForm lowercase decoded word → the joiner user word the user wants
      *   shown for it ([UserJoinerPreference.build]), or null. Default: none.
+     * @param isExcludedBase lowercase decoded word → true when the user DISABLED it, so the slate
+     *   filter will remove it after this overlay (`CtcSlateAssembly`; a disabled paired key stays
+     *   decodable so its contraction keeps its slot, [DisabledPairedSurfaces]). Such a base never
+     *   gets its possessive spliced beside it: with the base gone the possessive would take its
+     *   rank, and a possessive never goes ahead (§6c rule 4 of the contraction skill) — a disabled
+     *   `teams` must not turn a confident `teams` trace into an auto-inserted `team's`. It goes to
+     *   the tail instead. Default: nothing disabled.
      * @return overlaid (words, scores) — same lists when nothing applies.
      */
     fun apply(
@@ -192,6 +199,7 @@ object ContractionOverlay {
         pairedVariantFrequency: (base: String, variant: String) -> Int? = { _, _ -> null },
         baseFrequency: (String) -> Int? = { null },
         userPreferredForm: (String) -> UserJoinerPreference.Preference? = { null },
+        isExcludedBase: (String) -> Boolean = { false },
     ): Pair<List<String>, List<Int>> {
         if (words.isEmpty()) return words to scores
 
@@ -245,7 +253,7 @@ object ContractionOverlay {
                 // failing that, a possessive takes it only beside a CONFIDENT rank-0 base.
                 val spliced: Pair<String, Int?>? =
                     splicedVariant(lower, paired, pairedVariantFrequency)
-                        ?: if (i == 0 && confidentTop) {
+                        ?: if (i == 0 && confidentTop && !isExcludedBase(lower)) {
                             splicedPossessive(lower, paired, pairedVariantFrequency)
                         } else {
                             null

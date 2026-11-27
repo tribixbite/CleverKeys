@@ -707,6 +707,11 @@ class GeometricEngineAdapter(
         val bonusByWord = UserSwipePriorityBonus.geometricBonusByWord(
             userWords, SwipePriority.parseMap(priorityJson)
         )
+        // TODO: Saga r21 case 10 (2026-11-26) is fixed for CTC only. A disabled paired key (`well`)
+        //  leaves this dictionary with its contraction (`we'll`), as it always has here. Keep it
+        //  through `DisabledPairedSurfaces` (pass `disabled` minus the kept words to the merge),
+        //  filter the slate after the overlay as `CtcSlateAssembly` does, and pass the overlay
+        //  `isExcludedBase`; pin it with a geometric replay.
         val merged = GeometricUserWordMerge.merge(base, userWords, disabled, lang, version, bonusByWord)
         // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
         // occurrence wins (ties can only come from case-variant duplicates).

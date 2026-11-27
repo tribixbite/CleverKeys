@@ -106,7 +106,9 @@ class CtcDecodedSlate(
  *     primary's, which is the tap path's rule (`WordPredictor.isSecondaryWordDisabled`: a
  *     secondary candidate is hidden when the primary language disabled it or its own did). The
  *     match is exact (lowercase): `world's` is a pairing entry of its own and stays, as it does on
- *     tap. The key is still injected, so a disabled `well` keeps `we'll` reachable.
+ *     tap. A disabled paired key whose contraction is spelled on the same path (`well` → `we'll`)
+ *     stays in the trie at its own frequency (`DisabledPairedSurfaces`), so the filter removes
+ *     only the word and the contraction keeps its slot (Saga r21 case 10).
  *  2. **A user word ranks the same whichever list holds it (F1).** [CtcRankMerger] caps a
  *     secondary word at 920 against the primary's 1000, so `parcero` in the Spanish list lost every
  *     swipe to the English `parcel`, while the same word in the English list won. A secondary

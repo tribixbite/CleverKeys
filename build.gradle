@@ -1153,6 +1153,9 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.ctc.CtcSlateAssemblyTest',
     'tribixbite.cleverkeys.swipe.CtcSecondaryListReplayTest',
     'tribixbite.cleverkeys.swipe.CtcSlateAssemblyWiringTest',
+    // 2026-11-26 (Saga r21 case 10): a disabled paired key keeps its contraction (`well` → `we'll`).
+    'tribixbite.cleverkeys.swipe.DisabledPairedSurfacesTest',
+    'tribixbite.cleverkeys.swipe.CtcDisabledWordReplayTest',
     // Greek final-sigma repair — PHASE_O §3.3 prerequisite. sigma/final-sigma are distinct KEYS
     // in different rows, so an unrepaired word-final sigma is undecodable for 25.7% of the pack.
     'tribixbite.cleverkeys.swipe.ctc.CtcGreekOrthographyTest',

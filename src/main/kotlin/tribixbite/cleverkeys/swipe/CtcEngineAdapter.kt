@@ -788,6 +788,9 @@ class CtcEngineAdapter(
         // contraction-injection floor from this lexicon's rarest real word.
         val lexiconFrequencies: Collection<Double>
         val rescueFrequencies: Map<String, Double>
+        // The surface the trie files a word under (branch-specific, like the two above): what a
+        // disabled paired key must still be spelled as to stay decodable ([DisabledPairedSurfaces]).
+        val surfaceOf: (String) -> String?
         // The alphabet the trie, the rescue index and the projection all share. It MUST be the
         // same array the layout was built over — a trie on one alphabet and a layout on another
         // is a silent, total mismatch (every path simply fails to match).
@@ -806,6 +809,7 @@ class CtcEngineAdapter(
                 // The trie files a joiner user word under its stripped surface (raising it);
                 // WHAT that surface shows is the user's form, via the overlay.
                 val alphabetSet = alphabet.toHashSet()
+                surfaceOf = { UserJoinerPreference.stripToAlphabet(it, alphabetSet) }
                 userPreferences = UserJoinerPreference.build(
                     userWordPairs,
                     { UserJoinerPreference.stripToAlphabet(it, alphabetSet) },
@@ -830,6 +834,7 @@ class CtcEngineAdapter(
                 } else {
                     CtcAzProjection::project
                 }
+                surfaceOf = project
                 // Joiner USER words project separately: they raise their surface's frequency
                 // but never take its display slot, which used to make a user `l'une` REPLACE
                 // every decoded `lune` (contraction-system skill §2 casualty, per user).
@@ -893,6 +898,15 @@ class CtcEngineAdapter(
         // German. See [CtcContractionKeys.derivedFloor] and, for the table, [CtcContractionKeys.inject].
         val injectionFloor = CtcContractionKeys.derivedFloor(lexiconFrequencies)
         val contractions = contractionsFor(lang)
+        // Case 10 (Saga r21, 2026-11-26): a disabled PAIRED key whose contraction is spelled on the
+        // same path (`well` for `we'll`) keeps its surface at its own frequency, so the contraction
+        // is still offered; the slate filter removes the disabled word itself. Before the injection
+        // below, which would otherwise put the key back only at the floor, out of the slate.
+        for ((surface, frequency) in DisabledPairedSurfaces.keep(
+            userWords.excluded, basePairs, { contractions.getPairedContractions(it) }, surfaceOf,
+        )) {
+            trie.insert(surface, frequency)
+        }
         // A gated language's elisions enter at how often each is written (`d'être` above
         // `d'été`); every other key, and every language without a table, stays at the floor.
         val injected = CtcContractionKeys.inject(
@@ -1059,6 +1073,7 @@ class CtcEngineAdapter(
         ordinals: HashMap<String, Int>,
         pairingBaseFrequencies: Map<String, Int>,
         userPreferences: Map<String, UserJoinerPreference.Preference>,
+        excluded: Set<String>,
     ): PredictionResult {
         if (result.words.isEmpty()) return result
         val cm = contractionsFor(language)
@@ -1071,6 +1086,8 @@ class CtcEngineAdapter(
             pairedVariantFrequency = { base, variant -> cm.getPairedVariantFrequency(base, variant) },
             baseFrequency = { pairingBaseFrequencies[it] },
             userPreferredForm = { userPreferences[it] },
+            // A disabled base never carries its possessive into its own slot (case 10).
+            isExcludedBase = { it in excluded },
         )
         return PredictionResult(words, scores)
     }
@@ -1094,6 +1111,7 @@ class CtcEngineAdapter(
             lexicon.ordinals,
             lexicon.pairingBaseFrequencies,
             lexicon.userPreferences,
+            lexicon.userWords.excluded,
         )
         return CtcDecodedSlate(lexicon.language, expanded, display.words, display.scores, params, lexicon.userWords)
     }

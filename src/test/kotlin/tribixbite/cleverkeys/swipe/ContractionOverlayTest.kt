@@ -218,6 +218,38 @@ class ContractionOverlayTest {
     }
 
     @Test
+    fun `a disabled confident base never carries its possessive into its own slot`() {
+        // Case 10 (Saga r21): the slate filter removes a disabled base after this overlay. A
+        // possessive spliced beside it would inherit its rank 0 — a confident trace of a disabled
+        // `teams` would auto-insert `team's`. It goes to the tail instead.
+        val (words, _) = ContractionOverlay.apply(
+            listOf("teams", "trams", "terms"), listOf(900, 120, 80),
+            pairedVariants = { pairedAll[it] },
+            nonPairedMapping = { null },
+            wordOrdinal = { null },
+            pairedVariantFrequency = { base, variant -> pairFreq[base]?.get(variant) },
+            baseFrequency = { lexFreq[it] },
+            isExcludedBase = { it == "teams" },
+        )
+        assertThat(words).containsExactly("teams", "trams", "terms", "team's").inOrder()
+    }
+
+    @Test
+    fun `a disabled base still splices its non-possessive projection beside it`() {
+        // `we'll` keeps the slot of a disabled `well`; the filter removes `well` afterwards.
+        val (words, _) = ContractionOverlay.apply(
+            listOf("well", "wall"), listOf(900, 60),
+            pairedVariants = { pairedAll[it] },
+            nonPairedMapping = { null },
+            wordOrdinal = { null },
+            pairedVariantFrequency = { base, variant -> pairFreq[base]?.get(variant) },
+            baseFrequency = { null }, // a disabled word has no merged-lexicon frequency
+            isExcludedBase = { it == "well" },
+        )
+        assertThat(words).containsExactly("well", "we'll", "wall").inOrder()
+    }
+
+    @Test
     fun `contested rank-0 base keeps its possessive at the tail`() {
         // trams at 600 is within a factor of two of teams: the decoder has not settled the
         // trace, so the live competitor keeps slot 1 and team's stays a tail completion.

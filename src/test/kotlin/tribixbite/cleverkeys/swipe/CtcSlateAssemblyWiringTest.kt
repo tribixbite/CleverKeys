@@ -47,6 +47,22 @@ class CtcSlateAssemblyWiringTest {
     }
 
     @Test
+    fun aDisabledPairedKeyStaysDecodableBeforeTheInjection() {
+        val keep = lexiconFor.indexOf("DisabledPairedSurfaces.keep(")
+        val inject = lexiconFor.indexOf("CtcContractionKeys.inject(")
+        assertWithMessage(
+            "Saga r21 case 10: a disabled paired key (`well` for `we'll`) must be re-inserted at its " +
+                "own frequency BEFORE the alias injection, which skips keys the trie holds and would " +
+                "otherwise put it back only at the floor, out of the slate"
+        ).that(keep in 0 until inject).isTrue()
+        assertWithMessage("from the same excluded set the slate filter uses")
+            .that(lexiconFor).contains("userWords.excluded, basePairs, { contractions.getPairedContractions(it) }, surfaceOf,")
+        assertWithMessage("and the overlay must know which bases are disabled (no possessive in their slot)")
+            .that(adapter.substringAfter("private fun applyContractionDisplay(").substringBefore("\n    }\n"))
+            .contains("isExcludedBase = { it in excluded },")
+    }
+
+    @Test
     fun everySlateGoesThroughTheAssembly() {
         assertWithMessage("the single-language slate is filtered against the disabled words")
             .that(decodeAsync).contains("CtcSlateAssembly.single(")
