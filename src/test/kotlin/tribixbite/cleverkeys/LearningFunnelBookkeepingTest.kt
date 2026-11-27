@@ -1738,6 +1738,45 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("nothing in the English store").that(bigram("perro", "gato")).isEqualTo(0)
     }
 
+    /**
+     * Finding 2: a switch back to the primary below the user's sensitivity needs two detection
+     * runs in a row that favour it; one, or alternating ones, keep the secondary (each switch
+     * clears the window and the receipt).
+     */
+    @Test
+    fun aWeakSwitchBackNeedsTwoRunsInARow() {
+        useReceiptVocabulary()
+        config.auto_detect_language = true
+        config.active_secondary_language = "es"
+        config.language_detection_sensitivity = Defaults.LANGUAGE_DETECTION_SENSITIVITY
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.isLanguageSupported(any()) } returns true
+        predictor.setField("bigramModel", bigrams)
+        val detector = mockk<LanguageDetector>()
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returnsMany listOf(
+            LanguageDetector.DetectionResult("es", 0.9f),
+            LanguageDetector.DetectionResult("en", 0.3f),
+            LanguageDetector.DetectionResult("es", 0.4f),
+            LanguageDetector.DetectionResult("en", 0.3f),
+            LanguageDetector.DetectionResult("en", 0.3f),
+        )
+        predictor.setField("languageDetector", detector)
+        predictor.setField("multiLanguageManager", null)
+        fun lang() = predictor.getField("currentLanguage")
+
+        (1..5).forEach { predictor.addWordToContext("w$it", true) }
+        assertWithMessage("switched").that(lang()).isEqualTo("es")
+        (6..10).forEach { predictor.addWordToContext("w$it", true) }
+        assertWithMessage("one run for the primary").that(lang()).isEqualTo("es")
+        predictor.addWordToContext("w11", true)
+        assertWithMessage("then one for the secondary").that(lang()).isEqualTo("es")
+        predictor.addWordToContext("w12", true)
+        assertWithMessage("one again").that(lang()).isEqualTo("es")
+        predictor.addWordToContext("w13", true)
+        assertWithMessage("two in a row").that(lang()).isEqualTo("en")
+    }
+
     /** F2, second half: inside one field, an English context of 5+ words switches back. */
     @Test
     fun anEnglishContextSwitchesBackInsideOneField() {

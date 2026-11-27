@@ -221,6 +221,9 @@ class WordPredictor : Predictor {
         internal const val DROPPED_DOUBLE_MARGIN_STEPS = 64
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
+
+        /** Detection runs in a row that return next-word to the primary below the sensitivity. */
+        internal const val WEAK_RETURN_RUNS = 2
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
 
         // ── Prefix-score constants (calculatePrefixScore) ──────────────
@@ -1038,6 +1041,7 @@ class WordPredictor : Predictor {
         if (language != currentLanguage) {
             invalidateExactLearningCommit()
             secondaryVerdictFresh = false
+            weakPrimaryRuns = 0
             recentWords.clear()
             detectedDisabledCache = null
         }
@@ -1416,6 +1420,15 @@ class WordPredictor : Predictor {
     }
 
     /**
+     * Detection runs in a row whose window favoured the primary, below the user's sensitivity,
+     * while next-word was on the secondary. [WEAK_RETURN_RUNS] of them switch back (Fable review
+     * 2026-11-26): one at any margin used to, so mixed text could flap, and every flap cleared
+     * the window and the learn receipt the deletion rollbacks rely on. Reset by a switch, a
+     * window clear and any run that does not favour the primary.
+     */
+    private var weakPrimaryRuns = 0
+
+    /**
      * A new input FIELD (another app, field or input type; not a restart or a re-show of the same
      * one, see `SuggestionHandler.onInputFieldStarted`): Auto-Detect's
      * verdict from the previous one no longer counts, and next-word starts in the primary's
@@ -1487,10 +1500,14 @@ class WordPredictor : Predictor {
                 switchNextWordLanguage(detected)
             }
             if (detected != null && detected in chosen) {
+                weakPrimaryRuns = 0
                 noteDetectionVerdict(detected)
             } else if (windowFavoursPrimary(chosen)) {
-                // No confident switch, but the window reads as the primary: next-word returns.
-                switchNextWordLanguage(dictionaryLanguage)
+                // No confident switch, but the window reads as the primary: next-word returns
+                // once that holds for [WEAK_RETURN_RUNS] runs in a row.
+                if (++weakPrimaryRuns >= WEAK_RETURN_RUNS) switchNextWordLanguage(dictionaryLanguage)
+            } else {
+                weakPrimaryRuns = 0
             }
             // The manager's answer stands, a "no switch" (null) included: the legacy detector
             // below used to run after it at a fixed threshold over all six of its languages and
@@ -1505,10 +1522,13 @@ class WordPredictor : Predictor {
         if (!LanguageDetector.canChooseBetween(chosen)) return
         val result = detector.detectLanguageFromWordsWithConfidence(recentWords, chosen) ?: return
         val detectedLanguage = result.language
-        // Back to the primary needs no threshold ([windowFavoursPrimary]); away from it does.
-        val backToPrimary = dictionaryLanguageOrNull != null && detectedLanguage == dictionaryLanguage &&
-            currentLanguage != dictionaryLanguage
-        if ((result.confidence >= sensitivity || backToPrimary) && detectedLanguage in chosen) {
+        // Back to the primary needs no threshold ([windowFavoursPrimary]), but [WEAK_RETURN_RUNS]
+        // runs in a row; away from it, the user's sensitivity.
+        val confident = result.confidence >= sensitivity
+        val weakBackToPrimary = !confident && dictionaryLanguageOrNull != null &&
+            detectedLanguage == dictionaryLanguage && currentLanguage != dictionaryLanguage
+        weakPrimaryRuns = if (weakBackToPrimary) weakPrimaryRuns + 1 else 0
+        if ((confident || weakPrimaryRuns >= WEAK_RETURN_RUNS) && detectedLanguage in chosen) {
             if (detectedLanguage != currentLanguage && bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
@@ -1539,6 +1559,7 @@ class WordPredictor : Predictor {
     override fun clearContext() {
         invalidateExactLearningCommit()
         secondaryVerdictFresh = false
+        weakPrimaryRuns = 0
         recentWords.clear()
         lastRecordedCommit = null
     }
@@ -1621,6 +1642,7 @@ class WordPredictor : Predictor {
     override fun onSentenceBoundary() {
         invalidateExactLearningCommit()
         secondaryVerdictFresh = false
+        weakPrimaryRuns = 0
         recentWords.clear()
     }
 
