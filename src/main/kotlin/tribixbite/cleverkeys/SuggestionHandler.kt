@@ -2319,6 +2319,28 @@ class SuggestionHandler(
      */
     private var previousPlacement: LearnedPlacement? = null
 
+    /**
+     * A non-restart `onStartInput` came since the input view last started: the app bound another
+     * editor (another field, a new browser tab, a recreated window), which may look exactly like
+     * the last one. A hide and re-show of the same field (Back, then a tap) has none.
+     */
+    private var inputStartedSinceView = false
+
+    /**
+     * The learn window may hold another field's words: the view started after another editor was
+     * bound ([inputStartedSinceView]) in a field that looks the same (Chrome's textareas all report
+     * one package / field id / input type) and is not empty. The next commit keeps the window
+     * only when the editor shows the window's last word at its recorded place (Fable review
+     * 2026-11-27, #1: tab A `my diagnosis is`, tab B's draft ending in `is`, `great` learned
+     * `diagnosis is great`).
+     */
+    private var windowNeedsProof = false
+
+    /** CleverKeysService.onStartInput: see [inputStartedSinceView]. */
+    fun onInputStarted(restarting: Boolean) {
+        if (!restarting) inputStartedSinceView = true
+    }
+
     /** The field the input view last started for (package, field id, input type); null before any. */
     private var startedFieldIdentity: String? = null
 
@@ -2331,14 +2353,22 @@ class SuggestionHandler(
      * so Spanish needed five new words to come back).
      */
     fun onInputFieldStarted(info: EditorInfo?, restarting: Boolean, ic: InputConnection? = null) {
-        val identity = info?.let { "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}" }
+        // The incognito bit is part of a field (Fable review 2026-11-27, #1): a private tab and an
+        // ordinary one that otherwise look the same are two fields.
+        val identity = info?.let {
+            "${it.packageName}\u0000${it.fieldId}\u0000${it.inputType}\u0000" +
+                LearningGate.fieldAllowsPersonalizedLearning(it.imeOptions)
+        }
+        val boundAnotherEditor = inputStartedSinceView
+        inputStartedSinceView = false
         // Note10+ r22: every Chrome textarea reports the same package / field id / input type, so
-        // a new tab looked like the same field and kept the detected language. A start that is
-        // not a restart, in an EMPTY editor, is a new field (a re-shown or restarted field that
-        // still holds its text is not).
-        val newField = !restarting &&
-            (identity != startedFieldIdentity || (info != null && ic != null && editorLooksEmpty(info, ic)))
+        // a new tab looked like the same field and kept the detected language. An EMPTY editor
+        // right after the app bound another editor is a new field. Only then (Fable #3): Back and
+        // a tap on a chat box emptied by sending binds nothing and keeps the detected language.
+        val newField = !restarting && (identity != startedFieldIdentity ||
+            (boundAnotherEditor && info != null && ic != null && editorLooksEmpty(info, ic)))
         startedFieldIdentity = identity
+        windowNeedsProof = !newField && boundAnotherEditor
         if (newField) {
             val predictor = predictionCoordinator.getWordPredictor()
             // H1: the learn window ends with the field (moved here from onFinishInputView's flush,
@@ -3352,7 +3382,7 @@ class SuggestionHandler(
         // W2 follow-up: the previous learned word may have been deleted in the editor since, or
         // this word may be going in somewhere else (the cursor moved back to an earlier word).
         val prior = learnedPlacement
-        val outcome = if (ic != null && read != null) reconcileLearnWithEditor(word, ic, read) else Reconciled.UNCHECKED
+        val outcome = reconcileLearnWithEditor(word, ic, read)
 
         // Use the current source from tracker, or UNKNOWN if not set
         val source = contextTracker.getLastCommitSource() ?: PredictionSource.UNKNOWN
@@ -3474,10 +3504,13 @@ class SuggestionHandler(
         if (!afterShowsRemovedRest(placed, kept, afterNow, recordedAfter, ic)) return
         learnedPlacement = null
         applyProvenRemoval(placed)
+        // The editor showed the removed word at its anchor: the window is this editor's.
+        if (placed.provable) windowNeedsProof = false
         // The learn window ends with the previous word again: watch its place (Pixel r22, `fix `
         // + swipe `toy`, Backspace into `fix`, `lip`: `fix → filip`). The rest of the removed
-        // word still stands after it until the next Backspaces take it.
-        learnedPlacement = previousPlacement?.also { it.remains = kept }
+        // word still stands after it until the next Backspaces take it. Its checks start again
+        // (Fable #4): a caret move that left it while it was the newest word says nothing now.
+        learnedPlacement = previousPlacement?.also { it.remains = kept; it.editChecksOff = false }
         previousPlacement = null
         vlog { "LEARN REMOVED: the newest learned word was deleted in the editor" }
         // What is left of the word is the word being typed now (Fable review 2026-11-26): the
@@ -3514,9 +3547,13 @@ class SuggestionHandler(
     private fun applyProvenRemoval(placed: LearnedPlacement) {
         val predictor = predictionCoordinator.getWordPredictor() ?: return
         if (!predictor.rollbackLearningCommit(placed.commit, fieldAllowsPersonalizedLearning)) {
+            // Taken from the live window (the word before an undone one, whose receipt the newer
+            // commit replaced), the window is left as the editor's text before it and stays open,
+            // so retyping it relearns its pair (Fable #5: `a fix toy`, delete to `a fi`, `x `).
+            val fromWindow = predictor.learnWindowEndsWith(placed.word)
             // The one undo helper (RejectedWordRollbackTest pins that every undo path uses it).
             rollbackRejectedWord(placed.word)
-            predictor.onSentenceBoundary()
+            if (!fromWindow) predictor.onSentenceBoundary()
         }
         lastLearningCommit = null
         contextTracker.rollbackLastWord(placed.word)
@@ -3756,11 +3793,16 @@ class SuggestionHandler(
      * in front of it, or after a deleted space alone fails one of them. An editor that cannot be
      * read decides nothing, and an empty anchor (the field's first word) proves nothing.
      */
-    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection, read: CaretRead): Reconciled {
-        val placed = learnedPlacement ?: return Reconciled.UNCHECKED
+    private fun reconcileLearnWithEditor(newWord: String, ic: InputConnection?, read: CaretRead?): Reconciled {
+        // After another editor was bound, nothing unproven continues the window (#1).
+        val proofRequired = windowNeedsProof
+        windowNeedsProof = false
+        val unproven = { if (proofRequired) closeLearnWindow("this editor does not show the window's last word") else Reconciled.UNCHECKED }
+        val placed = learnedPlacement ?: return unproven()
         learnedPlacement = null
-        val editor = read.before ?: return Reconciled.UNCHECKED
-        val predictor = predictionCoordinator.getWordPredictor() ?: return Reconciled.UNCHECKED
+        if (ic == null || read == null) return unproven()
+        val editor = read.before ?: return unproven()
+        predictionCoordinator.getWordPredictor() ?: return Reconciled.UNCHECKED
         // No identity check against [lastLearningCommit] (audit A1): an input restart or a
         // dictation write nulls it, and both checks below then never ran, while the learn window
         // kept the word. The receipt check in [applyProvenRemoval] is the predictor's.
@@ -3772,15 +3814,30 @@ class SuggestionHandler(
             vlog { "LEARN SUPERSEDED: the previous word left the editor before this commit" }
             return Reconciled.REMOVED
         }
-        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return Reconciled.UNCHECKED
-        if (textBeforeTrailingWord(beforeNew, placed.word)?.let { endsAtWordBoundary(it, placed.word) } == true) {
+        val beforeNew = textBeforeTrailingWord(editor, newWord) ?: return unproven()
+        val beforeOld = textBeforeTrailingWord(beforeNew, placed.word)
+        if (beforeOld?.let { endsAtWordBoundary(it, placed.word) } == true &&
+            (!proofRequired || (placed.provable && anchorStandsBefore(placed, beforeOld)))
+        ) {
             return Reconciled.KEPT
         }
-        vlog { "LEARN WINDOW CLOSED: this word does not follow the previous one in the editor" }
-        predictor.onSentenceBoundary()
+        return closeLearnWindow("this word does not follow the previous one in the editor")
+    }
+
+    /** Close the learn window, as at a sentence boundary: the next word pairs with nothing. */
+    private fun closeLearnWindow(why: String): Reconciled {
+        vlog { "LEARN WINDOW CLOSED: $why" }
+        predictionCoordinator.getWordPredictor()?.onSentenceBoundary()
         lastLearningCommit = null
         return Reconciled.CLOSED
     }
+
+    /**
+     * [beforeOld], the editor's text before [placed]'s word, is its recorded anchor: the whole
+     * field before it, or ends with its full window.
+     */
+    private fun anchorStandsBefore(placed: LearnedPlacement, beforeOld: String): Boolean =
+        if (placed.wholeField) beforeOld == placed.anchor else beforeOld.endsWith(placed.anchor)
 
     /** What [reconcileLearnWithEditor] found about the newest learned word. */
     private enum class Reconciled {
@@ -3839,7 +3896,7 @@ class SuggestionHandler(
         // would find the receipt gone and close the learn window the replacement learns with. The
         // window ends with the previous word again, so that word's place is watched (Saga r22).
         if (learnedPlacement?.word.equals(word, ignoreCase = true)) {
-            learnedPlacement = previousPlacement?.also { it.remains = "" }
+            learnedPlacement = previousPlacement?.also { it.remains = ""; it.editChecksOff = false }
             previousPlacement = null
         }
     }

@@ -58,19 +58,28 @@ editor that used to be listed here already ship in 2.0.)
   keyboard or rotated the screen, or after the sentence ended: letter by letter, with
   Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. Deleting on into
   the word before it takes that word back too, also after Backspace undid a swipe (`so ` + swipe
-  `well`, Backspace, `so` deleted, swipe `fix` learned the pair `so → fix`). The first word of a field is covered when you delete it with the keyboard (not when the
-  app clears its field), and so is a word an autocorrect undo put back. A forward Delete is not
-  covered yet. The deleted swipe's alternates leave the bar.
+  `well`, Backspace, `so` deleted, swipe `fix` learned the pair `so → fix`) or after the sentence
+  ended, and retyping that word learns its pair again. The first word of a field is covered when
+  you delete it with the keyboard (not when the app clears its field), and so is a word an
+  autocorrect undo put back. A forward Delete is not covered yet. The deleted swipe's alternates
+  leave the bar.
+- Words typed in a private (incognito) browser tab are never used as the context of words typed
+  later in an ordinary tab, and switching to another tab whose text box looks the same and ends
+  in the same word no longer continues the last tab's phrase (`my diagnosis is` in one tab,
+  `great` after a draft ending in `is` in another, learned `diagnosis is great`).
+- Turning learning on no longer pairs the next word with words typed while it was off, and
+  deleting a word typed while learning was off no longer takes back counts it never added.
 - After Auto-Detect switched to the second language, another field or app starts again in the
-  primary language (also an empty text box in a new browser tab, which looks like the last one), and typing in the primary switches back within the same field, also across
-  short sentences: after about ten words that read as the primary, or at once when they clearly
-  do.
+  primary language (also an empty text box in a new browser tab, which looks like the last one),
+  and typing in the primary switches back within the same field, also across short sentences:
+  after about ten words that read as the primary, or at once when they clearly do.
 - Typing predictions and next-word suggestions drop a word disabled in Dictionary Manager at once,
   in both languages (they waited for the next typed prediction).
 - Moving the cursor to another word takes the last swipe's alternates off the suggestion bar, and
   tapping one of them can no longer replace the word under the cursor.
 - A detected second language now survives a rotation, hiding and showing the keyboard in the same
-  field, or dictation; only another field starts again in the primary language.
+  field (also over a box you just emptied by sending), or dictation; only another field starts
+  again in the primary language.
 - Importing the language pack of a second language you had chosen (for example from a restored
   backup) makes it active at once, without changing a setting.
 

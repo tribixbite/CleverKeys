@@ -960,6 +960,8 @@ class CleverKeysService : InputMethodService(),
         // Tile: a deferred show armed for another app's editor must not land here.
         if (_tileShow.hasPending) tileLog { "onStartInput ${attribute?.packageName} while a deferred show is armed" }
         _tileShow.onStartInput(attribute?.packageName)
+        // Another editor bound (not a restart): the next input view may be a look-alike field.
+        if (::_suggestionHandler.isInitialized) _suggestionHandler.onInputStarted(restarting)
         _rotationGuard.onStartInput(attribute?.packageName, restarting)
         _rotationModifiers.onStartInput(attribute?.packageName)
         if (ProcessTextReturn.hasResult() && attribute != null && attribute.packageName != packageName) {

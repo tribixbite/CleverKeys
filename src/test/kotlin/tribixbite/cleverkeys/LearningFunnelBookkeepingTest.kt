@@ -1702,16 +1702,19 @@ class LearningFunnelBookkeepingTest {
      */
     @Test
     fun theSameFieldRestartedReshownOrDictatedIntoKeepsTheDetectedLanguage() {
+        // Fable review 2026-11-27 (#3): with the editor passed in, and EMPTY, as a chat box is
+        // after sending (the calls without one could not see an empty-field rule).
         useRealLegacyDetector()
-        handler.onInputFieldStarted(chromeField(), restarting = false)
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
         spanish.forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
         val window = learnWindow()
 
-        handler.onInputFieldStarted(chromeField(), restarting = true)
+        handler.onInputStarted(restarting = true)
+        handler.onInputFieldStarted(chromeField(), restarting = true, ic)
         assertWithMessage("a restart").that(predictor.getField("currentLanguage")).isEqualTo("es")
         handler.onEditorSessionChanged()
-        handler.onInputFieldStarted(chromeField(), restarting = false)
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
         assertWithMessage("hidden and shown again").that(predictor.getField("currentLanguage")).isEqualTo("es")
         handler.onEditorSessionChanged() // a dictation write (CleverKeysService onExternalEdit)
         assertWithMessage("a dictation write").that(predictor.getField("currentLanguage")).isEqualTo("es")
@@ -2251,16 +2254,29 @@ class LearningFunnelBookkeepingTest {
      * CleverKeysService.onFinishInputView then onStartInputView, in the service's order: what a
      * rotation (the activity is recreated) and Back + a tap on the field (hide, show) both run.
      */
-    private fun hideAndShowKeyboard(field: EditorInfo = textField(), restarting: Boolean = false) {
+    private fun hideAndShowKeyboard(
+        field: EditorInfo = textField(), restarting: Boolean = false, newInput: Boolean = false,
+    ) {
         val coordinator = realCoordinator()
         // onFinishInputView
         handler.onEditorSessionChanged()
         handler.flushTypedWordOnFinishInput(ic)
         tracker.clearAll()
         coordinator.flushLearnedData()
+        // onStartInput: another editor was bound (a new tab, another field, a recreated window).
+        // Back + a tap on the same field has none.
+        if (newInput) handler.onInputStarted(restarting = false)
         // onStartInputView, with the editor as it now reads
         handler.onEditorSessionChanged()
         handler.onInputFieldStarted(field, restarting, ic)
+        handler.setFieldPersonalizedLearningAllowed(LearningGate.fieldAllowsPersonalizedLearning(field.imeOptions))
+    }
+
+    /** A WebView restarting its input (no onFinishInputView): onStartInput + onStartInputView, restarting. */
+    private fun webViewRestart(field: EditorInfo) {
+        handler.onInputStarted(restarting = true)
+        handler.onEditorSessionChanged()
+        handler.onInputFieldStarted(field, restarting = true, ic)
     }
 
     /**
@@ -2324,8 +2340,8 @@ class LearningFunnelBookkeepingTest {
     fun aLookAlikeFieldDoesNotPairWithThePreviousOne() {
         handler.onInputFieldStarted(textField(), restarting = false)
         type("fix ")
-        hideAndShowKeyboard()
         editor.setLength(0)
+        hideAndShowKeyboard(newInput = true)
         type("today ")
 
         assertWithMessage("no fix→today: today does not follow fix in this editor").that(bigram("fix", "today")).isEqualTo(0)
@@ -2346,7 +2362,7 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
 
         editor.setLength(0) // the new tab's textarea
-        hideAndShowKeyboard(field = chromeField())
+        hideAndShowKeyboard(field = chromeField(), newInput = true)
 
         assertWithMessage("the new textarea starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
     }
@@ -2363,6 +2379,8 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("re-shown").that(predictor.getField("currentLanguage")).isEqualTo("es")
         hideAndShowKeyboard(field = chromeField(), restarting = true)
         assertWithMessage("restarted").that(predictor.getField("currentLanguage")).isEqualTo("es")
+        webViewRestart(chromeField())
+        assertWithMessage("a WebView restart").that(predictor.getField("currentLanguage")).isEqualTo("es")
     }
 
     /**
@@ -2408,7 +2426,7 @@ class LearningFunnelBookkeepingTest {
         val caret = editor.length
 
         editor.setLength(0) // the connection's reads, not the field
-        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = caret; initialSelEnd = caret })
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = caret; initialSelEnd = caret }, newInput = true)
 
         assertWithMessage("kept").that(predictor.getField("currentLanguage")).isEqualTo("es")
     }
@@ -2437,6 +2455,40 @@ class LearningFunnelBookkeepingTest {
     // ------------------------------------------- Fable review 2026-11-27 of 8d42e6fbc / b2e554f8c
 
     /**
+     * #1 (HIGH, privacy): Chrome tab A `my diagnosis is`, hide; tab B (the same package / field id
+     * / input type) holds a draft ending in `is`. `great` learned `diagnosis is great`: the only
+     * check left was that the new text ends with the window's last word.
+     */
+    @Test
+    fun aLookAlikeFieldEndingInTheSameWordDoesNotContinueTheWindow() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 9; initialSelEnd = 9 }, newInput = true)
+        type("great ", chromeField())
+
+        assertWithMessage("no diagnosis is great").that(trigram("diagnosis", "is", "great")).isEqualTo(0f)
+        assertWithMessage("no is→great from tab A's is").that(bigram("is", "great")).isEqualTo(0)
+    }
+
+    /** #1: the same, when the new editor cannot be read: nothing proves the window is its own. */
+    @Test
+    fun anUnreadableLookAlikeFieldDoesNotContinueTheWindow() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        every { ic.getTextBeforeCursor(any(), any()) } returns null
+        every { ic.getExtractedText(any(), any()) } returns null
+        hideAndShowKeyboard(field = chromeField(), newInput = true)
+        type("great ", chromeField())
+
+        assertWithMessage("no diagnosis is great").that(trigram("diagnosis", "is", "great")).isEqualTo(0f)
+        assertWithMessage("no is→great").that(bigram("is", "great")).isEqualTo(0)
+    }
+
+    /**
      * #1: an incognito word never enters the learn window, so it cannot become the context of a
      * word typed in a normal tab that looks the same (`IME_FLAG_NO_PERSONALIZED_LEARNING` was
      * not part of the field identity either).
@@ -2456,6 +2508,24 @@ class LearningFunnelBookkeepingTest {
 
         assertWithMessage("no secret→plan").that(bigram("secret", "plan")).isEqualTo(0)
         assertWithMessage("no my secret plan").that(trigram("my", "secret", "plan")).isEqualTo(0f)
+    }
+
+    /** #1: an incognito tab's detected language does not carry into a normal tab that looks the same. */
+    @Test
+    fun anIncognitoTabsDetectedLanguageDoesNotCarryIntoANormalTab() {
+        useRealLegacyDetector()
+        val incognito = chromeField().apply { imeOptions = EditorInfo.IME_FLAG_NO_PERSONALIZED_LEARNING }
+        handler.onInputFieldStarted(incognito, restarting = false, ic)
+        handler.setFieldPersonalizedLearningAllowed(false)
+        editor.append(spanish.joinToString(" ") + " ")
+        spanish.forEach { predictor.addWordToContext(it, false) }
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        editor.setLength(0)
+        editor.append("hello there ")
+        hideAndShowKeyboard(field = chromeField().apply { initialSelStart = 12; initialSelEnd = 12 }, newInput = true)
+
+        assertWithMessage("the normal tab starts in the primary").that(predictor.getField("currentLanguage")).isEqualTo("en")
     }
 
     /** #2: learning off, `my pin is`, learning turned on, `long`: `pin is long` was stored. */
@@ -2487,6 +2557,48 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("word's count kept").that(vocabulary.getWordUsage("word")?.usageCount).isEqualTo(1)
     }
 
+    /**
+     * #4: a restored previous placement kept `editChecksOff` from a caret move made while it was
+     * the newest word, so deleting into `fix` went unseen again and the commit-time check closed
+     * the window: `a` → `filip` was not learned.
+     */
+    @Test
+    fun aRestoredPreviousWordIsWatchedEvenAfterTheCaretLeftItOnce() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        type("a fix ")
+        reportedCaret = cursor()
+        cursorAt = 1
+        cursorSync() // the caret into `a`: fix's region is left once
+        cursorAt = null
+        cursorSync() // and back to the end
+        swipe("toy", "try")
+        backspaceChars("toy ".length + "x ".length)
+        type("lip ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("a filip ")
+        assertWithMessage("no fix→filip").that(bigram("fix", "filip")).isEqualTo(0)
+        assertWithMessage("fix's +1 reversed").that(vocabulary.getWordUsage("fix")).isNull()
+        assertWithMessage("a→filip learned").that(bigram("a", "filip")).isEqualTo(1)
+    }
+
+    /** #5: `a fix toy`, delete to `a fi`, retype `x `: `a → fix` was reversed and never relearned. */
+    @Test
+    fun retypingThePreviousWordRelearnsItsPair() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        type("a fix ")
+        swipe("toy", "try")
+        backspaceChars("toy ".length + "x ".length)
+        type("x ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("a fix ")
+        assertWithMessage("fix→toy reversed").that(bigram("fix", "toy")).isEqualTo(0)
+        assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
+        assertWithMessage("a→fix relearned").that(bigram("a", "fix")).isEqualTo(1)
+        assertWithMessage("fix counted once").that(vocabulary.getWordUsage("fix")?.usageCount).isEqualTo(1)
+    }
+
     /** #5: after `fix toy.` (the sentence ended), deleting back through `fix` kept fix's +1. */
     @Test
     fun deletingBackThroughAnEndedSentenceTakesBothWordsBack() {
@@ -2502,6 +2614,23 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("fix→toy reversed").that(bigram("fix", "toy")).isEqualTo(0)
         assertWithMessage("toy's +1 reversed").that(vocabulary.getWordUsage("toy")).isNull()
         assertWithMessage("fix's +1 reversed").that(vocabulary.getWordUsage("fix")).isNull()
+    }
+
+    /** Fable #7: a WebView input restart (no onFinishInputView) keeps the deletion rollback working. */
+    @Test
+    fun aDeletionAfterAWebViewInputRestartIsRolledBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("fix ", chromeField())
+        swipe("got", "git", field = chromeField())
+        webViewRestart(chromeField())
+        backspaceChars("got ".length, field = chromeField())
+        newSwipe("something")
+
+        assertWithMessage("fix→got reversed").that(bigram("fix", "got")).isEqualTo(0)
+        assertWithMessage("got's +1 reversed").that(vocabulary.getWordUsage("got")).isNull()
+        assertWithMessage("fix→something learned").that(bigram("fix", "something")).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection

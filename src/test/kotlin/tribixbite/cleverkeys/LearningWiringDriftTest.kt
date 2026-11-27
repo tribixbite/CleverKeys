@@ -450,6 +450,9 @@ class LearningWiringDriftTest {
         val check = selection.indexOf("_suggestionHandler.onUnownedSelectionUpdate(")
         assertThat(check).isGreaterThan(-1)
         assertThat(selection.indexOf("onCursorMoved(")).isGreaterThan(check)
+        // onStartInput tells the handler that another editor was bound (Fable review 2026-11-27).
+        val input = service.substringAfter("override fun onStartInput(").substringBefore("override fun ")
+        assertThat(input).contains("_suggestionHandler.onInputStarted(restarting)")
         // Only onStartInputView tells a new field from a restart (Fable review 2026-11-26).
         val start = service.substringAfter("override fun onStartInputView(").substringBefore("override fun ")
         assertThat(start).contains("_suggestionHandler.onInputFieldStarted(info, restarting, currentInputConnection)")
