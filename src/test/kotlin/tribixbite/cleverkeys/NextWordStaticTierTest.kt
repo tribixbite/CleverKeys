@@ -123,7 +123,6 @@ class NextWordStaticTierTest {
         real.setField("personalizationEngine", personalization)
         real.setField("userWordOriginalCase", ConcurrentHashMap<String, String>())
         real.setField("languageDetector", null)
-        real.setField("multiLanguageManager", null)
         predictor = spyk(real)
         every { predictor.isInDictionary(any()) } returns true
         every { predictor.isInDictionary(any(), any()) } returns true
