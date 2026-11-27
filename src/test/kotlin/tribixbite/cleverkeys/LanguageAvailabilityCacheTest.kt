@@ -109,15 +109,18 @@ class LanguageAvailabilityCacheTest {
      */
     @Test
     fun anImportAttemptInvalidatesTheCache() {
-        assertThat(LanguageAvailability.isAvailable(context, "ru")).isFalse()
+        // The pickers' list is the cached part: isAvailable checks a pack's dictionary file
+        // itself since audit B5 (2026-11-26), so it sees the pack at once.
+        assertThat(LanguageAvailability.availableLanguages(context)).doesNotContain("ru")
         installPack("ru")
-        assertThat(LanguageAvailability.isAvailable(context, "ru")).isFalse()  // cached scan
+        assertThat(LanguageAvailability.availableLanguages(context)).doesNotContain("ru") // cached scan
 
         val resolver = mockk<android.content.ContentResolver>()
         every { context.contentResolver } returns resolver
         every { resolver.openInputStream(any()) } returns null
         manager.importLanguagePack(mockk())
 
+        assertThat(LanguageAvailability.availableLanguages(context)).contains("ru")
         assertThat(LanguageAvailability.isAvailable(context, "ru")).isTrue()
     }
 
@@ -160,4 +163,50 @@ class LanguageAvailabilityCacheTest {
         every { assets.list("dictionaries") } returns arrayOf("en_enhanced.bin")
         assertThat(LanguageAvailability.availableLanguages(context)).containsExactly("en")
     }
+
+    // ------------------------------------------------ audit B5 (2026-11-26)
+
+    /**
+     * The keyboard's availability check ([Config.ensureLanguageAvailability]) asks whether a
+     * DICTIONARY exists: a pack whose dictionary is there but whose manifest does not parse is
+     * available, a manifest without its dictionary (an interrupted install) is not. It listed
+     * packs by parseable manifest, which got both wrong.
+     */
+    @Test
+    fun theKeyboardsAvailabilityCheckAsksForTheDictionary() {
+        File(langpacks, "nl").apply { mkdirs() }.let { dir ->
+            File(dir, "manifest.json").writeText("{ not json")
+            File(dir, "dictionary.bin").writeBytes(ByteArray(48))
+        }
+        installPack("de", withDictionary = false)
+        val previous = Config.languageAvailability
+        Config.languageAvailability = null
+        try {
+            Config.ensureLanguageAvailability(context)
+            val check = Config.languageAvailability!!
+            assertThat(check("nl")).isTrue()
+            assertThat(check("de")).isFalse()
+            assertThat(check("en")).isTrue()
+        } finally {
+            Config.languageAvailability = previous
+        }
+    }
+
+    /**
+     * A pack import that finishes while a scan runs invalidates the cache before the scan stores
+     * its (now stale) result; that result must not be kept.
+     */
+    @Test
+    fun aScanThatAnInvalidateOvertookIsNotCached() {
+        var lists = 0
+        every { assets.list("dictionaries") } answers {
+            lists++
+            if (lists == 1) LanguageAvailability.invalidate() // an import finished mid-scan
+            arrayOf("en_enhanced.bin")
+        }
+        LanguageAvailability.isAvailable(context, "en")
+        LanguageAvailability.isAvailable(context, "en")
+        assertThat(lists).isEqualTo(2)
+    }
+
 }

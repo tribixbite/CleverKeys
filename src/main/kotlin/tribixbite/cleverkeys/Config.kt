@@ -2174,10 +2174,10 @@ class Config private constructor(
 
         /**
          * Install [languageAvailability] from [context] unless something already has: a language
-         * counts when [LanguageAvailability.availableLanguages] lists it (the list the Settings
-         * language pickers show), or while the answer is unknown: before the first unlock the pack
-         * storage is unreadable and every pack would look missing (nothing re-resolves at the
-         * unlock), and an empty list is a failed scan (a bundled dictionary always exists).
+         * counts when its dictionary exists ([LanguageAvailability.isAvailable]: bundled, or an
+         * installed pack's dictionary file), or while the answer is unknown: before the first
+         * unlock the pack storage is unreadable and every pack would look missing (nothing
+         * re-resolves at the unlock), and a failed asset scan reports every language available.
          */
         fun ensureLanguageAvailability(context: android.content.Context) {
             if (languageAvailability != null) return
@@ -2186,8 +2186,10 @@ class Config private constructor(
                 if (!tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(app).isPackStorageReadable()) {
                     true
                 } else {
-                    val known = LanguageAvailability.availableLanguages(app)
-                    known.isEmpty() || code in known
+                    // The dictionary-exists check (audit B5, 2026-11-26): the pickers' list is by
+                    // parseable manifest, so a pack with a dictionary and a broken manifest
+                    // resolved to no secondary and a manifest-only ghost counted as available.
+                    LanguageAvailability.isAvailable(app, code)
                 }
             }
         }

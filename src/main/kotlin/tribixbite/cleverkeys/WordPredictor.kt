@@ -888,8 +888,9 @@ class WordPredictor : Predictor {
     }
 
     /**
-     * [isWordDisabled] for a word of [language] — the accessor the swipe slate filter uses for a
-     * candidate whose language it knows. The primary's set for the loaded dictionary's language,
+     * [isWordDisabled] for a word of [language], for a caller that knows a candidate's language.
+     * No production caller yet (audit B4, 2026-11-26): the swipe lexicons read the disabled list
+     * from the preference themselves (`UserLexiconInputs`). The primary's set for the loaded dictionary's language,
      * [isSecondaryWordDisabled] for the loaded secondary, and for any other language the
      * primary's set plus that language's stored list (read once, kept until the next reload).
      */

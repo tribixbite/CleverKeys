@@ -477,6 +477,8 @@ class LearningWiringDriftTest {
         val received = service.substringAfter("private fun onLanguagePacksChanged()").substringBefore("\n    }\n")
         assertThat(received).contains("_configManager.refresh(resources)")
         assertThat(received).contains("reloadWordPredictorSecondaryDictionary(")
+        // Audit B5: the primary's own pack changing reloads the primary too.
+        assertThat(received).contains("reloadWordPredictorDictionary(primary)")
         assertThat(service.substringAfter("override fun onDestroy()").substringBefore("\n    override fun "))
             .contains("_languagePacksReceiver")
 

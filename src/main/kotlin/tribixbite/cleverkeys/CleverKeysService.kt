@@ -182,6 +182,21 @@ class CleverKeysService : InputMethodService(),
     /** [ACTION_LANGUAGE_PACKS_CHANGED] receiver, unregistered in onDestroy. */
     private var _languagePacksReceiver: BroadcastReceiver? = null
 
+    /**
+     * The primary language and its installed pack's dictionary file (path, size, mtime) as the
+     * keyboard last loaded it; null file part = no pack (a bundled dictionary). Lets
+     * [onLanguagePacksChanged] tell a re-imported or removed PRIMARY pack (audit B5, 2026-11-26:
+     * only the secondary was reloaded).
+     */
+    private var _primaryPackStamp: Pair<String, String?>? = null
+
+    private fun primaryPackStamp(language: String): Pair<String, String?> = language to try {
+        tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(this).getDictionaryPath(language)
+            ?.let { "${it.path}:${it.length()}:${it.lastModified()}" }
+    } catch (e: Exception) {
+        null
+    }
+
     companion object {
         /** Lets a theme change re-inflate the keyboard before its name shows in the bar. */
         private const val THEME_MESSAGE_DELAY_MS = 350L
@@ -554,6 +569,7 @@ class CleverKeysService : InputMethodService(),
         }
         _languagePacksReceiver = languagePacksReceiver
         PrivateReceivers.register(this, languagePacksReceiver, IntentFilter(ACTION_LANGUAGE_PACKS_CHANGED))
+        _primaryPackStamp = _config?.activeLanguages()?.primary?.let { primaryPackStamp(it) }
 
         // The default-keyboard reminder (I-7) is NOT checked here: Android creates this service
         // only while CleverKeys is becoming the selected keyboard, so the check could only misfire
@@ -1702,6 +1718,15 @@ class CleverKeysService : InputMethodService(),
         _configManager.refresh(resources)
         val after = _config?.activeLanguages()?.secondary
         if (after != null && after == before) _predictionCoordinator?.reloadWordPredictorSecondaryDictionary(after)
+        // The PRIMARY's pack re-imported or removed: its dictionary is reloaded from what is there
+        // now (a language change reloads through ActiveLanguageSync instead).
+        val primary = _config?.activeLanguages()?.primary ?: return
+        val stamp = primaryPackStamp(primary)
+        val known = _primaryPackStamp
+        if (known != null && known.first == primary && known.second != stamp.second) {
+            _predictionCoordinator?.reloadWordPredictorDictionary(primary)
+        }
+        _primaryPackStamp = stamp
     }
 
     override fun onEvaluateFullscreenMode(): Boolean {

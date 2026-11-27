@@ -132,8 +132,10 @@ object LayoutLanguageBinding {
         }
         // Unbound: exactly the pre-binding behaviour (the secondary loads whenever
         // Multi-Language is on and a secondary is chosen).
+        // A secondary equal to the primary is no secondary (audit B5, 2026-11-26), as Settings'
+        // pair check (`MultiLanguagePair.chosenSecondary`) already said.
         val secondary = userSecondary?.takeIf {
-            multilangEnabled && it.isNotEmpty() && it != LanguageDisplayNames.NONE && isAvailable(it)
+            multilangEnabled && it.isNotEmpty() && it != LanguageDisplayNames.NONE && it != userPrimary && isAvailable(it)
         }
         return ActiveLanguages(primary = userPrimary, secondary = secondary, boundLayoutLanguage = null)
     }

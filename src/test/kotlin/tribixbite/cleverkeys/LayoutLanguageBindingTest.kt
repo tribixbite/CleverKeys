@@ -153,4 +153,18 @@ class LayoutLanguageBindingTest {
         }
         assertThat(seen).containsExactly("en", "de", "fa", "en").inOrder()
     }
+
+    /** Audit B5 (2026-11-26): a secondary equal to the primary is no secondary, as Settings' pair check says. */
+    @Test
+    fun aSecondaryEqualToThePrimaryResolvesToNone() {
+        val active = LayoutLanguageBinding.resolve(
+            bindings = listOf(null),
+            currentIndex = 0,
+            userPrimary = "en",
+            multilangEnabled = true,
+            userSecondary = "en",
+        )
+        assertThat(active).isEqualTo(ActiveLanguages(primary = "en", secondary = null, boundLayoutLanguage = null))
+    }
+
 }

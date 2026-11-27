@@ -40,13 +40,21 @@ object LanguageAvailability {
     @Volatile
     private var cached: Snapshot? = null
 
+    /**
+     * Bumped by every [invalidate] (audit B5, 2026-11-26): a scan that an import or delete
+     * overtook (it invalidated while the scan ran) must not store its stale result.
+     */
+    private val generation = java.util.concurrent.atomic.AtomicLong()
+
     /** Drop the cached scan; the next query rescans. Called after every pack import/delete. */
     fun invalidate() {
+        generation.incrementAndGet()
         cached = null
     }
 
     private fun snapshot(context: Context): Snapshot {
         cached?.let { return it }
+        val startedAt = generation.get()
         val manager = LanguagePackManager.getInstance(context)
         // Asked BEFORE the scan: asked after it, an unlock landing in between would cache the
         // empty pre-unlock scan as readable (follow-up review 2026-11-15).
@@ -60,7 +68,7 @@ object LanguageAvailability {
         // Before the first unlock the packs directory cannot be listed and the scan sees none.
         // Caching that kept the empty list for the whole process (review 2026-11-14): a false
         // "no dictionary" warning and pickers without the installed packs until a restart.
-        if (readable) cached = snapshot
+        if (readable) synchronized(this) { if (generation.get() == startedAt) cached = snapshot }
         return snapshot
     }
 
@@ -72,9 +80,15 @@ object LanguageAvailability {
         emptyList()
     }
 
-    /** True when [code] has a bundled dictionary or an installed language pack. */
+    /**
+     * True when [code] has a bundled dictionary or an installed pack's DICTIONARY file (audit B5,
+     * 2026-11-26: whether the manifest parses does not matter here: a pack with a dictionary and
+     * a broken manifest serves words, a manifest without its dictionary serves none).
+     */
     fun isAvailable(context: Context, code: String): Boolean = try {
-        snapshot(context).let { code in it.bundled || code in it.packsWithDictionary }
+        // An empty bundled list is a failed asset scan (a bundled dictionary always exists): unknown.
+        val bundled = snapshot(context).bundled
+        bundled.isEmpty() || code in bundled || LanguagePackManager.getInstance(context).isInstalled(code)
     } catch (e: Exception) {
         Log.e(TAG, "Failed to check dictionary for '$code'", e)
         // Unknown is reported as available: a false "not installed" warning would be worse
