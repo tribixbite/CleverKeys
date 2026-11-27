@@ -2346,9 +2346,12 @@ class SuggestionHandler(
     private var inputRestartedSinceView = false
 
     /**
-     * Since the input view last started, did the field show nothing but a prefix of the newest
-     * learned (blank-anchor) word and its separator, with the caret at its end, at the first
-     * deletion? Null until that first look. Pixel / Saga r23 L2b: after a rotation (the keyboard's
+     * While a proof is due: was the field, as last read BEFORE the newest deletion, exactly the
+     * newest learned (blank-anchor) word with its separator (or the bare word), the caret at its
+     * end? Read at the view start and at every selection update that is not a deletion, so a
+     * Backspace or word delete is judged by the field before it (Fable check of dbe38d8be, #1: a read after the
+     * deletion accepted "", `m` or `mo` for `mop `, so an emptied or one-letter look-alike
+     * un-learned field A's word). Null when not tracked. Pixel / Saga r23 L2b: after a rotation (the keyboard's
      * config restart, then Chrome's re-bind on a tap, or a native field's window restore) neither
      * the EditorInfo nor a blank anchor proved the field's first word, so its deletion by the
      * keyboard's own Backspace took nothing back (`mop` 6 → 7, `got (1×)`).
@@ -2423,15 +2426,20 @@ class SuggestionHandler(
         // right after the app bound another editor is a new field. Only then (Fable #3): Back and
         // a tap on a chat box emptied by sending binds nothing and keeps the detected language;
         // nor after a restart, which a rotation of that box also is.
-        val newField = identityChanged ||
+        // A restart into an EMPTY editor while a non-empty whole-field placement is held is
+        // another field too (Fable check of dbe38d8be, #1): the held word cannot be in it.
+        val emptiedUnderPlacement = restarting && learnedPlacement?.wholeField == true &&
+            info != null && ic != null && editorLooksEmpty(info, ic)
+        val newField = identityChanged || emptiedUnderPlacement ||
             (!restarting && boundAnotherEditor && info != null && ic != null && editorLooksEmpty(info, ic))
         startedFieldIdentity = identity
         // A field that looks the same after another editor was bound, or after a restart (another
         // textarea of the same page, or the same field after a rotation): its next commit must
         // show the window's last word at its anchor. A field's first word (blank anchor) cannot,
         // so it loses its pair across a restart; a proven deletion lifts the requirement.
-        windowNeedsProof = !newField && (boundAnotherEditor || restartedInput)
-        fieldShowedOnlyTheFirstWord = null
+        // Sticky until proven (Fable check of dbe38d8be, #2): a plain hide and re-show after a
+        // restart or bind into a look-alike binds nothing, and recomputing it here dropped it.
+        windowNeedsProof = !newField && (windowNeedsProof || boundAnotherEditor || restartedInput)
         // A restart of the same field whose EditorInfo shows the newest learned word where it was
         // committed needs nothing more (Fable check of b12ff1d0c, #2: after a Chrome rotation a
         // field's first word was no longer taken back by Backspace, nor kept its pair).
@@ -2440,6 +2448,8 @@ class SuggestionHandler(
         ) {
             windowNeedsProof = false
         }
+        fieldShowedOnlyTheFirstWord = null
+        if (ic != null) noteFieldBeforeDeletion(ic)
         if (newField) {
             val predictor = predictionCoordinator.getWordPredictor()
             // H1: the learn window ends with the field (moved here from onFinishInputView's flush,
@@ -3528,7 +3538,11 @@ class SuggestionHandler(
         imeDeletionPending = false
         if (newSelStart != newSelEnd) return
         dropSwipeTrackingTheCaretLeft(ic)
-        if (newSelStart >= oldSelStart && newSelEnd >= oldSelEnd) return
+        if (newSelStart >= oldSelStart && newSelEnd >= oldSelEnd) {
+            // Not a deletion: the field as it stands before the next one.
+            if (ic != null) noteFieldBeforeDeletion(ic)
+            return
+        }
         reconcileLearnAfterDeletion(ic, imeDeletion)
     }
 
@@ -3593,7 +3607,7 @@ class SuggestionHandler(
         // A look-alike holding other text does not; one holding exactly that word is
         // indistinguishable and accepted (it only takes back this word's own learn).
         val firstWordByKeyboard = imeDeletion && placed.wholeField && placed.anchor.isBlank() &&
-            (!windowNeedsProof || fieldShowsOnlyFirstWord(placed, ic))
+            (!windowNeedsProof || fieldShowedOnlyTheFirstWord == true)
         if (!placed.provable && !firstWordByKeyboard) return
         val recordedAfter = placed.after ?: return
         val word = placed.word
@@ -3664,16 +3678,21 @@ class SuggestionHandler(
         contextTracker.rollbackLastWord(placed.word)
     }
 
-    /** See [fieldShowedOnlyTheFirstWord]; decided once, at the first deletion after the start. */
-    private fun fieldShowsOnlyFirstWord(placed: LearnedPlacement, ic: InputConnection): Boolean {
-        fieldShowedOnlyTheFirstWord?.let { return it }
+    /**
+     * Updates [fieldShowedOnlyTheFirstWord] from the editor as it stands now, which the caller
+     * knows is before the next deletion. Only while a proof is due for a blank-anchor placement.
+     */
+    private fun noteFieldBeforeDeletion(ic: InputConnection) {
+        val placed = learnedPlacement
+        if (!windowNeedsProof || placed == null || !placed.wholeField || placed.anchor.isNotBlank()) {
+            fieldShowedOnlyTheFirstWord = null
+            return
+        }
         val full = placed.word + placed.trailing
         val before = editorTextBeforeCursor(ic, full.length + 1)
-        val shown = before != null && before.length <= full.length &&
-            full.regionMatches(0, before, 0, before.length, ignoreCase = true) &&
+        fieldShowedOnlyTheFirstWord = before != null &&
+            (before.equals(full, ignoreCase = true) || before.equals(placed.word, ignoreCase = true)) &&
             editorTextAfterCursor(ic, 1)?.isEmpty() == true && caretProvenAtFieldEnd(ic)
-        fieldShowedOnlyTheFirstWord = shown
-        return shown
     }
 
     /**

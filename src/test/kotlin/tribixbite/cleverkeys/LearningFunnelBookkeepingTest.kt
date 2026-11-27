@@ -2941,6 +2941,105 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("mop kept its count").that(vocabulary.getWordUsage("mop")?.usageCount).isEqualTo(1)
     }
 
+    // ------------------------------------------------- Fable check 2026-11-27 of dbe38d8be
+
+    /**
+     * #1: an EMPTY look-alike textarea reached by an input restart, one letter typed and taken
+     * back: the field after that Backspace ("") passed as "only the first word", and field A's
+     * `mop` was un-learned.
+     */
+    @Test
+    fun aTypedAndDeletedLetterInAnEmptyLookAlikeDoesNotUnlearnTheFirstWord() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        editor.setLength(0)
+        webViewRestart(chromeField())
+        type("m", chromeField())
+        reportedCaret = cursor()
+        backspaceChars(1, field = chromeField())
+
+        assertWithMessage("A's mop kept its count").that(vocabulary.getWordUsage("mop")?.usageCount).isEqualTo(1)
+    }
+
+    /** #1: a look-alike holding `mob`; Backspace leaves `mo`, a prefix of `mop`. */
+    @Test
+    fun aBackspaceIntoAPrefixInALookAlikeDoesNotUnlearnTheFirstWord() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        editor.setLength(0)
+        editor.append("mob")
+        webViewRestart(chromeField())
+        reportedCaret = cursor()
+        backspaceChars(1, field = chromeField())
+
+        assertWithMessage("A's mop kept its count").that(vocabulary.getWordUsage("mop")?.usageCount).isEqualTo(1)
+    }
+
+    /** #1: a look-alike holding another single word, emptied by the keyboard's word delete. */
+    @Test
+    fun aWordDeleteThatEmptiesALookAlikeDoesNotUnlearnTheFirstWord() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        editor.setLength(0)
+        editor.append("dog")
+        webViewRestart(chromeField())
+        reportedCaret = cursor()
+        handler.onImeDeletion() // KeyEventHandler DELETE_WORD, before the editor's own delete
+        editor.setLength(0)
+        cursorSync(chromeField())
+
+        assertWithMessage("A's mop kept its count").that(vocabulary.getWordUsage("mop")?.usageCount).isEqualTo(1)
+    }
+
+    /**
+     * #2: the proof requirement was recomputed at every view start, so a plain hide and re-show
+     * (Back, then a tap: no new onStartInput) after a restart into a look-alike dropped it, and
+     * the next commit continued the window unchecked.
+     */
+    @Test
+    fun aHideAndReshowAfterARestartIntoALookAlikeStillNeedsTheProof() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("my diagnosis is ", chromeField())
+        editor.setLength(0)
+        editor.append("draft is ")
+        webViewRestart(chromeField())
+        hideAndShowKeyboard(field = chromeField())
+        type("great ", chromeField())
+
+        assertWithMessage("no diagnosis is great").that(trigram("diagnosis", "is", "great")).isEqualTo(0f)
+        assertWithMessage("no is→great").that(bigram("is", "great")).isEqualTo(0)
+    }
+
+    /**
+     * #3: a config restart that does not finish the input view first keeps the swipe's
+     * auto-insert tracking, so with "Backspace undoes swipe" on (the default) Backspace takes the
+     * #110 undo path: it must still take the first word back.
+     */
+    @Test
+    fun aSwipeUndoAfterARestartWithoutFinishTakesTheFirstWordBack() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = true
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        swipe("mop", "map", field = chromeField())
+        webViewRestart(chromeField())
+        // KeyEventHandler.handleBackspaceUndoSwipe: deletes "mop " and reports it; handle_backspace follows.
+        val c = cursor()
+        editor.setLength(0)
+        handler.onSwipeWordUndone("mop", ic)
+        handler.handleBackspace(ic, chromeField())
+        handler.onUnownedSelectionUpdate(c, c, cursor(), cursor(), ic)
+        newSwipe("map")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("map ")
+        assertWithMessage("mop's +1 reversed").that(vocabulary.getWordUsage("mop")).isNull()
+    }
+
     // ------------------------------------------------------------------ reflection
 
     /**
