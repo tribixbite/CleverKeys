@@ -2165,12 +2165,9 @@ class Config private constructor(
          * (a restored backup naming a pack never installed here) is no secondary, at read time,
          * so the stored choice comes back by itself once the pack is installed (2026-11-26).
          * Null (not installed) counts every language, the behaviour before. Installed like
-         * [themeAvailability], via [ensureLanguageAvailability].
-         *
-         * # TODO: CleverKeysService.onCreate should call [ensureLanguageAvailability] next to
-         * [themeAvailability] (outside the 2026-11-26 change's file fence); until then only a
-         * process in which Settings has started has it. A pack import or removal also re-resolves
-         * only at the next Config refresh (any preference change, a rotation, a layout switch).
+         * [themeAvailability], via [ensureLanguageAvailability]: CleverKeysService.onCreate and
+         * SettingsActivity both install it. A pack import or removal re-resolves at once: Settings
+         * sends `ACTION_LANGUAGE_PACKS_CHANGED` and the service refreshes its Config.
          */
         @Volatile
         var languageAvailability: ((String) -> Boolean)? = null
