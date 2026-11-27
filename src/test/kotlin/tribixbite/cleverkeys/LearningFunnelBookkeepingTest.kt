@@ -132,7 +132,6 @@ class LearningFunnelBookkeepingTest {
         real.setField("personalizationEngine", personalization)
         real.setField("userWordOriginalCase", ConcurrentHashMap<String, String>())
         real.setField("languageDetector", null)
-        real.setField("multiLanguageManager", null)
         predictor = spyk(real)
         every { predictor.isInDictionary(any()) } returns true
         every { predictor.isInDictionary(any(), any()) } returns true
@@ -234,6 +233,22 @@ class LearningFunnelBookkeepingTest {
         return vocabulary
     }
 
+    /**
+     * Production's only Auto-Detect path, the predictor's own [LanguageDetector] (audit B2,
+     * 2026-11-26: the MultiLanguageManager branch was never built in production and is gone),
+     * answering [language] at [confidence]; every language has static next-word data.
+     */
+    private fun detects(language: String, confidence: Float = 0.99f): LanguageDetector {
+        val bigrams = predictor.getField("bigramModel") as BigramModel?
+            ?: mockk<BigramModel>(relaxed = true).also { predictor.setField("bigramModel", it) }
+        every { bigrams.isLanguageSupported(any()) } returns true
+        val detector = mockk<LanguageDetector>()
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult(language, confidence)
+        predictor.setField("languageDetector", detector)
+        return detector
+    }
+
     private fun replaceReceipt(commit: LearningCommit, word: String): LearningCommit =
         (predictor.replaceLearningCommit(commit, word, true) as LearningCommitReplacement.Applied).commit
 
@@ -333,11 +348,9 @@ class LearningFunnelBookkeepingTest {
     fun exactReceiptSurvivesDetectionReturningTheAlreadyActiveStoreLanguage() {
         useReceiptVocabulary()
         config.auto_detect_language = true
-        val languages = mockk<MultiLanguageManager>()
-        // The manager can catch up to the predictor's language after a separate dictionary
-        // switch. Reporting en is not a change to this predictor's en context/store.
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "en"
-        predictor.setField("multiLanguageManager", languages)
+        config.active_secondary_language = "es"
+        // Detection confirming the active language is not a change to this predictor's en store.
+        detects("en")
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
         val receipt = requireNotNull(predictor.latestLearningCommit())
         assertWithMessage("same language detection keeps the context")
@@ -355,21 +368,17 @@ class LearningFunnelBookkeepingTest {
     fun autoDetectionIsSkippedWhileTheLayoutBindsALanguage() {
         useReceiptVocabulary()
         config.auto_detect_language = true
-        val languages = mockk<MultiLanguageManager>()
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
-        // The switch goes through setLanguage, which re-syncs the manager (already on es: a no-op).
-        every { languages.switchLanguage(any()) } returns true
-        predictor.setField("multiLanguageManager", languages)
+        val detector = detects("es")
 
         config.layout_bound_language = "en"
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
-        verify(exactly = 0) { languages.detectAndSwitch(any(), any(), any()) }
+        verify(exactly = 0) { detector.detectLanguageFromWordsWithConfidence(any(), any()) }
         assertWithMessage("bound language kept").that(predictor.getField("currentLanguage")).isEqualTo("en")
 
         config.layout_bound_language = null
         config.active_secondary_language = "es"
         predictor.addWordToContext("dogs", true)
-        verify(exactly = 1) { languages.detectAndSwitch(any(), any(), any()) }
+        verify(exactly = 1) { detector.detectLanguageFromWordsWithConfidence(any(), any()) }
         assertWithMessage("unbound: detection switches").that(predictor.getField("currentLanguage")).isEqualTo("es")
     }
 
@@ -403,60 +412,14 @@ class LearningFunnelBookkeepingTest {
         useReceiptVocabulary()
         config.auto_detect_language = true
         config.active_secondary_language = "de"
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
-        predictor.setField("multiLanguageManager", languages)
+        val detector = detects("es")
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("a language the user did not choose").that(predictor.getField("currentLanguage")).isEqualTo("en")
 
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("de", 0.99f)
         predictor.addWordToContext("dogs", true)
         assertWithMessage("the chosen secondary").that(predictor.getField("currentLanguage")).isEqualTo("de")
-    }
-
-    /**
-     * The manager must not switch to a language the user did not choose either (2026-11-25):
-     * `detectAndSwitch` switched its own active language first and the predictor refused it
-     * after, so on Portuguese text with English + Spanish chosen the manager recorded `pt`
-     * while the keyboard stayed English, and the two disagreed from then on.
-     */
-    @Test
-    fun theLanguageManagerStaysOnTheChosenLanguages() {
-        useReceiptVocabulary()
-        config.auto_detect_language = true
-        config.active_secondary_language = "es"
-        val languages = MultiLanguageManager("en")
-        predictor.setField("multiLanguageManager", languages)
-        listOf("o", "não", "é", "uma", "da", "do", "em", "com", "os", "mais", "não", "é").forEach {
-            predictor.addWordToContext(it, true)
-        }
-        assertWithMessage("the keyboard's language").that(predictor.getField("currentLanguage")).isEqualTo("en")
-        assertWithMessage("the manager's language").that(languages.getCurrentLanguage()).isEqualTo("en")
-    }
-
-    /**
-     * Pre-tag review 2026-11-25 S7, the predictor's half. When the manager decides not to switch
-     * (null), the predictor fell through to the legacy detector, which took the best of all six
-     * of its languages at a fixed threshold and could switch anyway. The manager's answer stands.
-     */
-    @Test
-    fun theLegacyDetectorDoesNotOverruleTheManager() {
-        useReceiptVocabulary()
-        config.auto_detect_language = true
-        config.active_secondary_language = "es"
-        val languages = mockk<MultiLanguageManager>()
-        every { languages.detectAndSwitch(any(), any(), any()) } returns null
-        predictor.setField("multiLanguageManager", languages)
-        val bigrams = mockk<BigramModel>(relaxed = true)
-        every { bigrams.isLanguageSupported(any()) } returns true
-        predictor.setField("bigramModel", bigrams)
-        val detector = mockk<LanguageDetector>()
-        every { detector.detectLanguageFromWords(any()) } returns "es"
-        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
-            LanguageDetector.DetectionResult("es", 0.99f)
-        predictor.setField("languageDetector", detector)
-        listOf("el", "perro", "come", "la", "comida", "con").forEach { predictor.addWordToContext(it, true) }
-        assertWithMessage("the manager said no switch").that(predictor.getField("currentLanguage")).isEqualTo("en")
     }
 
     /**
@@ -530,9 +493,7 @@ class LearningFunnelBookkeepingTest {
         // English is the loaded dictionary: setLanguage is what a dictionary load calls.
         predictor.setLanguage("en")
         assertWithMessage("English's disabled words").that(predictor.getField("disabledWords") as Set<*>).containsExactly("colour")
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
-        predictor.setField("multiLanguageManager", languages)
+        detects("de")
 
         listOf("wir", "haben", "das", "schon", "doch").forEach { predictor.addWordToContext(it, true) }
 
@@ -566,9 +527,7 @@ class LearningFunnelBookkeepingTest {
         val bigrams = mockk<BigramModel>(relaxed = true)
         predictor.setField("bigramModel", bigrams)
         predictor.setField("dictionaryLanguageOrNull", "en")
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "de"
-        predictor.setField("multiLanguageManager", languages)
+        detects("de")
         listOf("wir", "haben", "das", "schon", "doch").forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("precondition: German detected").that(predictor.getField("currentLanguage")).isEqualTo("de")
         return bigrams
@@ -1487,9 +1446,7 @@ class LearningFunnelBookkeepingTest {
     fun scenario7RollbackAfterADetectedSwitchTargetsTheStoreTheCommitWroteTo() {
         config.auto_detect_language = true
         config.active_secondary_language = "es"
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
-        predictor.setField("multiLanguageManager", languages)
+        detects("es")
         // English is the loaded dictionary (setLanguage, which a real dictionary load calls).
         predictor.setField("dictionaryLanguageOrNull", "en")
         editor.append("we all really like ")
@@ -1616,13 +1573,12 @@ class LearningFunnelBookkeepingTest {
         config.auto_detect_language = true
         config.active_secondary_language = "es"
         predictor.setField("dictionaryLanguageOrNull", "en")
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns null
-        predictor.setField("multiLanguageManager", languages)
+        val detector = detects("en")
         listOf("we", "all", "really", "like", "cats").forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("no switch yet").that(predictor.autoDetectedSecondaryLanguage()).isNull()
 
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
+        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("es", 0.99f)
         predictor.addWordToContext("perros", true)
         assertWithMessage("switched to the secondary").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
 
@@ -1642,9 +1598,7 @@ class LearningFunnelBookkeepingTest {
         config.auto_detect_language = true
         config.active_secondary_language = "es"
         predictor.setField("dictionaryLanguageOrNull", "en")
-        val languages = mockk<MultiLanguageManager>(relaxed = true)
-        every { languages.detectAndSwitch(any(), any(), any()) } returns "es"
-        predictor.setField("multiLanguageManager", languages)
+        detects("es")
         listOf("el", "perro", "come", "la", "comida").forEach { predictor.addWordToContext(it, true) }
         assertWithMessage("fresh").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
 
@@ -1673,7 +1627,6 @@ class LearningFunnelBookkeepingTest {
         every { bigrams.isLanguageSupported(any()) } returns true
         predictor.setField("bigramModel", bigrams)
         predictor.setField("languageDetector", LanguageDetector())
-        predictor.setField("multiLanguageManager", null)
     }
 
     private val spanish = "la casa de mi madre es muy bonita y no es para el perro".split(" ")
@@ -1755,42 +1708,84 @@ class LearningFunnelBookkeepingTest {
     }
 
     /**
-     * Finding 2: a switch back to the primary below the user's sensitivity needs two detection
-     * runs in a row that favour it; one, or alternating ones, keep the secondary (each switch
-     * clears the window and the receipt).
+     * Finding 2, then audit B6 (2026-11-26): a switch back to the primary below the user's
+     * sensitivity needs two detection windows that favour it WITHOUT sharing evidence: the second
+     * counts only once [WordPredictor.DETECTION_MIN_WORDS] new words came after the first. Two
+     * consecutive commits (windows sharing all but one word) were close to one decision. And
+     * while a weak return is under way the secondary's verdict is no longer fresh, so a bar add
+     * goes to the primary's list.
      */
     @Test
-    fun aWeakSwitchBackNeedsTwoRunsInARow() {
+    fun aWeakSwitchBackNeedsTwoWindowsWithoutSharedWords() {
         useReceiptVocabulary()
         config.auto_detect_language = true
         config.active_secondary_language = "es"
         config.language_detection_sensitivity = Defaults.LANGUAGE_DETECTION_SENSITIVITY
         predictor.setField("dictionaryLanguageOrNull", "en")
-        val bigrams = mockk<BigramModel>(relaxed = true)
-        every { bigrams.isLanguageSupported(any()) } returns true
-        predictor.setField("bigramModel", bigrams)
-        val detector = mockk<LanguageDetector>()
-        every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returnsMany listOf(
-            LanguageDetector.DetectionResult("es", 0.9f),
-            LanguageDetector.DetectionResult("en", 0.3f),
-            LanguageDetector.DetectionResult("es", 0.4f),
-            LanguageDetector.DetectionResult("en", 0.3f),
-            LanguageDetector.DetectionResult("en", 0.3f),
-        )
-        predictor.setField("languageDetector", detector)
-        predictor.setField("multiLanguageManager", null)
+        val detector = detects("es", 0.9f)
         fun lang() = predictor.getField("currentLanguage")
+        fun weakEnglish() = every { detector.detectLanguageFromWordsWithConfidence(any(), any()) } returns
+            LanguageDetector.DetectionResult("en", 0.3f)
 
         (1..5).forEach { predictor.addWordToContext("w$it", true) }
         assertWithMessage("switched").that(lang()).isEqualTo("es")
+        assertWithMessage("fresh").that(predictor.autoDetectedSecondaryLanguage()).isEqualTo("es")
+        weakEnglish()
         (6..10).forEach { predictor.addWordToContext("w$it", true) }
-        assertWithMessage("one run for the primary").that(lang()).isEqualTo("es")
+        assertWithMessage("one window for the primary").that(lang()).isEqualTo("es")
+        assertWithMessage("a weak return under way: not fresh").that(predictor.autoDetectedSecondaryLanguage()).isNull()
         predictor.addWordToContext("w11", true)
-        assertWithMessage("then one for the secondary").that(lang()).isEqualTo("es")
-        predictor.addWordToContext("w12", true)
-        assertWithMessage("one again").that(lang()).isEqualTo("es")
-        predictor.addWordToContext("w13", true)
-        assertWithMessage("two in a row").that(lang()).isEqualTo("en")
+        assertWithMessage("the next commit's window shares four words").that(lang()).isEqualTo("es")
+        (12..14).forEach { predictor.addWordToContext("w$it", true) }
+        assertWithMessage("still within the first window's words").that(lang()).isEqualTo("es")
+        predictor.addWordToContext("w15", true)
+        assertWithMessage("a second window of new words").that(lang()).isEqualTo("en")
+    }
+
+    /**
+     * Audit B1 (2026-11-26): detection needed five words in the LEARN window, which every
+     * sentence boundary empties, so after a Spanish sentence short English ones ("Ok. See you
+     * soon. Thanks!") never ran detection and the field stayed Spanish. The detection window
+     * keeps the field's last words across sentence boundaries.
+     */
+    @Test
+    fun shortEnglishSentencesAfterASpanishOneReturnToThePrimary() {
+        useRealLegacyDetector()
+        spanish.forEach { predictor.addWordToContext(it, true) }
+        predictor.onSentenceBoundary()
+        assertWithMessage("Spanish detected").that(predictor.getField("currentLanguage")).isEqualTo("es")
+
+        for (sentence in listOf("ok", "see you soon", "thanks", "i am on my way", "talk to you later", "bye now")) {
+            sentence.split(" ").forEach { predictor.addWordToContext(it, true) }
+            predictor.onSentenceBoundary()
+        }
+
+        assertWithMessage("English again").that(predictor.getField("currentLanguage")).isEqualTo("en")
+    }
+
+    /**
+     * Audit B3 (2026-11-26): the detected next-word language's static seed was respelled by the
+     * PRIMARY's Swiss-spelling flag. With English primary and German detected (Swiss spelling on)
+     * the seed offered `straße` while German's own lexicon held `strasse`, and next-word dropped it.
+     */
+    @Test
+    fun theDetectedLanguagesSeedIsSpelledLikeItsOwnLexicon() {
+        val ctx = mockk<android.content.Context>(relaxed = true)
+        predictor.setField("context", ctx)
+        val prefs = mockk<android.content.SharedPreferences>(relaxed = true)
+        every { prefs.getBoolean(LanguagePrefs.GERMAN_SWISS_SPELLING, any()) } returns true
+        every { prefs.all } returns mapOf(LanguagePrefs.GERMAN_SWISS_SPELLING to true)
+        mockkStatic(DirectBootAwarePreferences::get_shared_preferences)
+        every { DirectBootAwarePreferences.get_shared_preferences(any()) } returns prefs
+        val bigrams = mockk<BigramModel>(relaxed = true)
+        every { bigrams.getPredictions("die", any()) } returns listOf(StaticBigramSeed.Continuation("straße", 1f))
+        predictor.setField("bigramModel", bigrams)
+        predictor.setField("dictionaryLanguageOrNull", "en")
+        predictor.setField("currentLanguage", "de")
+        predictor.setField("primarySwissSpelling", false)
+
+        assertWithMessage("German's Swiss spelling").that(predictor.getStaticNextWordSeed(listOf("die"), 5).map { it.word })
+            .containsExactly("strasse")
     }
 
     /** F2, second half: inside one field, an English context of 5+ words switches back. */

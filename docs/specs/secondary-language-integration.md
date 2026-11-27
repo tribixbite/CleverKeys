@@ -13,7 +13,7 @@ Multi-language typing system that allows users to type in two languages simultan
 | `src/main/kotlin/tribixbite/cleverkeys/BinaryDictionaryLoader.kt` | V1/V2 loading | Dictionary loading |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `loadSecondaryDictionary()`, `secondaryIndex` | Primary + secondary dictionary management for tap typing (`OptimizedVocabulary`, the neural-era owner of this role, was deleted 2026-08-18 — ADR-011) |
 | `src/main/kotlin/tribixbite/cleverkeys/WordPredictor.kt` | `predictInternal` secondary block | Merges secondary candidates inline (dedup against primary, `secondary_prediction_weight` penalty). The standalone `SuggestionRanker.kt` this row used to name had zero production callers post-ADR-011 and was deleted 2026-09-06 (audit C-6) |
-| `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `detectLanguageFromWordsWithConfidence()` | Word/char-pattern language detection behind `MultiLanguageManager.detectAndSwitch` (`UnigramLanguageDetector`, the unigram-profile detector this row used to name, was deleted 2026-08-28 — ARC-006, write-only) |
+| `src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt` | `detectLanguageFromWordsWithConfidence()` | Word/char-pattern language detection behind `WordPredictor`'s Auto-Detect (`UnigramLanguageDetector`, the unigram-profile detector this row used to name, was deleted 2026-08-28 — ARC-006, write-only) |
 | `src/main/kotlin/tribixbite/cleverkeys/langpack/LanguagePackManager.kt` | Pack import | Language pack storage |
 
 ## Architecture
@@ -47,8 +47,7 @@ Multi-language typing system that allows users to type in two languages simultan
 > The diagram used to end in a `UnigramLanguageDetector` box ("sliding window of 10 words,
 > adjusts scoring multiplier"). That class was **deleted 2026-08-28 (ARC-006)**: it never
 > adjusted any multiplier after `OptimizedVocabulary` was removed — it was fed on every
-> commit and read by nobody. Auto-detection runs through `LanguageDetector` +
-> `MultiLanguageManager.detectAndSwitch`.
+> commit and read by nobody. Auto-detection runs through `LanguageDetector` in `WordPredictor`.
 
 ## Configuration
 
@@ -61,7 +60,7 @@ Multi-language typing system that allows users to type in two languages simultan
 | Detection Sensitivity | `pref_language_detection_sensitivity` | 0.6 | Minimum detector confidence to switch (higher switches less) |
 
 Auto-detection never switches to a language outside primary + secondary (2026-11-25,
-`MultiLanguageManager.detectAndSwitch(…, allowed)`, `LearningFunnelBookkeepingTest`).
+`detectLanguageFromWordsWithConfidence(…, chosen)`, `LearningFunnelBookkeepingTest`).
 Both detection branches switch through `WordPredictor.setLanguage` (2026-11-26), so a detected
 switch loads the new language's static next-word model and disabled words. The 0.6 default was
 swept on held-out text (`docs/eval/2026-11-26-auto-detect-threshold.md`): no value in 0.40–0.60

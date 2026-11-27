@@ -222,8 +222,18 @@ class WordPredictor : Predictor {
         private const val MAX_EDIT_DISTANCE = 2
         private const val MAX_RECENT_WORDS = 20 // Keep last 20 words for language detection
 
-        /** Detection runs in a row that return next-word to the primary below the sensitivity. */
+        /** Detection windows of new words that return next-word to the primary below the sensitivity. */
         internal const val WEAK_RETURN_RUNS = 2
+
+        /** Words [detectionWords] needs before Auto-Detect runs, and between two weak runs. */
+        internal const val DETECTION_MIN_WORDS = 5
+
+        /**
+         * The most recent words Auto-Detect scores: the old learn-window cap. The detector's
+         * common-word score grows with the number of words, so a shorter window would lower every
+         * score against the user's sensitivity (8 words never cleared 0.6 on a Spanish sentence).
+         */
+        internal const val DETECTION_WINDOW = 20
         private const val PREFIX_INDEX_MAX_LENGTH = 3 // Index prefixes up to 3 chars
 
         // ── Prefix-score constants (calculatePrefixScore) ──────────────
@@ -421,8 +431,10 @@ class WordPredictor : Predictor {
     // C-8 (2026-09-06 audit): the PersonalizedScorer field that used to sit here was
     // assigned in setContext and never read — the real scoring path queries
     // personalizationEngine directly in resolveScoreBreakdown. Class deleted.
+    // Auto-Detect's one detector. Audit B2 (2026-11-26): the MultiLanguageManager branch beside it
+    // was never built in production (PredictionCoordinator calls setContext before setConfig, so
+    // enable_multilang read as false) and is deleted with its class.
     private var languageDetector: LanguageDetector? = LanguageDetector()
-    private var multiLanguageManager: MultiLanguageManager? = null // Phase 8.3: Multi-language models
     /**
      * The NEXT-WORD language: the bigram tables, the static continuations, the learned context
      * model and the learn receipts. [setLanguage] sets it with the dictionary; an Auto-Detect
@@ -637,18 +649,9 @@ class WordPredictor : Predictor {
             if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "PersonalizationEngine initialized for adaptive predictions")
         }
 
-        // Phase 8.3: Initialize Multi-Language support if enabled.
-        // Phase 8.4's MultiLanguageDictionaryManager was deleted with the neural engine
-        // (2026-08-18): it wrapped an OptimizedVocabulary per language and was constructed
-        // here but never read — per-language tap dictionaries come from DictionaryManager.
-        val enableMultiLang = config?.enable_multilang ?: false
-        if (enableMultiLang) {
-            if (multiLanguageManager == null) {
-                val primaryLang = config?.primary_language ?: "en"
-                multiLanguageManager = MultiLanguageManager(primaryLang)
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "MultiLanguageManager initialized (primary: $primaryLang)")
-            }
-        }
+        // TODO(init order): PredictionCoordinator calls setContext before setConfig, so anything
+        // built here from [config] sees null/defaults. It kept the MultiLanguageManager (deleted
+        // 2026-11-26, audit B2) from ever being built; do not add config-dependent setup here.
 
         // Initialize dictionary observer for automatic updates
         if (dictionaryObserver == null) {
@@ -1056,8 +1059,10 @@ class WordPredictor : Predictor {
         if (language != currentLanguage) {
             invalidateExactLearningCommit()
             secondaryVerdictFresh = false
-            weakPrimaryRuns = 0
+            resetWeakReturn()
             recentWords.clear()
+            // Fresh evidence for the new state: the switch's own window does not count again.
+            detectionWords?.clear()
             detectedDisabledCache = null
         }
         currentLanguage = language
@@ -1071,16 +1076,6 @@ class WordPredictor : Predictor {
 
         // Keep the learned context LM language-isolated (2026-08-06 keying fix)
         contextModel?.language = language
-
-        // Phase 8.3: Switch multi-language models if enabled
-        multiLanguageManager?.let {
-            val switched = it.switchLanguage(language)
-            if (switched) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "MultiLanguageManager switched to: $language")
-            } else {
-                Log.w(TAG, "Failed to switch MultiLanguageManager to: $language")
-            }
-        }
     }
 
     /**
@@ -1227,9 +1222,14 @@ class WordPredictor : Predictor {
         withLearningStoreLocks(gates, fieldAllowsPersonalizedLearning) {
             recordContextCommit(word, gates, fieldAllowsPersonalizedLearning)
         }
-        // A replacement of the newest token must not switch language halfway through its
-        // transaction. Ordinary subsequent commits retain the existing detection behavior.
-        if (recentWords.size >= 5) {
+        // Auto-Detect reads its own window (audit B1): the field's last words, across sentence
+        // boundaries, which empty the learn window. Detection needed five words in the LEARN
+        // window, so short sentences ("Ok. See you soon. Thanks!") never ran it.
+        val window = detectionWords ?: ArrayList<String>().also { detectionWords = it }
+        window.add(word.lowercase().trim())
+        while (window.size > DETECTION_WINDOW) window.removeAt(0)
+        wordsSinceWeakRun++
+        if (window.size >= DETECTION_MIN_WORDS) {
             tryAutoLanguageDetection()
         } else {
             // A detection window is still filling (it is cleared at every switch): a layout bound
@@ -1444,6 +1444,26 @@ class WordPredictor : Predictor {
     private var weakPrimaryRuns = 0
 
     /**
+     * Commits since the last weak run counted toward [weakPrimaryRuns] (audit B6): a run counts
+     * only once [DETECTION_MIN_WORDS] new words came after the previous one, so the two windows
+     * of a weak return share no evidence. Two consecutive commits (windows sharing all but one
+     * word) were close to one decision.
+     */
+    private var wordsSinceWeakRun = 0
+
+    /**
+     * The field's last committed words, oldest first, for Auto-Detect only (audit B1): it keeps
+     * words across sentence boundaries, which empty the learn window; a new field, a context clear
+     * and a language switch empty it. Null in an Objenesis-built test double until first used.
+     */
+    private var detectionWords: MutableList<String>? = null
+
+    private fun resetWeakReturn() {
+        weakPrimaryRuns = 0
+        wordsSinceWeakRun = 0
+    }
+
+    /**
      * A new input FIELD (another app, field or input type; not a restart or a re-show of the same
      * one, see `SuggestionHandler.onInputFieldStarted`): Auto-Detect's
      * verdict from the previous one no longer counts, and next-word starts in the primary's
@@ -1453,24 +1473,11 @@ class WordPredictor : Predictor {
      */
     override fun onInputSessionChanged() {
         secondaryVerdictFresh = false
+        detectionWords?.clear()
+        resetWeakReturn()
         if (dictionaryLanguageOrNull != null && currentLanguage != dictionaryLanguage) {
             switchNextWordLanguage(dictionaryLanguage)
         }
-    }
-
-    /**
-     * Does the current window, scored between the two chosen languages, favour the PRIMARY while
-     * next-word is on the secondary? Returning needs no confidence threshold: the primary is the
-     * default, leaving it takes the user's sensitivity, and keeping the secondary takes evidence
-     * that still names it. Note10+ 2026-11-26 (F2): the detector's score is absolute, English
-     * text typically scores below the default 0.6, so a switch to Spanish never came back.
-     */
-    private fun windowFavoursPrimary(chosen: Set<String>): Boolean {
-        val primary = dictionaryLanguage
-        if (dictionaryLanguageOrNull == null || currentLanguage == primary || primary !in chosen) return false
-        val detector = languageDetector ?: return false
-        if (!LanguageDetector.canChooseBetween(chosen)) return false
-        return detector.detectLanguageFromWordsWithConfidence(recentWords, chosen)?.language == primary
     }
 
     /**
@@ -1501,53 +1508,38 @@ class WordPredictor : Predictor {
 
         val sensitivity = config?.language_detection_sensitivity ?: Defaults.LANGUAGE_DETECTION_SENSITIVITY
 
-        // Use MultiLanguageManager for detection and switching if available
-        if (multiLanguageManager != null) {
-            val detected = multiLanguageManager?.detectAndSwitch(recentWords, sensitivity, chosen)
-            if (detected != null && detected != currentLanguage && detected in chosen) {
-                if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
-                    Log.d(TAG, "MultiLanguageManager auto-detected and switched to: $detected")
-                }
-                // A detected switch moves the next-word language only (Fable audit 2026-11-26):
-                // the new language's `.cklm` loads off the main thread, the window that
-                // triggered detection is cleared (L6) and the exact learn receipt expires; the
-                // primary dictionary and its disabled / custom words stay.
-                switchNextWordLanguage(detected)
-            }
-            if (detected != null && detected in chosen) {
-                weakPrimaryRuns = 0
-                noteDetectionVerdict(detected)
-            } else if (windowFavoursPrimary(chosen)) {
-                // No confident switch, but the window reads as the primary: next-word returns
-                // once that holds for [WEAK_RETURN_RUNS] runs in a row.
-                if (++weakPrimaryRuns >= WEAK_RETURN_RUNS) switchNextWordLanguage(dictionaryLanguage)
-            } else {
-                weakPrimaryRuns = 0
-            }
-            // The manager's answer stands, a "no switch" (null) included: the legacy detector
-            // below used to run after it at a fixed threshold over all six of its languages and
-            // could switch anyway (pre-tag review 2026-11-25 S7).
-            return
-        }
-
-        // Legacy detection, only when no MultiLanguageManager exists, by the manager's rules: the
-        // chosen pair only (a pair it cannot score switches nothing, as Settings says), at the
-        // user's sensitivity.
+        // The chosen pair only (a pair the detector cannot score switches nothing, as Settings
+        // says), at the user's sensitivity.
         val detector = languageDetector ?: return
         if (!LanguageDetector.canChooseBetween(chosen)) return
-        val result = detector.detectLanguageFromWordsWithConfidence(recentWords, chosen) ?: return
+        val window = detectionWords ?: return
+        val result = detector.detectLanguageFromWordsWithConfidence(window, chosen) ?: return
         val detectedLanguage = result.language
-        // Back to the primary needs no threshold ([windowFavoursPrimary]), but [WEAK_RETURN_RUNS]
-        // runs in a row; away from it, the user's sensitivity.
         val confident = result.confidence >= sensitivity
-        val weakBackToPrimary = !confident && dictionaryLanguageOrNull != null &&
-            detectedLanguage == dictionaryLanguage && currentLanguage != dictionaryLanguage
-        weakPrimaryRuns = if (weakBackToPrimary) weakPrimaryRuns + 1 else 0
+        val onSecondary = dictionaryLanguageOrNull != null && currentLanguage != dictionaryLanguage
+        // Back to the primary needs no threshold, but [WEAK_RETURN_RUNS] windows of NEW words
+        // (audit B6); away from it, the user's sensitivity.
+        val weakBackToPrimary = !confident && onSecondary && detectedLanguage == dictionaryLanguage
+        if (weakBackToPrimary) {
+            // A return is under way: the secondary's verdict is no longer fresh (a bar add now
+            // goes to the primary's list), whether or not this window counts.
+            secondaryVerdictFresh = false
+            if (weakPrimaryRuns == 0 || wordsSinceWeakRun >= DETECTION_MIN_WORDS) {
+                weakPrimaryRuns++
+                wordsSinceWeakRun = 0
+            }
+        } else {
+            resetWeakReturn()
+        }
         if ((confident || weakPrimaryRuns >= WEAK_RETURN_RUNS) && detectedLanguage in chosen) {
             if (detectedLanguage != currentLanguage && bigramModel?.isLanguageSupported(detectedLanguage) == true) {
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
                     Log.d(TAG, "Auto-detected language change from $currentLanguage to $detectedLanguage")
                 }
+                // A detected switch moves the next-word language only (Fable audit 2026-11-26):
+                // the new language's `.cklm` loads off the main thread, the learn window is
+                // cleared (L6) and the exact learn receipt expires; the primary dictionary and
+                // its disabled / custom words stay.
                 switchNextWordLanguage(detectedLanguage)
             }
             noteDetectionVerdict(detectedLanguage)
@@ -1574,7 +1566,9 @@ class WordPredictor : Predictor {
     override fun clearContext() {
         invalidateExactLearningCommit()
         secondaryVerdictFresh = false
-        weakPrimaryRuns = 0
+        resetWeakReturn()
+        // The field ends (flushLearnedData at onFinishInputView) or an explicit edit rewrote it.
+        detectionWords?.clear()
         recentWords.clear()
         lastRecordedCommit = null
     }
@@ -1656,8 +1650,9 @@ class WordPredictor : Predictor {
      */
     override fun onSentenceBoundary() {
         invalidateExactLearningCommit()
+        // The verdict was the ended sentence's; the next commit re-detects over [detectionWords],
+        // which a sentence boundary keeps (audit B1), as it keeps a weak return under way.
         secondaryVerdictFresh = false
-        weakPrimaryRuns = 0
         recentWords.clear()
     }
 
@@ -1808,7 +1803,11 @@ class WordPredictor : Predictor {
         val seed = bigramModel?.getPredictions(prevWord, maxResults) ?: emptyList()
         // D2: the model spells Germany's way (`straße`); with Swiss spelling the dictionary the
         // seed is checked against does not, so the continuations are shown respelled, a twin once.
-        val shown = if (!primarySwissSpelling) seed else SwissSpelling.foldDistinct(seed, { it.word }) { c, word -> c.copy(word = word) }
+        // By the NEXT-WORD language's flag (audit B3): a German next-word language detected over an
+        // English primary was folded by English's (never), and next-word then dropped `straße`
+        // because German's own lexicon holds `strasse`.
+        val fold = if (currentLanguage == dictionaryLanguage) primarySwissSpelling else swissSpellingFor(context, currentLanguage)
+        val shown = if (!fold) seed else SwissSpelling.foldDistinct(seed, { it.word }) { c, word -> c.copy(word = word) }
         // A detected next-word language's own disabled words (2026-11-26, [detectedNextWordDisabled]).
         val disabled = detectedNextWordDisabled() ?: return shown
         return shown.filterNot { isDisabledIn(disabled, it.word) }

@@ -159,22 +159,25 @@ class LanguageDetectionEvalTest {
     }
 
     /**
-     * Types [stream] with production rules: the real [MultiLanguageManager] choosing between
-     * [pair], `WordPredictor`'s window (last 20 words, detection from 5, cleared on a switch).
+     * Types [stream] with the rules the eval was pre-registered with: the real [LanguageDetector]
+     * choosing between [pair] at [threshold], over a window of the last 20 words, detection from
+     * 5, cleared on a switch. (It ran through `MultiLanguageManager.detectAndSwitch`, deleted
+     * 2026-11-26 in audit B2 with the same rule; WordPredictor's production window has since
+     * changed, see `WordPredictor.DETECTION_WINDOW`, so these figures describe the registered rule.)
      * @return the language after each word
      */
     private fun typeProduction(stream: List<String>, start: String, pair: Set<String>, threshold: Float): List<String> {
-        val manager = MultiLanguageManager(start)
+        val detector = LanguageDetector()
         val window = ArrayList<String>()
         var current = start
         val after = ArrayList<String>(stream.size)
         for (w in stream) {
             window += w
             while (window.size > 20) window.removeAt(0)
-            if (window.size >= 5) {
-                val switched = manager.detectAndSwitch(window, threshold, pair)
-                if (switched != null && switched != current && switched in pair) {
-                    current = switched
+            if (window.size >= 5 && LanguageDetector.canChooseBetween(pair)) {
+                val result = detector.detectLanguageFromWordsWithConfidence(window, pair)
+                if (result != null && result.confidence >= threshold && result.language != current) {
+                    current = result.language
                     window.clear()
                 }
             }

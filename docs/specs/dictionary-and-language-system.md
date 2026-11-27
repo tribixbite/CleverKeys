@@ -148,14 +148,18 @@ There is no unigram-profile model and no `LanguageScore`/`shouldSwitch` (the
 **common-word arrays** for en, es, fr, pt, de and sv (`initialize*Patterns`), scored by
 `detectLanguageFromWordsWithConfidence(words): DetectionResult(language, confidence)`.
 
-Trigger (`WordPredictor.tryAutoLanguageDetection`, `WordPredictor.kt:1074`): after each commit,
-once `recentWords.size >= 5` (window capped at `MAX_RECENT_WORDS = 20`), and only when
-`auto_detect_language` is on (default `true`) and the layout has **no** language binding
-(`Config.layout_bound_language == null`, GH #186/#61). It calls
-`MultiLanguageManager.detectAndSwitch(recentWords, language_detection_sensitivity)` (default
-threshold 0.6); on a switch the predictor invalidates its exact-learning commit, moves
-`bigramModel`/`contextModel` to the new language and clears the window so prior-language
-words are not learned under the new one.
+Trigger (`WordPredictor.tryAutoLanguageDetection`): after each commit, once the detection window
+(`detectionWords`: the field's last `DETECTION_WINDOW = 20` words, kept across sentence boundaries,
+emptied by a new field, a context clear and a switch) holds `DETECTION_MIN_WORDS = 5` words, and
+only when `auto_detect_language` is on (default `true`), a secondary language is chosen and the
+layout has **no** language binding (`Config.layout_bound_language == null`, GH #186/#61). It scores
+the window between the two chosen languages (`detectLanguageFromWordsWithConfidence(window,
+chosen)`). Leaving the primary needs `language_detection_sensitivity` (default 0.6); returning to
+it needs no threshold but two windows of new words that favour it (`WEAK_RETURN_RUNS`, 2026-11-26
+audits). On a switch the predictor invalidates its exact-learning commit, moves
+`bigramModel`/`contextModel` to the new language and clears the learn window so prior-language
+words are not learned under the new one. (A `MultiLanguageManager` branch existed until
+2026-11-26; it was never built in production and was deleted, audit B2.)
 
 ### Dual-Dictionary Mode (as built)
 
@@ -192,10 +196,9 @@ Dutch was secondary changed nothing until the next language change or keyboard r
 
 ### Manual Language Switching (as built)
 
-`MultiLanguageManager.switchLanguage(newLanguage): Boolean` (`MultiLanguageManager.kt:66`) only
-validates the code (`isLanguageSupported`) and records `activeLanguage`; it loads **no models**
-(there is no ONNX session per language — the swipe encoders are per-script packs owned by the
-CTC engine, see `ctc-swipe-engine.md`). Dictionary/n-gram state follows through
+No language switch loads ONNX models (there is no session per language — the swipe encoders are
+per-script packs owned by the CTC engine, see `ctc-swipe-engine.md`). Dictionary/n-gram state
+follows through
 `DictionaryManager.setLanguage(code)` (`DictionaryManager.kt:157`), `BigramModel.setLanguage`,
 and the `WordPredictor` reload driven by `PredictionCoordinator`. A layout with a `language`
 binding (GH #186/#61) sets `Config.layout_bound_language` and wins over both the manual
@@ -220,7 +223,6 @@ None of `DictionaryWord`, `WordSource` or `LanguageState` exist. The types in pl
 | Class | Purpose |
 |-------|---------|
 | `DictionaryManager` | Singleton holding active WordPredictor instances, handles language lifecycle |
-| `MultiLanguageManager` | Tracks the active language code, validates switches (`switchLanguage`), runs `detectAndSwitch` over `LanguageDetector`; owns no ONNX sessions |
 | `WordPredictor` (inline) | Merges primary + secondary candidates in `predictInternal` via `calculateUnifiedScore` × `secondary_prediction_weight` (the standalone `SuggestionRanker` had zero production callers post-ADR-011 and was deleted 2026-09-06 — audit C-6) |
 | `LanguageDetector` | Word/character-pattern language detection (the unigram-frequency `UnigramLanguageDetector` was deleted 2026-08-28 — ARC-006, write-only after `OptimizedVocabulary` went) |
 | `AccentNormalizer` | Unicode normalization (NFD) + accent stripping |

@@ -13,8 +13,8 @@ import java.io.File
 
 /**
  * Auto-Detect Language chooses between the user's two languages only (pre-tag review S7,
- * 2026-11-25), with the real [LanguageDetector] scores. Mock tier only for `android.util.Log`
- * ([MultiLanguageManager] logs every switch); nothing else is mocked.
+ * 2026-11-25), with the real [LanguageDetector] scores. Mock tier only for `android.util.Log`;
+ * nothing else is mocked.
  *
  * Two defects this pins:
  * - The detector took the best of ITS six languages and the manager filtered to the chosen two
@@ -46,39 +46,20 @@ class AutoDetectChosenLanguagesTest {
     @After
     fun tearDown() = unmockkStatic(Log::class)
 
+    // The switch rules over these scores (the chosen pair, the sensitivity, a pair the detector
+    // cannot score switching nothing) are WordPredictor's since the MultiLanguageManager that
+    // applied them in tests only was deleted (audit B2, 2026-11-26): see
+    // LearningFunnelBookkeepingTest.theLegacyDetectorChoosesAmongTheChosenPairAtTheUsersSensitivity.
+
     @Test
-    fun spanishThatScoresAsPortugueseSwitchesToSpanishWhenEnglishAndSpanishAreChosen() {
-        val manager = MultiLanguageManager("en")
-        val unrestricted = manager.getLanguageConfidence(spanishScoredAsPortuguese)
+    fun theChosenPairsBestClearsALooseSensitivityWhereTheArgmaxIsNotChosen() {
+        val detector = LanguageDetector()
         assertWithMessage("precondition: the detector's own argmax is not a chosen language")
-            .that(unrestricted?.language).isEqualTo("pt")
-
-        val switched = manager.detectAndSwitch(spanishScoredAsPortuguese, loosest, setOf("en", "es"))
-        assertWithMessage("the best of the CHOSEN languages, above the sensitivity").that(switched).isEqualTo("es")
-        assertThat(manager.getCurrentLanguage()).isEqualTo("es")
-    }
-
-    @Test
-    fun theSensitivityStillGatesTheChosenLanguagesBest() {
-        val manager = MultiLanguageManager("en")
-        assertWithMessage("Spanish scores ~0.42: below a 0.6 sensitivity nothing switches")
-            .that(manager.detectAndSwitch(spanishScoredAsPortuguese, 0.6f, setOf("en", "es"))).isNull()
-        assertThat(manager.getCurrentLanguage()).isEqualTo("en")
-    }
-
-    @Test
-    fun aPairWithALanguageTheDetectorCannotScoreNeverSwitches() {
-        // Italian is a bundled secondary language with no detector profile. Switching to English
-        // on English text would strand the keyboard there: Italian text can never score.
-        val manager = MultiLanguageManager("it")
-        val unrestricted = manager.getLanguageConfidence(english)
-        assertWithMessage("precondition: English text clears the sensitivity as English")
-            .that(unrestricted?.language).isEqualTo("en")
-        assertThat(unrestricted!!.confidence).isAtLeast(loosest)
-
-        assertWithMessage("no half-working detection for it + en")
-            .that(manager.detectAndSwitch(english, loosest, setOf("it", "en"))).isNull()
-        assertThat(manager.getCurrentLanguage()).isEqualTo("it")
+            .that(detector.detectLanguageFromWordsWithConfidence(spanishScoredAsPortuguese)?.language).isEqualTo("pt")
+        val chosen = detector.detectLanguageFromWordsWithConfidence(spanishScoredAsPortuguese, setOf("en", "es"))
+        assertWithMessage("the best of the CHOSEN languages").that(chosen?.language).isEqualTo("es")
+        assertWithMessage("above the loosest sensitivity").that(chosen!!.confidence).isAtLeast(loosest)
+        assertWithMessage("Spanish scores ~0.42: below a 0.6 sensitivity").that(chosen.confidence).isLessThan(0.6f)
     }
 
     @Test

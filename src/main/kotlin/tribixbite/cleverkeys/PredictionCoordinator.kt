@@ -135,6 +135,10 @@ class PredictionCoordinator(
         MemoryProbe.mark("dictionaryManager.userWordsOnly", settle = true) { "lang=$primaryLang" }
 
         wordPredictor = WordPredictor().apply {
+            // TODO(init order): setContext runs before setConfig, so what setContext builds from
+            // the config sees its defaults (it kept the deleted MultiLanguageManager from ever
+            // being built). Swapping them changes when the learned stores and observers start;
+            // measure before reordering.
             setContext(context) // Enable disabled words filtering
             setConfig(config)
             adaptationManager?.let { setUserAdaptationManager(it) }
@@ -283,8 +287,9 @@ class PredictionCoordinator(
     // The detector class and its `assets/unigrams/*.txt` profiles are gone with it. Bringing
     // it back means writing the CONSUMER first (auto language switching is the only design
     // that ever wanted it) together with the pure test ADR-011 §E promised — the feed on its
-    // own is not evidence of anything. Auto-detection today runs through the separate
-    // `LanguageDetector`/`MultiLanguageManager` pair, which is unaffected by this deletion.
+    // own is not evidence of anything. Auto-detection today runs through `LanguageDetector` in
+    // WordPredictor (the `MultiLanguageManager` beside it was deleted 2026-11-26, audit B2: it was
+    // never built in production), which is unaffected by this deletion.
 
     /**
      * Gets the WordPredictor instance.

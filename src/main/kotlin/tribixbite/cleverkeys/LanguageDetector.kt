@@ -24,8 +24,8 @@ class LanguageDetector {
          * Whether detection can choose between [languages]: at least two distinct languages, each
          * one the detector has a profile for. With a language it cannot score (Italian, Dutch, an
          * imported pack) it could switch to the other language and never back, so Auto-Detect is
-         * neither offered (Settings) nor run (`MultiLanguageManager.detectAndSwitch`) for that
-         * pair (pre-tag review S7, 2026-11-25).
+         * neither offered (Settings) nor run (`WordPredictor`'s Auto-Detect) for that pair
+         * (pre-tag review S7, 2026-11-25).
          */
         fun canChooseBetween(languages: Collection<String>): Boolean {
             val distinct = languages.toSet()
