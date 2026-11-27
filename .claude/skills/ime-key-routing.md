@@ -228,7 +228,7 @@ These views live inside the IME's own view tree, so:
 - **inputType = TYPE_NULL**: Always set this on EditText within IME views. Without it, Android will try to show its own soft keyboard (which IS the current keyboard — infinite recursion). `setSelection()` and `selectionStart/End` operate on Editable spans and work correctly regardless of inputType.
 - **Cursor clamping**: Always use `.coerceIn(0, editable.length)` when accessing `selectionStart`/`selectionEnd`. View recycling can leave stale cursor positions.
 - **View recycling**: In `BaseAdapter.getView()`, use content-identity matching (not position) for tracking which entry is being edited. List positions shift when entries are added/deleted.
-- **TextWatcher accumulation**: When using `EditText` in a recycled view, remove the old `TextWatcher` before adding a new one. Otherwise watchers accumulate on each `getView()` call. Use `view.getTag()`/`setTag()` to track the active TextWatcher per view instance.
+- **TextWatcher accumulation**: When using `EditText` in a recycled view, remove the old `TextWatcher` before adding a new one. Otherwise watchers accumulate on each `getView()` call. Use `view.getTag()`/`setTag()` to track the active TextWatcher per view instance. Remove it BEFORE the bind's `setText`: `TextView.setText` notifies every attached watcher even when the text is unchanged, so a watcher left on during a re-bind reacts to the re-bind as if the user typed (it hid the inline save error the re-bind was showing, `584860d70`, 2026-11-26).
 - **PopupWindow in IME**: Must set `isFocusable = false` to prevent panel dismiss.
 - **View.post() for detached views**: Use `Handler(Looper.getMainLooper()).post()` instead of `view.post()` — detached views silently drop runnables.
 
@@ -245,28 +245,51 @@ When a `BaseAdapter`'s `getView()` renders an `EditText` whose height can change
 2. **Dynamic recovery property** (`activeEditingEditText`): A computed property that validates the cached reference via `visibility == VISIBLE` AND `windowToken != null`, then falls back to scanning live child views. All text manipulation methods use this instead of the raw field. **CRITICAL**: Must check visibility, not just windowToken. When `loadDataAsync()` completes during edit mode, `notifyDataSetChanged()` can recycle the cached editField to a different position (GONE) while it retains a valid windowToken. Without the visibility check, setText goes to the invisible view.
 
 3. **Setup OUTSIDE the guard**: Everything except the reference cache must run on every `getView()` call, because ListView may provide a different view instance for the same position:
+   - remove the previous bind's TextWatcher (tag-based) BEFORE `setText` — see the gotcha above
+   - read the caret to restore (`editingCursorPosition`) BEFORE `setText`: the field
+     (`ClipboardEditField`) reports every selection change, `setText`'s reset to 0 included
    - `setSelection(cursorPos)` — `setText()` resets cursor to 0; must restore after every setText
+   - the field's two listeners (`selectionListener`, `textMenuHandler`, below), set after `setSelection`
    - `setOnClickListener` — new button widgets need their handlers
-   - TextWatcher (with tag-based cleanup to prevent accumulation)
+   - add this bind's TextWatcher (it captures this row's save button and error line)
+   A normal-mode bind removes the watcher and clears both listeners, so a recycled editor field
+   never reports for the row being edited.
 
 4. **Direct state sync**: Text manipulation methods must update `editingInProgressText` directly (not rely solely on TextWatcher), because the TextWatcher may be on a different view instance.
 
 ```
-getView() call flow for editing row:
-┌──────────────────────────────────────────────┐
-│ ALWAYS (every getView call):                 │
-│  • editField.setText(displayText)            │
-│  • editField.setSelection(cursorPos)         │
-│  • saveButton.setOnClickListener(...)        │
-│  • cancelButton.setOnClickListener(...)      │
-│  • deleteButton.setOnClickListener(...)      │
-│  • TextWatcher (tag-based: remove old, add)  │
-├──────────────────────────────────────────────┤
-│ GUARD (if editingEditText == null):          │
-│  • editingEditText = editField               │
-│  (prevents scrap view reference theft)       │
-└──────────────────────────────────────────────┘
+getView() call flow for editing row (order matters):
+┌────────────────────────────────────────────────────────────┐
+│ ALWAYS (every getView call):                               │
+│  1. remove the previous bind's TextWatcher (tag-based)     │
+│  2. cursorPos = editingCursorPosition ?: text.length       │
+│  3. editField.setText(displayText)   ← no watcher attached │
+│  4. editField.setSelection(cursorPos)                      │
+│  5. selectionListener = { _, end → editingCursorPosition } │
+│     textMenuHandler = { id → onEditFieldMenuItem(id) }     │
+│  6. save / cancel / delete setOnClickListener(...)         │
+│  7. add this bind's TextWatcher, tag it                    │
+├────────────────────────────────────────────────────────────┤
+│ GUARD (if editingEditText == null):                        │
+│  • editingEditText = editField                             │
+│  (prevents scrap view reference theft)                     │
+└────────────────────────────────────────────────────────────┘
 ```
+
+Why 1–2 come first (2026-11-26): with the old order (setText, then "remove old, add"), the previous
+watcher saw the re-bind's setText as typing and cleared `editingErrorRes`, so every refused save
+looked like a dead checkmark; and a caret read after setText would be setText's 0 (the field's
+`selectionListener` reports it). The two listeners (`ClipboardEditField`):
+- `selectionListener` — every caret / selection change (a tap, a handle drag, a long press, the
+  keyboard's own setText / setSelection) becomes `editingCursorPosition`, so a re-bind keeps the
+  caret where the user put it. Ignored outside an edit.
+- `textMenuHandler` — the field's text toolbar (long press, double tap, the Paste bubble) offers
+  Cut / Copy / Paste to the editor's own `cutFromEditText` / `copyFromEditText` /
+  `pasteToEditText` first (the #156 private-entry confirmation, an undo step, the clip follow);
+  everything else stays the platform's.
+Tests: `ClipboardEditSaveErrorTest`, `ClipboardEditCaretTrackingTest`, `ClipboardEditCutFollowTest`
+(mock; `ClipboardEditorRowFixture` gives a field whose setText resets the selection and notifies
+every attached watcher, as the platform does).
 
 ## Testing
 
