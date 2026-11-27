@@ -32,7 +32,11 @@ class CtcSlateAssemblyWiringTest {
         assertWithMessage(
             "the slate's disabled filter and user-word placement must be built from the exact " +
                 "user-word list and disabled set the merge consumed, in the same trie build"
-        ).that(lexiconFor).contains("CtcUserWords.of(userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs))")
+        ).that(lexiconFor).contains("CtcUserWords.of(\n            userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs),")
+        assertWithMessage(
+            "a joiner user word reaches the slate only through the overlay's preference table, so " +
+                "the same table must tell the assembly which candidate it was shown for (audit C6)"
+        ).that(lexiconFor).contains("preferredForms = userPreferences.mapValues { it.value.form },")
         assertWithMessage(
             "the disabled set is read per decode from the per-language preference the tap path " +
                 "reads (`disabled_words_<lang>`, via UserLexiconInputs), never from a copy of its own: " +

@@ -773,13 +773,6 @@ class CtcEngineAdapter(
         if (Thread.currentThread().isInterrupted) throw InterruptedException("Lexicon load cancelled")
         val merged = CtcLexiconMerge.merge(basePairs, userWordPairs, disabled)
         val ordinals = CtcLexiconMerge.ordinals(merged)
-        // The slate's view of the same personal dictionary (F1/F3, 2026-11-26): the words the merge
-        // just dropped as disabled — the alias-key injection below can put a disabled contraction
-        // key back into the trie, so the finished slate is filtered against them — and the user
-        // words' stored frequencies, which place a secondary-list word as the primary would.
-        // Built from the merge's own inputs, re-read from the preferences on every decode above,
-        // so it is exactly as fresh as the trie (the memo key hashes this disabled set).
-        val userWords = CtcUserWords.of(userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs))
         MemoryProbe.mark("ctc.mergeAndOrdinals") { "merged=${merged.size}" }
 
         val priorities = SwipePriority.parseMap(priorityJson)
@@ -864,6 +857,17 @@ class CtcEngineAdapter(
                 }
             }
         }
+        // The slate's view of the same personal dictionary (F1/F3, 2026-11-26): the words the merge
+        // dropped as disabled — the alias-key injection below can put a disabled contraction key
+        // back into the trie, so the finished slate is filtered against them — the user words'
+        // stored frequencies, which place a secondary-list word as the primary would, and the
+        // joiner words the overlay shows for a decoded surface (audit C6). Built from the merge's
+        // own inputs, re-read from the preferences on every decode above, so it is exactly as
+        // fresh as the trie (the memo key hashes this disabled set).
+        val userWords = CtcUserWords.of(
+            userWordPairs, disabled, CtcLexiconMerge.baseFloor(basePairs),
+            preferredForms = userPreferences.mapValues { it.value.form },
+        )
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) {
             Log.d(TAG, "CTC trie[$lang]: ${trie.wordCount} words in " +
                 "${System.currentTimeMillis() - start}ms (v=$version)")

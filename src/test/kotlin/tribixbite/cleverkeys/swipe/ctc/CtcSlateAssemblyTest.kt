@@ -192,6 +192,68 @@ class CtcSlateAssemblyTest {
         assertThat(merged.indexOf("parcero")).isGreaterThan(merged.indexOf("parcels"))
     }
 
+    // ── C6 (audit C): a joiner user word reaches the slate only through the overlay ──────────
+
+    @Test
+    fun `a joiner user word in the secondary list is placed like any other`() {
+        // French secondary under English: `l'une` is shown through the overlay for the decoded
+        // `lune`, which is a word of its own and stays one slot behind it.
+        val fr = CtcScoringParams.presetFor("fr", topK = 8)
+        val primary = englishSlate(cand("lunar", -6.0, 200.0, en), cand("lines", -9.0, 150.0, en))
+        val lune = cand("lune", -3.0, 255.0, fr)
+        val secondary = CtcDecodedSlate(
+            "fr", listOf(lune, cand("lunes", -6.0, 200.0, fr)),
+            listOf("l'une", "lune", "lunes"), listOf(700, 700, 300), fr,
+            CtcUserWords.of(listOf("l'une" to 255), emptySet(), 1.0, preferredForms = mapOf("lune" to "l'une")),
+        )
+        assertThat(CtcSlateAssembly.primaryEquivalentScore(lune, 255, en, enFloor))
+            .isGreaterThan(primary.candidates[0].finalScore)
+
+        val merged = CtcSlateAssembly.dual(primary, secondary, limit = 8)
+
+        assertWithMessage(
+            "no engine spells the apostrophe, so `l'une` has no beam candidate of its own: it must " +
+                "be placed from the candidate it is shown for (`lune`), like any other user word"
+        ).that(merged.map { it.word }).containsExactly("l'une", "lunar", "lines", "lune", "lunes").inOrder()
+        assertThat(merged.first().language).isEqualTo("fr")
+    }
+
+    @Test
+    fun `an English-secondary joiner user word is placed from its stripped surface`() {
+        val fr = CtcScoringParams.presetFor("fr", topK = 8)
+        val primary = slate("fr", fr, listOf(cand("obtenir", -6.0, 200.0, fr)), CtcUserWords.of(emptyList(), emptySet(), 1.0))
+        val obrien = cand("obrien", -2.0, 255.0, en)
+        val secondary = CtcDecodedSlate(
+            "en", listOf(obrien), listOf("O'Brien"), listOf(1000), en,
+            // `obrien` is no English word: the overlay shows the user's form in its place.
+            CtcUserWords.of(listOf("O'Brien" to 255), emptySet(), enFloor, preferredForms = mapOf("obrien" to "O'Brien")),
+        )
+        assertThat(CtcSlateAssembly.primaryEquivalentScore(obrien, 255, fr, 1.0))
+            .isGreaterThan(primary.candidates[0].finalScore)
+
+        val merged = CtcSlateAssembly.dual(primary, secondary, limit = 8)
+
+        assertThat(merged.map { it.word }).containsExactly("O'Brien", "obtenir").inOrder()
+    }
+
+    // ── C7 (audit C): a word in both lists keeps the primary's label ──────────────────────────
+
+    @Test
+    fun `a word in both custom lists keeps the primary's language when placed`() {
+        // `parcero` in the English AND the Spanish list: the Spanish copy earns exactly the
+        // English copy's own rank, and the merged entry must stay English (possessive augment).
+        val primary = slate(
+            "en", en, listOf(cand("parcero", -5.0, 255.0, en), cand("parcel", -6.0, 179.0, en)),
+            CtcUserWords.of(listOf("parcero" to 255), emptySet(), enFloor),
+        )
+        val secondary = slate("es", es, listOf(cand("parcero", -5.0, 255.0, es)), spanishUserWords("parcero" to 255))
+
+        val merged = CtcSlateAssembly.dual(primary, secondary, limit = 8)
+
+        assertThat(merged.map { it.word to it.language })
+            .containsExactly("parcero" to "en", "parcel" to "en").inOrder()
+    }
+
     @Test
     fun `a raised swipe priority carries over from the secondary list`() {
         val primary = englishSlate(cand("parcel", -6.0, 179.0, en))

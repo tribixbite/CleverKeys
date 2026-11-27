@@ -20,11 +20,17 @@ import kotlin.math.roundToInt
  *   for a duplicate), for every custom and platform user word of this language.
  * @property calibrationFloor the base floor this lexicon maps a stored frequency onto
  *   ([CtcLexiconMerge.baseFloor]: 134 for the en JSON scale, 1 for CKDT sources).
+ * @property joinerSurfaces lowercase JOINER user word (`l'une`, `co-op`, `o'brien`) → the lowercase
+ *   decoded word the contraction overlay shows it for (`lune`, `coop`, `obrien`): the adapter's
+ *   `UserJoinerPreference` table read backwards. No engine spells a joiner, so such a word reaches
+ *   the slate only through the overlay and has no beam candidate under its own spelling; this is
+ *   how [CtcSlateAssembly] finds the candidate whose path evidence it was shown for.
  */
 class CtcUserWords(
     val excluded: Set<String>,
     val storedFrequencies: Map<String, Int>,
     val calibrationFloor: Double,
+    val joinerSurfaces: Map<String, String> = emptyMap(),
 ) {
     companion object {
         /** No user words and nothing disabled: the slate passes through unchanged. */
@@ -34,11 +40,14 @@ class CtcUserWords(
          * Build from the merge's own inputs: [userWords] (custom + platform, stored 1..255, the
          * `userWordPairs` the adapter passes to [CtcLexiconMerge.merge]), [disabled] (the set it
          * passes, already Swiss-spelling folded) and the base floor of the same merge.
+         * [preferredForms] is the overlay's preference table (lowercase decoded word → the joiner
+         * user word shown for it), stored backwards as [joinerSurfaces].
          */
         fun of(
             userWords: Iterable<Pair<String, Int>>,
             disabled: Set<String>,
             calibrationFloor: Double,
+            preferredForms: Map<String, String> = emptyMap(),
         ): CtcUserWords {
             val frequencies = HashMap<String, Int>()
             for ((word, stored) in userWords) {
@@ -52,7 +61,16 @@ class CtcUserWords(
             } else {
                 disabled.mapTo(HashSet()) { it.lowercase(Locale.ROOT) }.apply { removeAll(frequencies.keys) }
             }
-            return CtcUserWords(excluded, frequencies, calibrationFloor)
+            val joinerSurfaces = if (preferredForms.isEmpty()) {
+                emptyMap()
+            } else {
+                HashMap<String, String>(preferredForms.size * 2).apply {
+                    for ((decoded, form) in preferredForms) {
+                        putIfAbsent(form.lowercase(Locale.ROOT), decoded.lowercase(Locale.ROOT))
+                    }
+                }
+            }
+            return CtcUserWords(excluded, frequencies, calibrationFloor, joinerSurfaces)
         }
     }
 }
@@ -180,8 +198,9 @@ object CtcSlateAssembly {
     /**
      * Secondary slate index → the rank its word earns in the primary slate, for every word of
      * [secondaryWords] (the filtered secondary slate) that is a user word of the secondary list and
-     * one of its decoded [CtcDecodedSlate.candidates] (a fuzzy-rescue entry has no emission
-     * evidence of its own and keeps its plain slot). [primaryWords]/[primaryScores] are the filtered
+     * one of its decoded [CtcDecodedSlate.candidates], directly or, for a joiner word, through
+     * [CtcUserWords.joinerSurfaces] (a fuzzy-rescue entry has no emission evidence of its own and
+     * keeps its plain slot). [primaryWords]/[primaryScores] are the filtered
      * primary slate.
      */
     private fun earnedPrimaryRanks(
@@ -203,7 +222,11 @@ object CtcSlateAssembly {
                 for (c in secondary.candidates) map.putIfAbsent(c.word.lowercase(Locale.ROOT), c)
                 byWord = map
             }
-            val candidate = candidates[lower] ?: continue
+            // A joiner user word (`l'une`, `O'Brien`) is shown through the overlay for a decoded
+            // word spelled without the joiner; its path evidence is that candidate's (audit C6).
+            val candidate = candidates[lower]
+                ?: secondary.userWords.joinerSurfaces[lower]?.let { candidates[it] }
+                ?: continue
             val score = primaryEquivalentScore(candidate, frequency, primary.params, primary.userWords.calibrationFloor)
             val ranks = earned ?: HashMap<Int, Int>().also { earned = it }
             ranks[index] = rankInPrimarySlate(score, primary.candidates, primaryWords, primaryScores)

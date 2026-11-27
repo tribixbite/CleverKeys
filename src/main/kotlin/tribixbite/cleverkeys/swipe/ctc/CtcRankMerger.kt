@@ -22,7 +22,11 @@ import java.util.Locale
  * (`secondaryEarnedRanks`, computed by [CtcSlateAssembly] from the rank the primary list itself
  * would give the word): it then scores `1000/(r+1)` like a primary word at rank r and sorts AHEAD
  * of the primary word at that rank — the primary list would have put it above that word — but
- * never below its plain `920/(N+1)` slot. Without earned ranks the merge is unchanged.
+ * never below its plain `920/(N+1)` slot. Without earned ranks the merge is unchanged. A user word
+ * that is ALSO in the primary slate (the same word in both custom lists) keeps the primary's
+ * spelling and language label wherever it lands: the dedupe keeps the first entry, which is the
+ * secondary copy on a tie or above its plain slot, and a secondary label would skip the primary's
+ * possessive augment (audit C7). An ordinary secondary word keeps its own label as before.
  */
 object CtcRankMerger {
     data class Item(val word: String, val score: Int, val language: String)
@@ -48,16 +52,33 @@ object CtcRankMerger {
             ranked.add(Ranked(Item(word, 1000 / (rank + 1), primaryLanguage), placedUserWord = false))
         }
         if (!secondaryLanguage.isNullOrBlank() && secondaryLanguage != primaryLanguage) {
+            // Lowercase → the primary's own spelling, only needed when something was placed.
+            val primarySpelling: Map<String, String> = if (secondaryEarnedRanks.isEmpty()) {
+                emptyMap()
+            } else {
+                HashMap<String, String>(primaryWords.size * 2).apply {
+                    for (word in primaryWords) putIfAbsent(word.lowercase(Locale.ROOT), word)
+                }
+            }
             secondaryWords.forEachIndexed { rank, word ->
                 val plain = 920 / (rank + 1)
-                val earned = secondaryEarnedRanks[rank]?.let { 1000 / (it.coerceAtLeast(0) + 1) }
-                ranked.add(
-                    if (earned != null && earned >= plain) {
-                        Ranked(Item(word, earned, secondaryLanguage), placedUserWord = true)
-                    } else {
-                        Ranked(Item(word, plain, secondaryLanguage), placedUserWord = false)
-                    }
+                val earnedRank = secondaryEarnedRanks[rank]
+                if (earnedRank == null) {
+                    // An ordinary secondary word: the plain rank merge, label included.
+                    ranked.add(Ranked(Item(word, plain, secondaryLanguage), placedUserWord = false))
+                    return@forEachIndexed
+                }
+                val earned = 1000 / (earnedRank.coerceAtLeast(0) + 1)
+                val placed = earned >= plain
+                // A user word the primary slate also holds (in both custom lists) is ONE entry under
+                // the primary's spelling and label, at the better of the two positions (audit C7).
+                val inPrimary = primarySpelling[word.lowercase(Locale.ROOT)]
+                val item = Item(
+                    inPrimary ?: word,
+                    if (placed) earned else plain,
+                    if (inPrimary != null) primaryLanguage else secondaryLanguage,
                 )
+                ranked.add(Ranked(item, placedUserWord = placed))
             }
         }
         // Stable: equal scores keep insertion order (primary first), except that a placed user

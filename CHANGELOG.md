@@ -47,10 +47,10 @@ editor that used to be listed here already ship in 2.0.)
 ### Fixed (swiping and the personal dictionary, 2026-11-26)
 
 - A word you added to the SECOND language's personal dictionary in Multi-Language now wins a
-  swipe exactly as it would from the first language's list: swiping `parcero` from the Spanish
+  swipe as it would from the first language's list: swiping `parcero` from the Spanish
   list under English gave `parcel`. The word is ranked as if it were in the first language's
   list, at its own frequency and swipe priority, so an English word your swipe fits better
-  still wins.
+  still wins. This includes words with an apostrophe or a hyphen (`l'une`, `O'Brien`).
 - A word you disabled in Dictionary Manager is no longer offered among the swipe suggestions
   (a disabled `world` still showed after `would`, `works` …). A disabled word of the first
   language is also kept out of the second language's swipe suggestions, as in typing. Its

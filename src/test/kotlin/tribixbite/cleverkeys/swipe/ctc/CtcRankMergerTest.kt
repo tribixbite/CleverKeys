@@ -73,4 +73,50 @@ class CtcRankMergerTest {
         assertThat(CtcRankMerger.merge("fr", words, "en", other, 4, emptyMap()))
             .isEqualTo(CtcRankMerger.merge("fr", words, "en", other, 4))
     }
+
+    @Test
+    fun aPlacedWordThatIsAlsoAPrimaryWordKeepsThePrimaryLabel() {
+        // Audit C7: the placed Spanish copy ties the English copy and sorts first; the merged entry
+        // keeps the English label (and spelling), or the English possessive augment skips it.
+        val tie = CtcRankMerger.merge(
+            "en", listOf("parcel", "Parcero"), "es", listOf("parada", "parcela", "parcero"), limit = 4,
+            secondaryEarnedRanks = mapOf(2 to 1),
+        )
+        assertThat(tie).containsExactly(
+            CtcRankMerger.Item("parcel", 1000, "en"), CtcRankMerger.Item("parada", 920, "es"),
+            CtcRankMerger.Item("Parcero", 500, "en"), CtcRankMerger.Item("parcela", 460, "es"),
+        ).inOrder()
+
+        val ahead = CtcRankMerger.merge(
+            "en", listOf("parcel", "parcero"), "es", listOf("parcero"), limit = 3,
+            secondaryEarnedRanks = mapOf(0 to 0),
+        )
+        assertThat(ahead.map { it.word to it.language })
+            .containsExactly("parcero" to "en", "parcel" to "en").inOrder()
+    }
+
+    @Test
+    fun aUserWordInBothListsAboveItsPrimaryCopyKeepsThePrimaryLabel() {
+        // Its plain Spanish slot (920) beats both its earned rank and its English copy (500).
+        val merged = CtcRankMerger.merge(
+            "en", listOf("parcel", "Parcero"), "es", listOf("parcero"), limit = 3,
+            secondaryEarnedRanks = mapOf(0 to 1),
+        )
+
+        assertThat(merged).containsExactly(
+            CtcRankMerger.Item("parcel", 1000, "en"), CtcRankMerger.Item("Parcero", 920, "en"),
+        ).inOrder()
+    }
+
+    @Test
+    fun anOrdinaryWordInBothSlatesKeepsTheSecondaryLabelAboveThePrimaryCopy() {
+        // Unchanged by audit C7: only the user's own words take the primary label.
+        val merged = CtcRankMerger.merge(
+            "fr", listOf("bonjour", "salut", "menu"), "en", listOf("menu"), limit = 3,
+            secondaryEarnedRanks = emptyMap(),
+        )
+
+        assertThat(merged.map { it.word to it.language })
+            .containsExactly("bonjour" to "fr", "menu" to "en", "salut" to "fr").inOrder()
+    }
 }
