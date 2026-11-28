@@ -2586,7 +2586,9 @@ class LearningFunnelBookkeepingTest {
         assertWithMessage("editor").that(editor.toString()).isEqualTo("a filip ")
         assertWithMessage("no fix→filip").that(bigram("fix", "filip")).isEqualTo(0)
         assertWithMessage("fix's +1 reversed").that(vocabulary.getWordUsage("fix")).isNull()
-        assertWithMessage("a→filip learned").that(bigram("a", "filip")).isEqualTo(1)
+        // Saga r25: the caret move back into `a` now closes the learn window (its last word was no
+        // longer before the caret), so `a → filip` is not learned: the safe side, one pair lost.
+        assertWithMessage("no a→filip after the window closed").that(bigram("a", "filip")).isEqualTo(0)
     }
 
     /** #5: `a fix toy`, delete to `a fi`, retype `x `: `a → fix` was reversed and never relearned. */
@@ -3090,6 +3092,30 @@ class LearningFunnelBookkeepingTest {
             hideAndShowKeyboard(newInput = true)
             type("$sentence ")
             repeat(sentence.split(" ").size) { ctrlBackspace() }
+            type("now ")
+
+            assertWithMessage("editor").that(editor.toString()).isEqualTo("now ")
+            assertNoPairWithClearedWords(sentence.split(" "))
+        }
+    }
+
+    /**
+     * Saga r25: the same clear by DEL key events that do not come from the keyboard (a hardware
+     * or Bluetooth keyboard's Backspace, adb `input keyevent 67`) learned `blue → now`: those
+     * reach the keyboard only as selection updates, and the window check ran only after its own
+     * deletions.
+     */
+    @Test
+    fun clearingAFieldWithAnotherKeyboardsBackspaceLeavesNoPairWithTheNextWord() {
+        for (sentence in listOf("blue car seat", "pink cup lid top")) {
+            editor.setLength(0)
+            hideAndShowKeyboard(newInput = true)
+            type("$sentence ")
+            reportedCaret = cursor()
+            repeat(editor.length) {
+                editor.deleteCharAt(editor.length - 1) // the app applies the DEL; only a selection update reaches us
+                cursorSync()
+            }
             type("now ")
 
             assertWithMessage("editor").that(editor.toString()).isEqualTo("now ")

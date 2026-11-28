@@ -3544,7 +3544,9 @@ class SuggestionHandler(
             return
         }
         reconcileLearnAfterDeletion(ic, imeDeletion)
-        if (imeDeletion && ic != null) closeWindowWhoseLastWordIsGone(ic)
+        // Every caret move back, not only the keyboard's own deletions (Saga r25: another
+        // keyboard's Backspace, adb `input keyevent 67`, reaches us only as this update).
+        if (ic != null) closeWindowWhoseLastWordIsGone(ic, dropBarContext = imeDeletion)
     }
 
     /**
@@ -3554,18 +3556,25 @@ class SuggestionHandler(
      * by the keyboard, the window's last word must still stand before the caret (past its
      * separators, or before a word being typed after it); otherwise the window is closed, as at
      * a sentence boundary, and the bar's context drops the words the editor no longer shows.
-     * The older word's +1 is not taken back (no receipt reaches it). A caret move, an insert
-     * before the word or an app-side clear is not a keyboard deletion and closes nothing here.
+     * The older word's +1 is not taken back (no receipt reaches it). Runs on every caret move
+     * back (Saga r25: a hardware keyboard's Backspace is only a selection update to us), with one
+     * bounded read and only while the window holds a word; a caret moved back into earlier text
+     * closes it too, which loses at most the pair with the next word (the safe side). Typing and
+     * the keyboard's own commits move the caret forward and never come here. The bar's context
+     * is trimmed only after the keyboard's own deletions ([dropBarContext]): after a caret move
+     * the cursor sync re-reads it.
      */
-    private fun closeWindowWhoseLastWordIsGone(ic: InputConnection) {
+    private fun closeWindowWhoseLastWordIsGone(ic: InputConnection, dropBarContext: Boolean) {
         val predictor = predictionCoordinator.getWordPredictor() ?: return
-        val before = editorTextBeforeCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return
         val last = predictor.learnWindowLastWord()
+        if (last == null && !dropBarContext) return
+        val before = editorTextBeforeCursor(ic, SwipeCorrectionTracker.ANCHOR_WINDOW) ?: return
         if (last != null && !wordStandsAtEnd(before, last)) {
             vlog { "LEARN WINDOW CLOSED: the window's last word is no longer before the caret" }
             predictor.onSentenceBoundary()
             lastLearningCommit = null
         }
+        if (!dropBarContext) return
         var context = contextTracker.getContextWords()
         while (context.isNotEmpty() && !wordStandsAtEnd(before, context.last())) {
             if (!contextTracker.rollbackLastWord(context.last())) break

@@ -1411,6 +1411,9 @@ class CleverKeysService : InputMethodService(),
      * Back while the keyboard shows is the user dismissing it (marked for the tile); any
      * hardware key while a deferred show is armed means the user is typing: drop the show.
      */
+    // TODO(Saga r25, 2026-11-27): words typed on a hardware keyboard go straight to the app; the
+    // keyboard sees only selection updates, so they are never learned (no commit reaches the learn
+    // funnel). Out of scope for the learning fixes; deletions there do close the learn window.
     override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
         if (keyCode == android.view.KeyEvent.KEYCODE_BACK && isTileWindowVisible()) _tileShow.noteUserDismiss()
         if (_tileShow.hasPending) tileLog { "deferred show cancelled by key $keyCode" }
