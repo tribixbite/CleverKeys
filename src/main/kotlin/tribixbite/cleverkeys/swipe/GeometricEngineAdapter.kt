@@ -711,7 +711,9 @@ class GeometricEngineAdapter(
         //  leaves this dictionary with its contraction (`we'll`), as it always has here. Keep it
         //  through `DisabledPairedSurfaces` (pass `disabled` minus the kept words to the merge),
         //  filter the slate after the overlay as `CtcSlateAssembly` does, and pass the overlay
-        //  `isExcludedBase`; pin it with a geometric replay.
+        //  `isExcludedBase`. The current behaviour is pinned by GeoDisabledPairedKeyTest (test-gap
+        //  audit 2026-11-28 item 9: three coordinated changes, left for 2.1); its second assertion
+        //  flips when this lands.
         val merged = GeometricUserWordMerge.merge(base, userWords, disabled, lang, version, bonusByWord)
         // Lowercase word → ordinal rank, for ContractionOverlay's real-word guard. First
         // occurrence wins (ties can only come from case-variant duplicates).

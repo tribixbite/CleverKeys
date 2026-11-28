@@ -1369,6 +1369,8 @@ tasks.register('runPureTests', JavaExec) {
     'tribixbite.cleverkeys.swipe.UserSwipePriorityBonusTest',
     'tribixbite.cleverkeys.swipe.ctc.CtcPriorityBonusTest',
     'tribixbite.cleverkeys.swipe.geometric.GeoUserSwipePriorityTest',
+    // Test-gap audit 2026-11-28 item 9: a disabled paired key on the geometric engine (known gap).
+    'tribixbite.cleverkeys.swipe.geometric.GeoDisabledPairedKeyTest',
     // Legacy default-frequency offer + priority-driven frequency lift in the Add/Edit dialog
     // (maintainer decisions A/B, 2026-10-10; the device `adb` stored at the old default 100).
     'tribixbite.cleverkeys.LegacyCustomWordFrequencyTest',
