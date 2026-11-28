@@ -2837,6 +2837,31 @@ open class LearningFunnelBookkeepingTest {
         assertWithMessage("fix→something learned").that(bigram("fix", "something")).isEqualTo(1)
     }
 
+    /**
+     * Final Fable audit M3 (2026-11-28): `fix ` + swipe `toy` (kept) in textarea A, then a WebView
+     * input restart into a look-alike textarea whose draft ends in `toy `. The bar still held A's
+     * swipe and its alternates: a tap on `try` deleted B's `toy ` and took back A's `fix → toy`,
+     * and the #110 Backspace undo (KeyEventHandler.handleBackspaceUndoSwipe), which reads the same
+     * tracking, would have deleted B's word too. A restart that leaves the window unproven ends
+     * that tracking and the bar.
+     */
+    @Test
+    fun aStaleSwipeBarAfterARestartIntoALookAlikeFieldNeitherEditsItNorUnlearns() {
+        handler.onInputFieldStarted(chromeField(), restarting = false, ic)
+        type("fix ", chromeField())
+        swipe("toy", "try", field = chromeField())
+        assertWithMessage("fix→toy learned in A").that(bigram("fix", "toy")).isEqualTo(1)
+
+        editor.setLength(0)
+        editor.append("a toy ")
+        webViewRestart(chromeField())
+        assertWithMessage("no Backspace undo of A's swipe in B").that(tracker.getLastAutoInsertedWord()).isNull()
+        tap("try", chromeField())
+
+        assertWithMessage("A's kept word stays learned").that(bigram("fix", "toy")).isEqualTo(1)
+        assertWithMessage("B's draft is not rewritten").that(editor.toString()).startsWith("a toy ")
+    }
+
     // ------------------------------------------------- Fable re-check 2026-11-27 of 75674eb83
 
     /** A Chrome `<input type=text>`: the same package and field id as a textarea, another input type. */

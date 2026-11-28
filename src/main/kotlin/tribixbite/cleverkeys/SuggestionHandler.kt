@@ -2450,6 +2450,13 @@ class SuggestionHandler(
         ) {
             windowNeedsProof = false
         }
+        // Final Fable audit M3 (2026-11-28): the last swipe's alternates and the autocorrect undo
+        // belong to the field they were made in. After a bind or a restart into a field that is
+        // new, or that looks the same but is unproven (another textarea of one WebView), a tap on
+        // an alternate replaced the word at B's caret when B's text ended with it, and
+        // rolled back A's kept word; the #110 Backspace undo reads the same tracking. Both end
+        // here, with the bar that offered them. A proven restart (above) keeps them.
+        if (newField || (windowNeedsProof && (boundAnotherEditor || restartedInput))) dropUndoTargetsOfAnotherField()
         fieldShowedOnlyTheFirstWord = null
         if (ic != null) noteFieldBeforeDeletion(ic)
         if (newField) {
@@ -2462,6 +2469,21 @@ class SuggestionHandler(
             learnedPlacement = null
             previousPlacement = null
         }
+    }
+
+    /**
+     * M3: forget the swipe REPLACE target and the autocorrect undo of the previous field, and
+     * clear the bar that offered them (unless a prompt owns it). A no-op without either, so a bar
+     * this field filled (inline autofill chips) is left alone.
+     */
+    private fun dropUndoTargetsOfAnotherField() {
+        val swiped = !contextTracker.getLastAutoInsertedWord().isNullOrEmpty()
+        val corrected = contextTracker.getLastAutocorrectOriginalWord() != null
+        if (!swiped && !corrected) return
+        contextTracker.clearLastAutoInsertedWord()
+        contextTracker.clearAutocorrectTracking()
+        contextTracker.setLastCommitSource(PredictionSource.UNKNOWN)
+        if (!specialPromptActive) suggestionBar?.clearSuggestions()
     }
 
     /**
