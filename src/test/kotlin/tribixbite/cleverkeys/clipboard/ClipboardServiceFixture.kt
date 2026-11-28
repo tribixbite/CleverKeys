@@ -27,6 +27,10 @@ import tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizer
  *    `setPrimaryClip` sets it and then delivers the change to the service's capture
  *    ([ClipboardHistoryService.addClip]), as its OnPrimaryClipChangedListener does: a cut or copy
  *    becomes a History row, and the service's own write after an edit is skipped once.
+ *    With [queueListener] the change is instead queued like the real listener's callback, which
+ *    runs later on the main looper and RE-READS the clip ([ClipboardHistoryService.SystemListener]
+ *    → its capture): several writes before [drainListener] all read the last clip (test-gap audit
+ *    2026-11-28, item 5).
  *  - [history] is the History table, newest first: a capture inserts at the top (an existing row
  *    moves there, #108), an edit replaces the row in place keeping its position (the timestamp
  *    is not changed by an edit), a duplicate edit is refused, a missing row is EntryChanged; the
@@ -38,6 +42,13 @@ import tribixbite.cleverkeys.clipboard.sanitize.UrlSanitizer
 internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList()) {
 
     var systemClip: String? = null
+
+    /** Queue the listener's callbacks instead of delivering each write at once; see [drainListener]. */
+    var queueListener = false
+
+    /** Listener callbacks owed (one per write) while [queueListener] is on. */
+    var pendingCallbacks = 0
+        private set
 
     /** How many times anything wrote Android's clipboard. */
     var clipWrites = 0
@@ -59,7 +70,8 @@ internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList(
             val text = firstArg<ClipData>().getItemAt(0).text.toString()
             systemClip = text
             clipWrites++
-            service.addClip(text)  // the OnPrimaryClipChangedListener's capture
+            if (queueListener) pendingCallbacks++
+            else service.addClip(text)  // the OnPrimaryClipChangedListener's capture
         }
         every { context.getSystemService(Context.CLIPBOARD_SERVICE) } returns clipboard
 
@@ -118,6 +130,18 @@ internal class ClipboardServiceFixture(initialHistory: List<String> = emptyList(
         service.setField("_cm", clipboard)
         service.setField("_sanitizationConfig\$delegate", lazyOf(sanitization))
         service.setField("serviceScope", CoroutineScope(Dispatchers.Unconfined))
+    }
+
+    /**
+     * Runs every queued listener callback, in order, through the service's REAL listener
+     * ([ClipboardHistoryService.SystemListener]), which reads Android's clipboard as it is NOW.
+     */
+    fun drainListener() {
+        val listener = service.SystemListener()
+        while (pendingCallbacks > 0) {
+            pendingCallbacks--
+            listener.onPrimaryClipChanged()
+        }
     }
 
     companion object {

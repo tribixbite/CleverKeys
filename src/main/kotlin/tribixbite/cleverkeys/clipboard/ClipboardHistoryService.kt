@@ -432,9 +432,17 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
         // Our own write after an edit ([followEditOnSystemClipboard]): the edited row already holds
         // exactly this text, and storing it again could only add a trimmed copy beside it.
-        if (rewriteOsClipboard && clip == ownEditOnSystemClip) {
-            ownEditOnSystemClip = null
-            return
+        val ownEdit = ownEditOnSystemClip
+        if (rewriteOsClipboard && ownEdit != null) {
+            if (clip == ownEdit) {
+                ownEditOnSystemClip = null
+                return
+            }
+            // The listener runs later and re-reads the clip: a write made before it ran (the
+            // editor's own cut right after Save) is what the callback answering OUR write reads.
+            // That callback still spends the skip, or a later copy of the edited text (another
+            // app's, the user's own) would be dropped once (test-gap audit 2026-11-28, item 5).
+            if (ownEditWritten) ownEditOnSystemClip = null
         }
 
         // The limits come from the stored settings, not the in-memory Config: storeClip is
@@ -874,6 +882,13 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     private var ownEditOnSystemClip: String? = null
 
     /**
+     * [ownEditOnSystemClip] has reached Android's clipboard: the next listener callback answers
+     * that write (or a later one that replaced it), so it spends the skip whatever it reads.
+     */
+    @Volatile
+    private var ownEditWritten = false
+
+    /**
      * The edited row was the clip on Android's clipboard, or the clipboard is empty and
      * [fillEmpty]: put the edited text there, so the paste key, the app's own Paste and RustDesk's
      * paste give what the pane shows (maintainer 2026-11-23 and 2026-11-24; [EditedClipFollow]
@@ -887,9 +902,11 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             storedForm = ::storedFormOf,
         ) ?: return false
         ownEditOnSystemClip = put
+        ownEditWritten = false
         serviceScope.launch {
             try {
                 _cm.setPrimaryClip(ClipData.newPlainText("CleverKeys", put))
+                ownEditWritten = true
             } catch (e: Exception) {
                 ownEditOnSystemClip = null
                 android.util.Log.w("ClipboardHistory", "Edited clip not put on the system clipboard: " + e.message)

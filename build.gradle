@@ -1636,6 +1636,8 @@ tasks.register('runMockTests', JavaExec) {
     // Follow-up to S8 (2026-11-25): every History limit (type, count, size, item size, duration)
     // is read from the stored settings, not the in-memory Config.
     'tribixbite.cleverkeys.clipboard.ClipboardStoredLimitsTest',
+    // Test-gap audit 2026-11-28 item 5: the clipboard listener runs later and re-reads the clip.
+    'tribixbite.cleverkeys.clipboard.ClipboardQueuedListenerTest',
     // Saga r26 2026-11-28: History "lost" 13 old rows during a debug-app test run. Replayed
     // through the real capture/limit/delete code over a fake SQLite table: no automatic path
     // deletes; #108 de-dup moved re-copied old rows to in-run times and the cleanup took them.
