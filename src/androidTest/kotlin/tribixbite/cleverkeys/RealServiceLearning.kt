@@ -1,6 +1,8 @@
 package tribixbite.cleverkeys
 
 import android.content.res.Configuration
+import android.os.Build
+import android.os.Handler
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
@@ -13,10 +15,22 @@ import tribixbite.cleverkeys.contextaware.ContextModel
  * pointers use, so the whole typing → commit → selection update → learn funnel path runs as it
  * does on a phone, and the learned bigrams are read from the predictor's live store.
  *
- * Leaves no trace: [setUp] makes CleverKeys the keyboard and turns learning on, [tearDown] puts
- * the keyboard and the three learning preferences back. Learned counts are compared with the
- * count read before the test ([bigram] baseline), so a phone that already learned a pair does
- * not fail; on a fresh test install every baseline is 0.
+ * What it restores: [setUp] makes CleverKeys the keyboard and turns learning on, [tearDown] puts
+ * the keyboard and the three learning preferences back. What it does NOT restore: the words the
+ * tests type are learned for real (their pairs and personal-vocabulary counts stay in the app's
+ * learned stores), exactly as typing them by hand would. Taking them back would need an exact
+ * per-row undo the stores do not offer for an external caller, and a broader cleanup could remove
+ * a phone owner's own learning; so run these on a test install or a test phone, never on a
+ * personal one (final Fable audit M4, 2026-11-28: this KDoc used to claim "no trace").
+ * TODO(test-gap M4): an exact undo of the rows a test created (read before, compare after) would
+ *  make the claim true; needs a debug-only rollback seam on ContextModel and UserVocabulary.
+ *
+ * Learned counts are compared with the count read before the test ([bigram] baseline, read once
+ * the keyboard service exists), so a phone that already learned a pair does not fail; on a fresh
+ * test install every baseline is 0.
+ *
+ * No fixed sleeps: each key waits for the editor to show it and for the keyboard's cursor sync
+ * that its selection update scheduled to have run ([awaitCursorSync]).
  */
 internal class RealServiceLearning {
 
@@ -99,24 +113,76 @@ internal class RealServiceLearning {
         CleverKeysService::class.java.getDeclaredField("_keyeventhandler").apply { isAccessible = true }
             .get(service() ?: throw AssertionError("no keyboard service")) as KeyEventHandler
 
-    /** One key through the service's KeyEventHandler, then a pause for the editor's update. */
-    private fun key(value: KeyValue) {
+    private fun field(owner: Any, cls: Class<*>, name: String): Any? =
+        cls.getDeclaredField(name).apply { isAccessible = true }.get(owner)
+
+    /**
+     * The keyboard's debounced cursor sync (InputCoordinator.onCursorMoved): the runnable last
+     * scheduled, and whether it is still queued. Below API 29 the queue cannot be asked
+     * (`Handler.hasCallbacks`), so a scheduled runnable reads as queued until [awaitCursorSync]'s
+     * debounce deadline.
+     */
+    private fun cursorSync(): Pair<Runnable?, Boolean?> = onMain {
+        val service = service() ?: throw AssertionError("no keyboard service")
+        val coordinator = field(service, CleverKeysService::class.java, "_inputCoordinator") as InputCoordinator
+        val runnable = field(coordinator, InputCoordinator::class.java, "pendingSyncRunnable") as Runnable?
+        val handler = field(coordinator, InputCoordinator::class.java, "syncHandler") as Handler
+        runnable to (if (Build.VERSION.SDK_INT >= 29) runnable != null && handler.hasCallbacks(runnable) else null)
+    }
+
+    /**
+     * Waits until the cursor sync scheduled after [before] has run: a new runnable (the key's
+     * selection update reached the service) that is no longer queued. A key whose update the
+     * keyboard owns schedules none (a receipt-validated commit), so after [SYNC_WAIT_MS] without
+     * a new one this returns; the editor already showed the key, which the caller checked.
+     */
+    private fun awaitCursorSync(before: Runnable?) {
+        var scheduledAt = -1L
+        within(SYNC_WAIT_MS) {
+            val (runnable, queued) = cursorSync()
+            if (runnable == null || runnable === before) return@within false
+            if (scheduledAt < 0) scheduledAt = SystemClock.uptimeMillis()
+            queued?.not() ?: (SystemClock.uptimeMillis() - scheduledAt > SYNC_DEBOUNCE_MS)
+        }
+    }
+
+    /**
+     * One key through the service's KeyEventHandler; returns once the editor [shows] it and the
+     * keyboard's cursor sync for it has run, as typing at a few keys per second lets it.
+     */
+    private fun key(value: KeyValue, what: String, shows: (String) -> Boolean) {
+        val before = cursorSync().first
         onMain { keyEvents().key_up(value, Pointers.Modifiers.EMPTY) }
-        // Longer than the 100 ms cursor-sync debounce: each key's selection update and sync land
-        // before the next key, as typing at a few keys per second does.
-        Thread.sleep(KEY_GAP_MS)
+        waitFor(what, KEY_WAIT_MS) { shows(editorText()) }
+        awaitCursorSync(before)
     }
 
-    /** Types [text] key by key (letters, digits, space). */
+    /**
+     * Types [text] key by key (letters, digits, space). The editor must show each key (letter case
+     * aside: auto-capitalisation may raise a first letter).
+     */
     fun type(text: String) {
-        for (c in text) key(if (c == ' ') KeyValue.getKeyByName("space") else KeyValue.makeCharKey(c))
+        val base = editorText()
+        for (i in text.indices) {
+            val c = text[i]
+            val expected = base + text.substring(0, i + 1)
+            key(if (c == ' ') KeyValue.getKeyByName("space") else KeyValue.makeCharKey(c), "'$c' of '$text' typed") {
+                it.equals(expected, ignoreCase = true)
+            }
+        }
     }
 
-    /** The keyboard's Backspace, [count] times. */
-    fun backspace(count: Int) = repeat(count) { key(KeyValue.getKeyByName("backspace")) }
+    /** The keyboard's Backspace, [count] times; each must delete something. */
+    fun backspace(count: Int) = repeat(count) { n ->
+        val before = editorText()
+        key(KeyValue.getKeyByName("backspace"), "Backspace ${n + 1} of $count") { it.length < before.length }
+    }
 
     /** The live predictor's bigram store (private fields, read by reflection: debug build). */
     private fun bigramStore(): BigramStore {
+        // Read only once the service exists (M4: a baseline read before the keyboard was shown
+        // reflected on a null service).
+        service() ?: throw AssertionError("bigram read before the keyboard service exists")
         val coordinator = CleverKeysService::class.java.getDeclaredField("_predictionCoordinator")
             .apply { isAccessible = true }.get(service()) as PredictionCoordinator?
         val predictor = coordinator?.getWordPredictor() ?: throw AssertionError("no word predictor")
@@ -142,6 +208,13 @@ internal class RealServiceLearning {
     companion object {
         /** The learning master switch and the two stores the bigram learn needs. */
         val LEARNING_KEYS = listOf("on_device_learning_enabled", "context_aware_predictions_enabled", "word_prediction_enabled")
-        const val KEY_GAP_MS = 180L
+        /** InputCoordinator.CURSOR_SYNC_DEBOUNCE_MS (100 ms) with a margin, for API < 29 only. */
+        const val SYNC_DEBOUNCE_MS = 150L
+
+        /** How long a key's cursor sync may take to be scheduled before the key counts as owned. */
+        const val SYNC_WAIT_MS = 1_000L
+
+        /** How long the editor may take to show one key. */
+        const val KEY_WAIT_MS = 5_000L
     }
 }

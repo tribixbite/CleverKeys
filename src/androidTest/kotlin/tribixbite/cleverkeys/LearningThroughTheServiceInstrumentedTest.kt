@@ -20,8 +20,8 @@ import org.junit.runner.RunWith
  *  1. `fix toy `, rotate, Backspace ×4: `fix → toy` is taken back (Pixel r22 R3 / r23 L2b found it
  *     kept after a rotation), in an app recreated by the rotation ([ImeFieldTestActivity]) and in
  *     one that keeps its window ([ImeFieldKeepWindowTestActivity]).
- *  2. `blue car seat `, Backspace until the field is empty, `now `: no pair with any cleared word
- *     (Pixel r24 `blue → now`).
+ *  2. `blue car seat `, Backspace until the field is empty, `now here `: no pair with any cleared
+ *     word (Pixel r24 `blue → now`), while `now → here` is learned (the positive control).
  *
  * Compile-checked on the dev box; run on a test phone or emulator.wtf. Leaves no trace: the
  * keyboard, learning preferences and rotation settings are restored ([RealServiceLearning]).
@@ -78,11 +78,18 @@ class LearningThroughTheServiceInstrumentedTest {
             live.waitFor("the keyboard") { live.shown() }
             val cleared = listOf("blue", "car", "seat")
             val baselines = cleared.associateWith { live.bigram(it, "now") }
+            val controlBaseline = live.bigram("now", "here")
             live.type("blue car seat ")
             live.backspace("blue car seat ".length)
             live.waitFor("the field empty") { live.editorText().isEmpty() }
-            live.type("now ")
-            live.waitFor("now typed") { live.editorText().equals("now ", ignoreCase = true) }
+            live.type("now here ")
+            // Positive control (final Fable audit M4): the same field still learns, so the checks
+            // below cannot pass with learning off. `now → here` is learned at `here`'s commit,
+            // after `now`'s own (the one that would pair `now` with a cleared word), so once it
+            // is there the pair under test has been decided.
+            live.waitFor("now → here learned (baseline $controlBaseline)", 5_000L) {
+                live.bigram("now", "here") == controlBaseline + 1
+            }
 
             for (word in cleared) {
                 assertEquals("no $word → now after the field was cleared", baselines.getValue(word), live.bigram(word, "now"))
