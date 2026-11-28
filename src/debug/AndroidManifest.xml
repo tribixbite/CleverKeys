@@ -16,5 +16,9 @@
             android:name="tribixbite.cleverkeys.ImeFieldKeepWindowTestActivity"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:exported="false" />
+        <!-- Test-only WebView with two textareas (learn window across WebView fields). Debug APK only. -->
+        <activity
+            android:name="tribixbite.cleverkeys.WebViewTextareaTestActivity"
+            android:exported="false" />
     </application>
 </manifest>
