@@ -54,6 +54,7 @@ class ClipboardEditJvmTest {
             EditEntryResult.Success,
             EditEntryResult.DuplicateConflict,
             EditEntryResult.InvalidContent,
+            EditEntryResult.TooLarge,
             EditEntryResult.EntryChanged,
             EditEntryResult.Error("test")
         )
@@ -62,11 +63,12 @@ class ClipboardEditJvmTest {
                 is EditEntryResult.Success -> "success"
                 is EditEntryResult.DuplicateConflict -> "duplicate"
                 is EditEntryResult.InvalidContent -> "invalid"
+                is EditEntryResult.TooLarge -> "too large"
                 is EditEntryResult.EntryChanged -> "changed"
                 is EditEntryResult.Error -> "error:${result.message}"
             }
         }
-        assertThat(labels).containsExactly("success", "duplicate", "invalid", "changed", "error:test")
+        assertThat(labels).containsExactly("success", "duplicate", "invalid", "too large", "changed", "error:test")
     }
 
     // =========================================================================

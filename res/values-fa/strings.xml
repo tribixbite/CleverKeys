@@ -121,6 +121,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">موردی با این محتوا از قبل وجود دارد</string>
     <string name="clipboard_edit_invalid">محتوا نمی‌تواند خالی باشد</string>
+    <string name="clipboard_edit_too_large">برای ذخیره خیلی بزرگ است: بیش از حداکثر اندازه آیتم</string>
     <string name="clipboard_edit_error">به‌روزرسانی مورد ناموفق بود</string>
 
     <!-- #156 Private copy -->

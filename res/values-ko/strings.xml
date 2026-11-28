@@ -97,6 +97,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">이 내용의 항목이 이미 있습니다</string>
     <string name="clipboard_edit_invalid">내용은 비워 둘 수 없습니다</string>
+    <string name="clipboard_edit_too_large">너무 커서 저장할 수 없습니다: 항목 최대 크기 초과</string>
     <string name="clipboard_edit_error">항목을 업데이트하지 못했습니다</string>
 
     <!-- #156 Private copy -->

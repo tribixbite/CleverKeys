@@ -83,6 +83,8 @@ class ClipboardEditSaveErrorTest {
         val reasons = mapOf(
             EditEntryResult.EntryChanged to R.string.clipboard_edit_changed,
             EditEntryResult.InvalidContent to R.string.clipboard_edit_invalid,
+            // Fable audit M5 (2026-11-28): a size refusal said "Content cannot be empty".
+            EditEntryResult.TooLarge to R.string.clipboard_edit_too_large,
             EditEntryResult.Error("disk I/O error") to R.string.clipboard_edit_error,
         )
         for ((result, message) in reasons) {

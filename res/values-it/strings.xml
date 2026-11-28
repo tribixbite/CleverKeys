@@ -120,6 +120,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Esiste già una voce con questo contenuto</string>
     <string name="clipboard_edit_invalid">Il contenuto non può essere vuoto</string>
+    <string name="clipboard_edit_too_large">Troppo grande da salvare: supera la dimensione massima della voce</string>
     <string name="clipboard_edit_error">Impossibile aggiornare la voce</string>
 
     <!-- #156 Private copy -->

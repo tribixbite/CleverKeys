@@ -92,6 +92,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">An entry with this content already exists</string>
     <string name="clipboard_edit_invalid">Content cannot be empty</string>
+    <string name="clipboard_edit_too_large">Too large to save: over the maximum item size</string>
     <string name="clipboard_edit_error">Failed to update entry</string>
 
     <!-- #156 Private copy -->

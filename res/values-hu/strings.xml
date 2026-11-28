@@ -90,6 +90,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Már létezik bejegyzés ezzel a tartalommal</string>
     <string name="clipboard_edit_invalid">A tartalom nem lehet üres</string>
+    <string name="clipboard_edit_too_large">Túl nagy a mentéshez: meghaladja a maximális elemméretet</string>
     <string name="clipboard_edit_error">A bejegyzés frissítése sikertelen</string>
 
     <!-- #156 Private copy -->

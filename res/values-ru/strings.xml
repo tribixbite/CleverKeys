@@ -86,6 +86,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Запись с таким содержимым уже существует</string>
     <string name="clipboard_edit_invalid">Содержимое не может быть пустым</string>
+    <string name="clipboard_edit_too_large">Слишком большой для сохранения: превышен макс. размер элемента</string>
     <string name="clipboard_edit_error">Не удалось обновить запись</string>
 
     <!-- #156 Private copy -->

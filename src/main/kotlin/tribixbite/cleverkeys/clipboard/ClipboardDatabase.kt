@@ -21,6 +21,12 @@ sealed class EditEntryResult {
     /** Content is blank or otherwise invalid */
     object InvalidContent : EditEntryResult()
     /**
+     * The edited text is over the per-clipping size limit (`clipboard_max_item_size_kb`).
+     * Its own result (Fable audit M5, 2026-11-28): it was reported as [InvalidContent], whose
+     * message says the content cannot be empty.
+     */
+    object TooLarge : EditEntryResult()
+    /**
      * No row holds the content the editor opened with: the entry was changed or removed after
      * the edit began (optimistic concurrency, todo 22). Nothing was written.
      */

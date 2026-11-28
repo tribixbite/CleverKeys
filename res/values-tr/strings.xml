@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Bu içeriğe sahip bir kayıt zaten var</string>
     <string name="clipboard_edit_invalid">İçerik boş olamaz</string>
+    <string name="clipboard_edit_too_large">Kaydedilemeyecek kadar büyük: maksimum öğe boyutunu aşıyor</string>
     <string name="clipboard_edit_error">Kayıt güncellenemedi</string>
 
     <!-- #156 Private copy -->

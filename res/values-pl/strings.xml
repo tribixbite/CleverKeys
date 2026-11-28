@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Wpis o tej treści już istnieje</string>
     <string name="clipboard_edit_invalid">Treść nie może być pusta</string>
+    <string name="clipboard_edit_too_large">Za duże, by zapisać: przekracza maksymalny rozmiar wpisu</string>
     <string name="clipboard_edit_error">Nie udało się zaktualizować wpisu</string>
 
     <!-- #156 Private copy -->

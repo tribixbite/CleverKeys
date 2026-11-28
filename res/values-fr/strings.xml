@@ -88,6 +88,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Une entrée avec ce contenu existe déjà</string>
     <string name="clipboard_edit_invalid">Le contenu ne peut pas être vide</string>
+    <string name="clipboard_edit_too_large">Trop volumineux pour être enregistré : dépasse la taille maximale d’élément</string>
     <string name="clipboard_edit_error">Échec de la mise à jour de l\'entrée</string>
 
     <!-- #156 Private copy -->

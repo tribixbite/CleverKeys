@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Entri dengan konten ini sudah ada</string>
     <string name="clipboard_edit_invalid">Konten tidak boleh kosong</string>
+    <string name="clipboard_edit_too_large">Terlalu besar untuk disimpan: melebihi ukuran item maksimum</string>
     <string name="clipboard_edit_error">Gagal memperbarui entri</string>
 
     <!-- #156 Private copy -->

@@ -143,7 +143,8 @@ class ClipboardStoredLimitsTest {
 
         val outcome = service.editEntryFollowingClipboard("old", big, ClipboardTab.HISTORY, fillEmptyClipboard = false)
 
-        assertThat(outcome.result).isEqualTo(EditEntryResult.InvalidContent)
+        // Its own result (Fable audit M5, 2026-11-28): InvalidContent showed "Content cannot be empty".
+        assertThat(outcome.result).isEqualTo(EditEntryResult.TooLarge)
         verify(exactly = 0) { database.updateHistoryEntryContent(any(), any()) }
     }
 

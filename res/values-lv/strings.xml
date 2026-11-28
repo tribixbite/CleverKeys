@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Ieraksts ar šādu saturu jau pastāv</string>
     <string name="clipboard_edit_invalid">Saturs nevar būt tukšs</string>
+    <string name="clipboard_edit_too_large">Pārāk liels, lai saglabātu: pārsniedz maks. vienuma izmēru</string>
     <string name="clipboard_edit_error">Neizdevās atjaunināt ierakstu</string>
 
     <!-- #156 Private copy -->

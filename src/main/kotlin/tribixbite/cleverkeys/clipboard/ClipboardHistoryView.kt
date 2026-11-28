@@ -1131,6 +1131,7 @@ class ClipboardHistoryView(ctx: Context, attrs: AttributeSet?) : NonScrollListVi
             // error renders inline in the edit row and the user can fix or deliberately cancel.
             is EditEntryResult.DuplicateConflict -> showEditError(R.string.clipboard_edit_duplicate)
             is EditEntryResult.InvalidContent -> showEditError(R.string.clipboard_edit_invalid)
+            is EditEntryResult.TooLarge -> showEditError(R.string.clipboard_edit_too_large)
             is EditEntryResult.EntryChanged -> showEditError(R.string.clipboard_edit_changed)
             is EditEntryResult.Error, null -> showEditError(R.string.clipboard_edit_error)
         }

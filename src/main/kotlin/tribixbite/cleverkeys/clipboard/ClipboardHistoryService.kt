@@ -865,9 +865,9 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // Validate size limit (stored, as for a capture: [storedLimits])
         val maxSizeKb = storedLimits().maxItemSizeKb
         if (maxSizeKb > 0) {
-            val sizeBytes = newContent.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
-            if (sizeBytes > maxSizeKb * 1024) {
-                return EditOutcome(EditEntryResult.InvalidContent, false)
+            if (ClipboardSizePolicy.utf8Bytes(newContent) > maxSizeKb * 1024L) {
+                // Its own result and message (Fable audit M5): InvalidContent said "cannot be empty".
+                return EditOutcome(EditEntryResult.TooLarge, false)
             }
         }
 

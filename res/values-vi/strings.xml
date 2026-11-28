@@ -125,6 +125,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Đã tồn tại mục có nội dung này</string>
     <string name="clipboard_edit_invalid">Nội dung không được để trống</string>
+    <string name="clipboard_edit_too_large">Quá lớn để lưu: vượt kích thước mục tối đa</string>
     <string name="clipboard_edit_error">Không cập nhật được mục</string>
 
     <!-- #156 Private copy -->

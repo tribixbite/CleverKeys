@@ -96,6 +96,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Položka s tímto obsahem již existuje</string>
     <string name="clipboard_edit_invalid">Obsah nemůže být prázdný</string>
+    <string name="clipboard_edit_too_large">Příliš velké k uložení: přesahuje maximální velikost položky</string>
     <string name="clipboard_edit_error">Aktualizace položky se nezdařila</string>
 
     <!-- #156 Private copy -->

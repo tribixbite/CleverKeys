@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">May entry na may ganitong nilalaman</string>
     <string name="clipboard_edit_invalid">Hindi maaaring walang laman</string>
+    <string name="clipboard_edit_too_large">Masyadong malaki para i-save: lampas sa maximum na sukat ng item</string>
     <string name="clipboard_edit_error">Hindi na-update ang entry</string>
 
     <!-- #156 Private copy -->

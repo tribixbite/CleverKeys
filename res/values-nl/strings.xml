@@ -96,6 +96,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Er bestaat al een item met deze inhoud</string>
     <string name="clipboard_edit_invalid">Inhoud mag niet leeg zijn</string>
+    <string name="clipboard_edit_too_large">Te groot om op te slaan: groter dan de maximale itemgrootte</string>
     <string name="clipboard_edit_error">Bijwerken van item mislukt</string>
 
     <!-- #156 Private copy -->

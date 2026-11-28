@@ -743,6 +743,8 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Saving an edited clipping over the size limit says it is too large; it said "Content cannot be
+  empty".
 - After an edited clipping was put on the clipboard while History was off, the next copy of exactly
   that text is recorded (it was skipped once).
 - A clipping over the size limit that arrives as a text file is no longer stored when its "too

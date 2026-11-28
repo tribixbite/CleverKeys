@@ -120,6 +120,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Există deja o intrare cu acest conținut</string>
     <string name="clipboard_edit_invalid">Conținutul nu poate fi gol</string>
+    <string name="clipboard_edit_too_large">Prea mare pentru a fi salvat: depășește dimensiunea maximă a elementului</string>
     <string name="clipboard_edit_error">Actualizarea intrării a eșuat</string>
 
     <!-- #156 Private copy -->

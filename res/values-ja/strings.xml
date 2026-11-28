@@ -96,6 +96,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">この内容の項目はすでに存在します</string>
     <string name="clipboard_edit_invalid">内容を空にすることはできません</string>
+    <string name="clipboard_edit_too_large">大きすぎて保存できません: アイテム最大サイズを超えています</string>
     <string name="clipboard_edit_error">項目の更新に失敗しました</string>
 
     <!-- #156 Private copy -->

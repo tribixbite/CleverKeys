@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">Запис із таким вмістом уже існує</string>
     <string name="clipboard_edit_invalid">Вміст не може бути порожнім</string>
+    <string name="clipboard_edit_too_large">Завеликий для збереження: перевищено макс. розмір елемента</string>
     <string name="clipboard_edit_error">Не вдалося оновити запис</string>
 
     <!-- #156 Private copy -->

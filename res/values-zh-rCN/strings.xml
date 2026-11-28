@@ -95,6 +95,7 @@
     <!-- Clipboard History View (Material 3) -->
     <string name="clipboard_edit_duplicate">已存在相同内容的条目</string>
     <string name="clipboard_edit_invalid">内容不能为空</string>
+    <string name="clipboard_edit_too_large">太大，无法保存：超过条目最大大小</string>
     <string name="clipboard_edit_error">更新条目失败</string>
 
     <!-- #156 Private copy -->
