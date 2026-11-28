@@ -750,6 +750,8 @@ editor that used to be listed here already ship in 2.0.)
   browser page), the bar no longer offers the previous box's swipe alternates and Backspace no
   longer undoes that swipe there. A tap on such an alternate replaced a word in the new box and
   took back the learning of the word kept in the first one.
+- Loading a dictionary no longer runs a regular expression for every word (accent folding and
+  the swipe engine's word projection); the folded words are unchanged.
 - Private copy from the text-selection menu uses the largest-clipping size saved in Settings,
   also right after a restore while the keyboard is not running (it used a copy that only the
   running keyboard refreshes).

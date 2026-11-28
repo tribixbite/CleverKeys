@@ -13,6 +13,9 @@ class LanguageDetector {
     companion object {
         private const val TAG = "LanguageDetector"
 
+        /** A run of whitespace, compiled once (M6: was compiled on every detection). */
+        private val WHITESPACE = Regex("\\s+")
+
         // Detection thresholds
         private const val MIN_CONFIDENCE_THRESHOLD = 0.6f
         private const val MIN_TEXT_LENGTH = 10 // Minimum characters needed for detection
@@ -371,7 +374,7 @@ class LanguageDetector {
     private fun calculateCommonWordScore(text: String, language: String): Float {
         val commonWords = languageCommonWords[language] ?: return 0.0f
 
-        val textWords = text.split("\\s+".toRegex())
+        val textWords = text.split(WHITESPACE)
         if (textWords.isEmpty()) {
             return 0.0f
         }

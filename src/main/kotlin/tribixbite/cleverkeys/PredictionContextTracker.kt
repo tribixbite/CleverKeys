@@ -29,6 +29,9 @@ class PredictionContextTracker {
         // ≤23 chars for Log tag (Android limit); shortened from "PredictionContextTracker".
         private const val TAG = "PredictionCtxTracker"
 
+        /** A combining mark (Unicode Mn), compiled once (M6: was compiled per typed word). */
+        private val COMBINING_MARK = Regex("\\p{Mn}")
+
         // Maximum number of previous words to track for context
         private const val MAX_CONTEXT_WORDS = 2
 
@@ -963,8 +966,9 @@ class PredictionContextTracker {
         if (text.none { isArabicScript(it) }) {
             // NFD decomposition separates base chars from combining diacritics
             val normalized = Normalizer.normalize(text, Normalizer.Form.NFD)
-            // Remove combining diacritical marks (Unicode category Mn)
-            return normalized.replace(Regex("\\p{Mn}"), "").lowercase()
+            // Remove combining diacritical marks (Unicode category Mn). M6 (2026-11-28): a
+            // hoisted pattern; this ran `Regex("\\p{Mn}")` (a new compile) per typed word.
+            return COMBINING_MARK.replace(normalized, "").lowercase()
         }
         val folded = ArabicScriptFold.fold(text, language)
         val out = StringBuilder(folded.length)
@@ -973,7 +977,7 @@ class PredictionContextTracker {
                 c in '\u064B'..'\u0652' || c == '\u0670' -> Unit // harakat: optional vowel marks
                 isArabicScript(c) -> out.append(c)
                 else -> out.append(
-                    Normalizer.normalize(c.toString(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}"), "")
+                    COMBINING_MARK.replace(Normalizer.normalize(c.toString(), Normalizer.Form.NFD), "")
                 )
             }
         }

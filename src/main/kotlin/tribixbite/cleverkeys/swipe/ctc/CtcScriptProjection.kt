@@ -44,9 +44,6 @@ import kotlin.math.ln
  */
 object CtcScriptProjection {
 
-    /** Combining diacritical marks — the NFD residue to discard (el, he only). */
-    private val COMBINING = Regex("[\\p{Mn}]")
-
     /**
      * Non-alphabet joiners removed rather than rejected (the STRIP convention), for EVERY
      * script. Wider than [CtcAzProjection]'s set by `ʼ`, `‘` and `` ` ``, per PHASE_O §3.4;
@@ -113,7 +110,7 @@ object CtcScriptProjection {
         var text = word.lowercase(Locale.ROOT)
         if (stripMarks) {
             text = Normalizer.normalize(
-                COMBINING.replace(Normalizer.normalize(text, Normalizer.Form.NFD), ""),
+                CtcAzProjection.stripNonSpacingMarks(Normalizer.normalize(text, Normalizer.Form.NFD)),
                 Normalizer.Form.NFC,
             )
         }

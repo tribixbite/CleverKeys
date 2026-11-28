@@ -26,9 +26,6 @@ import java.util.Locale
  */
 object CtcAzProjection {
 
-    /** Combining diacritical marks — the NFD residue to discard. */
-    private val COMBINING = Regex("[\\p{Mn}]")
-
     /** Non-alphabet joiners removed rather than rejected (the STRIP convention). */
     private val JOINERS = charArrayOf('\'', '’', '-')
 
@@ -41,15 +38,49 @@ object CtcAzProjection {
     )
 
     /**
+     * [text] without its non-spacing marks (Unicode category Mn, any plane): the char-loop twin
+     * of `Regex("[\\p{Mn}]").replace(text, "")`, which these projections ran once per
+     * dictionary word (final Fable audit M6, 2026-11-28; pinned against the regex over the shipped
+     * word lists by AccentNormalizerTest). ASCII has no marks, so an ASCII [text] is returned as is.
+     */
+    internal fun stripNonSpacingMarks(text: String): String {
+        var firstMark = -1
+        var i = 0
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            if (cp >= 0x80 && Character.getType(cp) == Character.NON_SPACING_MARK.toInt()) {
+                firstMark = i
+                break
+            }
+            i += Character.charCount(cp)
+        }
+        if (firstMark < 0) return text
+        val sb = StringBuilder(text.length).append(text, 0, firstMark)
+        while (i < text.length) {
+            val cp = text.codePointAt(i)
+            if (Character.getType(cp) != Character.NON_SPACING_MARK.toInt()) sb.appendCodePoint(cp)
+            i += Character.charCount(cp)
+        }
+        return sb.toString()
+    }
+
+    /**
      * The a–z surface of [word], or null when it has no a–z spelling (empty after
      * stripping, or containing a character without an a-z decomposition/expansion, such as a
      * digit or symbol). Common Latin letters `ß`, `œ`, `æ`, and `ø` use explicit expansions.
      */
     fun project(word: String): String? {
         if (word.isEmpty()) return null
-        val decomposed = Normalizer.normalize(word.lowercase(Locale.ROOT), Normalizer.Form.NFD)
-        val sb = StringBuilder(decomposed.length)
-        for (ch in COMBINING.replace(decomposed, "")) {
+        val lower = word.lowercase(Locale.ROOT)
+        // ASCII needs no NFD and carries no combining marks (M6: this runs once per lexicon word).
+        val bare = if (lower.all { it.code < 0x80 }) {
+            lower
+        } else {
+            // The combining marks are the NFD residue to discard.
+            stripNonSpacingMarks(Normalizer.normalize(lower, Normalizer.Form.NFD))
+        }
+        val sb = StringBuilder(bare.length)
+        for (ch in bare) {
             if (ch in JOINERS) continue
             val expansion = EXPANSIONS[ch]
             if (expansion != null) {

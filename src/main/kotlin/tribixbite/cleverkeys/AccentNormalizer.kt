@@ -29,9 +29,10 @@ import java.text.Normalizer
  */
 object AccentNormalizer {
 
-    // Regex to match combining diacritical marks (accents, umlauts, etc.)
-    // Unicode range U+0300 to U+036F covers most Latin diacritics
-    private val DIACRITICS_REGEX = Regex("[\\u0300-\\u036F]")
+    // Combining diacritical marks (accents, umlauts, etc.) are U+0300 to U+036F, which covers
+    // most Latin diacritics; step 3 of [normalize] drops exactly that range.
+    private const val COMBINING_FIRST = '\u0300'
+    private const val COMBINING_LAST = '\u036F'
 
     // Special character replacements that aren't handled by NFD
     private val SPECIAL_REPLACEMENTS = mapOf(
@@ -64,10 +65,20 @@ object AccentNormalizer {
     fun normalize(word: String): String {
         if (word.isEmpty()) return word
 
-        // Step 1: Handle special characters first
-        var result = word.lowercase()
-        for ((char, replacement) in SPECIAL_REPLACEMENTS) {
-            result = result.replace(char.toString(), replacement)
+        // Final Fable audit M6 (2026-11-28): this runs once per dictionary word at load
+        // (NormalizedPrefixIndex.addWord), and used to make 18 String.replace passes and a Regex
+        // per word. An ASCII word has no special letter, NFD leaves it unchanged and it has no
+        // combining mark, so it only needs lowercasing. AccentNormalizerTest pins the output
+        // against the old regex implementation over the shipped word lists.
+        if (word.all { it.code < 0x80 }) return word.lowercase()
+
+        // Step 1: Handle special characters first. One pass is the same as one replace per
+        // letter in turn: every replacement is ASCII, so none creates another special letter.
+        val lower = word.lowercase()
+        val result = StringBuilder(lower.length + 4)
+        for (c in lower) {
+            val replacement = SPECIAL_REPLACEMENTS[c]
+            if (replacement != null) result.append(replacement) else result.append(c)
         }
 
         // Step 2: Apply NFD normalization (decomposes accented characters)
@@ -75,7 +86,9 @@ object AccentNormalizer {
         val normalized = Normalizer.normalize(result, Normalizer.Form.NFD)
 
         // Step 3: Remove combining diacritical marks
-        return DIACRITICS_REGEX.replace(normalized, "")
+        val out = StringBuilder(normalized.length)
+        for (c in normalized) if (c !in COMBINING_FIRST..COMBINING_LAST) out.append(c)
+        return out.toString()
     }
 
     /**

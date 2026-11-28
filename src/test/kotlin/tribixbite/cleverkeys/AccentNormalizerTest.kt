@@ -1,7 +1,13 @@
 package tribixbite.cleverkeys
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
+import tribixbite.cleverkeys.swipe.ctc.CtcAzProjection
+import tribixbite.cleverkeys.swipe.geometric.CkdtDictionaryReader
+import java.io.File
+import java.text.Normalizer
+import java.util.Locale
 
 /**
  * Pure JVM tests for AccentNormalizer.
@@ -268,5 +274,130 @@ class AccentNormalizerTest {
     fun `normalize handles multiple accents on same word`() {
         assertThat(AccentNormalizer.normalize("résumé")).isEqualTo("resume")
         assertThat(AccentNormalizer.normalize("naïveté")).isEqualTo("naivete")
+    }
+
+    // =========================================================================
+    // Final Fable audit M6 (2026-11-28): no Regex per dictionary word
+    // =========================================================================
+
+    /**
+     * The implementations as they were before M6 (a Regex per call), kept as the oracle: the char
+     * loops that replaced them must give the same output for every word.
+     */
+    private object RegexReference {
+        private val DIACRITICS = Regex("[\\u0300-\\u036F]")
+        private val COMBINING = Regex("[\\p{Mn}]")
+        private val SPECIAL = mapOf(
+            'ß' to "ss", 'ø' to "o", 'Ø' to "o", 'ð' to "d", 'Ð' to "d", 'þ' to "th", 'Þ' to "th",
+            'æ' to "ae", 'Æ' to "ae", 'œ' to "oe", 'Œ' to "oe", 'ł' to "l", 'Ł' to "l", 'đ' to "d",
+            'Đ' to "d", 'ı' to "i", 'ħ' to "h", 'Ħ' to "h",
+        )
+        private val AZ_JOINERS = charArrayOf('\'', '’', '-')
+        private val AZ_EXPANSIONS = mapOf('ß' to "ss", 'œ' to "oe", 'æ' to "ae", 'ø' to "o")
+
+        fun normalize(word: String): String {
+            if (word.isEmpty()) return word
+            var result = word.lowercase()
+            for ((char, replacement) in SPECIAL) result = result.replace(char.toString(), replacement)
+            return DIACRITICS.replace(Normalizer.normalize(result, Normalizer.Form.NFD), "")
+        }
+
+        fun stripNonSpacingMarks(text: String): String = COMBINING.replace(text, "")
+
+        fun azProject(word: String): String? {
+            if (word.isEmpty()) return null
+            val decomposed = Normalizer.normalize(word.lowercase(Locale.ROOT), Normalizer.Form.NFD)
+            val sb = StringBuilder(decomposed.length)
+            for (ch in COMBINING.replace(decomposed, "")) {
+                if (ch in AZ_JOINERS) continue
+                val expansion = AZ_EXPANSIONS[ch]
+                if (expansion != null) {
+                    sb.append(expansion)
+                    continue
+                }
+                if (ch !in 'a'..'z') return null
+                sb.append(ch)
+            }
+            return if (sb.isEmpty()) null else sb.toString()
+        }
+    }
+
+    /**
+     * Every word of the shipped dictionaries (the APK's assets, and the language packs' when the
+     * pack sources are on this machine: they are not in git), plus cases those lists may lack:
+     * capitals of the special letters, Turkish dotted I, Greek, Hebrew points, Arabic harakat,
+     * Devanagari, a supplementary-plane mark, a lone surrogate and mixed scripts.
+     */
+    private val oracleCorpus: List<String> by lazy {
+        val words = LinkedHashSet<String>()
+        fun dictionariesIn(dir: File): List<File> =
+            dir.listFiles().orEmpty().filter { it.isFile && it.name.endsWith("_enhanced.bin") }
+        val bins = dictionariesIn(File("src/main/assets/dictionaries")) +
+            File("scripts/dictionaries").listFiles().orEmpty().filter { it.isDirectory }.flatMap { dictionariesIn(it) }
+        check(bins.size >= 7) { "expected the shipped dictionaries (run from project root): $bins" }
+        for (bin in bins) bin.inputStream().use { input -> CkdtDictionaryReader.readEntries(input).mapTo(words) { it.word } }
+        Regex("\"([^\"]+)\"\\s*:").findAll(File("src/main/assets/dictionaries/en_enhanced.json").readText())
+            .mapTo(words) { it.groupValues[1] }
+        words += listOf(
+            "", "a", "ÆSIR", "STRAßE", "ØRESUND", "ŁÓDŹ", "ĐORĐE", "ĦAMRUN", "ÞÓR", "İSTANBUL", "ıslak",
+            "λόγος", "ΆΛΦΑ", "ϊ", "שָׁלוֹם", "مُدَرِّسَة", "नमस्ते", "a\uD834\uDD67b", "x\uD834", "café-au-lait",
+            "l’été", "don't", "naïveté", "ǅemal", "ﬁne", "Å", "A\u030A", "e\u0301\u0302", "12ab", "Ⅻ",
+        )
+        words.toList()
+    }
+
+    @Test
+    fun `normalize matches the regex implementation on every shipped word`() {
+        var checked = 0
+        for (word in oracleCorpus) {
+            assertWithMessage("normalize('$word')").that(AccentNormalizer.normalize(word))
+                .isEqualTo(RegexReference.normalize(word))
+            checked++
+        }
+        assertWithMessage("words checked").that(checked).isGreaterThan(100_000)
+    }
+
+    @Test
+    fun `the CTC a-z projection and mark stripping match the regex implementation`() {
+        for (word in oracleCorpus) {
+            assertWithMessage("project('$word')").that(CtcAzProjection.project(word))
+                .isEqualTo(RegexReference.azProject(word))
+            val decomposed = Normalizer.normalize(word.lowercase(Locale.ROOT), Normalizer.Form.NFD)
+            assertWithMessage("stripNonSpacingMarks('$word')").that(CtcAzProjection.stripNonSpacingMarks(decomposed))
+                .isEqualTo(RegexReference.stripNonSpacingMarks(decomposed))
+        }
+    }
+
+    /**
+     * No Regex on the dictionary and typing paths. The per-word folds (AccentNormalizer and the
+     * two CTC projections, run for every dictionary word at load) use no Regex at all, hoisted or
+     * not; PredictionContextTracker and LanguageDetector, which match per typed word, build theirs
+     * only as hoisted constants (`private val`). Before M6 the folds ran a Regex per word, and the
+     * tracker and the detector compiled a new one per call.
+     */
+    @Test
+    fun `no Regex is compiled per call on the dictionary and typing paths`() {
+        fun code(path: String) = File(path).readLines().withIndex().filter { (_, line) ->
+            val t = line.trimStart()
+            !t.startsWith("*") && !t.startsWith("//") && !t.startsWith("/*")
+        }
+        val regexFree = listOf(
+            "src/main/kotlin/tribixbite/cleverkeys/AccentNormalizer.kt",
+            "src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcAzProjection.kt",
+            "src/main/kotlin/tribixbite/cleverkeys/swipe/ctc/CtcScriptProjection.kt",
+        )
+        val hoistedOnly = listOf(
+            "src/main/kotlin/tribixbite/cleverkeys/PredictionContextTracker.kt",
+            "src/main/kotlin/tribixbite/cleverkeys/LanguageDetector.kt",
+        )
+        val offenders = regexFree.flatMap { path ->
+            code(path).filter { (_, line) -> "Regex" in line || ".toRegex()" in line }
+                .map { (i, line) -> "$path:${i + 1}: ${line.trim()}" }
+        } + hoistedOnly.flatMap { path ->
+            code(path).filter { (_, line) ->
+                ("Regex(" in line || ".toRegex()" in line) && !line.trimStart().startsWith("private val ")
+            }.map { (i, line) -> "$path:${i + 1}: ${line.trim()}" }
+        }
+        assertWithMessage("Regex on a per-word or per-call path").that(offenders).isEmpty()
     }
 }
