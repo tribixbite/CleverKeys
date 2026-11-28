@@ -2497,6 +2497,11 @@ class SuggestionHandler(
         val tail = placed.word + placed.trailing
         val full = placed.anchor + tail
         if (!EditorInitialText.supported()) {
+            // TODO(final Fable audit, low, 2026-11-28): below API 30 the EditorInfo carries no
+            // initial text, so this proof is the caret offset alone: a look-alike field whose text
+            // has the same length (`fix toy ` vs `abc def `) passes it and the learn window
+            // continues there. A bounded getTextBeforeCursor read compared with the placement
+            // would make it exact; not done for 2.0 (API 24-29 only).
             return placed.wholeField && info.initialSelStart == full.length && info.initialSelEnd == full.length
         }
         if (!placed.wholeField && !placed.provable) return false

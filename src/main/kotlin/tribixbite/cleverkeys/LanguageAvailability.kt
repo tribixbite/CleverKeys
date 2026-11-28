@@ -46,10 +46,16 @@ object LanguageAvailability {
      */
     private val generation = java.util.concurrent.atomic.AtomicLong()
 
-    /** Drop the cached scan; the next query rescans. Called after every pack import/delete. */
+    /**
+     * Drop the cached scan; the next query rescans. Called after every pack import/delete.
+     * Under the same lock as [snapshot]'s store (final Fable audit, low, 2026-11-28), so the
+     * generation bump and the clear are one step for a scan that is about to store its result.
+     */
     fun invalidate() {
-        generation.incrementAndGet()
-        cached = null
+        synchronized(this) {
+            generation.incrementAndGet()
+            cached = null
+        }
     }
 
     private fun snapshot(context: Context): Snapshot {

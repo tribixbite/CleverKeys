@@ -1062,8 +1062,8 @@ class WordPredictor : Predictor {
 
     /**
      * Move the NEXT-WORD language alone: the bigram tables, that language's static
-     * continuations (`.cklm`, parsed on the seed loader's thread, never on the commit path),
-     * the learned context model and the multi-language manager. The dictionary's disabled
+     * continuations (`.cklm`, parsed on the seed loader's thread, never on the commit path)
+     * and the learned context model. The dictionary's disabled
      * words, custom words and user-dictionary observer stay with [dictionaryLanguage]; the
      * secondary language's lexicon state belongs to the secondary path.
      *

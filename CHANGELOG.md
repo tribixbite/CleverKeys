@@ -1389,6 +1389,8 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Known issues
 
+- Removing the language pack of the primary language leaves that language selected with no
+  dictionary. Choose another primary language in Settings, or import the pack again.
 - With Samsung gesture navigation and the gesture hint turned off, the bottom key row sits at
   the screen edge, inside the home-gesture area: the system still gives the keyboard the
   hidden bar's height. A fix is planned for 2.1.

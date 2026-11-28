@@ -131,10 +131,9 @@ Complete mapping of settings to search terms, wiki guides, and implementation fi
 
 | Setting | Search Keywords | Wiki | Files |
 |---------|-----------------|------|-------|
-| Enable Multi-Language | multilingual, bilingual | [multi-language.md](wiki/layouts/multi-language.md) | `MultiLanguageManager.kt` |
-| Primary/Secondary Language | dictionary, locale | [multi-language.md](wiki/layouts/multi-language.md) | `OptimizedVocabulary.kt` |
-| Language Detection | auto, detect, switch | [multi-language.md](wiki/layouts/multi-language.md) | `LanguageDetector.kt`, `MultiLanguageManager.kt` |
-| Prefix Boost | prefix, boost, language | [multi-language.md](wiki/layouts/multi-language.md) | `PrefixBoostTrie.kt` |
+| Enable Multi-Language | multilingual, bilingual | [multi-language.md](wiki/layouts/multi-language.md) | `LayoutLanguageBinding.kt`, `ActiveLanguageSync.kt`, `WordPredictor.kt` |
+| Primary/Secondary Language | dictionary, locale | [multi-language.md](wiki/layouts/multi-language.md) | `LayoutLanguageBinding.kt`, `ActiveLanguageSync.kt` |
+| Language Detection | auto, detect, switch | [multi-language.md](wiki/layouts/multi-language.md) | `LanguageDetector.kt`, `WordPredictor.kt` (`tryAutoLanguageDetection`) |
 
 ---
 

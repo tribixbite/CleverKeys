@@ -32,7 +32,7 @@ The internal engineering notes are
 | LayoutsPreference | `prefs/LayoutsPreference.kt` | Stores the optional `language` field inside each `layouts` entry; `loadLayoutsWithBindings` |
 | LayoutManagerActivity | `activities/LayoutManagerActivity.kt` | Per-layout "Language: X" chip and the Layout language dialog; missing-pack warning |
 | WordPredictor | `WordPredictor.kt` | Primary + secondary dictionaries; inline secondary merge (`secondary_prediction_weight`); auto-detection call |
-| MultiLanguageManager / LanguageDetector | `MultiLanguageManager.kt`, `LanguageDetector.kt` | `detectAndSwitch` from recent words (word and character patterns) |
+| LanguageDetector | `LanguageDetector.kt` (called from `WordPredictor.tryAutoLanguageDetection`) | Scores the recent words (word and character patterns) for the chosen primary + secondary pair only |
 | AccentNormalizer / NormalizedPrefixIndex | `AccentNormalizer.kt`, `NormalizedPrefixIndex.kt` | Accent-insensitive lookup for 26-letter input |
 | LanguagePackManager | `langpack/LanguagePackManager.kt` | Imported language packs |
 
@@ -140,12 +140,13 @@ Unchanged from earlier versions. With Multi-Language on and a secondary chosen,
 `WordPredictor.predictInternal` merges secondary candidates that are not already in the
 primary slate, scored with `secondary_prediction_weight` (default 0.9). Accent-insensitive
 lookup lets 26-letter input reach accented words. With **Auto-Detect Language** on,
-`MultiLanguageManager.detectAndSwitch` checks recent words against the detection
-sensitivity (a minimum confidence) and may switch the next-word and learned-context models.
-Since 2026-11-25 it switches only between the primary and the chosen secondary language: it
-does not run without a secondary (`WordPredictor.tryAutoLanguageDetection` returns), and
-`detectAndSwitch(…, allowed)` refuses any other detected language before the manager's own
-active language changes. The two settings are shown only with a secondary language
+`WordPredictor.tryAutoLanguageDetection` scores the recent words with
+`LanguageDetector.detectLanguageFromWordsWithConfidence(window, chosen)` against the detection
+sensitivity (a minimum confidence) and may switch the next-word and learned-context models
+(`switchNextWordLanguage`; the primary dictionary stays). It chooses only between the primary
+and the chosen secondary language: it does not run without a secondary, and the detector is
+asked about that pair alone. (A `MultiLanguageManager.detectAndSwitch` did this before
+2026-11-26; it was never built in production and was deleted, audit B2.) The two settings are shown only with a secondary language
 (`MultiLanguageSection`). Measured before the change (`LanguageDetectionEvalTest`): with
 English chosen, 1.5–3.4% of words typed in Spanish, Portuguese or French switched the models.
 

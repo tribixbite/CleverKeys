@@ -1028,8 +1028,10 @@ class CtcEngineAdapter(
      */
     /**
      * `dictionaries/contraction_frequencies_<lang>.json`: alias key → the elision's measured
-     * frequency ([CtcContractionKeys.inject]). Shipped only for languages that passed the human
-     * swipe-corpus gate (French, 2026-11-25); empty for every other language. Read as a stream,
+     * frequency ([CtcContractionKeys.inject]). Shipped only for languages that passed their
+     * gate: French (the human swipe-corpus gate, `docs/eval/2026-11-25-elision-own-frequency.md`)
+     * and English (`docs/eval/2026-11-25-english-contraction-frequencies.md`), both 2026-11-25;
+     * empty for every other language. Read as a stream,
      * never through a regex: see [CtcContractionKeys.parseAttestedFrequencies] (native heap).
      */
     private fun attestedContractionFrequencies(lang: String): Map<String, Double> = try {
