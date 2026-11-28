@@ -564,6 +564,25 @@ arm64 `8115e576…`) is being run on all three.
 - r23 (`a62ce0f6f`, arm64 `672015a6…`): pure 4,252, mock 2,253, androidTest compiles; pushed;
   device runs L1–L8, C1–C4 in progress on the Saga `.1.130`, Note10+ and Pixel. Instrumented
   clipboard tests (`ClipboardSoftWrapEditTest`, merge cases) not run: emulator.wtf out of credits.
+- **r23 results:** clipboard C1–C4 PASS on the Saga and Note10+ (the rustdesk→tribixbite edit
+  merges, Ctrl+V / paste corner give the edited URL; no Short Swipe paste is bound on either, so
+  that path is untested). L2b failed (a first word after a rotation stayed learned: Pixel Chrome,
+  Saga native field): fixed `dbe38d8be`, tightened after a Fable check `2a724d7ea` (the proof is
+  read before the deletion; `windowNeedsProof` sticky). r24 (`2a724d7ea`, `a1fbad78…`) PASS on
+  all three phones; it found a cleared field pairing its first word with the next one
+  (`blue → now`): fixed `bfec92beb` (r25 `f520d7d6…`, PASS Saga + Note10+) and for deletes from
+  outside the keyboard (hardware / adb DEL) `e72d3cda5` (r26 `52d5d592…`, PASS Saga). Suites at
+  `e72d3cda5`: pure 4,252, mock 2,266; pushed.
+- **Known, kept (2.1 / TODO):** deleting a whole sentence takes back only its last two words; the
+  earlier pairs (`the → red`) and words' +1 stay (agent recommendation: correct, a deletion is a
+  rewording, not a rejection — maintainer to confirm). Swipe undo does not survive a restart that
+  finishes the input view (Chrome rotation, Settings search; since 2026-03, TODO in
+  `onFinishInputView`). Hardware-keyboard typing learns nothing (TODO `CleverKeysService.onKeyDown`).
+  Pairs typed during the Auto-Detect lag are filed in the old language (TODO). Auto-Detect needs
+  ~13 strongly Spanish words at 0.6 (absolute score grows with word count): a comparative rule is
+  proposed and needs an eval-tuned decision (maintainer: 2.0 or 2.1). Pixel: about 34–53 existing
+  words' usage counts rose across the r22–r24 runs (only a vocabulary import restores them;
+  maintainer to decide).
 
 **Status 2026-11-26, morning (agent).** Maintainer: real searches/clipboard allowed on the Note10+;
 compact-dictionary estimate; Fable audit; DM load timing; "do the peak fix for 2.0". Release r19
