@@ -60,6 +60,8 @@ class SuggestionHandler(
     private val keyeventhandler: KeyEventHandler
 ) : KeyEventHandler.LearningHooks {
     companion object {
+        /** Apostrophes a word can carry (`cat's`, `cat’s`), for [wordStandsAtEnd]'s word run. */
+        private val WORD_APOSTROPHES = charArrayOf('\'', '\u2019')
         private const val TAG = "SuggestionHandler"
 
         /** A suffix edit stamps at most: pre-edit caret, owned-tail selection, final caret. */
@@ -2717,8 +2719,12 @@ class SuggestionHandler(
         swipeCorrectionTracker?.clear(); suggestionBar?.clearSuggestions()
         wordEditReceipt = old.copy(edit = edit, learning = fresh)
         lastLearningCommit = fresh
-        // The learned word is now [newWord]; the old placement no longer describes it.
-        learnedPlacement = null
+        // The learned word is now [newWord]; the old placement no longer describes it. Watch the
+        // new word where the editor now shows it, so a later deletion of `cat's` (or of `cat`
+        // after the suffix undo) still takes its learning back (test-gap audit 2026-11-28, item 2:
+        // a null placement left `fix → cat's` learned after the word was deleted). The word
+        // before it keeps its own placement ([previousPlacement]); an unreadable editor watches nothing.
+        learnedPlacement = fresh?.let { commit -> placementOf(newWord, commit, readAroundCaret(old.ic, newWord)) }
         // The operation's callback allowance stays until its own callbacks consume it,
         // a later operation replaces it, or its time bound passes (OwnedSelectionLedger).
         return true
@@ -3584,14 +3590,17 @@ class SuggestionHandler(
 
     /**
      * [word] ends [before] (past its trailing separators), or ends it before a run of word
-     * characters typed after a separator (a word being typed or shortened after it).
+     * characters typed after a separator (a word being typed or shortened after it). The run may
+     * hold apostrophes: what is left of a possessive deleted letter by letter (`fix cat'` after
+     * `cat's`) is still the word being shortened (test-gap audit 2026-11-28, item 2: the window
+     * closed there and the next word lost its pair with `fix`).
      */
     private fun wordStandsAtEnd(before: String, word: String): Boolean {
         fun endsWithWord(text: String) =
             textBeforeTrailingWord(text, word)?.let { endsAtWordBoundary(it, word) } == true
         if (endsWithWord(before)) return true
         var i = before.length
-        while (i > 0 && WordChars.isWordCharAt(before, i - 1)) i--
+        while (i > 0 && (WordChars.isWordCharAt(before, i - 1) || before[i - 1] in WORD_APOSTROPHES)) i--
         if (i == before.length || i == 0) return false
         return endsWithWord(before.substring(0, i))
     }

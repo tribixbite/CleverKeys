@@ -7,6 +7,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedText
 import android.view.inputmethod.ExtractedTextRequest
 import android.view.inputmethod.InputConnection
+import android.view.inputmethod.SurroundingText
 import com.google.common.truth.Truth.assertWithMessage
 import io.mockk.every
 import io.mockk.just
@@ -53,8 +54,36 @@ import java.util.concurrent.TimeUnit
  * Seams that stay mocks: the personalization engine (recorded via `recordWordTyped`), the
  * selection-adaptation manager (recorded via `recordSelection`), the suggestion bar, the
  * contraction manager and the prediction executor.
+ *
+ * # Platform read paths
+ *
+ * This class runs every test with the pre-API-31 reads (extracted text). Two subclasses run the
+ * same tests on the API 31+ path, where [SuggestionHandler]'s end-of-field proof and
+ * [EditorSelectionReader] read `getSurroundingText` first ([readPath]): one with an editor that
+ * reports an absolute offset (TextView), one with a Chrome-style editor that reports offset -1
+ * (production falls back to the extracted text). Test-gap audit 2026-11-28, item 1.
  */
-class LearningFunnelBookkeepingTest {
+open class LearningFunnelBookkeepingTest {
+
+    /** Which platform read path the fake editor and the readers' seams model. */
+    enum class ReadPath(val sdk: Int, val surroundingOffsetKnown: Boolean?, val extractedTextReadable: Boolean) {
+        /** Below API 31: no getSurroundingText; the extracted-text read only. */
+        EXTRACTED_ONLY(0, null, true),
+
+        /**
+         * API 34, an editor answering getSurroundingText with an absolute offset (TextView). Its
+         * extracted text is made unreadable at a collapsed caret, so every proof these tests need
+         * there must come from the surrounding-text read (with it unreadable on the EXTRACTED_ONLY
+         * path, 28 tests fail).
+         */
+        SURROUNDING_ABSOLUTE(34, true, false),
+
+        /** API 34, an editor answering getSurroundingText with offset -1 (Chrome's WebView). */
+        SURROUNDING_UNKNOWN_OFFSET(34, false, true),
+    }
+
+    /** The read path this run models; subclasses choose another. */
+    protected open val readPath: ReadPath = ReadPath.EXTRACTED_ONLY
 
     private val objenesis = ObjenesisStd()
     private val scheduler = ScheduledThreadPoolExecutor(1)
@@ -80,6 +109,21 @@ class LearningFunnelBookkeepingTest {
 
     private fun cursor(): Int = (cursorAt ?: editor.length).coerceIn(0, editor.length)
 
+    /** The other end of a selection the keyboard made (setSelection); null = a collapsed caret. */
+    private var selectionAnchor: Int? = null
+
+    private fun selectionLow(): Int = minOf(selectionAnchor ?: cursor(), cursor()).coerceIn(0, editor.length)
+    private fun selectionHigh(): Int = maxOf(selectionAnchor ?: cursor(), cursor()).coerceIn(0, editor.length)
+
+    /**
+     * When true, the selection updates of the keyboard's own writes (commitText, setSelection,
+     * deleteSurroundingText) are queued here as (start, end) instead of being taken as already
+     * reported, and [deliverOwnSelectionUpdates] sends them through the service's real gate
+     * ([SuggestionHandler.onEditorSelectionChanged]). Off for most tests (test-gap item 2).
+     */
+    private var queueOwnSelectionUpdates = false
+    private val ownSelectionUpdates = ArrayDeque<Pair<Int, Int>>()
+
     /**
      * The caret the editor last reported (onUpdateSelection's old position): kept current by the
      * keyboard's own commits and deletions through [ic]; edits made straight on [editor] (typed
@@ -87,6 +131,14 @@ class LearningFunnelBookkeepingTest {
      */
     private var reportedCaret = -1
     private lateinit var ic: InputConnection
+
+    /** How many times the readers asked the fake editor for its surrounding text. */
+    protected var surroundingTextCalls = 0
+
+    /** The editor reports a write of the keyboard's own (see [queueOwnSelectionUpdates]). */
+    private fun ownSelectionWritten(start: Int, end: Int) {
+        if (queueOwnSelectionUpdates) ownSelectionUpdates.addLast(start to end) else reportedCaret = cursor()
+    }
 
     /** Words the handler last pushed to the bar; `getTopSuggestion` answers from it. */
     private var barWords: List<String> = emptyList()
@@ -169,21 +221,44 @@ class LearningFunnelBookkeepingTest {
         editor.setLength(0)
         cursorAt = null
         ic = mockk(relaxed = true)
+        selectionAnchor = null
+        queueOwnSelectionUpdates = false
+        ownSelectionUpdates.clear()
         every { ic.getTextBeforeCursor(any(), any()) } answers {
             val n = firstArg<Int>()
-            val c = cursor()
+            val c = selectionLow()
             editor.substring(maxOf(0, c - n), c)
         }
         every { ic.getTextAfterCursor(any(), any()) } answers {
-            val c = cursor()
+            val c = selectionHigh()
             editor.substring(c, minOf(editor.length, c + firstArg<Int>()))
+        }
+        every { ic.getSelectedText(any()) } answers {
+            if (selectionAnchor == null) null else editor.substring(selectionLow(), selectionHigh())
+        }
+        every { ic.finishComposingText() } returns true
+        every { ic.setSelection(any(), any()) } answers {
+            val start = firstArg<Int>()
+            val end = secondArg<Int>()
+            if (start < 0 || end < 0 || start > editor.length || end > editor.length) return@answers false
+            cursorAt = end
+            selectionAnchor = start.takeIf { it != end }
+            ownSelectionWritten(start, end)
+            true
         }
         every { ic.commitText(any(), any()) } answers {
             val text = firstArg<CharSequence>()
-            val c = cursor()
-            editor.insert(c, text)
-            cursorAt = cursorAt?.let { it + text.length }
-            reportedCaret = cursor()
+            if (selectionAnchor != null) {
+                // A selection is replaced by the text (the suffix edit selects its owned space).
+                val low = selectionLow()
+                editor.replace(low, selectionHigh(), text.toString())
+                cursorAt = low + text.length
+                selectionAnchor = null
+            } else {
+                editor.insert(cursor(), text)
+                cursorAt = cursorAt?.let { it + text.length }
+            }
+            ownSelectionWritten(cursor(), cursor())
             true
         }
         every { ic.deleteSurroundingText(any(), any()) } answers {
@@ -192,7 +267,7 @@ class LearningFunnelBookkeepingTest {
             val end = minOf(editor.length, c + secondArg<Int>())
             editor.delete(start, end)
             cursorAt = cursorAt?.let { start }
-            reportedCaret = cursor()
+            ownSelectionWritten(cursor(), cursor())
             true
         }
         every { ic.getCursorCapsMode(any()) } returns 0
@@ -202,12 +277,42 @@ class LearningFunnelBookkeepingTest {
             objenesis.newInstance(ExtractedText::class.java).apply {
                 text = editor.toString()
                 startOffset = 0
-                selectionStart = cursor()
+                selectionStart = selectionAnchor ?: cursor()
                 selectionEnd = cursor()
             }
         }
+        // API 31+: getSurroundingText over the same fake editor. The text is the window around
+        // the caret, the selection is relative to that text, and the offset is either the
+        // window's absolute start or -1 (an editor that does not know it, as Chrome reports).
+        every { ic.getSurroundingText(any(), any(), any()) } answers {
+            surroundingTextCalls++
+            val low = selectionLow()
+            val high = selectionHigh()
+            val start = maxOf(0, low - firstArg<Int>())
+            val end = minOf(editor.length, high + secondArg<Int>())
+            val window = editor.substring(start, end)
+            val known = readPath.surroundingOffsetKnown == true
+            // getSurroundingText normalises the selection (low end first).
+            mockk<SurroundingText> {
+                every { text } returns window
+                every { selectionStart } returns low - start
+                every { selectionEnd } returns high - start
+                every { offset } returns if (known) start else -1
+            }
+        }
+        surroundingTextCalls = 0
+        if (!readPath.extractedTextReadable) {
+            // A collapsed caret only: production reads a NON-empty selection from the extracted
+            // text on every platform (getSurroundingText normalises its direction).
+            val readable = ic.getExtractedText(objenesis.newInstance(ExtractedTextRequest::class.java), 0)
+            every { ic.getExtractedText(any(), any()) } answers {
+                if (selectionAnchor == null) null else readable?.apply {
+                    text = editor.toString(); selectionStart = selectionAnchor ?: cursor(); selectionEnd = cursor()
+                }
+            }
+        }
         EditorSelectionReader.newExtractedTextRequest = { objenesis.newInstance(ExtractedTextRequest::class.java) }
-        EditorSelectionReader.platformSdk = { 0 }
+        EditorSelectionReader.platformSdk = { readPath.sdk }
         // The EditorInfo's initial text (API 30+): off unless a test turns it on.
         EditorInitialText.platformSdk = { 0 }
         EditorInitialText.reader = null
@@ -223,7 +328,11 @@ class LearningFunnelBookkeepingTest {
         handler.setField("suggestionBar", bar)
         handler.setField("config", config)
         handler.setField("contractionManager", contractions)
-        handler.setField("keyeventhandler", mockk<KeyEventHandler>(relaxed = true))
+        // The harness's connection is the current editor, so committed words get the verified
+        // word receipt production makes (rememberVerifiedWord), and suffix edits can run.
+        val keyEvents = mockk<KeyEventHandler>(relaxed = true)
+        every { keyEvents.isCurrentEditor(any(), any()) } answers { firstArg<InputConnection?>() === ic }
+        handler.setField("keyeventhandler", keyEvents)
         handler.setField("predictionTasks", mockk<PredictionTaskRunner>(relaxed = true))
         // Objenesis leaves booleans false; production's default for an ordinary field is true.
         handler.setField("fieldAllowsPersonalizedLearning", true)
@@ -1215,14 +1324,44 @@ class LearningFunnelBookkeepingTest {
         // CleverKeysService.onUpdateSelection: an edit that shortened the newest learned word
         // takes its learning back at once (Saga F5), before the cursor bookkeeping below.
         val old = if (reportedCaret >= 0) reportedCaret else cursor()
-        handler.onUnownedSelectionUpdate(old, old, cursor(), cursor(), ic)
+        serviceSelectionUpdate(old, old, cursor(), cursor()) {
+            tracker.synchronizeWithCursor(ic, "en", field)
+            if (tracker.getCurrentWord().isNotEmpty()) {
+                handler.handleCursorSyncPrediction(ic, field)
+            } else {
+                handler.handleCursorParkPrediction(field, ic)
+            }
+        }
         reportedCaret = cursor()
-        tracker.onCursorPositionChanged(cursor())
-        tracker.synchronizeWithCursor(ic, "en", field)
-        if (tracker.getCurrentWord().isNotEmpty()) {
-            handler.handleCursorSyncPrediction(ic, field)
-        } else {
-            handler.handleCursorParkPrediction(field, ic)
+    }
+
+    /**
+     * CleverKeysService.onUpdateSelection's route (test-gap item 2): the update goes through the
+     * handler's owned-callback gate ([SuggestionHandler.onEditorSelectionChanged]), which drops an
+     * update a verified suffix edit owns. An unowned one reaches the learning check
+     * ([SuggestionHandler.onUnownedSelectionUpdate]) and, when the collapsed caret moved,
+     * InputCoordinator.onCursorMoved: [PredictionContextTracker.onCursorPositionChanged] at once,
+     * then [debouncedSync] (the 100 ms debounced sync, run here without the wait).
+     */
+    private fun serviceSelectionUpdate(
+        oldStart: Int, oldEnd: Int, newStart: Int, newEnd: Int, debouncedSync: () -> Unit = {},
+    ) {
+        handler.onEditorSelectionChanged(newStart, newEnd) {
+            handler.onUnownedSelectionUpdate(oldStart, oldEnd, newStart, newEnd, ic)
+            if (newStart == newEnd && oldStart != newStart) {
+                tracker.onCursorPositionChanged(newStart)
+                debouncedSync()
+            }
+        }
+    }
+
+    /** The keyboard's own writes' queued updates, in order, through [serviceSelectionUpdate]. */
+    private fun deliverOwnSelectionUpdates(field: EditorInfo = textField()) {
+        while (ownSelectionUpdates.isNotEmpty()) {
+            val (start, end) = ownSelectionUpdates.removeFirst()
+            val old = if (reportedCaret >= 0) reportedCaret else start
+            serviceSelectionUpdate(old, old, start, end) { tracker.synchronizeWithCursor(ic, "en", field) }
+            reportedCaret = end
         }
     }
 
@@ -1984,7 +2123,7 @@ class LearningFunnelBookkeepingTest {
             editor.deleteCharAt(c - 1)
             cursorAt = cursorAt?.minus(1)
             handler.handleBackspace(ic, textField())
-            handler.onUnownedSelectionUpdate(c, c, c - 1, c - 1, ic)
+            serviceSelectionUpdate(c, c, c - 1, c - 1)
             reportedCaret = c - 1
         }
     }
@@ -2090,7 +2229,7 @@ class LearningFunnelBookkeepingTest {
         cursorAt = start + typed.length
         if (typed.isNotEmpty()) handler.handleRegularTyping(typed, ic, textField())
         // CleverKeysService.onUpdateSelection with the editor's own numbers, e.g. (4,7)→(4,4).
-        handler.onUnownedSelectionUpdate(start, end, cursor(), cursor(), ic)
+        serviceSelectionUpdate(start, end, cursor(), cursor())
         reportedCaret = cursor()
         tracker.synchronizeWithCursor(ic, "en", textField())
     }
@@ -2197,16 +2336,16 @@ class LearningFunnelBookkeepingTest {
      */
     private fun inputCoordinatorSync(field: EditorInfo = textField()) {
         val old = if (reportedCaret >= 0) reportedCaret else cursor()
-        handler.onUnownedSelectionUpdate(old, old, cursor(), cursor(), ic)
-        reportedCaret = cursor()
-        tracker.onCursorPositionChanged(cursor())
-        tracker.synchronizeWithCursor(ic, "en", field)
-        when {
-            tracker.getCurrentWord().isNotEmpty() -> handler.handleCursorSyncPrediction(ic, field)
-            tracker.getLastAutocorrectOriginalWord() == null &&
-                tracker.getLastCommitSource() != PredictionSource.SWIPE -> handler.handleCursorParkPrediction(field, ic)
-            else -> Unit // the bar is kept
+        serviceSelectionUpdate(old, old, cursor(), cursor()) {
+            tracker.synchronizeWithCursor(ic, "en", field)
+            when {
+                tracker.getCurrentWord().isNotEmpty() -> handler.handleCursorSyncPrediction(ic, field)
+                tracker.getLastAutocorrectOriginalWord() == null &&
+                    tracker.getLastCommitSource() != PredictionSource.SWIPE -> handler.handleCursorParkPrediction(field, ic)
+                else -> Unit // the bar is kept
+            }
         }
+        reportedCaret = cursor()
     }
 
     /**
@@ -2408,7 +2547,7 @@ class LearningFunnelBookkeepingTest {
         editor.setLength(editor.length - "well ".length)
         handler.onSwipeWordUndone("well", ic)
         handler.handleBackspace(ic, textField())
-        handler.onUnownedSelectionUpdate(c, c, cursor(), cursor(), ic)
+        serviceSelectionUpdate(c, c, cursor(), cursor())
         reportedCaret = cursor()
         backspaceChars("so ".length)
         newSwipe("fix")
@@ -3035,7 +3174,7 @@ class LearningFunnelBookkeepingTest {
         editor.setLength(0)
         handler.onSwipeWordUndone("mop", ic)
         handler.handleBackspace(ic, chromeField())
-        handler.onUnownedSelectionUpdate(c, c, cursor(), cursor(), ic)
+        serviceSelectionUpdate(c, c, cursor(), cursor())
         newSwipe("map")
 
         assertWithMessage("editor").that(editor.toString()).isEqualTo("map ")
@@ -3133,6 +3272,104 @@ class LearningFunnelBookkeepingTest {
 
         assertWithMessage("car→seat kept").that(bigram("car", "seat")).isEqualTo(1)
         assertWithMessage("seat→now learned").that(bigram("seat", "now")).isEqualTo(1)
+    }
+
+    /**
+     * Test-gap audit 2026-11-28, item 1: the read path this run models is the one production took.
+     * The field's first word deleted with Backspace needs the end-of-field proof; on API 31+ that
+     * asks getSurroundingText first (and, with offset -1, falls back to the extracted text).
+     */
+    @Test
+    fun theEndOfFieldProofAsksThePlatformsReadPath() {
+        val vocabulary = useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        swipe("got", "git")
+        backspaceChars("got ".length)
+
+        assertWithMessage("got's usage reversed").that(vocabulary.getWordUsage("got")).isNull()
+        if (readPath.sdk >= android.os.Build.VERSION_CODES.S) {
+            assertWithMessage("getSurroundingText asked on API ${readPath.sdk}").that(surroundingTextCalls).isGreaterThan(0)
+        } else {
+            assertWithMessage("no getSurroundingText below API 31").that(surroundingTextCalls).isEqualTo(0)
+        }
+    }
+
+    // ------------------------------------- test-gap item 2 (2026-11-28): the service's real gate
+
+    /** `fix ` + swipe `cat`, then the "Append 's" command: `fix cat's `, the receipt follows the suffix. */
+    private fun possessiveCat() {
+        useReceiptVocabulary()
+        config.backspace_undo_swipe = false
+        editor.append("fix ")
+        handler.updateContext("fix")
+        swipe("cat", "cut")
+        queueOwnSelectionUpdates = true
+        assertWithMessage("the suffix edit ran").that(handler.appendSuffix("'s")).isTrue()
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix cat's ")
+        assertWithMessage("precondition: fix→cat's").that(bigram("fix", "cat's")).isEqualTo(1)
+        assertWithMessage("precondition: no fix→cat").that(bigram("fix", "cat")).isEqualTo(0)
+    }
+
+    /**
+     * The keyboard's Backspace after the possessive undoes the suffix (KeyEventHandler: undoSuffix
+     * before any DEL). That deletion's updates are the undo's own, stamped by the suffix edit, so
+     * the gate drops them; three more Backspaces remove `cat `. Neither `fix → cat's` nor
+     * `fix → cat` may stay, and the next word pairs with `fix`.
+     */
+    @Test
+    fun aPossessiveUndoneAndThenDeletedThroughTheGateLeavesNoPair() {
+        possessiveCat()
+        deliverOwnSelectionUpdates()
+        assertWithMessage("Backspace undid the suffix").that(handler.undoSuffix()).isTrue()
+        assertWithMessage("editor after the undo").that(editor.toString()).isEqualTo("fix cat ")
+        deliverOwnSelectionUpdates()
+        queueOwnSelectionUpdates = false
+        backspaceChars("cat ".length)
+        newSwipe("dog")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix dog ")
+        assertWithMessage("no fix→cat's").that(bigram("fix", "cat's")).isEqualTo(0)
+        assertWithMessage("no fix→cat").that(bigram("fix", "cat")).isEqualTo(0)
+        assertWithMessage("fix→dog learned").that(bigram("fix", "dog")).isEqualTo(1)
+    }
+
+    /**
+     * The possessive's own updates are still queued (Chrome reports them late) when another
+     * keyboard's Backspace deletes `cat's ` letter by letter; the queued updates then arrive,
+     * carrying the stamps the suffix edit owns, ahead of the deletion's. The gate must not
+     * let them hide the deletion: `fix → cat's` is rolled back.
+     */
+    @Test
+    fun aPossessiveDeletedWhileItsOwnUpdatesAreQueuedIsRolledBack() {
+        possessiveCat()
+        val caretAfterSuffix = cursor()
+        repeat("cat's ".length) { editor.deleteCharAt(editor.length - 1) }
+        deliverOwnSelectionUpdates() // the late owned stamps, read against the shortened editor
+        reportedCaret = caretAfterSuffix
+        queueOwnSelectionUpdates = false
+        cursorSync() // the deletion's own update
+        newSwipe("dog")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix dog ")
+        assertWithMessage("no fix→cat's").that(bigram("fix", "cat's")).isEqualTo(0)
+        assertWithMessage("fix→dog learned").that(bigram("fix", "dog")).isEqualTo(1)
+    }
+
+    /** The same deletion after the owned updates were delivered (the ordinary order). */
+    @Test
+    fun aPossessiveDeletedByAnotherKeyboardIsRolledBack() {
+        possessiveCat()
+        deliverOwnSelectionUpdates()
+        queueOwnSelectionUpdates = false
+        repeat("cat's ".length) {
+            editor.deleteCharAt(editor.length - 1)
+            cursorSync()
+        }
+        newSwipe("dog")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix dog ")
+        assertWithMessage("no fix→cat's").that(bigram("fix", "cat's")).isEqualTo(0)
+        assertWithMessage("fix→dog learned").that(bigram("fix", "dog")).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection
