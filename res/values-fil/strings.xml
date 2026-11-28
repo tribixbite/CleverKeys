@@ -1540,6 +1540,10 @@
         <item quantity="one">• Nilaktawan: %1$d duplicate</item>
         <item quantity="other">• Nilaktawan: %1$d duplicate</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d entry ang nilaktawan: masyadong malaki</item>
+        <item quantity="other">• %1$d entry ang nilaktawan: masyadong malaki</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d entry ng clipboard</item>
         <item quantity="other">• %1$d entry ng clipboard</item>

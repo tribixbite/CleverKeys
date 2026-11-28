@@ -1587,6 +1587,11 @@
         <item quantity="many">• Saltati: %1$d duplicati</item>
         <item quantity="other">• Saltati: %1$d duplicati</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d voce saltata: troppo grande</item>
+        <item quantity="many">• %1$d voci saltate: troppo grandi</item>
+        <item quantity="other">• %1$d voci saltate: troppo grandi</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d voce degli appunti</item>
         <item quantity="many">• %1$d voci degli appunti</item>

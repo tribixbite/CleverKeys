@@ -1566,6 +1566,12 @@
         <item quantity="many">• Přeskočeno: %1$d duplikátu</item>
         <item quantity="other">• Přeskočeno: %1$d duplikátů</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• Přeskočeno: %1$d položka (příliš velká)</item>
+        <item quantity="few">• Přeskočeno: %1$d položky (příliš velké)</item>
+        <item quantity="many">• Přeskočeno: %1$d položky (příliš velké)</item>
+        <item quantity="other">• Přeskočeno: %1$d položek (příliš velké)</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d položka schránky</item>
         <item quantity="few">• %1$d položky schránky</item>

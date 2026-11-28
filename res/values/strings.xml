@@ -1947,6 +1947,10 @@
         <item quantity="one">• Skipped: %1$d duplicate</item>
         <item quantity="other">• Skipped: %1$d duplicates</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d entry skipped: too large</item>
+        <item quantity="other">• %1$d entries skipped: too large</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d clipboard entry</item>
         <item quantity="other">• %1$d clipboard entries</item>

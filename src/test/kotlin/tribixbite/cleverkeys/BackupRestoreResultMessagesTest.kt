@@ -396,4 +396,44 @@ class BackupRestoreResultMessagesTest {
         val msg = buildSettingsResultMessage(result, EnglishResourceText)
         assertTrue(msg, msg.contains("• Swipe priorities applied: 3"))
     }
+
+    // -------------------------------------------------------------------
+    // Fable audit H3 (2026-11-28): entries an import skipped as too large
+    // -------------------------------------------------------------------
+
+    /** A row over the clipping cap would hide History once stored; the restore says it left it out. */
+    @Test
+    fun clipboard_tooLargeSkips_getTheirOwnLine_onlyWhenThereAreAny() {
+        val result = BackupRestoreManager.ClipboardImportResult().apply {
+            importedCount = 3
+            tooLargeCount = 2
+        }
+        val json = buildClipboardImportResultMessage(result, withMedia = false, text = EnglishResourceText)
+        assertTrue(json, json.contains("• 2 entries skipped: too large"))
+        val zip = buildClipboardImportResultMessage(result, withMedia = true, text = EnglishResourceText)
+        assertTrue(zip, zip.contains("• 2 entries skipped: too large"))
+
+        val none = buildClipboardImportResultMessage(
+            BackupRestoreManager.ClipboardImportResult().apply { importedCount = 3 },
+            withMedia = false, text = EnglishResourceText,
+        )
+        assertFalse(none, none.contains("too large"))
+    }
+
+    @Test
+    fun fullBackup_namesTooLargeClipboardEntries_onlyWhenThereAreAny() {
+        val base = BackupRestoreManager.FullBackupImportResult(
+            success = true, configImported = true, configKeysApplied = 1, customWordsImported = 0,
+            disabledWordsImported = 0, clipboardEntriesImported = 4, clipboardEntriesSkipped = 0,
+            mediaFilesRestored = 0,
+        )
+        val plain = buildFullBackupResultMessage(base, EnglishResourceText)
+        assertFalse(plain, plain.contains("too large"))
+
+        val one = buildFullBackupResultMessage(base.copy(clipboardEntriesTooLarge = 1), EnglishResourceText)
+        assertTrue(one, one.lines().contains("• 1 entry skipped: too large"))
+        // Right under the clipboard counts it belongs to.
+        val lines = one.lines()
+        assertEquals(lines.indexOf("• Clipboard skipped: 0 (duplicates)") + 1, lines.indexOf("• 1 entry skipped: too large"))
+    }
 }

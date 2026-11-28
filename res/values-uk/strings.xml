@@ -1577,6 +1577,12 @@
         <item quantity="many">• Пропущено: %1$d дублікатів</item>
         <item quantity="other">• Пропущено: %1$d дубліката</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• Пропущено %1$d запис: завеликий</item>
+        <item quantity="few">• Пропущено %1$d записи: завеликі</item>
+        <item quantity="many">• Пропущено %1$d записів: завеликі</item>
+        <item quantity="other">• Пропущено %1$d запису: завеликі</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d запис буфера обміну</item>
         <item quantity="few">• %1$d записи буфера обміну</item>

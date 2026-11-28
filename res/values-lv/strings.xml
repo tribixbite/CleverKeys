@@ -1558,6 +1558,11 @@
         <item quantity="one">• Izlaists: %1$d dublikāts</item>
         <item quantity="other">• Izlaisti: %1$d dublikāti</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="zero">• Izlaists: %1$d ierakstu (pārāk liels)</item>
+        <item quantity="one">• Izlaists: %1$d ieraksts (pārāk liels)</item>
+        <item quantity="other">• Izlaisti: %1$d ieraksti (pārāk lieli)</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="zero">• %1$d starpliktuves ierakstu</item>
         <item quantity="one">• %1$d starpliktuves ieraksts</item>

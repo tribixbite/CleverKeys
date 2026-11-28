@@ -95,7 +95,7 @@ class BackupRestoreImportReportTest {
         mockkObject(ClipboardDatabase.Companion)
         every { ClipboardDatabase.getInstance(any()) } returns clipboardDb
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0, 0)
 
         mockkObject(ShortSwipeCustomizationManager.Companion)
         every { ShortSwipeCustomizationManager.getInstance(any()) } returns shortSwipeManager
@@ -165,7 +165,7 @@ class BackupRestoreImportReportTest {
     /** One row imported, one duplicate; the duplicate's media is on the phone already. */
     private fun oneNewRowOneDuplicate() {
         onThePhone(dup)
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(1, 0, 0, 1, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(1, 0, 0, 1, 0, 0)
         // After the import the rows reference the duplicate's file and the new row's file; the
         // third archive member belongs to no row, so the orphan sweep removes it.
         every { clipboardDb.getAllReferencedMediaPaths() } returns setOf(dup, fresh)
@@ -256,5 +256,40 @@ class BackupRestoreImportReportTest {
         @Suppress("UNCHECKED_CAST")
         val disabled = prefs.values["disabled_words_en"] as Set<String>
         assertEquals(setOf("teh", "wich"), disabled)
+    }
+
+    // ── entries too large to store (Fable audit H3, 2026-11-28) ────────────────
+
+    /**
+     * An entry over the clipping cap is left out by the clipboard import (one such row hid
+     * History). Every restore that imports clipboard rows says how many it left out.
+     */
+    @Test
+    fun everyClipboardRestoreReportsTheEntriesSkippedAsTooLarge() {
+        // [activeAdded, pinnedAdded, todoAdded, duplicates, truncatedByCap, tooLarge]
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(1, 0, 0, 0, 0, 3)
+
+        val zipResult = manager().importClipboardHistoryZip(
+            uriFor(zip("clipboard_data.json" to clipboardJson()), "clip.zip")
+        )
+        assertEquals(3, zipResult.tooLargeCount)
+
+        val jsonResult = manager().importClipboardHistory(uriFor(clipboardJson(), "clip.json"))
+        assertEquals(3, jsonResult.tooLargeCount)
+        assertEquals("too large is not a duplicate", 0, jsonResult.skippedCount)
+
+        val full = manager().importFullBackup(
+            uriFor(
+                zip(
+                    BackupRestoreManager.ENTRY_MANIFEST to manifest(),
+                    BackupRestoreManager.ENTRY_CLIPBOARD_JSON to clipboardJson(),
+                ),
+                "full.zip",
+            ),
+            prefs,
+        )
+        assertTrue("import failed: ${full.errorMessage}", full.success)
+        assertEquals(3, full.clipboardEntriesTooLarge)
+        assertEquals(0, full.clipboardEntriesSkipped)
     }
 }

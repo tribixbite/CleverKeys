@@ -1521,6 +1521,9 @@
     <plurals name="clipboard_backup_skipped_duplicates">
         <item quantity="other">• Dilewati: %1$d duplikat</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="other">• %1$d entri dilewati: terlalu besar</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="other">• %1$d entri clipboard</item>
     </plurals>

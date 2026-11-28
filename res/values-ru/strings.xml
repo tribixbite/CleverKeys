@@ -1571,6 +1571,12 @@
         <item quantity="many">• Пропущено: %1$d дубликатов</item>
         <item quantity="other">• Пропущено: %1$d дубликата</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• Пропущена %1$d запись: слишком большая</item>
+        <item quantity="few">• Пропущено %1$d записи: слишком большие</item>
+        <item quantity="many">• Пропущено %1$d записей: слишком большие</item>
+        <item quantity="other">• Пропущено %1$d записи: слишком большие</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d запись буфера обмена</item>
         <item quantity="few">• %1$d записи буфера обмена</item>

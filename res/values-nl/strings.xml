@@ -1528,6 +1528,10 @@
         <item quantity="one">• Overgeslagen: %1$d duplicaat</item>
         <item quantity="other">• Overgeslagen: %1$d duplicaten</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d item overgeslagen: te groot</item>
+        <item quantity="other">• %1$d items overgeslagen: te groot</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d klemborditem</item>
         <item quantity="other">• %1$d klemborditems</item>

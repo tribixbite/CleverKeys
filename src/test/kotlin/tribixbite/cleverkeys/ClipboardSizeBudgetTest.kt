@@ -66,4 +66,42 @@ class ClipboardSizeBudgetTest {
 
     // The database's walk order (newest first, through this policy) is pinned behaviourally by
     // clipboard.ClipboardSizeLimitWalkTest in the mock tier; it replaced a source-text check here.
+
+    // ─── Stored-row limits (Fable audit H3, 2026-11-28) ─────────────────────────────────────
+    // A row over Android's 2 MiB CursorWindow cannot be read: the History reader's catch
+    // returned the rows read so far, so one such row emptied History (or cut it there) and a
+    // full backup silently left the clipboard out. Only an import could store one: capture,
+    // edit and merge all stop at the per-clipping cap.
+
+    @Test
+    fun theImportCapIsTheLargestCaptureCap() {
+        assertThat(ClipboardSizePolicy.MAX_STORED_ITEM_BYTES)
+            .isEqualTo(SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last * 1024L)
+    }
+
+    @Test
+    fun everyRowAnImportCanStoreFitsTheReadBudgetAndTheCursorWindow() {
+        // Content and tags at their caps plus the largest thumbnail we write must be readable.
+        val largestRow = ClipboardSizePolicy.MAX_STORED_ITEM_BYTES +
+            ClipboardSizePolicy.MAX_STORED_TAGS_BYTES + ClipboardMediaManager.MAX_THUMBNAIL_BYTES
+        assertThat(largestRow).isAtMost(ClipboardSizePolicy.MAX_READ_ROW_BYTES)
+        // And the read budget leaves room in the 2 MiB window for the row's other columns.
+        assertThat(ClipboardSizePolicy.MAX_READ_ROW_BYTES).isLessThan(2L * mb - 256L * 1024)
+    }
+
+    @Test
+    fun anImportedEntryOverTheCapIsRefusedInUtf8Bytes() {
+        val cap = ClipboardSizePolicy.MAX_STORED_ITEM_BYTES.toInt()
+        assertThat(ClipboardSizePolicy.importTooLarge("x".repeat(cap), "[]")).isFalse()
+        assertThat(ClipboardSizePolicy.importTooLarge("x".repeat(cap + 1), "[]")).isTrue()
+        // Counted in UTF-8 bytes, not chars: 2/3 of the cap in 3-byte chars is over it.
+        assertThat(ClipboardSizePolicy.importTooLarge("€".repeat(cap * 2 / 3), null)).isTrue()
+    }
+
+    @Test
+    fun anImportedEntryWithOversizedTagsIsRefused() {
+        val tagCap = ClipboardSizePolicy.MAX_STORED_TAGS_BYTES.toInt()
+        assertThat(ClipboardSizePolicy.importTooLarge("ok", "x".repeat(tagCap))).isFalse()
+        assertThat(ClipboardSizePolicy.importTooLarge("ok", "x".repeat(tagCap + 1))).isTrue()
+    }
 }

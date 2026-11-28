@@ -1508,6 +1508,9 @@
     <plurals name="clipboard_backup_skipped_duplicates">
         <item quantity="other">• スキップ: 重複 %1$d 件</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="other">• %1$d 件をスキップ: 大きすぎます</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="other">• クリップボード項目 %1$d 件</item>
     </plurals>

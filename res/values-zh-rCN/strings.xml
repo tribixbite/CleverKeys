@@ -1507,6 +1507,9 @@
     <plurals name="clipboard_backup_skipped_duplicates">
         <item quantity="other">• 已跳过：%1$d 个重复项</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="other">• 已跳过 %1$d 个条目：过大</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="other">• %1$d 个剪贴板条目</item>
     </plurals>

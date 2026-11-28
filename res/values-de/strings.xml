@@ -1548,6 +1548,10 @@
         <item quantity="one">• Übersprungen: %1$d Duplikat</item>
         <item quantity="other">• Übersprungen: %1$d Duplikate</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d Eintrag übersprungen: zu groß</item>
+        <item quantity="other">• %1$d Einträge übersprungen: zu groß</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d Zwischenablage-Eintrag</item>
         <item quantity="other">• %1$d Zwischenablage-Einträge</item>

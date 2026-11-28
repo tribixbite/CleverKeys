@@ -199,6 +199,36 @@ sealed class RelativeTime {
 
 /** Allocation-free UTF-8 payload sizing, including Java's one-byte replacement for lone surrogates. */
 object ClipboardSizePolicy {
+    /**
+     * Largest text a stored clipping may hold, in UTF-8 bytes: the top of the per-clipping
+     * capture cap (`clipboard_max_item_size_kb`, [SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB]).
+     * Capture, edit and merge already stop at the user's cap; an import is held to this ceiling
+     * (Fable audit H3, 2026-11-28), so it never brings back a row the app could not have stored.
+     */
+    val MAX_STORED_ITEM_BYTES: Long = SettingsRanges.CLIPBOARD_MAX_ITEM_SIZE_KB.last * 1024L
+
+    /**
+     * Largest tags JSON an imported Pinned/To-do row may hold. Tags are short labels (a real
+     * list is well under 1 KB); the cap exists so content plus tags plus a thumbnail always fits
+     * [MAX_READ_ROW_BYTES], which a second 1 MiB column would not.
+     */
+    const val MAX_STORED_TAGS_BYTES: Long = 256L * 1024L
+
+    /**
+     * Read budget for one row's large columns (content + tags + thumbnail) in a SQLite cursor.
+     * Android's CursorWindow holds 2 MiB and a row that does not fit throws on read; the readers
+     * leave out (and log) a row over this budget instead of letting it end the read. Every row the
+     * app can store fits: [MAX_STORED_ITEM_BYTES] + [MAX_STORED_TAGS_BYTES] + a 10 KB thumbnail.
+     */
+    val MAX_READ_ROW_BYTES: Long = MAX_STORED_ITEM_BYTES + MAX_STORED_TAGS_BYTES + 64L * 1024L
+
+    /**
+     * Whether an imported entry is too large to store: [content] or [tags] (the raw tags JSON,
+     * null for History rows) over its cap, counted in UTF-8 bytes. The import skips and counts it.
+     */
+    fun importTooLarge(content: String, tags: String?): Boolean =
+        utf8Bytes(content) > MAX_STORED_ITEM_BYTES || (tags != null && utf8Bytes(tags) > MAX_STORED_TAGS_BYTES)
+
     fun utf8Bytes(text: String): Long {
         var bytes = 0L
         var i = 0

@@ -743,6 +743,11 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A clipboard backup holding a clipping over 1 MB (the largest clipping size Settings allows) no
+  longer empties the History pane once restored. The restore leaves such entries out and says how
+  many ("2 entries skipped: too large"). A row that size already stored is left out of History,
+  Pinned, To-do and exports instead of hiding the rows after it, and a full backup no longer leaves
+  the whole clipboard out because of it.
 - Saving an edited clipping over the size limit says it is too large; it said "Content cannot be
   empty".
 - After an edited clipping was put on the clipboard while History was off, the next copy of exactly

@@ -112,6 +112,15 @@ internal fun buildFullBackupResultMessage(
     }
     appendLine(text.string(R.string.backup_result_full_clipboard_imported, result.clipboardEntriesImported))
     appendLine(text.string(R.string.backup_result_full_clipboard_skipped, result.clipboardEntriesSkipped))
+    // Fable audit H3 (2026-11-28): entries over the clipping cap are left out, and said so.
+    if (result.clipboardEntriesTooLarge > 0) {
+        appendLine(
+            text.plural(
+                R.plurals.clipboard_backup_skipped_too_large,
+                result.clipboardEntriesTooLarge, result.clipboardEntriesTooLarge,
+            )
+        )
+    }
     appendLine(text.string(R.string.backup_result_media_restored, result.mediaFilesRestored))
     result.sourceAppVersion?.let {
         appendLine(text.string(R.string.backup_result_source_version, it))
@@ -160,6 +169,9 @@ internal fun buildClipboardImportResultMessage(
     appendLine()
     appendLine(text.plural(R.plurals.clipboard_backup_imported_entries, result.importedCount, result.importedCount))
     appendLine(text.plural(R.plurals.clipboard_backup_skipped_duplicates, result.skippedCount, result.skippedCount))
+    if (result.tooLargeCount > 0) {
+        appendLine(text.plural(R.plurals.clipboard_backup_skipped_too_large, result.tooLargeCount, result.tooLargeCount))
+    }
     if (withMedia) {
         appendLine(text.string(R.string.backup_result_media_restored, result.mediaFilesRestored))
     }

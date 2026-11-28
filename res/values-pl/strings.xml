@@ -1576,6 +1576,12 @@
         <item quantity="many">• Pominięto: %1$d duplikatów</item>
         <item quantity="other">• Pominięto: %1$d duplikatu</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• Pominięto: %1$d wpis (za duży)</item>
+        <item quantity="few">• Pominięto: %1$d wpisy (za duże)</item>
+        <item quantity="many">• Pominięto: %1$d wpisów (za duże)</item>
+        <item quantity="other">• Pominięto: %1$d wpisu (za duże)</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d wpis schowka</item>
         <item quantity="few">• %1$d wpisy schowka</item>

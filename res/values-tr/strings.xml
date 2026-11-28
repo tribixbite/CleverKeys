@@ -1539,6 +1539,10 @@
         <item quantity="one">• Atlanan: %1$d yinelenen</item>
         <item quantity="other">• Atlanan: %1$d yinelenen</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d giriş atlandı: çok büyük</item>
+        <item quantity="other">• %1$d giriş atlandı: çok büyük</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d pano kaydı</item>
         <item quantity="other">• %1$d pano kaydı</item>

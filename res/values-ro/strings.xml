@@ -1574,6 +1574,11 @@
         <item quantity="few">• Omise: %1$d duplicate</item>
         <item quantity="other">• Omise: %1$d de duplicate</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• Omisă: %1$d intrare (prea mare)</item>
+        <item quantity="few">• Omise: %1$d intrări (prea mari)</item>
+        <item quantity="other">• Omise: %1$d de intrări (prea mari)</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d intrare din clipboard</item>
         <item quantity="few">• %1$d intrări din clipboard</item>

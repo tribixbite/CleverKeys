@@ -1557,6 +1557,11 @@
         <item quantity="many">• Ignorés : %1$d doublons</item>
         <item quantity="other">• Ignorés : %1$d doublons</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d entrée ignorée : trop volumineuse</item>
+        <item quantity="many">• %1$d entrées ignorées : trop volumineuses</item>
+        <item quantity="other">• %1$d entrées ignorées : trop volumineuses</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d entrée du presse-papiers</item>
         <item quantity="many">• %1$d entrées du presse-papiers</item>

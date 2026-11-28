@@ -21,6 +21,7 @@ import tribixbite.cleverkeys.ClipboardHistoryLimits
 import tribixbite.cleverkeys.ClipboardHistoryService
 import tribixbite.cleverkeys.ClipboardMediaManager
 import tribixbite.cleverkeys.ClipboardSanitizeSettings
+import tribixbite.cleverkeys.ClipboardSizePolicy
 import tribixbite.cleverkeys.DirectBootAwarePreferences
 import tribixbite.cleverkeys.TypedFakePreferences
 import tribixbite.cleverkeys.clipboard.ClipboardEditorRowFixture.Companion.setField
@@ -186,9 +187,16 @@ class ClipboardHistoryLossScenarioTest {
         sql.startsWith("SELECT id, is_private, source_package FROM clipboard_entries WHERE content_hash = ? AND content = ? AND expiry_timestamp > ?") ->
             cursorOf(table.filter { it.hash == args[0] && it.content == args[1] && it.expiry > args[2].toLong() }
                 .map { arrayOf(it.id, it.isPrivate, it.source) })
-        sql.startsWith("SELECT content, timestamp, mime_type, thumbnail_blob, media_path, is_private, source_package, id FROM clipboard_entries WHERE expiry_timestamp > ?") ->
+        // The History reader (getActiveClipboardEntries). Since Fable audit H3 its large columns
+        // read NULL and its last column (the fits flag) 0 for a row over the read budget.
+        sql.startsWith("SELECT CASE WHEN") &&
+            sql.contains(" THEN content END, timestamp, mime_type, ") &&
+            sql.contains(" FROM clipboard_entries WHERE expiry_timestamp > ? ORDER BY timestamp DESC") ->
             cursorOf(table.filter { it.expiry > args[0].toLong() }.sortedByDescending { it.timestamp }
-                .map { arrayOf(it.content, it.timestamp, null, null, null, it.isPrivate, it.source, it.id) })
+                .map {
+                    val fits = ClipboardSizePolicy.utf8Bytes(it.content) <= ClipboardSizePolicy.MAX_READ_ROW_BYTES
+                    arrayOf(if (fits) it.content else null, it.timestamp, null, null, null, it.isPrivate, it.source, it.id, if (fits) 1 else 0)
+                })
         sql.startsWith("SELECT id, LENGTH(CAST(content AS BLOB)) + COALESCE(LENGTH(thumbnail_blob), 0), media_path FROM clipboard_entries WHERE expiry_timestamp > ? ORDER BY timestamp DESC") ->
             cursorOf(table.filter { it.expiry > args[0].toLong() }.sortedByDescending { it.timestamp }
                 .map { arrayOf(it.id, it.content.toByteArray(Charsets.UTF_8).size.toLong(), null) })

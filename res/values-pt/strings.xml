@@ -1547,6 +1547,11 @@
         <item quantity="many">• Ignorados: %1$d duplicados</item>
         <item quantity="other">• Ignorados: %1$d duplicados</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d entrada ignorada: grande demais</item>
+        <item quantity="many">• %1$d entradas ignoradas: grandes demais</item>
+        <item quantity="other">• %1$d entradas ignoradas: grandes demais</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d item da área de transferência</item>
         <item quantity="many">• %1$d itens da área de transferência</item>

@@ -1566,6 +1566,10 @@
         <item quantity="one">• ردشده: %1$d مورد تکراری</item>
         <item quantity="other">• ردشده: %1$d مورد تکراری</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d مورد رد شد: خیلی بزرگ</item>
+        <item quantity="other">• %1$d مورد رد شد: خیلی بزرگ</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d مورد بریده‌دان</item>
         <item quantity="other">• %1$d مورد بریده‌دان</item>

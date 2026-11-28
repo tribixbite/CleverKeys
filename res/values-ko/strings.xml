@@ -1509,6 +1509,9 @@
     <plurals name="clipboard_backup_skipped_duplicates">
         <item quantity="other">• 건너뜀: 중복 %1$d개</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="other">• %1$d개 항목 건너뜀: 너무 큼</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="other">• 클립보드 항목 %1$d개</item>
     </plurals>

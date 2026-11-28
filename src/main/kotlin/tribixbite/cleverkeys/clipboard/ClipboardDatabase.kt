@@ -453,16 +453,20 @@ class ClipboardDatabase private constructor(context: Context) :
         val entries = mutableListOf<ClipboardEntry>()
         val currentTime = System.currentTimeMillis()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
+            SELECT ${ifRowFits(COLUMN_CONTENT, withTags = false)}, $COLUMN_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   ${ifRowFits(COLUMN_THUMBNAIL_BLOB, withTags = false)}, $COLUMN_MEDIA_PATH, $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID,
+                   ${rowFitsSql(withTags = false)}
             FROM $TABLE_CLIPBOARD
             WHERE $COLUMN_EXPIRY_TIMESTAMP > ?
             ORDER BY $COLUMN_TIMESTAMP DESC
         """.trimIndent()
+        var oversized = 0
         try {
             readableDatabase.rawQuery(query, arrayOf(currentTime.toString())).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
+                        // H3: a row over the read budget is left out (its columns read NULL).
+                        if (cursor.getInt(8) == 0) { oversized++; continue }
                         entries.add(ClipboardEntry(
                             content = cursor.getString(0),
                             timestamp = cursor.getLong(1),
@@ -479,6 +483,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving clipboard entries: ${e.message}")
         }
+        logOversizedRows("History", oversized)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} active clipboard entries")
         return entries
     }
@@ -852,15 +857,17 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getPinnedEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
+            SELECT ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_PINNED_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   ${ifRowFits(COLUMN_THUMBNAIL_BLOB)}, $COLUMN_MEDIA_PATH, ${ifRowFits(COLUMN_TAGS)},
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID, ${rowFitsSql()}
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
+        var oversized = 0
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
+                        if (cursor.getInt(9) == 0) { oversized++; continue } // H3
                         entries.add(ClipboardEntry(
                             content = cursor.getString(0),
                             timestamp = cursor.getLong(1),
@@ -878,6 +885,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving pinned entries: ${e.message}")
         }
+        logOversizedRows("Pinned", oversized)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} pinned entries")
         return entries
     }
@@ -886,17 +894,19 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getPinnedEntriesFull(): List<PinnedEntry> {
         val entries = mutableListOf<PinnedEntry>()
         val query = """
-            SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
+            SELECT $COLUMN_ID, ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_PINNED_TIMESTAMP,
-                   $COLUMN_POSITION, $COLUMN_TAGS, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                   $COLUMN_POSITION, ${ifRowFits(COLUMN_TAGS)}, $COLUMN_MIME_TYPE,
+                   ${ifRowFits(COLUMN_THUMBNAIL_BLOB)}, $COLUMN_MEDIA_PATH,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, ${rowFitsSql()}
             FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
+        var oversized = 0
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
+                        if (cursor.getInt(12) == 0) { oversized++; continue } // H3
                         entries.add(PinnedEntry(
                             id = cursor.getLong(0),
                             content = cursor.getString(1),
@@ -917,6 +927,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving full pinned entries: ${e.message}")
         }
+        logOversizedRows("Pinned (full)", oversized)
         return entries
     }
 
@@ -1250,15 +1261,17 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getTodoEntries(): List<ClipboardEntry> {
         val entries = mutableListOf<ClipboardEntry>()
         val query = """
-            SELECT $COLUMN_CONTENT, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
-                   $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH, $COLUMN_TAGS, $COLUMN_STATUS,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID
+            SELECT ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_ADDED_TIMESTAMP, $COLUMN_MIME_TYPE,
+                   ${ifRowFits(COLUMN_THUMBNAIL_BLOB)}, $COLUMN_MEDIA_PATH, ${ifRowFits(COLUMN_TAGS)}, $COLUMN_STATUS,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, $COLUMN_ID, ${rowFitsSql()}
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
+        var oversized = 0
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
+                        if (cursor.getInt(10) == 0) { oversized++; continue } // H3
                         entries.add(ClipboardEntry(
                             content = cursor.getString(0),
                             timestamp = cursor.getLong(1),
@@ -1277,6 +1290,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving todo entries: ${e.message}")
         }
+        logOversizedRows("To-do", oversized)
         if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Retrieved ${entries.size} todo entries")
         return entries
     }
@@ -1285,17 +1299,19 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getTodoEntriesFull(): List<TodoEntry> {
         val entries = mutableListOf<TodoEntry>()
         val query = """
-            SELECT $COLUMN_ID, $COLUMN_CONTENT, $COLUMN_CONTENT_HASH,
+            SELECT $COLUMN_ID, ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_CONTENT_HASH,
                    $COLUMN_CREATED_TIMESTAMP, $COLUMN_ADDED_TIMESTAMP,
-                   $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
-                   $COLUMN_MIME_TYPE, $COLUMN_THUMBNAIL_BLOB, $COLUMN_MEDIA_PATH,
-                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                   $COLUMN_POSITION, $COLUMN_STATUS, ${ifRowFits(COLUMN_TAGS)},
+                   $COLUMN_MIME_TYPE, ${ifRowFits(COLUMN_THUMBNAIL_BLOB)}, $COLUMN_MEDIA_PATH,
+                   $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, ${rowFitsSql()}
             FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
         """.trimIndent()
+        var oversized = 0
         try {
             readableDatabase.rawQuery(query, null).use { cursor ->
                 if (cursor.moveToFirst()) {
                     do {
+                        if (cursor.getInt(13) == 0) { oversized++; continue } // H3
                         entries.add(TodoEntry(
                             id = cursor.getLong(0),
                             content = cursor.getString(1),
@@ -1317,6 +1333,7 @@ class ClipboardDatabase private constructor(context: Context) :
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving full todo entries: ${e.message}")
         }
+        logOversizedRows("To-do (full)", oversized)
         return entries
     }
 
@@ -1745,7 +1762,7 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getAllPinnedTags(): Set<String> {
         val tags = mutableSetOf<String>()
         try {
-            readableDatabase.rawQuery("SELECT $COLUMN_TAGS FROM $TABLE_PINNED", null).use { cursor ->
+            readableDatabase.rawQuery("SELECT ${ifRowFits(COLUMN_TAGS)} FROM $TABLE_PINNED", null).use { cursor ->
                 while (cursor.moveToNext()) {
                     PinnedEntry.tagsFromJson(cursor.getString(0)).forEach { tags.add(it) }
                 }
@@ -1760,7 +1777,7 @@ class ClipboardDatabase private constructor(context: Context) :
     fun getAllTodoTags(): Set<String> {
         val tags = mutableSetOf<String>()
         try {
-            readableDatabase.rawQuery("SELECT $COLUMN_TAGS FROM $TABLE_TODO", null).use { cursor ->
+            readableDatabase.rawQuery("SELECT ${ifRowFits(COLUMN_TAGS)} FROM $TABLE_TODO", null).use { cursor ->
                 while (cursor.moveToNext()) {
                     TodoEntry.tagsFromJson(cursor.getString(0)).forEach { tags.add(it) }
                 }
@@ -1798,15 +1815,17 @@ class ClipboardDatabase private constructor(context: Context) :
             var activeCount = 0; var pinnedCount = 0; var todoCount = 0
             var mediaSkipped = 0
             var privateSkipped = 0  // #156: private entries omitted from a plaintext export
+            var oversizedSkipped = 0  // H3: rows over the read budget, left out (logged)
 
             // Export history entries (v5: includes content_hash, mime_type, media_path, is_private, source_package)
             readableDatabase.rawQuery("""
-                SELECT $COLUMN_CONTENT, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP,
+                SELECT ${ifRowFits(COLUMN_CONTENT, withTags = false)}, $COLUMN_TIMESTAMP, $COLUMN_EXPIRY_TIMESTAMP,
                        $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH, $COLUMN_CONTENT_HASH,
-                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, ${rowFitsSql(withTags = false)}
                 FROM $TABLE_CLIPBOARD ORDER BY $COLUMN_TIMESTAMP DESC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    if (cursor.getInt(8) == 0) { oversizedSkipped++; continue }
                     val mimeType = cursor.getString(3) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(4)
                     val contentHash = cursor.getString(5)
@@ -1835,13 +1854,14 @@ class ClipboardDatabase private constructor(context: Context) :
 
             // Export pinned entries with v5 media + private fields
             readableDatabase.rawQuery("""
-                SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
-                       $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_TAGS,
+                SELECT ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
+                       $COLUMN_PINNED_TIMESTAMP, $COLUMN_POSITION, ${ifRowFits(COLUMN_TAGS)},
                        $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
-                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, ${rowFitsSql()}
                 FROM $TABLE_PINNED ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    if (cursor.getInt(10) == 0) { oversizedSkipped++; continue }
                     val mimeType = cursor.getString(6) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(7)
                     val isPrivate = cursor.getInt(8) != 0
@@ -1872,13 +1892,14 @@ class ClipboardDatabase private constructor(context: Context) :
 
             // Export todo entries with v5 media + private fields
             readableDatabase.rawQuery("""
-                SELECT $COLUMN_CONTENT, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
-                       $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, $COLUMN_TAGS,
+                SELECT ${ifRowFits(COLUMN_CONTENT)}, $COLUMN_CONTENT_HASH, $COLUMN_CREATED_TIMESTAMP,
+                       $COLUMN_ADDED_TIMESTAMP, $COLUMN_POSITION, $COLUMN_STATUS, ${ifRowFits(COLUMN_TAGS)},
                        $COLUMN_MIME_TYPE, $COLUMN_MEDIA_PATH,
-                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE
+                       $COLUMN_IS_PRIVATE, $COLUMN_SOURCE_PACKAGE, ${rowFitsSql()}
                 FROM $TABLE_TODO ORDER BY $COLUMN_POSITION ASC, $COLUMN_ID ASC
             """.trimIndent(), null).use { cursor ->
                 while (cursor.moveToNext()) {
+                    if (cursor.getInt(11) == 0) { oversizedSkipped++; continue }
                     val mimeType = cursor.getString(7) ?: ClipboardEntry.MIME_TEXT_PLAIN
                     val mediaPath = cursor.getString(8)
                     val isPrivate = cursor.getInt(9) != 0
@@ -1922,7 +1943,10 @@ class ClipboardDatabase private constructor(context: Context) :
                 put("total_todo", todoCount)
                 if (mediaSkipped > 0) put("media_skipped", mediaSkipped)
                 if (privateSkipped > 0) put("private_skipped", privateSkipped)  // #156 option B
+                // H3: rows left out because they cannot be read; old releases ignore unknown keys.
+                if (oversizedSkipped > 0) put("oversized_skipped", oversizedSkipped)
             }.also {
+                logOversizedRows("Export", oversizedSkipped)
                 val mediaSuffix = if (textOnly) " (text-only, $mediaSkipped media skipped)" else ""
                 val privSuffix = if (privateSkipped > 0) " ($privateSkipped private excluded)" else ""
                 if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Exported $activeCount active, $pinnedCount pinned, $todoCount todo entries (v5)$mediaSuffix$privSuffix")
@@ -1945,13 +1969,17 @@ class ClipboardDatabase private constructor(context: Context) :
      * transaction told the user a failed import had succeeded and orphaned the media commit.
      *
      * @return IntArray of [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped,
-     *         truncatedByCap] — the fifth slot was added by ARC-034 and counts entries
-     *         dropped by [MAX_IMPORT_ENTRIES_PER_ARRAY]; it is 0 for every real payload.
+     *         truncatedByCap, tooLarge] — the fifth slot was added by ARC-034 and counts entries
+     *         dropped by [MAX_IMPORT_ENTRIES_PER_ARRAY]; it is 0 for every real payload. The
+     *         sixth (Fable audit H3, 2026-11-28) counts entries skipped because their content or
+     *         tags are over [ClipboardSizePolicy.importTooLarge]'s caps: such a row could not be
+     *         read back, and one of them hid History and dropped the clipboard from backups.
      * @throws Exception any SQLite/JSON failure; the DB transaction is already rolled back.
      */
     fun importFromJSON(importData: JSONObject): IntArray {
         var activeAdded = 0; var pinnedAdded = 0; var todoAdded = 0; var duplicatesSkipped = 0
         var truncatedByCap = 0
+        var tooLarge = 0
 
         // ARC-034: how many of [entries] to iterate. Accumulates the drop count and logs it
         // once per over-cap section, so a truncated import is never silent in logcat.
@@ -1984,8 +2012,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 val result = importHistoryEntries(
                     db, entries, freshExpiry, capped(entries, "active_entries")
                 )
-                activeAdded = result.first
-                duplicatesSkipped += result.second
+                activeAdded = result.added
+                duplicatesSkipped += result.duplicates
+                tooLarge += result.tooLarge
             }
 
             // Import pinned entries
@@ -1994,8 +2023,9 @@ class ClipboardDatabase private constructor(context: Context) :
                 val result = importPinnedEntries(
                     db, entries, exportVersion, freshExpiry, capped(entries, "pinned_entries")
                 )
-                pinnedAdded = result.first
-                duplicatesSkipped += result.second
+                pinnedAdded = result.added
+                duplicatesSkipped += result.duplicates
+                tooLarge += result.tooLarge
             }
 
             // Import todo entries
@@ -2004,16 +2034,51 @@ class ClipboardDatabase private constructor(context: Context) :
                 val result = importTodoEntries(
                     db, entries, exportVersion, freshExpiry, capped(entries, "todo_entries")
                 )
-                todoAdded = result.first
-                duplicatesSkipped += result.second
+                todoAdded = result.added
+                duplicatesSkipped += result.duplicates
+                tooLarge += result.tooLarge
             }
 
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
         }
-        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped, $truncatedByCap truncated")
-        return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap)
+        if (tooLarge > 0) {
+            Log.w(TAG, "Clipboard import: skipped $tooLarge entries over the clipping cap " +
+                "(${ClipboardSizePolicy.MAX_STORED_ITEM_BYTES} bytes of text, " +
+                "${ClipboardSizePolicy.MAX_STORED_TAGS_BYTES} bytes of tags)")
+        }
+        if (BuildConfig.ENABLE_VERBOSE_LOGGING) Log.d(TAG, "Import complete: $activeAdded active, $pinnedAdded pinned, $todoAdded todo, $duplicatesSkipped dupes skipped, $truncatedByCap truncated, $tooLarge too large")
+        return intArrayOf(activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap, tooLarge)
+    }
+
+    /** One import section's counts: rows added, duplicates skipped, entries too large to store. */
+    private data class SectionImport(val added: Int, val duplicates: Int, val tooLarge: Int)
+
+    // ─── H3 read guard (Fable audit 2026-11-28) ───────────────────────────────────────────
+    // Android's CursorWindow holds 2 MiB; a row that does not fit throws on read, and every
+    // reader's catch then returned only the rows before it. The readers select these
+    // expressions so an oversized row comes back with NULL large columns and a 0 flag, and is
+    // left out and logged; the rows around it are read as usual.
+
+    /** SQL: the UTF-8 bytes of a row's large columns (content, thumbnail, and tags if [withTags]). */
+    private fun rowBytesSql(withTags: Boolean): String = buildString {
+        append("ifnull(length(CAST($COLUMN_CONTENT AS BLOB)), 0) + ifnull(length($COLUMN_THUMBNAIL_BLOB), 0)")
+        if (withTags) append(" + ifnull(length(CAST($COLUMN_TAGS AS BLOB)), 0)")
+    }
+
+    /** SQL flag: 1 when the row fits [ClipboardSizePolicy.MAX_READ_ROW_BYTES], else 0. History has no tags column. */
+    private fun rowFitsSql(withTags: Boolean = true): String =
+        "((${rowBytesSql(withTags)}) <= ${ClipboardSizePolicy.MAX_READ_ROW_BYTES})"
+
+    /** SQL: [column] when the row fits the read budget, else NULL (never copied into the window). */
+    private fun ifRowFits(column: String, withTags: Boolean = true): String =
+        "CASE WHEN ${rowFitsSql(withTags)} THEN $column END"
+
+    private fun logOversizedRows(reader: String, count: Int) {
+        if (count > 0) {
+            Log.w(TAG, "$reader: left out $count row(s) over the ${ClipboardSizePolicy.MAX_READ_ROW_BYTES}-byte read budget")
+        }
     }
 
     /** Import history entries into clipboard_entries.
@@ -2021,12 +2086,14 @@ class ClipboardDatabase private constructor(context: Context) :
      *  Falls back to String.hashCode() for text entries or old exports without hash. */
     private fun importHistoryEntries(
         db: SQLiteDatabase, entries: JSONArray, freshExpiry: Long, limit: Int
-    ): Pair<Int, Int> {
-        var added = 0; var skipped = 0
+    ): SectionImport {
+        var added = 0; var skipped = 0; var tooLarge = 0
         // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
         for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
+            // H3: an entry over the clipping cap could not be read back; skip and count it.
+            if (ClipboardSizePolicy.importTooLarge(content, tags = null)) { tooLarge++; continue }
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
             val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
             // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
@@ -2060,7 +2127,7 @@ class ClipboardDatabase private constructor(context: Context) :
             }
             if (db.insert(TABLE_CLIPBOARD, null, values) != -1L) added++
         }
-        return Pair(added, skipped)
+        return SectionImport(added, skipped, tooLarge)
     }
 
     /**
@@ -2071,13 +2138,16 @@ class ClipboardDatabase private constructor(context: Context) :
      */
     private fun importPinnedEntries(
         db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long, limit: Int
-    ): Pair<Int, Int> {
-        var added = 0; var skipped = 0
+    ): SectionImport {
+        var added = 0; var skipped = 0; var tooLarge = 0
         var maxPosition = getMaxPinnedPosition(db)
         // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
         for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
+            // H3: content or tags over the cap could not be read back; skip and count the entry.
+            val tags = if (exportVersion >= 3) entry.optString("tags", "[]") else "[]"
+            if (ClipboardSizePolicy.importTooLarge(content, tags)) { tooLarge++; continue }
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
             val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
             // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
@@ -2100,7 +2170,6 @@ class ClipboardDatabase private constructor(context: Context) :
             val createdTs = entry.optLong("created_timestamp", entry.getLong("timestamp"))
             val pinnedTs = entry.optLong("pinned_timestamp", entry.getLong("timestamp"))
             val position = if (exportVersion >= 3) entry.getDouble("position") else { maxPosition += 1.0; maxPosition }
-            val tags = if (exportVersion >= 3) entry.optString("tags", "[]") else "[]"
 
             val values = ContentValues().apply {
                 put(COLUMN_CONTENT, content)
@@ -2142,7 +2211,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
             }
         }
-        return Pair(added, skipped)
+        return SectionImport(added, skipped, tooLarge)
     }
 
     /**
@@ -2153,13 +2222,16 @@ class ClipboardDatabase private constructor(context: Context) :
      */
     private fun importTodoEntries(
         db: SQLiteDatabase, entries: JSONArray, exportVersion: Int, freshExpiry: Long, limit: Int
-    ): Pair<Int, Int> {
-        var added = 0; var skipped = 0
+    ): SectionImport {
+        var added = 0; var skipped = 0; var tooLarge = 0
         var maxPosition = getMaxTodoPosition(db)
         // ARC-034: `limit` is entries.length() capped at MAX_IMPORT_ENTRIES_PER_ARRAY.
         for (i in 0 until limit) {
             val entry = entries.getJSONObject(i)
             val content = entry.getString("content")
+            // H3: content or tags over the cap could not be read back; skip and count the entry.
+            val tags = if (exportVersion >= 3) entry.optString("tags", "[]") else "[]"
+            if (ClipboardSizePolicy.importTooLarge(content, tags)) { tooLarge++; continue }
             val mimeType = entry.optString("mime_type", ClipboardEntry.MIME_TEXT_PLAIN)
             val isMedia = mimeType != ClipboardEntry.MIME_TEXT_PLAIN
             // Prefer exported hash (preserves SHA-256 for media); fall back to hashCode for text
@@ -2185,7 +2257,6 @@ class ClipboardDatabase private constructor(context: Context) :
             val rawStatus = if (exportVersion >= 3) entry.optString("status", TodoEntry.STATUS_ACTIVE) else TodoEntry.STATUS_ACTIVE
             // Validate against known statuses to guard against corrupted imports
             val status = if (rawStatus in TodoEntry.VALID_STATUSES) rawStatus else TodoEntry.STATUS_ACTIVE
-            val tags = if (exportVersion >= 3) entry.optString("tags", "[]") else "[]"
 
             val values = ContentValues().apply {
                 put(COLUMN_CONTENT, content)
@@ -2228,7 +2299,7 @@ class ClipboardDatabase private constructor(context: Context) :
                 }
             }
         }
-        return Pair(added, skipped)
+        return SectionImport(added, skipped, tooLarge)
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -1698,4 +1698,119 @@ class ClipboardDatabaseTest {
         assertEquals(listOf("sel-1 edited"), db.getActiveClipboardEntries().map { it.content })
         assertEquals(listOf("sel-0"), db.getPinnedEntries().map { it.content })
     }
+
+    // =========================================================================
+    // Fable audit H3 (2026-11-28): a row over the 2 MiB CursorWindow hid History.
+    // The readers' catch returned the rows read so far, so one such row emptied History (or cut
+    // it at that row), and exportToJSON returned null, which made a full backup leave the
+    // clipboard out. Only an import could store one. Rows are inserted raw here, as an old
+    // import did, to reach the readers.
+    // =========================================================================
+
+    /** Text over every read budget and over the CursorWindow (2.5 MB of ASCII). */
+    private val oversized = "o".repeat(2_500_000)
+
+    private fun insertRaw(table: String, content: String, tags: String? = null, extra: android.content.ContentValues.() -> Unit = {}) {
+        val now = System.currentTimeMillis()
+        val values = android.content.ContentValues().apply {
+            put("content", content)
+            put("content_hash", content.hashCode().toString())
+            when (table) {
+                "clipboard_entries" -> { put("timestamp", now); put("expiry_timestamp", futureExpiry) }
+                "pinned_entries" -> { put("created_timestamp", now); put("pinned_timestamp", now); put("position", 99.0) }
+                "todo_entries" -> { put("created_timestamp", now); put("added_timestamp", now); put("position", 99.0); put("status", "active") }
+            }
+            if (tags != null) put("tags", tags)
+            extra()
+        }
+        assertTrue("raw insert into $table", db.writableDatabase.insert(table, null, values) != -1L)
+    }
+
+    @Test
+    fun anOversizedHistoryRowDoesNotHideTheOtherRows() {
+        db.addClipboardEntry("newest", futureExpiry)
+        insertRaw("clipboard_entries", oversized) { put("timestamp", 1L) } // between the two by age
+        db.addClipboardEntry("oldest", futureExpiry)
+        // Make "newest" the newest and "oldest" the oldest.
+        db.writableDatabase.execSQL("UPDATE clipboard_entries SET timestamp = 2 WHERE content = 'newest'")
+        db.writableDatabase.execSQL("UPDATE clipboard_entries SET timestamp = 0 WHERE content = 'oldest'")
+
+        val contents = db.getActiveClipboardEntries().map { it.content }
+
+        assertEquals(listOf("newest", "oldest"), contents)
+    }
+
+    @Test
+    fun anOversizedPinnedOrTodoRowDoesNotHideTheOtherRows() {
+        assertTrue(db.pinEntry("pinned ok", System.currentTimeMillis()))
+        insertRaw("pinned_entries", oversized)
+        assertTrue(db.addTodoEntry("todo ok"))
+        insertRaw("todo_entries", oversized)
+        // Tags alone over the budget hide nothing either.
+        insertRaw("pinned_entries", "big tags", tags = "[\"" + "t".repeat(2_500_000) + "\"]")
+
+        assertEquals(listOf("pinned ok"), db.getPinnedEntries().map { it.content })
+        assertEquals(listOf("pinned ok"), db.getPinnedEntriesFull().map { it.content })
+        assertEquals(listOf("todo ok"), db.getTodoEntries().map { it.content })
+        assertEquals(listOf("todo ok"), db.getTodoEntriesFull().map { it.content })
+        // The tag list read survives the oversized tags row too.
+        db.getAllPinnedTags()
+        db.getAllTodoTags()
+    }
+
+    @Test
+    fun exportLeavesOutAnOversizedRowInsteadOfReturningNull() {
+        db.addClipboardEntry("kept history", futureExpiry)
+        insertRaw("clipboard_entries", oversized)
+        assertTrue(db.pinEntry("kept pinned", System.currentTimeMillis()))
+        insertRaw("pinned_entries", oversized)
+        assertTrue(db.addTodoEntry("kept todo"))
+        insertRaw("todo_entries", oversized)
+
+        val json = db.exportToJSON()
+        assertNotNull("one oversized row must not drop the whole clipboard from a backup", json)
+        json!!
+        fun contents(key: String) = (0 until json.getJSONArray(key).length()).map { json.getJSONArray(key).getJSONObject(it).getString("content") }
+        assertEquals(listOf("kept history"), contents("active_entries"))
+        assertEquals(listOf("kept pinned"), contents("pinned_entries"))
+        assertEquals(listOf("kept todo"), contents("todo_entries"))
+        assertEquals("the left-out rows are counted", 3, json.getInt("oversized_skipped"))
+    }
+
+    @Test
+    fun importSkipsAndCountsEntriesOverTheClippingCap() {
+        val cap = ClipboardSizePolicy.MAX_STORED_ITEM_BYTES.toInt()
+        val now = System.currentTimeMillis()
+        fun entry(content: String, tags: String? = null) = JSONObject().apply {
+            put("content", content)
+            put("timestamp", now)
+            put("position", 1.0)
+            if (tags != null) put("tags", tags)
+        }
+        val json = JSONObject().apply {
+            put("export_version", 5)
+            put("active_entries", JSONArray().apply {
+                put(entry("small history"))
+                put(entry("h".repeat(cap)))      // exactly at the cap: kept
+                put(entry("H".repeat(cap + 1)))  // one byte over: skipped
+            })
+            put("pinned_entries", JSONArray().apply {
+                put(entry("P".repeat(cap + 1)))
+                put(entry("small pinned", tags = "[\"" + "t".repeat(ClipboardSizePolicy.MAX_STORED_TAGS_BYTES.toInt()) + "\"]"))
+                put(entry("pinned ok"))
+            })
+            put("todo_entries", JSONArray().apply { put(entry("T".repeat(cap + 1))); put(entry("todo ok")) })
+        }
+
+        val result = db.importFromJSON(json)
+
+        assertEquals("history imported", 2, result[0])
+        assertEquals("pinned imported", 1, result[1])
+        assertEquals("todo imported", 1, result[2])
+        assertEquals("not duplicates", 0, result[3])
+        assertEquals("too large: one per table, plus the oversized tags", 4, result[5])
+        assertEquals(2, db.getActiveClipboardEntries().size)
+        assertEquals(listOf("pinned ok"), db.getPinnedEntries().map { it.content })
+        assertEquals(listOf("todo ok"), db.getTodoEntries().map { it.content })
+    }
 }

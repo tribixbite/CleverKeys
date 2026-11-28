@@ -1720,6 +1720,7 @@ open class BackupRestoreManager(
                     val result = ClipboardImportResult()
                     result.importedCount = importResult[0] + importResult[1] + importResult[2]
                     result.skippedCount = importResult[3]
+                    result.tooLargeCount = importResult[5]  // H3: over the clipping cap, not stored
                     result.mediaFilesRestored = mediaFilesRestored
                     result.readSource(jsonData)
                     result
@@ -1768,20 +1769,24 @@ open class BackupRestoreManager(
                 throw e
             }
 
-            // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap]
+            // importResult = [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap, tooLarge]
             val result = ClipboardImportResult()
             result.importedCount = importResult[0] + importResult[1] + importResult[2]  // active + pinned + todo
             result.skippedCount = importResult[3]  // duplicates skipped
             // ARC-034: entries dropped by ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY.
             // Kept OUT of skippedCount, which means "duplicate" everywhere it is read.
             result.truncatedCount = importResult[4]
+            // Fable audit H3 (2026-11-28): entries over the clipping cap, skipped (one such row
+            // hid History). Its own field and line, like the truncation.
+            result.tooLargeCount = importResult[5]
 
             result.readSource(importData)
 
             Log.i(
                 TAG,
                 "Imported clipboard history: ${result.importedCount} imported, " +
-                    "${result.skippedCount} skipped, ${result.truncatedCount} truncated by cap"
+                    "${result.skippedCount} skipped, ${result.truncatedCount} truncated by cap, " +
+                    "${result.tooLargeCount} too large"
             )
             result
         } catch (e: BackupDecryptException) {
@@ -1824,6 +1829,11 @@ open class BackupRestoreManager(
         // ARC-034: dropped by ClipboardDatabase.MAX_IMPORT_ENTRIES_PER_ARRAY. 0 for every
         // real export (history caps out in the hundreds); non-zero means a synthetic payload.
         @JvmField var truncatedCount: Int = 0,
+        /**
+         * Entries skipped because their text or tags are over the clipping cap
+         * ([ClipboardSizePolicy.importTooLarge]; Fable audit H3, 2026-11-28). Not duplicates.
+         */
+        @JvmField var tooLargeCount: Int = 0,
     )
 
     /**
@@ -1900,6 +1910,8 @@ open class BackupRestoreManager(
          * both sections' words likewise).
          */
         @JvmField val swipePrioritiesImported: Int = 0,
+        /** Clipboard entries skipped as over the clipping cap (Fable audit H3); not duplicates. */
+        @JvmField val clipboardEntriesTooLarge: Int = 0,
     )
 
     /**
@@ -2084,6 +2096,7 @@ open class BackupRestoreManager(
         var swipePrioritiesImported = 0
         var clipboardEntriesImported = 0
         var clipboardEntriesSkipped = 0
+        var clipboardEntriesTooLarge = 0
         var mediaFilesRestored = 0
         var learnedDataIncomplete = false
         var customThemesImported = 0
@@ -2293,6 +2306,7 @@ open class BackupRestoreManager(
                     val importResult = clipboardDb.importFromJSON(json)
                     clipboardEntriesImported = importResult[0] + importResult[1] + importResult[2]
                     clipboardEntriesSkipped = importResult[3]
+                    clipboardEntriesTooLarge = importResult[5]  // H3: over the clipping cap
                     // ARC-034: FullBackupImportResult has no truncation field; a cap hit is
                     // impossible for any real export, so log it rather than widen the result.
                     if (importResult[4] > 0) {
@@ -2324,6 +2338,7 @@ open class BackupRestoreManager(
                 swipePrioritiesImported = 0
                 clipboardEntriesImported = 0
                 clipboardEntriesSkipped = 0
+                clipboardEntriesTooLarge = 0
                 throw e
             }
 
@@ -2363,7 +2378,8 @@ open class BackupRestoreManager(
 
             Log.i(TAG, "Full backup imported: cfg=$configKeysApplied, custom=$customWordsImported, " +
                 "disabled=$disabledWordsImported, priorities=$swipePrioritiesImported, clip imported=$clipboardEntriesImported, " +
-                "clip skipped=$clipboardEntriesSkipped, media restored=$mediaFilesRestored")
+                "clip skipped=$clipboardEntriesSkipped, clip too large=$clipboardEntriesTooLarge, " +
+                "media restored=$mediaFilesRestored")
 
             FullBackupImportResult(
                 success = true,
@@ -2378,6 +2394,7 @@ open class BackupRestoreManager(
                 learnedDataIncomplete = learnedDataIncomplete,
                 swipePrioritiesImported = swipePrioritiesImported,
                 customThemesImported = customThemesImported,
+                clipboardEntriesTooLarge = clipboardEntriesTooLarge,
             )
         } catch (e: BackupDecryptException) {
             // Surface decrypt failures distinctly so the UI can prompt for a passphrase

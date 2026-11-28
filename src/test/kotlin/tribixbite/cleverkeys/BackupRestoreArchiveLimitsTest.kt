@@ -116,7 +116,7 @@ class BackupRestoreArchiveLimitsTest {
         mockkObject(ClipboardDatabase.Companion)
         every { ClipboardDatabase.getInstance(any()) } returns clipboardDb
         every { clipboardDb.getAllReferencedMediaPaths() } returns emptySet()
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(0, 0, 0, 0, 0, 0)
 
         mockkObject(ShortSwipeCustomizationManager.Companion)
         every { ShortSwipeCustomizationManager.getInstance(any()) } returns shortSwipeManager
@@ -727,8 +727,8 @@ class BackupRestoreArchiveLimitsTest {
      */
     @Test
     fun clipboardImport_surfacesTheCapTruncationCountSeparatelyFromDuplicates() {
-        // [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap]
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(4, 1, 0, 2, 7)
+        // [activeAdded, pinnedAdded, todoAdded, duplicatesSkipped, truncatedByCap, tooLarge]
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(4, 1, 0, 2, 7, 0)
 
         val json = """{"export_version":5,"export_date":"2026-08-28 00:00:00","active_entries":[]}"""
         val result = newManager().importClipboardHistory(fakeUriForInput(json.toByteArray(Charsets.UTF_8)))
@@ -741,7 +741,7 @@ class BackupRestoreArchiveLimitsTest {
     @Test
     fun clipboardImport_uncappedPayloadReportsZeroTruncation() {
         // The guard must not false-positive: an ordinary import reports 0.
-        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(3, 0, 0, 0, 0)
+        every { clipboardDb.importFromJSON(any()) } returns intArrayOf(3, 0, 0, 0, 0, 0)
 
         val json = """{"export_version":5,"export_date":"2026-08-28 00:00:00","active_entries":[]}"""
         val result = newManager().importClipboardHistory(fakeUriForInput(json.toByteArray(Charsets.UTF_8)))

@@ -1534,6 +1534,10 @@
         <item quantity="one">• Kihagyva: %1$d duplikátum</item>
         <item quantity="other">• Kihagyva: %1$d duplikátum</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d bejegyzés kihagyva: túl nagy</item>
+        <item quantity="other">• %1$d bejegyzés kihagyva: túl nagy</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d vágólap-bejegyzés</item>
         <item quantity="other">• %1$d vágólap-bejegyzés</item>

@@ -1565,6 +1565,11 @@
         <item quantity="many">• Omitidos: %1$d duplicados</item>
         <item quantity="other">• Omitidos: %1$d duplicados</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="one">• %1$d entrada omitida: demasiado grande</item>
+        <item quantity="many">• %1$d entradas omitidas: demasiado grandes</item>
+        <item quantity="other">• %1$d entradas omitidas: demasiado grandes</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="one">• %1$d entrada del portapapeles</item>
         <item quantity="many">• %1$d entradas del portapapeles</item>

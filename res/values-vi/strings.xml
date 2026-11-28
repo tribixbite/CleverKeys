@@ -1537,6 +1537,9 @@
     <plurals name="clipboard_backup_skipped_duplicates">
         <item quantity="other">• Đã bỏ qua: %1$d mục trùng lặp</item>
     </plurals>
+    <plurals name="clipboard_backup_skipped_too_large">
+        <item quantity="other">• Đã bỏ qua %1$d mục: quá lớn</item>
+    </plurals>
     <plurals name="clipboard_backup_zip_entries">
         <item quantity="other">• %1$d mục bộ nhớ tạm</item>
     </plurals>
