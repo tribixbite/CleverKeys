@@ -174,6 +174,8 @@ open class LearningFunnelBookkeepingTest {
         config.swipe_on_password_fields = false
         config.backspace_undo_swipe = true
         config.backspace_undo_autocorrect = true
+        // Read by WordPredictor.setConfig (a rotation's config refresh in hideAndShowKeyboard).
+        config.learning_aggression = "BALANCED"
         every { Config.globalConfig() } returns config
 
         tracker = PredictionContextTracker()
@@ -1350,9 +1352,24 @@ open class LearningFunnelBookkeepingTest {
             handler.onUnownedSelectionUpdate(oldStart, oldEnd, newStart, newEnd, ic)
             if (newStart == newEnd && oldStart != newStart) {
                 tracker.onCursorPositionChanged(newStart)
-                debouncedSync()
+                // A newer move replaces a pending sync (InputCoordinator's removeCallbacks).
+                pendingCursorSync = debouncedSync
+                if (!deferCursorSync) runPendingCursorSync()
             }
         }
+    }
+
+    /**
+     * When true, the debounced cursor sync of an unowned move waits in [pendingCursorSync] until
+     * [runPendingCursorSync] (its 100 ms elapsing); false runs it at once, as most tests assume.
+     */
+    private var deferCursorSync = false
+    private var pendingCursorSync: (() -> Unit)? = null
+
+    private fun runPendingCursorSync() {
+        val sync = pendingCursorSync ?: return
+        pendingCursorSync = null
+        sync()
     }
 
     /** The keyboard's own writes' queued updates, in order, through [serviceSelectionUpdate]. */
@@ -2404,6 +2421,8 @@ open class LearningFunnelBookkeepingTest {
         val coordinator = realCoordinator()
         // onFinishInputView
         handler.onEditorSessionChanged()
+        bar.clearSuggestions() // CleverKeysService.onFinishInputView clears the bar
+        pendingCursorSync = null // and cancels the pending cursor sync (InputCoordinator.cancelPendingCursorSync)
         handler.flushTypedWordOnFinishInput(ic)
         tracker.clearAll()
         coordinator.flushLearnedData()
@@ -2416,6 +2435,13 @@ open class LearningFunnelBookkeepingTest {
         handler.onEditorSessionChanged()
         handler.onInputFieldStarted(field, restarting, ic)
         handler.setFieldPersonalizedLearningAllowed(LearningGate.fieldAllowsPersonalizedLearning(field.imeOptions))
+        // A rotation: onConfigurationChanged runs refresh_config() after super's restart, and
+        // ConfigPropagator hands the refreshed Config to the predictor (setConfig: the learning
+        // epoch check, the next-word language) and to this handler.
+        if (restarting) {
+            coordinator.setConfig(config)
+            handler.setConfig(config)
+        }
     }
 
     /** A WebView restarting its input (no onFinishInputView): onStartInput + onStartInputView, restarting. */
@@ -3370,6 +3396,38 @@ open class LearningFunnelBookkeepingTest {
         assertWithMessage("editor").that(editor.toString()).isEqualTo("fix dog ")
         assertWithMessage("no fix→cat's").that(bigram("fix", "cat's")).isEqualTo(0)
         assertWithMessage("fix→dog learned").that(bigram("fix", "dog")).isEqualTo(1)
+    }
+
+    /**
+     * Test-gap item 3: a caret move's debounced sync still pending when the keyboard is hidden is
+     * cancelled (onFinishInputView), and the bar is cleared; the show does not bring back the
+     * word the caret was on.
+     */
+    @Test
+    fun aCursorSyncPendingAtTheHideNeverRunsAfterTheShow() {
+        type("fix toy ")
+        reportedCaret = cursor()
+        deferCursorSync = true
+        cursorAt = "fix".length // the caret moved into `fix`; its sync waits 100 ms
+        cursorSync()
+        assertWithMessage("precondition: the sync is pending").that(pendingCursorSync).isNotNull()
+        hideAndShowKeyboard()
+        runPendingCursorSync()
+
+        assertWithMessage("the hide cleared the bar").that(barWords).isEmpty()
+        assertWithMessage("no word synced from before the hide").that(tracker.getCurrentWord()).isEmpty()
+    }
+
+    /** Item 3: a rotation's config refresh keeps the learn window, so the next word still pairs. */
+    @Test
+    fun aRotationsConfigRefreshKeepsTheLearnWindow() {
+        handler.onInputFieldStarted(textField(), restarting = false, ic)
+        type("fix ")
+        editorInfoShowsTheText()
+        hideAndShowKeyboard(restarting = true)
+        type("toy ")
+
+        assertWithMessage("fix→toy learned across the rotation").that(bigram("fix", "toy")).isEqualTo(1)
     }
 
     // ------------------------------------------------------------------ reflection
