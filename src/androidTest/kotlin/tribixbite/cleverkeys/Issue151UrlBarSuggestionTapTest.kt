@@ -10,7 +10,7 @@ import android.view.inputmethod.InputConnection
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
-import org.junit.Assume.assumeNotNull
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -101,7 +101,7 @@ class Issue151UrlBarSuggestionTapTest {
                 }
             }
         }
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
 
         // word_prediction_enabled gates handleRegularTyping (word tracking);
         // autocorrect is irrelevant to the tap path (isManualSelection skips it)

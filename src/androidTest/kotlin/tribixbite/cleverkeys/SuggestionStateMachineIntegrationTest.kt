@@ -11,7 +11,6 @@ import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
-import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,7 +35,7 @@ import java.util.concurrent.TimeUnit
  *
  * Patterns mirror ContractionFlickerIntegrationTest:
  *   - Companion-object cached WordPredictor (heavy init OOM-resilient)
- *   - assumeNotNull guard so OOM skips rather than fails
+ *   - assertNotNull guard: an OOM FAILS the test (a skip hid regressions, test-gap audit 2026-11-28)
  *   - drainMainThread() helper for async result delivery
  */
 @RunWith(AndroidJUnit4::class)
@@ -113,7 +112,7 @@ class SuggestionStateMachineIntegrationTest {
             }
         }
 
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
         contractionManager = sharedContractionManager!!
 
         // SuggestionBar (View) + EditText (View) created on the main thread.

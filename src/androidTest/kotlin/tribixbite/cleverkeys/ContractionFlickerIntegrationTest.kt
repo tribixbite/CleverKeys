@@ -9,7 +9,6 @@ import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
-import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -79,7 +78,7 @@ class ContractionFlickerIntegrationTest {
             }
         }
 
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
 
         contractionManager = sharedContractionManager!!
 
@@ -114,7 +113,7 @@ class ContractionFlickerIntegrationTest {
             android.util.Log.w("ContractionFlickerIntTest",
                 "Could not inject WordPredictor via reflection: ${e.message}")
         }
-        assumeNotNull("WordPredictor must be accessible", predCoord.getWordPredictor())
+        assertNotNull("WordPredictor must be accessible", predCoord.getWordPredictor())
 
         // Create SuggestionHandler with all real dependencies
         suggestionHandler = SuggestionHandler(

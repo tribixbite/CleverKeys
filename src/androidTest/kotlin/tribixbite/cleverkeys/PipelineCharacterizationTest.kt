@@ -13,7 +13,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeNotNull
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,6 +75,42 @@ import java.util.concurrent.TimeUnit
  *   - SH.onSuggestionSelected     389-790 (spec 378-758).
  *   - SH.applyShiftTransformation companion fn (step 3 destination).
  *   - SH.augmentPredictionsWithPossessives 1474-1508 (spec 1441/1474).
+ *
+ * ## Skipped scenarios
+ *
+ * (Was the `assertTrue(true)` placeholder test `oracle_skipped_scenarios_documented`, removed
+ * 2026-11-28, test-gap audit item 8: a test that asserts nothing reads as coverage.)
+ *
+ * Scenario 6 (swipe during manual typing → typed partial replaced) is characterized only
+ * PARTIALLY and folded into scenario 5/5b above. The full "swipe mid-typed-partial" flow
+ * requires the tracker's currentWordLength to be non-zero at handlePredictionResults time,
+ * which in production is set by KeyEventHandler.send_text() committing each char AND
+ * contextTracker.appendToCurrentWord() — a coupling that only the live IME service wires
+ * (Keyboard2View → CleverKeysService). Reproducing it here would require driving
+ * handleRegularTyping (SH path) then handlePredictionResults (IC path) with a shared
+ * tracker; but SH.handleRegularTyping does NOT append to the tracker's currentWord in a way
+ * IC.handlePredictionResults reads for the "add space after manual typing" branch
+ * (InputCoordinator.handlePredictionResults) — the two use different tracking. SKIP:
+ * needs the real service to couple the
+ * KeyEventHandler-commit and tracker-append. Reported.
+ *
+ * Scenario 10's "ML capture fires (D5)" sub-assertion remains SKIPPED after step 6 LANDED
+ * D5 (capture now routes through MLDataCollector inside SH.handleSwipePredictionResults):
+ * it is still gated on PrivacyManager.canCollectSwipeData() AND a non-null
+ * currentSwipeData populated by
+ * the swipe dispatch (which we bypass to stay off the decoders). Verifying the store
+ * write would require driving handleSwipeTyping end-to-end (a real decoder) or a
+ * PrivacyManager/SwipeMLDataStore test double — out of scope for a post-prediction-seam
+ * oracle. The word-REPLACEMENT + CANDIDATE_SELECTION half of scenario 10 IS covered by
+ * oracle_swipe_tapAlternateAfterAutoInsert_replacesAutoInsertedWord.
+ *
+ * Scenario 18 (prompt survives a cursor-sync racing it) is NO LONGER SKIPPED — step 5 (2026-07-20)
+ * folded cursor-sync into SuggestionHandler's single specialPromptActive-guarded pipeline, making
+ * the race deterministic. It is now implemented as
+ * oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt (autocorrect-undo prompt variant): raise an
+ * SH prompt via the real typing path, fire a real cursor-sync prediction pass into a pre-existing
+ * word, and assert the prompt survives (the shared guard suppresses the racing post). This is the
+ * R-7 structural fix — the guard is no longer SH-only-and-bypassed-by-IC; there is ONE pipeline.
  */
 @RunWith(AndroidJUnit4::class)
 class PipelineCharacterizationTest {
@@ -147,13 +183,13 @@ class PipelineCharacterizationTest {
                         set(sharedPredictionCoordinator, sharedPredictor)
                     }
                 } catch (e: OutOfMemoryError) {
-                    android.util.Log.w("PipelineCharTest", "WordPredictor init OOM — tests skipped")
+                    android.util.Log.w("PipelineCharTest", "WordPredictor init OOM — tests fail")
                     sharedPredictor = null
                 }
             }
         }
-        assumeNotNull("WordPredictor required", sharedPredictor)
-        assumeNotNull("WordPredictor must be injected", sharedPredictionCoordinator!!.getWordPredictor())
+        assertNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor must be injected", sharedPredictionCoordinator!!.getWordPredictor())
     }
 
     /**
@@ -535,11 +571,9 @@ class PipelineCharacterizationTest {
         val h = harness(initialText = "")
         h.config.swipe_final_autocorrect_enabled = true
         val corrected = sharedPredictor!!.autoCorrect("teh")
-        // Only assert the correction behavior if the shared dictionary actually corrects "teh";
-        // otherwise the scenario can't be exercised deterministically on this build.
-        org.junit.Assume.assumeTrue(
-            "dictionary must autocorrect 'teh' for this scenario", corrected != "teh"
-        )
+        // The shipped dictionary corrects "teh"; a build where it does not is a regression, not a
+        // skip (test-gap audit 2026-11-28, item 7).
+        assertTrue("dictionary must autocorrect 'teh' for this scenario", corrected != "teh")
         swipeResults(h, listOf("teh"), listOf(300), textEditor())
         drainMainThread()
 
@@ -643,7 +677,7 @@ class PipelineCharacterizationTest {
         val h = harness(initialText = "")
         h.config.autocorrect_enabled = true
         val corrected = sharedPredictor!!.autoCorrect("teh")
-        org.junit.Assume.assumeTrue("dictionary must autocorrect 'teh'", corrected != "teh")
+        assertTrue("dictionary must autocorrect 'teh'", corrected != "teh")
 
         // Production order: chars + the completing space are committed to the editor, then the
         // handler runs per keystroke. The space keystroke triggers the autocorrect branch.
@@ -748,7 +782,7 @@ class PipelineCharacterizationTest {
     fun oracle_tap_preserveCapitalizationOnAutocorrect() {
         // "Teh " → autocorrect to "The " (title-case preserved from the typed "Teh").
         val corrected = sharedPredictor!!.autoCorrect("teh")
-        org.junit.Assume.assumeTrue("dictionary must autocorrect 'teh'", corrected != "teh")
+        assertTrue("dictionary must autocorrect 'teh'", corrected != "teh")
         val h = harness(initialText = "")
         h.config.autocorrect_enabled = true
         // Production order: "Teh" (capitalized first char) + completing space committed, then
@@ -900,7 +934,7 @@ class PipelineCharacterizationTest {
     @Test
     fun oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt() {
         val corrected = sharedPredictor!!.autoCorrect("teh")
-        org.junit.Assume.assumeTrue("dictionary must autocorrect 'teh'", corrected != "teh")
+        assertTrue("dictionary must autocorrect 'teh'", corrected != "teh")
 
         val h = harness(initialText = "its ")
         h.config.autocorrect_enabled = true
@@ -1007,46 +1041,4 @@ class PipelineCharacterizationTest {
         assertTrue(Suggestion.parse("book") is Suggestion.Word)
     }
 
-    // =========================================================================
-    // SKIPPED SCENARIOS (documented — cannot be characterized deterministically here)
-    // =========================================================================
-
-    /**
-     * Scenario 6 (swipe during manual typing → typed partial replaced) is characterized only
-     * PARTIALLY and folded into scenario 5/5b above. The full "swipe mid-typed-partial" flow
-     * requires the tracker's currentWordLength to be non-zero at handlePredictionResults time,
-     * which in production is set by KeyEventHandler.send_text() committing each char AND
-     * contextTracker.appendToCurrentWord() — a coupling that only the live IME service wires
-     * (Keyboard2View → CleverKeysService). Reproducing it here would require driving
-     * handleRegularTyping (SH path) then handlePredictionResults (IC path) with a shared
-     * tracker; but SH.handleRegularTyping does NOT append to the tracker's currentWord in a way
-     * IC.handlePredictionResults reads for the "add space after manual typing" branch
-     * (InputCoordinator.handlePredictionResults) — the two use different tracking. SKIP:
-     * needs the real service to couple the
-     * KeyEventHandler-commit and tracker-append. Reported.
-     *
-     * Scenario 10's "ML capture fires (D5)" sub-assertion remains SKIPPED after step 6 LANDED
-     * D5 (capture now routes through MLDataCollector inside SH.handleSwipePredictionResults):
-     * it is still gated on PrivacyManager.canCollectSwipeData() AND a non-null
-     * currentSwipeData populated by
-     * the swipe dispatch (which we bypass to stay off the decoders). Verifying the store
-     * write would require driving handleSwipeTyping end-to-end (a real decoder) or a
-     * PrivacyManager/SwipeMLDataStore test double — out of scope for a post-prediction-seam
-     * oracle. The word-REPLACEMENT + CANDIDATE_SELECTION half of scenario 10 IS covered by
-     * oracle_swipe_tapAlternateAfterAutoInsert_replacesAutoInsertedWord.
-     *
-     * Scenario 18 (prompt survives a cursor-sync racing it) is NO LONGER SKIPPED — step 5 (2026-07-20)
-     * folded cursor-sync into SuggestionHandler's single specialPromptActive-guarded pipeline, making
-     * the race deterministic. It is now implemented as
-     * oracle_cursorSync_doesNotClobberAutocorrectUndoPrompt (autocorrect-undo prompt variant): raise an
-     * SH prompt via the real typing path, fire a real cursor-sync prediction pass into a pre-existing
-     * word, and assert the prompt survives (the shared guard suppresses the racing post). This is the
-     * R-7 structural fix — the guard is no longer SH-only-and-bypassed-by-IC; there is ONE pipeline.
-     */
-    @Test
-    fun oracle_skipped_scenarios_documented() {
-        // Placeholder so the skip rationale ships in the class and is visible in test output.
-        // No assertion — the doc comment above is the deliverable.
-        assertTrue(true)
-    }
 }

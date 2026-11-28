@@ -7,7 +7,7 @@ import android.view.inputmethod.InputConnection
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeNotNull
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -80,7 +80,7 @@ class ContractionSentenceStartMeasureTest {
                 }
             }
         }
-        assumeNotNull("WordPredictor required (may OOM on small heap)", sharedPredictor)
+        assertNotNull("WordPredictor required (may OOM on small heap)", sharedPredictor)
 
         val latch = CountDownLatch(1)
         Handler(Looper.getMainLooper()).post {
@@ -107,7 +107,7 @@ class ContractionSentenceStartMeasureTest {
         } catch (e: Exception) {
             android.util.Log.w("UT7Measure", "reflection inject failed: ${e.message}")
         }
-        assumeNotNull("WordPredictor must be accessible", predCoord.getWordPredictor())
+        assertNotNull("WordPredictor must be accessible", predCoord.getWordPredictor())
 
         suggestionHandler = SuggestionHandler(
             context, sharedConfig!!, PredictionContextTracker(),

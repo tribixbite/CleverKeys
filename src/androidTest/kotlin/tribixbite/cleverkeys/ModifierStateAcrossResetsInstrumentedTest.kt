@@ -16,7 +16,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -36,7 +35,8 @@ import org.junit.runner.RunWith
  *
  * Real IME, real field, real rotation (`user_rotation` with auto-rotate off). Leaves no trace: the
  * keyboard, the rotation settings and `show_ime_with_hard_keyboard` are restored. A device that
- * does not rotate for `user_rotation` skips the rotation cases (assumption), it does not pass them.
+ * accepts `user_rotation` but does not turn FAILS the rotation cases; only one that does not keep
+ * the setting, or does not start in portrait, skips them, logged at error level ([UserRotation]).
  */
 @RunWith(AndroidJUnit4::class)
 class ModifierStateAcrossResetsInstrumentedTest {
@@ -48,9 +48,9 @@ class ModifierStateAcrossResetsInstrumentedTest {
     private val context = instrumentation.targetContext
 
     private var originalIme = ""
-    private var originalAutoRotate = ""
-    private var originalUserRotation = ""
-    private var rotated = false
+
+    /** The real rotation and its restore (test-gap item 7: a rotation that did not happen fails). */
+    private val rotation by lazy { UserRotation(::shell, ::orientation, ::within, TAG) }
 
     private fun shell(command: String): String =
         ParcelFileDescriptor.AutoCloseInputStream(
@@ -112,8 +112,6 @@ class ModifierStateAcrossResetsInstrumentedTest {
     @Before
     fun setUp() {
         originalIme = shell("settings get secure default_input_method")
-        originalAutoRotate = shell("settings get system accelerometer_rotation")
-        originalUserRotation = shell("settings get system user_rotation")
         val component = "${context.packageName}/tribixbite.cleverkeys.CleverKeysService"
         shell("ime enable $component")
         shell("ime set $component")
@@ -121,18 +119,10 @@ class ModifierStateAcrossResetsInstrumentedTest {
 
     @After
     fun tearDown() {
-        if (rotated) {
-            restoreSystemSetting("user_rotation", originalUserRotation)
-            restoreSystemSetting("accelerometer_rotation", originalAutoRotate)
-            within(10_000L) { orientation() == Configuration.ORIENTATION_PORTRAIT }
-        }
+        rotation.restore()
         if (originalIme.isNotBlank() && originalIme != "null") shell("ime set $originalIme")
     }
 
-    private fun restoreSystemSetting(key: String, value: String) {
-        if (value == "null" || value.isBlank()) shell("settings delete system $key")
-        else shell("settings put system $key $value")
-    }
 
     @Test
     fun autoCapitalisedShiftIsBackAfterTheNumberPane() {
@@ -164,10 +154,7 @@ class ModifierStateAcrossResetsInstrumentedTest {
         heldModifiersSurviveARotation(ImeFieldKeepWindowTestActivity::class.java)
 
     private fun <A : Activity> heldModifiersSurviveARotation(activity: Class<A>) {
-        assumeTrue(
-            "rotation needs portrait to start from (${orientation()})",
-            context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-        )
+        rotation.requirePortrait()
         ActivityScenario.launch(activity).use {
             waitFor("the keyboard") { shown() && onLetters() }
             instrumentation.runOnMainSync { service()!!.triggerKeyboardEvent(KeyValue.Event.CAPS_LOCK) }
@@ -177,11 +164,7 @@ class ModifierStateAcrossResetsInstrumentedTest {
             }
 
             val startedAt = SystemClock.uptimeMillis()
-            rotated = true
-            shell("settings put system accelerometer_rotation 0")
-            shell("settings put system user_rotation 1")
-            val turned = within(10_000L) { orientation() == Configuration.ORIENTATION_LANDSCAPE }
-            assumeTrue("this device did not rotate for user_rotation=1 (${state()})", turned)
+            rotation.toLandscape { state() }
             waitFor("the keyboard back after the rotation") { shown() && onLetters() }
             val carried = within(3_000L) {
                 has(KeyValue.Modifier.CTRL) && keyboard()?.isShiftLocked() == true

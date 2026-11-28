@@ -6,7 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
 import org.junit.After
-import org.junit.Assume.assumeNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,7 +30,7 @@ import org.junit.runner.RunWith
  *
  * Uses a shared singleton WordPredictor to load the 50k-word dictionary ONCE,
  * avoiding OOM from repeated loading on emulator.wtf's 200MB heap limit.
- * If initialization OOMs, individual tests are skipped via assumeNotNull.
+ * If initialization OOMs, every test FAILS (assertNotNull): a skip hid regressions (test-gap audit 2026-11-28).
  *
  * Runs on emulator.wtf via: ew-cli --app app.apk --test test.apk ...
  */
@@ -51,7 +50,7 @@ class TypingSimulationTest {
     companion object {
         // Lazily initialized once, shared across all tests.
         // Avoids 60+ WordPredictor + 50k dictionary loads that OOM the 200MB heap.
-        // If init OOMs, sharedPredictor stays null and tests skip via assumeNotNull.
+        // If init OOMs, sharedPredictor stays null and every test fails at assertNotNull.
         private var sharedPredictor: WordPredictor? = null
         private var sharedContractionManager: ContractionManager? = null
         private var sharedConfig: Config? = null
@@ -87,7 +86,7 @@ class TypingSimulationTest {
         }
 
         // Skip all tests if dictionary couldn't load (200MB heap emulator)
-        assumeNotNull("WordPredictor required (may OOM on small heap)", sharedPredictor)
+        assertNotNull("WordPredictor required (may OOM on small heap)", sharedPredictor)
 
         predictor = sharedPredictor!!
         contractionManager = sharedContractionManager!!

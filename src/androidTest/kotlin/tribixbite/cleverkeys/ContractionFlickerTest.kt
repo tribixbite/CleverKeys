@@ -382,7 +382,7 @@ class ContractionFlickerTest {
 
     @Test
     fun predictionPipeline_itsIncludesPairedContractionInResults() {
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
         val predictor = sharedPredictor!!
 
         val result = predictor.predictWordsWithContext("its", emptyList())
@@ -395,7 +395,7 @@ class ContractionFlickerTest {
 
     @Test
     fun predictionPipeline_pairedContractionInjection() {
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
         val predictor = sharedPredictor!!
 
         // Simulate SuggestionHandler.updatePredictionsForCurrentWord:

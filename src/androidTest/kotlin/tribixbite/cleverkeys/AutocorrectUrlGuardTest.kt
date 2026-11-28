@@ -8,7 +8,7 @@ import android.view.inputmethod.InputConnection
 import android.widget.EditText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
-import org.junit.Assume.assumeNotNull
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,7 +84,7 @@ class AutocorrectUrlGuardTest {
                 }
             }
         }
-        assumeNotNull("WordPredictor required", sharedPredictor)
+        assertNotNull("WordPredictor required", sharedPredictor)
 
         // Deterministic autocorrect knobs (same as AutocorrectTest).
         // word_prediction_enabled + a SuggestionBar are hard gates at the top of
