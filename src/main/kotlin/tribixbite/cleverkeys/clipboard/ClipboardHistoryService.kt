@@ -451,27 +451,18 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // ([storedLimits]). An unset setting reads as its documented default.
         val limits = storedLimits()
 
-        // Check maximum item size limit
+        // Check maximum item size limit. The decision is made here and nothing after it can
+        // undo it: the Toast used to be shown inside this check's try, whose catch let the clip
+        // through, so a capture off the main thread (a text URI is read on IO), where a Toast
+        // cannot be shown, stored the refused clip (audit 2026-11-28). Sizing is allocation-free.
         val maxSizeKb = limits.maxItemSizeKb
         if (maxSizeKb > 0) {
-            try {
-                val sizeBytes = clip.toByteArray(java.nio.charset.StandardCharsets.UTF_8).size
-                val maxSizeBytes = maxSizeKb * 1024
-
-                if (sizeBytes > maxSizeBytes) {
-                    // Item exceeds size limit - reject and notify user
-                    android.util.Log.w("ClipboardHistory", "Clipboard item too large: $sizeBytes bytes (limit: $maxSizeBytes bytes)")
-
-                    // Show toast notification to user. Shares the string resource with the
-                    // PROCESS_TEXT entry point (Finding 10) so both surfaces show identical wording.
-                    val message = _context.getString(
-                        R.string.private_copy_too_large, sizeBytes / 1024, maxSizeKb)
-                    Toast.makeText(_context, message, Toast.LENGTH_LONG).show()
-                    return // Don't add to clipboard history
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("ClipboardHistory", "Error checking clipboard item size: " + e.message)
-                // Continue with add if size check fails
+            val sizeBytes = ClipboardSizePolicy.utf8Bytes(clip)
+            val maxSizeBytes = maxSizeKb * 1024L
+            if (sizeBytes > maxSizeBytes) {
+                android.util.Log.w("ClipboardHistory", "Clipboard item too large: $sizeBytes bytes (limit: $maxSizeBytes bytes)")
+                showTooLargeToast((sizeBytes / 1024).toInt(), maxSizeKb)
+                return // Don't add to clipboard history
             }
         }
 
@@ -506,6 +497,23 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (added) {
             applyHistoryLimits(limits)
             notifyHistoryChanged()
+        }
+    }
+
+    /**
+     * Tell the user a capture was refused for its size, on the main thread ([serviceScope] is
+     * `Dispatchers.Main.immediate`: at once on main, posted from IO). Shares the string resource
+     * with the PROCESS_TEXT entry point (Finding 10) so both surfaces show identical wording. A
+     * failure to show it is logged; the refusal has already been decided by the caller.
+     */
+    private fun showTooLargeToast(sizeKb: Int, limitKb: Int) {
+        serviceScope.launch {
+            try {
+                val message = _context.getString(R.string.private_copy_too_large, sizeKb, limitKb)
+                Toast.makeText(_context, message, Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                android.util.Log.w("ClipboardHistory", "Size-limit toast not shown: " + e.message)
+            }
         }
     }
 

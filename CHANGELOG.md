@@ -743,6 +743,8 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- A clipping over the size limit that arrives as a text file is no longer stored when its "too
+  large" notice cannot be shown.
 - Cleaning links in a large clip with many links no longer holds a copy of the whole clip in memory
   for every link.
 - A language pack re-imported for a primary language chosen after the keyboard started is

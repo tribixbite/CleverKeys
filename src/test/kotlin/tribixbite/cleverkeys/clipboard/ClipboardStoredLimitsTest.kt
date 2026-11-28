@@ -147,6 +147,23 @@ class ClipboardStoredLimitsTest {
         verify(exactly = 0) { database.updateHistoryEntryContent(any(), any()) }
     }
 
+    /**
+     * Low audit item (2026-11-28): the over-cap branch of a capture showed its Toast inside the
+     * size check's `try`, whose catch let the clip through. A capture off the main thread (a
+     * text URI is read on IO) cannot show a Toast there, so the refused clip was stored. Here
+     * the Toast throws (mock tier: android.jar's Stub!); the cap must still hold.
+     */
+    @Test
+    fun anOverCapCaptureIsNotStoredWhenItsToastCannotBeShown() {
+        passThroughSanitizer()
+        service.setField("serviceScope", kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Unconfined))
+        settings.values["clipboard_max_item_size_kb"] = 64
+
+        service.addClip("x".repeat(100 * 1024))
+
+        verify(exactly = 0) { database.addClipboardEntry(any(), any(), any(), any()) }
+    }
+
     @Test
     fun aNewClippingExpiresByTheStoredDuration() {
         settings.values[ClipboardHistoryService.PREF_HISTORY_DURATION] = "60"
