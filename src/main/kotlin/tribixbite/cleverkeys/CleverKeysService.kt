@@ -183,19 +183,18 @@ class CleverKeysService : InputMethodService(),
     private var _languagePacksReceiver: BroadcastReceiver? = null
 
     /**
-     * The primary language and its installed pack's dictionary file (path, size, mtime) as the
-     * keyboard last loaded it; null file part = no pack (a bundled dictionary). Lets
-     * [onLanguagePacksChanged] tell a re-imported or removed PRIMARY pack (audit B5, 2026-11-26:
-     * only the secondary was reloaded).
+     * The primary language and its installed pack's dictionary as the keyboard last loaded it
+     * ([tribixbite.cleverkeys.langpack.PrimaryPackStamp]). Lets [onLanguagePacksChanged] tell a
+     * re-imported or removed PRIMARY pack (audit B5, 2026-11-26: only the secondary was reloaded).
      */
-    private var _primaryPackStamp: Pair<String, String?>? = null
+    private var _primaryPackStamp: tribixbite.cleverkeys.langpack.PrimaryPackStamp? = null
 
-    private fun primaryPackStamp(language: String): Pair<String, String?> = language to try {
-        tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(this).getDictionaryPath(language)
-            ?.let { "${it.path}:${it.length()}:${it.lastModified()}" }
-    } catch (e: Exception) {
-        null
-    }
+    private fun primaryPackStamp(language: String): tribixbite.cleverkeys.langpack.PrimaryPackStamp =
+        tribixbite.cleverkeys.langpack.PrimaryPackStamp.of(language, try {
+            tribixbite.cleverkeys.langpack.LanguagePackManager.getInstance(this).getDictionaryPath(language)
+        } catch (e: Exception) {
+            null
+        })
 
     companion object {
         /** Lets a theme change re-inflate the keyboard before its name shows in the bar. */
@@ -1734,8 +1733,7 @@ class CleverKeysService : InputMethodService(),
         // now (a language change reloads through ActiveLanguageSync instead).
         val primary = _config?.activeLanguages()?.primary ?: return
         val stamp = primaryPackStamp(primary)
-        val known = _primaryPackStamp
-        if (known != null && known.first == primary && known.second != stamp.second) {
+        if (tribixbite.cleverkeys.langpack.PrimaryPackStamp.primaryNeedsReload(_primaryPackStamp, stamp)) {
             _predictionCoordinator?.reloadWordPredictorDictionary(primary)
         }
         _primaryPackStamp = stamp

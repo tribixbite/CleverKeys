@@ -745,6 +745,8 @@ tasks.register('runPureTests', JavaExec) {
     // Todo item 11 (2026-10-12): crash-safe language-pack install swap and its recovery,
     // with every rename/delete failed or interrupted through the PackFileOps seam.
     'tribixbite.cleverkeys.langpack.LanguagePackSwapTest',
+    // Test-gap audit 2026-11-28 item 12: when a packs broadcast reloads the primary dictionary.
+    'tribixbite.cleverkeys.langpack.PrimaryPackStampTest',
     // 2026-10-29: on-device voice input (docs/specs/voice-input.md) — engine-neutral stt/ core,
     // voice-pack import over the language-pack swap, the modularity drift guard, and the real
     // Moonshine v2 model (skipped unless build/voicepacks/ + ~/.cache/cleverkeys-test/voice-samples exist).
