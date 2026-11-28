@@ -106,17 +106,5 @@ class DirectBootPrefsCacheTest {
             .forEach { it.isAccessible = true; it.set(DirectBootAwarePreferences, null) }
     }
 
-    private fun setSdkInt(value: Int) {
-        val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-        unsafeField.isAccessible = true
-        val unsafe = unsafeField.get(null)
-        val unsafeClass = unsafe.javaClass
-        val field = Build.VERSION::class.java.getField("SDK_INT")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field) as Long
-        unsafeClass.getMethod("putInt", Any::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-            .invoke(unsafe, base, offset, value)
-    }
+    private fun setSdkInt(value: Int) = ForcedSdkInt.set(value)
 }

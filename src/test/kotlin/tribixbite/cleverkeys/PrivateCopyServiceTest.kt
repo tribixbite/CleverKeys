@@ -129,19 +129,5 @@ class PrivateCopyServiceTest {
     }
 
     /** Set Build.VERSION.SDK_INT via sun.misc.Unsafe (Java 17+ removed Field.modifiers access). */
-    private fun setSdkInt(sdkInt: Int) {
-        try {
-            val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-            unsafeField.isAccessible = true
-            val unsafe = unsafeField.get(null)
-            val unsafeClass = unsafe.javaClass
-            val field = android.os.Build.VERSION::class.java.getField("SDK_INT")
-            val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field)
-            val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field) as Long
-            unsafeClass.getMethod("putInt", Object::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-                .invoke(unsafe, base, offset, sdkInt)
-        } catch (_: Exception) { /* falls back to android.jar default (0) */ }
-    }
+    private fun setSdkInt(sdkInt: Int) = ForcedSdkInt.set(sdkInt)
 }

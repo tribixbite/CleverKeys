@@ -149,22 +149,5 @@ class DirectBootAwarePreferencesTest {
     // Helper: set Build.VERSION.SDK_INT via Unsafe reflection
     // =========================================================================
 
-    private fun setSdkInt(value: Int) {
-        try {
-            val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-            unsafeField.isAccessible = true
-            val unsafe = unsafeField.get(null)
-            val unsafeClass = unsafe.javaClass
-
-            val field = Build.VERSION::class.java.getField("SDK_INT")
-            val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field)
-            val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field) as Long
-            unsafeClass.getMethod("putInt", Object::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-                .invoke(unsafe, base, offset, value)
-        } catch (_: Exception) {
-            // If Unsafe fails, SDK_INT stays at 0 (pre-N path)
-        }
-    }
+    private fun setSdkInt(value: Int) = ForcedSdkInt.set(value)
 }

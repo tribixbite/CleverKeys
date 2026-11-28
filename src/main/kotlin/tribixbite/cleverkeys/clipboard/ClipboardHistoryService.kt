@@ -178,7 +178,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         if (_isListenerRegistered) return
 
         // On Android 10+ (API 29+), being default IME grants system-wide clipboard access
-        if (VERSION.SDK_INT >= 29 && !isDefaultIme()) {
+        if (platformSdk() >= 29 && !isDefaultIme()) {
             android.util.Log.w("ClipboardHistory", "Clipboard access requires this keyboard to be set as default input method")
             // User notification will be handled by settings UI showing clipboard status
             return
@@ -231,7 +231,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
         // registered listener regardless of focus or default-IME status, so a registered
         // listener has already observed every set event. Gaps happen only while no listener is
         // registered, and registration (above) performs the one read that covers them.
-        if (VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        if (platformSdk() < Build.VERSION_CODES.O) return
         captureClip(catchUp = true)
     }
 
@@ -291,7 +291,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             return "Clipboard history disabled in settings"
 
         if (!_isListenerRegistered) {
-            if (VERSION.SDK_INT >= 29 && !isDefaultIme())
+            if (platformSdk() >= 29 && !isDefaultIme())
                 return "Clipboard access requires setting this keyboard as default input method"
             return "Clipboard monitoring inactive - open keyboard to activate"
         }
@@ -1119,7 +1119,7 @@ class ClipboardHistoryService private constructor(ctx: Context) {
             // #86: Android 13+ (API 33): Respect IS_SENSITIVE flag set by password managers
             // This is a more robust detection than package blocklisting
             if (capture.respectSensitiveFlag &&
-                VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                platformSdk() >= Build.VERSION_CODES.TIRAMISU) {
                 val extras = clip.description?.extras
                 if (extras != null) {
                     val isSensitive = extras.getBoolean("android.content.extra.IS_SENSITIVE", false)
@@ -1277,8 +1277,12 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     /** `ClipDescription.getTimestamp()` (API 26+); 0 when unavailable. */
+    @SuppressLint("NewApi") // guarded by platformSdk(), which lint cannot see (a test seam)
     private fun clipSetTime(description: android.content.ClipDescription?): Long =
-        if (description != null && VERSION.SDK_INT >= Build.VERSION_CODES.O) description.timestamp else 0L
+        if (description != null && platformSdk() >= Build.VERSION_CODES.O) setTimeOf(description) else 0L
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun setTimeOf(description: android.content.ClipDescription): Long = description.timestamp
 
     /** Per-item identity for the no-timestamp fingerprint: text, else URI string, else null. */
     private fun clipItemKeys(clip: ClipData): List<String?> =
@@ -1313,6 +1317,21 @@ class ClipboardHistoryService private constructor(ctx: Context) {
     }
 
     companion object {
+        /**
+         * The platform level the capture and catch-up branch on (API 24–25: no clip set time;
+         * 29+: default-IME access; 33+: the sensitive flag). A seam because host tests cannot
+         * force `Build.VERSION.SDK_INT` reliably: once the JIT has compiled the code it may fold
+         * the static final as a constant (CLAUDE.md, test-gap audit 2026-11-28 item 6).
+         * Production never replaces it.
+         */
+        @Volatile
+        internal var platformSdk: () -> Int = { VERSION.SDK_INT }
+
+        /** Puts [platformSdk] back to the real platform level (host-test teardown). */
+        internal fun resetPlatformSdk() {
+            platformSdk = { VERSION.SDK_INT }
+        }
+
         /** SharedPreferences file holding only [lastSeenClip] (not backed up, not exported). */
         const val LAST_SEEN_PREFS = "clipboard_last_seen"
         private const val LAST_SEEN_KEY = "last_seen_clip"

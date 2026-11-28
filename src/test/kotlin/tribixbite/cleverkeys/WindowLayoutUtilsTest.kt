@@ -618,24 +618,5 @@ class WindowLayoutUtilsTest {
      * this one **fails the test** if the write did not land, so a JDK change cannot silently
      * turn every branch assertion into an assertion about API 0.
      */
-    private fun setSdkInt(sdkInt: Int) {
-        val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-        unsafeField.isAccessible = true
-        val unsafe = unsafeField.get(null)
-        val unsafeClass = unsafe.javaClass
-
-        val field = Build.VERSION::class.java.getField("SDK_INT")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field) as Long
-        unsafeClass.getMethod(
-            "putInt",
-            Object::class.java,
-            Long::class.javaPrimitiveType,
-            Int::class.javaPrimitiveType
-        ).invoke(unsafe, base, offset, sdkInt)
-
-        assertThat(Build.VERSION.SDK_INT).isEqualTo(sdkInt)
-    }
+    private fun setSdkInt(sdkInt: Int) = ForcedSdkInt.set(sdkInt)
 }

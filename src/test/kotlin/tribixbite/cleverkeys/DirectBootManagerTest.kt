@@ -254,22 +254,5 @@ class DirectBootManagerTest {
      * Java 17+ removed Field.modifiers access, so we use sun.misc.Unsafe
      * which can modify any field regardless of final/accessibility.
      */
-    private fun setSdkInt(value: Int) {
-        try {
-            val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-            unsafeField.isAccessible = true
-            val unsafe = unsafeField.get(null)
-            val unsafeClass = unsafe.javaClass
-
-            val field = Build.VERSION::class.java.getField("SDK_INT")
-            val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field)
-            val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-                .invoke(unsafe, field) as Long
-            unsafeClass.getMethod("putInt", Object::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-                .invoke(unsafe, base, offset, value)
-        } catch (_: Exception) {
-            // If Unsafe fails, SDK_INT stays at android.jar default (0)
-        }
-    }
+    private fun setSdkInt(value: Int) = ForcedSdkInt.set(value)
 }

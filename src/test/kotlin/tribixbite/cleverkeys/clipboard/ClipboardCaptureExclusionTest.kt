@@ -110,6 +110,7 @@ class ClipboardCaptureExclusionTest {
     @After
     fun teardown() {
         setSdkInt(0)
+        tribixbite.cleverkeys.ClipboardHistoryService.resetPlatformSdk()
         unmockkAll()
     }
 
@@ -367,21 +368,9 @@ class ClipboardCaptureExclusionTest {
      * read. Symptom when omitted: the FIRST test in the class sees 0 and every later one sees
      * the forced value.
      */
+    /** The service's platform seam, plus SDK_INT itself (checked) for the code without one. */
     private fun setSdkInt(sdkInt: Int) {
-        Class.forName("android.os.Build\$VERSION", true, javaClass.classLoader)
-        val unsafeField = Class.forName("sun.misc.Unsafe").getDeclaredField("theUnsafe")
-        unsafeField.isAccessible = true
-        val unsafe = unsafeField.get(null)
-        val unsafeClass = unsafe.javaClass
-        val field = android.os.Build.VERSION::class.java.getField("SDK_INT")
-        val base = unsafeClass.getMethod("staticFieldBase", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field)
-        val offset = unsafeClass.getMethod("staticFieldOffset", java.lang.reflect.Field::class.java)
-            .invoke(unsafe, field) as Long
-        unsafeClass.getMethod(
-            "putInt", Object::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType
-        ).invoke(unsafe, base, offset, sdkInt)
-        assertWithMessage("SDK_INT must actually be forced, or the API-gated arms are unreachable")
-            .that(android.os.Build.VERSION.SDK_INT).isEqualTo(sdkInt)
+        tribixbite.cleverkeys.ForcedSdkInt.set(sdkInt)
+        tribixbite.cleverkeys.ClipboardHistoryService.platformSdk = { sdkInt }
     }
 }

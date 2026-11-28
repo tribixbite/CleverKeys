@@ -123,6 +123,7 @@ class ClipboardCatchUpTest {
     fun tearDown() {
         setGlobalConfig(null)
         setSdkInt(0)
+        tribixbite.cleverkeys.ClipboardHistoryService.resetPlatformSdk()
         unmockkAll()
     }
 
@@ -429,12 +430,9 @@ class ClipboardCatchUpTest {
     }
 
     /** Build.VERSION.SDK_INT via Unsafe (same idiom as ClipboardLockedStartupTest). */
+    /** The service's platform seam, plus SDK_INT itself (checked) for the code without one. */
     private fun setSdkInt(sdkInt: Int) {
-        val u = unsafe()
-        val field = android.os.Build.VERSION::class.java.getField("SDK_INT")
-        val base = u.javaClass.getMethod("staticFieldBase", Field::class.java).invoke(u, field)
-        val offset = u.javaClass.getMethod("staticFieldOffset", Field::class.java).invoke(u, field) as Long
-        u.javaClass.getMethod("putInt", Any::class.java, Long::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-            .invoke(u, base, offset, sdkInt)
+        tribixbite.cleverkeys.ForcedSdkInt.set(sdkInt)
+        tribixbite.cleverkeys.ClipboardHistoryService.platformSdk = { sdkInt }
     }
 }
