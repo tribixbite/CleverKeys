@@ -1,8 +1,6 @@
 package tribixbite.cleverkeys
 
 import android.content.Context
-import android.content.Intent
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.After
@@ -110,31 +108,31 @@ class PrivateCopyEditingKeyTest {
 
     @Test
     fun privateCopy_runsTheSameUrlSanitizerAsNormalHistory() {
-        // Wave-J fix round 2 (2026-09-02): write to Config.globalPrefs() — the EXACT store
-        // reloadSanitizationSettings() reads — not to DirectBootAwarePreferences. In a test
-        // process, whichever class ran initGlobalConfig first decided Config's store, and
-        // guessing it via DirectBootAware left the reload reading the OTHER store's stale
-        // false: the first Wave-J run stored the URL unsanitized for exactly that reason.
-        val prefs = Config.globalPrefs()
-        val config = Config.globalConfig()
-        val originalSanitize = config.clipboard_sanitize_links_enabled
-        val originalEmbed = config.clipboard_embed_enrich_enabled
-        val originalCustom = config.clipboard_custom_rules_enabled
-        val reload = Intent(SettingsActivity.ACTION_SANITIZATION_RULES_CHANGED)
+        // Since 9365dcc96 (2026-11-26) the sanitizer reads the STORED switches from the
+        // device-protected app store (SanitizationConfig's default `storedSettings`) on every
+        // call, never Config. Config.globalPrefs() is NOT that store in a test process
+        // (TestConfigHelper builds Config on "cleverkeys_test_prefs"), so writing there left
+        // the sanitizer reading the real store's switches (off: the URL stayed tracked, Note10+
+        // 2026-11-28). Write the store the service reads; no broadcast or Config reload is needed.
+        val prefs = DirectBootAwarePreferences.get_shared_preferences(context)
+        val keys = listOf(
+            "clipboard_sanitize_links_enabled",
+            "clipboard_embed_enrich_enabled",
+            "clipboard_custom_rules_enabled",
+        )
+        // Exact prior state (absent stays absent), restored with commit(): the orchestrator kills
+        // the process as soon as the test ends, so an apply() restore can be lost and leak.
+        val original: Map<String, Boolean?> =
+            keys.associateWith { key -> if (prefs.contains(key)) prefs.getBoolean(key, false) else null }
         try {
-            prefs.edit()
-                .putBoolean("clipboard_sanitize_links_enabled", true)
-                .putBoolean("clipboard_embed_enrich_enabled", false)
-                .putBoolean("clipboard_custom_rules_enabled", false)
-                .commit()
-            LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
-            // Wave-J fix (2026-09-02): the broadcast only reaches an ALREADY-constructed
-            // service instance. On a clean test process, privateCopy() below constructs the
-            // singleton lazily AFTER this point — the receiver never ran, so the lazily
-            // built sanitizer would read the STALE startup Config field (false) even though
-            // the pref is true. Mirror the receiver's refresh directly; the broadcast above
-            // still covers the pre-existing-instance case.
-            Config.globalConfig().reloadSanitizationSettings()
+            assertTrue(
+                "sanitize switches stored",
+                prefs.edit()
+                    .putBoolean("clipboard_sanitize_links_enabled", true)
+                    .putBoolean("clipboard_embed_enrich_enabled", false)
+                    .putBoolean("clipboard_custom_rules_enabled", false)
+                    .commit()
+            )
 
             val tracked = "https://example.com/x?utm_source=a&utm_medium=b&keep=yes"
             assertTrue(ClipboardHistoryService.privateCopy(context, tracked, "com.private.app"))
@@ -143,13 +141,11 @@ class PrivateCopyEditingKeyTest {
             assertEquals("https://example.com/x?keep=yes", entry!!.content)
             assertTrue(entry.isPrivate)
         } finally {
-            prefs.edit()
-                .putBoolean("clipboard_sanitize_links_enabled", originalSanitize)
-                .putBoolean("clipboard_embed_enrich_enabled", originalEmbed)
-                .putBoolean("clipboard_custom_rules_enabled", originalCustom)
-                .commit()
-            LocalBroadcastManager.getInstance(context).sendBroadcastSync(reload)
-            Config.globalConfig().reloadSanitizationSettings()
+            val restore = prefs.edit()
+            for ((key, value) in original) {
+                if (value == null) restore.remove(key) else restore.putBoolean(key, value)
+            }
+            assertTrue("sanitize switches restored", restore.commit())
         }
     }
 
