@@ -1029,11 +1029,12 @@ class CtcEngineAdapter(
     /**
      * `dictionaries/contraction_frequencies_<lang>.json`: alias key → the elision's measured
      * frequency ([CtcContractionKeys.inject]). Shipped only for languages that passed the human
-     * swipe-corpus gate (French, 2026-11-25); empty for every other language.
+     * swipe-corpus gate (French, 2026-11-25); empty for every other language. Read as a stream,
+     * never through a regex: see [CtcContractionKeys.parseAttestedFrequencies] (native heap).
      */
     private fun attestedContractionFrequencies(lang: String): Map<String, Double> = try {
         context.assets.open("dictionaries/contraction_frequencies_$lang.json")
-            .use { CtcContractionKeys.parseAttestedFrequencies(it.readBytes().decodeToString()) }
+            .use { CtcContractionKeys.parseAttestedFrequencies(it) }
     } catch (_: java.io.IOException) {
         emptyMap()
     }

@@ -3,6 +3,7 @@ package tribixbite.cleverkeys.swipe.ctc
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
+import java.io.File
 import kotlin.math.ln
 
 /**
@@ -142,5 +143,45 @@ class CtcContractionKeysTest {
         val parsed = CtcContractionKeys.parseAttestedFrequencies("{\n\"dabord\": 158.0,\n\"detre\": 168.0\n}\n")
         assertThat(parsed).containsExactly("dabord", 158.0, "detre", 168.0)
         assertThat(CtcContractionKeys.parseAttestedFrequencies("{}")).isEmpty()
+    }
+
+    /**
+     * The streamed parser reads every shipped table exactly as the regex it replaced did
+     * (2026-11-28: the regex's per-match ICU `Matcher` grew ART's native heap by ~300-560 MB per
+     * French read; `CtcAttestedFrequencyNativeMemoryTest`). The old pattern is the oracle here.
+     */
+    @Test
+    fun `the streamed parser reads every shipped table as the old regex did`() {
+        val oldEntry = Regex("\"([a-z]+)\"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)")
+        val tables = File("src/main/assets/dictionaries")
+            .listFiles { f -> f.name.startsWith("contraction_frequencies_") && f.name.endsWith(".json") }
+            .orEmpty()
+        assertWithMessage("shipped attested tables").that(tables.map { it.name })
+            .containsAtLeast("contraction_frequencies_en.json", "contraction_frequencies_fr.json")
+        for (table in tables) {
+            val text = table.readText()
+            val expected = oldEntry.findAll(text).associate { it.groupValues[1] to it.groupValues[2].toDouble() }
+            assertWithMessage("${table.name} from text").that(CtcContractionKeys.parseAttestedFrequencies(text))
+                .isEqualTo(expected)
+            assertWithMessage("${table.name} from the stream")
+                .that(table.inputStream().use { CtcContractionKeys.parseAttestedFrequencies(it) })
+                .isEqualTo(expected)
+        }
+    }
+
+    @Test
+    fun `the attested table skips what the trie cannot file`() {
+        val parsed = CtcContractionKeys.parseAttestedFrequencies(
+            "{\"cest\": 204.0, \"l'x\": 75.0, \"Quil\": 188, \"neg\": -3, \"text\": \"9\", " +
+                "\"nested\": {\"a\": 1}, \"\": 5, \"dabord\": 158}"
+        )
+        assertThat(parsed).containsExactly("cest", 204.0, "dabord", 158.0)
+        assertWithMessage("a top level that is not an object")
+            .that(CtcContractionKeys.parseAttestedFrequencies("[1, 2]")).isEmpty()
+    }
+
+    @Test(expected = java.io.IOException::class)
+    fun `a malformed table is an IOException, which the adapter reads as no table`() {
+        CtcContractionKeys.parseAttestedFrequencies("{\"cest\": 204.0,")
     }
 }

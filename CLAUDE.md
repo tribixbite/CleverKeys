@@ -245,6 +245,14 @@ instrumented run (`CtcMultiLanguageInstrumentedTest`, real assets) caught it, tw
 engine change that widens what a swipe offers, run that class and audit the data it newly exposes
 (`scripts/accent_twin_audit.py`, `.claude/skills/dictionary-pipeline.md`).
 
+## Kotlin Regex and native memory on ART (2026-11-28)
+
+On Android a `java.util.regex.Matcher` is ICU4C with its own native copy of the input, freed only
+when the GC runs its cleaner, and Kotlin's `Regex.findAll` makes a new Matcher per match (so does
+`String.toDoubleOrNull`, which screens with a Regex). One `findAll` over the 104 KB French
+attested table left the native heap at ~584 MB (Note10+); HotSpot tests cannot see it. Parse data
+files with Gson's `JsonReader`; check with `Debug.getNativeHeapSize()` (`CtcAttestedFrequencyNativeMemoryTest`).
+
 ## Compose "Recording currently in progress" crashes
 
 A throw inside an AndroidView's draw leaves Compose's RenderNodeLayer recording open;

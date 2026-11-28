@@ -1,5 +1,11 @@
 package tribixbite.cleverkeys.swipe.ctc
 
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.Reader
+import java.io.StringReader
 import java.util.Locale
 
 /**
@@ -161,17 +167,53 @@ object CtcContractionKeys {
         return inserted
     }
 
-    /** One `"key": number` entry of an `contraction_frequencies_<lang>.json` asset. */
-    private val ATTESTED_ENTRY = Regex("\"([a-z]+)\"\\s*:\\s*([0-9]+(?:\\.[0-9]+)?)")
-
     /**
      * Parse an `contraction_frequencies_<lang>.json` asset (a flat object of a–z keys to numbers,
      * as `build_elision_frequencies.py` writes it). Pure, so the adapter's asset read stays a
      * one-liner and the shape is unit-tested.
+     *
+     * Streamed with Gson's [JsonReader], never a regex. Until 2026-11-28 this was a Kotlin
+     * `Regex.findAll` over the whole text, and on ART that is a native-memory hazard: Kotlin's
+     * `MatchResult.next()` builds a new `Matcher` per match, and an Android `Matcher` is an ICU4C
+     * regex holding its own native copy of the input until the GC runs its cleaner. For the French
+     * table (104 KB, 5,406 keys) one parse churned ~1 GB of native memory, and every French trie
+     * build left the native heap near 600 MB, Scudo keeping it mapped (Note10+, API 31;
+     * `CtcAttestedFrequencyNativeMemoryTest`). HotSpot's regex is pure Java, so JVM tests miss it.
+     *
+     * Same table as the regex read: a key that is not all a–z, or a value that is not a
+     * non-negative number, is skipped, and a top level that is not an object is an empty table.
+     * A malformed file throws [java.io.IOException] (Gson's `MalformedJsonException`), which the
+     * adapter turns into an empty table.
      */
-    fun parseAttestedFrequencies(json: String): Map<String, Double> {
+    fun parseAttestedFrequencies(json: String): Map<String, Double> =
+        parseAttestedFrequencies(StringReader(json))
+
+    /** [parseAttestedFrequencies] straight from the asset stream (UTF-8), with no text copy. */
+    fun parseAttestedFrequencies(input: InputStream): Map<String, Double> =
+        parseAttestedFrequencies(InputStreamReader(input, Charsets.UTF_8))
+
+    private fun parseAttestedFrequencies(source: Reader): Map<String, Double> {
         val out = HashMap<String, Double>()
-        for (m in ATTESTED_ENTRY.findAll(json)) out[m.groupValues[1]] = m.groupValues[2].toDouble()
+        val reader = JsonReader(source)
+        // Not an object at all (an array, a bare value): no table, as the regex found none.
+        if (reader.peek() != JsonToken.BEGIN_OBJECT) return out
+        reader.beginObject()
+        while (reader.hasNext()) {
+            val key = reader.nextName()
+            // nextDouble, not Kotlin's toDoubleOrNull: that screens the text with a Regex, so on ART
+            // it would cost one native ICU Matcher per entry too (~40 MB of native heap here).
+            val value = if (reader.peek() == JsonToken.NUMBER) {
+                reader.nextDouble()
+            } else {
+                reader.skipValue()
+                null
+            }
+            if (value != null && value >= 0.0 && value.isFinite() && isAttestedKey(key)) out[key] = value
+        }
+        reader.endObject()
         return out
     }
+
+    /** The regex's old key class, `[a-z]+`: the alias keys the trie can file. */
+    private fun isAttestedKey(key: String): Boolean = key.isNotEmpty() && key.all { it in 'a'..'z' }
 }
