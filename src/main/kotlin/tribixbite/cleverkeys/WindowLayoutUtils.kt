@@ -204,6 +204,13 @@ object WindowLayoutUtils {
      * - API 29: `systemWindowInsets` (deprecated but the only aggregate on Q).
      * - API 24-28: the per-side deprecated getters (`getSystemWindowInsets()` unavailable).
      */
+    // TODO(2.1, final Fable audit M1, 2026-11-28): Samsung gesture navigation with the gesture
+    //  hint off HIDES the bar, yet the IME window is still given its 126 px navigationBars()
+    //  inset. The view reserves it, but the window's bottom then lies off-screen, so the keys end
+    //  at the screen edge, inside the home-gesture zone. When the bar is hidden
+    //  (`!wi.isVisible(WindowInsets.Type.navigationBars())`, API 30+), pad by
+    //  `WindowInsets.Type.mandatorySystemGestures()` bottom instead. Needs the phone to verify
+    //  (NightModeKeyboardHeightInstrumentedTest skips that state); CHANGELOG 2.0.0 Known issues.
     @JvmStatic
     fun readSystemBarInsets(wi: WindowInsets): SystemBarInsets {
         if (Build.VERSION.SDK_INT >= 30) {

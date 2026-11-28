@@ -1387,6 +1387,12 @@ editor that used to be listed here already ship in 2.0.)
 - A failed clipboard import is reported and rolled back (staged media deleted) instead of being
   reported as success.
 
+### Known issues
+
+- With Samsung gesture navigation and the gesture hint turned off, the bottom key row sits at
+  the screen edge, inside the home-gesture area: the system still gives the keyboard the
+  hidden bar's height. A fix is planned for 2.1.
+
 ---
 
 ## [1.5.0] - 2026-07-15
