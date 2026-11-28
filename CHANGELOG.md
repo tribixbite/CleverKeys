@@ -18,138 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 (The emoji picker with categories and search, the hold-for-subkeys popover and the DIY theme
 editor that used to be listed here already ship in 2.0.)
 
-### Fixed (editing a clipping in the clipboard pane, 2026-11-26)
-
-- Editing a History clipping into the text of another History clipping now saves: the two become
-  one clipping at the top, and if you had the edited one on Android's clipboard, a paste gives the
-  saved text. It was refused as a duplicate, and because the message never reached the screen the
-  checkmark seemed to do nothing. A save that is still refused (for example the same text in
-  Pinned or To-dos) now says why under the entry.
-- Sliding on the space bar to move the cursor while editing a clipping follows your finger when
-  it turns back; the cursor kept going the way the slide started. One step is one character,
-  an emoji included, and up / down move one line as you see it, also in a URL that wraps.
-- Tapping the end of a line that wraps inside a word (a long URL or word, Chinese or Japanese
-  text) puts the cursor after that line's last character; it landed before it, so Backspace
-  deleted the wrong one. Android draws that cursor at the start of the next line, which is the
-  same place in the text. The cursor also stays where you put it when the entry is redrawn, for
-  example after a refused save.
-- Cut, Copy and Paste in the edited text's own toolbar now work as the keyboard's do: a private
-  clipping asks before its text reaches Android's clipboard, and they can be undone. Text you cut
-  or copy while editing stays on Android's clipboard and appears as a new clipping above the one
-  you are editing; saving the edit does not replace it.
-
-### Fixed (learning from corrected words, 2026-11-26)
-
-- A swiped or autocorrected word you delete with ordinary Backspace (with "Backspace undoes
-  swipe" off), with the editor's own word delete, or by deleting part of it and typing on, is no
-  longer learned: when the next word takes its place, its word pair, its three-word sequence and
-  its personal-vocabulary count are taken back, and the next word does not learn a pair with it.
-- Going back to fix an earlier word no longer learns a pair between the fixed word and the last
-  word you typed, and tapping a suggestion there no longer deletes text before the cursor by the
-  length of the last swiped word (`fix got something`, tap `git` on `got`, gave `git something`).
-- Replacing a swiped word whose commit made Auto-Detect switch languages takes its word pair back
-  from the language it was learned in.
-- In Multi-Language with Auto-Detect, a word added from the suggestion bar (the add prompt, the
-  "+word" chip or an autocorrect undo) while Auto-Detect has just detected the second language,
-  in the same sentence and field, goes to that language's personal dictionary (it went to the
-  primary's), and its undo removes it from there. Otherwise it goes to the primary's.
-- Deleting a word you just typed or swiped takes back what it taught the keyboard at once, also
-  when you then leave the field, after an app restarted its input, after you hid and showed the
-  keyboard or rotated the screen, or after the sentence ended: letter by letter, with
-  Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. Deleting on into
-  the word before it takes that word back too, also after Backspace undid a swipe (`so ` + swipe
-  `well`, Backspace, `so` deleted, swipe `fix` learned the pair `so → fix`) or after the sentence
-  ended, and retyping that word learns its pair again. The first word of a field is covered when
-  you delete it with the keyboard (not when the app clears its field), and so is a word an
-  autocorrect undo put back. A forward Delete is not covered yet. The deleted swipe's alternates
-  leave the bar.
-- Words typed in a private (incognito) browser tab are never used as the context of words typed
-  later in an ordinary tab, and switching to another tab, or to another text box on the same
-  page, that looks the same and ends in the same word no longer continues the last box's phrase
-  (`my diagnosis is` in one, `great` after a draft ending in `is` in another, learned
-  `diagnosis is great`).
-- Turning learning on no longer pairs the next word with words typed while it was off, and
-  deleting a word typed while learning was off no longer takes back counts it never added.
-- After Auto-Detect switched to the second language, another field or app starts again in the
-  primary language (also an empty text box in a new browser tab, which looks like the last one),
-  and typing in the primary switches back within the same field, also across short sentences:
-  after about ten words that read as the primary, or at once when they clearly do.
-- Typing predictions and next-word suggestions drop a word disabled in Dictionary Manager at once,
-  in both languages (they waited for the next typed prediction).
-- Moving the cursor to another word takes the last swipe's alternates off the suggestion bar, and
-  tapping one of them can no longer replace the word under the cursor.
-- A detected second language now survives a rotation, hiding and showing the keyboard in the same
-  field (also over a box you just emptied by sending), or dictation; only another field starts
-  again in the primary language.
-- Importing the language pack of a second language you had chosen (for example from a restored
-  backup) makes it active at once, without changing a setting.
-
-### Fixed (swiping and the personal dictionary, 2026-11-26)
-
-- A word you added to the SECOND language's personal dictionary in Multi-Language now wins a
-  swipe as it would from the first language's list: swiping `parcero` from the Spanish
-  list under English gave `parcel`. The word is ranked as if it were in the first language's
-  list, at its own frequency and swipe priority, so an English word your swipe fits better
-  still wins. This includes words with an apostrophe or a hyphen (`l'une`, `O'Brien`).
-- A word you disabled in Dictionary Manager is no longer offered among the swipe suggestions
-  (a disabled `world` still showed after `would`, `works` …). A disabled word of the first
-  language is also kept out of the second language's swipe suggestions, as in typing. Its
-  apostrophe forms (`world's`) are separate entries and are still offered. Disabling `well`
-  keeps `we'll` in the swipe suggestions (it disappeared with it), and disabling `we'll` keeps
-  `well`.
-
-### Fixed (Settings and Dictionary Manager, 2026-11-26)
-
-- Dictionary Manager shows the primary language's list as soon as it is loaded: the lists still
-  load one at a time, but in tab order, so German no longer waits for a Russian secondary.
-- With Swiss spelling on, Dictionary Manager lists German words with ss (`strasse`), as the
-  keyboard suggests them; `Maße`/`Masse` show as one row, and a word disabled in either spelling
-  shows as disabled.
-- Searching Settings for the Swiss spelling switch while German is not selected lands on Primary
-  Language (or on the Multi-Language switch while that is off), where German is chosen.
-- "Auto-Detect is not available for this pair" no longer shows when no second language is set.
-- Removing a language pack finishes when the screen is rotated midway; a second pack import or
-  removal started while one runs now says so instead of doing nothing.
-- Importing custom clipboard sanitization rules finishes when the screen is rotated midway (the
-  rules file, its location and the clipboard's reload no longer stop half way).
-- A second GIF pack shared or picked while one imports now says it was not imported.
-- The "Pack already installed — replace it?" prompt of a GIF pack import stays open across a
-  rotation, and shows for a shared pack while the GIF section is collapsed.
-- Settings search for "Max Learned Words" scrolls to it (it opened the Input section and stayed
-  at the top). Every search result now reaches its setting, or the switch or choice that reveals
-  it: the autocorrect ranking and tuning settings while Auto-Correction is off or the other
-  ranking is chosen, and "Vertical Speed" while Selection Delete follows the finger.
-- Deleting the language pack of the current secondary language sets the secondary back to None:
-  the secondary settings and "Auto-Detect is not available for this pair" no longer stay under
-  "None", and the keyboard stops using that language as its secondary.
-- A secondary language whose dictionary is not on the phone (a restored backup naming a pack
-  never installed here) is treated as no secondary language, and the choice is kept for when the
-  pack is installed. The keyboard applies this from its start, and again right after a language
-  pack is imported or removed. A second language set to the first language is treated as none,
-  and a pack counts as installed when its dictionary is there, whether or not its manifest reads.
-- Settings search lands on "Enable short gestures" for the short swipe distance settings while
-  short gestures are off, and on Primary Language for the alternate primary language.
-- A language pack that could not be removed now says so.
-- Removing one GIF pack or all of them finishes when the screen is rotated midway, and waits for a
-  running GIF pack import (or says another GIF pack import or removal is still running).
-- Clipboard History in By Size mode shows every kept entry: it showed only as many as the hidden
-  entry count, while the rest still counted against the size budget and went into backups. The
-  Entry Duration note and "Never expire" no longer use that hidden count either.
-- Dictionary Manager keeps a German word you disabled under Swiss spelling (`strasse`, or one
-  row of `Maße`/`Masse`) disabled when you toggle another word; it showed enabled again while the
-  keyboard still left it out. Disabling such a word stores its dictionary spelling (`straße`), so
-  it stays disabled with Swiss spelling off, and a search typed before a list finished loading
-  now finds its words.
-- With Swiss spelling on, Dictionary Manager's Disabled tab lists a German word as the keyboard
-  treats it (`strasse`, not the stored `straße`), a search finds it by either spelling, and
-  enabling it there removes every stored spelling of it.
-
 ---
 
 ## [2.0.0] - unreleased
 
 > Not tagged yet. The section was first drafted 2026-09-09; everything merged up to
-> 2026-11-25 is folded in, including on-device voice input (moved here from the
+> 2026-11-28 is folded in, including on-device voice input (moved here from the
 > proposed 2.1.0 by maintainer decision on 2026-10-29) and its pause-based endpointing
 > (2026-10-31).
 
@@ -743,26 +617,159 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Editing a History clipping into the text of another History clipping now saves: the two become
+  one clipping at the top, and if you had the edited one on Android's clipboard, a paste gives the
+  saved text. It was refused as a duplicate, and because the message never reached the screen the
+  checkmark seemed to do nothing. A save that is still refused (for example the same text in
+  Pinned or To-dos) now says why under the entry; one over the size limit says it is too large
+  (it said "Content cannot be empty").
+- Sliding on the space bar to move the cursor while editing a clipping follows your finger when
+  it turns back; the cursor kept going the way the slide started. One step is one character,
+  an emoji included, and up / down move one line as you see it, also in a URL that wraps.
+- Tapping the end of a line that wraps inside a word (a long URL or word, Chinese or Japanese
+  text) puts the cursor after that line's last character; it landed before it, so Backspace
+  deleted the wrong one. Android draws that cursor at the start of the next line, which is the
+  same place in the text. The cursor also stays where you put it when the entry is redrawn, for
+  example after a refused save.
+- Cut, Copy and Paste in the edited text's own toolbar now work as the keyboard's do: a private
+  clipping asks before its text reaches Android's clipboard, and they can be undone. Text you cut
+  or copy while editing stays on Android's clipboard and appears as a new clipping above the one
+  you are editing; saving the edit does not replace it.
+- After you save an edited clipping, the next copy of exactly that text is recorded. It was
+  skipped once when History was off, a password manager was in front or the clip was marked
+  sensitive, and when you had cut part of the text in the editor just before saving.
 - A clipboard backup holding a clipping over 1 MB (the largest clipping size Settings allows) no
   longer empties the History pane once restored. The restore leaves such entries out and says how
   many ("2 entries skipped: too large"). A row that size already stored is left out of History,
   Pinned, To-do and exports instead of hiding the rows after it, and a full backup no longer leaves
   the whole clipboard out because of it.
-- Saving an edited clipping over the size limit says it is too large; it said "Content cannot be
-  empty".
-- After an edited clipping was put on the clipboard while History was off, the next copy of exactly
-  that text is recorded (it was skipped once).
 - A clipping over the size limit that arrives as a text file is no longer stored when its "too
   large" notice cannot be shown.
+- Clipboard History in By Size mode shows every kept entry: it showed only as many as the hidden
+  entry count, while the rest still counted against the size budget and went into backups. The
+  Entry Duration note and "Never expire" no longer use that hidden count either.
 - Cleaning links in a large clip with many links no longer holds a copy of the whole clip in memory
   for every link.
-- A language pack re-imported for a primary language chosen after the keyboard started is
-  loaded at once. After a switch from English to French, a re-imported French pack was not
-  reloaded and the old French dictionary was served until the keyboard restarted.
+- Importing custom clipboard sanitization rules finishes when the screen is rotated midway (the
+  rules file, its location and the clipboard's reload no longer stop half way).
+- A swiped or autocorrected word you delete with ordinary Backspace (with "Backspace undoes
+  swipe" off), with the editor's own word delete, or by deleting part of it and typing on, is no
+  longer learned: when the next word takes its place, its word pair, its three-word sequence and
+  its personal-vocabulary count are taken back, and the next word does not learn a pair with it.
+- Deleting a word you just typed or swiped takes back what it taught the keyboard at once, also
+  when you then leave the field, after an app restarted its input, after you hid and showed the
+  keyboard or rotated the screen, or after the sentence ended: letter by letter, with
+  Ctrl+Backspace, or by selecting it and deleting, cutting or typing over it. Deleting on into
+  the word before it takes that word back too, also after Backspace undid a swipe (`so ` + swipe
+  `well`, Backspace, `so` deleted, swipe `fix` learned the pair `so → fix`) or after the sentence
+  ended, and retyping that word learns its pair again. The first word of a field is covered when
+  you delete it with the keyboard (not when the app clears its field), and so is a word an
+  autocorrect undo put back. A forward Delete is not covered yet. The deleted swipe's alternates
+  leave the bar.
+- Deleting a possessive (`cat's`, made with "Append 's") takes back what it taught, also when
+  another keyboard deletes it. While you delete it letter by letter, the apostrophe left behind
+  (`fix cat'`) no longer makes the next word lose its pair with the word before (`fix`).
+- Clearing a field no longer pairs its old words with the next word you type (`blue car seat`
+  deleted to an empty field, then `now`, learned `blue → now`), whether you clear it with
+  Backspace or word delete on the keyboard or with the Backspace of a hardware or Bluetooth
+  keyboard. Moving the cursor back into earlier text likewise ends the phrase, so the next word
+  learns no pair with the word before the cursor moved.
+- Going back to fix an earlier word no longer learns a pair between the fixed word and the last
+  word you typed, and tapping a suggestion there no longer deletes text before the cursor by the
+  length of the last swiped word (`fix got something`, tap `git` on `got`, gave `git something`).
+- Moving the cursor to another word takes the last swipe's alternates off the suggestion bar, and
+  tapping one of them can no longer replace the word under the cursor.
 - When a page moves the keyboard to another text box that looks the same (two text areas in one
   browser page), the bar no longer offers the previous box's swipe alternates and Backspace no
   longer undoes that swipe there. A tap on such an alternate replaced a word in the new box and
   took back the learning of the word kept in the first one.
+- Words typed in a private (incognito) browser tab are never used as the context of words typed
+  later in an ordinary tab, and switching to another tab, or to another text box on the same
+  page, that looks the same and ends in the same word no longer continues the last box's phrase
+  (`my diagnosis is` in one, `great` after a draft ending in `is` in another, learned
+  `diagnosis is great`).
+- Turning learning on no longer pairs the next word with words typed while it was off, and
+  deleting a word typed while learning was off no longer takes back counts it never added.
+- A word added to your dictionary at the start of a field or sentence (from the "Add to
+  dictionary?" prompt, the tap-to-add chip, undoing an autocorrection or a Prefer offer) is stored
+  in lowercase when its capital came from auto-capitalisation, so it no longer comes out
+  capitalised mid-sentence (`und Grüezi`, `Parcero Parcero`). A capital you typed mid-sentence is
+  kept, as are all-caps words and words with capitals inside. In a person-name field, or one that
+  capitalises every word (an address field), the word is stored as typed, even at the field
+  start, so a surname such as `Kowalski` keeps its capital.
+- An "Added to dictionary" confirmation leaves the suggestion bar when it ends, is undone or
+  dismissed, or when you move to another field; it could stay for minutes.
+- After Auto-Detect switched to the second language, another field or app starts again in the
+  primary language (also an empty text box in a new browser tab, which looks like the last one),
+  and typing in the primary switches back within the same field, also across short sentences:
+  after about ten words that read as the primary, or at once when they clearly do. The detected
+  language survives a rotation, hiding and showing the keyboard in the same field (also over a
+  box you just emptied by sending), or dictation, and an app that changes only a field's input
+  options (such as its capitalisation) keeps it too; a change to another kind of field (text to
+  email or password) starts again in the primary.
+- After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
+  or Multi-Language off, changing the second language or picking a layout bound to your first
+  language returns them to your first language; they stayed in the second.
+- Replacing a swiped word whose commit made Auto-Detect switch languages takes its word pair back
+  from the language it was learned in.
+- In Multi-Language with Auto-Detect, a word added from the suggestion bar (the add prompt, the
+  "+word" chip or an autocorrect undo) while Auto-Detect has just detected the second language,
+  in the same sentence and field, goes to that language's personal dictionary (it went to the
+  primary's), and its undo removes it from there. Otherwise it goes to the primary's.
+- A word you disabled in Dictionary Manager leaves typing predictions and next-word suggestions
+  at once, in both languages (they waited for the next typed prediction), and after Auto-Detect
+  switched next-word predictions to your second language, a word you disabled for that language
+  is no longer suggested as the next word.
+- A word you disabled in Dictionary Manager is no longer offered among the swipe suggestions
+  (a disabled `world` still showed after `would`, `works` …). A disabled word of the first
+  language is also kept out of the second language's swipe suggestions, as in typing. Its
+  apostrophe forms (`world's`) are separate entries and are still offered. Disabling `well`
+  keeps `we'll` in the swipe suggestions (it disappeared with it), and disabling `we'll` keeps
+  `well`.
+- A word you added to the SECOND language's personal dictionary in Multi-Language now wins a
+  swipe as it would from the first language's list: swiping `parcero` from the Spanish
+  list under English gave `parcel`. The word is ranked as if it were in the first language's
+  list, at its own frequency and swipe priority, so an English word your swipe fits better
+  still wins. This includes words with an apostrophe or a hyphen (`l'une`, `O'Brien`).
+- Importing the language pack of a second language you had chosen (for example from a restored
+  backup) makes it active at once, without changing a setting.
+- A language pack re-imported for a primary language chosen after the keyboard started is
+  loaded at once. After a switch from English to French, a re-imported French pack was not
+  reloaded and the old French dictionary was served until the keyboard restarted.
+- A secondary language whose dictionary is not on the phone (a restored backup naming a pack
+  never installed here) is treated as no secondary language, and the choice is kept for when the
+  pack is installed. The keyboard applies this from its start, and again right after a language
+  pack is imported or removed. A second language set to the first language is treated as none,
+  and a pack counts as installed when its dictionary is there, whether or not its manifest reads.
+- Deleting the language pack of the current secondary language sets the secondary back to None:
+  the secondary settings and "Auto-Detect is not available for this pair" no longer stay under
+  "None", and the keyboard stops using that language as its secondary.
+- "Auto-Detect is not available for this pair" no longer shows when no second language is set.
+- Removing a language pack finishes when the screen is rotated midway, and one that could not be
+  removed says so; a second pack import or removal started while one runs now says so instead of
+  doing nothing.
+- Dictionary Manager shows the primary language's list as soon as it is loaded: the lists still
+  load one at a time, but in tab order, so German no longer waits for a Russian secondary.
+- With Swiss spelling on, Dictionary Manager lists German words with ss (`strasse`), as the
+  keyboard suggests them; `Maße`/`Masse` show as one row, and a word disabled in either spelling
+  shows as disabled. Such a word stays disabled when you toggle another word (it showed enabled
+  again while the keyboard still left it out), and disabling it stores its dictionary spelling
+  (`straße`), so it stays disabled with Swiss spelling off. The Disabled tab lists it as the
+  keyboard treats it (`strasse`, not the stored `straße`), a search finds it by either spelling
+  (also one typed before a list finished loading), and enabling it there removes every stored
+  spelling of it.
+- Settings search reaches every setting it finds, or the switch or choice that reveals it: "Max
+  Learned Words" scrolls to it (it opened the Input section and stayed at the top); the
+  autocorrect ranking and tuning settings lead to Auto-Correction or the ranking choice;
+  "Vertical Speed" to Selection Delete; the short swipe distance settings to "Enable short
+  gestures"; the alternate primary language to Primary Language; and the Swiss spelling switch,
+  while German is not selected, to Primary Language (or to the Multi-Language switch while that
+  is off).
+- A second GIF pack shared or picked while one imports now says it was not imported. Removing
+  one GIF pack or all of them finishes when the screen is rotated midway, and waits for a running
+  GIF pack import (or says another GIF pack import or removal is still running).
+- The "Pack already installed — replace it?" prompt of a GIF pack import stays open across a
+  rotation, and shows for a shared pack while the GIF section is collapsed.
 - Loading a dictionary no longer runs a regular expression for every word (accent folding and
   the swipe engine's word projection); the folded words are unchanged.
 - Private copy from the text-selection menu uses the largest-clipping size saved in Settings,
@@ -774,13 +781,6 @@ editor that used to be listed here already ship in 2.0.)
 - Adding a word to the dictionary needs less memory while the swipe dictionary is rebuilt: the
   old copy is let go before the new one is built, and the English word list is read piece by piece
   instead of all at once. On a test phone with a 256 MB limit this rebuild had reached 195 MB.
-- A word added to your dictionary at the start of a field or sentence (from the "Add to
-  dictionary?" prompt, the tap-to-add chip, undoing an autocorrection or a Prefer offer) is stored
-  in lowercase when its capital came from auto-capitalisation, so it no longer comes out
-  capitalised mid-sentence (`und Grüezi`, `Parcero Parcero`). A capital you typed mid-sentence is
-  kept, as are all-caps words and words with capitals inside. In a field that capitalises every
-  word (a name or address field) the word is stored as typed, so a surname such as `Kowalski`
-  keeps its capital.
 - Swiping you're, they're and I've: the swipe dictionary held each at the frequency of the
   apostrophe-free word (`youre`), about a hundredth of how often the contraction is written, so
   they're came first on 4 of 39 real swipes (FUTO corpus); now 22 of 39, with your, there and were
@@ -797,9 +797,9 @@ editor that used to be listed here already ship in 2.0.)
   Spanish); for a pair it cannot recognise (Italian, Dutch or an imported language beside
   another) Settings says Auto-Detect is not available instead of showing a switch that never
   worked. When it switches, next-word suggestions follow the new language (they used only a small
-  built-in table of it); the words you disabled and your own dictionary words stay those of your
-  main language, whose dictionary stays loaded. Known limits: Spanish has no next-word model of its own (only the
-  small built-in table; a Spanish model is planned for 2.1), and at the default sensitivity
+  built-in table of it); typing keeps your main language's dictionary, with its disabled words and
+  your own dictionary words, and next-word suggestions leave out the words you disabled in either
+  language. Known limits: Spanish has no next-word model of its own (only the small built-in table; a Spanish model is planned for 2.1), and at the default sensitivity
   Auto-Detect seldom switches. A sweep of the default (0.40–0.60) found no value that both
   switches promptly and rarely switches by mistake, so it stays 0.6; lower it in Settings to
   switch sooner (docs/eval/2026-11-26-auto-detect-threshold.md).
@@ -820,19 +820,11 @@ editor that used to be listed here already ship in 2.0.)
   a restore kept recording until the keyboard next started.
 - The clipboard History count, size and item-size settings are read as the numbers the Settings
   sliders save; each read logged a stored-type warning before.
-- An "Added to dictionary" confirmation leaves the suggestion bar when it ends, is undone or
-  dismissed, or when you move to another field; it could stay for minutes.
-- After Auto-Detect switched next-word predictions to your second language, turning Auto-Detect
-  or Multi-Language off, changing the second language or picking a layout bound to your first
-  language returns them to your first language; they stayed in the second.
-- After Auto-Detect switched next-word predictions to your second language, a word you disabled
-  for that language in the Dictionary Manager is no longer suggested as the next word.
 - Changing a setting or the language no longer makes keyboards from earlier sessions reload their
   dictionaries and contractions in the background; one language change loaded the English
   contraction list six times.
 - Clipboard link cleaning follows the settings a restore wrote, even while another keyboard is in
   use, and a copy is no longer lost when the keyboard had never started.
-- A word added from a person-name field keeps its capital (Kowalski), even at the field start.
 - A backup with a non-numeric or out-of-range clipboard size or item-size limit is reported as
   skipped on import instead of being kept as text and ignored; a limit an older import stored as
   text is rewritten as a number when Settings opens.
