@@ -85,6 +85,21 @@ open class LearningFunnelBookkeepingTest {
     /** The read path this run models; subclasses choose another. */
     protected open val readPath: ReadPath = ReadPath.EXTRACTED_ONLY
 
+    /**
+     * Test-gap item 4: production sends Backspace's DEL (KeyEventHandler) and THEN reads the
+     * editor (handle_backspace → [SuggestionHandler.handleBackspace]). An asynchronous editor may
+     * still answer that read with the text from before the DEL. True makes every keyboard
+     * Backspace in [backspaceChars] / [backspaceBeforeTheCursorSync] read so, until the
+     * editor's selection update for it arrives.
+     */
+    protected open val editorLagsBehindDel: Boolean = false
+
+    /** What a lagging editor still shows: (text, caret) from before the DEL; null = up to date. */
+    private var staleView: Pair<String, Int>? = null
+
+    /** Reads a lagging editor answered from [staleView]. */
+    private var staleReads = 0
+
     private val objenesis = ObjenesisStd()
     private val scheduler = ScheduledThreadPoolExecutor(1)
 
@@ -228,10 +243,12 @@ open class LearningFunnelBookkeepingTest {
         ownSelectionUpdates.clear()
         every { ic.getTextBeforeCursor(any(), any()) } answers {
             val n = firstArg<Int>()
+            staleView?.let { (text, c) -> staleReads++; return@answers text.substring(maxOf(0, c - n), c) }
             val c = selectionLow()
             editor.substring(maxOf(0, c - n), c)
         }
         every { ic.getTextAfterCursor(any(), any()) } answers {
+            staleView?.let { (text, c) -> return@answers text.substring(c, minOf(text.length, c + firstArg<Int>())) }
             val c = selectionHigh()
             editor.substring(c, minOf(editor.length, c + firstArg<Int>()))
         }
@@ -277,10 +294,11 @@ open class LearningFunnelBookkeepingTest {
         // editor's extracted text; ExtractedText(Request) are android.jar stubs here.
         every { ic.getExtractedText(any(), any()) } answers {
             objenesis.newInstance(ExtractedText::class.java).apply {
-                text = editor.toString()
+                val stale = staleView
+                text = stale?.first ?: editor.toString()
                 startOffset = 0
-                selectionStart = selectionAnchor ?: cursor()
-                selectionEnd = cursor()
+                selectionStart = stale?.second ?: selectionAnchor ?: cursor()
+                selectionEnd = stale?.second ?: cursor()
             }
         }
         // API 31+: getSurroundingText over the same fake editor. The text is the window around
@@ -288,11 +306,13 @@ open class LearningFunnelBookkeepingTest {
         // window's absolute start or -1 (an editor that does not know it, as Chrome reports).
         every { ic.getSurroundingText(any(), any(), any()) } answers {
             surroundingTextCalls++
-            val low = selectionLow()
-            val high = selectionHigh()
+            val stale = staleView
+            val shown = stale?.first ?: editor.toString()
+            val low = stale?.second ?: selectionLow()
+            val high = stale?.second ?: selectionHigh()
             val start = maxOf(0, low - firstArg<Int>())
-            val end = minOf(editor.length, high + secondArg<Int>())
-            val window = editor.substring(start, end)
+            val end = minOf(shown.length, high + secondArg<Int>())
+            val window = shown.substring(start, end)
             val known = readPath.surroundingOffsetKnown == true
             // getSurroundingText normalises the selection (low end first).
             mockk<SurroundingText> {
@@ -1386,12 +1406,19 @@ open class LearningFunnelBookkeepingTest {
     private fun backspaceChars(count: Int, field: EditorInfo = textField()) {
         repeat(count) {
             val c = cursor()
+            val before = staleViewBeforeDel()
             editor.deleteCharAt(c - 1)
             cursorAt = cursorAt?.minus(1)
+            staleView = before
             handler.handleBackspace(ic, field)
+            staleView = null // the editor's selection update for the DEL arrives with the text applied
             cursorSync(field)
         }
     }
+
+    /** The view a lagging editor keeps until the DEL's update ([editorLagsBehindDel]). */
+    private fun staleViewBeforeDel(): Pair<String, Int>? =
+        if (editorLagsBehindDel) editor.toString() to cursor() else null
 
     /** A new gesture: InputCoordinator clears the auto-insert tracking when it starts. */
     private fun newSwipe(vararg slate: String) {
@@ -2137,9 +2164,12 @@ open class LearningFunnelBookkeepingTest {
     private fun backspaceBeforeTheCursorSync(count: Int) {
         repeat(count) {
             val c = cursor()
+            val before = staleViewBeforeDel()
             editor.deleteCharAt(c - 1)
             cursorAt = cursorAt?.minus(1)
+            staleView = before
             handler.handleBackspace(ic, textField())
+            staleView = null
             serviceSelectionUpdate(c, c, c - 1, c - 1)
             reportedCaret = c - 1
         }
@@ -3428,6 +3458,27 @@ open class LearningFunnelBookkeepingTest {
         type("toy ")
 
         assertWithMessage("fix→toy learned across the rotation").that(bigram("fix", "toy")).isEqualTo(1)
+    }
+
+    /**
+     * Test-gap item 4: a typed word shortened by Backspace and finished differently is learned as
+     * the editor shows it. With an editor lagging behind the DEL, [SuggestionHandler.handleBackspace]
+     * makes NO editor read before the DEL's selection update (its decisions come from the tracker,
+     * and the rollback checks run at that update): that is why the DEL-then-read order is safe,
+     * and this pins it. A read added there would see the pre-DEL text in the lagging variant.
+     */
+    @Test
+    fun aTypedWordShortenedByBackspaceIsLearnedAsFinished() {
+        type("fix tox")
+        reportedCaret = cursor()
+        backspaceChars(1)
+        type("y ")
+
+        assertWithMessage("editor").that(editor.toString()).isEqualTo("fix toy ")
+        assertWithMessage("fix→toy learned").that(bigram("fix", "toy")).isEqualTo(1)
+        assertWithMessage("no fix→tox").that(bigram("fix", "tox")).isEqualTo(0)
+        assertWithMessage("no fix→toxy").that(bigram("fix", "toxy")).isEqualTo(0)
+        if (editorLagsBehindDel) assertWithMessage("no editor read between the DEL and its update").that(staleReads).isEqualTo(0)
     }
 
     // ------------------------------------------------------------------ reflection

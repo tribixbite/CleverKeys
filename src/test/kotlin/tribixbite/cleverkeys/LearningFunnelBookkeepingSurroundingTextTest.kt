@@ -18,3 +18,13 @@ class LearningFunnelBookkeepingSurroundingTextTest : LearningFunnelBookkeepingTe
 class LearningFunnelBookkeepingUnknownOffsetTest : LearningFunnelBookkeepingTest() {
     override val readPath: ReadPath = ReadPath.SURROUNDING_UNKNOWN_OFFSET
 }
+
+/**
+ * Every [LearningFunnelBookkeepingTest] case with an editor that lags behind the keyboard's DEL:
+ * [SuggestionHandler.handleBackspace]'s read right after the DEL still shows the text from before
+ * it, as an asynchronous editor (Chrome's) can answer. No rollback, undo or learning decision may
+ * change (test-gap audit 2026-11-28, item 4).
+ */
+class LearningFunnelBookkeepingLaggingEditorTest : LearningFunnelBookkeepingTest() {
+    override val editorLagsBehindDel: Boolean = true
+}

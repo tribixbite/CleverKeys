@@ -1575,6 +1575,7 @@ tasks.register('runMockTests', JavaExec) {
     'tribixbite.cleverkeys.LearningFunnelBookkeepingTest',
     'tribixbite.cleverkeys.LearningFunnelBookkeepingSurroundingTextTest',
     'tribixbite.cleverkeys.LearningFunnelBookkeepingUnknownOffsetTest',
+    'tribixbite.cleverkeys.LearningFunnelBookkeepingLaggingEditorTest',
     // Pre-tag review S7 (2026-11-25): Auto-Detect chooses among the two chosen languages with the
     // real detector scores, and never runs (nor is offered) for a pair it cannot score.
     'tribixbite.cleverkeys.AutoDetectChosenLanguagesTest',
