@@ -743,6 +743,8 @@ editor that used to be listed here already ship in 2.0.)
 
 ### Fixed
 
+- Cleaning links in a large clip with many links no longer holds a copy of the whole clip in memory
+  for every link.
 - A language pack re-imported for a primary language chosen after the keyboard started is
   loaded at once. After a switch from English to French, a re-imported French pack was not
   reloaded and the old French dictionary was served until the keyboard restarted.

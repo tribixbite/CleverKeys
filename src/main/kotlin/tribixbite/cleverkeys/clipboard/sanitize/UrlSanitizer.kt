@@ -44,7 +44,7 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
         // URL and left the rest unsanitized) but is excluded as the FINAL char, together with
         // trailing punctuation/brackets (.,;:!?) and `)`, so a quoted URL in prose still trims:
         // `(see https://x.com)` -> closing paren dropped; `"https://x.com"` -> closing quote dropped.
-        private val URL_REGEX = Regex(
+        private val URL_PATTERN: java.util.regex.Pattern = java.util.regex.Pattern.compile(
             "https?://[^\\s<>]+[^\\s<>\".,;:!?)]"
         )
     }
@@ -64,9 +64,24 @@ internal class RulesetUrlSanitizer(private val ruleset: Ruleset) : UrlSanitizer 
     override fun process(text: String): String {
         if (ruleset.providers.isEmpty() || text.isEmpty()) return text
 
-        return URL_REGEX.replace(text) { match ->
-            sanitizeOne(match.value)
-        }
+        // One java.util.regex.Matcher over the whole clip, walked with an explicit find loop.
+        // Kotlin's lambda form of Regex.replace advances through MatchResult's next match, which
+        // builds a NEW Matcher over the whole input for every match; on ART each one is ICU4C with its
+        // own native copy of the input, freed only when the GC runs its cleaner (CLAUDE.md
+        // "Kotlin Regex and native memory on ART", a471782fd). A large clip with many links held
+        // one native copy of the clip per link. Output is identical: each match is replaced by
+        // its sanitized form and the text between matches is copied verbatim.
+        val matcher = URL_PATTERN.matcher(text)
+        if (!matcher.find()) return text
+        val out = StringBuilder(text.length)
+        var copiedUpTo = 0
+        do {
+            out.append(text, copiedUpTo, matcher.start())
+            out.append(sanitizeOne(matcher.group()))
+            copiedUpTo = matcher.end()
+        } while (matcher.find())
+        out.append(text, copiedUpTo, text.length)
+        return out.toString()
     }
 
     private fun sanitizeOne(url: String): String {

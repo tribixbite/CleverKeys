@@ -1,6 +1,7 @@
 package tribixbite.cleverkeys.clipboard.sanitize
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 class UrlSanitizerTest {
@@ -300,5 +301,61 @@ class UrlSanitizerTest {
                 enabled = false,
             )
         ).isNull()
+    }
+
+    // ─── One Matcher per clip (low audit item, 2026-11-28) ─────────────────────────────
+    // Kotlin's `Regex.replace(text) { }` walks matches through `MatchResult.next()`, which
+    // builds a NEW java.util.regex.Matcher over the whole input for every match. On ART each
+    // Matcher is ICU4C with its own native copy of the input, freed only when the GC runs its
+    // cleaner (CLAUDE.md "Kotlin Regex and native memory on ART", a471782fd), so a large clip
+    // with many links held one native copy of the clip per link. HotSpot cannot see that cost;
+    // these tests pin the behaviour across the rewrite and the shape of the scan.
+
+    private val utmOnly = """{"providers":{"globalRules":{"urlPattern":".*","rules":["utm_source"]}}}"""
+
+    @Test
+    fun largeManyLinkClip_everyUrlSanitized_proseAndPunctuationKept() {
+        val sanitizer = RulesetUrlSanitizer(RulesetParser.fromJson(utmOnly))
+        val input = StringBuilder()
+        val expected = StringBuilder()
+        // ~5,000 links in ~300 KB: trailing punctuation, quotes, parens and a final URL at the end.
+        for (i in 0 until 5_000) {
+            val tail = when (i % 4) { 0 -> ", "; 1 -> ". "; 2 -> ") "; else -> "\" " }
+            input.append("item $i (https://e$i.com/p?utm_source=x&k=$i$tail")
+            expected.append("item $i (https://e$i.com/p?k=$i$tail")
+        }
+        input.append("https://end.com/?utm_source=z")
+        expected.append("https://end.com/")
+        assertThat(sanitizer.process(input.toString())).isEqualTo(expected.toString())
+    }
+
+    @Test
+    fun manyLinkClip_matchesTheRegexReplaceReference() {
+        // Reference = the old implementation's shape (Regex.replace over the same pattern, each
+        // match sanitized alone). A standalone match re-matches as exactly itself, so
+        // process(match) is the per-URL transform. Mixed separators exercise the URL boundaries.
+        val sanitizer = RulesetUrlSanitizer(RulesetParser.fromJson(utmOnly))
+        val pattern = Regex("https?://[^\\s<>]+[^\\s<>\".,;:!?)]")
+        val pieces = listOf(
+            "https://a.com?utm_source=1", " ", "http://b.org/x?y=2&utm_source=3", "\n",
+            "<https://c.net/?utm_source=4>", "\t", "\"https://d.io/q?utm_source=5\"", "!? ",
+            "https://e.com/a\"b?utm_source=6&z=7;", "  ", "https://", " x ", "https://f.com).",
+        )
+        val input = buildString { repeat(400) { i -> append(pieces[i % pieces.size]); append(pieces[(i * 7) % pieces.size]) } }
+        val reference = pattern.replace(input) { sanitizer.process(it.value) }
+        assertThat(sanitizer.process(input)).isEqualTo(reference)
+    }
+
+    @Test
+    fun processScansTheClipWithOneMatcher() {
+        val source = java.io.File(
+            "src/main/kotlin/tribixbite/cleverkeys/clipboard/sanitize/UrlSanitizer.kt"
+        ).readText()
+        val body = source.substringAfter("override fun process(text: String): String")
+            .substringBefore("private fun sanitizeOne(")
+        assertWithMessage("process() must not walk matches with Regex.replace/findAll/next() (one Matcher per match)")
+            .that(Regex("""\.replace\(text\)|findAll\(|\.next\(\)""").containsMatchIn(body)).isFalse()
+        assertWithMessage("process() scans with one java.util.regex.Matcher and an explicit find loop")
+            .that(body).contains(".matcher(text)")
     }
 }
