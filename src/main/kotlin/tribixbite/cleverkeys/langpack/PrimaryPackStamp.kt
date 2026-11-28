@@ -38,5 +38,20 @@ internal data class PrimaryPackStamp(val language: String, val dictionary: Strin
          */
         fun primaryNeedsReload(known: PrimaryPackStamp?, now: PrimaryPackStamp): Boolean =
             known != null && known.language == now.language && known.dictionary != now.dictionary
+
+        /**
+         * The stamp to keep once a Config refresh resolved [primary]: [known] while the primary
+         * is unchanged (a packs broadcast refreshes Config BEFORE it compares, so the stamp must
+         * still name what was loaded), else [stampOf] the new primary, whose dictionary the
+         * language change just loaded (ActiveLanguageSync). Final Fable audit M2 (2026-11-28):
+         * the stamp was taken only at startup and at a packs broadcast, so after en → fr it still
+         * named en, [primaryNeedsReload] saw another language, and a re-imported French pack was
+         * not reloaded.
+         */
+        fun afterPrimaryResolved(
+            known: PrimaryPackStamp?,
+            primary: String,
+            stampOf: (String) -> PrimaryPackStamp,
+        ): PrimaryPackStamp = if (known != null && known.language == primary) known else stampOf(primary)
     }
 }

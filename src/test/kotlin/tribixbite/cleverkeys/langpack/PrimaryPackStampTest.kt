@@ -50,6 +50,40 @@ class PrimaryPackStampTest {
     }
 
     /**
+     * Final Fable audit M2 (2026-11-28): start in en, switch the primary to fr, re-import fr. The
+     * stamp was taken only at startup and at a packs broadcast, so it still named en after the
+     * switch, [PrimaryPackStamp.primaryNeedsReload] saw another language and the old French
+     * dictionary stayed loaded. The stamp follows every primary change now.
+     */
+    @Test
+    fun aReimportOfAPrimaryChosenAfterStartupIsReloaded() {
+        val installed = mutableMapOf("en" to stamp("en", "/p/en"), "fr" to stamp("fr", "/p/fr", modified = 1))
+        val stampOf: (String) -> PrimaryPackStamp = { installed.getValue(it) }
+        var known = PrimaryPackStamp.afterPrimaryResolved(null, "en", stampOf)
+        known = PrimaryPackStamp.afterPrimaryResolved(known, "fr", stampOf)
+        assertWithMessage("the switch stamps fr's installed file").that(known).isEqualTo(installed["fr"])
+
+        installed["fr"] = stamp("fr", "/p/fr", modified = 2) // the re-import
+        assertWithMessage("fr re-imported after the switch").that(
+            PrimaryPackStamp.primaryNeedsReload(known, installed.getValue("fr"))
+        ).isTrue()
+    }
+
+    /**
+     * The other half: a packs broadcast refreshes Config BEFORE it compares, so a refresh that
+     * keeps the primary must keep the stamp it had, or the comparison would see no change.
+     */
+    @Test
+    fun aRefreshThatKeepsThePrimaryKeepsItsStamp() {
+        val before = stamp("en", "/p/en", modified = 1)
+        val reimported = stamp("en", "/p/en", modified = 2)
+        val kept = PrimaryPackStamp.afterPrimaryResolved(before, "en") { reimported }
+        assertWithMessage("the stamp is the one loaded").that(kept).isSameInstanceAs(before)
+        assertWithMessage("so the broadcast still sees the re-import")
+            .that(PrimaryPackStamp.primaryNeedsReload(kept, reimported)).isTrue()
+    }
+
+    /**
      * The same-size re-import case the stamp relies on file times for: the importer copies every
      * member with Kotlin's `File.copyTo` (LanguagePackManager.stageAndSwap), which does NOT keep
      * the source's modification time, so the installed dictionary's time is the copy's time and

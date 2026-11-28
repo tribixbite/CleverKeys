@@ -830,6 +830,11 @@ class CleverKeysService : InputMethodService(),
         // dictionary reload must never take the IME down.
         try {
             _activeLanguageSync?.apply(newConfig.activeLanguages())
+            // M2: the primary pack stamp follows a primary change, so a later re-import of the
+            // NEW primary is seen by onLanguagePacksChanged (it compared against the old one).
+            _primaryPackStamp = tribixbite.cleverkeys.langpack.PrimaryPackStamp.afterPrimaryResolved(
+                _primaryPackStamp, newConfig.activeLanguages().primary, ::primaryPackStamp
+            )
             // D2: a Swiss-spelling flip reloads the German lexicons (same refresh, after the
             // languages themselves are settled).
             _activeLanguageSync?.applySwissSpelling(newConfig.german_swiss_spelling)
