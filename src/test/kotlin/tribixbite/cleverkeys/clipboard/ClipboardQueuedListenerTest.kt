@@ -94,4 +94,33 @@ class ClipboardQueuedListenerTest {
         assertWithMessage("the later copy of the edited text is captured (moved to the top)")
             .that(services.history.first()).isEqualTo(edited)
     }
+
+    /**
+     * Low audit item (2026-11-28): the mark was spent only in the capture (`storeClip`), which a
+     * callback does not reach when History is off (or a password manager is in front). The mark
+     * then outlived its callback, and the next copy of exactly that text, after History was turned
+     * back on, was dropped once. The listener callback answering our write spends it, captured or not.
+     */
+    @Test
+    fun aCallbackThatCapturesNothingStillSpendsTheMark() {
+        val settings = tribixbite.cleverkeys.TypedFakePreferences()
+        every { tribixbite.cleverkeys.DirectBootAwarePreferences.get_shared_preferences(any()) } returns settings
+        // A newer row above the URL, so a capture of the edited text shows as a move to the top.
+        services.history.add(0, "newer")
+        editAndSave()
+
+        // History is off when the Save's callback arrives: nothing is captured.
+        settings.values["clipboard_history_enabled"] = false
+        services.drainListener()
+        assertWithMessage("precondition: History off captured nothing")
+            .that(services.history).containsExactly("newer", edited).inOrder()
+
+        // History on again: another app copies exactly the edited text.
+        settings.values["clipboard_history_enabled"] = true
+        services.clipboard.setPrimaryClip(ClipboardServiceFixture.clipOf(edited))
+        services.drainListener()
+
+        assertWithMessage("the later copy of the edited text is captured (moved to the top)")
+            .that(services.history).containsExactly(edited, "newer").inOrder()
+    }
 }

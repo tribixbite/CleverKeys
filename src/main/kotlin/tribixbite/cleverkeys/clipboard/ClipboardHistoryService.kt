@@ -1301,8 +1301,23 @@ class ClipboardHistoryService private constructor(ctx: Context) {
 
     inner class SystemListener : ClipboardManager.OnPrimaryClipChangedListener {
         override fun onPrimaryClipChanged() {
-            addCurrentClip()
+            try {
+                addCurrentClip()
+            } finally {
+                spendOwnEditMark()
+            }
         }
+    }
+
+    /**
+     * A listener callback that arrives once our edit's write reached Android's clipboard answers
+     * that write (or a later one that replaced it), so the one-shot skip is spent by it whether
+     * or not its capture reached [storeClip]. Before (audit 2026-11-28) only [storeClip] spent
+     * it, and a callback that captured nothing (History off, a password manager in front, an
+     * IS_SENSITIVE clip) left it armed: the next copy of exactly that text was dropped once.
+     */
+    private fun spendOwnEditMark() {
+        if (ownEditWritten) ownEditOnSystemClip = null
     }
 
     // HistoryEntry class removed - now using SQLite database storage
